@@ -360,9 +360,9 @@ now uses one optional `Slot<T>` union and one membership helper for distinct IDs
 [Structural generic constraints](docs/experiments/structural-constraints.md) now
 support named fields and public domain operations. [Public generic tooling](docs/experiments/generic-public-tooling.md)
 exposes symbolic templates separately from concrete callable exports.
-[Generic codec constraints and source serialization](docs/experiments/source-json.md)
-let `.my` programs encode and decode typed JSON.
-`examples/structural-constraints.my` returns `12`; `examples/source-json.my` returns `42`.
+`examples/structural-constraints.my` returns `12`. Guest-source JSON encoding and
+decoding were removed with the explicit storage tier; typed JSON remains available
+at the CLI and host boundary.
 
 [Compiler navigation](docs/experiments/navigation-client.md) finds qualified
 symbols, callers, references, types, effects and bounded source context:

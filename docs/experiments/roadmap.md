@@ -1209,7 +1209,7 @@ The bytecode VM remains the runtime; native implementation remains deferred.
   exact types, reference permissions and effect ceilings. This first scope is
   copy-constrained function templates; unsupported structural type constructors
   and reference-returning operations reject explicitly.
-- [Source typed JSON](source-json.md) gives `.my` programs allocator-authorized
+- [Source typed JSON](../legacy/experiments/source-json.md) gives `.my` programs allocator-authorized
   encoding and decoding through owned byte buffers and checked results. Generic
   `codec` requirements prove serializability, including declared domain codecs.
   Byte, value, memory, codec-call and remaining VM step/frame limits apply.

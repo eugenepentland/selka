@@ -25,7 +25,7 @@ intend to use; historical counts are not current verification receipts.
 | Resources | External resource owners, explicit completion and deterministic cleanup | [source resources](experiments/source-resources.md); [resource reads and writes](experiments/resource-io.md); no ambient operating-system authority |
 | Authority | Explicit host capabilities and transitive effect ceilings | [effects](../examples/effects.my); [byte runner scoped directory/endpoint grants](experiments/scoped-providers.md) |
 | Modules | Disk imports, explicit exports, nominal identity and embedded standard modules | [domain codecs](../examples/domain-codecs/main.my); [local locked package roots](experiments/local-packages.md); no network version resolver |
-| Data interchange | Typed JSON codecs, checked ordinary-JSON accessors, byte/text helpers and bounded builders | [source JSON](../examples/source-json.my); [managed byte strings](bytes.md); `bytes` is not a Unicode string type |
+| Data interchange | Typed JSON codecs at the CLI and host boundary, and managed byte strings | [managed byte strings](bytes.md); `bytes` is not a Unicode string type; guest-source JSON operations were removed with the explicit storage tier |
 | Development | Independent function diagnostics, navigation, parse-only declaration listing, formatting, syntax/exact-verdict/function-body caches, affected verification | [navigation](experiments/navigation-client.md); [declaration listing](experiments/list-declarations.md) reports kinds and byte ranges without checking; [changed-source reuse](../experiments/semantic-incremental/README.md) preserves fresh global checks with conservative fallback |
 | Documentation | Every fenced `mylang` example in README, SPEC and docs is run, type-checked or explicitly skipped by the default test gate | [executable documentation](experiments/doc-examples.md); directives pin expected output, expected diagnostics and explicit skips |
 | Tests | Exported test_ function discovery, typed expected values, filters and explicit skips | [guest test workflow](experiments/guest-tests.md); deterministic arguments and isolated source-provider fixtures |
@@ -41,8 +41,8 @@ stored reference lifetimes and unrestricted source compile-time execution. The [
 extensions; their presence in that backlog does not claim implementation.
 
 Memory safety combines the nonmoving tracing collector with VM checked handles,
-generations and leases. Each VM is single-threaded; [isolated process workers](experiments/workers.md) provide bounded parallel execution with copied typed messages. `noalloc` restricts explicit and managed guest
-backing allocations, not all compiler/VM/host allocation. Host callbacks are
+generations and leases. Each VM is single-threaded; [isolated process workers](experiments/workers.md) provide bounded parallel execution with copied typed messages. `noalloc` restricts managed guest
+allocation, not all compiler/VM/host allocation. Host callbacks are
 trusted implementations of documented contracts. These limits are part of the
 current model, not guarantees supplied by a future backend or thread system.
 

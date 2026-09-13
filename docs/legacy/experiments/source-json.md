@@ -1,5 +1,7 @@
 # Typed JSON from language source
 
+> Removed on 2026-09-13: this page documents a feature that no longer exists in the language.
+
 Source programs can encode checked values into bytes and decode those bytes
 without a host wrapper or a Zig rebuild. These operations use the existing
 `typed-json-v1` envelope and checked type identities used by the CLI boundary.

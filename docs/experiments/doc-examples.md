@@ -107,8 +107,8 @@ figures are a snapshot; the runner's own summary is the authority.
 | `docs/experiments/plain-json-ergonomics.md` | literal arguments | fragment: statements without their enclosing function or document |
 | `docs/experiments/plain-json-ergonomics.md` | document queries | fragment: statements without their enclosing function or document |
 | `docs/experiments/source-codecs.md` | codec match | fragment: statements without the `Positive` domain and `Wire` declarations |
-| `docs/experiments/source-json.md` | roundtrip | removed feature |
-| `docs/experiments/source-json.md` | generic codec | fragment: continues the `Encoded` declarations of the block above |
+| `docs/legacy/experiments/source-json.md` | roundtrip | removed feature |
+| `docs/legacy/experiments/source-json.md` | generic codec | fragment: continues the `Encoded` declarations of the block above |
 | `docs/familiar-syntax.md` | record and list intro | known-wrong example: `E_SYNTAX` rejects the trailing comma after this struct declaration's last field, though calls and record construction accept one; the rest of the example returns 42 |
 
 Every fragment above is a candidate for a later documentation rewrite: completing one
