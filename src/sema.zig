@@ -1,10 +1,6 @@
 //! Scope and type checking use resolved binding identities, including advisory use counts.
 const buffer_operations = @import("buffer_operations.zig");
 const ManagedKind = @import("runtime_values.zig").ManagedKind;
-/// Managed collection methods whose only argument has the receiver's own sequence type.
-fn sequenceArgument(kind: BufferKind) bool {
-    return kind == .split or kind == .contains or kind == .starts_with or kind == .ends_with or kind == .find;
-}
 const BufferKind = buffer_operations.Kind;
 const collections = @import("collection_lower.zig");
 const needs_list = "operation requires a managed list";
@@ -21,6 +17,10 @@ const eReturnLifetime = diagnostic.return_lifetime;
 const eShadowing = diagnostic.shadowing;
 const eConversionBody = "E_CONVERSION_BODY";
 const eByteConversion = "E_BYTES_CONVERSION";
+/// Managed collection methods whose only argument has the receiver's own sequence type.
+fn sequenceArgument(kind: BufferKind) bool {
+    return kind == .split or kind == .contains or kind == .starts_with or kind == .ends_with or kind == .find;
+}
 const eResourceResult = diagnostic.resource_result;
 const eReferenceReadOnly = diagnostic.reference_read_only;
 const eBufferResult = "E_BUFFER_RESULT";
@@ -1210,7 +1210,7 @@ const Checker = struct {
                     try self.require(self.nodes.items[@backingInt(arguments[0])].ty, schema.collection.key.?, operation.owner);
                 } else if (operation.kind == .contains) {
                     var needle = arguments[0];
-                    const wanted = if (byte_string) try self.byteMembership(.{ .span = operation.owner, .data = .unit }, &needle, local.ty) else local.ty;
+                    const wanted = if (byte_string) try self.byteMembership(operation.owner, &needle, local.ty) else local.ty;
                     arguments[0] = needle;
                     try self.require(self.nodes.items[@backingInt(needle)].ty, wanted, operation.owner);
                 } else try self.requireInteger(self.nodes.items[@backingInt(arguments[0])].ty, operation.owner);
@@ -1786,7 +1786,7 @@ const Checker = struct {
             .list => schema.shape.buffer.?,
             .dictionary => schema.collection.key.?,
             .string => container_type,
-            .bytes => try self.byteMembership(node, &member, container_type),
+            .bytes => try self.byteMembership(node.span, &member, container_type),
         };
         try self.require(self.nodes.items[@backingInt(member)].ty, expected, node.span);
         const inputs = [_]typed.NodeId{ member, container };
@@ -1811,10 +1811,11 @@ const Checker = struct {
         try self.statements.append(self.allocator, .{ .span = node.span, .terminates = false, .data = .{ .block = try self.allocator.dupe(typed.StatementId, &statements) } });
         return .{ .span = node.span, .ty = .bool, .data = .{ .block_value = .{ .body = body, .value = result } } };
     }
-    fn byteMembership(self: *Checker, node: ast.Node, needle: *typed.NodeId, container_type: typed.Type) Error!typed.Type {
+    /// Byte membership accepts either a byte scalar, widened to int, or a whole subsequence.
+    fn byteMembership(self: *Checker, span: source.Span, needle: *typed.NodeId, container_type: typed.Type) Error!typed.Type {
         const actual = self.nodes.items[@backingInt(needle.*)].ty;
         if (!actual.isInteger()) return container_type;
-        if (actual != .i64) needle.* = try (collections.Builder(Checker){ .checker = self, .span = node.span }).node(.i64, .{ .cast = needle.* });
+        if (actual != .i64) needle.* = try (collections.Builder(Checker){ .checker = self, .span = span }).node(.i64, .{ .cast = needle.* });
         return .i64;
     }
     fn checkValueIndex(self: *Checker, node: ast.Node, access: @FieldType(@FieldType(ast.Node, "data"), "index"), out: *typed.Node) Error!void {

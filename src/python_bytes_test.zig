@@ -216,6 +216,18 @@ test "PY-BYTES-1 byte strings are immutable and never convert through str" {
     try rejected("def main() -> int:\n    values: dict[bytes, int] = {}\n    return len(values)\n", "E_GENERIC_REQUIREMENT");
     try rejected("def main() -> int:\n    return len(bytes(\"ab\"))\n", "E_BYTES_CONVERSION");
     try rejected("def main() -> int:\n    return len(b\"ab\".encode())\n", "E_COLLECTION_METHOD");
+    try rejected(
+        "def build() -> int noalloc:\n    raw = b\"ab\"\n    return len(raw)\ndef main() -> int:\n    return build()\n",
+        "E_EFFECT_BOUND",
+    );
+    try rejected(
+        "def grow(a: bytes, b: bytes) -> int noalloc:\n    return len(a + b)\ndef main() -> int:\n    return grow(b\"a\", b\"b\")\n",
+        "E_EFFECT_BOUND",
+    );
+    try rejected(
+        "def cut(a: bytes) -> int noalloc:\n    return len(a[0:1])\ndef main() -> int:\n    return cut(b\"ab\")\n",
+        "E_EFFECT_BOUND",
+    );
 }
 
 // spec-case: PY-BYTES-3
