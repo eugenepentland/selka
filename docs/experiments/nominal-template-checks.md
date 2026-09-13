@@ -9,7 +9,8 @@ executable schemas. Malformed metadata reports its specific error before lowerin
 For example, this unused declaration now reports `E_GENERIC_REQUIREMENT` on `U`,
 with a related location pointing to `Key`'s requirement:
 
-```text
+```mylang
+// doc: expect-error E_GENERIC_REQUIREMENT
 struct Key<T:equality> { value: T }
 struct Bad<U:copy> { key: Key<U> }
 fn main() -> i64 { return 0; }

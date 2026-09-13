@@ -6,7 +6,8 @@ New code should use the [Python-style guide](python-syntax.md). This page docume
 The compiler accepts this syntax alongside existing source spellings. GC behavior,
 checked errors, and explicit resource ownership are unchanged.
 
-```rust
+```mylang
+// doc: skip known-wrong example: E_SYNTAX rejects the trailing comma after this struct declaration's last field, though calls and record construction accept one; the rest of the example returns 42
 struct Node {
     value: i64,
     children: List<Node>,

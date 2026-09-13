@@ -261,7 +261,8 @@ Do not add a REPL or guest printing facility. Printing `main`'s result is enough
 
 ## 5. Example acceptance program
 
-```text
+```mylang
+// doc: expect 4950
 fn sum_to(n: i64) -> i64 {
     let mut total: i64 = 0;
     let mut i: i64 = 0;
@@ -283,7 +284,8 @@ fn main() -> i64 {
 
 A second example exercises calls, local mutation, and remainder:
 
-```text
+```mylang
+// doc: expect 6
 fn gcd(a: i64, b: i64) -> i64 {
     let mut x = a;
     let mut y = b;

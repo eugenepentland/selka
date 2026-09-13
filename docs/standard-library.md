@@ -117,6 +117,7 @@ it with `required` for requiredness and kind/value predicates for field schemas.
 For example, an application helper returning `Result<i64,Error>` can write:
 
 ```mylang
+// doc: skip fragment: helper body without its enclosing function, document or module
 let names = new [2]std_json_view::Name[
     new std_json_view::Name {start:0u64,end:2u64},
     new std_json_view::Name {start:2u64,end:5u64}

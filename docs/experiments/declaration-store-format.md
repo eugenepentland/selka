@@ -136,7 +136,7 @@ they agree on every corpus project.
 `render --db PATH --branch NAME --output DIRECTORY` refuses a non-empty output
 directory and writes each module as
 
-```text
+```text notest
 prelude comments
 module NAME;
 imports, derived and sorted

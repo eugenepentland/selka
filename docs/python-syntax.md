@@ -5,6 +5,7 @@ execution and manages ordinary lists, strings and dictionaries with tracing GC.
 There are no allocator arguments or ownership annotations in ordinary data code.
 
 ```mylang
+# doc: expect 42
 class Node:
     value: int
     children: list[Node]

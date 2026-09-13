@@ -6,7 +6,7 @@ tables](tables.md) are also implemented, finishing A2.
 
 ## Declarations and construction
 
-```text
+```mylang
 enum Color { red, green, blue }
 struct Point { x: i64, y: i64 }
 union Shape { point: Point, radius: i64, empty }

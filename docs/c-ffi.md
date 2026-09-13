@@ -3,7 +3,9 @@
 QBE native builds support direct calls to fixed-arity C functions. No provider
 registration or copied-node adapter is needed:
 
-```text
+```mylang
+// doc: check
+// The interpreter cannot register libc; `mylang build main.my --run` links and runs it.
 extern fn abs(value: i32) -> i32 effects(host);
 extern fn floor(value: float) -> float effects(host);
 

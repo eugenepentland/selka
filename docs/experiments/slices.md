@@ -6,7 +6,7 @@ are also implemented and complete B. The whole-value reference contract is in [b
 
 ## Syntax and types
 
-```text
+```mylang
 fn increment(values: &mut []i64) -> i64 {
     let mut i = 0u64;
     while i < len_slice(values) {

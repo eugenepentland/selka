@@ -11,7 +11,8 @@ remain pending. C is not complete.
 A function may have one contextual annotation between its result/lifetime contract
 and body:
 
-```text
+```mylang
+// doc: skip fragment: `Numbers` is declared in the complete examples/effects.my
 fn edit(values: &mut []i64) -> i64 noalloc {
     write_slice(values, 0, 7);
     return read_slice(values, 0);

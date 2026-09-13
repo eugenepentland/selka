@@ -7,7 +7,7 @@ tracks remain pending.
 
 ## Syntax and type identity
 
-```text
+```mylang
 enum Status { ok, missing, failed }
 
 fn response_codes() -> [Status]u16 {
