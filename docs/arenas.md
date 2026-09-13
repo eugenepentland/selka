@@ -188,6 +188,10 @@ traps if any of them still reaches arena storage, then frees the arena. Normal
 exit, `return`, `?` propagation, `break` and `continue` out of the block, and
 traps unwinding through it all release the arena exactly once.
 
+The QBE native backend runs arena scopes too, with the same depth header, store
+barrier, bulk release and `escape` copy. A program with no arena scope pays for
+neither the barrier nor the per-frame depth bookkeeping.
+
 ## Interaction with collection
 
 Arenas do not turn collection off. The tracing collector still runs at managed
@@ -214,8 +218,6 @@ Honest list of what this first step does not do:
   statement; `acquire_resource`/`complete_resource` keep their existing spelling.
 - Arena scopes are rejected inside generic function bodies with
   `E_GENERIC_BODY_UNSUPPORTED`.
-- The QBE native backend rejects a program containing an arena scope explicitly,
-  with `E_QBE_UNSUPPORTED`. The VM is the backend for this feature.
 - The static rules are conservative in one direction and shallow in the other.
   They reject some safe programs (any assignment of a managed-bearing value to an
   outer binding, even one that could never reach arena storage) and they do not

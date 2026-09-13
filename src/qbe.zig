@@ -1,7 +1,8 @@
 //! Independent native QBE units. Source locations never enter native artifact bytes.
 const slice_abi = ":myl_slice";
 const scalar_lower = @import("qbe_scalar.zig");
-const zero_local = " call $memset(l %l{d}, w 0, l {d})\n";
+const zero_local = @import("qbe_format.zig").zero_local;
+const arena_lower = @import("qbe_arena.zig");
 const managed_lower = @import("qbe_managed.zig");
 const std = @import("std");
 const bytecode = @import("bytecode.zig");
@@ -37,8 +38,9 @@ pub fn generateWithInterface(allocator: std.mem.Allocator, program: bytecode.Pro
         }
         unit.* = .{ .name = function.name, .symbol = try symbol(a, function.name), .il = "", .locations = locations, .@"export" = try @import("qbe_exports.zig").describe(a, program, index, interface.roots) };
     }
+    const arenas = arena_lower.present(program);
     for (program.functions, units, 0..) |function, *unit, index| {
-        var emitter = Emitter{ .allocator = a, .program = program, .function = function, .units = units, .layouts = &layouts, .sink = sink, .output = .init(a) };
+        var emitter = Emitter{ .allocator = a, .program = program, .function = function, .units = units, .layouts = &layouts, .sink = sink, .output = .init(a), .arenas = arenas };
         unit.il = try emitter.emit(unit.symbol);
         unit.test_dependencies = @import("native_test_dependencies.zig").describe(a, program, index, unit.il, &layouts, emitter.states) catch |err| return layoutError(err);
     }
@@ -100,6 +102,7 @@ const Emitter = struct {
     pc: usize = 0,
     has_roots: bool = false,
     heap_frame: bool = false,
+    arenas: bool = false,
     frame_offset: u64 = 0,
     output: std.Io.Writer.Allocating,
     states: []?[]const typed.Type = &.{},
@@ -164,6 +167,7 @@ const Emitter = struct {
         }
         try self.print(" call $myl_qbe_enter_at_sized(l %ctx, l extern ${s}_meta, l {d})\n", .{ name, stack_bytes });
         try self.checkFailure("entry_failure");
+        try arena_lower.Lower(Emitter).mark(self);
         if (self.heap_frame) {
             try self.print(" %frame_memory =l call $myl_qbe_frame_allocate(l %ctx, l {d})\n", .{frame_bytes});
             try self.checkFailure("allocation_failure");
@@ -173,6 +177,7 @@ const Emitter = struct {
         try self.print(" %maxsteps =l add %ctx, 16\n %active =l add %ctx, 48\n %frame =l loadl %active\n %position =l add %frame, 8\n jmp @i0\n", .{});
         try self.emitInstructions();
         try self.print("@step_limit\n call $myl_qbe_fail_step(l %ctx)\n jmp @failure\n@failure\n", .{});
+        try arena_lower.Lower(Emitter).restore(self);
         if (self.has_roots) try self.print(" call $myl_qbe_root_restore(l %ctx, l %root_mark)\n", .{});
         if (self.heap_frame) try self.print(" call $myl_qbe_frame_release(l %ctx, l %frame_memory)\n jmp @allocation_failure\n@allocation_failure\n", .{});
         try self.print(" call $myl_qbe_leave(l %ctx)\n@entry_failure\n ret {s}\n}}\n", .{if (return_bytes == 0) "0" else "%empty"});
@@ -279,6 +284,7 @@ const Emitter = struct {
     /// Return a value after releasing heap-backed execution storage safely.
     pub fn returnValue(self: *Emitter, value: usize) GenerateError!void {
         try self.cleanupLocals();
+        try arena_lower.Lower(Emitter).restore(self);
         var output = value;
         const indirect = try self.largeResult(self.function);
         if (indirect) {
@@ -414,6 +420,7 @@ const Emitter = struct {
             .update_record,
             .replace_index,
             .get_index,
+            .arena_escape,
             .try_result,
             .acquire_buffer,
             .buffer_operation,
@@ -706,7 +713,8 @@ const Emitter = struct {
         switch (op) {
             .acquire_resource, .complete_resource, .resource_io, .restrict_resource => try @import("qbe_resources.zig").Lower(Emitter).emit(self, op, stack),
             .external_read, .environment_get => try @import("qbe_boundaries.zig").emit(self, op, stack),
-            .begin_arena, .end_arena, .arena_escape, .print, .file_access, .file_method => return self.reject(self.pc),
+            .begin_arena, .end_arena, .arena_escape => try arena_lower.Lower(Emitter).emit(self, op, stack),
+            .print, .file_access, .file_method => return self.reject(self.pc),
             .try_result => |propagate| {
                 const source = try self.load("s", h - 1);
                 const input = typed.resultShape(propagate.input, self.program.records).?;

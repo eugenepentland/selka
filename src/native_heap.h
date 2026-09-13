@@ -43,6 +43,8 @@ typedef struct myl_native_region {
     struct myl_native_region *parent;
     size_t users, children;
 } myl_native_region;
+/* Bulk arena counters, reported separately from tracing reclamation. */
+typedef struct { uint64_t scopes, released, escaped; } myl_native_arena_statistics;
 typedef struct {
     myl_native_object *objects;
     myl_native_object *pending;
@@ -55,6 +57,11 @@ typedef struct {
     size_t collections;
     size_t limit, next_collection;
     int stress;
+    /* Innermost arena depth; 0 is the ordinary tracing heap. Collection is
+     * suspended only while one escape copy builds its not-yet-rooted clones. */
+    unsigned region_depth;
+    int suspended;
+    myl_native_arena_statistics arena;
 } myl_native_heap;
 void myl_native_heap_init(myl_native_heap *heap, size_t limit);
 void myl_native_heap_destroy(myl_native_heap *heap);
@@ -68,6 +75,16 @@ int myl_native_root_pop(myl_native_heap *heap, myl_native_root *root);
 void *myl_native_heap_alloc(myl_native_heap *heap,
                             const myl_native_type *element, size_t count);
 void myl_native_heap_collect(myl_native_heap *heap);
+/* Allocate at an explicit arena depth so collection backing joins its owner
+ * rather than the innermost open arena. */
+void *myl_native_heap_alloc_at(myl_native_heap *heap,
+                               const myl_native_type *element, size_t count, unsigned region);
+/* Arena depth owning one managed payload; 0 for the ordinary tracing heap. */
+unsigned myl_native_object_region(const void *payload);
+/* Open the next innermost arena; later managed allocation lands in it. */
+void myl_native_region_begin(myl_native_heap *heap);
+/* Free every object allocated at the innermost arena depth and leave it. */
+void myl_native_region_end(myl_native_heap *heap);
 /* Explicit owned storage release. Caller removes all roots/references first. */
 void myl_native_heap_release(myl_native_heap *heap, void *payload);
 /// Release every external resource reachable from a value in place.

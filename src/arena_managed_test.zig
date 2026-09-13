@@ -397,16 +397,42 @@ test "ARENA-MANAGED-7 arena scopes and escape copies unwind on every allocation 
 }
 
 // spec: ARENA-MANAGED-8
-test "ARENA-MANAGED-8 the native backend rejects managed arena scopes explicitly" {
+test "ARENA-MANAGED-8 the native backend lowers arena scopes, the barrier and escape" {
     const source =
+        \\def stash(outer: list[list[int]], inner: list[int]) -> None:
+        \\    outer.append(inner)
+        \\
         \\def main() -> int:
+        \\    kept: list[int] = []
         \\    with arena() as scratch:
-        \\        return 7
+        \\        inner: list[int] = [7]
+        \\        holder: list[list[int]] = [inner, inner]
+        \\        stash(holder, inner)
+        \\        kept = scratch.escape(holder[0])
+        \\    return kept[0]
     ;
     var qbe = try language.Compilation.init(t.allocator, module, source);
     defer qbe.deinit();
-    try t.expectError(error.SourceError, qbe.emitQbe(t.allocator));
-    try t.expectEqualStrings("E_QBE_UNSUPPORTED", qbe.diagnostics.items[0].code);
+    const manifest = try qbe.emitQbe(t.allocator);
+    defer t.allocator.free(manifest);
+    for ([_][]const u8{ "myl_qbe_region_begin", "myl_qbe_region_end", "myl_qbe_region_escape", "myl_qbe_region_check", "myl_qbe_region_retains", "myl_qbe_region_restore" }) |symbol| {
+        try t.expect(std.mem.indexOf(u8, manifest, symbol) != null);
+    }
+}
+
+// spec-case: ARENA-MANAGED-8
+test "ARENA-MANAGED-8 an arena-free program emits neither the barrier nor depth bookkeeping" {
+    var qbe = try language.Compilation.init(t.allocator, module,
+        \\def main() -> int:
+        \\    values: list[list[int]] = []
+        \\    values.append([1, 2])
+        \\    return len(values)
+    );
+    defer qbe.deinit();
+    const manifest = try qbe.emitQbe(t.allocator);
+    defer t.allocator.free(manifest);
+    try t.expect(std.mem.indexOf(u8, manifest, "myl_qbe_region_check") == null);
+    try t.expect(std.mem.indexOf(u8, manifest, "myl_qbe_region_mark") == null);
 }
 
 test "arena source formatting preserves the with statement" {

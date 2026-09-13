@@ -40,7 +40,10 @@ int myl_native_list_append(myl_native_heap *heap, myl_native_list *list, const v
             if (capacity > SIZE_MAX / 2) goto failure;
             capacity *= 2;
         }
-        void *storage = myl_native_heap_alloc(heap, list->element, capacity);
+        /* Grown backing joins the list's own arena, so an append performed inside
+           a younger arena never leaves an older list with storage that is about
+           to be bulk released. */
+        void *storage = myl_native_heap_alloc_at(heap, list->element, capacity, myl_native_object_region(list));
         if (!storage) goto failure;
         if (list->length) memcpy(storage, list->storage, list->length * list->element->size);
         /* value may point into old backing; copy before unlinking that backing. */
