@@ -227,7 +227,8 @@ demonstrates the feature. A slug that stops describing a real form moves to `rem
 date and a note rather than disappearing.
 - [DOCCOV-1] `mylang doc-coverage [<repo-root>]` resolves every implemented feature's `doc`
 pointer against that checkout. A pointer without an anchor, a page that does not exist, a page
-reached through a `..` component, and an anchor matching no heading are all reported failures.
+reached through a `..` component, a page under `docs/legacy/` whose examples the runner never
+executes, and an anchor matching no heading are all reported failures.
 A heading's anchor is its text lowercased with punctuation dropped, spaces turned into hyphens,
 and hyphens and underscores kept; its section runs to the next heading of the same or higher
 level, and headings inside fenced blocks are not headings. A `language` section must contain a

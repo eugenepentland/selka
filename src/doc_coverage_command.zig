@@ -16,6 +16,7 @@ pub const Error = error{ OutOfMemory, WriteFailed };
 
 const file_limit: std.Io.Limit = .limited(8 * 1024 * 1024);
 const guide_path = "docs/standard-library.md";
+const excluded_prefix = "docs/legacy/";
 
 const Counts = struct { language: usize = 0, tooling: usize = 0, modules: usize = 0, exports: usize = 0 };
 
@@ -103,6 +104,11 @@ fn locate(report: *Report, slug: []const u8, pointer: []const u8) Error!?coverag
     const page = pointer[0..at];
     if (page.len == 0 or std.mem.indexOf(u8, page, "..") != null) {
         try fail(report, "{s}: doc pointer '{s}' is not a repository-relative page", .{ slug, pointer });
+        return null;
+    }
+    // The example runner skips docs/legacy/, so an example there would never actually run.
+    if (std.mem.startsWith(u8, page, excluded_prefix)) {
+        try fail(report, "{s}: doc pointer '{s}' names a page under {s}, whose examples are never executed", .{ slug, pointer, excluded_prefix });
         return null;
     }
     const text = (try document(report, page)) orelse {
@@ -200,11 +206,13 @@ test "a doc pointer without an anchor or with a parent escape is a failure, not 
     var report: Report = .{ .gpa = arena.allocator(), .io = testing.io, .root = ".", .documents = .empty, .pages = .empty, .failures = .empty, .counts = .{} };
     try testing.expect((try locate(&report, "slug", "docs/page.md")) == null);
     try testing.expect((try locate(&report, "slug", "../secrets.md#x")) == null);
+    try testing.expect((try locate(&report, "slug", "docs/legacy/old.md#x")) == null);
     try testing.expect((try locate(&report, "slug", "docs/absent-page-name.md#x")) == null);
-    try testing.expectEqual(@as(usize, 3), report.failures.items.len);
+    try testing.expectEqual(@as(usize, 4), report.failures.items.len);
     try testing.expect(std.mem.indexOf(u8, report.failures.items[0], "names no heading anchor") != null);
     try testing.expect(std.mem.indexOf(u8, report.failures.items[1], "repository-relative") != null);
-    try testing.expect(std.mem.indexOf(u8, report.failures.items[2], "does not exist") != null);
+    try testing.expect(std.mem.indexOf(u8, report.failures.items[2], "never executed") != null);
+    try testing.expect(std.mem.indexOf(u8, report.failures.items[3], "does not exist") != null);
 }
 
 // spec-case: DOCCOV-3
