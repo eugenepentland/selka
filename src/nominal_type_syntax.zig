@@ -24,7 +24,7 @@ pub fn present(program: ast.Program) bool {
 
 /// Select builtin nominal text/numeric schemas without requiring a generic use.
 pub fn presentInSource(program: ast.Program, src: Source) bool {
-    return present(program) or textUsed(src) or byteLiteral(program, src);
+    return present(program) or preludeUsed(src) or byteLiteral(program, src);
 }
 
 /// Recognize the `b` prefix that distinguishes managed byte strings from fixed arrays.
@@ -38,10 +38,12 @@ pub fn byteLiteral(program: ast.Program, src: Source) bool {
 }
 
 /// Recognize the literal and constructor spellings that need the managed bytes prelude type.
+/// Naming the type anywhere counts, so a bare `bytes` annotation resolves on its own.
 pub fn bytesSyntax(program: ast.Program, src: Source) bool {
     const std = @import("std");
     if (byteLiteral(program, src)) return true;
     for (program.functions) |function| if (std.mem.eql(u8, src.text(function.name), "bytes")) return false;
+    if (wordUsed(src, &.{"bytes"})) return true;
     for (program.nodes.items) |node| {
         if (node.data != .call) continue;
         const call = node.data.call;
@@ -55,6 +57,11 @@ pub fn bytesSyntax(program: ast.Program, src: Source) bool {
 /// Detect text/dictionary syntax without scanning quoted or commented words.
 pub fn textUsed(src: Source) bool {
     return wordUsed(src, &.{ "str", "dict" });
+}
+
+/// Whether any prelude collection or numeric type is named, selecting the nominal catalog.
+pub fn preludeUsed(src: Source) bool {
+    return wordUsed(src, &.{ "str", "dict", "bytes", "float" });
 }
 
 /// Scan identifier words outside quoted literals and comments for any listed spelling.

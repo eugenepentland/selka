@@ -22,6 +22,8 @@
     "python-string-methods",
     "format-strings",
     "list-comprehensions",
+    "wildcard-match-arms",
+    "prelude-float-operations",
     "string-to-number-parsing",
     "legacy-migration",
     "python-assignments-and-value-records",

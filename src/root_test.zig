@@ -27,6 +27,7 @@ test {
     _ = @import("python_strings_test.zig");
     _ = @import("python_format_test.zig");
     _ = @import("python_comprehension_test.zig");
+    _ = @import("python_surface_test.zig");
     _ = @import("unit_test.zig");
     _ = @import("declarations_test.zig");
     _ = @import("migrate_test.zig");

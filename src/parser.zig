@@ -65,18 +65,26 @@ pub const Parser = struct {
         if (self.cursor.depth >= 256) return self.sink.fail("E_NESTING_LIMIT", self.current().span, "parser nesting exceeds 256 levels");
         self.cursor.depth += 1;
     }
+    /// Accept a declared name that collides with an intrinsic keyword. `len` and `replace`
+    /// are intrinsics in call position only, so both remain ordinary names elsewhere.
+    fn declaredName(self: *Parser) diagnostic.Error!Span {
+        const token = self.current();
+        if (token.tag != .kw_len and token.tag != .kw_replace) return (try self.expect(.ident)).span;
+        self.cursor.pos += 1;
+        return token.span;
+    }
     fn qualifiedTail(self: *Parser, first: Span) diagnostic.Error!Span {
         if (!self.module_syntax) return first;
         if (self.current().tag == .dot and self.syntax.import_aliases.contains(self.src.text(first))) {
             if (!self.sameExpressionLine()) return first;
             self.cursor.pos += 1;
-            return .join(first, (try self.expect(.ident)).span);
+            return .join(first, try self.declaredName());
         }
         if (self.current().tag != .colon or self.genericCallSuffix()) return first;
         if (self.tokens[self.cursor.pos + 1].tag != .colon) return first;
         self.cursor.pos += 1;
         _ = try self.expect(.colon);
-        return .join(first, (try self.expect(.ident)).span);
+        return .join(first, try self.declaredName());
     }
     fn typeName(self: *Parser) diagnostic.Error!Span {
         try self.enter();
@@ -329,7 +337,7 @@ pub const Parser = struct {
         const previous_python = self.cursor.python_function;
         self.cursor.python_function = std.mem.eql(u8, self.src.text(head.span), "def");
         defer self.cursor.python_function = previous_python;
-        const name = try self.expect(.ident);
+        const name: lex.Token = .{ .tag = .ident, .span = try self.declaredName() };
         const type_parameters = try self.typeParameters();
         _ = try self.expect(.lparen);
         var parameters = try self.functionParameters();
@@ -854,9 +862,7 @@ pub const Parser = struct {
         return left;
     }
     fn parseMemberSuffix(self: *Parser, left: ast.NodeId) diagnostic.Error!ast.NodeId {
-        const name = self.current();
-        // `len` and `replace` are reserved intrinsics; both are ordinary method names too.
-        if (name.tag == .kw_len or name.tag == .kw_replace) self.cursor.pos += 1 else _ = try self.expect(.ident);
+        const name: lex.Token = .{ .tag = .ident, .span = try self.declaredName() };
         if (self.take(.lparen)) {
             var arguments: std.ArrayList(ast.NodeId) = .empty;
             if (self.current().tag != .rparen) while (true) {
@@ -1256,7 +1262,7 @@ pub const Parser = struct {
             switch (self.tokens[position].tag) {
                 .dot => if (applied and brackets == 0) return false,
                 .ident, .colon, .lbracket, .rbracket, .lt, .gt, .comma, .kw_i64, .kw_i8, .kw_i16, .kw_i32, .kw_u8, .kw_u16, .kw_u32, .kw_u64, .kw_bool, .kw_none => {},
-                .lparen => return applied,
+                .lparen => return applied and brackets == 0,
                 else => return false,
             }
         }
@@ -1298,11 +1304,7 @@ pub const Parser = struct {
         if (token.tag == .ident and self.sameExpressionLine() and self.methodSuffix()) {
             owner = name;
             self.cursor.pos += 1;
-            name = if (self.current().tag == .kw_len) member: {
-                const member = self.current();
-                self.cursor.pos += 1;
-                break :member member.span;
-            } else (try self.expect(.ident)).span;
+            name = try self.declaredName();
         }
         const type_arguments = if (token.tag == .ident) try self.typeArguments() else &.{};
         if (token.tag == .ident and self.sameExpressionLine() and self.take(.lparen)) {

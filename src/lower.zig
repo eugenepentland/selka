@@ -136,8 +136,12 @@ const Emitter = struct {
                 } else if (!self.program.statements[@backingInt(loop.body)].terminates)
                     try self.push(.{ .jump = .{ .target = start, .span = stmt.span } });
                 try self.push(.{ .statement = loop.body });
-                try self.push(.{ .jump = .{ .target = end, .conditional = true, .span = self.program.nodes[@backingInt(loop.condition)].span } });
-                try self.push(.{ .expression = loop.condition });
+                // A loop the checker proved never exits emits no conditional exit, so what
+                // follows it stays unreachable instead of falling out of the function.
+                if (!stmt.terminates) {
+                    try self.push(.{ .jump = .{ .target = end, .conditional = true, .span = self.program.nodes[@backingInt(loop.condition)].span } });
+                    try self.push(.{ .expression = loop.condition });
+                }
                 try self.push(.{ .mark = start });
             },
         }

@@ -59,7 +59,9 @@ arithmetic and comparisons, and `float(integer)` / `int(float)` conversion.
 `/` produces a float; `//` rounds the quotient down and `%` follows that quotient.
 `divtrunc(a, b)` and `remtrunc(a, b)` round toward zero instead, for binary formats and
 C interfaces that need that rounding. Float-to-int conversion truncates toward zero and
-traps outside the signed range.
+traps outside the signed range. `sqrt`, `floor`, `ceil`, `trunc` and `abs` operate on
+`float` values; `round`, `exp`, `log`, `pow` and the trigonometric functions are not
+provided.
 
 ```mylang
 # doc: expect 42
@@ -75,6 +77,18 @@ storage; assignment does not copy their contents. Use `items.append(value)`,
 `len(items)`, `items[index]`, `items[index] = value`, and `items[start:end]`.
 Negative indexes count from the end. Slices create independent list storage and
 copy the selected elements. Nested indexing and expression receivers work.
+
+Strings use ordinary single or double quotes and represent immutable UTF-8 text.
+Indexing and length count Unicode scalar values, rather than bytes or grapheme
+clusters. Use concatenation, equality, `split(separator)`, `separator.join(parts)`,
+and `str(value)` for scalar conversion. Strings also support slices and iteration. `b"..."` represents bytes for binary APIs.
+
+Strings answer `strip`/`lstrip`/`rstrip`, `upper`/`lower`, `replace(old, new)`,
+`startswith`/`endswith`, `find(sub)` (-1 when absent), `count(sub)`, `zfill(width)`,
+`splitlines()`, and `isdigit`/`isalpha`/`isspace`. Every one returns a fresh value, so no
+alias changes. `ljust` and `rjust` are absent, because intrinsic methods take no defaulted
+arguments. `int(text)` and `float(text)` return `Option[int]` and `Option[float]`: the
+language has no exceptions, so a string that is not exactly one number answers `None`.
 
 An `f"..."` literal interpolates `{expression}` holes, converting each one exactly as
 `str(value)` does and concatenating the result. `{{` and `}}` write single braces. Holes take
@@ -92,17 +106,6 @@ def main() -> int:
     return 0
 ```
 
-Strings answer `strip`/`lstrip`/`rstrip`, `upper`/`lower`, `replace(old, new)`,
-`startswith`/`endswith`, `find(sub)` (-1 when absent), `count(sub)`, `zfill(width)`,
-`splitlines()`, and `isdigit`/`isalpha`/`isspace`. Every one returns a fresh value, so no
-alias changes. `ljust` and `rjust` are absent, because intrinsic methods take no defaulted
-arguments. `int(text)` and `float(text)` return `Option[int]` and `Option[float]`: the
-language has no exceptions, so a string that is not exactly one number answers `None`.
-
-Strings use ordinary single or double quotes and represent immutable UTF-8 text.
-Indexing and length count Unicode scalar values, rather than bytes or grapheme
-clusters. Use concatenation, equality, `split(separator)`, `separator.join(parts)`,
-and `str(value)` for scalar conversion. Strings also support slices and iteration. `b"..."` represents bytes for binary APIs.
 Dictionaries preserve insertion order and use `int` or `str` keys. Their values
 have a single inferred or annotated type. Updates through an alias are shared.
 Use `counts[key]`, `counts[key] = value`, `counts.get(key, fallback)`,
@@ -192,6 +195,13 @@ def main() -> int:
 false, reporting the message — or the expression's own source text — and the location of the
 expression. Assertions are allowed under every effect bound and are not removed in release
 builds; use them for invariants a caller cannot violate, and `Result` for errors it can.
+
+`case _` covers every variant no earlier arm named, discarding the payload of each one it
+covers. It must be the last arm, must cover at least one variant, and is rejected when it
+would drop a payload that carries an unhandled result.
+
+A `while True` loop with no `break` never falls through, so a function whose body ends in
+one needs no unreachable trailing `return`.
 
 Checked errors use the following explicit extension to Python syntax:
 

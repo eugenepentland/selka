@@ -12,9 +12,16 @@ const eResultOperation = diagnostic.result_operation;
 const eOwnedConsumed = diagnostic.owned_consumed;
 const eResultPath = diagnostic.result_path;
 const eShadowing = diagnostic.shadowing;
+const eWildcardArm = "E_WILDCARD_ARM";
 const eConversionBody = "E_CONVERSION_BODY";
 const eByteConversion = "E_BYTES_CONVERSION";
 /// Managed collection methods whose only argument has the receiver's own sequence type.
+/// Recognize `case _`, the contextual arm that stands for every remaining variant.
+fn wildcard(src: source.Source, arm: anytype) bool {
+    if (arm.ty.start != arm.ty.end or arm.binding != null or arm.discard_payload) return false;
+    return std.mem.eql(u8, src.text(arm.name), "_");
+}
+
 fn sequenceArgument(kind: BufferKind) bool {
     return switch (kind) {
         .split, .contains, .starts_with, .ends_with, .find, .count, .replace => true,
@@ -46,7 +53,7 @@ const records = @import("records.zig");
 const Error = diagnostic.Error;
 const instances = @import("generic_instances.zig");
 const Names = @import("module_names.zig").Names;
-const LoopScope = struct { id: usize, before: []const Pending, arenas: usize = 0 };
+const LoopScope = struct { id: usize, before: []const Pending, arenas: usize = 0, exited: bool = false };
 const ArenaScope = struct { name: []const u8, declaration: source.Span, watermark: typed.LocalId };
 const eArenaEscape = "E_ARENA_ESCAPE";
 const eArenaBinding = "E_ARENA_BINDING";
@@ -507,6 +514,22 @@ const Checker = struct {
         if (std.mem.eql(u8, name, "Err")) return false;
         return null;
     }
+    /// Recognize `sqrt`, `floor`, `ceil`, `trunc` and `abs` as prelude float operations.
+    /// A local binding, a declared function or a module top-level name of the same name wins.
+    fn floatIntrinsic(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?typed.UnaryOp {
+        if (call.owner != null or call.type_arguments.len != 0) return null;
+        const name = self.src.text(call.name);
+        const op = @import("float_intrinsics.zig").operation(name) orelse return null;
+        if (self.active.contains(name) or self.functions.contains(name)) return null;
+        if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return null;
+        return op;
+    }
+    fn checkFloatIntrinsic(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), op: typed.UnaryOp, out: *typed.Node) Error!void {
+        const value = self.resolved[@backingInt(call.arguments[0])].?;
+        const ty_value = self.nodes.items[@backingInt(value)].ty;
+        if (!numeric_surface.isFloat(ty_value, self.catalog.records)) return self.sink.fail("E_TYPE", node.span, "this prelude operation requires a float argument");
+        out.* = try self.numericBuilder(node.span).unary(op, value);
+    }
     fn numericConversion(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?bool {
         if (call.owner != null or call.type_arguments.len != 0) return null;
         const name = self.src.text(call.name);
@@ -950,6 +973,12 @@ const Checker = struct {
         }
     }
     fn queueBuiltinCall(self: *Checker, work: *std.ArrayList(Work), call: @FieldType(@FieldType(ast.Node, "data"), "call"), node: ast.Node) Error!bool {
+        if (try self.floatIntrinsic(call) != null) {
+            try call_arguments.positional(call, self.sink);
+            if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "float operations require one argument");
+            try work.append(self.allocator, .{ .id = call.arguments[0] });
+            return true;
+        }
         if (try self.numericConversion(call) != null) {
             try call_arguments.positional(call, self.sink);
             if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "numeric conversions require one argument");
@@ -1426,6 +1455,7 @@ const Checker = struct {
         return true;
     }
     fn checkCall(self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
+        if (try self.floatIntrinsic(input)) |op| return self.checkFloatIntrinsic(node, input, op, out);
         if (try self.numericConversion(input)) |floating| return self.checkNumericConversion(node, input, floating, out);
         if (try self.optionConstructor(input)) return self.checkOptionConstructor(node, input, out);
         if (try self.textConstructor(input, node.span)) {
@@ -2076,18 +2106,49 @@ const Checker = struct {
         }
         return self.sink.fail("E_UNKNOWN_VARIANT", name, "case is not a variant of the matched type");
     }
+    /// Give every variant no earlier arm named the wildcard's body, discarding its payload.
+    fn wildcardArms(
+        self: *Checker,
+        arms: *std.ArrayList(typed.MatchArm),
+        shape: struct { seen: []?source.Span, variants: typed.Variants, name: source.Span },
+        body: typed.StatementId,
+    ) Error!void {
+        var covered: usize = 0;
+        for (shape.seen, shape.variants.cases, 0..) |named, variant, tag| {
+            if (named != null) continue;
+            if (variant.payload) |payload| if (self.requiresHandling(payload)) return self.sink.fail(
+                eResultDiscard,
+                shape.name,
+                "`case _` would drop a result-bearing payload; give that variant its own arm",
+            );
+            shape.seen[tag] = shape.name;
+            covered += 1;
+            try arms.append(self.allocator, .{ .tag = tag, .slot = null, .body = body });
+        }
+        if (covered == 0) return self.sink.fail(eWildcardArm, shape.name, "every variant already has an arm, so `case _` is unreachable");
+    }
     fn statementMatch(self: *Checker, stmt: ast.Statement, match: @FieldType(@FieldType(ast.Statement, "data"), "match"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         const value = try self.expression(match.value);
         const value_type = self.nodes.items[@backingInt(value)].ty;
         const variants = try self.catalog.variants(value_type, stmt.span, self.sink);
         const seen = try self.allocator.alloc(?source.Span, variants.cases.len);
         @memset(seen, null);
-        const arms = try self.allocator.alloc(typed.MatchArm, match.arms.len);
+        var arms: std.ArrayList(typed.MatchArm) = .empty;
         const before = try self.pendingState(self.locals.items.len);
         var continuation: ?[]Pending = null;
         flow.terminates = true;
-        for (match.arms, arms) |arm, *out_arm| {
+        for (match.arms, 0..) |arm, position| {
             self.restorePending(before);
+            if (wildcard(self.src, arm)) {
+                if (position + 1 != match.arms.len) return self.sink.fail(eWildcardArm, arm.name, "`case _` must be the last arm of a match");
+                const body = try self.statement(arm.body);
+                if (!body.terminates) {
+                    if (continuation) |state| try self.samePending(state, stmt.span, eResultPath) else continuation = try self.pendingState(before.len);
+                }
+                flow.terminates = flow.terminates and body.terminates;
+                try self.wildcardArms(&arms, .{ .seen = seen, .variants = variants, .name = arm.name }, body.id);
+                continue;
+            }
             const tag = try self.patternTag(value_type, arm.ty, arm.name);
             if (seen[tag]) |previous| return self.sink.failRelated("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm", .{ .span = previous, .message = "previous arm" });
             seen[tag] = arm.name;
@@ -2134,14 +2195,14 @@ const Checker = struct {
                 if (continuation) |state| try self.samePending(state, stmt.span, eResultPath) else continuation = try self.pendingState(before.len);
             }
             flow.terminates = flow.terminates and body.terminates;
-            out_arm.* = .{ .tag = tag, .slot = slot, .body = body.id };
+            try arms.append(self.allocator, .{ .tag = tag, .slot = slot, .body = body.id });
         }
         for (seen, variants.cases) |covered, variant| if (covered == null) {
             const message = try std.fmt.allocPrint(self.allocator, "match does not handle variant `{s}`; every variant requires an explicit arm", .{variant.name});
             return self.sink.failRelated("E_INCOMPLETE_MATCH", stmt.span, message, .{ .span = variant.declaration, .message = "unhandled variant declared here" });
         };
         if (continuation) |state| self.restorePending(state);
-        return .{ .match = .{ .value = value, .arms = arms } };
+        return .{ .match = .{ .value = value, .arms = try arms.toOwnedSlice(self.allocator) } };
     }
     fn matchExpression(self: *Checker, node: ast.Node, match: @FieldType(@FieldType(ast.Node, "data"), "match_expression"), temporaries: []const typed.Type) Error!typed.Node {
         const value = try self.expressionWithTemporaries(match.value, temporaries);
@@ -2242,7 +2303,7 @@ const Checker = struct {
         flow.terminates = then_body.terminates and if (else_body) |other| other.terminates else false;
         return .{ .branch = .{ .condition = condition, .then_body = then_body.id, .else_body = if (else_body) |other| other.id else null } };
     }
-    fn statementLoop(self: *Checker, stmt: ast.Statement, loop: @FieldType(@FieldType(ast.Statement, "data"), "loop"), _: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
+    fn statementLoop(self: *Checker, stmt: ast.Statement, loop: @FieldType(@FieldType(ast.Statement, "data"), "loop"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         const before = try self.pendingState(self.locals.items.len);
         const condition = try self.expression(loop.condition);
         try self.require(self.nodes.items[@backingInt(condition)].ty, .bool, self.syntax.nodes.items[@backingInt(loop.condition)].span);
@@ -2254,6 +2315,9 @@ const Checker = struct {
         const body = try self.statement(loop.body);
         if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
         self.restorePending(before);
+        // `while True:` without a break has no exit, so control never reaches what follows.
+        const always = self.nodes.items[@backingInt(condition)].data == .boolean and self.nodes.items[@backingInt(condition)].data.boolean;
+        flow.terminates = always and !self.loops.active.items[self.loops.active.items.len - 1].exited;
         return .{ .loop = .{ .id = loop_id, .condition = condition, .body = body.id } };
     }
     fn statementForEach(self: *Checker, stmt: ast.Statement, each: @FieldType(@FieldType(ast.Statement, "data"), "for_each")) Error!@FieldType(typed.Statement, "data") {
@@ -2370,6 +2434,7 @@ const Checker = struct {
         for (self.locals.items[loop.before.len..], loop.before.len..) |local, index| {
             if (try self.needsLocalCleanup(local.ty)) try owned.append(self.allocator, @fromBackingInt(index));
         }
+        if (!continuing) self.loops.active.items[self.loops.active.items.len - 1].exited = true;
         flow.terminates = true;
         flow.owned_cleanup = try owned.toOwnedSlice(self.allocator);
         var arenas: std.ArrayList(typed.LocalId) = .empty;
