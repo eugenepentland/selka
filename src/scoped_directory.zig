@@ -22,13 +22,31 @@ pub const Snapshot = struct {
         return .{ .length = length, .eof = self.position == self.bytes.len };
     }
 };
-/// Read metadata without following the final symlink; lists open directories without following links.
+/// Read metadata without following the final symlink; lists open directories without
+/// following links; `k` creates one directory and `x` removes one file or empty directory.
 pub fn create(allocator: std.mem.Allocator, io: std.Io, parent: std.Io.Dir, name: []const u8, mode: u8, limits: Limits) CallError!*Snapshot {
-    const bytes = if (mode == 'm') try metadata(allocator, io, parent, name, limits) else if (mode == 'l') try listing(allocator, io, parent, name, limits) else return error.Denied;
+    const bytes = switch (mode) {
+        'm' => try metadata(allocator, io, parent, name, limits),
+        'l' => try listing(allocator, io, parent, name, limits),
+        'k', 'x' => try change(allocator, io, parent, name, mode),
+        else => return error.Denied,
+    };
     errdefer allocator.free(bytes);
     const snapshot = try allocator.create(Snapshot);
     snapshot.* = .{ .allocator = allocator, .bytes = bytes };
     return snapshot;
+}
+/// Apply one directory change and report it as an empty acknowledged snapshot.
+fn change(allocator: std.mem.Allocator, io: std.Io, parent: std.Io.Dir, name: []const u8, mode: u8) CallError![]u8 {
+    if (name.len == 0) return error.Denied;
+    if (mode == 'k') {
+        parent.createDir(io, name, .default_dir) catch |err| return mapError(err);
+    } else parent.deleteFile(io, name) catch |first| {
+        if (first == error.IsDir) parent.deleteDir(io, name) catch |err| return mapError(err) else return mapError(first);
+    };
+    const bytes = try allocator.alloc(u8, 1);
+    bytes[0] = 1;
+    return bytes;
 }
 fn metadata(allocator: std.mem.Allocator, io: std.Io, parent: std.Io.Dir, name: []const u8, limits: Limits) CallError![]u8 {
     if (limits.bytes < 10) return error.Denied;

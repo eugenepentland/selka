@@ -93,6 +93,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
                 .resource_io => |io| graph.direct(index, typed.resourceKind(function.scope.locals[@backingInt(io.owner)].ty, program.records).?.effect(), node.span),
                 .environment_get => graph.direct(index, .environment, node.span),
                 .print => graph.direct(index, .output, node.span),
+                .file_access, .file_method => graph.direct(index, .filesystem, node.span),
                 .external_read => |read| graph.direct(index, read.kind.effect(), node.span),
                 .cast => if (allocatingSequence(program.records, node.ty)) {
                     graph.direct(index, .managed_allocation, node.span);
@@ -223,6 +224,7 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
             },
             .environment_get => graph.direct(index, .environment, instruction.span),
             .print => graph.direct(index, .output, instruction.span),
+            .file_access, .file_method => graph.direct(index, .filesystem, instruction.span),
             .external_read => |read| graph.direct(index, read.kind.effect(), instruction.span),
             .cast_integer => |ty| if (allocatingSequence(program.records, ty)) {
                 graph.direct(index, .managed_allocation, instruction.span);

@@ -759,8 +759,11 @@ const Walk = struct {
                 });
                 try self.expression(assignment.value, 0);
             },
-            .managed_arena => |scope| {
-                try self.out.text("with arena()");
+            .with_scope => |scope| {
+                if (scope.resource) |opened| {
+                    try self.out.text("with ");
+                    try self.expression(opened, 0);
+                } else try self.out.text("with arena()");
                 if (scope.name) |name| {
                     try self.out.text(" as ");
                     try self.out.text(self.src.text(name));
@@ -980,7 +983,7 @@ const Walk = struct {
             .acquire_resource => try self.rejectValue(item.span, "acquire_resource"),
             .complete_resource => try self.rejectValue(item.span, "complete_resource"),
             .resource_io => try self.rejectValue(item.span, "resource input or output"),
-            .buffer_operation => try self.rejectValue(item.span, self.leadingWord(item.span)),
+            .buffer_operation, .file_operation => try self.rejectValue(item.span, self.leadingWord(item.span)),
         }
     }
 

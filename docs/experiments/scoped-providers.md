@@ -1,14 +1,20 @@
 # Scoped synchronous resource providers
 
 `language.scoped_providers.Context` packages filesystem and TCP callbacks for
-`vm.Options.resources`. It borrows a configured open directory and a list of
-`Endpoint { name, address }` grants. Keep the stable context and grants alive
-until the VM's stores close; then call `Context.deinit` and close the directory.
-The adapter releases all remaining handles even if the guest traps.
+`vm.Options.resources`. It borrows an ordered list of `Root { dir, writable }`
+directory grants and a list of `Endpoint { name, address }` grants. Keep the
+stable context and grants alive until the VM's stores close; then call
+`Context.deinit` and close the directories. The adapter releases all remaining
+handles even if the guest traps.
+
+A relative request is tried against each root in order and the first success
+wins; modes that change the tree consider only roots granted `writable`.
 
 Filesystem acquisition requests are byte strings `r:relative/path` (read),
-`w:relative/path` (write existing), `c:relative/path` (exclusive create), or
-`t:relative/path` (truncate existing). Paths have at most 4094 bytes, contain no
+`w:relative/path` (write existing), `c:relative/path` (exclusive create),
+`t:relative/path` (truncate existing), `k:relative/path` (create one directory)
+or `x:relative/path` (remove one file or empty directory). The last two apply
+their change during acquisition and answer with a one-byte acknowledgement. Paths have at most 4094 bytes, contain no
 empty, dot, dot-dot, NUL or backslash components, and cannot be absolute.
 Directory traversal opens each component with symlink following disabled;
 final opens also reject symlinks. Exclusive creation never follows an existing
@@ -40,6 +46,9 @@ traffic are not rolled back on a later guest failure.
 
 Applications using mylang-io still import their explicit `io` host declaration
 (length, byte and put), as in the existing byte-I/O runner contract.
+
+`mylang run --allow-read=DIR` and `--allow-write=DIR` configure the same adapter
+for ordinary programs; see [printing, files and authority](../io.md).
 
 The standard filesystem additions also use read-authorized `m:path` metadata and
 `l:path` directory snapshots. Empty paths name the granted root for these two modes

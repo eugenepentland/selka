@@ -55,6 +55,8 @@ pub const Walker = struct {
                 },
                 .external_read => |read| try self.expr(read.capability),
                 .acquire_buffer => |acquire| try self.expr(acquire.capacity),
+                .file_access => |call| try self.arguments(call.arguments),
+                .file_method => |call| if (call.argument) |value| try self.expr(value),
                 .print => |output| {
                     if (output.terminator) |value| try self.expr(value);
                     if (output.separator) |value| try self.expr(value);
@@ -99,7 +101,10 @@ pub const Walker = struct {
                 },
             },
             .statement => |id| switch (self.program.statements[@backingInt(id)].data) {
-                .managed_arena => |scope| try self.stmt(scope.body),
+                .with_scope => |scope| {
+                    try self.stmt(scope.body);
+                    if (scope.resource) |value| try self.expr(value);
+                },
                 .block => |children| {
                     var i = children.len;
                     while (i != 0) {

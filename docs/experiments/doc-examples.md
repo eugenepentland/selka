@@ -47,8 +47,18 @@ written out. An unknown directive name fails the run.
 | `# doc: file <name>.my` | Name this block's file inside its project; `main.my` is the entry. |
 | `# doc: skip <reason>` | Do not execute. The reason is mandatory and appears in the report. |
 | `# doc: not-mylang` | Prose block that only looks like guest source; exempt from the mis-tag lint. |
+| `# doc: allow-read <dir>` | Run with `--allow-read=docs/fixtures/<dir>`, granting that fixture directory. |
+| `# doc: allow-write <dir>` | Run with `--allow-write=docs/fixtures/<dir>`, adding write authority. |
 
 A block with no directive and a `main` is run and must exit 0.
+
+A run unit is given `--print-result` unless its own source calls `print`, so an
+example that prints its output asserts that output and an older example still
+asserts the entry point's `int` result.
+
+Capability grants name a directory under `docs/fixtures/`. A fixture directory
+holds the files the example reads; an example that writes should write only
+names it also removes, because the tree is shared by every run.
 
 Grouped blocks become one project checked or run through `run-project`:
 

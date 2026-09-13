@@ -75,6 +75,8 @@ pub const Node = struct {
         external_read: struct { kind: @import("external_capabilities.zig").Kind, capability: NodeId },
         acquire_buffer: struct { capacity: NodeId },
         print: Print,
+        file_access: FileAccess,
+        file_method: FileMethod,
         arena_escape: NodeId,
         cast: NodeId,
         wrap: NodeId,
@@ -92,6 +94,12 @@ pub const Node = struct {
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
     },
 };
+/// Whole-path file helper: its operands begin with the `Filesystem` capability.
+pub const FileAccess = struct { kind: @import("file_operations.zig").Access, mode: u8, text: bool, arguments: []const NodeId, shapes: FileShapes };
+/// Method call on an open `with` binding, addressed by its local slot.
+pub const FileMethod = struct { kind: @import("file_operations.zig").Method, owner: LocalId, text: bool, argument: ?NodeId, shapes: FileShapes };
+/// Nominal payload schemas a file operation needs to build its result.
+pub const FileShapes = struct { text: Type, bytes: Type, list: Type };
 /// Rendered arguments and the optional `sep=`/`end=` text of one `print` call.
 pub const Print = struct { arguments: []const NodeId, separator: ?NodeId, terminator: ?NodeId };
 /// Resolved aggregate field index and the expression supplying its value.
@@ -215,7 +223,7 @@ pub const Statement = struct {
     terminates: bool,
     owned_cleanup: []const LocalId = &.{},
     data: union(enum) {
-        managed_arena: struct { watermark: LocalId, body: StatementId },
+        with_scope: struct { slot: LocalId, resource: ?NodeId, body: StatementId },
         block: []const StatementId,
         ret: NodeId,
         discard: NodeId,

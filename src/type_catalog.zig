@@ -37,7 +37,8 @@ pub const Catalog = struct {
         if (@import("prelude.zig").scalar(name)) if (self.names.get(name)) |ty| return ty;
         const key = if (self.module_names) |names| try names.reference(span, .type, null, null, sink) else name;
         if (self.templates.names.contains(key)) return sink.fail("E_GENERIC_ARITY", span, "nominal template requires explicit type arguments");
-        return self.names.get(key) orelse sink.fail("E_UNKNOWN_TYPE", span, "type is not declared");
+        if (self.names.get(key)) |declared| return declared;
+        return @import("prelude.zig").reservedType(name) orelse sink.fail("E_UNKNOWN_TYPE", span, "type is not declared");
     }
     /// Recognize a declared variant type before interpreting a dotted member as a field.
     pub fn variantType(self: Catalog, src: Source, span: Span, sink: *diagnostic.Sink) Error!?typed.Type {

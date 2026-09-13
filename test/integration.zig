@@ -888,3 +888,131 @@ test "CLI exposes resource permission attenuation and rejects malformed permissi
     const invalid = "fn main(fs: filesystem_cap) -> i64 { _ = restrict_resource<read, read>(fs); return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_PERMISSION]");
 }
+
+const clock_program =
+    \\result Time { ok: i64, err: i64 }
+    \\fn main(clock: Clock) -> i64 {
+    \\    match clock_now<Time>(clock) {
+    \\        Time.ok(now) => { return 0; },
+    \\        Time.err(code) => { return code; }
+    \\    }
+    \\}
+;
+// spec: CAPABILITY-1
+test "CLI accepts Python capability spellings and lets a declared type keep the name" {
+    try invoke("check", clock_program, 0, "", "");
+    const declared =
+        \\class Clock:
+        \\    ticks: int
+        \\
+        \\def main() -> int:
+        \\    return Clock(ticks=7).ticks
+    ;
+    try invoke("run", declared, 0, "7\n", "");
+    const entropy = "result Word { ok: u64, err: i64 }\nfn main(rng: Entropy) -> i64 { _ = random_u64<Word>(rng); return 0; }";
+    try invoke("check", entropy, 0, "", "");
+    try invoke("check", "fn main(env: Environment) -> i64 { return 0; }", 0, "", "");
+    try invoke("check", "fn main(fs: Filesystem) -> i64 { return 0; }", 0, "", "");
+}
+// spec: CAPABILITY-2
+test "CLI grant flags reject repeats empty values and commands that do not execute" {
+    for ([_][]const []const u8{
+        &.{ "--allow-clock", "--allow-clock" },
+        &.{"--allow-read="},
+        &.{"--allow-write="},
+        &.{"--allow-random=x"},
+        &.{ "--allow-env=PATH", "--allow-env" },
+        &.{ "--allow-all", "--allow-clock" },
+        &.{"--allow-nonsense"},
+    }) |options| try invokeOptions("run", clock_program, options, 2, "", "usage:");
+    try invokeOptions("check", clock_program, &.{"--allow-clock"}, 2, "", "usage:");
+    try invokeOptions("dump-bytecode", clock_program, &.{"--allow-clock"}, 2, "", "usage:");
+}
+// spec: CAPABILITY-3
+test "CLI refuses an ungranted entry capability before execution and names its flag" {
+    try invoke("run", clock_program, 2, "", "--allow-clock");
+    try invokeOptions("run", clock_program, &.{"--allow-clock"}, 0, "0\n", "");
+    // A granted capability the entry point never requests is simply never read.
+    try invokeOptions("run", "fn main() -> i64 { return 4; }", &.{ "--allow-clock", "--allow-random=7" }, 0, "4\n", "");
+    const environment = "struct Entry { bytes: [8]u8, length: u64, present: bool }\n" ++
+        "result Lookup { ok: Entry, err: i64 }\n" ++
+        "fn main(env: Environment) -> i64 { _ = environment_get<Lookup>(env, new [4]u8 [80u8, 65u8, 84u8, 72u8]); return 0; }";
+    try invoke("run", environment, 2, "", "--allow-env");
+    try invokeOptions("run", environment, &.{"--allow-env=PATH"}, 0, "0\n", "");
+}
+// spec: CAPABILITY-5
+test "CLI clock entropy and environment providers honour their grants" {
+    const seeded = "result Word { ok: u64, err: i64 }\n" ++
+        "fn main(rng: Entropy) -> i64 {\n" ++
+        "    match random_u64<Word>(rng) {\n" ++
+        "        Word.ok(value) => { return cast<i64>(value % 1000u64); },\n" ++
+        "        Word.err(code) => { return code; }\n" ++
+        "    }\n" ++
+        "}\n";
+    const first = try runFixture("run", seeded, &.{"--allow-random=11"});
+    defer testing.allocator.free(first.stdout);
+    defer testing.allocator.free(first.stderr);
+    const again = try runFixture("run", seeded, &.{"--allow-random=11"});
+    defer testing.allocator.free(again.stdout);
+    defer testing.allocator.free(again.stderr);
+    try testing.expectEqualStrings(first.stdout, again.stdout);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term);
+    const missing = "struct Entry { bytes: [8]u8, length: u64, present: bool }\n" ++
+        "result Lookup { ok: Entry, err: i64 }\n" ++
+        "fn main(env: Environment) -> i64 {\n" ++
+        "    match environment_get<Lookup>(env, new [4]u8 [80u8, 65u8, 84u8, 72u8]) {\n" ++
+        "        Lookup.ok(entry) => { return 0; },\n" ++
+        "        Lookup.err(code) => { return code; }\n" ++
+        "    }\n" ++
+        "}\n";
+    // PATH is outside this allowlist, so the lookup is denied rather than answered.
+    try invokeOptions("run", missing, &.{"--allow-env=OTHER"}, 0, "2\n", "");
+}
+
+// spec-case: CAPABILITY-4
+// spec-case: IO-9
+test "CLI directory grants scope the file surface and separate reading from writing" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "notes.txt", .data = "alpha\n" });
+    const directory = try temporary.dir.realPathAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(directory);
+    const read_grant = try std.fmt.allocPrint(testing.allocator, "--allow-read={s}", .{directory});
+    defer testing.allocator.free(read_grant);
+    const write_grant = try std.fmt.allocPrint(testing.allocator, "--allow-write={s}", .{directory});
+    defer testing.allocator.free(write_grant);
+    const program =
+        \\def main(fs: Filesystem) -> int:
+        \\    print(read_text(fs, "notes.txt"))
+        \\    print(write_text(fs, "copy.txt", "beta\n"))
+        \\    print(read_text(fs, "../escape"))
+        \\    return 0
+    ;
+    const denied = "Err('read \\'../escape\\': denied: outside the granted directories, or the mode needs a write grant')\n";
+    try invokeOptions("run", program, &.{read_grant}, 0, "Ok('alpha\\n')\n" ++
+        "Err('write \\'copy.txt\\': denied: outside the granted directories, or the mode needs a write grant')\n" ++ denied, "");
+    try invokeOptions("run", program, &.{write_grant}, 0, "Ok('alpha\\n')\nOk(None)\n" ++ denied, "");
+    const written = try temporary.dir.readFileAlloc(testing.io, "copy.txt", testing.allocator, .limited(32));
+    defer testing.allocator.free(written);
+    try testing.expectEqualStrings("beta\n", written);
+    try invoke("run", program, 2, "", "--allow-read=DIR");
+}
+// spec-case: IO-1
+test "CLI streams program output and reports the entry result only on request" {
+    const program =
+        \\def main() -> int:
+        \\    print("streamed")
+        \\    return 7
+    ;
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = program });
+    const path = try temporary.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const plain = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run", path } });
+    defer testing.allocator.free(plain.stdout);
+    defer testing.allocator.free(plain.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, plain.term);
+    try testing.expectEqualStrings("streamed\n", plain.stdout);
+    try invoke("run", program, 0, "streamed\n7\n", "");
+}

@@ -69,15 +69,24 @@ const Emitter = struct {
         for (exit.arenas) |slot| try self.instruction(stmt.span, .{ .end_arena = slot });
         for (stmt.owned_cleanup) |slot| try self.instruction(stmt.span, .{ .drop_local = slot });
     }
-    fn emitManagedArena(self: *Emitter, span: Span, scope: @FieldType(@FieldType(typed.Statement, "data"), "managed_arena")) !void {
-        if (!self.program.statements[@backingInt(scope.body)].terminates) try self.instruction(span, .{ .end_arena = scope.watermark });
+    /// One statement form, two resource kinds: a managed region or an open file.
+    fn emitWithScope(self: *Emitter, span: Span, scope: @FieldType(@FieldType(typed.Statement, "data"), "with_scope")) !void {
+        const terminates = self.program.statements[@backingInt(scope.body)].terminates;
+        if (scope.resource) |value| {
+            if (!terminates) try self.instruction(span, .{ .drop_local = scope.slot });
+            try self.push(.{ .statement = scope.body });
+            try self.instruction(span, .{ .store_local = scope.slot });
+            try self.push(.{ .expression = value });
+            return;
+        }
+        if (!terminates) try self.instruction(span, .{ .end_arena = scope.slot });
         try self.push(.{ .statement = scope.body });
-        try self.instruction(span, .{ .begin_arena = scope.watermark });
+        try self.instruction(span, .{ .begin_arena = scope.slot });
     }
     fn emitStatement(self: *Emitter, id: typed.StatementId) !void {
         const stmt = self.program.statements[@backingInt(id)];
         switch (stmt.data) {
-            .managed_arena => |scope| try self.emitManagedArena(stmt.span, scope),
+            .with_scope => |scope| try self.emitWithScope(stmt.span, scope),
             .block => |children| {
                 for (stmt.owned_cleanup) |slot| try self.instruction(stmt.span, .{ .drop_local = slot });
                 var i = children.len;
@@ -270,6 +279,32 @@ const Emitter = struct {
                 try self.push(.{ .expression = acquire.capacity });
             },
             .print => |output| try self.emitPrint(node.span, output),
+            .file_access => |call| {
+                try self.instruction(node.span, .{ .file_access = .{
+                    .kind = call.kind,
+                    .mode = call.mode,
+                    .text = call.text,
+                    .operands = call.arguments.len,
+                    .output = node.ty,
+                    .shapes = call.shapes,
+                } });
+                var index = call.arguments.len;
+                while (index > 0) {
+                    index -= 1;
+                    try self.push(.{ .expression = call.arguments[index] });
+                }
+            },
+            .file_method => |call| {
+                try self.instruction(node.span, .{ .file_method = .{
+                    .kind = call.kind,
+                    .owner = call.owner,
+                    .text = call.text,
+                    .argument = call.argument != null,
+                    .output = node.ty,
+                    .shapes = call.shapes,
+                } });
+                if (call.argument) |value| try self.push(.{ .expression = value });
+            },
             .local => |slot| try self.instruction(node.span, if (typed.moveOnly(node.ty, self.program.records) or typed.requiresHandling(node.ty, self.program.records)) .{ .move_local = slot } else .{ .load_local = slot }),
             .function_value => |target| try self.instruction(node.span, .{ .function_value = .{ .ty = node.ty, .function = target } }),
             .invoke => |call| {

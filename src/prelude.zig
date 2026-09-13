@@ -39,6 +39,23 @@ pub fn arity(name: []const u8) ?usize {
     inline for (.{ "dict", "Result" }) |two| if (std.mem.eql(u8, name, two)) return 2;
     return null;
 }
+/// Python spellings of the injected host capabilities and open file handles,
+/// used only when no declared type claims the name, so an ordinary `Clock`
+/// record still wins inside its own module.
+pub fn reservedType(name: []const u8) ?typed.Type {
+    inline for (.{ "Filesystem", "Network", "Clock", "Entropy", "Environment", "File", "TextFile" }, .{
+        typed.Type.filesystem_cap,
+        typed.Type.network_cap,
+        typed.Type.clock_cap,
+        typed.Type.random_cap,
+        typed.Type.environment_cap,
+        typed.Type.file,
+        typed.Type.text_file,
+    }) |surface, ty| {
+        if (std.mem.eql(u8, name, surface)) return ty;
+    }
+    return null;
+}
 /// Nonprimitive builtin names accepted by exported module signatures.
 pub fn scalar(name: []const u8) bool {
     return std.mem.eql(u8, name, "str") or std.mem.eql(u8, name, "bytes") or std.mem.eql(u8, name, "float");

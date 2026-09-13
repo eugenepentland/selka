@@ -16,7 +16,20 @@ pub fn present(program: ast.Program) bool {
 
 /// Select builtin nominal text/numeric schemas without requiring a generic use.
 pub fn presentInSource(program: ast.Program, src: Source) bool {
-    return present(program) or textUsed(src) or byteLiteral(program, src);
+    return present(program) or textUsed(src) or byteLiteral(program, src) or fileSyntax(program, src);
+}
+
+/// Recognize the file surface, whose results are `str`, `bytes` and `list[str]`.
+pub fn fileSyntax(program: ast.Program, src: Source) bool {
+    const files = @import("file_operations.zig");
+    for (program.nodes.items) |node| {
+        if (node.data != .call) continue;
+        const call = node.data.call;
+        if (call.owner) |owner| {
+            if (files.method(src.text(call.name)) != null and src.text(owner).len != 0) return true;
+        } else if (files.access(src.text(call.name)) != null) return true;
+    }
+    return false;
 }
 
 /// Recognize the `b` prefix that distinguishes managed byte strings from fixed arrays.
@@ -33,6 +46,7 @@ pub fn byteLiteral(program: ast.Program, src: Source) bool {
 pub fn bytesSyntax(program: ast.Program, src: Source) bool {
     const std = @import("std");
     if (byteLiteral(program, src)) return true;
+    if (fileSyntax(program, src)) return true;
     for (program.functions) |function| if (std.mem.eql(u8, src.text(function.name), "bytes")) return false;
     for (program.nodes.items) |node| {
         if (node.data != .call) continue;

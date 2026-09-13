@@ -24,10 +24,11 @@ EXECUTABLE_TAGS = ("mylang", "my")
 PROSE_TAGS = ("", "text", "rust", "python", "go")
 GUEST_SHAPE = re.compile(r"^(?:def main|fn main|module )", re.M)
 PRINT_CALL = re.compile(r"(?<![A-Za-z0-9_.])print\s*\(")
+FIXTURES = ROOT / "docs" / "fixtures"
 MODULE_LINE = re.compile(r"^module[ \t]+([A-Za-z_][A-Za-z0-9_]*)", re.M)
 MAIN_LINE = re.compile(r"^[ \t]*(?:pub[ \t]+)?(?:def|fn)[ \t]+main\b", re.M)
 DIRECTIVE = re.compile(r"^[ \t]*(?:#|//)[ \t]*doc:[ \t]*(?P<name>[A-Za-z-]+)[ \t]*(?P<rest>.*?)[ \t]*$")
-KNOWN = ("expect", "expect-error", "check", "project", "file", "skip", "not-mylang")
+KNOWN = ("expect", "expect-error", "check", "project", "file", "skip", "not-mylang", "allow-read", "allow-write")
 TIMEOUT = 120
 # `check` and `check-project` both demand an entry point, so a declaration-only example
 # gets this neutral one appended.  Every spelling shares one file grammar, so the
@@ -269,7 +270,12 @@ def options(unit, command):
     # An example that prints its own output asserts that output; one that does not
     # keeps asserting the entry point's int result, which `run` reports on request.
     prints = any(PRINT_CALL.search(member.source) for member in unit.members)
-    return [] if prints else ["--print-result"]
+    argv = [] if prints else ["--print-result"]
+    for name, flag in (("allow-read", "--allow-read="), ("allow-write", "--allow-write=")):
+        for member in unit.members:
+            for directory in values(member, name):
+                argv.append(flag + str(FIXTURES / directory.strip()))
+    return argv
 
 
 def mistagged(fence):

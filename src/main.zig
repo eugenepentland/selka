@@ -19,6 +19,9 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "same codec budgets)\n  input-module: reads a typed JSON manifest and writes generated " ++
     "module source\n  run/run-project: --max-steps=N --max-frames=N --dispatch=optimized|generic --gc-stress " ++
     "--print-result\n  " ++
+    "run/run-project authority: --allow-read=DIR --allow-write=DIR (repeatable) --allow-clock " ++
+    "--allow-random[=SEED] --allow-env[=NAME,...] --allow-all; an entry point requesting an " ++
+    "ungranted capability exits 2 before execution\n  " ++
     "run: --timings (VM execution nanoseconds on stderr; excludes source compilation)\n  " ++
     "eval-project: --max-steps=N --max-frames=N --max-eval-bytes=N " ++
     "--evaluation-report|--evaluation-request --inputs=manifest.json (repeat for up to 16 " ++
@@ -51,10 +54,12 @@ pub fn main(init: std.process.Init) void {
     if (status != 0) std.process.exit(status);
 }
 
+const grants = @import("cli_grants.zig");
 const Context = struct {
     gpa: std.mem.Allocator,
     arena: *std.heap.ArenaAllocator,
     io: std.Io,
+    environ: *const std.process.Environ.Map,
     diagnostics: diagnostic_output.Format,
     timings: *language.timings.Profile,
     fn text(self: Context, bytes: []const u8) !void {
@@ -77,7 +82,7 @@ fn dispatch(process: std.process.Init) !u8 {
         return 2;
     };
     var timings = language.timings.Profile.init(process.io, parsed.reporting.timings_json, .compiler);
-    const init: Context = .{ .timings = &timings, .gpa = process.gpa, .arena = process.arena, .io = process.io, .diagnostics = parsed.reporting.diagnostics orelse .text };
+    const init: Context = .{ .timings = &timings, .gpa = process.gpa, .arena = process.arena, .io = process.io, .environ = process.environ_map, .diagnostics = parsed.reporting.diagnostics orelse .text };
     const status = run(init, parsed) catch |err| status: {
         const message = try std.fmt.allocPrint(init.gpa, "mylang: host failure: {s}\n", .{@errorName(err)});
         defer init.gpa.free(message);
@@ -253,7 +258,7 @@ fn run(init: Context, parsed: Parsed) !u8 {
             defer allocator.free(text);
             try std.Io.File.stdout().writeStreamingAll(init.io, text);
         },
-        .run => switch (try executeRun(init, &compilation, parsed)) {
+        .run => switch ((try executeRun(init, &compilation, parsed)) orelse return 2) {
             .value => |value| {
                 if (!parsed.reporting.print_result) return 0;
                 var buffer: [32]u8 = undefined;
@@ -271,15 +276,30 @@ fn run(init: Context, parsed: Parsed) !u8 {
     return 0;
 }
 
-fn executeRun(init: Context, compilation: *language.Compilation, parsed: Parsed) !language.vm.Result {
+/// Report the flag that would grant an entry point the authority it asked for.
+fn reportUngranted(init: Context, flag: []const u8) !u8 {
+    const message = try std.fmt.allocPrint(init.gpa, "mylang: the entry point requests a capability this command line did not grant; pass {s}\n", .{flag});
+    defer init.gpa.free(message);
+    try init.text(message);
+    return 2;
+}
+
+fn executeRun(init: Context, compilation: *language.Compilation, parsed: Parsed) !?language.vm.Result {
     var buffer: [4096]u8 = undefined;
     var stdout = std.Io.File.stdout().writerStreaming(init.io, &buffer);
     defer flushOutput(&stdout);
-    var options = parsed.options;
-    options.output = &stdout.interface;
-    if (!parsed.reporting.timings and !parsed.reporting.timings_json) return compilation.executeWithOptions(init.gpa, options);
     init.timings.begin(lowering_phase, false);
     try compilation.emit();
+    if (grants.ungranted(compilation.code.?, parsed.grants)) |flag| {
+        init.timings.end();
+        _ = try reportUngranted(init, flag);
+        return null;
+    }
+    var state: grants.State = undefined;
+    try state.init(init.gpa, init.io, .{ .config = parsed.grants, .environ = init.environ });
+    defer state.deinit();
+    var options = state.apply(parsed.options);
+    options.output = &stdout.interface;
     init.timings.begin("vm_execution", false);
     const start = std.Io.Timestamp.now(init.io, .awake);
     const result = try language.vm.runWithOptions(init.gpa, compilation.code.?, options);
@@ -346,6 +366,7 @@ const Parsed = struct {
     quality: language.quality.Options,
     command: Command,
     path: []const u8,
+    grants: grants.Config,
     options: language.vm.Options,
     discovery: language.duplicates.Options,
     reporting: Reporting,
@@ -368,6 +389,7 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
         if (try parser.evaluationOption(arg)) continue;
         if (try parser.qualityOption(arg)) continue;
         if (try parser.migrationOption(arg)) continue;
+        if (try parser.grantOption(arg)) continue;
         if (try parser.executionOption(arg)) continue;
         if (try parser.discoveryOption(arg)) continue;
         if (std.mem.startsWith(u8, arg, policy_prefix)) {
@@ -399,6 +421,7 @@ const ArgumentParser = struct {
     migration: language.migrate.Options = .{},
     path: ?[]const u8 = null,
     policy: ?[]const u8 = null,
+    grants: grants.Config = .{},
     options: language.vm.Options = .{},
     saw_steps: bool = false,
     saw_frames: bool = false,
@@ -530,6 +553,13 @@ const ArgumentParser = struct {
         }
         return false;
     }
+    /// Capability grants apply only to the commands that execute a program.
+    fn grantOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (!std.mem.startsWith(u8, arg, "--allow-")) return false;
+        if (self.command != .run and self.command != .@"run-project") return error.Usage;
+        if (!try self.grants.parse(arg)) return error.Usage;
+        return true;
+    }
     fn executionOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
         if (std.mem.eql(u8, arg, "--check")) {
             if (!self.checks() or self.format_check) return error.Usage;
@@ -624,6 +654,7 @@ const ArgumentParser = struct {
             .quality = self.quality,
             .command = self.command,
             .path = self.path orelse return error.Usage,
+            .grants = self.grants,
             .options = self.options,
             .discovery = self.discovery,
             .reporting = self.reporting,
@@ -723,7 +754,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
                 return 1;
             },
             else => return err,
-        } else try runProjectProgram(init, compilation.code.?, parsed.options);
+        } else (try runProjectProgram(init, compilation.code.?, parsed)) orelse return 2;
         init.timings.end();
         if (parsed.command == .@"eval-project") try reportProject(init, &compilation);
         switch (outcome) {
@@ -759,14 +790,22 @@ fn flushOutput(stdout: *std.Io.File.Writer) void {
     };
 }
 
-/// Stream guest `print` output to stdout while the project entry point runs.
-fn runProjectProgram(init: Context, code: language.bytecode.Program, base: language.vm.Options) !language.vm.Result {
+/// Stream guest `print` output to stdout and grant only the requested authority.
+fn runProjectProgram(init: Context, code: language.bytecode.Program, parsed: Parsed) !?language.vm.Result {
+    if (grants.ungranted(code, parsed.grants)) |flag| {
+        _ = try reportUngranted(init, flag);
+        return null;
+    }
     var buffer: [4096]u8 = undefined;
     var stdout = std.Io.File.stdout().writerStreaming(init.io, &buffer);
     defer flushOutput(&stdout);
-    var options = base;
+    var state: grants.State = undefined;
+    try state.init(init.gpa, init.io, .{ .config = parsed.grants, .environ = init.environ });
+    defer state.deinit();
+    var options = state.apply(parsed.options);
     options.output = &stdout.interface;
-    return language.vm.runWithOptions(init.gpa, code, options);
+    const outcome = try language.vm.runWithOptions(init.gpa, code, options);
+    return outcome;
 }
 
 fn emitProjectNative(init: Context, compilation: *language.project_compile.Compilation) !?[]u8 {

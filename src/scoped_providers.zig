@@ -6,12 +6,15 @@ const CallError = external.CallError;
 const directory_data = @import("scoped_directory.zig");
 /// A configured numeric address. No DNS resolution or redirect following occurs.
 pub const Endpoint = struct { name: []const u8, address: std.Io.net.IpAddress };
+/// One granted directory. Writing modes consider only writable roots; a relative
+/// request is tried against each root in order and the first success wins.
+pub const Root = struct { dir: std.Io.Dir, writable: bool = false };
 const Handle = union(enum) { file: std.Io.File, stream: std.Io.net.Stream, snapshot: *directory_data.Snapshot };
 /// Callbacks borrow this stable context and its directory/endpoint grants until stores close.
 pub const Context = struct {
     allocator: std.mem.Allocator,
     io: std.Io,
-    directory: ?std.Io.Dir = null,
+    roots: []const Root = &.{},
     endpoints: []const Endpoint = &.{},
     handles: std.ArrayList(?Handle) = .empty,
     max_handles: usize = 256,
@@ -22,7 +25,8 @@ pub const Context = struct {
         self.handles.deinit(self.allocator);
         self.handles = .empty;
     }
-    /// File requests use r:path, w:path, c:path (exclusive create), or t:path (truncate existing).
+    /// File requests use r:path, w:path, c:path (exclusive create), t:path (truncate
+    /// existing), m:path, l:path, k:path (create directory) or x:path (remove entry).
     pub fn filesystem(self: *Context) resources.Provider {
         return .{ .context = self, .acquire = acquireFile, .read = read, .write = write, .complete = complete, .release = release };
     }
@@ -49,13 +53,24 @@ pub const Context = struct {
     }
     fn acquireFile(raw: *anyopaque, request: []const u8, permissions: resources.Permissions) CallError!u64 {
         const self: *Context = @ptrCast(@alignCast(raw));
-        const root = self.directory orelse return error.Unavailable;
+        if (self.roots.len == 0) return error.Unavailable;
         const spec = try fileRequest(request, permissions);
+        var failure: CallError = error.Denied;
+        for (self.roots) |root| {
+            if (writingMode(spec.mode) and !root.writable) continue;
+            if (self.acquireIn(root.dir, spec.mode, spec.path)) |handle| return handle else |err| {
+                if (err == error.OutOfMemory) return err;
+                failure = err;
+            }
+        }
+        return failure;
+    }
+    fn acquireIn(self: *Context, root: std.Io.Dir, mode: u8, path: []const u8) CallError!u64 {
         const index = try self.reserve();
         var parent = root;
         var owned = false;
         defer if (owned) parent.close(self.io);
-        var parts = std.mem.splitScalar(u8, spec.path, '/');
+        var parts = std.mem.splitScalar(u8, path, '/');
         var name = parts.next().?;
         while (parts.next()) |next| {
             const child = parent.openDir(self.io, name, .{ .follow_symlinks = false }) catch |err| return mapError(err);
@@ -64,12 +79,12 @@ pub const Context = struct {
             owned = true;
             name = next;
         }
-        if (spec.mode == 'm' or spec.mode == 'l') {
-            const snapshot = try directory_data.create(self.allocator, self.io, parent, name, spec.mode, self.snapshot_limits);
+        if (mode == 'm' or mode == 'l' or mode == 'k' or mode == 'x') {
+            const snapshot = try directory_data.create(self.allocator, self.io, parent, name, mode, self.snapshot_limits);
             self.handles.items[index] = .{ .snapshot = snapshot };
             return @intCast(index);
         }
-        const file = try self.open(parent, name, spec.mode);
+        const file = try self.open(parent, name, mode);
         self.handles.items[index] = .{ .file = file };
         return @intCast(index);
     }
@@ -136,7 +151,7 @@ pub fn fileRequest(request: []const u8, permissions: resources.Permissions) Call
     if (request.len < 2 or request.len > 4096 or request[1] != ':') return error.Denied;
     const mode = request[0];
     const reading = mode == 'r' or mode == 'm' or mode == 'l';
-    const writing = mode == 'w' or mode == 'c' or mode == 't';
+    const writing = writingMode(mode);
     if (!reading and !writing) return error.Denied;
     const required = resources.permissionBit(if (reading) .read else .write);
     if (permissions & required == 0) return error.Denied;
@@ -148,6 +163,10 @@ pub fn fileRequest(request: []const u8, permissions: resources.Permissions) Call
         if (part.len == 0 or std.mem.eql(u8, part, ".") or std.mem.eql(u8, part, "..")) return error.Denied;
     }
     return .{ .mode = mode, .path = path };
+}
+/// Request modes that change the granted tree and therefore need write authority.
+pub fn writingMode(mode: u8) bool {
+    return mode == 'w' or mode == 'c' or mode == 't' or mode == 'k' or mode == 'x';
 }
 /// Exact configured endpoints prevent DNS rebinding and implicit network scope expansion.
 pub fn endpoint(allowed: []const Endpoint, request: []const u8) CallError!std.Io.net.IpAddress {

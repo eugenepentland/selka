@@ -89,7 +89,10 @@
     "managed-lists",
     "nonmoving-tracing-gc",
     "managed-list-cycles",
-    "doc-examples"
+    "doc-examples",
+    "python-print-and-output-effect",
+    "python-file-surface",
+    "command-line-capability-grants"
   ],
   "unsupported": [
     "stored-reference-fields",
