@@ -137,11 +137,11 @@ Keep independent expected results as the oracle; interpreter execution alone
 cannot establish correctness. Extend specification links for implemented rules.
 
 The implemented workflow uses `zig build test` (or its `test-interpreter` alias)
-for interpreter acceptance, `test-native` for optional native compilation/parity
-integration, and `test-all` for both. Each route retains the Guardian gate. The
-default includes all existing core/CLI roots, interpreter/tooling drivers, and
-96 independent corpus checks in general/arena VM modes. Native corpus execution
-requires `--native --zig`; inexpensive C-emission tests remain in shared roots.
+for interpreter acceptance and `test-qbe` for optional native compilation/parity
+integration. Each route retains the Guardian gate. The default includes all
+existing core/CLI roots, interpreter/tooling drivers, and the independent corpus
+checks. The compatibility C backend and its `test-native`/`test-all` steps were
+removed on 2026-09-13; QBE is the only native backend.
 CI uses the default suite in Debug and ReleaseFast. A change to shared code should still receive
 relevant regression checks; native feature parity is not required for each new
 language feature. Unsupported native features must fail explicitly when used.

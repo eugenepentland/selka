@@ -67,9 +67,9 @@ The host-function milestone is guest-to-host library calling through the VM.
 Previously implemented native embedding and generated native bindings compile
 and call guest programs; they do not complete this new host-registration milestone.
 `zig build test` now runs interpreter acceptance; `test-interpreter` is an alias.
-`test-native` selects native compilation integration and `test-all` combines both.
-The ordinary corpus retains independent VM expectations in the default suite;
-its C compilation requires `--native --zig`. Shared core/CLI roots are unchanged.
+`test-qbe` selects native compilation integration. The ordinary corpus retains
+independent VM expectations in the default suite. Shared core/CLI roots are
+unchanged.
 
 ## Track inventory
 
