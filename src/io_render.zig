@@ -22,10 +22,14 @@ pub fn printable(ty: typed.Type, records: []const typed.Record) bool {
 /// Render one value into caller-owned bytes, the way `print` would write it.
 /// `str(value)` and an `f"{value}"` hole share this with `print`, so one value has
 /// one spelling wherever it is written.
-pub fn renderAlloc(allocator: std.mem.Allocator, records: []const typed.Record, value: typed.Value) (Error || error{OutOfMemory})![]u8 {
+pub fn renderAlloc(allocator: std.mem.Allocator, records: []const typed.Record, value: typed.Value) error{ Unprintable, OutOfMemory }![]u8 {
     var output: std.Io.Writer.Allocating = .init(allocator);
     errdefer output.deinit();
-    try render(&output.writer, records, value, 0);
+    render(&output.writer, records, value, 0) catch |err| switch (err) {
+        // An allocating writer fails only by running out of memory.
+        error.WriteFailed => return error.OutOfMemory,
+        else => |failure| return failure,
+    };
     return output.toOwnedSlice();
 }
 
