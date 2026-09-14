@@ -99,6 +99,9 @@ test "unit result payloads still require handling and propagation only drops suc
         \\
         \\def done() -> Done:
         \\    return Ok(noop())
+        \\
+        \\
+        \\
     ;
     var valid = try language.Compilation.init(t.allocator, "result.my", header ++
         \\def chained() -> Done:
@@ -115,8 +118,8 @@ test "unit result payloads still require handling and propagation only drops suc
     );
     defer valid.deinit();
     try t.expectEqual(@as(i64, 42), (try valid.execute(t.allocator)).value);
-    for ([_][]const u8{ "done();", "let pending=done();" }) |statement| {
-        const text = try std.fmt.allocPrint(t.allocator, "{s}fn main()->i64{{{s}return 0;}}", .{ header, statement });
+    for ([_][]const u8{ "done()", "pending = done()" }) |statement| {
+        const text = try std.fmt.allocPrint(t.allocator, "{s}def main() -> i64:\n    {s}\n    return 0\n", .{ header, statement });
         defer t.allocator.free(text);
         var invalid = try language.Compilation.init(t.allocator, "unhandled.my", text);
         defer invalid.deinit();

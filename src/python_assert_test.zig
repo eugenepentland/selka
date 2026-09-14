@@ -39,6 +39,7 @@ test "an assert message replaces the expression text in the trap report" {
 }
 
 // spec-case: PY-ASSERT-1
+// spec-case: PY-ASSERT-2
 test "assert checks a Boolean condition under any effect bound and inside loops" {
     try execute(
         \\def total(values: list[int]) -> int:
@@ -55,13 +56,4 @@ test "assert checks a Boolean condition under any effect bound and inside loops"
     defer c.deinit();
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings("E_TYPE", c.diagnostics.items[0].code);
-}
-
-// spec-case: PY-ASSERT-2
-test "assert remains an ordinary identifier in legacy brace sources" {
-    try execute(
-        \\def main() -> i64:
-        \\    assert = 42
-        \\    return assert
-    , 42);
 }

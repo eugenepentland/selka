@@ -34,7 +34,7 @@ test "Python values dictionary literal growing aliases and arbitrary method rece
         \\class Box:
         \\    values: dict[str,int]
         \\def main() -> int:
-        \\    box = Box{values: {"one": 1}}
+        \\    box = Box(values={"one": 1})
         \\    alias = box.values
         \\    box.values["two"] = 40
         \\    if "two" not in alias:

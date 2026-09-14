@@ -112,7 +112,7 @@ test "field receiver index and right side run once in order under collection str
         \\    receiver(log, rows)[index(log)].x = value(log)
         \\    if len(log) != 3:
         \\        return 1
-        \\    if log[0] != 1 or log[1] != 2 or log[2] != 3:
+        \\    if log[0] != 3 or log[1] != 1 or log[2] != 2:
         \\        return 2
         \\    return rows[0].x
     , 42);

@@ -24,8 +24,24 @@ fn trapped(source: []const u8, code: []const u8, span: []const u8) !void {
     try testing.expectEqualStrings(code, outcome.trap.code);
     try testing.expectEqualStrings(span, compilation.src.text(outcome.trap.span));
 }
-const color = "enum Color { red, green, blue } ";
-const other = "enum Other { red, green, blue } ";
+const color =
+    \\enum Color:
+    \\    red,
+    \\    green,
+    \\    blue
+    \\
+    \\
+    \\
+;
+const other =
+    \\enum Other:
+    \\    red,
+    \\    green,
+    \\    blue
+    \\
+    \\
+    \\
+;
 
 // spec: CORE-9
 test "enum table construction follows names across enum and initializer reordering" {
@@ -39,7 +55,15 @@ test "enum table construction follows names across enum and initializer reorderi
         \\    return lookup(t, Color.red) + t[Color.green] * 10 + t[Color.blue] * 100
     ;
     try result(color ++ body, 3210);
-    try result("enum Color { blue, red, green } " ++ body, 3210);
+    try result(
+        \\enum Color:
+        \\    blue,
+        \\    red,
+        \\    green
+        \\
+        \\
+        \\
+    ++ body, 3210);
     try result(
         \\enum One:
         \\    only
@@ -180,7 +204,8 @@ test "table VM rejects forged numeric and foreign enum keys and releases operand
         \\
         \\
         \\def main() -> i64:
-        \\    return {Key.a: 7}[Key.a]
+        \\    t: [Key]i64 = {Key.a: 7}
+        \\    return t[Key.a]
     );
     defer compilation.deinit();
     try compilation.emit();

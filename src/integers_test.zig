@@ -6,14 +6,14 @@ const language = @import("compiler.zig");
 const Type = @import("typed.zig").Type;
 
 fn evaluate(expression: []const u8, expected: i64) !void {
-    const text = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ return {s}; }}", .{expression});
+    const text = try std.fmt.allocPrint(testing.allocator, "def main() -> i64:\n    return {s}\n", .{expression});
     defer testing.allocator.free(text);
     var compilation = try language.Compilation.init(testing.allocator, "integer.my", text);
     defer compilation.deinit();
     try testing.expectEqual(expected, (try compilation.execute(testing.allocator)).value);
 }
 fn trapped(expression: []const u8, code: []const u8) !void {
-    const text = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ _ = {s}; return 0; }}", .{expression});
+    const text = try std.fmt.allocPrint(testing.allocator, "def main() -> i64:\n    _ = {s}\n    return 0\n", .{expression});
     defer testing.allocator.free(text);
     var compilation = try language.Compilation.init(testing.allocator, "integer.my", text);
     defer compilation.deinit();
@@ -25,16 +25,16 @@ fn trapped(expression: []const u8, code: []const u8) !void {
 
 test "checked signed and unsigned operations retain each declared width" {
     try evaluate("i64(100i8 + 20i8)", 120);
-    try evaluate("i64(-7i16 / 3i16)", -2);
-    try evaluate("i64(-7i32 % 3i32)", -1);
-    try evaluate("i64(-128i8 % -1i8)", 0);
-    try evaluate("i64(18446744073709551615u64 / 3u64)", 6148914691236517205);
+    try evaluate("i64(divtrunc(-7i16, 3i16))", -2);
+    try evaluate("i64(remtrunc(-7i32, 3i32))", -1);
+    try evaluate("i64(remtrunc(-128i8, -1i8))", 0);
+    try evaluate("i64(divtrunc(18446744073709551615u64, 3u64))", 6148914691236517205);
     try evaluate("i64(65535u16 - 1u16)", 65534);
-    try evaluate("i64(4294967295u32 % 10u32)", 5);
+    try evaluate("i64(remtrunc(4294967295u32, 10u32))", 5);
     try evaluate("i64(-0u8)", 0);
-    for ([_][]const u8{ "127i8 + 1i8", "-128i8 - 1i8", "--128i8", "-128i8 / -1i8", "0u8 - 1u8", "255u8 + 1u8", "-1u8", "18446744073709551615u64 * 18446744073709551615u64" }) |expr| try trapped(expr, "R_OVERFLOW");
-    try trapped("1u32 / 0u32", "R_DIVISION_BY_ZERO");
-    try trapped("1i16 % 0i16", "R_DIVISION_BY_ZERO");
+    for ([_][]const u8{ "127i8 + 1i8", "-128i8 - 1i8", "--128i8", "divtrunc(-128i8, -1i8)", "0u8 - 1u8", "255u8 + 1u8", "-1u8", "18446744073709551615u64 * 18446744073709551615u64" }) |expr| try trapped(expr, "R_OVERFLOW");
+    try trapped("divtrunc(1u32, 0u32)", "R_DIVISION_BY_ZERO");
+    try trapped("remtrunc(1i16, 0i16)", "R_DIVISION_BY_ZERO");
 }
 
 test "integer casts check narrowing signedness and retain operand traps" {
@@ -42,7 +42,7 @@ test "integer casts check narrowing signedness and retain operand traps" {
     try evaluate("i64(i8(-128))", -128);
     try evaluate("i64(u64(9223372036854775807))", 9223372036854775807);
     for ([_][]const u8{ "u8(-1)", "i8(128)", "u16(65536)", "i64(18446744073709551615u64)" }) |expr| try trapped(expr, "R_OVERFLOW");
-    try trapped("u8(1 / 0)", "R_DIVISION_BY_ZERO");
+    try trapped("u8(divtrunc(1, 0))", "R_DIVISION_BY_ZERO");
     try trapped("i64(127i8 + 1i8)", "R_OVERFLOW");
 }
 
@@ -173,7 +173,7 @@ test "scalar loop retains exact step budget and located trap under VM audit prob
     defer compilation.deinit();
     const limited = try compilation.executeWithOptions(testing.allocator, .{ .max_steps = 1309 });
     try testing.expectEqualStrings("R_STEP_LIMIT", limited.trap.code);
-    try testing.expectEqualStrings("return total;", source[limited.trap.span.start..limited.trap.span.end]);
+    try testing.expectEqualStrings("return total", source[limited.trap.span.start..limited.trap.span.end]);
     const result = try compilation.executeWithOptions(testing.allocator, .{ .max_steps = 1310 });
     try testing.expectEqual(@as(i64, 4950), result.value);
 }
@@ -184,7 +184,7 @@ test "all integer widths accept their limits and reject one-past literals" {
     for (widths) |ty| {
         const expression = try std.fmt.allocPrint(testing.allocator, "{d}{s} == {d}{s}", .{ ty.max(), @tagName(ty), ty.max(), @tagName(ty) });
         defer testing.allocator.free(expression);
-        const text = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ if {s} {{ return 1; }} return 0; }}", .{expression});
+        const text = try std.fmt.allocPrint(testing.allocator, "def main() -> i64:\n    if {s}:\n        return 1\n    return 0\n", .{expression});
         defer testing.allocator.free(text);
         var compilation = try language.Compilation.init(testing.allocator, "limits.my", text);
         defer compilation.deinit();
@@ -192,7 +192,7 @@ test "all integer widths accept their limits and reject one-past literals" {
         const minimum = try std.fmt.allocPrint(testing.allocator, "i64({d}{s})", .{ ty.min(), @tagName(ty) });
         defer testing.allocator.free(minimum);
         try evaluate(minimum, @intCast(ty.min()));
-        const bad = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ _ = {d}{s}; return 0; }}", .{ ty.max() + 1, @tagName(ty) });
+        const bad = try std.fmt.allocPrint(testing.allocator, "def main() -> i64:\n    _ = {d}{s}\n    return 0\n", .{ ty.max() + 1, @tagName(ty) });
         defer testing.allocator.free(bad);
         var invalid = try language.Compilation.init(testing.allocator, "range.my", bad);
         defer invalid.deinit();
@@ -206,7 +206,7 @@ test "no implicit width or boolean conversions and unknown suffixes are rejected
         .{ .body = "source = 1\n    n: i8 = source\n    return 0", .code = "E_TYPE" },
         .{ .body = "_ = 1u8 + 1u16\n    return 0", .code = "E_TYPE" },
         .{ .body = "_ = u8(True)\n    return 0", .code = "E_TYPE" },
-        .{ .body = "_ = bool(1)\n    return 0", .code = "E_TYPE" },
+        .{ .body = "_ = bool(1)\n    return 0", .code = "E_EXPRESSION" },
         .{ .body = "_ = 1i7\n    return 0", .code = "E_INTEGER_SUFFIX" },
         .{ .body = "_ = 1bool\n    return 0", .code = "E_INTEGER_SUFFIX" },
         .{ .body = "_ = -(128i8 + 0i8)\n    return 0", .code = "E_INTEGER_RANGE" },

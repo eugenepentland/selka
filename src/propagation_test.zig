@@ -72,7 +72,7 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
 test "propagation releases partial aggregate operands and survives every allocation failure" {
     var no_resize = testing.FailingAllocator.init(testing.allocator, .{ .resize_fail_index = 0 });
     try testing.checkAllAllocationFailures(no_resize.allocator(), allocationScenario, .{});
-    const success = try std.mem.replaceOwned(u8, testing.allocator, owned_source, "match build(true)", "match build(false)");
+    const success = try std.mem.replaceOwned(u8, testing.allocator, owned_source, "match build(True)", "match build(False)");
     defer testing.allocator.free(success);
     try result(success, 9);
 }

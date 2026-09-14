@@ -13,7 +13,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
         \\const MIN: i64 = -9223372036854775808
         \\
         \\
-        \\const SAFE: bool = False and divtrunc(1, 0) == 1
+        \\const SAFE: bool = False and 1 // 0 == 1
         \\
         \\
         \\const WIDTH: u8 = u8(BASE)
@@ -52,7 +52,14 @@ fn provider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: u
         \\def main() -> i64:
         \\    return constants.VALUE
     else if (std.mem.eql(u8, path, "constants.my"))
-        "module constants;export VALUE;const VALUE:i64=FACTOR*6;const FACTOR:i64=7;"
+        \\module constants
+        \\export VALUE
+        \\
+        \\
+        \\const VALUE: i64 = FACTOR * 6
+        \\
+        \\
+        \\const FACTOR: i64 = 7
     else
         return error.NotFound;
     return allocator.dupe(u8, text);

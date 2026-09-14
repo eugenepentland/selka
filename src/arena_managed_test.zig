@@ -452,18 +452,6 @@ test "arena source formatting preserves the with statement" {
     try t.expectEqualStrings(source, formatted);
 }
 
-test "with outside python syntax keeps its identifier spelling" {
-    const source =
-        \\def main() -> i64:
-        \\    with = 42
-        \\    return with
-    ;
-    var compilation = try language.Compilation.init(t.allocator, "brace.my", source);
-    defer compilation.deinit();
-    const result = try compilation.executeWithOptions(t.allocator, .{});
-    try t.expectEqual(@as(i64, 42), result.value);
-}
-
 test "region depth tracks nesting and bulk release frees exactly one depth" {
     var heap = gc.Heap.init(t.allocator);
     defer heap.deinit();

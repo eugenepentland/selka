@@ -45,8 +45,8 @@ test "effect scanning includes untaken branches and short circuit operands" {
 }
 
 test "effect bounds reject unknown and duplicate names and noio permits allocation" {
-    try reject("fn main() -> i64 effects(magic) { return 0; }", "E_UNKNOWN_EFFECT", "unknown effect");
-    try reject("fn main() -> i64 effects(clock, clock) { return 0; }", "E_DUPLICATE_EFFECT", "more than once");
+    try reject("def main() -> i64 effects(magic):\n    return 0\n", "E_UNKNOWN_EFFECT", "unknown effect");
+    try reject("def main() -> i64 effects(clock, clock):\n    return 0\n", "E_DUPLICATE_EFFECT", "more than once");
     try result("def main() -> int noio:\n    items: list[int] = []\n    items.append(9)\n    return items[0]\n", 9);
     try result(
         \\def main() -> i64 effects(filesystem, network, clock, random, environment):

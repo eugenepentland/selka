@@ -4,7 +4,7 @@ const language = @import("compiler.zig");
 const testing = std.testing;
 
 fn result(expression: []const u8, expected: i64) !void {
-    const text = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ return {s}; }}", .{expression});
+    const text = try std.fmt.allocPrint(testing.allocator, "def main() -> i64:\n    return {s}\n", .{expression});
     defer testing.allocator.free(text);
     var compilation = try language.Compilation.init(testing.allocator, "test.my", text);
     defer compilation.deinit();
@@ -29,7 +29,7 @@ test "overflow traps at the responsible operator without folding during check" {
         "(0 - 9223372036854775807) - 2",
     };
     for (cases) |expression| {
-        const text = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ return {s}; }}", .{expression});
+        const text = try std.fmt.allocPrint(testing.allocator, "def main() -> i64:\n    return {s}\n", .{expression});
         defer testing.allocator.free(text);
         var compilation = try language.Compilation.init(testing.allocator, "trap.my", text);
         defer compilation.deinit();
@@ -46,8 +46,8 @@ test "overflow traps at the responsible operator without folding during check" {
 test "malformed source and range errors are normal located diagnostics" {
     const cases = [_]struct { text: []const u8, code: []const u8 }{
         .{ .text = "", .code = "E_MAIN" },
-        .{ .text = "fn main() -> i64 { return 1 + ; }", .code = "E_EXPRESSION" },
-        .{ .text = "fn main() -> i64 { return 1;", .code = "E_SYNTAX" },
+        .{ .text = "def main() -> i64:\n    return 1 + \n", .code = "E_EXPRESSION" },
+        .{ .text = "def main() -> i64:\n    x = 41 return x + 1\n", .code = "E_SYNTAX" },
         .{ .text =
         \\def main() -> i64:
         \\    return 9223372036854775808
@@ -64,7 +64,7 @@ test "malformed source and range errors are normal located diagnostics" {
         \\def main() -> bool:
         \\    return 1
         , .code = "E_TYPE" },
-        .{ .text = "fn main() -> i64 { return @; }", .code = "E_TOKEN" },
+        .{ .text = "def main() -> i64:\n    return @\n", .code = "E_TOKEN" },
     };
     for (cases) |case| {
         var compilation = try language.Compilation.init(testing.allocator, "bad.my", case.text);
@@ -77,17 +77,17 @@ test "malformed source and range errors are normal located diagnostics" {
 }
 
 test "source is owned and CRLF diagnostics locate operators and EOF" {
-    const bytes = try testing.allocator.dupe(u8, "// comment\r\nfn main() -> i64 {\r\nreturn 9223372036854775807 + 1;\r\n}");
+    const bytes = try testing.allocator.dupe(u8, "# comment\r\ndef main() -> i64:\r\n    return 9223372036854775807 + 1\r\n");
     var compilation = try language.Compilation.init(testing.allocator, "crlf.my", bytes);
     testing.allocator.free(bytes);
     defer compilation.deinit();
     const outcome = try compilation.execute(testing.allocator);
     const location = compilation.src.locate(outcome.trap.span.start);
     try testing.expectEqual(@as(usize, 3), location.line);
-    try testing.expectEqual(@as(usize, 28), location.column);
+    try testing.expectEqual(@as(usize, 32), location.column);
     const rendered = try outcome.trap.render(testing.allocator, compilation.src);
     defer testing.allocator.free(rendered);
-    try testing.expect(std.mem.indexOf(u8, rendered, "crlf.my:3:28: error[R_OVERFLOW]") != null);
+    try testing.expect(std.mem.indexOf(u8, rendered, "crlf.my:3:32: error[R_OVERFLOW]") != null);
     try testing.expect(std.mem.indexOfScalar(u8, rendered, '\r') == null);
     try testing.expectEqual(@as(usize, 4), compilation.src.locate(compilation.src.bytes.len).line);
 }
@@ -109,11 +109,11 @@ test "bytecode dump is deterministic and multiplication precedes addition" {
 test "parser rejects excessive nesting without a host stack overflow" {
     var text: std.Io.Writer.Allocating = .init(testing.allocator);
     defer text.deinit();
-    try text.writer.writeAll("fn main() -> i64 { return ");
+    try text.writer.writeAll("def main() -> i64:\n    return ");
     try text.writer.splatByteAll('(', 300);
     try text.writer.writeByte('1');
     try text.writer.splatByteAll(')', 300);
-    try text.writer.writeAll("; }");
+    try text.writer.writeAll("\n");
     var compilation = try language.Compilation.init(testing.allocator, "deep.my", text.written());
     defer compilation.deinit();
     try testing.expectError(error.SourceError, compilation.check());
@@ -161,7 +161,17 @@ test "locals mutation annotations and lexical scope" {
         \\    result = result * amount
         \\    return result
     , 21);
-    try programResult("fn main() -> i64 { let mut result = 0; { let x = 2; result = x; } { let x = 3; result = result + x; } return result; }", 5);
+    try programResult(
+        \\def main() -> i64:
+        \\    result = 0
+        \\    if True:
+        \\        x = 2
+        \\        result = x
+        \\    if True:
+        \\        x = 3
+        \\        result = result + x
+        \\    return result
+    , 5);
     try programResult(
         \\def main() -> i64:
         \\    return 8
@@ -207,7 +217,7 @@ test "scope types immutability and structural return diagnostics" {
         .{ .body = "return 1\n    return 2", .code = "E_UNREACHABLE" },
         .{ .body = "return -(9223372036854775808 + 0)", .code = "E_INTEGER_RANGE" },
         .{ .body = "return -9223372036854775809", .code = "E_INTEGER_RANGE" },
-        .{ .body = "bool = 1\n    return 0", .code = "E_SYNTAX" },
+        .{ .body = "bool = 1\n    return 0", .code = "E_EXPRESSION" },
     };
     for (cases) |case| {
         const text = try std.fmt.allocPrint(testing.allocator,
@@ -223,21 +233,32 @@ test "scope types immutability and structural return diagnostics" {
 }
 
 test "binding warnings distinguish writes from reads and sibling identities" {
-    const text = "fn main() -> i64 { let mut unused = 1; let mut write_only = 2; write_only = 3; { let x = 4; } { let x = 5; return x; } }";
+    const text =
+        \\def main() -> i64:
+        \\    unused = 1
+        \\    write_only = 2
+        \\    write_only = 3
+        \\    if True:
+        \\        x = 4
+        \\    if True:
+        \\        x = 5
+        \\        return x
+        \\    return 0
+    ;
     var compilation = try language.Compilation.init(testing.allocator, "warnings.my", text);
     defer compilation.deinit();
     try testing.expectEqual(@as(i64, 5), (try compilation.execute(testing.allocator)).value);
     const warnings = compilation.diagnostics.items;
-    try testing.expectEqual(@as(usize, 4), warnings.len);
-    try testing.expectEqualStrings("W_UNNECESSARY_MUT", warnings[0].code);
+    try testing.expectEqual(@as(usize, 3), warnings.len);
+    try testing.expectEqualStrings("W_UNUSED_BINDING", warnings[0].code);
     try testing.expectEqualStrings("W_UNUSED_BINDING", warnings[1].code);
     try testing.expectEqualStrings("unused", compilation.src.text(warnings[0].span));
-    try testing.expectEqualStrings("write_only", compilation.src.text(warnings[2].span));
-    try testing.expectEqualStrings("x", compilation.src.text(warnings[3].span));
-    try testing.expectEqual(std.mem.indexOf(u8, text, "x = 4").?, warnings[3].span.start);
+    try testing.expectEqualStrings("write_only", compilation.src.text(warnings[1].span));
+    try testing.expectEqualStrings("x", compilation.src.text(warnings[2].span));
+    try testing.expectEqual(std.mem.indexOf(u8, text, "x = 4").?, warnings[2].span.start);
     for (warnings) |warning| try testing.expectEqual(language.diagnostic.Severity.warning, warning.severity);
     try compilation.check();
-    try testing.expectEqual(@as(usize, 4), compilation.diagnostics.items.len);
+    try testing.expectEqual(@as(usize, 3), compilation.diagnostics.items.len);
 }
 
 fn localAllocationScenario(allocator: std.mem.Allocator) !void {
@@ -265,27 +286,27 @@ test "allocation failure during scope checking warning rendering and locals exec
 test "long left-associative expressions do not recursively traverse host stacks" {
     var text: std.Io.Writer.Allocating = .init(testing.allocator);
     defer text.deinit();
-    try text.writer.writeAll("fn main() -> i64 { return 1");
+    try text.writer.writeAll("def main() -> i64:\n    return 1");
     for (0..4095) |_| try text.writer.writeAll(" + 1");
-    try text.writer.writeAll("; }");
+    try text.writer.writeAll("\n");
     try programResult(text.written(), 4096);
 }
 
 fn booleanResult(expression: []const u8, expected: bool) !void {
-    const text = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ if {s} {{ return 1; }} else {{ return 0; }} }}", .{expression});
+    const text = try std.fmt.allocPrint(testing.allocator, "def main() -> i64:\n    if {s}:\n        return 1\n    else:\n        return 0\n", .{expression});
     defer testing.allocator.free(text);
     try programResult(text, if (expected) 1 else 0);
 }
 
 test "signed division and remainder implement truncation toward zero" {
-    try result("-7 / 3", -2);
-    try result("7 / -3", -2);
-    try result("-7 / -3", 2);
-    try result("-7 % 3", -1);
-    try result("7 % -3", 1);
-    try result("-7 % -3", -1);
-    try result("-9223372036854775808 % -1", 0);
-    try result("20 - 6 / 2", 17);
+    try result("divtrunc(-7, 3)", -2);
+    try result("divtrunc(7, -3)", -2);
+    try result("divtrunc(-7, -3)", 2);
+    try result("remtrunc(-7, 3)", -1);
+    try result("remtrunc(7, -3)", 1);
+    try result("remtrunc(-7, -3)", -1);
+    try result("remtrunc(-9223372036854775808, -1)", 0);
+    try result("20 - divtrunc(6, 2)", 17);
 }
 
 test "instruction limit is checked before the next dispatch" {
@@ -412,7 +433,7 @@ test "function signatures entry points and all uncalled bodies are checked" {
         , .code = "E_SHADOWING" },
         .{ .text =
         \\def f(n: i64) -> i64:
-        \\    n = 2
+        \\    n: i64 = 2
         \\    return n
         \\
         \\
@@ -428,15 +449,6 @@ test "function signatures entry points and all uncalled bodies are checked" {
         \\def f() -> i64:
         \\    return 0
         , .code = "E_SHADOWING" },
-        .{ .text =
-        \\def f(n: i64) -> i64:
-        \\    n = 2
-        \\    return n
-        \\
-        \\
-        \\def main() -> i64:
-        \\    return 0
-        , .code = "E_IMMUTABLE" },
         .{ .text =
         \\def f() -> bool:
         \\    return 1
@@ -500,7 +512,7 @@ test "parameter warnings remain separate between functions and are deferred unti
     try compilation.check();
     try testing.expectEqual(@as(usize, 1), compilation.diagnostics.items.len);
     try testing.expectEqualStrings("W_UNUSED_BINDING", compilation.diagnostics.items[0].code);
-    try testing.expectEqual(@as(usize, 5), compilation.diagnostics.items[0].span.start);
+    try testing.expectEqual(@as(usize, 6), compilation.diagnostics.items[0].span.start);
     var invalid = try language.Compilation.init(testing.allocator, "bad.my",
         \\def f(x: i64) -> i64:
         \\    return 0
@@ -554,11 +566,11 @@ test "call traces locate guest operators and callers and argument traps evaluate
     try testing.expectEqual(@as(usize, 3), outcome.trap.stack.len);
     for ([_][]const u8{ "inner", "outer", "main" }, 0..) |name, i| {
         try testing.expectEqualStrings(name, outcome.trap.stack.frames[i].function);
-        try testing.expectEqual(3 - i, compilation.src.locate(outcome.trap.stack.frames[i].span.start).line);
+        try testing.expectEqual(10 - 4 * i, compilation.src.locate(outcome.trap.stack.frames[i].span.start).line);
     }
     const rendered = try outcome.trap.render(testing.allocator, compilation.src);
     defer testing.allocator.free(rendered);
-    try testing.expect(std.mem.indexOf(u8, rendered, "in outer at trace.my:2:") != null);
+    try testing.expect(std.mem.indexOf(u8, rendered, "in outer at trace.my:6:") != null);
     var order = try language.Compilation.init(testing.allocator, "order.my",
         \\def f(a: i64, b: i64) -> i64:
         \\    return a + b
@@ -641,8 +653,7 @@ test "all recursive syntax forms obey the parser nesting budget" {
     for ([_][]const u8{ "-", "id(", "{" }) |opening| {
         var text: std.Io.Writer.Allocating = .init(testing.allocator);
         defer text.deinit();
-        try text.writer.writeAll("fn main() -> i64 { ");
-        if (!std.mem.eql(u8, opening, "{")) try text.writer.writeAll("return ");
+        try text.writer.writeAll("def main() -> i64:\n    return ");
         for (0..300) |_| try text.writer.writeAll(opening);
         // Rejection occurs at the resource boundary before trailing syntax matters.
         try text.writer.writeAll("1");
@@ -774,22 +785,22 @@ test "all comparisons boolean operations and logical precedence have observable 
     try booleanResult("2 >= 3", false);
     try booleanResult("2 == 2", true);
     try booleanResult("2 != 2", false);
-    try booleanResult("true == false", false);
-    try booleanResult("true != false", true);
-    try booleanResult("!false", true);
-    try booleanResult("!true", false);
-    try booleanResult("false || true && false", false);
-    try booleanResult("true || false && false", true);
-    try booleanResult("1 + 2 * 3 == 7 && 4 >= 3", true);
-    const operands = [_][]const u8{ "false", "true" };
+    try booleanResult("True == False", false);
+    try booleanResult("True != False", true);
+    try booleanResult("not False", true);
+    try booleanResult("not True", false);
+    try booleanResult("False or True and False", false);
+    try booleanResult("True or False and False", true);
+    try booleanResult("1 + 2 * 3 == 7 and 4 >= 3", true);
+    const operands = [_][]const u8{ "False", "True" };
     for (0..4) |pair| {
         const a = pair / 2;
         const b = pair % 2;
         const left = operands[a];
         const right = operands[b];
-        const conjunction = try std.fmt.allocPrint(testing.allocator, "{s} && {s}", .{ left, right });
+        const conjunction = try std.fmt.allocPrint(testing.allocator, "{s} and {s}", .{ left, right });
         defer testing.allocator.free(conjunction);
-        const disjunction = try std.fmt.allocPrint(testing.allocator, "{s} || {s}", .{ left, right });
+        const disjunction = try std.fmt.allocPrint(testing.allocator, "{s} or {s}", .{ left, right });
         defer testing.allocator.free(disjunction);
         try booleanResult(conjunction, a == 1 and b == 1);
         try booleanResult(disjunction, a == 1 or b == 1);
@@ -797,8 +808,8 @@ test "all comparisons boolean operations and logical precedence have observable 
 }
 
 test "short circuit skips traps while an explicit drop retains evaluation" {
-    try booleanResult("false && (1 / 0 == 0)", false);
-    try booleanResult("true || (1 / 0 == 0)", true);
+    try booleanResult("False and (divtrunc(1, 0) == 0)", false);
+    try booleanResult("True or (divtrunc(1, 0) == 0)", true);
     try programResult(
         \\def main() -> i64:
         \\    _ = False and divtrunc(1, 0) == 0
@@ -816,16 +827,16 @@ test "short circuit skips traps while an explicit drop retains evaluation" {
         \\        return 9
     , 4);
     const cases = [_]struct { expression: []const u8, code: []const u8 }{
-        .{ .expression = "true && (1 / 0 == 0)", .code = "R_DIVISION_BY_ZERO" },
-        .{ .expression = "false || (1 / 0 == 0)", .code = "R_DIVISION_BY_ZERO" },
-        .{ .expression = "1 / 0", .code = "R_DIVISION_BY_ZERO" },
-        .{ .expression = "1 % 0", .code = "R_DIVISION_BY_ZERO" },
-        .{ .expression = "-9223372036854775808 / -1", .code = "R_OVERFLOW" },
-        .{ .expression = "(9223372036854775807 + 1) + (1 / 0)", .code = "R_OVERFLOW" },
-        .{ .expression = "(1 / 0) + (9223372036854775807 + 1)", .code = "R_DIVISION_BY_ZERO" },
+        .{ .expression = "True and (divtrunc(1, 0) == 0)", .code = "R_DIVISION_BY_ZERO" },
+        .{ .expression = "False or (divtrunc(1, 0) == 0)", .code = "R_DIVISION_BY_ZERO" },
+        .{ .expression = "divtrunc(1, 0)", .code = "R_DIVISION_BY_ZERO" },
+        .{ .expression = "remtrunc(1, 0)", .code = "R_DIVISION_BY_ZERO" },
+        .{ .expression = "divtrunc(-9223372036854775808, -1)", .code = "R_OVERFLOW" },
+        .{ .expression = "(9223372036854775807 + 1) + divtrunc(1, 0)", .code = "R_OVERFLOW" },
+        .{ .expression = "divtrunc(1, 0) + (9223372036854775807 + 1)", .code = "R_DIVISION_BY_ZERO" },
     };
     for (cases) |case| {
-        const text = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ _ = {s}; return 0; }}", .{case.expression});
+        const text = try std.fmt.allocPrint(testing.allocator, "def main() -> i64:\n    _ = {s}\n    return 0\n", .{case.expression});
         defer testing.allocator.free(text);
         var compilation = try language.Compilation.init(testing.allocator, "trap.my", text);
         defer compilation.deinit();
@@ -977,7 +988,7 @@ test "runtime storage remains bounded across many calls and loop declarations" {
 
 test "located source diagnostics include EOF explicit drops and previous declarations" {
     for ([_][]const u8{ "\n", "\r\n" }) |newline| {
-        const text = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{{s}return 1;{s}", .{ newline, newline });
+        const text = try std.fmt.allocPrint(testing.allocator, "def main() -> i64:{s}    return 1 + {s}", .{ newline, newline });
         defer testing.allocator.free(text);
         var compilation = try language.Compilation.init(testing.allocator, "eof.my", text);
         defer compilation.deinit();
@@ -1000,10 +1011,10 @@ test "located source diagnostics include EOF explicit drops and previous declara
     try testing.expectError(error.SourceError, duplicate.check());
     const diag = duplicate.diagnostics.items[0];
     try testing.expectEqualStrings("main", duplicate.src.text(diag.span));
-    try testing.expectEqual(@as(usize, 3), diag.related.?.span.start);
+    try testing.expectEqual(@as(usize, 4), diag.related.?.span.start);
     const rendered = try diag.render(testing.allocator, duplicate.src);
     defer testing.allocator.free(rendered);
-    try testing.expect(std.mem.indexOf(u8, rendered, "note: duplicate.my:1:4: previous function declaration") != null);
+    try testing.expect(std.mem.indexOf(u8, rendered, "note: duplicate.my:1:5: previous function declaration") != null);
     var discard = try language.Compilation.init(testing.allocator, "ignored.my",
         \\def main() -> i64:
         \\    1 + 2
@@ -1012,5 +1023,5 @@ test "located source diagnostics include EOF explicit drops and previous declara
     defer discard.deinit();
     try testing.expectError(error.SourceError, discard.check());
     try testing.expectEqualStrings("E_EXPLICIT_DISCARD_REQUIRED", discard.diagnostics.items[0].code);
-    try testing.expectEqualStrings("1 + 2;", discard.src.text(discard.diagnostics.items[0].span));
+    try testing.expectEqualStrings("1 + 2", discard.src.text(discard.diagnostics.items[0].span));
 }

@@ -216,8 +216,8 @@ test "newline suffixes end an expression outside parentheses and continue inside
     const syntax = compilation.syntax.?;
     const body = syntax.statements.items[@backingInt(syntax.functions[1].body)].data.block;
     try t.expectEqual(@as(usize, 3), body.len);
-    const binding = syntax.statements.items[@backingInt(body[0])].data.binding;
-    try t.expect(syntax.nodes.items[@backingInt(binding.value)].data == .name);
+    const assignment = syntax.statements.items[@backingInt(body[0])].data.assignment;
+    try t.expect(syntax.nodes.items[@backingInt(assignment.value)].data == .name);
     const expression = syntax.statements.items[@backingInt(body[1])].data.discard;
     try t.expect(syntax.nodes.items[@backingInt(expression)].data == .integer);
 }

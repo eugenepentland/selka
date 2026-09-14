@@ -16,8 +16,24 @@ fn reject(source: []const u8, code: []const u8) !void {
     try testing.expectError(error.SourceError, compilation.check());
     try testing.expectEqualStrings(code, compilation.diagnostics.items[0].code);
 }
-const choice = "enum Choice { first, second, third } ";
-const event = "union Event { count: i64, flag: bool, empty } ";
+const choice =
+    \\enum Choice:
+    \\    first,
+    \\    second,
+    \\    third
+    \\
+    \\
+    \\
+;
+const event =
+    \\union Event:
+    \\    count: i64,
+    \\    flag: bool,
+    \\    empty
+    \\
+    \\
+    \\
+;
 
 // spec: CORE-8
 test "exhaustive matching detects added variants even on statically known values" {
@@ -51,9 +67,10 @@ test "exhaustive matching detects added variants even on statically known values
     try reject(choice ++
         \\def main() -> i64:
         \\    match Choice.first:
+        \\        case Choice.first:
+        \\            return 1
         \\    return 0
     , "E_INCOMPLETE_MATCH");
-    try reject(choice ++ "fn main() -> i64 { match new Choice.first { else => { return 0; } } }", "E_SYNTAX");
 }
 
 test "match return analysis and control flow joins handle empty arms loops and nesting" {
