@@ -1,47 +1,64 @@
 //! Trusted raw byte operations; all input interpretation belongs to the guest.
+//! The operations themselves are compiled into the guest's own native executable
+//! (`native_byte_io.c`); this module is the driver that builds that executable,
+//! hands it one invocation's bytes, and decides what reaches the real stdout.
 const std = @import("std");
-const language = @import("mylang");
-const host = language.host_functions;
-/// The declared host effect bit shared by every trusted registration.
-const host_effect = @import("mylang").effect_set.bit(.host);
-/// Borrow raw input and own unpublished output for one guest invocation.
-pub const Context = struct {
-    allocator: std.mem.Allocator,
+const native = @import("host_native");
+const limits = @import("limits.zig");
+const bulk = @import("bulk.zig");
+/// The trusted provider translation unit linked into every guest executable.
+pub const provider = @embedFile("native_byte_io.c");
+/// Build, transport and guest-outcome failures of one native invocation.
+pub const Error = native.Error;
+/// Own one invocation's private build products and byte transport files.
+pub const Session = struct {
+    program: native.Program,
     input: []const u8,
-    output: std.ArrayList(u8) = .empty,
-    output_limit: usize = 128 * 1024 * 1024,
-    /// Release buffered output after publication or a failed invocation.
-    pub fn deinit(self: *Context) void {
-        self.output.deinit(self.allocator);
+    published: []const u8,
+    /// Build the guest with the trusted provider and describe this authority to it.
+    /// A validated copied-block shape names the exact types the provider copies,
+    /// so a differently shaped block never reaches a callback.
+    pub fn init(process: std.process.Init, options: limits.Options, shape: ?bulk.Shape) Error!Session {
+        var program = try native.Program.build(process, .{
+            .project = options.project,
+            .provider = provider,
+            .cache = options.tools.cache,
+            .qbe = options.tools.qbe,
+            .zig = options.tools.zig,
+        });
+        errdefer program.deinit();
+        var session: Session = .{
+            .program = program,
+            .input = try program.file("input"),
+            .published = try program.file("output"),
+        };
+        try session.describe(options, shape);
+        return session;
     }
-    /// Install scalar compatibility calls and optional validated copied-block I/O.
-    pub fn install(self: *Context, registry: *language.vm_host.Registry) language.vm_host.Error!void {
-        const scalar = host.Parameter{ .ty = .i64 };
-        const octet = host.Parameter{ .ty = .u8 };
-        try registry.register("io::length", .{ .signature = .{ .parameters = &.{}, .result = scalar, .effects = host_effect }, .context = self, .invoke = length }, host_effect);
-        try registry.register("io::byte", .{ .signature = .{ .parameters = &.{scalar}, .result = octet, .effects = host_effect }, .context = self, .invoke = byte }, host_effect);
-        try registry.register("io::put", .{ .signature = .{ .parameters = &.{octet}, .result = scalar, .effects = host_effect }, .context = self, .invoke = put }, host_effect);
-        try @import("bulk.zig").Operations(Context).install(self, registry);
+    /// Remove every private file; nothing an invocation produced outlives it.
+    pub fn deinit(self: *Session) void {
+        self.program.deinit();
     }
-    fn context(call: *host.Call) *Context {
-        return @ptrCast(@alignCast(call.context.?));
+    fn describe(self: *Session, options: limits.Options, shape: ?bulk.Shape) Error!void {
+        try self.program.set("MYLANG_BYTE_IO_INPUT", self.input);
+        try self.program.set("MYLANG_BYTE_IO_OUTPUT", self.published);
+        try self.program.setNumber("MYLANG_BYTE_IO_MAX_OUTPUT", options.output);
+        try self.program.setNumber("MYLANG_BYTE_IO_MAX_CALLS", options.execution.calls);
+        try self.program.setNumber("MYLANG_BYTE_IO_MAX_WORK", options.execution.work);
+        if (shape) |names| {
+            try self.program.set("MYLANG_BYTE_IO_BLOCK_TYPE", names.record);
+            try self.program.set("MYLANG_BYTE_IO_ARRAY_TYPE", names.array);
+        }
+        try options.grants.install(self.program.allocator, &self.program.environment);
     }
-    fn length(call: *host.Call) host.CallbackError!language.vm.Value {
-        try call.consume(1);
-        return .{ .i64 = @intCast(context(call).input.len) };
+    /// Run the guest once against these bytes and report its entry-point result.
+    pub fn invoke(self: *Session, bytes: []const u8, steps: u64) Error!i64 {
+        try self.program.write(self.input, bytes);
+        const budget = try std.fmt.allocPrint(self.program.allocator, "--max-steps={d}", .{steps});
+        return self.program.invoke(&.{budget});
     }
-    fn byte(call: *host.Call) host.CallbackError!language.vm.Value {
-        try call.consume(1);
-        const input = context(call).input;
-        const index = call.arguments[0].i64;
-        if (index < 0 or index >= input.len) return error.HostFailure;
-        return language.vm.Value.number(.u8, input[@intCast(index)]);
-    }
-    fn put(call: *host.Call) host.CallbackError!language.vm.Value {
-        try call.consume(1);
-        const self = context(call);
-        if (self.output.items.len >= self.output_limit) return error.HostWorkLimit;
-        try self.output.append(self.allocator, @intCast(call.arguments[0].integer.value));
-        return .{ .i64 = 0 };
+    /// Read back the bytes the guest asked to publish during this invocation.
+    pub fn output(self: *Session) Error![]const u8 {
+        return self.program.read(self.published);
     }
 };
