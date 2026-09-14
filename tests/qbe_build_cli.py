@@ -185,7 +185,7 @@ def runtime_tree_acceptance(builder):
     bundled = {path.relative_to(tree).as_posix() for path in tree.rglob('*') if path.is_file()}
     assert 'qbe_runtime.c' in bundled and 'qbe_runtime.h' in bundled and 'native_format.zig' in bundled
     assert not any(name.endswith('_test.zig') for name in bundled), sorted(bundled)[:20]
-    assert 'vm.zig' not in bundled and not any(name.endswith('.my') and '/' not in name for name in bundled)
+    assert 'sema.zig' not in bundled and not any(name.endswith('.my') and '/' not in name for name in bundled)
     # A second build reuses the published tree instead of extracting it again.
     marker = tree / 'reuse marker'
     marker.write_text('kept')

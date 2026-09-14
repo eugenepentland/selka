@@ -293,7 +293,7 @@ test "bundled build inputs carry only the native runtime, not compiler tests or 
     }
     try std.testing.expect(bundles("qbe_runtime.c") and bundles("qbe_runtime.h") and bundles("native_heap.c"));
     try std.testing.expect(bundles("native_equal.c") and bundles("native_format.zig"));
-    try std.testing.expect(!bundles("vm.zig") and !bundles("qbe_build.zig") and !bundles("json_document.zig"));
+    try std.testing.expect(!bundles("sema.zig") and !bundles("qbe_build.zig") and !bundles("json_document.zig"));
 }
 // spec: QBE-3
 test "the runtime tree is published once per content hash and reused by later builds" {
@@ -307,7 +307,7 @@ test "the runtime tree is published once per content hash and reused by later bu
     const first = try materialize(context, cache);
     try std.testing.expect(std.mem.endsWith(u8, first, bundled.content_hash));
     try std.testing.expect(context.exists(try std.fs.path.join(context.allocator, &.{ first, "qbe_runtime.c" })));
-    try std.testing.expect(!context.exists(try std.fs.path.join(context.allocator, &.{ first, "vm.zig" })));
+    try std.testing.expect(!context.exists(try std.fs.path.join(context.allocator, &.{ first, "sema.zig" })));
     const marker = try std.fs.path.join(context.allocator, &.{ first, "reuse-marker" });
     try context.write(marker, "kept");
     try std.testing.expectEqualStrings(first, try materialize(context, cache));
