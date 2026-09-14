@@ -211,7 +211,7 @@ def concurrent_runtime_tree(builder, expected):
     for index, (work, process) in enumerate(running):
         _, errors = process.communicate(timeout=600)
         assert process.returncode == 0, (index, errors.decode(errors='replace'))
-        result = checked([work / 'program'], env=builder.env, cwd=work)
+        result = checked([work / 'program', '--print-result'], env=builder.env, cwd=work)
         assert result.stdout == ('%d\n' % (index + 1)).encode(), result
     published = sorted(path.name for path in (cache / 'runtime').iterdir())
     assert published == [expected], published

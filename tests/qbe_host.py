@@ -77,7 +77,7 @@ def main():
             composite = project / (mode + '-composite')
             built = run([*common, ROOT / 'src/native_fixtures/composite.my', '--provider', ROOT / 'tests/native_host_composite.c', '-o', composite])
             assert built.returncode == 0, built.stderr.decode()
-            native = run([composite])
+            native = run([composite, '--print-result'])
             assert native.returncode == 0 and native.stdout == b'42\n', native
             native = run([composite], env=dict(os.environ, MYLANG_HOST_BAD='1'))
             assert native.returncode != 0 and b'R_HOST_CONTRACT' in native.stderr, native
@@ -99,7 +99,7 @@ def main():
             wide_output = project / (mode + '-wide')
             built = run([*common, wide_source, '--provider', wide_provider, '-o', wide_output])
             assert built.returncode == 0, built.stderr.decode()
-            native = run([wide_output])
+            native = run([wide_output, '--print-result'])
             assert native.returncode == 0 and native.stdout == b'42\n', native
             library = project / (mode + '-host.so')
             built = run([*common, ROOT / 'src/native_fixtures/composite.my', '--library', '-o', library])

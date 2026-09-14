@@ -40,15 +40,28 @@
    "stderr": "",
    "stdout": "MS0yLTMhCjAK"
   },
-  "4bb81f472b0321f5d0f6703391b758b0": {
+  "3e16549a28ae98a3007dc51d81fbcf41": {
    "case": [
-    "docs/bytes.md:262",
+    "docs/io.md:151",
+    false,
+    [
+     "--restrict",
+     "--allow-read=/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a19af21c1f3b18345/docs/fixtures/notes"
+    ]
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "T2soJ2hlbGxvIGZyb20gYSBncmFudGVkIGRpcmVjdG9yeVxuJykKVHJ1ZSBGYWxzZQowCg=="
+  },
+  "4cf4ce684b13886067dfa72fd278140e": {
+   "case": [
+    "docs/bytes.md:235",
     false,
     []
    ],
    "returncode": 0,
    "stderr": "",
-   "stdout": "NDIK"
+   "stdout": "MTMxCg=="
   },
   "4d324b35f68410d9c0b91cda77dceed7": {
    "case": [
@@ -59,6 +72,19 @@
    "returncode": 0,
    "stderr": "",
    "stdout": "aGVsbG8gNDIgVHJ1ZSBOb25lClsnYScsICdiJ10geydrJzogMX0gYidceDAwXHhmZicKMAo="
+  },
+  "51495cf9b8672b5a01df8abf75655d8e": {
+   "case": [
+    "docs/io.md:171",
+    false,
+    [
+     "--restrict",
+     "--allow-read=/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a19af21c1f3b18345/docs/fixtures/notes"
+    ]
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "YidoZWxsbyBmcm9tIGEgZ3JhbnRlZCBkaXJlY3RvcnlcbicKMwowCg=="
   },
   "542aca53383313e23c9ec9b3e718158f": {
    "case": [
@@ -109,6 +135,16 @@
    "returncode": 0,
    "stderr": "",
    "stdout": "NTQK"
+  },
+  "772e77a76fb9d6d45b9fd894d43538c1": {
+   "case": [
+    "docs/bytes.md:261",
+    false,
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "NDIK"
   },
   "7d3b80cd762f5f33c4a6c684ccadec14": {
    "case": [
@@ -170,19 +206,6 @@
    "stderr": "",
    "stdout": "MTUK"
   },
-  "a57b98bbe78a223a702626280fbb06b3": {
-   "case": [
-    "docs/io.md:152",
-    false,
-    [
-     "--restrict",
-     "--allow-read=/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a19af21c1f3b18345/docs/fixtures/notes"
-    ]
-   ],
-   "returncode": 0,
-   "stderr": "",
-   "stdout": "T2soJ2hlbGxvIGZyb20gYSBncmFudGVkIGRpcmVjdG9yeVxuJykKVHJ1ZSBGYWxzZQowCg=="
-  },
   "a711d4591796df4315164c0e47064765": {
    "case": [
     "docs/bytes.md:95",
@@ -192,29 +215,6 @@
    "returncode": 0,
    "stderr": "",
    "stdout": "MTEK"
-  },
-  "c67b3413e6c007f64cc431319f5a6a42": {
-   "case": [
-    "docs/io.md:172",
-    false,
-    [
-     "--restrict",
-     "--allow-read=/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a19af21c1f3b18345/docs/fixtures/notes"
-    ]
-   ],
-   "returncode": 0,
-   "stderr": "",
-   "stdout": "YidoZWxsbyBmcm9tIGEgZ3JhbnRlZCBkaXJlY3RvcnlcbicKMwowCg=="
-  },
-  "c6a2252a9483184820e72d8c8ac48abc": {
-   "case": [
-    "docs/bytes.md:236",
-    false,
-    []
-   ],
-   "returncode": 0,
-   "stderr": "",
-   "stdout": "MTMxCg=="
   },
   "c70fa48919776202d0c685fa09453f33": {
    "case": [
@@ -226,16 +226,6 @@
    "stderr": "",
    "stdout": "NDMK"
   },
-  "c7518a4d6f6bfb4c0f1c5846a65a12cd": {
-   "case": [
-    "docs/text.md:194",
-    false,
-    []
-   ],
-   "returncode": 0,
-   "stderr": "",
-   "stdout": "ODEyMgo="
-  },
   "dff0c0d1bf394d4c8b4df410e2b9040f": {
    "case": [
     "docs/arenas.md:15",
@@ -245,19 +235,6 @@
    "returncode": 0,
    "stderr": "",
    "stdout": "MjA0Cg=="
-  },
-  "e253abe23fdae6662053b225e9ff263d": {
-   "case": [
-    "docs/io.md:236",
-    false,
-    [
-     "--restrict",
-     "--allow-read=/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a19af21c1f3b18345/docs/fixtures/notes"
-    ]
-   ],
-   "returncode": 0,
-   "stderr": "",
-   "stdout": "RXJyKCdyZWFkIFwnLi4vZXNjYXBlXCc6IGRlbmllZDogb3V0c2lkZSB0aGUgZ3JhbnRlZCBkaXJlY3Rvcmllcywgb3IgdGhlIG1vZGUgbmVlZHMgYSB3cml0ZSBncmFudCcpCkVycignd3JpdGUgXCduZXcudHh0XCc6IGRlbmllZDogb3V0c2lkZSB0aGUgZ3JhbnRlZCBkaXJlY3Rvcmllcywgb3IgdGhlIG1vZGUgbmVlZHMgYSB3cml0ZSBncmFudCcpCjAK"
   },
   "e9862c47f1efe02f97389a3509a6ce32": {
    "case": [
@@ -269,6 +246,16 @@
    "stderr": "PGNvcnB1cz4vdW5pdDEwL21haW4ubXk6MTg6MTg6IHdhcm5pbmdbV19VTlVTRURfQklORElOR106IGJpbmRpbmcgaXMgbmV2ZXIgcmVhZDsgdXNlIGl0IG9yIHJlbW92ZSBpdCwgcHJlc2VydmluZyBpbml0aWFsaXplciBlZmZlY3RzIHdpdGggYF8gPWAgd2hlbiBuZWVkZWQKICAgICAgICAgIGNhc2UgRXJyKG1lc3NhZ2UpOgogICAgICAgICAgICAgICAgICAgXgo=",
    "stdout": "Ngo="
   },
+  "f82931a5cb4106cd114036dea03b15c5": {
+   "case": [
+    "docs/text.md:193",
+    false,
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "ODEyMgo="
+  },
   "fc935e89832fefaa299d01966f84943d": {
    "case": [
     "examples/arena-managed/main.my",
@@ -278,6 +265,19 @@
    "returncode": 0,
    "stderr": "",
    "stdout": "MzgK"
+  },
+  "ffffa58475453c1b4563160895e6784a": {
+   "case": [
+    "docs/io.md:235",
+    false,
+    [
+     "--restrict",
+     "--allow-read=/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a19af21c1f3b18345/docs/fixtures/notes"
+    ]
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "RXJyKCdyZWFkIFwnLi4vZXNjYXBlXCc6IGRlbmllZDogb3V0c2lkZSB0aGUgZ3JhbnRlZCBkaXJlY3Rvcmllcywgb3IgdGhlIG1vZGUgbmVlZHMgYSB3cml0ZSBncmFudCcpCkVycignd3JpdGUgXCduZXcudHh0XCc6IGRlbmllZDogb3V0c2lkZSB0aGUgZ3JhbnRlZCBkaXJlY3Rvcmllcywgb3IgdGhlIG1vZGUgbmVlZHMgYSB3cml0ZSBncmFudCcpCjAK"
   }
  },
  "version": "golden-outcomes-v1"
