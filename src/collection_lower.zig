@@ -5,6 +5,9 @@ const Span = @import("source.zig").Span;
 const Error = @import("diagnostic.zig").Error;
 /// Shared diagnostic for invalid managed collection types.
 pub const list_type_error = "E_LIST_TYPE";
+/// Omitted slice endpoints, mirrored by `MYL_NATIVE_SLICE_FIRST`/`_LAST` in the runtime.
+const omitted_first: i128 = std.math.minInt(i64);
+const omitted_last: i128 = std.math.maxInt(i64);
 const Kind = @import("buffer_operations.zig").Kind;
 const nominal = @import("nominal_catalog.zig");
 const Catalog = @import("type_catalog.zig").Catalog;
@@ -78,6 +81,7 @@ pub fn operationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Spa
         .contains => .bool,
         .length, .capacity => .u64,
         .append, .write, .iteration_check => .unit,
+        .slice_step => owner,
         else => error.InternalError,
     };
     if (schema.collection.kind == .bytes) return bytesOperationType(catalog, owner, kind, span);
@@ -93,6 +97,7 @@ pub fn operationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Spa
         .get => if (dictionary) element else error.InternalError,
         .key_at => if (dictionary) schema.collection.key.? else error.InternalError,
         .slice, .join => if (!dictionary) owner else error.InternalError,
+        .slice_step => if (dictionary or schema.collection.kind == .bytes) error.InternalError else owner,
         .keys => if (dictionary) listType(catalog, schema.collection.key.?, span) else error.InternalError,
         .values => if (dictionary) listType(catalog, element, span) else error.InternalError,
         .split => if (!dictionary) listType(catalog, owner, span) else error.InternalError,
@@ -208,6 +213,29 @@ pub fn Builder(comptime Checker: type) type {
         pub fn textSlice(self: Self, base: typed.NodeId, start: ?typed.NodeId, end: ?typed.NodeId) Error!typed.Node {
             const owner = try self.local(self.checker.nodes.items[@backingInt(base)].ty);
             return self.block(&.{try self.stmt(.{ .initialize = .{ .slot = owner, .value = base } })}, try self.operation(owner, .slice, &.{ start orelse try self.integer(0), end orelse try self.length(owner) }));
+        }
+        /// Copy a stepped slice into fresh storage. An omitted endpoint stays a sentinel
+        /// so the runtime can default it for the step's sign, and explicit endpoints are
+        /// passed unclamped because the runtime applies Python's adjustment exactly once.
+        /// The receiver, both endpoints and the step are each evaluated exactly once.
+        pub fn sliceStep(self: Self, base: typed.NodeId, start: ?typed.NodeId, end: ?typed.NodeId, step: typed.NodeId) Error!typed.Node {
+            const ty = self.checker.nodes.items[@backingInt(base)].ty;
+            const owner = try self.local(ty);
+            const first_slot = try self.local(.i64);
+            const last_slot = try self.local(.i64);
+            const step_slot = try self.local(.i64);
+            const first = if (start) |value| try self.widened(value) else try self.integer(omitted_first);
+            const last = if (end) |value| try self.widened(value) else try self.integer(omitted_last);
+            return self.block(&.{
+                try self.stmt(.{ .initialize = .{ .slot = owner, .value = base } }),
+                try self.stmt(.{ .initialize = .{ .slot = first_slot, .value = first } }),
+                try self.stmt(.{ .initialize = .{ .slot = last_slot, .value = last } }),
+                try self.stmt(.{ .initialize = .{ .slot = step_slot, .value = step } }),
+            }, try self.operation(owner, .slice_step, &.{ try self.read(first_slot), try self.read(last_slot), try self.read(step_slot) }));
+        }
+        /// Widen a checked integer expression to the signed index type.
+        fn widened(self: Self, input: typed.NodeId) Error!typed.NodeId {
+            return if (self.checker.nodes.items[@backingInt(input)].ty == .i64) input else self.node(.i64, .{ .cast = input });
         }
         /// Copy a bounded slice into a fresh list using existing checked loop instructions.
         pub fn slice(self: Self, base: typed.NodeId, start: ?typed.NodeId, end: ?typed.NodeId) Error!typed.Node {

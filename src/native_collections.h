@@ -17,4 +17,11 @@ int myl_native_list_get(const myl_native_list *, size_t index, void *output);
 int myl_native_list_set(myl_native_list *, size_t index, const void *value);
 int myl_native_list_pop(myl_native_list *, void *output);
 int myl_native_list_clear(myl_native_list *);
+/* `values[start:stop:step]` endpoints. An omitted endpoint arrives as one of
+ * these sentinels, which no source expression can spell. */
+#define MYL_NATIVE_SLICE_FIRST INT64_MIN
+#define MYL_NATIVE_SLICE_LAST INT64_MAX
+/* Fresh stepped slice under Python's endpoint rules. A zero step or a refused
+ * allocation returns NULL. */
+myl_native_list *myl_native_list_slice_step(myl_native_heap *, myl_native_list *, int64_t start, int64_t stop, int64_t step);
 #endif

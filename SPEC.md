@@ -528,6 +528,8 @@ mis-tagged and at least one executable block was found.
 
 - [PY-COLLECTIONS-13] Record field writeback retains unrelated fields changed through managed aliases during evaluation of the assigned value.
 
+- [PY-COLLECTIONS-14] `values[start:stop:step]` copies every `step`-th element of a list or `str`, applying Python's endpoint rules exactly once: an omitted endpoint defaults to the end the step walks from, endpoints are normalized against the length once, and a negative step walks backwards. The receiver, both endpoints and the step are each evaluated once, and a zero step traps with `R_SLICE_STEP`. Byte strings reject a step with `E_COLLECTION_METHOD`.
+
 
 - [PY-TEXT-1] Managed immutable text validates UTF-8, indexes Unicode scalar values (including negative indices), compares exact codepoints, concatenates, and splits/joins literal separators. Strings cannot be mutated through list operations. Scalar str conversions use Python Boolean/None spellings and numeric text. Python strings support Unicode escapes, codepoint slices, membership, and iteration; generic bodies preserve these types.
 - [PY-DICT-1] Managed dictionaries preserve insertion order and shared alias updates, compare integer/string keys by value, distinguish missing keys from defaults, trace key/value cycles, and fail allocation or capacity growth atomically. Managed data equality compares contents with cycle detection; dictionary equality ignores insertion order. Membership searches dictionary keys, list values, or a text substring. Python in/not in evaluate the needle before the container exactly once. Dictionary iteration returns keys in insertion order and traps if aliases change its size; generic dictionary literals preserve symbolic key/value types.

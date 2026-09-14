@@ -1000,6 +1000,12 @@ const Checker = struct {
         if (start) |value| try self.requireInteger(self.nodes.items[@backingInt(value)].ty, node.span);
         if (end) |value| try self.requireInteger(self.nodes.items[@backingInt(value)].ty, node.span);
         const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
+        if (slice.step) |stride| {
+            if (schema.collection.kind == .bytes) return self.sink.fail(eCollectionMethod, node.span, "byte strings do not support a slice step");
+            const step = try self.expressionWithTemporaries(stride, temporaries);
+            try self.requireInteger(self.nodes.items[@backingInt(step)].ty, node.span);
+            return b.sliceStep(base, start, end, step);
+        }
         return if (schema.collection.kind == .list) b.slice(base, start, end) else b.textSlice(base, start, end);
     }
     fn checkListAccess(self: *Checker, node: ast.Node, operation: struct { base: ast.NodeId, kind: BufferKind, inputs: []const ast.NodeId, signed_length: bool = false }, temporaries: []const typed.Type) Error!typed.Node {

@@ -48,6 +48,7 @@ void *myl_qbe_root_mark(void *context) { return ((Context *)context)->heap.roots
 void myl_qbe_root_restore(void *context, void *mark) { ((Context *)context)->heap.roots = mark; }
 void myl_qbe_fail_capability(void *context) { fail(context, "R_CAPABILITY"); }
 void myl_qbe_fail_slice(void *context) { fail(context, "R_SLICE_BOUNDS"); }
+void myl_qbe_fail_slice_step(void *context) { fail(context, "R_SLICE_STEP"); }
 void myl_qbe_fail_text_bounds(void *context) { fail(context, "R_TEXT_BOUNDS"); }
 void myl_qbe_fail_missing_key(void *context) { fail(context, "R_MISSING_KEY"); }
 void myl_qbe_fail_empty_separator(void *context) { fail(context, "R_EMPTY_SEPARATOR"); }

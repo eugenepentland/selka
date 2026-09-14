@@ -148,6 +148,28 @@ test "slice negative clamp empty and copy alias semantics" {
     , 42);
 }
 
+// spec: PY-COLLECTIONS-14
+test "slice step selects every nth element of a list and of text in both directions" {
+    try run(
+        \\def main() -> i64:
+        \\    items = [1, 2, 3, 4, 5, 6]
+        \\    text = "abcdef"
+        \\    if len(items[0:6:2]) != 3 or items[0:6:2][1] != 3:
+        \\        return 1
+        \\    if len(items[::-1]) != 6 or items[::-1][0] != 6:
+        \\        return 2
+        \\    if len(items[5:0:-2]) != 3 or items[5:0:-2][1] != 4:
+        \\        return 3
+        \\    if len(items[99:0:-1]) != 5 or len(items[0:6:99]) != 1:
+        \\        return 4
+        \\    if text[1:5:2] != "bd" or len(text[::-2]) != 3:
+        \\        return 5
+        \\    if text[4:0:-3] != "eb" or len(text[2:2:1]) != 0:
+        \\        return 6
+        \\    return items[-1:0:-2][0] * 7
+    , 42);
+}
+
 // spec: PY-COLLECTIONS-11
 test "outer annotated postfix expressions do not contaminate literal element inference" {
     try run(

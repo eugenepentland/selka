@@ -789,9 +789,10 @@ pub const Parser = struct {
             if (self.take(.lbracket)) {
                 const start = if (self.current().tag == .colon) null else try self.expression(0);
                 if (self.take(.colon)) {
-                    const end = if (self.current().tag == .rbracket) null else try self.expression(0);
+                    const end = if (self.current().tag == .rbracket or self.current().tag == .colon) null else try self.expression(0);
+                    const step = if (self.take(.colon)) (if (self.current().tag == .rbracket) null else try self.expression(0)) else null;
                     const close = try self.expect(.rbracket);
-                    left = try self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, close.span), .data = .{ .slice = .{ .base = left, .start = start, .end = end } } });
+                    left = try self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, close.span), .data = .{ .slice = .{ .base = left, .start = start, .end = end, .step = step } } });
                 } else {
                     const close = try self.expect(.rbracket);
                     left = try self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, close.span), .data = .{ .index = .{ .base = left, .index = start.? } } });

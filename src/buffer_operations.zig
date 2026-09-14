@@ -5,6 +5,8 @@ pub const Kind = enum {
     iteration_check,
     key_at,
     slice,
+    /// `values[start:stop:step]`; the endpoints carry omission sentinels.
+    slice_step,
     capacity,
     read,
     write,
@@ -51,6 +53,7 @@ pub const Kind = enum {
             .replace => 2,
             .iteration_check, .key_at, .read, .append, .take, .truncate, .contains, .split, .join, .starts_with, .ends_with, .find => 1,
             .write, .resize, .reserve, .get, .slice => 2,
+            .slice_step => 3,
         };
     }
     /// Identify operations that may allocate new guest backing storage.
@@ -90,7 +93,7 @@ pub fn method(name: []const u8) ?Kind {
 /// Whether a managed operation can allocate, including new dictionary entries.
 pub fn managedAllocation(kind: Kind, dictionary: bool) bool {
     return switch (kind) {
-        .append, .split, .join, .keys, .values, .slice => true,
+        .append, .split, .join, .keys, .values, .slice, .slice_step => true,
         .encode, .decode, .to_list, .hex, .from_hex => true,
         .strip, .lstrip, .rstrip, .upper, .lower, .splitlines, .replace, .zfill => true,
         .parse_int, .parse_float => true,

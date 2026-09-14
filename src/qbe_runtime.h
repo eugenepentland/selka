@@ -45,6 +45,7 @@ void myl_qbe_step_at(void *context, uint64_t position);
 void *myl_qbe_root_mark(void *context);
 void myl_qbe_root_restore(void *context, void *mark);
 void myl_qbe_fail_slice(void *context);
+void myl_qbe_fail_slice_step(void *context);
 void myl_qbe_fail_text_bounds(void *context);
 void myl_qbe_fail_missing_key(void *context);
 void myl_qbe_fail_empty_separator(void *context);

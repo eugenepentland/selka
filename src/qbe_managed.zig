@@ -102,8 +102,22 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             }
             try self.print(store_unit, .{base});
         },
+        .slice_step => try steppedSlice(E, self, base, list),
         else => return self.reject(self.pc),
     }
+}
+
+/// Copy a stepped slice through the shared native list routine, which text shares.
+fn steppedSlice(comptime E: type, self: *E, base: usize, input: usize) Error!void {
+    const first = try self.load("s", base);
+    const last = try self.load("s", base + 1);
+    const step = try self.load("s", base + 2);
+    const nonzero = self.temp();
+    try self.print(" %v{d} =l cnel %v{d}, 0\n", .{ nonzero, step });
+    try self.require(nonzero, "myl_qbe_fail_slice_step");
+    const result = self.temp();
+    try self.print(" %v{d} =l call $myl_native_list_slice_step(l %heap, l %v{d}, l %v{d}, l %v{d}, l %v{d})\n", .{ result, input, first, last, step });
+    try checkedPointer(E, self, result, base);
 }
 
 fn operandPointer(comptime E: type, self: *E, ty: typed.Type, slot: usize) Error!usize {
@@ -269,6 +283,7 @@ fn textOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try self.print(" %v{d} =l call $myl_native_text_slice(l %heap, l %v{d}, l %v{d}, l %v{d})\n", .{ result, input, start, end });
             try checkedPointer(E, self, result, base);
         },
+        .slice_step => try steppedSlice(E, self, base, input),
         .split, .join => {
             const argument = try self.load("s", base);
             if (op.kind == .split) {

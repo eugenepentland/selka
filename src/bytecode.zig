@@ -247,6 +247,7 @@ fn validateManagedOperation(program: Program, local: typed.Local, operation: Buf
             .iteration_check => .unit,
             .key_at => if (dictionary) schema.collection.key.? else return error.InternalError,
             .slice => if (!dictionary) local.ty else return error.InternalError,
+            .slice_step => if (!dictionary and !byte_string) local.ty else return error.InternalError,
             .read => if (dictionary or byte_string) element else local.ty,
             .write => if (dictionary) .unit else return error.InternalError,
             .get => if (dictionary) element else return error.InternalError,
@@ -277,6 +278,7 @@ fn validateManagedOperation(program: Program, local: typed.Local, operation: Buf
         .read => element,
         .append, .write, .iteration_check => .unit,
         .contains => .bool,
+        .slice_step => local.ty,
         else => return error.InternalError,
     };
     if (operation.output != expected) return error.InternalError;
