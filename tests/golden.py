@@ -77,6 +77,16 @@ class Reference:
             raise Missing(f'{self.name}: no recorded outcome for {case!r}; rerun the driver with --record')
         return Outcome(entry['returncode'], base64.b64decode(entry['stdout']), base64.b64decode(entry['stderr']))
 
+    def remember(self, case, produce):
+        """Return recorded JSON data for one case, computing it only while recording."""
+        identity = self.key(case)
+        if self.recording:
+            self.entries[identity] = {'case': case, 'data': produce()}
+        entry = self.entries.get(identity)
+        if entry is None:
+            raise Missing(f'{self.name}: no recorded data for {case!r}; rerun the driver with --record')
+        return entry['data']
+
     def save(self):
         """Write the golden file when recording; a comparison run leaves it alone."""
         if not self.recording:

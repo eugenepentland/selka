@@ -69,7 +69,7 @@ class Builder:
         return report
 
     def execute(self, expected, *, options=(), env=None):
-        result = checked([self.output, *options], env=env or self.env, cwd=self.directory)
+        result = checked([self.output, '--print-result', *options], env=env or self.env, cwd=self.directory)
         assert result.stdout == expected, result
         return result
 

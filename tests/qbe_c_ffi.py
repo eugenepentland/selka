@@ -97,20 +97,20 @@ def main():
         source.write_text(guest())
         foreign.write_text(C_SOURCE)
         for mode in ('Debug', 'ReleaseFast'):
-            result = run([compiler, 'build', source, '--run', '--link', foreign, '--mode', mode, *tools])
+            result = run([compiler, 'build', source, '--run', '--link', foreign, '--mode', mode, *tools, '--', '--print-result'])
             assert result.stdout == b'42\n', result
         # Explicit object and archive inputs, including library search/name controls.
         obj = root / 'foreign.o'
         run([zig, 'cc', '-fPIC', '-c', foreign, '-o', obj])
-        result = run([compiler, 'build', source, '--run', '--link', obj, *tools])
+        result = run([compiler, 'build', source, '--run', '--link', obj, *tools, '--', '--print-result'])
         assert result.stdout == b'42\n'
         shared = root / 'libforeign.so'
         run([zig, 'cc', '-shared', '-fPIC', foreign, '-o', shared])
-        result = run([compiler, 'build', source, '--run', '--link', shared, *tools])
+        result = run([compiler, 'build', source, '--run', '--link', shared, *tools, '--', '--print-result'])
         assert result.stdout == b'42\n'
         archive = root / 'libforeign.a'
         run([zig, 'ar', 'rcs', archive, obj])
-        result = run([compiler, 'build', source, '--run', '--library-path', root, '--link-library=foreign', *tools])
+        result = run([compiler, 'build', source, '--run', '--library-path', root, '--link-library=foreign', *tools, '--', '--print-result'])
         assert result.stdout == b'42\n'
         run([compiler, 'build', source, '--run', *tools], ok=False)
         # Module qualification must not change the linked C symbol.
@@ -119,7 +119,7 @@ def main():
         source.write_text('module main\nimport foreign\n\n'
                           'def main() -> i64:\n'
                           '    return i64(foreign.c_version())\n')
-        assert run([compiler, 'build', source, '--project', '--run', '--link', foreign, *tools]).stdout == b'42\n'
+        assert run([compiler, 'build', source, '--project', '--run', '--link', foreign, *tools, '--', '--print-result']).stdout == b'42\n'
         # No test receipt may suppress another external call, even if IL is unchanged.
         source.write_text('module main\nimport foreign\nexport test_external\nexport test_pure\n\n'
                           'def test_external() -> bool:\n'

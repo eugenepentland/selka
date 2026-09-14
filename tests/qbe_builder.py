@@ -40,7 +40,7 @@ def main():
         source.write_text('def square(x: i64) -> i64:\n    return x * x\n\n\ndef main() -> i64:\n    return square(4)\n')
         first = build()
         assert first['compiled_functions'] == 2 and first['reused_functions'] == 0, first
-        assert subprocess.check_output([output]) == b'16\n'
+        assert subprocess.check_output([output, '--print-result']) == b'16\n'
         previous_stat = output.stat()
         repeat = build()
         assert not repeat['output_changed'], repeat
@@ -51,11 +51,11 @@ def main():
         edited = build()
         assert edited['compiled_functions'] == 1 and edited['reused_functions'] == 1, edited
         assert sum(keys(first)[name] == key for name, key in keys(edited).items()) == 1
-        assert subprocess.check_output([output]) == b'17\n'
+        assert subprocess.check_output([output, '--print-result']) == b'17\n'
         cold_output = directory / 'cold-program'
         cold = build(['--cache-dir', str(directory / 'cold-cache'), '-o', str(cold_output)])
         assert cold['compiled_functions'] == 2, cold
-        assert subprocess.check_output([cold_output]) == subprocess.check_output([output])
+        assert subprocess.check_output([cold_output, '--print-result']) == subprocess.check_output([output, '--print-result'])
         source.write_text('# changed order and formatting\ndef main() -> i64:\n    return  square( 4 )\n\n\ndef square( x : i64 ) -> i64:\n    return x*x + 1\n')
         reordered = build()
         assert reordered['compiled_functions'] == 0 and keys(reordered) == keys(edited), reordered
@@ -63,7 +63,7 @@ def main():
         corrupted.write_bytes(b'corrupt object')
         repaired = build()
         assert repaired['compiled_functions'] == 1 and repaired['reused_functions'] == 1, repaired
-        assert subprocess.check_output([output]) == b'17\n'
+        assert subprocess.check_output([output, '--print-result']) == b'17\n'
         Path(repaired['functions'][0]['object']).with_suffix('.sha256').write_bytes(b'\xff')
         metadata_repaired = build()
         assert metadata_repaired['compiled_functions'] == 1, metadata_repaired
@@ -73,7 +73,7 @@ def main():
         assert len(deleted['functions']) == 1, deleted
         manifest = json.loads(output.with_name(output.name + '.qbe-manifest.json').read_text())
         assert len(manifest['functions']) == 1
-        assert subprocess.check_output([output]) == b'19\n'
+        assert subprocess.check_output([output, '--print-result']) == b'19\n'
         previous = output.read_bytes()
         previous_manifest = output.with_name(output.name + '.qbe-manifest.json').read_bytes()
         source.write_text('def main() -> i64:\n    return True\n')
@@ -94,7 +94,7 @@ def main():
         project = build(['--project'])
         assert len(project['functions']) == 3
         assert len({unit['symbol'] for unit in project['functions']}) == 3
-        assert subprocess.check_output([output]) == b'30\n'
+        assert subprocess.check_output([output, '--print-result']) == b'30\n'
         source.write_text('module source\nimport right\nimport left\n\n\ndef main() -> i64:\n    return left.value() + right.value()\n')
         reordered_project = build(['--project'])
         assert reordered_project['compiled_functions'] == 0, reordered_project
@@ -117,7 +117,7 @@ def main():
         source.write_text('def square(x: i64, y: i64) -> i64:\n    return x * y\n\n\ndef main() -> i64:\n    return square(4, 5)\n')
         signature = build()
         assert signature['compiled_functions'] == 2, signature
-        assert subprocess.check_output([output]) == b'20\n'
+        assert subprocess.check_output([output, '--print-result']) == b'20\n'
     print('QBE builder: body-only reuse, restart reuse, clean parity, reorder, deletion, corruption recovery, diagnostic relocation, and failure preservation passed')
 
 

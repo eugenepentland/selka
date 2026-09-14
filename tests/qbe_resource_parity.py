@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Execute resource-provider semantics and exact VM event order through QBE."""
+"""Execute resource-provider semantics and the recorded event order through QBE."""
 import argparse
 from pathlib import Path
 import tempfile
+
+import golden
 import native_resources as oracle
 
 
@@ -11,7 +13,9 @@ def main():
     parser.add_argument('--compiler',required=True)
     parser.add_argument('--qbe',required=True)
     parser.add_argument('--zig',default='zig')
+    golden.argument(parser)
     args=parser.parse_args()
+    reference=golden.Reference('qbe_resource_parity',args.record)
     root=Path(__file__).resolve().parents[1]
     example=(root/'examples/resources.my').read_text()
     prefix=('resource File: filesystem\n\n\n'
@@ -55,7 +59,7 @@ def main():
     cases.append(('quota-reuse',quota,{},0,b'8\n',None))
     with tempfile.TemporaryDirectory(prefix='qbe-resources-') as directory:
         directory=Path(directory)
-        traces=oracle.vm_oracle(root,directory,args.zig,cases)
+        traces=oracle.recorded(reference,root,directory,args.zig,cases)
         previous=None
         for i,(name,text,settings,code,output,error) in enumerate(cases):
             source=directory/'case.my';source.write_text(text)
@@ -65,12 +69,13 @@ def main():
                                      '--qbe',args.qbe,'--zig',args.zig,'--provider',root/'tests/native_resources.c','-o',executable],timeout=240)
                 assert built.returncode==0,(name,built.stderr.decode())
                 previous=text
-            result=oracle.invoke([executable],settings)
+            result=oracle.invoke([executable,'--print-result'],settings)
             assert (result.returncode,result.stdout)==(code,output),(name,result)
             if error:assert error in result.stderr,(name,result.stderr)
             events=oracle.events(result);oracle.balanced(events)
-            if i in traces:assert events==traces[i],(name,events,traces[i])
-    print(f'QBE resources: {len(cases)} lifecycle/I/O comparisons and VM release-order checks passed')
+            if name in traces:assert events==traces[name],(name,events,traces[name])
+        reference.save()
+    print(f'QBE resources: {len(cases)} lifecycle/I/O comparisons and recorded release-order checks passed')
 
 
 if __name__=='__main__':main()

@@ -66,7 +66,7 @@ def main():
                       '--qbe', args.qbe, '--zig', args.zig, '--mode', mode, '--cache-dir', project / 'cache']
             built = run([*common, entry, '--project', '--provider', ROOT / 'tests/native_host_provider.c', '-o', output])
             assert built.returncode == 0, built.stderr.decode()
-            native = run([output])
+            native = run([output, '--print-result'])
             assert native.returncode == 0 and native.stdout == b'0\n' and native.stderr == b'\x00\xffA', native
             for failure, code in ((1, b'HostMissingRegistration'), (2, b'HostCapabilityDenied'),
                                   (3, b'HostSignatureMismatch'), (4, b'R_HOST_CONTRACT'),

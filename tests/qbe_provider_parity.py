@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Execute the existing VM provider oracle cases through QBE native callbacks."""
+"""Execute the recorded provider cases through QBE native callbacks."""
 import argparse
 import os
 from pathlib import Path
@@ -23,8 +23,6 @@ def main():
     count=0
     with tempfile.TemporaryDirectory(prefix='qbe-providers-') as directory:
         directory=Path(directory)
-        external.vm_oracle(root,directory,args.zig)
-        environment.vm_oracle(root,directory,args.zig)
         for family,sources,provider in [('external',external.SOURCES,'native_provider.c'),
                                         ('environment',environment.SOURCES,'native_environment.c')]:
             for index,text in enumerate(sources):
@@ -43,14 +41,14 @@ def main():
                     cases=[(environment.settings(mode,missing,index==3),value,error,f'environment-calls: {calls}\n')
                            for selected,mode,missing,value,error,calls in environment.CASES if selected==index]
                 for env,value,error,trace in cases:
-                    result=run([output],env)
+                    result=run([output,'--print-result'],env)
                     if error:
                         assert result.returncode==2 and not result.stdout and error.encode() in result.stderr,(family,index,error,result)
                     else:
                         assert result.returncode==0 and result.stdout==f'{value}\n'.encode(),(family,index,result)
                     assert trace.encode() in result.stderr,(family,index,result.stderr)
                     count+=1
-    print(f'QBE providers: {count} clock/random/environment VM oracle comparisons passed')
+    print(f'QBE providers: {count} clock/random/environment recorded-case comparisons passed')
 
 
 if __name__=='__main__':main()

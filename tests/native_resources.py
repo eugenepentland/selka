@@ -102,12 +102,25 @@ fn scenario(id:usize,source:[]const u8,acquire:u8,complete:u8,permissions:u8,mis
         calls.append(f"try scenario({index},{json.dumps(source)},{settings.get('ACQUIRE',0)},{settings.get('COMPLETE',0)},{settings.get('PERMISSIONS',7)},{str(bool(settings.get('MISSING',0))).lower()},{settings.get('READ',0)},{settings.get('WRITE',0)},{str(bool(settings.get('IO_MISSING',0))).lower()},{int(output) if output else 0},{failure},{trap});")
     path = directory / "oracle.zig"
     path.write_text(template + '\ntest "resource-oracle"{\n' + "\n".join(calls) + "\n}\n")
-    result = invoke([zig, "test", "-OReleaseFast", "--test-filter", "resource-oracle", "--dep", "language", f"-Mroot={path}", f"-Mlanguage={root / 'src/compiler.zig'}"])
+    result = invoke([zig, "test", "-OReleaseFast", "--test-filter", "resource-oracle", "--dep", "language", f"-Mroot={path}", f"-Mlanguage={root / 'src/compiler.zig'}"], timeout=1800)
     assert result.returncode == 0, result.stderr
     traces = {index: [] for index in included}
     for index, event in re.findall(rb"resource-oracle: (\d+) ([^\n]+)", result.stderr):
         traces[int(index)].append(tuple(event.split()))
     return traces
+
+
+def recorded(reference, root, directory, zig, cases):
+    """Recorded interpreter release order for the cases that have one, keyed by name."""
+    names = [case[0] for case in cases]
+
+    def produce():
+        traces = vm_oracle(root, directory, zig, cases)
+        return {names[index]: [[part.decode() for part in event] for event in events]
+                for index, events in traces.items()}
+
+    data = reference.remember(['resource-release-order'], produce)
+    return {name: [tuple(part.encode() for part in event) for event in events] for name, events in data.items()}
 
 
 def io_cases(prefix, finish):

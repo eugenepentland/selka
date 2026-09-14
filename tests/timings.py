@@ -40,12 +40,12 @@ def main():
         measured = command(compiler, 'run', str(single), '--print-result', '--timings=json')
         assert baseline.returncode == measured.returncode == 0
         assert baseline.stdout == measured.stdout == b'7\n' and not baseline.stderr
-        counts = records(measured, 'compiler', ['source_load', 'frontend', 'bytecode_lowering', 'vm_execution', 'total'])
+        counts = records(measured, 'compiler', ['source_load', 'frontend', 'bytecode_lowering', 'native_emission', 'native_execution', 'total'])
         assert counts['source_bytes'] == single.stat().st_size and counts['modules'] == 1
         assert counts['ast_nodes'] and counts['typed_nodes']
         legacy = command(compiler, 'run', str(single), '--print-result', '--timings')
         assert legacy.returncode == 0 and legacy.stdout == baseline.stdout
-        assert legacy.stderr.startswith(b'timings: bytecode_ns='), legacy
+        assert legacy.stderr.startswith(b'timings: native_ns='), legacy
         checked = command(compiler, 'check', str(single), '--timings=json')
         assert checked.returncode == 0 and not checked.stdout
         records(checked, 'compiler', ['source_load', 'frontend', 'total'])
@@ -62,10 +62,10 @@ def main():
         single.write_text('def main() -> i64:\n    x = 0\n    return 7 // x\n')
         trapped = command(compiler, 'run', str(single), '--timings=json', '--diagnostics=json')
         assert trapped.returncode == 1 and not trapped.stdout
-        records(trapped, 'compiler', ['source_load', 'frontend', 'bytecode_lowering', 'vm_execution', 'total'])
+        records(trapped, 'compiler', ['source_load', 'frontend', 'bytecode_lowering', 'native_emission', 'native_execution', 'total'])
         project = root / 'main.my'
         project.write_text('module main\n\n\ndef main() -> i64:\n    return 7\n')
-        for mode, phases in [('check-project', []), ('run-project', ['bytecode_lowering', 'vm_execution']), ('index-project', []), ('emit-project-qbe', ['bytecode_lowering', 'native_emission'])]:
+        for mode, phases in [('check-project', []), ('run-project', ['bytecode_lowering', 'native_emission', 'native_execution']), ('index-project', []), ('emit-project-qbe', ['bytecode_lowering', 'native_emission'])]:
             normal = command(compiler, mode, str(project))
             timed = command(compiler, mode, str(project), '--timings=json')
             assert timed.returncode == normal.returncode == 0, timed
