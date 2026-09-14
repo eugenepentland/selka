@@ -364,6 +364,16 @@ pub fn build(b: *std.Build) void {
     const agent_tools = b.step("test-agent-tools", "Verify compact feedback, byte-contract fixtures, and compiler-pinned references");
     guardian.addAllChecks(b, guardian_exe, agent_tools, .{});
     boundedChecks(agent_tools);
+    const idiom_step = b.step("test-idioms", "Measure Python-shaped idioms and reject regressions");
+    const idiom_self_test = bounded(b.addSystemCommand(&.{ "python3", "tests/idiom_probes.py", "--self-test" }), rss.driver);
+    idiom_self_test.setCwd(b.path("."));
+    idiom_step.dependOn(&idiom_self_test.step);
+    const idiom_run = bounded(b.addSystemCommand(&.{ "python3", "tests/idiom_probes.py", "--compiler" }), rss.parity);
+    idiom_run.addArtifactArg(exe);
+    idiom_run.setCwd(b.path("."));
+    idiom_run.has_side_effects = true;
+    idiom_step.dependOn(&idiom_run.step);
+    test_step.dependOn(idiom_step);
     const doc_coverage = bounded(b.addRunArtifact(exe), rss.driver);
     doc_coverage.addArgs(&.{ "doc-coverage", "." });
     doc_coverage.setCwd(b.path("."));

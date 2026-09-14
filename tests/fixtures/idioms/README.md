@@ -28,8 +28,16 @@ the plan requires. A run classifies each probe as:
 | `baseline` | unchanged from the recorded starting point |
 | `changed` | neither — either real progress with a stale record, or a break; review it |
 
-An expectation matches on exit `status`, on printed `stdout` (from `--print-result`), on a
-diagnostic `code` (for example `E_LIST_METHOD`), and optionally on `stderr_contains`.
+An expectation that records `stdout` and no `code` or `stderr_contains` is a value
+expectation. It matches the value printed by `--print-result` and requires the program to
+have run to completion. It deliberately ignores the exact exit status because a completed
+`main` returning an integer exits with that integer; compiler errors and runtime traps still
+fail because they report a failure diagnostic on stderr. Warnings do not turn a
+completed value probe into a failure.
+
+An expectation with `code` or `stderr_contains` is a diagnostic expectation. It checks the
+exact recorded `status` as well as the diagnostic code or text. Run the classifier's small
+table-driven test independently with `python3 tests/idiom_probes.py --self-test`.
 
 ## Groups
 
