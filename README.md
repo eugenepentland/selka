@@ -1,14 +1,18 @@
 # mylang
 
 An experimental statically checked, compiled language implemented in Zig.
-Programs are compiled to native code; we develop the language's semantics to test
-whether agents can write and repair correct code more reliably. The implementation
-follows [the revision 3 plan](docs/plan.md). The working language name and `.my`
-extension are provisional.
+Programs are compiled to native code. The design goal is for mylang to be the
+fastest language for AI agents to develop in: the default path is the easy path —
+Python-like syntax, static types, incremental compilation and testing — with
+opt-in escape hatches for performance when a measurement calls for them. That goal
+is still a hypothesis; [the plan](docs/plan.md) tracks the application evidence that
+would confirm it. The working language name and `.my` extension are provisional.
 
 The [incremental QBE native backend](docs/experiments/incremental-qbe.md) is the
 only runtime. `mylang build` produces an executable, reusing individual native
-function objects while checking the frontend fresh, and `mylang run` is that same
+function objects while checking the frontend fresh (making that frontend reuse the
+default is a stated goal, not yet the case — see
+[the plan](docs/plan.md#1-project-direction)), and `mylang run` is that same
 build followed by running the result. The bytecode interpreter that used to sit
 beside it was removed on 2026-09-14; bytecode survives only as the internal IR
 QBE consumes. The backend supports the current typed operations, managed

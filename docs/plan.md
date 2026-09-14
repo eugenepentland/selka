@@ -36,7 +36,11 @@ Status: revision 3; the interpreter-first direction adopted on 2026-09-06 was re
 
 Working executable name: `mylang`. Working source extension: `.my`.
 
-Purpose: a plan for an experimental implementation, not a finished language specification.
+Purpose: a plan for an experimental implementation, not a finished language
+specification. §1 states the design goal ("north star") the rest of the document
+serves; dated entries from §3 on record what was tried and must not be read as a
+current feature list. Where this document and the [current language
+reference](current-language.md) disagree, the reference wins.
 
 Revision 2 introduced Guardian-derived quality proposals. Revision 3 prioritizes
 language semantics, diagnostics, typed host calls, and real application evidence.
@@ -46,27 +50,72 @@ implementation entries record what was demonstrated at each checkpoint.
 
 ## 1. Project direction
 
-Build a small, statically checked, compiled language that helps agents write,
-understand, and modify correct code with fewer mistakes and less repair effort.
-Compile through QBE to native amd64 Linux code: that is the only runtime, and it
-executes real application code. Source-level explanation comes from the compiler's own
-diagnostics and reports, not from a second, interpreted execution path.
+### Design goal (north star)
+
+Mylang should be the **fastest language for AI agents to develop in**: the language in
+which an agent gets from a task description to a correct, working program in the
+fewest turns and with the least repair. Development speed is the headline goal;
+runtime speed is a property the escape hatches buy back when a measurement says it
+matters.
+
+The **default path must be the easy path**. The shortest, most obvious way to write a
+program should also be the correct and idiomatic way. When the design has a choice
+between a technically stronger rule and a rule an agent can hold in one context
+window, prefer the simpler rule unless the stronger one prevents a real, likely
+mistake. Ceremony that does not buy a correctness guarantee is a defect.
+
+Concretely, the goal has five parts:
+
+- **Python-like syntax, statically typed.** `def`, indentation, `class`, ordinary
+  assignment, `list[T]`, strings, dictionaries, `for ... in`, comprehensions and
+  familiar builtins, with types checked before execution. Mylang should not surprise a
+  Python reader; every difference from Python must be deliberate, documented and rare.
+- **Everyday code is short.** One obvious spelling per operation. Missing vocabulary
+  that a Python programmer reaches for — the common builtins and collection methods —
+  is a bug in the language, not a simplification.
+- **Incremental compilation and testing by default.** A one-line edit should pay for
+  the affected functions and tests, not for a whole-program rebuild. Reuse must work
+  without the agent opting in; an explicit `check-session` is a stopgap, not the goal.
+- **A simple backend optimized for development speed.** One small, well-understood
+  native path (QBE to amd64 Linux) that compiles quickly and is easy to debug. It does
+  not need to win code-generation benchmarks; it needs to keep the edit-run-test loop
+  short.
+- **Escape hatches for performance, when measured.** Native builds, fixed-width and
+  fixed-size types, `bytes`, effect ceilings such as `noalloc`/`noio`, typed C calls,
+  and managed arenas are the opt-in route to throughput and constrained hosts. They
+  must be discoverable, must not leak into the default surface, and must not be added
+  on the strength of an unmeasured performance story.
+
+The implementation direction that follows: compile through QBE to native amd64 Linux
+code, the only runtime, so programs execute as real application code. Source-level
+explanation comes from the compiler's own diagnostics and reports, not from a second,
+interpreted execution path. The 14 September [language simplicity
+audit](audits/language-simplicity-2026-09-14.md) and [simplification
+plan](audits/simplification-plan-2026-09-14.md) track where the current implementation
+falls short of this goal.
 
 The existing parser, checker, separate typed IR, and bytecode lowering remain the
 foundation; that bytecode is now the internal IR the QBE backend consumes rather than
 something a VM executes. Zig builds the host implementation; it does not consume guest
 bytecode. Keep Guardian on the Zig implementation with blocking checks and no frozen
-violation baselines. Language guarantees and advisory application-code reports
+violation baselines. Gate latency is part of the north star: a check that measurably
+lengthens the routine edit/test loop is itself a defect to fix, not a cost to absorb.
+Language guarantees and advisory application-code reports
 remain separate from Guardian's implementation-quality policies.
 
 Favor a small number of strong, understandable rules: distinct IDs and units,
 exhaustive tagged unions, explicit optional values and checked errors, definite
-initialization, checked arithmetic and indexing, ownership and borrowing, explicit
-mutation, and controlled effects. Existing experiments cover many of these;
-remaining syntax and usability must be evaluated on realistic programs. More
-restrictions, obscure inference, or boilerplate are not success criteria. Keep
-inferred duplication and complexity advisory; share domain knowledge through
-explicit types, schemas, and interfaces where that improves the program.
+initialization, checked arithmetic and indexing, explicit mutation, and controlled
+effects. Every rule must earn its place against the north-star goal; a rule that
+merely moves work onto the agent is not justified by being statically stronger. More
+restrictions, obscure inference, or boilerplate are not success criteria. Existing
+experiments cover many of these; remaining syntax and usability must be
+evaluated on realistic programs, and the default path should stay free of ceremony the
+task did not ask for. Keep inferred duplication and complexity advisory; share domain
+knowledge through explicit types, schemas, and interfaces where that improves the
+program. Where this plan previously named ownership, borrowing, references or
+allocator capabilities as rules, those belonged to the removed storage tier and are
+not part of the current language.
 
 ### Current implementation order
 
@@ -78,19 +127,19 @@ explicit types, schemas, and interfaces where that improves the program.
    construction and substitution with explicit numeric lengths.
    Keep unsupported structural operations explicit until their rules are in place.
 2. Improve structured diagnostics and repair examples alongside those features.
-   Whole-value/partial-field moves, borrow conflicts, arena escapes and invalid
-   reference returns now retain causal, declaration and contract evidence, with
+   Whole-value/partial-field moves, arena escapes and result-propagation errors now
+   retain causal, declaration and contract evidence, with
    executed repair fixtures. [Versioned CLI diagnostics](experiments/json-diagnostics.md)
    now expose that evidence, source-mapped trap call stacks and cached warnings with `--diagnostics=json`. The initial
    [optional-value audit](experiments/optional-values.md) retains named unions and
    checked results; measure application usability before adding convenience syntax.
-3. The [typed VM host interface](experiments/host-functions.md) now supports
+3. The [typed native host interface](experiments/host-functions.md) now supports
    explicit guest declarations and handwritten Zig wrappers with exact signatures,
    transitive effects, grants, copied values and typed failures. Registrations bind
-   to the same compiled program; VM calls share bounded sessions and deterministic
-   cleanup. Borrowed and runtime-owned boundary signatures reject explicitly.
+   to the same compiled program; host calls share bounded sessions and deterministic
+   cleanup. Borrowed and runtime-owned boundary signatures are rejected explicitly.
 4. The [bounded board keepout trial](../experiments/board_trial/README.md) now
-   executes guest validation on the VM and a standalone Zig baseline against 87
+   executes guest validation natively and a standalone Zig baseline against 87
    fixed oracle cases plus 60 transformed cases, with exact report/callback
    agreement. Geometry stays behind a typed wrapper. The [repair-study harness](../experiments/board_trial/repair/README.md)
    now prepares five task pairs, records submissions and grades fresh shared
@@ -104,9 +153,9 @@ explicit types, schemas, and interfaces where that improves the program.
    now validates unused fields/payloads, identities and argument requirements;
    [finite layout checking](experiments/nominal-layouts.md) now validates stored
    dependencies while preserving phantom arguments. [Concrete instances](experiments/nominal-instances.md)
-   now execute on the VM with complete schemas and existing ownership/host rules.
+   now execute natively with complete schemas and existing managed-resource/host rules.
    [Symbolic nominal bodies](experiments/nominal-bodies.md) now check construction,
-   fields, variants, ownership and lifetimes before late VM specialization.
+   fields, variants, value and resource rules before late native specialization.
    [Provider-specific symbolic shapes](experiments/nominal-providers.md) now cover
    resource/environment operations and concrete domain codecs in generic callers.
    The board trial now uses one `Slot<T>` declaration and one equality-constrained
@@ -118,8 +167,9 @@ explicit types, schemas, and interfaces where that improves the program.
 Measure pre-execution mistakes caught, next-attempt diagnostic repair success,
 unrelated edits and unsafe workarounds, and independent behavioral-test results.
 Compare equivalent tasks against an existing implementation, recording failed
-attempts as well as successes. Language usefulness remains an untested hypothesis
-until this application evidence exists.
+attempts as well as successes. The north-star claim — that mylang is the fastest
+language for agents to develop in — remains an untested hypothesis until this
+application evidence exists.
 
 ### Runtime and future backends
 
@@ -153,29 +203,53 @@ adopted on 2026-09-06 and reversed on 2026-09-14; read it as history. The gate i
 
 ## 2. Long-term language goals
 
+> **Status (2026-09-14):** these are long-term properties, not the current surface.
+> Items tied to the removed storage tier — allocator capabilities, owned/shared/
+> exclusive borrows, references and slices, pools, and borrowed resource ABIs — are
+> retained as design history; do not implement them without a new decision that passes
+> the default-path test in §1. The current surface is
+> [current-language.md](current-language.md).
+
 ### Predictable execution and allocation
 
-Ordinary expressions should have understandable costs. Heap allocation should require an allocator capability, and APIs should make potentially allocating operations recognizable. Containers should support operations that use existing capacity as well as operations that may grow.
+**Current model.** Ordinary expressions should have understandable costs, and APIs
+should make potentially allocating operations recognizable. Ordinary data uses value
+semantics; managed strings, lists and dictionaries are shared references reclaimed by
+a nonmoving tracing collector, with optional `with arena()` regions for bulk release
+([managed memory](managed-memory.md), [arenas](arenas.md)). Recoverable errors are
+values with convenient propagation and no exception unwinding.
 
-Use value semantics for ordinary data. Keep resource ownership and transfer explicit enough to follow. Support deterministic cleanup with no mandatory garbage collector. Represent recoverable errors as values, with convenient propagation and no exception unwinding.
-
-Deterministic cleanup can execute code at scope exit. The goal is to make that ownership contract clear, not to pretend cleanup is free.
+**Removed storage-tier goals (2026-09-13).** The earlier direction required an
+allocator capability for heap allocation, deterministic cleanup with no mandatory
+garbage collector, and explicit ownership/transfer of every resource. Those belonged
+to the removed buffers/pools/references/borrow tier and are not current rules.
+Deterministic cleanup still exists for resource owners (files, handles) at scope exit;
+the goal there is to make the contract clear, not to pretend cleanup is free.
 
 ### Visible dependencies and effects
 
-Extend the allocator-capability idea to filesystem access, networking, clocks, randomness, and environment access. Library code receives capabilities from callers; ambient mutable state and unrestricted access to external resources should not be ordinary safe-language conveniences.
+Extend the capability idea to filesystem access, networking, clocks, randomness, and environment access. Library code receives capabilities from callers; ambient mutable state and unrestricted access to external resources should not be ordinary safe-language conveniences.
 
-Experiment with small function contracts for no I/O and no allocation. Verify them transitively through callees and cleanup operations. An explicit allocator argument alone does not establish a no-allocation guarantee. Absence of external effects does not establish termination or freedom from arithmetic traps. Exact syntax and the handling of indirect calls and FFI are deferred; section 18 describes the experiment.
+Experiment with small function contracts for no I/O and no allocation. Verify them transitively through callees and cleanup operations. A `noalloc` effect on one function does not by itself establish a transitive no-allocation guarantee. Absence of external effects does not establish termination or freedom from arithmetic traps. Exact syntax and the handling of indirect calls and FFI are deferred; section 18 describes the experiment.
 
 ### Practical memory safety
 
-Aim for owned values, shared borrows, exclusive borrows, and slices. Safe references should be checked for lifetime and access validity. Raw pointers and hardware access should require explicit unsafe operations and documented preconditions.
+**Removed storage-tier direction (2026-09-13):** owned values, shared and exclusive
+borrows, references, slices, pools and typed integer handles. The current model relies
+on the tracing collector, runtime checked handles/generations/leases, and managed
+arenas instead ([managed memory](managed-memory.md), [arenas](arenas.md)). Do not
+promise a borrow checker with no complexity, and prototype any lifetime rule on
+realistic graph, arena and container examples before making the syntax permanent. Raw
+pointers and hardware access still require explicit unsafe operations and documented
+preconditions.
 
-Make arenas, pools, and typed integer handles practical. Graph-like applications should be able to store objects in pools and refer to them by IDs. An ID type prevents mixing categories; detecting stale or invalid IDs still requires an appropriate pool design and checks.
-
-Do not promise a borrow checker with no complexity. Prototype its rules on realistic graph, arena, and container examples before making the syntax permanent.
-
-Track resource ownership through ordinary scope exits, recoverable-error returns, and ownership transfers. Resource-owning containers must not be implicitly copied. Partial construction must release resources already acquired when a later acquisition fails. Operations with fallible completion, such as transaction commit, need explicit result-returning APIs; cleanup must not imply successful completion. Cleanup behavior on traps needs a separate decision before guest resources are introduced.
+Resource ownership does remain for external owners: resource cleanup runs through
+ordinary scope exits and recoverable-error returns. Resource-owning containers must
+not be implicitly copied. Partial construction must release resources already acquired
+when a later acquisition fails. Operations with fallible completion, such as
+transaction commit, need explicit result-returning APIs; cleanup must not imply
+successful completion. Cleanup behavior on traps needs a separate decision while guest
+resources remain excluded.
 
 ### Defined arithmetic and layout
 
