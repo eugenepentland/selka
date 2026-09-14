@@ -5,6 +5,8 @@ from pathlib import Path
 import sys
 import tempfile
 
+import golden
+
 from qbe_parity import ROOT, run, signature
 
 
@@ -138,14 +140,17 @@ def main():
     parser.add_argument('--compiler', type=Path, required=True)
     parser.add_argument('--qbe', default='qbe')
     parser.add_argument('--zig', default='zig')
+    golden.argument(parser)
     args = parser.parse_args()
+    reference = golden.Reference('qbe_managed', args.record)
     with tempfile.TemporaryDirectory(prefix='mylang-qbe-managed-') as directory:
         temp = Path(directory)
+        reference.scrub = [(str(temp).encode(), b'<corpus>')]
         source, output = temp / 'case.my', temp / 'program'
         count = 0
         for text in cases():
             source.write_text(text)
-            vm = run([args.compiler.resolve(), 'run', source, '--print-result'])
+            vm = reference.expect([text, []], [args.compiler.resolve(), 'run', source, '--print-result'])
             built = run([sys.executable, ROOT / 'scripts/qbe.py', source, '-o', output,
                          '--compiler', args.compiler.resolve(), '--qbe', args.qbe,
                          '--zig', args.zig, '--cache-dir', temp / 'cache'])
@@ -154,6 +159,7 @@ def main():
                 native = run([output, *options])
                 assert signature(vm) == signature(native), (text, options, vm, native)
             count += 1
+        reference.save()
     print(f'QBE managed parity: {count} cases passed')
 
 

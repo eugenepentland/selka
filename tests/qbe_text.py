@@ -12,6 +12,8 @@ import struct
 import sys
 import tempfile
 
+import golden
+
 from qbe_parity import ROOT, run, signature
 
 ESCAPES = {'s': ' ', 't': '\t', 'n': '\n', 'r': '\r', 'v': '\v', 'f': '\f', '\\': '\\'}
@@ -316,7 +318,7 @@ def check(args, source, output, cache, text):
     source.write_text(text)
     built = build(args, source, output, cache)
     assert built.returncode == 0, (text, built.stderr.decode())
-    vm = run([args.compiler, 'run', source, '--print-result'])
+    vm = args.reference.expect([text, []], [args.compiler, 'run', source, '--print-result'])
     results = []
     for options in ([], ['--gc-stress']):
         native = run([output, *options])
@@ -330,10 +332,13 @@ def main():
     parser.add_argument('--compiler', type=Path, required=True)
     parser.add_argument('--qbe', default='qbe')
     parser.add_argument('--zig', default='zig')
+    golden.argument(parser)
     args = parser.parse_args()
     args.compiler = args.compiler.resolve()
+    args.reference = golden.Reference('qbe_text', args.record)
     with tempfile.TemporaryDirectory(prefix='mylang-qbe-text-') as directory:
         temp = Path(directory)
+        args.reference.scrub = [(str(temp).encode(), b'<corpus>')]
         source, output, cache = temp / 'case.my', temp / 'program', temp / 'cache'
         methods = 0
         for text in cases():
@@ -347,6 +352,7 @@ def main():
             for (kind, value, outcome), printed in zip(chunk, lines):
                 assert matches(kind, printed, outcome), (kind, value, outcome, printed)
             parsed += len(chunk) - 2
+        args.reference.save()
     print(f'QBE text parity: {methods} method cases and {parsed} number vectors passed')
 
 

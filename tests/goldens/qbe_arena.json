@@ -1,0 +1,176 @@
+{
+ "entries": {
+  "0aae5d4ec1f4c39a5286b08fcb004544": {
+   "case": [
+    "def main() -> int:\n    kept: list[list[int]] = []\n    with arena() as scratch:\n        cycle: list[list[int]] = []\n        cycle.append([1, 2])\n        kept = scratch.escape(cycle)\n    return len(kept) + len(kept[0])\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "Mwo="
+  },
+  "0c43e2e8d7cea313d847904415466668": {
+   "case": [
+    "def main() -> int:\n    older: list[int] = [5]\n    kept: list[list[int]] = []\n    with arena() as scratch:\n        holder: list[list[int]] = [older]\n        kept = scratch.escape(holder)\n    older.append(6)\n    return len(kept[0]) * 10 + kept[0][0]\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "MjUK"
+  },
+  "0f5465e679c8d3a7a9afb54ed2d0a985": {
+   "case": [
+    "def build(limit: int) -> Result[int, int]:\n    total = 0\n    with arena() as scratch:\n        values: list[int] = []\n        for index in range(limit):\n            values.append(index)\n        if limit > 3:\n            return Err(len(values))\n        total = len(values)\n    return Ok(total)\n\ndef chain(limit: int) -> Result[int, int]:\n    answer = 0\n    with arena() as outer:\n        noise: list[int] = [limit]\n        answer = build(limit)? + len(noise)\n    return Ok(answer * 2)\n\ndef main() -> int:\n    match chain(3):\n        case Ok(value):\n            match chain(9):\n                case Ok(other):\n                    return other\n                case Err(code):\n                    return value * 10 + code\n        case Err(code):\n            return 0 - code\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "ODkK"
+  },
+  "2b343b748606899bbcc5f007f2fc6559": {
+   "case": [
+    "class Holder:\n    label: str\n    samples: list[int]\n    flag: bool\n\ndef main() -> int:\n    kept = Holder(label=\"\", samples=[], flag=False)\n    older: list[int] = [5]\n    with arena() as scratch:\n        inner: list[int] = [1, 2]\n        kept = scratch.escape(Holder(label=\"deep\", samples=inner, flag=True))\n    older.append(6)\n    kept.samples.append(3)\n    return len(kept.label) + len(kept.samples) * 10 + len(older)\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "MzYK"
+  },
+  "2e5ea8dcb32e5b610b35e0fcacded0df": {
+   "case": [
+    "def stash(outer: list[list[int]], inner: list[int]) -> None:\n    outer.append(inner)\n\ndef main() -> int:\n    keeper: list[list[int]] = []\n    with arena() as scratch:\n        temp: list[int] = [1]\n        stash(keeper, temp)\n    return len(keeper)\n",
+    []
+   ],
+   "returncode": 1,
+   "stderr": "PGNvcnB1cz4vY2FzZS5teToyOjU6IGVycm9yW1JfQVJFTkFfRVNDQVBFXTogc3RvcmluZyBhIHZhbHVlIGFsbG9jYXRlZCBpbiB0aGlzIGFyZW5hIGludG8gYW4gb2JqZWN0IHRoYXQgb3V0bGl2ZXMgaXQgd291bGQgbGVhdmUgYSBkYW5nbGluZyByZWZlcmVuY2UKICAgICAgb3V0ZXIuYXBwZW5kKGlubmVyKQogICAgICBeCiAgaW4gc3Rhc2ggYXQgPGNvcnB1cz4vY2FzZS5teToyOjUKICBpbiBtYWluIGF0IDxjb3JwdXM+L2Nhc2UubXk6ODo5Cg==",
+   "stdout": ""
+  },
+  "3414b3535e41008e519ccf3ff3b77874": {
+   "case": [
+    "class Holder:\n    samples: list[int]\n\ndef stash(outer: list[Holder], inner: Holder) -> None:\n    outer[0] = inner\n\ndef main() -> int:\n    keeper: list[Holder] = [Holder(samples=[0])]\n    with arena() as scratch:\n        temp = Holder(samples=[1])\n        stash(keeper, temp)\n    return len(keeper)\n",
+    []
+   ],
+   "returncode": 1,
+   "stderr": "PGNvcnB1cz4vY2FzZS5teTo1OjU6IGVycm9yW1JfQVJFTkFfRVNDQVBFXTogc3RvcmluZyBhIHZhbHVlIGFsbG9jYXRlZCBpbiB0aGlzIGFyZW5hIGludG8gYW4gb2JqZWN0IHRoYXQgb3V0bGl2ZXMgaXQgd291bGQgbGVhdmUgYSBkYW5nbGluZyByZWZlcmVuY2UKICAgICAgb3V0ZXJbMF0gPSBpbm5lcgogICAgICBeCiAgaW4gc3Rhc2ggYXQgPGNvcnB1cz4vY2FzZS5teTo1OjUKICBpbiBtYWluIGF0IDxjb3JwdXM+L2Nhc2UubXk6MTE6OQo=",
+   "stdout": ""
+  },
+  "6c55b0021d5ed868571a0a8ebed536d2": {
+   "case": [
+    "def grow(outer: list[int], count: int) -> None:\n    for index in range(count):\n        outer.append(index)\n\ndef main() -> int:\n    keeper: list[int] = []\n    with arena() as scratch:\n        grow(keeper, 40)\n        noise: list[int] = []\n        for index in range(40):\n            noise.append(index)\n    total = 0\n    for value in keeper:\n        total = total + value\n    return total\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "NzgwCg=="
+  },
+  "6e52fe21c1654619f755a88c87b174bf": {
+   "case": [
+    "def stash(outer: list[list[int]], inner: list[int]) -> None:\n    outer.append(inner)\n\ndef main() -> int:\n    keeper: list[list[int]] = []\n    older: list[int] = [3]\n    with arena() as scratch:\n        stash(keeper, older)\n        temp: list[int] = [1]\n    return len(keeper) + keeper[0][0]\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "PGNvcnB1cz4vY2FzZS5teTo5Ojk6IHdhcm5pbmdbV19VTlVTRURfQklORElOR106IGJpbmRpbmcgaXMgbmV2ZXIgcmVhZDsgdXNlIGl0IG9yIHJlbW92ZSBpdCwgcHJlc2VydmluZyBpbml0aWFsaXplciBlZmZlY3RzIHdpdGggYF8gPWAgd2hlbiBuZWVkZWQKICAgICAgICAgIHRlbXA6IGxpc3RbaW50XSA9IFsxXQogICAgICAgICAgXgo=",
+   "stdout": "NAo="
+  },
+  "6ee3189c788409c7abcf021609bc097c": {
+   "case": [
+    "def squares(limit: int) -> list[int]:\n    values: list[int] = []\n    for index in range(limit):\n        values.append(index * index)\n    return values\n\ndef main() -> int:\n    total = 0\n    with arena() as scratch:\n        values = squares(9)\n        for value in values:\n            total = total + value\n    return total\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "MjA0Cg=="
+  },
+  "7d2decb0f3cf94524b3698d276e5c5b5": {
+   "case": [
+    "def main() -> int:\n    kept: Option[list[int]] = None\n    with arena() as scratch:\n        found: Option[list[int]] = Some([4, 5, 6])\n        kept = scratch.escape(found)\n    match kept:\n        case Some(values):\n            values.append(7)\n            return len(values)\n        case None:\n            return 0\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "NAo="
+  },
+  "88ed2fc9123768ce676f074a6ec3f102": {
+   "case": [
+    "def stash(outer: dict[str, list[int]], inner: list[int]) -> None:\n    outer[\"kept\"] = inner\n\ndef main() -> int:\n    keeper: dict[str, list[int]] = {}\n    with arena() as scratch:\n        temp: list[int] = [1]\n        stash(keeper, temp)\n    return len(keeper)\n",
+    []
+   ],
+   "returncode": 1,
+   "stderr": "PGNvcnB1cz4vY2FzZS5teToyOjU6IGVycm9yW1JfQVJFTkFfRVNDQVBFXTogc3RvcmluZyBhIHZhbHVlIGFsbG9jYXRlZCBpbiB0aGlzIGFyZW5hIGludG8gYW4gb2JqZWN0IHRoYXQgb3V0bGl2ZXMgaXQgd291bGQgbGVhdmUgYSBkYW5nbGluZyByZWZlcmVuY2UKICAgICAgb3V0ZXJbImtlcHQiXSA9IGlubmVyCiAgICAgIF4KICBpbiBzdGFzaCBhdCA8Y29ycHVzPi9jYXNlLm15OjI6NQogIGluIG1haW4gYXQgPGNvcnB1cz4vY2FzZS5teTo4OjkK",
+   "stdout": ""
+  },
+  "892f973ceb23bee4dab8aeece253f3f3": {
+   "case": [
+    "class Reading:\n    sensor: int\n    samples: list[int]\n\ndef collect(sensors: int, per_sensor: int) -> list[Reading]:\n    readings: list[Reading] = []\n    for sensor in range(sensors):\n        samples: list[int] = []\n        for index in range(per_sensor):\n            samples.append(sensor * per_sensor + index)\n        readings.append(Reading(sensor=sensor, samples=samples))\n    return readings\n\ndef main() -> int:\n    kept: list[int] = []\n    with arena() as scratch:\n        readings = collect(3, 4)\n        kept = scratch.escape(readings[2].samples)\n    total = 0\n    for sample in kept:\n        total = total + sample\n    return total\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "MzgK"
+  },
+  "8f695fe4635a50578ae72ee2aece125d": {
+   "case": [
+    "def main() -> int:\n    total = 0\n    for round in range(6):\n        with arena() as scratch:\n            values: list[int] = [round, round]\n            if round == 2:\n                continue\n            if round == 4:\n                break\n            total = total + len(values) + round\n    return total\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "MTAK"
+  },
+  "a386f3c8158b93d4ccbd5520646775c4": {
+   "case": [
+    "def inner(limit: int) -> int:\n    with arena() as scratch:\n        values: list[int] = []\n        for index in range(limit):\n            values.append(index)\n        return len(values)\n\ndef main() -> int:\n    total = 0\n    for round in range(20):\n        total = total + inner(round)\n    return total\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "MTkwCg=="
+  },
+  "b61bed54b6984282db006df52f41a712": {
+   "case": [
+    "def sized(limit: int) -> list[int]:\n    values: list[int] = []\n    for index in range(limit):\n        values.append(index)\n    return values\n\ndef main() -> int:\n    total = 0\n    with arena() as outer:\n        first = sized(3)\n        with arena() as inner:\n            second = sized(4)\n            total = total + len(second)\n        total = total + len(first)\n    return total\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "Nwo="
+  },
+  "b64382e10dcd97e67e0ca537161ca691": {
+   "case": [
+    "def main() -> int:\n    total = 0\n    with arena() as scratch:\n        words: list[str] = [\"alpha\", \"beta\", \"gamma\"]\n        for word in words:\n            total = total + len(word)\n    return total\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "MTQK"
+  },
+  "ba5ee629cb968baf0e72c14be42881af": {
+   "case": [
+    "def main() -> int:\n    with arena() as scratch:\n        values: list[int] = [1]\n        return values[5]\n",
+    []
+   ],
+   "returncode": 1,
+   "stderr": "PGNvcnB1cz4vY2FzZS5teTo0OjE2OiBlcnJvcltSX0xJU1RfQk9VTkRTXTogbGlzdCBpbmRleCBpcyBvdXRzaWRlIGluaXRpYWxpemVkIGJvdW5kcwogICAgICAgICAgcmV0dXJuIHZhbHVlc1s1XQogICAgICAgICAgICAgICAgIF4KICBpbiBtYWluIGF0IDxjb3JwdXM+L2Nhc2UubXk6NDoxNgo=",
+   "stdout": ""
+  },
+  "efd9db61f97172576dffce6982f8e4f7": {
+   "case": [
+    "def main() -> int:\n    kept: dict[str, bytes] = {}\n    with arena() as scratch:\n        table: dict[str, bytes] = {}\n        table[\"a\"] = b\"\\x01\\x02\"\n        table[\"b\"] = (\"x\" + \"y\").encode()\n        kept = scratch.escape(table)\n    total = 0\n    for value in kept[\"a\"]:\n        total += value\n    return total + len(kept[\"b\"]) + len(kept)\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "Nwo="
+  },
+  "f2baede7359943efcd31fce0aade5d5d": {
+   "case": [
+    "def main() -> int:\n    kept: list[list[int]] = []\n    with arena() as scratch:\n        shared: list[int] = [7]\n        holder: list[list[int]] = [shared, shared]\n        kept = scratch.escape(holder)\n    kept[0].append(9)\n    return len(kept) * 10 + kept[0][0] + kept[1][1]\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "MzYK"
+  }
+ },
+ "version": "golden-outcomes-v1"
+}

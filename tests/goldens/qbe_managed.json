@@ -1,0 +1,131 @@
+{
+ "entries": {
+  "2dcb9c167883c3ec826b9a169601c8dc": {
+   "case": [
+    "def main() -> int:\n    text = \"h\u00e9\ud83d\ude42,x,\"\n    parts = text.split(\",\")\n    if \",\".join(parts) != text:\n        return 1\n    if \"\u00e9\ud83d\ude42\" not in text:\n        return 2\n    if parts[0][2] != \"\ud83d\ude42\":\n        return 3\n    return len(text)\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "Ngo="
+  },
+  "2f02a71bb75846571f351f3ed34ae840": {
+   "case": [
+    "def main() -> int:\n    raw = b\"ab\"\n    return raw[2]\n",
+    []
+   ],
+   "returncode": 1,
+   "stderr": "PGNvcnB1cz4vY2FzZS5teTozOjEyOiBlcnJvcltSX0xJU1RfQk9VTkRTXTogYnl0ZSBzdHJpbmcgb3BlcmF0aW9uIGZhaWxlZAogICAgICByZXR1cm4gcmF3WzJdCiAgICAgICAgICAgICBeCiAgaW4gbWFpbiBhdCA8Y29ycHVzPi9jYXNlLm15OjM6MTIK",
+   "stdout": ""
+  },
+  "5645aeac67dcc417f2e23a30e8d796f9": {
+   "case": [
+    "def main() -> int:\n    raw = b\"hi\\x00\\xff\"\n    if len(raw) != 4:\n        return 1\n    if raw[0] != 104 or raw[-1] != 255:\n        return 2\n    if raw != b\"hi\\x00\\xff\" or raw == b\"hi\":\n        return 3\n    total = 0\n    for value in raw:\n        total += value\n    return total - 388\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "NzYK"
+  },
+  "64ca9c4dc7b97bec5d1887d7db5fc511": {
+   "case": [
+    "def make() -> list[str]:\n    values: dict[int,str] = {1: \"retained\", 2: \"\ud83d\ude42\"}\n    return values.values()\ndef main() -> int:\n    values = make()\n    i = 0\n    while i < 40:\n        garbage = [\"new\" + \" text\", \"\ud83d\ude42\"]\n        i += 1\n    if values[1] != \"\ud83d\ude42\":\n        return 1\n    return len(values[0])\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "PGNvcnB1cz4vY2FzZS5teTo4Ojk6IHdhcm5pbmdbV19VTlVTRURfQklORElOR106IGJpbmRpbmcgaXMgbmV2ZXIgcmVhZDsgdXNlIGl0IG9yIHJlbW92ZSBpdCwgcHJlc2VydmluZyBpbml0aWFsaXplciBlZmZlY3RzIHdpdGggYF8gPWAgd2hlbiBuZWVkZWQKICAgICAgICAgIGdhcmJhZ2UgPSBbIm5ldyIgKyAiIHRleHQiLCAi8J+ZgiJdCiAgICAgICAgICBeCg==",
+   "stdout": "OAo="
+  },
+  "68614b9b3d88a90dbecba6661ec327fc": {
+   "case": [
+    "def main() -> int:\n    text = \"a\"\n    return len(text[2])\n",
+    []
+   ],
+   "returncode": 1,
+   "stderr": "PGNvcnB1cz4vY2FzZS5teTozOjE2OiBlcnJvcltSX1RFWFRfQk9VTkRTXTogY29sbGVjdGlvbiBvcGVyYXRpb24gZmFpbGVkCiAgICAgIHJldHVybiBsZW4odGV4dFsyXSkKICAgICAgICAgICAgICAgICBeCiAgaW4gbWFpbiBhdCA8Y29ycHVzPi9jYXNlLm15OjM6MTYK",
+   "stdout": ""
+  },
+  "6e06c7f076922c47cd30183459ea9d90": {
+   "case": [
+    "def main() -> int:\n    values: dict[str,int] = {\"first\": 40, \"second\": 2}\n    alias = values\n    alias[\"first\"] = 41\n    keys = values.keys()\n    before = values.values()\n    values[\"first\"] = 42\n    if keys[0] != \"first\":\n        return 1\n    return before[0] + values.get(\"missing\", 1)\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "NDIK"
+  },
+  "7221d4d1442c83d89febc4795a6e2c5f": {
+   "case": [
+    "def main() -> int:\n    if str(-9223372036854775807 - 1) != \"-9223372036854775808\":\n        return 1\n    if str(True) != \"True\" or str(False) != \"False\":\n        return 2\n    if str(None) != \"None\":\n        return 3\n    if str(0.1) != \"0.1\" or str(-0.0) != \"-0.0\":\n        return 4\n    text = \"value=\" + str(42)\n    if str(text) != \"value=42\":\n        return 5\n    return 42\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "NDIK"
+  },
+  "81346bd005cb373b0f53eca1c5b3f768": {
+   "case": [
+    "def main() -> int:\n    text = \"a\"\n    return len(text.split(\"\"))\n",
+    []
+   ],
+   "returncode": 1,
+   "stderr": "PGNvcnB1cz4vY2FzZS5teTozOjE2OiBlcnJvcltSX0VNUFRZX1NFUEFSQVRPUl06IGNvbGxlY3Rpb24gb3BlcmF0aW9uIGZhaWxlZAogICAgICByZXR1cm4gbGVuKHRleHQuc3BsaXQoIiIpKQogICAgICAgICAgICAgICAgIF4KICBpbiBtYWluIGF0IDxjb3JwdXM+L2Nhc2UubXk6MzoxNgo=",
+   "stdout": ""
+  },
+  "9a7979d53a36d7a8114b24b6e6a2767c": {
+   "case": [
+    "def main() -> int:\n    values = {\"first\": 40}\n    for key in values:\n        values[\"second\"] = 2\n    return 0\n",
+    []
+   ],
+   "returncode": 1,
+   "stderr": "PGNvcnB1cz4vY2FzZS5teTozOjU6IGVycm9yW1JfTElTVF9JVEVSQVRJT05fTVVUQVRJT05dOiBjb2xsZWN0aW9uIHNpemUgY2hhbmdlZCBkdXJpbmcgaXRlcmF0aW9uCiAgICAgIGZvciBrZXkgaW4gdmFsdWVzOgogICAgICBeCiAgaW4gbWFpbiBhdCA8Y29ycHVzPi9jYXNlLm15OjM6NQo=",
+   "stdout": ""
+  },
+  "a1dc10f4c54498ea49a580a8dc15b047": {
+   "case": [
+    "def main() -> int:\n    a = [0.0]\n    b = [-0.0]\n    if a != b:\n        return 1\n    return 42\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "NDIK"
+  },
+  "db237a179321a1e51f466ff7a810e79b": {
+   "case": [
+    "def main() -> int:\n    left = [1, 2, 3]\n    right = [1, 2, 3]\n    if left != right or 2 not in left:\n        return 1\n    a = {\"first\": left, \"second\": right}\n    b = {\"second\": right, \"first\": left}\n    if a != b:\n        return 2\n    right[0] = 9\n    if left == right:\n        return 3\n    return 42\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "NDIK"
+  },
+  "df4e88d5606fb016bcecc980112c89da": {
+   "case": [
+    "def main() -> int:\n    text = \"\u00e9\ud83d\ude42\"\n    if text[-99:99] != text:\n        return 1\n    if text[1:0] != \"\":\n        return 2\n    return len(text[-1])\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "MQo="
+  },
+  "e0096cf78e31ce5452b1b0f35dd137bf": {
+   "case": [
+    "def main() -> int:\n    values = {\"first\": 40}\n    return values[\"missing\"]\n",
+    []
+   ],
+   "returncode": 1,
+   "stderr": "PGNvcnB1cz4vY2FzZS5teTozOjEyOiBlcnJvcltSX01JU1NJTkdfS0VZXTogY29sbGVjdGlvbiBvcGVyYXRpb24gZmFpbGVkCiAgICAgIHJldHVybiB2YWx1ZXNbIm1pc3NpbmciXQogICAgICAgICAgICAgXgogIGluIG1haW4gYXQgPGNvcnB1cz4vY2FzZS5teTozOjEyCg==",
+   "stdout": ""
+  },
+  "f8ba8cb53fb06eaf3be8273e31b0066d": {
+   "case": [
+    "def main() -> int:\n    values = {\"first\": 40, \"second\": 2}\n    total = 0\n    for key in values:\n        total += values[key]\n    return total\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "NDIK"
+  }
+ },
+ "version": "golden-outcomes-v1"
+}

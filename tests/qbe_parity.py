@@ -7,6 +7,8 @@ import subprocess
 import sys
 import tempfile
 
+import golden
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -100,15 +102,18 @@ def main():
     parser.add_argument('--compiler', type=Path, required=True)
     parser.add_argument('--qbe', default='qbe')
     parser.add_argument('--zig', default='zig')
+    golden.argument(parser)
     args = parser.parse_args()
     compiler = args.compiler.resolve()
+    reference = golden.Reference('qbe_parity', args.record)
     with tempfile.TemporaryDirectory(prefix='mylang-qbe-parity-') as directory:
         temp = Path(directory)
+        reference.scrub = [(str(temp).encode(), b'<corpus>')]
         source, output = temp / 'case.my', temp / 'program'
         count = 0
         for text in cases():
             source.write_text(text)
-            vm = run([compiler, 'run', source, '--print-result'])
+            vm = reference.expect([text, []], [compiler, 'run', source, '--print-result'])
             built = run([sys.executable, ROOT / 'scripts/qbe.py', source, '-o', output,
                          '--compiler', compiler, '--qbe', args.qbe, '--zig', args.zig,
                          '--cache-dir', temp / 'cache'])
@@ -118,7 +123,7 @@ def main():
             count += 1
         for text in extended_cases():
             source.write_text(text)
-            vm = run([compiler, 'run', source, '--print-result'])
+            vm = reference.expect([text, []], [compiler, 'run', source, '--print-result'])
             built = run([sys.executable, ROOT / 'scripts/qbe.py', source, '-o', output,
                          '--compiler', compiler, '--qbe', args.qbe, '--zig', args.zig,
                          '--cache-dir', temp / 'cache'])
@@ -136,7 +141,7 @@ def main():
                          '--compiler', compiler, '--qbe', args.qbe, '--zig', args.zig,
                          '--cache-dir', temp / 'cache'])
             assert built.returncode == 0, built.stderr
-            vm = run([compiler, 'run', source, '--print-result', *options])
+            vm = reference.expect([text, options], [compiler, 'run', source, '--print-result', *options])
             native = run([output, *options])
             assert signature(vm) == signature(native), (text, vm, native)
             count += 1
@@ -146,11 +151,12 @@ def main():
                          '--compiler', compiler, '--qbe', args.qbe, '--zig', args.zig,
                          '--cache-dir', temp / 'cache'])
             assert built.returncode == 0, built.stderr
-            vm = run([compiler, 'run', source, '--print-result', *options])
+            vm = reference.expect([text, options], [compiler, 'run', source, '--print-result', *options])
             native = run([output, *options])
             assert signature(vm) == expected, (options, vm)
             assert signature(native) == expected, (options, native)
             count += 1
+        reference.save()
         print(f'QBE native parity: {count} cases passed')
     return 0
 

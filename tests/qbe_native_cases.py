@@ -4,13 +4,14 @@ import argparse
 from pathlib import Path
 import sys
 import tempfile
+import golden
 from native_cases import cases, invoke, signature
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def compare(compiler, source, executable, options, name):
-    vm = invoke([compiler, 'run', source, '--print-result', *options])
+def compare(reference, compiler, source, executable, options, name):
+    vm = reference.expect([name, options], [compiler, 'run', source, '--print-result', *options])
     native = invoke([executable, *options])
     try:
         assert signature(vm) == signature(native)
@@ -24,12 +25,15 @@ def main():
     parser.add_argument('--compiler', type=Path, required=True)
     parser.add_argument('--qbe', default='qbe')
     parser.add_argument('--zig', default='zig')
+    golden.argument(parser)
     args = parser.parse_args()
     compiler = args.compiler.resolve()
+    reference = golden.Reference('qbe_native_cases', args.record)
     fixtures = cases(ROOT)
     comparisons = 0
     with tempfile.TemporaryDirectory(prefix='mylang-qbe-native-cases-') as directory:
         directory = Path(directory)
+        reference.scrub = [(str(directory).encode(), b'<corpus>')]
         for index, (name, text) in enumerate(fixtures):
             source = directory / (name + '-"quoted.my')
             source.write_text(text)
@@ -39,17 +43,18 @@ def main():
             assert built.returncode == 0, (name, built.returncode, built.stderr.decode(errors='replace'))
             normal = ['--max-frames=25000'] if name == 'recursive' else []
             for options in (normal, ['--max-steps=1'], ['--max-frames=1'], normal + ['--gc-stress']):
-                compare(compiler, source, executable, options, name)
+                compare(reference, compiler, source, executable, options, name)
                 comparisons += 1
             if name == 'calls' or name.startswith(('variant-', 'result-')):
                 for budget in range(1, 200):
                     comparisons += 1
-                    if compare(compiler, source, executable, [f'--max-steps={budget}'], name):
+                    if compare(reference, compiler, source, executable, [f'--max-steps={budget}'], name):
                         break
                 else:
                     raise AssertionError((name, 'did not complete within acceptance budget'))
             if (index + 1) % 10 == 0:
                 print(f'QBE native fixture parity: {index + 1}/{len(fixtures)} passed', flush=True)
+        reference.save()
     print(f'QBE native parity: {len(fixtures)} fixtures, {comparisons} VM comparisons; diagnostics, budgets, deep recursion and GC stress passed')
 
 

@@ -12,6 +12,7 @@ import subprocess
 import sys
 import tempfile
 
+import golden
 from docs_examples import directives, fences, group, options, plan, project_shaped, write
 from qbe_parity import ROOT, signature
 
@@ -41,19 +42,19 @@ def build(args, source, output, cache, project):
 
 
 def compare(args, label, entry, project, argv, cache):
-    """Build one entry natively and match it against fresh VM execution.
+    """Build one entry natively and match it against its recorded outcome.
 
-    A native executable always reports the entry point's result, so the VM side
-    always asks for it too; everything else is the example's own output.
+    A native executable always reports the entry point's result, so the recorded
+    side asked for it too; everything else is the example's own output.
     """
     output = cache.parent / 'program'
     built = build(args, entry, output, cache, project)
     assert built.returncode == 0, (label, built.stderr.decode(errors='replace'))
     command = 'run-project' if project else 'run'
     grants = [value for value in argv if value != '--print-result']
-    vm = invoke([args.compiler, command, entry, '--print-result', *grants])
+    expected = args.reference.expect([label, project, grants], [args.compiler, command, entry, '--print-result', *grants])
     native = invoke([output, *grants])
-    assert signature(vm) == signature(native), (label, argv, vm.stdout, vm.stderr, native.stdout, native.stderr)
+    assert signature(expected) == signature(native), (label, argv, expected.stdout, expected.stderr, native.stdout, native.stderr)
 
 
 def schematic(args, temp):
@@ -88,11 +89,14 @@ def main():
     parser.add_argument('--compiler', type=Path, required=True)
     parser.add_argument('--qbe', default='qbe')
     parser.add_argument('--zig', default='zig')
+    golden.argument(parser)
     args = parser.parse_args()
     args.compiler = args.compiler.resolve()
+    args.reference = golden.Reference('qbe_docs', args.record)
     count = 0
     with tempfile.TemporaryDirectory(prefix='mylang-qbe-docs-') as directory:
         temp = Path(directory)
+        args.reference.scrub = [(str(temp).encode(), b'<corpus>'), (str(ROOT).encode(), b'<root>')]
         cache = temp / 'cache'
         for index, unit in enumerate(units()):
             work = temp / f'unit{index}'
@@ -107,7 +111,8 @@ def main():
             compare(args, name, entry, project, ['--print-result'], cache)
             count += 1
         modules = schematic(args, temp)
-    print(f'QBE documentation parity: {count} runnable examples matched the VM, {modules} schematic guest modules lowered')
+        args.reference.save()
+    print(f'QBE documentation parity: {count} runnable examples matched their recorded outcome, {modules} schematic guest modules lowered')
 
 
 if __name__ == '__main__':

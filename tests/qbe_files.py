@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 
+import golden
 from qbe_parity import ROOT, signature
 
 GREETING = 'hello from a granted directory\n'
@@ -178,10 +179,13 @@ def main():
     parser.add_argument('--compiler', type=Path, required=True)
     parser.add_argument('--qbe', default='qbe')
     parser.add_argument('--zig', default='zig')
+    golden.argument(parser)
     args = parser.parse_args()
     compiler = args.compiler.resolve()
+    reference = golden.Reference('qbe_files', args.record)
     with tempfile.TemporaryDirectory(prefix='mylang-qbe-files-') as directory:
         temp = Path(directory)
+        reference.scrub = [(str(temp).encode(), b'<corpus>')]
         source, output = temp / 'case.my', temp / 'program'
         count = 0
         for text, options in cases():
@@ -191,15 +195,19 @@ def main():
                          '--cache-dir', temp / 'cache'], None)
             assert built.returncode == 0, (text, built.stderr.decode())
             for stress in ([], ['--gc-stress']):
-                outcomes = []
-                for command in ([compiler, 'run', source, '--print-result', *options, *stress], [output, *options, *stress]):
-                    work = temp / 'work'
-                    shutil.rmtree(work, ignore_errors=True)
-                    work.mkdir()
-                    prepare(work)
-                    outcomes.append(signature(run(command, work)))
-                assert outcomes[0] == outcomes[1], (text, options, stress, outcomes)
+                work = temp / 'work'
+                shutil.rmtree(work, ignore_errors=True)
+                work.mkdir()
+                prepare(work)
+                expected = reference.expect([text, options, stress],
+                                            [compiler, 'run', source, '--print-result', *options, *stress], work)
+                shutil.rmtree(work, ignore_errors=True)
+                work.mkdir()
+                prepare(work)
+                native = run([output, *options, *stress], work)
+                assert signature(expected) == signature(native), (text, options, stress, expected, native)
             count += 1
+        reference.save()
     print(f'QBE file surface parity: {count} cases passed')
 
 
