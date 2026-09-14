@@ -9,6 +9,9 @@ const tools = @import("host_tools");
 pub const Error = qbe_build.Error || std.Io.Dir.CreateDirError || error{ GuestTrap, InvalidGuestResult };
 /// Bound on what one child may leave on a captured stream before publication.
 pub const stream_limit = 256 * 1024 * 1024;
+/// The step budget a host application gives one guest invocation. Host guests
+/// parse and render whole documents, so it is far above an ordinary `run`.
+pub const step_budget = "--max-steps=100000000";
 /// Private per-invocation build products and transport files.
 const Files = struct {
     allocator: std.mem.Allocator,

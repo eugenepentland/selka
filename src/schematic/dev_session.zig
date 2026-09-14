@@ -6,7 +6,7 @@ const print = std.debug.print;
 const application = @import("app.zig");
 const diagnostics = @import("diagnostics.zig");
 /// The native step budget one prepared rendering may spend.
-const arguments = [_][]const u8{"--max-steps=100000000"};
+const arguments = [_][]const u8{@import("host_native").step_budget};
 const Request = struct {
     action: enum { prepare, commit, discard, quit },
     project: ?[]const u8 = null,

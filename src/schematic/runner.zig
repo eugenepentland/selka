@@ -4,7 +4,7 @@ const print = std.debug.print;
 const application = @import("app.zig");
 const diagnostics = @import("diagnostics.zig");
 /// The native step budget one schematic rendering may spend.
-const steps = "--max-steps=100000000";
+const steps = @import("host_native").step_budget;
 /// Publish SVG on stdout only after parsing, semantic validation and rendering succeed.
 /// The host bounds its own address space first: it executes guest bytecode in
 /// this process, so a runaway guest is a runaway host.

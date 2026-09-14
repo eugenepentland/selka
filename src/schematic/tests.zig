@@ -23,7 +23,7 @@ const declarations =
     \\host def issue(code: i64, file: i64, position: i64) -> i64 effects(host)
 ;
 const empty: [3][]const u8 = .{ "", "", "" };
-const budget = [_][]const u8{"--max-steps=100000000"};
+const budget = [_][]const u8{@import("host_native").step_budget};
 /// One host-application process standing in for `main`'s supplied resources.
 const Harness = struct {
     arena: std.heap.ArenaAllocator,

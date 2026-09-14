@@ -1,0 +1,14 @@
+module io
+export length
+export byte
+export put
+# The trial's whole authority: read the request bytes, append observation bytes.
+
+
+host def length() -> i64 effects(host)
+
+
+host def byte(position: i64) -> u8 effects(host)
+
+
+host def put(value: u8) -> i64 effects(host)

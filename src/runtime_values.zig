@@ -178,12 +178,6 @@ pub const Value = union(enum) {
         value.aggregate.active_tag = tag;
         return value;
     }
-    /// Read a variant's active tag, rejecting nonvariant values.
-    pub fn variantTag(self: Value) error{InternalError}!usize {
-        if (self != .aggregate) return error.InternalError;
-        return self.aggregate.active_tag orelse error.InternalError;
-    }
-
     /// Input expressions are already evaluated in source order. Store in schema order.
     /// The emitter validates that order is a permutation before dispatch.
     pub fn createOrdered(allocator: std.mem.Allocator, ty: Type, fields: []const Value, order: []const usize) error{ OutOfMemory, InvalidAggregateType, InternalError }!Value {

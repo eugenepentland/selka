@@ -155,7 +155,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/board_trial/runner.zig"),
         .target = target,
         .optimize = optimize,
-        .imports = &.{ .{ .name = "mylang", .module = core }, .{ .name = "memory_budget", .module = budget } },
+        .imports = host_imports,
     });
     const board_runner = b.addExecutable(.{ .max_rss = rss.compile, .name = "board-trial", .root_module = board_module });
     b.installArtifact(board_runner);
@@ -186,7 +186,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/board_trial/tests.zig"),
         .target = target,
         .optimize = optimize,
-        .imports = &.{ .{ .name = "mylang", .module = core }, .{ .name = "memory_budget", .module = budget } },
+        .imports = host_imports,
     }) });
     guardian.enableTestDiagnostics(board_unit.root_module);
     const schematic_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
@@ -259,12 +259,15 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_schematic_unit.step);
     guardian.addAllChecks(b, guardian_exe, schematic_step, .{});
     boundedChecks(schematic_step);
-    const board_runtime = bounded(b.addSystemCommand(&.{ "python3", "tests/board_trial.py", "--runner" }), rss.driver);
+    const board_step = b.step("test-board-trial", "Verify the bounded board-validation trial against its independent oracle");
+    board_step.dependOn(&run_board_unit.step);
+    const board_runtime = bounded(b.addSystemCommand(&.{ "python3", "tests/board_trial.py", "--runner" }), rss.parity);
     board_runtime.addFileArg(board_runner.getEmittedBin());
     board_runtime.addArg("--compiler");
     board_runtime.addFileArg(exe.getEmittedBin());
     board_runtime.setCwd(b.path("."));
     test_step.dependOn(&board_runtime.step);
+    board_step.dependOn(&board_runtime.step);
     const disk_runtime = bounded(b.addSystemCommand(&.{ "python3", "tests/disk_projects.py", "--schematic-runner" }), rss.driver);
     disk_runtime.addFileArg(schematic_runner.getEmittedBin());
     disk_runtime.addArg("--board-runner");

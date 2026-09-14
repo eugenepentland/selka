@@ -1,6 +1,13 @@
 module main
+import io
+import wire
+import request
+import observe
 import validation
 
 
 def main() -> i64:
+    if io.length() != wire.REQUEST:
+        return 1
+    _ = observe.publish(validation.validate(request.board()))
     return 0

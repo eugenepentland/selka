@@ -31,13 +31,6 @@ pub const PublicValueTypeError = error{
     UnknownPublicValueType,
     InternalError,
 };
-/// Failures returned by publicFunction; callers must handle these boundary errors.
-pub const PublicFunctionError = error{
-    OutOfMemory,
-    SourceError,
-    UnknownPublicFunction,
-    InternalError,
-};
 /// Failures returned by emit; callers must handle these boundary errors.
 pub const EmitError = error{
     InternalError,

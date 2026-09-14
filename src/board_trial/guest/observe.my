@@ -1,0 +1,92 @@
+module observe
+import model as m
+import io
+import wire
+export publish
+# Encode one validator outcome for the host: a status byte, then either the
+# report (count, optional first violation) or the single failure ordinal.
+
+
+def problem(value: m.InputProblem) -> u8:
+    match value:
+        case m.InputProblem.invalid_bounds:
+            return 0u8
+        case m.InputProblem.invalid_id:
+            return 1u8
+        case m.InputProblem.duplicate_component:
+            return 2u8
+        case m.InputProblem.duplicate_net:
+            return 3u8
+        case m.InputProblem.empty_blocks:
+            return 4u8
+        case m.InputProblem.unknown_allow_net:
+            return 5u8
+        case m.InputProblem.missing_component:
+            return 6u8
+        case m.InputProblem.missing_net:
+            return 7u8
+
+
+def unavailable(value: m.GeometryFailure) -> u8:
+    match value:
+        case m.GeometryFailure.invalid_bounds:
+            return 0u8
+        case m.GeometryFailure.unavailable:
+            return 1u8
+
+
+def kind(value: m.ViolationKind) -> u8:
+    match value:
+        case m.ViolationKind.outside_board:
+            return 0u8
+        case m.ViolationKind.keepout:
+            return 1u8
+
+
+def where(value: m.RegionIndex) -> i64:
+    match value:
+        case m.RegionIndex.board:
+            _ = io.put(0u8)
+            return wire.emitUnsigned(0u64)
+        case m.RegionIndex.keepout(index):
+            _ = io.put(1u8)
+            return wire.emitUnsigned(index)
+
+
+def violation(first: m.Slot[m.Violation]) -> i64:
+    match first:
+        case m.Slot[m.Violation].none:
+            _ = io.put(0u8)
+            _ = wire.emitUnsigned(0u64)
+            _ = io.put(0u8)
+            _ = io.put(0u8)
+            return wire.emitUnsigned(0u64)
+        case m.Slot[m.Violation].some(item):
+            _ = io.put(1u8)
+            _ = wire.emitUnsigned(item.feature)
+            _ = io.put(kind(item.kind))
+            return where(item.region)
+
+
+def report(value: m.Report) -> i64:
+    _ = io.put(0u8)
+    _ = wire.emitUnsigned(value.violations)
+    return violation(value.first)
+
+
+def failure(value: m.Failure) -> i64:
+    match value:
+        case m.Failure.input(cause):
+            _ = io.put(1u8)
+            return io.put(problem(cause))
+        case m.Failure.geometry(cause):
+            _ = io.put(2u8)
+            return io.put(unavailable(cause))
+
+
+def publish(outcome: m.Validation) -> i64:
+    match outcome:
+        case m.Validation.ok(value):
+            return report(value)
+        case m.Validation.err(value):
+            return failure(value)

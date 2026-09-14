@@ -137,7 +137,7 @@ def main():
         compare(args.runner.resolve(), path, transformed(cases))
         rejected = reject_transport(args.runner.resolve(), path, cases[0])
         check_diagnostics(args.compiler.resolve(), Path(directory))
-    print(f'board trial: 87 fixed + 60 transformed cases, both VM and Zig match; {rejected} malformed transports reject; 3 seeded static errors caught')
+    print(f'board trial: 87 fixed + 60 transformed cases, guest and Zig match; {rejected} malformed transports reject; 3 seeded static errors caught')
 
 
 if __name__ == '__main__':

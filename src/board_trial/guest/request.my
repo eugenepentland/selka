@@ -1,0 +1,113 @@
+module request
+import model as m
+import ids
+import units
+import wire
+export board
+# Decode the host's fixed request layout into the board the validator expects.
+
+
+def slot[T](present: bool, value: T) -> m.Slot[T]:
+    empty: m.Slot[T] = m.Slot.none
+    if not present:
+        return empty
+    return m.Slot.some(value)
+
+
+def rect(position: i64) -> m.Rect:
+    return m.Rect(
+        x=units.Micrometres.make(wire.signed(position)),
+        y=units.Micrometres.make(wire.signed(position + 8)),
+        width=units.Micrometres.make(wire.signed(position + 16)),
+        height=units.Micrometres.make(wire.signed(position + 24))
+    )
+
+
+def component(position: i64) -> m.Slot[ids.ComponentId]:
+    return slot[ids.ComponentId](wire.flag(position), ids.ComponentId.make(wire.unsigned(position + 1)))
+
+
+def net(position: i64) -> m.Slot[ids.NetId]:
+    return slot[ids.NetId](wire.flag(position), ids.NetId.make(wire.unsigned(position + 1)))
+
+
+def face(code: u8) -> m.Face:
+    if code == 0u8:
+        return m.Face.top
+    return m.Face.bottom
+
+
+def regionFace(code: u8) -> m.RegionFace:
+    if code == 0u8:
+        return m.RegionFace.top
+    if code == 1u8:
+        return m.RegionFace.bottom
+    return m.RegionFace.both
+
+
+def layer(code: u8) -> m.Layer:
+    if code == 0u8:
+        return m.Layer.front
+    if code == 1u8:
+        return m.Layer.back
+    return m.Layer.inner
+
+
+def admitted(position: i64) -> [4]m.Slot[ids.NetId]:
+    return [net(position), net(position + wire.SLOT), net(position + 2 * wire.SLOT), net(position + 3 * wire.SLOT)]
+
+
+def region(position: i64) -> m.Slot[m.Region]:
+    value = m.Region(
+        rect=rect(position + 1),
+        face=regionFace(wire.code(position + 33)),
+        blocks=m.Blocks(component=wire.flag(position + 34), track=wire.flag(position + 35), via=wire.flag(position + 36)),
+        allow_nets=admitted(position + 37)
+    )
+    return slot[m.Region](wire.flag(position), value)
+
+
+def feature(position: i64) -> m.Slot[m.Feature]:
+    bounds = rect(position + 2)
+    identity = wire.unsigned(position + 34)
+    item = m.Feature.via(m.Via(net=ids.NetId.make(identity), rect=bounds))
+    if wire.code(position + 1) == 0u8:
+        item = m.Feature.component(m.Component(id=ids.ComponentId.make(identity), face=face(wire.code(position + 42)), rect=bounds))
+    if wire.code(position + 1) == 1u8:
+        item = m.Feature.track(m.Track(net=ids.NetId.make(identity), layer=layer(wire.code(position + 42)), rect=bounds))
+    return slot[m.Feature](wire.flag(position), item)
+
+
+def components() -> [4]m.Slot[ids.ComponentId]:
+    return [component(wire.COMPONENTS), component(wire.COMPONENTS + wire.SLOT), component(wire.COMPONENTS + 2 * wire.SLOT), component(wire.COMPONENTS + 3 * wire.SLOT)]
+
+
+def nets() -> [4]m.Slot[ids.NetId]:
+    return [net(wire.NETS), net(wire.NETS + wire.SLOT), net(wire.NETS + 2 * wire.SLOT), net(wire.NETS + 3 * wire.SLOT)]
+
+
+def regions() -> [4]m.Slot[m.Region]:
+    return [region(wire.REGIONS), region(wire.REGIONS + wire.REGION), region(wire.REGIONS + 2 * wire.REGION), region(wire.REGIONS + 3 * wire.REGION)]
+
+
+def features() -> [8]m.Slot[m.Feature]:
+    return [
+        feature(wire.FEATURES),
+        feature(wire.FEATURES + wire.FEATURE),
+        feature(wire.FEATURES + 2 * wire.FEATURE),
+        feature(wire.FEATURES + 3 * wire.FEATURE),
+        feature(wire.FEATURES + 4 * wire.FEATURE),
+        feature(wire.FEATURES + 5 * wire.FEATURE),
+        feature(wire.FEATURES + 6 * wire.FEATURE),
+        feature(wire.FEATURES + 7 * wire.FEATURE)
+    ]
+
+
+def board() -> m.Board:
+    return m.Board(
+        outline=rect(wire.OUTLINE),
+        components=components(),
+        nets=nets(),
+        regions=regions(),
+        features=features()
+    )
