@@ -121,7 +121,7 @@ def round(value: float) -> float:
     return whole
 
 
-# Square root computed by argument reduction and Newton refinement.
+# Square root, correctly rounded by the binary64 intrinsic.
 def sqrt(value: float) -> float:
     if is_nan(value) or value == 0.0:
         return value
@@ -129,20 +129,7 @@ def sqrt(value: float) -> float:
         return nan()
     if is_inf(value):
         return value
-    scale = 1.0
-    reduced = value
-    while reduced >= 4.0:
-        reduced = reduced / 4.0
-        scale = scale * 2.0
-    while reduced < 1.0:
-        reduced = reduced * 4.0
-        scale = scale / 2.0
-    estimate = 0.5 * (1.0 + reduced)
-    step = 0
-    while step < 8:
-        estimate = 0.5 * (estimate + reduced / estimate)
-        step += 1
-    return estimate * scale
+    return f64_sqrt(value)
 
 
 # Repeated squaring for a nonnegative exponent that already fits the budget.

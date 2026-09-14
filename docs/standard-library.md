@@ -69,12 +69,10 @@ def main() -> int:
             return 0 - len(message)
 ```
 
-`sqrt` reduces the argument by exact powers of four and refines with Newton
-iterations, because the language exposes no bit accessor for `float` that
-would reach the `f64_sqrt` intrinsic. It is accurate to within one unit in the
-last place rather than guaranteed correctly rounded. `pow` takes an integer
-exponent and squares repeatedly; magnitudes above 4096 saturate to a same-parity
-magnitude, which preserves the sign and the overflow or underflow outcome.
+`sqrt` calls the binary64 `f64_sqrt` intrinsic on its ordinary `float` argument,
+so it is the correctly rounded square root. `pow` takes an integer exponent and
+squares repeatedly; magnitudes above 4096 saturate to a same-parity magnitude,
+which preserves the sign and the overflow or underflow outcome.
 
 ## strings
 
@@ -577,9 +575,8 @@ match on the `Result` variant and, where a module offers one, on a typed accesso
 
 ## Limits
 
-- `sqrt` and decimal-to-float conversion are accurate rather than correctly
-  rounded, because guest code cannot reach the binary64 bit intrinsics through the
-  ordinary `float` type.
+- Decimal-to-float conversion is accurate rather than correctly rounded; `sqrt`
+  uses the correctly rounded binary64 instruction.
 - There are no transcendental functions: no `exp`, `log`, `sin` or `pow` with a
   floating exponent.
 - `sort` has no ordering contract to generalize over, so a generic sort needs an

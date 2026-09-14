@@ -70,3 +70,32 @@ test "ordinary float values reach the same binary64 semantics without a nominal 
     defer c.deinit();
     try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
 }
+
+// spec: FLOAT-INTRINSIC-FLOAT-1
+test "a float-in float-out intrinsic takes a float operand and answers a float" {
+    var c = try language.Compilation.init(t.allocator, "float.my",
+        \\def main() -> i64:
+        \\    value = 1764.0
+        \\    root = f64_sqrt(value)
+        \\    if root != 42.0:
+        \\        return 1
+        \\    if f64_floor(0.0 - 1.5) != 0.0 - 2.0 or f64_ceil(0.0 - 1.5) != 0.0 - 1.0:
+        \\        return 2
+        \\    if f64_trunc(0.0 - 1.9) != 0.0 - 1.0 or f64_abs(0.0 - 2.5) != 2.5:
+        \\        return 3
+        \\    if f64_neg(4.0) != 0.0 - 4.0:
+        \\        return 4
+        \\    return int(f64_abs(0.0 - root))
+    );
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
+    // The bit-pattern conversions still own the raw `u64` spelling: a float
+    // cannot be handed to `f64_to_u64`.
+    var raw = try language.Compilation.init(t.allocator, "float.my",
+        \\def main() -> i64:
+        \\    return f64_to_u64(f64_sqrt(1764.0))
+    );
+    defer raw.deinit();
+    try t.expectError(error.SourceError, raw.check());
+    try t.expectEqualStrings("E_TYPE", raw.diagnostics.items[0].code);
+}
