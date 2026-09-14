@@ -15,9 +15,12 @@ any other toolchain.
 
 ## Fast loops (use these while iterating)
 
-- `zig build test-runtime-audit -Dtest-filter=SUBSTRING` — runs only the Zig tests whose
-  name contains SUBSTRING, across every test root. Seconds instead of the full
-  ~884-test binary. `-Dtest-filter` also applies to `zig build test` and `test-compile`.
+- `zig build test-units -Dtest-filter=SUBSTRING` — runs only `src/root_test.zig` tests
+  whose name contains SUBSTRING. `-Dtest-filter=arena` is 37 tests in 1.5 s; the whole
+  root is 889 tests in 25 s. `zig build test-cli -Dtest-filter=…` does the same for
+  `test/integration.zig`. Neither runs Python drivers or Guardian. The filter also
+  applies to `zig build test` and `test-compile`. A filter that names nothing fails
+  rather than reporting green, so filter one root at a time.
 - `zig-out/bin/mylang test <entry.my|dir> --filter SUBSTRING` — guest (`.my`) tests.
   A bare substring matches anywhere in the qualified name; a pattern containing
   `*`, `?` or `[` is a glob. A directory runs every `.my` entry under it in parallel.

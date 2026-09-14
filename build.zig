@@ -133,7 +133,11 @@ pub fn build(b: *std.Build) void {
     const test_step = b.step("test", "Run interpreter, checker, CLI, and tooling regression tests");
     b.step("test-interpreter", "Run the default interpreter acceptance suite").dependOn(test_step);
     guardian.addAllChecks(b, guardian_exe, test_step, .{});
-    test_step.dependOn(&b.addRunArtifact(unit).step);
+    const run_unit = b.addRunArtifact(unit);
+    test_step.dependOn(&run_unit.step);
+    // The fast inner loops: no Python drivers and no Guardian, so `-Dtest-filter` returns in seconds.
+    b.step("test-units", "Run only src/root_test.zig, honouring -Dtest-filter").dependOn(&run_unit.step);
+    b.step("test-cli", "Run only test/integration.zig, honouring -Dtest-filter").dependOn(&run_integration.step);
     const byte_io_step = b.step("test-byte-io", "Verify raw guest stdin/stdout and host bounds");
     const run_byte_io_unit = b.addRunArtifact(byte_io_unit);
     byte_io_step.dependOn(&run_byte_io_unit.step);
@@ -156,7 +160,7 @@ pub fn build(b: *std.Build) void {
     const run_schematic_unit = b.addRunArtifact(schematic_unit);
     const audit_runtime = b.step("test-runtime-audit", "Run every Zig test root for isolated runtime probes");
     guardian.addAllChecks(b, guardian_exe, audit_runtime, .{});
-    audit_runtime.dependOn(&b.addRunArtifact(unit).step);
+    audit_runtime.dependOn(&run_unit.step);
     audit_runtime.dependOn(&run_integration.step);
     audit_runtime.dependOn(&run_board_unit.step);
     audit_runtime.dependOn(&run_byte_io_unit.step);

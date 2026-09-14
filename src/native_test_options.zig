@@ -18,7 +18,7 @@ pub const Options = struct {
     limits: execute.Limits = .{},
 };
 /// Native tests require no Python interpreter.
-pub const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE]\n" ++
+pub const usage = "usage: mylang test <entry.my|directory> [--filter SUBSTRING|GLOB] [--cases FILE]\n" ++
     "  --link FILE --link-library NAME --library-path DIR (repeatable)\n" ++
     "  --cache-dir DIR --force --json --qbe PATH --zig PATH --mode Debug|ReleaseFast\n" ++
     "  --max-steps N --max-frames N --max-calls N --timeout-ms N\n";

@@ -34,3 +34,38 @@ $ /tmp/factorial
 $ mylang build examples/factorial.my --run --cache-dir /tmp/qbe-cache
 120
 ```
+
+## Object cache and link
+
+Everything a build compiles is content addressed under `--cache-dir`
+(`.mylang-cache/qbe` by default): one object per guest function, one for the
+generated typed-metadata unit, and one for the generated entry adapter. Their
+keys cover the compiler's own build-time identity, the runtime content hash, the
+Zig and QBE tool stamps, and the target and optimize mode, so a changed tool or
+mode never reuses an object built by another one.
+
+The fixed runtime translation units are not linked as loose objects. They are
+compiled once per build environment and published as a single archive beside the
+objects, and the link places that archive after every object that can reference
+it. The linker therefore pulls only the archive members a program actually needs,
+and because every unit is compiled with function and data sections and the link
+collects unreferenced ones, a program that never prints carries no printing
+runtime. A build that changes nothing relinks nothing observable: the candidate
+and the published executable are compared by length and then by bytes, and an
+identical result keeps its inode and modification time, which `--report` shows as
+`"output_changed": false`.
+
+A cached object or archive is accepted only when a fingerprint over its length
+and contents matches the one stored beside it in a `.digest` file. Damaged bytes
+and a damaged fingerprint are both misses, so a corrupt cache repairs the one
+entry it lost rather than failing the build or silently linking rubble. Cache
+keys stay on SHA-256 because they name small inputs; verification uses the
+cheaper fingerprint because a warm build re-reads megabytes of stored objects and
+a cryptographic pass over them costs more than the link it protects.
+
+```console
+$ mylang build examples/factorial.my -o /tmp/factorial --cache-dir /tmp/qbe-cache --report
+{"version":"qbe-build-v1","output":"/tmp/factorial","output_changed":true,...}
+$ mylang build examples/factorial.my -o /tmp/factorial --cache-dir /tmp/qbe-cache --report
+{"version":"qbe-build-v1","output":"/tmp/factorial","output_changed":false,...}
+```

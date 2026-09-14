@@ -10,5 +10,6 @@ test {
     _ = @import("native_test_options.zig");
     _ = @import("native_test_receipts.zig");
     _ = @import("native_test_session.zig");
+    _ = @import("native_test_directory.zig");
     _ = @import("native_test_command.zig");
 }
