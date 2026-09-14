@@ -36,13 +36,25 @@ const units =
     \\
     \\    def number(n: Seconds) -> i64:
     \\        return unwrap(n)
+    \\
+    \\
+    \\
 ;
 
 test "domain backing types require built-in scalars and exact wrapping types" {
     for ([_][]const u8{ "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64" }) |width| {
-        const source = try std.fmt.allocPrint(testing.allocator, "domain Count: {s} {{ fn from(n: {s}) -> Count {{ return wrap[Count](n); }} fn " ++
-            "number(n: Count) -> {s} {{ return unwrap(n); }} }} fn main() -> i64 {{ return " ++
-            "i64(Count.number(Count.from(7{s}))); }}", .{ width, width, width, width });
+        const source = try std.fmt.allocPrint(testing.allocator,
+            \\domain Count: {s}:
+            \\    def from(n: {s}) -> Count:
+            \\        return wrap[Count](n)
+            \\
+            \\    def number(n: Count) -> {s}:
+            \\        return unwrap(n)
+            \\
+            \\
+            \\def main() -> i64:
+            \\    return i64(Count.number(Count.from(7{s})))
+        , .{ width, width, width, width });
         defer testing.allocator.free(source);
         try result(source, 7);
     }
@@ -229,7 +241,14 @@ test "domain namespaces support forward calls recursion private helpers and shar
         \\    def main() -> i64:
         \\        return 0
     , "E_MAIN");
-    try reject("private fn helper() -> i64 { return 0; } fn main() -> i64 { return 0; }", "E_PRIVATE_SCOPE");
+    try reject(
+        \\private def helper() -> i64:
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_PRIVATE_SCOPE");
 }
 
 const allocation_source = units ++
@@ -398,6 +417,9 @@ test "nominal domains prevent mixing units and preserve validated factory values
         \\
         \\def distance(time: Seconds) -> Millimeters:
         \\    return Millimeters.from(u8(Seconds.number(time) * 10u64))
+        \\
+        \\
+        \\
     ;
     try result(conversion ++
         \\def main() -> i64:

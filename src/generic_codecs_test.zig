@@ -27,6 +27,9 @@ const domain =
     \\
     \\    def to_wire(x: Positive) -> Wire:
     \\        return Wire(n=unwrap(x))
+    \\
+    \\
+    \\
 ;
 const helpers =
     \\def round[T](ignored: T, n: i64) -> i64:
@@ -36,6 +39,9 @@ const helpers =
     \\            return codec_encode[Positive](x).n
     \\        case Decoded.err(e):
     \\            return e
+    \\
+    \\
+    \\
 ;
 fn scenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "generic-codecs.my", domain ++ helpers ++
@@ -57,7 +63,7 @@ test "generic codecs execute concrete domain factories and accessors under alloc
 }
 fn reject(body: []const u8, expected: []const u8) !void {
     const text = try std.mem.concat(t.allocator, u8, &.{
-        domain, body,
+        domain, body, "\n\n\n",
         \\def main() -> i64:
         \\    return 0
     });
@@ -86,7 +92,7 @@ const Modules = struct {
             \\def main() -> i64:
             \\    return f[bool](False)
         );
-        if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8, "module model;export Wire;export Decoded;export Positive;" ++ domain);
+        if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8, "module model\nexport Wire\nexport Decoded\nexport Positive\n" ++ domain);
         return error.NotFound;
     }
 };

@@ -129,7 +129,7 @@ fn provider(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8
         \\    value: shapes.Count = 42
         \\    return value
     else if (std.mem.eql(u8, path, "shapes.my"))
-        if (hidden) "module shapes;type Count=i64;" else "module shapes;export Count;type Count=i64;"
+        if (hidden) "module shapes\ntype Count = i64\n" else "module shapes\nexport Count\ntype Count = i64\n"
     else
         return error.NotFound;
     return allocator.dupe(u8, text);

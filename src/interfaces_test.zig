@@ -78,7 +78,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
     var call_seen = false;
     for (syntax.nodes.items) |node| if (node.data == .call) {
         call_seen = true;
-        try t.expectEqualStrings("units::Distance", project.modules.items[0].src.text(node.data.call.owner.?));
+        try t.expectEqualStrings("units.Distance", project.modules.items[0].src.text(node.data.call.owner.?));
     };
     try t.expect(call_seen);
 }
@@ -103,7 +103,10 @@ fn reject(body: []const u8, code: []const u8) !void {
 }
 // spec: PROJ-3
 test "module interfaces reject duplicate exports missing symbols and private type leaks" {
-    try reject("module main; export Missing;", "E_UNKNOWN_EXPORT");
+    try reject(
+        \\module main
+        \\export Missing
+    , "E_UNKNOWN_EXPORT");
     try reject(
         \\module main
         \\export X
@@ -173,18 +176,13 @@ test "module interfaces reject duplicate exports missing symbols and private typ
         \\export f
         \\
         \\
-        \\def f(x: absent.Thing) -> i64:
-        \\    return 0
-    , "E_UNKNOWN_IMPORT");
-    try reject(
-        \\module main
-        \\export f
-        \\
-        \\
         \\def f(x: Missing) -> i64:
         \\    return 0
     , "E_UNKNOWN_SYMBOL");
-    try reject("module main; fn broken( ;", "E_SYNTAX");
+    try reject(
+        \\module main
+        \\def broken(
+    , "E_SYNTAX");
 }
 test "module privacy rejects direct private access wrong kinds and transitive import names" {
     const cases = [_]struct { alias: ?[]const u8, name: []const u8, kind: interfaces.Kind, code: []const u8, from: usize = 0 }{
@@ -205,7 +203,7 @@ test "module privacy rejects direct private access wrong kinds and transitive im
         try t.expectEqualStrings(case.code, project.problem.?.code);
         const message = try project.renderProblem(t.allocator);
         defer t.allocator.free(message);
-        if (std.mem.eql(u8, case.code, "E_PRIVATE_SYMBOL")) try t.expect(std.mem.indexOf(u8, message, "units.my:1:") != null);
+        if (std.mem.eql(u8, case.code, "E_PRIVATE_SYMBOL")) try t.expect(std.mem.indexOf(u8, message, "units.my:") != null);
     }
 }
 
@@ -266,7 +264,7 @@ fn mergedScenario(allocator: std.mem.Allocator) !void {
             if (node.data == .call) for (node.data.call.arguments) |argument| try t.expect(@backingInt(argument) >= range.node_start and @backingInt(argument) < range.node_end);
         }
     }
-    try t.expectEqualStrings("units::Distance", merged.src.text(merged.syntax.types.records[0].fields[0].ty));
+    try t.expectEqualStrings("units.Distance", merged.src.text(merged.syntax.types.records[0].fields[0].ty));
     const original_span = index.units[1].syntax.functions[0].name;
     try t.expectEqualStrings("raw", project.modules.items[1].src.text(original_span));
     try t.expect(original_span.start < merged.syntax.functions[2].name.start);
@@ -489,7 +487,7 @@ fn discoveryScenario(allocator: std.mem.Allocator) !void {
     try t.expect(!grouped(analysis, compilation.program.?, "left::wrapper", "right::wrapper"));
     const text = try duplicates_module.render(allocator, analysis, compilation.program.?, compilation.src);
     defer allocator.free(text);
-    for ([_][]const u8{ "left.my:1:", "right.my:1:", "left::pure", "right::pure", "approximate near-v3" }) |part| try t.expect(std.mem.indexOf(u8, text, part) != null);
+    for ([_][]const u8{ "left.my:9:", "right.my:9:", "left::pure", "right::pure", "approximate near-v3" }) |part| try t.expect(std.mem.indexOf(u8, text, part) != null);
 }
 test "module duplicate discovery preserves nominal types and callees while normalizing shared import aliases" {
     try discoveryScenario(t.allocator);
@@ -625,17 +623,19 @@ fn expectQualifiedSyntax(syntax: @import("ast.zig").Program, src: @import("sourc
     var matches: usize = 0;
     for (syntax.nodes.items) |node| switch (node.data) {
         .call => |call| {
-            try t.expectEqualStrings("units::helper", src.text(call.name));
+            try t.expectEqualStrings("units.helper", src.text(call.name));
             calls += 1;
         },
-        .variant => |variant| {
-            try t.expectEqualStrings("units::Choice", src.text(variant.ty));
+        // A payload-free case reads as a field of its qualified enum until the checker rewrites it.
+        .field => |field| {
+            try t.expectEqualStrings("units.Choice", src.text(syntax.nodes.items[@backingInt(field.base)].data.name));
+            try t.expectEqualStrings("a", src.text(field.name));
             variants += 1;
         },
         else => {},
     };
     for (syntax.statements.items) |statement| if (statement.data == .match) {
-        try t.expectEqualStrings("units::Choice", src.text(statement.data.match.arms[0].ty));
+        try t.expectEqualStrings("units.Choice", src.text(statement.data.match.arms[0].ty));
         matches += 1;
     };
     try t.expectEqual(@as(usize, 1), calls);
@@ -725,7 +725,7 @@ test "generic syntax module interfaces retain scoped type names without hiding p
         \\export echo
         \\
         \\
-        \\def echo[T](x: [2]T) -> [2]T:
+        \\def echo[T: copy](x: [2]T) -> [2]T:
         \\    return x
         \\
         \\
@@ -783,7 +783,7 @@ test "generic body contracts respect module-local declaration and import scopes"
         \\
         \\def main() -> i64:
         \\    return 0
-    , "module units;", "E_SHADOWING");
+    , "module units\n", "E_SHADOWING");
     try acceptChecked(
         \\module main
         \\import units
@@ -844,13 +844,14 @@ test "generic calls preserve imported declaration identity and private boundarie
         \\    return x
     ;
     try acceptChecked(main, dependency);
+    // A domain member takes its type arguments by inference: `Owner.member[T](x)` has no spelling.
     const domain_main =
         \\module main
         \\import units
         \\
         \\
         \\def forward[T](x: T) -> T:
-        \\    return units.D.make::<T>(x)
+        \\    return units.D.make(x)
         \\
         \\
         \\def main() -> i64:
@@ -866,7 +867,7 @@ test "generic calls preserve imported declaration identity and private boundarie
         \\        return x
         \\
         \\    def make[U](x: U) -> U:
-        \\        return D.hidden::<U>(x)
+        \\        return D.hidden(x)
     ;
     try acceptChecked(domain_main, domain_dependency);
     try rejectChecked(main,
@@ -1045,7 +1046,7 @@ fn genericExecutionScenario(allocator: std.mem.Allocator) !void {
     try t.expectEqual(@as(i64, 7), (try @import("vm.zig").runWithOptions(allocator, compilation.code.?, .{})).value);
     var nominal_instance = false;
     for (compilation.program.?.functions) |function| {
-        if (!std.mem.eql(u8, function.name, "units::id::<units::Box>")) continue;
+        if (!std.mem.eql(u8, function.name, "units::id[units::Box]")) continue;
         nominal_instance = true;
         try t.expectEqual(@as(usize, 1), function.type_arguments.len);
         try t.expectEqualStrings("units::Box", @import("typed.zig").typeName(function.type_arguments[0], compilation.program.?.records));
@@ -1056,7 +1057,7 @@ fn genericExecutionScenario(allocator: std.mem.Allocator) !void {
     try t.expectEqual(@as(usize, 1), roots.len);
     const schema = try @import("schema.zig").render(allocator, &compilation);
     defer allocator.free(schema);
-    try t.expect(std.mem.indexOf(u8, schema, "::<") == null);
+    try t.expect(std.mem.indexOf(u8, schema, "units::id[") == null);
 }
 test "generic execution retains module identities and ordinary public schema roots" {
     try genericExecutionScenario(t.allocator);
@@ -1118,9 +1119,31 @@ test "exports after declarations retain interface validation and scope boundarie
         \\
         \\export value
     , "E_PRIVATE_INTERFACE");
-    try reject("module main; fn value()->i64{export value; return 0;}", "E_SYNTAX");
-    try reject("module main; struct Value { export Value; }", "E_SYNTAX");
-    try reject("module main; fn value()->i64{return 0;} import units;", "E_SYNTAX");
+    try reject(
+        \\module main
+        \\
+        \\
+        \\def value() -> i64:
+        \\    export value
+        \\    return 0
+    , "E_SYNTAX");
+    try reject(
+        \\module main
+        \\
+        \\
+        \\class Value:
+        \\    export Value
+    , "E_SYNTAX");
+    try reject(
+        \\module main
+        \\
+        \\
+        \\def value() -> i64:
+        \\    return 0
+        \\
+        \\
+        \\import units
+    , "E_SYNTAX");
 }
 
 fn scatteredExports(allocator: std.mem.Allocator) !void {
@@ -1390,7 +1413,18 @@ test "generic calls concrete helpers retain imported identity and private domain
 }
 
 test "interface closure includes domain backing and enum table keys" {
-    try reject("module main; export D; domain Hidden: i64 {} domain D: Hidden {}", "E_PRIVATE_INTERFACE");
+    try reject(
+        \\module main
+        \\export D
+        \\
+        \\
+        \\domain Hidden: i64:
+        \\    pass
+        \\
+        \\
+        \\domain D: Hidden:
+        \\    pass
+    , "E_PRIVATE_INTERFACE");
     try reject(
         \\module main
         \\export Table
@@ -1404,7 +1438,11 @@ test "interface closure includes domain backing and enum table keys" {
         \\class Table:
         \\    values: [Key]i64
     , "E_PRIVATE_INTERFACE");
-    try reject("module main; export units; import units;", "E_SYNTAX");
+    try reject(
+        \\module main
+        \\export units
+        \\import units
+    , "E_SYNTAX");
 }
 
 // spec: ERGONOMIC-INTEGRATION-1

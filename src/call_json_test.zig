@@ -207,11 +207,11 @@ test "JSON function call argument envelope depth preserves the 128 level value b
     for ([_]usize{ 127, 128 }) |levels| {
         var text = std.Io.Writer.Allocating.init(t.allocator);
         defer text.deinit();
-        try text.writer.writeAll("module data;export consume;");
-        for (0..levels) |index| try text.writer.print("export R{d};", .{index});
+        try text.writer.writeAll("module data\nexport consume\n");
+        for (0..levels) |index| try text.writer.print("export R{d}\n", .{index});
         for (0..levels) |index| {
-            try text.writer.print("struct R{d}{{next:", .{index});
-            if (index + 1 == levels) try text.writer.writeAll("bool}") else try text.writer.print("R{d}}}", .{index + 1});
+            try text.writer.print("class R{d}:\n    next: ", .{index});
+            if (index + 1 == levels) try text.writer.writeAll("bool\n\n\n") else try text.writer.print("R{d}\n\n\n", .{index + 1});
         }
         try text.writer.writeAll(
             \\def consume(x: R0) -> bool:

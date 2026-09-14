@@ -6,6 +6,9 @@ const Cache = language.semantic_cache.Cache;
 const prefix =
     \\def helper(n: i64) -> i64:
     \\    return n + 1
+    \\
+    \\
+    \\
 ;
 const suffix =
     \\def keep(n: i64) -> i64:
@@ -57,12 +60,18 @@ fn scenario(allocator: std.mem.Allocator) !void {
     try compare(allocator, &cache,
         \\def helper(n: i64) -> i64:
         \\    return n + 2
+        \\
+        \\
+        \\
     ++ suffix, 43);
     try t.expectEqual(@as(usize, 2), cache.statistics.reused);
     try t.expectEqual(@as(usize, 4), cache.statistics.checked);
     try compare(allocator, &cache,
         \\def helper(n: i64) -> i64:
         \\    return True
+        \\
+        \\
+        \\
     ++ suffix, null);
     try t.expectEqual(@as(usize, 2), cache.statistics.stored);
     try compare(allocator, &cache, prefix ++ suffix, 42);
@@ -84,10 +93,16 @@ test "semantic cache falls back for declaration type constant generic and alias 
     try compare(t.allocator, &cache,
         \\def helper(n: bool) -> i64:
         \\    return 1
+        \\
+        \\
+        \\
     ++ suffix, null);
     try compare(t.allocator, &cache,
         \\class Item:
         \\    n: i64
+        \\
+        \\
+        \\
     ++ prefix ++ suffix, 42);
     try t.expectEqual(@as(usize, 0), cache.statistics.reused);
     try compare(t.allocator, &cache,
@@ -145,6 +160,9 @@ test "semantic cache keeps previous committed bodies when remember reports OutOf
     var interrupted = try language.Compilation.init(t.allocator, "edited.my",
         \\def helper(n: i64) -> i64:
         \\    return n + 2
+        \\
+        \\
+        \\
     ++ suffix);
     defer interrupted.deinit();
     try t.expectError(error.OutOfMemory, interrupted.checkWithCache(&cache));
@@ -167,10 +185,16 @@ test "semantic cache keeps inferred callback schemas fresh across changed bodies
     try compare(t.allocator, &cache,
         \\def helper(n: i64) -> i64 effects():
         \\    return n + 1
+        \\
+        \\
+        \\
     ++ caller, 41);
     try compare(t.allocator, &cache,
         \\def helper(n: i64) -> i64 effects():
         \\    return n + 2
+        \\
+        \\
+        \\
     ++ caller, 42);
     try t.expectEqual(@as(usize, 0), cache.statistics.reused);
 }
@@ -181,6 +205,9 @@ test "semantic cache bypasses constant length function and nominal specializatio
     const function =
         \\def size[const N: u64]() -> u64:
         \\    return N
+        \\
+        \\
+        \\
     ;
     try compare(t.allocator, &cache, function ++
         \\def main() -> i64:
@@ -193,6 +220,9 @@ test "semantic cache bypasses constant length function and nominal specializatio
     const nominal =
         \\class Chunk[const N: u64]:
         \\    items: [N]i64
+        \\
+        \\
+        \\
     ;
     try compare(t.allocator, &cache, nominal ++
         \\def main() -> i64:
@@ -221,6 +251,9 @@ test "semantic cache rechecks transitive effects when only a callee body changes
         \\
         \\def main() -> i64 effects(clock):
         \\    return change()
+        \\
+        \\
+        \\
     ;
     var first = try language.Compilation.init(t.allocator, "edited.my", shared ++
         \\def change() -> i64:

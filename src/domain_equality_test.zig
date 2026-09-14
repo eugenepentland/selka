@@ -12,6 +12,9 @@ const declarations =
     \\domain Other: u64:
     \\    def make(n: u64) -> Other:
     \\        return wrap[Other](n)
+    \\
+    \\
+    \\
 ;
 const comparison = declarations ++
     \\def main() -> i64:
@@ -101,8 +104,8 @@ const Modules = struct {
             \\def make(n: u64) -> alias.Id:
             \\    return alias.Id.make(n)
         );
-        if (std.mem.eql(u8, path, "left.my")) return allocator.dupe(u8, "module left;export Id;" ++ declarations);
-        if (std.mem.eql(u8, path, "right.my")) return allocator.dupe(u8, "module right;export Id;" ++ declarations);
+        if (std.mem.eql(u8, path, "left.my")) return allocator.dupe(u8, "module left\nexport Id\n" ++ declarations);
+        if (std.mem.eql(u8, path, "right.my")) return allocator.dupe(u8, "module right\nexport Id\n" ++ declarations);
         return error.NotFound;
     }
 };
@@ -128,8 +131,19 @@ test "domain equality resolves declaration identity through module aliases" {
 // spec: DOMAIN-EQUALITY-1
 test "domain equality compares every scalar backing by value" {
     for ([_][]const u8{ "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64" }) |width| {
-        const source = try std.fmt.allocPrint(t.allocator, "domain D:{s}{{fn make(n:{s})->D{{return wrap[D](n);}}}}fn main()->i64{{" ++
-            "let a=D.make(7{s});let b=D.make(8{s});if a==a && a!=b && !(a==b) && !(a!=a){{return 1;}}return 0;}}", .{ width, width, width, width });
+        const source = try std.fmt.allocPrint(t.allocator,
+            \\domain D: {s}:
+            \\    def make(n: {s}) -> D:
+            \\        return wrap[D](n)
+            \\
+            \\
+            \\def main() -> i64:
+            \\    a = D.make(7{s})
+            \\    b = D.make(8{s})
+            \\    if a == a and a != b and not (a == b) and not (a != a):
+            \\        return 1
+            \\    return 0
+        , .{ width, width, width, width });
         defer t.allocator.free(source);
         try expectValue(t.allocator, source, 1);
     }
