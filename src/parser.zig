@@ -1148,7 +1148,65 @@ pub const Parser = struct {
         };
         return .{ .values = try values.toOwnedSlice(self.arena.allocator()), .names = if (keyword_seen) try names.toOwnedSlice(self.arena.allocator()) else &.{} };
     }
+    /// Recognize `Owner.name[T](…)`, a member call carrying explicit type arguments.
+    /// The applied-constructor lookahead cannot claim it, because `Owner.name` names a
+    /// function rather than a type, and an import alias joins into one name instead.
+    fn memberApplicationAhead(self: *Parser) bool {
+        if (self.cursor.pos + 4 >= self.tokens.len) return false;
+        const head = self.current();
+        if (head.tag != .ident) return false;
+        if (self.module_syntax and self.syntax.import_aliases.contains(self.src.text(head.span))) return false;
+        if (self.tokens[self.cursor.pos + 1].tag != .dot) return false;
+        const member = self.tokens[self.cursor.pos + 2].tag;
+        if (member != .ident and member != .kw_len and member != .kw_replace) return false;
+        if (self.tokens[self.cursor.pos + 3].tag != .lbracket) return false;
+        var position = self.cursor.pos + 3;
+        var brackets: usize = 0;
+        while (position < self.tokens.len) : (position += 1) {
+            switch (self.tokens[position].tag) {
+                .lbracket => brackets += 1,
+                .rbracket => {
+                    brackets -= 1;
+                    if (brackets == 0) return position + 1 < self.tokens.len and self.tokens[position + 1].tag == .lparen;
+                },
+                .ident, .integer, .comma, .kw_i64, .kw_i8, .kw_i16, .kw_i32, .kw_u8, .kw_u16, .kw_u32, .kw_u64, .kw_bool, .kw_none, .dot => {},
+                else => return false,
+            }
+        }
+        return false;
+    }
+
+    /// One `[A, B]` list of explicit call type arguments.
+    fn squareTypeArguments(self: *Parser) diagnostic.Error![]const Span {
+        _ = try self.expect(.lbracket);
+        var arguments: std.ArrayList(Span) = .empty;
+        while (true) {
+            const argument = try self.genericArgument();
+            if (arguments.items.len == 16) return self.sink.fail(eGenericLimit, argument, "at most 16 type arguments are permitted");
+            try arguments.append(self.arena.allocator(), argument);
+            if (!self.take(.comma)) break;
+        }
+        _ = try self.expect(.rbracket);
+        return arguments.toOwnedSlice(self.arena.allocator());
+    }
+
     fn parseLeaf(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
+        if (token.tag == .ident and self.memberApplicationAhead()) {
+            const owner = (try self.expect(.ident)).span;
+            _ = try self.expect(.dot);
+            const member = try self.declaredName();
+            const type_arguments = try self.squareTypeArguments();
+            _ = try self.expect(.lparen);
+            const arguments = try self.callArguments();
+            const close = try self.expect(.rparen);
+            return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{
+                .owner = owner,
+                .type_arguments = type_arguments,
+                .name = member,
+                .arguments = arguments.values,
+                .argument_names = arguments.names,
+            } } });
+        }
         if (token.tag == .ident and self.appliedConstructorAhead()) {
             const name = try self.typeName();
             _ = try self.expect(.lparen);
