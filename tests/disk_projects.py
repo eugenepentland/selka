@@ -36,33 +36,38 @@ def rejected(result, code):
     assert code.encode() in result.stderr, result.stderr
 
 
+def letter_module(body):
+    """The helper module the edits replace, with one statement for its body."""
+    return 'module helper\nexport letter\n\n\ndef letter() -> u8:\n    ' + body + '\n'
+
+
 def module_edits(binary, directory):
     project = directory / "small guest"
     project.mkdir()
     shutil.copyfile(ROOT / "src/schematic/guest/io.my", project / "io.my")
     entry = project / "main.my"
     helper = project / "helper.my"
-    entry.write_text('module main; import io; import helper; fn main()->i64 { _ = io::put(helper::letter()); return 0; }')
-    helper.write_text('module helper; export letter; fn letter()->u8 { return 65u8; }')
+    entry.write_text('module main\nimport io\nimport helper\n\n\ndef main() -> i64:\n    _ = io.put(helper.letter())\n    return 0\n')
+    helper.write_text(letter_module('return 65u8'))
     inputs = [directory / f"empty{i}.sexp" for i in range(3)]
     for path in inputs:
         path.write_bytes(b"")
     assert success(run(binary, project, inputs, directory)) == b"A"
-    helper.write_text('module helper; import added; export letter; fn letter()->u8 { return added::letter(); }')
-    (project / "added.my").write_text('module added; export letter; fn letter()->u8 { return 66u8; }')
+    helper.write_text('module helper\nimport added\nexport letter\n\n\ndef letter() -> u8:\n    return added.letter()\n')
+    (project / "added.my").write_text('module added\nexport letter\n\n\ndef letter() -> u8:\n    return 66u8\n')
     assert success(run(binary, project, inputs, directory)) == b"B"
     (project / "added.my").unlink()
     rejected(run(binary, project, inputs, directory), "E_MODULE_READ")
-    for body in ('return true;', 'return ;'):
-        helper.write_text('module helper; export letter; fn letter()->u8 { ' + body + ' }')
+    for body in ('return True', 'return'):
+        helper.write_text(letter_module(body))
         failure = run(binary, project, inputs, directory)
         rejected(failure, "E_")
         assert re.search(rb"helper.my:\d+:\d+:", failure.stderr), failure.stderr
-    helper.write_text('module helper; export letter; fn letter()->u8 { return 67u8; }')
+    helper.write_text(letter_module('return 67u8'))
     assert success(run(binary, project, inputs, directory)) == b"C"
     io = project / "io.my"
     io.write_text(io.read_text().replace('value: u8', 'value: i64'))
-    entry.write_text('module main; import io; fn main()->i64 { _ = io::put(65); return 0; }')
+    entry.write_text('module main\nimport io\n\n\ndef main() -> i64:\n    _ = io.put(65)\n    return 0\n')
     rejected(run(binary, project, inputs, directory), "SignatureMismatch")
     entry.unlink()
     rejected(run(binary, project, inputs, directory), "E_MODULE_READ")
