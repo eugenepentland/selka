@@ -373,6 +373,16 @@
       "summary": "Runtime memory reports separate the VM and host totals, and split the VM's between guest backing and bookkeeping.",
       "doc": "docs/tooling/runtime-budgets.md#memory-accounting-categories"
     },
+    "guest-memory-ceilings": {
+      "kind": "tooling",
+      "summary": "Every process that runs guest code runs under a byte ceiling the heap traps on and the kernel backs with RLIMIT_AS.",
+      "doc": "docs/tooling/runtime-budgets.md#guest-memory-ceilings"
+    },
+    "memory-bounded-test-fanout": {
+      "kind": "tooling",
+      "summary": "A directory test run sizes its worker pool from free memory as well as cores, with --jobs and MYLANG_JOBS to override it.",
+      "doc": "docs/tooling/runtime-budgets.md#fan-out-bounded-by-memory"
+    },
     "typed-holes": {
       "kind": "language",
       "summary": "`todo[T]()` declares an unfinished implementation with a checked type and blocks publication.",

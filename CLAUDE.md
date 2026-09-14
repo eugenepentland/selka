@@ -41,6 +41,18 @@ zig build fmt-check
 
 `zig build test` also runs `mylang doc-coverage .` and `tests/docs_examples.py`.
 
+## Memory ceilings (why a runaway guest no longer kills the machine)
+
+Every process that runs guest code runs under a byte ceiling: the managed heap
+traps `R_MEMORY_BUDGET` at it and the runtime backs it with `RLIMIT_AS` at the
+budget plus 256 MiB. `MYLANG_MEMORY_LIMIT` carries it (bytes, `K`/`M`/`G`
+suffixes); `--max-memory=BYTES` on `run`, `build --run` and `test` outranks it;
+the defaults are 512 MiB per test child and 4 GiB for a single run. The compiler
+caps itself at 8 GiB (`MYLANG_HOST_MEMORY_LIMIT`), `mylang test <dir>` sizes its
+fan-out from `MemAvailable` as well as cores (`--jobs N`, `MYLANG_JOBS`), and
+every build step declares `max_rss`, so `zig build --maxrss N` bounds the whole
+gate's concurrency. See `docs/tooling/runtime-budgets.md`.
+
 ## Guardian rules that actually bite
 
 Guardian runs **inside** `zig build test` and blocks; there are no baselines.
