@@ -75,9 +75,17 @@ pub fn assemble(cache: cache_api.Cache, parsed: options.Options, manifest: std.j
     try state.compile(parsed);
     return state.link(parsed, output);
 }
+/// The frontend that emits a guest's QBE units. A host application is its own
+/// frontend, so `/proc/self/exe emit-project-qbe` emits them; `MYLANG_HOST_COMPILER`
+/// overrides that with an explicit compiler, which a host running from a binary
+/// that is not itself a compiler — a Zig test binary — must supply.
+fn frontendCompiler(context: fs.Context) fs.Error![]const u8 {
+    if (context.environ.get("MYLANG_HOST_COMPILER")) |path| return context.allocator.dupe(u8, path);
+    return std.Io.Dir.cwd().realPathFileAlloc(context.io, "/proc/self/exe", context.allocator);
+}
 fn build(context: fs.Context, parsed: options.Options) !u8 {
     const a = context.allocator;
-    const compiler = try std.Io.Dir.cwd().realPathFileAlloc(context.io, "/proc/self/exe", a);
+    const compiler = try frontendCompiler(context);
     const prepared = prepare(context, parsed) catch |err| switch (err) {
         error.NativeToolFailed => return 2,
         else => return err,
@@ -279,6 +287,17 @@ test "native build rejects incompatible tools targets and malformed manifests" {
     , .{});
     defer value.deinit();
     try std.testing.expectError(error.InvalidNativeManifest, validate(value.value));
+}
+// spec: QBE-HOST-COMPILER-1
+test "the frontend honours an explicit host compiler over the running executable" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const own = try frontendCompiler(context);
+    try std.testing.expect(own.len != 0);
+    try environment.put("MYLANG_HOST_COMPILER", "/opt/mylang/bin/mylang");
+    try std.testing.expectEqualStrings("/opt/mylang/bin/mylang", try frontendCompiler(context));
 }
 fn bundles(name: []const u8) bool {
     for (bundled.files) |asset| if (std.mem.eql(u8, asset.path, name)) return true;

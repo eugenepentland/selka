@@ -195,6 +195,12 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .imports = host_imports,
     }) });
+    // The schematic tests drive the host application, which builds its guest with
+    // a real frontend; a Zig test binary is not one, so it names the installed
+    // compiler explicitly rather than recursing into itself.
+    const schematic_options = b.addOptions();
+    schematic_options.addOptionPath("compiler_path", exe.getEmittedBin());
+    schematic_unit.root_module.addOptions("schematic_test_options", schematic_options);
     guardian.enableTestDiagnostics(schematic_unit.root_module);
     const options = b.addOptions();
     options.addOptionPath("compiler_path", exe.getEmittedBin());

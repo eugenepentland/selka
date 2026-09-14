@@ -38,6 +38,11 @@ const Harness = struct {
             .directory = t.tmpDir(.{}),
         };
         self.root = try self.directory.dir.realPathFileAlloc(t.io, ".", self.arena.allocator());
+        // The host builds its guest with a real frontend, which this test binary
+        // is not, and runs it under a byte ceiling like every guest process.
+        const compiler = try std.Io.Dir.cwd().realPathFileAlloc(t.io, @import("schematic_test_options").compiler_path, self.arena.allocator());
+        try self.environment.put("MYLANG_HOST_COMPILER", compiler);
+        try self.environment.put("MYLANG_MEMORY_LIMIT", "1073741824");
         return self;
     }
     fn close(self: *Harness) void {
