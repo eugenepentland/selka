@@ -16,7 +16,9 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "-project|run-project|check-policy> <file.my>\n  schema-project: --schema-report (include " ++
     "checked source and compiler identities)\n  " ++
     "input-module: reads a typed JSON manifest and writes generated " ++
-    "module source\n  run/run-project: builds the program natively and runs it; --max-steps=N --max-frames=N " ++
+    "module source\n  run: builds the program natively and runs it; it loads the whole project when the entry " ++
+    "file opens with a module header (or a module-only import/export), and stays single-unit otherwise; " ++
+    "run-project is the explicit project-entry alias\n  run/run-project: --max-steps=N --max-frames=N " ++
     "--max-memory=BYTES --gc-stress --print-result --cache-dir=DIR --qbe=PATH --zig=PATH " ++
     "(native objects default to .mylang-cache/qbe, shared with build)\n  " ++
     "run/run-project: --max-memory takes K/M/G suffixes and caps the guest process's address space; " ++
@@ -90,6 +92,15 @@ fn dispatch(process: std.process.Init) !u8 {
     if (args.len >= 2 and std.mem.eql(u8, args[1], "test")) return @import("native_test_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "doc-coverage")) return @import("doc_coverage_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "doctest")) return @import("doctest_command.zig").run(process, args[2..]);
+    // The C backend is gone. Answer its command names with a migration that
+    // points at the QBE replacements rather than a bare usage dump.
+    if (args.len >= 2 and (std.mem.eql(u8, args[1], "emit-c") or std.mem.eql(u8, args[1], "emit-project-c"))) {
+        const replacement = if (std.mem.eql(u8, args[1], "emit-c")) "emit-qbe" else "emit-project-qbe";
+        var buffer: [192]u8 = undefined;
+        const message = try std.fmt.bufPrint(&buffer, "mylang: {s} was removed with the C backend; use {s} instead\n", .{ args[1], replacement });
+        try std.Io.File.stderr().writeStreamingAll(process.io, message);
+        return 2;
+    }
     const parsed = parseArgs(args[1..]) catch {
         try std.Io.File.stderr().writeStreamingAll(process.io, usage);
         return 2;
@@ -131,6 +142,11 @@ fn run(init: Context, parsed: Parsed) !u8 {
     init.timings.counts.source_bytes = bytes.len;
     init.timings.counts.modules = 1;
     init.timings.end();
+    // `run` accepts a project entry: a file that opens with a module header (or a
+    // module-only import/export) loads its reachable graph exactly as
+    // `run-project` does. A plain single-file program skips this and keeps the
+    // original one-unit path byte-for-byte.
+    if (parsed.command == .run and entryUsesModuleSyntax(bytes)) return listModules(init, parsed);
     if (parsed.command == .@"input-module") {
         var manifest = (try parseInputManifest(init, parsed.path, bytes)) orelse return 2;
         defer manifest.deinit();
@@ -958,6 +974,31 @@ fn checkImportedInputs(init: Context, inputs: []const GeneratedInput, project: *
         return false;
     };
     return true;
+}
+
+/// Whether the entry source names a project rather than a plain single-file
+/// program. A project file opens with `module NAME`; a leading `import`/`export`
+/// directive is module-only too, so it routes to the loader for the clearer
+/// missing-header diagnostic. Anything else - including the assignments
+/// `module = 1`, `import = 2` and `export = 3` - keeps the single-file path.
+fn entryUsesModuleSyntax(bytes: []const u8) bool {
+    var cursor: usize = 0;
+    while (true) {
+        while (cursor < bytes.len and std.ascii.isWhitespace(bytes[cursor])) cursor += 1;
+        if (cursor >= bytes.len or bytes[cursor] != '#') break;
+        while (cursor < bytes.len and bytes[cursor] != '\n') cursor += 1;
+    }
+    const start = cursor;
+    while (cursor < bytes.len and (std.ascii.isAlphanumeric(bytes[cursor]) or bytes[cursor] == '_')) cursor += 1;
+    const keyword = bytes[start..cursor];
+    const directive = std.mem.eql(u8, keyword, "module") or std.mem.eql(u8, keyword, "import") or std.mem.eql(u8, keyword, "export");
+    if (!directive) return false;
+    while (cursor < bytes.len and (bytes[cursor] == ' ' or bytes[cursor] == '\t')) cursor += 1;
+    if (cursor >= bytes.len) return false;
+    // The directive must be followed by a name: `module units`, `import math`,
+    // `export count`. A newline or operator here means an ordinary expression.
+    const next = bytes[cursor];
+    return std.ascii.isAlphabetic(next) or next == '_';
 }
 
 fn validEntryBasename(basename: []const u8) bool {
