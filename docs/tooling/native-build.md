@@ -1,11 +1,17 @@
 # Native builds
 
 `mylang build` turns a checked guest program into a Linux x86-64 executable or
-shared library. The compiler drives the whole pipeline itself: it emits QBE
-intermediate code, runs QBE, assembles and links, and bundles the native runtime
-sources it needs. There is no installer script, no `make`, and no compiler source
-checkout in the loop. The design record is
+shared library. The compiler drives the whole pipeline itself: it lowers the
+checked program to bytecode, renders that as QBE intermediate code, runs QBE,
+assembles and links, and bundles the native runtime sources it needs. There is no
+installer script, no `make`, and no compiler source checkout in the loop. The
+design record is
 [incremental QBE native compilation](../experiments/incremental-qbe.md).
+
+Bytecode is still part of the compiler, but only as that internal IR. Nothing
+executes it: there is no interpreter, and QBE is the only backend. `mylang run`
+is this same pipeline followed by running the result, and `dump-bytecode`
+disassembles the IR for inspection rather than for execution.
 
 ## `mylang build`
 

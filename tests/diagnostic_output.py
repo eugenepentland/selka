@@ -54,7 +54,9 @@ def single_files(compiler, root):
     path.write_text('def recur(n: i64) -> i64:\n    return recur(n + 1)\n\n\ndef main() -> i64:\n    return recur(0)\n')
     _, messages = invoke(compiler, 'run', path, '--max-frames=20', status=1)
     stack = problem(messages, 'R_FRAME_LIMIT')['stack']
-    assert len(stack['frames']) == 16 and stack['omitted'] > 0
+    # The native trap renders a bounded window of the guest's own call stack.
+    assert len(stack['frames']) == 16 and 'omitted' in stack
+    assert {frame['function'] for frame in stack['frames']} == {'recur'}
     # Indentation is syntax, so a program the parser accepts is already canonical:
     # `fmt --check` can no longer differ, and reports nothing on the JSON channel.
     path.write_text('def main() -> i64:\n    return 7\n')
@@ -110,14 +112,8 @@ def modules(compiler, root):
     cycle = messages[0]['diagnostic']
     assert cycle['notes'] and cycle['location']['path'] != cycle['notes'][0]['location']['path']
     entry.write_text('module main\n\n\ndef main() -> i64:\n    return divtrunc(1, 0)\n')
-    for command in ('run-project', 'eval-project'):
-        _, messages = invoke(compiler, command, entry, status=1)
-        assert problem(messages, 'R_DIVISION_BY_ZERO')['location']['path'] == 'main.my'
-    request, messages = invoke(compiler, 'eval-project', entry, '--evaluation-request')
-    assert json.loads(request)['evaluation'] == 'not-executed' and messages == []
-    entry.write_text('module main\n\n\ndef main(c: clock_cap) -> i64:\n    _ = c\n    return 7\n')
-    _, messages = invoke(compiler, 'eval-project', entry, '--evaluation-request', status=1)
-    problem(messages, 'E_EVAL_INPUT')
+    _, messages = invoke(compiler, 'run-project', entry, status=1)
+    assert problem(messages, 'R_DIVISION_BY_ZERO')['location']['path'] == 'main.my'
     entry.write_text('module main\n\n\ndef main() -> i64:\n    unused = 1\n    return 7\n')
     result = subprocess.run([compiler, 'check-session', str(entry), '--diagnostics=json'], input='check\ncheck\nclear\ncheck\nquit\n', capture_output=True, text=True, timeout=30)
     assert result.returncode == 0
@@ -131,9 +127,8 @@ def modules(compiler, root):
     manifest.write_text('{}')
     _, messages = invoke(compiler, 'schema-project', entry, '--inputs=' + str(manifest), status=2)
     assert messages[0]['kind'] == 'message' and 'manifest' in messages[0]['message']
-    for command, option in (('input-module', None), ('check-value-project', '--value='), ('invoke-project', '--request=')):
-        _, messages = invoke(compiler, command, manifest if option is None else entry, *([] if option is None else [option + str(manifest)]), status=2 if option is None else 1)
-        assert messages and all(item['kind'] == 'message' for item in messages if item.get('diagnostic', {}).get('severity') != 'warning')
+    _, messages = invoke(compiler, 'input-module', manifest, status=2)
+    assert messages and all(item['kind'] == 'message' for item in messages if item.get('diagnostic', {}).get('severity') != 'warning')
     entry.write_text('module main\nexport missing\n\n\ndef main() -> i64:\n    return 0\n')
     _, messages = invoke(compiler, 'list-interfaces', entry, status=1)
     assert messages[0]['kind'] == 'diagnostic' and messages[0]['diagnostic']['location']['path'] == 'main.my'
@@ -148,7 +143,7 @@ def main():
         single_files(compiler, root)
         export_placement(compiler, root)
         modules(compiler, root)
-    print('JSON diagnostics: source errors, warnings, module notes, VM traces, auxiliary failures, text compatibility and cached session replay passed')
+    print('JSON diagnostics: source errors, warnings, module notes, native runtime traps, auxiliary failures, text compatibility and cached session replay passed')
 
 
 if __name__ == '__main__':

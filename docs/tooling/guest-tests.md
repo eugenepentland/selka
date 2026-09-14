@@ -5,8 +5,7 @@ checks the project, finds the exported functions whose names begin with `test_`,
 builds them natively and runs each one in its own process. Cases are configured
 with one JSON file rather than with a framework inside the language, and the
 runner needs no Python. The design record is
-[the guest test workflow](../experiments/guest-tests.md); `tests/guest_tests.py`
-still exercises the older VM comparison runner.
+[the guest test workflow](../experiments/guest-tests.md).
 
 ## `mylang test`
 

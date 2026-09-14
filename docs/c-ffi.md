@@ -5,7 +5,7 @@ registration or copied-node adapter is needed:
 
 ```mylang
 # doc: check
-# The interpreter cannot register libc; `mylang build main.my --run` links and runs it.
+# Calling libc needs a native build; `mylang build main.my --run` links and runs it.
 extern def abs(value: i32) -> i32 effects(host)
 
 
@@ -66,8 +66,7 @@ Unaffected pure tests can retain their results.
 
 Every declaration requires `effects(host)` and may declare additional effects.
 These effects propagate through callers and prohibit compile-time execution.
-Direct imports work with QBE executable and shared-library builds. The bytecode
-VM cannot execute them.
+Direct imports work with QBE executable and shared-library builds.
 
 C code is trusted native code. The handwritten declaration must match the actual
 C prototype; a linker cannot verify C types. Foreign calls bypass provider grants

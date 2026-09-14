@@ -20,9 +20,9 @@ intend to use; historical counts are not current verification receipts.
 | Control flow | Indented if/elif/else, while, foreach/enumerate/range, break/continue and match/case | [range iteration](range-iteration.md), [matching a variant](match-expressions.md); conservative outer ownership on loop exits |
 | Generics | Functions and nominal records/unions/results/enums; structural field/operation contracts and const length parameters | [structural contracts](../examples/structural-constraints.my); [inferred call type arguments](generic-inference.md) |
 | Managed allocation | Shared growing lists and dictionaries, immutable strings, nonmoving tracing GC and cycle reclamation | [Managed memory](managed-memory.md); managed graph host/native boundaries remain excluded |
-| Managed arenas | `with arena() as name:` region blocks over ordinary managed objects, bulk release, `escape` copy-out, static and runtime escape checks | [Managed arenas](arenas.md); [runnable example](../examples/arena-managed/main.my); VM and QBE native |
+| Managed arenas | `with arena() as name:` region blocks over ordinary managed objects, bulk release, `escape` copy-out, static and runtime escape checks | [Managed arenas](arenas.md); [runnable example](../examples/arena-managed/main.my); QBE native |
 | Managed bytes | Immutable GC byte strings with Python indexing, slicing, membership, split/join and text/hex conversions | [Managed byte strings](bytes.md); byte strings are rejected at JSON and host boundaries like `str` |
-| Ordinary I/O | `print` with Python rendering and an `output` effect; `with open(...)`, handle methods and whole-path file helpers over granted directories | [printing, files and authority](io.md); VM and QBE native |
+| Ordinary I/O | `print` with Python rendering and an `output` effect; `with open(...)`, handle methods and whole-path file helpers over granted directories | [printing, files and authority](io.md); QBE native |
 | Resources | External resource owners, explicit completion and deterministic cleanup | [source resources](experiments/source-resources.md); [resource reads and writes](experiments/resource-io.md); no ambient operating-system authority |
 | Authority | Explicit host capabilities and transitive effect ceilings; `mylang run` grants them all, and `--restrict` plus `--allow-*` withholds and narrows them | [effects](../examples/effects.my); [command-line grants](io.md#capabilities); [byte runner scoped directory/endpoint grants](experiments/scoped-providers.md) |
 | Modules | Disk imports, explicit exports, nominal identity and embedded standard modules | [domain codecs](../examples/domain-codecs/main.my); [local locked package roots](experiments/local-packages.md); no network version resolver |
@@ -32,7 +32,7 @@ intend to use; historical counts are not current verification receipts.
 | Documentation | Every fenced `mylang` example in README, SPEC and docs is run, type-checked or explicitly skipped by the default test gate | [executable documentation](experiments/doc-examples.md); directives pin expected output, expected diagnostics and explicit skips |
 | Tests | Exported test_ function discovery, typed expected values, filters and explicit skips | [guest test workflow](experiments/guest-tests.md); deterministic arguments and isolated source-provider fixtures |
 | Byte application I/O | Scalar compatibility and bounded copied 256-byte blocks, configurable input/output/execution budgets | [bulk I/O](byte-io-bulk.md); output publishes only on successful guest exit |
-| Execution | Typed bytecode VM; QBE native builds through `mylang build`, `emit-qbe` and `emit-project-qbe` | [native experiments](experiments/roadmap.md); [direct C imports](c-ffi.md) and [guest tests](experiments/guest-tests.md) describe the native route |
+| Execution | QBE native code is the only runtime: `mylang build` writes an executable, `mylang run`, `run-project` and `test` build one and execute it in a child process, and `emit-qbe`/`emit-project-qbe` stop at QBE IL | [native experiments](experiments/roadmap.md); [direct C imports](c-ffi.md) and [guest tests](experiments/guest-tests.md) describe the native route |
 
 The detailed [SPEC](../SPEC.md) and focused experiment references describe
 operation contracts and their tests. [legacy/semantics.md](legacy/semantics.md) preserves
@@ -42,17 +42,18 @@ Absent features include capturing closures, guest shared-memory threads, arbitra
 stored reference lifetimes and unrestricted source compile-time execution. The [feature audit](audits/feature-completeness-2026-09-07.md) proposes
 extensions; their presence in that backlog does not claim implementation.
 
-Memory safety combines the nonmoving tracing collector with VM checked handles,
-generations and leases. Each VM is single-threaded; [isolated process workers](experiments/workers.md) provide bounded parallel execution with copied typed messages. `noalloc` restricts managed guest
-allocation, not all compiler/VM/host allocation. Host callbacks are
-trusted implementations of documented contracts. These limits are part of the
-current model, not guarantees supplied by a future backend or thread system.
+Memory safety combines the nonmoving tracing collector with the runtime's checked
+handles, generations and leases. The guest runtime is single-threaded and the language
+has no spawn syntax: parallelism is one guest process per task, arranged by the host.
+`noalloc` restricts managed guest allocation, not all compiler/runtime/host allocation.
+Host callbacks are trusted implementations of documented contracts. These limits are
+part of the current model, not guarantees supplied by a future thread system.
 
 `float` provides decimal literals and ordinary numeric operators over IEEE binary64; the standard `math` module adds classification, rounding, roots and integer helpers, and the raw `f64_*` intrinsics over `u64` representations remain available. See [floating-point.md](floating-point.md).
 
 Scalar constants may call bounded nongeneric source functions with scalar locals and control flow; see [source-evaluation.md](source-evaluation.md).
 
-[Runtime memory reports](experiments/runtime-memory-budgets.md) distinguish logical slots, guest backing and bookkeeping. Typed holes, bounded VM traces, in-memory host replay and named executable laws are experimental agent-facing tools; comparative productivity evidence remains pending.
+Every process that runs guest code runs under a byte ceiling; see [runtime budgets](tooling/runtime-budgets.md). Typed holes and named executable laws are experimental agent-facing tools; comparative productivity evidence remains pending.
 
 Run `python3 tests/feature_surface.py --compiler zig-out/bin/mylang --output receipt.json`
 to execute the documented feature-surface examples and verify explicit
@@ -71,6 +72,8 @@ A statement ends at its newline, at the dedent that closes its suite, or at end 
 `None` and `()` both spell the unit type and unit value. `return` followed by a newline or a dedent returns unit. Postfix `expression?` propagates a failed result to the caller, with postfix precedence. Calls and parameter lists accept trailing commas.
 
 The brace dialect this language grew out of was removed on 2026-09-13, together with the `migrate` tool that converted it; [the removed-features index](legacy/README.md) records what each spelling became.
+
+The bytecode interpreter was removed on 2026-09-14. QBE native code is the only runtime, so `mylang run`, `run-project` and `test` build a program before executing it, and the `eval-project`, `check-value-project` and `invoke-project` commands went with the interpreter. Bytecode remains the compiler's internal IR that QBE consumes, and `dump-bytecode` still prints it.
 
 ## Feature reference pages
 
@@ -102,6 +105,6 @@ Tooling:
 - [Native builds](tooling/native-build.md), [guest tests](tooling/guest-tests.md)
 - [Compiler caches](tooling/caches.md), [source navigation](tooling/navigation.md)
 - [Agent-facing inspection](tooling/agent-tools.md), [documentation gates](tooling/documentation-gate.md)
-- [Local packages](tooling/packages.md), [isolated workers](tooling/workers.md)
+- [Local packages](tooling/packages.md)
 - [The byte runner host](tooling/byte-runner.md), [runtime budgets](tooling/runtime-budgets.md)
-- [Bounded evaluation](tooling/evaluation.md), [command phase timings](tooling/timings.md)
+- [Command phase timings](tooling/timings.md)

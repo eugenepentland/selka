@@ -197,11 +197,10 @@ neither the barrier nor the per-frame depth bookkeeping.
 Arenas do not turn collection off. The tracing collector still runs at managed
 allocation safepoints inside a block, arena objects are traced like any other, and
 an arena object the collector proves unreachable is swept early and leaves its
-arena. `--gc-stress` works inside arenas. The VM's `memory.gc.statistics` reports arena
-scope entries and bulk-released objects separately from `reclaimed`, so a program
-can tell which mechanism freed what; the native heap keeps the same three counters
-— scopes entered, objects bulk released and objects copied out by `escape` — but
-exposes no guest module for them.
+arena. `--gc-stress` works inside arenas. The heap keeps three arena counters —
+scopes entered, objects bulk released and objects copied out by `escape` —
+separately from `reclaimed`, so an embedder can tell which mechanism freed what;
+no guest module exposes them.
 
 Allocation inside an arena is still allocation: it contributes the
 `managed_allocation` effect, so `noalloc` rejects it exactly as it rejects

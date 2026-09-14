@@ -1,13 +1,13 @@
 # Typed JSON boundaries
 
-The compiler can read and write JSON for a checked project's exported types
-without any codec being written by hand. This is the *compiler's* boundary, used
-by `check-value-project`, `invoke-project` and `schema-project` to move data in
-and out of a project from outside it. It is not the guest-level `json` module,
-which is an ordinary library a program calls to parse and render text at run
-time; see [the standard library](standard-library.md#json) for that. The two
-never meet: this page is about the envelope a tool hands the compiler, not about
-a value a program builds.
+The compiler derives a JSON representation for a checked project's exported
+types without any codec being written by hand. This is the *compiler's* boundary:
+`schema-project` renders the contract, and `mylang test --cases` uses the
+representation to carry a test's arguments and its expected result. It is not the
+guest-level `json` module, which is an ordinary library a program calls to parse
+and render text at run time; see [the standard library](standard-library.md#json)
+for that. The two never meet: this page is about the envelope a tool hands the
+compiler, not about a value a program builds.
 
 ## Typed JSON boundaries
 
@@ -26,6 +26,7 @@ module main
 export Status
 export Sample
 export sequence_of
+export test_sequence
 
 enum Status:
     ready,
@@ -38,14 +39,15 @@ class Sample:
 def sequence_of(sample: Sample) -> u64:
     return sample.sequence
 
+def test_sequence(sample: Sample) -> u64:
+    return sequence_of(sample)
+
 def main() -> int:
     return 0
 ```
 
-A `Sample` value for that project is written like this, and
-`mylang check-value-project main.my --value=sample.json` decodes it, validates it
-against the checked type graph, and writes the canonical encoding back to
-standard output:
+A `Sample` value for that project is written like this, and anything that accepts
+a value of that type decodes it against the checked type graph:
 
 ```json
 {
@@ -75,27 +77,47 @@ unknown keys included. There is no unknown-field preservation and no
 unknown-case fallback: an extra key at any level rejects, and a payloadless case
 rejects even an explicit null `value`.
 
-## Calling across the boundary
+## Where the representation is used
 
-`mylang invoke-project` executes one exported function or public domain method
-against a request document. The request pins the interface by digest: it carries
-`schema_sha256`, the SHA-256 of the exact compact document `mylang schema-project`
-prints, so a changed public contract rejects an old request with
-`InvocationSchemaMismatch` while a body-only change runs the freshly checked
-implementation. Argument keys are source parameter names and their values use
-those parameters' typed-JSON representations; the result comes back as another
-`typed-json-v1` envelope.
+`mylang schema-project` prints the language-contract graph — names, fields,
+effects, modes — for every reachable exported declaration. A signature that is
+not JSON-compatible still appears there; it simply has no derived codec. The
+schema and the envelope describe different things: the schema is the contract,
+the envelope is a wire representation. Neither is a native memory layout or a
+foreign ABI.
+
+`mylang test --cases` is what actually moves typed JSON in and out of a running
+program. A case names its arguments by source parameter name and gives each one
+the typed-JSON representation of that parameter's type; a test whose result is
+not `bool` must declare an expected value in the same representation, which the
+runner compares against what the native process returned. See
+[guest tests](tooling/guest-tests.md#mylang-test).
 
 ```sh
 mylang schema-project main.my                  # the language-contract graph
-mylang invoke-project main.my --request=call.json
+mylang test main.my --cases cases.json         # typed JSON arguments and expectations
 ```
 
-Calling `main::sequence_of` with `{"sample": {"sequence": "7", "status": "ready"}}`
-answers `{"version":"typed-json-v1","type":"u64","value":"7"}`. Note that
-`schema-project` and `typed-json-v1` describe different things: the schema is the
-language contract graph — names, fields, effects, modes — while the envelope is a
-wire representation. Neither is a native memory layout or a foreign ABI.
+Driving `main::test_sequence` from the project above takes a `Sample` in and a
+`u64` out, both in the representation this page describes:
+
+```console
+$ cat cases.json
+{
+  "main::test_sequence": {
+    "arguments": {"sample": {"sequence": "7", "status": "ready"}},
+    "expected": "7"
+  }
+}
+$ mylang test main.my --cases cases.json
+passed main::test_sequence
+1 passed, 0 cached, 0 failed, 0 skipped
+```
+
+Arguments are named by source parameter and supplied in declaration order; an
+extra or missing name rejects. Note that an argument and an expectation are bare
+values of their type, not three-field envelopes — the case already names the test
+whose signature fixes both types.
 
 ## Limits
 
@@ -107,12 +129,13 @@ wire representation. Neither is a native memory layout or a foreign ABI.
 - Documents are bounded at 1 MiB in each direction, 65,536 materialized value
   nodes, 262,144 scanner tokens and 64 typed levels. These are work and size
   bounds, not a memory quota or a timeout.
-- The CLI selects an exact qualified exported type name, not a local import
+- A document selects an exact qualified exported type name, not a local import
   alias; private and unknown names reject. Root structural arrays are reachable
   only through the embedding API.
-- `check-value-project` does not execute guest code, invoke providers or write
-  files. `invoke-project` rejects effectful call graphs and reference parameters
-  or returns before it decodes anything.
+- There is no longer a command that decodes a standalone value document or calls
+  an exported function from one. `mylang test --cases` is the only path that
+  executes guest code from typed JSON, and it runs a test, not an arbitrary
+  export.
 - Explicit domain codecs, external key mappings and source-level codec operations
   remain unfinished.
 
@@ -120,4 +143,4 @@ wire representation. Neither is a native memory layout or a foreign ABI.
 
 - [The standard library](standard-library.md#json) — the separate guest-level `json` module
 - [Typed JSON serialization and validation](experiments/typed-json.md) — the wire contract in full
-- [Schema-pinned public JSON calls](experiments/checked-calls.md) — the request format for `invoke-project`
+- [Guest tests](tooling/guest-tests.md) — the runner that carries typed JSON arguments and expectations

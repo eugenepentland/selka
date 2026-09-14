@@ -70,7 +70,7 @@ def main() -> int:
 ```
 
 `sqrt` reduces the argument by exact powers of four and refines with Newton
-iterations, because the virtual machine exposes no bit accessor for `float` that
+iterations, because the language exposes no bit accessor for `float` that
 would reach the `f64_sqrt` intrinsic. It is accurate to within one unit in the
 last place rather than guaranteed correctly rounded. `pow` takes an integer
 exponent and squares repeatedly; magnitudes above 4096 saturate to a same-parity

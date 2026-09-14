@@ -225,9 +225,8 @@ function cannot construct them.
 Like `str`, `bytes` is accepted in exported module signatures but is not an
 ordinary data type at wire boundaries. JSON encoding and decoding reject it with
 `E_JSON_CODEC` and `host def` signatures reject it with `E_HOST_SIGNATURE`. Every
-byte-string operation runs on the QBE native backend as well as the VM, over a
-native byte runtime that mirrors the managed text runtime with a one-byte
-stride.
+byte-string operation runs on the QBE native backend, over a native byte runtime
+that mirrors the managed text runtime with a one-byte stride.
 
 A `b"..."` literal still reads as a fixed `[N]u8` array exactly where the context
 demands one — an array annotation — so array-shaped host and fixture code keeps

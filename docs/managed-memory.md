@@ -51,8 +51,8 @@ ordinary scalar host calls from managed applications still work.
 
 ## Collection and allocation contracts
 
-Each VM execution owns a single-threaded, nonmoving tracing heap. Managed objects
-have stable identities. VM locals, operands, intermediate values, and retained
+Each execution owns a single-threaded, nonmoving tracing heap. Managed objects
+have stable identities. Locals, operands, intermediate values, and retained
 aggregate snapshots maintain reference counts used for root discovery. Collection
 subtracts edges internal to the managed graph (including aggregate wrappers),
 marks reachable objects, and reclaims unreachable cycles. Dead edges are released
@@ -62,14 +62,14 @@ reference counting alone is not the reclamation algorithm.
 Automatic collection runs at managed allocation safepoints according to a simple
 object-count threshold. This prototype is not a tuned latency or byte-budget
 policy. Host allocators still determine total memory availability.
-VM `memory.gc.statistics` reports
+`memory.gc.statistics` reports
 created, reclaimed-during-collection, live/peak objects, live capacity slots, and
 collection counts; final teardown zeroes live counts separately from reclamation.
 
 Managed construction and append carry the transitive `managed_allocation` effect.
 `noalloc` excludes it, meaning "performs no managed allocation". It does not
-promise zero host allocation for value representation or VM bookkeeping. Reads and
-fixed-slot writes are permitted under that bound. Inside a
+promise zero host allocation for value representation or runtime bookkeeping.
+Reads and fixed-slot writes are permitted under that bound. Inside a
 [`with arena() as name:`](arenas.md) block the same managed allocation happens; only
 its release point moves. Managed mutation is not a promise of purity or exclusive
 access.

@@ -1,7 +1,6 @@
 """Exercise ordinary module applications against independent Python expectations."""
 import argparse
 import importlib.util
-import json
 import random
 from pathlib import Path
 import shutil
@@ -16,6 +15,12 @@ def run(argv, status=0):
     result = subprocess.run([str(a) for a in argv], capture_output=True, text=True, timeout=90)
     assert result.returncode == status, (argv, result.returncode, result.stdout, result.stderr)
     return result
+
+
+def identifier(name):
+    """Map a language name onto the class-name spelling scripts/bindings.py emits."""
+    return ''.join(chr(byte) if (65 <= byte <= 90 or 97 <= byte <= 122 or 48 <= byte <= 57) else f'_x{byte:02x}'
+                   for byte in name.encode('utf-8'))
 
 
 def invoice(counts):
@@ -135,31 +140,30 @@ def tools_review(compiler, directory, name):
         assert int(run([compiler, 'run-project', entry, '--print-result']).stdout) == baseline + 1
         assert (directory / 'packaging.my').read_bytes() == original['packaging.my']
         path.write_bytes(original['delivery.my'])
-        manifest = directory / 'declared-inputs.json'
         values = (12, 0, 0)
-        manifest.write_text(json.dumps({'version': 1, 'module': 'inputs', 'values': [
-            {'name': k, 'type': 'i64', 'value': str(v)} for k, v in zip(('books', 'cables', 'adapters'), values)]}))
-        assert int(run([compiler, 'eval-project', entry, f'--inputs={manifest}']).stdout) == invoice(values)['total']
-        assert (directory / 'inputs.my').read_bytes() == original['inputs.my']
+        inputs = directory / 'inputs.my'
+        inputs.write_text(invoice_inputs(values))
+        assert int(run([compiler, 'run-project', entry, '--print-result']).stdout) == invoice(values)['total']
+        inputs.write_bytes(original['inputs.my'])
         document = {'version': 'typed-json-v1', 'type': 'pricing::Receipt', 'value': {k: str(v) for k, v in invoice((2, 3, 1)).items()}}
     else:
         assert '0 candidate groups;' in discoveries[0] and '0 approximate pairs;' in discoveries[0]
         assert 'line-bytes 129 exceeds configured 100' in quality, quality
         mutation(compiler, directory, 'model.my', '    reading: Reading\n', '    reading: Reading,\n    alarm: u8\n', 'E_INCOMPLETE_MATCH')
         document = {'version': 'typed-json-v1', 'type': 'model::Message', 'value': {'case': 'reading', 'value': {'sequence': '7', 'value': '300'}}}
-    value = directory / 'value.json'
-    value.write_text(json.dumps(document))
-    checked = run([compiler, 'check-value-project', entry, f'--value={value}'])
-    assert json.loads(checked.stdout) == document
+    # Generating data bindings needs only the rendered schema, so it survives; there is no
+    # longer a command that executes a declared codec, so nothing checks a value round trip.
     output = directory / 'bindings.py'
     run([sys.executable, ROOT / 'scripts/bindings.py', entry, '--compiler', compiler, '--output', output])
+    generated = output.read_bytes()
+    run([sys.executable, ROOT / 'scripts/bindings.py', entry, '--compiler', compiler, '--output', output])
+    assert output.read_bytes() == generated, 'binding generation was not deterministic'
     module_name = 'corpus_' + name
     spec = importlib.util.spec_from_file_location(module_name, output)
     binding = importlib.util.module_from_spec(spec)
     sys.modules[module_name] = binding
     spec.loader.exec_module(binding)
-    decoded = binding.loads(checked.stdout, expected_type=document['type'])
-    assert json.loads(binding.dumps(decoded)) == document
+    assert hasattr(binding, 'T_' + identifier(document['type'])), document['type']
     assert original == {p.name: p.read_bytes() for p in directory.glob('*.my')}
 
 
@@ -181,7 +185,7 @@ def main():
                 actual = run([compiler, 'run-project', entry, '--print-result'])
                 assert int(actual.stdout) == expected, (name, source, expected, actual.stdout)
                 comparisons += 1
-        print(f'ordinary corpus (VM only): 2 applications, 13 modules, 48 input cases, {comparisons} independent-oracle execution checks; duplicates/quality, policy, schema/bindings, declared inputs, and change-impact rejection passed')
+        print(f'ordinary corpus: 2 applications, 13 modules, 48 input cases, {comparisons} independent-oracle native execution checks; duplicates/quality, policy, schema/bindings, and change-impact rejection passed')
 
 if __name__ == '__main__':
     main()
