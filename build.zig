@@ -132,6 +132,20 @@ pub fn build(b: *std.Build) void {
     const root = std.Io.Dir.cwd().realPathFileAlloc(b.graph.io, ".", b.allocator) catch @panic("build root");
     tool_qbe = b.pathJoin(&.{ root, "zig-out", "bin", "qbe" });
     tool_zig = b.graph.zig_exe;
+    // Prebuild the runtime archive (and text-formatter object) for each optimize
+    // mode with the freshly built compiler and install them beside it under
+    // `lib/mylang-runtime`, so a cold `mylang build` links a matching prebuilt
+    // archive instead of compiling the runtime from source on its first run.
+    const prebuild = b.addRunArtifact(exe);
+    prebuild.step.max_rss = rss.parity;
+    prebuild.addArgs(&.{ "emit-runtime", "--zig", b.graph.zig_exe, "--qbe" });
+    prebuild.addFileArg(qbe_exe.getEmittedBin());
+    prebuild.addArg("--out");
+    const runtime_out = prebuild.addOutputDirectoryArg("mylang-runtime");
+    prebuild.addArg("--work");
+    _ = prebuild.addOutputDirectoryArg("work");
+    const install_runtime = b.addInstallDirectory(.{ .source_dir = runtime_out, .install_dir = .lib, .install_subdir = "mylang-runtime" });
+    b.getInstallStep().dependOn(&install_runtime.step);
     install_all = b.getInstallStep();
     // Host applications build their own guests natively, so they carry the same
     // native build driver the compiler does rather than shelling out to it.
