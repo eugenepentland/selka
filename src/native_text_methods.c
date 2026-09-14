@@ -12,7 +12,10 @@ static int classified(uint32_t point, int property) {
     if (property==MYL_TEXT_ALPHA) return (point>='a'&&point<='z') || (point>='A'&&point<='Z');
     return space_point(point);
 }
+/* An empty needle matches everywhere, and answering before the comparison keeps
+   the empty string's absent storage out of pointer arithmetic. */
 static int matches_at(const myl_native_text *input, size_t at, const myl_native_text *needle) {
+    if (!needle->length) return 1;
     if (input->length-at < needle->length) return 0;
     return !memcmp(myl_native_text_points(input)+at, needle->storage, needle->length*4);
 }
