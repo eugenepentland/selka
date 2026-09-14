@@ -205,27 +205,48 @@ test "disk initDisk rejects failed compilations and reloads bounded sources" {
 }
 
 // The independent Python oracle checks this same fixture's electrical geometry.
-// This test additionally forces collection at native allocation safepoints during
-// real parsing, graph construction, shared row mutation and rendering.
 // spec: SCHEMATIC-MODEL-1
-test "schematic managed fixture keeps identical SVG under collection stress" {
+test "schematic renders the whole fixture byte for byte" {
     const harness = try Harness.open();
     defer harness.close();
     const a = harness.arena.allocator();
+    var app: application.App = undefined;
+    try app.initDisk(harness.process(), "src/schematic/guest");
+    defer app.deinit();
+    const rendered = try app.run(&try fixture(a), &budget);
+    const expected = try std.Io.Dir.cwd().readFileAlloc(t.io, "experiments/schematic/straps-synth-lmx2595.svg", a, .limited(1024 * 1024));
+    try t.expectEqualStrings(expected, rendered);
+}
+
+/// The full circuit plus its footprint and interface documents.
+fn fixture(a: std.mem.Allocator) ![3][]const u8 {
     const names = [_][]const u8{ "straps-synth-lmx2595.sexp", "lmx2595rhar.sexp", "spi.sexp" };
     var documents: [3][]const u8 = undefined;
     for (names, &documents) |name, *document| {
         const path = try std.fmt.allocPrint(a, "experiments/schematic/fixtures/{s}", .{name});
         document.* = try std.Io.Dir.cwd().readFileAlloc(t.io, path, a, .limited(1024 * 1024));
     }
+    return documents;
+}
+
+// Collection at every native allocation safepoint costs about a thousand seconds
+// on the whole circuit, so stress runs the same parse, graph construction, shared
+// row mutation and rendering over the footprint document alone, which exercises
+// each of them and finishes in seconds.
+// spec-case: SCHEMATIC-MODEL-1
+test "schematic managed rendering is identical under collection stress" {
+    const harness = try Harness.open();
+    defer harness.close();
+    const a = harness.arena.allocator();
+    const documents = try fixture(a);
+    const small: [3][]const u8 = .{ documents[1], documents[1], documents[2] };
     var app: application.App = undefined;
     try app.initDisk(harness.process(), "src/schematic/guest");
     defer app.deinit();
-    const normal = try app.run(&documents, &budget);
-    const expected = try std.Io.Dir.cwd().readFileAlloc(t.io, "experiments/schematic/straps-synth-lmx2595.svg", a, .limited(1024 * 1024));
-    try t.expectEqualStrings(expected, normal);
-    const stressed = try app.run(&documents, &.{ budget[0], "--gc-stress" });
-    try t.expectEqualStrings(expected, stressed);
+    const normal = try app.run(&small, &budget);
+    const stressed = try app.run(&small, &.{ budget[0], "--gc-stress" });
+    try t.expect(normal.len != 0);
+    try t.expectEqualStrings(normal, stressed);
 }
 
 test {
