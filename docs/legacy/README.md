@@ -17,7 +17,6 @@ Three removals are recorded here:
   and the C-only runtime units. QBE is the only native backend; see
   [../experiments/incremental-qbe.md](../experiments/incremental-qbe.md) and
   `zig build test-qbe`.
-
 - **Brace syntax** (removed 2026-09-13). `fn`/`let`/`let mut`/`struct`/`new`,
   `T { field: value }` record literals, `alias::name` qualification, `f::<T>(x)`
   turbofish, `cast<T>(x)`, `//` and `/* */` comments, bare `{ }` scope blocks,
@@ -27,4 +26,5 @@ Three removals are recorded here:
   are the surface; see [../python-syntax.md](../python-syntax.md). `mylang
   migrate`, which converted between the two, went with it.
 
-`src/features.json` records all three under its `removed` key with the same date.
+`src/features.json` records all three under its `removed` key with the same date,
+alongside the narrower spellings each removal took with it.

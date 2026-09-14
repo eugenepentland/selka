@@ -2,8 +2,9 @@
 
 > Removed on 2026-09-13: the explicit storage tier (buffers, pools, legacy `list`
 > declarations, the `allocator` capability, references and slices, lexical borrows and
-> legacy arena scopes) and the C backend are gone. Entries below that describe them are
-> history; see [legacy/](legacy/) and [the current language reference](current-language.md).
+> legacy arena scopes), the C backend and the brace dialect these entries are written
+> in — `fn`, `let`, `struct`, `new T { … }`, `::` qualification, `//` comments — are gone.
+> Entries below that describe any of them are history; see [legacy/](legacy/) and [the current language reference](current-language.md).
 
 The scalar MVP and substantial post-MVP experiments are implemented. The
 [revision 3 plan](plan.md) and [current roadmap](experiments/roadmap.md) define
