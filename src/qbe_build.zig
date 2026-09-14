@@ -53,7 +53,7 @@ pub fn prepare(context: fs.Context, parsed: options.Options) Error!Prepared {
     try checkVersion(zig_version);
     const directory = try context.absolute(parsed.cache);
     try context.mkdir(directory);
-    const assets = try materialize(context, directory);
+    const assets = try materialize(context, try runtimeRoot(context, parsed, directory));
     const temporary = try context.temporary(directory);
     const environment = try std.json.Stringify.valueAlloc(a, .{
         .version = "zig-qbe-build-v2",
@@ -119,6 +119,7 @@ fn build(context: fs.Context, parsed: options.Options) !u8 {
             .compiled_functions = state.records.items.len - state.reused,
             .reused_functions = state.reused,
             .runtime_reused = state.runtime.reused,
+            .runtime_installed = state.runtime_installed,
             .metadata_reused = state.metadata_reused,
             .functions = state.records.items,
             .frontend_seconds = frontend,
@@ -165,16 +166,36 @@ pub fn spawn(context: fs.Context, output: []const u8, parsed: options.Options) E
     });
     return status(try child.wait(context.io));
 }
+/// The directory that holds the materialized runtime source trees. An explicit
+/// `--cache-dir` keeps it hermetically under that directory; a default build shares
+/// a user-level location (`$XDG_CACHE_HOME/mylang/runtime`, else `$HOME/.cache/...`)
+/// so a fresh project reuses the tree another project already derived, and falls
+/// back to the per-project cache when neither variable is set.
+fn runtimeRoot(context: fs.Context, parsed: options.Options, directory: []const u8) fs.Error![]const u8 {
+    const local = try std.fs.path.join(context.allocator, &.{ directory, "runtime" });
+    if (!std.mem.eql(u8, parsed.cache, options.default_cache)) return local;
+    return sharedRuntimeRoot(context) orelse local;
+}
+/// The user-level shared runtime location, or null when no home directory names it.
+fn sharedRuntimeRoot(context: fs.Context) ?[]const u8 {
+    const a = context.allocator;
+    if (context.environ.get("XDG_CACHE_HOME")) |base| {
+        if (base.len != 0 and std.fs.path.isAbsolute(base)) return std.fs.path.join(a, &.{ base, "mylang", "runtime" }) catch null;
+    }
+    if (context.environ.get("HOME")) |home| {
+        if (home.len != 0 and std.fs.path.isAbsolute(home)) return std.fs.path.join(a, &.{ home, ".cache", "mylang", "runtime" }) catch null;
+    }
+    return null;
+}
 /// Publish the bundled runtime tree once per content hash and reuse it afterwards.
 /// Concurrent builds stage into private directories and rename, so a shared cache
 /// never observes a partial tree; a lost race simply reuses the winner's tree.
-fn materialize(context: fs.Context, cache: []const u8) ![]const u8 {
+fn materialize(context: fs.Context, root: []const u8) ![]const u8 {
     const a = context.allocator;
-    const parent = try std.fs.path.join(a, &.{ cache, "runtime" });
-    const directory = try std.fs.path.join(a, &.{ parent, bundled.content_hash });
+    const directory = try std.fs.path.join(a, &.{ root, bundled.content_hash });
     if (context.exists(directory)) return directory;
-    try context.mkdir(parent);
-    const staging = try context.temporary(parent);
+    try context.mkdir(root);
+    const staging = try context.temporary(root);
     for (bundled.files) |asset| {
         const path = try std.fs.path.join(a, &.{ staging, asset.path });
         try context.mkdir(std.fs.path.dirname(path).?);
@@ -185,6 +206,88 @@ fn materialize(context: fs.Context, cache: []const u8) ![]const u8 {
         if (!context.exists(directory)) return err;
     };
     return directory;
+}
+/// The portable identity of a prebuilt runtime artifact: the runtime source content
+/// hash, the pinned Zig version, the optimize mode and the target. It excludes the
+/// tool file stamps the object cache keys on, so an archive installed at build time
+/// still matches a later build that resolved its tools from a different path.
+fn runtimeInstalledHash(a: std.mem.Allocator, kind: []const u8, mode: []const u8) fs.Error![]const u8 {
+    const encoded = try std.json.Stringify.valueAlloc(a, .{ "mylang-runtime-installed-v1", kind, bundled.content_hash, bundled.zig_version, mode, "amd64_sysv" }, .{});
+    return fs.hash(a, encoded);
+}
+/// Resolve a prebuilt runtime artifact installed under `<compiler>/../lib/mylang-runtime`.
+/// Returns it only when the file exists and its stored fingerprint still matches, so a
+/// removed, cross-target or corrupted install falls back to compiling from source.
+fn installedRuntime(context: fs.Context, mode: []const u8, kind: []const u8, extension: []const u8) fs.Error!?cache_api.Object {
+    const a = context.allocator;
+    if (context.self_directory.len == 0) return null;
+    const parent = std.fs.path.dirname(context.self_directory) orelse return null;
+    const hash = try runtimeInstalledHash(a, kind, mode);
+    const path = try std.fmt.allocPrint(a, "{s}/lib/mylang-runtime/{s}{s}", .{ parent, hash, extension });
+    if (!validInstalled(context, path)) return null;
+    return .{ .key = hash, .path = path, .reused = true };
+}
+/// A prebuilt artifact is trusted only when a fingerprint over its length and contents
+/// matches the `.digest` published beside it, mirroring the object cache's own check.
+fn validInstalled(context: fs.Context, path: []const u8) bool {
+    const bytes = context.read(path) catch return false;
+    if (bytes.len == 0) return false;
+    const checksum = std.fmt.allocPrint(context.allocator, "{s}.digest", .{path}) catch return false;
+    const stored = context.read(checksum) catch return false;
+    const actual = fs.digest(context.allocator, bytes) catch return false;
+    return std.mem.eql(u8, stored, actual);
+}
+/// Build the runtime archive and text-formatter object for each optimize mode and
+/// publish them, hashed by their portable identity, into `--out` so `zig build` can
+/// install them beside the compiler. `--work` names a scratch cache the step discards.
+/// A later `mylang build` links a matching install directly instead of compiling it.
+pub fn emitRuntime(process: std.process.Init, args: []const []const u8) Error!u8 {
+    var context = try fs.Context.init(process.gpa, process.io, process.environ_map);
+    defer context.deinit();
+    const a = context.allocator;
+    var zig_path: []const u8 = "zig";
+    var qbe_path: []const u8 = "qbe";
+    var out: []const u8 = "";
+    var work: []const u8 = "";
+    var index: usize = 0;
+    while (index + 1 < args.len) : (index += 2) {
+        const flag = args[index];
+        const value = args[index + 1];
+        if (std.mem.eql(u8, flag, "--zig")) {
+            zig_path = value;
+        } else if (std.mem.eql(u8, flag, "--qbe")) {
+            qbe_path = value;
+        } else if (std.mem.eql(u8, flag, "--out")) {
+            out = value;
+        } else if (std.mem.eql(u8, flag, "--work")) {
+            work = value;
+        } else return 2;
+    }
+    if (out.len == 0 or work.len == 0) return 2;
+    out = try context.absolute(out);
+    try checkHost(builtin.os.tag, builtin.cpu.arch);
+    for ([_][]const u8{ "Debug", "ReleaseFast" }) |mode| {
+        const parsed: options.Options = .{ .source = "runtime", .output = "runtime", .zig = zig_path, .qbe = qbe_path, .cache = try std.fs.path.join(a, &.{ work, mode }), .mode = mode };
+        const prepared = prepare(context, parsed) catch |err| switch (err) {
+            error.NativeToolFailed => return 2,
+            else => return err,
+        };
+        defer context.remove(prepared.cache.temporary);
+        const archive = try prepared.cache.library("runtime", &runtime_units);
+        try publishInstalled(context, archive.path, out, try runtimeInstalledHash(a, "archive", mode), ".a");
+        const format = try prepared.cache.object("format", "native_format.zig", .zig_file);
+        try publishInstalled(context, format.path, out, try runtimeInstalledHash(a, "format", mode), ".o");
+    }
+    return 0;
+}
+/// Copy one built artifact into the install-staging directory under its portable hash
+/// and publish a fingerprint beside it, so a later build can trust the installed file.
+fn publishInstalled(context: fs.Context, source: []const u8, out: []const u8, hash: []const u8, extension: []const u8) Error!void {
+    const a = context.allocator;
+    const bytes = try context.read(source);
+    const dest = try std.fmt.allocPrint(a, "{s}/{s}{s}", .{ out, hash, extension });
+    try context.write(dest, bytes);
+    try context.atomic(try std.fmt.allocPrint(a, "{s}.digest", .{dest}), try fs.digest(a, bytes));
 }
 fn seconds(context: fs.Context, start: std.Io.Timestamp) f64 {
     return @as(f64, @floatFromInt(start.durationTo(std.Io.Timestamp.now(context.io, .awake)).nanoseconds)) / 1e9;
@@ -213,6 +316,7 @@ const State = struct {
     reused: usize = 0,
     runtime: cache_api.Object = undefined,
     metadata_reused: bool = false,
+    runtime_installed: bool = false,
     fn add(self: *State, object: cache_api.Object) !void {
         try self.objects.append(self.context.allocator, object.path);
     }
@@ -231,9 +335,25 @@ const State = struct {
         try self.add(metadata);
         const wrapper = if (parsed.library) try @import("qbe_build_embed.zig").libraryWrapper(a, self.manifest) else try outputs.entry(a, self.manifest, parsed.provider != null);
         try self.add(try self.cache.object("entry", wrapper, .c_text));
-        if (v.boolean(v.get(self.manifest, "text_format"))) try self.add(try self.cache.object("format", "native_format.zig", .zig_file));
+        if (v.boolean(v.get(self.manifest, "text_format"))) try self.add(try self.resolveFormat());
         // Linked last, so every object above can still pull the members it needs.
-        self.runtime = try self.cache.library("runtime", &runtime_units);
+        self.runtime = try self.resolveRuntime();
+    }
+    /// Link the prebuilt runtime archive installed beside the compiler when its hash
+    /// matches this build's runtime, mode and target; otherwise compile the archive
+    /// from source. A matching install skips the whole runtime compile on a cold build.
+    fn resolveRuntime(self: *State) !cache_api.Object {
+        if (try installedRuntime(self.context, self.cache.mode, "archive", ".a")) |found| {
+            self.runtime_installed = true;
+            return found;
+        }
+        return self.cache.library("runtime", &runtime_units);
+    }
+    /// Use the prebuilt text-formatter object installed beside the compiler when it
+    /// matches, else compile `native_format.zig` from the bundled runtime source.
+    fn resolveFormat(self: *State) !cache_api.Object {
+        if (try installedRuntime(self.context, self.cache.mode, "format", ".o")) |found| return found;
+        return self.cache.object("format", "native_format.zig", .zig_file);
     }
     fn link(self: *State, parsed: options.Options, output: []const u8) !bool {
         const a = self.context.allocator;
@@ -338,6 +458,39 @@ test "the runtime tree is published once per content hash and reused by later bu
     try context.write(marker, "kept");
     try std.testing.expectEqualStrings(first, try materialize(context, cache));
     try std.testing.expectEqualStrings("kept", try context.read(marker));
+}
+// spec-case: QBE-3
+test "a default build shares the runtime root while an explicit cache-dir keeps it local" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    try environment.put("XDG_CACHE_HOME", "/xdg");
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const shared = try runtimeRoot(context, .{ .cache = options.default_cache }, "/project/.mylang-cache/qbe");
+    try std.testing.expectEqualStrings("/xdg/mylang/runtime", shared);
+    const local = try runtimeRoot(context, .{ .cache = "/tmp/hermetic" }, "/tmp/hermetic");
+    try std.testing.expectEqualStrings("/tmp/hermetic/runtime", local);
+    try std.testing.expectEqualStrings("/xdg/mylang/runtime", sharedRuntimeRoot(context).?);
+}
+// spec: QBE-RUNTIME-INSTALLED-1
+test "prebuilt runtime hashes separate kind and mode and stay stable, and misses fall back" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const archive_debug = try runtimeInstalledHash(a, "archive", "Debug");
+    const archive_release = try runtimeInstalledHash(a, "archive", "ReleaseFast");
+    const format_debug = try runtimeInstalledHash(a, "format", "Debug");
+    try std.testing.expectEqual(@as(usize, 64), archive_debug.len);
+    try std.testing.expect(!std.mem.eql(u8, archive_debug, archive_release));
+    try std.testing.expect(!std.mem.eql(u8, archive_debug, format_debug));
+    try std.testing.expectEqualStrings(archive_debug, try runtimeInstalledHash(a, "archive", "Debug"));
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    context.self_directory = "";
+    try std.testing.expectEqual(@as(?cache_api.Object, null), try installedRuntime(context, "Debug", "archive", ".a"));
+    try std.testing.expect(!validInstalled(context, "/no/such/installed/runtime.a"));
 }
 // spec-case: QBE-2
 test "shared library links bind their own data descriptor symbols" {

@@ -2,6 +2,10 @@
 const std = @import("std");
 /// Malformed or unsupported command-line build controls.
 pub const Error = error{InvalidBuildArguments};
+/// The per-project object cache used when no `--cache-dir` selects another; a build
+/// left at this default may share its runtime tree with other projects, while an
+/// explicit `--cache-dir` keeps every artifact hermetically under that directory.
+pub const default_cache = ".mylang-cache/qbe";
 /// The native driver preserves the Python prototype's build controls.
 pub const Options = struct {
     link_arguments: []const []const u8 = &.{},
@@ -14,7 +18,7 @@ pub const Options = struct {
     zig: []const u8 = "zig",
     mode: []const u8 = "Debug",
     target: []const u8 = "amd64_sysv",
-    cache: []const u8 = ".mylang-cache/qbe",
+    cache: []const u8 = default_cache,
     report: bool = false,
     run: bool = false,
     max_memory: ?u64 = null,

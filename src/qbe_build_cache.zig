@@ -24,9 +24,12 @@ pub const Cache = struct {
         try self.compile(.{ .work = work, .candidate = candidate, .input = input, .flavor = flavor });
         return self.store(key, path, candidate);
     }
-    /// Publish the fixed runtime translation units as one archive. The linker then
-    /// pulls only the members a program actually references, and a warm build
-    /// verifies one entry instead of every runtime object it did not need.
+    /// Publish the fixed runtime translation units as one archive whose single
+    /// member merges every unit. `zig build-obj` compiles all C sources in one
+    /// process — a cold build pays one toolchain start, not one per unit — and a
+    /// relocatable link preserves each unit's function and data sections, so the
+    /// final `--gc-sections` link still drops runtime a program never reaches. The
+    /// linker verifies one archive entry instead of every runtime object.
     pub fn library(self: Cache, kind: []const u8, sources: []const []const u8) Error!Object {
         const a = self.context.allocator;
         const key = try self.identity(kind, try std.mem.join(a, "\x00", sources));
@@ -34,12 +37,38 @@ pub const Cache = struct {
         if (self.valid(path, try self.entry(key, ".digest"))) return .{ .key = key, .path = path, .reused = true };
         const work = try self.context.temporary(self.temporary);
         defer self.context.remove(work);
+        const merged = try std.fs.path.join(a, &.{ work, "runtime.o" });
+        try self.mergeC(sources, merged);
         const candidate = try std.fs.path.join(a, &.{ work, "runtime.a" });
-        var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(a, &.{ self.zig, "ar", "rcs", candidate });
-        for (sources) |source| try argv.append(a, (try self.object(kind, source, .c_file)).path);
-        try self.context.command(argv.items, null);
+        try self.context.command(&.{ self.zig, "ar", "rcs", candidate, merged }, null);
         return self.store(key, path, candidate);
+    }
+    /// Compile every runtime C source into one relocatable object with a single
+    /// `zig build-obj`, then leave the merge command to run it.
+    fn mergeC(self: Cache, sources: []const []const u8, output: []const u8) Error!void {
+        try self.context.command(try self.mergeCommand(sources, output), null);
+    }
+    /// The single-invocation `zig build-obj` command that merges the runtime units.
+    /// Per-unit optimization, section splitting and path mapping match the loose
+    /// `zig cc` path so the merged member links identically, and one process start
+    /// replaces one per unit on a cold build.
+    fn mergeCommand(self: Cache, sources: []const []const u8, output: []const u8) Error![]const []const u8 {
+        const a = self.context.allocator;
+        const zig_mode = if (std.mem.eql(u8, self.mode, "Debug")) "-ODebug" else "-OReleaseFast";
+        const optimization = if (std.mem.eql(u8, self.mode, "Debug")) "-O0" else "-O2";
+        const shared = try std.fmt.allocPrint(a, "-ffile-prefix-map={s}=mylang-runtime", .{self.assets});
+        const shared_debug = try std.fmt.allocPrint(a, "-fdebug-prefix-map={s}=mylang-runtime", .{self.assets});
+        var argv: std.ArrayList([]const u8) = .empty;
+        try argv.appendSlice(a, &.{
+            self.zig,          "build-obj",  "-fPIC",      "-lc",
+            zig_mode,          "-I",         self.assets,  "-cflags",
+            "-std=c11",        optimization, "-fno-ident", "-ffunction-sections",
+            "-fdata-sections", shared,       shared_debug, "-fdebug-compilation-dir=mylang-runtime",
+            "--",
+        });
+        for (sources) |source| try argv.append(a, try std.fs.path.join(a, &.{ self.assets, source }));
+        try argv.append(a, try std.fmt.allocPrint(a, "-femit-bin={s}", .{output}));
+        return argv.items;
     }
     fn identity(self: Cache, kind: []const u8, input: []const u8) Error![]const u8 {
         const encoded = try std.json.Stringify.valueAlloc(self.context.allocator, .{ self.environment, kind, input }, .{});
@@ -77,7 +106,6 @@ pub const Cache = struct {
                 try self.context.write(source, task.input);
                 try self.compileC(source, task.candidate, null);
             },
-            .c_file => try self.compileC(try std.fs.path.join(a, &.{ self.assets, task.input }), task.candidate, null),
             .zig_file => try self.context.command(&.{ self.zig, "build-obj", try std.fs.path.join(a, &.{ self.assets, task.input }), "-lc", "-fPIC", "-O", self.mode, try std.fmt.allocPrint(a, "-femit-bin={s}", .{task.candidate}) }, null),
         }
     }
@@ -105,7 +133,7 @@ pub const Cache = struct {
     }
 };
 /// Ways to lower an object without routing a guest function through C.
-pub const Flavor = enum { qbe, c_text, c_file, zig_file };
+pub const Flavor = enum { qbe, c_text, zig_file };
 /// One validated object-cache result.
 pub const Object = struct { key: []const u8, path: []const u8, reused: bool };
 const Task = struct { work: []const u8, candidate: []const u8, input: []const u8, flavor: Flavor };
@@ -116,4 +144,20 @@ fn objectDigest(allocator: std.mem.Allocator, bytes: []const u8) Error![]const u
 }
 test "empty native tool output cannot enter the object cache" {
     try std.testing.expectError(error.EmptyNativeObject, objectDigest(std.testing.allocator, ""));
+}
+// spec: QBE-RUNTIME-MERGE-1
+test "the runtime units merge in one build-obj invocation naming every source" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const cache: Cache = .{ .context = context, .directory = "objects", .temporary = "work", .assets = "/assets", .environment = "env", .zig = "/zig", .qbe = "/qbe", .mode = "ReleaseFast" };
+    const argv = try cache.mergeCommand(&.{ "qbe_runtime.c", "native_heap.c" }, "/tmp/out.o");
+    const joined = try std.mem.join(context.allocator, " ", argv);
+    try std.testing.expectEqualStrings("build-obj", argv[1]);
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, joined, "build-obj"));
+    try std.testing.expect(std.mem.indexOf(u8, joined, "/assets/qbe_runtime.c") != null);
+    try std.testing.expect(std.mem.indexOf(u8, joined, "/assets/native_heap.c") != null);
+    try std.testing.expect(std.mem.indexOf(u8, joined, "-O2") != null);
+    try std.testing.expectEqualStrings("-femit-bin=/tmp/out.o", argv[argv.len - 1]);
 }
