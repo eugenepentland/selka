@@ -83,6 +83,14 @@ pub fn build(b: *std.Build) void {
         b.dupeStrings(&.{needle})
     else
         &.{};
+    // The guest-running hosts live under src/<host>/, so they cannot reach
+    // src/memory_budget.zig by path; they import it as a module instead. The
+    // compiler itself reaches the same file directly from its own root module.
+    const budget = b.addModule("memory_budget", .{
+        .root_source_file = b.path("src/memory_budget.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
     const core = b.addModule("mylang", .{
         .root_source_file = b.path("src/compiler.zig"),
         .target = target,
@@ -120,7 +128,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/board_trial/runner.zig"),
         .target = target,
         .optimize = optimize,
-        .imports = &.{.{ .name = "mylang", .module = core }},
+        .imports = &.{ .{ .name = "mylang", .module = core }, .{ .name = "memory_budget", .module = budget } },
     });
     const board_runner = b.addExecutable(.{ .max_rss = rss.compile, .name = "board-trial", .root_module = board_module });
     b.installArtifact(board_runner);
@@ -128,21 +136,21 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/schematic/runner.zig"),
         .target = target,
         .optimize = optimize,
-        .imports = &.{.{ .name = "mylang", .module = core }},
+        .imports = &.{ .{ .name = "mylang", .module = core }, .{ .name = "memory_budget", .module = budget } },
     }) });
     b.installArtifact(schematic_runner);
     const byte_io_runner = b.addExecutable(.{ .max_rss = rss.compile, .name = "mylang-io", .root_module = b.createModule(.{
         .root_source_file = b.path("src/byte_io/runner.zig"),
         .target = target,
         .optimize = optimize,
-        .imports = &.{.{ .name = "mylang", .module = core }},
+        .imports = &.{ .{ .name = "mylang", .module = core }, .{ .name = "memory_budget", .module = budget } },
     }) });
     b.installArtifact(byte_io_runner);
     const byte_io_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
         .root_source_file = b.path("src/byte_io/tests.zig"),
         .target = target,
         .optimize = optimize,
-        .imports = &.{.{ .name = "mylang", .module = core }},
+        .imports = &.{ .{ .name = "mylang", .module = core }, .{ .name = "memory_budget", .module = budget } },
     }) });
     guardian.enableTestDiagnostics(byte_io_unit.root_module);
     guardian.addAllChecks(b, guardian_exe, b.getInstallStep(), .{});
@@ -151,14 +159,14 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/board_trial/tests.zig"),
         .target = target,
         .optimize = optimize,
-        .imports = &.{.{ .name = "mylang", .module = core }},
+        .imports = &.{ .{ .name = "mylang", .module = core }, .{ .name = "memory_budget", .module = budget } },
     }) });
     guardian.enableTestDiagnostics(board_unit.root_module);
     const schematic_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
         .root_source_file = b.path("src/schematic/tests.zig"),
         .target = target,
         .optimize = optimize,
-        .imports = &.{.{ .name = "mylang", .module = core }},
+        .imports = &.{ .{ .name = "mylang", .module = core }, .{ .name = "memory_budget", .module = budget } },
     }) });
     guardian.enableTestDiagnostics(schematic_unit.root_module);
     const options = b.addOptions();

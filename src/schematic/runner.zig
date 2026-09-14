@@ -5,7 +5,10 @@ const application = @import("app.zig");
 const diagnostics = @import("diagnostics.zig");
 const language = @import("mylang");
 /// Publish SVG on stdout only after parsing, semantic validation and rendering succeed.
+/// The host bounds its own address space first: it executes guest bytecode in
+/// this process, so a runaway guest is a runaway host.
 pub fn main(init: std.process.Init) void {
+    _ = @import("memory_budget").guardHost(init.environ_map);
     run(init) catch |err| {
         if (err != error.InvalidSchematic and err != error.GuestTrap) print("schematic-svg: {s}\n", .{@errorName(err)});
         std.process.exit(1);

@@ -4,7 +4,10 @@ const print = std.debug.print;
 const language = @import("mylang");
 const bridge = @import("host.zig");
 /// Publish output only after a successful guest exit; send tool failures to stderr.
+/// The host bounds its own address space first: it executes guest bytecode in
+/// this process, so a runaway guest is a runaway host.
 pub fn main(init: std.process.Init) void {
+    _ = @import("memory_budget").guardHost(init.environ_map);
     run(init) catch |err| {
         print("mylang-io: {s}\n", .{@errorName(err)});
         std.process.exit(1);
