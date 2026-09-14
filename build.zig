@@ -342,7 +342,8 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&board_contract.step);
     const repair_study = bounded(b.addSystemCommand(&.{ "python3", "experiments/board_trial/repair/selftest.py", "--compiler" }), rss.parity);
     repair_study.addFileArg(exe.getEmittedBin());
-    repair_study.addArgs(&.{ "--zig", b.graph.zig_exe });
+    repair_study.addArgs(&.{ "--zig", b.graph.zig_exe, "--assets" });
+    repair_study.addFileArg(build_assets.root_source_file.?);
     repair_study.setCwd(b.path("."));
     test_step.dependOn(&repair_study.step);
     const repair_step = b.step("test-repair-study", "Verify repair-study fixtures and retained evidence");

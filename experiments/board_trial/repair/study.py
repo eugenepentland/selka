@@ -36,7 +36,7 @@ def validated(root):
     return manifest
 
 
-def prepare(root, language, task, compiler, zig, participant, model, kind="fixture"):
+def prepare(root, language, task, compiler, zig, participant, model, kind="fixture", assets=None):
     from storage import identity
     commit = subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True).strip()
     dirty = subprocess.check_output(['git', '-C', str(ROOT), 'status', '--porcelain', '--', 'src'], text=True)
@@ -65,6 +65,7 @@ def prepare(root, language, task, compiler, zig, participant, model, kind="fixtu
                 'tools': tools, 'harness': harness_identity(), 'editable': editable,
                 'base_files': inventory(root / 'base'), 'compiler_files': inventory(root / 'compiler'),
                 'compiler_source': str(root / 'compiler/compiler.zig'),
+                'assets_source': str(assets) if assets else None,
                 'instructions': {name: digest(root / 'work' / name) for name in [*set(context).difference(editable), 'TASK.md', 'contract.md']},
                 'max_edits': 5, 'max_checks': 20}
     manifest['initial_candidate_sha256'] = candidate_digest(work_inventory(root / 'work'))

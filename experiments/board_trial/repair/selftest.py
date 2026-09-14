@@ -1,5 +1,6 @@
 """Execute known fixture restorations; this verifies the harness, not agent ability."""
 import argparse
+ASSETS = None  # set from --assets in __main__; the host wrapper links this generated module
 from pathlib import Path
 import tempfile
 import shutil
@@ -25,7 +26,7 @@ class HarnessTests(unittest.TestCase):
 
     def prepare(self, language='guest', task='admission'):
         root = self.directory / (language + '-' + task)
-        study.prepare(root, language, task, COMPILER, ZIG, 'fixture-self-test', 'none')
+        study.prepare(root, language, task, COMPILER, ZIG, 'fixture-self-test', 'none', assets=ASSETS)
         return root
 
     def restore(self, root):
@@ -192,6 +193,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--compiler', type=Path, required=True)
     parser.add_argument('--zig', type=Path, required=True)
+    parser.add_argument('--assets', type=Path, required=True,
+                        help='the generated qbe_build_assets module the host wrapper links')
     args = parser.parse_args()
-    COMPILER, ZIG = args.compiler.resolve(), args.zig.resolve()
+    COMPILER, ZIG, ASSETS = args.compiler.resolve(), args.zig.resolve(), args.assets.resolve()
     unittest.main(argv=['repair-selftest'])

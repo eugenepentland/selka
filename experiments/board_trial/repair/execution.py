@@ -38,11 +38,25 @@ def board(directory, manifest, cases):
     program = directory / 'board-trial'
     # The host wrapper bounds its own address space before running guest code,
     # so the frozen compiler snapshot supplies that module alongside `mylang`.
-    budget = Path(manifest['compiler_source']).with_name('memory_budget.zig')
+    src = Path(manifest['compiler_source']).parent
+    budget = src / 'memory_budget.zig'
+    # The host wrapper builds its guest natively, so it links the native build
+    # driver module graph: `host_native` over `qbe_build`, its generated asset
+    # module, and a `host_tools` whose paths are only a runtime fallback (the
+    # environment names the real tools), so a placeholder module compiles.
+    host_tools = directory / 'host_tools.zig'
+    host_tools.write_text('pub const qbe: []const u8 = "qbe";\npub const zig: []const u8 = "zig";\n')
     compiled = command(directory, 'compile', [manifest['tools']['zig']['path'], 'build-exe',
-                       '--dep', 'mylang', '--dep', 'memory_budget',
-                       '-Mroot=' + str(source / 'runner.zig'), '-Mmylang=' + manifest['compiler_source'],
+                       '--dep', 'mylang', '--dep', 'memory_budget', '--dep', 'host_native',
+                       '-Mroot=' + str(source / 'runner.zig'),
+                       '-Mmylang=' + manifest['compiler_source'],
                        '-Mmemory_budget=' + str(budget),
+                       '--dep', 'qbe_build', '--dep', 'host_tools',
+                       '-Mhost_native=' + str(src / 'host_native.zig'),
+                       '--dep', 'qbe_build_assets', '--dep', 'memory_budget',
+                       '-Mqbe_build=' + str(src / 'qbe_build.zig'),
+                       '-Mqbe_build_assets=' + manifest['assets_source'],
+                       '-Mhost_tools=' + str(host_tools),
                        '-femit-bin=' + str(program)], timeout=120)
     if compiled['status'] != 'passed':
         return {'phase': 'zig-compile', 'passed': False, 'failure_kind': compiled['status']}
