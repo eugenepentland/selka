@@ -1,84 +1,60 @@
-//! The Python file surface on the VM: `with open(...)` scopes, handle methods,
-//! whole-path helpers, cleanup on every exit, and the effect and native bounds.
+//! The Python file surface natively: `with open(...)` scopes, handle methods,
+//! whole-path helpers, cleanup on every exit, and the effect and grant bounds.
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
-const scoped = @import("scoped_providers.zig");
+const native = @import("native_execute.zig");
 const file_resources = @import("file_resources.zig");
 
 const module = "io-files.my";
 
-/// One granted temporary directory and the provider callbacks over it.
+/// One real temporary directory and the capability grant a run receives over it.
 const Sandbox = struct {
     temporary: std.testing.TmpDir,
-    context: scoped.Context,
-    roots: [1]scoped.Root,
-    output: std.Io.Writer.Allocating,
+    path: [:0]u8,
+    grant: [2][]const u8,
 
-    fn init(self: *Sandbox, writable: bool) void {
+    fn init(self: *Sandbox, writable: bool) !void {
         self.temporary = t.tmpDir(.{});
-        self.roots = .{.{ .dir = self.temporary.dir, .writable = writable }};
-        self.context = .{ .allocator = t.allocator, .io = t.io, .roots = self.roots[0..1] };
-        self.output = .init(t.allocator);
+        self.path = try self.temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+        self.grant = .{ "--restrict", if (writable) "--allow-write=." else "--allow-read=." };
     }
     fn deinit(self: *Sandbox) void {
-        self.context.deinit();
-        self.output.deinit();
+        t.allocator.free(self.path);
         self.temporary.cleanup();
     }
-    fn options(self: *Sandbox, writable: bool) language.vm.Options {
-        return .{
-            .output = &self.output.writer,
-            .resources = .{ .filesystem = self.context.filesystem(), .filesystem_permissions = if (writable) 7 else 5 },
-        };
+    /// Run the guest inside the granted directory, so its relative paths resolve there.
+    fn options(self: *Sandbox) native.Options {
+        return .{ .directory = self.path, .arguments = &self.grant };
     }
-    /// Compile and run one program against this grant, returning its scalar result.
-    fn run(self: *Sandbox, text: []const u8, writable: bool) !i64 {
+    /// Compile and run one program against this grant, returning the whole outcome.
+    fn run(self: *Sandbox, text: []const u8) !native.Run {
         var compilation = try language.Compilation.init(t.allocator, module, text);
         defer compilation.deinit();
-        const outcome = compilation.executeWithOptions(t.allocator, self.options(writable)) catch |err| {
-            if (err != error.OutOfMemory) @import("diagnostics_test.zig").report(compilation.diagnostics.items);
+        return native.runWithOptions(&compilation, self.options()) catch |err| {
+            @import("diagnostics_test.zig").report(compilation.diagnostics.items);
             return err;
         };
-        return value(outcome);
     }
 };
 
-/// Report a trap as a readable failure so no test body needs a branch.
-fn value(outcome: language.vm.Result) !i64 {
-    if (outcome == .trap) {
-        try t.expectEqualStrings("", outcome.trap.code);
-        return error.Unreachable;
-    }
-    return outcome.value;
-}
-
-/// Report a successful run as a failure so no test body needs a branch.
-fn trapCode(outcome: language.vm.Result) ![]const u8 {
-    if (outcome == .value) {
-        try t.expectEqual(@as(i64, -1), outcome.value);
-        return error.Unreachable;
-    }
-    return outcome.trap.code;
-}
-
-fn expectPrinted(text: []const u8, expected: []const u8, writable: bool) !void {
+/// Grant a read-only directory holding `notes.txt` and compare everything printed.
+fn expectPrinted(text: []const u8, expected: []const u8) !void {
     var sandbox: Sandbox = undefined;
-    sandbox.init(writable);
+    try sandbox.init(false);
     defer sandbox.deinit();
     try sandbox.temporary.dir.writeFile(t.io, .{ .sub_path = "notes.txt", .data = "alpha\nbeta\n" });
-    _ = try sandbox.run(text, writable);
-    try t.expectEqualStrings(expected, sandbox.output.written());
+    const outcome = try sandbox.run(text);
+    try t.expectEqualStrings("", outcome.trap.code);
+    try t.expectEqualStrings(expected, outcome.stdout);
 }
 
 fn expectTrap(text: []const u8, code: []const u8) !void {
     var sandbox: Sandbox = undefined;
-    sandbox.init(true);
+    try sandbox.init(true);
     defer sandbox.deinit();
-    var compilation = try language.Compilation.init(t.allocator, module, text);
-    defer compilation.deinit();
-    const outcome = try compilation.executeWithOptions(t.allocator, sandbox.options(true));
-    try t.expectEqualStrings(code, try trapCode(outcome));
+    const outcome = try sandbox.run(text);
+    try t.expectEqualStrings(code, outcome.trap.code);
 }
 
 fn reject(text: []const u8, code: []const u8) !void {
@@ -95,27 +71,27 @@ test "IO-7 with open binds a handle whose reads follow the declared mode" {
         \\    with open(fs, "notes.txt", "rb") as f:
         \\        print(f.read())
         \\    return 0
-    , "b'alpha\\nbeta\\n'\n", false);
+    , "b'alpha\\nbeta\\n'\n");
     try expectPrinted(
         \\def main(fs: Filesystem) -> int:
         \\    with open(fs, "notes.txt", "r") as f:
         \\        print(f.read(5))
         \\        print(f.readline())
         \\    return 0
-    , "alpha\n\n\n", false);
+    , "alpha\n\n\n");
     try expectPrinted(
         \\def main(fs: Filesystem) -> int:
         \\    with open(fs, "notes.txt", "r") as f:
         \\        for line in f.readlines():
         \\            print(len(line))
         \\    return 0
-    , "6\n5\n", false);
+    , "6\n5\n");
 }
 
 // spec: IO-8
 test "IO-8 writing modes create truncate and append through a write grant" {
     var sandbox: Sandbox = undefined;
-    sandbox.init(true);
+    try sandbox.init(true);
     defer sandbox.deinit();
     const program =
         \\def main(fs: Filesystem) -> int:
@@ -128,8 +104,8 @@ test "IO-8 writing modes create truncate and append through a write grant" {
         \\        _ = f.write("third\n")
         \\    return 0
     ;
-    _ = try sandbox.run(program, true);
-    try t.expectEqualStrings("6\n", sandbox.output.written());
+    const outcome = try sandbox.run(program);
+    try t.expectEqualStrings("6\n", outcome.stdout);
     const written = try sandbox.temporary.dir.readFileAlloc(t.io, "out.txt", t.allocator, .limited(64));
     defer t.allocator.free(written);
     try t.expectEqualStrings("third\n", written);
@@ -138,7 +114,7 @@ test "IO-8 writing modes create truncate and append through a write grant" {
 // spec: IO-9
 test "IO-9 whole-path helpers report provider failures as readable Result errors" {
     var sandbox: Sandbox = undefined;
-    sandbox.init(true);
+    try sandbox.init(true);
     defer sandbox.deinit();
     try sandbox.temporary.dir.writeFile(t.io, .{ .sub_path = "notes.txt", .data = "alpha\n" });
     const program =
@@ -156,7 +132,7 @@ test "IO-9 whole-path helpers report provider failures as readable Result errors
         \\    print(read_text(fs, "../escape"))
         \\    return 0
     ;
-    _ = try sandbox.run(program, true);
+    const outcome = try sandbox.run(program);
     try t.expectEqualStrings(
         "Ok('alpha\\n')\n" ++
             "Ok(b'alpha\\n')\n" ++
@@ -169,14 +145,14 @@ test "IO-9 whole-path helpers report provider failures as readable Result errors
             "False\n" ++
             "Err('read \\'absent.txt\\': failed: the path does not exist or could not be used')\n" ++
             "Err('read \\'../escape\\': denied: outside the granted directories, or the mode needs a write grant')\n",
-        sandbox.output.written(),
+        outcome.stdout,
     );
 }
 
 // spec: IO-10
 test "IO-10 a read-only grant denies every writing mode" {
     var sandbox: Sandbox = undefined;
-    sandbox.init(false);
+    try sandbox.init(false);
     defer sandbox.deinit();
     const program =
         \\def main(fs: Filesystem) -> int:
@@ -185,22 +161,19 @@ test "IO-10 a read-only grant denies every writing mode" {
         \\    print(remove(fs, "out.txt"))
         \\    return 0
     ;
-    _ = try sandbox.run(program, false);
-    try t.expect(std.mem.indexOf(u8, sandbox.output.written(), "needs a write grant") != null);
-    try t.expectEqual(@as(usize, 3), std.mem.count(u8, sandbox.output.written(), "Err("));
+    const outcome = try sandbox.run(program);
+    try t.expect(std.mem.indexOf(u8, outcome.stdout, "needs a write grant") != null);
+    try t.expectEqual(@as(usize, 3), std.mem.count(u8, outcome.stdout, "Err("));
 }
 
 // spec: IO-11
 test "IO-11 a with scope closes its file on every exit including traps and propagation" {
     var sandbox: Sandbox = undefined;
-    sandbox.init(true);
+    try sandbox.init(true);
     defer sandbox.deinit();
     try sandbox.temporary.dir.writeFile(t.io, .{ .sub_path = "notes.txt", .data = "alpha\n" });
-    // One live resource at a time proves each scope released its handle.
-    var statistics: [2]@import("external_resources.zig").Statistics = undefined;
-    var options = sandbox.options(true);
-    options.resources.max_live_per_kind = 1;
-    options.resources.statistics = &statistics;
+    // The provider holds 256 handles at once, so three hundred scopes that each
+    // return, break or propagate can only finish if every one released its own.
     const program =
         \\def early(fs: Filesystem) -> int:
         \\    with open(fs, "notes.txt", "r") as f:
@@ -208,10 +181,10 @@ test "IO-11 a with scope closes its file on every exit including traps and propa
         \\
         \\def looped(fs: Filesystem) -> int:
         \\    total = 0
-        \\    for index in range(3):
+        \\    for index in range(300):
         \\        with open(fs, "notes.txt", "r") as f:
         \\            total = total + len(f.read())
-        \\            if index == 1:
+        \\            if index == 298:
         \\                break
         \\    return total
         \\
@@ -229,11 +202,9 @@ test "IO-11 a with scope closes its file on every exit including traps and propa
         \\        case Err(message):
         \\            return total
     ;
-    var compilation = try language.Compilation.init(t.allocator, module, program);
-    defer compilation.deinit();
-    const outcome = try compilation.executeWithOptions(t.allocator, options);
-    try t.expectEqual(@as(i64, 18), try value(outcome));
-    try t.expectEqual(@as(usize, 0), statistics[0].live);
+    const outcome = try sandbox.run(program);
+    try t.expectEqualStrings("", outcome.trap.code);
+    try t.expectEqual(@as(i64, 6 + 299 * 6), outcome.value);
     // Explicit close releases the handle before the scope ends.
     try expectPrinted(
         \\def main(fs: Filesystem) -> int:
@@ -241,7 +212,7 @@ test "IO-11 a with scope closes its file on every exit including traps and propa
         \\        print(len(f.read()))
         \\        f.close()
         \\    return 0
-    , "11\n", false);
+    , "11\n");
     try expectTrap(
         \\def main(fs: Filesystem) -> int:
         \\    with open(fs, "written.txt", "w") as f:
@@ -329,18 +300,15 @@ test "file operations report a readable reason for every provider failure" {
     try t.expect(std.mem.startsWith(u8, file_resources.reason(error.Failed), "failed"));
 }
 
-test "a program with no granted filesystem provider traps rather than reading anything" {
+test "a program with no granted filesystem refuses to start rather than reading anything" {
     var compilation = try language.Compilation.init(t.allocator, module,
         \\def main(fs: Filesystem) -> int:
         \\    _ = exists(fs, "notes.txt")
         \\    return 0
     );
     defer compilation.deinit();
-    try t.expectError(error.CapabilityUnavailable, compilation.executeWithOptions(t.allocator, .{}));
-}
-
-test "the run helpers name an unexpected trap or an unexpected value as a failure" {
-    const empty: language.vm.Result = .{ .trap = .{ .code = "", .message = "", .span = .{ .start = 0, .end = 0 } } };
-    try t.expectError(error.Unreachable, value(empty));
-    try t.expectError(error.Unreachable, trapCode(.{ .value = -1 }));
+    const outcome = try native.runWithOptions(&compilation, .{ .arguments = &.{"--restrict"} });
+    try t.expectEqualStrings("CapabilityUnavailable", outcome.trap.code);
+    try t.expectEqual(@as(u8, 2), outcome.status);
+    try t.expectEqualStrings("", outcome.stdout);
 }
