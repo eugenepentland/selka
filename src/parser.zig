@@ -52,10 +52,13 @@ pub const Parser = struct {
     syntax: struct {
         nodes: std.ArrayList(ast.Node) = .empty,
         statements: std.ArrayList(ast.Statement) = .empty,
-        array_types: std.ArrayList(ast.ArrayType) = .empty,
-        callbacks: std.ArrayList(ast.CallbackType) = .empty,
-        applications: std.ArrayList(ast.TypeApplication) = .empty,
-        aliases: std.ArrayList(ast.TypeAlias) = .empty,
+        types: struct {
+            arrays: std.ArrayList(ast.ArrayType) = .empty,
+            callbacks: std.ArrayList(ast.CallbackType) = .empty,
+            applications: std.ArrayList(ast.TypeApplication) = .empty,
+            aliases: std.ArrayList(ast.TypeAlias) = .empty,
+        } = .{},
+        lambdas: std.ArrayList(ast.Lambda) = .empty,
         import_aliases: std.StringHashMapUnmanaged(void) = .empty,
     } = .{},
     fn current(self: *Parser) lex.Token {
@@ -127,7 +130,7 @@ pub const Parser = struct {
             _ = try self.expect(.rbracket);
             const element = try self.typeName();
             const span: Span = .join(token.span, element);
-            try self.syntax.array_types.append(self.arena.allocator(), .{ .span = span, .index = index, .element = element });
+            try self.syntax.types.arrays.append(self.arena.allocator(), .{ .span = span, .index = index, .element = element });
             return span;
         }
         for ([_]lex.Tag{
@@ -168,7 +171,7 @@ pub const Parser = struct {
         const result = try self.typeName();
         const bound = try self.effectBound() orelse return self.sink.fail("E_CALLBACK_EFFECTS", first, "callback types require an explicit effects ceiling");
         const span: Span = .join(first, self.tokens[self.cursor.pos - 1].span);
-        try self.syntax.callbacks.append(self.arena.allocator(), .{ .span = span, .parameters = try parameters.toOwnedSlice(self.arena.allocator()), .return_type = result, .effect_bound = bound });
+        try self.syntax.types.callbacks.append(self.arena.allocator(), .{ .span = span, .parameters = try parameters.toOwnedSlice(self.arena.allocator()), .return_type = result, .effect_bound = bound });
         return span;
     }
     fn nominalTypeName(self: *Parser) diagnostic.Error!Span {
@@ -184,7 +187,7 @@ pub const Parser = struct {
         }
         const close = try self.expect(.rbracket);
         const span: Span = .join(name, close.span);
-        try self.syntax.applications.append(self.arena.allocator(), .{ .span = span, .name = name, .arguments = try arguments.toOwnedSlice(self.arena.allocator()) });
+        try self.syntax.types.applications.append(self.arena.allocator(), .{ .span = span, .name = name, .arguments = try arguments.toOwnedSlice(self.arena.allocator()) });
         return span;
     }
     /// Parse module headers and bodies without loading imports or checking names.
@@ -247,7 +250,7 @@ pub const Parser = struct {
                 _ = try self.expect(.equal);
                 const target = try self.typeName();
                 _ = try self.expect(.semicolon);
-                try self.syntax.aliases.append(self.arena.allocator(), .{ .name = name, .target = target });
+                try self.syntax.types.aliases.append(self.arena.allocator(), .{ .name = name, .target = target });
                 continue;
             }
             if (self.take(.kw_const)) {
@@ -336,10 +339,10 @@ pub const Parser = struct {
                 .variants = try variants.toOwnedSlice(self.arena.allocator()),
                 .domains = try domains.toOwnedSlice(self.arena.allocator()),
                 .expressions = .{
-                    .callbacks = try self.syntax.callbacks.toOwnedSlice(self.arena.allocator()),
-                    .arrays = try self.syntax.array_types.toOwnedSlice(self.arena.allocator()),
-                    .applications = try self.syntax.applications.toOwnedSlice(self.arena.allocator()),
-                    .aliases = try self.syntax.aliases.toOwnedSlice(self.arena.allocator()),
+                    .callbacks = try self.syntax.types.callbacks.toOwnedSlice(self.arena.allocator()),
+                    .arrays = try self.syntax.types.arrays.toOwnedSlice(self.arena.allocator()),
+                    .applications = try self.syntax.types.applications.toOwnedSlice(self.arena.allocator()),
+                    .aliases = try self.syntax.types.aliases.toOwnedSlice(self.arena.allocator()),
                 },
                 .records = try records.toOwnedSlice(self.arena.allocator()),
             },
@@ -347,6 +350,7 @@ pub const Parser = struct {
             .nodes = self.syntax.nodes,
             .statements = self.syntax.statements,
             .functions = try functions.toOwnedSlice(self.arena.allocator()),
+            .lambdas = try self.syntax.lambdas.toOwnedSlice(self.arena.allocator()),
         };
     }
     fn function(self: *Parser, owner: ?Span) diagnostic.Error!ast.Function {
@@ -746,6 +750,7 @@ pub const Parser = struct {
         try self.enter();
         defer self.cursor.depth -= 1;
         const token = self.current();
+        if (token.tag == .ident and std.mem.eql(u8, self.src.text(token.span), "lambda")) return self.lambdaExpression(token);
         var left: ast.NodeId = switch (token.tag) {
             .kw_restrict_resource => try self.parseRestrict(token),
             .kw_read_resource, .kw_write_resource => try self.parseResourceIo(token),
@@ -869,6 +874,26 @@ pub const Parser = struct {
             } } });
         }
         return left;
+    }
+    fn lambdaExpression(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
+        self.cursor.pos += 1;
+        var parameters: std.ArrayList(Span) = .empty;
+        if (self.current().tag != .colon) while (true) {
+            const parameter = try self.expect(.ident);
+            if (std.mem.eql(u8, self.src.text(parameter.span), "_"))
+                return self.sink.fail("E_LAMBDA_PARAMETER", parameter.span, "lambda parameters must have a usable name");
+            try parameters.append(self.arena.allocator(), parameter.span);
+            if (!self.take(.comma)) break;
+        };
+        _ = try self.expect(.colon);
+        const body = try self.expression(0);
+        const span = Span.join(token.span, self.syntax.nodes.items[@backingInt(body)].span);
+        try self.syntax.lambdas.append(self.arena.allocator(), .{
+            .span = span,
+            .parameters = try parameters.toOwnedSlice(self.arena.allocator()),
+            .body = body,
+        });
+        return self.append(.{ .span = span, .data = .{ .name = token.span } });
     }
     fn parseMemberSuffix(self: *Parser, left: ast.NodeId) diagnostic.Error!ast.NodeId {
         const name: lex.Token = .{ .tag = .ident, .span = try self.declaredName() };

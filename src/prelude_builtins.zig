@@ -152,6 +152,10 @@ fn buildCall(comptime Checker: type, checker: *Checker, span: source.Span, name:
         return largest;
     }
     if (std.mem.eql(u8, name, "zip")) return checker.sink.fail(unsupported, span, "zip is only an iteration source: for a, b in zip(xs, ys)");
+    if (std.mem.eql(u8, name, "sorted")) {
+        if (arguments.len == 0 or arguments.len > 2) return checker.sink.fail(eArity, span, "sorted requires a list and optional key callback");
+        return @as(?typed.Node, try sorted(Checker, checker, span, arguments[0], if (arguments.len == 2) arguments[1] else null));
+    }
     const input = try single(Checker, checker, span, name, arguments);
     const built: ?typed.Node = if (std.mem.eql(u8, name, "sum"))
         try sum(Checker, checker, span, input)
@@ -159,8 +163,6 @@ fn buildCall(comptime Checker: type, checker: *Checker, span: source.Span, name:
         try anyAll(Checker, checker, span, input, true)
     else if (std.mem.eql(u8, name, "all"))
         try anyAll(Checker, checker, span, input, false)
-    else if (std.mem.eql(u8, name, "sorted"))
-        try sorted(Checker, checker, span, input)
     else if (std.mem.eql(u8, name, "reversed"))
         try reversedList(Checker, checker, span, input)
     else if (std.mem.eql(u8, name, "round"))
@@ -391,11 +393,16 @@ fn extremeOfList(comptime Checker: type, checker: *Checker, span: source.Span, i
     }, try b.read(result));
 }
 
-/// `sorted(xs)`: a new ascending list of int, float or str values.
-fn sorted(comptime Checker: type, checker: *Checker, span: source.Span, input: typed.NodeId) Error!typed.Node {
+/// `sorted(xs, key=callback)`: a stable ascending copy, optionally ordered by an integer key.
+fn sorted(comptime Checker: type, checker: *Checker, span: source.Span, input: typed.NodeId, key: ?typed.NodeId) Error!typed.Node {
     const b = builder(Checker, checker, span);
     const element = try listElement(Checker, checker, nodeType(Checker, checker, input), span);
-    const family = familyOf(Checker, checker, element) orelse return checker.sink.fail(unsupported, span, "sorted requires a list of int, float or str values");
+    const family = if (key == null) familyOf(Checker, checker, element) orelse return checker.sink.fail(unsupported, span, "sorted requires a list of int, float or str values") else .integer;
+    if (key) |callback| {
+        const contract = @import("callables.zig").signature(nodeType(Checker, checker, callback), checker.catalog.records) orelse return checker.sink.fail(unsupported, span, "sorted key requires a callback");
+        if (contract.parameters.len != 1 or contract.parameters[0] != element or contract.return_type != .i64 or contract.effects != 0)
+            return checker.sink.fail(unsupported, span, "sorted key requires def(T) -> int effects() for the list element type T");
+    }
     const list = try collections.listType(&checker.catalog, element, span);
     const source_slot = try b.local(list);
     const target_slot = try b.local(list);
@@ -409,6 +416,7 @@ fn sorted(comptime Checker: type, checker: *Checker, span: source.Span, input: t
     const right_cursor = try b.local(.i64);
     const left_value = try b.local(element);
     const right_value = try b.local(element);
+    const key_slot = if (key) |callback| try b.local(nodeType(Checker, checker, callback)) else null;
     const n = try b.read(count);
     const w = try b.read(width);
     const i = try b.read(cursor);
@@ -419,7 +427,9 @@ fn sorted(comptime Checker: type, checker: *Checker, span: source.Span, input: t
     const middle_bound = try b.binary(.add, i, w, .i64);
     const end_bound = try b.binary(.add, i, step_up, .i64);
     const both = try b.binary(.logical_and, try b.binary(.lt, try b.read(left_cursor), try b.read(middle), .bool), try b.binary(.lt, try b.read(right_cursor), try b.read(end), .bool), .bool);
-    const take_right = try less(Checker, checker, span, family, try b.read(right_value), try b.read(left_value));
+    const right_order = if (key_slot) |slot| try invokeKey(Checker, checker, span, try b.read(slot), try b.read(right_value)) else try b.read(right_value);
+    const left_order = if (key_slot) |slot| try invokeKey(Checker, checker, span, try b.read(slot), try b.read(left_value)) else try b.read(left_value);
+    const take_right = try less(Checker, checker, span, family, right_order, left_order);
     const merge = try b.stmt(.{ .block = try keep(Checker, checker, &.{
         try b.stmt(.{ .assign = .{ .slot = left_value, .value = try b.operation(source_slot, .read, &.{try b.read(left_cursor)}) } }),
         try b.stmt(.{ .assign = .{ .slot = right_value, .value = try b.operation(source_slot, .read, &.{try b.read(right_cursor)}) } }),
@@ -477,13 +487,20 @@ fn sorted(comptime Checker: type, checker: *Checker, span: source.Span, input: t
         try b.stmt(.{ .assign = .{ .slot = target_slot, .value = try b.read(swap_slot) } }),
         try b.stmt(.{ .assign = .{ .slot = width, .value = step_up } }),
     }) });
-    return b.block(&.{
-        try b.stmt(.{ .initialize = .{ .slot = target_slot, .value = empty } }),
-        try b.stmt(.{ .initialize = .{ .slot = source_slot, .value = try retain(Checker, checker, span, try b.slice(input, null, null)) } }),
-        try b.stmt(.{ .initialize = .{ .slot = count, .value = try b.length(source_slot) } }),
-        try b.stmt(.{ .initialize = .{ .slot = width, .value = try b.integer(1) } }),
-        try b.stmt(.{ .loop = .{ .id = loopId(Checker, checker), .condition = try b.binary(.lt, try b.read(width), n, .bool), .body = pass, .step = null } }),
-    }, try b.read(source_slot));
+    var setup: std.ArrayList(typed.StatementId) = .empty;
+    try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = target_slot, .value = empty } }));
+    try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = source_slot, .value = try retain(Checker, checker, span, try b.slice(input, null, null)) } }));
+    if (key_slot) |slot| try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = slot, .value = key.? } }));
+    try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = count, .value = try b.length(source_slot) } }));
+    try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = width, .value = try b.integer(1) } }));
+    try setup.append(checker.allocator, try b.stmt(.{ .loop = .{ .id = loopId(Checker, checker), .condition = try b.binary(.lt, try b.read(width), n, .bool), .body = pass, .step = null } }));
+    return b.block(setup.items, try b.read(source_slot));
+}
+
+fn invokeKey(comptime Checker: type, checker: *Checker, span: source.Span, callback: typed.NodeId, value: typed.NodeId) Error!typed.NodeId {
+    const b = builder(Checker, checker, span);
+    const arguments = try checker.allocator.dupe(typed.NodeId, &.{value});
+    return b.node(.i64, .{ .invoke = .{ .callee = callback, .arguments = arguments } });
 }
 
 fn loopId(comptime Checker: type, checker: *Checker) usize {

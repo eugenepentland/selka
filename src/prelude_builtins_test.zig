@@ -104,6 +104,23 @@ test "sorted returns a new ascending list for int, float and str" {
     try reject("def main() -> int:\n    return len(sorted([True, False]))\n", "E_PRELUDE_TYPE");
 }
 
+// spec: PRELUDE-SORT-KEY-1
+test "sorted key lambdas order records stably and diagnose invalid inputs" {
+    try run(
+        \\class Item:
+        \\    key: int
+        \\    position: int
+        \\
+        \\
+        \\def main() -> int:
+        \\    items = [Item(key=2, position=0), Item(key=1, position=1), Item(key=2, position=2)]
+        \\    ordered = sorted(items, key=lambda item: item.key)
+        \\    return ordered[0].position * 100 + ordered[1].position * 10 + ordered[2].position
+    , 102);
+    try reject("def main() -> int:\n    return len(sorted(1, key=lambda value: value))\n", "E_PRELUDE_TYPE");
+    try reject("def main() -> int:\n    xs = [1]\n    return len(sorted(xs, key=lambda value: True))\n", "E_TYPE");
+}
+
 // spec: PRELUDE-ABS-1
 test "abs is total for int and still a float operation for float" {
     try run("def main() -> int:\n    return abs(0 - 42)\n", 42);

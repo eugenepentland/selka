@@ -417,6 +417,11 @@
       "summary": "A function value has a declared signature and captures nothing.",
       "doc": "docs/functions.md#function-values"
     },
+    "expression-bodied-lambdas": {
+      "kind": "language",
+      "summary": "A contextually typed `lambda` spells an expression-bodied noncapturing callback.",
+      "doc": "docs/lambdas.md#expression-bodied-noncapturing-lambdas"
+    },
     "bounded-guest-callbacks": {
       "kind": "language",
       "summary": "A callback parameter declares its signature and an exact effect ceiling.",
