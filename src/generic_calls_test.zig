@@ -4,8 +4,7 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const diagnostic = @import("diagnostic.zig");
 const bodies = @import("generic_bodies.zig");
-// A domain-qualified call infers its type argument; `D.hidden[U](x)` would read as
-// an index expression, so the qualified sites below rely on inference.
+// A domain-qualified call may name its type argument explicitly: `D.hidden[U](x)`.
 const declarations =
     \\def identity[U](x: U) -> U:
     \\    return x
@@ -55,7 +54,7 @@ const valid = declarations ++
     \\        return x
     \\
     \\    def public[U](x: U) -> U:
-    \\        return D.hidden(x)
+    \\        return D.hidden[U](x)
     \\
     \\
     \\def main() -> i64:
@@ -161,7 +160,7 @@ test "generic calls reject invalid contracts identities arity and private access
         \\
         \\domain E: i64:
         \\    def f[T](x: T) -> T:
-        \\        return D.hidden(x)
+        \\        return D.hidden[T](x)
         , .code = "E_PRIVATE_FUNCTION" },
 
         .{ .body =
@@ -171,7 +170,7 @@ test "generic calls reject invalid contracts identities arity and private access
         \\
         \\
         \\def f[T](x: T) -> T:
-        \\    return D.hidden(x)
+        \\    return D.hidden[T](x)
         , .code = "E_PRIVATE_FUNCTION" },
     };
     for (cases) |case| {
