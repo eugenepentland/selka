@@ -106,7 +106,7 @@ at all is a failure rather than a pass.
 
 `README.md` and `SPEC.md` contribute no executable blocks: the README fences are all
 shell invocations, and `SPEC.md` has no fenced blocks at all. Across the scanned
-documents the gate currently runs 102 examples, type-checks 16 and skips 6. Those
+documents the gate currently runs 106 examples, type-checks 19 and skips 6. Those
 figures are a snapshot; the runner's own summary is the authority. The count grew
 when every implemented feature gained a documented example, which
 [`mylang doc-coverage`](../tooling/documentation-gate.md) now requires.
@@ -119,15 +119,13 @@ when every implemented feature gained a documented example, which
 | `docs/experiments/module-discovery.md` | module header | fragment: header excerpt whose imported modules are not shown |
 | `docs/experiments/module-interfaces.md` | export placement | fragment: the imported `shared.units` module is not shown |
 | `docs/experiments/source-codecs.md` | codec match | fragment: statements without the `Positive` domain and `Wire` declarations |
-| `docs/legacy/familiar-syntax.md` | record and list intro | known-wrong example: `E_SYNTAX` rejects the trailing comma after this struct declaration's last field, though calls and record construction accept one; the rest of the example returns 42 |
 
 Every fragment above is a candidate for a later documentation rewrite: completing one
 into a whole program removes its `skip` directive and adds it to the executed set. The
 `removed feature` row is different in kind: it is a block in a dated record whose syntax
-the language no longer has, kept for the history rather than rewritten.
-The `docs/legacy/familiar-syntax.md` entry is different again, because the example and the
-prose around it disagree with the compiler; resolving that needs a language or prose
-decision rather than an edit to the block.
+the language no longer has, kept for the history rather than rewritten. Nothing under
+`docs/legacy/` appears here at all, because the scan skips that directory: an example
+whose subject was removed is not executed, and so it is neither a skip nor a failure.
 
 `README.md` and `SPEC.md` are the other standing item. Neither carries an executable
 example today, so neither is covered by this gate; examples added to them are picked up

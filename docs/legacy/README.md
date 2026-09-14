@@ -4,7 +4,7 @@ These pages describe language and tooling surfaces that no longer exist. They ar
 kept so that older sources, audits and evidence files remain readable, not as a
 description of the current language. Every page carries a removal banner.
 
-Three removals are recorded here:
+Four broad removals are recorded here:
 
 - **Explicit storage tier** (removed 2026-09-13). `buffer`/`pool`/legacy `list`
   declarations, the `allocator` capability and entry parameter, `&T`/`&mut T`
@@ -25,6 +25,11 @@ Three removals are recorded here:
   `#` comments, `match`/`case`, `True`/`False`/`None`, `elif` and `range(a, b)`
   are the surface; see [../python-syntax.md](../python-syntax.md). `mylang
   migrate`, which converted between the two, went with it.
+- **Bytecode interpreter** (removed 2026-09-14). The interpreter and its
+  project-evaluation commands were removed. QBE native code is the only runtime:
+  `mylang run`, `run-project` and `test` build a program and execute it in a child
+  process. Bytecode remains the compiler's internal IR and `dump-bytecode` still
+  prints it; see [../current-language.md](../current-language.md).
 
-`src/features.json` records all three under its `removed` key with the same date,
-alongside the narrower spellings each removal took with it.
+`src/features.json` records every removal under its `removed` key with its date
+and the narrower spellings it took with it; that list is the authority.

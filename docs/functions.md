@@ -54,7 +54,11 @@ away needs `_ = work(...)` and a bare non-unit value reports
 `E_EXPLICIT_DISCARD_REQUIRED`. Unit appears in a module's public schema as
 `kind: unit` and stays callable from other language modules, but it is rejected
 at the data, wire and host ABI boundaries, so a procedure is not callable across
-the C ABI.
+the C ABI. There is no unit literal: a bare `return`, falling off the end, or a
+unit-returning call produces it, and `type Name = None` may name it. Unit is an
+ordinary value of one shape rather than an absence, so it flows through generic
+functions, callbacks, bindings and result payloads, and `fallible()?` propagates
+a failed result whose success payload is unit.
 
 ```mylang
 # doc: expect 42

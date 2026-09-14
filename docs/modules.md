@@ -26,6 +26,35 @@ def main() -> int:
 remains the explicit alias for the same entry. A file with no module header is
 still checked and run as one standalone unit, unchanged.
 
+This is the canonical everyday command shape:
+
+```console
+$ mylang run main.my
+$ mylang run main.my --restrict --allow-read=.
+```
+
+`run` and `run-project` share stdout, stderr, capability and exit-status
+semantics. Both compile to a temporary native executable. A completed `main`
+returning `int` exits with that value (truncated to eight bits), `--print-result`
+also prints it, diagnostics go to stderr, and a trap outranks the return value.
+Every capability is granted by default; `--restrict` denies capabilities except
+those named by `--allow-*` options.
+
+The related native routes use the same runtime contract with command-specific
+front ends. `mylang build main.my --run -- <runtime-options>` executes a temporary
+binary, while `mylang build main.my -o app` creates an executable that accepts the
+same runtime options directly. Today `build` requires `--project` for a module
+entry even though `run` auto-detects it. `mylang test main.my` builds each guest
+test as a separate native child with no ambient capabilities and returns an
+aggregate runner status. Wave 1 has no guest `argv` parameter: these arguments
+configure execution and are not application data.
+
+One observable gap remains in this baseline: under `--restrict`, `run` reports a
+missing entry capability with a command-line preflight diagnostic, while
+`build --run` and an installed executable report `CapabilityUnavailable: QBE
+runtime failure`. All three exit 2 and deny execution, but their stderr text is
+not yet identical.
+
 ## Disk modules
 
 A file opens with `module NAME`, then its `import` declarations, then its

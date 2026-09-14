@@ -249,8 +249,8 @@ def main() -> int:
 `value = checked(42)?` propagates an error when the enclosing function returns a
 compatible `Result`. `Option[T]` represents an optional value: construct it with
 `Some(value)` or contextual `None`, then match `case Some(value)` / `case None`.
-Prelude `list`, `List`, `Result`, and `Option` have one identity across every
-module and both spellings; ordinary procedures use `None`.
+Prelude `list`, `Result`, and `Option` have one identity across every module;
+ordinary procedures use `None`.
 
 Generic functions and classes use square brackets, for example
 `def identity[T](value: T) -> T:`. Calls infer type arguments when possible, and
@@ -270,6 +270,27 @@ plus `read_text`, `write_text`, `exists`, `listdir`, `mkdir` and `remove`.
 `mylang run` grants the filesystem, clock, entropy and environment by default;
 `--restrict` withholds them and turns on the `--allow-*` flags. See
 [printing, files and command-line authority](io.md).
+
+## One command shape
+
+Use `mylang run <entry.my>` for both standalone files and module entries. The
+command detects `module`, `import`, and `export` headers and loads the reachable
+project; `run-project` remains an explicit alias. Compiler and runtime options
+belong before a separating `--` when the command provides one. In Wave 1 there is
+no general application-argument parameter yet, so arguments after `--` are native
+runtime options such as `--restrict`, not a guest `argv` list.
+
+`mylang build <entry.my> --run` and an executable produced with `-o` use the same
+native runtime and integer exit-status rule. A module entry still requires
+`mylang build <entry.my> --project ...`; project auto-detection currently belongs
+to `run`. `mylang test <entry.my>` also builds native children, but reports the
+test runner's aggregate status rather than treating a test function's value as a
+process exit status. Guest tests receive no ambient capabilities.
+
+Capability denial currently has two diagnostic renderings: `run` catches a
+missing restricted grant before execution, while `build --run` and installed
+executables report the native runtime's `CapabilityUnavailable` failure. They
+all deny the capability and exit 2; unifying the stderr wording is pending.
 
 `with` is one statement form with two resource kinds. Wrap a phase of work in
 `with arena() as scratch:` to free everything it allocates in one step and copy

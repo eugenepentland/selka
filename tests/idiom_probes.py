@@ -25,9 +25,28 @@ MANIFEST = FIXTURES / 'manifest.json'
 TIMEOUT = 60
 
 
+def failed_run(result):
+    """Whether stderr/status proves the guest did not complete normally."""
+    stderr = result['stderr']
+    return (result['status'] < 0 or 'error[' in stderr or
+            'host failure:' in stderr or 'QBE runtime failure' in stderr or
+            stderr.startswith('mylang:') or stderr.startswith('usage:'))
+
+
 def matches(result, expected):
     """Whether one run satisfies a recorded expectation."""
-    if result['status'] != expected['status']:
+    diagnostic = 'code' in expected or 'stderr_contains' in expected
+    if diagnostic:
+        if result['status'] != expected['status']:
+            return False
+    elif 'stdout' in expected:
+        # A completed integer-valued main exits with that integer.  For value
+        # probes, failure diagnostics distinguish completion from a compiler
+        # error or trap; warnings remain compatible with successful completion.
+        # The exact process status is deliberately not part of the expectation.
+        if failed_run(result):
+            return False
+    elif result['status'] != expected['status']:
         return False
     if 'stdout' in expected and result['stdout'].strip() != expected['stdout'].strip():
         return False
@@ -36,6 +55,43 @@ def matches(result, expected):
     if 'stderr_contains' in expected and expected['stderr_contains'] not in result['stderr']:
         return False
     return True
+
+
+def self_test():
+    """Exercise value and diagnostic expectation classification."""
+    cases = [
+        ('value uses printed result, not exit status',
+         {'status': 6, 'stdout': '6\n', 'stderr': ''},
+         {'status': 0, 'stdout': '6'}, True),
+        ('wrong printed result fails',
+         {'status': 6, 'stdout': '7\n', 'stderr': ''},
+         {'status': 0, 'stdout': '6'}, False),
+        ('runtime trap is not completion',
+         {'status': 1, 'stdout': '6\n', 'stderr': 'error[R_ASSERT]: trap\n'},
+         {'status': 0, 'stdout': '6'}, False),
+        ('compiler error is not completion',
+         {'status': 1, 'stdout': '', 'stderr': 'error[E_TYPE]: mismatch\n'},
+         {'status': 0, 'stdout': ''}, False),
+        ('warning does not hide completion',
+         {'status': 6, 'stdout': '6\n', 'stderr': 'warning[W_UNUSED]: note\n'},
+         {'status': 0, 'stdout': '6'}, True),
+        ('diagnostic checks exact status and code',
+         {'status': 1, 'stdout': '', 'stderr': 'error[E_TYPE]: mismatch\n'},
+         {'status': 1, 'code': 'E_TYPE'}, True),
+        ('diagnostic rejects a different status',
+         {'status': 2, 'stdout': '', 'stderr': 'error[E_TYPE]: mismatch\n'},
+         {'status': 1, 'code': 'E_TYPE'}, False),
+        ('diagnostic substring matches',
+         {'status': 1, 'stdout': '', 'stderr': 'error: canonical replacement is len(x)\n'},
+         {'status': 1, 'stderr_contains': 'len(x)'}, True),
+    ]
+    failures = [name for name, observed, expected, wanted in cases
+                if matches(observed, expected) != wanted]
+    if failures:
+        print('idiom classifier self-test failed: ' + ', '.join(failures), file=sys.stderr)
+        return 1
+    print(f'idiom classifier self-test: {len(cases)} passed')
+    return 0
 
 
 def run_probe(compiler, path):
@@ -85,13 +141,20 @@ def load_manifest():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--compiler', type=Path, required=True)
+    parser.add_argument('--compiler', type=Path)
+    parser.add_argument('--self-test', action='store_true',
+                        help='test expectation classification without running probes')
     parser.add_argument('--output', type=Path)
     parser.add_argument('--filter', default='*', help='glob matched against probe names')
     parser.add_argument('--require-targets', action='store_true',
                         help='fail unless every selected probe meets its target')
     parser.add_argument('--verbose', action='store_true')
     args = parser.parse_args()
+
+    if args.self_test:
+        return self_test()
+    if args.compiler is None:
+        parser.error('--compiler is required unless --self-test is used')
 
     compiler = args.compiler.resolve()
     probes = [probe for probe in load_manifest()

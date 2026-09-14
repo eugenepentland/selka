@@ -238,7 +238,7 @@ The accepted subset has one `def main() -> int` and typed helper functions, with
 local bindings, assignment,
 nested blocks, branches, loops, discarded expression statements (`_ = expr`),
 and typed returns.
-[Unit procedures](docs/experiments/unit-procedures.md) omit the return annotation, ordinary call
+[Unit procedures](docs/functions.md#unit-procedures) omit the return annotation, ordinary call
 statements, and bare returns or fallthrough; other values retain explicit handling.
 It supports integer and boolean values,
 optional local type annotations, unary `-` and `not`, binary `+`, `-`, `*`, `/`, `%`, short-circuit `and` and `or`,
@@ -321,7 +321,7 @@ Operating-system adapters remain separate work.
 [Managed arenas](docs/arenas.md) provide the language's only manual-memory control:
 `with arena() as scratch:` frees everything a phase of work allocated in one step,
 and `scratch.escape(value)` copies a result out.
-`zig build run -- run-project examples/arena-managed/main.my` returns `38`.
+`zig-out/bin/mylang run examples/arena-managed/main.my --print-result` returns `38`.
 
 [Approximate discovery](docs/experiments/approximate-discovery.md) is available with
 `discover-duplicates --approximate`. It reports canonical edits between near matches

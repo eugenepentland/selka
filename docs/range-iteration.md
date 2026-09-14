@@ -1,6 +1,6 @@
 # Integer range iteration
 
-`for index in start..end { ... }` visits a half-open ascending integer range:
+`for index in range(start, end):` visits a half-open ascending integer range:
 
 ```my
 def main() -> i64:
