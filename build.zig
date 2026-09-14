@@ -31,6 +31,11 @@ pub fn build(b: *std.Build) void {
         @panic("mylang requires Guardian's Zig 0.17.0-dev.1683+5ceec001b toolchain (see .zigversion)");
     const target = b.resolveTargetQuery(.{});
     const optimize = b.standardOptimizeOption(.{});
+    // `-Dtest-filter=SUBSTRING` narrows the unit and CLI suites to one area in seconds.
+    const test_filters: []const []const u8 = if (b.option([]const u8, "test-filter", "Run only Zig tests whose name contains this substring")) |needle|
+        b.dupeStrings(&.{needle})
+    else
+        &.{};
     const core = b.addModule("mylang", .{
         .root_source_file = b.path("src/compiler.zig"),
         .target = target,
@@ -57,7 +62,7 @@ pub fn build(b: *std.Build) void {
     run.step.dependOn(b.getInstallStep());
     b.step("run", "Check, run, or inspect a source program").dependOn(&run.step);
 
-    const unit = b.addTest(.{ .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
+    const unit = b.addTest(.{ .test_runner = guardian.testRunner(guardian_dep), .filters = test_filters, .root_module = b.createModule(.{
         .root_source_file = b.path("src/root_test.zig"),
         .target = target,
         .optimize = optimize,
@@ -110,7 +115,7 @@ pub fn build(b: *std.Build) void {
     const options = b.addOptions();
     options.addOptionPath("compiler_path", exe.getEmittedBin());
     options.addOptionPath("arena_example_path", b.path("examples/arena-managed/main.my"));
-    const integration = b.addTest(.{ .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
+    const integration = b.addTest(.{ .test_runner = guardian.testRunner(guardian_dep), .filters = test_filters, .root_module = b.createModule(.{
         .root_source_file = b.path("test/integration.zig"),
         .target = target,
         .optimize = optimize,
