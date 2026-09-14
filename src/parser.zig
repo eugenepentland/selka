@@ -643,6 +643,21 @@ pub const Parser = struct {
         const end = try self.expect(.semicolon);
         return self.addStatement(.{ .span = .join(first.span, end.span), .implicit_discard = implicit_discard, .data = data });
     }
+    /// Recognize `range(end)` or `range(start, end)` as an iteration source and return its
+    /// half-open bounds, using a unit sentinel for the implicit zero start. A `for` loop and
+    /// a list comprehension share this so both accept exactly the same range spellings.
+    fn rangeBounds(self: *Parser, input: ast.NodeId) diagnostic.Error!?struct { start: ast.NodeId, end: ast.NodeId } {
+        const node = self.syntax.nodes.items[@backingInt(input)];
+        if (node.data != .call or node.data.call.owner != null) return null;
+        const call = node.data.call;
+        if (!std.mem.eql(u8, self.src.text(call.name), "range")) return null;
+        if (call.arguments.len < 1 or call.arguments.len > 2) return self.sink.fail("E_ARITY", node.span, "range requires end or start, end");
+        // Unit is an internal zero sentinel, avoiding fabricated source text.
+        return .{
+            .start = if (call.arguments.len == 2) call.arguments[0] else try self.append(.{ .span = call.name, .data = .unit }),
+            .end = call.arguments[call.arguments.len - 1],
+        };
+    }
     fn forStatement(self: *Parser, first: lex.Token) diagnostic.Error!ast.StatementId {
         const first_name = (try self.expect(.ident)).span;
         const second_name = if (self.take(.comma)) (try self.expect(.ident)).span else null;
@@ -651,19 +666,15 @@ pub const Parser = struct {
         var start: ?ast.NodeId = null;
         var end: ?ast.NodeId = null;
         var iterable = input;
-        {
+        if (try self.rangeBounds(input)) |bounds| {
+            start = bounds.start;
+            end = bounds.end;
+        } else {
             const node = self.syntax.nodes.items[@backingInt(input)];
-            if (node.data == .call and node.data.call.owner == null) {
+            if (node.data == .call and node.data.call.owner == null and std.mem.eql(u8, self.src.text(node.data.call.name), "enumerate")) {
                 const call = node.data.call;
-                if (std.mem.eql(u8, self.src.text(call.name), "range")) {
-                    if (call.arguments.len < 1 or call.arguments.len > 2) return self.sink.fail("E_ARITY", node.span, "range requires end or start, end");
-                    // Unit is an internal zero sentinel, avoiding fabricated source text.
-                    start = if (call.arguments.len == 2) call.arguments[0] else try self.append(.{ .span = call.name, .data = .unit });
-                    end = call.arguments[call.arguments.len - 1];
-                } else if (std.mem.eql(u8, self.src.text(call.name), "enumerate")) {
-                    if (call.arguments.len != 1 or second_name == null) return self.sink.fail("E_ARITY", node.span, "enumerate requires one iterable and two iteration names");
-                    iterable = call.arguments[0];
-                } else if (second_name != null) return self.sink.fail(eIteration, node.span, "two iteration names require enumerate");
+                if (call.arguments.len != 1 or second_name == null) return self.sink.fail("E_ARITY", node.span, "enumerate requires one iterable and two iteration names");
+                iterable = call.arguments[0];
             } else if (second_name != null) return self.sink.fail(eIteration, node.span, "two iteration names require enumerate");
         }
         const body = try self.block();
@@ -868,13 +879,17 @@ pub const Parser = struct {
         _ = try self.expect(.kw_for);
         const name = try self.expect(.ident);
         _ = try self.expect(.kw_in);
-        const iterable = try self.expression(0);
+        const input = try self.expression(0);
         const filter = if (self.take(.kw_if)) try self.expression(0) else null;
         const close = try self.expect(.rbracket);
+        const src: ast.Comprehension.Source = if (try self.rangeBounds(input)) |bounds|
+            .{ .range = .{ .start = bounds.start, .end = bounds.end } }
+        else
+            .{ .iterable = input };
         return self.append(.{ .span = .join(token.span, close.span), .data = .{ .comprehension = .{
             .output = output,
             .name = name.span,
-            .iterable = iterable,
+            .source = src,
             .filter = filter,
         } } });
     }

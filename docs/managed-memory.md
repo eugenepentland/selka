@@ -284,6 +284,22 @@ The source collection is unchanged, and the produced value has to be a copyable
 storable list element. Nested generators, generator expressions, and dictionary
 or set comprehensions are not provided; write an ordinary `for` loop for those.
 
+The source may also be an integer `range(...)`, exactly as in a `for` loop:
+`range(end)` and `range(start, end)` walk a half-open ascending range and bind the
+name to each integer value, so `[i * i for i in range(5)]` collects the first five
+squares. The bounds share one integer type and evaluate once before the loop, and
+an empty or reversed range yields an empty list.
+
+```mylang
+# doc: expect 20
+def main() -> int:
+    squares = [i * i for i in range(5)]
+    total = 0
+    for s in squares:
+        total = total + s
+    return total - 10
+```
+
 ```mylang
 # doc: expect 21
 def main() -> int:

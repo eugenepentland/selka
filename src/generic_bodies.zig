@@ -441,10 +441,13 @@ const Checker = struct {
         for (inputs) |input| try self.same(try self.expressionExpected(input, shape.element), shape.element, node.span);
         return expected;
     }
-    /// A comprehension iterates one collection and yields a list of its produced values.
+    /// A comprehension iterates one collection or integer range and yields a list of its
+    /// produced values.
     fn comprehensionValue(self: *Checker, each: ast.Comprehension, span: source.Span) Error!Symbolic {
-        const iterable = try self.expression(each.iterable);
-        const element = try self.collectionElement(iterable, span);
+        const element = switch (each.source) {
+            .iterable => |iterable| try self.collectionElement(try self.expression(iterable), span),
+            .range => |bounds| try self.rangeElement(bounds, each.name, span),
+        };
         const text = self.src.text(each.name);
         if (try self.topLevel(each.name) or self.active.contains(text)) return self.sink.fail(eShadowing, each.name, "comprehension binding shadows an active declaration");
         try self.bind(each.name, element, false);
@@ -455,6 +458,14 @@ const Checker = struct {
         try self.supports(produced, .storable, span);
         self.seedEffect(.managed_allocation);
         return self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{produced});
+    }
+    /// Resolve a `range(...)` comprehension source to its integer element type, mirroring the
+    /// generic `for` range bounds check: a unit start is zero, and both bounds share one type.
+    fn rangeElement(self: *Checker, bounds: @FieldType(ast.Comprehension.Source, "range"), name: source.Span, span: source.Span) Error!Symbolic {
+        const element: Symbolic = if (self.program.nodes.items[@backingInt(bounds.start)].data == .unit) .{ .concrete = .i64 } else try self.expression(bounds.start);
+        try self.supports(element, .integer, name);
+        try self.same(try self.expression(bounds.end), element, span);
+        return element;
     }
 
     /// Every f-string piece converts to text, so the whole literal is `str`.

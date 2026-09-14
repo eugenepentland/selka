@@ -92,8 +92,9 @@ use a ```mylang block; `kind: "tooling"` features may use a ```bash or ```consol
   `E_UNKNOWN_NAME`. The `for` loop variable and `match` payload binding stay scoped to
   their block. A managed value first assigned inside `with arena()` is confined: reading
   it after the block is `E_ARENA_ESCAPE`, not a dangling read.
-- **`range()` is not accepted as a comprehension source.** `[x for x in range(10)]` is
-  rejected; comprehend over a list, or use a `for` loop.
+- **`range()` is a comprehension source, just like in a `for` loop.** `[x for x in
+  range(10)]` and `[x for x in range(a, b)]` build a list of the range's integer values;
+  comprehending over a list, string or dictionary works too.
 - **`def main() -> int`'s value is the process exit status**, truncated to the low 8
   bits (POSIX `status = value & 0xFF`), for `mylang run`, `run-project` and a native
   executable — the way Python and Go return an exit code. `--print-result` still prints

@@ -927,10 +927,15 @@ const Checker = struct {
         try self.active.put(self.allocator, text, slot);
     }
 
-    /// Build `[value for name in iterable if condition]` as a checked loop over a fresh list.
+    /// Build `[value for name in source if condition]` as a checked loop over a fresh list,
+    /// drawing elements from a collection or, like a `for` loop, from an integer `range(...)`.
     fn checkComprehension(self: *Checker, node: ast.Node, each: ast.Comprehension, temporaries: []const typed.Type) Error!typed.Node {
         const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
-        const iterable = try self.expressionWithTemporaries(each.iterable, temporaries);
+        const iterable_node = switch (each.source) {
+            .range => |bounds| return self.checkRangeComprehension(b, node, each, bounds),
+            .iterable => |iterable| iterable,
+        };
+        const iterable = try self.expressionWithTemporaries(iterable_node, temporaries);
         const iterable_type = self.nodes.items[@backingInt(iterable)].ty;
         if (!iterable_type.isAggregate() or !self.catalog.records[iterable_type.recordIndex()].managed) return self.sink.fail(eCollectionMethod, node.span, "iteration requires a list, str, or dictionary");
         const schema = self.catalog.records[iterable_type.recordIndex()];
@@ -944,7 +949,15 @@ const Checker = struct {
         const index = try b.local(.i64);
         const limit = try b.local(.i64);
         const value_slot = try b.local(element);
-        try self.bindElement(each.name, value_slot);
+        const parts = try self.comprehensionBody(b, node, each, value_slot);
+        return self.comprehensionLoop(b, .{ .owner = owner, .index = index, .limit = limit, .slot = value_slot }, parts.body, .{ .iterable = iterable, .output = parts.output, .kind = schema.collection.kind });
+    }
+
+    /// Check the produced value and optional filter with `slot` bound to the element name,
+    /// returning the fresh output list and the retained-append body the loop repeats. Shared
+    /// by the collection and range forms so both keep one element-storability contract.
+    fn comprehensionBody(self: *Checker, b: collections.Builder(Checker), node: ast.Node, each: ast.Comprehension, slot: typed.LocalId) Error!struct { output: typed.LocalId, body: typed.StatementId } {
+        try self.bindElement(each.name, slot);
         defer _ = self.active.remove(self.src.text(each.name));
         const produced = try self.expression(each.output);
         const produced_type = self.nodes.items[@backingInt(produced)].ty;
@@ -957,7 +970,32 @@ const Checker = struct {
             try self.require(self.nodes.items[@backingInt(test_value)].ty, .bool, self.syntax.nodes.items[@backingInt(condition)].span);
             break :guarded try b.stmt(.{ .branch = .{ .condition = test_value, .then_body = kept, .else_body = null } });
         } else kept;
-        return self.comprehensionLoop(b, .{ .owner = owner, .index = index, .limit = limit, .slot = value_slot }, body, .{ .iterable = iterable, .output = output, .kind = schema.collection.kind });
+        return .{ .output = output, .body = body };
+    }
+
+    /// Build `[value for name in range(...)]` as an ascending integer loop, resolving the
+    /// half-open bounds exactly as a `for` range statement does and binding the name to the
+    /// running index, so a comprehension over `range` yields integer elements.
+    fn checkRangeComprehension(self: *Checker, b: collections.Builder(Checker), node: ast.Node, each: ast.Comprehension, bounds: @FieldType(ast.Comprehension.Source, "range")) Error!typed.Node {
+        const zero_start = self.syntax.nodes.items[@backingInt(bounds.start)].data == .unit;
+        const start = if (zero_start) try b.integer(0) else try self.expression(bounds.start);
+        const end = try self.expression(bounds.end);
+        const element = self.nodes.items[@backingInt(start)].ty;
+        try self.requireInteger(element, each.name);
+        try self.require(self.nodes.items[@backingInt(end)].ty, element, self.syntax.nodes.items[@backingInt(bounds.end)].span);
+        const index = try b.local(element);
+        const limit = try b.local(element);
+        const parts = try self.comprehensionBody(b, node, each, index);
+        const i = try b.read(index);
+        const step = try b.stmt(.{ .assign = .{ .slot = index, .value = try b.binary(.add, i, try b.node(element, .{ .integer = 1 }), element) } });
+        const loop_id = self.loops.next;
+        self.loops.next += 1;
+        return b.block(&.{
+            try b.stmt(.{ .initialize = .{ .slot = index, .value = start } }),
+            try b.stmt(.{ .initialize = .{ .slot = limit, .value = end } }),
+            try b.stmt(.{ .initialize = .{ .slot = parts.output, .value = try b.node(self.locals.items[@backingInt(parts.output)].ty, .{ .acquire_buffer = .{ .capacity = try b.integer(0) } }) } }),
+            try b.stmt(.{ .loop = .{ .id = loop_id, .condition = try b.binary(.lt, i, try b.read(limit), .bool), .body = parts.body, .step = step } }),
+        }, try b.read(parts.output));
     }
 
     /// Assemble the fixed-bound iteration, its mutation check, and the produced list.
