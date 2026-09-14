@@ -892,7 +892,6 @@ const Checker = struct {
             .list_operation => |operation| try self.listOperation(node, operation),
             .method_call => try self.listMethod(node),
             .slice => try self.listSlice(node),
-            .array => |array| try self.arrayValue(array, node.span),
             .replace => |replacement| result: {
                 const base = try self.expression(replacement.base);
                 const shape = try self.arrayIndex(base, replacement.index, node.span);
@@ -1138,15 +1137,6 @@ const Checker = struct {
         const index = try self.expression(input);
         if (shape.key) |key| try self.same(index, .{ .concrete = key }, span) else try self.supports(index, .integer, span);
         return shape;
-    }
-    fn arrayValue(self: *Checker, array: @FieldType(@FieldType(ast.Node, "data"), "array"), span: source.Span) Error!Symbolic {
-        const result = try self.ty(array.ty);
-        const shape = try self.arrayShape(result, span);
-        if (shape.key != null) return self.sink.fail("E_TYPE", span, "enum-indexed tables require named construction");
-        if (shape.length_parameter != null) return self.sink.fail(diagnostic.generic_length, span, "array literal construction requires a fixed length in an uncalled template");
-        if (array.values.len != shape.length) return self.sink.fail("E_ARRAY_LENGTH", span, "array construction must supply its declared number of elements");
-        for (array.values) |value| try self.same(try self.expression(value), shape.element, span);
-        return result;
     }
     fn recordValue(self: *Checker, record: @FieldType(@FieldType(ast.Node, "data"), "record"), span: source.Span) Error!Symbolic {
         const result = try self.ty(record.name);

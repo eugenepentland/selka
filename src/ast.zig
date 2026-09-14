@@ -82,7 +82,6 @@ pub const Node = struct {
         wrap: TypedValue,
         variant: struct { ty: Span, name: Span, value: ?NodeId },
         unwrap: NodeId,
-        array: struct { ty: Span, values: []const NodeId },
         index: struct { base: NodeId, index: NodeId },
         replace: struct { base: NodeId, index: NodeId, value: NodeId },
         length: NodeId,

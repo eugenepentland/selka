@@ -1220,15 +1220,6 @@ const Checker = struct {
                 return true;
             },
             .variant => |variant| return self.queueVariant(work, id, variant),
-            .array => |array| {
-                try work.append(self.allocator, .{ .id = id, .emit = true });
-                var i = array.values.len;
-                while (i > 0) {
-                    i -= 1;
-                    try work.append(self.allocator, .{ .id = array.values[i] });
-                }
-                return true;
-            },
             .index => |access| {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
                 try work.append(self.allocator, .{ .id = access.index });
@@ -1468,18 +1459,6 @@ const Checker = struct {
         local.usage.reads += 1;
         local.usage.writes += 1;
         out.data = .{ .resource_io = .{ .kind = io.kind, .owner = owner, .value = value } };
-    }
-    fn checkArray(self: *Checker, node: ast.Node, array: @FieldType(@FieldType(ast.Node, "data"), "array"), out: *typed.Node) Error!void {
-        out.ty = try self.ty(array.ty);
-        const schema = try self.catalog.array(out.ty, array.ty, self.sink);
-        if (schema.key != null) return self.sink.fail("E_TABLE_CONSTRUCTION", node.span, "enum-indexed tables require named initializers for every enum case");
-        if (array.values.len != schema.length) return self.sink.fail("E_ARRAY_ARITY", node.span, "array construction must initialize exactly its declared number of elements");
-        const values = try self.allocator.alloc(typed.NodeId, array.values.len);
-        for (array.values, values) |input, *value| {
-            value.* = self.resolved[@backingInt(input)].?;
-            try self.require(self.nodes.items[@backingInt(value.*)].ty, schema.element, self.syntax.nodes.items[@backingInt(input)].span);
-        }
-        out.data = .{ .array = values };
     }
     fn checkField(self: *Checker, node: ast.Node, field: @FieldType(@FieldType(ast.Node, "data"), "field"), out: *typed.Node) Error!void {
         const base = self.resolved[@backingInt(field.base)].?;
@@ -1992,7 +1971,6 @@ const Checker = struct {
                 if (value) |input| try self.require(self.nodes.items[@backingInt(input)].ty, schema.payload.?, self.syntax.nodes.items[@backingInt(variant.value.?)].span);
                 out.data = .{ .variant = .{ .tag = tag, .value = value } };
             },
-            .array => |array| try self.checkArray(node, array, &out),
             .index => |access| try self.checkValueIndex(node, access, &out),
             .replace => |replace| {
                 const base = self.resolved[@backingInt(replace.base)].?;
@@ -2802,7 +2780,7 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     checker.ordinary_count = checker.instance_keys.items.len;
     const main_declaration = checker.functions.get(main_name) orelse {
         if (failed) return error.SourceError;
-        return sink.fail("E_MAIN", .{ .start = 0, .end = 0 }, "the program requires fn main() -> i64");
+        return sink.fail("E_MAIN", .{ .start = 0, .end = 0 }, "the program requires an entry point: def main() -> int");
     };
     const entry = program.functions[@backingInt(main_declaration)];
     const main = ordinary_ids[@backingInt(main_declaration)] orelse return sink.fail("E_MAIN", entry.name, "main cannot have type parameters");

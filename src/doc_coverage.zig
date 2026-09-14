@@ -292,7 +292,7 @@ test "a skipped or prose-tagged block is not an executed example" {
     try testing.expect(!hasRunnableExample("```mylang\n# doc: skip fragment\ndef main() -> int:\n    return 1\n```\n"));
     try testing.expect(hasRunnableExample("```my\n\n# doc: check\ndef answer() -> int:\n    return 1\n```\n"));
     try testing.expect(hasRunnableExample("~~~mylang\ndef main() -> int:\n    return 1\n~~~\n"));
-    try testing.expect(hasDirective("// doc: expect 42\nfn main() -> i64 { return 42; }\n", "expect"));
+    try testing.expect(hasDirective("# doc: expect 42\ndef main() -> int:\n    return 42\n", "expect"));
     try testing.expect(!hasDirective("def main() -> int:\n# doc: skip late\n    return 1\n", "skip"));
 }
 
