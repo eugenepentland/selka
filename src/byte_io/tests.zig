@@ -117,6 +117,11 @@ test "a native guest result is the final output line and nothing else" {
     try t.expectEqual(@as(i64, -7), try native.outcome("printed\n-7\n"));
     try t.expectError(error.InvalidGuestResult, native.outcome(""));
     try t.expectError(error.InvalidGuestResult, native.outcome("nothing numeric\n"));
+    const argv = try native.command(t.allocator, "/tmp/guest", &.{"--max-steps=9"});
+    defer t.allocator.free(argv);
+    try t.expectEqual(@as(usize, 3), argv.len);
+    try t.expectEqualStrings("--print-result", argv[1]);
+    try t.expectEqualStrings("--max-steps=9", argv[2]);
 }
 test {
     _ = @import("runner.zig");

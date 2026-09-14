@@ -106,11 +106,8 @@ pub const Program = struct {
     /// Run the guest once and report its entry-point result. A trapped or
     /// otherwise failing child leaves its diagnostics on the host's stderr.
     pub fn invoke(self: *Program, arguments: []const []const u8) Error!i64 {
-        var argv: std.ArrayList([]const u8) = .empty;
-        try argv.append(self.allocator, self.path);
-        try argv.appendSlice(self.allocator, arguments);
         const result = try std.process.run(self.allocator, self.io, .{
-            .argv = argv.items,
+            .argv = try command(self.allocator, self.path, arguments),
             .environ_map = &self.environment,
             .stdout_limit = .limited(stream_limit),
             .stderr_limit = .limited(stream_limit),
@@ -135,6 +132,15 @@ fn located(io: std.Io, chosen: []const u8, name: []const u8, fallback: []const u
     std.Io.Dir.cwd().access(io, fallback, .{ .execute = true }) catch return chosen;
     return fallback;
 }
+/// The argument vector for one guest invocation. A native executable reports
+/// its entry result only when asked, and a host application always needs it.
+pub fn command(allocator: std.mem.Allocator, path: []const u8, arguments: []const []const u8) std.mem.Allocator.Error![]const []const u8 {
+    var argv: std.ArrayList([]const u8) = .empty;
+    try argv.appendSlice(allocator, &.{ path, "--print-result" });
+    try argv.appendSlice(allocator, arguments);
+    return argv.toOwnedSlice(allocator);
+}
+
 /// A native executable reports its entry-point result as its final output line.
 pub fn outcome(stdout: []const u8) error{InvalidGuestResult}!i64 {
     const trimmed = std.mem.trimEnd(u8, stdout, "\n");
