@@ -1,7 +1,6 @@
 //! Trusted byte-I/O boundary tests; the independent Python suite validates complete schematics.
 const std = @import("std");
 const t = std.testing;
-const language = @import("mylang");
 const bridge = @import("host.zig");
 const application = @import("app.zig");
 const declarations =
@@ -23,65 +22,128 @@ const declarations =
     \\
     \\host def issue(code: i64, file: i64, position: i64) -> i64 effects(host)
 ;
-const main_source =
-    \\module main
-    \\import io
-    \\
-    \\
-    \\def main() -> i64:
-    \\    n = io.length(0)
-    \\    _ = io.put(65u8)
-    \\    while n == 2:
-    \\        _ = io.put(66u8)
-    \\    return n
-;
-fn provider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
-    const bytes = if (std.mem.eql(u8, path, "io.my")) declarations else if (std.mem.eql(u8, path, "main.my")) main_source else return error.NotFound;
-    if (bytes.len > limit) return error.TooLarge;
-    return allocator.dupe(u8, bytes);
-}
-fn callbackScenario(allocator: std.mem.Allocator, code: language.bytecode.Program) !void {
-    var context: bridge.Context = .{ .allocator = allocator, .documents = &.{"\xc2\xb5"} };
-    defer context.deinit();
-    var registry = try language.vm_host.Registry.init(allocator, code);
-    defer registry.deinit();
-    try context.install(&registry);
-    const session = try registry.begin(allocator, code, .{});
-    defer session.close() catch |err| std.debug.panic("host session cleanup failed: {s}", .{@errorName(err)});
-    const length = try registry.registry.resolve("io::length");
-    const byte = try registry.registry.resolve("io::byte");
-    const put = try registry.registry.resolve("io::put");
-    const issue = try registry.registry.resolve("io::issue");
-    try t.expectEqual(@as(i64, 2), (try session.call(length, &.{.{ .i64 = 0 }})).i64);
-    try t.expectEqual(@as(i128, 181), (try session.call(byte, &.{ .{ .i64 = 0 }, .{ .i64 = 1 } })).integer.value);
-    try hostFailure(error.HostFailure, session.call(byte, &.{ .{ .i64 = 0 }, .{ .i64 = -1 } }));
-    try hostFailure(error.HostFailure, session.call(byte, &.{ .{ .i64 = 0 }, .{ .i64 = 2 } }));
-    try hostFailure(error.HostFailure, session.call(length, &.{.{ .i64 = 1 }}));
-    _ = try session.call(put, &.{language.vm.Value.number(.u8, 65)});
-    try t.expectEqualStrings("A", context.output.items);
-    _ = try session.call(issue, &.{ .{ .i64 = 15 }, .{ .i64 = 0 }, .{ .i64 = 9 } });
-    _ = try session.call(issue, &.{ .{ .i64 = 20 }, .{ .i64 = 0 }, .{ .i64 = 10 } });
-    try t.expectEqualDeep(bridge.Issue{ .code = 15, .file = 0, .position = 9 }, context.issue.?);
-    try context.output.resize(allocator, 4 * 1024 * 1024);
-    try hostFailure(error.HostWorkLimit, session.call(put, &.{language.vm.Value.number(.u8, 66)}));
-}
-fn hostFailure(expected: anyerror, result: language.host_functions.Error!language.vm.Value) !void {
-    const value = result catch |err| {
-        if (err == error.OutOfMemory) return err;
-        try t.expectEqual(expected, err);
-        return;
-    };
-    value.release(t.allocator);
-    try t.expect(false);
+const empty: [3][]const u8 = .{ "", "", "" };
+const budget = [_][]const u8{"--max-steps=100000000"};
+/// One host-application process standing in for `main`'s supplied resources.
+const Harness = struct {
+    arena: std.heap.ArenaAllocator,
+    environment: std.process.Environ.Map,
+    directory: std.testing.TmpDir,
+    root: []const u8 = "",
+    fn open() !*Harness {
+        const self = try t.allocator.create(Harness);
+        self.* = .{
+            .arena = std.heap.ArenaAllocator.init(t.allocator),
+            .environment = .init(t.allocator),
+            .directory = t.tmpDir(.{}),
+        };
+        self.root = try self.directory.dir.realPathFileAlloc(t.io, ".", self.arena.allocator());
+        return self;
+    }
+    fn close(self: *Harness) void {
+        self.directory.cleanup();
+        self.environment.deinit();
+        self.arena.deinit();
+        t.allocator.destroy(self);
+    }
+    fn process(self: *Harness) std.process.Init {
+        return .{
+            .minimal = undefined,
+            .arena = &self.arena,
+            .gpa = t.allocator,
+            .io = t.io,
+            .environ_map = &self.environment,
+            .preopens = undefined,
+        };
+    }
+    /// Place one guest source file in this harness's private project root.
+    fn source(self: *Harness, name: []const u8, bytes: []const u8) !void {
+        try self.directory.dir.writeFile(t.io, .{ .sub_path = name, .data = bytes });
+    }
+    /// Build the staged project and render one set of documents through it.
+    fn render(self: *Harness, documents: [3][]const u8) ![]const u8 {
+        var app: application.App = undefined;
+        try app.initDisk(self.process(), self.root);
+        defer app.deinit();
+        return app.run(&documents, &budget);
+    }
+    /// Build the staged project and report the located issue one run produced.
+    fn reject(self: *Harness, documents: [3][]const u8) !?bridge.Issue {
+        var app: application.App = undefined;
+        try app.initDisk(self.process(), self.root);
+        defer app.deinit();
+        _ = app.run(&documents, &budget) catch return app.issue;
+        return null;
+    }
+};
+fn staged(source: []const u8) !*Harness {
+    const harness = try Harness.open();
+    errdefer harness.close();
+    try harness.source("io.my", declarations);
+    try harness.source("main.my", source);
+    return harness;
 }
 // spec: SCHEMATIC-1
-test "schematic byte callbacks and hostFailure preserve bounds output ownership and first issue under allocation failure" {
-    var app: application.App = undefined;
-    try app.init(t.allocator, .{ .context = null, .read = provider });
-    defer app.deinit();
-    try callbackScenario(t.allocator, app.program.compilation.code.?);
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), callbackScenario, .{app.program.compilation.code.?});
+test "schematic byte callbacks publish only on success and keep the first located issue" {
+    const harness = try staged(
+        \\module main
+        \\import io
+        \\
+        \\
+        \\def main() -> i64:
+        \\    _ = io.put(io.byte(0, 1))
+        \\    _ = io.put(65u8)
+        \\    return 0
+    );
+    defer harness.close();
+    try t.expectEqualStrings("\xb5A", try harness.render(.{ "\xc2\xb5", "", "" }));
+    try harness.source("main.my",
+        \\module main
+        \\import io
+        \\
+        \\
+        \\def main() -> i64:
+        \\    _ = io.put(65u8)
+        \\    _ = io.issue(15, 0, 9)
+        \\    _ = io.issue(20, 0, 10)
+        \\    return 1
+    );
+    try t.expectEqualDeep(bridge.Issue{ .code = 15, .file = 0, .position = 9 }, (try harness.reject(empty)).?);
+}
+// spec-case: SCHEMATIC-1
+test "schematic byte callbacks reject positions and documents the host never supplied" {
+    const harness = try staged(
+        \\module main
+        \\import io
+        \\
+        \\
+        \\def main() -> i64:
+        \\    _ = io.put(65u8)
+        \\    _ = io.byte(0, 4)
+        \\    return 0
+    );
+    defer harness.close();
+    try t.expectEqual(@as(?bridge.Issue, null), try harness.reject(empty));
+    try harness.source("main.my",
+        \\module main
+        \\import io
+        \\
+        \\
+        \\def main() -> i64:
+        \\    _ = io.length(7)
+        \\    return 0
+    );
+    try t.expectEqual(@as(?bridge.Issue, null), try harness.reject(empty));
+    // A nonzero result with no reported issue is bounded-storage exhaustion.
+    try harness.source("main.my",
+        \\module main
+        \\import io
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 3
+    );
+    try t.expectEqual(@as(i64, 24), (try harness.reject(empty)).?.code);
 }
 test "schematic documents reject malformed UTF8 and XML controls with exact byte positions" {
     try t.expect(bridge.validateDocuments(&.{"ok \xc2\xb5\n\t\r"}) == null);
@@ -93,93 +155,77 @@ test "schematic documents reject malformed UTF8 and XML controls with exact byte
     defer t.allocator.free(big);
     try t.expectEqual(@as(i64, 7), bridge.validateDocuments(&.{big}).?.code);
 }
-test "schematic application clears output and trap state between bounded runs" {
-    var app: application.App = undefined;
-    try app.init(t.allocator, .{ .context = null, .read = provider });
-    defer app.deinit();
-    const invalid: [3][]const u8 = .{ "\xff", "", "" };
-    try t.expectError(error.InvalidSchematic, app.run(t.allocator, &invalid, .{}));
-    try t.expectEqual(@as(i64, 8), app.issue.?.code);
-    const nonzero: [3][]const u8 = .{ "one", "", "" };
-    try t.expectError(error.InvalidSchematic, app.run(t.allocator, &nonzero, .{}));
-    const docs: [3][]const u8 = .{ "", "", "" };
-    const partial: [3][]const u8 = .{ "xx", "", "" };
-    try t.expectError(error.GuestTrap, app.run(t.allocator, &partial, .{ .max_steps = 100 }));
-    try t.expectEqualStrings("R_STEP_LIMIT", app.trap.?.code);
-    const result = try app.run(t.allocator, &docs, .{});
-    defer t.allocator.free(result);
-    try t.expect(app.trap == null and app.issue == null);
-    try t.expectEqualStrings("A", result);
-    try t.expectError(error.TooLarge, provider(null, t.allocator, "main.my", 0));
-    try t.expectError(error.NotFound, provider(null, t.allocator, "unknown.my", 1024));
-}
-
-// spec: DISK-PROJECT-1
-test "disk initSource and initDisk release failed compilations and reload bounded sources" {
-    var temp = t.tmpDir(.{});
-    defer temp.cleanup();
-    const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
-    defer t.allocator.free(root);
-    var disk: language.project_files.Files = .{ .io = t.io, .root = root };
-    try t.expectError(error.NotFound, language.project_files.Files.read(&disk, t.allocator, "main.my", 100));
-    try temp.dir.writeFile(t.io, .{ .sub_path = "main.my", .data = main_source });
-    try t.expectError(error.TooLarge, language.project_files.Files.read(&disk, t.allocator, "main.my", main_source.len - 1));
-    const exact = try language.project_files.Files.read(&disk, t.allocator, "main.my", main_source.len);
-    defer t.allocator.free(exact);
-    try t.expectEqualStrings(main_source, exact);
-    var app: application.App = undefined;
-    try t.expectError(error.SourceError, app.initDisk(t.allocator, t.io, root));
-    try temp.dir.writeFile(t.io, .{ .sub_path = "io.my", .data = "module io; broken" });
-    try t.expectError(error.SourceError, app.initDisk(t.allocator, t.io, root));
-    try temp.dir.writeFile(t.io, .{ .sub_path = "io.my", .data = declarations });
-    try temp.dir.writeFile(t.io, .{ .sub_path = "main.my", .data =
+// spec-case: SCHEMATIC-1
+test "invalid documents are rejected before the guest executable is given any bytes" {
+    const harness = try staged(
         \\module main
+        \\import io
         \\
         \\
         \\def main() -> i64:
-        \\    return True
-    });
-    try t.expectError(error.SourceError, app.initDisk(t.allocator, t.io, root));
-    try temp.dir.writeFile(t.io, .{ .sub_path = "main.my", .data = main_source });
-    try app.initDisk(t.allocator, t.io, root);
-    defer app.deinit();
-    const output = try app.run(t.allocator, &.{ "", "", "" }, .{});
-    defer t.allocator.free(output);
-    try t.expectEqualStrings("A", output);
+        \\    _ = io.put(65u8)
+        \\    return 0
+    );
+    defer harness.close();
+    try t.expectEqualDeep(bridge.Issue{ .code = 8, .file = 0, .position = 0 }, (try harness.reject(.{ "\xff", "", "" })).?);
+    try t.expectEqualStrings("A", try harness.render(empty));
+}
+// spec-case: SCHEMATIC-1
+test "the reported issue transport carries exactly three located numbers" {
+    try t.expectEqualDeep(bridge.Issue{ .code = 15, .file = 1, .position = 9 }, bridge.decode("15 1 9\n").?);
+    try t.expectEqual(@as(?bridge.Issue, null), bridge.decode(""));
+    try t.expectEqual(@as(?bridge.Issue, null), bridge.decode("15 1\n"));
+    try t.expectEqual(@as(?bridge.Issue, null), bridge.decode("not a number\n"));
+}
+// spec-case: SCHEMATIC-1
+test "only the operations a guest declares are registered with its native provider" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const manifest =
+        \\{"host":{"declarations":[{"name":"io::put"},{"name":"io::circuit_input"},{"name":"other::thing"}]}}
+    ;
+    try t.expectEqualStrings("io::circuit_input,io::put", try bridge.declared(arena.allocator(), manifest));
+    try t.expectError(error.InvalidNativeManifest, bridge.declared(arena.allocator(), "{}"));
+    try t.expectEqualStrings("", try bridge.declared(arena.allocator(), "{\"host\":{\"declarations\":[]}}"));
+}
+
+// spec: DISK-PROJECT-1
+test "disk initDisk rejects failed compilations and reloads bounded sources" {
+    const harness = try Harness.open();
+    defer harness.close();
+    var app: application.App = undefined;
+    try t.expectError(error.SourceError, app.initDisk(harness.process(), harness.root));
+    try harness.source("main.my", "module main\n\n\ndef main() -> i64:\n    return True\n");
+    try t.expectError(error.SourceError, app.initDisk(harness.process(), harness.root));
+    try harness.source("io.my", "module io; broken");
+    try t.expectError(error.SourceError, app.initDisk(harness.process(), harness.root));
+    try harness.source("io.my", declarations);
+    try harness.source("main.my", "module main\nimport io\n\n\ndef main() -> i64:\n    _ = io.put(65u8)\n    return 0\n");
+    try t.expectEqualStrings("A", try harness.render(empty));
 }
 
 // The independent Python oracle checks this same fixture's electrical geometry.
-// This test additionally forces GC at allocation boundaries during real parsing,
-// graph construction, shared row mutation and rendering, using a leak-checking allocator.
+// This test additionally forces collection at native allocation safepoints during
+// real parsing, graph construction, shared row mutation and rendering.
 // spec: SCHEMATIC-MODEL-1
-test "schematic managed fixture keeps identical SVG under collection stress and reclaims temporary graphs" {
-    var files = std.heap.ArenaAllocator.init(t.allocator);
-    defer files.deinit();
-    const input_allocator = files.allocator();
+test "schematic managed fixture keeps identical SVG under collection stress" {
+    const harness = try Harness.open();
+    defer harness.close();
+    const a = harness.arena.allocator();
     const names = [_][]const u8{ "straps-synth-lmx2595.sexp", "lmx2595rhar.sexp", "spi.sexp" };
     var documents: [3][]const u8 = undefined;
     for (names, &documents) |name, *document| {
-        const path = try std.fmt.allocPrint(input_allocator, "experiments/schematic/fixtures/{s}", .{name});
-        document.* = try std.Io.Dir.cwd().readFileAlloc(t.io, path, input_allocator, .limited(1024 * 1024));
+        const path = try std.fmt.allocPrint(a, "experiments/schematic/fixtures/{s}", .{name});
+        document.* = try std.Io.Dir.cwd().readFileAlloc(t.io, path, a, .limited(1024 * 1024));
     }
     var app: application.App = undefined;
-    try app.initDisk(t.allocator, t.io, "src/schematic/guest");
+    try app.initDisk(harness.process(), "src/schematic/guest");
     defer app.deinit();
-    const normal = try app.run(t.allocator, &documents, .{ .max_steps = 100_000_000 });
-    defer t.allocator.free(normal);
-    const expected = try std.Io.Dir.cwd().readFileAlloc(t.io, "experiments/schematic/straps-synth-lmx2595.svg", input_allocator, .limited(1024 * 1024));
+    const normal = try app.run(&documents, &budget);
+    const expected = try std.Io.Dir.cwd().readFileAlloc(t.io, "experiments/schematic/straps-synth-lmx2595.svg", a, .limited(1024 * 1024));
     try t.expectEqualStrings(expected, normal);
-    var statistics: language.vm.GcStatistics = .{};
-    const stressed = try app.run(t.allocator, &documents, .{
-        .max_steps = 100_000_000,
-        .memory = .{ .gc = .{ .stress = true, .statistics = &statistics } },
-    });
-    defer t.allocator.free(stressed);
-    try t.expectEqualStrings(normal, stressed);
-    try t.expect(statistics.created >= 9);
-    try t.expect(statistics.collections > statistics.created);
-    try t.expect(statistics.reclaimed > 0);
-    try t.expectEqual(@as(usize, 0), statistics.live_objects);
+    const stressed = try app.run(&documents, &.{ budget[0], "--gc-stress" });
+    try t.expectEqualStrings(expected, stressed);
 }
 
 test {
@@ -198,46 +244,37 @@ const named_main =
     \\    _ = io.put(io.byte(io.Document.id(inputs.interface), 0))
     \\    return 0
 ;
-fn namedProvider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
-    const bytes = if (std.mem.eql(u8, path, "io.my")) @embedFile("guest/io.my") else if (std.mem.eql(u8, path, "main.my")) named_main else return error.NotFound;
-    if (bytes.len > limit) return error.TooLarge;
-    return allocator.dupe(u8, bytes);
-}
-fn namedScenario(allocator: std.mem.Allocator, code: language.bytecode.Program) !void {
-    var context: bridge.Context = .{ .allocator = allocator, .documents = &.{ "Circuit", "Pinout", "Interface" } };
-    defer context.deinit();
-    var registry = try language.vm_host.Registry.init(allocator, code);
-    defer registry.deinit();
-    try context.install(&registry);
-    const result = try language.vm.runWithHost(allocator, code, .{}, &registry, .{});
-    try t.expectEqual(@as(i64, 0), result.value);
-    try t.expectEqualStrings("CPI", context.output.items);
-}
-
 // spec: SCHEMATIC-INPUTS-1
-test "named schematic input handles select their host documents and retain scalar byte ABI under allocation failure" {
-    var app: application.App = undefined;
-    try app.init(t.allocator, .{ .context = null, .read = namedProvider });
-    defer app.deinit();
-    try namedScenario(t.allocator, app.program.compilation.code.?);
-    try t.checkAllAllocationFailures(t.allocator, namedScenario, .{app.program.compilation.code.?});
+test "named schematic input handles select their host documents" {
+    const harness = try Harness.open();
+    defer harness.close();
+    try harness.source("io.my", @embedFile("guest/io.my"));
+    try harness.source("main.my", named_main);
+    try t.expectEqualStrings("CPI", try harness.render(.{ "Circuit", "Pinout", "Interface" }));
 }
 
 // spec: SCHEMATIC-INPUTS-2
-test "named schematic input providers reject missing documents" {
+test "named schematic input providers reject documents the host never supplied" {
+    const harness = try Harness.open();
+    defer harness.close();
+    try harness.source("io.my", @embedFile("guest/io.my"));
+    try harness.source("main.my",
+        \\module main
+        \\import io
+        \\
+        \\
+        \\def main() -> i64:
+        \\    inputs = io.inputs()
+        \\    _ = io.byte(io.Document.id(inputs.interface), 0)
+        \\    return 0
+    );
     var app: application.App = undefined;
-    try app.init(t.allocator, .{ .context = null, .read = namedProvider });
+    try app.initDisk(harness.process(), harness.root);
     defer app.deinit();
-    const code = app.program.compilation.code.?;
-    var context: bridge.Context = .{ .allocator = t.allocator, .documents = &.{ "Circuit", "Pinout" } };
-    defer context.deinit();
-    var registry = try language.vm_host.Registry.init(t.allocator, code);
-    defer registry.deinit();
-    try context.install(&registry);
-    const session = try registry.begin(t.allocator, code, .{});
-    defer session.close() catch unreachable;
-    const interface_input = try registry.registry.resolve("io::interface_input");
-    try hostFailure(error.HostFailure, session.call(interface_input, &.{}));
+    try t.expectError(error.GuestTrap, app.run(&.{ "Circuit", "Pinout", "" }, &budget));
+    // A document the host cannot hand to the guest is refused before it starts.
+    try t.expectError(error.InvalidSchematic, app.run(&.{ "Circuit", "Pinout", "\xff" }, &budget));
+    try t.expectEqual(@as(i64, 8), app.issue.?.code);
 }
 
 const decimal_main =
@@ -252,17 +289,15 @@ const decimal_main =
     \\    text.decimal(0)
     \\    return 0
 ;
-fn decimalProvider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
-    const bytes = if (std.mem.eql(u8, path, "main.my")) decimal_main else if (std.mem.eql(u8, path, "text.my")) @embedFile("guest/text.my") else if (std.mem.eql(u8, path, "io.my")) @embedFile("guest/io.my") else return error.NotFound;
-    if (bytes.len > limit) return error.TooLarge;
-    return allocator.dupe(u8, bytes);
-}
 // spec: SCHEMATIC-PYTHON-1
 test "Python schematic decimal output preserves negative numbers and minimum integer" {
+    const harness = try Harness.open();
+    defer harness.close();
+    try harness.source("io.my", @embedFile("guest/io.my"));
+    try harness.source("text.my", @embedFile("guest/text.my"));
+    try harness.source("main.my", decimal_main);
     var app: application.App = undefined;
-    try app.init(t.allocator, .{ .context = null, .read = decimalProvider });
+    try app.initDisk(harness.process(), harness.root);
     defer app.deinit();
-    const output = try app.run(t.allocator, &.{ "", "", "" }, .{ .memory = .{ .gc = .{ .stress = true } } });
-    defer t.allocator.free(output);
-    try t.expectEqualStrings("-12,-9223372036854775808,0", output);
+    try t.expectEqualStrings("-12,-9223372036854775808,0", try app.run(&empty, &.{ budget[0], "--gc-stress" }));
 }

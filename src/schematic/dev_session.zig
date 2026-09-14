@@ -1,8 +1,12 @@
 //! Synchronous request-boundary reload: retain one active and one prepared generation.
+//! A generation is a guest built natively from one source snapshot, so committing
+//! one keeps its executable alive and discarding one removes it.
 const std = @import("std");
 const print = std.debug.print;
 const application = @import("app.zig");
 const diagnostics = @import("diagnostics.zig");
+/// The native step budget one prepared rendering may spend.
+const arguments = [_][]const u8{"--max-steps=100000000"};
 const Request = struct {
     action: enum { prepare, commit, discard, quit },
     project: ?[]const u8 = null,
@@ -18,10 +22,9 @@ const State = struct {
             slot.* = null;
         }
     }
-    fn prepare(self: *State, init: std.process.Init, request: Request) ![]u8 {
+    fn prepare(self: *State, init: std.process.Init, request: Request) ![]const u8 {
         release(init.gpa, &self.candidate);
         try validate(request);
-        const root = request.project.?;
         const paths = request.documents.?;
         var arena = std.heap.ArenaAllocator.init(init.gpa);
         defer arena.deinit();
@@ -29,14 +32,10 @@ const State = struct {
         for (paths, &documents) |path, *out| out.* = try std.Io.Dir.cwd().readFileAlloc(init.io, path, arena.allocator(), .limited(1024 * 1024));
         const app = try init.gpa.create(application.App);
         errdefer init.gpa.destroy(app);
-        try app.initDisk(init.gpa, init.io, root);
+        try app.initDisk(init, request.project.?);
         errdefer app.deinit();
-        const svg = app.run(init.gpa, &documents, .{ .max_steps = 100_000_000 }) catch |err| {
+        const svg = app.run(&documents, &arguments) catch |err| {
             if (app.issue) |issue| diagnostics.report(issue, &paths, &documents);
-            if (app.trap) |trap| {
-                const at = app.program.compilation.src.locate(trap.span.start);
-                print("{s}:{d}:{d}: {s}: {s}\n", .{ at.path, at.line, at.column, trap.code, trap.message });
-            }
             return err;
         };
         self.candidate = app;
@@ -83,7 +82,6 @@ pub fn run(init: std.process.Init) (std.Io.Reader.DelimiterError || std.Io.File.
                     try reply(init, "error", null, @errorName(err));
                     continue;
                 };
-                defer init.gpa.free(svg);
                 try reply(init, "prepared", svg, null);
             },
         }

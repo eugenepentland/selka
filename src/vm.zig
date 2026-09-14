@@ -64,8 +64,6 @@ pub const Options = struct {
     max_steps: u64 = 10_000_000,
     max_frames: u64 = 1024,
 };
-/// Collection stress mode and observations for each fresh managed execution heap.
-pub const GcStatistics = gc_heap.Statistics;
 /// Optional collection stress and counters, independent of explicit allocator authority.
 pub const GcOptions = struct {
     stress: bool = false,

@@ -1,89 +1,45 @@
 //! Bounded byte input/output only; parsing and schematic decisions belong to the guest.
+//! The operations themselves are compiled into the guest's own native executable
+//! (`native_schematic.c`); this module describes that boundary to the driver.
 const std = @import("std");
-const language = @import("mylang");
-const host = language.host_functions;
-/// The declared host effect bit shared by every trusted registration.
-const host_effect = @import("mylang").effect_set.bit(.host);
-/// Located guest failure, separate from VM traps and host failures.
+/// The trusted provider translation unit linked into every guest executable.
+pub const provider = @embedFile("native_schematic.c");
+/// Manifest and issue-transport failures of one trusted boundary.
+pub const Error = error{ InvalidNativeManifest, OutOfMemory };
+/// Located guest failure, separate from native traps and host failures.
 pub const Issue = struct { code: i64, file: i64, position: i64 };
-/// Stable-address context borrowing documents and owning the unpublished output.
-pub const Context = struct {
-    allocator: std.mem.Allocator,
-    documents: []const []const u8,
-    output: std.ArrayList(u8) = .empty,
-    issue: ?Issue = null,
-    /// Release all unpublished or returned output storage.
-    pub fn deinit(self: *Context) void {
-        self.output.deinit(self.allocator);
-    }
-    /// Register declared byte operations and named input providers; older guests may omit providers.
-    pub fn install(self: *Context, registry: *language.vm_host.Registry) language.vm_host.Error!void {
-        const i64_type = language.host_functions.Parameter{ .ty = .i64 };
-        const u8_type = language.host_functions.Parameter{ .ty = .u8 };
-        const Rule = struct { name: []const u8, args: []const host.Parameter, result: host.Parameter, invoke: *const fn (*host.Call) host.CallbackError!language.vm.Value };
-        for ([_]Rule{
-            .{ .name = "io::circuit_input", .args = &.{}, .result = i64_type, .invoke = circuitInput },
-            .{ .name = "io::pinout_input", .args = &.{}, .result = i64_type, .invoke = pinoutInput },
-            .{ .name = "io::interface_input", .args = &.{}, .result = i64_type, .invoke = interfaceInput },
-            .{ .name = "io::length", .args = &.{i64_type}, .result = i64_type, .invoke = length },
-            .{ .name = "io::byte", .args = &.{ i64_type, i64_type }, .result = u8_type, .invoke = byte },
-            .{ .name = "io::put", .args = &.{u8_type}, .result = i64_type, .invoke = put },
-            .{ .name = "io::issue", .args = &.{ i64_type, i64_type, i64_type }, .result = i64_type, .invoke = reportIssue },
-        }) |rule| {
-            _ = registry.registry.resolve(rule.name) catch |err| switch (err) {
-                error.HostUnknownFunction => continue,
-                else => return err,
-            };
-            try registry.register(rule.name, .{ .signature = .{ .parameters = rule.args, .result = rule.result, .effects = host_effect }, .context = self, .invoke = rule.invoke }, host_effect);
+/// Every trusted byte operation this host is prepared to serve.
+pub const operations = [_][]const u8{
+    "io::circuit_input", "io::pinout_input", "io::interface_input",
+    "io::length",        "io::byte",         "io::put",
+    "io::issue",
+};
+/// Name the operations this guest actually declares. Older guests omit the named
+/// input providers, and a provider that registered one the guest never declared
+/// would be rejected before the first call.
+pub fn declared(allocator: std.mem.Allocator, manifest: []const u8) Error![]const u8 {
+    const parsed = std.json.parseFromSlice(std.json.Value, allocator, manifest, .{ .allocate = .alloc_always }) catch return error.InvalidNativeManifest;
+    if (parsed.value != .object) return error.InvalidNativeManifest;
+    const host = parsed.value.object.get("host") orelse return error.InvalidNativeManifest;
+    if (host != .object) return error.InvalidNativeManifest;
+    const list = host.object.get("declarations") orelse return error.InvalidNativeManifest;
+    var found: std.ArrayList([]const u8) = .empty;
+    for (operations) |name| {
+        if (list != .array) break;
+        for (list.array.items) |item| {
+            const declaration = if (item == .object) item.object.get("name") orelse continue else continue;
+            if (declaration == .string and std.mem.eql(u8, declaration.string, name)) try found.append(allocator, name);
         }
     }
-    fn context(call: *host.Call) *Context {
-        return @ptrCast(@alignCast(call.context.?));
-    }
-    fn document(self: *Context, id: i64) host.CallbackError![]const u8 {
-        if (id < 0 or id >= self.documents.len) return error.HostFailure;
-        return self.documents[@intCast(id)];
-    }
-    fn input(call: *host.Call, index: i64) host.CallbackError!language.vm.Value {
-        try call.consume(1);
-        _ = try context(call).document(index);
-        return .{ .i64 = index };
-    }
-    fn circuitInput(call: *host.Call) host.CallbackError!language.vm.Value {
-        return input(call, 0);
-    }
-    fn pinoutInput(call: *host.Call) host.CallbackError!language.vm.Value {
-        return input(call, 1);
-    }
-    fn interfaceInput(call: *host.Call) host.CallbackError!language.vm.Value {
-        return input(call, 2);
-    }
-    fn length(call: *host.Call) host.CallbackError!language.vm.Value {
-        try call.consume(1);
-        return .{ .i64 = @intCast((try context(call).document(call.arguments[0].i64)).len) };
-    }
-    fn byte(call: *host.Call) host.CallbackError!language.vm.Value {
-        try call.consume(1);
-        const bytes = try context(call).document(call.arguments[0].i64);
-        const index = call.arguments[1].i64;
-        if (index < 0 or index >= bytes.len) return error.HostFailure;
-        return language.vm.Value.number(.u8, bytes[@intCast(index)]);
-    }
-    fn put(call: *host.Call) host.CallbackError!language.vm.Value {
-        try call.consume(1);
-        const self = context(call);
-        if (self.output.items.len == 4 * 1024 * 1024) return error.HostWorkLimit;
-        try self.output.append(self.allocator, @intCast(call.arguments[0].integer.value));
-        return .{ .i64 = 0 };
-    }
-    fn reportIssue(call: *host.Call) host.CallbackError!language.vm.Value {
-        try call.consume(1);
-        const self = context(call);
-        if (self.issue == null) self.issue = .{ .code = call.arguments[0].i64, .file = call.arguments[1].i64, .position = call.arguments[2].i64 };
-        return .{ .i64 = 0 };
-    }
-};
-
+    return std.mem.join(allocator, ",", found.items);
+}
+/// Decode the first located issue a guest reported during one invocation.
+pub fn decode(bytes: []const u8) ?Issue {
+    var fields = std.mem.tokenizeAny(u8, bytes, " \n");
+    var numbers: [3]i64 = undefined;
+    for (&numbers) |*number| number.* = std.fmt.parseInt(i64, fields.next() orelse return null, 10) catch return null;
+    return .{ .code = numbers[0], .file = numbers[1], .position = numbers[2] };
+}
 /// Reject invalid UTF-8 and characters XML 1.0 cannot represent before handing bytes to the guest.
 pub fn validateDocuments(documents: []const []const u8) ?Issue {
     for (documents, 0..) |bytes, file| {

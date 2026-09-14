@@ -103,7 +103,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/schematic/runner.zig"),
         .target = target,
         .optimize = optimize,
-        .imports = &.{.{ .name = "mylang", .module = core }},
+        .imports = host_imports,
     }) });
     b.installArtifact(schematic_runner);
     const byte_io_runner = b.addExecutable(.{ .name = "mylang-io", .root_module = b.createModule(.{
@@ -132,7 +132,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/schematic/tests.zig"),
         .target = target,
         .optimize = optimize,
-        .imports = &.{.{ .name = "mylang", .module = core }},
+        .imports = host_imports,
     }) });
     guardian.enableTestDiagnostics(schematic_unit.root_module);
     const options = b.addOptions();
