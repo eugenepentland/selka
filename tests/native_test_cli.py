@@ -288,6 +288,18 @@ def directory_acceptance(compiler, args, root):
         '%s::test_%s' % (name, kind) for name in names for kind in ('value', 'other')}, cold
     warm = run()
     assert warm['cached'] == 2 * len(names) and warm['executed'] == 0, warm
+    # An explicit fan-out width changes how the run is scheduled, never which
+    # programs it selects or what they report.
+    narrow = run('--jobs', '1')
+    assert narrow['programs'] == len(names) and narrow['cached'] == 2 * len(names), narrow
+    # The resolved byte ceiling is part of a receipt key, so changing it re-executes.
+    raised = run('--jobs', '2', '--max-memory=256M')
+    assert raised['executed'] == 2 * len(names) and raised['cached'] == 0, raised
+    assert run('--jobs', '2', '--max-memory=256M')['cached'] == 2 * len(names), 'a repeated ceiling reuses'
+    for switches in (('--jobs', '0'), ('--jobs', 'many'), ('--max-memory=1Q')):
+        refused = subprocess.run([str(compiler), 'test', str(suite), *switches],
+                                 cwd=root, capture_output=True, text=True, timeout=60)
+        assert refused.returncode == 2 and '--jobs N' in refused.stderr, refused
     (suite / 'beta.my').write_text((suite / 'beta.my').read_text().replace('return 1', 'return 1 + 0'))
     edited = run()
     assert edited['executed'] == 1 and edited['cached'] == 2 * len(names) - 1, edited

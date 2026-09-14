@@ -24,6 +24,7 @@ export test_trap
 export test_frames
 export test_step
 export test_table
+export test_memory
 
 
 class Pair:
@@ -116,6 +117,13 @@ def test_frames() -> bool:
 
 def test_step() -> bool:
     return True
+
+
+def test_memory() -> bool:
+    values: list[int] = []
+    for r in range(200000):
+        values.append(r)
+    return len(values) == 200000
 '''
 
 
@@ -147,6 +155,7 @@ def main():
             'main::test_result': {'arguments': {'r': {'case': 'err', 'value': '-7'}},
                                   'expected': {'case': 'err', 'value': '-7'}},
             'main::test_domain': {'arguments': {'n': '8'}, 'expected': '17'},
+            'main::test_memory': {'skip': 'exercised below under explicit byte ceilings'},
         }
 
         def invoke(pattern='*', code=0, extra=()):
@@ -163,8 +172,11 @@ def main():
             return {row['name']: row for row in report['tests']}
 
         rows = invoke(code=1)
-        assert len(rows) == 10, rows
+        assert len(rows) == 11, rows
+        assert rows['main::test_memory']['status'] == 'skipped', rows['main::test_memory']
         for name, row in rows.items():
+            if name == 'main::test_memory':
+                continue
             if name == 'main::test_trap':
                 assert row['status'] == 'failed' and 'R_DIVISION_BY_ZERO' in row['reason'], row
                 line = SOURCE.splitlines().index('    return divtrunc(1, 0) == 0') + 1
@@ -183,6 +195,17 @@ def main():
         assert 'R_STEP_LIMIT' in step['reason'], step
         frame = invoke('*frames', code=1, extra=('--max-frames=1',))['main::test_frames']
         assert 'R_FRAME_LIMIT' in frame['reason'], frame
+        # The byte ceiling alone decides: the same growth passes under a roomy one
+        # and traps under a tight one, reported as a failure rather than a crash.
+        del cases['main::test_memory']
+        steps = '--max-steps=8000000'
+        roomy = invoke('*memory', extra=('--max-memory=32M', steps))['main::test_memory']
+        assert roomy['status'] == 'passed', roomy
+        tight = invoke('*memory', code=1, extra=('--max-memory=1M', steps))['main::test_memory']
+        assert tight['status'] == 'failed' and 'R_MEMORY_BUDGET' in tight['reason'], tight
+        assert 'in main::test_memory' in tight['reason'], tight
+        assert '--max-memory BYTES' in invoke('*memory', code=2, extra=('--max-memory=huge',))
+        cases['main::test_memory'] = {'skip': 'exercised above under explicit byte ceilings'}
         for invalid in ('01', '-0', '9223372036854775808', 1, True):
             cases['main::test_record']['arguments'] = {'n': invalid}
             assert 'InvalidTestValue' in invoke('*record', code=2)
@@ -194,7 +217,7 @@ def main():
                          'def test_opaque(s: Secret) -> bool:\n    return True\n')
         cases = {'main::test_opaque': {'arguments': {'s': '1'}}}
         assert 'UnsupportedTestType' in invoke(code=2)
-    print('Native test execution: typed trees, domain codecs, exact call budgets, source traps and strict arguments passed')
+    print('Native test execution: typed trees, domain codecs, exact call budgets, byte ceilings, source traps and strict arguments passed')
 
 
 if __name__ == '__main__':
