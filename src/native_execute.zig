@@ -32,17 +32,23 @@ pub const Trap = struct {
 
 /// One native execution: the entry point's result, the trap that ended the run,
 /// the guest's own streams and the process exit status. A successful run leaves
-/// `trap.code` empty; a trapped one leaves `value` at zero.
+/// `trap.code` empty and `failed` false; a trapped one leaves `value` at zero.
+/// The status is the program's own exit code — the entry `int` truncated to the
+/// low 8 bits on a normal return, or the diagnostic status on a trap — so it no
+/// longer distinguishes success from failure on its own; `failed` does.
 pub const Run = struct {
     value: i64 = 0,
     trap: Trap = .{ .code = "" },
     stdout: []const u8 = "",
     stderr: []const u8 = "",
     status: u8 = 0,
+    failed: bool = false,
 
-    /// Whether the native runtime ended this program with a trap.
+    /// Whether the native runtime ended this program with a trap rather than a
+    /// normal return. A nonzero status alone no longer implies a trap, because a
+    /// program that returns a nonzero value exits with it.
     pub fn trapped(self: Run) bool {
-        return self.status != 0;
+        return self.failed;
     }
 };
 
@@ -123,9 +129,13 @@ fn spawn(executable: []const u8, options: Options) Error!Run {
         .stderr_limit = .limited(4 * 1024 * 1024),
     });
     const status = fs.exitCode(outcome.term);
-    if (status != 0) {
+    // The exit status is now the entry's own result, so it cannot mark a trap; a
+    // native runtime failure instead writes a diagnostic to stderr (and a crash
+    // ends the process by signal). A clean return leaves stderr empty and appends
+    // its `--print-result` line to stdout, which `divide` reads.
+    if (outcome.term != .exited or outcome.stderr.len != 0) {
         const trap = parse(allocator, outcome.stderr) catch Trap{ .code = "" };
-        return .{ .trap = trap, .stdout = outcome.stdout, .stderr = outcome.stderr, .status = status };
+        return .{ .trap = trap, .stdout = outcome.stdout, .stderr = outcome.stderr, .status = status, .failed = true };
     }
     const reported = try divide(outcome.stdout);
     return .{ .value = reported.value, .stdout = reported.output, .stderr = outcome.stderr, .status = status };
@@ -193,7 +203,9 @@ test "native execution reports entry results, guest output and located traps" {
     const outcome = try run(&compilation);
     try std.testing.expectEqual(@as(i64, 7), outcome.value);
     try std.testing.expectEqualStrings("hello\n", outcome.stdout);
-    try std.testing.expectEqual(@as(u8, 0), outcome.status);
+    // The entry returned 7, so the process exits 7; the value is not a trap.
+    try std.testing.expect(!outcome.trapped());
+    try std.testing.expectEqual(@as(u8, 7), outcome.status);
     var trapped = try language.Compilation.init(std.testing.allocator, "trap.my",
         \\def main() -> i64:
         \\    return divtrunc(1, 0)

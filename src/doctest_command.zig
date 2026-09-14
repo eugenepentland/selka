@@ -851,7 +851,15 @@ fn record(allocator: std.mem.Allocator, unit: *Unit, decided: Plan, invocation: 
         unit.detail = try std.fmt.allocPrint(allocator, "rejected with {s}", .{try formatList(allocator, decided.codes)});
         return;
     }
-    if (status != 0) {
+    // A run now exits with its entry's `int` result, so a nonzero status is not a
+    // failure by itself. A genuine failure is a checker rejection (`check`), a
+    // native trap (a `diagnostic-v1` record on stderr), or a crash by signal.
+    const crashed = invocation.term != .exited;
+    const failed = if (decided.action == .run)
+        crashed or try diagnosedError(allocator, invocation.stderr)
+    else
+        status != 0;
+    if (failed) {
         const rendered = try normalise(allocator, invocation.stderr);
         const fallback = if (rendered.len > 0) rendered else try normalise(allocator, invocation.stdout);
         unit.status = .failed;
@@ -876,6 +884,23 @@ fn record(allocator: std.mem.Allocator, unit: *Unit, decided: Plan, invocation: 
         return;
     }
     unit.status = .run;
+}
+
+/// Whether stderr carries a `diagnostic-v1` record of error severity — a native
+/// trap or a checker rejection. A warning is not a failure and never counts.
+fn diagnosedError(allocator: std.mem.Allocator, stderr: []const u8) !bool {
+    var split = std.mem.splitScalar(u8, stderr, '\n');
+    while (split.next()) |line| {
+        if (line.len == 0 or line[0] != '{') continue;
+        var parsed = std.json.parseFromSlice(std.json.Value, allocator, line, .{}) catch continue;
+        defer parsed.deinit();
+        if (parsed.value != .object) continue;
+        const diagnostic = parsed.value.object.get("diagnostic") orelse continue;
+        if (diagnostic != .object) continue;
+        const severity = diagnostic.object.get("severity") orelse continue;
+        if (severity == .string and std.mem.eql(u8, severity.string, "error")) return true;
+    }
+    return false;
 }
 
 fn diagnose(allocator: std.mem.Allocator, stderr: []const u8) ![]const []const u8 {
@@ -1233,4 +1258,18 @@ test "doctest normalise trims a stream the way expect comparison needs" {
     try testing.expectEqualStrings("hello\n\nworld", rendered);
     const empty = try normalise(arena.allocator(), " \n\t\n");
     try testing.expectEqualStrings("", empty);
+}
+
+// spec-case: EXIT-STATUS-1
+test "doctest a run fails on an error diagnostic but tolerates a warning" {
+    // A run now exits with its entry result, so a bare nonzero exit is not a
+    // failure; only an error-severity diagnostic (a trap) is. A warning is not.
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const err = "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"R_DIVISION_BY_ZERO\",\"severity\":\"error\"}}";
+    const warn = "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"W_UNUSED_BINDING\",\"severity\":\"warning\"}}";
+    try testing.expect(try diagnosedError(a, err));
+    try testing.expect(!(try diagnosedError(a, warn)));
+    try testing.expect(!(try diagnosedError(a, "")));
 }

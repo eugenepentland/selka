@@ -5,7 +5,7 @@
     "def main() -> int:\n    line = \"banana\"\n    if line.find(\"na\") != 2:\n        return 1\n    if line.find(\"zz\") != 0 - 1:\n        return 2\n    if line.find(\"banana\") != 0:\n        return 3\n    if line.find(\"bananas\") != 0 - 1:\n        return 4\n    if line.count(\"na\") != 2:\n        return 5\n    if line.count(\"ana\") != 1:\n        return 6\n    if line.count(\"zz\") != 0:\n        return 7\n    if \"\".count(\"a\") != 0:\n        return 8\n    if not line.startswith(\"ban\"):\n        return 9\n    if not line.endswith(\"ana\"):\n        return 10\n    if line.startswith(\"nan\"):\n        return 11\n    if not line.startswith(\"\"):\n        return 12\n    if not line.endswith(\"\"):\n        return 13\n    if line.startswith(\"bananas\"):\n        return 14\n    return line.count(\"a\") * 10 + line.find(\"n\")\n",
     []
    ],
-   "returncode": 0,
+   "returncode": 32,
    "stderr": "",
    "stdout": "MzIK"
   },
@@ -14,7 +14,7 @@
     "def main() -> int:\n    padded = \"  value  \"\n    if padded.strip() != \"value\":\n        return 1\n    if padded.lstrip() != \"value  \":\n        return 2\n    if padded.rstrip() != \"  value\":\n        return 3\n    if \"\\t\\n\\u000b\\u000c\\r x \\r \".strip() != \"x\":\n        return 4\n    if \"\".strip() != \"\":\n        return 5\n    if \"   \".strip() != \"\":\n        return 6\n    if padded != \"  value  \":\n        return 7\n    return len(padded.strip()) * 3\n",
     []
    ],
-   "returncode": 0,
+   "returncode": 15,
    "stderr": "",
    "stdout": "MTUK"
   },
@@ -23,7 +23,7 @@
     "def make() -> list[str]:\n    return \"a-b-c\".upper().split(\"-\")\n\ndef main() -> int:\n    kept = make()\n    i = 0\n    while i < 60:\n        _ = (\"  x  \".strip() + \"y\").replace(\"x\", \"z\").splitlines()\n        i += 1\n    if kept[2] != \"C\":\n        return 1\n    if \"-\".join(kept) != \"A-B-C\":\n        return 2\n    return len(kept) + len(\"-\".join(kept))\n",
     []
    ],
-   "returncode": 0,
+   "returncode": 8,
    "stderr": "",
    "stdout": "OAo="
   },
@@ -59,7 +59,7 @@
     "def main() -> int:\n    text = \"caf\\u00e9 na\\u00efve\"\n    if text.upper() != \"CAF\\u00e9 NA\\u00efVE\":\n        return 1\n    if text.find(\"\\u00e9\") != 3:\n        return 2\n    if text.count(\"a\") != 2:\n        return 3\n    if not text.startswith(\"caf\"):\n        return 4\n    if not text.endswith(\"ve\"):\n        return 5\n    if text.strip() != text:\n        return 6\n    return len(text)\n",
     []
    ],
-   "returncode": 0,
+   "returncode": 10,
    "stderr": "",
    "stdout": "MTAK"
   },
@@ -68,7 +68,7 @@
     "def main() -> int:\n    if not \"42\".isdigit():\n        return 1\n    if \"4a\".isdigit():\n        return 2\n    if \"\".isdigit():\n        return 3\n    if not \"abZ\".isalpha():\n        return 4\n    if \"ab1\".isalpha():\n        return 5\n    if \"\".isalpha():\n        return 6\n    if not \" \\t\\n\\r\\u000b\\u000c\".isspace():\n        return 7\n    if \" a\".isspace():\n        return 8\n    if \"\".isspace():\n        return 9\n    if \"\\u00e9\".isalpha():\n        return 10\n    if \"\\uff14\".isdigit():\n        return 11\n    return 42\n",
     []
    ],
-   "returncode": 0,
+   "returncode": 42,
    "stderr": "",
    "stdout": "NDIK"
   },
@@ -95,7 +95,7 @@
     "def trimmed(text: str) -> str:\n    return text.strip()\n\ndef widened(text: str, width: int) -> str:\n    return text.zfill(width)\n\ndef main() -> int:\n    if trimmed(\"  a  \") != \"a\":\n        return 1\n    if widened(\"5\", 4) != \"0005\":\n        return 2\n    values = [\"  one \", \" two\", \"three  \"]\n    total = 0\n    for value in values:\n        total += len(trimmed(value))\n    return total\n",
     []
    ],
-   "returncode": 0,
+   "returncode": 11,
    "stderr": "",
    "stdout": "MTEK"
   },
@@ -104,7 +104,7 @@
     "def main() -> int:\n    if \"banana\".replace(\"na\", \"NA\") != \"baNANA\":\n        return 1\n    if \"aaa\".replace(\"aa\", \"b\") != \"ba\":\n        return 2\n    if \"abc\".replace(\"x\", \"y\") != \"abc\":\n        return 3\n    if \"aaa\".replace(\"a\", \"\") != \"\":\n        return 4\n    if len(\"\".replace(\"a\", \"b\")) != 0:\n        return 5\n    if \"aa\".replace(\"a\", \"bb\") != \"bbbb\":\n        return 6\n    lines = \"a\\nb\\r\\nc\\rd\".splitlines()\n    if len(lines) != 4:\n        return 7\n    if lines[3] != \"d\":\n        return 8\n    if len(\"\".splitlines()) != 0:\n        return 9\n    if len(\"a\\n\".splitlines()) != 1:\n        return 10\n    if len(\"\\n\\n\".splitlines()) != 2:\n        return 11\n    return len(lines) * 10\n",
     []
    ],
-   "returncode": 0,
+   "returncode": 40,
    "stderr": "",
    "stdout": "NDAK"
   },
@@ -113,7 +113,7 @@
     "def main() -> int:\n    if \"aB\\u00e9\".upper() != \"AB\\u00e9\":\n        return 1\n    if \"aB\\u00e9\".lower() != \"ab\\u00e9\":\n        return 2\n    if \"\".upper() != \"\":\n        return 3\n    if \"7\".zfill(3) != \"007\":\n        return 4\n    if \"-7\".zfill(4) != \"-007\":\n        return 5\n    if \"+7\".zfill(4) != \"+007\":\n        return 6\n    if \"1234\".zfill(2) != \"1234\":\n        return 7\n    if \"\".zfill(3) != \"000\":\n        return 8\n    if \"-\".zfill(3) != \"-00\":\n        return 9\n    if \"7\".zfill(0 - 5) != \"7\":\n        return 10\n    if \"7\".zfill(0) != \"7\":\n        return 11\n    return len(\"7\".zfill(9))\n",
     []
    ],
-   "returncode": 0,
+   "returncode": 9,
    "stderr": "",
    "stdout": "OQo="
   },
@@ -122,7 +122,7 @@
     "def main() -> int:\n    total = 0\n    for letter in \"h\\u00e9llo\":\n        total += len(letter)\n    for index, letter in enumerate(\"ab\"):\n        total += index * 2 + len(letter)\n    letters = [letter.upper() for letter in \"abc\"]\n    if len(letters) != 3:\n        return 1\n    if letters[2] != \"C\":\n        return 2\n    for line in \"a\\nb\".splitlines():\n        total += len(line.strip())\n    return total\n",
     []
    ],
-   "returncode": 0,
+   "returncode": 11,
    "stderr": "",
    "stdout": "MTEK"
   },
