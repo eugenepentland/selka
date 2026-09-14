@@ -15,7 +15,7 @@ import tempfile
 from docs_examples import directives, fences, group, options, plan, project_shaped, write
 from qbe_parity import ROOT, signature
 
-DOCUMENTS = ('docs/arenas.md', 'docs/bytes.md', 'docs/io.md')
+DOCUMENTS = ('docs/arenas.md', 'docs/bytes.md', 'docs/io.md', 'docs/text.md')
 EXAMPLES = ('examples/arena-managed/main.my', 'examples/python-bytes/main.my')
 
 
