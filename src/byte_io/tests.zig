@@ -110,6 +110,14 @@ test "structured timing opt-in accepts JSON and rejects duplicates and unknown f
     try t.expectError(error.InvalidArguments, limits.parse(&.{ "io", "--project", ".", "--timings=json", "--timings=json" }));
     try t.expectError(error.InvalidArguments, limits.parse(&.{ "io", "--project", ".", "--timings=text" }));
 }
+// spec-case: BYTE-IO-1
+test "a native guest result is the final output line and nothing else" {
+    const native = @import("host_native");
+    try t.expectEqual(@as(i64, 0), try native.outcome("0\n"));
+    try t.expectEqual(@as(i64, -7), try native.outcome("printed\n-7\n"));
+    try t.expectError(error.InvalidGuestResult, native.outcome(""));
+    try t.expectError(error.InvalidGuestResult, native.outcome("nothing numeric\n"));
+}
 test {
     _ = @import("runner.zig");
 }

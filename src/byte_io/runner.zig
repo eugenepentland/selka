@@ -48,9 +48,8 @@ fn execute(init: std.process.Init, options: limits.Options, timings: *language.t
     // The copied-block ABI is structural, so it is settled against the emitted
     // native metadata before any trusted callback is linked into the guest.
     const shape = try bulk.validate(allocator, try program.compilation.emitQbe(allocator));
-    var session = try host.Session.init(init, options);
+    var session = try host.Session.init(init, options, shape);
     defer session.deinit();
-    try session.compile(init, options, shape);
     timings.begin("stdin_read", false);
     var buffer: [8192]u8 = undefined;
     var reader = std.Io.File.stdin().readerStreaming(init.io, &buffer);

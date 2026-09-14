@@ -64,10 +64,12 @@ pub fn build(b: *std.Build) void {
     const host_tools = b.addOptions();
     host_tools.addOptionPath("qbe", qbe_exe.getEmittedBin());
     host_tools.addOption([]const u8, "zig", b.graph.zig_exe);
+    const host_native = b.createModule(.{ .root_source_file = b.path("src/host_native.zig"), .target = target, .optimize = optimize });
+    host_native.addImport("qbe_build", native_build);
+    host_native.addImport("host_tools", host_tools.createModule());
     const host_imports: []const std.Build.Module.Import = &.{
         .{ .name = "mylang", .module = core },
-        .{ .name = "qbe_build", .module = native_build },
-        .{ .name = "host_tools", .module = host_tools.createModule() },
+        .{ .name = "host_native", .module = host_native },
     };
     const guardian_dep = b.dependency("guardian", .{ .target = target, .optimize = optimize });
     const guardian_exe = guardian_dep.artifact("guardian-check");
