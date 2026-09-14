@@ -53,7 +53,7 @@ pub fn prepare(context: fs.Context, parsed: options.Options) Error!Prepared {
     try checkVersion(zig_version);
     const directory = try context.absolute(nativeCacheDirectory(parsed));
     try context.mkdir(directory);
-    const assets = try materialize(context, try runtimeRoot(context, parsed, directory));
+    const assets = try materializeRuntime(context, parsed, directory);
     const temporary = try context.temporary(directory);
     const environment = try std.json.Stringify.valueAlloc(a, .{
         .version = "zig-qbe-build-v2",
@@ -223,6 +223,16 @@ fn materialize(context: fs.Context, root: []const u8) ![]const u8 {
         if (!context.exists(directory)) return err;
     };
     return directory;
+}
+/// Publish the bundled runtime tree, preferring the shared user cache but falling
+/// back to the per-project cache when that location cannot be written (for example
+/// a read-only home directory). An explicit `--cache-dir` already resolves locally.
+fn materializeRuntime(context: fs.Context, parsed: options.Options, directory: []const u8) Error![]const u8 {
+    const shared = try runtimeRoot(context, parsed, directory);
+    const local = try std.fs.path.join(context.allocator, &.{ directory, "runtime" });
+    if (std.mem.eql(u8, shared, local)) return materialize(context, shared);
+    const published = materialize(context, shared) catch null;
+    return published orelse materialize(context, local);
 }
 /// The portable identity of a prebuilt runtime artifact: the runtime source content
 /// hash, the pinned Zig version, the optimize mode and the target. It excludes the
@@ -492,6 +502,25 @@ test "a default build shares the runtime root while an explicit cache-dir keeps 
     // must still resolve to its default directory, not a directory named "none".
     try std.testing.expectEqualStrings(options.default_cache, nativeCacheDirectory(.{ .cache = options.no_cache }));
     try std.testing.expectEqualStrings("/xdg/mylang/runtime", try runtimeRoot(context, .{ .cache = options.no_cache }, "/project/.mylang-cache/qbe"));
+}
+// spec-case: QBE-3
+test "an unwritable shared runtime root falls back to the project cache" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const base = try directory.dir.realPathFileAlloc(std.testing.io, ".", std.testing.allocator);
+    defer std.testing.allocator.free(base);
+    const blocker = try std.fs.path.join(std.testing.allocator, &.{ base, "not-a-directory" });
+    defer std.testing.allocator.free(blocker);
+    try std.Io.Dir.cwd().writeFile(std.testing.io, .{ .sub_path = blocker, .data = "x" });
+    try environment.put("XDG_CACHE_HOME", blocker);
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const cache = try std.fs.path.join(std.testing.allocator, &.{ base, "qbe" });
+    defer std.testing.allocator.free(cache);
+    const assets = try materializeRuntime(context, .{ .cache = options.default_cache }, cache);
+    try std.testing.expect(std.mem.startsWith(u8, assets, cache));
 }
 // spec: QBE-RUNTIME-INSTALLED-1
 test "prebuilt runtime hashes separate kind and mode and stay stable, and misses fall back" {
