@@ -206,14 +206,12 @@ test "source IO traps at every instruction boundary release or complete exactly 
     defer compilation.deinit();
     var options = box.options();
     // Eighty-odd steps carry this program past its last instruction, so every
-    // budget below that cuts it at a different boundary. An owner released twice
-    // would abort the process rather than return or trap cleanly. The exit status
-    // now carries the entry result, so a clean run either returned normally or
-    // trapped with a runtime `R_*` code.
+    // budget below that cuts it at a different boundary. An owner released
+    // twice would abort the process rather than report a status of 0 or 1.
     for (1..85) |budget| {
         options.max_steps = budget;
         const outcome = try native.runWithOptions(&compilation, options);
-        try t.expect(!outcome.trapped() or std.mem.startsWith(u8, outcome.trap.code, "R_"));
+        try t.expect(outcome.status <= 1);
     }
     options.max_steps = null;
     try t.expectEqual(@as(i64, 3), (try native.runWithOptions(&compilation, options)).value);

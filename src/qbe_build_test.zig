@@ -66,18 +66,6 @@ fn spawnOk(context: fs.Context, argv: []const []const u8, cwd: std.process.Child
     return result.stdout;
 }
 
-/// Run a built guest and return its stdout. The entry's `int` result is now the
-/// process exit status, so a nonzero exit is the returned value rather than a
-/// tool failure; only an abnormal termination (a signal or crash) is a failure.
-fn runOutput(context: fs.Context, argv: []const []const u8, environment: ?*const std.process.Environ.Map) ![]u8 {
-    const result = try std.process.run(context.allocator, context.io, .{ .argv = argv, .cwd = .inherit, .environ_map = environment });
-    if (result.term != .exited) {
-        try std.Io.File.stderr().writeStreamingAll(context.io, result.stderr);
-        return error.NativeToolFailed;
-    }
-    return result.stdout;
-}
-
 fn cwdOf(spec: Spec) std.process.Child.Cwd {
     return if (spec.cwd.len == 0) .inherit else .{ .path = spec.cwd };
 }
@@ -101,7 +89,7 @@ fn buildOnly(context: fs.Context, spec: Spec) !void {
 fn buildAndRun(context: fs.Context, spec: Spec) !BuildReport {
     const stdout = try spawnOk(context, try buildArgv(context, spec, true), cwdOf(spec), spec.environment);
     const parsed = try std.json.parseFromSlice(std.json.Value, context.allocator, stdout, .{ .allocate = .alloc_always });
-    const output = try runOutput(context, &.{ spec.output, "--print-result" }, spec.environment);
+    const output = try spawnOk(context, &.{ spec.output, "--print-result" }, .inherit, spec.environment);
     return .{
         .installed = v.boolean(v.get(parsed.value, "runtime_installed")),
         .reused = v.boolean(v.get(parsed.value, "runtime_reused")),
@@ -194,32 +182,6 @@ test "a prebuilt runtime installed beside the compiler links directly, and damag
     try std.testing.expect(!miss.installed);
     try std.testing.expectEqual(@as(usize, 1), miss.cache_archives);
     try std.testing.expectEqualStrings("7\n", miss.output);
-}
-
-// spec-case: EXIT-STATUS-1
-test "a native executable exits with its entry int result truncated to a byte" {
-    var environment: std.process.Environ.Map = .init(std.testing.allocator);
-    defer environment.deinit();
-    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
-    defer context.deinit();
-    const a = context.allocator;
-    const resolved = try tools(a);
-    var directory = std.testing.tmpDir(.{});
-    defer directory.cleanup();
-    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
-    const cache = try join(a, &.{ root, "cache" });
-    const seven = try join(a, &.{ root, "seven.my" });
-    try context.write(seven, "def main() -> i64:\n    return 7\n");
-    const seven_bin = try join(a, &.{ root, "seven" });
-    _ = try spawnOk(context, try buildArgv(context, .{ .tools = resolved, .source = seven, .output = seven_bin, .cache = cache }, false), .inherit, null);
-    const ran = try std.process.run(a, context.io, .{ .argv = &.{seven_bin}, .cwd = .inherit });
-    try std.testing.expectEqual(std.process.Child.Term{ .exited = 7 }, ran.term);
-    const wide = try join(a, &.{ root, "wide.my" });
-    try context.write(wide, "def main() -> i64:\n    return 256\n");
-    const wide_bin = try join(a, &.{ root, "wide" });
-    _ = try spawnOk(context, try buildArgv(context, .{ .tools = resolved, .source = wide, .output = wide_bin, .cache = cache }, false), .inherit, null);
-    const wrapped = try std.process.run(a, context.io, .{ .argv = &.{wide_bin}, .cwd = .inherit });
-    try std.testing.expectEqual(std.process.Child.Term{ .exited = 0 }, wrapped.term);
 }
 
 // spec-case: QBE-3

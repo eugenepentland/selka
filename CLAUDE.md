@@ -88,11 +88,9 @@ use a ```mylang block; `kind: "tooling"` features may use a ```bash or ```consol
   visible after the block. Pre-declare it before the block and reassign inside.
 - **`range()` is not accepted as a comprehension source.** `[x for x in range(10)]` is
   rejected; comprehend over a list, or use a `for` loop.
-- **`def main() -> int`'s value is the process exit status**, truncated to the low 8
-  bits (POSIX `status = value & 0xFF`), for `mylang run`, `run-project` and a native
-  executable — the way Python and Go return an exit code. `--print-result` still prints
-  the value to stdout and is orthogonal to the status. A runtime trap outranks the
-  return and exits 1; source/check errors exit 1, usage/host failures exit 2.
+- **`def main() -> int`'s value is not the exit status.** `mylang run prog.my` builds
+  the program and runs it; `--print-result` prints the entry point's value. The
+  process exit status is separate.
 - **No tuples. No methods on classes. No closures.** Records are values; functions are
   top-level and take their state as parameters.
 - **File access needs a capability parameter on the entry point.** Write
