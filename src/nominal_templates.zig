@@ -117,7 +117,9 @@ pub const Index = struct {
         if (@import("nominal_type_syntax.zig").bytesSyntax(program, self.context.src)) try self.addByteString();
         try self.addBuiltin("dict", 2, .buffer);
     }
-    fn addByteString(self: *Index) Error!void {
+    /// Materialize the managed byte string for an operation that needs its schema
+    /// without the source naming `bytes`; a declared type of that name still wins.
+    pub fn addByteString(self: *Index) Error!void {
         try self.addBuiltin("bytes", 0, .buffer);
         const declaration = &self.declarations.items[self.names.get("bytes") orelse return];
         if (declaration.builtin_name == null) return;

@@ -25,6 +25,7 @@ test {
     _ = @import("qbe_build_outputs.zig");
     _ = @import("qbe_build_io.zig");
 
+    _ = @import("prelude_builtins_test.zig");
     _ = @import("python_core_test.zig");
     _ = @import("python_calls_test.zig");
     _ = @import("python_syntax_test.zig");
