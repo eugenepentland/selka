@@ -534,4 +534,11 @@ Native builds support `--report` for emission and link timings and publication
 status. Failed builds preserve the last executable; byte-identical successful
 builds preserve its timestamp.
 
+When a program is not fast enough, the [performance page](docs/performance.md) is
+the front door: what ordinary managed code costs, that `mylang build` and
+`mylang run` build `ReleaseFast` by default, how to raise the `--max-steps` and
+`--max-frames` budgets each trap now names, why a fixed `[N]T` belongs on the wire
+rather than in a hot loop, and how to measure with `--timings`, `--report` and the
+system timer.
+
 The [owner/generic maintenance calibration](docs/experiments/direct-agent-maintenance-20260907.md) records two fresh agents completing three sequential stages each, with preserved command and grading evidence. It establishes feasibility on small tasks, not a language productivity advantage.
