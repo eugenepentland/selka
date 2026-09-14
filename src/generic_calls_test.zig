@@ -4,6 +4,8 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const diagnostic = @import("diagnostic.zig");
 const bodies = @import("generic_bodies.zig");
+// A domain-qualified call infers its type argument; `D.hidden[U](x)` would read as
+// an index expression, so the qualified sites below rely on inference.
 const declarations =
     \\def identity[U](x: U) -> U:
     \\    return x
@@ -11,6 +13,9 @@ const declarations =
     \\
     \\def numeric[N: integer](x: N) -> N:
     \\    return x
+    \\
+    \\
+    \\
 ;
 const valid = declarations ++
     \\def duo[A: integer, B](x: A, y: B) -> B:
@@ -50,7 +55,7 @@ const valid = declarations ++
     \\        return x
     \\
     \\    def public[U](x: U) -> U:
-    \\        return D.hidden::<U>(x)
+    \\        return D.hidden(x)
     \\
     \\
     \\def main() -> i64:
@@ -101,6 +106,9 @@ const helpers =
     \\def unused(c: clock_cap) -> i64:
     \\    _ = clock_now[Time](c)
     \\    return 0
+    \\
+    \\
+    \\
 ;
 fn helperScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "helpers.my", declarations ++ helpers);
@@ -143,7 +151,7 @@ test "generic calls reject invalid contracts identities arity and private access
         , .code = "E_ARITY" },
         .{ .body =
         \\def f[T](x: T) -> T:
-        \\    return missing[T](x)
+        \\    return missing(x)
         , .code = "E_UNKNOWN_FUNCTION" },
         .{ .body =
         \\domain D: i64:
@@ -153,7 +161,7 @@ test "generic calls reject invalid contracts identities arity and private access
         \\
         \\domain E: i64:
         \\    def f[T](x: T) -> T:
-        \\        return D.hidden::<T>(x)
+        \\        return D.hidden(x)
         , .code = "E_PRIVATE_FUNCTION" },
 
         .{ .body =
@@ -163,12 +171,12 @@ test "generic calls reject invalid contracts identities arity and private access
         \\
         \\
         \\def f[T](x: T) -> T:
-        \\    return D.hidden::<T>(x)
+        \\    return D.hidden(x)
         , .code = "E_PRIVATE_FUNCTION" },
     };
     for (cases) |case| {
         const text = try std.mem.concat(t.allocator, u8, &.{
-            declarations, case.body,
+            declarations, case.body, "\n\n\n",
             \\def main() -> i64:
             \\    return 0
         });
@@ -203,7 +211,7 @@ test "generic calls reject hidden effects and invalid concrete helper bodies" {
     };
     for (cases) |case| {
         const text = try std.mem.concat(t.allocator, u8, &.{
-            case.body,
+            case.body, "\n\n\n",
             \\def f[T](x: T) -> i64:
             \\    _ = x
             \\    return helper(1)
@@ -232,6 +240,9 @@ test "generic calls reject reachable clock effects even behind cycles and false 
         \\        _ = clock_now[Time](c)
         \\        return helper(c)
         \\    return 0
+        \\
+        \\
+        \\
     ;
     var ordinary = try language.Compilation.init(t.allocator, "ordinary.my", effectful ++
         \\def main(c: clock_cap) -> i64:

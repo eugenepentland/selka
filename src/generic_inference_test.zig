@@ -53,7 +53,8 @@ test "generic inference follows arrays nominal applications const lengths and ca
         \\
         \\
         \\def main() -> i64:
-        \\    return forward([7, 9])
+        \\    values: [2]i64 = [7, 9]
+        \\    return forward(values)
     , 7);
     try run(
         \\class Box[T]:
@@ -92,7 +93,7 @@ test "generic inference follows arrays nominal applications const lengths and ca
         \\    return x + 1
         \\
         \\
-        \\def apply[T](f: fn(T) -> T effects(), x: T) -> T:
+        \\def apply[T](f: def(T) -> T effects(), x: T) -> T:
         \\    return f(x)
         \\
         \\
@@ -108,7 +109,8 @@ const Modules = struct {
             \\
             \\
             \\def main() -> i64:
-            \\    return h.first([7, 9])
+            \\    values: [2]i64 = [7, 9]
+            \\    return h.first(values)
         );
         if (std.mem.eql(u8, path, "helper.my")) return allocator.dupe(u8,
             \\module helper

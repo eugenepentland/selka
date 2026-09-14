@@ -57,7 +57,14 @@ test "generic requirements diagnose unknown names and builtin shadowing before u
         \\def main() -> i64:
         \\    return 0
         , .code = "E_GENERIC_REQUIREMENT", .token = "unknown" },
-        .{ .text = "fn f<i64:copy>(x:i64)->i64{return x;}fn main()->i64{return 0;}", .code = "E_SYNTAX", .token = "i64" },
+        .{ .text =
+        \\def f[i64: copy](x: i64) -> i64:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        , .code = "E_SYNTAX", .token = "i64" },
         .{ .text =
         \\def f[T](x: T) -> T:
         \\    return x

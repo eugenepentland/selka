@@ -51,17 +51,17 @@ fn parseScenario(allocator: std.mem.Allocator) !void {
     const cloned = try copy.clone(arena.allocator(), syntax);
     try t.expect(cloned.types.records[0].type_parameters.ptr != syntax.types.records[0].type_parameters.ptr);
     const application = syntax.types.expressions.applications[0];
-    try t.expectEqualStrings("Pair<T,bool>", compilation.src.text(application.span));
+    try t.expectEqualStrings("Pair[T, bool]", compilation.src.text(application.span));
     try t.expectEqualStrings("Pair", compilation.src.text(application.name));
     try t.expect(cloned.types.expressions.applications[0].arguments.ptr != application.arguments.ptr);
     const mapped = try language.source.Source.initMapped(arena.allocator(), &.{ try language.source.Source.init(arena.allocator(), "prefix.my", "// prefix\n"), compilation.src });
     const mapper: copy.Mapper = .{ .src = mapped, .module = 1, .node_count = syntax.nodes.items.len, .statement_count = syntax.statements.items.len };
     const moved = try mapper.value(arena.allocator(), ast.TypeApplication, application);
-    try t.expectEqualStrings("Pair<T,bool>", mapped.text(moved.span));
+    try t.expectEqualStrings("Pair[T, bool]", mapped.text(moved.span));
     try t.expectEqualStrings("bool", mapped.text(moved.arguments[1]));
     const formatted = try compilation.format(allocator);
     defer allocator.free(formatted);
-    try t.expect(std.mem.indexOf(u8, formatted, "Pair<T, bool> = new Pair<T, bool>") != null);
+    try t.expect(std.mem.indexOf(u8, formatted, "p: Pair[T, bool] = Pair[T, bool](first=x, second=True)") != null);
     var again = try language.Compilation.init(allocator, "formatted.my", formatted);
     defer again.deinit();
     try again.parse();
@@ -83,30 +83,45 @@ fn parseReject(text: []const u8, code: []const u8) !void {
     try t.expectEqualStrings(code, compilation.diagnostics.items[0].code);
 }
 test "nominal templates reject malformed declarations and application lists" {
-    try parseReject("struct Box<T:copy,T:copy>{value:T}", "E_GENERIC_PARAMETER");
-    try parseReject("union Slot<T:copy+copy>{none,some:T}", "E_GENERIC_REQUIREMENT");
-    try parseReject("struct Box<T>{value:T}", "E_SYNTAX");
-    try parseReject("fn f(x:Box<>)->i64{return 0;}", "E_TYPE");
-    try parseReject("fn f(x:Box<i64,>)->i64{return 0;}", "E_TYPE");
-    try parseReject("fn f(x:Box<i64)->i64{return 0;}", "E_SYNTAX");
+    try parseReject(
+        \\class Box[T, T]:
+        \\    value: T
+    , "E_GENERIC_PARAMETER");
+    try parseReject(
+        \\union Slot[T: copy + copy]:
+        \\    none,
+        \\    some: T
+    , "E_GENERIC_REQUIREMENT");
+    try parseReject(
+        \\def f(x: Box[]) -> i64:
+        \\    return 0
+    , "E_TYPE");
+    try parseReject(
+        \\def f(x: Box[i64,]) -> i64:
+        \\    return 0
+    , "E_TYPE");
+    try parseReject(
+        \\def f(x: Box[i64) -> i64:
+        \\    return 0
+    , "E_SYNTAX");
 }
 fn listSource(allocator: std.mem.Allocator, count: usize, nested: bool) ![]u8 {
     var out: std.Io.Writer.Allocating = .init(allocator);
     defer out.deinit();
-    try out.writer.writeAll("fn f(x:");
+    try out.writer.writeAll("def f(x: ");
     if (nested) {
-        for (0..count) |_| try out.writer.writeAll("Box<");
+        for (0..count) |_| try out.writer.writeAll("Box[");
         try out.writer.writeAll("i64");
-        for (0..count) |_| try out.writer.writeByte('>');
+        for (0..count) |_| try out.writer.writeByte(']');
     } else {
-        try out.writer.writeAll("Box<");
+        try out.writer.writeAll("Box[");
         for (0..count) |index| {
-            if (index != 0) try out.writer.writeByte(',');
+            if (index != 0) try out.writer.writeAll(", ");
             try out.writer.writeAll("i64");
         }
-        try out.writer.writeByte('>');
+        try out.writer.writeByte(']');
     }
-    try out.writer.writeAll(")->i64{return 0;}");
+    try out.writer.writeAll(") -> i64:\n    return 0\n");
     return out.toOwnedSlice();
 }
 test "nominal application list and nesting bounds reject excessive syntax" {
@@ -236,7 +251,7 @@ fn moduleScenario(allocator: std.mem.Allocator) !void {
         const merged = try @import("project_syntax.zig").build(&index);
         try t.expectEqual(@as(usize, 3), merged.syntax.types.expressions.applications.len);
         const application = merged.syntax.types.expressions.applications[0];
-        try t.expectEqualStrings("m::Slot", merged.src.text(application.name));
+        try t.expectEqualStrings("m.Slot", merged.src.text(application.name));
         try t.expectEqualStrings("[2]T", merged.src.text(application.arguments[0]));
         try t.expectEqual(@as(usize, iteration * 2), cache.statistics.hits);
         var compilation = try language.project_compile.Compilation.init(&index);

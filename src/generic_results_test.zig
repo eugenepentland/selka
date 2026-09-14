@@ -2,10 +2,17 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
-const schema = "result R{ok:i64,err:i64}";
+const schema =
+    \\result R:
+    \\    ok: i64,
+    \\    err: i64
+    \\
+    \\
+    \\
+;
 fn reject(body: []const u8, code: []const u8) !void {
     const bytes = try std.mem.concat(t.allocator, u8, &.{
-        schema, body,
+        schema, body, "\n\n\n",
         \\def main() -> i64:
         \\    return 0
     });

@@ -89,9 +89,9 @@ test "generic body contracts bound left-deep expression checking" {
     for ([_]usize{ 100, 300 }) |length| {
         var text: std.Io.Writer.Allocating = .init(t.allocator);
         defer text.deinit();
-        try text.writer.writeAll("fn f<T:integer>(x:T)->T{return x");
-        for (0..length) |_| try text.writer.writeAll("+x");
-        try text.writer.writeAll(";}");
+        try text.writer.writeAll("def f[T: integer](x: T) -> T:\n    return x");
+        for (0..length) |_| try text.writer.writeAll(" + x");
+        try text.writer.writeByte('\n');
         try checkBound(text.written(), length == 300);
     }
 }
@@ -146,9 +146,11 @@ test "generic body contracts reject undeclared operations mismatches and invalid
         \\def f[T: integer](x: T) -> T:
         \\    return x + 1
         , .code = "E_GENERIC_TYPE" },
+        // Assignment binds, so a loop variable is the binding that stays immutable.
         .{ .text =
         \\def f[T](x: T) -> T:
-        \\    x = x
+        \\    for i in range(0, 2):
+        \\        i = 1
         \\    return x
         , .code = "E_IMMUTABLE" },
         .{ .text =
@@ -159,7 +161,7 @@ test "generic body contracts reject undeclared operations mismatches and invalid
         , .code = "E_UNKNOWN_NAME" },
         .{ .text =
         \\def f[T](x: T) -> T:
-        \\    x = x
+        \\    x: T = x
         \\    return x
         , .code = "E_SHADOWING" },
         .{ .text =
@@ -184,7 +186,7 @@ test "generic body contracts reject undeclared operations mismatches and invalid
         , .code = "E_INTEGER_RANGE" },
         .{ .text =
         \\def f[T](x: T) -> T:
-        \\    return other[T](x)
+        \\    return other(x)
         , .code = "E_UNKNOWN_FUNCTION" },
     };
     for (cases) |case| try reject(case.text, case.code);
@@ -194,9 +196,9 @@ test "generic body contracts bound wide statement work without host execution" {
     for ([_]usize{ 49998, 49999 }) |length| {
         var text: std.Io.Writer.Allocating = .init(t.allocator);
         defer text.deinit();
-        try text.writer.writeAll("fn f<T:copy>(x:T)->T{");
-        for (0..length) |_| try text.writer.writeAll("_ = x;");
-        try text.writer.writeAll("{}return x;}");
+        try text.writer.writeAll("def f[T](x: T) -> T:\n");
+        for (0..length) |_| try text.writer.writeAll("    _ = x\n");
+        try text.writer.writeAll("    pass\n    return x\n");
         try checkBound(text.written(), length == 49999);
     }
 }

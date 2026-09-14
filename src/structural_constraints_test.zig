@@ -71,6 +71,7 @@ test "structural declarations reject uncalled invalid access and incomplete cons
         \\def main() -> i64:
         \\    return 0
     , "E_GENERIC_TYPE");
+    // A type parameter has no construction spelling: `T(...)` reads as a call.
     try reject(
         \\def f[T: copy + field(value: i64)]() -> T:
         \\    return T(value=1)
@@ -78,7 +79,7 @@ test "structural declarations reject uncalled invalid access and incomplete cons
         \\
         \\def main() -> i64:
         \\    return 0
-    , "E_GENERIC_BODY_UNSUPPORTED");
+    , "E_UNKNOWN_FUNCTION");
     try reject(
         \\def f[T](v: T) -> i64:
         \\    return T.score(v)
@@ -139,7 +140,14 @@ test "structural fields reject incomplete forwarding unknown fields and hidden o
         \\def main() -> i64:
         \\    return 0
     , "E_GENERIC_REQUIREMENT");
-    try reject("fn f<T:copy+op(score(v:T)->i64)>(v:T)->i64{return 0;}fn main()->i64{return 0;}", "E_GENERIC_REQUIREMENT");
+    try reject(
+        \\def f[T: copy + op(score(v: T) -> i64)](v: T) -> i64:
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_GENERIC_REQUIREMENT");
 }
 const domain =
     \\domain D: i64:
@@ -148,10 +156,16 @@ const domain =
     \\
     \\    def score(v: D) -> i64 effects():
     \\        return unwrap(v)
+    \\
+    \\
+    \\
 ;
 const operation =
     \\def apply[T: copy + op(score(v: T) -> i64 effects())](v: T) -> i64:
     \\    return T.score(v)
+    \\
+    \\
+    \\
 ;
 test "structural operation forwarding retains type identity and public contracts" {
     try run(domain ++ operation ++
@@ -195,6 +209,9 @@ test "structural concrete operations reject private absent wrong typed and exces
         \\
         \\    private def score(v: D) -> i64 effects():
         \\        return unwrap(v)
+        \\
+        \\
+        \\
     ++ operation ++
         \\def main() -> i64:
         \\    return apply[D](D.make())
@@ -203,6 +220,9 @@ test "structural concrete operations reject private absent wrong typed and exces
         \\domain D: i64:
         \\    def make() -> D:
         \\        return wrap[D](1)
+        \\
+        \\
+        \\
     ++ operation ++
         \\def main() -> i64:
         \\    return apply[D](D.make())
@@ -214,6 +234,9 @@ test "structural concrete operations reject private absent wrong typed and exces
         \\
         \\    def score(v: D) -> bool effects():
         \\        return True
+        \\
+        \\
+        \\
     ++ operation ++
         \\def main() -> i64:
         \\    return apply[D](D.make())
@@ -225,6 +248,9 @@ test "structural concrete operations reject private absent wrong typed and exces
         \\
         \\    def score(v: D) -> i64 effects(host):
         \\        return unwrap(v)
+        \\
+        \\
+        \\
     ++ operation ++
         \\def main() -> i64:
         \\    return apply[D](D.make())

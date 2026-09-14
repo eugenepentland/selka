@@ -124,14 +124,14 @@ test "nominal layout expansion bounds argument growth without host stack recursi
 fn identitySource(allocator: std.mem.Allocator, count: usize, wrap: bool) ![]u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
-    try text.writer.writeAll("struct Tag<T:copy>{}struct Values<T:copy>{");
+    try text.writer.writeAll("class Tag[T]:\n    pass\n\n\nclass Values[T]:\n");
     for (0..count) |i| {
-        try text.writer.print("{s}f{d}:", .{ if (i == 0) "" else ",", i });
-        if (wrap) try text.writer.writeAll("Tag<");
+        try text.writer.print("    f{d}: ", .{i});
+        if (wrap) try text.writer.writeAll("Tag[");
         try text.writer.print("[{d}]T", .{i + 1});
-        if (wrap) try text.writer.writeByte('>');
+        if (wrap) try text.writer.writeByte(']');
+        try text.writer.writeByte('\n');
     }
-    try text.writer.writeAll("}");
     return text.toOwnedSlice();
 }
 test "nominal layout expansion bounds distinct array identities" {
@@ -152,11 +152,10 @@ test "nominal layout expansion bounds distinct array identities" {
 fn workSource(allocator: std.mem.Allocator) ![]u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
-    try text.writer.writeAll("struct Big<T:copy>{");
-    for (0..512) |i| try text.writer.print("{s}f{d}:T", .{ if (i == 0) "" else ",", i });
-    try text.writer.writeAll("}struct Uses<U:copy>{");
-    for (0..256) |i| try text.writer.print("{s}f{d}:Big<[{d}]U>", .{ if (i == 0) "" else ",", i, i + 1 });
-    try text.writer.writeAll("}");
+    try text.writer.writeAll("class Big[T]:\n");
+    for (0..512) |i| try text.writer.print("    f{d}: T\n", .{i});
+    try text.writer.writeAll("\n\nclass Uses[U]:\n");
+    for (0..256) |i| try text.writer.print("    f{d}: Big[[{d}]U]\n", .{ i, i + 1 });
     return text.toOwnedSlice();
 }
 test "nominal layout expansion bounds repeated field work independently of identity growth" {
@@ -170,8 +169,11 @@ fn longSource(allocator: std.mem.Allocator) ![]u8 {
     try text.writer.writeAll(
         \\class Marker[T]:
         \\    pass
+        \\
+        \\
+        \\
     );
-    for (0..1200) |i| try text.writer.print("struct Link{d}{{next:Link{d}}}", .{ i, i + 1 });
+    for (0..1200) |i| try text.writer.print("class Link{d}:\n    next: Link{d}\n\n\n", .{ i, i + 1 });
     try text.writer.writeAll(
         \\class Link1200:
         \\    value: i64

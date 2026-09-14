@@ -32,12 +32,14 @@ fn scenario(allocator: std.mem.Allocator) !void {
     const moved = try mapper.value(arena.allocator(), ast.Function, cloned.functions[0]);
     try t.expectEqualStrings("copy", mapped.text(moved.signature.type_parameters[0].requirements[0]));
     var seen = false;
-    for (syntax.nodes.items) |node| if (node.data == .call) {
+    for (syntax.types.expressions.applications) |application| {
         seen = true;
-        const moved_call = try mapper.value(arena.allocator(), ast.Node, node);
-        try t.expectEqual(@as(usize, 2), moved_call.data.call.type_arguments.len);
-        try t.expectEqualStrings("u8", mapped.text(moved_call.data.call.type_arguments[1]));
-    };
+        try t.expectEqualStrings("choose", compilation.src.text(application.name));
+        try t.expect(cloned.types.expressions.applications[0].arguments.ptr != application.arguments.ptr);
+        const moved_application = try mapper.value(arena.allocator(), ast.TypeApplication, application);
+        try t.expectEqual(@as(usize, 2), moved_application.arguments.len);
+        try t.expectEqualStrings("u8", mapped.text(moved_application.arguments[1]));
+    }
     try t.expect(seen);
     const formatted = try compilation.format(allocator);
     defer allocator.free(formatted);
@@ -53,13 +55,22 @@ test "generic syntax retains requirements type arguments and relocated owned met
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
+// `[T]` is the copy spelling, and a square argument list is always a valid index
+// expression, so neither a bare parameter nor a list without a call is rejected.
 test "generic syntax rejects incomplete duplicate and uncallable annotations" {
     const cases = [_]struct { text: []const u8, code: []const u8 }{
-        .{ .text = "fn f<T>(x:T)->T{return x;}", .code = "E_SYNTAX" },
-        .{ .text = "fn f<>(x:i64)->i64{return x;}", .code = "E_SYNTAX" },
-        .{ .text = "fn f<T:copy,T:integer>(x:T)->T{return x;}", .code = "E_GENERIC_PARAMETER" },
-        .{ .text = "fn f<T:copy+copy>(x:T)->T{return x;}", .code = "E_GENERIC_REQUIREMENT" },
-        .{ .text = "fn main()->i64{return f::<i64>;}", .code = "E_GENERIC_CALL" },
+        .{ .text =
+        \\def f[](x: i64) -> i64:
+        \\    return x
+        , .code = "E_SYNTAX" },
+        .{ .text =
+        \\def f[T: copy, T: integer](x: T) -> T:
+        \\    return x
+        , .code = "E_GENERIC_PARAMETER" },
+        .{ .text =
+        \\def f[T: copy + copy](x: T) -> T:
+        \\    return x
+        , .code = "E_GENERIC_REQUIREMENT" },
     };
     for (cases) |case| {
         var compilation = try language.Compilation.init(t.allocator, "bad.my", case.text);
@@ -87,12 +98,12 @@ test "generic syntax list limits accept sixteen and reject seventeen entries" {
             defer text.deinit();
             const arguments = std.mem.eql(u8, kind, "arguments");
             const parameters = std.mem.eql(u8, kind, "parameters");
-            try text.writer.writeAll(if (arguments) "fn main()->i64{return f::<" else if (parameters) "fn f<" else "fn f<T:");
+            try text.writer.writeAll(if (arguments) "def main() -> i64:\n    return f[" else if (parameters) "def f[" else "def f[T: ");
             for (0..count) |i| {
-                if (i != 0) try text.writer.writeAll(if (parameters or arguments) "," else "+");
-                if (arguments) try text.writer.writeAll("i64") else if (parameters) try text.writer.print("T{d}:copy", .{i}) else try text.writer.print("R{d}", .{i});
+                if (i != 0) try text.writer.writeAll(if (parameters or arguments) ", " else " + ");
+                if (arguments) try text.writer.writeAll("i64") else if (parameters) try text.writer.print("T{d}: copy", .{i}) else try text.writer.print("R{d}", .{i});
             }
-            try text.writer.writeAll(if (arguments) ">(1);}" else ">(x:i64)->i64{return x;}");
+            try text.writer.writeAll(if (arguments) "](1)\n" else "](x: i64) -> i64:\n    return x\n");
             var compilation = try language.Compilation.init(t.allocator, "limits.my", text.written());
             defer compilation.deinit();
             if (count == 16) try compilation.parse() else {

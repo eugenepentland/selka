@@ -15,6 +15,9 @@ const definitions =
     \\result R[T]:
     \\    ok: T,
     \\    err: i64
+    \\
+    \\
+    \\
 ;
 fn run(allocator: std.mem.Allocator, text: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(allocator, "nominal-body.my", text);

@@ -16,6 +16,9 @@ const definitions =
     \\result Answer[T]:
     \\    ok: T,
     \\    err: i64
+    \\
+    \\
+    \\
 ;
 fn run(allocator: std.mem.Allocator, text: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(allocator, "instances.my", text);
@@ -218,8 +221,11 @@ fn largeNames(allocator: std.mem.Allocator) ![]u8 {
         \\class Pair[A, B]:
         \\    a: A
         \\    b: B
+        \\
+        \\
+        \\
     );
-    for (0..18) |i| try text.writer.print("struct Chain{d}<T:copy>{{next:Chain{d}<Pair<T,T>>}}", .{ i, i + 1 });
+    for (0..18) |i| try text.writer.print("class Chain{d}[T]:\n    next: Chain{d}[Pair[T, T]]\n\n\n", .{ i, i + 1 });
     try text.writer.writeAll(
         \\class Chain18[T]:
         \\    pass
