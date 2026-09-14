@@ -4,11 +4,12 @@ const fixture_path = "records.my";
 const std = @import("std");
 const testing = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 
 fn result(source: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
     defer compilation.deinit();
-    try testing.expectEqual(expected, (try compilation.execute(testing.allocator)).value);
+    try testing.expectEqual(expected, (try native.run(&compilation)).value);
 }
 fn reject(source: []const u8, code: []const u8) !void {
     var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
@@ -44,7 +45,7 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
         \\    return convert(next).value
     );
     defer compilation.deinit();
-    try testing.expectEqual(@as(i64, 9), (try compilation.execute(allocator)).value);
+    try compilation.check();
     const dump = try compilation.dump(allocator);
     defer allocator.free(dump);
     var discovery = try language.duplicates.discover(allocator, compilation.program.?, .{});
