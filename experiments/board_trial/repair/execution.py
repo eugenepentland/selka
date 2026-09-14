@@ -36,8 +36,13 @@ def board(directory, manifest, cases):
         if checked['status'] != 'passed':
             return {'phase': 'guest-check', 'passed': False, 'failure_kind': checked['status']}
     program = directory / 'board-trial'
-    compiled = command(directory, 'compile', [manifest['tools']['zig']['path'], 'build-exe', '--dep', 'mylang',
+    # The host wrapper bounds its own address space before running guest code,
+    # so the frozen compiler snapshot supplies that module alongside `mylang`.
+    budget = Path(manifest['compiler_source']).with_name('memory_budget.zig')
+    compiled = command(directory, 'compile', [manifest['tools']['zig']['path'], 'build-exe',
+                       '--dep', 'mylang', '--dep', 'memory_budget',
                        '-Mroot=' + str(source / 'runner.zig'), '-Mmylang=' + manifest['compiler_source'],
+                       '-Mmemory_budget=' + str(budget),
                        '-femit-bin=' + str(program)], timeout=120)
     if compiled['status'] != 'passed':
         return {'phase': 'zig-compile', 'passed': False, 'failure_kind': compiled['status']}
