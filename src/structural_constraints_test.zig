@@ -3,10 +3,11 @@ const std = @import("std");
 const t = std.testing;
 const print = std.debug.print;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 fn run(bytes: []const u8, expected: i64) !void {
     var c = try language.Compilation.init(t.allocator, "structural.my", bytes);
     defer c.deinit();
-    const result = c.execute(t.allocator) catch |err| {
+    const result = native.run(&c) catch |err| {
         for (c.diagnostics.items) |diag| print("{s}: {s} ({s})\n", .{ diag.code, diag.message, c.src.text(diag.span) });
         return err;
     };
@@ -286,7 +287,7 @@ fn lifecycle(allocator: std.mem.Allocator) !void {
     const again = try copy.format(allocator);
     defer allocator.free(again);
     try t.expectEqualStrings(formatted, again);
-    try t.expectEqual(@as(i64, 12), (try copy.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 12), (try native.run(&copy)).value);
 }
 test "structural formatter lifecycle round trips and releases storage under allocation failure" {
     try lifecycle(t.allocator);
@@ -327,7 +328,7 @@ test "structural imported operation dispatch survives AST source relocation" {
     var program: language.embedded_project.Program = undefined;
     try program.init(t.allocator, .{ .context = null, .read = moduleRead });
     defer program.deinit();
-    try t.expectEqual(@as(i64, 13), (try language.vm.run(t.allocator, program.compilation.code.?)).value);
+    try t.expectEqual(@as(i64, 13), (try native.run(&program.compilation)).value);
 }
 
 // spec: STRUCTURAL-COMPOSITE-1
@@ -391,5 +392,5 @@ fn compositeLifecycle(allocator: std.mem.Allocator) !void {
     defer allocator.free(formatted);
     var copy = try language.Compilation.init(allocator, "formatted.my", formatted);
     defer copy.deinit();
-    try t.expectEqual(@as(i64, 7), (try copy.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 7), (try native.run(&copy)).value);
 }

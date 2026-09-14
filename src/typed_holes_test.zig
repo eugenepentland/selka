@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const source =
     \\def first() -> i64:
     \\    return todo[i64]()
@@ -28,7 +29,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
         try t.expectEqualStrings("todo", compilation.src.text(item.span));
         try t.expect(item.related != null);
     }
-    try t.expectError(error.SourceError, compilation.execute(allocator));
+    try t.expectError(error.SourceError, native.run(&compilation));
     try t.expect(compilation.program == null);
 }
 // spec: TYPED-HOLES-1
@@ -47,5 +48,5 @@ test "formatting retains typed holes and filling them restores executable checki
         \\    return 7
     );
     defer repaired.deinit();
-    try t.expectEqual(@as(i64, 7), (try repaired.execute(t.allocator)).value);
+    try t.expectEqual(@as(i64, 7), (try native.run(&repaired)).value);
 }

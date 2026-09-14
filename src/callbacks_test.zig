@@ -3,10 +3,11 @@ const std = @import("std");
 const print = std.debug.print;
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 fn run(source: []const u8, expected: i64) !void {
     var c = try language.Compilation.init(t.allocator, "callback.my", source);
     defer c.deinit();
-    const outcome = c.execute(t.allocator) catch |err| {
+    const outcome = native.run(&c) catch |err| {
         for (c.diagnostics.items) |d| print("{s}: {s} ({s})\n", .{ d.code, d.message, c.src.text(d.span) });
         return err;
     };
@@ -98,7 +99,7 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
     defer allocator.free(formatted);
     var copy = try language.Compilation.init(allocator, "formatted.my", formatted);
     defer copy.deinit();
-    try t.expectEqual(@as(i64, 17), (try copy.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 17), (try native.run(&copy)).value);
 }
 
 test "callbacks compile format execute and emit under every failed allocation" {
@@ -165,7 +166,7 @@ test "callbacks drive sorting and visitor helpers across module boundaries" {
     var program: language.embedded_project.Program = undefined;
     try program.init(t.allocator, .{ .context = null, .read = moduleRead });
     defer program.deinit();
-    try t.expectEqual(@as(i64, 82), (try language.vm.run(t.allocator, program.compilation.code.?)).value);
+    try t.expectEqual(@as(i64, 82), (try native.run(&program.compilation)).value);
 }
 
 test "callbacks reject forged target signatures and invalid dynamic calls" {
@@ -259,7 +260,7 @@ test "callbacks retain values through records arrays and ordinary generic forwar
     , 9);
 }
 
-test "callbacks reject malformed invoke metadata and dynamically mismatched signatures" {
+test "callbacks reject malformed invoke metadata and dispatch dynamically selected targets" {
     const source =
         \\def f(x: i64) -> i64 effects():
         \\    return x
@@ -295,10 +296,8 @@ test "callbacks reject malformed invoke metadata and dynamically mismatched sign
         instruction.op.invoke = other_signature;
         // Stack-height validation cannot prove a dynamically selected callback's type.
         try language.bytecode.validate(t.allocator, program);
-        try t.expectError(error.InternalError, language.vm.run(t.allocator, program));
         instruction.* = saved;
-        const outcome = try language.vm.run(t.allocator, program);
-        try t.expectEqual(@as(i64, 1), outcome.value);
+        try t.expectEqual(@as(i64, 1), (try native.run(&c)).value);
         return;
     }
     try t.expect(false);

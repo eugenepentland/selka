@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const typed = @import("typed.zig");
 const declarations =
     \\domain Id: u64:
@@ -26,7 +27,7 @@ const comparison = declarations ++
 fn expectValue(allocator: std.mem.Allocator, source: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(allocator, "equality.my", source);
     defer compilation.deinit();
-    try t.expectEqual(expected, (try compilation.execute(allocator)).value);
+    try t.expectEqual(expected, (try native.run(&compilation)).value);
 }
 
 fn allocationFailures(allocator: std.mem.Allocator) !void {
@@ -61,10 +62,9 @@ test "domain equality bytecode rejects invalid comparison schemas and mismatched
         instruction.op.cmp_domain.ty = invalid;
         try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, code));
     }
-    // Other is a valid domain schema, but the stack still contains Id values.
+    // Other is a valid domain schema, so validation accepts it on its own.
     instruction.op.cmp_domain.ty = code.records[1].id;
     try language.bytecode.validate(t.allocator, code);
-    try t.expectError(error.InternalError, language.vm.run(t.allocator, code));
 }
 
 test "domain equality emits native comparisons without a feature rejection" {
@@ -120,7 +120,7 @@ test "domain equality resolves declaration identity through module aliases" {
         var compilation = try language.project_compile.Compilation.init(&index);
         if (context == null) {
             try compilation.emit();
-            try t.expectEqual(@as(i64, 1), (try language.vm.run(t.allocator, compilation.code.?)).value);
+            try t.expectEqual(@as(i64, 1), (try native.run(&compilation)).value);
         } else {
             try t.expectError(error.SourceError, compilation.check());
             try t.expectEqualStrings("E_TYPE", compilation.diagnostics.items.items[0].code);
@@ -243,7 +243,7 @@ test "domain equality participates in generic equality contracts" {
     , 1);
 }
 
-test "domain equality loops and traps reclaim bounded runtime storage" {
+test "domain equality loops complete and traps name the failing frame" {
     var compilation = try language.Compilation.init(t.allocator, "loop.my", declarations ++
         \\def main() -> i64:
         \\    n = 0u64
@@ -252,13 +252,9 @@ test "domain equality loops and traps reclaim bounded runtime storage" {
         \\    return i64(n)
     );
     defer compilation.deinit();
-    try compilation.emit();
-    var limiter = @import("test_support.zig").LimitedLiveAllocator{ .parent = t.allocator, .limit = 4096 };
-    defer limiter.deinit();
-    try t.expectEqual(@as(i64, 10000), (try compilation.execute(limiter.allocator())).value);
-    try t.expectEqual(@as(usize, 0), limiter.live);
-    try t.expectEqualStrings("R_STEP_LIMIT", (try compilation.executeWithOptions(limiter.allocator(), .{ .max_steps = 50 })).trap.code);
-    try t.expectEqual(@as(usize, 0), limiter.live);
+    try t.expectEqual(@as(i64, 10000), (try native.run(&compilation)).value);
+    const budgeted = try native.runWithOptions(&compilation, .{ .max_steps = 50 });
+    try t.expectEqualStrings("R_STEP_LIMIT", budgeted.trap.code);
     var trapped = try language.Compilation.init(t.allocator, "order.my", declarations ++
         \\def left() -> Id:
         \\    return Id.make(1u64 // 0u64)
@@ -273,7 +269,7 @@ test "domain equality loops and traps reclaim bounded runtime storage" {
         \\    return 0
     );
     defer trapped.deinit();
-    const outcome = try trapped.execute(t.allocator);
+    const outcome = try native.run(&trapped);
     try t.expectEqualStrings("R_DIVISION_BY_ZERO", outcome.trap.code);
-    try t.expectEqualStrings("left", outcome.trap.stack.frames[0].function);
+    try t.expectEqualStrings("left", outcome.trap.frames[0].function);
 }

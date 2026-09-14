@@ -4,12 +4,12 @@ const fixture_path = "propagation.my";
 const std = @import("std");
 const testing = std.testing;
 const language = @import("compiler.zig");
-const LimitedLiveAllocator = @import("test_support.zig").LimitedLiveAllocator;
+const native = @import("native_execute.zig");
 const declaration = @import("fixture_declarations_test.zig").scalar_result;
 fn result(source: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
     defer compilation.deinit();
-    try testing.expectEqual(expected, (try compilation.execute(testing.allocator)).value);
+    try testing.expectEqual(expected, (try native.run(&compilation)).value);
 }
 fn reject(body: []const u8, code: []const u8) !void {
     const source = try std.mem.concat(testing.allocator, u8, &.{ declaration, body });
@@ -62,7 +62,7 @@ const owned_source =
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, fixture_path, owned_source);
     defer compilation.deinit();
-    try testing.expectEqual(@as(i64, 7), (try compilation.execute(allocator)).value);
+    try testing.expectEqual(@as(i64, 7), (try native.run(&compilation)).value);
     const dump = try compilation.dump(allocator);
     defer allocator.free(dump);
     var discovery = try language.duplicates.discover(allocator, compilation.program.?, .{});
