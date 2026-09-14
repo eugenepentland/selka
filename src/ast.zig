@@ -43,8 +43,8 @@ pub const BinaryOp = enum {
     f64_lt,
     f64_le,
 };
-/// Parsed simple, additive, and subtractive assignment forms.
-pub const AssignmentOp = enum { set, add, sub };
+/// Parsed simple and augmented assignment forms.
+pub const AssignmentOp = enum { set, add, sub, mul, div, floor_div, rem };
 /// Parsed negation and Boolean inversion operators.
 pub const UnaryOp = enum { neg, not, f64_sqrt, f64_floor, f64_ceil, f64_trunc, f64_abs, f64_neg, f64_from_u64, f64_to_u64, f64_from_i64, f64_to_i64 };
 /// Source type spelling paired with an expression requiring that type.
@@ -54,6 +54,7 @@ pub const Node = struct {
     span: Span,
     data: union(enum) {
         field_assignment: struct { target: NodeId, value: NodeId },
+        index_assignment: struct { target: NodeId, op: AssignmentOp, value: NodeId },
         list_literal: []const NodeId,
         method_call: struct { base: NodeId, name: Span, arguments: []const NodeId },
         list_operation: struct { base: NodeId, kind: @import("buffer_operations.zig").Kind, arguments: []const NodeId },

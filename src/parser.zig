@@ -623,14 +623,9 @@ pub const Parser = struct {
                     break :assignment .{ .discard = try self.expression(0) };
                 }
                 const operator = self.tokens[self.cursor.pos + 1];
-                const op: ast.AssignmentOp = switch (operator.tag) {
-                    .equal => .set,
-                    .plus_equal => .add,
-                    .minus_equal => .sub,
-                    else => {
-                        implicit_discard = true;
-                        break :assignment .{ .discard = try self.assignmentExpression() };
-                    },
+                const op: ast.AssignmentOp = assignmentOperation(operator.tag) orelse {
+                    implicit_discard = true;
+                    break :assignment .{ .discard = try self.assignmentExpression() };
                 };
                 self.cursor.pos += 2;
                 break :assignment .{ .assignment = .{ .name = first.span, .value = try self.expression(0), .op = op, .op_span = operator.span } };
@@ -676,17 +671,38 @@ pub const Parser = struct {
     }
     fn assignmentExpression(self: *Parser) diagnostic.Error!ast.NodeId {
         const value = try self.expression(0);
-        if (!self.take(.equal)) return value;
+        const operator = self.current();
+        const op = assignmentOperation(operator.tag) orelse return value;
+        self.cursor.pos += 1;
         const target = self.syntax.nodes.items[@backingInt(value)];
         if (target.data == .field) {
+            if (op != .set) return self.sink.fail("E_ASSIGNMENT_TARGET", operator.span, "augmented assignment to a record field is not supported; write the field out in full");
             const assigned = try self.expression(0);
             return self.append(.{ .span = .join(target.span, self.syntax.nodes.items[@backingInt(assigned)].span), .data = .{ .field_assignment = .{ .target = value, .value = assigned } } });
         }
         if (target.data != .index) return self.sink.fail("E_ASSIGNMENT_TARGET", target.span, "indexed assignment requires a list binding and index");
+        if (op != .set) {
+            const assigned = try self.expression(0);
+            return self.append(.{ .span = .join(target.span, self.syntax.nodes.items[@backingInt(assigned)].span), .data = .{ .index_assignment = .{ .target = value, .op = op, .value = assigned } } });
+        }
         const arguments = try self.arena.allocator().alloc(ast.NodeId, 2);
         arguments[0] = target.data.index.index;
         arguments[1] = try self.expression(0);
         return self.append(.{ .span = .join(target.span, self.syntax.nodes.items[@backingInt(arguments[1])].span), .data = .{ .list_operation = .{ .kind = .write, .base = target.data.index.base, .arguments = arguments } } });
+    }
+
+    /// Map an assignment operator token, or null when the statement is an expression.
+    fn assignmentOperation(tag: lex.Tag) ?ast.AssignmentOp {
+        return switch (tag) {
+            .equal => .set,
+            .plus_equal => .add,
+            .minus_equal => .sub,
+            .star_equal => .mul,
+            .slash_equal => .div,
+            .slash_slash_equal => .floor_div,
+            .percent_equal => .rem,
+            else => null,
+        };
     }
 
     fn append(self: *Parser, node: ast.Node) diagnostic.Error!ast.NodeId {

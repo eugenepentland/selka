@@ -170,6 +170,56 @@ test "slice step selects every nth element of a list and of text in both directi
     , 42);
 }
 
+// spec: PY-AUGASSIGN-1
+test "augmented assignment applies each binding type's own operator rules" {
+    try run(
+        \\def main() -> i64:
+        \\    n = 5
+        \\    n *= 8
+        \\    n += 2
+        \\    m = 17
+        \\    m //= 2
+        \\    if m != 8:
+        \\        return 1
+        \\    m %= 5
+        \\    if m != 3:
+        \\        return 2
+        \\    ratio = 1.0
+        \\    ratio += 2.5
+        \\    ratio *= 2.0
+        \\    if int(ratio) != 7:
+        \\        return 3
+        \\    ratio -= 0.5
+        \\    if int(ratio) != 6:
+        \\        return 4
+        \\    label = "a"
+        \\    label += "b"
+        \\    if label != "ab":
+        \\        return 5
+        \\    return n
+    , 42);
+}
+
+// spec: PY-AUGASSIGN-2
+test "augmented assignment writes a list slot and a dictionary entry in place" {
+    try run(
+        \\def main() -> i64:
+        \\    xs = [1, 2]
+        \\    xs[0] += 5
+        \\    xs[1] *= 3
+        \\    xs[-1] -= 6
+        \\    counts = {"a": 1}
+        \\    counts["a"] += 41
+        \\    label = {"k": "a"}
+        \\    label["k"] += "b"
+        \\    if xs[0] != 6 or xs[1] != 0:
+        \\        return 1
+        \\    if label["k"] != "ab":
+        \\        return 2
+        \\    return counts["a"]
+    , 42);
+}
+
 // spec: PY-COLLECTIONS-11
 test "outer annotated postfix expressions do not contaminate literal element inference" {
     try run(

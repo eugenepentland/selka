@@ -46,6 +46,19 @@ const variantDeclaredHere = "variant declared here";
 const std = @import("std");
 const bufferOperation = "buffer_operation";
 const eCollectionMethod = "E_COLLECTION_METHOD";
+/// The ordinary binary operator one augmented assignment applies to its operand pair.
+fn augmentedOperator(op: ast.AssignmentOp) ast.BinaryOp {
+    return switch (op) {
+        .add => .add,
+        .sub => .sub,
+        .mul => .mul,
+        .div => .python_div,
+        .floor_div => .floor_div,
+        .rem => .floor_rem,
+        .set => .add,
+    };
+}
+const eTextOperator = "E_TEXT_OPERATOR";
 const unsupported_collection = "operation is not supported by this collection";
 
 const ast = @import("ast.zig");
@@ -819,6 +832,48 @@ const Checker = struct {
             try b.stmt(.{ .assign = .{ .slot = destination.owner, .value = value } });
         try statements.append(self.allocator, write);
         return b.block(statements.items, try b.node(.unit, .unit));
+    }
+    /// Check `values[index] op= value` by reading the slot once, combining the pair with
+    /// the operator's ordinary rules and writing the result back through the same slot.
+    fn checkIndexAugmented(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
+        const assignment = node.data.index_assignment;
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
+        var statements: std.ArrayList(typed.StatementId) = .empty;
+        const destination = try self.fieldDestination(self.syntax.nodes.items[@backingInt(assignment.target)], &statements, temporaries);
+        const index = destination.index orelse return self.sink.fail("E_ASSIGNMENT_TARGET", node.span, "augmented assignment requires a list slot or dictionary entry");
+        const element = self.nodes.items[@backingInt(destination.value)].ty;
+        try self.hint(assignment.value, element);
+        const right = try self.expressionWithTemporaries(assignment.value, temporaries);
+        try self.require(self.nodes.items[@backingInt(right)].ty, element, node.span);
+        const combined = try self.augmented(assignment.op, destination.value, right, node.span);
+        const stored = try b.local(element);
+        const evaluate_value = try b.stmt(.{ .initialize = .{ .slot = stored, .value = combined } });
+        // Python reads the slot first, then evaluates the assigned value and writes back.
+        try statements.append(self.allocator, evaluate_value);
+        try statements.append(self.allocator, try b.stmt(.{ .discard = try b.operation(destination.owner, .write, &.{ index, try b.read(stored) }) }));
+        return b.block(statements.items, try b.node(.unit, .unit));
+    }
+    /// Combine one augmented-assignment operand pair with the operator's checked rules.
+    fn augmented(self: *Checker, op: ast.AssignmentOp, left: typed.NodeId, right: typed.NodeId, span: source.Span) Error!typed.NodeId {
+        const left_type = self.nodes.items[@backingInt(left)].ty;
+        if (numeric_surface.isFloat(left_type, self.catalog.records)) {
+            const builder = self.numericBuilder(span);
+            return builder.append(try builder.binary(augmentedOperator(op), left, right, self.sink));
+        }
+        if (left_type.isAggregate() and self.catalog.records[left_type.recordIndex()].managed) {
+            const sequence = self.catalog.records[left_type.recordIndex()].collection.kind;
+            if (op != .add or sequence == .dictionary) return self.sink.fail(eTextOperator, span, "a managed collection augments with `+=` only, and str, bytes and list are the types that support it");
+        } else {
+            try self.requireInteger(left_type, span);
+            if (op == .div) return self.sink.fail("E_TYPE", span, "augmented `/=` produces a float; declare the binding as float or use `//=`");
+        }
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = span };
+        return b.node(left_type, .{ .binary = .{
+            .op = std.meta.stringToEnum(typed.BinaryOp, @tagName(augmentedOperator(op))).?,
+            .left = left,
+            .right = right,
+            .op_span = span,
+        } });
     }
     fn fieldDestination(self: *Checker, root: ast.Node, statements: *std.ArrayList(typed.StatementId), temporaries: []const typed.Type) Error!FieldDestination {
         const b: collections.Builder(Checker) = .{ .checker = self, .span = root.span };
@@ -1897,6 +1952,7 @@ const Checker = struct {
             out.data = .{ .integer = parsed.value };
         } else switch (node.data) {
             .field_assignment => return self.checkFieldAssignment(node, temporaries),
+            .index_assignment => return self.checkIndexAugmented(node, temporaries),
             .list_literal => |inputs| return self.checkListLiteral(node, inputs, temporaries),
             .format => |parts| return self.checkFormat(node, parts, temporaries),
             .comprehension => |each| return self.checkComprehension(node, each, temporaries),
@@ -2631,19 +2687,12 @@ const Checker = struct {
             return self.sink.fail(eImmutable, a.name, "this binding cannot be assigned");
         var value = try self.expressionExpected(a.value, self.locals.items[@backingInt(slot)].ty);
         if (a.op != .set) {
-            try self.requireInteger(self.locals.items[@backingInt(slot)].ty, a.op_span);
-            try self.require(self.nodes.items[@backingInt(value)].ty, self.locals.items[@backingInt(slot)].ty, a.op_span);
+            const target_type = self.locals.items[@backingInt(slot)].ty;
+            try self.require(self.nodes.items[@backingInt(value)].ty, target_type, a.op_span);
             self.locals.items[@backingInt(slot)].usage.reads += 1;
             const read: typed.NodeId = @fromBackingInt(self.nodes.items.len);
-            try self.nodes.append(self.allocator, .{ .ty = self.locals.items[@backingInt(slot)].ty, .span = a.name, .data = .{ .local = slot } });
-            const combined: typed.NodeId = @fromBackingInt(self.nodes.items.len);
-            try self.nodes.append(self.allocator, .{ .ty = self.locals.items[@backingInt(slot)].ty, .span = stmt.span, .data = .{ .binary = .{
-                .op = if (a.op == .add) .add else .sub,
-                .left = read,
-                .right = value,
-                .op_span = a.op_span,
-            } } });
-            value = combined;
+            try self.nodes.append(self.allocator, .{ .ty = target_type, .span = a.name, .data = .{ .local = slot } });
+            value = try self.augmented(a.op, read, value, a.op_span);
         }
         try self.require(self.nodes.items[@backingInt(value)].ty, self.locals.items[@backingInt(slot)].ty, stmt.span);
         try self.requireArenaAssignment(slot, value);
