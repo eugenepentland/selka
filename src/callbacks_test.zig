@@ -38,6 +38,51 @@ test "callbacks infer function values and invoke passed exact signatures" {
     , 9);
 }
 
+// spec: PY-LAMBDA-1
+test "expression lambdas use an expected callback signature and invoke correctly" {
+    try run(
+        \\def apply(f: def(int) -> int effects(), value: int) -> int:
+        \\    return f(value)
+        \\
+        \\
+        \\def main() -> int:
+        \\    return apply(lambda value: value + 2, 40)
+    , 42);
+    try run(
+        \\const OFFSET: int = 2
+        \\
+        \\
+        \\def apply(f: def(int) -> int effects(), value: int) -> int:
+        \\    return f(value)
+        \\
+        \\
+        \\def main() -> int:
+        \\    return apply(lambda value: value + OFFSET, 40)
+    , 42);
+}
+
+// spec: PY-LAMBDA-2
+test "lambdas reject missing context wrong results effects and local captures" {
+    try reject("def main() -> int:\n    f = lambda value: value\n    return 0\n", "E_LAMBDA_CONTEXT");
+    try reject(
+        "def apply(f: def(int) -> bool effects()) -> int:\n    return 0\n\ndef main() -> int:\n    return apply(lambda value: value + 1)\n",
+        "E_TYPE",
+    );
+    try reject(
+        "def apply(f: def(int) -> None effects()) -> int:\n    return 0\n\ndef main() -> int:\n    return apply(lambda value: print(value))\n",
+        "E_EFFECT_BOUND",
+    );
+    var capture = try language.Compilation.init(
+        t.allocator,
+        "lambda-capture.my",
+        "def apply(f: def(int) -> int effects()) -> int:\n    return f(1)\n\ndef main() -> int:\n    offset = 2\n    return apply(lambda value: value + offset)\n",
+    );
+    defer capture.deinit();
+    try t.expectError(error.SourceError, capture.check());
+    try t.expectEqualStrings("E_LAMBDA_CAPTURE", capture.diagnostics.items[0].code);
+    try t.expectEqualStrings("offset", capture.src.text(capture.diagnostics.items[0].span));
+}
+
 // spec-case: CALLBACK-1
 test "a callback type names itself the way the surface writes it" {
     var c = try language.Compilation.init(t.allocator, "callback-name.my",

@@ -183,7 +183,10 @@ pub const Program = struct {
     nodes: std.ArrayList(Node),
     statements: std.ArrayList(Statement),
     functions: []const Function,
+    lambdas: []const Lambda = &.{},
 };
+/// Expression-bodied anonymous function with contextually typed parameters and result.
+pub const Lambda = struct { span: Span, parameters: []const Span, body: NodeId };
 /// Source type declarations collected separately from function bodies and expression tables.
 pub const TypeDeclarations = struct {
     resources: []const Domain = &.{},

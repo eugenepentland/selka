@@ -11,6 +11,8 @@ const io_render = @import("io_render.zig");
 const file_operations = @import("file_operations.zig");
 const callables = @import("callables.zig");
 const callback_type_code = "E_CALLBACK_TYPE";
+const lambda_context_code = "E_LAMBDA_CONTEXT";
+const call_argument_code = "E_CALL_ARGUMENT";
 const eResultOperation = diagnostic.result_operation;
 const eOwnedConsumed = diagnostic.owned_consumed;
 const eResultPath = diagnostic.result_path;
@@ -80,7 +82,7 @@ const eArenaBinding = "E_ARENA_BINDING";
 const eWithResource = "E_WITH_RESOURCE";
 const eFileArgument = "E_FILE_ARGUMENT";
 const Pending = struct { available: bool, transfer_span: ?source.Span };
-const Work = struct { default_value: bool = false, id: ast.NodeId, emit: bool = false, checkpoint: bool = false, verify: ?[]const Pending = null };
+const Work = struct { default_value: bool = false, id: ast.NodeId, emit: bool = false, checkpoint: bool = false, sorted_key: bool = false, verify: ?[]const Pending = null };
 const FieldDestination = struct { owner: typed.LocalId, index: ?typed.NodeId, value: typed.NodeId, refresh: typed.StatementId };
 /// An already-evaluated managed receiver and the source arguments of its method.
 const ManagedAccess = struct { base: typed.NodeId, kind: BufferKind, inputs: []const ast.NodeId, receiver: ?typed.LocalId = null };
@@ -105,6 +107,8 @@ const arrays = @import("array_literals.zig");
 const variant_calls = @import("variant_calls.zig");
 const truncating = @import("truncating_math.zig");
 
+const LambdaCapture = struct { name: []const u8 };
+
 const Checker = struct {
     allocator: std.mem.Allocator,
     src: source.Source,
@@ -123,6 +127,10 @@ const Checker = struct {
     ordinary_ids: []?typed.FunctionId,
     ordinary_count: usize = 0,
     current_function: ?typed.FunctionId = null,
+    current_lambda: ?usize = null,
+    lambda_start: usize = 0,
+    lambda_types: []?typed.Type = &.{},
+    lambda_captures: []?[]const LambdaCapture = &.{},
     loops: struct { active: std.ArrayList(LoopScope) = .empty, next: usize = 0 } = .{},
     return_type: typed.Type = .i64,
     arenas: std.ArrayList(ArenaScope) = .empty,
@@ -134,10 +142,13 @@ const Checker = struct {
     trapping_open: ?source.Span = null,
 
     fn checkFunction(self: *Checker, i: usize) Error!typed.Function {
+        if (i >= self.lambda_start and i < self.lambda_start + self.syntax.lambdas.len)
+            return self.checkLambdaFunction(i - self.lambda_start);
         const allocator = self.allocator;
         const src = self.src;
         const sink = self.sink;
         self.current_function = @fromBackingInt(i);
+        self.current_lambda = null;
         const function = self.syntaxFunction(@fromBackingInt(i));
         const constant_context: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = self.sink, .catalog = self.catalog };
         const constant = if (function.policy.constant) try constant_context.evaluate(@backingInt(self.instance_keys.items[i].declaration)) else null;
@@ -219,6 +230,48 @@ const Checker = struct {
             .name = try self.instanceName(@fromBackingInt(i)),
             .type_arguments = self.instance_keys.items[i].arguments,
             .declaration = function.name,
+        };
+    }
+    fn checkLambdaFunction(self: *Checker, index: usize) Error!typed.Function {
+        const lambda = self.syntax.lambdas[index];
+        const lambda_type = self.lambda_types[index] orelse
+            return self.sink.fail(lambda_context_code, lambda.span, "lambda requires an expected callback type");
+        const contract = callables.signature(lambda_type, self.catalog.records) orelse return error.InternalError;
+        self.current_function = null;
+        self.current_lambda = index;
+        for (self.resolved_nodes.items) |node| self.resolved[node] = null;
+        self.resolved_nodes.clearRetainingCapacity();
+        self.expected_types.clearRetainingCapacity();
+        self.locals = .empty;
+        self.active.clearRetainingCapacity();
+        self.owner = null;
+        self.return_type = contract.return_type;
+        for (lambda.parameters, contract.parameters) |parameter, parameter_type| {
+            const name = self.src.text(parameter);
+            if (self.active.contains(name)) return self.sink.fail("E_DUPLICATE_PARAMETER", parameter, "lambda parameter name is already declared");
+            const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
+            try self.locals.append(self.allocator, .{
+                .name = name,
+                .declaration = parameter,
+                .ty = parameter_type,
+                .mutable = false,
+                .ownership = .{ .initialized = true, .transfer_available = self.transfers(parameter_type) },
+            });
+            try self.active.put(self.allocator, name, slot);
+        }
+        const value = try self.expressionExpected(lambda.body, contract.return_type);
+        try self.require(self.nodes.items[@backingInt(value)].ty, contract.return_type, self.syntax.nodes.items[@backingInt(lambda.body)].span);
+        try self.requireHandled(0, lambda.span);
+        const body: typed.StatementId = @fromBackingInt(self.statements.items.len);
+        try self.statements.append(self.allocator, .{ .span = lambda.span, .terminates = true, .data = .{ .ret = value } });
+        const name = try std.fmt.allocPrint(self.allocator, "lambda@{d}", .{lambda.span.start});
+        return .{
+            .policy = .{ .effect_bound = .{ .span = lambda.span, .allowed = contract.effects } },
+            .signature = .{ .return_type = contract.return_type, .parameter_count = contract.parameters.len },
+            .scope = .{ .body = body, .locals = try self.locals.toOwnedSlice(self.allocator) },
+            .id = @fromBackingInt(self.lambda_start + index),
+            .name = name,
+            .declaration = lambda.span,
         };
     }
     fn topLevel(self: *Checker, span: source.Span) error{InternalError}!bool {
@@ -659,11 +712,19 @@ const Checker = struct {
         }
     }
     /// Queue the operands of one prelude builtin call in evaluation order.
-    fn queuePreludeCall(self: *Checker, work: *std.ArrayList(Work), call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
+    fn queuePreludeCall(self: *Checker, work: *std.ArrayList(Work), call_id: ast.NodeId, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
         if (!try self.preludeName(call)) return false;
-        try call_arguments.positional(call, self.sink);
-        try self.hintPreludeArguments(self.src.text(call.name), call);
-        const materialized = if (prelude_builtins.materializes(self.src.text(call.name)) and call.arguments.len == 1) try self.rangeSource(call.arguments[0]) else null;
+        const name = self.src.text(call.name);
+        if (std.mem.eql(u8, name, "sorted")) {
+            try self.validateSortedArguments(call);
+            if (call.arguments.len == 2) {
+                try work.append(self.allocator, .{ .id = call_id, .sorted_key = true });
+                try work.append(self.allocator, .{ .id = call.arguments[0] });
+                return true;
+            }
+        } else try call_arguments.positional(call, self.sink);
+        try self.hintPreludeArguments(name, call);
+        const materialized = if (prelude_builtins.materializes(name) and call.arguments.len == 1) try self.rangeSource(call.arguments[0]) else null;
         const arguments = if (materialized) |range| range.arguments else call.arguments;
         var index = arguments.len;
         while (index > 0) {
@@ -675,8 +736,8 @@ const Checker = struct {
     /// Build one prelude builtin call, or report that a later recognizer owns it.
     fn checkPreludeCall(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!bool {
         if (!try self.preludeName(call)) return false;
-        try call_arguments.positional(call, self.sink);
         const name = self.src.text(call.name);
+        if (std.mem.eql(u8, name, "sorted")) try self.validateSortedArguments(call) else try call_arguments.positional(call, self.sink);
         const builtins: prelude_builtins.Prelude(Checker) = .{ .checker = self };
         if (prelude_builtins.materializes(name) and call.arguments.len == 1) {
             if (try self.rangeSource(call.arguments[0])) |range| {
@@ -692,6 +753,35 @@ const Checker = struct {
         for (call.arguments, values) |id, *slot| slot.* = self.resolved[@backingInt(id)].?;
         out.* = (try builtins.build(node.span, name, values)) orelse return false;
         return true;
+    }
+    fn validateSortedArguments(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!void {
+        if (call.arguments.len == 0 or call.arguments.len > 2) return self.sink.fail("E_ARITY", call.name, "sorted requires a list and optional key callback");
+        if (call.argument_names.len == 0) {
+            if (call.arguments.len == 2) return self.sink.fail(call_argument_code, self.syntax.nodes.items[@backingInt(call.arguments[1])].span, "sorted key must be written as key=callback");
+            return;
+        }
+        if (call.argument_names[0] != null) return self.sink.fail(call_argument_code, call.argument_names[0].?, "the sorted list is positional");
+        if (call.arguments.len != 2 or call.argument_names[1] == null or !std.mem.eql(u8, self.src.text(call.argument_names[1].?), "key"))
+            return self.sink.fail(call_argument_code, call.name, "sorted accepts only the named argument key=callback");
+    }
+    fn hintSortedArguments(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!void {
+        try self.validateSortedArguments(call);
+        if (call.arguments.len != 2) return;
+        const input = self.syntax.nodes.items[@backingInt(call.arguments[0])];
+        const input_type = if (self.resolved[@backingInt(call.arguments[0])]) |value|
+            self.nodes.items[@backingInt(value)].ty
+        else if (input.data == .name) name: {
+            const slot = self.active.get(self.src.text(input.data.name)) orelse return;
+            break :name self.locals.items[@backingInt(slot)].ty;
+        } else return;
+        if (!input_type.isAggregate()) return self.sink.fail("E_PRELUDE_TYPE", input.span, "sorted key requires a list input");
+        const input_schema = self.catalog.records[input_type.recordIndex()];
+        if (!input_schema.managed or input_schema.collection.kind != .list)
+            return self.sink.fail("E_PRELUDE_TYPE", input.span, "sorted key requires a list input");
+        const element = input_schema.shape.buffer.?;
+        const parameters = try self.allocator.dupe(typed.Type, &.{element});
+        const callback = try callables.intern(self.allocator, &self.catalog, .{ .parameters = parameters, .return_type = .i64, .effects = 0 }, call.argument_names[1].?, self.sink);
+        try self.hint(call.arguments[1], callback);
     }
     /// Whole-path file helpers are reserved under the same shadowing rule as `print`.
     fn fileAccessBuiltin(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?file_operations.Access {
@@ -1410,8 +1500,8 @@ const Checker = struct {
             }
         }
     }
-    fn queueBuiltinCall(self: *Checker, work: *std.ArrayList(Work), call: @FieldType(@FieldType(ast.Node, "data"), "call"), node: ast.Node) Error!bool {
-        if (try self.queuePreludeCall(work, call)) return true;
+    fn queueBuiltinCall(self: *Checker, work: *std.ArrayList(Work), call_id: ast.NodeId, call: @FieldType(@FieldType(ast.Node, "data"), "call"), node: ast.Node) Error!bool {
+        if (try self.queuePreludeCall(work, call_id, call)) return true;
         if (try self.floatIntrinsic(call) != null) {
             try call_arguments.positional(call, self.sink);
             if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "float operations require one argument");
@@ -1615,7 +1705,7 @@ const Checker = struct {
             },
             .call => |call| {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
-                if (try self.queueBuiltinCall(work, call, node)) return true;
+                if (try self.queueBuiltinCall(work, id, call, node)) return true;
                 if (call.owner == null and self.active.contains(self.src.text(call.name))) {
                     var index = call.arguments.len;
                     while (index > 0) {
@@ -1929,6 +2019,13 @@ const Checker = struct {
             }
         }
         if (!self.active.contains(self.src.text(name)) and try self.functionValue(name, out)) return;
+        if (!self.active.contains(self.src.text(name))) if (self.current_lambda) |lambda_index| {
+            if (self.lambda_captures[lambda_index]) |captures| for (captures) |capture| {
+                if (!std.mem.eql(u8, capture.name, self.src.text(name))) continue;
+                const message = try std.fmt.allocPrint(self.allocator, "lambda cannot capture local `{s}`; use a top-level function or pass the value as an explicit state parameter", .{capture.name});
+                return self.sink.fail("E_LAMBDA_CAPTURE", name, message);
+            };
+        };
         const slot = try self.resolve(name);
         try self.requireReadable(slot, name);
         if (self.transfers(self.locals.items[@backingInt(slot)].ty)) {
@@ -2282,7 +2379,9 @@ const Checker = struct {
     }
     fn checkedExpression(self: *Checker, node: ast.Node, minimum_literal: ?Literal, temporaries: []const typed.Type) Error!typed.Node {
         var out: typed.Node = .{ .span = node.span, .ty = .i64, .data = undefined };
-        if (minimum_literal) |parsed| {
+        if (self.lambdaIndex(node.span)) |lambda_index| {
+            try self.checkLambdaValue(lambda_index, node, &out);
+        } else if (minimum_literal) |parsed| {
             out.ty = parsed.ty;
             out.data = .{ .integer = parsed.value };
         } else switch (node.data) {
@@ -2444,6 +2543,36 @@ const Checker = struct {
         }
         return out;
     }
+    fn lambdaIndex(self: *Checker, span: source.Span) ?usize {
+        for (self.syntax.lambdas, 0..) |lambda, index| {
+            if (lambda.span.start == span.start and lambda.span.end == span.end) return index;
+        }
+        return null;
+    }
+    fn checkLambdaValue(self: *Checker, index: usize, node: ast.Node, out: *typed.Node) Error!void {
+        const expected = self.expected_types.get(node.span) orelse return self.sink.fail(
+            lambda_context_code,
+            node.span,
+            "lambda requires an expected callback type; annotate the destination or pass it to a callback parameter",
+        );
+        const contract = callables.signature(expected, self.catalog.records) orelse return self.sink.fail(
+            lambda_context_code,
+            node.span,
+            "lambda requires an expected callback type",
+        );
+        const lambda = self.syntax.lambdas[index];
+        if (lambda.parameters.len != contract.parameters.len) return self.sink.fail("E_ARITY", node.span, "lambda parameter count must match its expected callback type");
+        if (self.lambda_types[index]) |previous| {
+            const old = callables.signature(previous, self.catalog.records) orelse return error.InternalError;
+            if (!callables.equal(old, contract)) return self.sink.fail(lambda_context_code, node.span, "one lambda expression cannot have conflicting callback types");
+        } else self.lambda_types[index] = expected;
+        var captures: std.ArrayList(LambdaCapture) = .empty;
+        var active = self.active.iterator();
+        while (active.next()) |entry| try captures.append(self.allocator, .{ .name = entry.key_ptr.* });
+        self.lambda_captures[index] = try captures.toOwnedSlice(self.allocator);
+        out.ty = expected;
+        out.data = .{ .function_value = @fromBackingInt(self.lambda_start + index) };
+    }
     fn consumedTemporaries(self: *Checker, node: ast.Node, out: typed.Node) Error!usize {
         if (node.data == .index and out.data == .block_value) return 2;
         if (node.data == .length and out.data == .block_value) return 1;
@@ -2483,6 +2612,13 @@ const Checker = struct {
         try temporaries.appendSlice(self.allocator, inherited);
         try work.append(self.allocator, .{ .id = root });
         while (work.pop()) |task| {
+            if (task.sorted_key) {
+                const parent = self.syntax.nodes.items[@backingInt(task.id)];
+                std.debug.assert(parent.data == .call);
+                try self.hintSortedArguments(parent.data.call);
+                try work.append(self.allocator, .{ .id = parent.data.call.arguments[1] });
+                continue;
+            }
             if (task.verify) |state| {
                 try self.samePending(state, self.syntax.nodes.items[@backingInt(task.id)].span, eResultPath);
                 continue;
@@ -3236,7 +3372,21 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     @memset(resolved, null);
     const ordinary_ids = try allocator.alloc(?typed.FunctionId, program.functions.len);
     @memset(ordinary_ids, null);
-    var checker: Checker = .{ .allocator = allocator, .src = src, .syntax = program, .sink = sink, .resolved = resolved, .catalog = catalog, .ordinary_ids = ordinary_ids };
+    const lambda_types = try allocator.alloc(?typed.Type, program.lambdas.len);
+    @memset(lambda_types, null);
+    const lambda_captures = try allocator.alloc(?[]const LambdaCapture, program.lambdas.len);
+    @memset(lambda_captures, null);
+    var checker: Checker = .{
+        .allocator = allocator,
+        .src = src,
+        .syntax = program,
+        .sink = sink,
+        .resolved = resolved,
+        .catalog = catalog,
+        .ordinary_ids = ordinary_ids,
+        .lambda_types = lambda_types,
+        .lambda_captures = lambda_captures,
+    };
     defer allocator.free(checker.managed_types);
     for (program.functions, 0..) |function, i| {
         const name = if (module_names) |names| try names.functionDeclaration(function.policy.owner, function.name) else try functionName(allocator, src, function.policy.owner, function.name);
@@ -3256,6 +3406,8 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
             try checker.instance_keys.append(allocator, .{ .declaration = @fromBackingInt(i), .arguments = &.{} });
         }
     }
+    checker.lambda_start = checker.instance_keys.items.len;
+    for (program.lambdas) |_| try checker.instance_keys.append(allocator, .{ .declaration = @fromBackingInt(0), .arguments = &.{} });
     const main_name = if (module_names) |names| try std.fmt.allocPrint(allocator, "{s}::main", .{names.index.project.modules.items[0].name}) else "main";
     checker.ordinary_count = checker.instance_keys.items.len;
     const main_declaration = checker.functions.get(main_name) orelse {
