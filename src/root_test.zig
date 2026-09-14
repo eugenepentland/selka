@@ -10,6 +10,7 @@ test {
 
     _ = @import("doc_coverage.zig");
     _ = @import("doc_coverage_command.zig");
+    _ = @import("doctest_command.zig");
 
     _ = @import("host_declarations_test.zig");
     _ = @import("native_execute.zig");

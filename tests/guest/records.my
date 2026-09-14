@@ -1,0 +1,101 @@
+module records
+export test_value_records
+export test_enums
+export test_unions
+export test_arrays_and_tables
+
+
+class Point:
+    x: int
+    y: int
+
+
+class Segment:
+    start: Point
+    end: Point
+    visible: bool
+
+
+enum Status:
+    ok,
+    missing,
+    failed
+
+
+union Shape:
+    empty,
+    radius: int,
+    point: Point
+
+
+def move(point: Point, dx: int) -> Point:
+    point.x = point.x + dx
+    return point
+
+
+def score(shape: Shape) -> int:
+    match shape:
+        case Shape.empty:
+            return 0
+        case Shape.radius(r):
+            return r * r
+        case Shape.point(p):
+            return p.x + p.y
+
+
+def status_code(status: Status) -> int:
+    match status:
+        case Status.ok:
+            return 200
+        case Status.missing:
+            return 404
+        case Status.failed:
+            return 500
+
+
+def codes() -> [Status]int:
+    return {Status.missing: 404, Status.ok: 200, Status.failed: 500}
+
+
+def test_value_records() -> bool:
+    origin = Point(y=2, x=3)
+    segment = Segment(start=origin, end=move(origin, 4), visible=True)
+    if origin.x != 3 or origin.y != 2 or segment.end.x != 7:
+        return False
+    copied = segment
+    copied.start.x = 99
+    return segment.start.x == 3 and copied.start.x == 99 and segment.visible
+
+
+def test_enums() -> bool:
+    if status_code(Status.ok) != 200 or status_code(Status.missing) != 404:
+        return False
+    status = Status.ok
+    match status:
+        case Status.ok:
+            return status_code(Status.failed) == 500
+        case Status.missing:
+            return False
+        case Status.failed:
+            return False
+
+
+def test_unions() -> bool:
+    shapes: list[Shape] = [Shape.point(Point(x=2, y=3)), Shape.radius(4), Shape.empty]
+    return score(shapes[0]) == 5 and score(shapes[1]) == 16 and score(shapes[2]) == 0
+
+
+def test_arrays_and_tables() -> bool:
+    fixed: [3]int = [7, 8, 9]
+    revised = replace(fixed, 1, 11)
+    table = codes()
+    updated = replace(table, Status.failed, 503)
+    if fixed[1] != 8 or revised[1] != 11:
+        return False
+    if table[Status.missing] != 404 or updated[Status.failed] != 503:
+        return False
+    return updated[Status.ok] == 200 and fixed[2] == 9
+
+
+def main() -> int:
+    return 0

@@ -1,0 +1,87 @@
+module generics
+export test_generic_functions
+export test_generic_records
+export test_generic_results
+export test_structural_contracts
+
+
+class Box[T]:
+    value: T
+
+
+class Reading:
+    value: int
+
+
+class TaggedReading:
+    tag: bool
+    value: int
+
+
+def identity[T](value: T) -> T:
+    return value
+
+
+def head[T](values: list[T]) -> Result[T, str]:
+    if len(values) == 0:
+        return Err("empty")
+    return Ok(values[0])
+
+
+def total[T: integer](value: T) -> T:
+    if value == T(0):
+        return value
+    return value + total[T](value - T(1))
+
+
+def contains[T: equality](items: list[T], needle: T) -> bool:
+    for item in items:
+        if item == needle:
+            return True
+    return False
+
+
+def field_value[T: copy + field(value: int)](item: T) -> int:
+    return item.value
+
+
+def test_generic_functions() -> bool:
+    if identity[int](7) != 7 or identity[str]("ay") != "ay":
+        return False
+    if total[u8](4u8) != 10u8 or total[int](5) != 15:
+        return False
+    return contains[int]([1, 2, 3], 2) and not contains[int]([1, 2, 3], 9)
+
+
+def test_generic_records() -> bool:
+    box = Box[int](value=9)
+    changed = box
+    changed.value = 11
+    words = Box[str](value="hello")
+    return box.value == 9 and changed.value == 11 and words.value == "hello"
+
+
+def test_structural_contracts() -> bool:
+    if field_value[Reading](Reading(value=2)) != 2:
+        return False
+    return field_value[TaggedReading](TaggedReading(tag=True, value=3)) == 3
+
+
+def test_generic_results() -> bool:
+    numbers: list[int] = [4, 5, 6]
+    empty: list[int] = []
+    match head[int](numbers):
+        case Ok(value):
+            if value != 4:
+                return False
+        case Err(_):
+            return False
+    match head[int](empty):
+        case Ok(_):
+            return False
+        case Err(message):
+            return message == "empty"
+
+
+def main() -> int:
+    return 0
