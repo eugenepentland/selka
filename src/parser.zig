@@ -13,6 +13,34 @@ const Span = @import("source.zig").Span;
 const diagnostic = @import("diagnostic.zig");
 const byte_literal = @import("byte_literal.zig");
 const format_strings = @import("format_strings.zig");
+/// Tokens that may stand inside an explicit type-argument list: a name, a constant
+/// length, nested brackets, and every type the lexer spells as a keyword.
+fn typeArgumentToken(tag: lex.Tag) bool {
+    return switch (tag) {
+        .ident,
+        .integer,
+        .lbracket,
+        .rbracket,
+        .kw_i8,
+        .kw_i16,
+        .kw_i32,
+        .kw_i64,
+        .kw_u8,
+        .kw_u16,
+        .kw_u32,
+        .kw_u64,
+        .kw_bool,
+        .kw_none,
+        .kw_filesystem_cap,
+        .kw_network_cap,
+        .kw_environment_cap,
+        .kw_clock_cap,
+        .kw_random_cap,
+        => true,
+        else => false,
+    };
+}
+
 /// Token cursor and allocator-backed syntax builder with bounded recursive nesting.
 pub const Parser = struct {
     src: @import("source.zig").Source,
@@ -1128,9 +1156,8 @@ pub const Parser = struct {
             switch (self.tokens[position].tag) {
                 .dot => if (applied and brackets == 0) return false,
                 .comma, .colon => if (brackets == 0) return false,
-                .ident, .integer, .lbracket, .rbracket, .kw_i64, .kw_i8, .kw_i16, .kw_i32, .kw_u8, .kw_u16, .kw_u32, .kw_u64, .kw_bool, .kw_none => {},
                 .lparen => return applied and brackets == 0,
-                else => return false,
+                else => if (!typeArgumentToken(self.tokens[position].tag)) return false,
             }
         }
         return false;
@@ -1179,8 +1206,8 @@ pub const Parser = struct {
                     brackets -= 1;
                     if (brackets == 0) return position + 1 < self.tokens.len and self.tokens[position + 1].tag == .lparen;
                 },
-                .ident, .integer, .comma, .kw_i64, .kw_i8, .kw_i16, .kw_i32, .kw_u8, .kw_u16, .kw_u32, .kw_u64, .kw_bool, .kw_none, .dot => {},
-                else => return false,
+                .comma, .dot => {},
+                else => if (!typeArgumentToken(self.tokens[position].tag)) return false,
             }
         }
         return false;

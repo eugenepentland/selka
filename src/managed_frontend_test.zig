@@ -106,7 +106,7 @@ test "managed lists reject nested and generic capabilities before helper alias e
         \\
         \\
         \\def main(clock: clock_cap) -> i64:
-        \\    return hold(clock)
+        \\    return hold[clock_cap](clock)
         ,
     };
     for (cases) |bytes| {
