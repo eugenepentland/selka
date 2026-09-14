@@ -8,18 +8,19 @@ pub const RenderError = error{
 
 const std = @import("std");
 const project = @import("project.zig");
-const evaluation = @import("evaluation.zig");
 const receipt = @import("source_receipt.zig");
 pub const Identity = receipt.Identity;
+/// Instruction, frame, and live-byte limits a receipt records for its request.
+pub const Budgets = struct { max_steps: u64 = 1_000_000, max_frames: u64 = 256, max_bytes: usize = 16 * 1024 * 1024 };
 /// Allocate a deterministic evaluation receipt with source identities, limits, and the scalar result.
-pub fn render(allocator: std.mem.Allocator, graph: *const project.Project, value: i64, options: evaluation.Options, identity: Identity) RenderError![]u8 {
+pub fn render(allocator: std.mem.Allocator, graph: *const project.Project, value: i64, options: Budgets, identity: Identity) RenderError![]u8 {
     return renderInner(allocator, graph, value, options, identity);
 }
 /// Allocate the evaluation request identity without executing the program.
-pub fn renderRequest(allocator: std.mem.Allocator, graph: *const project.Project, options: evaluation.Options, identity: Identity) RenderError![]u8 {
+pub fn renderRequest(allocator: std.mem.Allocator, graph: *const project.Project, options: Budgets, identity: Identity) RenderError![]u8 {
     return renderInner(allocator, graph, null, options, identity);
 }
-fn renderInner(allocator: std.mem.Allocator, graph: *const project.Project, value: ?i64, options: evaluation.Options, identity: Identity) ![]u8 {
+fn renderInner(allocator: std.mem.Allocator, graph: *const project.Project, value: ?i64, options: Budgets, identity: Identity) ![]u8 {
     if (!graph.progress.complete or graph.problem != null or graph.modules.items.len == 0) return error.IncompleteProject;
     if (options.max_steps == 0 or options.max_frames == 0 or options.max_bytes == 0) return error.InvalidBudget;
     var arena = std.heap.ArenaAllocator.init(allocator);

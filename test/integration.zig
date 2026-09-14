@@ -594,7 +594,7 @@ test "CLI checks and runs module programs with private boundaries and cross-file
     });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
     defer testing.allocator.free(path);
-    for ([_][]const u8{ "check-project", "run-project", "eval-project" }) |command| {
+    for ([_][]const u8{ "check-project", "run-project" }) |command| {
         const reporting: []const []const u8 = if (std.mem.eql(u8, command, "run-project")) &.{"--print-result"} else &.{};
         var argv: std.ArrayList([]const u8) = .empty;
         defer argv.deinit(testing.allocator);

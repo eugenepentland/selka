@@ -8,16 +8,13 @@ const diagnostic_output = language.diagnostic_output;
 const Reporting = struct { print_result: bool = false, timings: bool = false, timings_json: bool = false, diagnostics: ?diagnostic_output.Format = null };
 const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--json] [--force]\n       mylang build <file.my> (-o <output> | --run) [--help]\n" ++
     "       mylang doc-coverage [<repo-root>] (every implemented feature and standard export needs a documented example)\n       mylang " ++
-    "<invoke-project|check-value-project|schema-project|input-module|check|run|dump-bytecode|di" ++
+    "<schema-project|input-module|check|run|dump-bytecode|di" ++
     "scover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fm" ++
-    "t-module|fmt-project|emit-qbe|emit-project-qbe|eval-project|list-modules|list-interfaces|list-" ++
+    "t-module|fmt-project|emit-qbe|emit-project-qbe|list-modules|list-interfaces|list-" ++
     "declarations|check" ++
     "-project|run-project|check-policy> <file.my>\n  schema-project: --schema-report (include " ++
-    "checked source and compiler identities)\n  check-value-project: --value=path.json " ++
-    "(required; validates and writes canonical typed-json-v1); --max-codec-steps=N " ++
-    "--max-codec-frames=N --max-codec-calls=N --max-codec-bytes=N --max-codec-values=N\n  " ++
-    "invoke-project: --request=path.json (typed-call-v1, schema-pinned public function call; " ++
-    "same codec budgets)\n  input-module: reads a typed JSON manifest and writes generated " ++
+    "checked source and compiler identities)\n  " ++
+    "input-module: reads a typed JSON manifest and writes generated " ++
     "module source\n  run/run-project: --max-steps=N --max-frames=N --dispatch=optimized|generic --gc-stress " ++
     "--print-result\n  " ++
     "run/run-project authority: every capability is granted by default; --restrict denies them " ++
@@ -25,10 +22,7 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "--allow-env[=NAME,...] --allow-all. Under --restrict an entry point requesting an ungranted " ++
     "capability exits 2 before execution; --allow-random=SEED pins the seed in either mode\n  " ++
     "run: --timings (VM execution nanoseconds on stderr; excludes source compilation)\n  " ++
-    "eval-project: --max-steps=N --max-frames=N --max-eval-bytes=N " ++
-    "--evaluation-report|--evaluation-request --inputs=manifest.json (repeat for up to 16 " ++
-    "modules; effect-free, parameter-free entry)\n  " ++
-    "schema-project/check-value-project/invoke-project: --inputs=manifest.json (repeat for up to 16 modules)\n  " ++
+    "schema-project: --inputs=manifest.json (repeat for up to 16 modules)\n  " ++
     "discover-duplicates/discover-project-duplicates: --min-nodes=N " ++
     "--population=production|tests|generated|reference|intentional --timings --approximate " ++
     "--max-work=N\n  report-quality/report-project-quality: --max-function-lines=N " ++
@@ -100,10 +94,7 @@ fn run(init: Context, parsed: Parsed) !u8 {
         .@"index-project",
         .@"project-dependencies",
         .@"check-session",
-        .@"invoke-project",
-        .@"check-value-project",
         .@"schema-project",
-        .@"eval-project",
         .@"list-modules",
         .@"list-interfaces",
         .@"check-project",
@@ -183,11 +174,8 @@ fn run(init: Context, parsed: Parsed) !u8 {
         .@"index-project",
         .@"project-dependencies",
         .@"check-session",
-        .@"invoke-project",
-        .@"check-value-project",
         .@"schema-project",
         .@"input-module",
-        .@"eval-project",
         .fmt,
         .@"fmt-module",
         .@"fmt-project",
@@ -326,11 +314,8 @@ const Command = enum {
     @"index-project",
     @"project-dependencies",
     @"check-session",
-    @"invoke-project",
-    @"check-value-project",
     @"schema-project",
     @"input-module",
-    @"eval-project",
     @"emit-project-qbe",
     @"fmt-project",
     @"fmt-module",
@@ -351,14 +336,9 @@ const Command = enum {
     @"report-quality",
 };
 const Parsed = struct {
-    codec: language.codec_json.Options,
     schema_report: bool,
-    value_path: ?[]const u8,
     inputs: [16][]const u8,
     input_count: usize,
-    evaluation_request: bool,
-    evaluation_report: bool,
-    evaluation: language.evaluation.Options,
     policy: ?[]const u8,
     format_check: bool,
     write: bool,
@@ -374,18 +354,13 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (args.len < 2) return error.Usage;
     const command = std.meta.stringToEnum(Command, args[0]) orelse return error.Usage;
     var parser: ArgumentParser = .{ .command = command };
-    if (command == .@"eval-project") {
-        parser.options.max_steps = parser.evaluation.max_steps;
-        parser.options.max_frames = parser.evaluation.max_frames;
-    }
     for (args[1..]) |arg| {
         if (std.mem.startsWith(u8, arg, "--diagnostics=")) {
             if (parser.reporting.diagnostics != null) return error.Usage;
             parser.reporting.diagnostics = std.meta.stringToEnum(diagnostic_output.Format, arg["--diagnostics=".len..]) orelse return error.Usage;
             continue;
         }
-        if (try parser.codecOption(arg)) continue;
-        if (try parser.evaluationOption(arg)) continue;
+        if (try parser.surfaceOption(arg)) continue;
         if (try parser.qualityOption(arg)) continue;
         if (try parser.grantOption(arg)) continue;
         if (try parser.executionOption(arg)) continue;
@@ -402,14 +377,7 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
 }
 const ArgumentParser = struct {
     command: Command,
-    codec: language.codec_json.Options = .{},
-    codec_seen: u8 = 0,
     schema_report: bool = false,
-    value_path: ?[]const u8 = null,
-    evaluation: language.evaluation.Options = .{},
-    saw_eval_bytes: bool = false,
-    evaluation_report: bool = false,
-    evaluation_request: bool = false,
     inputs: [16][]const u8 = @splat(""),
     input_count: usize = 0,
     quality: language.quality.Options = .{},
@@ -428,48 +396,15 @@ const ArgumentParser = struct {
     saw_min: bool = false,
     saw_population: bool = false,
     saw_work: bool = false,
-    fn codecOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+    fn surfaceOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
         if (std.mem.eql(u8, arg, "--schema-report")) {
             if (self.command != .@"schema-project" or self.schema_report) return error.Usage;
             self.schema_report = true;
             return true;
         }
-        inline for (.{
-            "max_steps",
-            "max_frames",
-            "max_calls",
-            "max_bytes",
-            "max_work_values",
-        }, .{
-            "--max-codec-steps=",
-            "--max-codec-frames=",
-            "--max-codec-calls=",
-            "--max-codec-bytes=",
-            "--max-codec-values=",
-        }, 0..) |field, prefix, index| {
-            if (std.mem.startsWith(u8, arg, prefix)) {
-                const bit: u8 = 1 << index;
-                if ((self.command != .@"check-value-project" and self.command != .@"invoke-project") or self.codec_seen & bit != 0) return error.Usage;
-                self.codec_seen |= bit;
-                @field(self.codec, field) = std.math.cast(@TypeOf(@field(self.codec, field)), try positive(arg[prefix.len..])) orelse return error.Usage;
-                return true;
-            }
-        }
-        if (std.mem.startsWith(u8, arg, "--value=") or std.mem.startsWith(u8, arg, "--request=")) {
-            const prefix = if (self.command == .@"invoke-project") "--request=" else "--value=";
-            if (self.command != .@"check-value-project" and self.command != .@"invoke-project") return error.Usage;
-            if (!std.mem.startsWith(u8, arg, prefix)) return error.Usage;
-            if (self.value_path != null or arg.len == prefix.len) return error.Usage;
-            self.value_path = arg[prefix.len..];
-            return true;
-        }
-        return false;
-    }
-
-    fn evaluationOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
         if (std.mem.startsWith(u8, arg, inputs_prefix)) {
             switch (self.command) {
-                .@"eval-project", .@"schema-project", .@"invoke-project", .@"check-value-project", .@"check-session", .@"project-dependencies" => {},
+                .@"schema-project", .@"check-session", .@"project-dependencies" => {},
                 else => return error.Usage,
             }
             if (self.input_count == self.inputs.len or arg.len == inputs_prefix.len) return error.Usage;
@@ -477,22 +412,6 @@ const ArgumentParser = struct {
             for (self.inputs[0..self.input_count]) |previous| if (std.mem.eql(u8, previous, input)) return error.Usage;
             self.inputs[self.input_count] = input;
             self.input_count += 1;
-            return true;
-        }
-        if (std.mem.eql(u8, arg, "--evaluation-request")) {
-            if (self.command != .@"eval-project" or self.evaluation_request or self.evaluation_report) return error.Usage;
-            self.evaluation_request = true;
-            return true;
-        }
-        if (std.mem.eql(u8, arg, "--evaluation-report")) {
-            if (self.command != .@"eval-project" or self.evaluation_report or self.evaluation_request) return error.Usage;
-            self.evaluation_report = true;
-            return true;
-        }
-        if (std.mem.startsWith(u8, arg, "--max-eval-bytes=")) {
-            if (self.command != .@"eval-project" or self.saw_eval_bytes) return error.Usage;
-            self.saw_eval_bytes = true;
-            self.evaluation.max_bytes = std.math.cast(usize, try positive(arg["--max-eval-bytes=".len..])) orelse return error.Usage;
             return true;
         }
         return false;
@@ -550,7 +469,7 @@ const ArgumentParser = struct {
             if (self.options.memory.gc.stress) return error.Usage;
             self.options.memory.gc.stress = true;
         } else if (std.mem.startsWith(u8, arg, "--max-steps=")) {
-            if ((self.command != .run and self.command != .@"run-project" and self.command != .@"eval-project") or self.saw_steps) return error.Usage;
+            if ((self.command != .run and self.command != .@"run-project") or self.saw_steps) return error.Usage;
             self.saw_steps = true;
             const digits = arg["--max-steps=".len..];
             if (digits.len == 0) return error.Usage;
@@ -560,7 +479,7 @@ const ArgumentParser = struct {
             self.options.max_steps = std.fmt.parseUnsigned(u64, digits, 10) catch return error.Usage;
             if (self.options.max_steps == 0) return error.Usage;
         } else if (std.mem.startsWith(u8, arg, "--max-frames=")) {
-            if ((self.command != .run and self.command != .@"run-project" and self.command != .@"eval-project") or self.saw_frames) return error.Usage;
+            if ((self.command != .run and self.command != .@"run-project") or self.saw_frames) return error.Usage;
             self.saw_frames = true;
             const digits = arg["--max-frames=".len..];
             if (digits.len == 0) return error.Usage;
@@ -614,20 +533,10 @@ const ArgumentParser = struct {
         if (self.saw_work and !self.discovery.approximate) return error.Usage;
         if (self.command == .@"fmt-project" and !self.format_check) return error.Usage;
         if (self.command == .@"check-policy" and self.policy == null) return error.Usage;
-        if ((self.command == .@"check-value-project" or self.command == .@"invoke-project") and self.value_path == null) return error.Usage;
         return .{
-            .codec = self.codec,
             .schema_report = self.schema_report,
-            .value_path = self.value_path,
             .inputs = self.inputs,
             .input_count = self.input_count,
-            .evaluation_request = self.evaluation_request,
-            .evaluation_report = self.evaluation_report,
-            .evaluation = .{
-                .max_steps = self.options.max_steps,
-                .max_frames = self.options.max_frames,
-                .max_bytes = self.evaluation.max_bytes,
-            },
             .policy = self.policy,
             .format_check = self.format_check,
             .write = self.write,
@@ -706,10 +615,9 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         init.timings.counts.typed_nodes = compilation.program.?.nodes.len + compilation.program.?.statements.len;
         init.timings.end();
         if (parsed.command == .@"emit-project-qbe") break :result (try emitProjectNative(init, &compilation)) orelse return 1;
-        if (parsed.command != .@"eval-project") try reportProject(init, &compilation);
+        try reportProject(init, &compilation);
         if (parsed.command == .@"project-dependencies") break :result try dependencyReport(init, &compilation, files.inputs);
         if (parsed.command == .@"check-project") return rememberCheck(verdict, &project, &compilation);
-        if (parsed.command == .@"check-value-project" or parsed.command == .@"invoke-project") break :result (try checkValue(init, &compilation, parsed.value_path.?, parsed.codec, parsed.command == .@"invoke-project")) orelse return 1;
         if (parsed.command == .@"schema-project") break :result if (parsed.schema_report)
             try language.schema_report.render(init.gpa, &compilation, try compilerIdentity(init.io))
         else
@@ -726,19 +634,11 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         init.timings.begin(lowering_phase, false);
         try compilation.emit();
         init.timings.end();
-        if (parsed.evaluation_request) break :result (try evaluationRequest(init, parsed, &project, &compilation)) orelse return 1;
-        init.timings.begin(executionPhase(parsed.command), false);
-        const outcome = if (parsed.command == .@"eval-project") language.evaluation.evaluate(init.gpa, compilation.code.?, &compilation.diagnostics, parsed.evaluation) catch |err| switch (err) {
-            error.SourceError => {
-                try reportProject(init, &compilation);
-                return 1;
-            },
-            else => return err,
-        } else (try runProjectProgram(init, compilation.code.?, parsed)) orelse return 2;
+        init.timings.begin("vm_execution", false);
+        const outcome = (try runProjectProgram(init, compilation.code.?, parsed)) orelse return 2;
         init.timings.end();
-        if (parsed.command == .@"eval-project") try reportProject(init, &compilation);
         switch (outcome) {
-            .value => |value| break :result (try entryOutcome(init, parsed, &project, value)) orelse return 0,
+            .value => |value| break :result (try entryOutcome(init, parsed, value)) orelse return 0,
             .trap => |trap| {
                 const message = try diagnostic_output.render(init.gpa, trap, compilation.src, init.diagnostics);
                 defer init.gpa.free(message);
@@ -752,13 +652,9 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     return 0;
 }
 
-/// Render an evaluation report, or the entry result when `--print-result` asks for it.
-fn entryOutcome(init: Context, parsed: Parsed, project: *language.project.Project, value: i64) !?[]u8 {
-    if (parsed.evaluation_report) {
-        const rendered = try language.evaluation_report.render(init.gpa, project, value, parsed.evaluation, try compilerIdentity(init.io));
-        return rendered;
-    }
-    if (parsed.command == .@"run-project" and !parsed.reporting.print_result) return null;
+/// Render the entry result when `--print-result` asks for it, and nothing otherwise.
+fn entryOutcome(init: Context, parsed: Parsed, value: i64) !?[]u8 {
+    if (!parsed.reporting.print_result) return null;
     const rendered = try std.fmt.allocPrint(init.gpa, "{d}\n", .{value});
     return rendered;
 }
@@ -874,7 +770,7 @@ fn reportProject(init: Context, compilation: *language.project_compile.Compilati
 /// executable to hash it cost seconds per report on a Debug build and told receipts
 /// nothing extra: two builds of the same sources share this identity, and any source,
 /// toolchain or mode change still changes it.
-fn compilerIdentity(io: std.Io) !language.evaluation_report.Identity {
+fn compilerIdentity(io: std.Io) !language.source_receipt.Identity {
     _ = io;
     const builtin = @import("builtin");
     return .{ .compiler_sha256 = build_identity, .zig_version = builtin.zig_version_string, .architecture = @tagName(builtin.cpu.arch), .os = @tagName(builtin.os.tag), .abi = @tagName(builtin.abi), .optimize = @tagName(builtin.mode) };
@@ -895,47 +791,6 @@ fn parseInputManifest(init: Context, path: []const u8, bytes: []const u8) !?lang
         const message = try std.fmt.allocPrint(init.gpa, "{s}: invalid input manifest: {s}\n", .{ path, @errorName(err) });
         defer init.gpa.free(message);
         try init.text(message);
-        return null;
-    };
-}
-
-fn valueFailure(init: Context, path: []const u8, err: anyerror, location: ?*const language.typed_json.Location, invocation: bool) !?[]u8 {
-    const pointer = if (location) |at| (if (at.has_path) try std.json.Stringify.valueAlloc(init.gpa, at.text(), .{}) else null) else null;
-    defer if (pointer) |text| init.gpa.free(text);
-    const detail = if (pointer) |text| try std.fmt.allocPrint(init.gpa, " at JSON pointer {s}{s}", .{ text, if (location.?.truncated) " (path truncated)" else "" }) else try init.gpa.dupe(u8, "");
-    defer init.gpa.free(detail);
-    const message = try std.fmt.allocPrint(init.gpa, "{s}: invalid {s}: {s}{s}\n", .{ path, if (invocation) "invocation" else "typed JSON", @errorName(err), detail });
-    defer init.gpa.free(message);
-    try init.text(message);
-    return null;
-}
-fn checkValue(init: Context, compilation: *language.project_compile.Compilation, path: []const u8, options: language.codec_json.Options, invocation: bool) !?[]u8 {
-    const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, path, init.gpa, .limited(options.json.max_bytes + 1)) catch |err| {
-        if (err == error.StreamTooLong) return valueFailure(init, path, error.CodecByteLimit, null, invocation);
-        return err;
-    };
-    defer init.gpa.free(bytes);
-    var failure: language.codec_json.Failure = .{};
-    defer failure.deinit(init.gpa);
-    return (if (invocation) language.codec_json.invokeProject(init.gpa, compilation, bytes, options, &failure) else language.codec_json.canonicalProject(init.gpa, compilation, bytes, options, &failure)) catch |err| {
-        if (err == error.OutOfMemory) return err;
-        _ = try valueFailure(init, path, err, &failure.location, invocation);
-        if (failure.execution.trap) |trap| {
-            const rendered = try diagnostic_output.render(init.gpa, trap, compilation.src, init.diagnostics);
-            defer init.gpa.free(rendered);
-            try std.Io.File.stderr().writeStreamingAll(init.io, rendered);
-        }
-        if (failure.execution.rejection) |rejection| {
-            const rendered = language.typed_json.encode(init.gpa, compilation.program.?.records, rejection.typeOf(), rejection, options.json) catch |render_error| {
-                if (render_error == error.OutOfMemory) return render_error;
-                try init.text("codec error payload exceeds diagnostic serialization limits\n");
-                return null;
-            };
-            defer init.gpa.free(rendered);
-            const message = try std.fmt.allocPrint(init.gpa, "codec rejection: {s}\n", .{rendered});
-            defer init.gpa.free(message);
-            try init.text(message);
-        }
         return null;
     };
 }
@@ -1073,25 +928,6 @@ fn dependencyReport(init: Context, compilation: *language.project_compile.Compil
     return language.dependency_report.render(init.gpa, compilation, try compilerIdentity(init.io), manifests);
 }
 
-fn evaluationRequest(init: Context, parsed: Parsed, project: *language.project.Project, compilation: *language.project_compile.Compilation) !?[]u8 {
-    const failure = language.evaluation.preflight(init.gpa, compilation.code.?, &compilation.diagnostics, parsed.evaluation) catch |err| switch (err) {
-        error.SourceError => {
-            try reportProject(init, compilation);
-            return null;
-        },
-        else => return err,
-    };
-    try reportProject(init, compilation);
-    if (failure) |trap| {
-        const message = try diagnostic_output.render(init.gpa, trap, compilation.src, init.diagnostics);
-        defer init.gpa.free(message);
-        try std.Io.File.stderr().writeStreamingAll(init.io, message);
-        return null;
-    }
-    const report_text = try language.evaluation_report.renderRequest(init.gpa, project, parsed.evaluation, try compilerIdentity(init.io));
-    return report_text;
-}
-
 fn checkImportedInputs(init: Context, inputs: []const GeneratedInput, project: *const language.project.Project) !bool {
     for (inputs) |input| if (!project.names.contains(input.module)) {
         const message = try std.fmt.allocPrint(init.gpa, "{s}: declared input module {s} is not imported by the reachable project\n", .{ input.manifest_path, input.module });
@@ -1200,10 +1036,6 @@ fn featureReport(init: std.process.Init) !void {
     defer init.gpa.free(text);
     try std.Io.File.stdout().writeStreamingAll(init.io, text);
     try std.Io.File.stdout().writeStreamingAll(init.io, "\n");
-}
-
-fn executionPhase(command: Command) []const u8 {
-    return if (command == .@"eval-project") "evaluation" else "vm_execution";
 }
 
 fn emitMeasuredNative(init: Context, compilation: anytype) ![]u8 {

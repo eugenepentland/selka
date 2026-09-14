@@ -43,8 +43,8 @@ pub const CheckTypeError = error{
     OutOfMemory,
 };
 
-/// Wire validation and domain execution failures during typed value conversion.
-pub const ValueError = @import("codec_execution.zig").DecodeError || CheckTypeError || ScanRequestError || error{
+/// Wire validation failures raised while converting a typed value.
+pub const ValueError = CheckTypeError || ScanRequestError || error{
     CodecByteLimit,
     CodecDepthLimit,
     CodecIntegerOutOfRange,
@@ -55,7 +55,9 @@ pub const ValueError = @import("codec_execution.zig").DecodeError || CheckTypeEr
     InvalidCodecLimits,
     InvalidCodecValue,
     UnexpectedCodecField,
+    InvalidAggregateType,
     UnknownCodecCase,
+    ValueTypeMismatch,
 };
 
 const std = @import("std");
@@ -63,7 +65,6 @@ const typed = @import("typed.zig");
 const Type = typed.Type;
 const Value = typed.Value;
 const Json = std.json.Value;
-const Execution = @import("codec_execution.zig").Execution;
 const Part = union(enum) { key: []const u8, index: usize };
 /// Owned diagnostic prefix: independent of document/catalog lifetimes. Path capture
 /// allocates nothing and never replaces a data failure with an allocation failure.
@@ -206,37 +207,11 @@ pub const Document = struct {
         var decoder: Decoder = .{ .allocator = allocator, .records = records, .budget = &budget, .trace = .init(location) };
         return decoder.value(ty, self.parsed.value.value, 1);
     }
-    /// Internal operation entry: the caller shares traversal/execution budgets.
-    pub fn decodeWithCodecs(self: Document, allocator: std.mem.Allocator, execution: *Execution, ty: Type, budget: *Budget, location: *Location) ValueError!Value {
-        const records = execution.backend.program.records;
-        location.* = .{};
-        try checkCodecType(allocator, records, ty, location);
-        if (!std.mem.eql(u8, self.parsed.value.type, typed.typeName(ty, records))) {
-            location.field("type");
-            return error.ValueTypeMismatch;
-        }
-        var decoder: Decoder = .{ .allocator = allocator, .records = records, .budget = budget, .execution = execution, .trace = .init(location) };
-        return decoder.value(ty, self.parsed.value.value, 1);
-    }
 };
-/// Decode one named argument while sharing the operation's counters.
-pub fn decodeArgument(allocator: std.mem.Allocator, execution: *Execution, argument: Argument, budget: *Budget, location: *Location) ValueError!Value {
-    var trace = Trace.init(location);
-    trace.parts[0] = .{ .key = "arguments" };
-    trace.parts[1] = .{ .key = argument.name };
-    trace.len = 2;
-    var decoder: Decoder = .{ .allocator = allocator, .records = execution.backend.program.records, .execution = execution, .budget = budget, .trace = trace };
-    return decoder.value(argument.ty, argument.value, 1);
-}
 // Scan before building a JSON DOM: even invalid/unused subtrees are subject to
 // depth/token bounds. next() returns string fragments without allocating strings.
 fn scan(allocator: std.mem.Allocator, bytes: []const u8, limits: Limits) !void {
     return scanDepth(allocator, bytes, limits, @as(usize, limits.max_depth) + 1);
-}
-/// Validate JSON syntax and resource bounds with allowance for the call request envelope.
-pub fn scanRequest(allocator: std.mem.Allocator, bytes: []const u8, limits: Limits) ScanRequestError!void {
-    try limits.check();
-    return scanDepth(allocator, bytes, limits, @as(usize, limits.max_depth) + 2);
 }
 /// Validate ordinary JSON with the exact container depth budget and no envelope allowance.
 pub fn scanDocument(allocator: std.mem.Allocator, bytes: []const u8, limits: Limits) ScanRequestError!void {
@@ -278,17 +253,6 @@ pub fn checkType(allocator: std.mem.Allocator, records: []const typed.Record, ro
     };
 }
 
-fn checkCodecType(allocator: std.mem.Allocator, records: []const typed.Record, ty: Type, location: *Location) !void {
-    @import("data_type.zig").checkCodecs(allocator, records, ty) catch |err| {
-        if (err != error.OutOfMemory) location.field("type");
-        return switch (err) {
-            error.NotDataType => error.NoImplicitCodec,
-            error.InvalidDataType => error.InvalidCodecType,
-            else => err,
-        };
-    };
-}
-
 /// Shared value traversal count across input and output conversion directions.
 pub const WorkBudget = struct { limit: usize, values: usize = 0 };
 /// Per-direction JSON limits and optional shared operation traversal accounting.
@@ -321,7 +285,6 @@ const Decoder = struct {
     allocator: std.mem.Allocator,
     records: []const typed.Record,
     budget: *Budget,
-    execution: ?*Execution = null,
     trace: Trace,
     fn variant(self: *Decoder, ty: Type, json: Json, depth: usize, variants: typed.Variants) ValueError!Value {
         if (!variants.is_union) {
@@ -358,13 +321,7 @@ const Decoder = struct {
         if (ty.isInteger()) return if (json == .string) integer(ty, json.string) else error.ValueTypeMismatch;
         if (ty == .bool) return if (json == .bool) .{ .bool = json.bool } else error.ValueTypeMismatch;
         const record = self.records[ty.recordIndex()];
-        if (record.shape.domain != null) {
-            const execution = self.execution orelse return error.NoImplicitCodec;
-            const codec = record.contract.codec orelse return error.NoImplicitCodec;
-            const wire = try self.value(codec.wire, json, depth);
-            defer wire.release(self.allocator);
-            return execution.decode(self.allocator, ty, wire);
-        }
+        if (record.shape.domain != null) return error.NoImplicitCodec;
         if (record.shape.variants) |variants| return self.variant(ty, json, depth, variants);
         const count = record.count();
         const array = record.shape.array;
@@ -402,8 +359,6 @@ const Encoder = struct {
     allocator: std.mem.Allocator,
     records: []const typed.Record,
     budget: *Budget,
-    execution: ?*Execution = null,
-    execution_allocator: ?std.mem.Allocator = null,
     trace: Trace,
     fn child(self: *Encoder, ty: Type, input: Value, depth: usize, part: Part) ValueError!Json {
         self.trace.push(part);
@@ -428,15 +383,7 @@ const Encoder = struct {
         if (input != .aggregate or input.aggregate.moved_fields != null) return error.InvalidCodecValue;
         const record = self.records[ty.recordIndex()];
         const fields = input.aggregate.fields;
-        if (record.shape.domain != null) {
-            const execution = self.execution orelse return error.NoImplicitCodec;
-            const codec = record.contract.codec orelse return error.NoImplicitCodec;
-            if (self.budget.values == self.budget.limits.max_values) return error.CodecValueLimit;
-            const runtime_allocator = self.execution_allocator.?;
-            const wire = try execution.encode(runtime_allocator, ty, input);
-            defer wire.release(runtime_allocator);
-            return self.value(codec.wire, wire, depth);
-        }
+        if (record.shape.domain != null) return error.NoImplicitCodec;
         if (record.shape.variants) |variants| {
             const tag = input.aggregate.active_tag orelse return error.InvalidCodecValue;
             if (tag >= variants.cases.len) return error.InvalidCodecValue;
@@ -488,22 +435,6 @@ fn encodeLocatedInner(allocator: std.mem.Allocator, records: []const typed.Recor
     const document: Envelope = .{ .version = wire_version, .type = typed.typeName(ty, records), .value = try encoder.value(ty, input, 1) };
     return serialize(allocator, document, limits);
 }
-/// Allocate typed JSON using the operation's declared domain encoders and shared budgets.
-pub fn encodeWithCodecs(allocator: std.mem.Allocator, execution: *Execution, ty: Type, input: Value, budget: *Budget, location: *Location) ValueError![]u8 {
-    location.* = .{};
-    return encodeCodecsInner(allocator, execution, ty, input, budget, location) catch |err| {
-        if (err != error.OutOfMemory and !location.has_path) location.capture(&.{});
-        return err;
-    };
-}
-fn encodeCodecsInner(allocator: std.mem.Allocator, execution: *Execution, ty: Type, input: Value, budget: *Budget, location: *Location) ![]u8 {
-    try checkCodecType(allocator, execution.backend.program.records, ty, location);
-    var arena = std.heap.ArenaAllocator.init(allocator);
-    defer arena.deinit();
-    var encoder: Encoder = .{ .allocator = arena.allocator(), .records = execution.backend.program.records, .budget = budget, .execution = execution, .execution_allocator = allocator, .trace = .init(location) };
-    const document: Envelope = .{ .version = wire_version, .type = typed.typeName(ty, execution.backend.program.records), .value = try encoder.value(ty, input, 1) };
-    return serialize(allocator, document, budget.limits);
-}
 fn serialize(allocator: std.mem.Allocator, document: Envelope, limits: Limits) ![]u8 {
     var counter = std.Io.Writer.Discarding.init(&.{});
     std.json.Stringify.value(document, .{}, &counter.writer) catch return error.InternalError;
@@ -514,6 +445,3 @@ fn serialize(allocator: std.mem.Allocator, document: Envelope, limits: Limits) !
     try scan(allocator, text, limits);
     return text;
 }
-
-/// A named wire argument and its checked language type; JSON storage is borrowed.
-pub const Argument = struct { name: []const u8, ty: Type, value: Json };

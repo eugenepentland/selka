@@ -89,6 +89,7 @@ test {
     _ = @import("import_policy_test.zig");
     _ = @import("source_map_test.zig");
     _ = @import("project_test.zig");
+    _ = @import("evaluation_test.zig");
     _ = @import("interfaces_test.zig");
     _ = @import("compiler_test.zig");
     _ = @import("duplicates_test.zig");
@@ -109,7 +110,6 @@ test {
     _ = @import("arena_managed_test.zig");
     _ = @import("gc_regions.zig");
     _ = @import("effects_test.zig");
-    _ = @import("evaluation_test.zig");
     _ = @import("input_manifest_test.zig");
     _ = @import("typed_json_test.zig");
     _ = @import("external_capabilities_test.zig");
@@ -121,8 +121,6 @@ test {
     _ = @import("propagation_test.zig");
     _ = @import("invocation_test.zig");
     _ = @import("domain_codecs_test.zig");
-    _ = @import("codec_json_test.zig");
-    _ = @import("call_json_test.zig");
     _ = @import("runtime_values_test.zig");
     _ = @import("gc_heap_test.zig");
     _ = @import("managed_values_test.zig");
