@@ -30,9 +30,9 @@ const diamond = [_]File{
     \\def main() -> i64:
     \\    return 1
     },
-    .{ .path = "left.my", .bytes = "module left; import shared . data;" },
-    .{ .path = "right.my", .bytes = "module right; import shared.data;" },
-    .{ .path = "shared/data.my", .bytes = "// shared\nmodule shared.data;" },
+    .{ .path = "left.my", .bytes = "module left\nimport shared . data\n" },
+    .{ .path = "right.my", .bytes = "module right\nimport shared.data\n" },
+    .{ .path = "shared/data.my", .bytes = "# shared\nmodule shared.data\n" },
 };
 fn scenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &diamond };
@@ -68,22 +68,22 @@ fn rejection(entries: []const File, options: p.Options, code: []const u8) !void 
 }
 test "module headers reject mismatch duplicate aliases duplicate imports and invalid syntax" {
     for ([_]struct { text: []const u8, code: []const u8 }{
-        .{ .text = "module other;", .code = "E_MODULE_NAME" },
+        .{ .text = "module other\n", .code = "E_MODULE_NAME" },
         .{ .text =
         \\def main() -> i64:
         \\    return 0
         , .code = "E_MODULE_HEADER" },
-        .{ .text = "module main; import x.a; import y.a;", .code = "E_IMPORT_ALIAS" },
-        .{ .text = "module main; import x as a; import x as b;", .code = "E_DUPLICATE_IMPORT" },
-        .{ .text = "module main; import ../secret;", .code = "E_MODULE_HEADER" },
-        .{ .text = "module main; import", .code = "E_MODULE_HEADER" },
+        .{ .text = "module main\nimport x.a\nimport y.a\n", .code = "E_IMPORT_ALIAS" },
+        .{ .text = "module main\nimport x as a\nimport x as b\n", .code = "E_DUPLICATE_IMPORT" },
+        .{ .text = "module main\nimport ../secret\n", .code = "E_MODULE_HEADER" },
+        .{ .text = "module main\nimport", .code = "E_MODULE_HEADER" },
     }) |case| try rejection(&.{.{ .path = "main.my", .bytes = case.text }}, .{}, case.code);
 }
 // spec: PROJ-2
 test "module cycles report importing and related file locations" {
     var files: Files = .{ .entries = &.{
-        .{ .path = "main.my", .bytes = "module main;\nimport child;" },
-        .{ .path = "child.my", .bytes = "module child;\nimport main;" },
+        .{ .path = "main.my", .bytes = "module main\nimport child\n" },
+        .{ .path = "child.my", .bytes = "module child\nimport main\n" },
     } };
     var project = p.Project.init(t.allocator);
     defer project.deinit();
@@ -91,7 +91,7 @@ test "module cycles report importing and related file locations" {
     const text = try project.renderProblem(t.allocator);
     defer t.allocator.free(text);
     for ([_][]const u8{ "E_IMPORT_CYCLE", "main -> child -> main", "child.my:2:", "main.my:1:" }) |part| try t.expect(std.mem.indexOf(u8, text, part) != null);
-    try rejection(&.{.{ .path = "main.my", .bytes = "module main; import main;" }}, .{}, "E_IMPORT_CYCLE");
+    try rejection(&.{.{ .path = "main.my", .bytes = "module main\nimport main\n" }}, .{}, "E_IMPORT_CYCLE");
 }
 test "module budgets and missing files fail without a partial report" {
     try rejection(&diamond, .{ .max_modules = 2 }, "E_MODULE_LIMIT");
@@ -119,7 +119,7 @@ test "module paths exclude traversal and incomplete state cannot render" {
 }
 
 fn cycleFailure(allocator: std.mem.Allocator) !void {
-    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = "module main; import main;" }} };
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = "module main\nimport main\n" }} };
     var project = p.Project.init(allocator);
     defer project.deinit();
     project.load(files.provider(), "main", .{}) catch |err| {
@@ -340,7 +340,7 @@ fn fillModuleChain(allocator: std.mem.Allocator, entries: []File) !void {
     for (entries, 0..) |*file, i| {
         const name = if (i == 0) "main" else try std.fmt.allocPrint(allocator, "m{d}", .{i});
         file.path = try std.fmt.allocPrint(allocator, "{s}.my", .{name});
-        file.bytes = if (i + 1 == entries.len) try std.fmt.allocPrint(allocator, "module {s};", .{name}) else try std.fmt.allocPrint(allocator, "module {s}; import m{d};", .{ name, i + 1 });
+        file.bytes = if (i + 1 == entries.len) try std.fmt.allocPrint(allocator, "module {s}\n", .{name}) else try std.fmt.allocPrint(allocator, "module {s}\nimport m{d}\n", .{ name, i + 1 });
     }
 }
 

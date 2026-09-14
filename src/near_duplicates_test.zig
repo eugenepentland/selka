@@ -93,7 +93,8 @@ test "near reports explain changed operators and resolved callees" {
 test "near search retains signature effect and nominal boundaries and excludes unrelated bodies" {
     const text =
         \\domain D: i64:
-        \\    pass
+        \\    def make(x: i64) -> D:
+        \\        return wrap[D](x)
         \\
         \\
         \\def a(x: i64) -> i64:
@@ -160,7 +161,7 @@ test "near comparison matrix output and rendering release every failed allocatio
 }
 
 test "near pair limits bound repeated drift reports while exact groups remain complete" {
-    const text = source ++
+    const text = source ++ "\n\n\n" ++
         \\def more(x: i64) -> i64:
         \\    return x * 2 + 5
     ;

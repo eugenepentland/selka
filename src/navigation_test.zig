@@ -102,7 +102,13 @@ test "navigation exposes declarations but never checked references after a seman
 }
 
 test "navigation syntax failure retains lexical declarations without resolving comments or calls" {
-    var files: Files = .{ .main = "module main; import data; // fn invented()\nfn broken()->i64{return +;}" };
+    var files: Files = .{ .main =
+        \\module main
+        \\import data
+        \\# def invented()
+        \\def broken() -> i64:
+        \\    return +
+    };
     var project = graph.Project.init(t.allocator);
     defer project.deinit();
     try project.load(.{ .context = &files, .read = Files.read }, "main", .{});
@@ -182,8 +188,8 @@ test "navigation jsonStringify preserves flat wire facts and reports a full writ
         .kind = "function",
         .location = .{ .path = "main.my", .start = 10, .end = 14, .line = 2, .column = 4 },
         .exported = true,
-        .details = .{ .signature = "draw()->i64", .type_name = "i64", .effects = &.{"alloc"} },
-        .context = .{ .snippet = "draw()->i64{return 1;}", .snippet_truncated = true },
+        .details = .{ .signature = "draw() -> i64", .type_name = "i64", .effects = &.{"alloc"} },
+        .context = .{ .snippet = "draw() -> i64:\n    return 1", .snippet_truncated = true },
     };
     var output = std.Io.Writer.Allocating.init(t.allocator);
     defer output.deinit();
@@ -192,7 +198,7 @@ test "navigation jsonStringify preserves flat wire facts and reports a full writ
     const parsed = try std.json.parseFromSlice(std.json.Value, t.allocator, output.written(), .{});
     defer parsed.deinit();
     const row = parsed.value.object;
-    try t.expectEqualStrings("draw()->i64", row.get("signature").?.string);
+    try t.expectEqualStrings("draw() -> i64", row.get("signature").?.string);
     try t.expectEqualStrings("alloc", row.get("effects").?.array.items[0].string);
     try t.expect(row.get("snippet_truncated").?.bool);
     try t.expect(row.get("details") == null and row.get("context") == null);
@@ -202,14 +208,14 @@ test "navigation jsonStringify preserves flat wire facts and reports a full writ
 }
 
 test "navigation excerpts retain complete UTF8 at the size bound" {
-    const prefix = "module main;import data;fn main()->i64{//";
-    const name_start = std.mem.indexOf(u8, prefix, "main()->").?;
+    const prefix = "module main\nimport data\n\n\ndef main() -> i64:\n    # ";
+    const name_start = std.mem.indexOf(u8, prefix, "main() -> i64").?;
     const padding = name_start + 16383 - prefix.len;
     var bytes: std.ArrayList(u8) = .empty;
     defer bytes.deinit(t.allocator);
     try bytes.appendSlice(t.allocator, prefix);
     try bytes.appendNTimes(t.allocator, 'x', padding);
-    try bytes.appendSlice(t.allocator, "é remaining comment\nlet b=new data::Box{value:3};return data::read(b);}");
+    try bytes.appendSlice(t.allocator, "é remaining comment\n    b = data.Box(value=3)\n    return data.read(b)");
     const parsed = try document(bytes.items);
     defer parsed.deinit();
     var found = false;
@@ -220,7 +226,7 @@ test "navigation excerpts retain complete UTF8 at the size bound" {
         try t.expectEqualStrings(bytes.items[name_start..][0..16383], excerpt);
         try t.expect(std.unicode.utf8ValidateSlice(excerpt));
         try t.expect(item.object.get("snippet_truncated").?.bool);
-        try t.expectEqualStrings("main()->i64", item.object.get("signature").?.string);
+        try t.expectEqualStrings("main() -> i64", item.object.get("signature").?.string);
     }
     try t.expect(found);
 }
@@ -232,7 +238,11 @@ test "navigation excerpts preserve original module qualified calls" {
     for (linked.value.object.get("symbols").?.array.items) |item| {
         if (!std.mem.eql(u8, item.object.get("id").?.string, "main::main")) continue;
         linked_found = true;
-        try t.expectEqualStrings("main()->i64{let b=new data::Box{value:3};return read(data::read(b));}", item.object.get("snippet").?.string);
+        try t.expectEqualStrings(
+            \\main() -> i64:
+            \\    b = data.Box(value=3)
+            \\    return read(data.read(b))
+        , item.object.get("snippet").?.string);
     }
     try t.expect(linked_found);
 }

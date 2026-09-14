@@ -117,7 +117,7 @@ test "discovery groups many matches once and emits deterministic locations" {
     const second = try language.duplicates.render(testing.allocator, analysis, compilation.program.?, compilation.src);
     defer testing.allocator.free(second);
     try testing.expectEqualStrings(first, second);
-    try testing.expect(std.mem.indexOf(u8, first, "groups.my:2:4: b") != null);
+    try testing.expect(std.mem.indexOf(u8, first, "groups.my:5:5: b") != null);
     try testing.expect(std.mem.indexOf(u8, first, "population=intentional") != null);
     var filtered = try language.duplicates.discover(testing.allocator, compilation.program.?, .{ .min_nodes = 100 });
     defer filtered.deinit();

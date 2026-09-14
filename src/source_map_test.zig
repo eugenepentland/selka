@@ -20,7 +20,8 @@ fn scenario(allocator: std.mem.Allocator) !void {
         \\def main() -> i64:
         \\    return helper()
         ,
-        "fn helper() -> i64 {\r\n\treturn 1 / 0;\r\n}",
+        // CRLF line ends and an inline tab still map back to this input's own offsets.
+        "def helper() -> i64:\r\n    return divtrunc(1,\t0)",
     });
     defer compilation.deinit();
     const result = try compilation.execute(allocator);
@@ -54,7 +55,7 @@ test "mapped related diagnostics identify each original declaration" {
     try t.expectError(error.SourceError, compilation.check());
     const text = try compilation.diagnostics.items[0].render(t.allocator, compilation.src);
     defer t.allocator.free(text);
-    try t.expect(std.mem.indexOf(u8, text, "part1.my:2:") != null);
+    try t.expect(std.mem.indexOf(u8, text, "part1.my:1:") != null);
     try t.expect(std.mem.indexOf(u8, text, "note: part0.my:1:") != null);
 }
 test "mapped sources distinguish empty inputs EOF boundaries CRLF tabs and checked spans" {
@@ -107,10 +108,10 @@ test "quality metrics use combined line indices while reports use original paths
     try compilation.check();
     var analysis = try language.quality.analyze(t.allocator, compilation.program.?, compilation.src, .{});
     defer analysis.deinit();
-    try t.expectEqual(@as(usize, 3), analysis.functions[1].structure.lines);
+    try t.expectEqual(@as(usize, 2), analysis.functions[1].structure.lines);
     try t.expect(analysis.functions[1].structure.longest_line < analysis.functions[0].structure.longest_line);
     const text = try language.quality.render(t.allocator, analysis, compilation.program.?, compilation.src);
     defer t.allocator.free(text);
     try t.expect(std.mem.indexOf(u8, text, "part1.my:1:") != null);
-    try t.expect(std.mem.indexOf(u8, text, "calls helper at part0.my:1:") != null);
+    try t.expect(std.mem.indexOf(u8, text, "calls helper at part0.my:2:") != null);
 }
