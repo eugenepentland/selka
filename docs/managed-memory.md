@@ -8,27 +8,26 @@ they are written.
 
 ```mylang
 # doc: expect 42
-def main() -> i64:
-    values: List[i64] = []
+def main() -> int:
+    values: list[int] = []
     alias = values
-    alias.push(42)
+    alias.append(42)
     print(values[0])
     return 0
 ```
 
-A list assignment or function argument copies a shared reference. `let` prevents
-rebinding but permits mutation of the referenced list. Appending grows capacity
-automatically. Reading returns a value snapshot, including shared references in
-its fields; it never exposes an interior pointer into growable storage. Independent
+A list assignment or function argument copies a shared reference, so every alias
+observes the same mutations. Appending grows capacity automatically. Reading
+returns a value snapshot, including shared references in its fields; it never exposes an interior pointer into growable storage. Independent
 containers require explicit construction and copying of their elements.
 
-Use `List<Node>` for application collections and `let nodes: List<Node> = []`
+Use `list[Node]` for application collections and `nodes: list[Node] = []`
 for an empty list. Read with `nodes[index]`, write with `nodes[index] = value`,
-append with `nodes.push(value)`, and count with `nodes.len()`. These operations
+append with `nodes.append(value)`, and count with `len(nodes)`. These operations
 currently use a named local or parameter as their receiver. An empty literal needs
 an expected list type from an annotation, return type, or parameter.
 
-Capacity is a reserve hint, not a fixed limit. Mutations return `unit`. Invalid
+Capacity is a reserve hint, not a fixed limit. Mutations return `None`. Invalid
 indices trap with `R_LIST_BOUNDS`. Allocation failure terminates the execution
 with cleanup, rather than returning a recoverable collection result. Keep
 application cardinality checks where input limits are part of its contract.
@@ -37,10 +36,12 @@ List elements can be ordinary copyable values, records, and other managed lists.
 Recursive graphs through list references are supported:
 
 ```text
-struct Node { value: i64, children: List<Node> }
+class Node:
+    value: int
+    children: list[Node]
 ```
 
-Records retain value semantics. This release does not introduce `ref struct`,
+Records retain value semantics. This release does not introduce reference records,
 capturing closures, or managed hash maps. Byte literals and the managed
 [`bytes`](bytes.md) type keep their documented behavior. Owned resources, provider
 capabilities, and must-handle results cannot be hidden inside freely aliased

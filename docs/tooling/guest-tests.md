@@ -91,7 +91,7 @@ passed main::test_reading
 
 The native runner registers no host callbacks and grants no ambient authority, so
 a test that reaches a clock, an entropy source or the environment through a
-`host fn` declaration fails with `HostMissingRegistration` rather than reading
+`host def` declaration fails with `HostMissingRegistration` rather than reading
 the real machine. A case makes such a dependency deterministic by replacing the
 module that declares it with ordinary guest source returning a fixed value. The
 substitution lives in the private snapshot, is captured in the receipt identity,

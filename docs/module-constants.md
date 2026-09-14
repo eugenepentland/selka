@@ -31,7 +31,7 @@ const ANSWER: i64 = 42;
 
 Importers read `settings::ANSWER`. Generic functions may read concrete constants;
 there are no generic constants yet. Constants cannot be assigned or mutably
-reassigned, and they cannot replace the required `fn main` entry point.
+reassigned, and they cannot replace the required `def main` entry point.
 
 Checking folds initializers before executable publication. The current typed
 program represents a constant as a pure zero-argument getter containing its

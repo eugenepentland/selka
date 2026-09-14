@@ -203,7 +203,7 @@ cache is ignored.
 ## Current implementation
 
 The [typed VM host interface](docs/experiments/host-functions.md) supports explicit
-`host fn` declarations, transitive effects and program-bound registrations. It
+`host def` declarations, transitive effects and program-bound registrations. It
 copies ordinary values through bounded synchronous sessions, including imported
 calls and typed results. Host-enabled typed application invocation now accepts
 snapshots and returns owned reports through exported guest functions.
@@ -220,10 +220,10 @@ and typed returns.
 [Unit procedures](docs/experiments/unit-procedures.md) omit the return annotation, ordinary call
 statements, and bare returns or fallthrough; other values retain explicit handling.
 It supports integer and boolean values,
-optional local type annotations, unary `-` and `!`, binary `+`, `-`, `*`, `/`, `%`, short-circuit `&&` and `||`,
-comparisons, parentheses, whitespace, and `//` comments. Active shadowing,
+optional local type annotations, unary `-` and `not`, binary `+`, `-`, `*`, `/`, `%`, short-circuit `and` and `or`,
+comparisons, parentheses, whitespace, and `#` comments. Active shadowing,
 use outside scope, mutation of immutable bindings, and type mismatches are
-rejected. Unused bindings and unnecessary `mut` produce advisory warnings.
+rejected. Unused bindings produce advisory warnings.
 Arithmetic traps on overflow in every host optimization mode; checking does
 not evaluate arithmetic. `examples/locals.my` returns `21`.
 
@@ -498,7 +498,7 @@ one. Located embedding APIs retain the failure path independently of parsed docu
 large paths are bounded and explicitly marked as truncated. See
 [codec diagnostics](docs/experiments/codec-diagnostics.md) for path semantics and limits.
 
-[Direct C imports](docs/c-ffi.md) support `extern fn` scalar calls through QBE,
+[Direct C imports](docs/c-ffi.md) support `extern def` scalar calls through QBE,
 with repeatable `--link`, `--link-library`, and `--library-path` build/test options.
 See [the libc example](examples/c-ffi/main.my).
 

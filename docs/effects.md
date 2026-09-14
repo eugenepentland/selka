@@ -45,7 +45,7 @@ source error.
 | `random` | drawing from the entropy stream |
 | `environment` | reading process environment variables |
 | `output` | `print` |
-| `host` | calling a host-provided implementation, such as an `extern fn` |
+| `host` | calling a host-provided implementation, such as an `extern def` |
 
 `noalloc` and `noio` are shorthands for the two common ceilings. `noalloc`
 excludes `managed_allocation` and permits everything else. `noio` excludes

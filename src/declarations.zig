@@ -118,7 +118,7 @@ fn commentStart(bytes: []const u8, start: usize) usize {
     while (line > 0) {
         const previous = lineStart(bytes, line - 1);
         const comment = std.mem.trim(u8, bytes[previous .. line - 1], " \t\r");
-        if (!std.mem.startsWith(u8, comment, "//") and !std.mem.startsWith(u8, comment, "#")) break;
+        if (!std.mem.startsWith(u8, comment, "#")) break;
         line = previous;
     }
     return line;

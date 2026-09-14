@@ -110,8 +110,7 @@ def main() -> Result[int, int]:
 ## Explicit call type arguments
 
 A generic call may state its type arguments in square brackets between the
-function name and the argument list: `identity[int](2)` is the Python spelling of
-the legacy `identity::<int>(2)`. Explicit arguments and [inferred
+function name and the argument list: `identity[int](2)`. Explicit arguments and [inferred
 ones](generic-inference.md) reach the same instance, so the choice is about
 readability rather than behaviour — except where inference has nothing to work
 from, such as a type parameter no value argument mentions, where the explicit
@@ -139,7 +138,7 @@ def main() -> int:
 ## Function values
 
 The name of a declared function, written without a call, is a function value. Its
-type is spelled `fn(parameters) -> result effects(...)`, with the parameter
+type is spelled `def(parameters) -> result effects(...)`, with the parameter
 types, the result type and the effect ceiling all written out, and a value of
 that type can be stored in a local, passed as an argument and returned. A
 function value captures nothing. There are no closures and no nested `def`, so
