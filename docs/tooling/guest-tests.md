@@ -139,7 +139,7 @@ failed main::test_stamp: HostMissingRegistration
 $ cat cases.json
 {
   "main::test_stamp": {
-    "providers": {"clock.my": "module clock;export now;fn now() -> i64 effects(host) { return 1700000000; }"}
+    "providers": {"clock.my": "module clock\nexport now\n\n\ndef now() -> i64:\n    return 1700000000\n"}
   }
 }
 $ mylang test app/main.my --cases cases.json
