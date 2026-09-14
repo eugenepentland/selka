@@ -124,9 +124,10 @@ iteration traps. The [word-count example](../examples/python-word-count/main.my)
 puts these operations together.
 
 `[value for name in items if condition]` builds a list in one pass, with the filter
-optional and the binding confined to the comprehension. It takes one generator; nested
-generators and generator expressions are not provided, and neither are dict or set
-comprehensions.
+optional and the binding confined to the comprehension. The source is a list, string,
+dictionary or an integer `range(...)` — `[i for i in range(10)]` works the same as it
+does in a `for` loop. It takes one generator; nested generators and generator
+expressions are not provided, and neither are dict or set comprehensions.
 
 ```mylang
 # doc: expect 42

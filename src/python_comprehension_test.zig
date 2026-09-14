@@ -49,6 +49,24 @@ test "comprehensions read strings and dictionaries and leave the source unchange
     , 42);
 }
 
+// spec: PY-COMPREHENSION-3
+test "a comprehension accepts range as a source in one- and two-argument forms" {
+    try execute(
+        \\def total(values: list[int]) -> int:
+        \\    sum = 0
+        \\    for value in values:
+        \\        sum = sum + value
+        \\    return sum
+        \\
+        \\def main() -> int:
+        \\    squares = [i * i for i in range(5)]
+        \\    span = [n for n in range(3, 7)]
+        \\    kept = [k for k in range(6) if k > 2]
+        \\    empty = [j for j in range(5, 5)]
+        \\    return total(squares) + total(span) + total(kept) + len(empty)
+    , 60);
+}
+
 // spec: PY-COMPREHENSION-2
 test "comprehensions reject shadowing, non-Boolean filters and uniterable sources" {
     try reject(

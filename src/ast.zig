@@ -113,7 +113,15 @@ pub const Statement = struct {
     },
 };
 /// One generator with an optional filter, producing a value per retained element.
-pub const Comprehension = struct { output: NodeId, name: Span, iterable: NodeId, filter: ?NodeId = null };
+pub const Comprehension = struct {
+    output: NodeId,
+    name: Span,
+    source: Source,
+    filter: ?NodeId = null,
+    /// A comprehension draws its elements from a collection expression or, like a `for`
+    /// loop, from a half-open integer `range(...)`; a unit start means the implicit zero.
+    pub const Source = union(enum) { iterable: NodeId, range: struct { start: NodeId, end: NodeId } };
+};
 /// Checked condition with the trap message its failure reports.
 pub const Assertion = struct { condition: NodeId, message: []const u8, literal: ?Span = null };
 /// Expression match case with an optional payload binding and its yielded value.
