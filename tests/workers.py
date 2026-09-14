@@ -12,19 +12,56 @@ import time
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 from workers import Limits, Pool, canonical, schema_identity
 
-SOURCE = b'''module main;
-export Stats;export analyze;export loop;export nodata;export clock;export Time;
-struct Stats{sum:i64,squares:i64}
-fn analyze(values:[4]i64)->Stats{
-    let mut sum=0;let mut squares=0;let mut i=0u64;
-    while i<4u64{let n=values[i];sum+=n;squares+=n*n;i+=1u64;}
-    return new Stats{sum:sum,squares:squares};
-}
-fn loop(n:i64)->i64{let mut i=n;while true{i+=1;if i==1000000{i=0;}}return i;}
-fn nodata()->unit{}
-result Time{ok:i64,err:i64}
-fn clock(c:clock_cap)->Time{return clock_now[Time](c);}
-fn main()->i64{return 0;}
+SOURCE = b'''module main
+export Stats
+export analyze
+export loop
+export nodata
+export clock
+export Time
+
+
+class Stats:
+    sum: i64
+    squares: i64
+
+
+result Time:
+    ok: i64,
+    err: i64
+
+
+def analyze(values: [4]i64) -> Stats:
+    sum = 0
+    squares = 0
+    i = 0u64
+    while i < 4u64:
+        n = values[i]
+        sum += n
+        squares += n * n
+        i += 1u64
+    return Stats(sum=sum, squares=squares)
+
+
+def loop(n: i64) -> i64:
+    i = n
+    while True:
+        i += 1
+        if i == 1000000:
+            i = 0
+    return i
+
+
+def nodata():
+    pass
+
+
+def clock(c: clock_cap) -> Time:
+    return clock_now[Time](c)
+
+
+def main() -> i64:
+    return 0
 '''
 
 

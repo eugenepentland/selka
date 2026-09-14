@@ -9,10 +9,11 @@ zig build run -- fmt examples/records.my
 zig build run -- fmt examples/records.my --check
 ```
 
-Normal mode writes the source to stdout and exits 0. Check mode emits no source,
-exits 0 for canonical input, and exits 1 with `formatting differs` otherwise.
-Syntax errors exit 1 with source diagnostics; usage and host failures exit 2. The
-check option is fmt-only and accepted once. Input files retain their original bytes.
+Normal mode writes the source to stdout and exits 0. Check mode emits no source and
+exits 0 for every input the parser accepts, because an accepted program already is
+its own canonical text. Syntax errors exit 1 with source diagnostics; usage and host
+failures exit 2. The check option is fmt-only and accepted once. Input files retain
+their original bytes.
 
 ## Format contract
 

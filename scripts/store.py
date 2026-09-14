@@ -241,13 +241,8 @@ class Compiler:
 
     def project_graph_loads(self, entry):
         """True when fmt-project could load the graph, whether or not the tree is canonical."""
-        result = self.run(['fmt-project', entry, '--check'])
-        if result.returncode == 0:
-            return True
-        if result.returncode != 1:
-            return False
-        lines = [line for line in result.stderr.decode(errors='replace').split('\n') if line]
-        return bool(lines) and all(line.endswith(': formatting differs') for line in lines)
+        # An accepted program is its own canonical text, so this only rejects bad syntax.
+        return self.run(['fmt-project', entry, '--check']).returncode == 0
 
 
 def split_module(formatted, document):

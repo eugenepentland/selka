@@ -76,7 +76,7 @@ the fixed ASCII strings described here.
 Non-source CLI messages use a separate record:
 
 ```json
-{"version":"diagnostic-v1","kind":"message","message":"formatting differs\n"}
+{"version":"diagnostic-v1","kind":"message","message":"cannot load missing.my: FileNotFound\n"}
 ```
 
 This includes normal host I/O failures, manifest/value/policy errors, formatting
