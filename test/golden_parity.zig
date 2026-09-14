@@ -384,11 +384,14 @@ fn fixtureSource(name: []const u8) ?[]const u8 {
     return null;
 }
 
-/// Compare two signatures exactly the way the retired `qbe_parity.signature`
-/// did: stdout on success, first `R_*` code on failure.
+/// Compare two signatures: stdout on a clean run, first `R_*` code on a trap. A
+/// run now exits with its entry's `int` result, so the status no longer marks a
+/// trap; a diagnostic code on stderr does. When neither side trapped the recorded
+/// status is part of the signature, so a program that returns N is expected to
+/// exit N (truncated to a byte) rather than 0.
 fn signaturesMatch(expected: Signature, actual: Signature) bool {
     if (expected.returncode != actual.returncode) return false;
-    if (expected.returncode == 0) return std.mem.eql(u8, expected.stdout, actual.stdout);
+    if (expected.code.len == 0 and actual.code.len == 0) return std.mem.eql(u8, expected.stdout, actual.stdout);
     return std.mem.eql(u8, expected.code, actual.code);
 }
 

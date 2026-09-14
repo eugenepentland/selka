@@ -116,7 +116,11 @@ pub const Program = struct {
             .stderr_limit = .limited(stream_limit),
         });
         try std.Io.File.stderr().writeStreamingAll(self.io, result.stderr);
-        if (result.term != .exited or result.term.exited != 0) return error.GuestTrap;
+        // The entry result is now the process exit status, so a nonzero status no
+        // longer means a trap: a host reads the full result from the printed line
+        // instead. A native runtime failure ends the process by signal or writes a
+        // diagnostic to stderr, neither of which a clean run produces.
+        if (result.term != .exited or result.stderr.len != 0) return error.GuestTrap;
         return outcome(result.stdout);
     }
 };

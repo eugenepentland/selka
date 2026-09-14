@@ -75,12 +75,11 @@ def main() -> int noio:
 Write `effects(output)` to permit printing under an explicit bound. `print`
 runs on the QBE native backend, the only runtime.
 
-## What `mylang run` prints
+## What `mylang run` prints and returns
 
 `mylang run` streams program output to standard output as it happens and does
 **not** print the entry point's `int` result. Pass `--print-result` when you want
-the old behaviour — the result line is then written after the program's own
-output:
+the result line written after the program's own output:
 
 ```text
 $ mylang run hello.my
@@ -90,7 +89,20 @@ hello
 0
 ```
 
-`run-project` follows the same rule.
+The entry's `int` result is the **process exit status**, the way a Python or Go
+program returns an exit code, truncated to the low 8 bits (`status = value &
+0xFF`). This holds whether or not `--print-result` is passed, so printing the
+value and exiting with it are independent:
+
+```text
+$ mylang run hello.my; echo "exit $?"
+hello
+exit 0
+```
+
+A runtime trap outranks the return and exits 1, because the program never
+reached its `return`. `run-project` and a native executable from `mylang build`
+follow the same rule.
 
 ## Capabilities
 
@@ -275,8 +287,9 @@ does, and takes the same `--restrict` and `--allow-*` options; `mylang build
 $ mylang build report.my --run -- --restrict --allow-read=notes
 ```
 
-A native executable always writes the entry point's `int` result after the
-program's own output, the way `mylang run --print-result` does.
+A native executable exits with the entry point's `int` result (truncated to the
+low 8 bits), the way `mylang run` does, and writes that result after the
+program's own output only when passed `--print-result`.
 
 Generic function bodies still reject `print` and the file builtins, with
 `E_GENERIC_BODY_UNSUPPORTED`. Write an ordinary function and call it from the

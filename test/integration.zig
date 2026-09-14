@@ -33,7 +33,8 @@ test "CLI runs the managed arena example under normal and stress collection" {
         const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
         defer testing.allocator.free(outcome.stdout);
         defer testing.allocator.free(outcome.stderr);
-        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+        // The entry returns 38, which is now the process exit status.
+        try testing.expectEqual(std.process.Child.Term{ .exited = 38 }, outcome.term);
         try testing.expectEqualStrings("38\n", outcome.stdout);
         try testing.expectEqualStrings("", outcome.stderr);
     }
@@ -53,11 +54,26 @@ test "CLI reports managed arena escapes as machine-readable diagnostics" {
 fn invoke(command: []const u8, text: []const u8, expected_status: u8, expected_stdout: []const u8, stderr_part: []const u8) !void {
     return invokeOptions(command, text, &.{}, expected_status, expected_stdout, stderr_part);
 }
+/// The process exit status a `--print-result` run now yields: the entry's printed
+/// integer result truncated to the low 8 bits (POSIX status), read from the final
+/// output line. A command that does not print a result line, or a non-run command,
+/// yields 0.
+fn resultStatus(printed: []const u8) u8 {
+    const body = std.mem.trimRight(u8, printed, "\n");
+    const start = if (std.mem.lastIndexOfScalar(u8, body, '\n')) |index| index + 1 else 0;
+    const value = std.fmt.parseInt(i64, body[start..], 10) catch return 0;
+    return @truncate(@as(u64, @bitCast(value)));
+}
 fn invokeOptions(command: []const u8, text: []const u8, options: []const []const u8, expected_status: u8, expected_stdout: []const u8, stderr_part: []const u8) !void {
     const outcome = try runFixture(command, text, options);
     defer testing.allocator.free(outcome.stdout);
     defer testing.allocator.free(outcome.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = expected_status }, outcome.term);
+    // A successful run exits with its entry's `int` result; the callers pass 0 for
+    // that success and encode it through `expected_stdout` (the `--print-result`
+    // line), so derive the truncated status from there and keep the explicit value
+    // for traps, usage and host failures.
+    const wanted = if (std.mem.startsWith(u8, command, "run") and expected_status == 0) resultStatus(expected_stdout) else expected_status;
+    try testing.expectEqual(std.process.Child.Term{ .exited = wanted }, outcome.term);
     try testing.expectEqualStrings(expected_stdout, outcome.stdout);
     if (stderr_part.len == 0) try testing.expectEqualStrings("", outcome.stderr) else try testing.expect(std.mem.indexOf(u8, outcome.stderr, stderr_part) != null);
 }
@@ -88,7 +104,8 @@ test "CLI execution timings preserve results and runtime diagnostics" {
     const outcome = try runFixture("run", source, &.{"--timings"});
     defer testing.allocator.free(outcome.stdout);
     defer testing.allocator.free(outcome.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    // The entry returns 42, which is now the process exit status.
+    try testing.expectEqual(std.process.Child.Term{ .exited = 42 }, outcome.term);
     try testing.expectEqualStrings("42\n", outcome.stdout);
     const prefix = "timings: native_ns=";
     try testing.expect(std.mem.startsWith(u8, outcome.stderr, prefix));
@@ -612,7 +629,9 @@ test "CLI checks and runs module programs with private boundaries and cross-file
         const result = try std.process.run(testing.allocator, testing.io, .{ .argv = argv.items });
         defer testing.allocator.free(result.stdout);
         defer testing.allocator.free(result.stderr);
-        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+        // `run-project` exits with the entry's `42`; `check-project` never runs it.
+        const wanted: u8 = if (std.mem.eql(u8, command, "check-project")) 0 else 42;
+        try testing.expectEqual(std.process.Child.Term{ .exited = wanted }, result.term);
         try testing.expectEqualStrings(if (std.mem.eql(u8, command, "check-project")) "" else "42\n", result.stdout);
         try testing.expectEqualStrings("", result.stderr);
     }
@@ -691,7 +710,8 @@ test "CLI checkProjectPolicy distinguishes language failures policy failures and
     const ordinary = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run-project", path, "--print-result" } ++ tools) });
     defer testing.allocator.free(ordinary.stdout);
     defer testing.allocator.free(ordinary.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, ordinary.term);
+    // The entry returns 7, which is now the process exit status.
+    try testing.expectEqual(std.process.Child.Term{ .exited = 7 }, ordinary.term);
     try testing.expectEqualStrings("7\n", ordinary.stdout);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "rules file.json", .data = "{\"version\":1,\"default_action\":\"allow\",\"rules\":[]}" });
     const allowed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-policy", path, option } });
@@ -1382,7 +1402,9 @@ test "all commands preserve stdout and deterministic advisory stderr" {
         const outcome = try runFixture(command, source, &.{});
         defer testing.allocator.free(outcome.stdout);
         defer testing.allocator.free(outcome.stderr);
-        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+        // Only `run` executes the guest; its entry returns 7, now the exit status.
+        const wanted: u8 = if (std.mem.eql(u8, command, "run")) 7 else 0;
+        try testing.expectEqual(std.process.Child.Term{ .exited = wanted }, outcome.term);
         try testing.expectEqualStrings(expected, outcome.stdout);
         try testing.expect(std.mem.indexOf(u8, outcome.stderr, ":2:5: warning[W_UNUSED_BINDING]") != null);
         try testing.expectEqual(@as(usize, 1), std.mem.count(u8, outcome.stderr, "warning["));
@@ -1804,7 +1826,9 @@ test "CLI clock entropy and environment providers honour their grants" {
     defer testing.allocator.free(again.stdout);
     defer testing.allocator.free(again.stderr);
     try testing.expectEqualStrings(first.stdout, again.stdout);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term);
+    // The seeded entry returns `value % 1000`, which is now the exit status; the
+    // value is unknown here, so assert the contract against its printed result.
+    try testing.expectEqual(std.process.Child.Term{ .exited = resultStatus(first.stdout) }, first.term);
     const missing =
         \\class Entry:
         \\    bytes: [8]u8
@@ -1873,7 +1897,9 @@ test "CLI streams program output and reports the entry result only on request" {
     const plain = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run", path } ++ tools) });
     defer testing.allocator.free(plain.stdout);
     defer testing.allocator.free(plain.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, plain.term);
+    // Without `--print-result` the value is not printed, but the entry still
+    // returns 7, so the process exits 7 all the same.
+    try testing.expectEqual(std.process.Child.Term{ .exited = 7 }, plain.term);
     try testing.expectEqualStrings("streamed\n", plain.stdout);
     try invoke("run", program, 0, "streamed\n7\n", "");
 }

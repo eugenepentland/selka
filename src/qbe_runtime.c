@@ -305,14 +305,16 @@ int mylang_qbe_run_providers(uint64_t (*entry)(void *), int argc, char **argv, c
         }
         return strncmp(result.code,"R_",2) ? 2:1;
     }
-    /* The entry point's integer result is a diagnostic, not program output:
-       `mylang run` and a built executable both report it only when asked. */
-    if (print) {
-        int64_t value;
-        memcpy(&value, &result.value, sizeof value);
-        printf("%" PRId64 "\n", value);
-    }
-    return 0;
+    /* The entry point's integer result becomes the process exit status, the way
+       a Python or Go program returns an exit code, truncated to the low 8 bits
+       (POSIX `waitpid` semantics: status = value & 0xFF). `--print-result` is now
+       orthogonal: it still prints the full value to stdout when asked, but the
+       status reflects the value whether or not it was printed. A trap outranks the
+       status and returns 1 above, because the program never reached its return. */
+    int64_t value;
+    memcpy(&value, &result.value, sizeof value);
+    if (print) printf("%" PRId64 "\n", value);
+    return (int)((uint64_t)value & 0xFF);
 }
 int mylang_qbe_execute(uint64_t (*entry)(void *), uint64_t steps, uint64_t frames, MylQbeResult *result) {
     return mylang_qbe_execute_gc(entry, steps, frames, 0, result);

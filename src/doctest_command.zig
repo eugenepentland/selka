@@ -851,7 +851,15 @@ fn record(allocator: std.mem.Allocator, unit: *Unit, decided: Plan, invocation: 
         unit.detail = try std.fmt.allocPrint(allocator, "rejected with {s}", .{try formatList(allocator, decided.codes)});
         return;
     }
-    if (status != 0) {
+    // A run now exits with its entry's `int` result, so a nonzero status is not a
+    // failure by itself. A genuine failure is a checker rejection (`check`), a
+    // native trap (a `diagnostic-v1` record on stderr), or a crash by signal.
+    const crashed = invocation.term != .exited;
+    const failed = if (decided.action == .run)
+        crashed or (try diagnose(allocator, invocation.stderr)).len > 0
+    else
+        status != 0;
+    if (failed) {
         const rendered = try normalise(allocator, invocation.stderr);
         const fallback = if (rendered.len > 0) rendered else try normalise(allocator, invocation.stdout);
         unit.status = .failed;
