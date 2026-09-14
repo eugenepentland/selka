@@ -39,7 +39,7 @@ test "managed list formatting preserves contextual list case identifiers" {
         \\
         \\def main() -> i64:
         \\    values: List[i64] = []
-        \\    values.push(42)
+        \\    values.append(42)
         \\    return values[0]
     );
     defer compilation.deinit();
@@ -58,7 +58,7 @@ test "managed generic list creation mutation and copy identity preserve shared a
         \\
         \\
         \\def add[T](items: List[T], value: T):
-        \\    items.push(value)
+        \\    items.append(value)
         \\
         \\
         \\def identity[T](value: T) -> T:
@@ -84,7 +84,7 @@ test "managed nominal recursive list record edges allow finite reference graphs"
         \\def main() -> i64:
         \\    children: List[Node[i64]] = []
         \\    node = Node[i64](value=42, children=children)
-        \\    children.push(node)
+        \\    children.append(node)
         \\    child = children[0]
         \\    return child.value
     );

@@ -243,6 +243,21 @@
    "must_pass": false
   },
   {
+   "name": "list_augassign",
+   "group": "collections",
+   "audit": "2.1",
+   "note": "Python xs += [2, 3] extends in place",
+   "baseline": {
+    "status": 1,
+    "code": "E_TYPE"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "3"
+   },
+   "must_pass": false
+  },
+  {
    "name": "augassign_float",
    "group": "collections",
    "audit": "2.1",
@@ -524,6 +539,21 @@
    "target": {
     "status": 0,
     "stdout": "42"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "dict_pop",
+   "group": "dictionary",
+   "audit": "2.1",
+   "note": "Python d.pop(key) and d.pop(key, default)",
+   "baseline": {
+    "status": 1,
+    "code": "E_LIST_METHOD"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "8"
    },
    "must_pass": false
   },

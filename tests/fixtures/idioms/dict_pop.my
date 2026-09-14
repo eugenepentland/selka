@@ -1,0 +1,7 @@
+def main() -> int:
+    d = {"a": 1, "b": 2}
+    removed = d.pop("a")
+    missing = d.pop("z", 7)
+    if len(d) != 1:
+        return 1
+    return removed + missing

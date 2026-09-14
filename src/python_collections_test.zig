@@ -148,6 +148,209 @@ test "slice negative clamp empty and copy alias semantics" {
     , 42);
 }
 
+// spec: PY-COLLECTIONS-14
+test "slice step selects every nth element of a list and of text in both directions" {
+    try run(
+        \\def main() -> i64:
+        \\    items = [1, 2, 3, 4, 5, 6]
+        \\    text = "abcdef"
+        \\    if len(items[0:6:2]) != 3 or items[0:6:2][1] != 3:
+        \\        return 1
+        \\    if len(items[::-1]) != 6 or items[::-1][0] != 6:
+        \\        return 2
+        \\    if len(items[5:0:-2]) != 3 or items[5:0:-2][1] != 4:
+        \\        return 3
+        \\    if len(items[99:0:-1]) != 5 or len(items[0:6:99]) != 1:
+        \\        return 4
+        \\    if text[1:5:2] != "bd" or len(text[::-2]) != 3:
+        \\        return 5
+        \\    if text[4:0:-3] != "eb" or len(text[2:2:1]) != 0:
+        \\        return 6
+        \\    return items[-1:0:-2][0] * 7
+    , 42);
+}
+
+// spec: PY-AUGASSIGN-1
+test "augmented assignment applies each binding type's own operator rules" {
+    try run(
+        \\def main() -> i64:
+        \\    n = 5
+        \\    n *= 8
+        \\    n += 2
+        \\    m = 17
+        \\    m //= 2
+        \\    if m != 8:
+        \\        return 1
+        \\    m %= 5
+        \\    if m != 3:
+        \\        return 2
+        \\    ratio = 1.0
+        \\    ratio += 2.5
+        \\    ratio *= 2.0
+        \\    if int(ratio) != 7:
+        \\        return 3
+        \\    ratio -= 0.5
+        \\    if int(ratio) != 6:
+        \\        return 4
+        \\    label = "a"
+        \\    label += "b"
+        \\    if label != "ab":
+        \\        return 5
+        \\    return n
+    , 42);
+}
+
+// spec: PY-AUGASSIGN-2
+test "augmented assignment writes a list slot and a dictionary entry in place" {
+    try run(
+        \\def main() -> i64:
+        \\    xs = [1, 2]
+        \\    xs[0] += 5
+        \\    xs[1] *= 3
+        \\    xs[-1] -= 6
+        \\    counts = {"a": 1}
+        \\    counts["a"] += 41
+        \\    label = {"k": "a"}
+        \\    label["k"] += "b"
+        \\    if xs[0] != 6 or xs[1] != 0:
+        \\        return 1
+        \\    if label["k"] != "ab":
+        \\        return 2
+        \\    return counts["a"]
+    , 42);
+}
+
+// spec: PY-COLLECTIONS-15
+test "list methods mutate in place with Python-shaped bounds" {
+    try run(
+        \\def main() -> i64:
+        \\    xs = [3, 1, 2]
+        \\    xs.sort()
+        \\    if xs[0] != 1 or xs[2] != 3:
+        \\        return 1
+        \\    xs.reverse()
+        \\    if xs[0] != 3 or xs[2] != 1:
+        \\        return 2
+        \\    xs.insert(0, 9)
+        \\    if xs[0] != 9 or len(xs) != 4:
+        \\        return 3
+        \\    xs.remove(9)
+        \\    if xs[0] != 3 or len(xs) != 3:
+        \\        return 4
+        \\    xs.extend([7, 8])
+        \\    if len(xs) != 5 or xs[4] != 8:
+        \\        return 5
+        \\    last = xs.pop()
+        \\    if last != 8 or len(xs) != 4:
+        \\        return 6
+        \\    middle = xs.pop(1)
+        \\    if middle != 2 or len(xs) != 3:
+        \\        return 7
+        \\    xs.clear()
+        \\    if len(xs) != 0:
+        \\        return 8
+        \\    return 42
+    , 42);
+}
+
+// spec: PY-COLLECTIONS-16
+test "list index and copy are read forms with first-occurrence order" {
+    try run(
+        \\def main() -> i64:
+        \\    xs = [10, 20, 30, 20]
+        \\    if xs.index(20) != 1:
+        \\        return 1
+        \\    ys = xs.copy()
+        \\    ys.append(99)
+        \\    if len(xs) != 4 or len(ys) != 5:
+        \\        return 2
+        \\    return ys[4] + xs[0] - 67
+    , 42);
+}
+
+// spec: PY-COLLECTIONS-17
+test "dictionary pop update and setdefault keep insertion order" {
+    try run(
+        \\def main() -> i64:
+        \\    d = {"a": 1, "b": 2}
+        \\    if d.pop("a") != 1:
+        \\        return 1
+        \\    if d.pop("z", 7) != 7:
+        \\        return 2
+        \\    d.update({"b": 20, "c": 3})
+        \\    if d["b"] != 20 or d["c"] != 3:
+        \\        return 3
+        \\    if d.setdefault("d", 4) != 4:
+        \\        return 4
+        \\    if d.setdefault("d", 9) != 4:
+        \\        return 5
+        \\    if len(d) != 3:
+        \\        return 6
+        \\    return 42
+    , 42);
+}
+
+// spec: PY-COLLECTIONS-18
+test "list += extends in place and items yields the value snapshot in order" {
+    try run(
+        \\def main() -> i64:
+        \\    xs = [1]
+        \\    alias = xs
+        \\    xs += [2, 3]
+        \\    if len(xs) != 3 or len(alias) != 3:
+        \\        return 1
+        \\    d = {"a": 1, "b": 2}
+        \\    total = 0
+        \\    for position, value in d.items():
+        \\        total += position + value
+        \\    if total != 4:
+        \\        return 2
+        \\    return 42
+    , 42);
+}
+
+// spec: PY-COLLECTIONS-19
+test "push is rejected with a migration diagnostic naming append" {
+    var compilation = try language.Compilation.init(t.allocator, "push.my",
+        \\def main() -> i64:
+        \\    xs = [1]
+        \\    xs.push(2)
+        \\    return len(xs)
+    );
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.check());
+    try t.expectEqualStrings("E_REMOVED_SPELLING", compilation.diagnostics.items[0].code);
+    try t.expect(std.mem.indexOf(u8, compilation.diagnostics.items[0].message, "append") != null);
+}
+
+// spec: PY-COLLECTIONS-20
+test "absent list and dictionary values trap instead of returning a sentinel" {
+    const cases = [_]struct { source: []const u8, code: []const u8 }{
+        .{ .source =
+        \\def main() -> i64:
+        \\    xs = [1, 2]
+        \\    return xs.index(9)
+        , .code = "R_LIST_VALUE" },
+        .{ .source =
+        \\def main() -> i64:
+        \\    xs: List[i64] = []
+        \\    return xs.pop()
+        , .code = "R_LIST_BOUNDS" },
+        .{ .source =
+        \\def main() -> i64:
+        \\    d = {"a": 1}
+        \\    return d.pop("z")
+        , .code = "R_MISSING_KEY" },
+    };
+    for (cases) |case| {
+        var compilation = try language.Compilation.init(t.allocator, "absent.my", case.source);
+        defer compilation.deinit();
+        const result = try native.runWithOptions(&compilation, .{ .gc_stress = true });
+        try t.expect(result.trapped());
+        try t.expectEqualStrings(case.code, result.trap.code);
+    }
+}
+
 // spec: PY-COLLECTIONS-11
 test "outer annotated postfix expressions do not contaminate literal element inference" {
     try run(

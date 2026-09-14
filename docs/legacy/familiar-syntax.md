@@ -23,7 +23,7 @@ fn make_node(value: i64) -> Node {
 
 fn main() -> i64 {
     let nodes: List<Node> = []
-    nodes.push(make_node(42))
+    nodes.append(make_node(42))
     let first = nodes[0]
     return first.value
 }

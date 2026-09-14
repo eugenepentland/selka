@@ -80,3 +80,45 @@ int myl_native_dictionary_key_at(const myl_native_dictionary *dict, size_t index
     memmove(output,(const unsigned char *)dict->entries->storage+index*dict->entry_type.size,dict->key->size);
     return 1;
 }
+int myl_native_dictionary_pop(myl_native_dictionary *dict, const void *key, void *output) {
+    size_t index=find(dict,key);
+    if (index==SIZE_MAX) return 0;
+    unsigned char *entries=dict->entries->storage;
+    size_t size=dict->entry_type.size;
+    memcpy(output,entries+index*size+dict->value_offset,dict->value->size);
+    size_t moved=dict->entries->length-index-1;
+    if (moved) memmove(entries+index*size,entries+(index+1)*size,moved*size);
+    dict->entries->length--;
+    memset(entries+dict->entries->length*size,0,size);
+    dict->entries->generation++;
+    return 1;
+}
+int myl_native_dictionary_update(myl_native_heap *heap, myl_native_dictionary *dict, const myl_native_dictionary *source) {
+    for (size_t i=0;i<source->entries->length;i++) {
+        const unsigned char *entry=(const unsigned char *)source->entries->storage+i*source->entry_type.size;
+        if (!myl_native_dictionary_write(heap,dict,entry,entry+source->value_offset)) return 0;
+    }
+    return 1;
+}
+int myl_native_dictionary_setdefault(myl_native_heap *heap, myl_native_dictionary *dict, const void *key, const void *fallback, void *output) {
+    if (myl_native_dictionary_read(dict,key,output)) return 1;
+    if (!myl_native_dictionary_write(heap,dict,key,fallback)) return 0;
+    memcpy(output,fallback,dict->value->size);
+    return 1;
+}
+void myl_native_dictionary_clear(myl_native_dictionary *dict) {
+    if (dict->entries->length) {
+        memset(dict->entries->storage,0,dict->entries->length*dict->entry_type.size);
+        dict->entries->length=0;
+        dict->entries->generation++;
+    }
+}
+myl_native_dictionary *myl_native_dictionary_copy(myl_native_heap *heap, const myl_native_dictionary *input) {
+    const myl_native_dictionary *rooted=input;
+    myl_native_root root;
+    myl_native_root_push(heap,&root,&rooted,&pointer_type);
+    myl_native_dictionary *result=myl_native_dictionary_new(heap,input->key,input->value,input->string_keys);
+    if (result && !myl_native_dictionary_update(heap,result,input)) result=NULL;
+    myl_native_root_pop(heap,&root);
+    return result;
+}

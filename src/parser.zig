@@ -623,14 +623,9 @@ pub const Parser = struct {
                     break :assignment .{ .discard = try self.expression(0) };
                 }
                 const operator = self.tokens[self.cursor.pos + 1];
-                const op: ast.AssignmentOp = switch (operator.tag) {
-                    .equal => .set,
-                    .plus_equal => .add,
-                    .minus_equal => .sub,
-                    else => {
-                        implicit_discard = true;
-                        break :assignment .{ .discard = try self.assignmentExpression() };
-                    },
+                const op: ast.AssignmentOp = assignmentOperation(operator.tag) orelse {
+                    implicit_discard = true;
+                    break :assignment .{ .discard = try self.assignmentExpression() };
                 };
                 self.cursor.pos += 2;
                 break :assignment .{ .assignment = .{ .name = first.span, .value = try self.expression(0), .op = op, .op_span = operator.span } };
@@ -666,6 +661,11 @@ pub const Parser = struct {
                 } else if (std.mem.eql(u8, self.src.text(call.name), "zip")) {
                     if (call.arguments.len != 2 or second_name == null) return self.sink.fail("E_ARITY", node.span, "zip requires two iterables and two iteration names");
                 } else if (second_name != null) return self.sink.fail(eIteration, node.span, "two iteration names require enumerate or zip");
+            } else if (second_name != null and node.data == .call and node.data.call.owner != null and std.mem.eql(u8, self.src.text(node.data.call.name), "items")) {
+                // `for position, value in d.items()` consumes the value snapshot
+                // that `items` produces; the first name receives the position.
+            } else if (second_name != null and node.data == .method_call and std.mem.eql(u8, self.src.text(node.data.method_call.name), "items")) {
+                // The same form when the receiver is a postfix expression.
             } else if (second_name != null) return self.sink.fail(eIteration, node.span, "two iteration names require enumerate");
         }
         const body = try self.block();
@@ -678,17 +678,38 @@ pub const Parser = struct {
     }
     fn assignmentExpression(self: *Parser) diagnostic.Error!ast.NodeId {
         const value = try self.expression(0);
-        if (!self.take(.equal)) return value;
+        const operator = self.current();
+        const op = assignmentOperation(operator.tag) orelse return value;
+        self.cursor.pos += 1;
         const target = self.syntax.nodes.items[@backingInt(value)];
         if (target.data == .field) {
+            if (op != .set) return self.sink.fail("E_ASSIGNMENT_TARGET", operator.span, "augmented assignment to a record field is not supported; write the field out in full");
             const assigned = try self.expression(0);
             return self.append(.{ .span = .join(target.span, self.syntax.nodes.items[@backingInt(assigned)].span), .data = .{ .field_assignment = .{ .target = value, .value = assigned } } });
         }
         if (target.data != .index) return self.sink.fail("E_ASSIGNMENT_TARGET", target.span, "indexed assignment requires a list binding and index");
+        if (op != .set) {
+            const assigned = try self.expression(0);
+            return self.append(.{ .span = .join(target.span, self.syntax.nodes.items[@backingInt(assigned)].span), .data = .{ .index_assignment = .{ .target = value, .op = op, .value = assigned } } });
+        }
         const arguments = try self.arena.allocator().alloc(ast.NodeId, 2);
         arguments[0] = target.data.index.index;
         arguments[1] = try self.expression(0);
         return self.append(.{ .span = .join(target.span, self.syntax.nodes.items[@backingInt(arguments[1])].span), .data = .{ .list_operation = .{ .kind = .write, .base = target.data.index.base, .arguments = arguments } } });
+    }
+
+    /// Map an assignment operator token, or null when the statement is an expression.
+    fn assignmentOperation(tag: lex.Tag) ?ast.AssignmentOp {
+        return switch (tag) {
+            .equal => .set,
+            .plus_equal => .add,
+            .minus_equal => .sub,
+            .star_equal => .mul,
+            .slash_equal => .div,
+            .slash_slash_equal => .floor_div,
+            .percent_equal => .rem,
+            else => null,
+        };
     }
 
     fn append(self: *Parser, node: ast.Node) diagnostic.Error!ast.NodeId {
@@ -791,9 +812,10 @@ pub const Parser = struct {
             if (self.take(.lbracket)) {
                 const start = if (self.current().tag == .colon) null else try self.expression(0);
                 if (self.take(.colon)) {
-                    const end = if (self.current().tag == .rbracket) null else try self.expression(0);
+                    const end = if (self.current().tag == .rbracket or self.current().tag == .colon) null else try self.expression(0);
+                    const step = if (self.take(.colon)) (if (self.current().tag == .rbracket) null else try self.expression(0)) else null;
                     const close = try self.expect(.rbracket);
-                    left = try self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, close.span), .data = .{ .slice = .{ .base = left, .start = start, .end = end } } });
+                    left = try self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, close.span), .data = .{ .slice = .{ .base = left, .start = start, .end = end, .step = step } } });
                 } else {
                     const close = try self.expect(.rbracket);
                     left = try self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, close.span), .data = .{ .index = .{ .base = left, .index = start.? } } });

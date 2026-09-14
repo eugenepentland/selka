@@ -64,7 +64,7 @@ test "managed dictionary source literals indexing alias updates get and snapshot
 test "managed str conversion source evaluates argument once" {
     try runSource(
         \\def next(xs: List[i64]) -> i64:
-        \\    xs.push(1)
+        \\    xs.append(1)
         \\    return 42
         \\
         \\
@@ -91,8 +91,8 @@ test "managed equality source compares values rather than insertion order" {
         \\def main() -> i64:
         \\    a: List[i64] = []
         \\    b: List[i64] = []
-        \\    a.push(42)
-        \\    b.push(42)
+        \\    a.append(42)
+        \\    b.append(42)
         \\    if a == b:
         \\        if a.contains(42):
         \\            return 42
@@ -130,7 +130,7 @@ test "managed membership source searches list values dictionary keys and text" {
     try runSource(
         \\def main() -> i64:
         \\    values: List[i64] = []
-        \\    values.push(42)
+        \\    values.append(42)
         \\    if 42 in values:
         \\        return 42
         \\    return 0

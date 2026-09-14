@@ -6,7 +6,7 @@ const native = @import("native_execute.zig");
 
 const ordered =
     \\def mark(log: List[int], value: int) -> int:
-    \\    log.push(value)
+    \\    log.append(value)
     \\    return value
     \\
     \\def combine(a: int, b: int = 2) -> int:
@@ -106,7 +106,7 @@ test "Python keyword call temporaries remain rooted under GC stress and are recl
     const text =
         \\def make(value: int) -> List[int]:
         \\    xs: List[int] = []
-        \\    xs.push(value)
+        \\    xs.append(value)
         \\    return xs
         \\
         \\def use(first: List[int], second: List[int]) -> int:

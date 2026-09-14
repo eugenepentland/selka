@@ -1462,7 +1462,7 @@ test "cross module effect and recoverable result obligations are enforced" {
         \\
         \\def allocate() -> i64:
         \\    values: List[i64] = []
-        \\    values.push(1)
+        \\    values.append(1)
         \\    return values[0u64]
     , "E_EFFECT_BOUND");
     try rejectChecked(

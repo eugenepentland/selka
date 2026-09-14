@@ -187,7 +187,7 @@ test "nested generic record constructors retain list type arguments and field co
         \\def main() -> i64:
         \\    holder = Holder[List[i64]](value=[])
         \\    values = holder.value
-        \\    values.push(42)
+        \\    values.append(42)
         \\    return values[0]
     , 42);
 }

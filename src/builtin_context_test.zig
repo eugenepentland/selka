@@ -19,7 +19,7 @@ test "generic List Result and contextual constructors keep symbolic type paramet
     try run(
         \\def singleton[T](value: T) -> List[T]:
         \\    values: List[T] = []
-        \\    values.push(value)
+        \\    values.append(value)
         \\    return values
         \\
         \\
@@ -54,7 +54,7 @@ const Modules = struct {
             \\
             \\def main() -> i64:
             \\    values: List[i64] = []
-            \\    values.push(42)
+            \\    values.append(42)
             \\    match model.answer(values):
             \\        case Result.ok(n):
             \\            return n
@@ -93,7 +93,7 @@ const ShadowModules = struct {
             \\
             \\def main() -> i64:
             \\    values: List[i64] = []
-            \\    values.push(21)
+            \\    values.append(21)
             \\    return values[0] + model.answer()
         );
         if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8,
@@ -174,7 +174,7 @@ test "builtin List and Result resolve without imports or explicit declarations" 
         \\
         \\def main() -> i64:
         \\    values: List[i64] = []
-        \\    values.push(42)
+        \\    values.append(42)
         \\    match answer():
         \\        case Result.ok(n):
         \\            return n
@@ -204,7 +204,7 @@ test "empty lists and Ok Err inherit binding return and argument contexts" {
         \\
         \\def main() -> i64:
         \\    values: List[i64] = []
-        \\    values.push(42)
+        \\    values.append(42)
         \\    result: Result[i64, i64] = Err(values[0u64])
         \\    _ = result
         \\    return recover(Ok(42))
@@ -221,14 +221,14 @@ test "record fields and nested list elements propagate empty list context" {
         \\def choose(value: Holder, other: List[i64]) -> i64:
         \\    _ = other
         \\    xs = value.values
-        \\    xs.push(42)
+        \\    xs.append(42)
         \\    return xs[0u64]
         \\
         \\
         \\def main() -> i64:
         \\    nested: List[List[i64]] = []
         \\    inner: List[i64] = []
-        \\    nested.push(inner)
+        \\    nested.append(inner)
         \\    return choose(Holder(values=[]), [])
     );
 }
@@ -263,7 +263,7 @@ test "declared List and Result types retain their own nominal identity" {
         \\
         \\def main() -> i64:
         \\    values: List[i64] = []
-        \\    values.push(42)
+        \\    values.append(42)
         \\    if values[0u64] != 42:
         \\        return 0
         \\    match answer():

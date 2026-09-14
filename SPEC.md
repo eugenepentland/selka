@@ -539,6 +539,24 @@ mis-tagged and at least one executable block was found.
 
 - [PY-COLLECTIONS-13] Record field writeback retains unrelated fields changed through managed aliases during evaluation of the assigned value.
 
+- [PY-COLLECTIONS-14] `values[start:stop:step]` copies every `step`-th element of a list or `str`, applying Python's endpoint rules exactly once: an omitted endpoint defaults to the end the step walks from, endpoints are normalized against the length once, and a negative step walks backwards. The receiver, both endpoints and the step are each evaluated once, and a zero step traps with `R_SLICE_STEP`. Byte strings reject a step with `E_COLLECTION_METHOD`.
+
+- [PY-COLLECTIONS-15] `values.extend(other)`, `values.insert(index, value)`, `values.remove(value)`, `values.reverse()`, `values.sort()` and `values.clear()` mutate the list in place; `insert` counts a negative index from the end and clamps to the bounds, `remove` deletes the first equal element or traps with `R_LIST_VALUE`, `sort` orders integer and binary64 elements ascending, and every method returns unit. `values.pop()` removes the last element and `values.pop(index)` removes the indexed element, both returning the element and trapping with `R_LIST_BOUNDS` when no element exists.
+
+- [PY-COLLECTIONS-16] `values.index(value)` returns the first equal element's index or traps with `R_LIST_VALUE`; `values.copy()` returns a fresh shallow list holding the same elements in the same order so later mutation of either list is not observed by the other.
+
+- [PY-COLLECTIONS-17] Dictionary `pop(key)` removes the matching entry and returns its value, `pop(key, default)` returns the default when absent, and `pop(key)` traps with `R_MISSING_KEY` when absent. `update(other)` writes every source entry into the receiver, replacing existing values while preserving their insertion position and appending new keys at the end; `setdefault(key, default)` returns the existing value or stores and returns the default. Insertion order remains the iteration order.
+
+- [PY-COLLECTIONS-18] `values += other` extends the receiver list in place, so every alias observes the added elements, and the assigned value must already have the receiver's list type. `d.items()` allocates a snapshot list of the dictionary's values in insertion order; because `for first, second in` binds first to the position, `for position, value in d.items()` pairs each snapshot position with its value.
+
+- [PY-COLLECTIONS-19] `push` is removed; calling it reports `E_REMOVED_SPELLING` and names `append` as the replacement.
+
+- [PY-COLLECTIONS-20] Reading an absent list value (`index` or `remove`) traps with `R_LIST_VALUE`, popping an empty list traps with `R_LIST_BOUNDS`, and popping an absent dictionary key without a default traps with `R_MISSING_KEY`; no absent value is silently replaced by a sentinel.
+
+- [PY-AUGASSIGN-1] `+=`, `-=`, `*=`, `/=`, `//=` and `%=` assign the operator's own result back to an existing binding, so `float` bindings take the float operators, `str` bindings concatenate, and integer bindings take the integer operators. `/=` on a non-float binding is rejected with `E_TYPE` because its result is a float, and a non-integer, non-float, non-`str` target is rejected with `E_TYPE` as before.
+
+- [PY-AUGASSIGN-2] An augmented assignment writes through a list slot or dictionary entry: `values[index] op= value` and `counts[key] op= value` read the slot once, evaluate the assigned value first, apply the operator's rules to the element and write the result back through the same receiver and index, which are each evaluated once. The element type of `str` values concatenates and integer or `float` elements take their own operators.
+
 
 - [PY-TEXT-1] Managed immutable text validates UTF-8, indexes Unicode scalar values (including negative indices), compares exact codepoints, concatenates, and splits/joins literal separators. Strings cannot be mutated through list operations. Scalar str conversions use Python Boolean/None spellings and numeric text. Python strings support Unicode escapes, codepoint slices, membership, and iteration; generic bodies preserve these types.
 - [PY-DICT-1] Managed dictionaries preserve insertion order and shared alias updates, compare integer/string keys by value, distinguish missing keys from defaults, trace key/value cycles, and fail allocation or capacity growth atomically. Managed data equality compares contents with cycle detection; dictionary equality ignores insertion order. Membership searches dictionary keys, list values, or a text substring. Python in/not in evaluate the needle before the container exactly once. Dictionary iteration returns keys in insertion order and traps if aliases change its size; generic dictionary literals preserve symbolic key/value types.
