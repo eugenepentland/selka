@@ -1,0 +1,209 @@
+enum TokenKind:
+    identifier,
+    keyword,
+    integer,
+    string,
+    newline,
+    lparen,
+    rparen,
+    lbracket,
+    rbracket,
+    comma,
+    colon,
+    plus,
+    minus,
+    star,
+    slash,
+    equal,
+    equal_equal,
+    less,
+    less_equal,
+    greater,
+    greater_equal,
+    eof
+
+
+class Token:
+    kind: TokenKind
+    start: int
+    end: int
+    line: int
+
+
+class LexError:
+    line: int
+    column: int
+    message: str
+
+
+class LexResult:
+    tokens: list[Token]
+    errors: list[LexError]
+
+
+def is_letter(char: str) -> bool:
+    return char.isalpha() or char == "_"
+
+
+def is_digit(char: str) -> bool:
+    return char.isdigit()
+
+
+def is_keyword(keywords: dict[str, bool], word: str) -> bool:
+    return word in keywords
+
+
+def add_token(tokens: list[Token], kind: TokenKind, start: int, end: int, line: int) -> None:
+    tokens.append(Token(kind=kind, start=start, end=end, line=line))
+
+
+def lex(source: str) -> LexResult:
+    tokens: list[Token] = []
+    errors: list[LexError] = []
+    keywords: dict[str, bool] = {
+        "def": True,
+        "return": True,
+        "if": True,
+        "else": True,
+        "while": True,
+        "and": True,
+        "or": True,
+        "not": True,
+    }
+    index = 0
+    line = 1
+    line_start = 0
+    while index < len(source):
+        char = source[index]
+        if char == " " or char == "\t" or char == "\r":
+            index += 1
+            continue
+        if char == "\n":
+            add_token(tokens, TokenKind.newline, index, index + 1, line)
+            index += 1
+            line += 1
+            line_start = index
+            continue
+        if char == "#":
+            while index < len(source) and source[index] != "\n":
+                index += 1
+            continue
+        if is_letter(char):
+            start = index
+            index += 1
+            while index < len(source) and (is_letter(source[index]) or is_digit(source[index])):
+                index += 1
+            word = source[start:index]
+            kind = TokenKind.identifier
+            if is_keyword(keywords, word):
+                kind = TokenKind.keyword
+            add_token(tokens, kind, start, index, line)
+            continue
+        if is_digit(char):
+            start = index
+            index += 1
+            while index < len(source) and is_digit(source[index]):
+                index += 1
+            add_token(tokens, TokenKind.integer, start, index, line)
+            continue
+        if char == "'":
+            start = index
+            start_line = line
+            index += 1
+            closed = False
+            while index < len(source):
+                if source[index] == "\\":
+                    index += 1
+                    if index < len(source):
+                        index += 1
+                    continue
+                if source[index] == "'":
+                    index += 1
+                    closed = True
+                    break
+                if source[index] == "\n":
+                    break
+                index += 1
+            if closed:
+                add_token(tokens, TokenKind.string, start, index, start_line)
+            else:
+                errors.append(LexError(
+                    line=start_line,
+                    column=start - line_start + 1,
+                    message="unterminated string",
+                ))
+            continue
+        start = index
+        index += 1
+        if char == "(" :
+            add_token(tokens, TokenKind.lparen, start, index, line)
+        elif char == ")":
+            add_token(tokens, TokenKind.rparen, start, index, line)
+        elif char == "[":
+            add_token(tokens, TokenKind.lbracket, start, index, line)
+        elif char == "]":
+            add_token(tokens, TokenKind.rbracket, start, index, line)
+        elif char == ",":
+            add_token(tokens, TokenKind.comma, start, index, line)
+        elif char == ":":
+            add_token(tokens, TokenKind.colon, start, index, line)
+        elif char == "+":
+            add_token(tokens, TokenKind.plus, start, index, line)
+        elif char == "-":
+            add_token(tokens, TokenKind.minus, start, index, line)
+        elif char == "*":
+            add_token(tokens, TokenKind.star, start, index, line)
+        elif char == "/":
+            add_token(tokens, TokenKind.slash, start, index, line)
+        elif char == "=":
+            if index < len(source) and source[index] == "=":
+                index += 1
+                add_token(tokens, TokenKind.equal_equal, start, index, line)
+            else:
+                add_token(tokens, TokenKind.equal, start, index, line)
+        elif char == "<":
+            if index < len(source) and source[index] == "=":
+                index += 1
+                add_token(tokens, TokenKind.less_equal, start, index, line)
+            else:
+                add_token(tokens, TokenKind.less, start, index, line)
+        elif char == ">":
+            if index < len(source) and source[index] == "=":
+                index += 1
+                add_token(tokens, TokenKind.greater_equal, start, index, line)
+            else:
+                add_token(tokens, TokenKind.greater, start, index, line)
+        else:
+            errors.append(LexError(
+                line=line,
+                column=start - line_start + 1,
+                message=f"unknown character {char}",
+            ))
+    add_token(tokens, TokenKind.eof, len(source), len(source), line)
+    return LexResult(tokens=tokens, errors=errors)
+
+
+def token_checksum(tokens: list[Token]) -> int:
+    checksum = 0
+    for token in tokens:
+        checksum += token.start + token.end + token.line
+    return checksum
+
+
+def main() -> int:
+    source = "def total(xs):\n    # add two values\n    return xs[0] + 41\nname = 'a\\'b'\n"
+    result = lex(source)
+    if len(result.errors) != 0:
+        error = result.errors[0]
+        print(f"lexer error at {error.line}:{error.column}: {error.message}")
+        return 1
+    print(f"lexer: tokens={len(result.tokens)} checksum={token_checksum(result.tokens)}")
+    unterminated = lex("ok\n'open")
+    unknown = lex("ok @")
+    if len(unterminated.errors) != 1 or len(unknown.errors) != 1:
+        return 2
+    string_error = unterminated.errors[0]
+    character_error = unknown.errors[0]
+    print(f"lexer error at {string_error.line}:{string_error.column}: {string_error.message}")
+    print(f"lexer error at {character_error.line}:{character_error.column}: {character_error.message}")
+    return 0

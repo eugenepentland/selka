@@ -1,0 +1,115 @@
+module bench
+import time
+
+
+enum TokenKind:
+    word,
+    integer,
+    string,
+    punctuation,
+    newline,
+    eof
+
+
+class Token:
+    kind: TokenKind
+    start: int
+    end: int
+    line: int
+
+
+def is_word_start(char: str) -> bool:
+    return char.isalpha() or char == "_"
+
+
+def add_token(tokens: list[Token], kind: TokenKind, start: int, end: int, line: int) -> None:
+    tokens.append(Token(kind=kind, start=start, end=end, line=line))
+
+
+def lex(source: str) -> list[Token]:
+    tokens: list[Token] = []
+    index = 0
+    line = 1
+    while index < len(source):
+        char = source[index]
+        if char == " " or char == "\t" or char == "\r":
+            index += 1
+            continue
+        if char == "\n":
+            add_token(tokens, TokenKind.newline, index, index + 1, line)
+            index += 1
+            line += 1
+            continue
+        if char == "#":
+            while index < len(source) and source[index] != "\n":
+                index += 1
+            continue
+        if is_word_start(char):
+            start = index
+            index += 1
+            while index < len(source) and (is_word_start(source[index]) or source[index].isdigit()):
+                index += 1
+            add_token(tokens, TokenKind.word, start, index, line)
+            continue
+        if char.isdigit():
+            start = index
+            index += 1
+            while index < len(source) and source[index].isdigit():
+                index += 1
+            add_token(tokens, TokenKind.integer, start, index, line)
+            continue
+        if char == "'":
+            start = index
+            index += 1
+            while index < len(source) and source[index] != "'":
+                if source[index] == "\\" and index + 1 < len(source):
+                    index += 2
+                else:
+                    index += 1
+            if index < len(source):
+                index += 1
+            add_token(tokens, TokenKind.string, start, index, line)
+            continue
+        start = index
+        index += 1
+        add_token(tokens, TokenKind.punctuation, start, index, line)
+    add_token(tokens, TokenKind.eof, len(source), len(source), line)
+    return tokens
+
+
+def build_source(line_count: int) -> str:
+    # Builder evidence: line_count pieces are accumulated, then exactly one
+    # join copies their contents into the final source.  No loop iteration
+    # copies the prefix built by earlier iterations.
+    pieces: list[str] = []
+    for index in range(line_count):
+        pieces.append(f"value_{index} = compute({index}, 'payload\\n') # synthetic input\n")
+    source = "".join(pieces)
+    pieces.clear()
+    return source
+
+
+def elapsed_milliseconds(start: time.Instant, finish: time.Instant) -> int:
+    match time.elapsed(start, finish):
+        case Ok(span):
+            return time.to_milliseconds(span)
+        case Err(_):
+            return -1
+
+
+def main(clock: Clock) -> int:
+    line_count = 4000
+    source = build_source(line_count)
+    match time.now(clock):
+        case Ok(start):
+            tokens = lex(source)
+            match time.now(clock):
+                case Ok(finish):
+                    elapsed = elapsed_milliseconds(start, finish)
+                    print(f"bench: chars={len(source)} pieces={line_count} joins=1 tokens={len(tokens)} lex_ms={elapsed}")
+                case Err(message):
+                    print(f"bench: chars={len(source)} pieces={line_count} joins=1 tokens={len(tokens)} clock_error={message}")
+        case Err(message):
+            tokens = lex(source)
+            print(f"bench: chars={len(source)} pieces={line_count} joins=1 tokens={len(tokens)} clock_error={message}")
+    return 0
