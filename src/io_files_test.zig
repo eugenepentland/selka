@@ -8,28 +8,34 @@ const file_resources = @import("file_resources.zig");
 
 const module = "io-files.my";
 
+/// Opening the granted directory, compiling a guest program and running it.
+pub const SandboxError = native.Error || std.Io.Dir.RealPathFileAllocError || std.mem.Allocator.Error;
+
 /// One real temporary directory and the capability grant a run receives over it.
-const Sandbox = struct {
+/// Every capability suite that needs a filesystem builds its fixtures here.
+pub const Sandbox = struct {
     temporary: std.testing.TmpDir,
     path: [:0]u8,
     grant: [2][]const u8,
 
-    fn init(self: *Sandbox, writable: bool) !void {
+    /// Open a fresh directory and decide whether its grant carries write authority.
+    pub fn init(self: *Sandbox, writable: bool) SandboxError!void {
         self.temporary = t.tmpDir(.{});
         self.path = try self.temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
         self.grant = .{ "--restrict", if (writable) "--allow-write=." else "--allow-read=." };
     }
-    fn deinit(self: *Sandbox) void {
+    /// Release the resolved path and remove the directory and everything in it.
+    pub fn deinit(self: *Sandbox) void {
         t.allocator.free(self.path);
         self.temporary.cleanup();
     }
     /// Run the guest inside the granted directory, so its relative paths resolve there.
-    fn options(self: *Sandbox) native.Options {
+    pub fn options(self: *Sandbox) native.Options {
         return .{ .directory = self.path, .arguments = &self.grant };
     }
     /// Compile and run one program against this grant, returning the whole outcome.
-    fn run(self: *Sandbox, text: []const u8) !native.Run {
-        var compilation = try language.Compilation.init(t.allocator, module, text);
+    pub fn run(self: *Sandbox, name: []const u8, text: []const u8) SandboxError!native.Run {
+        var compilation = try language.Compilation.init(t.allocator, name, text);
         defer compilation.deinit();
         return native.runWithOptions(&compilation, self.options()) catch |err| {
             @import("diagnostics_test.zig").report(compilation.diagnostics.items);
@@ -44,7 +50,7 @@ fn expectPrinted(text: []const u8, expected: []const u8) !void {
     try sandbox.init(false);
     defer sandbox.deinit();
     try sandbox.temporary.dir.writeFile(t.io, .{ .sub_path = "notes.txt", .data = "alpha\nbeta\n" });
-    const outcome = try sandbox.run(text);
+    const outcome = try sandbox.run(module, text);
     try t.expectEqualStrings("", outcome.trap.code);
     try t.expectEqualStrings(expected, outcome.stdout);
 }
@@ -53,7 +59,7 @@ fn expectTrap(text: []const u8, code: []const u8) !void {
     var sandbox: Sandbox = undefined;
     try sandbox.init(true);
     defer sandbox.deinit();
-    const outcome = try sandbox.run(text);
+    const outcome = try sandbox.run(module, text);
     try t.expectEqualStrings(code, outcome.trap.code);
 }
 
@@ -104,7 +110,7 @@ test "IO-8 writing modes create truncate and append through a write grant" {
         \\        _ = f.write("third\n")
         \\    return 0
     ;
-    const outcome = try sandbox.run(program);
+    const outcome = try sandbox.run(module, program);
     try t.expectEqualStrings("6\n", outcome.stdout);
     const written = try sandbox.temporary.dir.readFileAlloc(t.io, "out.txt", t.allocator, .limited(64));
     defer t.allocator.free(written);
@@ -132,7 +138,7 @@ test "IO-9 whole-path helpers report provider failures as readable Result errors
         \\    print(read_text(fs, "../escape"))
         \\    return 0
     ;
-    const outcome = try sandbox.run(program);
+    const outcome = try sandbox.run(module, program);
     try t.expectEqualStrings(
         "Ok('alpha\\n')\n" ++
             "Ok(b'alpha\\n')\n" ++
@@ -161,7 +167,7 @@ test "IO-10 a read-only grant denies every writing mode" {
         \\    print(remove(fs, "out.txt"))
         \\    return 0
     ;
-    const outcome = try sandbox.run(program);
+    const outcome = try sandbox.run(module, program);
     try t.expect(std.mem.indexOf(u8, outcome.stdout, "needs a write grant") != null);
     try t.expectEqual(@as(usize, 3), std.mem.count(u8, outcome.stdout, "Err("));
 }
@@ -202,7 +208,7 @@ test "IO-11 a with scope closes its file on every exit including traps and propa
         \\        case Err(message):
         \\            return total
     ;
-    const outcome = try sandbox.run(program);
+    const outcome = try sandbox.run(module, program);
     try t.expectEqualStrings("", outcome.trap.code);
     try t.expectEqual(@as(i64, 6 + 299 * 6), outcome.value);
     // Explicit close releases the handle before the scope ends.
