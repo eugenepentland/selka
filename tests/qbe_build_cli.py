@@ -121,10 +121,11 @@ def cache_acceptance(builder):
     repaired = builder.build()
     assert (repaired['compiled_functions'], repaired['reused_functions']) == (1, 1), repaired
     builder.execute(b'17\n')
-    Path(repaired['functions'][0]['object']).with_suffix('.sha256').write_bytes(b'\xff')
+    Path(repaired['functions'][0]['object']).with_suffix('.digest').write_bytes(b'\xff')
     repaired_checksum = builder.build()
     assert repaired_checksum['compiled_functions'] == 1, repaired_checksum
     builder.execute(b'17\n')
+    runtime_archive_acceptance(builder)
 
     release = builder.build('--mode', 'ReleaseFast')
     assert release['compiled_functions'] == 2 and keys(release) != keys(repaired), release
@@ -150,6 +151,26 @@ def cache_acceptance(builder):
     assert builder.snapshot() == before
     assert builder.build('--target', 'not-a-target', failure=True).returncode == 2
     assert builder.snapshot() == before
+
+
+def runtime_archive_acceptance(builder):
+    """The runtime links as one verified archive that damage rebuilds, not as loose objects."""
+    cache = builder.cache
+    archives = sorted(cache.glob('*.a'))
+    assert len(archives) == 1 and len(archives[0].stem) == 64, archives
+    reused = builder.build()
+    assert reused['runtime_reused'] and reused['compiled_functions'] == 0, reused
+    archives[0].write_bytes(b'not an archive')
+    rebuilt = builder.build()
+    assert not rebuilt['runtime_reused'] and rebuilt['compiled_functions'] == 0, rebuilt
+    assert sorted(cache.glob('*.a')) == archives, sorted(cache.glob('*.a'))
+    builder.execute(b'17\n')
+    archives[0].with_suffix('.digest').write_bytes(b'\xff')
+    repaired = builder.build()
+    assert not repaired['runtime_reused'], repaired
+    builder.execute(b'17\n')
+    assert builder.build()['runtime_reused'], 'a repaired archive must be reusable again'
+    builder.execute(b'17\n')
 
 
 def runtime_tree_acceptance(builder):

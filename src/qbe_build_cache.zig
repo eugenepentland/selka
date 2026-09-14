@@ -15,26 +15,51 @@ pub const Cache = struct {
     mode: []const u8,
     /// Cache hits are accepted only when their independent checksum matches.
     pub fn object(self: Cache, kind: []const u8, input: []const u8, flavor: Flavor) Error!Object {
-        const encoded = try std.json.Stringify.valueAlloc(self.context.allocator, .{ self.environment, kind, input }, .{});
-        const key = try fs.hash(self.context.allocator, encoded);
-        const path = try std.fmt.allocPrint(self.context.allocator, "{s}/{s}.o", .{ self.directory, key });
-        const checksum = try std.fmt.allocPrint(self.context.allocator, "{s}/{s}.sha256", .{ self.directory, key });
-        if (self.valid(path, checksum)) return .{ .key = key, .path = path, .reused = true };
+        const key = try self.identity(kind, input);
+        const path = try self.entry(key, ".o");
+        if (self.valid(path, try self.entry(key, ".digest"))) return .{ .key = key, .path = path, .reused = true };
         const work = try self.context.temporary(self.temporary);
         defer self.context.remove(work);
         const candidate = try std.fs.path.join(self.context.allocator, &.{ work, "object.o" });
         try self.compile(.{ .work = work, .candidate = candidate, .input = input, .flavor = flavor });
+        return self.store(key, path, candidate);
+    }
+    /// Publish the fixed runtime translation units as one archive. The linker then
+    /// pulls only the members a program actually references, and a warm build
+    /// verifies one entry instead of every runtime object it did not need.
+    pub fn library(self: Cache, kind: []const u8, sources: []const []const u8) Error!Object {
+        const a = self.context.allocator;
+        const key = try self.identity(kind, try std.mem.join(a, "\x00", sources));
+        const path = try self.entry(key, ".a");
+        if (self.valid(path, try self.entry(key, ".digest"))) return .{ .key = key, .path = path, .reused = true };
+        const work = try self.context.temporary(self.temporary);
+        defer self.context.remove(work);
+        const candidate = try std.fs.path.join(a, &.{ work, "runtime.a" });
+        var argv: std.ArrayList([]const u8) = .empty;
+        try argv.appendSlice(a, &.{ self.zig, "ar", "rcs", candidate });
+        for (sources) |source| try argv.append(a, (try self.object(kind, source, .c_file)).path);
+        try self.context.command(argv.items, null);
+        return self.store(key, path, candidate);
+    }
+    fn identity(self: Cache, kind: []const u8, input: []const u8) Error![]const u8 {
+        const encoded = try std.json.Stringify.valueAlloc(self.context.allocator, .{ self.environment, kind, input }, .{});
+        return fs.hash(self.context.allocator, encoded);
+    }
+    fn entry(self: Cache, key: []const u8, extension: []const u8) Error![]const u8 {
+        return std.fmt.allocPrint(self.context.allocator, "{s}/{s}{s}", .{ self.directory, key, extension });
+    }
+    fn store(self: Cache, key: []const u8, path: []const u8, candidate: []const u8) Error!Object {
         const bytes = try self.context.read(candidate);
         const digest = try objectDigest(self.context.allocator, bytes);
         try self.context.rename(candidate, path);
-        try self.context.atomic(checksum, digest);
+        try self.context.atomic(try self.entry(key, ".digest"), digest);
         return .{ .key = key, .path = path, .reused = false };
     }
     fn valid(self: Cache, path: []const u8, checksum: []const u8) bool {
         const expected = self.context.read(checksum) catch return false;
         const bytes = self.context.read(path) catch return false;
         if (bytes.len == 0) return false;
-        const actual = fs.hash(self.context.allocator, bytes) catch return false;
+        const actual = fs.digest(self.context.allocator, bytes) catch return false;
         return std.mem.eql(u8, expected, actual);
     }
     fn compile(self: Cache, task: Task) Error!void {
@@ -72,9 +97,10 @@ pub const Cache = struct {
         const shared = try std.fmt.allocPrint(a, "-ffile-prefix-map={s}=mylang-runtime", .{self.assets});
         const shared_debug = try std.fmt.allocPrint(a, "-fdebug-prefix-map={s}=mylang-runtime", .{self.assets});
         return a.dupe([]const u8, &.{
-            self.zig,                             "cc",  "-std=c11", optimization, "-fno-ident", "-fPIC",
-            "-fdebug-compilation-dir=mylang-qbe", files, debug,      shared,       shared_debug, "-I",
-            self.assets,
+            self.zig,     "cc",                                 "-std=c11",            optimization,
+            "-fno-ident", "-fPIC",                              "-ffunction-sections", "-fdata-sections",
+            files,        "-fdebug-compilation-dir=mylang-qbe", debug,                 shared,
+            shared_debug, "-I",                                 self.assets,
         });
     }
 };
@@ -86,7 +112,7 @@ const Task = struct { work: []const u8, candidate: []const u8, input: []const u8
 
 fn objectDigest(allocator: std.mem.Allocator, bytes: []const u8) Error![]const u8 {
     if (bytes.len == 0) return error.EmptyNativeObject;
-    return fs.hash(allocator, bytes);
+    return fs.digest(allocator, bytes);
 }
 test "empty native tool output cannot enter the object cache" {
     try std.testing.expectError(error.EmptyNativeObject, objectDigest(std.testing.allocator, ""));

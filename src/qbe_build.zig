@@ -13,6 +13,13 @@ pub const Error = fs.Error || std.json.ParseError(std.json.Scanner) || outputs.E
     error{ UnsupportedNativeHost, ZigVersionMismatch, InvalidNativeManifest };
 const abi = "mylang-qbe-native-v3";
 const Record = struct { name: []const u8, symbol: []const u8, key: []const u8, object: []const u8, reused: bool };
+/// Fixed runtime translation units archived together once per build environment.
+const runtime_units = [_][]const u8{
+    "qbe_runtime.c",   "native_heap.c",    "native_collections.c", "native_text.c",  "native_dictionary.c",
+    "qbe_stack.c",     "qbe_providers.c",  "qbe_resources.c",      "native_equal.c", "native_bytes.c",
+    "qbe_bytes.c",     "native_regions.c", "qbe_arena.c",          "native_print.c", "qbe_io.c",
+    "native_scoped.c", "qbe_grants.c",     "qbe_files.c",
+};
 /// Execute a native build using process-owned allocation and I/O policy.
 pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     if (args.len == 1 and std.mem.eql(u8, args[0], "--help")) {
@@ -64,7 +71,7 @@ fn build(context: fs.Context, parsed: options.Options) !u8 {
     const cache: cache_api.Cache = .{ .context = context, .directory = directory, .temporary = temporary, .assets = assets, .environment = environment, .zig = zig, .qbe = qbe, .mode = parsed.mode };
     var state = State{ .context = context, .cache = cache, .manifest = manifest };
     const codegen_start = std.Io.Timestamp.now(context.io, .awake);
-    try state.compile();
+    try state.compile(parsed);
     const codegen = seconds(context, codegen_start);
     const link_start = std.Io.Timestamp.now(context.io, .awake);
     const output = if (parsed.run) try std.fs.path.join(a, &.{ temporary, "program" }) else try context.absolute(parsed.output);
@@ -157,7 +164,7 @@ const State = struct {
     fn add(self: *State, object: cache_api.Object) !void {
         try self.objects.append(self.context.allocator, object.path);
     }
-    fn compile(self: *State) !void {
+    fn compile(self: *State, parsed: options.Options) !void {
         const a = self.context.allocator;
         const units = try a.dupe(std.json.Value, v.array(v.get(self.manifest, "functions")));
         std.mem.sort(std.json.Value, units, {}, less);
@@ -167,35 +174,28 @@ const State = struct {
             self.reused += @intFromBool(object.reused);
             try self.records.append(a, .{ .name = v.text(v.get(unit, "name")), .symbol = v.text(v.get(unit, "symbol")), .key = object.key, .object = object.path, .reused = object.reused });
         }
-        self.runtime = try self.cache.object("runtime", "qbe_runtime.c", .c_file);
-        try self.add(self.runtime);
-        for ([_][]const u8{
-            "native_heap.c",    "native_collections.c", "native_text.c",  "native_dictionary.c", "qbe_stack.c",
-            "qbe_providers.c",  "qbe_resources.c",      "native_equal.c", "native_bytes.c",      "qbe_bytes.c",
-            "native_regions.c", "qbe_arena.c",          "native_print.c", "qbe_io.c",            "native_scoped.c",
-            "qbe_grants.c",     "qbe_files.c",
-        }) |source| try self.add(try self.cache.object("support", source, .c_file));
         const metadata = try self.cache.object("metadata", try outputs.metadata(a, self.manifest), .c_text);
         self.metadata_reused = metadata.reused;
         try self.add(metadata);
+        const wrapper = if (parsed.library) try @import("qbe_build_embed.zig").libraryWrapper(a, self.manifest) else try outputs.entry(a, self.manifest, parsed.provider != null);
+        try self.add(try self.cache.object("entry", wrapper, .c_text));
         if (v.boolean(v.get(self.manifest, "text_format"))) try self.add(try self.cache.object("format", "native_format.zig", .zig_file));
+        // Linked last, so every object above can still pull the members it needs.
+        self.runtime = try self.cache.library("runtime", &runtime_units);
     }
     fn link(self: *State, parsed: options.Options, output: []const u8) !bool {
         const a = self.context.allocator;
         const temporary = try self.context.temporary(std.fs.path.dirname(output).?);
         defer self.context.remove(temporary);
         const candidate = try std.fs.path.join(a, &.{ temporary, "program" });
-        const wrapper = try std.fs.path.join(a, &.{ self.cache.temporary, "entry.c" });
-        const text = if (parsed.library) try @import("qbe_build_embed.zig").libraryWrapper(a, self.manifest) else try outputs.entry(a, self.manifest, parsed.provider != null);
-        try self.context.write(wrapper, text);
         if (parsed.provider) |provider_source| try self.provider(provider_source);
         var args: std.ArrayList([]const u8) = .empty;
         try args.appendSlice(a, try self.cache.flags());
         if (parsed.library) try args.append(a, "-shared");
-        try args.append(a, wrapper);
         try args.appendSlice(a, self.objects.items);
         try @import("native_link.zig").append(self.context, parsed.link_arguments, &args, false);
-        try args.appendSlice(a, &.{ "-lm", "-o", candidate });
+        // Unreferenced runtime sections leave with the archive members nothing pulled.
+        try args.appendSlice(a, &.{ self.runtime.path, "-lm", "-Wl,--gc-sections", "-o", candidate });
         try self.context.command(args.items, null);
         if (parsed.run) return self.context.publish(candidate, output);
         const report = try std.json.Stringify.valueAlloc(a, .{ .version = "qbe-manifest-v1", .abi = abi, .entry = v.text(v.get(self.manifest, "entry")), .functions = self.records.items, .runtime_object = self.runtime.path }, .{});

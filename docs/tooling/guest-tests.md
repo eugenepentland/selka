@@ -15,7 +15,9 @@ schema. A parameter-free test returning `bool` asserts `true`; any other result
 type needs an explicit expected typed JSON value, so an undeclared expectation is
 a configuration error rather than a silent pass. `--cases FILE` supplies
 arguments, expectations and skip reasons keyed by qualified test name, and
-`--filter GLOB` selects qualified names case-sensitively. Each selected case runs
+`--filter` selects qualified names case-sensitively: a pattern carrying no `*`,
+`?` or `[` matches any substring of the qualified name, and one that carries them
+is a shell-style glob. Each selected case runs
 as a fresh native process bounded by `--max-steps`, `--max-frames`, `--max-calls`
 and `--timeout-ms`, with no implicit clock, entropy, filesystem, network or
 environment grants. `--json` prints a `native-tests-v1` report instead of the text
@@ -32,6 +34,35 @@ $ mylang test examples/testing/main.my --filter 'main::test_nothing'
 0 passed, 0 cached, 0 failed, 0 skipped
 $ echo $?
 3
+```
+
+## Directory runs
+
+The positional argument may be a directory instead of one entry. Every `.my`
+program beneath it is selected in sorted path order — generated `.mylang-cache`,
+`.zig-cache`, `zig-out` and `.git` trees are skipped — and each one runs as its
+own child command, up to the machine's core count at a time. The children share
+one object cache and one receipt directory, so an unchanged program reuses its
+results instead of rebuilding, and the runtime archive every program links is
+built once for the whole suite. Their reports merge into one case listing, one
+count line naming how many programs took part, and the most severe exit status:
+2 if any program failed to set up, 1 if any case failed, 3 if the whole selection
+was empty or skipped, and 0 otherwise. `--cases` is rejected for a directory run,
+because its keys name the tests of one project.
+
+On a corpus of 100 small programs with 200 tests, a cold run takes about 7
+seconds, an unchanged rerun about 0.6 seconds, and a run after editing one
+program about 0.8 seconds — re-executing only the two tests that program owns.
+
+```console
+$ mylang test suite/ --cache-dir /tmp/suite-cache
+passed prog000::test_scale0
+passed prog000::test_sum0
+200 passed, 0 cached, 0 failed, 0 skipped across 100 programs
+$ mylang test suite/ --cache-dir /tmp/suite-cache --filter test_scale4
+cached prog004::test_scale4
+cached prog040::test_scale40
+0 passed, 11 cached, 0 failed, 0 skipped across 100 programs
 ```
 
 ## Reusing unaffected results

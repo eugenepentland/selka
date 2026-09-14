@@ -74,10 +74,9 @@ pub const Context = struct {
     pub fn read(self: Context, path: []const u8) Error![]const u8 {
         return std.Io.Dir.cwd().readFileAlloc(self.io, path, self.allocator, .unlimited);
     }
-    /// Hash exact tool or object contents rather than timestamps.
-    pub fn fileHash(self: Context, path: []const u8) Error![]const u8 {
-        const bytes = try self.read(path);
-        return hash(self.allocator, bytes);
+    /// Report the byte length of a published artifact without reading it.
+    pub fn size(self: Context, path: []const u8) Error!u64 {
+        return (try std.Io.Dir.cwd().statFile(self.io, path, .{})).size;
     }
     /// Write an input in an already-created private build directory.
     pub fn write(self: Context, path: []const u8, bytes: []const u8) Error!void {
@@ -114,12 +113,19 @@ pub const Context = struct {
     }
     /// Preserve an unchanged executable's inode and modification time.
     pub fn publish(self: Context, candidate: []const u8, output: []const u8) Error!bool {
-        const existing = self.fileHash(output) catch null;
-        if (existing) |old| {
-            if (self.runnable(output) and std.mem.eql(u8, old, try self.fileHash(candidate))) return false;
-        }
+        if (self.runnable(output) and self.unchanged(candidate, output)) return false;
         try self.rename(candidate, output);
         return true;
+    }
+    /// Compare lengths before bytes: a relinked program that really changed is
+    /// never read twice, and an unchanged one costs one comparison, not two digests.
+    fn unchanged(self: Context, candidate: []const u8, output: []const u8) bool {
+        const produced = self.size(candidate) catch return false;
+        const published = self.size(output) catch return false;
+        if (produced != published) return false;
+        const left = self.read(candidate) catch return false;
+        const right = self.read(output) catch return false;
+        return std.mem.eql(u8, left, right);
     }
     /// Capture frontend output and replay diagnostics without interpreting them.
     pub fn capture(self: Context, argv: []const []const u8) Error!std.process.RunResult {
@@ -134,11 +140,18 @@ pub const Context = struct {
         if (exitCode(result.term) != 0) return error.NativeToolFailed;
     }
 };
-/// Stable hexadecimal SHA-256 used by the private native object cache.
+/// Stable hexadecimal SHA-256 naming a cache entry by the inputs that produced it.
 pub fn hash(allocator: std.mem.Allocator, bytes: []const u8) Error![]const u8 {
-    var digest: [32]u8 = undefined;
-    Sha.hash(bytes, &digest, .{});
-    return allocator.dupe(u8, &std.fmt.bytesToHex(digest, .lower));
+    var result: [32]u8 = undefined;
+    Sha.hash(bytes, &result, .{});
+    return allocator.dupe(u8, &std.fmt.bytesToHex(result, .lower));
+}
+/// Integrity fingerprint for stored native objects, covering length and contents.
+/// Keys stay on SHA-256 because they name small inputs; a warm build instead
+/// re-reads megabytes of cached objects, where a cryptographic hash costs more
+/// than the whole link it protects.
+pub fn digest(allocator: std.mem.Allocator, bytes: []const u8) Error![]const u8 {
+    return std.fmt.allocPrint(allocator, "mylang-object-v1:{d}:{x:0>16}", .{ bytes.len, std.hash.XxHash3.hash(0, bytes) });
 }
 /// Translate abnormal child termination into the CLI's host failure status.
 pub fn exitCode(term: std.process.Child.Term) u8 {
@@ -160,6 +173,22 @@ test "native build IO owns allocations and rejects missing tools or failing comm
     try std.testing.expectEqual(@as(u8, 0), exitCode(captured.term));
     try std.testing.expectEqual(@as(u8, 2), exitCode(.{ .signal = .KILL }));
     try std.testing.expectEqualStrings("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", try hash(context.allocator, "abc"));
+}
+// spec-case: QBE-2
+test "object integrity fingerprints separate truncated, padded and altered bytes" {
+    const a = std.testing.allocator;
+    const original = try digest(a, "native object bytes");
+    defer a.free(original);
+    const truncated = try digest(a, "native object byte");
+    defer a.free(truncated);
+    const altered = try digest(a, "native object bytez");
+    defer a.free(altered);
+    const repeated = try digest(a, "native object bytes");
+    defer a.free(repeated);
+    try std.testing.expect(!std.mem.eql(u8, original, truncated));
+    try std.testing.expect(!std.mem.eql(u8, original, altered));
+    try std.testing.expectEqualStrings("mylang-object-v1:18:", truncated[0..20]);
+    try std.testing.expectEqualStrings(original, repeated);
 }
 test "native publication repairs executable permissions and tool lookup skips directories" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);

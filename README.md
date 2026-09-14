@@ -147,6 +147,14 @@ zig build fmt-check
 acceptance. `zig build test-interpreter` is an explicit alias. CI uses this
 default suite in Debug and ReleaseFast.
 
+While iterating, `-Dtest-filter=SUBSTRING` narrows the Zig suites to the tests
+whose name contains that text. `zig build test-units -Dtest-filter=arena` runs
+that area of `src/root_test.zig` in a second or two instead of the whole
+889-test binary, and `zig build test-cli -Dtest-filter=…` does the same for
+`test/integration.zig`; neither step runs the Python drivers. A filter that
+selects nothing fails rather than reporting a green run, so narrow one root at a
+time. `-Dtest-filter` applies to `zig build test` and `test-compile` too.
+
 QBE native compilation and parity integration remain available on demand:
 
 ```sh
