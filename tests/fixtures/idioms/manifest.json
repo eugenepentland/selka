@@ -1,0 +1,837 @@
+{
+ "version": "idiom-probes-v1",
+ "note": "Each probe records what it does today (baseline) and what the simplification plan requires (target). must_pass probes are the regression gate.",
+ "probes": [
+  {
+   "name": "ctl_list_append",
+   "group": "collections",
+   "audit": "2.1",
+   "note": "the one method that exists today",
+   "baseline": {
+    "status": 0,
+    "stdout": "2"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "2"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "ctl_list_neg_index",
+   "group": "collections",
+   "audit": "2.1",
+   "note": "negative indexing",
+   "baseline": {
+    "status": 0,
+    "stdout": "3"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "3"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "ctl_nested_index",
+   "group": "collections",
+   "audit": "2.1",
+   "note": "nested managed lists",
+   "baseline": {
+    "status": 0,
+    "stdout": "3"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "3"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "ctl_alias_shared",
+   "group": "collections",
+   "audit": "2.1",
+   "note": "managed lists share storage",
+   "baseline": {
+    "status": 0,
+    "stdout": "2"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "2"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "ctl_len_int",
+   "group": "collections",
+   "audit": "5.1",
+   "note": "len(x) returns int",
+   "baseline": {
+    "status": 0,
+    "stdout": "3"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "3"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "list_extend",
+   "group": "collections",
+   "audit": "2.1",
+   "note": "Python xs.extend(other)",
+   "baseline": {
+    "status": 1,
+    "code": "E_LIST_METHOD"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "3"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "list_insert_pop",
+   "group": "collections",
+   "audit": "2.1",
+   "note": "Python xs.insert / xs.pop",
+   "baseline": {
+    "status": 1,
+    "code": "E_LIST_METHOD"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "3"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "list_remove",
+   "group": "collections",
+   "audit": "2.1",
+   "note": "Python xs.remove(value)",
+   "baseline": {
+    "status": 1,
+    "code": "E_LIST_METHOD"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "2"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "list_index_method",
+   "group": "collections",
+   "audit": "2.1",
+   "note": "Python xs.index(value)",
+   "baseline": {
+    "status": 1,
+    "code": "E_LIST_METHOD"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "1"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "list_reverse",
+   "group": "collections",
+   "audit": "2.1",
+   "note": "Python xs.reverse()",
+   "baseline": {
+    "status": 1,
+    "code": "E_LIST_METHOD"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "3"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "list_sort_method",
+   "group": "collections",
+   "audit": "2.1",
+   "note": "Python xs.sort()",
+   "baseline": {
+    "status": 1,
+    "code": "E_LIST_METHOD"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "1"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "list_copy",
+   "group": "collections",
+   "audit": "2.1",
+   "note": "Python xs.copy()",
+   "baseline": {
+    "status": 1,
+    "code": "E_LIST_METHOD"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "2"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "list_slice_step",
+   "group": "collections",
+   "audit": "2.1",
+   "note": "slices with a step",
+   "baseline": {
+    "status": 1,
+    "code": "E_SYNTAX"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "2"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "list_concat",
+   "group": "collections",
+   "audit": "2.1",
+   "note": "Python list + list",
+   "baseline": {
+    "status": 1,
+    "code": "E_TEXT_OPERATOR"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "2"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "list_repeat",
+   "group": "collections",
+   "audit": "2.1",
+   "note": "Python list * int",
+   "baseline": {
+    "status": 1,
+    "code": "E_TYPE"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "3"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "elem_augassign",
+   "group": "collections",
+   "audit": "2.1",
+   "note": "xs[0] += 5",
+   "baseline": {
+    "status": 1,
+    "code": "E_SYNTAX"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "6"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "augassign_float",
+   "group": "collections",
+   "audit": "2.1",
+   "note": "x += 1.0 for a float",
+   "baseline": {
+    "status": 1,
+    "code": "E_TYPE"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "3"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "augassign_str",
+   "group": "collections",
+   "audit": "2.1",
+   "note": "s += \"b\"",
+   "baseline": {
+    "status": 1,
+    "code": "E_TYPE"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "2"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "ctl_enumerate",
+   "group": "builtins",
+   "audit": "2.2",
+   "note": "enumerate works",
+   "baseline": {
+    "status": 0,
+    "stdout": "31"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "31"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "ctl_int_parse",
+   "group": "builtins",
+   "audit": "2.2",
+   "note": "int(text) parses to an Option",
+   "baseline": {
+    "status": 0,
+    "stdout": "42"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "42"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "ctl_str_methods",
+   "group": "builtins",
+   "audit": "2.2",
+   "note": "string methods already read like Python",
+   "baseline": {
+    "status": 0,
+    "stdout": "4"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "4"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "sum_list",
+   "group": "builtins",
+   "audit": "2.2",
+   "note": "Python sum(xs)",
+   "baseline": {
+    "status": 1,
+    "code": "E_UNKNOWN_FUNCTION"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "6"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "min_max",
+   "group": "builtins",
+   "audit": "2.2",
+   "note": "Python min/max",
+   "baseline": {
+    "status": 1,
+    "code": "E_UNKNOWN_FUNCTION"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "3"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "sorted_builtin",
+   "group": "builtins",
+   "audit": "2.2",
+   "note": "Python sorted(xs)",
+   "baseline": {
+    "status": 1,
+    "code": "E_UNKNOWN_FUNCTION"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "1"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "abs_int",
+   "group": "builtins",
+   "audit": "2.2",
+   "note": "abs is float-only today",
+   "baseline": {
+    "status": 1,
+    "code": "E_TYPE"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "42"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "round_builtin",
+   "group": "builtins",
+   "audit": "2.2",
+   "note": "Python round(x)",
+   "baseline": {
+    "status": 1,
+    "code": "E_UNKNOWN_FUNCTION"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "2"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "any_all",
+   "group": "builtins",
+   "audit": "2.2",
+   "note": "Python any/all",
+   "baseline": {
+    "status": 1,
+    "code": "E_UNKNOWN_FUNCTION"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "42"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "zip_pairs",
+   "group": "builtins",
+   "audit": "2.2",
+   "note": "Python zip",
+   "baseline": {
+    "status": 1,
+    "code": "E_ITERATION"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "10"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "reversed_list",
+   "group": "builtins",
+   "audit": "2.2",
+   "note": "Python reversed(xs)",
+   "baseline": {
+    "status": 1,
+    "code": "E_UNKNOWN_FUNCTION"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "2"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "list_of_range",
+   "group": "builtins",
+   "audit": "2.2",
+   "note": "list(range(n))",
+   "baseline": {
+    "status": 1,
+    "code": "E_UNKNOWN_FUNCTION"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "3"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "ctl_dict_get",
+   "group": "dictionary",
+   "audit": "2.1",
+   "note": "d.get(key, fallback)",
+   "baseline": {
+    "status": 0,
+    "stdout": "2"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "2"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "ctl_dict_membership",
+   "group": "dictionary",
+   "audit": "2.1",
+   "note": "key in d",
+   "baseline": {
+    "status": 0,
+    "stdout": "42"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "42"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "ctl_dict_keys",
+   "group": "dictionary",
+   "audit": "2.1",
+   "note": "keys() and values() snapshots",
+   "baseline": {
+    "status": 0,
+    "stdout": "4"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "4"
+   },
+   "must_pass": true
+  },
+  {
+   "name": "dict_items",
+   "group": "dictionary",
+   "audit": "2.1",
+   "note": "Python d.items()",
+   "baseline": {
+    "status": 1,
+    "code": "E_ITERATION"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "3"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "dict_augassign",
+   "group": "dictionary",
+   "audit": "2.1",
+   "note": "d[k] += 1",
+   "baseline": {
+    "status": 1,
+    "code": "E_SYNTAX"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "42"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "ternary",
+   "group": "expressions",
+   "audit": "2.3",
+   "note": "conditional expression",
+   "baseline": {
+    "status": 1,
+    "code": "E_SYNTAX"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "42"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "chained_compare",
+   "group": "expressions",
+   "audit": "2.3",
+   "note": "chained comparison",
+   "baseline": {
+    "status": 1,
+    "code": "E_TYPE"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "42"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "tuple_swap",
+   "group": "expressions",
+   "audit": "2.3",
+   "note": "a, b = b, a",
+   "baseline": {
+    "status": 1,
+    "code": "E_SYNTAX"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "21"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "is_none",
+   "group": "expressions",
+   "audit": "2.3",
+   "note": "x is None",
+   "baseline": {
+    "status": 1,
+    "code": "E_SYNTAX"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "42"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "eq_none_option",
+   "group": "expressions",
+   "audit": "2.3",
+   "note": "comparing an Option to None",
+   "baseline": {
+    "status": 1,
+    "code": "E_TYPE"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "42"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "lambda_sort_key",
+   "group": "expressions",
+   "audit": "2.3",
+   "note": "sorted with a lambda key (needs two features)",
+   "baseline": {
+    "status": 1,
+    "code": "E_SYNTAX"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "12"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "edge_const_bytes",
+   "group": "program-edge",
+   "audit": "5.7",
+   "note": "const bytes literal",
+   "baseline": {
+    "status": 1,
+    "code": "E_CONSTANT_EXPRESSION"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "6"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "edge_const_str",
+   "group": "program-edge",
+   "audit": "5.7",
+   "note": "const str literal",
+   "baseline": {
+    "status": 1,
+    "code": "E_CONSTANT_EXPRESSION"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "5"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "edge_option_try",
+   "group": "program-edge",
+   "audit": "5.7",
+   "note": "? on an Option inside an Option function",
+   "baseline": {
+    "status": 1,
+    "code": "E_TRY_TYPE"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "42"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "edge_main_result",
+   "group": "program-edge",
+   "audit": "5.7",
+   "note": "main returns a renderable Result",
+   "baseline": {
+    "status": 1,
+    "code": "E_TYPE"
+   },
+   "target": {
+    "status": 1,
+    "stderr_contains": "bad"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "edge_declared_len_wins",
+   "group": "program-edge",
+   "audit": "5.2",
+   "note": "a declared len shadows the prelude operation",
+   "baseline": {
+    "status": 1,
+    "code": "E_TYPE"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "42"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "edge_floor_div_scan",
+   "group": "program-edge",
+   "audit": "5.3",
+   "note": "a prelude type named after `//` on one line",
+   "baseline": {
+    "status": 1,
+    "code": "E_UNKNOWN_TYPE"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "4"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "edge_bytes_without_token",
+   "group": "program-edge",
+   "audit": "5.3",
+   "note": "bytes inference without the `bytes` word in the file",
+   "baseline": {
+    "status": 1,
+    "code": "E_COLLECTION_METHOD"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "2"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "run_import_single_file",
+   "group": "entry-command",
+   "audit": "2.4",
+   "note": "`mylang run` accepts a module header and an import",
+   "baseline": {
+    "status": 1,
+    "code": "E_SYNTAX"
+   },
+   "target": {
+    "status": 0,
+    "stdout": "42"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "rm_push",
+   "group": "removals",
+   "audit": "3",
+   "note": "push folded into append",
+   "baseline": {
+    "status": 0,
+    "stdout": "2"
+   },
+   "target": {
+    "status": 1,
+    "code": "E_REMOVED_SPELLING",
+    "stderr_contains": "append"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "rm_dot_len",
+   "group": "removals",
+   "audit": "5.1",
+   "note": "x.len() folded into len(x)",
+   "baseline": {
+    "status": 1,
+    "code": "E_TYPE"
+   },
+   "target": {
+    "status": 1,
+    "code": "E_REMOVED_SPELLING",
+    "stderr_contains": "len("
+   },
+   "must_pass": false
+  },
+  {
+   "name": "rm_list_alias",
+   "group": "removals",
+   "audit": "3",
+   "note": "List folded into list",
+   "baseline": {
+    "status": 0,
+    "stdout": "3"
+   },
+   "target": {
+    "status": 1,
+    "code": "E_REMOVED_SPELLING",
+    "stderr_contains": "list["
+   },
+   "must_pass": false
+  },
+  {
+   "name": "rm_clock_cap",
+   "group": "removals",
+   "audit": "3",
+   "note": "clock_cap folded into Clock",
+   "baseline": {
+    "status": 0,
+    "stdout": "42"
+   },
+   "target": {
+    "status": 1,
+    "code": "E_REMOVED_SPELLING",
+    "stderr_contains": "Clock"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "rm_f64_add",
+   "group": "removals",
+   "audit": "4",
+   "note": "raw f64 intrinsics folded into float",
+   "baseline": {
+    "status": 0,
+    "stdout": "3"
+   },
+   "target": {
+    "status": 1,
+    "code": "E_REMOVED_SPELLING",
+    "stderr_contains": "float"
+   },
+   "must_pass": false
+  },
+  {
+   "name": "rm_dict_contains",
+   "group": "removals",
+   "audit": "3",
+   "note": "d.contains folded into `in`",
+   "baseline": {
+    "status": 0,
+    "stdout": "42"
+   },
+   "target": {
+    "status": 1,
+    "code": "E_REMOVED_SPELLING",
+    "stderr_contains": "in"
+   },
+   "must_pass": false
+  }
+ ]
+}

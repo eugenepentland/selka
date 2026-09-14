@@ -1,0 +1,6 @@
+def main() -> int:
+    match int("42"):
+        case Some(v):
+            return v
+        case None:
+            return 0

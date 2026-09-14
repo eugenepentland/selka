@@ -1,0 +1,4 @@
+const NAME: str = "hello"
+
+def main() -> int:
+    return len(NAME)

@@ -1,0 +1,2 @@
+def main() -> int:
+    return int(f64_to_u64(f64_add(f64_from_u64(1u64), f64_from_u64(2u64))))

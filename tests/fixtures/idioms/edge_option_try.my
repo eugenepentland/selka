@@ -1,0 +1,13 @@
+def lookup(key: int) -> Option[int]:
+    return Some(key + 1)
+
+def get(key: int) -> Option[int]:
+    found = lookup(key)?
+    return Some(found + 1)
+
+def main() -> int:
+    match get(0):
+        case Some(value):
+            return value + 40
+        case None:
+            return 0

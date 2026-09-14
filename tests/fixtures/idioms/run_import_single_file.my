@@ -1,0 +1,5 @@
+module main
+import math
+
+def main() -> int:
+    return int(math.sqrt(1764.0))
