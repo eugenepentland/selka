@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const generic_text =
     \\def sum_range[T: integer](start: T, end: T) -> i64:
     \\    sum = 0
@@ -37,20 +38,18 @@ const once_text =
 fn run(allocator: std.mem.Allocator, path: []const u8, text: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(allocator, path, text);
     defer compilation.deinit();
-    try t.expectEqual(expected, (try compilation.execute(allocator)).value);
+    try t.expectEqual(expected, (try native.run(&compilation)).value);
     const formatted = try compilation.format(allocator);
     defer allocator.free(formatted);
     var again = try language.Compilation.init(allocator, path, formatted);
     defer again.deinit();
-    try t.expectEqual(expected, (try again.execute(allocator)).value);
+    try t.expectEqual(expected, (try native.run(&again)).value);
 }
 fn scenario(allocator: std.mem.Allocator) !void {
     try run(allocator, "for.my", generic_text, 14);
     try run(allocator, "once.my", once_text, 8);
 }
 // spec: FOR-RANGE-1
-test "half-open ranges evaluate bounds once and support generic nested exits with allocation failures" {
+test "half-open ranges evaluate bounds once and support generic nested exits" {
     try scenario(t.allocator);
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }

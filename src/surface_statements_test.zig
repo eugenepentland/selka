@@ -3,11 +3,12 @@ const std = @import("std");
 const t = std.testing;
 const debug = std.debug;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 
 fn evaluate(bytes: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(t.allocator, "statements.my", bytes);
     defer compilation.deinit();
-    const result = compilation.execute(t.allocator) catch |err| {
+    const result = native.run(&compilation) catch |err| {
         for (compilation.diagnostics.items) |diag| debug.print("{s}: {s} ({s})\n", .{ diag.code, diag.message, compilation.src.text(diag.span) });
         return err;
     };
@@ -16,7 +17,7 @@ fn evaluate(bytes: []const u8, expected: i64) !void {
     defer t.allocator.free(formatted);
     var after = try language.Compilation.init(t.allocator, "formatted.my", formatted);
     defer after.deinit();
-    try t.expectEqual(expected, (try after.execute(t.allocator)).value);
+    try t.expectEqual(expected, (try native.run(&after)).value);
     const twice = try after.format(t.allocator);
     defer t.allocator.free(twice);
     try t.expectEqualStrings(formatted, twice);

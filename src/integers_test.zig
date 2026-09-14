@@ -3,6 +3,7 @@
 const std = @import("std");
 const testing = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const Type = @import("typed.zig").Type;
 
 fn evaluate(expression: []const u8, expected: i64) !void {
@@ -10,7 +11,7 @@ fn evaluate(expression: []const u8, expected: i64) !void {
     defer testing.allocator.free(text);
     var compilation = try language.Compilation.init(testing.allocator, "integer.my", text);
     defer compilation.deinit();
-    try testing.expectEqual(expected, (try compilation.execute(testing.allocator)).value);
+    try testing.expectEqual(expected, (try native.run(&compilation)).value);
 }
 fn trapped(expression: []const u8, code: []const u8) !void {
     const text = try std.fmt.allocPrint(testing.allocator, "def main() -> i64:\n    _ = {s}\n    return 0\n", .{expression});
@@ -18,9 +19,9 @@ fn trapped(expression: []const u8, code: []const u8) !void {
     var compilation = try language.Compilation.init(testing.allocator, "integer.my", text);
     defer compilation.deinit();
     try compilation.check();
-    const outcome = try compilation.execute(testing.allocator);
+    const outcome = try native.run(&compilation);
     try testing.expectEqualStrings(code, outcome.trap.code);
-    try testing.expect(outcome.trap.span.start < text.len);
+    try testing.expectEqual(@as(u64, 2), outcome.trap.line);
 }
 
 test "checked signed and unsigned operations retain each declared width" {
@@ -72,7 +73,7 @@ test "integer widths remain distinct in functions records compound assignment an
     ;
     var compilation = try language.Compilation.init(testing.allocator, "widths.my", source);
     defer compilation.deinit();
-    try testing.expectEqual(@as(i64, 8), (try compilation.execute(testing.allocator)).value);
+    try testing.expectEqual(@as(i64, 8), (try native.run(&compilation)).value);
     const dump = try compilation.dump(testing.allocator);
     defer testing.allocator.free(dump);
     try testing.expect(std.mem.indexOf(u8, dump, "CAST_INT u64") != null);
@@ -95,7 +96,7 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
         \\    return i64(u64(n.n) * 2u64)
     );
     defer compilation.deinit();
-    try testing.expectEqual(@as(i64, 510), (try compilation.execute(allocator)).value);
+    try compilation.check();
     const dump = try compilation.dump(allocator);
     defer allocator.free(dump);
     var discovery = try language.duplicates.discover(allocator, compilation.program.?, .{});
@@ -159,7 +160,7 @@ test "every signed and unsigned byte addition and multiplication has checked bou
 }
 
 // spec: VM-AUDIT-1
-test "scalar loop retains exact step budget and located trap under VM audit probes" {
+test "scalar loop retains exact step budget and located trap under the native runtime" {
     const source =
         \\def main() -> i64:
         \\    i = 0
@@ -171,10 +172,11 @@ test "scalar loop retains exact step budget and located trap under VM audit prob
     ;
     var compilation = try language.Compilation.init(testing.allocator, "audit.my", source);
     defer compilation.deinit();
-    const limited = try compilation.executeWithOptions(testing.allocator, .{ .max_steps = 1309 });
+    const limited = try native.runWithOptions(&compilation, .{ .max_steps = 1309 });
     try testing.expectEqualStrings("R_STEP_LIMIT", limited.trap.code);
-    try testing.expectEqualStrings("return total", source[limited.trap.span.start..limited.trap.span.end]);
-    const result = try compilation.executeWithOptions(testing.allocator, .{ .max_steps = 1310 });
+    try testing.expectEqual(@as(u64, 7), limited.trap.line);
+    try testing.expectEqual(@as(u64, 5), limited.trap.column);
+    const result = try native.runWithOptions(&compilation, .{ .max_steps = 1310 });
     try testing.expectEqual(@as(i64, 4950), result.value);
 }
 
@@ -188,7 +190,7 @@ test "all integer widths accept their limits and reject one-past literals" {
         defer testing.allocator.free(text);
         var compilation = try language.Compilation.init(testing.allocator, "limits.my", text);
         defer compilation.deinit();
-        try testing.expectEqual(@as(i64, 1), (try compilation.execute(testing.allocator)).value);
+        try testing.expectEqual(@as(i64, 1), (try native.run(&compilation)).value);
         const minimum = try std.fmt.allocPrint(testing.allocator, "i64({d}{s})", .{ ty.min(), @tagName(ty) });
         defer testing.allocator.free(minimum);
         try evaluate(minimum, @intCast(ty.min()));

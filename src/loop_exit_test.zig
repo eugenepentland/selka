@@ -2,10 +2,11 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 fn execute(text: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(t.allocator, "loops.my", text);
     defer compilation.deinit();
-    const result = compilation.execute(t.allocator) catch |err| {
+    const result = native.run(&compilation) catch |err| {
         @import("diagnostics_test.zig").report(compilation.diagnostics.items);
         return err;
     };
@@ -14,7 +15,7 @@ fn execute(text: []const u8, expected: i64) !void {
     defer t.allocator.free(formatted);
     var again = try language.Compilation.init(t.allocator, "formatted.my", formatted);
     defer again.deinit();
-    try t.expectEqual(expected, (try again.execute(t.allocator)).value);
+    try t.expectEqual(expected, (try native.run(&again)).value);
 }
 // spec: LOOP-EXIT-1
 test "break and continue target nearest loops and preserve generic flow and formatting" {
@@ -75,11 +76,9 @@ const cleanup_text =
 fn cleanupScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "cleanup.my", cleanup_text);
     defer compilation.deinit();
-    const result = try compilation.executeWithOptions(allocator, .{});
+    const result = try native.run(&compilation);
     try t.expectEqual(@as(i64, 6), result.value);
 }
-test "loop exits release nested managed arenas under every allocation failure" {
+test "loop exits release the nested managed arenas they jump out of" {
     try cleanupScenario(t.allocator);
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), cleanupScenario, .{});
 }

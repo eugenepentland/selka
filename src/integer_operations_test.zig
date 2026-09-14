@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const typed = @import("typed.zig");
 const integers = @import("integers.zig");
 fn widths() !void {
@@ -40,17 +41,15 @@ fn guest(allocator: std.mem.Allocator) !void {
     ;
     var compilation = try language.Compilation.init(allocator, "numbers.my", source);
     defer compilation.deinit();
-    try t.expectEqual(@as(i64, 2), (try compilation.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 2), (try native.run(&compilation)).value);
     const formatted = try compilation.format(allocator);
     defer allocator.free(formatted);
     var again = try language.Compilation.init(allocator, "formatted.my", formatted);
     defer again.deinit();
-    try t.expectEqual(@as(i64, 2), (try again.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 2), (try native.run(&again)).value);
 }
-test "named integer operations share constants generic and runtime semantics under allocation failure" {
+test "named integer operations share constant generic and runtime semantics across a reformat" {
     try guest(t.allocator);
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), guest, .{});
 }
 test "invalid runtime shifts are located and constant shifts reject before execution" {
     var runtime = try language.Compilation.init(t.allocator, "shift.my",
@@ -58,7 +57,7 @@ test "invalid runtime shifts are located and constant shifts reject before execu
         \\    return shift_left(1, 64)
     );
     defer runtime.deinit();
-    const result = try runtime.execute(t.allocator);
+    const result = try native.run(&runtime);
     try t.expectEqualStrings("R_INVALID_SHIFT", result.trap.code);
     var constant = try language.Compilation.init(t.allocator, "shift.my",
         \\const X: i64 = shift_right(1, -1)

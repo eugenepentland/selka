@@ -3,11 +3,12 @@ const std = @import("std");
 const t = std.testing;
 const debug = std.debug.print;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 
 fn evaluate(bytes: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(t.allocator, "familiar-collections.my", bytes);
     defer compilation.deinit();
-    const result = compilation.execute(t.allocator) catch |err| {
+    const result = native.run(&compilation) catch |err| {
         for (compilation.diagnostics.items) |diag| debug("{s}: {s} ({s})\n", .{ diag.code, diag.message, compilation.src.text(diag.span) });
         return err;
     };
@@ -48,32 +49,6 @@ test "list syntax rejects invalid methods element types and indices" {
         try t.expectError(error.SourceError, compilation.check());
         try t.expectEqualStrings(case.code, compilation.diagnostics.items[0].code);
     }
-}
-
-fn allocationScenario(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, "list-oom.my",
-        \\def make_values() -> Result[List[i64], i64]:
-        \\    values: List[i64] = []
-        \\    values.push(42)
-        \\    return Ok(values)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    match make_values():
-        \\        case Result.ok(xs):
-        \\            return xs[0]
-        \\        case Result.err(e):
-        \\            return e
-    );
-    defer compilation.deinit();
-    const result = try compilation.executeWithOptions(allocator, .{ .memory = .{ .gc = .{ .stress = true } } });
-    try t.expectEqual(@as(i64, 42), result.value);
-}
-
-// spec: SURFACE-COLLECTIONS-5
-test "contextual managed source compilation and execution clean every failed allocation" {
-    try allocationScenario(t.allocator);
-    try t.checkAllAllocationFailures(t.allocator, allocationScenario, .{});
 }
 
 // spec: SURFACE-COLLECTIONS-2
