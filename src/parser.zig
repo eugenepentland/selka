@@ -663,7 +663,9 @@ pub const Parser = struct {
                 } else if (std.mem.eql(u8, self.src.text(call.name), "enumerate")) {
                     if (call.arguments.len != 1 or second_name == null) return self.sink.fail("E_ARITY", node.span, "enumerate requires one iterable and two iteration names");
                     iterable = call.arguments[0];
-                } else if (second_name != null) return self.sink.fail(eIteration, node.span, "two iteration names require enumerate");
+                } else if (std.mem.eql(u8, self.src.text(call.name), "zip")) {
+                    if (call.arguments.len != 2 or second_name == null) return self.sink.fail("E_ARITY", node.span, "zip requires two iterables and two iteration names");
+                } else if (second_name != null) return self.sink.fail(eIteration, node.span, "two iteration names require enumerate or zip");
             } else if (second_name != null) return self.sink.fail(eIteration, node.span, "two iteration names require enumerate");
         }
         const body = try self.block();

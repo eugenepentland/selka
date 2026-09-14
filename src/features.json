@@ -112,6 +112,11 @@
       "summary": "Prelude helpers convert, compare and classify binary64 values without importing a module.",
       "doc": "docs/floating-point.md#prelude-float-helpers"
     },
+    "python-prelude-builtins": {
+      "kind": "language",
+      "summary": "Bare Python `sum`, `min`, `max`, `sorted`, `abs`, `round`, `any`, `all`, `reversed`, `list` and `zip` work without an import.",
+      "doc": "docs/python-syntax.md#prelude-builtins"
+    },
     "string-to-number-parsing": {
       "kind": "language",
       "summary": "`int(text)` and `float(text)` answer `Option` rather than raising on text that is not a number.",

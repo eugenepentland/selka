@@ -330,7 +330,7 @@
     "status": 0,
     "stdout": "6"
    },
-   "must_pass": false
+   "must_pass": true
   },
   {
    "name": "min_max",
@@ -345,7 +345,7 @@
     "status": 0,
     "stdout": "3"
    },
-   "must_pass": false
+   "must_pass": true
   },
   {
    "name": "sorted_builtin",
@@ -360,7 +360,7 @@
     "status": 0,
     "stdout": "1"
    },
-   "must_pass": false
+   "must_pass": true
   },
   {
    "name": "abs_int",
@@ -375,7 +375,7 @@
     "status": 0,
     "stdout": "42"
    },
-   "must_pass": false
+   "must_pass": true
   },
   {
    "name": "round_builtin",
@@ -390,7 +390,7 @@
     "status": 0,
     "stdout": "2"
    },
-   "must_pass": false
+   "must_pass": true
   },
   {
    "name": "any_all",
@@ -405,7 +405,7 @@
     "status": 0,
     "stdout": "42"
    },
-   "must_pass": false
+   "must_pass": true
   },
   {
    "name": "zip_pairs",
@@ -420,7 +420,7 @@
     "status": 0,
     "stdout": "10"
    },
-   "must_pass": false
+   "must_pass": true
   },
   {
    "name": "reversed_list",
@@ -435,7 +435,7 @@
     "status": 0,
     "stdout": "2"
    },
-   "must_pass": false
+   "must_pass": true
   },
   {
    "name": "list_of_range",
@@ -450,7 +450,7 @@
     "status": 0,
     "stdout": "3"
    },
-   "must_pass": false
+   "must_pass": true
   },
   {
    "name": "ctl_dict_get",

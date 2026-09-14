@@ -298,6 +298,31 @@ In particular:
 - Formatting validates source and returns it unchanged: indentation already is
   the canonical layout, so `fmt --check` accepts everything that parses.
 
+## Prelude builtins
+
+The everyday Python builtins are ordinary prelude names: no import is needed,
+and a local binding or declared function of the same name still wins. `sum`,
+`min`, `max`, `sorted`, `abs`, `round`, `any`, `all`, `reversed`, `list` and
+`zip` cover the scalar folds and list materialization. `sum`, `any`, `all`,
+`min` and `max` accept a list of the element type they name; `sorted` accepts a
+list of `int`, `float` or `str` and returns a new stable ascending list without
+changing its input. `reversed(xs)` copies a list or string from last to first
+and, like `zip(a, b)`, is also a `for` source; `zip` stops at the shorter list and the
+Boolean folds stop as soon as their answer is known.
+`list(range(end))` and `list(range(start, end))` materialize their range.
+
+`round(value)` answers the nearest integral `float`, with halves away from zero
+and NaN or infinities unchanged. `abs` is total for `int` except the signed
+minimum, which traps `R_OVERFLOW`; a `float` argument stays the prelude float
+operation. An empty `min`/`max` has no answer and traps `R_LIST_BOUNDS`.
+
+```mylang
+# doc: expect 15
+def main() -> int:
+    values = [3, 1, 2]
+    return sum(values) + max(values) + abs(0 - 6)
+```
+
 Byte-oriented code uses the managed `bytes` type; see
 [managed byte strings](bytes.md) for its literals, operations and conversions.
 

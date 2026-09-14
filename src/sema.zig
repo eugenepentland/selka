@@ -15,6 +15,7 @@ const eResultOperation = diagnostic.result_operation;
 const eOwnedConsumed = diagnostic.owned_consumed;
 const eResultPath = diagnostic.result_path;
 const eShadowing = diagnostic.shadowing;
+const eIterationShadow = "iteration binding shadows an active declaration";
 const eWildcardArm = "E_WILDCARD_ARM";
 const eConversionBody = "E_CONVERSION_BODY";
 const eByteConversion = "E_BYTES_CONVERSION";
@@ -79,6 +80,7 @@ const integer_literal = @import("integer_literal.zig");
 const float_syntax = @import("float_syntax.zig");
 const numeric_surface = @import("numeric_surface.zig");
 const prelude = @import("prelude.zig");
+const prelude_builtins = @import("prelude_builtins.zig");
 const arrays = @import("array_literals.zig");
 const variant_calls = @import("variant_calls.zig");
 const truncating = @import("truncating_math.zig");
@@ -563,6 +565,81 @@ const Checker = struct {
         } else if (input_float) {
             out.* = try self.numericBuilder(node.span).toInteger(value);
         } else out.* = .{ .span = node.span, .ty = .i64, .data = .{ .cast = value } };
+    }
+    /// The bare prelude builtins answer only when no binding, declaration or module name claims them.
+    fn preludeName(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
+        if (call.owner != null or call.type_arguments.len != 0) return false;
+        const name = self.src.text(call.name);
+        if (!prelude_builtins.reserved(name)) return false;
+        if (self.active.contains(name) or self.functions.contains(name)) return false;
+        if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return false;
+        return true;
+    }
+    /// The `range(...)` source of `list(range(...))`, which is never an ordinary expression.
+    fn rangeSource(self: *Checker, id: ast.NodeId) Error!?@FieldType(@FieldType(ast.Node, "data"), "call") {
+        const node = self.syntax.nodes.items[@backingInt(id)];
+        if (node.data != .call) return null;
+        const call = node.data.call;
+        if (call.owner != null or call.type_arguments.len != 0) return null;
+        if (!std.mem.eql(u8, self.src.text(call.name), "range")) return null;
+        if (self.active.contains("range") or self.functions.contains("range")) return null;
+        if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return null;
+        if (call.arguments.len == 0 or call.arguments.len > 2) return null;
+        return call;
+    }
+    /// An unannotated empty list literal adopts the element type the builtin fixes,
+    /// so `any([])`, `sum([])`, `sorted([])` and `list([])` all infer their schema.
+    fn hintEmptyPreludeList(self: *Checker, id: ast.NodeId, element: typed.Type) Error!void {
+        const node = self.syntax.nodes.items[@backingInt(id)];
+        if (node.data != .list_literal or node.data.list_literal.len != 0) return;
+        try self.hint(id, try collections.listType(&self.catalog, element, node.span));
+    }
+    /// Hint the fixed element types of one bare prelude builtin's sequence arguments.
+    fn hintPreludeArguments(self: *Checker, name: []const u8, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!void {
+        if (std.mem.eql(u8, name, "zip")) {
+            for (call.arguments) |id| try self.hintEmptyPreludeList(id, .i64);
+            return;
+        }
+        if (call.arguments.len != 1) return;
+        if (std.mem.eql(u8, name, "any") or std.mem.eql(u8, name, "all")) return self.hintEmptyPreludeList(call.arguments[0], .bool);
+        inline for (.{ "sum", "min", "max", "sorted", "reversed", "list" }) |builtin| {
+            if (std.mem.eql(u8, name, builtin)) return self.hintEmptyPreludeList(call.arguments[0], .i64);
+        }
+    }
+    /// Queue the operands of one prelude builtin call in evaluation order.
+    fn queuePreludeCall(self: *Checker, work: *std.ArrayList(Work), call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
+        if (!try self.preludeName(call)) return false;
+        try call_arguments.positional(call, self.sink);
+        try self.hintPreludeArguments(self.src.text(call.name), call);
+        const materialized = if (prelude_builtins.materializes(self.src.text(call.name)) and call.arguments.len == 1) try self.rangeSource(call.arguments[0]) else null;
+        const arguments = if (materialized) |range| range.arguments else call.arguments;
+        var index = arguments.len;
+        while (index > 0) {
+            index -= 1;
+            try work.append(self.allocator, .{ .id = arguments[index] });
+        }
+        return true;
+    }
+    /// Build one prelude builtin call, or report that a later recognizer owns it.
+    fn checkPreludeCall(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!bool {
+        if (!try self.preludeName(call)) return false;
+        try call_arguments.positional(call, self.sink);
+        const name = self.src.text(call.name);
+        const builtins: prelude_builtins.Prelude(Checker) = .{ .checker = self };
+        if (prelude_builtins.materializes(name) and call.arguments.len == 1) {
+            if (try self.rangeSource(call.arguments[0])) |range| {
+                const bounds = try self.allocator.alloc(typed.NodeId, range.arguments.len);
+                for (range.arguments, bounds) |id, *slot| slot.* = self.resolved[@backingInt(id)].?;
+                out.* = try builtins.rangeList(node.span, bounds);
+                return true;
+            }
+            out.* = try builtins.copyList(node.span, self.resolved[@backingInt(call.arguments[0])].?);
+            return true;
+        }
+        const values = try self.allocator.alloc(typed.NodeId, call.arguments.len);
+        for (call.arguments, values) |id, *slot| slot.* = self.resolved[@backingInt(id)].?;
+        out.* = (try builtins.build(node.span, name, values)) orelse return false;
+        return true;
     }
     /// Whole-path file helpers are reserved under the same shadowing rule as `print`.
     fn fileAccessBuiltin(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?file_operations.Access {
@@ -1092,6 +1169,7 @@ const Checker = struct {
         }
     }
     fn queueBuiltinCall(self: *Checker, work: *std.ArrayList(Work), call: @FieldType(@FieldType(ast.Node, "data"), "call"), node: ast.Node) Error!bool {
+        if (try self.queuePreludeCall(work, call)) return true;
         if (try self.floatIntrinsic(call) != null) {
             try call_arguments.positional(call, self.sink);
             if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "float operations require one argument");
@@ -1615,6 +1693,7 @@ const Checker = struct {
         out.data = .{ .cast = value };
     }
     fn checkCall(self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
+        if (try self.checkPreludeCall(node, input, out)) return;
         if (try self.floatIntrinsic(input)) |op| return self.checkFloatIntrinsic(node, input, op, out);
         if (try self.numericConversion(input)) |floating| return self.checkNumericConversion(node, input, floating, out);
         if (try self.typeConversion(input)) |ty_value| return self.checkTypeConversion(node, input, ty_value, out);
@@ -2442,6 +2521,7 @@ const Checker = struct {
         return .{ .loop = .{ .id = loop_id, .condition = condition, .body = body.id } };
     }
     fn statementForEach(self: *Checker, stmt: ast.Statement, each: @FieldType(@FieldType(ast.Statement, "data"), "for_each")) Error!@FieldType(typed.Statement, "data") {
+        if (try self.preludeIteration(stmt, each)) |statements| return .{ .block = statements };
         const b: collections.Builder(Checker) = .{ .checker = self, .span = stmt.span };
         const iterable = try self.expression(each.iterable);
         const iterable_type = self.nodes.items[@backingInt(iterable)].ty;
@@ -2460,7 +2540,7 @@ const Checker = struct {
         const names = [_]?source.Span{ each.name, each.index_name };
         const slots = [_]typed.LocalId{ value_slot, index };
         for (names) |maybe_name| if (maybe_name) |name| {
-            if (try self.topLevel(name) or self.active.contains(self.src.text(name))) return self.sink.fail(eShadowing, name, "iteration binding shadows an active declaration");
+            if (try self.topLevel(name) or self.active.contains(self.src.text(name))) return self.sink.fail(eShadowing, name, eIterationShadow);
         };
         if (each.index_name) |name| if (std.mem.eql(u8, self.src.text(name), self.src.text(each.name))) return self.sink.fail(eShadowing, name, "iteration names must differ");
         for (names, slots) |maybe_name, slot| if (maybe_name) |name| {
@@ -2496,6 +2576,49 @@ const Checker = struct {
             try b.stmt(.{ .initialize = .{ .slot = limit, .value = try b.length(owner) } }),
             try b.stmt(.{ .loop = .{ .id = loop_id, .condition = try b.binary(.lt, i, try b.read(limit), .bool), .body = iteration, .step = step } }),
         }) };
+    }
+    /// `for x in reversed(xs):` and `for a, b in zip(xs, ys):` walk their sources
+    /// directly, so no intermediate list is materialised.
+    fn preludeIteration(self: *Checker, stmt: ast.Statement, each: @FieldType(@FieldType(ast.Statement, "data"), "for_each")) Error!?[]const typed.StatementId {
+        const node = self.syntax.nodes.items[@backingInt(each.iterable)];
+        if (node.data != .call) return null;
+        const call = node.data.call;
+        if (!std.mem.eql(u8, self.src.text(call.name), "reversed") and !std.mem.eql(u8, self.src.text(call.name), "zip")) return null;
+        if (!try self.preludeName(call)) return null;
+        try call_arguments.positional(call, self.sink);
+        const paired = std.mem.eql(u8, self.src.text(call.name), "zip");
+        if (call.arguments.len != (if (paired) @as(usize, 2) else 1)) return self.sink.fail("E_ARITY", node.span, "reversed takes one iterable and zip takes two");
+        if (paired != (each.index_name != null)) return self.sink.fail(eCollectionMethod, stmt.span, "zip binds two iteration names and reversed binds one");
+        for (call.arguments) |id| try self.hintEmptyPreludeList(id, .i64);
+        const sources = try self.allocator.alloc(typed.NodeId, call.arguments.len);
+        for (call.arguments, sources) |id, *slot| slot.* = try self.expression(id);
+        const builtins: prelude_builtins.Prelude(Checker) = .{ .checker = self };
+        const left_type = self.nodes.items[@backingInt(sources[0])].ty;
+        const zip = if (paired) try builtins.reserveZip(stmt.span, left_type, self.nodes.items[@backingInt(sources[1])].ty) else null;
+        const walk = if (zip) |pair| pair.left else try builtins.reserveWalk(stmt.span, left_type);
+        const names = [_]?source.Span{ each.index_name, each.name };
+        const slots = [_]typed.LocalId{ walk.slot, if (zip) |pair| pair.right.slot else walk.slot };
+        for (names, slots) |maybe_name, slot| if (maybe_name) |name| {
+            if (try self.topLevel(name) or self.active.contains(self.src.text(name))) return self.sink.fail(eShadowing, name, eIterationShadow);
+            self.locals.items[@backingInt(slot)].name = self.src.text(name);
+            self.locals.items[@backingInt(slot)].declaration = name;
+            try self.active.put(self.allocator, self.src.text(name), slot);
+        };
+        defer for (names) |maybe_name| if (maybe_name) |name| {
+            _ = self.active.remove(self.src.text(name));
+        };
+        const before = try self.pendingState(self.locals.items.len);
+        try self.loops.active.append(self.allocator, .{ .id = walk.loop, .before = before, .arenas = self.arenas.items.len });
+        defer _ = self.loops.active.pop();
+        const body = try self.statement(each.body);
+        if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
+        self.restorePending(before);
+        if (zip) |pair| {
+            const statements = try builtins.zipStatements(.{ .span = stmt.span, .left = sources[0], .right = sources[1], .zip = pair, .body = body.id });
+            return statements;
+        }
+        const statements = try builtins.walkStatements(.{ .span = stmt.span, .input = sources[0], .walk = walk, .descending = true, .body = body.id });
+        return statements;
     }
     fn iterationValue(self: *Checker, b: collections.Builder(Checker), owner: typed.LocalId, kind: ManagedKind, index: typed.NodeId) Error!typed.NodeId {
         _ = self;

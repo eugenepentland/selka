@@ -19,6 +19,9 @@ pub fn listType(catalog: *Catalog, element: typed.Type, span: Span) Error!typed.
 /// Materialize a parameterless prelude collection such as `str` or `bytes`.
 pub fn preludeType(catalog: *Catalog, name: []const u8, span: Span) Error!typed.Type {
     const state = catalog.templates.store orelse return error.InternalError;
+    // A collection operation can produce `bytes` without the source naming the
+    // type, so materialize its schema on demand; a declared type still wins.
+    if (std.mem.eql(u8, name, "bytes") and !state.index.names.contains("bytes")) try state.index.addByteString();
     const declaration = state.index.names.get(name) orelse return error.InternalError;
     const builtin = state.index.declarations.items[declaration].builtin_name orelse return error.InternalError;
     if (!std.mem.eql(u8, builtin, name)) return error.InternalError;

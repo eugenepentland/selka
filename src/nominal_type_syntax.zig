@@ -24,7 +24,18 @@ pub fn present(program: ast.Program) bool {
 
 /// Select builtin nominal text/numeric schemas without requiring a generic use.
 pub fn presentInSource(program: ast.Program, src: Source) bool {
-    return present(program) or preludeUsed(src) or byteLiteral(program, src) or fileSyntax(program, src);
+    return present(program) or preludeUsed(src) or byteLiteral(program, src) or fileSyntax(program, src) or listCall(program, src);
+}
+
+/// Recognize bare `list(...)`: unlike a list literal it can be the only evidence
+/// that the program needs the nominal `List` schema, as in `list(range(n))`.
+fn listCall(program: ast.Program, src: Source) bool {
+    const std = @import("std");
+    for (program.nodes.items) |node| if (node.data == .call) {
+        const call = node.data.call;
+        if (call.owner == null and std.mem.eql(u8, src.text(call.name), "list")) return true;
+    };
+    return false;
 }
 
 /// Recognize the I/O surface, whose operands and results are `str`, `bytes` and
