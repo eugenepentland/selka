@@ -176,7 +176,7 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 
 ### Disk application raw byte host
 
-- [BYTE-IO-1] The raw byte host preserves arbitrary input, enforces bounds and publishes output only on successful guest exit.
+- [BYTE-IO-1] The raw byte host preserves arbitrary input, enforces bounds and publishes output only on successful guest exit. Its operations are a trusted native provider compiled into the guest's own executable, which buffers output where only the driver can publish it.
 
 The `mylang-io --project DIRECTORY` host compiles `main.my` and its imports from
 disk into bytecode. It supplies only `io::length() -> i64`,
@@ -251,8 +251,8 @@ depends on it.
 
 - [STANDARD-MODULES-7] Standard generic Result values retain the language's must-handle obligation; an ignored fallible result is a source error.
 
-- [BYTE-IO-BULK-1] The byte application host optionally registers io::read_block(i64)->Block and io::write_block(Block)->i64 for a copied plain Block with bytes:[256]u8 followed by count:i64. Reads return up to 256 useful bytes with zero padding, count zero at EOF, and reject offsets outside [0,input length]. Writes reject counts outside [0,256], append up to remaining unpublished output capacity, and return the accepted count. Each call charges one work unit plus transferred bytes before mutation; allocation/work failure never appends a partial block. Existing scalar declarations remain compatible. Output is published only after successful guest exit.
-- [BYTE-IO-LIMITS-1] mylang-io accepts unique decimal --max-input, --max-output, --max-steps, --max-calls and --max-work values using = syntax after --project DIRECTORY. Input/output limits may be zero; execution budgets must be positive. Unknown flags, duplicate limits, non-decimal values and overflow reject before invocation. The configured input limit, output publication capacity and VM/host budgets are enforced without changing default limits.
+- [BYTE-IO-BULK-1] The byte application host optionally registers io::read_block(i64)->Block and io::write_block(Block)->i64 for a copied plain Block with bytes:[256]u8 followed by count:i64. Reads return up to 256 useful bytes with zero padding, count zero at EOF, and reject offsets outside [0,input length]. Writes reject counts outside [0,256], append up to remaining unpublished output capacity, and return the accepted count. Each call charges one work unit plus transferred bytes before mutation; a work failure never appends a partial block. The block's record and array shapes are validated against the emitted native host metadata before any callback is linked, and declaring only one of the pair rejects. Existing scalar declarations remain compatible. Output is published only after successful guest exit.
+- [BYTE-IO-LIMITS-1] mylang-io accepts unique decimal --max-input, --max-output, --max-steps, --max-calls and --max-work values using = syntax after --project DIRECTORY. It also accepts unique --qbe=, --zig= and --cache-dir= paths for the native build, preferring an explicit path, then the environment, then the tools this build produced. Input/output limits may be zero; execution budgets must be positive. Unknown flags, duplicate limits, non-decimal values and overflow reject before invocation. The configured input limit, output publication capacity and guest call/work budgets are enforced without changing default limits.
 
 - [SCOPED-PROVIDERS-1] Packaged resource adapters accept only relative normal path components under an open directory and exact configured numeric TCP endpoints. Read-only acquisition rejects write/create/truncate modes before effects; network adapters do not resolve DNS or follow redirects.
 - [SCOPED-PROVIDERS-2] Directory adapters reject symlink path components, create exclusively, truncate only opened regular files, report actual partial I/O and close all provider handles when their stores end. The host keeps directory and endpoint grants alive until provider stores close.
@@ -274,7 +274,6 @@ depends on it.
 ## Runtime requested-byte accounting
 
 - [RUNTIME-BYTES-1] Embedded allocation budgets support child quotas clamped to the parent limit. Child allocations and resize/remap operations charge both live-byte limits; failed acquisitions do not charge storage; release restores live accounting and retains peak statistics. Accounting objects must outlive every allocation made through them.
-- [RUNTIME-BYTES-2] The byte application runner accepts unique nonnegative `--max-runtime-bytes`, `--max-vm-bytes`, `--max-host-bytes` limits and `--memory-report`. VM and host requested live bytes share the total cap. Source compilation/input storage, underlying allocator overhead, operating-system and provider-internal allocations outside the supplied allocator are excluded. Exhaustion terminates execution with cleanup; it is not a guest-recoverable numeric error. Reports distinguish VM allocations and host allocations, and split VM bytes into managed object storage and bookkeeping.
 - [INTEGER-EXTENDED-1] Named integer bitwise operations, shifts, wrapping and saturating arithmetic use declared widths; invalid shift counts trap identically across optimization modes.
 
 ## Explicit implementation obligations

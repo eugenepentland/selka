@@ -55,6 +55,20 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(exe);
     // Installed beside `mylang`, where the native build driver looks for it before `PATH`.
     const qbe_exe = vendoredQbe(b, target);
+    // Host applications build their own guests natively, so they carry the same
+    // native build driver the compiler does rather than shelling out to it.
+    const native_build = b.createModule(.{ .root_source_file = b.path("src/qbe_build.zig"), .target = target, .optimize = optimize });
+    native_build.addImport("qbe_build_assets", build_assets);
+    // A host application links guest executables, so it falls back to the tools
+    // this build produced when neither a flag, the environment, nor `PATH` names one.
+    const host_tools = b.addOptions();
+    host_tools.addOptionPath("qbe", qbe_exe.getEmittedBin());
+    host_tools.addOption([]const u8, "zig", b.graph.zig_exe);
+    const host_imports: []const std.Build.Module.Import = &.{
+        .{ .name = "mylang", .module = core },
+        .{ .name = "qbe_build", .module = native_build },
+        .{ .name = "host_tools", .module = host_tools.createModule() },
+    };
     const guardian_dep = b.dependency("guardian", .{ .target = target, .optimize = optimize });
     const guardian_exe = guardian_dep.artifact("guardian-check");
     const run = b.addRunArtifact(exe);
@@ -87,14 +101,14 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/byte_io/runner.zig"),
         .target = target,
         .optimize = optimize,
-        .imports = &.{.{ .name = "mylang", .module = core }},
+        .imports = host_imports,
     }) });
     b.installArtifact(byte_io_runner);
     const byte_io_unit = b.addTest(.{ .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
         .root_source_file = b.path("src/byte_io/tests.zig"),
         .target = target,
         .optimize = optimize,
-        .imports = &.{.{ .name = "mylang", .module = core }},
+        .imports = host_imports,
     }) });
     guardian.enableTestDiagnostics(byte_io_unit.root_module);
     guardian.addAllChecks(b, guardian_exe, b.getInstallStep(), .{});

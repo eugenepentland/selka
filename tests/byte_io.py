@@ -1,6 +1,5 @@
 """Actual raw guest I/O and reload checks for the installed application bridge."""
 import argparse
-import json
 from pathlib import Path
 import subprocess
 import tempfile
@@ -28,28 +27,15 @@ def main():
         copied = run('def main() -> i64:\n    i = 0\n    while i < io.length():\n        _ = io.put(io.byte(i))\n        i += 1\n    return 0\n', b'\x00\xff\xc0\x80{broken}')
         assert copied.returncode == 0, copied.stderr
         assert copied.stdout == b'\x00\xff\xc0\x80{broken}'
-        measured = run(PUT_A, flags=('--memory-report',))
+        measured = run(PUT_A)
         assert measured.returncode == 0 and measured.stdout == b'A', measured.stderr
-        accounting = json.loads(measured.stderr)
-        assert accounting['version'] == 'runtime-memory-v1'
-        assert accounting['total']['live'] == 0
-        assert accounting['vm_categories']['guest_backing']['live'] == 0
-        assert accounting['vm_categories']['bookkeeping_and_snapshots']['peak'] > 0
-        assert accounting['vm']['peak'] > 0 and accounting['host']['peak'] > 0
-        backed = run('def main() -> i64:\n    values: List[i64] = []\n    values.push(8)\n    _ = values\n    return 0\n',
-                     flags=('--memory-report',))
-        assert backed.returncode == 0, backed.stderr
-        backing_report = json.loads(backed.stderr)
-        # Managed object storage is measured apart from VM bookkeeping.
-        assert backing_report['vm_categories']['guest_backing']['peak'] > 0
-        assert backing_report['vm_categories']['guest_backing']['live'] == 0
-        assert backing_report['vm_categories']['bookkeeping_and_snapshots']['peak'] > 0
-        assert backing_report['total']['live'] == 0
-        for flag in ('--max-runtime-bytes=0', '--max-vm-bytes=0', '--max-host-bytes=0'):
-            exhausted = run(PUT_A, flags=(flag, '--memory-report'))
-            assert exhausted.returncode != 0 and not exhausted.stdout, exhausted
-            report = next(json.loads(line) for line in exhausted.stderr.splitlines() if line.startswith(b'{'))
-            assert report['total']['live'] == 0, report
+        assert measured.stderr == b'', measured.stderr
+        # The guest's own native executable is rebuilt per invocation from a shared
+        # object cache, so an unchanged guest produces the same bytes again.
+        again = run(PUT_A)
+        assert again.returncode == 0 and again.stdout == b'A', again.stderr
+        backed = run('def main() -> i64:\n    values: List[i64] = []\n    values.push(8)\n    _ = values\n    return 0\n')
+        assert backed.returncode == 0 and backed.stdout == b'', backed.stderr
         # The same binary reads a changed guest source on its next invocation.
         changed = run(PUT_A)
         assert changed.returncode == 0 and changed.stdout == b'A', changed.stderr
