@@ -765,7 +765,7 @@
     "status": 0,
     "stdout": "42"
    },
-   "must_pass": false
+   "must_pass": true
   },
   {
    "name": "rm_push",

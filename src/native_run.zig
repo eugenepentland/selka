@@ -161,7 +161,9 @@ test "a run identity separates programs, toolchains and build modes" {
     const tool = try std.fs.path.join(context.allocator, &.{ home, "tool" });
     try context.write(tool, "#!/bin/sh\nexit 0\n");
     try std.Io.Dir.cwd().setFilePermissions(std.testing.io, tool, .executable_file, .{});
-    const settings: options.Options = .{ .source = "", .run = true, .zig = tool, .qbe = tool };
+    // Pin both modes: the default is `ReleaseFast` now, so the test must name
+    // the other mode rather than relying on the default being `Debug`.
+    const settings: options.Options = .{ .source = "", .run = true, .zig = tool, .qbe = tool, .mode = "Debug" };
     const first = try identity(context, settings, "{\"functions\":[]}");
     const second = try identity(context, settings, "{\"functions\":[1]}");
     var release = settings;

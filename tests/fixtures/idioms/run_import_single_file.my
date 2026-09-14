@@ -1,4 +1,4 @@
-module main
+module run_import_single_file
 import math
 
 def main() -> int:
