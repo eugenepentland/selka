@@ -175,7 +175,59 @@ fn test_trap()->i64{return 1/0;}
         entry.write_text('module main;fn main()->i64{return missing;}')
         configuration.write_text('{}')
         invoke(code=2)
-    print('Native guest tests: assertions, traps, filtering, fixture isolation, and affected-test reuse pass')
+        directory_acceptance(compiler, args, root)
+    print('Native guest tests: assertions, traps, filtering, directory fan-out, fixture isolation, and affected-test reuse pass')
+
+
+# spec: NATIVE-TEST-4
+def directory_acceptance(compiler, args, root):
+    """A directory runs every program concurrently, reusing the results it can."""
+    suite = root / 'suite of programs'
+    suite.mkdir()
+    cache = root / 'suite cache'
+    names = ['alpha', 'beta', 'gamma', 'delta']
+    for index, name in enumerate(names):
+        (suite / (name + '.my')).write_text(
+            'module %s\nexport test_value\nexport test_other\n\n'
+            'def helper() -> int:\n    return %d\n\n'
+            'def test_value() -> bool:\n    return helper() == %d\n\n'
+            'def test_other() -> bool:\n    return True\n\n'
+            'def main() -> int:\n    return 0\n' % (name, index, index))
+    (suite / 'notes.txt').write_text('not a program')
+
+    def run(*switches, code=0):
+        process = subprocess.run([str(compiler), 'test', str(suite), '--json',
+            '--qbe', str(args.qbe), '--zig', str(args.zig), '--cache-dir', str(cache), *switches],
+            cwd=root, capture_output=True, text=True, timeout=600)
+        assert process.returncode == code, (process.returncode, process.stdout, process.stderr)
+        report = json.loads(process.stdout)
+        assert report['version'] == 'native-tests-v1', report
+        return report
+
+    cold = run()
+    assert cold['programs'] == len(names) and cold['executed'] == 2 * len(names), cold
+    assert {row['name'] for row in cold['tests']} == {
+        '%s::test_%s' % (name, kind) for name in names for kind in ('value', 'other')}, cold
+    warm = run()
+    assert warm['cached'] == 2 * len(names) and warm['executed'] == 0, warm
+    (suite / 'beta.my').write_text((suite / 'beta.my').read_text().replace('return 1', 'return 1 + 0'))
+    edited = run()
+    assert edited['executed'] == 1 and edited['cached'] == 2 * len(names) - 1, edited
+    selected = run('--filter', 'test_other')
+    assert selected['cached'] == len(names) and selected['programs'] == len(names), selected
+    assert all(row['name'].endswith('test_other') for row in selected['tests']), selected
+    broken = suite / 'delta.my'
+    broken.write_text('module delta\ndef main() -> int:\n    return missing\n')
+    assert run(code=2)['programs'] == len(names)
+    broken.write_text('module delta\nexport test_value\n\ndef test_value() -> bool:\n'
+                      '    return False\n\ndef main() -> int:\n    return 0\n')
+    failing = run(code=1)
+    assert failing['failed'] == 1, failing
+    cases = root / 'suite cases.json'
+    cases.write_text('{}')
+    process = subprocess.run([str(compiler), 'test', str(suite), '--cases', str(cases)],
+                             cwd=root, capture_output=True, text=True, timeout=60)
+    assert process.returncode == 2 and 'DirectoryCasesUnsupported' in process.stderr, process
 
 
 if __name__ == '__main__':

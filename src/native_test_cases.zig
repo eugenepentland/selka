@@ -74,8 +74,11 @@ fn makeCase(function: std.json.Value, settings: std.json.Value) Error!Case {
         .settings = settings,
     };
 }
-/// Case-sensitive shell-style wildcard matching, including bracket ranges.
+/// Case-sensitive shell-style wildcard matching, including bracket ranges. A
+/// pattern carrying no wildcard is a plain substring of the qualified name, so
+/// `--filter parse` selects every module's `test_parse*` without a glob.
 pub fn matches(pattern: []const u8, name: []const u8) bool {
+    if (std.mem.indexOfAny(u8, pattern, "*?[") == null) return std.mem.indexOf(u8, name, pattern) != null;
     var p: usize = 0;
     var n: usize = 0;
     var star: ?usize = null;
@@ -148,6 +151,14 @@ test "test discovery rejects unknown configuration and missing typed expectation
     const empty = try discover(std.testing.allocator, schema, .null, "other::*");
     defer std.testing.allocator.free(empty);
     try std.testing.expectEqual(@as(usize, 0), empty.len);
+}
+// spec-case: NATIVE-TEST-4
+test "a wildcard-free filter selects by substring of the qualified name" {
+    try std.testing.expect(matches("test_sum", "prog042::test_sum"));
+    try std.testing.expect(matches("prog042", "prog042::test_sum"));
+    try std.testing.expect(matches("", "prog042::test_sum"));
+    try std.testing.expect(!matches("test_product", "prog042::test_sum"));
+    try std.testing.expect(!matches("Test_sum", "prog042::test_sum"));
 }
 test "test filters match qualified names and bracket exclusions" {
     try std.testing.expect(matches("*::test_[a-c]?", "checks::test_b1"));

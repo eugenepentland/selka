@@ -31,6 +31,11 @@ pub fn build(b: *std.Build) void {
         @panic("mylang requires Guardian's Zig 0.17.0-dev.1683+5ceec001b toolchain (see .zigversion)");
     const target = b.resolveTargetQuery(.{});
     const optimize = b.standardOptimizeOption(.{});
+    // `-Dtest-filter=SUBSTRING` narrows the unit and CLI suites to one area in seconds.
+    const test_filters: []const []const u8 = if (b.option([]const u8, "test-filter", "Run only Zig tests whose name contains this substring")) |needle|
+        b.dupeStrings(&.{needle})
+    else
+        &.{};
     const core = b.addModule("mylang", .{
         .root_source_file = b.path("src/compiler.zig"),
         .target = target,
@@ -57,7 +62,7 @@ pub fn build(b: *std.Build) void {
     run.step.dependOn(b.getInstallStep());
     b.step("run", "Check, run, or inspect a source program").dependOn(&run.step);
 
-    const unit = b.addTest(.{ .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
+    const unit = b.addTest(.{ .test_runner = guardian.testRunner(guardian_dep), .filters = test_filters, .root_module = b.createModule(.{
         .root_source_file = b.path("src/root_test.zig"),
         .target = target,
         .optimize = optimize,
@@ -110,7 +115,7 @@ pub fn build(b: *std.Build) void {
     const options = b.addOptions();
     options.addOptionPath("compiler_path", exe.getEmittedBin());
     options.addOptionPath("arena_example_path", b.path("examples/arena-managed/main.my"));
-    const integration = b.addTest(.{ .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
+    const integration = b.addTest(.{ .test_runner = guardian.testRunner(guardian_dep), .filters = test_filters, .root_module = b.createModule(.{
         .root_source_file = b.path("test/integration.zig"),
         .target = target,
         .optimize = optimize,
@@ -128,7 +133,11 @@ pub fn build(b: *std.Build) void {
     const test_step = b.step("test", "Run interpreter, checker, CLI, and tooling regression tests");
     b.step("test-interpreter", "Run the default interpreter acceptance suite").dependOn(test_step);
     guardian.addAllChecks(b, guardian_exe, test_step, .{});
-    test_step.dependOn(&b.addRunArtifact(unit).step);
+    const run_unit = b.addRunArtifact(unit);
+    test_step.dependOn(&run_unit.step);
+    // The fast inner loops: no Python drivers and no Guardian, so `-Dtest-filter` returns in seconds.
+    b.step("test-units", "Run only src/root_test.zig, honouring -Dtest-filter").dependOn(&run_unit.step);
+    b.step("test-cli", "Run only test/integration.zig, honouring -Dtest-filter").dependOn(&run_integration.step);
     const byte_io_step = b.step("test-byte-io", "Verify raw guest stdin/stdout and host bounds");
     const run_byte_io_unit = b.addRunArtifact(byte_io_unit);
     byte_io_step.dependOn(&run_byte_io_unit.step);
@@ -151,7 +160,7 @@ pub fn build(b: *std.Build) void {
     const run_schematic_unit = b.addRunArtifact(schematic_unit);
     const audit_runtime = b.step("test-runtime-audit", "Run every Zig test root for isolated runtime probes");
     guardian.addAllChecks(b, guardian_exe, audit_runtime, .{});
-    audit_runtime.dependOn(&b.addRunArtifact(unit).step);
+    audit_runtime.dependOn(&run_unit.step);
     audit_runtime.dependOn(&run_integration.step);
     audit_runtime.dependOn(&run_board_unit.step);
     audit_runtime.dependOn(&run_byte_io_unit.step);

@@ -8,8 +8,9 @@ const snapshot = @import("native_test_snapshot.zig");
 const sessions = @import("native_test_session.zig");
 const planner = @import("native_test_plan.zig");
 const receipts = @import("native_test_receipts.zig");
+const fanout = @import("native_test_directory.zig");
 /// Setup failures never produce a cached green test run.
-pub const Error = sessions.Error || cases.Error || planner.Error || receipts.Error;
+pub const Error = sessions.Error || cases.Error || planner.Error || receipts.Error || fanout.Error;
 /// Discover, check, selectively execute, and report native application tests.
 pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     if (args.len == 1 and std.mem.eql(u8, args[0], "--help")) {
@@ -22,6 +23,8 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     };
     var context = try fs.Context.init(process.arena.allocator(), process.io, process.environ_map);
     defer context.deinit();
+    // A directory names many independent projects, so each one runs as its own child.
+    if (fanout.selected(context, opts.source)) return fanout.run(context, opts);
     const session = try sessions.Session.init(context, opts);
     defer context.remove(session.temporary);
     const captured = try snapshot.materialize(context, session.source, try context.temporary(session.temporary));
