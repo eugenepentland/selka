@@ -182,6 +182,23 @@ pub fn exitCode(term: std.process.Child.Term) u8 {
     };
 }
 
+/// Allocate scratch through a fresh context, then release it back to `parent`.
+fn buildRound(parent: std.mem.Allocator, environment: *const std.process.Environ.Map) !void {
+    var context = try Context.init(parent, std.testing.io, environment);
+    defer context.deinit();
+    _ = try context.absolute("guest.my");
+    _ = try context.temporary(try context.absolute("."));
+}
+// spec: NATIVE-BUILD-RECLAIM-1
+test "a build context reclaims its scratch on deinit, so repeated builds do not accumulate" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    // The testing allocator asserts every byte is freed, so a context that did
+    // not reclaim its arena to its parent would leak across these repeated builds.
+    try buildRound(std.testing.allocator, &environment);
+    try buildRound(std.testing.allocator, &environment);
+    try buildRound(std.testing.allocator, &environment);
+}
 test "native build IO owns allocations and rejects missing tools or failing commands" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
     defer environment.deinit();

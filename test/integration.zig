@@ -1180,7 +1180,7 @@ test "CLI features identify installed compiler without source input" {
     const report = parsed.value.object;
     try testing.expectEqualStrings("language-features-v1", report.get("version").?.string);
     try testing.expectEqual(@as(usize, 64), report.get("compiler_sha256").?.string.len);
-    try testing.expectEqualStrings("vm", report.get("features").?.object.get("primary_backend").?.string);
+    try testing.expectEqualStrings("qbe", report.get("features").?.object.get("primary_backend").?.string);
     // The identity is the compiler's embedded build-time digest, not a fresh hash of its
     // own executable, so a receipt from the same compiler reports exactly the same value.
     const receipt = try runFixture("project-dependencies",

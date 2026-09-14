@@ -32,7 +32,10 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
         return 2;
     };
     try checkHost(builtin.os.tag, builtin.cpu.arch);
-    var context = try fs.Context.init(process.arena.allocator(), process.io, process.environ_map);
+    // Build scratch is freed here, not at process exit: a long-lived host that
+    // rebuilds its guest on every reload must reclaim each build, so the context
+    // owns a reclaiming arena over `gpa` rather than the process's own arena.
+    var context = try fs.Context.init(process.gpa, process.io, process.environ_map);
     defer context.deinit();
     return build(context, parsed);
 }

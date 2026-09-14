@@ -77,7 +77,7 @@ def render(identity, features, report, selection):
                 'Read api.md for signatures and types; features.json and schema.json preserve the full reports.',
                 'Run this tool with --check to detect changed compiler, sources, or artifacts.', '',
                 'Language version: ' + facts['language_version'],
-                'Primary backend: ' + facts['primary_backend'], 'Native backend: ' + facts['native_backend'], '',
+                'Backend: ' + facts['primary_backend'] + ' native code (the only runtime)', '',
                 '## Reported implemented features', '',
                 'Each feature reports its kind, a one-line summary, and the checkout documentation',
                 'section that demonstrates it; `mylang doc-coverage` keeps those pointers resolvable.', '']

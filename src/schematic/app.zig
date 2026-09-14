@@ -17,7 +17,12 @@ pub const App = struct {
     /// Build the guest project at this root together with the trusted provider.
     /// Source diagnostics are reported before any native tool runs.
     pub fn initDisk(self: *App, process: std.process.Init, root: []const u8) InitError!void {
-        const allocator = process.arena.allocator();
+        // The frontend check needed only to read the guest's host declarations is
+        // transient: a long-lived host reloading its guest reclaims it every time,
+        // so it uses an arena over `gpa` rather than the process's own arena.
+        var scratch = std.heap.ArenaAllocator.init(process.gpa);
+        defer scratch.deinit();
+        const allocator = scratch.allocator();
         var loaded: language.embedded_project.Program = undefined;
         try loaded.initDisk(allocator, process.io, root);
         defer loaded.deinit();

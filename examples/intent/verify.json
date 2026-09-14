@@ -17,7 +17,11 @@
           "main.my"
         ]
       ],
-      "expect_stdout": "7\n"
+      "expect_stdout": "7\n",
+      "env": [
+        "MYLANG_QBE",
+        "MYLANG_ZIG"
+      ]
     }
   ]
 }
