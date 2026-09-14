@@ -4,7 +4,19 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const external = @import("external_capabilities.zig");
-const declarations = "result Time { ok: i64, err: i64 } result Random { ok: u64, err: i64 } ";
+const declarations =
+    \\result Time:
+    \\    ok: i64,
+    \\    err: i64
+    \\
+    \\
+    \\result Random:
+    \\    ok: u64,
+    \\    err: i64
+    \\
+    \\
+    \\
+;
 const Fake = struct {
     calls: usize = 0,
     failure: ?external.CallError = null,

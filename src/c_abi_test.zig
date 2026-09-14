@@ -3,6 +3,8 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const entry =
+    \\
+    \\
     \\def main() -> i64:
     \\    return 0
 ;
@@ -24,7 +26,7 @@ test "direct C imports preserve formatting and reject VM registry and legacy C e
     defer c.deinit();
     const formatted = try c.format(t.allocator);
     defer t.allocator.free(formatted);
-    try t.expect(std.mem.indexOf(u8, formatted, "extern fn abs") != null);
+    try t.expect(std.mem.indexOf(u8, formatted, "extern def abs") != null);
     try c.emit();
     try t.expect(c.code.?.functions[0].policy.c_abi);
     var functions = try t.allocator.dupe(language.bytecode.Function, c.code.?.functions);
@@ -40,7 +42,7 @@ test "direct C supports bool void and binary64 without provider registration" {
         \\extern def floor(x: float) -> float effects(host)
         \\
         \\
-        \\extern def flush() effects(host)
+        \\extern def flush() -> None effects(host)
         \\
         \\
         \\extern def invert(x: bool) -> bool effects(host)
@@ -67,9 +69,15 @@ test "direct C declarations reject unsupported signatures and preserve effect ch
         \\
         \\extern def f(x: R) -> i64 effects(host)
     ++ entry, "E_EXTERN_SIGNATURE");
-    try reject("extern fn f<T:copy>(x:T)->T effects(host);" ++ entry, "E_HOST_DECLARATION");
-    try reject("extern fn f()->i64;" ++ entry, "E_HOST_EFFECTS");
-    try reject("extern fn f() effects(host);" ++ entry, "E_EXTERN_SIGNATURE");
+    try reject(
+        \\extern def f[T](x: T) -> T effects(host)
+    ++ entry, "E_HOST_DECLARATION");
+    try reject(
+        \\extern def f() -> i64
+    ++ entry, "E_HOST_EFFECTS");
+    try reject(
+        \\extern def f() effects(host)
+    ++ entry, "E_EXTERN_SIGNATURE");
     try reject(
         \\extern def myl_intrude() -> i64 effects(host)
     ++ entry, "E_EXTERN_SYMBOL");
@@ -94,7 +102,7 @@ test "direct C imports preserve formatting and reject VM registry binding" {
     defer c.deinit();
     const formatted = try c.format(t.allocator);
     defer t.allocator.free(formatted);
-    try t.expect(std.mem.indexOf(u8, formatted, "extern fn abs") != null);
+    try t.expect(std.mem.indexOf(u8, formatted, "extern def abs") != null);
     try c.emit();
     try t.expect(c.code.?.functions[0].policy.c_abi);
     var functions = try t.allocator.dupe(language.bytecode.Function, c.code.?.functions);

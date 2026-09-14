@@ -13,6 +13,9 @@ const declarations =
     \\result Lookup[T]:
     \\    err: i64,
     \\    ok: Entry[T]
+    \\
+    \\
+    \\
 ;
 const program = declarations ++
     \\def singleton[T](x: T) -> [1]T:

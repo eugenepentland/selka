@@ -24,6 +24,9 @@ const domain_source =
     \\
     \\    def encode(x: Positive) -> i64:
     \\        return unwrap(x)
+    \\
+    \\
+    \\
 ;
 fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "invoke.my", domain_source ++
@@ -117,7 +120,13 @@ const ProjectSource = struct {
             \\def main() -> i64:
             \\    return 0
         );
-        if (std.mem.eql(u8, path, "data.my")) return allocator.dupe(u8, "module data;export Positive;export Decoded;" ++ domain_source ++
+        if (std.mem.eql(u8, path, "data.my")) return allocator.dupe(u8,
+            \\module data
+            \\export Positive
+            \\export Decoded
+            \\
+            \\
+        ++ domain_source ++
             \\def hidden() -> i64:
             \\    return 7
         );
@@ -154,7 +163,7 @@ fn aggregateCopyScenario(allocator: std.mem.Allocator) !void {
         \\    b: [2]i64
         \\
         \\
-        \\def pass(x: R) -> R:
+        \\def forward(x: R) -> R:
         \\    return x
         \\
         \\
@@ -163,7 +172,7 @@ fn aggregateCopyScenario(allocator: std.mem.Allocator) !void {
     );
     defer c.deinit();
     try c.emit();
-    const id = find(c.code.?, "pass");
+    const id = find(c.code.?, "forward");
     const ty = c.code.?.functions[@backingInt(id)].signature.return_type;
     const array_ty = c.code.?.records[ty.recordIndex()].fields[0].ty;
     const array = try typed.Value.create(t.allocator, array_ty, &.{ .{ .i64 = 7 }, .{ .i64 = 8 } });

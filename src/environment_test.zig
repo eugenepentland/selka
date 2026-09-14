@@ -13,6 +13,9 @@ const declarations =
     \\result Lookup:
     \\    err: i64,
     \\    ok: Entry
+    \\
+    \\
+    \\
 ;
 const Fake = struct {
     calls: usize = 0,
@@ -160,7 +163,8 @@ test "zero capacity environment values distinguish absent empty and too large" {
 }
 const generic_environment = declarations ++
     \\def lookup[G](cap: environment_cap) -> Lookup effects(environment):
-    \\    return environment_get[Lookup](cap, [75u8])
+    \\    name: [1]u8 = [75u8]
+    \\    return environment_get[Lookup](cap, name)
     \\
     \\
     \\def main(cap: environment_cap) -> i64:

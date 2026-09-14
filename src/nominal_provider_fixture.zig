@@ -3,11 +3,52 @@ const std = @import("std");
 const resources = @import("external_resources.zig");
 const external = @import("external_capabilities.zig");
 /// Named fields are deliberately reordered to test semantic contract matching.
-pub const declarations = "resource File:filesystem;result Open<T:copy>{err:i64,ok:File}" ++
-    "struct Failure<T:copy>{code:i64,resource:File}result Finish<T:copy>{err:Failure<T>,ok:bool}" ++
-    "struct Chunk<T:copy>{eof:bool,bytes:[4]u8,length:u64}result Read<T:copy>{err:i64,ok:Chunk<T>}" ++
-    "result Written<T:copy>{err:i64,ok:u64}result Status<T:copy>{ok:i64,err:i64}" ++
-    "fn singleton<T:copy>(x:T)->[1]T{return new [1]T[x];}";
+pub const declarations =
+    \\resource File: filesystem
+    \\
+    \\
+    \\result Open[T]:
+    \\    err: i64,
+    \\    ok: File
+    \\
+    \\
+    \\class Failure[T]:
+    \\    code: i64
+    \\    resource: File
+    \\
+    \\
+    \\result Finish[T]:
+    \\    err: Failure[T],
+    \\    ok: bool
+    \\
+    \\
+    \\class Chunk[T]:
+    \\    eof: bool
+    \\    bytes: [4]u8
+    \\    length: u64
+    \\
+    \\
+    \\result Read[T]:
+    \\    err: i64,
+    \\    ok: Chunk[T]
+    \\
+    \\
+    \\result Written[T]:
+    \\    err: i64,
+    \\    ok: u64
+    \\
+    \\
+    \\result Status[T]:
+    \\    ok: i64,
+    \\    err: i64
+    \\
+    \\
+    \\def singleton[T](x: T) -> [1]T:
+    \\    return [x]
+    \\
+    \\
+    \\
+;
 /// Observable ownership and callback accounting, including failed completion retries.
 pub const Counts = struct { acquired: usize = 0, live: usize = 0, completed: usize = 0, released: usize = 0, completions: usize = 0, reads: usize = 0, writes: usize = 0 };
 /// Host functions check exact requests and record every byte supplied by the guest.
@@ -64,13 +105,36 @@ pub const Fake = struct {
 };
 /// Exercise repeated ordinary I/O before returning completion ownership for a retry.
 pub const program = declarations ++
-    "fn finish<T:copy>(file:File)->Finish<T>{match complete_resource<Finish<T>>(file){Finish<T>.ok(done)=>{return new Finish<T>.ok(done);}," ++
-    "Finish<T>.err(failure)=>{return complete_resource<Finish<T>>(failure.resource);}}}" ++
-    "fn work<T:copy>(fs:filesystem_cap)->Status<T>{let mut file=acquire_resource<Open<T>>(fs,singleton::<u8>(42u8))?;" ++
-    "let chunk=read_resource<Read<T>>(file)?;let n=write_resource<Written<T>>(file,singleton::<u8>(9u8))?;" ++
-    "let second=read_resource<Read<T>>(file)?;" ++
-    "let m=write_resource<Written<T>>(file,new [2]u8[second.bytes[0],second.bytes[1]])?;" ++
-    "match finish::<T>(file){Finish<T>.ok(done)=>{if !done{return new Status<T>.err(91);}},Finish<T>.err(failure)=>{return new Status<T>.err(failure.code);}}" ++
-    "if !chunk.eof || !second.eof{return new Status<T>.err(92);}return new Status<T>.ok(i64(chunk.length)+i64(chunk.bytes[0])+i64(chunk.bytes[1])+" ++
-    "i64(chunk.bytes[2])+i64(chunk.bytes[3])+i64(n)+i64(second.length)+i64(second.bytes[0])+i64(second.bytes[1])+i64(m));}" ++
-    "fn main(fs:filesystem_cap)->i64{match work::<bool>(fs){Status<bool>.ok(n)=>{return n;},Status<bool>.err(e)=>{return -e;}}}";
+    \\def finish[T](file: File) -> Finish[T]:
+    \\    match complete_resource[Finish[T]](file):
+    \\        case Finish.ok(done):
+    \\            return Ok(done)
+    \\        case Finish.err(failure):
+    \\            return complete_resource[Finish[T]](failure.resource)
+    \\
+    \\
+    \\def work[T](fs: filesystem_cap) -> Status[T]:
+    \\    file = acquire_resource[Open[T]](fs, singleton[u8](42u8))?
+    \\    chunk = read_resource[Read[T]](file)?
+    \\    n = write_resource[Written[T]](file, singleton[u8](9u8))?
+    \\    second = read_resource[Read[T]](file)?
+    \\    payload: [2]u8 = [second.bytes[0], second.bytes[1]]
+    \\    m = write_resource[Written[T]](file, payload)?
+    \\    match finish[T](file):
+    \\        case Finish.ok(done):
+    \\            if not done:
+    \\                return Err(91)
+    \\        case Finish.err(failure):
+    \\            return Err(failure.code)
+    \\    if not chunk.eof or not second.eof:
+    \\        return Err(92)
+    \\    return Ok(i64(chunk.length) + i64(chunk.bytes[0]) + i64(chunk.bytes[1]) + i64(chunk.bytes[2]) + i64(chunk.bytes[3]) + i64(n) + i64(second.length) + i64(second.bytes[0]) + i64(second.bytes[1]) + i64(m))
+    \\
+    \\
+    \\def main(fs: filesystem_cap) -> i64:
+    \\    match work[bool](fs):
+    \\        case Status.ok(n):
+    \\            return n
+    \\        case Status.err(e):
+    \\            return -e
+;

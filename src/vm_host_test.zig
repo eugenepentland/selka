@@ -119,9 +119,27 @@ const geometry_source =
     \\
     \\host def validate(point: Point) -> Checked effects(host)
 ;
-const entry_prefix = "module main;import geometry as g;fn relay<T:copy>(p:g::Point,tag:T)->g::Checked effects(host){_ = tag;return g::validate(p);}" ++
-    "fn main()->i64{let r=relay::<bool>(new g::Point{x:";
-const entry_suffix = ",y:4},true);match r{g::Checked.ok(p)=>{return p.x+p.y;},g::Checked.err(e)=>{return e;}}}";
+const entry_prefix =
+    \\module main
+    \\import geometry as g
+    \\
+    \\
+    \\def relay[T](p: g.Point, tag: T) -> g.Checked effects(host):
+    \\    _ = tag
+    \\    return g.validate(p)
+    \\
+    \\
+    \\def main() -> i64:
+    \\    r = relay[bool](g.Point(x=
+;
+const entry_suffix =
+    \\, y=4), True)
+    \\    match r:
+    \\        case g.Checked.ok(p):
+    \\            return p.x + p.y
+    \\        case g.Checked.err(e):
+    \\            return e
+;
 const Inputs = struct {
     negative: bool,
     fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
@@ -161,7 +179,7 @@ fn projectScenario(allocator: std.mem.Allocator) !void {
         try t.expectEqualStrings("R_HOST_LIMIT", limited.trap.code);
         const site = compilation.src.locate(limited.trap.span.start);
         try t.expectEqualStrings("main.my", site.path);
-        try t.expectEqualStrings("g::validate(p)", compilation.src.text(limited.trap.span));
+        try t.expectEqualStrings("g.validate(p)", compilation.src.text(limited.trap.span));
     }
 }
 test "VM host imports preserve nominal aggregate results generic calls and allocation cleanup" {
@@ -171,6 +189,8 @@ test "VM host imports preserve nominal aggregate results generic calls and alloc
 }
 test "VM host preflight requires unused declarations before any callback and rejects invalid budgets" {
     var c = try language.Compilation.init(t.allocator, "host.my", scalar_source ++
+        \\
+        \\
         \\host def unused() -> i64 effects(host)
     );
     defer c.deinit();

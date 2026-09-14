@@ -64,7 +64,7 @@ const schema =
 ;
 fn reject(body: []const u8, code: []const u8) !void {
     const bytes = try std.mem.concat(t.allocator, u8, &.{
-        schema, body,
+        schema, "\n\n\n", body, "\n\n\n",
         \\def main() -> i64:
         \\    return 0
     });
@@ -108,25 +108,83 @@ test "generic externalValue and environmentValue enforce capability kinds and re
     , "E_EFFECT_BOUND");
     try reject(
         \\def f[T](cap: environment_cap) -> i64 effects():
-        \\    _ = environment_get[Env](cap, [])
+        \\    name: [0]u8 = []
+        \\    _ = environment_get[Env](cap, name)
         \\    return 0
     , "E_EFFECT_BOUND");
 }
 
 test "generic acquireResource and completeResource preserve kind byte request and ownership contracts" {
-    try reject("fn f<T:copy>(cap:filesystem_cap)->R{return acquire_resource[R](cap,new [0]u8[]);}", "E_RESOURCE_RESULT");
-    try reject("fn f<T:copy>(cap:network_cap)->Open{return acquire_resource[Open](cap,new [0]u8[]);}", "E_GENERIC_TYPE");
-    try reject("fn f<T:copy>(cap:filesystem_cap)->Open{return acquire_resource[Open](cap,0);}", "E_RESOURCE_REQUEST");
-    try reject("fn f<T:copy>(file:File)->R{return complete_resource[R](file);}", "E_COMPLETION_RESULT");
-    try reject("fn f<T:copy>()->Finish{return complete_resource[Finish](0);}", "E_GENERIC_TYPE");
-    try reject("fn f<T:copy>(file:File)->Finish{_ = complete_resource[Finish](file);return complete_resource[Finish](file);}", "E_OWNED_CONSUMED");
-    try reject("fn f<T:copy>(cap:filesystem_cap)->Open noio{return acquire_resource[Open](cap,new [0]u8[]);}", "E_EFFECT_BOUND");
+    try reject(
+        \\def f[T](cap: filesystem_cap) -> R:
+        \\    empty: [0]u8 = []
+        \\    return acquire_resource[R](cap, empty)
+    , "E_RESOURCE_RESULT");
+    try reject(
+        \\def f[T](cap: network_cap) -> Open:
+        \\    empty: [0]u8 = []
+        \\    return acquire_resource[Open](cap, empty)
+    , "E_GENERIC_TYPE");
+    try reject(
+        \\def f[T](cap: filesystem_cap) -> Open:
+        \\    return acquire_resource[Open](cap, 0)
+    , "E_RESOURCE_REQUEST");
+    try reject(
+        \\def f[T](file: File) -> R:
+        \\    return complete_resource[R](file)
+    , "E_COMPLETION_RESULT");
+    try reject(
+        \\def f[T]() -> Finish:
+        \\    return complete_resource[Finish](0)
+    , "E_GENERIC_TYPE");
+    try reject(
+        \\def f[T](file: File) -> Finish:
+        \\    _ = complete_resource[Finish](file)
+        \\    return complete_resource[Finish](file)
+    , "E_OWNED_CONSUMED");
+    try reject(
+        \\def f[T](cap: filesystem_cap) -> Open noio:
+        \\    empty: [0]u8 = []
+        \\    return acquire_resource[Open](cap, empty)
+    , "E_EFFECT_BOUND");
 }
 
 test "generic resourceIo checks mutation owner state byte values and fixed result payloads" {
-    try reject("fn f<T:copy>(file:File)->Read{return read_resource[Read](file);}", "E_IMMUTABLE");
-    try reject("fn f<T:copy>(input:File)->Read{let mut file=input;_ = file;return read_resource[Read](file);}", "E_OWNED_CONSUMED");
-    try reject("fn f<T:copy>(input:File)->R{let mut file=input;return read_resource[R](file);}", "E_RESOURCE_IO_RESULT");
-    try reject("fn f<T:copy>(input:File)->Random{let mut file=input;return write_resource[Random](file,1);}", "E_RESOURCE_BYTES");
-    try reject("fn consume(file:File)->[0]u8{_ = file;return new [0]u8[];}fn f<T:copy>(input:File)->Random{let mut file=input;return write_resource[Random](file,consume(file));}", "E_OWNED_CONSUMED");
+    // A parameter now binds mutably, so the immutable owner a read must reject is
+    // a match arm payload: those bindings stay immutable for the arm's lifetime.
+    try reject(
+        \\def f[T](r: Open) -> Read:
+        \\    match r:
+        \\        case Open.ok(file):
+        \\            return read_resource[Read](file)
+        \\        case Open.err(code):
+        \\            return Err(code)
+    , "E_IMMUTABLE");
+    try reject(
+        \\def f[T](input: File) -> Read:
+        \\    file = input
+        \\    _ = file
+        \\    return read_resource[Read](file)
+    , "E_OWNED_CONSUMED");
+    try reject(
+        \\def f[T](input: File) -> R:
+        \\    file = input
+        \\    return read_resource[R](file)
+    , "E_RESOURCE_IO_RESULT");
+    try reject(
+        \\def f[T](input: File) -> Random:
+        \\    file = input
+        \\    return write_resource[Random](file, 1)
+    , "E_RESOURCE_BYTES");
+    try reject(
+        \\def consume(file: File) -> [0]u8:
+        \\    _ = file
+        \\    empty: [0]u8 = []
+        \\    return empty
+        \\
+        \\
+        \\def f[T](input: File) -> Random:
+        \\    file = input
+        \\    return write_resource[Random](file, consume(file))
+    , "E_OWNED_CONSUMED");
 }
