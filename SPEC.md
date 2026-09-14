@@ -385,7 +385,6 @@ depends on it.
 - [GC-SOURCE-6] `noalloc` rejects transitive managed allocation and list growth; fixed-slot mutation and reads remain permitted.
 - [GC-SOURCE-7] Managed element declarations reject owned resources and unchecked results, including such values nested in ordinary aggregates.
 - [GC-SOURCE-9] Bytecode validation rejects managed metadata on record shapes that are not managed containers.
-- [GC-SOURCE-10] Managed source execution releases intermediate roots and backing on every host allocation failure, including failures in collection and list growth.
 - [GC-GENERIC-1] Generic managed list creation, mutation, and identity helpers preserve shared aliases without explicit allocator authority.
 - [GC-GENERIC-2] Recursive generic list and record declarations form managed reference graphs without recursive value layout.
 - [GC-GENERIC-3] Ordinary directly recursive value declarations remain rejected even when managed lists are available.

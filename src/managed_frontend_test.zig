@@ -3,11 +3,12 @@ const std = @import("std");
 const t = std.testing;
 const debug = std.debug.print;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 
 fn evaluate(bytes: []const u8) !void {
     var compilation = try language.Compilation.init(t.allocator, "managed-generic.my", bytes);
     defer compilation.deinit();
-    const result = compilation.execute(t.allocator) catch |err| {
+    const result = native.run(&compilation) catch |err| {
         for (compilation.diagnostics.items) |diag| debug("{s}: {s} ({s})\n", .{ diag.code, diag.message, compilation.src.text(diag.span) });
         return err;
     };

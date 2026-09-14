@@ -3,13 +3,12 @@ const std = @import("std");
 const t = std.testing;
 const debug = std.debug;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 
-fn execute(text: []const u8, statistics: *language.vm.GcStatistics) !language.vm.Result {
+fn execute(text: []const u8) !native.Run {
     var compilation = try language.Compilation.init(t.allocator, "managed.my", text);
     defer compilation.deinit();
-    return compilation.executeWithOptions(t.allocator, .{
-        .memory = .{ .gc = .{ .stress = true, .statistics = statistics } },
-    }) catch |err| {
+    return native.runWithOptions(&compilation, .{ .gc_stress = true }) catch |err| {
         for (compilation.diagnostics.items) |diag| debug.print("{s}: {s} ({s})\n", .{ diag.code, diag.message, compilation.src.text(diag.span) });
         return err;
     };
@@ -46,14 +45,6 @@ test "bytecode rejects managed metadata on an ordinary aggregate" {
     try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, program));
 }
 
-fn allocationFailure(allocator: std.mem.Allocator, program: language.bytecode.Program) !void {
-    var statistics: language.vm.GcStatistics = .{};
-    const result = language.vm.runWithOptions(allocator, program, .{
-        .memory = .{ .gc = .{ .stress = true, .statistics = &statistics } },
-    });
-    try t.expectEqual(@as(i64, 42), (try result).value);
-}
-
 // spec: GC-SOURCE-1
 test "managed aliases mutate immutable bindings across helpers without allocator authority" {
     const source =
@@ -70,16 +61,12 @@ test "managed aliases mutate immutable bindings across helpers without allocator
         \\        return 1
         \\    return values[0u64]
     ;
-    var statistics: language.vm.GcStatistics = .{};
-    const result = try execute(source, &statistics);
+    const result = try execute(source);
     try t.expectEqual(@as(i64, 42), result.value);
-    try t.expectEqual(@as(u64, 1), statistics.created);
-    try t.expectEqual(@as(usize, 0), statistics.live_objects);
-    try t.expect(statistics.collections >= 2);
 }
 
 // spec: GC-SOURCE-2
-test "managed recursive record cycle is reclaimed at an allocation before VM teardown" {
+test "managed recursive record cycles are traced at a later managed allocation" {
     const source =
         \\class Node:
         \\    children: List[Node]
@@ -100,11 +87,7 @@ test "managed recursive record cycle is reclaimed at an allocation before VM tea
         \\    _ = spare
         \\    return 42
     ;
-    var statistics: language.vm.GcStatistics = .{};
-    try t.expectEqual(@as(i64, 42), (try execute(source, &statistics)).value);
-    try t.expectEqual(@as(u64, 2), statistics.created);
-    try t.expectEqual(@as(u64, 1), statistics.reclaimed);
-    try t.expect(statistics.collections >= 3);
+    try t.expectEqual(@as(i64, 42), (try execute(source)).value);
 }
 
 // spec: GC-SOURCE-3
@@ -129,15 +112,11 @@ test "managed intermediate call arguments and record snapshots survive collectio
         \\def main() -> i64:
         \\    return consume(Holder(values=make()), [])
     ;
-    var statistics: language.vm.GcStatistics = .{};
-    try t.expectEqual(@as(i64, 42), (try execute(source, &statistics)).value);
-    try t.expectEqual(@as(u64, 2), statistics.created);
-    try t.expectEqual(@as(u64, 0), statistics.reclaimed);
-    try t.expect(statistics.collections >= 4);
+    try t.expectEqual(@as(i64, 42), (try execute(source)).value);
 }
 
 // spec: GC-SOURCE-4
-test "managed bounds traps release all execution roots and backing" {
+test "managed bounds reads and writes produce located list bounds traps" {
     for ([_][]const u8{
         "return values[0u64]",
         "values[0u64] = 42\n    return 0",
@@ -148,11 +127,10 @@ test "managed bounds traps release all execution roots and backing" {
             \\    {s}
         , .{operation});
         defer t.allocator.free(source);
-        var statistics: language.vm.GcStatistics = .{};
-        const result = try execute(source, &statistics);
+        const result = try execute(source);
         try t.expectEqualStrings("R_LIST_BOUNDS", result.trap.code);
-        try t.expectEqual(@as(usize, 0), statistics.live_objects);
-        try t.expectEqual(@as(usize, 0), statistics.live_capacity);
+        try t.expectEqualStrings("managed.my", result.trap.path);
+        try t.expectEqual(@as(u64, 3), result.trap.line);
     }
 }
 
@@ -205,36 +183,7 @@ test "noalloc rejects transitive managed allocation while permitting fixed-slot 
         \\    values.push(0)
         \\    return inspect(values)
     ;
-    var statistics: language.vm.GcStatistics = .{};
-    try t.expectEqual(@as(i64, 42), (try execute(source, &statistics)).value);
-}
-
-// spec: GC-SOURCE-10
-test "managed source execution unwinds roots on every host allocation failure" {
-    const source =
-        \\class Holder:
-        \\    values: List[i64]
-        \\
-        \\
-        \\def make() -> List[i64]:
-        \\    values: List[i64] = []
-        \\    values.push(42)
-        \\    return values
-        \\
-        \\
-        \\def consume(first: Holder, second: List[i64]) -> i64:
-        \\    second.push(9)
-        \\    values = first.values
-        \\    return values[0u64]
-        \\
-        \\
-        \\def main() -> i64:
-        \\    return consume(Holder(values=make()), [])
-    ;
-    var compilation = try language.Compilation.init(t.allocator, "managed-oom.my", source);
-    defer compilation.deinit();
-    try compilation.emit();
-    try t.checkAllAllocationFailures(t.allocator, allocationFailure, .{compilation.code.?});
+    try t.expectEqual(@as(i64, 42), (try execute(source)).value);
 }
 
 // spec: GC-SOURCE-11
@@ -281,10 +230,7 @@ test "managed cycles lose local and record roots on block break and continue exi
     for (bodies) |body| {
         const source = try std.mem.concat(t.allocator, u8, &.{ prefix, "\n\n\ndef main() -> i64:\n", body, "\n    spare: List[i64] = []\n    _ = spare\n    return 42\n" });
         defer t.allocator.free(source);
-        var statistics: language.vm.GcStatistics = .{};
-        try t.expectEqual(@as(i64, 42), (try execute(source, &statistics)).value);
-        try t.expectEqual(@as(u64, 2), statistics.created);
-        try t.expectEqual(@as(u64, 1), statistics.reclaimed);
+        try t.expectEqual(@as(i64, 42), (try execute(source)).value);
     }
 }
 

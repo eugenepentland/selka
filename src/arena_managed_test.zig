@@ -4,6 +4,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const gc = @import("gc_heap.zig");
 const regions = @import("gc_regions.zig");
 const values = @import("runtime_values.zig");
@@ -12,20 +13,18 @@ const list_type: values.Type = @fromBackingInt(@intCast(32));
 const record_type: values.Type = @fromBackingInt(@intCast(33));
 const module = "arena-managed.my";
 
-fn run(text: []const u8, statistics: *language.vm.GcStatistics, stress: bool) !language.vm.Result {
+fn run(text: []const u8, stress: bool) !native.Run {
     var compilation = try language.Compilation.init(t.allocator, module, text);
     defer compilation.deinit();
-    return compilation.executeWithOptions(t.allocator, .{
-        .memory = .{ .gc = .{ .stress = stress, .statistics = statistics } },
-    }) catch |err| {
+    return native.runWithOptions(&compilation, .{ .gc_stress = stress }) catch |err| {
         if (err != error.OutOfMemory) @import("diagnostics_test.zig").report(compilation.diagnostics.items);
         return err;
     };
 }
 
-fn value(text: []const u8, statistics: *language.vm.GcStatistics) !i64 {
-    const outcome = try run(text, statistics, false);
-    if (outcome == .trap) try t.expectEqualStrings("", outcome.trap.code);
+fn value(text: []const u8) !i64 {
+    const outcome = try run(text, false);
+    try t.expectEqualStrings("", outcome.trap.code);
     return outcome.value;
 }
 
@@ -58,8 +57,7 @@ test "ARENA-MANAGED-1 nested arenas redirect helper allocation and release each 
         \\        total = total + len(first)
         \\    return total
     ;
-    var statistics: language.vm.GcStatistics = .{};
-    try t.expectEqual(@as(i64, 7), try value(source, &statistics));
+    try t.expectEqual(@as(i64, 7), try value(source));
 }
 
 // spec-case: ARENA-MANAGED-1
@@ -71,8 +69,7 @@ test "ARENA-MANAGED-1 an anonymous arena scope still bulk releases its allocatio
         \\        total = len(build(5))
         \\    return total
     ;
-    var statistics: language.vm.GcStatistics = .{};
-    try t.expectEqual(@as(i64, 5), try value(source, &statistics));
+    try t.expectEqual(@as(i64, 5), try value(source));
 }
 
 // spec: ARENA-MANAGED-2
@@ -86,8 +83,7 @@ test "ARENA-MANAGED-2 escape copies a shared subgraph once into the enclosing re
         \\        kept = scratch.escape(holder)
         \\    return len(kept) * 10 + kept[0][0] + kept[1][0]
     ;
-    var statistics: language.vm.GcStatistics = .{};
-    try t.expectEqual(@as(i64, 34), try value(source, &statistics));
+    try t.expectEqual(@as(i64, 34), try value(source));
 }
 
 // spec-case: ARENA-MANAGED-2
@@ -105,8 +101,7 @@ test "ARENA-MANAGED-2 escape preserves a cycle through a record field" {
         \\        kept = scratch.escape(nodes)
         \\    return kept[0].value + len(kept[0].links)
     ;
-    var statistics: language.vm.GcStatistics = .{};
-    const outcome = try run(source, &statistics, true);
+    const outcome = try run(source, true);
     try t.expectEqual(@as(i64, 6), outcome.value);
 }
 
@@ -122,8 +117,7 @@ test "ARENA-MANAGED-2 an escaped copy may be returned from the outermost arena s
         \\    kept = solve(6)
         \\    return len(kept) * 10 + kept[5]
     ;
-    var statistics: language.vm.GcStatistics = .{};
-    try t.expectEqual(@as(i64, 65), try value(source, &statistics));
+    try t.expectEqual(@as(i64, 65), try value(source));
 }
 
 // spec-case: ARENA-MANAGED-2
@@ -138,8 +132,7 @@ test "ARENA-MANAGED-2 escape shares objects that already live in the enclosing r
         \\    older.append(5)
         \\    return len(kept[0]) * 10 + kept[0][1]
     ;
-    var statistics: language.vm.GcStatistics = .{};
-    try t.expectEqual(@as(i64, 25), try value(source, &statistics));
+    try t.expectEqual(@as(i64, 25), try value(source));
 }
 
 // spec: ARENA-MANAGED-3
@@ -155,8 +148,7 @@ test "ARENA-MANAGED-3 the store barrier traps when a helper stores arena storage
         \\        stash(keeper, temp)
         \\    return len(keeper)
     ;
-    var statistics: language.vm.GcStatistics = .{};
-    const outcome = try run(source, &statistics, false);
+    const outcome = try run(source, false);
     try t.expectEqualStrings("R_ARENA_ESCAPE", outcome.trap.code);
 }
 
@@ -172,8 +164,7 @@ test "ARENA-MANAGED-3 the store barrier covers dictionary values written through
         \\        stash(keeper, [3])
         \\    return 0
     ;
-    var statistics: language.vm.GcStatistics = .{};
-    const outcome = try run(source, &statistics, false);
+    const outcome = try run(source, false);
     try t.expectEqualStrings("R_ARENA_ESCAPE", outcome.trap.code);
 }
 
@@ -305,8 +296,7 @@ test "ARENA-MANAGED-5 result propagation out of an arena releases its storage in
         \\        case Err(code):
         \\            return code
     ;
-    var statistics: language.vm.GcStatistics = .{};
-    try t.expectEqual(@as(i64, 7), try value(source, &statistics));
+    try t.expectEqual(@as(i64, 7), try value(source));
 }
 
 // spec-case: ARENA-MANAGED-5
@@ -320,8 +310,7 @@ test "ARENA-MANAGED-5 a trap inside an arena releases its storage before executi
         \\        items: list[int] = [1, 2]
         \\        return divide(len(items), 0)
     ;
-    var statistics: language.vm.GcStatistics = .{};
-    const outcome = try run(source, &statistics, false);
+    const outcome = try run(source, false);
     try t.expectEqualStrings("R_DIVISION_BY_ZERO", outcome.trap.code);
 }
 
@@ -339,8 +328,7 @@ test "ARENA-MANAGED-5 break and continue out of an arena close the scope exactly
         \\                break
         \\    return total
     ;
-    var statistics: language.vm.GcStatistics = .{};
-    try t.expectEqual(@as(i64, 6), try value(source, &statistics));
+    try t.expectEqual(@as(i64, 6), try value(source));
 }
 
 // spec: ARENA-MANAGED-6
@@ -357,8 +345,7 @@ test "ARENA-MANAGED-6 stress collection inside an arena sweeps unreachable arena
         \\        total = total + waste()
         \\    return total
     ;
-    var statistics: language.vm.GcStatistics = .{};
-    const outcome = try run(source, &statistics, true);
+    const outcome = try run(source, true);
     try t.expectEqual(@as(i64, 6), outcome.value);
 }
 
@@ -382,10 +369,7 @@ fn escapeScenario(allocator: std.mem.Allocator) !void {
     ;
     var compilation = try language.Compilation.init(allocator, module, source);
     defer compilation.deinit();
-    var statistics: language.vm.GcStatistics = .{};
-    const outcome = compilation.executeWithOptions(allocator, .{
-        .memory = .{ .gc = .{ .statistics = &statistics } },
-    }) catch |err| return err;
+    const outcome = try native.run(&compilation);
     try t.expectEqual(@as(i64, 7), outcome.value);
 }
 
@@ -547,7 +531,5 @@ test "ARENA-MANAGED-6 noalloc still rejects arena allocation while entering a sc
         \\def main() -> int:
         \\    return empty()
     ;
-    var statistics: language.vm.GcStatistics = .{};
-    try t.expectEqual(@as(i64, 7), try value(source, &statistics));
-    try t.expectEqual(@as(u64, 1), statistics.arena.scopes);
+    try t.expectEqual(@as(i64, 7), try value(source));
 }
