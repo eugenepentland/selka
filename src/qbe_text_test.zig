@@ -28,6 +28,10 @@ const every_method =
     \\            total = total + value
     \\        case None:
     \\            total = total - 1
+    \\    for letter in "abc":
+    \\        total = total + len(letter)
+    \\    for index, letter in enumerate("ab"):
+    \\        total = total + index + len(letter)
     \\    match float("2.5"):
     \\        case Some(number):
     \\            total = total + len(str(number))

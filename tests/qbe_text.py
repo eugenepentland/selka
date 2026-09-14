@@ -178,6 +178,22 @@ def cases():
         return 6
     return len(text)
 '''
+    # Iterating text visits its scalar values, and enumerate adds the position.
+    yield '''def main() -> int:
+    total = 0
+    for letter in "h\\u00e9llo":
+        total += len(letter)
+    for index, letter in enumerate("ab"):
+        total += index * 2 + len(letter)
+    letters = [letter.upper() for letter in "abc"]
+    if len(letters) != 3:
+        return 1
+    if letters[2] != "C":
+        return 2
+    for line in "a\\nb".splitlines():
+        total += len(line.strip())
+    return total
+'''
     # Fresh values survive repeated collection while retained aliases stay equal.
     yield '''def make() -> list[str]:
     return "a-b-c".upper().split("-")
