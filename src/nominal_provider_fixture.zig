@@ -6,38 +6,47 @@ const external = @import("external_capabilities.zig");
 pub const declarations =
     \\resource File: filesystem
     \\
+    \\
     \\result Open[T]:
     \\    err: i64,
     \\    ok: File
+    \\
     \\
     \\class Failure[T]:
     \\    code: i64
     \\    resource: File
     \\
+    \\
     \\result Finish[T]:
     \\    err: Failure[T],
     \\    ok: bool
+    \\
     \\
     \\class Chunk[T]:
     \\    eof: bool
     \\    bytes: [4]u8
     \\    length: u64
     \\
+    \\
     \\result Read[T]:
     \\    err: i64,
     \\    ok: Chunk[T]
+    \\
     \\
     \\result Written[T]:
     \\    err: i64,
     \\    ok: u64
     \\
+    \\
     \\result Status[T]:
     \\    ok: i64,
     \\    err: i64
     \\
+    \\
     \\def singleton[T](x: T) -> [1]T:
-    \\    only: [1]T = [x]
-    \\    return only
+    \\    return [x]
+    \\
+    \\
     \\
 ;
 /// Observable ownership and callback accounting, including failed completion retries.
@@ -96,7 +105,6 @@ pub const Fake = struct {
 };
 /// Exercise repeated ordinary I/O before returning completion ownership for a retry.
 pub const program = declarations ++
-    \\
     \\def finish[T](file: File) -> Finish[T]:
     \\    match complete_resource[Finish[T]](file):
     \\        case Finish.ok(done):
@@ -110,8 +118,8 @@ pub const program = declarations ++
     \\    chunk = read_resource[Read[T]](file)?
     \\    n = write_resource[Written[T]](file, singleton[u8](9u8))?
     \\    second = read_resource[Read[T]](file)?
-    \\    echoed: [2]u8 = [second.bytes[0], second.bytes[1]]
-    \\    m = write_resource[Written[T]](file, echoed)?
+    \\    payload: [2]u8 = [second.bytes[0], second.bytes[1]]
+    \\    m = write_resource[Written[T]](file, payload)?
     \\    match finish[T](file):
     \\        case Finish.ok(done):
     \\            if not done:
@@ -120,10 +128,7 @@ pub const program = declarations ++
     \\            return Err(failure.code)
     \\    if not chunk.eof or not second.eof:
     \\        return Err(92)
-    \\    total = i64(chunk.length) + i64(chunk.bytes[0]) + i64(chunk.bytes[1])
-    \\    total = total + i64(chunk.bytes[2]) + i64(chunk.bytes[3]) + i64(n)
-    \\    total = total + i64(second.length) + i64(second.bytes[0]) + i64(second.bytes[1]) + i64(m)
-    \\    return Ok(total)
+    \\    return Ok(i64(chunk.length) + i64(chunk.bytes[0]) + i64(chunk.bytes[1]) + i64(chunk.bytes[2]) + i64(chunk.bytes[3]) + i64(n) + i64(second.length) + i64(second.bytes[0]) + i64(second.bytes[1]) + i64(m))
     \\
     \\
     \\def main(fs: filesystem_cap) -> i64:

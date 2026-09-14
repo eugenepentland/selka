@@ -42,6 +42,9 @@ const declarations =
     \\result Status:
     \\    ok: i64,
     \\    err: i64
+    \\
+    \\
+    \\
 ;
 const Fake = struct {
     live: usize = 0,
@@ -99,16 +102,31 @@ fn reject(text: []const u8, code: []const u8) !void {
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
-const source = declarations ++ "fn work(fs: filesystem_cap) -> Status { let mut file = acquire_resource[Open](fs," ++
-    " new [0]u8 [])?; let first = read_resource[Read](file)?; let second = " ++
-    "read_resource[Read](file)?; let count = write_resource[Written](file, new [3]u8 " ++
-    "[7u8, 8u8, 9u8])?; match complete_resource[Finish](file) { Finish.ok(done) => { " ++
-    "_ = done; }, Finish.err(failure) => { return new Status.err(failure.code); } } " ++
-    "if first.eof || !second.eof { return new Status.err(99); } return new " ++
-    "Status.ok(i64(first.bytes[1]) + i64(second.bytes[0]) + " ++
-    "i64(first.bytes[3]) + i64(count)); } fn main(fs: filesystem_cap) -> i64 " ++
-    "noalloc { match work(fs) { Status.ok(value) => { return value; }, Status.err(code) " ++
-    "=> { return -code; } } }";
+const source = declarations ++
+    \\def work(fs: filesystem_cap) -> Status:
+    \\    empty: [0]u8 = []
+    \\    file = acquire_resource[Open](fs, empty)?
+    \\    first = read_resource[Read](file)?
+    \\    second = read_resource[Read](file)?
+    \\    payload: [3]u8 = [7u8, 8u8, 9u8]
+    \\    count = write_resource[Written](file, payload)?
+    \\    match complete_resource[Finish](file):
+    \\        case Finish.ok(done):
+    \\            _ = done
+    \\        case Finish.err(failure):
+    \\            return Err(failure.code)
+    \\    if first.eof or not second.eof:
+    \\        return Err(99)
+    \\    return Ok(i64(first.bytes[1]) + i64(second.bytes[0]) + i64(first.bytes[3]) + i64(count))
+    \\
+    \\
+    \\def main(fs: filesystem_cap) -> i64 noalloc:
+    \\    match work(fs):
+    \\        case Status.ok(value):
+    \\            return value
+    \\        case Status.err(code):
+    \\            return -code
+;
 fn scenario(allocator: std.mem.Allocator) !void {
     var fake: Fake = .{};
     defer std.debug.assert(fake.live == 0);
