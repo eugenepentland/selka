@@ -76,10 +76,12 @@ use a ```mylang block; `kind: "tooling"` features may use a ```bash or ```consol
   `mylang run prog.my --print-result`. The process exit status is separate.
 - **No tuples. No methods on classes. No closures.** Records are values; functions are
   top-level and take their state as parameters.
-- **`print` and file access need effects on the entry point.** `print` contributes the
-  `output` effect; files need a `Filesystem` parameter on `main`. Declare
-  `def main(fs: Filesystem) -> int` (and `effects(output)` where an explicit bound is
-  required) or the checker rejects the program.
+- **File access needs a capability parameter on the entry point.** Write
+  `def main(fs: Filesystem) -> int` and thread `fs` through; there is no ambient
+  filesystem. `Network`, `Clock`, `Entropy` and `Environment` work the same way.
+- **`print` contributes the `output` effect.** An unbounded `def main() -> int` may
+  print, but under an explicit bound (`noio`) it is rejected — write `effects(output)`
+  on any function in the chain that prints.
 - **`mylang run` grants every capability** unless you pass `--restrict`. Native builds
   (`mylang build`) grant only what the entry point's parameters ask for.
 - Integers have fixed width, conditions must be `bool`, lists are homogeneous, ranges
