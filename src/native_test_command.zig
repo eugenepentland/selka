@@ -9,20 +9,40 @@ const sessions = @import("native_test_session.zig");
 const planner = @import("native_test_plan.zig");
 const receipts = @import("native_test_receipts.zig");
 const fanout = @import("native_test_directory.zig");
+const budget = @import("memory_budget");
 /// Setup failures never produce a cached green test run.
 pub const Error = sessions.Error || cases.Error || planner.Error || receipts.Error || fanout.Error;
+/// The fan-out width asked for: `--jobs` first, then `MYLANG_JOBS`, then none,
+/// which leaves the default derived from cores and free memory.
+fn requested(flag: ?usize, environ: *const std.process.Environ.Map) budget.Error!?usize {
+    if (flag) |value| return value;
+    const text = environ.get(budget.jobs_variable) orelse return null;
+    if (text.len == 0) return null;
+    const width = try budget.jobs(text);
+    return width;
+}
 /// Discover, check, selectively execute, and report native application tests.
 pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     if (args.len == 1 and std.mem.eql(u8, args[0], "--help")) {
         try std.Io.File.stdout().writeStreamingAll(process.io, options.usage);
         return 0;
     }
-    const opts = options.parse(args) catch {
+    var opts = options.parse(args) catch {
         try std.Io.File.stderr().writeStreamingAll(process.io, options.usage);
         return 2;
     };
     var context = try fs.Context.init(process.arena.allocator(), process.io, process.environ_map);
     defer context.deinit();
+    // Resolve the ceiling once, before any child or receipt key observes it:
+    // the flag wins, then MYLANG_MEMORY_LIMIT, then the per-test default.
+    opts.limits.max_memory = budget.resolve(opts.limits.max_memory, context.environ, budget.variable, budget.test_default) catch {
+        try std.Io.File.stderr().writeStreamingAll(process.io, options.usage);
+        return 2;
+    };
+    opts.jobs = requested(opts.jobs, context.environ) catch {
+        try std.Io.File.stderr().writeStreamingAll(process.io, options.usage);
+        return 2;
+    };
     // A directory names many independent projects, so each one runs as its own child.
     if (fanout.selected(context, opts.source)) return fanout.run(context, opts);
     const session = try sessions.Session.init(context, opts);
@@ -85,6 +105,19 @@ fn symbol(manifest: std.json.Value, name: []const u8) Error![]const u8 {
         if (std.mem.eql(u8, name, v.text(v.get(v.get(function, "export"), "name")))) return v.text(v.get(function, "symbol"));
     }
     return error.UnknownFunction;
+}
+// spec-case: MEMORY-CEILING-3
+test "an explicit fan-out width outranks the environment, which outranks the derived default" {
+    var environ: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environ.deinit();
+    try std.testing.expectEqual(@as(?usize, null), try requested(null, &environ));
+    try environ.put(budget.jobs_variable, "4");
+    try std.testing.expectEqual(@as(?usize, 4), try requested(null, &environ));
+    try std.testing.expectEqual(@as(?usize, 9), try requested(9, &environ));
+    try environ.put(budget.jobs_variable, "");
+    try std.testing.expectEqual(@as(?usize, null), try requested(null, &environ));
+    try environ.put(budget.jobs_variable, "0");
+    try std.testing.expectError(error.InvalidMemoryLimit, requested(null, &environ));
 }
 fn report(context: fs.Context, results: []const receipts.Result, json: bool) Error!u8 {
     var passed: usize = 0;

@@ -10,6 +10,7 @@ const fs = @import("qbe_build_io.zig");
 const cache_api = @import("qbe_build_cache.zig");
 const native_build = @import("qbe_build.zig");
 const wiring = @import("wiring/native_session.zig");
+const budget = @import("memory_budget");
 const language = @import("compiler.zig");
 
 /// Native build, tool and child-process failures a guest execution can report.
@@ -55,6 +56,8 @@ pub const Options = struct {
     directory: ?[]const u8 = null,
     /// Replaces the inherited environment, which `Environment` capabilities read.
     environment: ?*const std.process.Environ.Map = null,
+    /// The guest's address-space ceiling; the per-test default bounds every run.
+    max_memory: ?u64 = null,
 };
 
 /// Build one checked compilation natively and run it once with default budgets.
@@ -115,7 +118,7 @@ fn spawn(executable: []const u8, options: Options) Error!Run {
     const outcome = try std.process.run(allocator, session.io, .{
         .argv = argv.items,
         .cwd = if (options.directory) |directory| .{ .path = directory } else .inherit,
-        .environ_map = options.environment,
+        .environ_map = try bounded(session, options),
         .stdout_limit = .limited(64 * 1024 * 1024),
         .stderr_limit = .limited(4 * 1024 * 1024),
     });
@@ -126,6 +129,18 @@ fn spawn(executable: []const u8, options: Options) Error!Run {
     }
     const reported = try divide(outcome.stdout);
     return .{ .value = reported.value, .stdout = reported.output, .stderr = outcome.stderr, .status = status };
+}
+
+/// Every test guest runs under a byte ceiling, so a program that allocates without
+/// bound traps with `R_MEMORY_BUDGET` instead of exhausting the machine. A test that
+/// supplies its own environment keeps it, with the ceiling added.
+fn bounded(session: *wiring.Session, options: Options) Error!*const std.process.Environ.Map {
+    const allocator = session.allocator();
+    const map = try allocator.create(std.process.Environ.Map);
+    map.* = try (options.environment orelse &session.environ).clone(allocator);
+    const limit = options.max_memory orelse budget.test_default;
+    try map.put(budget.variable, try std.fmt.allocPrint(allocator, "{d}", .{limit}));
+    return map;
 }
 
 /// Separate the guest's own output from the entry result line `--print-result` appends.

@@ -3,13 +3,23 @@ const std = @import("std");
 const fs = @import("qbe_build_io.zig");
 const v = @import("qbe_build_value.zig");
 const wire = @import("native_test_wire.zig");
+const budget = @import("memory_budget");
 const Value = std.json.Value;
 const infrastructure_failure = "infrastructure-failure";
 const magic: u64 = 0x3154534554594c4d;
 /// Native test setup, validation, filesystem and child-process failures.
 pub const Error = fs.Error || wire.Error || error{ InvalidNativeTestManifest, InvalidTestLimits, WriteFailed };
-/// Execution quotas shared by guest function and declared domain codecs.
-pub const Limits = struct { max_steps: u64 = 1000000, max_frames: u64 = 1024, max_calls: u64 = 4096, timeout_ms: u32 = 60000 };
+/// Execution quotas shared by guest function and declared domain codecs. The
+/// byte ceiling is null until the command resolves the flag, the environment
+/// and the built-in default against each other; a resolved value is part of a
+/// receipt key, so raising or lowering it re-executes rather than reuses.
+pub const Limits = struct {
+    max_steps: u64 = 1000000,
+    max_frames: u64 = 1024,
+    max_calls: u64 = 4096,
+    timeout_ms: u32 = 60000,
+    max_memory: ?u64 = null,
+};
 /// One execution result; expected-value comparison never executes guest code.
 pub const Outcome = struct { status: []const u8, actual: Value = .null, diagnostics: []const u8 = "", steps: u64 = 0 };
 /// Reusable compiled harness and immutable schema for a native test library.
@@ -48,6 +58,7 @@ pub const Executor = struct {
         try self.context.write(path, try request(self.context.allocator, v.text(v.get(function, "name")), codec.nodes.items, limits));
         const result = std.process.run(self.context.allocator, self.context.io, .{
             .argv = &.{ self.executable, self.library, path },
+            .environ_map = try self.context.bounded(limits.max_memory orelse budget.test_default),
             .stdout_limit = .limited(32 * 1024 * 1024),
             .stderr_limit = .limited(1024 * 1024),
             .timeout = .{ .duration = .{ .raw = .fromMilliseconds(limits.timeout_ms), .clock = .awake } },

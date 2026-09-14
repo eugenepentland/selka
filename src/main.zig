@@ -18,8 +18,12 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "--max-codec-frames=N --max-codec-calls=N --max-codec-bytes=N --max-codec-values=N\n  " ++
     "invoke-project: --request=path.json (typed-call-v1, schema-pinned public function call; " ++
     "same codec budgets)\n  input-module: reads a typed JSON manifest and writes generated " ++
-    "module source\n  run/run-project: builds the program natively and runs it; --max-steps=N --max-frames=N --gc-stress " ++
-    "--print-result --cache-dir=DIR --qbe=PATH --zig=PATH (native objects default to .mylang-cache/qbe, shared with build)\n  " ++
+    "module source\n  run/run-project: builds the program natively and runs it; --max-steps=N --max-frames=N " ++
+    "--max-memory=BYTES --gc-stress --print-result --cache-dir=DIR --qbe=PATH --zig=PATH " ++
+    "(native objects default to .mylang-cache/qbe, shared with build)\n  " ++
+    "run/run-project: --max-memory takes K/M/G suffixes and caps the guest process's address space; " ++
+    "MYLANG_MEMORY_LIMIT names the same ceiling and MYLANG_HOST_MEMORY_LIMIT replaces the " ++
+    "compiler's own 8G ceiling (0 removes it)\n  " ++
     "run/run-project authority: every capability is granted by default; --restrict denies them " ++
     "and enables --allow-read=DIR --allow-write=DIR (repeatable) --allow-clock --allow-random[=SEED] " ++
     "--allow-env[=NAME,...] --allow-all. Under --restrict an entry point requesting an ungranted " ++
@@ -43,8 +47,15 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "  all commands: --diagnostics=text|json (stderr JSON Lines; stdout unchanged)\n" ++
     "  check-session: persistent check/clear/quit lines on stdin; JSON status on stdout; --inputs supported\n";
 
+/// Byte ceilings for guest execution, shared by every command that runs one.
+const budget = @import("memory_budget");
+
 /// Dispatch compiler commands, reporting usage/source/IO failures through process exit status.
+/// The compiler bounds its own address space first, so a compiler defect fails
+/// loudly instead of taking the machine into swap, and the `zig cc` and QBE
+/// children a native build spawns inherit that ceiling and still finish.
 pub fn main(init: std.process.Init) void {
+    _ = budget.guardHost(init.environ_map);
     const status = dispatch(init) catch |err| status: {
         var buffer: [256]u8 = undefined;
         const message = std.fmt.bufPrint(&buffer, "mylang: host failure: {s}\n", .{@errorName(err)}) catch "mylang: host failure\n";
@@ -303,12 +314,14 @@ fn executeRun(init: Context, compilation: *language.Compilation, parsed: Parsed)
 fn runNative(init: Context, parsed: Parsed, manifest: []const u8) !u8 {
     init.timings.begin("native_execution", false);
     const start = std.Io.Timestamp.now(init.io, .awake);
+    var settings = parsed.native;
+    settings.arguments = parsed.runtime[0..parsed.runtime_count];
+    settings.max_memory = parsed.max_memory;
     const status = try native_run.execute(init.gpa, .{
         .io = init.io,
         .environ = init.environ,
         .manifest = manifest,
-        .arguments = parsed.runtime[0..parsed.runtime_count],
-        .settings = parsed.native,
+        .settings = settings,
         .diagnostics = if (init.diagnostics == .json) .json else .text,
     });
     init.timings.end();
@@ -377,6 +390,7 @@ const Parsed = struct {
     runtime_count: usize,
     discovery: language.duplicates.Options,
     reporting: Reporting,
+    max_memory: ?u64,
 };
 fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (args.len < 2) return error.Usage;
@@ -435,6 +449,7 @@ const ArgumentParser = struct {
     saw_frames: bool = false,
     saw_cache: bool = false,
     gc_stress: bool = false,
+    max_memory: ?u64 = null,
     discovery: language.duplicates.Options = .{},
     reporting: Reporting = .{},
     saw_min: bool = false,
@@ -586,6 +601,9 @@ const ArgumentParser = struct {
             self.saw_frames = true;
             self.budgets.max_frames = try positive(arg["--max-frames=".len..]);
             if (self.executes()) try self.forward(arg);
+        } else if (std.mem.startsWith(u8, arg, "--max-memory=")) {
+            if (!self.executes() or self.max_memory != null) return error.Usage;
+            self.max_memory = budget.parse(arg["--max-memory=".len..]) catch return error.Usage;
         } else if (std.mem.eql(u8, arg, "--print-result")) {
             if (!self.executes() or self.reporting.print_result) return error.Usage;
             self.reporting.print_result = true;
@@ -659,6 +677,7 @@ const ArgumentParser = struct {
             .runtime_count = self.runtime_count,
             .discovery = self.discovery,
             .reporting = self.reporting,
+            .max_memory = self.max_memory,
         };
     }
 };

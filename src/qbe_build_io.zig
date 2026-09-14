@@ -127,6 +127,15 @@ pub const Context = struct {
         const right = self.read(output) catch return false;
         return std.mem.eql(u8, left, right);
     }
+    /// This process's environment with a guest byte ceiling added, for a child
+    /// that runs guest code. The runtime reads it before its first allocation,
+    /// so no spawner needs a new argument ABI to bound a guest.
+    pub fn bounded(self: Context, bytes: u64) Error!*const std.process.Environ.Map {
+        const environment = try self.allocator.create(std.process.Environ.Map);
+        environment.* = try self.environ.clone(self.allocator);
+        try environment.put(@import("memory_budget").variable, try std.fmt.allocPrint(self.allocator, "{d}", .{bytes}));
+        return environment;
+    }
     /// Capture frontend output and replay diagnostics without interpreting them.
     pub fn capture(self: Context, argv: []const []const u8) Error!std.process.RunResult {
         const result = try std.process.run(self.allocator, self.io, .{ .argv = argv });

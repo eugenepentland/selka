@@ -10,6 +10,7 @@ const v = @import("qbe_build_value.zig");
 /// Build errors include frontend transport, native tools and manifest validation.
 pub const Error = fs.Error || std.json.ParseError(std.json.Scanner) || outputs.Error ||
     @import("qbe_build_embed.zig").Error || cache_api.Error ||
+    @import("memory_budget").Error ||
     error{ UnsupportedNativeHost, ZigVersionMismatch, InvalidNativeManifest };
 const abi = "mylang-qbe-native-v3";
 const Record = struct { name: []const u8, symbol: []const u8, key: []const u8, object: []const u8, reused: bool };
@@ -121,7 +122,7 @@ fn build(context: fs.Context, parsed: options.Options) !u8 {
         const stream = if (parsed.run) std.Io.File.stderr() else std.Io.File.stdout();
         try stream.writeStreamingAll(context.io, try std.fmt.allocPrint(a, "{s}\n", .{report}));
     }
-    if (parsed.run) return spawn(context, output, parsed.arguments);
+    if (parsed.run) return spawn(context, output, parsed);
     return 0;
 }
 /// The argument vector for one built program and the options it was given.
@@ -139,9 +140,18 @@ pub fn status(term: std.process.Child.Term) u8 {
         else => 2,
     };
 }
-/// Run a built program with the arguments it was given, returning its exit status.
-pub fn spawn(context: fs.Context, output: []const u8, arguments: []const []const u8) Error!u8 {
-    var child = try std.process.spawn(context.io, .{ .argv = try command(context, output, arguments) });
+/// The byte ceiling one guest process runs under: `--max-memory` first, then
+/// `MYLANG_MEMORY_LIMIT`, then the single-guest default.
+pub fn ceiling(context: fs.Context, parsed: options.Options) Error!*const std.process.Environ.Map {
+    const budget = @import("memory_budget");
+    return context.bounded(try budget.resolve(parsed.max_memory, context.environ, budget.variable, budget.run_default));
+}
+/// Run a built program with the arguments it was given, under its byte ceiling.
+pub fn spawn(context: fs.Context, output: []const u8, parsed: options.Options) Error!u8 {
+    var child = try std.process.spawn(context.io, .{
+        .argv = try command(context, output, parsed.arguments),
+        .environ_map = try ceiling(context, parsed),
+    });
     return status(try child.wait(context.io));
 }
 /// Publish the bundled runtime tree once per content hash and reuse it afterwards.

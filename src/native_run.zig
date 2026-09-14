@@ -15,14 +15,13 @@ const bundled = @import("qbe_build_assets");
 /// Native build, tool and child-process failures raised while running a program.
 pub const Error = builder.Error;
 
-/// One native run: the emitted units, the program's own arguments, and where to build.
+/// One native run: the emitted units, and the build settings that also carry the
+/// program's own arguments and its byte ceiling.
 pub const Request = struct {
     io: std.Io,
     environ: *const std.process.Environ.Map,
     /// The `qbe-units-v1` manifest the frontend emitted for this program.
     manifest: []const u8,
-    /// Capability grants and runtime budgets, passed to the program verbatim.
-    arguments: []const []const u8,
     settings: options.Options = .{ .source = "", .run = true },
     /// `json` re-renders the runtime's trap text as `diagnostic-v1` records.
     diagnostics: Format = .text,
@@ -36,15 +35,19 @@ pub fn execute(allocator: std.mem.Allocator, request: Request) Error!u8 {
     var context = try fs.Context.init(allocator, request.io, request.environ);
     defer context.deinit();
     const path = try publish(context, request.settings, request.manifest);
-    if (request.diagnostics == .text) return builder.spawn(context, path, request.arguments);
-    return observe(context, path, request.arguments);
+    if (request.diagnostics == .text) return builder.spawn(context, path, request.settings);
+    return observe(context, path, request.settings);
 }
 
 /// Run the program with its diagnostics captured, so a trap the native runtime
 /// located can be re-rendered as JSON. Standard output still streams through.
-fn observe(context: fs.Context, path: []const u8, arguments: []const []const u8) Error!u8 {
-    const argv = try builder.command(context, path, arguments);
-    var child = try std.process.spawn(context.io, .{ .argv = argv, .stderr = .pipe });
+fn observe(context: fs.Context, path: []const u8, settings: options.Options) Error!u8 {
+    const argv = try builder.command(context, path, settings.arguments);
+    var child = try std.process.spawn(context.io, .{
+        .argv = argv,
+        .environ_map = try builder.ceiling(context, settings),
+        .stderr = .pipe,
+    });
     var buffer: [4096]u8 = undefined;
     var reader = child.stderr.?.readerStreaming(context.io, &buffer);
     const captured = reader.interface.allocRemaining(context.allocator, .limited(4 * 1024 * 1024)) catch "";

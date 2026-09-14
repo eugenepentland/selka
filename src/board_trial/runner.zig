@@ -7,7 +7,10 @@ const Kernel = @import("kernel.zig").Kernel;
 const m = @import("model.zig");
 const Row = struct { name: []const u8, guest: m.Observation, baseline: m.Observation };
 /// Read one bounded request file and emit observations; no expected answers enter this process.
+/// The host bounds its own address space first: it executes guest bytecode in
+/// this process, so a runaway guest is a runaway host.
 pub fn main(init: std.process.Init) !void {
+    _ = @import("memory_budget").guardHost(init.environ_map);
     const allocator = init.arena.allocator();
     const args = try init.minimal.args.toSlice(allocator);
     if (args.len != 4 or !std.mem.eql(u8, args[1], "--project")) {

@@ -56,3 +56,83 @@ $ printf 'hello bytes' | mylang-io --project examples/contract-echo \
 hello bytes
 {"version":"runtime-memory-v1","scope":"requested-live-bytes-excluding-source-input-and-allocator-overhead","total":{"limit":8388608,"live":0,"peak":2624},"vm":{"limit":4194304,"live":0,"peak":2624},"host":{"limit":1048576,"live":0,"peak":129},"vm_categories":{"guest_backing":{"limit":4194304,"live":0,"peak":0},"bookkeeping_and_snapshots":{"limit":4194304,"live":0,"peak":2624}}}
 ```
+
+## Guest memory ceilings
+
+The byte budgets above bound what the VM's own allocator hands out. A *ceiling*
+is coarser and applies to every process that runs guest code: the native test
+runner's children, `mylang build --run`, and a program you built and started
+yourself. It exists so one runaway guest cannot take the machine into swap.
+
+Two mechanisms enforce it. The soft one is the managed heap's byte budget: an
+allocation that would exceed it *after a collection* traps with
+`R_MEMORY_BUDGET`, "memory budget exhausted", and exit status 1, exactly like
+`R_STEP_LIMIT` bounds instructions. The hard one is the kernel's: before its
+first allocation the runtime lowers its own `RLIMIT_AS` to the budget plus 256
+MiB of headroom, so a defect in the runtime cannot outgrow the budget the heap
+is enforcing. `RLIMIT_AS` was chosen over a pre-`exec` hook because Zig's
+`std.process.Child` has none, and because a process that bounds itself is also
+bounded when you start it by hand. A tighter ceiling already in force is never
+loosened, and no ceiling is installed in a sanitizer build, whose shadow mapping
+reserves far more address space than any budget would permit.
+
+The budget travels in `MYLANG_MEMORY_LIMIT`, written as bytes with an optional
+`K`, `M` or `G` suffix, so no spawner needs a new argument ABI. Precedence is
+`--max-memory=BYTES` on `run`, `build --run` and `test` first, then the
+variable, then the built-in default: **512 MiB** for one `mylang test` child and
+**4 GiB** for `run` and `build --run`. Malformed text refuses the run rather
+than leaving it unbounded; `0` removes the ceiling. A program you built with
+`-o` and start yourself is unbounded unless the variable is exported. The
+resolved test ceiling is part of a receipt key, so raising or lowering it
+re-executes rather than reusing.
+
+The compiler bounds itself too, at 8 GiB unless `MYLANG_HOST_MEMORY_LIMIT` says
+otherwise, so a compiler defect fails loudly instead of swapping; the `zig cc`
+and QBE children a native build spawns complete under that inherited ceiling.
+
+```console
+$ cat grow.my
+def grow(values: list[int], rounds: int) -> int:
+    for r in range(rounds):
+        values.append(r)
+    return len(values)
+
+
+def main() -> int:
+    values: list[int] = []
+    return grow(values, 100000000)
+$ mylang build grow.my --run --max-memory=64M -- --max-steps=4000000000
+grow.my:3:9: error[R_MEMORY_BUDGET]: memory budget exhausted
+  in grow at grow.my:3:9
+  in main at grow.my:9:12
+$ echo $?
+1
+```
+
+A `mylang test` child reports the same trap as an ordinary failure, with the
+guest source trace, rather than dying:
+
+```console
+$ mylang test suite/main.my --max-memory=32M --max-steps=4000000
+failed main::test_runaway: R_MEMORY_BUDGET
+  in main::grow at main.my:7:9
+  in main::test_runaway at main.my:13:12
+
+0 passed, 0 cached, 1 failed, 0 skipped
+```
+
+## Fan-out bounded by memory
+
+A directory run (`mylang test suite/`) starts one child per program. Its worker
+count is the machine's core count, further limited by how many per-child
+ceilings `MemAvailable` in `/proc/meminfo` can hold — each child is counted as
+its ceiling plus the same 256 MiB of headroom. A cold fan-out on a loaded
+machine therefore waits rather than oversubscribing, and it is never fewer than
+one worker or more workers than there are programs. `--jobs N` overrides it,
+`MYLANG_JOBS` overrides the derived default, and zero or non-numeric widths are
+rejected.
+
+```console
+$ mylang test suite/ --jobs 4 --max-memory=256M
+8 passed, 0 cached, 0 failed, 0 skipped across 4 programs
+```
