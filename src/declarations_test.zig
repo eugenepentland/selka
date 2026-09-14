@@ -66,33 +66,38 @@ const Wire = struct {
     exports: []const struct { name: []const u8, bytes: Range },
     declarations: []const struct { kind: []const u8, name: []const u8, exported: bool, bytes: Range, comment_start: usize },
 };
-const Expected = struct { kind: []const u8, name: []const u8, exported: bool, text: []const u8, comment: []const u8 };
+/// `comment` defaults to `text`: a declaration with no leading comment reports its own start.
+const Expected = struct { kind: []const u8, name: []const u8, exported: bool, text: []const u8, comment: ?[]const u8 = null };
 const expected_declarations = [_]Expected{
-    .{ .kind = "alias", .name = "Count", .exported = true, .text = "type Count = i64;", .comment = "// leading comment" },
-    .{ .kind = "const", .name = "LIMIT", .exported = false, .text = "const LIMIT: Count = 3;", .comment = "const LIMIT: Count = 3;" },
+    .{ .kind = "alias", .name = "Count", .exported = true, .text = "type Count = i64", .comment = "# leading comment" },
+    .{ .kind = "const", .name = "LIMIT", .exported = false, .text = "const LIMIT: Count = 3" },
     .{ .kind = "struct", .name = "Job", .exported = false, .text =
     \\class Job:
     \\    id: Count
-    , .comment =
-    \\class Job:
-    \\    id: Count
     },
-    .{ .kind = "enum", .name = "Colour", .exported = false, .text = "enum Colour { red, green }", .comment = "enum Colour { red, green }" },
-    .{ .kind = "union", .name = "Shape", .exported = false, .text = "union Shape { dot: i64, line: i64 }", .comment = "union Shape { dot: i64, line: i64 }" },
-    .{ .kind = "result", .name = "Outcome", .exported = false, .text = "result Outcome { ok: i64, err: i64 }", .comment = "result Outcome { ok: i64, err: i64 }" },
+    .{ .kind = "enum", .name = "Colour", .exported = false, .text =
+    \\enum Colour:
+    \\    red,
+    \\    green
+    },
+    .{ .kind = "union", .name = "Shape", .exported = false, .text =
+    \\union Shape:
+    \\    dot: i64,
+    \\    line: i64
+    },
+    .{ .kind = "result", .name = "Outcome", .exported = false, .text =
+    \\result Outcome:
+    \\    ok: i64,
+    \\    err: i64
+    },
     .{ .kind = "domain", .name = "Distance", .exported = false, .text =
     \\domain Distance: i64:
     \\    def make(x: i64) -> Distance:
     \\        return wrap[Distance](x)
-    , .comment = "domain Distance" },
-    .{ .kind = "resource", .name = "Handle", .exported = false, .text = "resource Handle: filesystem;", .comment = "resource Handle: filesystem;" },
-    .{ .kind = "host_fn", .name = "measure", .exported = false, .text =
-    \\host def measure(x: i64) -> i64 effects(host)
-    , .comment = "host fn measure" },
+    },
+    .{ .kind = "resource", .name = "Handle", .exported = false, .text = "resource Handle: filesystem" },
+    .{ .kind = "host_fn", .name = "measure", .exported = false, .text = "host def measure(x: i64) -> i64 effects(host)" },
     .{ .kind = "fn", .name = "main", .exported = true, .text =
-    \\def main() -> i64:
-    \\    return LIMIT
-    , .comment =
     \\def main() -> i64:
     \\    return LIMIT
     },
@@ -113,16 +118,16 @@ fn scenario(allocator: std.mem.Allocator) !void {
     try t.expectEqualStrings("declarations-v1", wire.version);
     try t.expectEqualStrings("kinds", wire.module.?);
     try t.expectEqual(@as(usize, 0), wire.header.?.start);
-    try t.expectEqualStrings("module kinds;", kinds_module[wire.header.?.start..wire.header.?.end]);
+    try t.expectEqualStrings("module kinds", kinds_module[wire.header.?.start..wire.header.?.end]);
     try t.expectEqual(@as(usize, 2), wire.imports.len);
     try t.expectEqualStrings("math", wire.imports[0].name);
     try t.expect(wire.imports[0].alias == null);
-    try t.expectEqualStrings("import math;", kinds_module[wire.imports[0].bytes.start..wire.imports[0].bytes.end]);
+    try t.expectEqualStrings("import math", kinds_module[wire.imports[0].bytes.start..wire.imports[0].bytes.end]);
     try t.expectEqualStrings("shared.units", wire.imports[1].name);
     try t.expectEqualStrings("units", wire.imports[1].alias.?);
     try t.expectEqual(@as(usize, 2), wire.exports.len);
     try t.expectEqualStrings("Count", wire.exports[0].name);
-    try t.expectEqualStrings("export main;", kinds_module[wire.exports[1].bytes.start..wire.exports[1].bytes.end]);
+    try t.expectEqualStrings("export main", kinds_module[wire.exports[1].bytes.start..wire.exports[1].bytes.end]);
     try t.expectEqual(expected_declarations.len, wire.declarations.len);
     for (wire.declarations, expected_declarations) |listed, expected| {
         try t.expectEqualStrings(expected.kind, listed.kind);
@@ -130,7 +135,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
         try t.expectEqual(expected.exported, listed.exported);
         try t.expectEqual(std.mem.indexOf(u8, kinds_module, expected.text).?, listed.bytes.start);
         try t.expectEqualStrings(expected.text, kinds_module[listed.bytes.start..listed.bytes.end]);
-        try t.expectEqual(std.mem.indexOf(u8, kinds_module, expected.comment).?, listed.comment_start);
+        try t.expectEqual(std.mem.indexOf(u8, kinds_module, expected.comment orelse expected.text).?, listed.comment_start);
     }
 }
 
@@ -171,8 +176,14 @@ test "declaration listing parses without checking and rejects unresolved exports
         \\def main() -> i64:
         \\    return 0
         , .code = "E_DUPLICATE_EXPORT" },
-        .{ .text = "fn main() -> i64 { return 1 + ; }", .code = "E_EXPRESSION" },
-        .{ .text = "module m; fn broken( ;", .code = "E_SYNTAX" },
+        .{ .text =
+        \\def main() -> i64:
+        \\    return 1 +
+        , .code = "E_EXPRESSION" },
+        .{ .text =
+        \\module m
+        \\def broken(
+        , .code = "E_SYNTAX" },
     };
     for (cases) |case| {
         var compilation = try language.Compilation.init(t.allocator, "invalid.my", case.text);

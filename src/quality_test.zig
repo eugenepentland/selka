@@ -127,7 +127,7 @@ test "explicit quality roots validate bounds and tolerate duplicate or empty roo
 }
 
 fn writeCallChain(output: *std.Io.Writer.Allocating) !void {
-    for (0..2000) |i| try output.writer.print("fn f{d}() -> i64 {{ return f{d}(); }}\n", .{ i, i + 1 });
+    for (0..2000) |i| try output.writer.print("def f{d}() -> i64:\n    return f{d}()\n\n\n", .{ i, i + 1 });
     try output.writer.writeAll(
         \\def f2000() -> i64:
         \\    return 7
@@ -159,15 +159,16 @@ test "structural metrics count branches loops short circuits nesting and physica
     var result = try quality.analyze(t.allocator, c.program.?, c.src, .{ .max_nesting = 1, .max_decisions = 3, .max_parameters = 1, .max_function_lines = 7 });
     defer result.deinit();
     const metrics = result.functions[try index(&c, "work")];
-    try t.expectEqual(@as(usize, 8), metrics.structure.lines);
+    // A suite closes at the dedent, so the blank lines before the next declaration are counted too.
+    try t.expectEqual(@as(usize, 10), metrics.structure.lines);
     try t.expectEqual(@as(usize, 2), metrics.structure.parameters);
     try t.expectEqual(@as(usize, 2), metrics.structure.nesting);
     try t.expectEqual(@as(usize, 4), metrics.structure.decisions);
-    try t.expectEqual(@as(usize, "fn work(x: i64, flag: bool) -> i64 {".len), metrics.structure.longest_line);
+    try t.expectEqual(@as(usize, "def work(x: i64, flag: bool) -> i64:".len), metrics.structure.longest_line);
     const first = try quality.render(t.allocator, result, c.program.?, c.src);
     defer t.allocator.free(first);
     const second = try quality.render(t.allocator, result, c.program.?, c.src);
     defer t.allocator.free(second);
     try t.expectEqualStrings(first, second);
-    for ([_][]const u8{ "function-lines 8 exceeds", "parameters 2 exceeds", "control-nesting 2 exceeds", "decision-points 4 exceeds" }) |part| try t.expect(std.mem.indexOf(u8, first, part) != null);
+    for ([_][]const u8{ "function-lines 10 exceeds", "parameters 2 exceeds", "control-nesting 2 exceeds", "decision-points 4 exceeds" }) |part| try t.expect(std.mem.indexOf(u8, first, part) != null);
 }

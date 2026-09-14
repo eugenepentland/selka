@@ -30,14 +30,14 @@ fn largeProject(allocator: std.mem.Allocator) ![]File {
     for (entries[1..], imports, calls, 0..) |*entry, *import_, *call, i| {
         entry.* = .{
             .path = try std.fmt.allocPrint(allocator, "m{d}.my", .{i}),
-            .bytes = try std.fmt.allocPrint(allocator, "module m{d};export value;fn value()->i64{{return 1;}}", .{i}),
+            .bytes = try std.fmt.allocPrint(allocator, "module m{d}\nexport value\n\n\ndef value() -> i64:\n    return 1\n", .{i}),
         };
-        import_.* = try std.fmt.allocPrint(allocator, "import m{d};", .{i});
-        call.* = try std.fmt.allocPrint(allocator, "m{d}::value()", .{i});
+        import_.* = try std.fmt.allocPrint(allocator, "import m{d}\n", .{i});
+        call.* = try std.fmt.allocPrint(allocator, "m{d}.value()", .{i});
     }
     entries[0] = .{
         .path = "main.my",
-        .bytes = try std.fmt.allocPrint(allocator, "module main;{s}fn main()->i64{{return {s};}}", .{ try std.mem.join(allocator, "", imports), try std.mem.join(allocator, "+", calls) }),
+        .bytes = try std.fmt.allocPrint(allocator, "module main\n{s}\n\ndef main() -> i64:\n    return {s}\n", .{ try std.mem.join(allocator, "", imports), try std.mem.join(allocator, "+", calls) }),
     };
     return entries;
 }

@@ -38,7 +38,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
     try load(&project, &files);
     const warnings = cache.lookup(&project).?;
     try t.expect(std.mem.indexOf(u8, warnings, "W_UNUSED_BINDING") != null);
-    try t.expect(std.mem.indexOf(u8, warnings, "main.my:1:") != null);
+    try t.expect(std.mem.indexOf(u8, warnings, "main.my:5:") != null);
     const original = project.modules.items[0].src.path;
     project.modules.items[0].src.path = "renamed.my";
     try t.expect(cache.lookup(&project) == null);
