@@ -490,8 +490,13 @@ pub const Parser = struct {
             if (self.current().tag == .eof) return self.sink.fail(syntax_code, self.current().span, "block is not closed before the end of the file");
             try statements.append(self.arena.allocator(), try self.statement());
         }
-        const close = try self.expect(.dedent);
-        return self.addStatement(.{ .span = .join(open.span, close.span), .data = .{ .block = try statements.toOwnedSlice(self.arena.allocator()) } });
+        _ = try self.expect(.dedent);
+        // A dedent stands at the next declaration, so the blank lines and comments
+        // between two suites belong to neither; a suite ends where its last token did.
+        var written = self.cursor.pos;
+        while (written > 1 and self.tokens[written - 1].span.start == self.tokens[written - 1].span.end) written -= 1;
+        const close = self.tokens[written - 1].span;
+        return self.addStatement(.{ .span = .join(open.span, close), .data = .{ .block = try statements.toOwnedSlice(self.arena.allocator()) } });
     }
     /// One `with` form covers both resource kinds: `with arena()` opens a managed
     /// region, and any other expression must produce an open file handle.

@@ -159,8 +159,7 @@ test "structural metrics count branches loops short circuits nesting and physica
     var result = try quality.analyze(t.allocator, c.program.?, c.src, .{ .max_nesting = 1, .max_decisions = 3, .max_parameters = 1, .max_function_lines = 7 });
     defer result.deinit();
     const metrics = result.functions[try index(&c, "work")];
-    // A suite closes at the dedent, so the blank lines before the next declaration are counted too.
-    try t.expectEqual(@as(usize, 10), metrics.structure.lines);
+    try t.expectEqual(@as(usize, 8), metrics.structure.lines);
     try t.expectEqual(@as(usize, 2), metrics.structure.parameters);
     try t.expectEqual(@as(usize, 2), metrics.structure.nesting);
     try t.expectEqual(@as(usize, 4), metrics.structure.decisions);
@@ -170,5 +169,5 @@ test "structural metrics count branches loops short circuits nesting and physica
     const second = try quality.render(t.allocator, result, c.program.?, c.src);
     defer t.allocator.free(second);
     try t.expectEqualStrings(first, second);
-    for ([_][]const u8{ "function-lines 10 exceeds", "parameters 2 exceeds", "control-nesting 2 exceeds", "decision-points 4 exceeds" }) |part| try t.expect(std.mem.indexOf(u8, first, part) != null);
+    for ([_][]const u8{ "function-lines 8 exceeds", "parameters 2 exceeds", "control-nesting 2 exceeds", "decision-points 4 exceeds" }) |part| try t.expect(std.mem.indexOf(u8, first, part) != null);
 }

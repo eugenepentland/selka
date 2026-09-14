@@ -822,7 +822,7 @@ test "CLI module quality reports preserve export roots and advisory thresholds" 
     defer testing.allocator.free(result.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
     try testing.expectEqualStrings("", result.stderr);
-    for ([_][]const u8{ "quality-modules-v1", "api.my:5:", "api::entry; private=false; reachable-from-main=false", "module-exported=true reachable-from-exports=true", "module-exported=false reachable-from-exports=true", "function-lines 4 exceeds configured 1", "calls api::hidden at api.my:6:", "Runtime coverage and assertions: not measured" }) |part| try testing.expect(std.mem.indexOf(u8, result.stdout, part) != null);
+    for ([_][]const u8{ "quality-modules-v1", "api.my:5:", "api::entry; private=false; reachable-from-main=false", "module-exported=true reachable-from-exports=true", "module-exported=false reachable-from-exports=true", "function-lines 2 exceeds configured 1", "calls api::hidden at api.my:6:", "Runtime coverage and assertions: not measured" }) |part| try testing.expect(std.mem.indexOf(u8, result.stdout, part) != null);
     try testing.expect(std.mem.indexOf(u8, result.stdout, "no call path from main or exported interfaces") == null);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "api.my", .data =
         \\module api
