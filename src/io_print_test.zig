@@ -126,7 +126,10 @@ test "IO-6 the native backend lowers print through generated per-type renderers"
         \\    x: int
         \\    y: float
         \\
-        \\enum Colour { red, green }
+        \\enum Colour:
+        \\    red,
+        \\    green
+        \\
         \\
         \\def main() -> int:
         \\    rows: dict[str, list[bytes]] = {"a": [b"\\x00"]}
