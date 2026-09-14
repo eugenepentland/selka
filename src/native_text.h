@@ -2,6 +2,11 @@
 #define MYLANG_NATIVE_TEXT_H
 #include "native_collections.h"
 typedef myl_native_list myl_native_text;
+/* The one-scalar element descriptor every `str` value shares. */
+extern const myl_native_type myl_native_text_point;
+/* Fresh text holding `count` scalars starting at `start`, with `input` rooted
+ * across the allocation. NULL once the allocation budget is exhausted. */
+myl_native_text *myl_native_text_copy(myl_native_heap *, myl_native_text *, size_t start, size_t count);
 myl_native_text *myl_native_text_from_utf8(myl_native_heap *, const unsigned char *, size_t);
 myl_native_text *myl_native_text_concat(myl_native_heap *, myl_native_text *, myl_native_text *);
 myl_native_text *myl_native_text_at(myl_native_heap *, myl_native_text *, int64_t);

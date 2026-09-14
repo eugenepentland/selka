@@ -1,10 +1,27 @@
-//! Native scalar-to-text formatting shares the VM's canonical Zig formatter.
+//! Native scalar-to-text formatting and text-to-number parsing share the VM's
+//! canonical Zig implementations, so `str(value)`, `int(text)` and `float(text)`
+//! cannot answer differently on the two backends.
 const std = @import("std");
 const builtin = @import("builtin");
+const number_text = @import("number_text.zig");
 const Kind = enum { signed, unsigned, boolean, unit, floating };
 const FormatError = error{NoSpaceLeft};
 comptime {
     if (!builtin.is_test) @export(&scalarC, .{ .name = "myl_native_text_scalar" });
+    if (!builtin.is_test) @export(&numberC, .{ .name = "myl_native_number_parse" });
+}
+/// Parse Unicode scalars under the pinned grammar, publishing the value's bits
+/// and answering 1 for a number or 0 for text that is not exactly one.
+fn numberC(points: ?[*]const u32, count: usize, floating: c_uint, output: *u64) callconv(.c) c_uint {
+    const scalars: []const u32 = if (points) |found| found[0..count] else &.{};
+    if (floating != 0) {
+        const value = number_text.floating(scalars) orelse return 0;
+        output.* = @bitCast(value);
+        return 1;
+    }
+    const value = number_text.integer(scalars) orelse return 0;
+    output.* = @bitCast(value);
+    return 1;
 }
 extern fn myl_native_text_from_utf8(heap: *anyopaque, bytes: [*]const u8, length: usize) ?*anyopaque;
 fn scalarC(heap: *anyopaque, bits: u64, kind: c_uint) callconv(.c) ?*anyopaque {

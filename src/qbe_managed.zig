@@ -10,6 +10,7 @@ const allocation_failure = @import("qbe_format.zig").allocation_failure;
 const bounds_failure = "myl_qbe_fail_list_bounds";
 const load_word = @import("qbe_format.zig").load_word;
 const bytes_lower = @import("qbe_bytes.zig");
+const text_lower = @import("qbe_text.zig");
 const arena_lower = @import("qbe_arena.zig");
 const dictionary_write = " %v{d} =w call $myl_native_dictionary_write(l %heap, l %v{d}, l %v{d}, l %v{d})\n";
 /// Bind managed lowering to the concrete emitter without dependency cycles.
@@ -275,7 +276,8 @@ fn textOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try boolean(E, self, result, base);
         },
         .encode, .from_hex => return bytes_lower.Lower(E).textual(self, op, stack),
-        else => return self.reject(self.pc),
+        // The Python string methods and the number grammar lower on their own.
+        else => return text_lower.Lower(E).operation(self, op, stack),
     }
 }
 fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const typed.Type) Error!void {

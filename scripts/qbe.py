@@ -217,7 +217,8 @@ def main():
                          'native_regions.h', 'native_regions.c', 'qbe_arena.h', 'qbe_arena.c',
                          'native_print.h', 'native_print.c', 'qbe_io.h', 'qbe_io.c',
                          'native_scoped.h', 'native_scoped.c', 'qbe_grants.h', 'qbe_grants.c',
-                         'qbe_files.h', 'qbe_files.c']},
+                         'qbe_files.h', 'qbe_files.c',
+                         'native_text_methods.h', 'native_text_methods.c']},
         }
         cache = args.cache_dir.resolve()
         cache.mkdir(parents=True, exist_ok=True)
@@ -243,7 +244,7 @@ def main():
         runtime_obj, runtime_reused = cached_object(cache, runtime_key,
             lambda temporary, candidate: run([zig, 'cc', *flags, '-c', runtime, '-o', candidate]))
         objects.append(runtime_obj)
-        for support in ['native_heap', 'native_collections', 'native_text', 'native_dictionary', 'qbe_stack', 'qbe_providers', 'qbe_resources', 'native_equal', 'native_bytes', 'qbe_bytes', 'native_regions', 'qbe_arena', 'native_print', 'qbe_io', 'native_scoped', 'qbe_grants', 'qbe_files']:
+        for support in ['native_heap', 'native_collections', 'native_text', 'native_dictionary', 'qbe_stack', 'qbe_providers', 'qbe_resources', 'native_equal', 'native_bytes', 'qbe_bytes', 'native_regions', 'qbe_arena', 'native_print', 'qbe_io', 'native_scoped', 'qbe_grants', 'qbe_files', 'native_text_methods']:
             support_key = key_for({'environment': environment, 'kind': support})
             support_obj, _ = cached_object(cache, support_key,
                 lambda temporary, candidate, support=support: run([zig, 'cc', *flags, '-c', ROOT / 'src' / (support+'.c'), '-o', candidate]))
@@ -258,7 +259,8 @@ def main():
         objects.append(metadata_obj)
         if value.get('text_format'):
             format_key = key_for({'environment': environment,
-                                  'format': digest_file(ROOT / 'src/native_format.zig')})
+                                  'format': digest_file(ROOT / 'src/native_format.zig'),
+                                  'grammar': digest_file(ROOT / 'src/number_text.zig')})
             format_obj, _ = cached_object(cache, format_key,
                 lambda temporary, candidate: run([zig, 'build-obj', ROOT / 'src/native_format.zig',
                     '-fPIC', '-O', args.mode, '-femit-bin=' + str(candidate)]))

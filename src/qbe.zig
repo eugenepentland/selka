@@ -55,9 +55,7 @@ pub fn generateWithInterface(allocator: std.mem.Allocator, program: bytecode.Pro
     const codecs = @import("qbe_codecs.zig").describe(a, program, &layouts) catch |err| return layoutError(err);
     var text_format = false;
     for (program.functions) |function| for (function.scope.instructions) |instruction| {
-        if (instruction.op != .cast_integer) continue;
-        const target = instruction.op.cast_integer;
-        if (target.isAggregate() and program.records[target.recordIndex()].collection.kind == .string) text_format = true;
+        if (needsTextRuntime(program, instruction.op)) text_format = true;
     };
     const host = @import("qbe_host.zig").describe(a, program, &layouts) catch |err| return layoutError(err);
     return std.json.Stringify.valueAlloc(allocator, .{
@@ -73,6 +71,16 @@ pub fn generateWithInterface(allocator: std.mem.Allocator, program: bytecode.Pro
         .functions = units,
         .entry = units[@backingInt(program.main)].symbol,
     }, .{});
+}
+
+/// Whether one operation needs the shared Zig text runtime unit: `str(value)`
+/// formatting, or the pinned `int(text)` and `float(text)` grammar.
+fn needsTextRuntime(program: bytecode.Program, op: @FieldType(bytecode.Instruction, "op")) bool {
+    switch (op) {
+        .cast_integer => |target| return target.isAggregate() and program.records[target.recordIndex()].collection.kind == .string,
+        .buffer_operation => |operation| return operation.kind == .parse_int or operation.kind == .parse_float,
+        else => return false,
+    }
 }
 
 fn symbol(a: std.mem.Allocator, name: []const u8) ![]const u8 {
