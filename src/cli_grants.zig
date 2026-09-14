@@ -4,8 +4,6 @@
 //! anything or can an entry point be refused for lack of a grant.
 const std = @import("std");
 const language = @import("mylang");
-const providers = @import("cli_providers.zig");
-const scoped = language.scoped_providers;
 
 /// Most directory grants one command line may carry.
 pub const max_directories = 8;
@@ -80,11 +78,6 @@ pub const Config = struct {
         self.count += 1;
         return true;
     }
-    /// Whether any granted directory permits writing, creating or removing entries.
-    pub fn anyWritable(self: Config) bool {
-        for (self.directories[0..self.count]) |entry| if (entry.writable) return true;
-        return false;
-    }
 };
 
 /// The flag that would grant one capability an entry point asked for.
@@ -116,64 +109,3 @@ pub fn ungranted(program: language.bytecode.Program, config: Config) ?[]const u8
     }
     return null;
 }
-
-/// Stable provider storage; deinitialize only after the VM releases its stores.
-pub const State = struct {
-    context: scoped.Context,
-    roots: [max_directories]scoped.Root = @splat(.{ .dir = undefined, .writable = false }),
-    clock: providers.Clock,
-    entropy: providers.Entropy,
-    environment: providers.Environment,
-    config: Config,
-
-    /// Open every granted directory; no guest file is acquired here. The default
-    /// mode opens nothing: one direct root over the working directory resolves
-    /// relative paths against it and lets absolute paths name themselves.
-    pub fn init(self: *State, allocator: std.mem.Allocator, io: std.Io, request: Request) std.Io.Dir.OpenError!void {
-        self.* = .{
-            .context = .{ .allocator = allocator, .io = io },
-            .clock = .{ .io = io },
-            .entropy = .init(io, if (request.config.entropy) |seed| seed else null),
-            .environment = .{ .environ = request.environ, .names = request.config.environment orelse "" },
-            .config = request.config,
-        };
-        if (!request.config.restricted) {
-            self.roots[0] = .{ .dir = .cwd(), .writable = true, .direct = true };
-            self.context.roots = self.roots[0..1];
-            return;
-        }
-        var opened: usize = 0;
-        errdefer for (self.roots[0..opened]) |root| root.dir.close(io);
-        while (opened < request.config.count) : (opened += 1) {
-            const entry = request.config.directories[opened];
-            self.roots[opened] = .{ .dir = try std.Io.Dir.cwd().openDir(io, entry.path, .{}), .writable = entry.writable };
-        }
-        self.context.roots = self.roots[0..opened];
-    }
-    /// Close acquired resources before the directory grants they borrow. The
-    /// default mode borrows the working directory and opened nothing to close.
-    pub fn deinit(self: *State) void {
-        self.context.deinit();
-        if (self.config.restricted) for (self.context.roots) |root| root.dir.close(self.context.io);
-        self.context.roots = &.{};
-    }
-    /// Apply the granted authority to execution options, leaving budgets unchanged.
-    /// Write authority always implies read authority, so a default or write grant
-    /// can never be narrower than a read grant.
-    pub fn apply(self: *State, base: language.vm.Options) language.vm.Options {
-        const writable = !self.config.restricted or self.config.anyWritable();
-        var options = base;
-        options.resources = .{
-            .filesystem = if (self.context.roots.len != 0) self.context.filesystem() else null,
-            // Resource mask bits are read=1, write=2, complete=4.
-            .filesystem_permissions = if (writable) 7 else 5,
-        };
-        if (!self.config.restricted or self.config.clock) options.external.clock = self.clock.provider();
-        if (!self.config.restricted or self.config.entropy != null) options.external.random = self.entropy.provider();
-        if (!self.config.restricted or self.config.environment != null) options.environment = self.environment.provider();
-        return options;
-    }
-};
-
-/// Borrowed grant configuration and the host environment it may expose.
-pub const Request = struct { config: Config, environ: *const std.process.Environ.Map };
