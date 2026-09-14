@@ -137,7 +137,7 @@ fn runSource(source: []const u8, expected: i64) !void {
     const language = @import("compiler.zig");
     var compilation = try language.Compilation.init(t.allocator, "managed-values.my", source);
     defer compilation.deinit();
-    const result = compilation.execute(t.allocator) catch |err| {
+    const result = @import("native_execute.zig").run(&compilation) catch |err| {
         for (compilation.diagnostics.items) |diag| debug("{s}: {s} ({s})\n", .{ diag.code, diag.message, compilation.src.text(diag.span) });
         return err;
     };

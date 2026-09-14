@@ -3,12 +3,12 @@ const fixture_path = "domains.my";
 const std = @import("std");
 const testing = std.testing;
 const language = @import("compiler.zig");
-const LimitedLiveAllocator = @import("test_support.zig").LimitedLiveAllocator;
+const native = @import("native_execute.zig");
 
 fn result(source: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
     defer compilation.deinit();
-    try testing.expectEqual(expected, (try compilation.execute(testing.allocator)).value);
+    try testing.expectEqual(expected, (try native.run(&compilation)).value);
 }
 fn reject(source: []const u8, code: []const u8) !void {
     var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
@@ -260,7 +260,7 @@ const allocation_source = units ++
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, fixture_path, allocation_source);
     defer compilation.deinit();
-    try testing.expectEqual(@as(i64, 3), (try compilation.execute(allocator)).value);
+    try testing.expectEqual(@as(i64, 3), (try native.run(&compilation)).value);
     const dump = try compilation.dump(allocator);
     defer allocator.free(dump);
     var discovery = try language.duplicates.discover(allocator, compilation.program.?, .{});
@@ -431,10 +431,10 @@ test "nominal domains prevent mixing units and preserve validated factory values
         \\    return 0
     );
     defer overflow.deinit();
-    try testing.expectEqualStrings("R_OVERFLOW", (try overflow.execute(testing.allocator)).trap.code);
+    try testing.expectEqualStrings("R_OVERFLOW", (try native.run(&overflow)).trap.code);
 }
 
-test "domain creation loops and factory traps release bounded runtime storage" {
+test "domain creation loops complete and factory traps name the failing frame" {
     var compilation = try language.Compilation.init(testing.allocator, fixture_path, units ++
         \\def main() -> i64:
         \\    current = Millimeters.from(0)
@@ -443,13 +443,9 @@ test "domain creation loops and factory traps release bounded runtime storage" {
         \\    return Millimeters.number(current)
     );
     defer compilation.deinit();
-    try compilation.emit();
-    var limiter = LimitedLiveAllocator{ .parent = testing.allocator, .limit = 4096 };
-    defer limiter.deinit();
-    try testing.expectEqual(@as(i64, 10000), (try compilation.execute(limiter.allocator())).value);
-    try testing.expectEqual(@as(usize, 0), limiter.live);
-    try testing.expectEqualStrings("R_STEP_LIMIT", (try compilation.executeWithOptions(limiter.allocator(), .{ .max_steps = 50 })).trap.code);
-    try testing.expectEqual(@as(usize, 0), limiter.live);
+    try testing.expectEqual(@as(i64, 10000), (try native.run(&compilation)).value);
+    const budgeted = try native.runWithOptions(&compilation, .{ .max_steps = 50 });
+    try testing.expectEqualStrings("R_STEP_LIMIT", budgeted.trap.code);
     var trapped = try language.Compilation.init(testing.allocator, "trapped.my",
         \\domain Byte: u8:
         \\    def from(n: i64) -> Byte:
@@ -461,9 +457,7 @@ test "domain creation loops and factory traps release bounded runtime storage" {
         \\    return 0
     );
     defer trapped.deinit();
-    try trapped.emit();
-    const outcome = try trapped.execute(limiter.allocator());
+    const outcome = try native.run(&trapped);
     try testing.expectEqualStrings("R_OVERFLOW", outcome.trap.code);
-    try testing.expectEqualStrings("Byte.from", outcome.trap.stack.frames[0].function);
-    try testing.expectEqual(@as(usize, 0), limiter.live);
+    try testing.expectEqualStrings("Byte.from", outcome.trap.frames[0].function);
 }

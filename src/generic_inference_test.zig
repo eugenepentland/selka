@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const text =
     \\def id[T](value: T) -> T:
     \\    return value
@@ -27,7 +28,7 @@ const text =
 fn scenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "inference.my", text);
     defer compilation.deinit();
-    try t.expectEqual(@as(i64, 28), (try compilation.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 28), (try native.run(&compilation)).value);
     try t.expectEqual(@as(usize, 8), compilation.program.?.functions.len);
 }
 // spec: GENERIC-INFERENCE-1
@@ -39,7 +40,7 @@ test "generic inferCall allocation failures preserve widths forwarding recursion
 fn run(text_input: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(t.allocator, "shapes.my", text_input);
     defer compilation.deinit();
-    const result = try compilation.execute(t.allocator);
+    const result = try native.run(&compilation);
     try t.expectEqual(expected, result.value);
 }
 test "generic inference follows arrays nominal applications const lengths and callbacks" {
@@ -130,7 +131,7 @@ test "generic inference keeps module relocation and formatter source identity" {
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
     try compilation.emit();
-    try t.expectEqual(@as(i64, 7), (try language.vm.run(t.allocator, compilation.code.?)).value);
+    try t.expectEqual(@as(i64, 7), (try native.run(&compilation)).value);
     var source_compilation = try language.Compilation.init(t.allocator, "format.my", text);
     defer source_compilation.deinit();
     const formatted = try source_compilation.format(t.allocator);

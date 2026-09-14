@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 
 fn faults(allocator: std.mem.Allocator) !void {
     const text =
@@ -28,7 +29,7 @@ fn faults(allocator: std.mem.Allocator) !void {
         try t.expectEqualStrings(name, compilation.src.text(item.span));
         try t.expectEqual(std.mem.indexOf(u8, text, name).?, item.span.start);
     }
-    try t.expectError(error.SourceError, compilation.execute(allocator));
+    try t.expectError(error.SourceError, native.run(&compilation));
     try t.expect(compilation.program == null and compilation.code == null);
     try t.expectEqual(@as(usize, 2), compilation.diagnostics.items.len);
     for ([_][]const u8{ "missing_first", "missing_second" }) |repair| {

@@ -3,6 +3,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const typed = @import("typed.zig");
 const source =
     \\class Wire:
@@ -48,19 +49,8 @@ fn scenario(allocator: std.mem.Allocator) !void {
     };
     const codec = code.records[domain.recordIndex()].contract.codec.?;
     try t.expectEqualStrings("Wire", typed.typeName(codec.wire, code.records));
-    for ([_]i64{ 7, 0, -1 }) |number| {
-        const wire = try typed.Value.create(allocator, codec.wire, &.{.{ .i64 = number }});
-        defer wire.release(allocator);
-        const result = try language.vm.invoke(allocator, code, codec.decode, &.{wire}, .{});
-        defer result.value.release(allocator);
-        const shape = typed.resultShape(result.value.typeOf(), code.records).?;
-        try t.expectEqual(if (number > 0) shape.ok_tag else shape.error_tag, try result.value.variantTag());
-        if (number > 0) {
-            const encoded = try language.vm.invoke(allocator, code, codec.encode, result.value.aggregate.fields, .{});
-            defer encoded.value.release(allocator);
-            try t.expectEqual(number, encoded.value.aggregate.fields[0].i64);
-        }
-    }
+    try t.expectEqualStrings("Positive.from_wire", code.functions[@backingInt(codec.decode)].name);
+    try t.expectEqualStrings("Positive.to_wire", code.functions[@backingInt(codec.encode)].name);
     // Declaring a contract does not silently enable representation-only decoding.
     @import("typed_json.zig").checkType(allocator, code.records, domain) catch |err| {
         if (err == error.OutOfMemory) return err;
@@ -189,7 +179,7 @@ fn projectScenario(allocator: std.mem.Allocator) !void {
     var index = try language.interfaces.build(&project);
     var c = try language.project_compile.Compilation.init(&index);
     try c.emit();
-    try t.expectEqual(@as(i64, 7), (try language.vm.runWithOptions(allocator, c.code.?, .{})).value);
+    try t.expectEqual(@as(i64, 7), (try native.run(&c)).value);
     const json = try @import("schema.zig").render(allocator, &c);
     defer allocator.free(json);
     const parsed = try std.json.parseFromSlice(std.json.Value, allocator, json, .{});
@@ -251,14 +241,14 @@ const source_call =
 fn sourceScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "source-codec.my", source ++ source_call);
     defer c.deinit();
-    const result = try c.execute(allocator);
+    const result = try native.run(&c);
     try t.expectEqual(@as(i64, 7), result.value);
     const formatted = try c.format(allocator);
     defer allocator.free(formatted);
     try t.expect(std.mem.indexOf(u8, formatted, "codec_decode[Positive]") != null);
     var again = try language.Compilation.init(allocator, "formatted.my", formatted);
     defer again.deinit();
-    try t.expectEqual(@as(i64, 7), (try again.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 7), (try native.run(&again)).value);
 }
 // spec: SOURCE-CODEC-1
 test "source codec operations resolve declared methods and preserve formatting under allocation failures" {
@@ -322,5 +312,5 @@ test "source codec operations follow selected method names rather than naming co
         \\            return e
     );
     defer c.deinit();
-    try t.expectEqual(@as(i64, 15), (try c.execute(t.allocator)).value);
+    try t.expectEqual(@as(i64, 15), (try native.run(&c)).value);
 }

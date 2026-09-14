@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const File = language.embedded_project.File;
 const Files = struct {
     entries: []File,
@@ -20,7 +21,7 @@ fn outcome(files: *Files, cache: *language.syntax_cache.Cache) ![]u8 {
         if (err != error.SourceError) return err;
         return std.fmt.allocPrint(t.allocator, "diagnostic:{s}", .{compilation.diagnostics.items.items[0].code});
     };
-    const result = try language.vm.run(t.allocator, compilation.code.?);
+    const result = try native.run(&compilation);
     return std.fmt.allocPrint(t.allocator, "value:{d}", .{result.value});
 }
 fn largeProject(allocator: std.mem.Allocator) ![]File {

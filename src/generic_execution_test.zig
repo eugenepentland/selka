@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const text =
     \\def id[T](x: T) -> T:
     \\    return x
@@ -27,7 +28,7 @@ const text =
 fn scenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "specialized.my", text);
     defer compilation.deinit();
-    try t.expectEqual(@as(i64, 28), (try compilation.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 28), (try native.run(&compilation)).value);
     // main plus two forward, two sum, and three id specializations.
     try t.expectEqual(@as(usize, 8), compilation.program.?.functions.len);
 }
@@ -57,7 +58,7 @@ test "generic execution preserves nominal values through copy contracts" {
         \\    return a.x + b.x
     );
     defer compilation.deinit();
-    try t.expectEqual(@as(i64, 7), (try compilation.execute(t.allocator)).value);
+    try t.expectEqual(@as(i64, 7), (try native.run(&compilation)).value);
     try t.expectEqual(@as(usize, 3), compilation.program.?.functions.len);
     try t.expectEqualStrings("id[A]", compilation.program.?.functions[1].name);
     try t.expectEqualStrings("id[B]", compilation.program.?.functions[2].name);
@@ -137,11 +138,11 @@ test "generic diagnostics retain instantiated names in runtime traces" {
         \\    return i64(forward[u8](1u8))
     );
     defer compilation.deinit();
-    const result = try compilation.execute(t.allocator);
+    const result = try native.run(&compilation);
     try t.expectEqualStrings("R_DIVISION_BY_ZERO", result.trap.code);
-    try t.expectEqual(@as(usize, 3), result.trap.stack.len);
-    try t.expectEqualStrings("divide[u8]", result.trap.stack.frames[0].function);
-    try t.expectEqualStrings("forward[u8]", result.trap.stack.frames[1].function);
+    try t.expectEqual(@as(usize, 3), result.trap.frames.len);
+    try t.expectEqualStrings("divide[u8]", result.trap.frames[0].function);
+    try t.expectEqualStrings("forward[u8]", result.trap.frames[1].function);
 }
 
 test "generic execution rejects concrete requirement and arity violations" {

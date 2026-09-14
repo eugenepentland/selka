@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const debug = std.debug;
 const File = language.embedded_project.File;
 const Files = struct {
@@ -79,7 +80,7 @@ fn scenario(allocator: std.mem.Allocator, main: []const u8, expected_error: ?[]c
         return err;
     };
     try t.expect(expected_error == null);
-    try t.expectEqual(@as(i64, 42), (try language.vm.run(allocator, compilation.code.?)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&compilation)).value);
 }
 const header = "module main\nimport library.api as api\n";
 const dotted = header ++

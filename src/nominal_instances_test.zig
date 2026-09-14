@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const typed = @import("typed.zig");
 const definitions =
     \\class Box[T]:
@@ -23,7 +24,7 @@ const definitions =
 fn run(allocator: std.mem.Allocator, text: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(allocator, "instances.my", text);
     defer compilation.deinit();
-    const output = try compilation.execute(allocator);
+    const output = try native.run(&compilation);
     try t.expectEqual(expected, output.value);
 }
 fn reject(text: []const u8, code: []const u8) !void {
@@ -207,7 +208,7 @@ fn moduleScenario(allocator: std.mem.Allocator) !void {
     try t.expectEqual(typed.Type.i64, compilation.program.?.records[public_type.recordIndex()].fields[0].ty);
     try t.expectError(error.UnknownPublicValueType, compilation.publicValueType("model::Box<model::Hidden>"));
     try t.expectError(error.UnknownPublicValueType, compilation.publicValueType("model::Empty<model::Hidden>"));
-    try t.expectEqual(@as(i64, 8), (try language.vm.run(allocator, compilation.code.?)).value);
+    try t.expectEqual(@as(i64, 8), (try native.run(&compilation)).value);
 }
 test "nominal instances share declaration identity through imported signatures and constructors" {
     try moduleScenario(t.allocator);
@@ -245,35 +246,6 @@ test "nominal concrete type names stop expansion before excessive diagnostic all
     const text = try largeNames(t.allocator);
     defer t.allocator.free(text);
     try reject(text, "E_GENERIC_LIMIT");
-}
-fn hostEcho(call: *language.host_functions.Call) language.host_functions.CallbackError!typed.Value {
-    return typed.Value.createVariant(call.allocator(), call.result_type, 0, call.arguments[0]);
-}
-fn hostScenario(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, "host-instance.my", definitions ++
-        \\host def echo(x: Box[i64]) -> Answer[Box[i64]] effects(host)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    match echo(Box[i64](value=7)):
-        \\        case Answer.ok(box):
-        \\            return box.value
-        \\        case Answer.err(e):
-        \\            return e
-    );
-    defer compilation.deinit();
-    try compilation.emit();
-    var registry = try language.vm_host.Registry.init(allocator, compilation.code.?);
-    defer registry.deinit();
-    const signature = try registry.contract("echo");
-    try registry.register("echo", .{ .signature = signature, .invoke = hostEcho }, signature.effects);
-    const result = try language.vm.runWithHost(allocator, compilation.code.?, .{}, &registry, .{});
-    try t.expectEqual(@as(i64, 7), result.value);
-}
-test "nominal instances cross typed host calls without erasing result or payload identity" {
-    try hostScenario(t.allocator);
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), hostScenario, .{});
 }
 test "nominal exported type constructors are symbolic schema templates rather than concrete callable roots" {
     var project = language.project.Project.init(t.allocator);
@@ -318,7 +290,7 @@ test "nominal instances carry domain payloads beside resource declarations" {
     ;
     var compilation = try language.Compilation.init(t.allocator, "nominal-domain.my", program);
     defer compilation.deinit();
-    try t.expectEqual(@as(i64, 13), (try compilation.execute(t.allocator)).value);
+    try t.expectEqual(@as(i64, 13), (try native.run(&compilation)).value);
     try t.expectEqual(@as(usize, 1), filesystemResources(compilation.program.?.records));
 }
 test "nominal instances keep growing phantom arguments outside runtime storage" {

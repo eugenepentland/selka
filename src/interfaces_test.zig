@@ -6,6 +6,7 @@ const std = @import("std");
 const t = std.testing;
 const graph = @import("project.zig");
 const interfaces = @import("interfaces.zig");
+const native = @import("native_execute.zig");
 const File = struct { path: []const u8, bytes: []const u8 };
 const Files = struct {
     entries: []const File,
@@ -308,7 +309,7 @@ fn checkedScenario(allocator: std.mem.Allocator) !void {
     var index = try interfaces.build(&project);
     var compilation = try project_compile_module.Compilation.init(&index);
     try compilation.emit();
-    const result = try @import("vm.zig").runWithOptions(allocator, compilation.code.?, .{});
+    const result = try native.run(&compilation);
     try t.expectEqual(@as(i64, 12), result.value);
 }
 test "cross module domain factories type check and execute with allocation failure cleanup" {
@@ -375,7 +376,7 @@ test "shared record types cross module boundaries and hidden names do not shadow
     var index = try interfaces.build(&project);
     var compilation = try project_compile_module.Compilation.init(&index);
     try compilation.emit();
-    const result = try @import("vm.zig").runWithOptions(t.allocator, compilation.code.?, .{});
+    const result = try native.run(&compilation);
     try t.expectEqual(@as(i64, 7), result.value);
 }
 
@@ -978,7 +979,7 @@ fn acceptChecked(main: []const u8, dependency: []const u8) !void {
     var compilation = try project_compile_module.Compilation.init(&index);
     try compilation.check();
     try compilation.emit();
-    try t.expectEqual(@as(i64, 0), (try @import("vm.zig").runWithOptions(t.allocator, compilation.code.?, .{})).value);
+    try t.expectEqual(@as(i64, 0), (try native.run(&compilation)).value);
 }
 
 fn genericExecutionScenario(allocator: std.mem.Allocator) !void {
@@ -1043,7 +1044,7 @@ fn genericExecutionScenario(allocator: std.mem.Allocator) !void {
     var index = try interfaces.build(&project);
     var compilation = try project_compile_module.Compilation.init(&index);
     try compilation.emit();
-    try t.expectEqual(@as(i64, 7), (try @import("vm.zig").runWithOptions(allocator, compilation.code.?, .{})).value);
+    try t.expectEqual(@as(i64, 7), (try native.run(&compilation)).value);
     var nominal_instance = false;
     for (compilation.program.?.functions) |function| {
         if (!std.mem.eql(u8, function.name, "units::id[units::Box]")) continue;
@@ -1199,7 +1200,7 @@ fn scatteredExports(allocator: std.mem.Allocator) !void {
     var index = try interfaces.build(&project);
     var compilation = try project_compile_module.Compilation.init(&index);
     try compilation.emit();
-    try t.expectEqual(@as(i64, 0), (try @import("vm.zig").runWithOptions(allocator, compilation.code.?, .{})).value);
+    try t.expectEqual(@as(i64, 0), (try native.run(&compilation)).value);
 }
 
 test "scattered exports preserve source order and spans through compilation and allocation failures" {

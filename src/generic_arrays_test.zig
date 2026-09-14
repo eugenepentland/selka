@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const factories =
     \\domain Component: u64:
     \\    def make(n: u64) -> Component:
@@ -34,7 +35,7 @@ const helpers =
 fn value(allocator: std.mem.Allocator, source: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(allocator, "arrays.my", source);
     defer compilation.deinit();
-    try t.expectEqual(expected, (try compilation.execute(allocator)).value);
+    try t.expectEqual(expected, (try native.run(&compilation)).value);
 }
 fn reject(source: []const u8, code: []const u8) !void {
     var compilation = try language.Compilation.init(t.allocator, "bad-arrays.my", source);
@@ -160,9 +161,11 @@ test "generic array runtime indexing retains traps and source locations" {
         \\    return at[i64](pair[i64](1, 2), 2u64)
     );
     defer compilation.deinit();
-    const result = try compilation.execute(t.allocator);
+    const result = try native.run(&compilation);
     try t.expectEqualStrings("R_INDEX_BOUNDS", result.trap.code);
-    try t.expectEqualStrings("a[i]", compilation.src.text(result.trap.span));
+    try t.expectEqualStrings("bounds.my", result.trap.path);
+    try t.expectEqual(@as(u64, 15), result.trap.line);
+    try t.expectEqualStrings("at[i64]", result.trap.frames[0].function);
 }
 
 const Modules = struct {
@@ -198,7 +201,7 @@ fn moduleScenario(allocator: std.mem.Allocator) !void {
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
     try compilation.emit();
-    try t.expectEqual(@as(i64, 1), (try language.vm.run(allocator, compilation.code.?)).value);
+    try t.expectEqual(@as(i64, 1), (try native.run(&compilation)).value);
 }
 test "exported generic arrays resolve imported nominal arguments across source relocation" {
     try moduleScenario(t.allocator);

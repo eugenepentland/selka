@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const schema =
     \\class Sample:
     \\    values: [2]i64
@@ -34,7 +35,7 @@ const program = schema ++
 fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "concrete.my", program);
     defer c.deinit();
-    try t.expectEqual(@as(i64, 17), (try c.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 17), (try native.run(&c)).value);
 }
 // spec: GENERIC-CONCRETE-1
 test "generic concrete records and arrays retain checked shapes under allocation failures" {
@@ -70,7 +71,7 @@ const updates =
 fn updateScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "updates.my", updates);
     defer c.deinit();
-    try t.expectEqual(@as(i64, 35), (try c.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 35), (try native.run(&c)).value);
     var table = try language.Compilation.init(allocator, "table-update.my",
         \\enum Key:
         \\    first,
@@ -87,7 +88,7 @@ fn updateScenario(allocator: std.mem.Allocator) !void {
         \\    return old[Key.first] + changed[Key.first]
     );
     defer table.deinit();
-    try t.expectEqual(@as(i64, 9), (try table.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 9), (try native.run(&table)).value);
 }
 // spec: GENERIC-UPDATE-1
 test "generic record updates and array replacement preserve snapshots under allocation failures" {
@@ -142,7 +143,7 @@ const variants =
 fn variantScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "variants.my", variants);
     defer c.deinit();
-    try t.expectEqual(@as(i64, 9), (try c.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 9), (try native.run(&c)).value);
 }
 // spec: GENERIC-VARIANT-1
 test "generic concrete variants construct and match with scoped payloads under allocation failures" {
@@ -362,7 +363,7 @@ test "generic match payload scopes and fallthrough preserve independent arm chec
         \\    return f[bool](True, U.left(7)) + f[bool](False, U.right(8))
     );
     defer c.deinit();
-    try t.expectEqual(@as(i64, 16), (try c.execute(t.allocator)).value);
+    try t.expectEqual(@as(i64, 16), (try native.run(&c)).value);
     try reject(
         \\union U:
         \\    a: i64
@@ -430,7 +431,7 @@ test "generic concrete enum tables require complete unique nominal keys" {
         \\    return table[u8](7u8)[K.a]
     );
     defer c.deinit();
-    try t.expectEqual(@as(i64, 7), (try c.execute(t.allocator)).value);
+    try t.expectEqual(@as(i64, 7), (try native.run(&c)).value);
     try reject(
         \\enum K:
         \\    a,
