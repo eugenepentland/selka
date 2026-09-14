@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const ast = @import("ast.zig");
 const copy = @import("ast_copy.zig");
 const fixture =
@@ -176,7 +177,7 @@ test "unused nominal templates do not become empty executable record schemas" {
     for (cases) |text| {
         var compilation = try language.Compilation.init(t.allocator, "deferred.my", text);
         defer compilation.deinit();
-        try t.expectEqual(@as(i64, 0), (try compilation.execute(t.allocator)).value);
+        try t.expectEqual(@as(i64, 0), (try native.run(&compilation)).value);
         try t.expectEqual(@as(usize, 0), compilation.program.?.records.len);
     }
     var invalid = try language.Compilation.init(t.allocator, "requirements.my",
@@ -256,7 +257,7 @@ fn moduleScenario(allocator: std.mem.Allocator) !void {
         try t.expectEqual(@as(usize, iteration * 2), cache.statistics.hits);
         var compilation = try language.project_compile.Compilation.init(&index);
         try compilation.emit();
-        try t.expectEqual(@as(i64, 0), (try language.vm.run(allocator, compilation.code.?)).value);
+        try t.expectEqual(@as(i64, 0), (try native.run(&compilation)).value);
     }
 }
 test "public nominal templates survive cached syntax and project relocation with requirements intact" {

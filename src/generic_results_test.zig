@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const schema =
     \\result R:
     \\    ok: i64,
@@ -25,7 +26,7 @@ fn reject(body: []const u8, code: []const u8) !void {
 fn run(bytes: []const u8, expected: i64) !void {
     var c = try language.Compilation.init(t.allocator, "generic-result.my", bytes);
     defer c.deinit();
-    try t.expectEqual(expected, (try c.execute(t.allocator)).value);
+    try t.expectEqual(expected, (try native.run(&c)).value);
 }
 const scenario_source = schema ++
     \\def step[T](r: R) -> R:
@@ -89,7 +90,7 @@ const nested_source = schema ++
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "generic-results.my", scenario_source);
     defer c.deinit();
-    try t.expectEqual(@as(i64, 9), (try c.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 9), (try native.run(&c)).value);
 }
 test "generic result construction nested matching and native emission survive allocation failures" {
     try run(nested_source, 5);
@@ -214,7 +215,7 @@ test "generic acknowledgement retains operand traps" {
         \\    return f[u8](0u8)
     );
     defer c.deinit();
-    try t.expectEqualStrings("R_DIVISION_BY_ZERO", (try c.execute(t.allocator)).trap.code);
+    try t.expectEqualStrings("R_DIVISION_BY_ZERO", (try native.run(&c)).trap.code);
 }
 
 // spec: GENERIC-RESULT-1

@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const domain =
     \\class Wire:
     \\    n: i64
@@ -49,7 +50,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
         \\    return round[bool](False, 7) + round[i64](2, 0)
     );
     defer compilation.deinit();
-    const result = compilation.execute(allocator) catch |err| {
+    const result = native.run(&compilation) catch |err| {
         if (err != error.OutOfMemory) @import("diagnostics_test.zig").report(compilation.diagnostics.items);
         return err;
     };
@@ -103,7 +104,7 @@ fn projectScenario(allocator: std.mem.Allocator) !void {
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
     try compilation.emit();
-    try t.expectEqual(@as(i64, 23), (try language.vm.run(allocator, compilation.code.?)).value);
+    try t.expectEqual(@as(i64, 23), (try native.run(&compilation)).value);
 }
 test "generic codecs follow imported contracts and declaring domain privacy through module relocation" {
     try projectScenario(t.allocator);

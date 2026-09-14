@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const definitions =
     \\class Box[T]:
     \\    value: T
@@ -22,7 +23,7 @@ const definitions =
 fn run(allocator: std.mem.Allocator, text: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(allocator, "nominal-body.my", text);
     defer compilation.deinit();
-    const result = compilation.execute(allocator) catch |err| {
+    const result = native.run(&compilation) catch |err| {
         if (err != error.OutOfMemory) @import("diagnostics_test.zig").report(compilation.diagnostics.items);
         return err;
     };
@@ -189,7 +190,7 @@ fn moduleScenario(allocator: std.mem.Allocator) !void {
     try compilation.emit();
     const ty = try compilation.publicValueType("model::Box<i64>");
     try t.expectEqual(@import("typed.zig").Type.i64, compilation.program.?.records[ty.recordIndex()].fields[0].ty);
-    try t.expectEqual(@as(i64, 23), (try language.vm.run(allocator, compilation.code.?)).value);
+    try t.expectEqual(@as(i64, 23), (try native.run(&compilation)).value);
 }
 test "nominal bodies preserve imported declaration identity through specialization and public lookup" {
     try moduleScenario(t.allocator);
