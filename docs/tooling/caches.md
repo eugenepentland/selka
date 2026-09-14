@@ -1,5 +1,9 @@
 # Compiler caches
 
+Native builds also keep an on-disk cache; see
+[the native build cache](#native-build-cache) below. The rest of this document
+covers the in-process caches.
+
 The compiler keeps three bounded in-process caches: parsed module syntax, a
 whole-program checking verdict, and checked function bodies. Ordinary one-shot
 commands build an independent project and use none of them; `mylang check-session`
@@ -83,3 +87,31 @@ check
 quit
 {"version":"check-session-v1","action":"quit","status":0,"failure":null,"reuse":{"hits":0,"misses":0},"cache":{"hits":0,"misses":2,"stored":2,"evicted":0,"bypassed":0,"retained_bytes":16624},"semantic":{"hits":0,"misses":2,"stored":2,"bypassed":0,"retained_bytes":524},"functions":{"reused":2,"checked":4,"stored":2,"bypassed":0,"retained_bytes":9118}}
 ```
+
+## Native build cache
+
+`mylang build` (and `mylang run`, which builds and then runs) keeps an on-disk
+cache of native artifacts. It has three parts with different scopes and lifetimes:
+
+1. **Object cache** — one content-addressed object per guest function, plus the
+   generated entry and typed-metadata objects. It lives under `--cache-dir`
+   (default `.mylang-cache/qbe`, per project). Keys cover the compiler's build-time
+   identity, the runtime content hash, the Zig and QBE tool stamps, and the target
+   and optimize mode. A stored object is reused only when a fingerprint over its
+   length and contents matches the `.digest` beside it.
+2. **Runtime source tree** — the runtime C sources and headers the entry and
+   metadata objects compile against, materialized once per content hash. With an
+   explicit `--cache-dir` it stays hermetically under `DIR/runtime/<hash>`; by
+   default it is shared at `$XDG_CACHE_HOME/mylang/runtime/<hash>` (else
+   `$HOME/.cache/mylang/runtime/<hash>`), so a fresh project reuses a tree another
+   already derived. It falls back to the per-project cache when no absolute home is
+   named.
+3. **Prebuilt runtime archive** — installed beside the compiler under
+   `lib/mylang-runtime/` by `zig build`, one archive and text-formatter object per
+   optimize mode. A cold build links a matching install directly instead of
+   compiling the runtime, and falls back to a source build when none matches. See
+   [Prebuilt runtime archive](native-build.md#prebuilt-runtime-archive).
+
+The precedence a cold build follows for the runtime: link the installed archive if
+its hash matches; otherwise compile it from the runtime tree (shared or hermetic)
+into the object cache. `--cache-dir` never reads or writes the shared location.

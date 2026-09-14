@@ -50,13 +50,14 @@ keys cover the compiler's own build-time identity, the runtime content hash, the
 Zig and QBE tool stamps, and the target and optimize mode, so a changed tool or
 mode never reuses an object built by another one.
 
-The fixed runtime translation units are not linked as loose objects. They are
-compiled once per build environment and published as a single archive beside the
-objects, and the link places that archive after every object that can reference
-it. The linker therefore pulls only the archive members a program actually needs,
-and because every unit is compiled with function and data sections and the link
-collects unreferenced ones, a program that never prints carries no printing
-runtime. A build that changes nothing relinks nothing observable: the candidate
+The fixed runtime translation units are not linked as loose objects. A single
+`zig build-obj` compiles all of them in one process into one relocatable object —
+a cold build pays one toolchain start rather than one per unit — and that object
+becomes the single member of an archive published beside the objects. The link
+places the archive after every object that can reference it. Because the merge
+keeps every unit's function and data sections and the link collects unreferenced
+ones, a program that never prints still carries no printing runtime. A build that
+changes nothing relinks nothing observable: the candidate
 and the published executable are compared by length and then by bytes, and an
 identical result keeps its inode and modification time, which `--report` shows as
 `"output_changed": false`.
@@ -75,3 +76,44 @@ $ mylang build examples/factorial.my -o /tmp/factorial --cache-dir /tmp/qbe-cach
 $ mylang build examples/factorial.my -o /tmp/factorial --cache-dir /tmp/qbe-cache --report
 {"version":"qbe-build-v1","output":"/tmp/factorial","output_changed":false,...}
 ```
+
+## Prebuilt runtime archive
+
+Compiling the runtime is the only real work a cold build does — everything else
+is codegen and a link measured in tens of milliseconds. So `zig build` does that
+work once, when it builds the compiler: it prebuilds the runtime archive and the
+text-formatter object for each optimize mode and installs them beside the compiler
+under `zig-out/lib/mylang-runtime/`, each named by a portable hash of the runtime
+content hash, the pinned Zig version, the optimize mode and the target. `mylang`
+finds this directory relative to its own executable, the same way it finds the
+sibling `qbe`.
+
+A cold `mylang build` computes the hash its runtime needs and, if a matching
+archive is installed, links it directly and skips compiling the runtime from
+source — `--report` shows `"runtime_installed": true`. The prebuilt hash excludes
+the Zig and QBE tool file stamps that object-cache keys carry, so an installed
+archive still matches a build that resolved those tools from a different path. A
+missing archive (a cross-target build, or a relocated compiler with no `lib`
+beside it), a mode with no matching install, or a corrupted file whose fingerprint
+no longer matches the `.digest` published beside it all fall back cleanly to
+compiling the runtime from source in one `zig build-obj`.
+
+## Runtime source tree and shared caches
+
+The build also needs the runtime C sources and headers on disk, because the
+generated entry and metadata objects `#include` them. That tree materializes once
+per content hash, and where it lands follows the cache selection:
+
+- **`--cache-dir DIR`** keeps everything hermetically under `DIR`: objects in
+  `DIR`, the runtime tree in `DIR/runtime/<hash>`. Nothing outside `DIR` is read
+  or written, which is what the test suite relies on for isolation.
+- **The default (no `--cache-dir`)** keeps the per-project object cache at
+  `.mylang-cache/qbe` but shares the runtime tree at a user-level location —
+  `$XDG_CACHE_HOME/mylang/runtime/<hash>`, falling back to
+  `$HOME/.cache/mylang/runtime/<hash>`, and to the per-project cache only when
+  neither variable names an absolute home. A brand-new project therefore reuses a
+  runtime tree another project already derived, and the installed archive means it
+  compiles no runtime at all on its first build.
+
+Concurrent builds sharing either location stage the tree into a private directory
+and rename it into place, so no build ever observes a partial tree.

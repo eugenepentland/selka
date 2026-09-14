@@ -218,6 +218,80 @@ def concurrent_runtime_tree(builder, expected):
     assert (cache / 'runtime' / expected / 'qbe_runtime.c').is_file()
 
 
+def installed_runtime_acceptance(builder):
+    """A runtime archive installed beside the compiler links directly; damage falls back to source."""
+    root = builder.directory / 'install layout'
+    binm = root / 'bin'
+    libm = root / 'lib' / 'mylang-runtime'
+    binm.mkdir(parents=True)
+    libm.mkdir(parents=True)
+    compiler = binm / 'mylang'
+    shutil.copy2(builder.compiler, compiler)
+    work = builder.directory / 'emit work'
+    work.mkdir()
+    checked([compiler, 'emit-runtime', '--zig', builder.zig, '--qbe', builder.qbe,
+             '--out', libm, '--work', work], env=builder.env, cwd=builder.directory)
+    # One archive and one formatter object per optimize mode, each named by a 64-hex hash.
+    archives = sorted(libm.glob('*.a'))
+    assert len(archives) == 2 and all(len(p.stem) == 64 for p in archives), archives
+    assert len(list(libm.glob('*.o'))) == 2, sorted(libm.glob('*.o'))
+    src = builder.directory / 'installed main.my'
+    src.write_text('def main() -> i64:\n    return 7\n')
+
+    def build_installed(cache):
+        command = [compiler, 'build', src, '-o', root / 'prog', '--qbe', builder.qbe,
+                   '--zig', builder.zig, '--cache-dir', cache, '--report']
+        return json.loads(checked(command, env=builder.env, cwd=builder.directory).stdout)
+
+    cache = builder.directory / 'installed cache'
+    hit = build_installed(cache)
+    assert hit['runtime_installed'] and hit['runtime_reused'], hit
+    # A linked install compiles no runtime archive into the object cache.
+    assert not list(cache.glob('*.a')), sorted(cache.glob('*.a'))
+    result = checked([root / 'prog', '--print-result'], env=builder.env, cwd=builder.directory)
+    assert result.stdout == b'7\n', result
+    # A corrupted install no longer matches its fingerprint and falls back to a source build.
+    for archive in libm.glob('*.a'):
+        archive.write_bytes(b'not an archive')
+    fallback_cache = builder.directory / 'installed fallback cache'
+    miss = build_installed(fallback_cache)
+    assert not miss['runtime_installed'], miss
+    assert len(list(fallback_cache.glob('*.a'))) == 1, sorted(fallback_cache.glob('*.a'))
+    assert checked([root / 'prog', '--print-result'], env=builder.env, cwd=builder.directory).stdout == b'7\n'
+
+
+def shared_runtime_acceptance(builder):
+    """A default build shares its runtime tree under XDG; an explicit --cache-dir stays hermetic."""
+    xdg = builder.directory / 'xdg cache'
+    env = dict(builder.env, XDG_CACHE_HOME=str(xdg))
+    shared_root = xdg / 'mylang' / 'runtime'
+    # Hermetic: a --cache-dir build keeps its runtime tree under the cache and never touches XDG.
+    hermetic_src = builder.directory / 'hermetic main.my'
+    hermetic_src.write_text('def main() -> i64:\n    return 5\n')
+    hermetic_cache = builder.directory / 'hermetic cache'
+    checked([builder.compiler, 'build', hermetic_src, '-o', builder.directory / 'hermetic prog',
+             '--qbe', builder.qbe, '--zig', builder.zig, '--cache-dir', hermetic_cache],
+            env=env, cwd=builder.directory)
+    assert (hermetic_cache / 'runtime').is_dir(), 'the hermetic runtime tree stays under the cache dir'
+    assert not (xdg / 'mylang').exists(), 'a --cache-dir build must not read or write the shared cache'
+    # Default: the runtime tree materializes once under XDG and a second project reuses it.
+    first = builder.directory / 'default one'
+    second = builder.directory / 'default two'
+    first.mkdir()
+    second.mkdir()
+    (first / 'm.my').write_text('def main() -> i64:\n    return 6\n')
+    (second / 'm.my').write_text('def main() -> i64:\n    return 8\n')
+    checked([builder.compiler, 'build', 'm.my', '-o', 'prog', '--qbe', builder.qbe, '--zig', builder.zig],
+            env=env, cwd=first)
+    trees = sorted(shared_root.iterdir())
+    assert len(trees) == 1 and len(trees[0].name) == 64, trees
+    marker = trees[0] / 'reuse marker'
+    marker.write_text('kept')
+    checked([builder.compiler, 'build', 'm.my', '-o', 'prog', '--qbe', builder.qbe, '--zig', builder.zig],
+            env=env, cwd=second)
+    assert sorted(shared_root.iterdir()) == trees and marker.read_text() == 'kept', 'the second project reuses the shared tree'
+
+
 def project_and_locations(builder):
     (builder.directory / 'left.my').write_text('module left\nexport value\n\n'
                                                'def value() -> i64:\n    return 10\n')
@@ -352,10 +426,12 @@ def main():
         assert b'mylang build' in help_result.stdout + help_result.stderr, help_result
         cache_acceptance(builder)
         runtime_tree_acceptance(builder)
+        installed_runtime_acceptance(builder)
+        shared_runtime_acceptance(builder)
         project_and_locations(builder)
         boundary_acceptance(builder)
         temporary_runs(builder)
-    print('mylang build: relocated executable, no Python PATH, cache reuse/recovery, shared content-addressed runtime trees under concurrent builds, atomic failure preservation, project diagnostics, JSON, providers, library APIs and temporary runs with inherited I/O, status and cleanup passed')
+    print('mylang build: relocated executable, no Python PATH, cache reuse/recovery, shared content-addressed runtime trees under concurrent builds, prebuilt installed runtime archive with clean fallback, XDG-shared runtime tree with hermetic --cache-dir isolation, atomic failure preservation, project diagnostics, JSON, providers, library APIs and temporary runs with inherited I/O, status and cleanup passed')
 
 
 if __name__ == '__main__':
