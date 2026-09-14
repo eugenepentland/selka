@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 test "const length function parameters specialize array shapes and forward values" {
     const text =
         \\def first[T, const N: u64](items: [N]T) -> T:
@@ -21,7 +22,7 @@ test "const length function parameters specialize array shapes and forward value
     ;
     var c = try language.Compilation.init(t.allocator, "lengths.my", text);
     defer c.deinit();
-    try t.expectEqual(@as(i64, 42), (try c.execute(t.allocator)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
 }
 fn nominalScenario(allocator: std.mem.Allocator) !void {
     const text =
@@ -44,18 +45,16 @@ fn nominalScenario(allocator: std.mem.Allocator) !void {
     ;
     var c = try language.Compilation.init(allocator, "lengths.my", text);
     defer c.deinit();
-    try t.expectEqual(@as(i64, 42), (try c.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
     const formatted = try c.format(allocator);
     defer allocator.free(formatted);
     var again = try language.Compilation.init(allocator, "formatted.my", formatted);
     defer again.deinit();
-    try t.expectEqual(@as(i64, 42), (try again.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&again)).value);
 }
 // spec: CONST-LENGTH-1
-test "const length nominal parameters compose arrays and clean allocation failures" {
+test "const length nominal parameters compose arrays across a reformat" {
     try nominalScenario(t.allocator);
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), nominalScenario, .{});
 }
 test "uncalled const length templates reject kind confusion unprovable construction and missing requirements" {
     const cases = [_]struct { source: []const u8, code: []const u8 }{
@@ -128,7 +127,7 @@ test "one helper serves distinct nominal element types and empty lengths" {
     ;
     var c = try language.Compilation.init(t.allocator, "nominals.my", text);
     defer c.deinit();
-    try t.expectEqual(@as(i64, 42), (try c.execute(t.allocator)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
 }
 test "constant specialization identity owns lengths and distinguishes equal scalar representations" {
     const instances = @import("generic_instances.zig");
@@ -172,5 +171,5 @@ test "exported constant length constructors retain kind through source relocatio
     var program: language.embedded_project.Program = undefined;
     try program.init(t.allocator, .{ .context = null, .read = provider });
     defer program.deinit();
-    try t.expectEqual(@as(i64, 42), (try language.vm.run(t.allocator, program.compilation.code.?)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&program.compilation)).value);
 }

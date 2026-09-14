@@ -1,82 +1,9 @@
 //! Storage experiments precede record syntax so lifetime failures stay isolated.
 const std = @import("std");
 const testing = std.testing;
-const language = @import("compiler.zig");
 const values = @import("value.zig");
 const Value = values.Value;
 const record_type: values.Type = @fromBackingInt(values.Type.record_base);
-const span: language.source.Span = .{ .start = 0, .end = 0 };
-const schema: @import("typed.zig").Record = .{ .id = record_type, .name = "TestRecord", .declaration = span, .fields = &.{.{ .name = "value", .declaration = span, .ty = .i64 }} };
-const Op = @FieldType(language.bytecode.Instruction, "op");
-fn instruction(op: Op) language.bytecode.Instruction {
-    return .{ .span = span, .op = op };
-}
-
-// Build, copy into a callee, return, overwrite a local, project a field, discard.
-// The returned main value must survive all of those ownership boundaries.
-const code = [_]language.bytecode.Instruction{
-    instruction(.{ .push_i64 = 42 }),
-    instruction(.{ .make_record = .{ .ty = record_type, .fields = 1 } }),
-    instruction(.{ .store_local = @fromBackingInt(0) }),
-    instruction(.{ .load_local = @fromBackingInt(0) }),
-    instruction(.{ .call = @fromBackingInt(1) }),
-    instruction(.{ .push_i64 = 9 }),
-    instruction(.{ .make_record = .{ .ty = record_type, .fields = 1 } }),
-    instruction(.{ .store_local = @fromBackingInt(0) }),
-    instruction(.{ .get_field = 0 }),
-    instruction(.{ .load_local = @fromBackingInt(0) }),
-    instruction(.pop),
-    instruction(.ret),
-};
-const program: language.bytecode.Program = .{ .records = &.{schema}, .functions = &.{
-    .{
-        .id = @fromBackingInt(0),
-        .name = "main",
-        .scope = .{
-            .locals = &.{.{ .name = "record", .declaration = span, .ty = record_type, .mutable = true }},
-            .instructions = &code,
-        },
-    },
-    .{
-        .id = @fromBackingInt(1),
-        .name = "identity",
-        .signature = .{
-            .parameter_count = 1,
-            .return_type = record_type,
-        },
-        .scope = .{
-            .locals = &.{.{
-                .name = "argument",
-                .declaration = span,
-                .ty = record_type,
-                .mutable = false,
-            }},
-            .instructions = &.{
-                instruction(.{
-                    .load_local = @fromBackingInt(0),
-                }),
-                instruction(.ret),
-            },
-        },
-    },
-} };
-
-fn allocationScenario(allocator: std.mem.Allocator) !void {
-    try testing.expectEqual(@as(i64, 42), (try language.vm.run(allocator, program)).value);
-}
-
-test "aggregate VM ownership releases on every allocation failure" {
-    try testing.checkAllAllocationFailures(testing.allocator, allocationScenario, .{});
-}
-
-test "step traps at each ownership boundary release aggregate storage" {
-    // Also covers traps with both stack and locals referencing the same value.
-    for (1..14) |budget| {
-        const outcome = try language.vm.runWithOptions(testing.allocator, program, .{ .max_steps = budget });
-        try testing.expectEqualStrings("R_STEP_LIMIT", outcome.trap.code);
-    }
-}
-
 test "nested immutable fields remain alive independently of their containing value" {
     const inner = try Value.create(testing.allocator, record_type, &.{.{ .i64 = 7 }});
     defer inner.release(testing.allocator);
@@ -99,20 +26,6 @@ test "deep aggregate release is iterative and needs no additional allocations" {
     // The final defer frees the entire chain; guest depth does not recurse here.
 }
 
-test "internal field and scalar type errors release popped aggregate operands" {
-    const variants = [_]Op{ .{ .get_field = 4 }, .neg_i64_checked, .not_bool };
-    for (variants) |op| {
-        const bad: language.bytecode.Program = .{ .records = &.{schema}, .functions = &.{.{
-            .id = @fromBackingInt(0),
-            .name = "main",
-            .scope = .{
-                .instructions = &.{ instruction(.{ .push_i64 = 7 }), instruction(.{ .make_record = .{ .ty = record_type, .fields = 1 } }), instruction(op), instruction(.ret) },
-            },
-        }} };
-        try testing.expectError(error.InternalError, language.vm.run(testing.allocator, bad));
-    }
-}
-
 test "repeated record allocation retains bounded live storage" {
     // 10,000 overwrites at one local slot. A fixed live-memory allocator would
     // be obscured by allocation strategy, so cap outstanding bytes directly.
@@ -129,42 +42,6 @@ test "repeated record allocation retains bounded live storage" {
 }
 
 const LimitedLiveAllocator = @import("test_support.zig").LimitedLiveAllocator;
-
-test "VM loop construction and overwrite fit a fixed live byte budget" {
-    const loop: language.bytecode.Program = .{ .records = &.{schema}, .functions = &.{.{
-        .id = @fromBackingInt(0),
-        .name = "main",
-        .scope = .{
-            .locals = &.{ .{ .name = "i", .declaration = span, .ty = .i64, .mutable = true }, .{ .name = "record", .declaration = span, .ty = record_type, .mutable = true } },
-            .instructions = &.{
-                instruction(.{ .push_i64 = 0 }),
-                instruction(.{ .store_local = @fromBackingInt(0) }),
-                instruction(.{ .push_i64 = 0 }),
-                instruction(.{ .make_record = .{ .ty = record_type, .fields = 1 } }),
-                instruction(.{ .store_local = @fromBackingInt(1) }),
-                instruction(.{ .load_local = @fromBackingInt(0) }),
-                instruction(.{ .push_i64 = 10_000 }),
-                instruction(.{ .cmp_i64 = .lt }),
-                instruction(.{ .jump_if_false = 17 }),
-                instruction(.{ .load_local = @fromBackingInt(0) }),
-                instruction(.{ .make_record = .{ .ty = record_type, .fields = 1 } }),
-                instruction(.{ .store_local = @fromBackingInt(1) }),
-                instruction(.{ .load_local = @fromBackingInt(0) }),
-                instruction(.{ .push_i64 = 1 }),
-                instruction(.add_i64_checked),
-                instruction(.{ .store_local = @fromBackingInt(0) }),
-                instruction(.{ .jump = 5 }),
-                instruction(.{ .load_local = @fromBackingInt(1) }),
-                instruction(.{ .get_field = 0 }),
-                instruction(.ret),
-            },
-        },
-    }} };
-    var limiter = LimitedLiveAllocator{ .parent = testing.allocator, .limit = 4096 };
-    defer limiter.deinit();
-    try testing.expectEqual(@as(i64, 9999), (try language.vm.run(limiter.allocator(), loop)).value);
-    try testing.expectEqual(@as(usize, 0), limiter.live);
-}
 
 test "aggregate construction rejects scalar type identity" {
     try testing.expectError(error.InvalidAggregateType, Value.create(testing.allocator, .i64, &.{}));

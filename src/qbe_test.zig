@@ -1,6 +1,7 @@
 //! Independent QBE unit boundaries and stable artifact inputs.
 const std = @import("std");
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const Unit = struct { name: []const u8, symbol: []const u8, il: []const u8 };
 const Manifest = struct { version: []const u8, abi: []const u8, functions: []Unit, entry: []const u8 };
 fn emitted(a: std.mem.Allocator, input: []const u8) !std.json.Parsed(Manifest) {
@@ -64,7 +65,7 @@ test "QBE lowers stack joins loops casts and calls independently" {
     defer a.free(manifest);
     try std.testing.expect(std.mem.indexOf(u8, manifest, "jnz") != null);
     try std.testing.expect(std.mem.indexOf(u8, manifest, "myl_qbe_int_binary") != null);
-    try std.testing.expectEqual(@as(i64, 8), (try c.execute(a)).value);
+    try std.testing.expectEqual(@as(i64, 8), (try native.run(&c)).value);
 }
 
 fn allocationScenario(a: std.mem.Allocator) !void {
