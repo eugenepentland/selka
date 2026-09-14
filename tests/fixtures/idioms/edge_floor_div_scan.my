@@ -1,0 +1,3 @@
+def main() -> int:
+    n = 4 // 2; raw: bytes = "hi".encode()
+    return len(raw) + n

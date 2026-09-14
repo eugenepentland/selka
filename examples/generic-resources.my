@@ -2,11 +2,11 @@ resource File: filesystem
 
 result Open:
     ok: File,
-    err: i64
+    err: int
 
 
 class Failure:
-    code: i64
+    code: int
     resource: File
 
 
@@ -17,28 +17,28 @@ result Finish:
 
 result Status:
     ok: bool,
-    err: i64
+    err: int
 
 
 class Owned:
     file: File
-    code: i64
+    code: int
 
 
 def forward[T](file: File) -> File effects(filesystem):
     return file
 
 
-def drop[T](file: File) -> i64 effects(filesystem):
+def drop[T](file: File) -> int effects(filesystem):
     return 1
 
 
-def fields[T](value: Owned) -> i64 effects(filesystem):
+def fields[T](value: Owned) -> int effects(filesystem):
     _ = value
     return 7
 
 
-def handle[T](r: Open) -> i64 effects(filesystem):
+def handle[T](r: Open) -> int effects(filesystem):
     match r:
         case Open.ok(file):
             return fields[bool](Owned(file=forward[bool](file), code=7))
@@ -46,7 +46,7 @@ def handle[T](r: Open) -> i64 effects(filesystem):
             return code
 
 
-def main(fs: filesystem_cap) -> i64:
+def main(fs: filesystem_cap) -> int:
     empty: [0]u8 = []
     first = handle[bool](acquire_resource[Open](fs, empty))
     match acquire_resource[Open](fs, empty):

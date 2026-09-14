@@ -1,0 +1,4 @@
+def main() -> int:
+    xs = [1, 2, 3, 4]
+    ys = xs[0:4:2]
+    return len(ys)

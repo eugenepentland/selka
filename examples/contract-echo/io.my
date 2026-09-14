@@ -4,10 +4,10 @@ export byte
 export put
 
 
-host def length() -> i64 effects(host)
+host def length() -> int effects(host)
 
 
-host def byte(index: i64) -> u8 effects(host)
+host def byte(index: int) -> u8 effects(host)
 
 
-host def put(value: u8) -> i64 effects(host)
+host def put(value: u8) -> int effects(host)

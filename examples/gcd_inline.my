@@ -1,4 +1,4 @@
-def main() -> i64:
+def main() -> int:
     x = 48
     y = 18
     while y != 0:

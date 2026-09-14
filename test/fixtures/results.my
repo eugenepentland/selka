@@ -3,17 +3,17 @@ enum DivisionError:
 
 
 result Quotient:
-    ok: i64,
+    ok: int,
     err: DivisionError
 
 
-def divide(numerator: i64, denominator: i64) -> Quotient:
+def divide(numerator: int, denominator: int) -> Quotient:
     if denominator == 0:
         return Err(DivisionError.zero)
     return Ok(divtrunc(numerator, denominator))
 
 
-def value_or_zero(outcome: Quotient) -> i64:
+def value_or_zero(outcome: Quotient) -> int:
     match outcome:
         case Quotient.ok(value):
             return value
@@ -21,7 +21,7 @@ def value_or_zero(outcome: Quotient) -> i64:
             return 0
 
 
-def main() -> i64:
+def main() -> int:
     first = divide(21, 3)
     total = value_or_zero(first) + value_or_zero(divide(21, 0))
     _ = divide(1, 0)

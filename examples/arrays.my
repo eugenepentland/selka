@@ -1,8 +1,8 @@
 class Samples:
-    values: [3]i64
+    values: [3]int
 
 
-def sum(values: [3]i64) -> i64:
+def sum(values: [3]int) -> int:
     index = 0u64
     total = 0
     while index < len(values):
@@ -11,7 +11,7 @@ def sum(values: [3]i64) -> i64:
     return total
 
 
-def main() -> i64:
+def main() -> int:
     original = Samples(values=[4, 7, 9])
     changed = original
     changed.values = replace(original.values, 1, 11)

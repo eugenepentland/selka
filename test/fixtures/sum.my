@@ -1,6 +1,6 @@
-def sum_to(n: i64) -> i64:
-    total: i64 = 0
-    i: i64 = 0
+def sum_to(n: int) -> int:
+    total: int = 0
+    i: int = 0
 
     while i < n:
         total += i
@@ -9,5 +9,5 @@ def sum_to(n: i64) -> i64:
     return total
 
 
-def main() -> i64:
+def main() -> int:
     return sum_to(100)

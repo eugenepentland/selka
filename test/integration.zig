@@ -203,6 +203,70 @@ test "CLI step budgets count dispatch and reject invalid options" {
     try invokeOptions("check", text, &.{"--max-steps=2"}, 2, "", "usage:");
     try invokeOptions("dump-bytecode", text, &.{"--max-steps=2"}, 2, "", "usage:");
 }
+// spec: BUDGET-HINT-1
+test "CLI budget traps name the flag that raises the budget" {
+    const text =
+        \\def main() -> i64:
+        \\    return 1
+    ;
+    try invokeOptions("run", text, &.{"--max-steps=1"}, 1, "", "raise it with --max-steps=N");
+    try invokeOptions("run", text, &.{ "--max-steps=1", "--diagnostics=json" }, 1, "", "\"message\":\"instruction budget exhausted; raise it with --max-steps=N\"");
+    try invokeOptions("run",
+        \\def inner() -> i64:
+        \\    return 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return inner()
+    , &.{ "--max-frames=1", "--max-steps=1000000" }, 1, "", "raise it with --max-frames=N");
+    try invokeOptions("run",
+        \\def inner() -> i64:
+        \\    return 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return inner()
+    , &.{ "--max-frames=1", "--max-steps=1000000", "--diagnostics=json" }, 1, "", "\"message\":\"call-depth budget exhausted; raise it with --max-frames=N\"");
+    const memory =
+        \\def main() -> i64:
+        \\    values: list[int] = []
+        \\    for r in range(100000000):
+        \\        values.append(r)
+        \\    return len(values)
+    ;
+    try invokeOptions("run", memory, &.{ "--max-steps=4000000000", "--max-memory=32M" }, 1, "", "error[R_MEMORY_BUDGET]: memory budget exhausted");
+}
+// spec-case: BUILD-MODE-1
+test "CLI build report states the default and explicit optimize modes" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
+        \\def main() -> i64:
+        \\    return 42
+    });
+    const path = try temporary.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const directory = std.fs.path.dirname(path).?;
+    const cache = try std.fs.path.join(testing.allocator, &.{ directory, "cache" });
+    defer testing.allocator.free(cache);
+    const output = try std.fs.path.join(testing.allocator, &.{ directory, "program" });
+    defer testing.allocator.free(output);
+    for ([_][]const u8{ "ReleaseFast", "Debug" }) |mode| {
+        var argv: std.ArrayList([]const u8) = .empty;
+        defer argv.deinit(testing.allocator);
+        try argv.appendSlice(testing.allocator, &.{ compiler_path, "build", path, "-o", output, "--report", "--cache-dir", cache });
+        try argv.appendSlice(testing.allocator, &tools);
+        if (!std.mem.eql(u8, mode, "ReleaseFast")) try argv.appendSlice(testing.allocator, &.{ "--mode", mode });
+        const result = try std.process.run(testing.allocator, testing.io, .{ .argv = argv.items });
+        defer testing.allocator.free(result.stdout);
+        defer testing.allocator.free(result.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+        try testing.expectEqualStrings("", result.stderr);
+        const needle = try std.fmt.allocPrint(testing.allocator, "\"mode\":\"{s}\"", .{mode});
+        defer testing.allocator.free(needle);
+        try testing.expect(std.mem.indexOf(u8, result.stdout, needle) != null);
+    }
+}
 // spec: CLI-3
 test "CLI executes the exact plan acceptance programs and recursive functions" {
     try invoke("run", @embedFile("fixtures/sum.my"), 0, "4950\n", "");
@@ -597,6 +661,40 @@ test "CLI module interfaces parse bodies and check exported signature visibility
         \\    return Secret()
     , 1, "", "E_PRIVATE_INTERFACE");
     try invokeOptions("list-interfaces", "module input", &.{"--check"}, 2, "", "usage:");
+}
+// spec: PROJ-5
+test "CLI run loads a project entry that imports a standard module and leaves single-file run unchanged" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
+        \\module main
+        \\import math
+        \\
+        \\
+        \\def main() -> int:
+        \\    return math.clamp(99, 0, 42)
+    });
+    const path = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run", path, "--print-result" } ++ tools) });
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    try testing.expectEqualStrings("42\n", result.stdout);
+    try testing.expectEqualStrings("", result.stderr);
+    // `run-project` stays an explicit alias for the same entry.
+    const alias = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run-project", path, "--print-result" } ++ tools) });
+    defer testing.allocator.free(alias.stdout);
+    defer testing.allocator.free(alias.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, alias.term);
+    try testing.expectEqualStrings("42\n", alias.stdout);
+    // A plain single-file program still takes the original one-unit path.
+    try invoke("run", @embedFile("fixtures/arithmetic.my"), 0, "7\n", "");
+}
+// spec: CLI-6
+test "CLI answers removed C-backend commands with their QBE migration" {
+    try invokeOptions("emit-c", "def main() -> int:\n    return 0\n", &.{}, 2, "", "emit-qbe");
+    try invokeOptions("emit-project-c", "module main\n\n\ndef main() -> int:\n    return 0\n", &.{}, 2, "", "emit-project-qbe");
 }
 test "CLI checks and runs module programs with private boundaries and cross-file traps" {
     var temp = testing.tmpDir(.{});
@@ -1990,4 +2088,130 @@ test "CLI grants every capability by default and resolves paths against the work
     const absolute = try std.fmt.allocPrint(testing.allocator, "def main(fs: Filesystem) -> int:\n    print(read_text(fs, \"{s}\"))\n    return 0\n", .{anchor});
     defer testing.allocator.free(absolute);
     try invokeOptions("run", absolute, &.{"--allow-read=."}, 0, "Ok('alpha\\n')\n0\n", "");
+}
+
+/// Persistent frontend cache counters parsed from the `frontend-cache-v1` report line.
+const CacheCounters = struct { syntax_hits: usize, syntax_misses: usize, verdict_hits: usize, verdict_misses: usize };
+
+fn numberAfter(object: std.json.Value, key: []const u8) usize {
+    const value = object.object.get(key) orelse return 0;
+    return @intCast(value.integer);
+}
+
+fn cacheCounters(stderr: []const u8) !CacheCounters {
+    const marker = std.mem.indexOf(u8, stderr, "frontend-cache-v1") orelse return error.MissingCacheLine;
+    const open = std.mem.lastIndexOfScalar(u8, stderr[0..marker], '{') orelse return error.MissingCacheLine;
+    const close = std.mem.indexOfScalarPos(u8, stderr, marker, '}') orelse return error.MissingCacheLine;
+    var parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, stderr[open .. close + 1], .{});
+    defer parsed.deinit();
+    return .{
+        .syntax_hits = numberAfter(parsed.value, "syntax_hits"),
+        .syntax_misses = numberAfter(parsed.value, "syntax_misses"),
+        .verdict_hits = numberAfter(parsed.value, "verdict_hits"),
+        .verdict_misses = numberAfter(parsed.value, "verdict_misses"),
+    };
+}
+
+/// Check a two-module project under `--report`, returning the parsed counters.
+fn projectCacheCheck(entry: []const u8, cache_dir: []const u8, expected_status: u8) !CacheCounters {
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "check-project", entry, "--report", cache_dir });
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = expected_status }, outcome.term);
+    return cacheCounters(outcome.stderr);
+}
+
+// spec: FRONTEND-CACHE-1
+// spec: FRONTEND-CACHE-2
+test "CLI project checks reuse syntax and verdicts and invalidate only changed modules" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.createDir(testing.io, "app", .default_dir);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app/main.my", .data =
+        \\module main
+        \\
+        \\import helper
+        \\
+        \\def main() -> i64:
+        \\    return helper.answer()
+    });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
+        \\module helper
+        \\
+        \\export answer
+        \\
+        \\def answer() -> i64:
+        \\    return 7
+    });
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "app/main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const temp_root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(temp_root);
+    const cache_root = try std.fs.path.join(testing.allocator, &.{ temp_root, "frontend-cache" });
+    defer testing.allocator.free(cache_root);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_root});
+    defer testing.allocator.free(cache_argument);
+
+    // Cold: two parses stored and the successful verdict is retained.
+    const cold = try projectCacheCheck(entry, cache_argument, 0);
+    try testing.expectEqual(@as(usize, 0), cold.syntax_hits);
+    try testing.expectEqual(@as(usize, 2), cold.syntax_misses);
+    try testing.expectEqual(@as(usize, 0), cold.verdict_hits);
+
+    // Warm: the whole-program verdict comes from disk, so no syntax lookup runs.
+    const warm = try projectCacheCheck(entry, cache_argument, 0);
+    try testing.expectEqual(@as(usize, 1), warm.verdict_hits);
+    try testing.expectEqual(@as(usize, 0), warm.syntax_misses);
+
+    // Editing the dependency invalidates the verdict and only that module's syntax.
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
+        \\module helper
+        \\
+        \\export answer
+        \\
+        \\def answer() -> i64:
+        \\    return 8
+    });
+    const edited = try projectCacheCheck(entry, cache_argument, 0);
+    try testing.expectEqual(@as(usize, 1), edited.syntax_hits);
+    try testing.expectEqual(@as(usize, 1), edited.syntax_misses);
+    try testing.expectEqual(@as(usize, 0), edited.verdict_hits);
+    try testing.expect(edited.verdict_misses >= 1);
+
+    // A rejected edit can never inherit the earlier successful verdict. The
+    // failure is reported and the cache is not consulted again for this content.
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
+        \\module helper
+        \\
+        \\export answer
+        \\
+        \\def answer() -> i64:
+        \\    return True
+    });
+    const broken = try projectCacheCheck(entry, cache_argument, 1);
+    try testing.expectEqual(@as(usize, 0), broken.verdict_hits);
+
+    // Repair the source so the final no-cache run is a successful check.
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
+        \\module helper
+        \\
+        \\export answer
+        \\
+        \\def answer() -> i64:
+        \\    return 8
+    });
+
+    // `--no-cache` opens no cache at all, so it emits no reuse receipt and the
+    // stored successful verdict for the same content is not consulted.
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "check-project", entry, "--report", "--no-cache" });
+    const uncached = try std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+    defer testing.allocator.free(uncached.stdout);
+    defer testing.allocator.free(uncached.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, uncached.term);
+    try testing.expect(std.mem.indexOf(u8, uncached.stderr, "frontend-cache-v1") == null);
 }

@@ -15,6 +15,7 @@ const eResultOperation = diagnostic.result_operation;
 const eOwnedConsumed = diagnostic.owned_consumed;
 const eResultPath = diagnostic.result_path;
 const eShadowing = diagnostic.shadowing;
+const eIterationShadow = "iteration binding shadows an active declaration";
 const eWildcardArm = "E_WILDCARD_ARM";
 const eConversionBody = "E_CONVERSION_BODY";
 const eByteConversion = "E_BYTES_CONVERSION";
@@ -46,7 +47,22 @@ const variantDeclaredHere = "variant declared here";
 const std = @import("std");
 const bufferOperation = "buffer_operation";
 const eCollectionMethod = "E_COLLECTION_METHOD";
+/// The ordinary binary operator one augmented assignment applies to its operand pair.
+fn augmentedOperator(op: ast.AssignmentOp) ast.BinaryOp {
+    return switch (op) {
+        .add => .add,
+        .sub => .sub,
+        .mul => .mul,
+        .div => .python_div,
+        .floor_div => .floor_div,
+        .rem => .floor_rem,
+        .set => .add,
+    };
+}
+const eTextOperator = "E_TEXT_OPERATOR";
 const unsupported_collection = "operation is not supported by this collection";
+const unsupported_list = "operation is not supported by lists";
+const method_arity = "collection method argument count differs from its signature";
 
 const ast = @import("ast.zig");
 const typed = @import("typed.zig");
@@ -66,6 +82,10 @@ const eFileArgument = "E_FILE_ARGUMENT";
 const Pending = struct { available: bool, transfer_span: ?source.Span };
 const Work = struct { default_value: bool = false, id: ast.NodeId, emit: bool = false, checkpoint: bool = false, verify: ?[]const Pending = null };
 const FieldDestination = struct { owner: typed.LocalId, index: ?typed.NodeId, value: typed.NodeId, refresh: typed.StatementId };
+/// An already-evaluated managed receiver and the source arguments of its method.
+const ManagedAccess = struct { base: typed.NodeId, kind: BufferKind, inputs: []const ast.NodeId, receiver: ?typed.LocalId = null };
+/// One list method call whose receiver and arguments are already evaluated.
+const ListMethodCall = struct { base: typed.NodeId, base_input: ast.NodeId, kind: BufferKind, inputs: []const ast.NodeId, temporaries: []const typed.Type };
 const CheckedStatement = struct { id: typed.StatementId, terminates: bool, looping: bool = false };
 
 const StatementFlow = struct {
@@ -80,6 +100,7 @@ const integer_literal = @import("integer_literal.zig");
 const float_syntax = @import("float_syntax.zig");
 const numeric_surface = @import("numeric_surface.zig");
 const prelude = @import("prelude.zig");
+const prelude_builtins = @import("prelude_builtins.zig");
 const arrays = @import("array_literals.zig");
 const variant_calls = @import("variant_calls.zig");
 const truncating = @import("truncating_math.zig");
@@ -597,6 +618,81 @@ const Checker = struct {
             out.* = try self.numericBuilder(node.span).toInteger(value);
         } else out.* = .{ .span = node.span, .ty = .i64, .data = .{ .cast = value } };
     }
+    /// The bare prelude builtins answer only when no binding, declaration or module name claims them.
+    fn preludeName(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
+        if (call.owner != null or call.type_arguments.len != 0) return false;
+        const name = self.src.text(call.name);
+        if (!prelude_builtins.reserved(name)) return false;
+        if (self.active.contains(name) or self.functions.contains(name)) return false;
+        if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return false;
+        return true;
+    }
+    /// The `range(...)` source of `list(range(...))`, which is never an ordinary expression.
+    fn rangeSource(self: *Checker, id: ast.NodeId) Error!?@FieldType(@FieldType(ast.Node, "data"), "call") {
+        const node = self.syntax.nodes.items[@backingInt(id)];
+        if (node.data != .call) return null;
+        const call = node.data.call;
+        if (call.owner != null or call.type_arguments.len != 0) return null;
+        if (!std.mem.eql(u8, self.src.text(call.name), "range")) return null;
+        if (self.active.contains("range") or self.functions.contains("range")) return null;
+        if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return null;
+        if (call.arguments.len == 0 or call.arguments.len > 2) return null;
+        return call;
+    }
+    /// An unannotated empty list literal adopts the element type the builtin fixes,
+    /// so `any([])`, `sum([])`, `sorted([])` and `list([])` all infer their schema.
+    fn hintEmptyPreludeList(self: *Checker, id: ast.NodeId, element: typed.Type) Error!void {
+        const node = self.syntax.nodes.items[@backingInt(id)];
+        if (node.data != .list_literal or node.data.list_literal.len != 0) return;
+        try self.hint(id, try collections.listType(&self.catalog, element, node.span));
+    }
+    /// Hint the fixed element types of one bare prelude builtin's sequence arguments.
+    fn hintPreludeArguments(self: *Checker, name: []const u8, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!void {
+        if (std.mem.eql(u8, name, "zip")) {
+            for (call.arguments) |id| try self.hintEmptyPreludeList(id, .i64);
+            return;
+        }
+        if (call.arguments.len != 1) return;
+        if (std.mem.eql(u8, name, "any") or std.mem.eql(u8, name, "all")) return self.hintEmptyPreludeList(call.arguments[0], .bool);
+        inline for (.{ "sum", "min", "max", "sorted", "reversed", "list" }) |builtin| {
+            if (std.mem.eql(u8, name, builtin)) return self.hintEmptyPreludeList(call.arguments[0], .i64);
+        }
+    }
+    /// Queue the operands of one prelude builtin call in evaluation order.
+    fn queuePreludeCall(self: *Checker, work: *std.ArrayList(Work), call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
+        if (!try self.preludeName(call)) return false;
+        try call_arguments.positional(call, self.sink);
+        try self.hintPreludeArguments(self.src.text(call.name), call);
+        const materialized = if (prelude_builtins.materializes(self.src.text(call.name)) and call.arguments.len == 1) try self.rangeSource(call.arguments[0]) else null;
+        const arguments = if (materialized) |range| range.arguments else call.arguments;
+        var index = arguments.len;
+        while (index > 0) {
+            index -= 1;
+            try work.append(self.allocator, .{ .id = arguments[index] });
+        }
+        return true;
+    }
+    /// Build one prelude builtin call, or report that a later recognizer owns it.
+    fn checkPreludeCall(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!bool {
+        if (!try self.preludeName(call)) return false;
+        try call_arguments.positional(call, self.sink);
+        const name = self.src.text(call.name);
+        const builtins: prelude_builtins.Prelude(Checker) = .{ .checker = self };
+        if (prelude_builtins.materializes(name) and call.arguments.len == 1) {
+            if (try self.rangeSource(call.arguments[0])) |range| {
+                const bounds = try self.allocator.alloc(typed.NodeId, range.arguments.len);
+                for (range.arguments, bounds) |id, *slot| slot.* = self.resolved[@backingInt(id)].?;
+                out.* = try builtins.rangeList(node.span, bounds);
+                return true;
+            }
+            out.* = try builtins.copyList(node.span, self.resolved[@backingInt(call.arguments[0])].?);
+            return true;
+        }
+        const values = try self.allocator.alloc(typed.NodeId, call.arguments.len);
+        for (call.arguments, values) |id, *slot| slot.* = self.resolved[@backingInt(id)].?;
+        out.* = (try builtins.build(node.span, name, values)) orelse return false;
+        return true;
+    }
     /// Whole-path file helpers are reserved under the same shadowing rule as `print`.
     fn fileAccessBuiltin(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?file_operations.Access {
         if (call.owner != null) return null;
@@ -779,9 +875,14 @@ const Checker = struct {
                 if (value_type.isAggregate() and self.catalog.records[value_type.recordIndex()].managed) {
                     try call_arguments.positional(call, self.sink);
                     const name = self.src.text(call.name);
-                    const kind = buffer_operations.method(name) orelse
+                    const kind = buffer_operations.method(name) orelse {
+                        if (std.mem.eql(u8, name, "push")) return self.sink.fail("E_REMOVED_SPELLING", call.name, "`push` was removed; use `append(value)`");
                         return self.sink.fail("E_LIST_METHOD", call.name, "unknown managed collection method");
-                    if (call.type_arguments.len != 0 or call.arguments.len != kind.arity()) return self.sink.fail("E_ARITY", node.span, "list method argument count does not match its signature");
+                    };
+                    // The everyday vocabulary stays a buffer operation; the
+                    // checker picks its arity from the receiver and `pop` name.
+                    if (!buffer_operations.vocabulary(kind) and (call.type_arguments.len != 0 or call.arguments.len != kind.arity()))
+                        return self.sink.fail("E_ARITY", node.span, "list method argument count does not match its signature");
                     node.data = .{ .buffer_operation = .{ .kind = kind, .owner = owner, .arguments = call.arguments } };
                 }
             };
@@ -853,6 +954,48 @@ const Checker = struct {
             try b.stmt(.{ .assign = .{ .slot = destination.owner, .value = value } });
         try statements.append(self.allocator, write);
         return b.block(statements.items, try b.node(.unit, .unit));
+    }
+    /// Check `values[index] op= value` by reading the slot once, combining the pair with
+    /// the operator's ordinary rules and writing the result back through the same slot.
+    fn checkIndexAugmented(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
+        const assignment = node.data.index_assignment;
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
+        var statements: std.ArrayList(typed.StatementId) = .empty;
+        const destination = try self.fieldDestination(self.syntax.nodes.items[@backingInt(assignment.target)], &statements, temporaries);
+        const index = destination.index orelse return self.sink.fail("E_ASSIGNMENT_TARGET", node.span, "augmented assignment requires a list slot or dictionary entry");
+        const element = self.nodes.items[@backingInt(destination.value)].ty;
+        try self.hint(assignment.value, element);
+        const right = try self.expressionWithTemporaries(assignment.value, temporaries);
+        try self.require(self.nodes.items[@backingInt(right)].ty, element, node.span);
+        const combined = try self.augmented(assignment.op, destination.value, right, node.span);
+        const stored = try b.local(element);
+        const evaluate_value = try b.stmt(.{ .initialize = .{ .slot = stored, .value = combined } });
+        // Python reads the slot first, then evaluates the assigned value and writes back.
+        try statements.append(self.allocator, evaluate_value);
+        try statements.append(self.allocator, try b.stmt(.{ .discard = try b.operation(destination.owner, .write, &.{ index, try b.read(stored) }) }));
+        return b.block(statements.items, try b.node(.unit, .unit));
+    }
+    /// Combine one augmented-assignment operand pair with the operator's checked rules.
+    fn augmented(self: *Checker, op: ast.AssignmentOp, left: typed.NodeId, right: typed.NodeId, span: source.Span) Error!typed.NodeId {
+        const left_type = self.nodes.items[@backingInt(left)].ty;
+        if (numeric_surface.isFloat(left_type, self.catalog.records)) {
+            const builder = self.numericBuilder(span);
+            return builder.append(try builder.binary(augmentedOperator(op), left, right, self.sink));
+        }
+        if (left_type.isAggregate() and self.catalog.records[left_type.recordIndex()].managed) {
+            const sequence = self.catalog.records[left_type.recordIndex()].collection.kind;
+            if (op != .add or sequence == .dictionary) return self.sink.fail(eTextOperator, span, "a managed collection augments with `+=` only, and str, bytes and list are the types that support it");
+        } else {
+            try self.requireInteger(left_type, span);
+            if (op == .div) return self.sink.fail("E_TYPE", span, "augmented `/=` produces a float; declare the binding as float or use `//=`");
+        }
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = span };
+        return b.node(left_type, .{ .binary = .{
+            .op = std.meta.stringToEnum(typed.BinaryOp, @tagName(augmentedOperator(op))).?,
+            .left = left,
+            .right = right,
+            .op_span = span,
+        } });
     }
     fn fieldDestination(self: *Checker, root: ast.Node, statements: *std.ArrayList(typed.StatementId), temporaries: []const typed.Type) Error!FieldDestination {
         const b: collections.Builder(Checker) = .{ .checker = self, .span = root.span };
@@ -1059,6 +1202,7 @@ const Checker = struct {
     fn checkCollectionMethod(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
         const call = node.data.method_call;
         const name = self.src.text(call.name);
+        if (std.mem.eql(u8, name, "push")) return self.sink.fail("E_REMOVED_SPELLING", call.name, "`push` was removed; use `append(value)`");
         const kind = buffer_operations.method(name) orelse return self.sink.fail("E_COLLECTION_METHOD", call.name, "unknown managed collection method");
         return self.checkListAccess(node, .{ .base = call.base, .kind = kind, .inputs = call.arguments }, temporaries);
     }
@@ -1074,25 +1218,40 @@ const Checker = struct {
         if (start) |value| try self.requireInteger(self.nodes.items[@backingInt(value)].ty, node.span);
         if (end) |value| try self.requireInteger(self.nodes.items[@backingInt(value)].ty, node.span);
         const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
+        if (slice.step) |stride| {
+            if (schema.collection.kind == .bytes) return self.sink.fail(eCollectionMethod, node.span, "byte strings do not support a slice step");
+            const step = try self.expressionWithTemporaries(stride, temporaries);
+            try self.requireInteger(self.nodes.items[@backingInt(step)].ty, node.span);
+            return b.sliceStep(base, start, end, step);
+        }
         return if (schema.collection.kind == .list) b.slice(base, start, end) else b.textSlice(base, start, end);
     }
     fn checkListAccess(self: *Checker, node: ast.Node, operation: struct { base: ast.NodeId, kind: BufferKind, inputs: []const ast.NodeId, signed_length: bool = false }, temporaries: []const typed.Type) Error!typed.Node {
         const base_input = operation.base;
-        const kind = operation.kind;
+        var kind = operation.kind;
         const inputs = operation.inputs;
         const base = try self.expressionWithTemporaries(base_input, temporaries);
         const owner_type = self.nodes.items[@backingInt(base)].ty;
-        if (owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].collection.kind != .list) {
+        const managed_owner = owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].managed;
+        const dictionary = managed_owner and self.catalog.records[owner_type.recordIndex()].collection.kind == .dictionary;
+        // `pop` is one Python name with an optional argument; its arity selects the
+        // list-tail, list-index, dictionary-key or dictionary-default form.
+        if (kind == .pop) kind = if (dictionary) (if (inputs.len == 2) .pop_default else .pop_key) else (if (inputs.len == 1) .pop_at else .pop);
+        if (managed_owner and self.catalog.records[owner_type.recordIndex()].collection.kind != .list) {
             const receiver = self.arenaReceiver(base_input);
             return self.checkManagedAccess(node, .{ .base = base, .kind = kind, .inputs = inputs, .receiver = receiver }, temporaries);
         }
+        if (switch (kind) {
+            .extend, .insert, .pop, .pop_at, .remove, .index_of, .reverse, .sort, .copy, .clear => true,
+            else => false,
+        }) return self.checkListMethod(node, .{ .base = base, .base_input = base_input, .kind = kind, .inputs = inputs, .temporaries = temporaries });
         const supported = switch (kind) {
             .append, .read, .write, .length, .contains => true,
             else => false,
         };
-        if (!supported) return self.sink.fail(eCollectionMethod, node.span, "operation is not supported by lists");
+        if (!supported) return self.sink.fail(eCollectionMethod, node.span, unsupported_list);
         const element = try self.listElement(self.nodes.items[@backingInt(base)].ty, node.span);
-        if (inputs.len != kind.arity()) return self.sink.fail("E_ARITY", node.span, "collection method argument count differs from its signature");
+        if (inputs.len != kind.arity()) return self.sink.fail("E_ARITY", node.span, method_arity);
         const arguments = try self.allocator.alloc(typed.NodeId, inputs.len);
         for (inputs, arguments, 0..) |input, *argument, i| {
             const writes_element = kind == .append or kind == .contains or (kind == .write and i == 1);
@@ -1104,7 +1263,52 @@ const Checker = struct {
         try self.requireArenaOperation(self.arenaReceiver(base_input), kind, arguments);
         return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(base, kind, arguments, operation.signed_length);
     }
-    fn checkManagedAccess(self: *Checker, node: ast.Node, operation: struct { base: typed.NodeId, kind: BufferKind, inputs: []const ast.NodeId, receiver: ?typed.LocalId = null }, temporaries: []const typed.Type) Error!typed.Node {
+    /// Check a list's Python-shaped method call, which either mutates or copies its receiver.
+    fn checkListMethod(self: *Checker, node: ast.Node, call: ListMethodCall) Error!typed.Node {
+        const base = call.base;
+        const base_input = call.base_input;
+        const kind = call.kind;
+        const inputs = call.inputs;
+        const temporaries = call.temporaries;
+        const owner_type = self.nodes.items[@backingInt(base)].ty;
+        const element = try self.listElement(owner_type, node.span);
+        if (inputs.len != kind.arity()) return self.sink.fail("E_ARITY", node.span, method_arity);
+        if (kind == .sort and !(element.isInteger() or numeric_surface.isFloat(element, self.catalog.records))) {
+            return self.sink.fail(eCollectionMethod, node.span, "sort requires an integer or float element type");
+        }
+        const arguments = try self.allocator.alloc(typed.NodeId, inputs.len);
+        switch (kind) {
+            .extend => {
+                try self.hint(inputs[0], owner_type);
+                arguments[0] = try self.expressionWithTemporaries(inputs[0], temporaries);
+                try self.require(self.nodes.items[@backingInt(arguments[0])].ty, owner_type, node.span);
+            },
+            .insert => {
+                try self.hint(inputs[0], .i64);
+                arguments[0] = try self.expressionWithTemporaries(inputs[0], temporaries);
+                try self.requireInteger(self.nodes.items[@backingInt(arguments[0])].ty, node.span);
+                try self.hint(inputs[1], element);
+                arguments[1] = try self.expressionWithTemporaries(inputs[1], temporaries);
+                try self.require(self.nodes.items[@backingInt(arguments[1])].ty, element, node.span);
+            },
+            .pop_at => {
+                try self.hint(inputs[0], .i64);
+                arguments[0] = try self.expressionWithTemporaries(inputs[0], temporaries);
+                try self.requireInteger(self.nodes.items[@backingInt(arguments[0])].ty, node.span);
+            },
+            .remove, .index_of => {
+                try self.hint(inputs[0], element);
+                arguments[0] = try self.expressionWithTemporaries(inputs[0], temporaries);
+                try self.require(self.nodes.items[@backingInt(arguments[0])].ty, element, node.span);
+            },
+            .pop, .reverse, .sort, .copy, .clear => {},
+            else => return self.sink.fail(eCollectionMethod, node.span, unsupported_list),
+        }
+        try self.requireArenaOperation(self.arenaReceiver(base_input), kind, arguments);
+        return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(base, kind, arguments, false);
+    }
+
+    fn checkManagedAccess(self: *Checker, node: ast.Node, operation: ManagedAccess, temporaries: []const typed.Type) Error!typed.Node {
         const owner_type = self.nodes.items[@backingInt(operation.base)].ty;
         const schema = self.catalog.records[owner_type.recordIndex()];
         const dictionary = schema.collection.kind == .dictionary;
@@ -1112,7 +1316,11 @@ const Checker = struct {
             error.InternalError => return self.sink.fail(eCollectionMethod, node.span, unsupported_collection),
             else => return err,
         };
-        if (operation.inputs.len != operation.kind.arity()) return self.sink.fail("E_ARITY", node.span, "collection method argument count differs from its signature");
+        if (dictionary and switch (operation.kind) {
+            .items, .update, .setdefault, .pop_key, .pop_default, .copy, .clear => true,
+            else => false,
+        }) return self.checkDictionaryMethod(node, owner_type, operation, temporaries);
+        if (operation.inputs.len != operation.kind.arity()) return self.sink.fail("E_ARITY", node.span, method_arity);
         const arguments = try self.allocator.alloc(typed.NodeId, operation.inputs.len);
         for (operation.inputs, arguments, 0..) |input, *argument, index| {
             const integer = !dictionary and (operation.kind == .read or operation.kind == .slice or widthArgument(operation.kind));
@@ -1126,14 +1334,51 @@ const Checker = struct {
         try self.requireArenaOperation(operation.receiver, operation.kind, arguments);
         return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(operation.base, operation.kind, arguments, false);
     }
+    /// Check a dictionary's Python-shaped methods against its key and value types.
+    fn checkDictionaryMethod(self: *Checker, node: ast.Node, owner_type: typed.Type, operation: ManagedAccess, temporaries: []const typed.Type) Error!typed.Node {
+        const schema = self.catalog.records[owner_type.recordIndex()];
+        const key_type = schema.collection.key.?;
+        const value_type = schema.shape.buffer.?;
+        if (operation.inputs.len != operation.kind.arity()) return self.sink.fail("E_ARITY", node.span, method_arity);
+        const arguments = try self.allocator.alloc(typed.NodeId, operation.inputs.len);
+        switch (operation.kind) {
+            .items, .copy, .clear => {},
+            .update => {
+                try self.hint(operation.inputs[0], owner_type);
+                arguments[0] = try self.expressionWithTemporaries(operation.inputs[0], temporaries);
+                try self.require(self.nodes.items[@backingInt(arguments[0])].ty, owner_type, node.span);
+            },
+            .pop_key => {
+                try self.hint(operation.inputs[0], key_type);
+                arguments[0] = try self.expressionWithTemporaries(operation.inputs[0], temporaries);
+                try self.require(self.nodes.items[@backingInt(arguments[0])].ty, key_type, node.span);
+            },
+            .pop_default, .setdefault => {
+                try self.hint(operation.inputs[0], key_type);
+                arguments[0] = try self.expressionWithTemporaries(operation.inputs[0], temporaries);
+                try self.require(self.nodes.items[@backingInt(arguments[0])].ty, key_type, node.span);
+                try self.hint(operation.inputs[1], value_type);
+                arguments[1] = try self.expressionWithTemporaries(operation.inputs[1], temporaries);
+                try self.require(self.nodes.items[@backingInt(arguments[1])].ty, value_type, node.span);
+            },
+            else => return self.sink.fail(eCollectionMethod, node.span, "operation is not supported by dictionaries"),
+        }
+        try self.requireArenaOperation(operation.receiver, operation.kind, arguments);
+        return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(operation.base, operation.kind, arguments, false);
+    }
+
     fn hintBufferArguments(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation)) Error!void {
         if (self.active.get(self.src.text(operation.owner))) |slot| {
             const owner_type = self.locals.items[@backingInt(slot)].ty;
             if (owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].collection.kind != .list) {
                 const schema = self.catalog.records[owner_type.recordIndex()];
                 if (schema.collection.kind == .dictionary) {
-                    if (operation.arguments.len > 0) try self.hint(operation.arguments[0], schema.collection.key.?);
-                    if (operation.arguments.len == 2) try self.hint(operation.arguments[1], schema.shape.buffer.?);
+                    if (operation.kind == .update and operation.arguments.len == 1) {
+                        try self.hint(operation.arguments[0], owner_type);
+                    } else {
+                        if (operation.arguments.len > 0) try self.hint(operation.arguments[0], schema.collection.key.?);
+                        if (operation.arguments.len == 2) try self.hint(operation.arguments[1], schema.shape.buffer.?);
+                    }
                 } else if (operation.kind == .replace and operation.arguments.len == 2) {
                     for (operation.arguments) |argument| try self.hint(argument, owner_type);
                 } else if (sequenceArgument(operation.kind) and operation.arguments.len == 1) {
@@ -1166,6 +1411,7 @@ const Checker = struct {
         }
     }
     fn queueBuiltinCall(self: *Checker, work: *std.ArrayList(Work), call: @FieldType(@FieldType(ast.Node, "data"), "call"), node: ast.Node) Error!bool {
+        if (try self.queuePreludeCall(work, call)) return true;
         if (try self.floatIntrinsic(call) != null) {
             try call_arguments.positional(call, self.sink);
             if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "float operations require one argument");
@@ -1468,10 +1714,43 @@ const Checker = struct {
                 try self.require(self.nodes.items[@backingInt(arguments[0])].ty, if (operation.kind == .split) local.ty else list_type, operation.owner);
                 out.ty = if (operation.kind == .split) list_type else local.ty;
             },
+            .items, .pop, .pop_key, .pop_default, .update, .setdefault, .copy, .clear => return self.checkDictionaryBufferMethod(operation, owner, out),
             else => return self.sink.fail(eCollectionMethod, operation.owner, unsupported_collection),
         }
         out.data = .{ .buffer_operation = .{ .kind = operation.kind, .owner = owner, .arguments = arguments } };
     }
+    /// Check a dictionary vocabulary operation reached through the buffer-operation
+    /// form that a simple `mapping.method(...)` call desugars to.
+    fn checkDictionaryBufferMethod(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation), owner: typed.LocalId, out: *typed.Node) Error!void {
+        const owner_type = self.locals.items[@backingInt(owner)].ty;
+        const schema = self.catalog.records[owner_type.recordIndex()];
+        if (schema.collection.kind != .dictionary) return self.sink.fail(eCollectionMethod, operation.owner, "operation is not supported by this collection");
+        const key_type = schema.collection.key.?;
+        const value_type = schema.shape.buffer.?;
+        var kind = operation.kind;
+        if (kind == .pop) kind = if (operation.arguments.len == 2) .pop_default else .pop_key;
+        if (operation.arguments.len != kind.arity()) return self.sink.fail("E_ARITY", operation.owner, method_arity);
+        const arguments = try self.allocator.alloc(typed.NodeId, operation.arguments.len);
+        for (operation.arguments, arguments, 0..) |input, *argument, index| {
+            argument.* = self.resolved[@backingInt(input)].?;
+            const actual = self.nodes.items[@backingInt(argument.*)].ty;
+            const span = self.syntax.nodes.items[@backingInt(input)].span;
+            switch (kind) {
+                .items, .copy, .clear => {},
+                .update => try self.require(actual, owner_type, span),
+                .pop_key => try self.require(actual, key_type, span),
+                .pop_default, .setdefault => if (index == 0) try self.require(actual, key_type, span) else try self.require(actual, value_type, span),
+                else => {},
+            }
+        }
+        try self.requireArenaOperation(owner, kind, arguments);
+        out.ty = collections.operationType(&self.catalog, owner_type, kind, operation.owner) catch |err| switch (err) {
+            error.InternalError => return self.sink.fail(eCollectionMethod, operation.owner, unsupported_collection),
+            else => return err,
+        };
+        out.data = .{ .buffer_operation = .{ .kind = kind, .owner = owner, .arguments = arguments } };
+    }
+
     fn checkBufferOperation(self: *Checker, _: ast.Node, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation), out: *typed.Node) Error!void {
         const owner = try self.resolve(operation.owner);
         const local = &self.locals.items[@backingInt(owner)];
@@ -1485,7 +1764,11 @@ const Checker = struct {
         }
         switch (operation.kind) {
             .append, .read, .write, .length, .capacity, .contains, .iteration_check => {},
-            else => return self.sink.fail(eCollectionMethod, operation.owner, "operation is not supported by lists"),
+            .extend, .insert, .pop, .pop_at, .remove, .index_of, .reverse, .sort, .copy, .clear => {
+                try self.checkListBufferMethod(operation, owner, out);
+                return;
+            },
+            else => return self.sink.fail(eCollectionMethod, operation.owner, unsupported_list),
         }
         const arguments = try self.allocator.alloc(typed.NodeId, operation.arguments.len);
         for (operation.arguments, arguments, 0..) |input, *argument, argument_index| {
@@ -1502,6 +1785,37 @@ const Checker = struct {
         try self.requireArenaOperation(owner, operation.kind, arguments);
         out.ty = if (operation.kind.mutates()) .unit else if (operation.kind == .read) element else if (operation.kind == .contains) .bool else .u64;
         out.data = .{ .buffer_operation = .{ .kind = operation.kind, .owner = owner, .arguments = arguments } };
+    }
+    /// Check a list vocabulary operation reached through the buffer-operation form
+    /// that a simple `values.method(...)` call desugars to.
+    fn checkListBufferMethod(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation), owner: typed.LocalId, out: *typed.Node) Error!void {
+        const owner_type = self.locals.items[@backingInt(owner)].ty;
+        const element = self.catalog.records[owner_type.recordIndex()].shape.buffer.?;
+        var kind = operation.kind;
+        if (kind == .pop) kind = if (operation.arguments.len == 1) .pop_at else .pop;
+        if (operation.arguments.len != kind.arity()) return self.sink.fail("E_ARITY", operation.owner, method_arity);
+        if (kind == .sort and !(element.isInteger() or numeric_surface.isFloat(element, self.catalog.records))) {
+            return self.sink.fail(eCollectionMethod, operation.owner, "sort requires an integer or float element type");
+        }
+        const arguments = try self.allocator.alloc(typed.NodeId, operation.arguments.len);
+        for (operation.arguments, arguments, 0..) |input, *argument, index| {
+            argument.* = self.resolved[@backingInt(input)].?;
+            const actual = self.nodes.items[@backingInt(argument.*)].ty;
+            const span = self.syntax.nodes.items[@backingInt(input)].span;
+            switch (kind) {
+                .extend => try self.require(actual, owner_type, span),
+                .insert => if (index == 0) try self.requireInteger(actual, span) else try self.require(actual, element, span),
+                .pop_at => try self.requireInteger(actual, span),
+                .remove, .index_of => try self.require(actual, element, span),
+                else => {},
+            }
+        }
+        try self.requireArenaOperation(owner, kind, arguments);
+        out.ty = collections.operationType(&self.catalog, owner_type, kind, operation.owner) catch |err| switch (err) {
+            error.InternalError => return self.sink.fail(eCollectionMethod, operation.owner, unsupported_collection),
+            else => return err,
+        };
+        out.data = .{ .buffer_operation = .{ .kind = kind, .owner = owner, .arguments = arguments } };
     }
     fn checkAcquireResource(self: *Checker, _: ast.Node, acquire: @FieldType(@FieldType(ast.Node, "data"), "acquire_resource"), out: *typed.Node) Error!void {
         out.ty = try self.ty(acquire.ty);
@@ -1690,6 +2004,7 @@ const Checker = struct {
         out.data = .{ .cast = value };
     }
     fn checkCall(self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
+        if (try self.checkPreludeCall(node, input, out)) return;
         if (try self.floatIntrinsic(input)) |op| return self.checkFloatIntrinsic(node, input, op, out);
         if (try self.numericConversion(input)) |floating| return self.checkNumericConversion(node, input, floating, out);
         if (try self.typeConversion(input)) |ty_value| return self.checkTypeConversion(node, input, ty_value, out);
@@ -1760,9 +2075,15 @@ const Checker = struct {
         var out: typed.Node = undefined;
         out.span = node.span;
         const operand = self.resolved[@backingInt(u.operand)].?;
-        out.ty = if (u.op == .not) .bool else self.nodes.items[@backingInt(operand)].ty;
+        const operand_ty = self.nodes.items[@backingInt(operand)].ty;
+        out.ty = if (u.op == .not) .bool else operand_ty;
         if (u.op == .neg and numeric_surface.isFloat(out.ty, self.catalog.records)) return self.numericBuilder(node.span).negate(operand);
-        if (u.op == .neg) try self.requireInteger(out.ty, u.op_span) else try self.require(self.nodes.items[@backingInt(operand)].ty, if (u.op == .not) .bool else .u64, u.op_span);
+        // A `float` operand is the binary64 value itself, so the float-in/float-out
+        // `f64_*` operations answer a float instead of demanding a bit pattern.
+        if (@import("float_intrinsics.zig").floatwise(u.op) and numeric_surface.isFloat(operand_ty, self.catalog.records)) {
+            return self.numericBuilder(u.op_span).unary(std.meta.stringToEnum(typed.UnaryOp, @tagName(u.op)).?, operand);
+        }
+        if (u.op == .neg) try self.requireInteger(out.ty, u.op_span) else try self.require(operand_ty, if (u.op == .not) .bool else .u64, u.op_span);
         out.data = .{ .unary = .{ .op = std.meta.stringToEnum(typed.UnaryOp, @tagName(u.op)).?, .operand = operand, .op_span = u.op_span } };
         return out;
     }
@@ -1966,6 +2287,7 @@ const Checker = struct {
             out.data = .{ .integer = parsed.value };
         } else switch (node.data) {
             .field_assignment => return self.checkFieldAssignment(node, temporaries),
+            .index_assignment => return self.checkIndexAugmented(node, temporaries),
             .list_literal => |inputs| return self.checkListLiteral(node, inputs, temporaries),
             .format => |parts| return self.checkFormat(node, parts, temporaries),
             .comprehension => |each| return self.checkComprehension(node, each, temporaries),
@@ -2252,7 +2574,7 @@ const Checker = struct {
     fn requireArenaOperation(self: *Checker, owner: ?typed.LocalId, kind: BufferKind, arguments: []const typed.NodeId) Error!void {
         const slot = owner orelse return;
         if (self.arenas.items.len == 0) return;
-        if (kind == .append and arguments.len == 1) return self.requireArenaStore(slot, arguments[0]);
+        if ((kind == .append or kind == .extend) and arguments.len == 1) return self.requireArenaStore(slot, arguments[0]);
         if (kind != .write or arguments.len != 2) return;
         try self.requireArenaStore(slot, arguments[0]);
         try self.requireArenaStore(slot, arguments[1]);
@@ -2541,6 +2863,7 @@ const Checker = struct {
         return .{ .loop = .{ .id = loop_id, .condition = condition, .body = body.id } };
     }
     fn statementForEach(self: *Checker, stmt: ast.Statement, each: @FieldType(@FieldType(ast.Statement, "data"), "for_each")) Error!@FieldType(typed.Statement, "data") {
+        if (try self.preludeIteration(stmt, each)) |statements| return .{ .block = statements };
         const b: collections.Builder(Checker) = .{ .checker = self, .span = stmt.span };
         const iterable = try self.expression(each.iterable);
         const iterable_type = self.nodes.items[@backingInt(iterable)].ty;
@@ -2559,7 +2882,7 @@ const Checker = struct {
         const names = [_]?source.Span{ each.name, each.index_name };
         const slots = [_]typed.LocalId{ value_slot, index };
         for (names) |maybe_name| if (maybe_name) |name| {
-            if (try self.topLevel(name) or self.active.contains(self.src.text(name))) return self.sink.fail(eShadowing, name, "iteration binding shadows an active declaration");
+            if (try self.topLevel(name) or self.active.contains(self.src.text(name))) return self.sink.fail(eShadowing, name, eIterationShadow);
         };
         if (each.index_name) |name| if (std.mem.eql(u8, self.src.text(name), self.src.text(each.name))) return self.sink.fail(eShadowing, name, "iteration names must differ");
         for (names, slots) |maybe_name, slot| if (maybe_name) |name| {
@@ -2596,6 +2919,49 @@ const Checker = struct {
             try b.stmt(.{ .initialize = .{ .slot = limit, .value = try b.length(owner) } }),
             try b.stmt(.{ .loop = .{ .id = loop_id, .condition = try b.binary(.lt, i, try b.read(limit), .bool), .body = iteration, .step = step } }),
         }) };
+    }
+    /// `for x in reversed(xs):` and `for a, b in zip(xs, ys):` walk their sources
+    /// directly, so no intermediate list is materialised.
+    fn preludeIteration(self: *Checker, stmt: ast.Statement, each: @FieldType(@FieldType(ast.Statement, "data"), "for_each")) Error!?[]const typed.StatementId {
+        const node = self.syntax.nodes.items[@backingInt(each.iterable)];
+        if (node.data != .call) return null;
+        const call = node.data.call;
+        if (!std.mem.eql(u8, self.src.text(call.name), "reversed") and !std.mem.eql(u8, self.src.text(call.name), "zip")) return null;
+        if (!try self.preludeName(call)) return null;
+        try call_arguments.positional(call, self.sink);
+        const paired = std.mem.eql(u8, self.src.text(call.name), "zip");
+        if (call.arguments.len != (if (paired) @as(usize, 2) else 1)) return self.sink.fail("E_ARITY", node.span, "reversed takes one iterable and zip takes two");
+        if (paired != (each.index_name != null)) return self.sink.fail(eCollectionMethod, stmt.span, "zip binds two iteration names and reversed binds one");
+        for (call.arguments) |id| try self.hintEmptyPreludeList(id, .i64);
+        const sources = try self.allocator.alloc(typed.NodeId, call.arguments.len);
+        for (call.arguments, sources) |id, *slot| slot.* = try self.expression(id);
+        const builtins: prelude_builtins.Prelude(Checker) = .{ .checker = self };
+        const left_type = self.nodes.items[@backingInt(sources[0])].ty;
+        const zip = if (paired) try builtins.reserveZip(stmt.span, left_type, self.nodes.items[@backingInt(sources[1])].ty) else null;
+        const walk = if (zip) |pair| pair.left else try builtins.reserveWalk(stmt.span, left_type);
+        const names = [_]?source.Span{ each.index_name, each.name };
+        const slots = [_]typed.LocalId{ walk.slot, if (zip) |pair| pair.right.slot else walk.slot };
+        for (names, slots) |maybe_name, slot| if (maybe_name) |name| {
+            if (try self.topLevel(name) or self.active.contains(self.src.text(name))) return self.sink.fail(eShadowing, name, eIterationShadow);
+            self.locals.items[@backingInt(slot)].name = self.src.text(name);
+            self.locals.items[@backingInt(slot)].declaration = name;
+            try self.active.put(self.allocator, self.src.text(name), slot);
+        };
+        defer for (names) |maybe_name| if (maybe_name) |name| {
+            _ = self.active.remove(self.src.text(name));
+        };
+        const before = try self.pendingState(self.locals.items.len);
+        try self.loops.active.append(self.allocator, .{ .id = walk.loop, .before = before, .arenas = self.arenas.items.len });
+        defer _ = self.loops.active.pop();
+        const body = try self.statement(each.body);
+        if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
+        self.restorePending(before);
+        if (zip) |pair| {
+            const statements = try builtins.zipStatements(.{ .span = stmt.span, .left = sources[0], .right = sources[1], .zip = pair, .body = body.id });
+            return statements;
+        }
+        const statements = try builtins.walkStatements(.{ .span = stmt.span, .input = sources[0], .walk = walk, .descending = true, .body = body.id });
+        return statements;
     }
     fn iterationValue(self: *Checker, b: collections.Builder(Checker), owner: typed.LocalId, kind: ManagedKind, index: typed.NodeId) Error!typed.NodeId {
         _ = self;
@@ -2727,19 +3093,22 @@ const Checker = struct {
         var value = try self.expressionExpected(a.value, self.locals.items[@backingInt(slot)].ty);
         if (a.op != .set) {
             try self.requireReadable(slot, a.name);
-            try self.requireInteger(self.locals.items[@backingInt(slot)].ty, a.op_span);
-            try self.require(self.nodes.items[@backingInt(value)].ty, self.locals.items[@backingInt(slot)].ty, a.op_span);
+            const target_type = self.locals.items[@backingInt(slot)].ty;
+            try self.require(self.nodes.items[@backingInt(value)].ty, target_type, a.op_span);
+            // `values += other` is Python's in-place extend, not a fresh list.
+            if (a.op == .add and target_type.isAggregate() and self.catalog.records[target_type.recordIndex()].managed and self.catalog.records[target_type.recordIndex()].collection.kind == .list) {
+                const b: collections.Builder(Checker) = .{ .checker = self, .span = a.op_span };
+                const arguments = try self.allocator.alloc(typed.NodeId, 1);
+                arguments[0] = value;
+                try self.requireArenaOperation(slot, .extend, arguments);
+                self.locals.items[@backingInt(slot)].usage.reads += 1;
+                self.locals.items[@backingInt(slot)].usage.writes += 1;
+                return .{ .block = try self.allocator.dupe(typed.StatementId, &.{try b.stmt(.{ .discard = try b.operation(slot, .extend, arguments) })}) };
+            }
             self.locals.items[@backingInt(slot)].usage.reads += 1;
             const read: typed.NodeId = @fromBackingInt(self.nodes.items.len);
-            try self.nodes.append(self.allocator, .{ .ty = self.locals.items[@backingInt(slot)].ty, .span = a.name, .data = .{ .local = slot } });
-            const combined: typed.NodeId = @fromBackingInt(self.nodes.items.len);
-            try self.nodes.append(self.allocator, .{ .ty = self.locals.items[@backingInt(slot)].ty, .span = stmt.span, .data = .{ .binary = .{
-                .op = if (a.op == .add) .add else .sub,
-                .left = read,
-                .right = value,
-                .op_span = a.op_span,
-            } } });
-            value = combined;
+            try self.nodes.append(self.allocator, .{ .ty = target_type, .span = a.name, .data = .{ .local = slot } });
+            value = try self.augmented(a.op, read, value, a.op_span);
         }
         try self.require(self.nodes.items[@backingInt(value)].ty, self.locals.items[@backingInt(slot)].ty, stmt.span);
         try self.requireArenaAssignment(slot, value);

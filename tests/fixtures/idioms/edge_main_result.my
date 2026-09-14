@@ -1,0 +1,2 @@
+def main(fs: Filesystem) -> Result[None, str]:
+    return Err("bad")

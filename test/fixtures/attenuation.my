@@ -2,7 +2,7 @@ resource File: filesystem
 
 result Open:
     ok: File,
-    err: i64
+    err: int
 
 
 class Chunk:
@@ -13,14 +13,14 @@ class Chunk:
 
 result Read:
     ok: Chunk,
-    err: i64
+    err: int
 
 
 def delegate(fs: filesystem_cap) -> filesystem_cap effects():
     return restrict_resource[read](fs)
 
 
-def main(fs: filesystem_cap) -> i64:
+def main(fs: filesystem_cap) -> int:
     reader = delegate(fs)
     request: [1]u8 = [42u8]
     match acquire_resource[Open](reader, request):
@@ -28,7 +28,7 @@ def main(fs: filesystem_cap) -> i64:
             file = input
             match read_resource[Read](file):
                 case Read.ok(chunk):
-                    return i64(chunk.length)
+                    return int(chunk.length)
                 case Read.err(code):
                     return -code
         case Open.err(code):

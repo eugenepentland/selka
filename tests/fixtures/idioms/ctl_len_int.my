@@ -1,0 +1,4 @@
+def main() -> int:
+    xs = [1, 2, 3]
+    n: int = len(xs)
+    return n

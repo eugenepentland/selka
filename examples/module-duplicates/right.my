@@ -2,11 +2,11 @@ module right
 export quote
 
 
-def quote(count: i64) -> i64:
+def quote(count: int) -> int:
     subtotal = count * 2
     return subtotal + 3
 
 
-def alternate(count: i64) -> i64:
+def alternate(count: int) -> int:
     subtotal = count * 2
     return subtotal + 4

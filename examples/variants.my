@@ -5,17 +5,17 @@ enum Color:
 
 
 class Point:
-    x: i64
-    y: i64
+    x: int
+    y: int
 
 
 union Shape:
     point: Point,
-    radius: i64,
+    radius: int,
     empty
 
 
-def score(shape: Shape) -> i64:
+def score(shape: Shape) -> int:
     match shape:
         case Shape.empty:
             return 0
@@ -25,7 +25,7 @@ def score(shape: Shape) -> i64:
             return p.x + p.y
 
 
-def color_score(color: Color) -> i64:
+def color_score(color: Color) -> int:
     match color:
         case Color.red:
             return 1
@@ -35,6 +35,6 @@ def color_score(color: Color) -> i64:
             return 3
 
 
-def main() -> i64:
+def main() -> int:
     shapes: [3]Shape = [Shape.point(Point(x=2, y=3)), Shape.radius(4), Shape.empty]
     return score(shapes[0]) + score(shapes[1]) + score(shapes[2]) + color_score(Color.blue)

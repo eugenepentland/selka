@@ -225,8 +225,8 @@ test "unit fallthrough and early return release managed parameters without losin
         \\
         \\def produce() -> A:
         \\    values: List[i64] = []
-        \\    values.push(1)
-        \\    values.push(2)
+        \\    values.append(1)
+        \\    values.append(2)
         \\    return Ok(values)
         \\
         \\

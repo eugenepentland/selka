@@ -1,0 +1,7 @@
+class Person:
+    age: int
+
+def main() -> int:
+    people = [Person(age=30), Person(age=12)]
+    ranked = sorted(people, key=lambda person: person.age)
+    return ranked[0].age

@@ -2,7 +2,7 @@ module main
 import io
 
 
-def main() -> i64:
+def main() -> int:
     index = 0
     while index < io.length():
         _ = io.put(io.byte(index))

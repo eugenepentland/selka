@@ -1,5 +1,5 @@
-def main() -> i64:
-    factor: i64 = 7
+def main() -> int:
+    factor: int = 7
     total = 0
     amount = 3
     total = factor * amount

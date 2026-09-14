@@ -118,6 +118,10 @@ pub const Tag = enum {
     or_or,
     plus_equal,
     minus_equal,
+    star_equal,
+    slash_equal,
+    slash_slash_equal,
+    percent_equal,
     equal,
     eq_eq,
     bang,
@@ -296,6 +300,10 @@ pub fn spelling(comptime tag: Tag) []const u8 {
         .or_or => "or",
         .plus_equal => "+=",
         .minus_equal => "-=",
+        .star_equal => "*=",
+        .slash_equal => "/=",
+        .slash_slash_equal => "//=",
+        .percent_equal => "%=",
         .equal => "=",
         .eq_eq => "==",
         .bang => "not",
@@ -367,10 +375,17 @@ fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, sink: *
             }
             i += 1;
             const next = if (i < limit) bytes[i] else 0;
+            // `//=` is the one three-byte operator; every other augmented form is a pair.
+            if (ch == '/' and next == '/' and i + 1 < limit and bytes[i + 1] == '=') {
+                i += 2;
+                break :blk .slash_slash_equal;
+            }
             const pair: ?Tag = switch (ch) {
-                '/' => if (next == '/') .slash_slash else null,
+                '/' => if (next == '/') .slash_slash else if (next == '=') .slash_equal else null,
                 '-' => if (next == '>') .arrow else if (next == '=') .minus_equal else null,
                 '+' => if (next == '=') .plus_equal else null,
+                '*' => if (next == '=') .star_equal else null,
+                '%' => if (next == '=') .percent_equal else null,
                 '=' => if (next == '=') .eq_eq else null,
                 '!' => if (next == '=') .bang_eq else null,
                 '<' => if (next == '=') .le else null,

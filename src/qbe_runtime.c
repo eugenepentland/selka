@@ -21,8 +21,13 @@ _Static_assert(offsetof(MylQbeActiveFrame, position) == 8, "QBE frame position A
 /* Stable trap for a guest that outgrew its byte ceiling. It is a runtime trap
    like any other R_ code, so it exits 1 rather than reporting a host defect. */
 static const char *const memory_budget_code = "R_MEMORY_BUDGET";
+/* A budget trap tells the reader which flag raises it, because a program that
+   stops at ten million steps is a budget decision, not a program defect. */
 static const char *describe(const char *code) {
-    return strcmp(code, memory_budget_code) ? "native execution failed" : "memory budget exhausted";
+    if (!strcmp(code, memory_budget_code)) return "memory budget exhausted";
+    if (!strcmp(code, "R_STEP_LIMIT")) return "instruction budget exhausted; raise it with --max-steps=N";
+    if (!strcmp(code, "R_FRAME_LIMIT")) return "call-depth budget exhausted; raise it with --max-frames=N";
+    return strncmp(code, "R_", 2) ? "QBE runtime failure" : "native execution failed";
 }
 static uint64_t fail(void *context, const char *code) {
     Context *ctx = context;
@@ -48,12 +53,14 @@ void *myl_qbe_root_mark(void *context) { return ((Context *)context)->heap.roots
 void myl_qbe_root_restore(void *context, void *mark) { ((Context *)context)->heap.roots = mark; }
 void myl_qbe_fail_capability(void *context) { fail(context, "R_CAPABILITY"); }
 void myl_qbe_fail_slice(void *context) { fail(context, "R_SLICE_BOUNDS"); }
+void myl_qbe_fail_slice_step(void *context) { fail(context, "R_SLICE_STEP"); }
 void myl_qbe_fail_text_bounds(void *context) { fail(context, "R_TEXT_BOUNDS"); }
 void myl_qbe_fail_missing_key(void *context) { fail(context, "R_MISSING_KEY"); }
 void myl_qbe_fail_empty_separator(void *context) { fail(context, "R_EMPTY_SEPARATOR"); }
 void myl_qbe_fail_buffer_bounds(void *context) { fail(context, "R_BUFFER_BOUNDS"); }
 void myl_qbe_fail_list_bounds(void *context) { fail(context, "R_LIST_BOUNDS"); }
 void myl_qbe_fail_list_capacity(void *context) { fail(context, "R_LIST_CAPACITY"); }
+void myl_qbe_fail_list_value(void *context) { fail(context, "R_LIST_VALUE"); }
 /* A refused managed allocation names the budget when the heap declined it and
    the host only when the process itself could not produce the bytes. */
 void myl_qbe_fail_allocation(void *context) {
@@ -298,7 +305,7 @@ int mylang_qbe_run_providers(uint64_t (*entry)(void *), int argc, char **argv, c
         if (result.trace_count) {
             const MylQbeTrace *at=&result.trace[0];
             fprintf(stderr,"%s:%" PRIu64 ":%" PRIu64 ": error[%s]: %s\n",at->path,at->line,at->column,result.code,describe(result.code));
-        } else fprintf(stderr, "%s: %s\n", result.code, strcmp(result.code, memory_budget_code) ? "QBE runtime failure" : describe(result.code));
+        } else fprintf(stderr, "%s: %s\n", result.code, describe(result.code));
         for (uint64_t i=0; i<result.trace_count; ++i) {
             MylQbeTrace frame = result.trace[i];
             fprintf(stderr, "  in %s at %s:%" PRIu64 ":%" PRIu64 "\n", frame.function, frame.path, frame.line, frame.column);

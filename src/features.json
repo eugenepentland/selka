@@ -4,7 +4,7 @@
   "implemented": {
     "direct-c-scalar-imports-qbe": {
       "kind": "tooling",
-      "summary": "`extern fn` declarations call fixed-arity C scalar functions directly from QBE native builds.",
+      "summary": "`extern def` declarations call fixed-arity C scalar functions directly from QBE native builds.",
       "doc": "docs/c-ffi.md#direct-c-imports"
     },
     "explicit-native-link-inputs": {
@@ -112,6 +112,11 @@
       "summary": "Prelude helpers convert, compare and classify binary64 values without importing a module.",
       "doc": "docs/floating-point.md#prelude-float-helpers"
     },
+    "python-prelude-builtins": {
+      "kind": "language",
+      "summary": "Bare Python `sum`, `min`, `max`, `sorted`, `abs`, `round`, `any`, `all`, `reversed`, `list` and `zip` work without an import.",
+      "doc": "docs/python-syntax.md#prelude-builtins"
+    },
     "string-to-number-parsing": {
       "kind": "language",
       "summary": "`int(text)` and `float(text)` answer `Option` rather than raising on text that is not a number.",
@@ -149,7 +154,12 @@
     },
     "managed-insertion-ordered-dictionaries": {
       "kind": "language",
-      "summary": "`dict` keeps insertion order over `int` or `str` keys and copyable values.",
+      "summary": "`dict` keeps insertion order over `int` or `str` keys and copyable values and answers `items`, `pop`, `update`, `setdefault`, `get`, `keys`, `values`, `copy` and `clear`.",
+      "doc": "docs/managed-memory.md#insertion-ordered-dictionaries"
+    },
+    "dictionary-methods": {
+      "kind": "language",
+      "summary": "`dict.pop(key[, fallback])` removes and returns a value, `update` merges another dictionary in insertion order, and `setdefault` returns or stores a fallback.",
       "doc": "docs/managed-memory.md#insertion-ordered-dictionaries"
     },
     "ordinary-binary64-float": {
@@ -189,7 +199,7 @@
     },
     "list-methods-and-indexing": {
       "kind": "language",
-      "summary": "Lists answer `append`, `len`, indexing with negative positions and indexed writes.",
+      "summary": "Lists answer `append`, `extend`, `insert`, `pop`, `remove`, `index`, `reverse`, `sort`, `copy`, `clear`, `len`, indexing with negative positions and indexed in-place `+=`.",
       "doc": "docs/managed-memory.md#list-methods-and-indexing"
     },
     "postfix-error-propagation": {
@@ -372,6 +382,16 @@
       "summary": "Every process that runs guest code runs under a byte ceiling the heap traps on and the kernel backs with RLIMIT_AS.",
       "doc": "docs/tooling/runtime-budgets.md#guest-memory-ceilings"
     },
+    "native-default-releasefast": {
+      "kind": "tooling",
+      "summary": "`mylang build` and `mylang run` build ReleaseFast unless `--mode Debug` selects an unoptimized binary, and `--report` states the mode.",
+      "doc": "docs/performance.md#build-for-speed"
+    },
+    "native-instruction-and-frame-budgets": {
+      "kind": "tooling",
+      "summary": "`--max-steps=N` and `--max-frames=N` raise the per-process instruction and call-depth budgets, and each trap names the flag that raises it.",
+      "doc": "docs/tooling/runtime-budgets.md#instruction-and-frame-budgets"
+    },
     "memory-bounded-test-fanout": {
       "kind": "tooling",
       "summary": "A directory test run sizes its worker pool from free memory as well as cores, with --jobs and MYLANG_JOBS to override it.",
@@ -516,7 +536,7 @@
     "iteration": "range(end/start,end), list/str/dict foreach and enumerate; fixed bounds and structural mutation checks",
     "native_runtime": "QBE only; host effects require explicit ABI registration",
     "workers": "no host worker facility and no guest spawn syntax; parallelism is one guest process per task",
-    "floating_point": "float literals, ordinary operators, signed int conversions; IEEE binary64; standard sqrt and decimal parsing are accurate rather than correctly rounded; no transcendentals",
+    "floating_point": "float literals, ordinary operators, signed int conversions; IEEE binary64; standard sqrt is the correctly rounded binary64 operation, decimal parsing is accurate rather than correctly rounded; no transcendentals",
     "callbacks": "generic signatures, exact effect ceilings, explicit readonly context borrows, no captures or reference results",
     "semantic_reuse": "conservative function-body queries; generics constants aliases and inferred callback schemas check fresh",
     "text_data": "managed Unicode scalar strings and managed bytes; host byte I/O keeps its scalar ABI",

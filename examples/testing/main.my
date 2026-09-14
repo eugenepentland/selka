@@ -3,11 +3,11 @@ export test_square
 export test_sum
 
 
-def square(value: i64) -> i64:
+def square(value: int) -> int:
     return value * value
 
 
-def sum(left: i64, right: i64) -> i64:
+def sum(left: int, right: int) -> int:
     return left + right
 
 
@@ -19,5 +19,5 @@ def test_sum() -> bool:
     return sum(20, 22) == 42
 
 
-def main() -> i64:
+def main() -> int:
     return 0

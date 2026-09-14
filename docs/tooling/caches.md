@@ -1,12 +1,12 @@
 # Compiler caches
 
 Native builds also keep an on-disk cache; see
-[the native build cache](#native-build-cache) below. The rest of this document
-covers the in-process caches.
+[the native build cache](#native-build-cache) below. This document covers the
+in-process caches and the [persistent frontend cache](#persistent-frontend-cache)
+that ordinary one-shot commands use across processes.
 
 The compiler keeps three bounded in-process caches: parsed module syntax, a
-whole-program checking verdict, and checked function bodies. Ordinary one-shot
-commands build an independent project and use none of them; `mylang check-session`
+whole-program checking verdict, and checked function bodies. `mylang check-session`
 keeps them across requests so an editor or an agent can check the same project
 repeatedly in one process. Every reply is one `check-session-v1` JSON line whose
 `reuse`, `cache`, `semantic` and `functions` fields report what was actually
@@ -14,6 +14,78 @@ reused. The design records are
 [bounded incremental module syntax](../experiments/incremental-syntax.md),
 [persistent CLI checking sessions](../experiments/check-session.md) and
 [larger-project incremental checking](../experiments/large-project-checking.md).
+
+## Persistent frontend cache
+
+Ordinary one-shot `mylang check`, `mylang run`, `mylang build` and `mylang test`
+also reuse work across processes through a content-addressed on-disk cache. It is
+deliberately narrow: it can skip lexing and parsing, and it can replay a whole
+program's already-successful warnings; it never stores a checked program, a symbol
+index, an interface or a resolved declaration.
+
+The cache root is `<cache-dir>/frontend/` when `--cache-dir` is given, otherwise
+`MYLANG_FRONTEND_CACHE`, otherwise the per-project `.mylang-cache/frontend`.
+`mylang build` and `mylang test` pass their own cache directory through to the
+frontend, so frontend entries sit under the same root as the native object cache.
+`--no-cache` disables frontend reuse for `check`, `run`, `build` and the project
+commands; a native `build` still uses its separate object cache. Within the root,
+entries are partitioned by the compiler's
+build-time identity (a digest of every file under `src`, the Zig toolchain and the
+optimize mode), so a rebuilt compiler can never read an older build's entries.
+
+The cache has two independent layers, and both are always keyed by the compiler
+identity and a format version:
+
+| layer | stored | key also includes | skipped on a hit | still runs fresh |
+| --- | --- | --- | --- | --- |
+| parsed syntax | one parsed module body | exact source path, exact source bytes, module body start | the lexer and parser for that module only | every declaration, symbol, export, visibility, ownership, effect and typed-body check |
+| project verdict | the rendered warning text of one successful `check-project` | every loaded module's name, exact path and exact bytes, plus the diagnostic format | declaration/interface resolution and the entire semantic check | loading every module from disk and recomputing the key |
+
+Single-file commands (`check`, `run`, `emit-qbe`) key syntax with body start `0`;
+project commands key it with the module header's body start, so the two shapes
+never alias. A syntax hit returns independently owned AST storage: the two
+growable `Program` lists are persisted as exact-length owned slices, so a restored
+list owns exactly its items and never advertises capacity it did not allocate.
+
+### Limits and fallbacks
+
+- **Nothing typed is persisted.** Checked `typed.Program` bodies, the semantic
+  function cache, symbol indexes, interfaces and resolved declarations are never
+  written. A re-invocation after any edit re-checks every function body; only the
+  in-process `check-session` reuses checked bodies. The persistent cache therefore
+  cannot mask a changed declaration, visibility, ownership or effect bound, and it
+  does not reproduce the `functions` counters of a session.
+- **Failed checks are never stored.** A verdict entry is written only after a
+  complete, error-free `check-project`; a type, privacy, import or deleted-file
+  error can never inherit an earlier success. The verdict key covers all loaded
+  bytes, so a changed file, module name, import graph or generated input misses.
+- **Damaged entries degrade to a miss.** Every entry repeats its key, payload
+  length and an XxHash checksum in its header. A truncated, foreign, resized or
+  bit-flipped entry is rejected (`damaged` in the receipt) and the caller parses
+  or checks fresh; no partial result is ever used. Stores stage to a unique
+  `.tmp` file and rename atomically, and concurrent trims can only cost a miss.
+- **Bounded retention.** One identity namespace holds at most 128 MiB of entry
+  files; an entry larger than that is bypassed rather than stored, and the
+  directory is trimmed oldest-mtime-first after a successful store. `retained_bytes`
+  is the size observed during the last trim, so a pure cache hit reports `0`.
+- **Invalidation is exact-content.** Any change to the compiler sources, Zig
+  toolchain, optimize mode, diagnostic format, source path or source bytes
+  changes a key. There is no time-based expiry and no notion of a "changed but
+  currently unread" file: the caller always reloads every module first.
+
+`--report` prints one `frontend-cache-v1` JSON receipt on stderr; `--timings=json`
+adds the same JSON receipt alongside the phase-timing lines. Plain `--timings`
+keeps its existing `timings: native_ns=<integer>` text protocol and does not emit
+a receipt. `mylang build --report` keeps its own native `qbe-build-v1` receipt on
+its usual stream; the frontend counters are available from `check`, `run` and
+`check-project` (or any command with `--timings=json`).
+
+```console
+$ mylang check-project app/main.my --report --cache-dir=.mylang-cache/qbe
+{"version":"frontend-cache-v1","syntax_hits":0,"syntax_misses":2,"syntax_stored":2,"verdict_hits":0,"verdict_misses":1,"verdict_stored":1,"damaged":0,"bypassed":0,"evicted":0,"retained_bytes":685}
+$ mylang check-project app/main.my --report --cache-dir=.mylang-cache/qbe
+{"version":"frontend-cache-v1","syntax_hits":0,"syntax_misses":0,"syntax_stored":0,"verdict_hits":1,"verdict_misses":0,"verdict_stored":0,"damaged":0,"bypassed":0,"evicted":0,"retained_bytes":0}
+```
 
 ## Syntax cache
 

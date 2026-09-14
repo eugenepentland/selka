@@ -2,5 +2,5 @@ module amount
 export total
 
 
-def total() -> i64:
+def total() -> int:
     return 42

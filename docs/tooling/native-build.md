@@ -6,7 +6,9 @@ checked program to bytecode, renders that as QBE intermediate code, runs QBE,
 assembles and links, and bundles the native runtime sources it needs. There is no
 installer script, no `make`, and no compiler source checkout in the loop. The
 design record is
-[incremental QBE native compilation](../experiments/incremental-qbe.md).
+[incremental QBE native compilation](../experiments/incremental-qbe.md). For
+when to reach for a native build, what the optimize mode costs, and how to
+measure the result, see the [performance page](../performance.md).
 
 Bytecode is still part of the compiler, but only as that internal IR. Nothing
 executes it: there is no interpreter, and QBE is the only backend. `mylang run`

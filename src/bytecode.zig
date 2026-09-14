@@ -236,51 +236,63 @@ fn validateCollectionBinary(program: Program, binary: @FieldType(@FieldType(Inst
 
 fn validateManagedOperation(program: Program, local: typed.Local, operation: BufferOperation) Error!void {
     const schema = program.records[local.ty.recordIndex()];
-    const element = schema.shape.buffer.?;
+    if (schema.collection.kind == .list) return validateManagedListOperation(local, schema, operation);
+    return validateManagedTextOperation(program, local, schema, operation);
+}
 
-    if (schema.collection.kind != .list) {
-        const dictionary = schema.collection.kind == .dictionary;
-        const byte_string = schema.collection.kind == .bytes;
-        const expected: typed.Type = switch (operation.kind) {
-            .length => .i64,
-            .find => if (dictionary) return error.InternalError else .i64,
-            .iteration_check => .unit,
-            .key_at => if (dictionary) schema.collection.key.? else return error.InternalError,
-            .slice => if (!dictionary) local.ty else return error.InternalError,
-            .read => if (dictionary or byte_string) element else local.ty,
-            .write => if (dictionary) .unit else return error.InternalError,
-            .get => if (dictionary) element else return error.InternalError,
-            .contains => .bool,
-            .starts_with, .ends_with => if (dictionary) return error.InternalError else .bool,
-            .to_list, .hex, .decode => if (byte_string) try validateConversion(program, operation) else return error.InternalError,
-            .encode, .from_hex => if (schema.collection.kind == .string) try validateConversion(program, operation) else return error.InternalError,
-            .join => if (!dictionary) local.ty else return error.InternalError,
-            .strip, .lstrip, .rstrip, .upper, .lower, .replace, .zfill => if (dictionary or byte_string) return error.InternalError else local.ty,
-            .is_digit, .is_alpha, .is_space => if (dictionary or byte_string) return error.InternalError else .bool,
-            .count => if (dictionary or byte_string) return error.InternalError else .i64,
-            .splitlines, .parse_int, .parse_float => if (dictionary or byte_string) return error.InternalError else operation.output,
-            .split, .keys, .values => list: {
-                if ((operation.kind == .split) == dictionary) return error.InternalError;
-                if (!operation.output.isAggregate()) return error.InternalError;
-                const result = program.records[operation.output.recordIndex()];
-                const member = if (operation.kind == .split) local.ty else if (operation.kind == .keys) schema.collection.key.? else element;
-                if (!result.managed or result.collection.kind != .list or result.shape.buffer != member) return error.InternalError;
-                break :list operation.output;
-            },
-            else => return error.InternalError,
-        };
-        if (operation.output != expected) return error.InternalError;
-        return;
-    }
+fn validateManagedListOperation(local: typed.Local, schema: typed.Record, operation: BufferOperation) Error!void {
+    const element = schema.shape.buffer.?;
     const expected: typed.Type = switch (operation.kind) {
         .length, .capacity => .u64,
-        .read => element,
+        .read, .pop, .pop_at => element,
+        .index_of => .i64,
+        .copy => local.ty,
         .append, .write, .iteration_check => .unit,
+        .extend, .insert, .remove, .reverse, .sort, .clear => .unit,
         .contains => .bool,
+        .slice_step => local.ty,
         else => return error.InternalError,
     };
     if (operation.output != expected) return error.InternalError;
-    return;
+}
+
+fn validateManagedTextOperation(program: Program, local: typed.Local, schema: typed.Record, operation: BufferOperation) Error!void {
+    const element = schema.shape.buffer.?;
+    const dictionary = schema.collection.kind == .dictionary;
+    const byte_string = schema.collection.kind == .bytes;
+    const expected: typed.Type = switch (operation.kind) {
+        .length => .i64,
+        .find => if (dictionary) return error.InternalError else .i64,
+        .iteration_check => .unit,
+        .key_at => if (dictionary) schema.collection.key.? else return error.InternalError,
+        .slice => if (!dictionary) local.ty else return error.InternalError,
+        .slice_step => if (!dictionary and !byte_string) local.ty else return error.InternalError,
+        .read => if (dictionary or byte_string) element else local.ty,
+        .write => if (dictionary) .unit else return error.InternalError,
+        .get => if (dictionary) element else return error.InternalError,
+        .contains => .bool,
+        .starts_with, .ends_with => if (dictionary) return error.InternalError else .bool,
+        .to_list, .hex, .decode => if (byte_string) try validateConversion(program, operation) else return error.InternalError,
+        .encode, .from_hex => if (schema.collection.kind == .string) try validateConversion(program, operation) else return error.InternalError,
+        .join => if (!dictionary) local.ty else return error.InternalError,
+        .strip, .lstrip, .rstrip, .upper, .lower, .replace, .zfill => if (dictionary or byte_string) return error.InternalError else local.ty,
+        .is_digit, .is_alpha, .is_space => if (dictionary or byte_string) return error.InternalError else .bool,
+        .count => if (dictionary or byte_string) return error.InternalError else .i64,
+        .splitlines, .parse_int, .parse_float => if (dictionary or byte_string) return error.InternalError else operation.output,
+        .pop_key, .pop_default, .setdefault => if (dictionary) element else return error.InternalError,
+        .update, .clear => if (dictionary) .unit else return error.InternalError,
+        .copy => if (dictionary) local.ty else return error.InternalError,
+        .split, .keys, .values, .items => list: {
+            if ((operation.kind == .split) == dictionary) return error.InternalError;
+            if (!operation.output.isAggregate()) return error.InternalError;
+            const result = program.records[operation.output.recordIndex()];
+            const member = if (operation.kind == .split) local.ty else if (operation.kind == .keys) schema.collection.key.? else element;
+            if (!result.managed or result.collection.kind != .list or result.shape.buffer != member) return error.InternalError;
+            break :list operation.output;
+        },
+        else => return error.InternalError,
+    };
+    if (operation.output != expected) return error.InternalError;
 }
 
 fn validateConversion(program: Program, operation: BufferOperation) Error!typed.Type {

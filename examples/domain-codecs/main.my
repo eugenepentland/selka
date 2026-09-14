@@ -2,7 +2,7 @@ module main
 import data
 
 
-def main() -> i64:
+def main() -> int:
     match data.Positive.from_wire(data.Wire(n=7)):
 
         case data.Decoded.ok(value):

@@ -1,0 +1,4 @@
+def main() -> int:
+    xs = [1]
+    xs.extend([2, 3])
+    return len(xs)

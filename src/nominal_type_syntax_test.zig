@@ -248,7 +248,7 @@ fn moduleScenario(allocator: std.mem.Allocator) !void {
         var project = language.project.Project.init(allocator);
         defer project.deinit();
         try project.load(files.provider(), "main", .{});
-        var index = try language.interfaces.buildWithCache(&project, &cache);
+        var index = try language.interfaces.buildWithCache(&project, &cache, null);
         const merged = try @import("project_syntax.zig").build(&index);
         try t.expectEqual(@as(usize, 3), merged.syntax.types.expressions.applications.len);
         const application = merged.syntax.types.expressions.applications[0];

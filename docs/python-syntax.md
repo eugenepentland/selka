@@ -5,6 +5,26 @@ This is the language guide. There is one syntax: `def`, `class`, indentation and
 lists, strings and dictionaries with tracing GC. There are no allocator arguments
 or ownership annotations in ordinary data code.
 
+A file that opens with `module NAME` is a project entry. `mylang run` loads its
+reachable imports itself, so one file can use the standard library without
+switching commands:
+
+```mylang
+# doc: expect 42
+module main
+import math
+
+def main() -> int:
+    return math.clamp(99, 0, 42)
+```
+
+Save this as `main.my`, then run `zig-out/bin/mylang run main.my --print-result`.
+It prints `42`; without that flag `run` prints only what the program prints
+itself. `run-project` remains the explicit alias for a project entry, and a file
+with no module header is still one standalone unit.
+
+Here is the same single-file shape with ordinary records and a list:
+
 ```mylang
 # doc: expect 42
 class Node:
@@ -20,12 +40,10 @@ def main() -> int:
     return total
 ```
 
-Save this as `main.my`, then run `zig-out/bin/mylang run main.my --print-result`.
-It prints `42`; without that flag `run` prints only what the program prints
-itself. Use `check` instead of `run` for type checking, or `run-project` for a
-project with imports. The [schematic application](../src/schematic/guest/main.my) is a
-larger example; its [instructions](../experiments/schematic/README.md) describe
-rendering and GC stress testing.
+Save it as `main.my` too; `check` type-checks either file without building. The
+[schematic application](../src/schematic/guest/main.my) is a larger example; its
+[instructions](../experiments/schematic/README.md) describe rendering and GC
+stress testing.
 
 Write `def`, `class`, four-space indentation, `#` comments, `True`, `False`,
 `None`, and `and`/`or`/`not`. A statement ends at its newline; a `;` separates two
@@ -283,6 +301,31 @@ In particular:
   implemented.
 - Formatting validates source and returns it unchanged: indentation already is
   the canonical layout, so `fmt --check` accepts everything that parses.
+
+## Prelude builtins
+
+The everyday Python builtins are ordinary prelude names: no import is needed,
+and a local binding or declared function of the same name still wins. `sum`,
+`min`, `max`, `sorted`, `abs`, `round`, `any`, `all`, `reversed`, `list` and
+`zip` cover the scalar folds and list materialization. `sum`, `any`, `all`,
+`min` and `max` accept a list of the element type they name; `sorted` accepts a
+list of `int`, `float` or `str` and returns a new stable ascending list without
+changing its input. `reversed(xs)` copies a list or string from last to first
+and, like `zip(a, b)`, is also a `for` source; `zip` stops at the shorter list and the
+Boolean folds stop as soon as their answer is known.
+`list(range(end))` and `list(range(start, end))` materialize their range.
+
+`round(value)` answers the nearest integral `float`, with halves away from zero
+and NaN or infinities unchanged. `abs` is total for `int` except the signed
+minimum, which traps `R_OVERFLOW`; a `float` argument stays the prelude float
+operation. An empty `min`/`max` has no answer and traps `R_LIST_BOUNDS`.
+
+```mylang
+# doc: expect 15
+def main() -> int:
+    values = [3, 1, 2]
+    return sum(values) + max(values) + abs(0 - 6)
+```
 
 Byte-oriented code uses the managed `bytes` type; see
 [managed byte strings](bytes.md) for its literals, operations and conversions.

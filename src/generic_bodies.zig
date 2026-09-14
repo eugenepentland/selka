@@ -532,8 +532,31 @@ const Checker = struct {
     }
     fn listMethod(self: *Checker, node: ast.Node) Error!Symbolic {
         const method = node.data.method_call;
-        const kind = buffer_operations.method(self.src.text(method.name)) orelse return self.sink.fail("E_LIST_METHOD", method.name, "unknown collection method");
+        const name = self.src.text(method.name);
+        if (std.mem.eql(u8, name, "push")) return self.sink.fail("E_REMOVED_SPELLING", method.name, "`push` was removed; use `append(value)`");
+        const kind = buffer_operations.method(name) orelse return self.sink.fail("E_LIST_METHOD", method.name, "unknown collection method");
         return self.listOperation(node, .{ .base = method.base, .kind = kind, .arguments = method.arguments });
+    }
+    /// Check `values[index] op= value` in a generic body against the element's own rules.
+    fn indexAssignment(self: *Checker, node: ast.Node) Error!Symbolic {
+        const assignment = node.data.index_assignment;
+        const target = self.program.nodes.items[@backingInt(assignment.target)];
+        const expected = try self.expression(assignment.target);
+        try self.augmentedTarget(assignment.op, expected, node.span);
+        try self.same(try self.expressionExpected(assignment.value, expected), expected, node.span);
+        if (target.data == .index) if (self.program.nodes.items[@backingInt(target.data.index.base)].data == .name)
+            try self.runtimeOwner(self.program.nodes.items[@backingInt(target.data.index.base)].data.name, true);
+        return .{ .concrete = .unit };
+    }
+    /// Augmented assignment accepts what the target type's ordinary binary rules accept.
+    fn augmentedTarget(self: *Checker, op: ast.AssignmentOp, target: Symbolic, span: source.Span) Error!void {
+        if (self.isFloat(target)) return;
+        if (self.shapes().managed(target)) {
+            if (op == .add and self.shapes().collectionKind(target) == .string) return;
+            return self.sink.fail("E_TEXT_OPERATOR", span, "a managed collection augments with `+=` only, and str is the managed type whose `+=` a generic body can prove");
+        }
+        if (op == .div) return self.sink.fail("E_TYPE", span, "augmented `/=` produces a float; declare the binding as float or use `//=`");
+        return self.supports(target, .integer, span);
     }
     fn listSlice(self: *Checker, node: ast.Node) Error!Symbolic {
         const slice = node.data.slice;
@@ -541,6 +564,7 @@ const Checker = struct {
         _ = try self.collectionElement(owner, node.span);
         if (slice.start) |input| try self.supports(try self.expression(input), .integer, node.span);
         if (slice.end) |input| try self.supports(try self.expression(input), .integer, node.span);
+        if (slice.step) |input| try self.supports(try self.expression(input), .integer, node.span);
         self.seedEffect(.managed_allocation);
         return owner;
     }
@@ -897,6 +921,7 @@ const Checker = struct {
             .record => |record| try self.recordValue(record, node.span),
             .variant => |variant| try self.variantValue(variant, node.span),
             .field_assignment => try self.fieldAssignment(node),
+            .index_assignment => try self.indexAssignment(node),
             .list_literal => |inputs| try self.listLiteral(node, inputs),
             .format => |parts| try self.formatValue(parts, node.span),
             .comprehension => |each| try self.comprehensionValue(each, node.span),
@@ -1286,7 +1311,7 @@ const Checker = struct {
                 if (!target.mutable) return self.sink.fail(diagnostic.immutable, assignment.name, "assignment requires a mutable binding");
                 const value = try self.expressionExpected(assignment.value, target.ty);
                 try self.same(value, target.ty, assignment.op_span);
-                if (assignment.op != .set) try self.supports(target.ty, .integer, assignment.op_span);
+                if (assignment.op != .set) try self.augmentedTarget(assignment.op, target.ty, assignment.op_span);
                 if ((try self.transfers(target.ty))) {
                     if ((try self.pendingObligation(target.*))) return self.sink.fail("E_RESULT_OVERWRITE", assignment.name, "assignment would overwrite an unhandled result");
                     target.available = true;

@@ -1,14 +1,14 @@
 class Source:
-    x: i64
-    y: i64
+    x: int
+    y: int
     note: bool
 
 
 class View:
-    distance: i64
+    distance: int
 
 
-def combine(x: i64, y: i64) -> i64:
+def combine(x: int, y: int) -> int:
     return x + y
 
 
@@ -17,6 +17,6 @@ conversion def to_view(source: Source) -> View:
     return View(distance=combine(source.x, source.y))
 
 
-def main() -> i64:
+def main() -> int:
     source = Source(x=4, y=7, note=True)
     return to_view(source).distance

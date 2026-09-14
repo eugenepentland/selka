@@ -6,8 +6,13 @@ const typed = @import("typed.zig");
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 const BufferOperation = @FieldType(@FieldType(bytecode.Instruction, "op"), "buffer_operation");
 const store_unit = " storel 0, %s{d}\n";
+const copy_scratch = " %v{d} =l copy %s{d}\n";
+const load_scratch = " %v{d} =l loadl %s{d}\n";
 const allocation_failure = @import("qbe_format.zig").allocation_failure;
 const bounds_failure = "myl_qbe_fail_list_bounds";
+const list_value_failure = "myl_qbe_fail_list_value";
+const missing_key_failure = "myl_qbe_fail_missing_key";
+const numeric_surface = @import("numeric_surface.zig");
 const load_word = @import("qbe_format.zig").load_word;
 const iteration_failure = "myl_qbe_fail_iteration";
 const bytes_lower = @import("qbe_bytes.zig");
@@ -90,7 +95,7 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             const element = schema.shape.buffer.?;
             const position = h - 1;
             const value_pointer = self.temp();
-            if (self.isScalar(element)) try self.print(" %v{d} =l copy %s{d}\n", .{ value_pointer, position }) else try self.print(" %v{d} =l loadl %s{d}\n", .{ value_pointer, position });
+            if (self.isScalar(element)) try self.print(copy_scratch, .{ value_pointer, position }) else try self.print(load_scratch, .{ value_pointer, position });
             try arena_lower.Lower(E).barrier(self, list, element, value_pointer);
             if (op.kind == .append) {
                 try self.print(" %v{d} =w call $myl_native_list_append(l %heap, l %v{d}, l %v{d})\n", .{ output, list, value_pointer });
@@ -102,13 +107,94 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             }
             try self.print(store_unit, .{base});
         },
+        .extend => {
+            const other = try self.load("s", base);
+            try self.print(" %v{d} =w call $myl_native_list_extend(l %heap, l %v{d}, l %v{d})\n", .{ output, list, other });
+            try self.require(output, allocation_failure);
+            try self.print(store_unit, .{base});
+        },
+        .insert => {
+            const element = schema.shape.buffer.?;
+            const position = h - 1;
+            const value_pointer = self.temp();
+            if (self.isScalar(element)) try self.print(copy_scratch, .{ value_pointer, position }) else try self.print(load_scratch, .{ value_pointer, position });
+            try arena_lower.Lower(E).barrier(self, list, element, value_pointer);
+            const index_value = try self.load("s", base);
+            try self.print(" %v{d} =w call $myl_native_list_insert(l %heap, l %v{d}, l %v{d}, l %v{d})\n", .{ output, list, index_value, value_pointer });
+            try self.require(output, allocation_failure);
+            try self.print(store_unit, .{base});
+        },
+        .pop, .pop_at => {
+            const pointer = try self.aggregatePointer();
+            if (op.kind == .pop_at) {
+                const index_value = try self.load("s", base);
+                try self.print(" %v{d} =w call $myl_native_list_pop_at(l %v{d}, l %v{d}, l %agg{d})\n", .{ output, list, index_value, self.pc });
+            } else {
+                try self.print(" %v{d} =w call $myl_native_list_pop(l %v{d}, l %agg{d})\n", .{ output, list, self.pc });
+            }
+            try self.require(output, bounds_failure);
+            try self.store(base, try self.readValue(pointer, op.output));
+        },
+        .remove => {
+            const element = schema.shape.buffer.?;
+            const needle = try operandPointer(E, self, element, base);
+            try self.print(" %v{d} =w call $myl_native_list_remove(l %v{d}, l %v{d})\n", .{ output, list, needle });
+            const found = self.temp();
+            try self.print(" %v{d} =w ceqw %v{d}, 1\n", .{ found, output });
+            try self.require(found, list_value_failure);
+            try self.print(store_unit, .{base});
+        },
+        .index_of => {
+            const element = schema.shape.buffer.?;
+            const needle = try operandPointer(E, self, element, base);
+            const pointer = try self.aggregatePointer();
+            try self.print(" %v{d} =w call $myl_native_list_index(l %v{d}, l %v{d}, l %agg{d})\n", .{ output, list, needle, self.pc });
+            const found = self.temp();
+            try self.print(" %v{d} =w ceqw %v{d}, 1\n", .{ found, output });
+            try self.require(found, list_value_failure);
+            try self.store(base, try self.readValue(pointer, .i64));
+        },
+        .reverse => {
+            try self.print(" call $myl_native_list_reverse(l %v{d})\n", .{list});
+            try self.print(store_unit, .{base});
+        },
+        .sort => {
+            const element = schema.shape.buffer.?;
+            const order: u32 = if (numeric_surface.isFloat(element, self.program.records)) 2 else if (element.isInteger()) (if (element.integer().?.signed) 0 else 1) else 3;
+            try self.print(" %v{d} =w call $myl_native_list_sort(l %v{d}, w {d})\n", .{ output, list, order });
+            try self.require(output, allocation_failure);
+            try self.print(store_unit, .{base});
+        },
+        .copy => {
+            const result = self.temp();
+            try self.print(" %v{d} =l call $myl_native_list_copy(l %heap, l %v{d})\n", .{ result, list });
+            try checkedPointer(E, self, result, base);
+        },
+        .clear => {
+            try self.print(" %v{d} =w call $myl_native_list_clear(l %v{d})\n", .{ output, list });
+            try self.print(store_unit, .{base});
+        },
+        .slice_step => try steppedSlice(E, self, base, list),
         else => return self.reject(self.pc),
     }
 }
 
+/// Copy a stepped slice through the shared native list routine, which text shares.
+fn steppedSlice(comptime E: type, self: *E, base: usize, input: usize) Error!void {
+    const first = try self.load("s", base);
+    const last = try self.load("s", base + 1);
+    const step = try self.load("s", base + 2);
+    const nonzero = self.temp();
+    try self.print(" %v{d} =l cnel %v{d}, 0\n", .{ nonzero, step });
+    try self.require(nonzero, "myl_qbe_fail_slice_step");
+    const result = self.temp();
+    try self.print(" %v{d} =l call $myl_native_list_slice_step(l %heap, l %v{d}, l %v{d}, l %v{d}, l %v{d})\n", .{ result, input, first, last, step });
+    try checkedPointer(E, self, result, base);
+}
+
 fn operandPointer(comptime E: type, self: *E, ty: typed.Type, slot: usize) Error!usize {
     const result = self.temp();
-    if (self.isScalar(ty)) try self.print(" %v{d} =l copy %s{d}\n", .{ result, slot }) else try self.print(" %v{d} =l loadl %s{d}\n", .{ result, slot });
+    if (self.isScalar(ty)) try self.print(copy_scratch, .{ result, slot }) else try self.print(load_scratch, .{ result, slot });
     return result;
 }
 fn boolean(comptime E: type, self: *E, result: usize, slot: usize) Error!void {
@@ -199,7 +285,7 @@ fn emitIndex(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Ty
             try self.store(base, input);
         } else {
             try self.print(" %v{d} =w call $myl_native_dictionary_read(l %v{d}, l %v{d}, l %agg{d})\n", .{ result, input, key, self.pc });
-            try self.require(result, "myl_qbe_fail_missing_key");
+            try self.require(result, missing_key_failure);
             try self.store(base, try self.readValue(try self.aggregatePointer(), schema.shape.buffer.?));
         }
     } else {
@@ -269,6 +355,7 @@ fn textOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try self.print(" %v{d} =l call $myl_native_text_slice(l %heap, l %v{d}, l %v{d}, l %v{d})\n", .{ result, input, start, end });
             try checkedPointer(E, self, result, base);
         },
+        .slice_step => try steppedSlice(E, self, base, input),
         .split, .join => {
             const argument = try self.load("s", base);
             if (op.kind == .split) {
@@ -338,10 +425,53 @@ fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: [
                     try self.store(base, try self.load("s", base + 1));
                     try self.print(" jmp @got{d}\n@got{d}\n", .{ label, label });
                 } else {
-                    try self.require(result, "myl_qbe_fail_missing_key");
+                    try self.require(result, missing_key_failure);
                     try self.store(base, try self.readValue(try self.aggregatePointer(), op.output));
                 }
             }
+        },
+        .items => {
+            try self.print(" %v{d} =l call $myl_native_dictionary_snapshot(l %heap, l %v{d}, w 0)\n", .{ result, input });
+            try checkedPointer(E, self, result, base);
+        },
+        .pop_key, .pop_default => {
+            const key = try operandPointer(E, self, schema.collection.key.?, base);
+            const pointer = try self.aggregatePointer();
+            try self.print(" %v{d} =w call $myl_native_dictionary_pop(l %v{d}, l %v{d}, l %agg{d})\n", .{ result, input, key, self.pc });
+            if (op.kind == .pop_key) {
+                try self.require(result, missing_key_failure);
+                try self.store(base, try self.readValue(pointer, op.output));
+            } else {
+                const label = self.temp();
+                try self.print(" jnz %v{d}, @found{d}, @missing{d}\n@found{d}\n", .{ result, label, label, label });
+                try self.store(base, try self.readValue(pointer, op.output));
+                try self.print(" jmp @got{d}\n@missing{d}\n", .{ label, label });
+                try self.store(base, try self.load("s", base + 1));
+                try self.print(" jmp @got{d}\n@got{d}\n", .{ label, label });
+            }
+        },
+        .update => {
+            const other = try self.load("s", base);
+            try self.print(" %v{d} =w call $myl_native_dictionary_update(l %heap, l %v{d}, l %v{d})\n", .{ result, input, other });
+            try self.require(result, allocation_failure);
+            try self.print(store_unit, .{base});
+        },
+        .setdefault => {
+            const key = try operandPointer(E, self, schema.collection.key.?, base);
+            const fallback = try operandPointer(E, self, schema.shape.buffer.?, base + 1);
+            const pointer = try self.aggregatePointer();
+            try self.print(" %v{d} =w call $myl_native_dictionary_setdefault(l %heap, l %v{d}, l %v{d}, l %v{d}, l %agg{d})\n", .{ result, input, key, fallback, self.pc });
+            try self.require(result, allocation_failure);
+            try self.store(base, try self.readValue(pointer, op.output));
+        },
+        .clear => {
+            try self.print(" call $myl_native_dictionary_clear(l %v{d})\n", .{input});
+            try self.print(store_unit, .{base});
+        },
+        .copy => {
+            const copy = self.temp();
+            try self.print(" %v{d} =l call $myl_native_dictionary_copy(l %heap, l %v{d})\n", .{ copy, input });
+            try checkedPointer(E, self, copy, base);
         },
         else => return self.reject(self.pc),
     }

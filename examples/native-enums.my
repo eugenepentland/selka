@@ -9,7 +9,7 @@ def toggle(state: State) -> State:
     return State.idle
 
 
-def main() -> i64:
+def main() -> int:
     state = toggle(State.idle)
     match state:
         case State.active:

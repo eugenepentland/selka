@@ -2,7 +2,7 @@ resource File: filesystem
 
 result Open:
     ok: File,
-    err: i64
+    err: int
 
 
 class Chunk:
@@ -13,17 +13,17 @@ class Chunk:
 
 result Read:
     ok: Chunk,
-    err: i64
+    err: int
 
 
 result Written:
     ok: u64,
-    err: i64
+    err: int
 
 
 result Status:
-    ok: i64,
-    err: i64
+    ok: int,
+    err: int
 
 
 def work(fs: filesystem_cap) -> Status effects(filesystem):
@@ -33,10 +33,10 @@ def work(fs: filesystem_cap) -> Status effects(filesystem):
     # The count reports actual write progress. This example sends one byte.
     payload: [1]u8 = [7u8]
     written = write_resource[Written](file, payload)?
-    return Ok(i64(chunk.length) + i64(written))
+    return Ok(int(chunk.length) + int(written))
 
 
-def main(fs: filesystem_cap) -> i64 noalloc:
+def main(fs: filesystem_cap) -> int noalloc:
     match work(fs):
         case Status.ok(value):
             return value

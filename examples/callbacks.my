@@ -1,20 +1,20 @@
 class Pair:
-    values: [2]i64
+    values: [2]int
 
 
-def build(n: i64) -> Pair effects():
+def build(n: int) -> Pair effects():
     return Pair(values=[n, n + 1])
 
 
-def apply(callback: def(i64) -> Pair effects(), n: i64) -> Pair:
+def apply(callback: def(int) -> Pair effects(), n: int) -> Pair:
     return callback(n)
 
 
-def identity(callback: def(i64) -> Pair effects()) -> def(i64) -> Pair effects():
+def identity(callback: def(int) -> Pair effects()) -> def(int) -> Pair effects():
     return callback
 
 
-def main() -> i64:
+def main() -> int:
     callback = identity(build)
     a = apply(callback, 7)
     b = callback(9)

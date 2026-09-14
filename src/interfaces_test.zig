@@ -740,7 +740,7 @@ test "generic syntax module interfaces retain scoped type names without hiding p
         var project = graph.Project.init(t.allocator);
         defer project.deinit();
         try project.load(files.provider(), "main", .{});
-        var index = try interfaces.buildWithCache(&project, &cache);
+        var index = try interfaces.buildWithCache(&project, &cache, null);
         const merged = try @import("project_syntax.zig").build(&index);
         const parameters = merged.syntax.functions[0].signature.type_parameters;
         try t.expectEqual(@as(usize, 1), parameters.len);
@@ -1462,7 +1462,7 @@ test "cross module effect and recoverable result obligations are enforced" {
         \\
         \\def allocate() -> i64:
         \\    values: List[i64] = []
-        \\    values.push(1)
+        \\    values.append(1)
         \\    return values[0u64]
     , "E_EFFECT_BOUND");
     try rejectChecked(

@@ -1,19 +1,19 @@
-def set(values: List[i64], index: i64, replacement: i64):
+def set(values: List[int], index: int, replacement: int):
     values[index] = replacement
 
 
-def countdown(n: i64) effects():
+def countdown(n: int) effects():
     if n == 0:
         return
     countdown(n - 1)
 
 
-def apply(callback: def(i64) -> None effects(), value: i64):
+def apply(callback: def(int) -> None effects(), value: int):
     callback(value)
 
 
-def main() -> i64:
-    values: List[i64] = [0]
+def main() -> int:
+    values: List[int] = [0]
     set(values, 0, 42)
     apply(countdown, 3)
     return values[0]

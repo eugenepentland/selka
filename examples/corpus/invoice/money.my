@@ -2,11 +2,11 @@ module money
 export Cents
 
 
-domain Cents: i64:
+domain Cents: int:
     def make(value: u64) -> Cents:
-        return wrap[Cents](i64(value))
+        return wrap[Cents](int(value))
 
-    def number(value: Cents) -> i64:
+    def number(value: Cents) -> int:
         return unwrap(value)
 
     def add(left: Cents, right: Cents) -> Cents:

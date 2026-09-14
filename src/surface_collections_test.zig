@@ -21,13 +21,13 @@ test "list syntax rejects invalid methods element types and indices" {
         .{ .text =
         \\def main() -> i64:
         \\    values: List[i64] = []
-        \\    values.push()
+        \\    values.append()
         \\    return 0
         , .code = "E_ARITY" },
         .{ .text =
         \\def main() -> i64:
         \\    values: List[i64] = []
-        \\    values.push(True)
+        \\    values.append(True)
         \\    return 0
         , .code = "E_TYPE" },
         .{ .text =
@@ -39,9 +39,9 @@ test "list syntax rejects invalid methods element types and indices" {
         .{ .text =
         \\def main() -> i64:
         \\    values: List[i64] = []
-        \\    values.clear()
+        \\    values.remove(True)
         \\    return 0
-        , .code = "E_LIST_METHOD" },
+        , .code = "E_TYPE" },
     };
     for (cases) |case| {
         var compilation = try language.Compilation.init(t.allocator, "invalid-list.my", case.text);
@@ -77,7 +77,7 @@ test "list methods indexing and indexed assignment share aliases" {
         \\def main() -> i64:
         \\    values: List[i64] = []
         \\    alias = values
-        \\    alias.push(10)
+        \\    alias.append(10)
         \\    values[0] = 41
         \\    return alias[0] + i64(values.len())
     , 42);
@@ -87,7 +87,7 @@ test "list methods indexing and indexed assignment share aliases" {
 test "generic list methods retain element type checking" {
     try evaluate(
         \\def add[T](values: List[T], value: T):
-        \\    values.push(value)
+        \\    values.append(value)
         \\
         \\
         \\def first[T](values: List[T]) -> T:
