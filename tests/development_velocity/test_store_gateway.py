@@ -17,7 +17,7 @@ REPO = Path(__file__).resolve().parents[2]
 PRACTICE = REPO / 'experiments/application_comparison/practice/my'
 COMPILER = REPO / 'zig-out/bin/mylang'
 HOST = REPO / 'zig-out/bin/mylang-io'
-MARKER = 'fn store_gateway_marker(value: i64) -> i64 {\n    return value;\n}\n'
+MARKER = 'def store_gateway_marker(value: i64) -> i64:\n    return value\n'
 
 
 def available():

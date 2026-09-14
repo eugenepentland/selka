@@ -30,7 +30,7 @@ const Builder = struct {
         defer if (array_prefix) |prefix| allocator.free(prefix);
         switch (node.key.base) {
             .callback => |mask| {
-                array_prefix = try std.fmt.allocPrint(allocator, "fn@{d}:", .{mask.effects});
+                array_prefix = try std.fmt.allocPrint(allocator, "def@{d}:", .{mask.effects});
                 base = array_prefix.?;
             },
             .parameter => return,

@@ -34,7 +34,7 @@ pub fn intern(allocator: std.mem.Allocator, catalog: *@import("type_catalog.zig"
     const parameters = try allocator.dupe(typed.Type, contract.parameters);
     var name: std.Io.Writer.Allocating = .init(allocator);
     defer name.deinit();
-    name.writer.writeAll("fn(") catch return error.OutOfMemory;
+    name.writer.writeAll("def(") catch return error.OutOfMemory;
     for (parameters, 0..) |parameter, i| {
         if (i != 0) name.writer.writeByte(',') catch return error.OutOfMemory;
         name.writer.writeAll(typed.typeName(parameter, catalog.records)) catch return error.OutOfMemory;

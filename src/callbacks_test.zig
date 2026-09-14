@@ -37,6 +37,23 @@ test "callbacks infer function values and invoke passed exact signatures" {
     , 9);
 }
 
+// spec-case: CALLBACK-1
+test "a callback type names itself the way the surface writes it" {
+    var c = try language.Compilation.init(t.allocator, "callback-name.my",
+        \\def apply(f: def(i64) -> i64 effects(), x: i64) -> i64:
+        \\    return f(x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return apply(7, 8)
+    );
+    defer c.deinit();
+    try t.expectError(error.SourceError, c.check());
+    try t.expectEqualStrings("E_TYPE", c.diagnostics.items[0].code);
+    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "def@") != null);
+    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "fn") == null);
+}
+
 fn reject(source: []const u8, code: []const u8) !void {
     const complete = try std.mem.concat(t.allocator, u8, &.{
         source,

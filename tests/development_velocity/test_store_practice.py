@@ -15,7 +15,7 @@ REPAIRS = (('helper::multiply(6)', 'helper::multiply(7)'),
            ('return missing_nine;', 'return nine;'),
            ('return 0;', 'return -1;'))
 SCRATCH = ('// Onboarding scratch declaration; added and removed during practice.\n'
-           'fn practice_scratch(value: i64) -> i64 {\n    return value;\n}\n')
+           'def practice_scratch(value: i64) -> i64:\n    return value\n')
 
 
 def repaired(text):

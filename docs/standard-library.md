@@ -144,7 +144,7 @@ compare_strs(a: str, b: str) -> int
 sort_ints(values: list[int]) -> list[int]
 sort_floats(values: list[float]) -> list[float]
 sort_strs(values: list[str]) -> list[str]
-sort_by_key[T: copy + storable](values: list[T], key: fn(T) -> int effects()) -> list[T]
+sort_by_key[T: copy + storable](values: list[T], key: def(T) -> int effects()) -> list[T]
 is_sorted_ints(values: list[int]) -> bool
 binary_search(values: list[int], target: int) -> Option[int]
 min_int(values: list[int]) -> Option[int]

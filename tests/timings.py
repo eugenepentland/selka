@@ -33,7 +33,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='phase-timings-') as tmp:
         root = Path(tmp)
         single = root / 'single.my'
-        single.write_text('fn main()->i64{return 7;}')
+        single.write_text('def main() -> i64:\n    return 7\n')
         def command(*argv, data=b''):
             return subprocess.run(argv, input=data, capture_output=True, timeout=30)
         baseline = command(compiler, 'run', str(single), '--print-result')
@@ -54,25 +54,25 @@ def main():
         missing = command(compiler, 'check', str(root / 'missing.my'), '--timings=json', '--diagnostics=json')
         assert missing.returncode == 2
         records(missing, 'compiler', ['source_load', 'total'])
-        single.write_text('fn main()->i64{return missing;}')
+        single.write_text('def main() -> i64:\n    return missing\n')
         failed = command(compiler, 'check', str(single), '--timings=json', '--diagnostics=json')
         assert failed.returncode == 1 and not failed.stdout
         records(failed, 'compiler', ['source_load', 'frontend', 'total'])
         assert any(json.loads(line).get('kind') == 'diagnostic' for line in failed.stderr.splitlines())
-        single.write_text('fn main()->i64{let x=0;return 7/x;}')
+        single.write_text('def main() -> i64:\n    x = 0\n    return 7 // x\n')
         trapped = command(compiler, 'run', str(single), '--timings=json', '--diagnostics=json')
         assert trapped.returncode == 1 and not trapped.stdout
         records(trapped, 'compiler', ['source_load', 'frontend', 'bytecode_lowering', 'vm_execution', 'total'])
         project = root / 'main.my'
-        project.write_text('module main;fn main()->i64{return 7;}')
+        project.write_text('module main\n\n\ndef main() -> i64:\n    return 7\n')
         for mode, phases in [('check-project', []), ('run-project', ['bytecode_lowering', 'vm_execution']), ('index-project', []), ('emit-project-qbe', ['bytecode_lowering', 'native_emission'])]:
             normal = command(compiler, mode, str(project))
             timed = command(compiler, mode, str(project), '--timings=json')
             assert timed.returncode == normal.returncode == 0, timed
             assert timed.stdout == normal.stdout, (mode, timed)
             records(timed, 'compiler', ['source_load_parse', 'frontend', *phases, 'total'])
-        (root / 'io.my').write_text('module io;export length;export byte;export put;host fn length()->i64 effects(host);host fn byte(index:i64)->u8 effects(host);host fn put(value:u8)->i64 effects(host);')
-        project.write_text('module main;import io;fn main()->i64{let mut i=0;while i<io::length(){_ = io::put(io::byte(i));i+=1;}return 0;}')
+        (root / 'io.my').write_text('module io\nexport length\nexport byte\nexport put\n\n\nhost def length() -> i64 effects(host)\nhost def byte(index: i64) -> u8 effects(host)\nhost def put(value: u8) -> i64 effects(host)\n')
+        project.write_text('module main\nimport io\n\n\ndef main() -> i64:\n    i = 0\n    while i < io.length():\n        _ = io.put(io.byte(i))\n        i += 1\n    return 0\n')
         payload = b'\x00\xff\xc0\x80{broken}'
         normal = command(runner, '--project', str(root), data=payload)
         timed = command(runner, '--project', str(root), '--timings=json', data=payload)
@@ -82,11 +82,11 @@ def main():
         assert counts['input_bytes'] == counts['output_bytes'] == len(payload)
         assert counts['modules'] == 2
         assert command(runner, '--project', str(root), '--timings=json', '--timings=json').returncode != 0
-        project.write_text('module main;import io;fn main()->i64{_ = io::put(65u8);return 1;}')
+        project.write_text('module main\nimport io\n\n\ndef main() -> i64:\n    _ = io.put(65u8)\n    return 1\n')
         failed = command(runner, '--project', str(root), '--timings=json')
         assert failed.returncode == 1 and not failed.stdout
         records(failed, 'byte_io', ['compilation_inclusive', 'stdin_read', 'vm_execution', 'total'])
-        project.write_text('module main;fn main()->i64{return missing;}')
+        project.write_text('module main\n\n\ndef main() -> i64:\n    return missing\n')
         failed = command(runner, '--project', str(root), '--timings=json')
         assert failed.returncode == 1 and not failed.stdout
         records(failed, 'byte_io', ['compilation_inclusive', 'total'])

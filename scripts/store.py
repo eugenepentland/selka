@@ -99,7 +99,7 @@ def tokens(text):
         character = text[at]
         if character.isspace():
             at += 1
-        elif text.startswith('//', at):
+        elif character == '#':
             newline = text.find('\n', at)
             at = size if newline < 0 else newline
         elif character == '"':
@@ -127,52 +127,67 @@ def tokens(text):
     return result
 
 
-def qualifiers(text):
-    """Import aliases used as `alias.name`; `name[T]` type arguments and a `.method` call are not qualifications."""
+def qualifiers(text, aliases):
+    """Known import aliases written as `alias.name`; a method call or field read on a value is not one."""
     stream = tokens(text)
     found = set()
-    for index in range(len(stream) - 3):
-        word, colon, second, following = stream[index:index + 4]
-        if word[0] != 'word' or colon[1] != ':' or second[1] != ':' or following[0] != 'word':
+    for index in range(len(stream) - 2):
+        word, dot, following = stream[index:index + 3]
+        if word[0] != 'word' or word[1] not in aliases or dot[1] != '.' or following[0] != 'word':
             continue
         if index >= 1 and stream[index - 1][1] == '.':
-            continue
-        if index >= 2 and stream[index - 2][1] == ':' and stream[index - 1][1] == ':':
             continue
         found.add(word[1])
     return found
 
 
 def comment_lines(text):
-    return sum(1 for line in text.split('\n') if line.lstrip().startswith('//'))
+    return sum(1 for line in text.split('\n') if line.lstrip().startswith('#'))
 
 
 def leading_comment(source):
     """The attached comment block of a canonical declaration source, markers stripped."""
     lines = []
     for line in source.split('\n'):
-        if not line.lstrip().startswith('//'):
+        if not line.lstrip().startswith('#'):
             break
-        lines.append(line.lstrip()[2:].strip())
+        lines.append(line.lstrip()[1:].strip())
     return '\n'.join(lines)[:MAX_DOC_BYTES]
 
 
 def body_start(source):
     for line in source.split('\n'):
-        if not line.lstrip().startswith('//'):
+        if not line.lstrip().startswith('#'):
             return source.index(line)
     return len(source)
 
 
+def head_end(text):
+    """Offset of the newline that ends a declaration head, skipping continuations inside delimiters."""
+    depth, at, size = 0, 0, len(text)
+    while at < size:
+        character = text[at]
+        if character in '([{':
+            depth += 1
+        elif character in ')]}':
+            depth -= 1
+        elif character == '"':
+            at += 1
+            while at < size and text[at] != '"':
+                at += 2 if text[at] == '\\' else 1
+        elif character == '\n' and depth <= 0:
+            return at
+        at += 1
+    return size
+
+
 def signature_of(source):
-    """Declaration text up to its body brace or terminating semicolon, whitespace collapsed."""
+    """The declaration head up to the colon that opens its suite, whitespace collapsed."""
     body = source[body_start(source):]
-    cut = len(body)
-    for kind, text, start in tokens(body):
-        if kind == 'punctuation' and text in '{;':
-            cut = start
-            break
-    return ' '.join(body[:cut].split())[:MAX_SIGNATURE_BYTES]
+    head = body[:head_end(body)].rstrip()
+    if head.endswith(':'):
+        head = head[:-1]
+    return ' '.join(head.split())[:MAX_SIGNATURE_BYTES]
 
 
 def effects_of(signature):
@@ -265,7 +280,7 @@ def split_module(formatted, document):
             if index != 0:
                 raise ValueError('module comment cannot be placed by the store: ' + repr(gap[:64]))
             parts['prelude'] = gap.strip('\n')
-        elif gap not in ('', '\n'):
+        elif gap.strip('\n \t') != '':
             raise ValueError('canonical module text has unexpected blank space')
         at = end
         if kind == 'header':
@@ -279,7 +294,7 @@ def split_module(formatted, document):
     tail = formatted[at:]
     if tail.strip():
         parts['trailing'] = tail.strip('\n')
-    elif tail not in ('', '\n'):
+    elif tail.strip('\n \t') != '':
         raise ValueError('canonical module text has unexpected trailing space')
     return parts
 
@@ -290,22 +305,26 @@ def source_text(row):
     return source if isinstance(source, str) else source.decode('utf-8')
 
 
-def import_lines(meta, declarations):
+def import_lines(meta, declarations, known=()):
     """Derived imports: every referenced alias, declared aliases preserved, sorted by module name."""
+    declared = {(row['alias'] or row['name'].rsplit('.', 1)[-1]): row['name'] for row in meta['imports']}
+    aliases = set(declared)
+    for name in known:
+        aliases.add(name.rsplit('.', 1)[-1])
     used = set()
     for row in declarations:
-        used |= qualifiers(source_text(row))
-    declared = {(row['alias'] or row['name'].rsplit('.', 1)[-1]): row['name'] for row in meta['imports']}
+        used |= qualifiers(source_text(row), aliases)
     chosen = {}
+    reachable = {name.rsplit('.', 1)[-1]: name for name in known}
     for alias in used:
-        name = declared.get(alias, alias)
+        name = declared.get(alias) or reachable.get(alias, alias)
         if name in chosen and chosen[name] != alias:
             raise ValueError('two aliases derive the same import: ' + name)
         chosen[name] = alias
     lines = []
     for name in sorted(chosen):
         alias = chosen[name]
-        lines.append(f'import {name};' if alias == name.rsplit('.', 1)[-1] else f'import {name} as {alias};')
+        lines.append(f'import {name}' if alias == name.rsplit('.', 1)[-1] else f'import {name} as {alias}')
     return lines
 
 
@@ -314,22 +333,24 @@ def export_lines(meta, declarations):
     exported = [row['name'] for row in declarations if row['exported']]
     ordered = [name for name in meta['exports'] if name in exported]
     ordered += [name for name in exported if name not in ordered]
-    return [f'export {name};' for name in ordered]
+    return [f'export {name}' for name in ordered]
 
 
-def render_module(meta, declarations):
-    """Prelude, header, derived imports, exports, declarations in position order; one LF between blocks."""
-    blocks = []
+def render_module(meta, declarations, known=()):
+    """Prelude, header, imports and exports one line each; declarations follow two blank lines apart."""
+    head = []
     if meta['prelude']:
-        blocks.append(meta['prelude'])
+        head.append(meta['prelude'])
     if meta['header']:
-        blocks.append(meta['header'])
-    blocks.extend(import_lines(meta, declarations))
-    blocks.extend(export_lines(meta, declarations))
-    blocks.extend(source_text(row) for row in declarations)
+        head.append(meta['header'])
+    head.extend(import_lines(meta, declarations, known))
+    head.extend(export_lines(meta, declarations))
+    blocks = [source_text(row).rstrip('\n') for row in declarations]
     if meta['trailing']:
         blocks.append(meta['trailing'])
-    return '\n'.join(blocks) + '\n' if blocks else ''
+    if head:
+        blocks.insert(0, '\n'.join(head))
+    return '\n\n\n'.join(blocks) + '\n' if blocks else ''
 
 
 def declaration_hash(module, entry):
@@ -645,7 +666,7 @@ class Store:
         entries, written = [], {}
         for module in modules:
             meta = self.module_meta(branch, module)
-            text = render_module(meta, self.list_branch(branch, module))
+            text = render_module(meta, self.list_branch(branch, module), [m for m in modules if m != module])
             path = directory / meta['path']
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(text.encode('utf-8'))

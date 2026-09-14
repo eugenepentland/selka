@@ -9,8 +9,9 @@ import subprocess
 import tempfile
 import time
 
-IO = ('module io;export length;export byte;export put;export Block;export read_block;export write_block;'
-      'struct Block{bytes:[256]u8,count:i64}'
+IO = ('module io\nexport length\nexport byte\nexport put\n'
+      'export Block\nexport read_block\nexport write_block\n\n\n'
+      'class Block:\n    bytes: [256]u8\n    count: i64\n\n\n'
       'host def length() -> i64 effects(host)\n\n\n'
       'host def byte(index: i64) -> u8 effects(host)\n\n\n'
       'host def put(value: u8) -> i64 effects(host)\n\n\n'
