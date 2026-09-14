@@ -441,7 +441,7 @@ depends on it.
 
 ## Collection and statement surface
 
-- [SURFACE-COLLECTIONS-1] Managed list push(value), len(), indexing, and indexed assignment preserve shared aliases through immutable bindings.
+- [SURFACE-COLLECTIONS-1] Managed list push(value), len(), indexing, and indexed assignment preserve shared aliases across bindings.
 - [SURFACE-COLLECTIONS-2] Record construction names its type and fields — `Box[i64](value=42)`, `Empty()` — covering generic records, empty records declared with `pass`, and trailing argument commas.
 - [SURFACE-COLLECTIONS-3] Generic managed list methods and indexing preserve abstract element type checking.
 
@@ -452,7 +452,7 @@ depends on it.
 - [SURFACE-COLLECTIONS-4] Managed list methods reject invalid argument counts, unknown methods, mismatched element types, and noninteger indices.
 - [SURFACE-COLLECTIONS-5] Contextual managed construction and result compilation/execution release every partially allocated object on injected allocation failures.
 
-## Familiar prelude types and contextual constructors
+## Prelude types and contextual constructors
 
 - [BUILTIN-CONTEXT-1] List<T> and Result<T,E> are available without imports or explicit declarations and use existing managed-list and fallible-result semantics.
 - [BUILTIN-CONTEXT-2] Empty lists and Ok/Err payload constructors use expected binding, return, and concrete call-argument types.
