@@ -3,14 +3,15 @@ const std = @import("std");
 const t = std.testing;
 const debug = std.debug;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 fn run(text: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(t.allocator, "core.my", text);
     defer compilation.deinit();
-    const result = compilation.executeWithOptions(t.allocator, .{ .memory = .{ .gc = .{ .stress = true } } }) catch |err| {
+    const result = native.runWithOptions(&compilation, .{ .gc_stress = true }) catch |err| {
         for (compilation.diagnostics.items) |diag| debug.print("{s}: {s} ({s})\n", .{ diag.code, diag.message, compilation.src.text(diag.span) });
         return err;
     };
-    try t.expect(result == .value);
+    try t.expect(!result.trapped());
     try t.expectEqual(expected, result.value);
 }
 const Modules = struct {
@@ -60,7 +61,7 @@ test "prelude List Result and Option keep one identity across modules and spelli
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
     try compilation.emit();
-    try t.expectEqual(@as(i64, 42), (try language.vm.run(t.allocator, compilation.code.?)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&compilation)).value);
 }
 // spec: PYTHON-CORE-2
 test "unit and checked-result main adapt to scalar status without changing guest call signatures" {
@@ -222,7 +223,7 @@ test "Python exported module signatures share builtin types and resolve enum mem
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
     try compilation.emit();
-    try t.expectEqual(@as(i64, 42), (try language.vm.runWithOptions(t.allocator, compilation.code.?, .{ .memory = .{ .gc = .{ .stress = true } } })).value);
+    try t.expectEqual(@as(i64, 42), (try native.runWithOptions(&compilation, .{ .gc_stress = true })).value);
 }
 // spec-case: PYTHON-CALL-1
 test "Python string and float defaults remain typed and independent across repeated calls" {
