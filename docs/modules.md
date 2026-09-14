@@ -6,16 +6,37 @@ command line names. There is no package manifest in the language itself and no
 ambient namespace — a module sees exactly what it declares and what its imports
 bring in.
 
+## Running a file that imports
+
+`mylang run` detects a project entry itself. When the file the command names
+opens with a `module` header — or a module-only `import`/`export` directive — it
+loads the reachable graph exactly as a project command does, so a single file
+that imports a standard module needs no separate command:
+
+```mylang
+# doc: expect 42
+module main
+import math
+
+def main() -> int:
+    return math.clamp(99, 0, 42)
+```
+
+`mylang run main.my --print-result` prints `42`; `mylang run-project main.my`
+remains the explicit alias for the same entry. A file with no module header is
+still checked and run as one standalone unit, unchanged.
+
 ## Disk modules
 
 A file opens with `module NAME`, then its `import` declarations, then its
 top-level declarations. An import resolves to a source file under the project
 root by turning the dotted name into a path: `import units` reads `units.my`, and
-`import shared.units` reads `shared/units.my`. `mylang check-project` and
-`mylang run-project` take the entry file and load the reachable graph once, in
-dependency order. Nothing is exported implicitly: a declaration is visible to
-importers only when an `export` directive names it, and an exported signature
-that mentions a private type rejects rather than leaking it.
+`import shared.units` reads `shared/units.my`. `mylang run` and
+`mylang check-project` take the entry file and load the reachable graph once, in
+dependency order; `mylang run-project` is the explicit project-entry alias.
+Nothing is exported implicitly: a declaration is visible to importers only when
+an `export` directive names it, and an exported signature that mentions a
+private type rejects rather than leaking it.
 
 ```mylang
 # doc: project measure

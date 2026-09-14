@@ -581,6 +581,40 @@ test "CLI module interfaces parse bodies and check exported signature visibility
     , 1, "", "E_PRIVATE_INTERFACE");
     try invokeOptions("list-interfaces", "module input", &.{"--check"}, 2, "", "usage:");
 }
+// spec: PROJ-5
+test "CLI run loads a project entry that imports a standard module and leaves single-file run unchanged" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
+        \\module main
+        \\import math
+        \\
+        \\
+        \\def main() -> int:
+        \\    return math.clamp(99, 0, 42)
+    });
+    const path = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run", path, "--print-result" } ++ tools) });
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    try testing.expectEqualStrings("42\n", result.stdout);
+    try testing.expectEqualStrings("", result.stderr);
+    // `run-project` stays an explicit alias for the same entry.
+    const alias = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run-project", path, "--print-result" } ++ tools) });
+    defer testing.allocator.free(alias.stdout);
+    defer testing.allocator.free(alias.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, alias.term);
+    try testing.expectEqualStrings("42\n", alias.stdout);
+    // A plain single-file program still takes the original one-unit path.
+    try invoke("run", @embedFile("fixtures/arithmetic.my"), 0, "7\n", "");
+}
+// spec: CLI-6
+test "CLI answers removed C-backend commands with their QBE migration" {
+    try invokeOptions("emit-c", "def main() -> int:\n    return 0\n", &.{}, 2, "", "emit-qbe");
+    try invokeOptions("emit-project-c", "module main\n\n\ndef main() -> int:\n    return 0\n", &.{}, 2, "", "emit-project-qbe");
+}
 test "CLI checks and runs module programs with private boundaries and cross-file traps" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();

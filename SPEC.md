@@ -46,6 +46,7 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [PROJ-2] Reports module cycles with both the importing location and the related source location.
 - [PROJ-3] Rejects duplicate exports, missing exported symbols, and private types exposed through public interfaces.
 - [PROJ-4] Reports related declarations in their original source files after project source mapping.
+- [PROJ-5] `mylang run FILE` loads the reachable project graph when the entry file opens with a `module` header or a module-only `import`/`export` directive, so a single file that imports a standard module needs no separate command; a file with no module header stays one standalone unit, and `run-project` remains the explicit project-entry alias.
 ## Discovery and formatting
 
 - [TOOL-1] Groups exact duplicate bodies after binding renaming while preserving resolved binding identity.
@@ -75,6 +76,7 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 
 - [CACHE-1] Reusing unchanged module syntax preserves fresh semantic checks and changed results, with independent returned storage and bounded cache retention.
 - [CLI-5] Persistent checking sessions reuse unchanged parses and allow clearing retained cache storage between requests.
+- [CLI-6] The removed C-backend command names `emit-c` and `emit-project-c` fail with a migration that names `emit-qbe` and `emit-project-qbe`; no live C backend or VM command remains in the CLI surface.
 
 
 

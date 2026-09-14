@@ -5,6 +5,26 @@ This is the language guide. There is one syntax: `def`, `class`, indentation and
 lists, strings and dictionaries with tracing GC. There are no allocator arguments
 or ownership annotations in ordinary data code.
 
+A file that opens with `module NAME` is a project entry. `mylang run` loads its
+reachable imports itself, so one file can use the standard library without
+switching commands:
+
+```mylang
+# doc: expect 42
+module main
+import math
+
+def main() -> int:
+    return math.clamp(99, 0, 42)
+```
+
+Save this as `main.my`, then run `zig-out/bin/mylang run main.my --print-result`.
+It prints `42`; without that flag `run` prints only what the program prints
+itself. `run-project` remains the explicit alias for a project entry, and a file
+with no module header is still one standalone unit.
+
+Here is the same single-file shape with ordinary records and a list:
+
 ```mylang
 # doc: expect 42
 class Node:
@@ -20,12 +40,10 @@ def main() -> int:
     return total
 ```
 
-Save this as `main.my`, then run `zig-out/bin/mylang run main.my --print-result`.
-It prints `42`; without that flag `run` prints only what the program prints
-itself. Use `check` instead of `run` for type checking, or `run-project` for a
-project with imports. The [schematic application](../src/schematic/guest/main.my) is a
-larger example; its [instructions](../experiments/schematic/README.md) describe
-rendering and GC stress testing.
+Save it as `main.my` too; `check` type-checks either file without building. The
+[schematic application](../src/schematic/guest/main.my) is a larger example; its
+[instructions](../experiments/schematic/README.md) describe rendering and GC
+stress testing.
 
 Write `def`, `class`, four-space indentation, `#` comments, `True`, `False`,
 `None`, and `and`/`or`/`not`. A statement ends at its newline; a `;` separates two
