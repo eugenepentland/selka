@@ -257,6 +257,10 @@ fn keyword(word: []const u8) Tag {
         .{ "and", Tag.and_and },
         .{ "or", Tag.or_or },
         .{ "not", Tag.bang },
+        // Internal binary64 square root for `src/stdlib/math.my`: the module
+        // declares `sqrt`, which shadows the prelude helper, so it reaches the
+        // intrinsic under a spelling ordinary programs are not taught.
+        .{ "__float_sqrt", Tag.kw_f64_sqrt },
     };
     inline for (aliases) |alias| if (std.mem.eql(u8, word, alias[0])) return alias[1];
     return .ident;

@@ -24,9 +24,9 @@ test "binary64 IEEE boundaries canonical NaNs signed zero and FloatConversion" {
 }
 
 const intrinsic_source =
-    \\def main() -> i64:
-    \\    root = f64_to_u64(f64_sqrt(f64_from_u64(1764u64)))
-    \\    return i64(root)
+    \\def main() -> int:
+    \\    root = int(__float_sqrt(1764.0))
+    \\    return root
 ;
 fn intrinsicScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "float.my", intrinsic_source);
@@ -36,17 +36,17 @@ fn intrinsicScenario(allocator: std.mem.Allocator) !void {
 // spec-case: FLOAT-DOMAIN-1
 test "float intrinsics evaluate in constants and at runtime and reject raw operands" {
     var good = try language.Compilation.init(t.allocator, "float.my",
-        \\const V: u64 = f64_to_u64(f64_sqrt(f64_from_u64(1764u64)))
+        \\const V: float = __float_sqrt(1764.0)
         \\
         \\
-        \\def main() -> i64:
-        \\    return i64(V)
+        \\def main() -> int:
+        \\    return int(V)
     );
     defer good.deinit();
     try t.expectEqual(@as(i64, 42), (try native.run(&good)).value);
     var bad = try language.Compilation.init(t.allocator, "float.my",
-        \\def main() -> i64:
-        \\    return f64_sqrt(1)
+        \\def main() -> int:
+        \\    return int(__float_sqrt(1))
     );
     defer bad.deinit();
     try t.expectError(error.SourceError, bad.check());
@@ -74,28 +74,27 @@ test "ordinary float values reach the same binary64 semantics without a nominal 
 // spec: FLOAT-INTRINSIC-FLOAT-1
 test "a float-in float-out intrinsic takes a float operand and answers a float" {
     var c = try language.Compilation.init(t.allocator, "float.my",
-        \\def main() -> i64:
+        \\def main() -> int:
         \\    value = 1764.0
-        \\    root = f64_sqrt(value)
+        \\    root = sqrt(value)
         \\    if root != 42.0:
         \\        return 1
-        \\    if f64_floor(0.0 - 1.5) != 0.0 - 2.0 or f64_ceil(0.0 - 1.5) != 0.0 - 1.0:
+        \\    if floor(0.0 - 1.5) != 0.0 - 2.0 or ceil(0.0 - 1.5) != 0.0 - 1.0:
         \\        return 2
-        \\    if f64_trunc(0.0 - 1.9) != 0.0 - 1.0 or f64_abs(0.0 - 2.5) != 2.5:
+        \\    if trunc(0.0 - 1.9) != 0.0 - 1.0 or abs(0.0 - 2.5) != 2.5:
         \\        return 3
-        \\    if f64_neg(4.0) != 0.0 - 4.0:
+        \\    if __float_sqrt(value) != root:
         \\        return 4
-        \\    return int(f64_abs(0.0 - root))
+        \\    return int(abs(0.0 - root))
     );
     defer c.deinit();
     try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
-    // The bit-pattern conversions still own the raw `u64` spelling: a float
-    // cannot be handed to `f64_to_u64`.
+    // Every removed raw spelling is a located migration diagnostic.
     var raw = try language.Compilation.init(t.allocator, "float.my",
-        \\def main() -> i64:
-        \\    return f64_to_u64(f64_sqrt(1764.0))
+        \\def main() -> int:
+        \\    return int(f64_to_u64(f64_sqrt(1764.0)))
     );
     defer raw.deinit();
     try t.expectError(error.SourceError, raw.check());
-    try t.expectEqualStrings("E_TYPE", raw.diagnostics.items[0].code);
+    try t.expectEqualStrings("E_REMOVED_SPELLING", raw.diagnostics.items[0].code);
 }

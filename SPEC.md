@@ -304,7 +304,7 @@ mis-tagged and at least one executable block was found.
 ## Bounded VM explanations
 
 
-- [FLOAT-DOMAIN-1] Builtin float is IEEE binary64: separate arithmetic operations with canonical arithmetic NaNs, numeric comparisons in which signed zeros compare equal and every NaN comparison is false, and checked conversion to and from signed integers. The raw f64_* intrinsics over u64 representations remain available for code that owns a bit pattern; the f64 spelling is not a type name.
+- [FLOAT-DOMAIN-1] Builtin float is IEEE binary64: separate arithmetic operations with canonical arithmetic NaNs, numeric comparisons in which signed zeros compare equal and every NaN comparison is false, and checked conversion to and from signed integers. The fifteen raw `f64_*` source spellings are removed; ordinary `float` values use numeric operators and the prelude `sqrt`, `floor`, `ceil`, `trunc` and `abs` operations. `src/stdlib/math.my` reaches the correctly rounded binary64 square root through the compiler-internal `__float_sqrt` spelling because the module declares its own `sqrt`, which shadows the prelude helper.
 - [FLOAT-INTRINSIC-FLOAT-1] The fifteen removed `f64_*` source spellings report `E_REMOVED_SPELLING`; ordinary `float` values use numeric operators, conversions and the prelude `sqrt`, `floor`, `ceil`, `trunc` and `abs` operations.
 
 - [STRUCTURAL-COMPOSITE-1] Structural field and operation signatures substitute fixed arrays and nominal applications. Result obligations remain transferred by value. Invalid unused templates still reject.

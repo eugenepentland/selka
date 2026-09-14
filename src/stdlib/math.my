@@ -121,7 +121,9 @@ def round(value: float) -> float:
     return whole
 
 
-# Square root computed without a removed raw-bit intrinsic.
+# Square root, correctly rounded by the binary64 intrinsic. This module
+# declares `sqrt`, which shadows the prelude helper, so it reaches the
+# compiler-internal intrinsic spelling directly.
 def sqrt(value: float) -> float:
     if is_nan(value) or value == 0.0:
         return value
@@ -129,20 +131,7 @@ def sqrt(value: float) -> float:
         return nan()
     if is_inf(value):
         return value
-    scaled = value
-    factor = 1.0
-    while scaled > 4.0:
-        scaled = scaled / 4.0
-        factor = factor * 2.0
-    while scaled < 1.0:
-        scaled = scaled * 4.0
-        factor = factor / 2.0
-    estimate = scaled
-    remaining = 16
-    while remaining > 0:
-        estimate = (estimate + scaled / estimate) / 2.0
-        remaining -= 1
-    return estimate * factor
+    return __float_sqrt(value)
 
 
 # Repeated squaring for a nonnegative exponent that already fits the budget.
