@@ -15,7 +15,7 @@ fn outcome(files: *Files, cache: *language.syntax_cache.Cache) ![]u8 {
     var project = language.project.Project.init(t.allocator);
     defer project.deinit();
     try project.load(.{ .context = files, .read = Files.read }, "main", .{});
-    var index = try language.interfaces.buildWithCache(&project, cache);
+    var index = try language.interfaces.buildWithCache(&project, cache, null);
     var compilation = try language.project_compile.Compilation.init(&index);
     compilation.emit() catch |err| {
         if (err != error.SourceError) return err;

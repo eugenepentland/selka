@@ -2,10 +2,25 @@
 const lowering_phase = "bytecode_lowering";
 const inputs_prefix = "--inputs=";
 const policy_prefix = "--policy=";
+const cache_directory_prefix = "--cache-dir=";
+/// Phase label and default cache-directory leaf, shared so the literal is not
+/// repeated across the timer and the persistent-cache path join.
+const frontend_label = "frontend";
 const std = @import("std");
 const language = @import("mylang");
 const diagnostic_output = language.diagnostic_output;
-const Reporting = struct { print_result: bool = false, timings: bool = false, timings_json: bool = false, diagnostics: ?diagnostic_output.Format = null };
+const Reporting = struct {
+    print_result: bool = false,
+    timings: bool = false,
+    timings_json: bool = false,
+    /// `--report` asks one-shot commands for a frontend-cache reuse receipt.
+    report: bool = false,
+    diagnostics: ?diagnostic_output.Format = null,
+    /// Whether any timing/reporting sink asked for a machine-readable receipt.
+    fn measured(self: Reporting) bool {
+        return self.timings_json or self.report;
+    }
+};
 const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--json] [--force]\n       mylang build <file.my> (-o <output> | --run) [--help]\n" ++
     "       mylang doc-coverage [<repo-root>] (every implemented feature and standard export needs a documented example)\n       mylang " ++
     "doctest [<repo-root>] [--filter GLOB] [--report PATH] [--verbose] (run every fenced documentation example)\n       mylang " ++
@@ -39,6 +54,7 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "  list-declarations: parse-only declarations-v1 JSON with byte ranges\n" ++
     "  index-project: JSON symbols, references and pinned source snapshot\n  project-dependencies: checked module graph and hashes; --inputs supported\n" ++
     "  one-shot commands: --timings=json (phase-timings-v1 JSON Lines on stderr)\n" ++
+    "    --report prints a frontend-cache-v1 reuse receipt on stderr; --timings=json also adds one; --cache-dir=DIR selects its root; --no-cache disables reuse\n" ++
     "  all commands: --diagnostics=text|json (stderr JSON Lines; stdout unchanged)\n" ++
     "  check-session: persistent check/clear/quit lines on stdin; JSON status on stdout; --inputs supported\n";
 
@@ -95,7 +111,14 @@ fn dispatch(process: std.process.Init) !u8 {
         return 2;
     };
     var timings = language.timings.Profile.init(process.io, parsed.reporting.timings_json, .compiler);
-    const init: Context = .{ .timings = &timings, .gpa = process.gpa, .arena = process.arena, .io = process.io, .environ = process.environ_map, .diagnostics = parsed.reporting.diagnostics orelse .text };
+    const init: Context = .{
+        .timings = &timings,
+        .gpa = process.gpa,
+        .arena = process.arena,
+        .io = process.io,
+        .environ = process.environ_map,
+        .diagnostics = parsed.reporting.diagnostics orelse .text,
+    };
     const status = run(init, parsed) catch |err| status: {
         const message = try std.fmt.allocPrint(init.gpa, "mylang: host failure: {s}\n", .{@errorName(err)});
         defer init.gpa.free(message);
@@ -106,8 +129,26 @@ fn dispatch(process: std.process.Init) !u8 {
     return status;
 }
 fn run(init: Context, parsed: Parsed) !u8 {
-    const allocator = init.gpa;
     if (parsed.command == .@"check-session") return checkSession(init, parsed);
+    var frontend_cache = openFrontendCache(init, parsed);
+    var with_frontend = parsed;
+    with_frontend.frontend = if (frontend_cache) |*cache| cache else null;
+    const status = runCommand(init, with_frontend) catch |err| {
+        if (frontend_cache) |*cache| {
+            reportFrontendCounters(init, cache, parsed.reporting) catch return err;
+            cache.deinit();
+        }
+        return err;
+    };
+    if (frontend_cache) |*cache| {
+        try reportFrontendCounters(init, cache, parsed.reporting);
+        cache.deinit();
+    }
+    return status;
+}
+/// Dispatch one command with `parsed.frontend` already resolved.
+fn runCommand(init: Context, parsed: Parsed) !u8 {
+    const allocator = init.gpa;
     switch (parsed.command) {
         .@"index-project",
         .@"project-dependencies",
@@ -139,7 +180,7 @@ fn run(init: Context, parsed: Parsed) !u8 {
         try std.Io.File.stdout().writeStreamingAll(init.io, generated);
         return 0;
     }
-    init.timings.begin("frontend", false);
+    init.timings.begin(frontend_label, false);
     var compilation = try language.Compilation.init(allocator, parsed.path, bytes);
     defer compilation.deinit();
     if (parsed.command == .fmt or parsed.command == .@"fmt-module") {
@@ -176,7 +217,7 @@ fn run(init: Context, parsed: Parsed) !u8 {
         return 0;
     }
     const check_start = if (parsed.reporting.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
-    compilation.check() catch |err| switch (err) {
+    compilation.checkWithFrontend(parsed.frontend) catch |err| switch (err) {
         error.SourceError => {
             try report(init, &compilation);
             return 1;
@@ -374,6 +415,13 @@ const Parsed = struct {
     discovery: language.duplicates.Options,
     reporting: Reporting,
     max_memory: ?u64,
+    /// `--no-cache` disables all persistent frontend reuse for this command.
+    no_cache: bool,
+    /// `--cache-dir` selects the cache root; null uses the default location.
+    cache_dir: ?[]const u8,
+    /// Persistent frontend cache opened by `run` for commands that reuse frontend
+    /// work; null for commands (or sessions) that do not.
+    frontend: ?*language.frontend_cache.Cache = null,
 };
 fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (args.len < 2) return error.Usage;
@@ -385,6 +433,17 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
             parser.reporting.diagnostics = std.meta.stringToEnum(diagnostic_output.Format, arg["--diagnostics=".len..]) orelse return error.Usage;
             continue;
         }
+        if (std.mem.eql(u8, arg, "--no-cache")) {
+            if (parser.no_cache) return error.Usage;
+            parser.no_cache = true;
+            continue;
+        }
+        if (std.mem.eql(u8, arg, "--report")) {
+            if (parser.reporting.report) return error.Usage;
+            parser.reporting.report = true;
+            continue;
+        }
+        if (try parser.cacheDirectoryOption(arg)) continue;
         if (try parser.surfaceOption(arg)) continue;
         if (try parser.qualityOption(arg)) continue;
         if (try parser.grantOption(arg)) continue;
@@ -418,14 +477,25 @@ const ArgumentParser = struct {
     runtime_count: usize = 0,
     saw_steps: bool = false,
     saw_frames: bool = false,
-    saw_cache: bool = false,
     gc_stress: bool = false,
     max_memory: ?u64 = null,
     discovery: language.duplicates.Options = .{},
     reporting: Reporting = .{},
+    no_cache: bool = false,
+    cache_dir: ?[]const u8 = null,
     saw_min: bool = false,
     saw_population: bool = false,
     saw_work: bool = false,
+    /// `--cache-dir` is shared by every frontend-caching command; the executing
+    /// commands additionally hand the same directory to the native object cache.
+    fn cacheDirectoryOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (!std.mem.startsWith(u8, arg, cache_directory_prefix)) return false;
+        if (self.cache_dir != null or arg.len == cache_directory_prefix.len) return error.Usage;
+        self.cache_dir = arg[cache_directory_prefix.len..];
+        if (self.executes()) self.native.cache = self.cache_dir.?;
+        return true;
+    }
+
     fn surfaceOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
         if (std.mem.eql(u8, arg, "--schema-report")) {
             if (self.command != .@"schema-project" or self.schema_report) return error.Usage;
@@ -530,10 +600,6 @@ const ArgumentParser = struct {
             if (!self.executes() or self.reporting.print_result) return error.Usage;
             self.reporting.print_result = true;
             try self.forward(arg);
-        } else if (std.mem.startsWith(u8, arg, "--cache-dir=")) {
-            if (!self.executes() or self.saw_cache) return error.Usage;
-            self.saw_cache = true;
-            self.native.cache = try self.value(arg, "--cache-dir=");
         } else if (std.mem.startsWith(u8, arg, "--qbe=")) {
             self.native.qbe = try self.value(arg, "--qbe=");
         } else if (std.mem.startsWith(u8, arg, "--zig=")) {
@@ -590,6 +656,8 @@ const ArgumentParser = struct {
             .discovery = self.discovery,
             .reporting = self.reporting,
             .max_memory = self.max_memory,
+            .no_cache = self.no_cache,
+            .cache_dir = self.cache_dir,
         };
     }
 };
@@ -623,6 +691,7 @@ fn listModules(init: Context, parsed: Parsed) !u8 {
     return listModulesWithCache(init, parsed, null, null, null);
 }
 fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_cache.Cache, verdict: ?*language.check_cache.Cache, functions: ?*language.semantic_cache.Cache) !u8 {
+    const frontend = parsed.frontend;
     const frontend_start = if (parsed.reporting.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
     const path = parsed.path;
     const basename = std.fs.path.basename(path);
@@ -641,9 +710,10 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     init.timings.end();
     if (try surfaceProject(init, &project, parsed)) |status| return status;
     if (try replayCheck(init, parsed.command, &project, verdict)) return 0;
+    if (try replayFrontendVerdict(init, parsed.command, &project, frontend)) return 0;
     const output = if (parsed.command != .@"list-modules") result: {
-        init.timings.begin("frontend", false);
-        var index = (try buildIndex(init, &project, cache)) orelse return partialNavigation(init, &project, parsed.command);
+        init.timings.begin(frontend_label, false);
+        var index = (try buildIndex(init, &project, cache, frontend)) orelse return partialNavigation(init, &project, parsed.command);
         if (parsed.command == .@"list-interfaces") break :result try index.render(init.gpa);
         var compilation = try language.project_compile.Compilation.init(&index);
         if (parsed.command == .@"index-project") break :result try renderNavigation(init, &compilation);
@@ -660,7 +730,10 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         if (parsed.command == .@"emit-project-qbe") break :result (try emitProjectNative(init, &compilation)) orelse return 1;
         try reportProject(init, &compilation);
         if (parsed.command == .@"project-dependencies") break :result try dependencyReport(init, &compilation, files.inputs);
-        if (parsed.command == .@"check-project") return rememberCheck(verdict, &project, &compilation);
+        if (parsed.command == .@"check-project") {
+            try rememberFrontendVerdict(init, parsed.command, &project, &compilation, frontend);
+            return rememberCheck(verdict, &project, &compilation);
+        }
         if (parsed.command == .@"schema-project") break :result if (parsed.schema_report)
             try language.schema_report.render(init.gpa, &compilation, try compilerIdentity(init.io))
         else
@@ -754,8 +827,8 @@ fn loadModules(init: Context, project: *language.project.Project, files: *Module
     return null;
 }
 
-fn buildIndex(init: Context, project: *language.project.Project, cache: ?*language.syntax_cache.Cache) !?language.interfaces.Index {
-    return language.interfaces.buildWithCache(project, cache) catch |err| switch (err) {
+fn buildIndex(init: Context, project: *language.project.Project, cache: ?*language.syntax_cache.Cache, frontend: ?*language.frontend_cache.Cache) !?language.interfaces.Index {
+    return language.interfaces.buildWithCache(project, cache, frontend) catch |err| switch (err) {
         error.SourceError => {
             const message = try diagnostic_output.renderProject(init.gpa, project, init.diagnostics);
             defer init.gpa.free(message);
@@ -777,6 +850,34 @@ fn replayCheck(init: Context, command: Command, project: *const language.project
     const warnings = cache.lookup(project) orelse return false;
     try std.Io.File.stderr().writeStreamingAll(init.io, warnings);
     return true;
+}
+
+/// Replay a persistent successful verdict for an identical project. The loaded
+/// project facts (every module name, path and byte) are the key, so a changed
+/// file, graph or module name never reaches the stored text.
+fn replayFrontendVerdict(init: Context, command: Command, project: *const language.project.Project, frontend: ?*language.frontend_cache.Cache) !bool {
+    if (command != .@"check-project") return false;
+    const cache = frontend orelse return false;
+    const warnings = (try cache.lookupVerdict(init.gpa, project, init.diagnostics)) orelse return false;
+    defer init.gpa.free(warnings);
+    try std.Io.File.stderr().writeStreamingAll(init.io, warnings);
+    return true;
+}
+
+/// Retain a successful check's rendered warnings under the project's content key.
+fn rememberFrontendVerdict(init: Context, command: Command, project: *const language.project.Project, compilation: *const language.project_compile.Compilation, frontend: ?*language.frontend_cache.Cache) error{OutOfMemory}!void {
+    if (command != .@"check-project") return;
+    const cache = frontend orelse return;
+    var writer: std.Io.Writer.Allocating = .init(init.gpa);
+    defer writer.deinit();
+    for (compilation.diagnostics.items.items) |problem| {
+        const rendered = try diagnostic_output.render(init.gpa, problem, compilation.src, init.diagnostics);
+        defer init.gpa.free(rendered);
+        writer.writer.writeAll(rendered) catch return error.OutOfMemory;
+    }
+    const warnings = writer.toOwnedSlice() catch return error.OutOfMemory;
+    defer init.gpa.free(warnings);
+    try cache.rememberVerdict(project, init.diagnostics, warnings);
 }
 
 fn reportProject(init: Context, compilation: *language.project_compile.Compilation) !void {
@@ -958,6 +1059,58 @@ fn checkImportedInputs(init: Context, inputs: []const GeneratedInput, project: *
         return false;
     };
     return true;
+}
+
+/// Resolve the persistent frontend cache directory for this invocation.
+/// Precedence: `--no-cache`, then an explicit `--cache-dir` (nested under
+/// `frontend/`), then `MYLANG_FRONTEND_CACHE` from a parent build driver, then
+/// the per-project default. The compiler identity partitions the directory.
+fn frontendRoot(init: Context, parsed: Parsed) ?[]const u8 {
+    if (parsed.no_cache) return null;
+    const base = parsed.cache_dir orelse init.environ.get("MYLANG_FRONTEND_CACHE") orelse language.frontend_cache.default_directory;
+    if (std.mem.eql(u8, base, language.frontend_cache.default_directory)) return base;
+    return std.fs.path.join(init.gpa, &.{ base, frontend_label }) catch null;
+}
+
+/// Open the persistent cache on demand; a missing or unwritable directory simply
+/// disables reuse, never failing the command.
+fn openFrontendCache(init: Context, parsed: Parsed) ?language.frontend_cache.Cache {
+    const root = frontendRoot(init, parsed) orelse return null;
+    // `&build_identity` points at the immutable compile-time global, so the
+    // cache's borrowed identity outlives this frame; a local copy would dangle.
+    var cache = language.frontend_cache.Cache.init(init.gpa, init.io, root, &build_identity);
+    // A joined path is freshly allocated and released by deinit; the default
+    // constant is static storage and must not be freed.
+    cache.root_owned = root.ptr != language.frontend_cache.default_directory.ptr;
+    return cache;
+}
+
+/// Report persistent frontend reuse when the caller asked for `--report` or
+/// `--timings=json`. Both emit one machine-readable `frontend-cache-v1` JSON line
+/// on stderr; plain `--timings` is left untouched because its text protocol is
+/// `timings: native_ns=<integer>`.
+fn reportFrontendCounters(init: Context, cache: *const language.frontend_cache.Cache, reporting: Reporting) !void {
+    if (!reporting.measured()) return;
+    const stats = cache.statistics;
+    const json = try std.json.Stringify.valueAlloc(init.gpa, .{
+        .version = "frontend-cache-v1",
+        .syntax_hits = stats.syntax.hits,
+        .syntax_misses = stats.syntax.misses,
+        .syntax_stored = stats.syntax.stored,
+        .verdict_hits = stats.verdict.hits,
+        .verdict_misses = stats.verdict.misses,
+        .verdict_stored = stats.verdict.stored,
+        .damaged = stats.damaged,
+        .bypassed = stats.bypassed,
+        .evicted = stats.evicted,
+        .retained_bytes = stats.retained_bytes,
+    }, .{});
+    defer init.gpa.free(json);
+    const line = try std.fmt.allocPrint(init.gpa, "{s}\n", .{json});
+    defer init.gpa.free(line);
+    // The receipt is protocol data, not a diagnostic: `--diagnostics=json` must
+    // not wrap it in a message envelope.
+    try std.Io.File.stderr().writeStreamingAll(init.io, line);
 }
 
 fn validEntryBasename(basename: []const u8) bool {

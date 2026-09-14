@@ -34,6 +34,8 @@ pub const check_cache = @import("check_cache.zig");
 /// Changed-source semantic function queries with fresh global validation.
 pub const semantic_cache = @import("semantic_cache.zig");
 pub const syntax_cache = @import("syntax_cache.zig");
+/// Persistent content-addressed frontend reuse for ordinary one-shot commands.
+pub const frontend_cache = @import("frontend_cache.zig");
 pub const project = @import("project.zig");
 pub const source = @import("source.zig");
 pub const diagnostic = @import("diagnostic.zig");
@@ -82,12 +84,24 @@ pub const Compilation = struct {
 
     /// Lazily tokenize and parse the source, retaining syntax and source diagnostics.
     pub fn parse(self: *Compilation) diagnostic.Error!void {
+        return self.parseCached(null);
+    }
+    /// Parse through an optional persistent cache. A disk hit still rebuilds all
+    /// interface, resolution and semantic state; only the lexer and parser are skipped.
+    pub fn parseCached(self: *Compilation, cache: ?*frontend_cache.Cache) diagnostic.Error!void {
         if (self.syntax != null) return;
+        if (cache) |disk| {
+            if (try disk.lookupSyntax(self.arena.allocator(), self.src, 0)) |syntax| {
+                self.syntax = syntax;
+                return;
+            }
+        }
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
         self.tokens = try lexer.lex(sink.allocator, self.src.bytes, &sink);
         var p: parser.Parser = .{ .src = self.src, .arena = &self.arena, .tokens = self.tokens.?, .sink = &sink };
         self.syntax = try p.parse();
+        if (cache) |disk| try disk.rememberSyntax(self.src, 0, self.syntax.?);
     }
 
     pub fn format(self: *Compilation, allocator: std.mem.Allocator) FormatError![]u8 {
@@ -116,6 +130,17 @@ pub const Compilation = struct {
     /// Lazily type-check parsed syntax and retain the checked program.
     pub fn check(self: *Compilation) diagnostic.Error!void {
         return self.checkWithCache(null);
+    }
+    /// Check through an optional persistent syntax cache. Declaration, interface
+    /// and whole-program validation always run; only source lexing and parsing
+    /// may be skipped.
+    pub fn checkWithFrontend(self: *Compilation, cache: ?*frontend_cache.Cache) diagnostic.Error!void {
+        if (self.program != null) return;
+        for (self.diagnostics.items) |item| if (item.severity == .err) return error.SourceError;
+        try self.parseCached(cache);
+        var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
+        defer self.diagnostics = sink.items;
+        self.program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, null);
     }
     /// Reuse independently owned checked bodies after supported source edits.
     pub fn checkWithCache(self: *Compilation, cache: ?*semantic_cache.Cache) diagnostic.Error!void {

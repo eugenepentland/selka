@@ -51,7 +51,7 @@ pub fn prepare(context: fs.Context, parsed: options.Options) Error!Prepared {
     if (fs.exitCode(version.term) != 0) return error.NativeToolFailed;
     const zig_version = std.mem.trim(u8, version.stdout, "\r\n ");
     try checkVersion(zig_version);
-    const directory = try context.absolute(parsed.cache);
+    const directory = try context.absolute(nativeCacheDirectory(parsed));
     try context.mkdir(directory);
     const assets = try materialize(context, try runtimeRoot(context, parsed, directory));
     const temporary = try context.temporary(directory);
@@ -97,7 +97,17 @@ fn build(context: fs.Context, parsed: options.Options) !u8 {
     const temporary = cache.temporary;
     defer context.remove(temporary);
     const start = std.Io.Timestamp.now(context.io, .awake);
-    const generated = try context.capture(&.{ compiler, if (parsed.project) "emit-project-qbe" else "emit-qbe", try context.absolute(parsed.source) });
+    // The frontend child reuses its persistent content-addressed cache by default.
+    // An explicit `--cache-dir` keeps the frontend under that same root; the
+    // `no_cache` sentinel disables reuse for this build.
+    var arguments: std.ArrayList([]const u8) = .empty;
+    try arguments.appendSlice(a, &.{ compiler, if (parsed.project) "emit-project-qbe" else "emit-qbe", try context.absolute(parsed.source) });
+    if (std.mem.eql(u8, parsed.cache, options.no_cache)) {
+        try arguments.append(a, "--no-cache");
+    } else if (!std.mem.eql(u8, parsed.cache, options.default_cache)) {
+        try arguments.append(a, try std.fmt.allocPrint(a, "--cache-dir={s}", .{parsed.cache}));
+    }
+    const generated = try context.capture(arguments.items);
     const code = fs.exitCode(generated.term);
     if (code != 0) return code;
     const manifest = (try std.json.parseFromSlice(std.json.Value, a, generated.stdout, .{ .allocate = .alloc_always })).value;
@@ -166,6 +176,13 @@ pub fn spawn(context: fs.Context, output: []const u8, parsed: options.Options) E
     });
     return status(try child.wait(context.io));
 }
+/// The native object-cache directory. `--no-cache` is a frontend-reuse sentinel,
+/// so the native cache still uses its default directory instead of materializing
+/// a directory named after the sentinel while the frontend child is told to
+/// disable reuse.
+fn nativeCacheDirectory(parsed: options.Options) []const u8 {
+    return if (std.mem.eql(u8, parsed.cache, options.no_cache)) options.default_cache else parsed.cache;
+}
 /// The directory that holds the materialized runtime source trees. An explicit
 /// `--cache-dir` keeps it hermetically under that directory; a default build shares
 /// a user-level location (`$XDG_CACHE_HOME/mylang/runtime`, else `$HOME/.cache/...`)
@@ -173,7 +190,7 @@ pub fn spawn(context: fs.Context, output: []const u8, parsed: options.Options) E
 /// back to the per-project cache when neither variable is set.
 fn runtimeRoot(context: fs.Context, parsed: options.Options, directory: []const u8) fs.Error![]const u8 {
     const local = try std.fs.path.join(context.allocator, &.{ directory, "runtime" });
-    if (!std.mem.eql(u8, parsed.cache, options.default_cache)) return local;
+    if (!std.mem.eql(u8, nativeCacheDirectory(parsed), options.default_cache)) return local;
     return sharedRuntimeRoot(context) orelse local;
 }
 /// The user-level shared runtime location, or null when no home directory names it.
@@ -471,6 +488,10 @@ test "a default build shares the runtime root while an explicit cache-dir keeps 
     const local = try runtimeRoot(context, .{ .cache = "/tmp/hermetic" }, "/tmp/hermetic");
     try std.testing.expectEqualStrings("/tmp/hermetic/runtime", local);
     try std.testing.expectEqualStrings("/xdg/mylang/runtime", sharedRuntimeRoot(context).?);
+    // `--no-cache` disables only the frontend reuse sentinel; the native cache
+    // must still resolve to its default directory, not a directory named "none".
+    try std.testing.expectEqualStrings(options.default_cache, nativeCacheDirectory(.{ .cache = options.no_cache }));
+    try std.testing.expectEqualStrings("/xdg/mylang/runtime", try runtimeRoot(context, .{ .cache = options.no_cache }, "/project/.mylang-cache/qbe"));
 }
 // spec: QBE-RUNTIME-INSTALLED-1
 test "prebuilt runtime hashes separate kind and mode and stay stable, and misses fall back" {

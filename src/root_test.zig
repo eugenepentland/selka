@@ -80,6 +80,7 @@ test {
     _ = @import("generic_requirements_test.zig");
     _ = @import("generic_syntax_test.zig");
     _ = @import("syntax_cache_test.zig");
+    _ = @import("frontend_cache_test.zig");
     _ = @import("check_cache_test.zig");
     _ = @import("semantic_cache_test.zig");
     _ = @import("semantic_project_test.zig");

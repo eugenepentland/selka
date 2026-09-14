@@ -74,7 +74,9 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [CLI-4] Schema generation reads declared input manifests into generated modules on every invocation and rejects malformed or duplicate inputs. A generated module is ordinary source — a `#` provenance comment, a `module` line, `export` directives and one `def` per value — and spells a boolean `True`/`False` even though its manifest spells it the way JSON does.
 
 - [CACHE-1] Reusing unchanged module syntax preserves fresh semantic checks and changed results, with independent returned storage and bounded cache retention.
+- [FRONTEND-CACHE-1] Ordinary one-shot `check`, `build`, `run` and `test` commands reuse parsed module syntax from a persistent content-addressed cache under `--cache-dir` (default `.mylang-cache/frontend`), keyed by the compiler build identity, the exact source path and bytes and the module body start. Declaration collection, symbol/export resolution, interface visibility, ownership, effects and every typed body still run fresh, and a changed byte yields a miss. Damaged, truncated or foreign entries fall back to a full parse, and `--no-cache` disables reuse.
 - [CLI-5] Persistent checking sessions reuse unchanged parses and allow clearing retained cache storage between requests.
+- [FRONTEND-CACHE-2] An ordinary one-shot `check-project` may reuse a successful whole-program verdict from the persistent cache only after loading every module fresh and comparing each module name, path and source byte against the content-addressed key; reused warnings are replayed and interface/semantic work is skipped. Failed checks are never stored, a compiler or diagnostic-format change misses, and `--report`/`--timings` expose reuse and miss counts.
 
 
 
