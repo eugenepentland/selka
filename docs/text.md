@@ -64,9 +64,9 @@ rather than raising when the needle is absent, the three classifications answer
 scalar alone, and `zfill` keeps a leading sign in front of its padding. An empty
 needle traps `R_EMPTY_SEPARATOR`, and these methods are rejected on lists and
 dictionaries. `ljust` and `rjust` are absent; use
-[`strings.pad_left` and `strings.pad_right`](standard-library.md#strings). The
-native backend reports `E_QBE_UNSUPPORTED` for these methods, so they run in the
-VM.
+[`strings.pad_left` and `strings.pad_right`](standard-library.md#strings). Every
+one of these methods runs on the QBE native backend as well as the VM, over the
+same immutable text runtime, with byte-identical answers and the same traps.
 
 ```mylang
 # doc: expect 43
@@ -172,12 +172,24 @@ def main() -> int:
 `int(text)` answers `Option[int]` and `float(text)` answers `Option[float]`. The
 language has no exceptions, so text that is not a number produces `None` and the
 caller decides what that means; `match` with `case Some(value)` and `case None`
-is the way to read the answer. The whole string must be exactly one number: a
-leading `+` or `-` and `_` digit separators are accepted, but surrounding
-whitespace, a trailing character, an alternate base such as `0x10`, and empty text
-all answer `None`. `int` also answers `None` for a value the signed 64-bit range
-cannot hold, so a valid-looking but oversized literal never silently wraps. Strip
-the input yourself when the caller may have padded it.
+is the way to read the answer.
+
+Both accept one pinned base-10 grammar, the one Python's own `int()` and
+`float()` accept for base 10: optional surrounding ASCII whitespace, an optional
+`+` or `-` sign, then ASCII decimal digits that may be separated by single `_`
+characters sitting between two digits. `float` additionally accepts a `.`
+fraction, an `e`/`E` exponent with its own optional sign and digits, and the
+case-insensitive spellings `inf`, `infinity` and `nan`. An alternate base such as
+`0x10`, a non-ASCII digit, an interior space, a trailing character, a dangling
+separator and empty text all answer `None`. `int` also answers `None` for a value
+the signed 64-bit range cannot hold, so a valid-looking but oversized literal
+never silently wraps, while `float` is correctly rounded: a magnitude above
+binary64's range answers an infinity and one below it a signed zero.
+
+One implementation serves both backends — the VM calls it directly and a native
+build links the same compiled grammar — and one shared table of vectors drives
+the Zig unit test and the native parity driver, so `mylang run` and `mylang build`
+cannot disagree about which text is a number or about the value it names.
 
 ```mylang
 # doc: expect 8122
@@ -197,7 +209,7 @@ def main() -> int:
         return 3
     if port_of("1_000") != 1000:
         return 4
-    if port_of(" 8080 ") != -1:
+    if port_of(" 8080 ") != 8080:
         return 5
     if port_of("80x") != -1:
         return 6
@@ -207,16 +219,24 @@ def main() -> int:
         return 8
     if port_of("9223372036854775808") != -1:
         return 9
+    if port_of("1_") != -1:
+        return 10
     match float("2.5"):
         case Some(value):
             if value != 2.5:
-                return 10
+                return 11
         case None:
-            return 11
+            return 12
+    match float("nan"):
+        case Some(value):
+            if value == value:
+                return 13
+        case None:
+            return 14
     match float("two"):
         case Some(value):
             return int(value)
         case None:
             pass
-    return port_of("8080") + port_of(" 42 ".strip())
+    return port_of("8080") + port_of(" 42 ")
 ```

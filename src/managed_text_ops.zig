@@ -6,6 +6,7 @@ const std = @import("std");
 const gc = @import("gc_heap.zig");
 const values = @import("runtime_values.zig");
 const text = @import("managed_text.zig");
+const number_text = @import("number_text.zig");
 const Value = values.Value;
 const Type = values.Type;
 
@@ -180,16 +181,26 @@ pub fn zfill(heap: *gc.Heap, value: Value, width: i128) Error!Value {
     return text.fromPoints(heap, input.ty, points.items);
 }
 
-/// Parse the whole text as a decimal integer, or null when it is not exactly one.
+/// Parse the whole text as a decimal integer under the pinned grammar, or null
+/// when it is not exactly one number or leaves the signed 64-bit range.
 pub fn parseInteger(heap: *gc.Heap, value: Value) Error!?i64 {
-    const bytes = try text.encode(heap, value);
-    defer heap.allocator.free(bytes);
-    return std.fmt.parseInt(i64, bytes, 10) catch null;
+    const scalars = try pointsOf(heap, value);
+    defer heap.allocator.free(scalars);
+    return number_text.integer(scalars);
 }
 
-/// Parse the whole text as a decimal binary64 value, or null when it is not exactly one.
+/// Parse the whole text as one binary64 value under the pinned grammar, or null
+/// when it is not exactly one number. The native runtime calls the same parser.
 pub fn parseFloat(heap: *gc.Heap, value: Value) Error!?f64 {
-    const bytes = try text.encode(heap, value);
-    defer heap.allocator.free(bytes);
-    return std.fmt.parseFloat(f64, bytes) catch null;
+    const scalars = try pointsOf(heap, value);
+    defer heap.allocator.free(scalars);
+    return number_text.floating(scalars);
+}
+
+/// Copy the receiver's scalar values out for the shared grammar to read.
+fn pointsOf(heap: *gc.Heap, value: Value) Error![]u32 {
+    const input = try text.object(heap, value);
+    const scalars = try heap.allocator.alloc(u32, input.items.items.len);
+    for (input.items.items, scalars) |item, *scalar| scalar.* = point(item);
+    return scalars;
 }

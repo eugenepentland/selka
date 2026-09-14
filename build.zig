@@ -356,6 +356,12 @@ pub fn build(b: *std.Build) void {
     qbe_bytes.addFileArg(qbe_tool);
     qbe_bytes.setCwd(b.path("."));
     qbe_step.dependOn(&qbe_bytes.step);
+    const qbe_text = b.addSystemCommand(&.{ "python3", "tests/qbe_text.py", "--compiler" });
+    qbe_text.addFileArg(exe.getEmittedBin());
+    qbe_text.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe" });
+    qbe_text.addFileArg(qbe_tool);
+    qbe_text.setCwd(b.path("."));
+    qbe_step.dependOn(&qbe_text.step);
     const qbe_providers = b.addSystemCommand(&.{ "python3", "tests/qbe_provider_parity.py", "--compiler" });
     qbe_providers.addFileArg(exe.getEmittedBin());
     qbe_providers.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe" });

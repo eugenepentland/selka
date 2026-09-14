@@ -1,6 +1,6 @@
 #include "native_text.h"
 #include <string.h>
-static const myl_native_type point_type = { .size=4,.alignment=4,.kind=MYL_NATIVE_PLAIN };
+const myl_native_type myl_native_text_point = { .size=4,.alignment=4,.kind=MYL_NATIVE_PLAIN };
 static const myl_native_type pointer_type = { .size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER };
 static int decode(const unsigned char *bytes, size_t length, size_t *offset, uint32_t *point) {
     if (*offset == length) return 0;
@@ -33,17 +33,17 @@ myl_native_text *myl_native_text_from_utf8(myl_native_heap *heap, const unsigned
     int status;
     while ((status=decode(bytes,length,&offset,&point))>0) count++;
     if (status<0) return NULL;
-    myl_native_text *result=myl_native_list_new(heap,&point_type,count);
+    myl_native_text *result=myl_native_list_new(heap,&myl_native_text_point,count);
     if (!result) return NULL;
     offset=0;
     for (size_t i=0; i<count; ++i) { decode(bytes,length,&offset,&point); ((uint32_t *)result->storage)[i]=point; }
     result->length=count;
     return result;
 }
-static myl_native_text *copy_points(myl_native_heap *heap, myl_native_text *input, size_t start, size_t count) {
+myl_native_text *myl_native_text_copy(myl_native_heap *heap, myl_native_text *input, size_t start, size_t count) {
     myl_native_root root;
     myl_native_root_push(heap,&root,&input,&pointer_type);
-    myl_native_text *result=myl_native_list_new(heap,&point_type,count);
+    myl_native_text *result=myl_native_list_new(heap,&myl_native_text_point,count);
     if (result) {
         if (count) memcpy(result->storage,(uint32_t *)input->storage+start,count*4);
         result->length=count;
@@ -56,7 +56,7 @@ myl_native_text *myl_native_text_concat(myl_native_heap *heap, myl_native_text *
     myl_native_root a,b;
     myl_native_root_push(heap,&a,&left,&pointer_type);
     myl_native_root_push(heap,&b,&right,&pointer_type);
-    myl_native_text *result=myl_native_list_new(heap,&point_type,left->length+right->length);
+    myl_native_text *result=myl_native_list_new(heap,&myl_native_text_point,left->length+right->length);
     if (result) {
         if (left->length) memcpy(result->storage,left->storage,left->length*4);
         if (right->length) memcpy((uint32_t *)result->storage+left->length,right->storage,right->length*4);
@@ -73,11 +73,11 @@ static size_t endpoint(size_t length, int64_t value) {
 myl_native_text *myl_native_text_at(myl_native_heap *heap, myl_native_text *input, int64_t index) {
     if (index<0 && (uint64_t)(-(index+1))+1>input->length) return NULL;
     if (index>=0 && (uint64_t)index>=input->length) return NULL;
-    return copy_points(heap,input,endpoint(input->length,index),1);
+    return myl_native_text_copy(heap,input,endpoint(input->length,index),1);
 }
 myl_native_text *myl_native_text_slice(myl_native_heap *heap, myl_native_text *input, int64_t start, int64_t end) {
     size_t first=endpoint(input->length,start), last=endpoint(input->length,end);
-    return copy_points(heap,input,first,last>first ? last-first : 0);
+    return myl_native_text_copy(heap,input,first,last>first ? last-first : 0);
 }
 int myl_native_text_equal(const myl_native_text *a, const myl_native_text *b) {
     return a->length==b->length && (!a->length || !memcmp(a->storage,b->storage,a->length*4));
@@ -100,7 +100,7 @@ myl_native_list *myl_native_text_split(myl_native_heap *heap, myl_native_text *i
         size_t start=0,cursor=0;
         while (cursor<=input->length) {
             if (cursor==input->length || (separator->length<=input->length-cursor && !memcmp((uint32_t *)input->storage+cursor,separator->storage,separator->length*4))) {
-                myl_native_text *piece=copy_points(heap,input,start,cursor-start);
+                myl_native_text *piece=myl_native_text_copy(heap,input,start,cursor-start);
                 if (!piece || !myl_native_list_append(heap,result,&piece)) { result=NULL; break; }
                 if (cursor==input->length) break;
                 cursor+=separator->length; start=cursor;
@@ -120,7 +120,7 @@ myl_native_text *myl_native_text_join(myl_native_heap *heap, myl_native_text *se
     }
     myl_native_root a,b;
     myl_native_root_push(heap,&a,&separator,&pointer_type); myl_native_root_push(heap,&b,&list,&pointer_type);
-    myl_native_text *result=myl_native_list_new(heap,&point_type,count);
+    myl_native_text *result=myl_native_list_new(heap,&myl_native_text_point,count);
     if (result) {
         size_t at=0;
         for (size_t i=0;i<list->length;i++) {

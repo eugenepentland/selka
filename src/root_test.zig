@@ -150,12 +150,15 @@ test {
 
 test {
     _ = @import("qbe_test.zig");
+    _ = @import("qbe_text_test.zig");
 }
 
 test {
     _ = @import("native_ir_test.zig");
     _ = @import("native_types_test.zig");
     _ = @import("native_format.zig");
+    _ = @import("number_text.zig");
+    _ = @import("number_text_test.zig");
     _ = @import("native_types.zig");
     _ = @import("native_descriptors.zig");
 }

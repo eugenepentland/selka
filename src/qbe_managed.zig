@@ -9,7 +9,9 @@ const store_unit = " storel 0, %s{d}\n";
 const allocation_failure = @import("qbe_format.zig").allocation_failure;
 const bounds_failure = "myl_qbe_fail_list_bounds";
 const load_word = @import("qbe_format.zig").load_word;
+const iteration_failure = "myl_qbe_fail_iteration";
 const bytes_lower = @import("qbe_bytes.zig");
+const text_lower = @import("qbe_text.zig");
 const arena_lower = @import("qbe_arena.zig");
 const dictionary_write = " %v{d} =w call $myl_native_dictionary_write(l %heap, l %v{d}, l %v{d}, l %v{d})\n";
 /// Bind managed lowering to the concrete emitter without dependency cycles.
@@ -68,7 +70,7 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             const expected = try self.load("s", base);
             const actual = self.temp();
             try self.print(" %v{d} =l loadl %v{d}\n %v{d} =l ceql %v{d}, %v{d}\n", .{ actual, list, output, actual, expected });
-            try self.require(output, "myl_qbe_fail_iteration");
+            try self.require(output, iteration_failure);
             try self.print(store_unit, .{base});
         },
         .contains => {
@@ -253,6 +255,14 @@ fn textOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             const at = try self.load("s", base);
             try textAt(E, self, input, at, stack[base], result, base);
         },
+        // Text shares the list header, so iteration reads its scalar count too.
+        .iteration_check => {
+            const expected = try self.load("s", base);
+            const actual = self.temp();
+            try self.print(" %v{d} =l loadl %v{d}\n %v{d} =l ceql %v{d}, %v{d}\n", .{ actual, input, result, actual, expected });
+            try self.require(result, iteration_failure);
+            try self.print(store_unit, .{base});
+        },
         .slice => {
             const start = try self.load("s", base);
             const end = try self.load("s", base + 1);
@@ -275,7 +285,8 @@ fn textOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try boolean(E, self, result, base);
         },
         .encode, .from_hex => return bytes_lower.Lower(E).textual(self, op, stack),
-        else => return self.reject(self.pc),
+        // The Python string methods and the number grammar lower on their own.
+        else => return text_lower.Lower(E).operation(self, op, stack),
     }
 }
 fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const typed.Type) Error!void {
@@ -292,7 +303,7 @@ fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: [
             const actual = self.temp();
             const expected = try self.load("s", base);
             try self.print(" %v{d} =l call $myl_native_dictionary_length(l %v{d})\n %v{d} =l ceql %v{d}, %v{d}\n", .{ actual, input, result, actual, expected });
-            try self.require(result, "myl_qbe_fail_iteration");
+            try self.require(result, iteration_failure);
             try self.print(store_unit, .{base});
         },
         .keys, .values => {
