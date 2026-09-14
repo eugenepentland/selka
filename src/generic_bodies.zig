@@ -521,7 +521,9 @@ const Checker = struct {
     }
     fn listMethod(self: *Checker, node: ast.Node) Error!Symbolic {
         const method = node.data.method_call;
-        const kind = buffer_operations.method(self.src.text(method.name)) orelse return self.sink.fail("E_LIST_METHOD", method.name, "unknown collection method");
+        const name = self.src.text(method.name);
+        if (std.mem.eql(u8, name, "push")) return self.sink.fail("E_REMOVED_SPELLING", method.name, "`push` was removed; use `append(value)`");
+        const kind = buffer_operations.method(name) orelse return self.sink.fail("E_LIST_METHOD", method.name, "unknown collection method");
         return self.listOperation(node, .{ .base = method.base, .kind = kind, .arguments = method.arguments });
     }
     /// Check `values[index] op= value` in a generic body against the element's own rules.

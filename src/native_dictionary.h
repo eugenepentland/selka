@@ -18,4 +18,11 @@ int myl_native_dictionary_read(const myl_native_dictionary *, const void *key, v
 int myl_native_dictionary_write(myl_native_heap *, myl_native_dictionary *, const void *key, const void *value);
 myl_native_list *myl_native_dictionary_snapshot(myl_native_heap *, myl_native_dictionary *, int keys);
 int myl_native_dictionary_key_at(const myl_native_dictionary *, size_t index, void *output);
+/* Python-shaped dictionary methods. `pop` removes a matching entry and answers 1
+ * found or 0 absent; `update`/`setdefault` may allocate and answer 0 on refusal. */
+int myl_native_dictionary_pop(myl_native_dictionary *, const void *key, void *output);
+int myl_native_dictionary_update(myl_native_heap *, myl_native_dictionary *, const myl_native_dictionary *source);
+int myl_native_dictionary_setdefault(myl_native_heap *, myl_native_dictionary *, const void *key, const void *fallback, void *output);
+void myl_native_dictionary_clear(myl_native_dictionary *);
+myl_native_dictionary *myl_native_dictionary_copy(myl_native_heap *, const myl_native_dictionary *input);
 #endif

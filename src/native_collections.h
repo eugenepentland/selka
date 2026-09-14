@@ -16,7 +16,18 @@ int myl_native_list_append(myl_native_heap *, myl_native_list *, const void *val
 int myl_native_list_get(const myl_native_list *, size_t index, void *output);
 int myl_native_list_set(myl_native_list *, size_t index, const void *value);
 int myl_native_list_pop(myl_native_list *, void *output);
+int myl_native_list_pop_at(myl_native_list *, int64_t index, void *output);
 int myl_native_list_clear(myl_native_list *);
+/* Python-shaped list methods. `extend`/`insert` may allocate and return zero on
+ * refusal; `remove`/`index` answer 1 found, 0 absent and negative on comparison
+ * failure. `sort` orders signed integers, unsigned integers or binary64 values. */
+int myl_native_list_extend(myl_native_heap *, myl_native_list *, const myl_native_list *other);
+int myl_native_list_insert(myl_native_heap *, myl_native_list *, int64_t index, const void *value);
+int myl_native_list_remove(myl_native_list *, const void *value);
+int myl_native_list_index(const myl_native_list *, const void *value, int64_t *output);
+void myl_native_list_reverse(myl_native_list *);
+int myl_native_list_sort(myl_native_list *, unsigned order);
+myl_native_list *myl_native_list_copy(myl_native_heap *, const myl_native_list *input);
 /* `values[start:stop:step]` endpoints. An omitted endpoint arrives as one of
  * these sentinels, which no source expression can spell. */
 #define MYL_NATIVE_SLICE_FIRST INT64_MIN

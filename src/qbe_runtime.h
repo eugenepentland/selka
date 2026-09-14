@@ -52,6 +52,7 @@ void myl_qbe_fail_empty_separator(void *context);
 void myl_qbe_fail_buffer_bounds(void *context);
 void myl_qbe_fail_list_bounds(void *context);
 void myl_qbe_fail_list_capacity(void *context);
+void myl_qbe_fail_list_value(void *context);
 void myl_qbe_fail_allocation(void *context);
 void myl_qbe_fail_iteration(void *context);
 void myl_qbe_fail_assert(void *context);

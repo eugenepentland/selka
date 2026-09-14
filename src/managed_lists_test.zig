@@ -49,7 +49,7 @@ test "bytecode rejects managed metadata on an ordinary aggregate" {
 test "managed aliases mutate immutable bindings across helpers without allocator authority" {
     const source =
         \\def change(values: List[i64]):
-        \\    values.push(40)
+        \\    values.append(40)
         \\    values[0u64] = 42
         \\
         \\
@@ -75,7 +75,7 @@ test "managed recursive record cycles are traced at a later managed allocation" 
         \\
         \\def cycle():
         \\    nodes: List[Node] = []
-        \\    nodes.push(Node(children=nodes, value=42))
+        \\    nodes.append(Node(children=nodes, value=42))
         \\    node = nodes[0u64]
         \\    alias = node.children
         \\    alias[0u64] = node
@@ -99,12 +99,12 @@ test "managed intermediate call arguments and record snapshots survive collectio
         \\
         \\def make() -> List[i64]:
         \\    values: List[i64] = []
-        \\    values.push(42)
+        \\    values.append(42)
         \\    return values
         \\
         \\
         \\def consume(first: Holder, second: List[i64]) -> i64:
-        \\    second.push(9)
+        \\    second.append(9)
         \\    values = first.values
         \\    return values[0u64]
         \\
@@ -154,7 +154,7 @@ test "noalloc rejects transitive managed allocation while permitting fixed-slot 
         try reject(create_source, "E_EFFECT_BOUND");
         const append_source = try std.fmt.allocPrint(t.allocator,
             \\def grow(values: List[i64]) -> None:
-            \\    values.push(42)
+            \\    values.append(42)
             \\
             \\
             \\def constrained(values: List[i64]) -> None {s}:
@@ -180,7 +180,7 @@ test "noalloc rejects transitive managed allocation while permitting fixed-slot 
         \\
         \\def main() -> i64:
         \\    values: List[i64] = []
-        \\    values.push(0)
+        \\    values.append(0)
         \\    return inspect(values)
     ;
     try t.expectEqual(@as(i64, 42), (try execute(source)).value);
@@ -200,7 +200,7 @@ test "managed cycles lose local and record roots on block break and continue exi
     const bodies = [_][]const u8{
         \\    if True:
         \\        nodes: List[Node] = []
-        \\        nodes.push(Node(children=nodes, value=42))
+        \\        nodes.append(Node(children=nodes, value=42))
         \\        holder = Holder(nodes=nodes)
         \\        alias = holder.nodes
         \\        if len(alias) != 1:
@@ -208,7 +208,7 @@ test "managed cycles lose local and record roots on block break and continue exi
         ,
         \\    while True:
         \\        nodes: List[Node] = []
-        \\        nodes.push(Node(children=nodes, value=42))
+        \\        nodes.append(Node(children=nodes, value=42))
         \\        holder = Holder(nodes=nodes)
         \\        alias = holder.nodes
         \\        if len(alias) != 1:
@@ -219,7 +219,7 @@ test "managed cycles lose local and record roots on block break and continue exi
         \\    while i < 1:
         \\        i = i + 1
         \\        nodes: List[Node] = []
-        \\        nodes.push(Node(children=nodes, value=42))
+        \\        nodes.append(Node(children=nodes, value=42))
         \\        holder = Holder(nodes=nodes)
         \\        alias = holder.nodes
         \\        if len(alias) != 1:
@@ -284,13 +284,13 @@ test "a managed alias keeps one identity and an aggregate snapshot roots its ele
         \\def main() -> i64:
         \\    values: List[i64] = []
         \\    alias = values
-        \\    alias.push(11)
+        \\    alias.append(11)
         \\    holder = Holder(items=values)
-        \\    alias.push(31)
+        \\    alias.append(31)
         \\    i = 0
         \\    while i < 40:
         \\        garbage: List[i64] = []
-        \\        garbage.push(i)
+        \\        garbage.append(i)
         \\        i = i + 1
         \\    return total(holder)
     ;
@@ -308,7 +308,7 @@ test "an unreachable managed cycle is reclaimed while a reachable one survives c
         \\
         \\def loop(value: i64) -> Node:
         \\    node = Node(links=[], value=value)
-        \\    node.links.push(node)
+        \\    node.links.append(node)
         \\    return node
         \\
         \\
@@ -330,7 +330,7 @@ test "a managed list read past its initialized bounds is a located trap" {
     const source =
         \\def main() -> i64:
         \\    values: List[i64] = []
-        \\    values.push(7)
+        \\    values.append(7)
         \\    return values[3u64]
     ;
     const result = try execute(source);
@@ -344,7 +344,7 @@ test "a managed element declaration refuses a capability, directly or inside a r
     try rejectAll(&.{
         \\def main(fs: filesystem_cap) -> int:
         \\    values: List[filesystem_cap] = []
-        \\    values.push(fs)
+        \\    values.append(fs)
         \\    return len(values)
         ,
         \\class Holder:
@@ -353,7 +353,7 @@ test "a managed element declaration refuses a capability, directly or inside a r
         \\
         \\def main(fs: filesystem_cap) -> int:
         \\    values: List[Holder] = []
-        \\    values.push(Holder(fs=fs))
+        \\    values.append(Holder(fs=fs))
         \\    return len(values)
     }, "E_LIST_CAPABILITY");
 }

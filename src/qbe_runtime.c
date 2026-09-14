@@ -55,6 +55,7 @@ void myl_qbe_fail_empty_separator(void *context) { fail(context, "R_EMPTY_SEPARA
 void myl_qbe_fail_buffer_bounds(void *context) { fail(context, "R_BUFFER_BOUNDS"); }
 void myl_qbe_fail_list_bounds(void *context) { fail(context, "R_LIST_BOUNDS"); }
 void myl_qbe_fail_list_capacity(void *context) { fail(context, "R_LIST_CAPACITY"); }
+void myl_qbe_fail_list_value(void *context) { fail(context, "R_LIST_VALUE"); }
 /* A refused managed allocation names the budget when the heap declined it and
    the host only when the process itself could not produce the bytes. */
 void myl_qbe_fail_allocation(void *context) {

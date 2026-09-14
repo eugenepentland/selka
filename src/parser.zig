@@ -659,6 +659,11 @@ pub const Parser = struct {
                     if (call.arguments.len != 1 or second_name == null) return self.sink.fail("E_ARITY", node.span, "enumerate requires one iterable and two iteration names");
                     iterable = call.arguments[0];
                 } else if (second_name != null) return self.sink.fail(eIteration, node.span, "two iteration names require enumerate");
+            } else if (second_name != null and node.data == .call and node.data.call.owner != null and std.mem.eql(u8, self.src.text(node.data.call.name), "items")) {
+                // `for position, value in d.items()` consumes the value snapshot
+                // that `items` produces; the first name receives the position.
+            } else if (second_name != null and node.data == .method_call and std.mem.eql(u8, self.src.text(node.data.method_call.name), "items")) {
+                // The same form when the receiver is a postfix expression.
             } else if (second_name != null) return self.sink.fail(eIteration, node.span, "two iteration names require enumerate");
         }
         const body = try self.block();

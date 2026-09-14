@@ -6,7 +6,7 @@ statement. A bare `return;` exits early; reaching the end returns unit naturally
 ```mylang
 # doc: expect 42
 def add(values: List[i64], value: i64):
-    values.push(value)
+    values.append(value)
 
 
 def main() -> i64:

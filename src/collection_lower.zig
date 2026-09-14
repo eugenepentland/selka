@@ -77,10 +77,13 @@ pub fn operationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Spa
     const schema = catalog.records[owner.recordIndex()];
     const element = schema.shape.buffer.?;
     if (schema.collection.kind == .list) return switch (kind) {
-        .read => element,
+        .read, .pop, .pop_at => element,
+        .index_of => .i64,
+        .copy => owner,
         .contains => .bool,
         .length, .capacity => .u64,
         .append, .write, .iteration_check => .unit,
+        .extend, .insert, .remove, .reverse, .sort, .clear => .unit,
         .slice_step => owner,
         else => error.InternalError,
     };
@@ -93,8 +96,10 @@ pub fn operationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Spa
         .contains => .bool,
         .iteration_check => .unit,
         .read => if (dictionary) element else owner,
-        .write => if (dictionary) .unit else error.InternalError,
-        .get => if (dictionary) element else error.InternalError,
+        .get, .pop_key, .pop_default, .setdefault => if (dictionary) element else error.InternalError,
+        .write, .update, .clear => if (dictionary) .unit else error.InternalError,
+        .copy => if (dictionary) owner else error.InternalError,
+        .items => if (dictionary) listType(catalog, element, span) else error.InternalError,
         .key_at => if (dictionary) schema.collection.key.? else error.InternalError,
         .slice, .join => if (!dictionary) owner else error.InternalError,
         .slice_step => if (dictionary or schema.collection.kind == .bytes) error.InternalError else owner,
@@ -195,7 +200,7 @@ pub fn Builder(comptime Checker: type) type {
             }
             try statements.append(self.checker.allocator, init);
             const list_receiver = self.checker.catalog.records[ty.recordIndex()].collection.kind == .list;
-            if (list_receiver and (kind == .read or kind == .write)) arguments[0] = try self.index(owner, arguments[0], false);
+            if (list_receiver and (kind == .read or kind == .write or kind == .pop_at)) arguments[0] = try self.index(owner, arguments[0], false);
             const result = if (signed_length) try self.length(owner) else try self.operation(owner, kind, arguments);
             return self.block(statements.items, result);
         }
