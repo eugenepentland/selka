@@ -2,7 +2,7 @@ module main
 import config.values as inputs
 
 
-def main() -> i64:
+def main() -> int:
     if inputs.enabled():
-        return i64(inputs.batch_size())
+        return int(inputs.batch_size())
     return 0

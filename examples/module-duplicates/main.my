@@ -3,5 +3,5 @@ import left
 import right
 
 
-def main() -> i64:
+def main() -> int:
     return left.price(10) + right.quote(10)

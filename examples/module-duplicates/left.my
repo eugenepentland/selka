@@ -2,6 +2,6 @@ module left
 export price
 
 
-def price(quantity: i64) -> i64:
+def price(quantity: int) -> int:
     subtotal = quantity * 2
     return subtotal + 3

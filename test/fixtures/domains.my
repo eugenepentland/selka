@@ -28,6 +28,6 @@ class Measurement:
     elapsed: Seconds
 
 
-def main() -> i64:
+def main() -> int:
     sample = Measurement(distance=Millimeters.add(Millimeters.from(700u32), Millimeters.from(500u32)), elapsed=Seconds.from(3u32))
-    return i64(Millimeters.number(sample.distance)) + i64(Seconds.number(sample.elapsed))
+    return int(Millimeters.number(sample.distance)) + int(Seconds.number(sample.elapsed))

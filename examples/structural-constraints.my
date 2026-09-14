@@ -1,31 +1,31 @@
 class Reading:
-    value: i64
+    value: int
 
 
 class TaggedReading:
     tag: bool
-    value: i64
+    value: int
 
 
-def value[T: copy + field(value: i64)](item: T) -> i64:
+def value[T: copy + field(value: int)](item: T) -> int:
     return item.value
 
 
-def forward[U: copy + field(value: i64)](item: U) -> i64:
+def forward[U: copy + field(value: int)](item: U) -> int:
     return value[U](item)
 
 
-domain Counter: i64:
-    def make(n: i64) -> Counter:
+domain Counter: int:
+    def make(n: int) -> Counter:
         return wrap[Counter](n)
 
-    def score(item: Counter) -> i64 effects():
+    def score(item: Counter) -> int effects():
         return unwrap(item)
 
 
-def score[T: copy + op(score(item: T) -> i64 effects())](item: T) -> i64 effects():
+def score[T: copy + op(score(item: T) -> int effects())](item: T) -> int effects():
     return T.score(item)
 
 
-def main() -> i64:
+def main() -> int:
     return value[Reading](Reading(value=2)) + forward[TaggedReading](TaggedReading(tag=True, value=3)) + score[Counter](Counter.make(7))

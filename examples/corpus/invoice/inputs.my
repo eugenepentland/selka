@@ -4,13 +4,13 @@ export cables
 export adapters
 
 
-def books() -> i64:
+def books() -> int:
     return 2
 
 
-def cables() -> i64:
+def cables() -> int:
     return 3
 
 
-def adapters() -> i64:
+def adapters() -> int:
     return 1

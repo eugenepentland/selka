@@ -3,28 +3,28 @@ enum ArithmeticError:
 
 
 result Quotient:
-    ok: i64,
+    ok: int,
     err: ArithmeticError
 
 
 result Total:
     err: ArithmeticError,
-    ok: i64
+    ok: int
 
 
-def divide(n: i64, d: i64) -> Quotient:
+def divide(n: int, d: int) -> Quotient:
     if d == 0:
         return Err(ArithmeticError.zero)
     return Ok(divtrunc(n, d))
 
 
-def calculate(denominator: i64) -> Total:
+def calculate(denominator: int) -> Total:
     value = 10
     value = value + divide(21, denominator)?
     return Ok(value)
 
 
-def handle(outcome: Total) -> i64:
+def handle(outcome: Total) -> int:
     match outcome:
         case Total.ok(value):
             return value
@@ -32,5 +32,5 @@ def handle(outcome: Total) -> i64:
             return 3
 
 
-def main() -> i64:
+def main() -> int:
     return handle(calculate(3)) + handle(calculate(0))

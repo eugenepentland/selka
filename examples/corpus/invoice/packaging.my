@@ -3,7 +3,7 @@ export fee
 
 
 # Independent packaging tariff; changes are reviewed separately from delivery.
-def fee(items: i64) -> i64:
+def fee(items: int) -> int:
     cents = 100
     if items > 10:
         cents += 100

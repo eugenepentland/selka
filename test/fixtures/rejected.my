@@ -1,2 +1,2 @@
-def main() -> i64:
+def main() -> int:
     return missing

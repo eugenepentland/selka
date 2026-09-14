@@ -27,5 +27,5 @@ def choose[T](x: Slot[T], fallback: T) -> T:
             return value
 
 
-def main() -> i64:
-    return extract[i64](pack[i64](choose[i64](slot[i64](7), 0)))
+def main() -> int:
+    return extract[int](pack[int](choose[int](slot[int](7), 0)))

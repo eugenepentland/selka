@@ -4,11 +4,11 @@ export analyze
 
 
 class Stats:
-    sum: i64
-    squares: i64
+    sum: int
+    squares: int
 
 
-def analyze(values: [4]i64) -> Stats:
+def analyze(values: [4]int) -> Stats:
     sum = 0
     squares = 0
     i = 0u64
@@ -20,5 +20,5 @@ def analyze(values: [4]i64) -> Stats:
     return Stats(sum=sum, squares=squares)
 
 
-def main() -> i64:
+def main() -> int:
     return 0

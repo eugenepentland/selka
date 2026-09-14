@@ -1,4 +1,4 @@
-def collatz_steps(start: i64) -> i64:
+def collatz_steps(start: int) -> int:
     n = start
     steps = 0
     while n > 1:
@@ -10,5 +10,5 @@ def collatz_steps(start: i64) -> i64:
     return steps
 
 
-def main() -> i64:
+def main() -> int:
     return collatz_steps(27)

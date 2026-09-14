@@ -8,9 +8,9 @@ def sum[T: integer](value: T) -> T:
     return value + sum[T](value - T(1))
 
 
-def main() -> i64:
+def main() -> int:
     small = sum[u8](4u8)
-    large = sum[i64](5)
+    large = sum[int](5)
     if identity[bool](True):
-        return i64(small) + large
+        return int(small) + large
     return 0

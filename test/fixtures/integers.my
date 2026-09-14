@@ -10,8 +10,8 @@ conversion def widen(sample: Sample) -> WideSample:
     return WideSample(value=u64(sample.value))
 
 
-def main() -> i64:
+def main() -> int:
     small = Sample(value=255u8)
     wide = widen(small)
     quotient = 18446744073709551615u64 // 3u64
-    return i64(quotient - wide.value)
+    return int(quotient - wide.value)

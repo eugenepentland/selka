@@ -1,13 +1,13 @@
 result Number:
-    ok: i64,
-    err: i64
+    ok: int,
+    err: int
 
 
 def increment[T: integer](input: Number, amount: T) -> Number:
-    return Ok(input? + i64(amount))
+    return Ok(input? + int(amount))
 
 
-def number[T](context: T, input: Number) -> i64:
+def number[T](context: T, input: Number) -> int:
     _ = context
     match input:
         case Number.ok(value):
@@ -16,7 +16,7 @@ def number[T](context: T, input: Number) -> i64:
             return 0 - code
 
 
-def count[T](context: T, early: bool, input: Number) -> i64:
+def count[T](context: T, early: bool, input: Number) -> int:
     _ = context
     if early:
         _ = input
@@ -32,5 +32,5 @@ def count[T](context: T, early: bool, input: Number) -> i64:
     return index
 
 
-def main() -> i64:
+def main() -> int:
     return number[bool](True, increment[u8](Ok(7), 1u8)) + number[bool](True, increment[u8](Err(3), 1u8)) + count[u8](0u8, True, Err(9)) + count[u8](0u8, False, Ok(9))

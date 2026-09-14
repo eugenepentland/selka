@@ -5,20 +5,20 @@ export Positive
 
 
 class Wire:
-    n: i64
+    n: int
 
 
 result Decoded:
     ok: Positive,
-    err: i64
+    err: int
 
 
-domain Positive: i64:
+domain Positive: int:
     codec Wire:
         decode: from_wire,
         encode: to_wire
 
-    private def raw(x: i64) -> Positive:
+    private def raw(x: int) -> Positive:
         return wrap[Positive](x)
 
     def from_wire(x: Wire) -> Decoded:

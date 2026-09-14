@@ -6,7 +6,7 @@ class Entry:
 
 result Lookup:
     ok: Entry,
-    err: i64
+    err: int
 
 
 def lookup(env: environment_cap) -> Lookup effects(environment):
@@ -14,11 +14,11 @@ def lookup(env: environment_cap) -> Lookup effects(environment):
     return environment_get[Lookup](env, [75u8])
 
 
-def main(env: environment_cap) -> i64 noio:
+def main(env: environment_cap) -> int noio:
     match lookup(env):
         case Lookup.ok(entry):
             if entry.present:
-                return i64(entry.length)
+                return int(entry.length)
             return -1
         case Lookup.err(code):
             return -code - 1

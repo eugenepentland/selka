@@ -2,11 +2,11 @@ resource File: filesystem
 
 result Open:
     ok: File,
-    err: i64
+    err: int
 
 
 class Failure:
-    code: i64
+    code: int
     resource: File
 
 
@@ -23,7 +23,7 @@ def retry(file: File) -> Finish effects(filesystem):
             return complete_resource[Finish](failure.resource)
 
 
-def main(fs: filesystem_cap) -> i64 noalloc:
+def main(fs: filesystem_cap) -> int noalloc:
     request: [1]u8 = [42u8]
     match acquire_resource[Open](fs, request):
         case Open.ok(file):

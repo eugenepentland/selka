@@ -14,7 +14,7 @@ result Parsed:
 
 
 domain Count: u16:
-    def parse(value: i64) -> Parsed:
+    def parse(value: int) -> Parsed:
         if value < 0 or value > 99:
             return Err(InvalidQuantity.outside_range)
         return Ok(wrap[Count](u16(value)))

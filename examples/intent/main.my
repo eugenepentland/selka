@@ -1,9 +1,9 @@
 module main
 
 
-def configured_limit() -> i64:
+def configured_limit() -> int:
     return 7
 
 
-def main() -> i64:
+def main() -> int:
     return configured_limit()

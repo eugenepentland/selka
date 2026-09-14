@@ -4,7 +4,7 @@ import decoder
 import model
 
 
-def main() -> i64:
+def main() -> int:
     packet = inputs.bytes()
     size = inputs.size()
     match decoder.decode(packet, size):
@@ -13,6 +13,6 @@ def main() -> i64:
         case model.Decoded.ok(message):
             match message:
                 case model.Message.heartbeat(sequence):
-                    return i64(sequence)
+                    return int(sequence)
                 case model.Message.reading(reading):
-                    return i64(reading.sequence) * 4294967296 + i64(reading.value)
+                    return int(reading.sequence) * 4294967296 + int(reading.value)

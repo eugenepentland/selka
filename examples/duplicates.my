@@ -1,5 +1,5 @@
 # Deliberate review corpus: the second implementation is a legacy copy.
-def sum_to(n: i64) -> i64:
+def sum_to(n: int) -> int:
     total = 0
     i = 0
     while i < n:
@@ -8,7 +8,7 @@ def sum_to(n: i64) -> i64:
     return total
 
 
-def legacy_sum(limit: i64) -> i64:
+def legacy_sum(limit: int) -> int:
     result = 0
     index = 0
     while index < limit:
@@ -18,7 +18,7 @@ def legacy_sum(limit: i64) -> i64:
 
 
 # Changed policy: inclusive sequence. Exact discovery must keep this separate.
-def inclusive_sum(n: i64) -> i64:
+def inclusive_sum(n: int) -> int:
     total = 0
     i = 0
     while i <= n:
@@ -27,5 +27,5 @@ def inclusive_sum(n: i64) -> i64:
     return total
 
 
-def main() -> i64:
+def main() -> int:
     return sum_to(100) + legacy_sum(100) + inclusive_sum(100)

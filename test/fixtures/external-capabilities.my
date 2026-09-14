@@ -1,11 +1,11 @@
 result Time:
-    ok: i64,
-    err: i64
+    ok: int,
+    err: int
 
 
 result Random:
     ok: u64,
-    err: i64
+    err: int
 
 
 def sample(clock: clock_cap, rng: random_cap) -> Time effects(clock, random):
@@ -14,7 +14,7 @@ def sample(clock: clock_cap, rng: random_cap) -> Time effects(clock, random):
     return Ok(now)
 
 
-def main(clock: clock_cap, rng: random_cap) -> i64 noio:
+def main(clock: clock_cap, rng: random_cap) -> int noio:
     match sample(clock, rng):
         case Time.ok(now):
             return now

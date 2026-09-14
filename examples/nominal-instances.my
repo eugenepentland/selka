@@ -7,11 +7,11 @@ union Slot[T]:
     some: T
 
 
-def main() -> i64:
-    original = Box[i64](value=7)
+def main() -> int:
+    original = Box[int](value=7)
     changed = original
     changed.value = 9
-    slot: Slot[Box[i64]] = Slot.some(changed)
+    slot: Slot[Box[int]] = Slot.some(changed)
     match slot:
         case Slot.none:
             return 0

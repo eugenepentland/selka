@@ -1,6 +1,6 @@
 class Point:
-    x: i64
-    y: i64
+    x: int
+    y: int
 
 
 class Segment:
@@ -9,13 +9,13 @@ class Segment:
     visible: bool
 
 
-def move(point: Point, dx: i64) -> Point:
+def move(point: Point, dx: int) -> Point:
     moved = point
     moved.x = point.x + dx
     return moved
 
 
-def main() -> i64:
+def main() -> int:
     origin = Point(y=2, x=3)
     segment = Segment(start=origin, end=move(origin, 4), visible=True)
     if segment.visible:

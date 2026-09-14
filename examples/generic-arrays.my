@@ -21,7 +21,7 @@ def contains[T: equality](items: [2]T, needle: T) -> bool:
     return False
 
 
-def main() -> i64:
+def main() -> int:
     components = pair[ComponentId](ComponentId.make(1u64), ComponentId.make(2u64))
     nets = pair[NetId](NetId.make(8u64), NetId.make(9u64))
     score = 0

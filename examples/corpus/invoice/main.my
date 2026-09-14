@@ -3,7 +3,7 @@ import inputs
 import pricing
 
 
-def main() -> i64:
+def main() -> int:
     match pricing.calculate(inputs.books(), inputs.cables(), inputs.adapters()):
         case pricing.Invoice.ok(receipt):
             return receipt.total
