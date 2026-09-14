@@ -1,0 +1,86 @@
+module results_options
+export test_options
+export test_results
+export test_propagation
+export test_parsing_and_conversion
+
+
+def lookup(values: list[int], index: int) -> Option[int]:
+    if index < 0 or index >= len(values):
+        return None
+    return Some(values[index])
+
+
+def describe(value: Option[int]) -> int:
+    match value:
+        case Some(number):
+            return number
+        case None:
+            return -1
+
+
+def divide(numerator: int, denominator: int) -> Result[int, str]:
+    if denominator == 0:
+        return Err("division by zero")
+    return Ok(numerator // denominator)
+
+
+def average(total: int, parts: int) -> Result[int, str]:
+    share = divide(total, parts)?
+    return Ok(share + 1)
+
+
+def report(total: int, parts: int) -> int:
+    match average(total, parts):
+        case Ok(value):
+            return value
+        case Err(message):
+            return len(message)
+
+
+def test_options() -> bool:
+    values = [10, 20, 30]
+    if describe(lookup(values, 1)) != 20 or describe(lookup(values, 9)) != -1:
+        return False
+    blank: Option[int] = None
+    return describe(blank) == -1
+
+
+def test_results() -> bool:
+    match divide(21, 3):
+        case Ok(value):
+            if value != 7:
+                return False
+        case Err(_):
+            return False
+    match divide(1, 0):
+        case Ok(_):
+            return False
+        case Err(message):
+            return message == "division by zero"
+
+
+def test_propagation() -> bool:
+    return report(40, 2) == 21 and report(40, 0) == 16
+
+
+def test_parsing_and_conversion() -> bool:
+    if describe(int("22")) != 22 or describe(int(" 42 ")) != 42:
+        return False
+    if describe(int("0x10")) != -1 or describe(int("")) != -1:
+        return False
+    match float("2.5"):
+        case Some(value):
+            if value != 2.5:
+                return False
+        case None:
+            return False
+    match float("nope"):
+        case Some(_):
+            return False
+        case None:
+            return True
+
+
+def main() -> int:
+    return 0

@@ -1,0 +1,58 @@
+module arithmetic
+export test_int_precedence
+export test_division_rounding
+export test_comparisons_and_short_circuit
+export test_float_arithmetic
+export test_float_rounding
+
+
+def test_int_precedence() -> bool:
+    total = 1 + 2 * 3 - 4
+    if total != 3:
+        return False
+    if (2 + 3) * 4 != 20:
+        return False
+    if -7 + 7 != 0 or 17 // 5 != 3 or 17 % 5 != 2:
+        return False
+    return 2 * 3 * 4 == 24 and 100 - 58 == 42
+
+
+def test_division_rounding() -> bool:
+    if -7 // 2 != -4 or -7 % 2 != 1:
+        return False
+    if divtrunc(-7, 2) != -3 or remtrunc(-7, 2) != -1:
+        return False
+    if 85 // 2 != 42 or 85 % 2 != 1:
+        return False
+    return divtrunc(85, -2) == -42 and remtrunc(85, -2) == 1
+
+
+def test_comparisons_and_short_circuit() -> bool:
+    if not (3 < 4 and 4 <= 4 and 5 > 4 and 4 >= 4 and 3 == 3 and 3 != 4):
+        return False
+    if False and divtrunc(1, 0) == 0:
+        return False
+    if True or divtrunc(1, 0) == 0:
+        return True
+    return False
+
+
+def test_float_arithmetic() -> bool:
+    half = 7.5
+    if half + 0.5 != 8.0 or half / 2.0 != 3.75:
+        return False
+    if float(7) != 7.0 or int(7.9) != 7:
+        return False
+    return abs(-2.5) == 2.5 and sqrt(9.0) == 3.0
+
+
+def test_float_rounding() -> bool:
+    if 7.5 // 2.0 != 3.0:
+        return False
+    if floor(3.7) != 3.0 or ceil(3.2) != 4.0 or trunc(-3.7) != -3.0:
+        return False
+    return -3.7 < -3.2 and 1.5 >= 1.5
+
+
+def main() -> int:
+    return 0

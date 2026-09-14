@@ -1,0 +1,58 @@
+module loops
+export test_range_loops
+export test_enumerate_and_control
+export test_comprehension_filter
+export test_while_and_locals
+
+
+def test_range_loops() -> bool:
+    total = 0
+    for index in range(5):
+        total += index
+    if total != 10:
+        return False
+    ranged = 0
+    for index in range(2, 6):
+        ranged += index
+    if ranged != 14:
+        return False
+    countdown = 0
+    for index in range(3):
+        if index == 0:
+            continue
+        countdown += 1
+    return countdown == 2
+
+
+def test_enumerate_and_control() -> bool:
+    values = [10, 20, 30, 40]
+    positions = 0
+    total = 0
+    for index, value in enumerate(values):
+        if value == 30:
+            break
+        positions += 1
+        total += index
+    return positions == 2 and total == 1
+
+
+def test_comprehension_filter() -> bool:
+    source = [1, 2, 3, 4, 5, 6]
+    kept = [value * 2 for value in source if value % 2 == 0]
+    if len(kept) != 3 or kept[0] != 4 or kept[2] != 12:
+        return False
+    all_values = [value + 1 for value in source]
+    return len(all_values) == 6 and all_values[5] == 7
+
+
+def test_while_and_locals() -> bool:
+    index = 0
+    total = 0
+    while index < 5:
+        total += index * index
+        index += 1
+    return total == 30 and index == 5
+
+
+def main() -> int:
+    return 0

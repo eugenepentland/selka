@@ -1,0 +1,48 @@
+module dicts
+export test_insertion_order
+export test_aliases_and_values
+export test_membership_and_get
+
+
+def test_insertion_order() -> bool:
+    counts: dict[str, int] = {}
+    counts["pear"] = 2
+    counts["apple"] = 3
+    counts["pear"] = counts["pear"] + 1
+    order: list[str] = []
+    for name in counts:
+        order.append(name)
+    if len(order) != 2 or order[0] != "pear" or order[1] != "apple":
+        return False
+    if counts["pear"] != 3 or counts["apple"] != 3:
+        return False
+    return len(counts) == 2
+
+
+def test_aliases_and_values() -> bool:
+    counts: dict[str, int] = {}
+    counts["pear"] = 2
+    counts["apple"] = 3
+    alias = counts
+    alias["fig"] = 5
+    if counts["fig"] != 5 or len(counts) != 3:
+        return False
+    total = 0
+    for amount in counts.values():
+        total += amount
+    if total != 10:
+        return False
+    return len(counts.keys()) == 3
+
+
+def test_membership_and_get() -> bool:
+    counts: dict[str, int] = {"pear": 2, "apple": 3}
+    if "pear" not in counts or "plum" in counts:
+        return False
+    if counts.get("plum", 0) != 0 or counts["apple"] != 3:
+        return False
+    return counts.get("pear", 0) == 2
+
+
+def main() -> int:
+    return 0

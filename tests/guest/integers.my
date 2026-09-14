@@ -1,0 +1,85 @@
+module integers
+export test_width_conversions
+export test_extremes
+export test_wrapping_arithmetic
+export test_saturating_arithmetic
+export test_bitwise_and_shifts
+export test_checked_division
+
+
+def test_width_conversions() -> bool:
+    byte: u8 = 255u8
+    signed_byte: i8 = -128i8
+    half: u16 = 65535u16
+    small: i32 = -2147483648i32
+    if int(byte) != 255 or int(signed_byte) != -128:
+        return False
+    if int(half) != 65535 or int(small) != -2147483648:
+        return False
+    widened: u64 = u64(byte)
+    narrowed: u16 = u16(200)
+    return int(widened) == 255 and int(narrowed) == 200
+
+
+def test_extremes() -> bool:
+    signed_max = 9223372036854775807
+    signed_min = -9223372036854775807 - 1
+    unsigned: u64 = 18446744073709551615u64
+    if signed_max != 9223372036854775807 or signed_min != -9223372036854775807 - 1:
+        return False
+    if unsigned != 18446744073709551615u64:
+        return False
+    return int(signed_max - 9223372036854775765) == 42
+
+
+def test_wrapping_arithmetic() -> bool:
+    level: u8 = 250u8
+    if wrapping_add(level, 10u8) != 4u8:
+        return False
+    if wrapping_sub(0u8, 1u8) != 255u8:
+        return False
+    if wrapping_mul(200u8, 2u8) != 144u8:
+        return False
+    if wrapping_add(9223372036854775807, 1) != -9223372036854775807 - 1:
+        return False
+    return wrapping_sub(-9223372036854775807 - 1, 1) == 9223372036854775807
+
+
+def test_saturating_arithmetic() -> bool:
+    level: u8 = 250u8
+    if saturating_add(level, 10u8) != 255u8:
+        return False
+    if saturating_sub(3u8, 10u8) != 0u8:
+        return False
+    if saturating_mul(100i8, 100i8) != 127i8:
+        return False
+    if saturating_add(9223372036854775807, 5) != 9223372036854775807:
+        return False
+    return saturating_sub(-9223372036854775807 - 1, 5) == -9223372036854775807 - 1
+
+
+def test_bitwise_and_shifts() -> bool:
+    flags: u8 = 12u8
+    if bit_and(flags, 10u8) != 8u8:
+        return False
+    if bit_or(flags, 10u8) != 14u8:
+        return False
+    if bit_xor(flags, 10u8) != 6u8:
+        return False
+    if shift_left(flags, 4u8) != 192u8:
+        return False
+    if shift_right(200u8, 3u8) != 25u8:
+        return False
+    return shift_right(-16i32, 2i32) == -4i32
+
+
+def test_checked_division() -> bool:
+    if divtrunc(-85, 2) != -42 or remtrunc(-85, 2) != -1:
+        return False
+    if -85 // 2 != -43 or -85 % 2 != 1:
+        return False
+    return divtrunc(85, -2) == -42 and remtrunc(85, -2) == 1
+
+
+def main() -> int:
+    return 0

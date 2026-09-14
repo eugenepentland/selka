@@ -1,0 +1,51 @@
+module bytes
+export test_indexing_and_slicing
+export test_search_and_split
+export test_conversion
+
+
+def test_indexing_and_slicing() -> bool:
+    header = b"my"
+    body = b"lang"
+    whole = header + body
+    if len(whole) != 6 or whole[0] != 109 or whole[-1] != 103:
+        return False
+    if whole[2:6] != body or len(whole[2:99]) != 4 or len(whole[-1:0]) != 0:
+        return False
+    total = 0
+    for value in whole:
+        total += value
+    return total == 109 + 121 + 108 + 97 + 110 + 103
+
+
+def test_search_and_split() -> bool:
+    record = b"name,age,city"
+    if not record.startswith(b"name") or not record.endswith(b"city"):
+        return False
+    if record.find(b"age") != 5 or record.find(b"zz") != -1:
+        return False
+    if 44 not in record or b"city" not in record or b"zz" in record:
+        return False
+    fields = record.split(b",")
+    if len(fields) != 3 or fields[1] != b"age":
+        return False
+    return b",".join(fields) == record
+
+
+def test_conversion() -> bool:
+    values: list[int] = [72, 105]
+    greeting = bytes(values)
+    if greeting != b"Hi" or greeting.to_list() != values:
+        return False
+    encoded = "héllo".encode()
+    if len(encoded) != 6 or encoded.hex() != "68c3a96c6c6f":
+        return False
+    match encoded.decode():
+        case Ok(text):
+            return text == "héllo"
+        case Err(_):
+            return False
+
+
+def main() -> int:
+    return 0
