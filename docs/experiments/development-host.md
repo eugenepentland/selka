@@ -60,6 +60,9 @@ changes require a binary rebuild and restart. Future concurrent request handling
 needs reference-counted generation lifetimes; future persistent guest state needs
 explicit serialization and migration.
 
+> The Python development-host/watch driver was dropped in the Zig-native tooling
+> fold. This page is retained as a historical design record.
+
 Validation: `tests/dev_reload.py --runner PATH` covers source and fixture changes,
 compile and host-contract errors, repair, import membership, immutable snapshots,
 repeated replacements with a bounded RSS-growth check on Linux, stable host PID,
