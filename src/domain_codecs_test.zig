@@ -29,6 +29,9 @@ const source =
     \\
     \\    def to_wire(x: Positive) -> Wire:
     \\        return Wire(n=unwrap(x))
+    \\
+    \\
+    \\
 ;
 fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "codec.my", source ++
@@ -77,19 +80,89 @@ fn reject(bytes: []const u8, expected: []const u8) !void {
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings(expected, c.diagnostics.items[0].code);
 }
-const prefix = "result R{ok:D,err:i64} domain D:i64{";
-const suffix = "fn dec(x:i64)->R{return new R.ok(wrap[D](x));} fn enc(x:D)->i64{return unwrap(x);}}fn main()->i64{return 0;}";
+const prefix =
+    \\result R:
+    \\    ok: D,
+    \\    err: i64
+    \\
+    \\
+    \\domain D: i64:
+    \\
+;
+const suffix =
+    \\    def dec(x: i64) -> R:
+    \\        return Ok(wrap[D](x))
+    \\
+    \\    def enc(x: D) -> i64:
+    \\        return unwrap(x)
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return 0
+;
+const private_decode =
+    \\    private def dec(x: i64) -> R:
+    \\        return Ok(wrap[D](x))
+    \\
+    \\    def enc(x: D) -> i64:
+    \\        return unwrap(x)
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return 0
+;
 // spec: WIRE-4
 test "domain codec declarations reject duplicate missing unknown and private entries" {
-    try reject(prefix ++ "codec i64{decode:dec,decode:dec,encode:enc}" ++ suffix, "E_DUPLICATE_CODEC_KEY");
-    try reject(prefix ++ "codec i64{decode:dec}" ++ suffix, "E_INCOMPLETE_CODEC");
-    try reject(prefix ++ "codec i64{encode:enc}" ++ suffix, "E_INCOMPLETE_CODEC");
-    try reject(prefix ++ "codec i64{}" ++ suffix, "E_INCOMPLETE_CODEC");
-    try reject(prefix ++ "codec i64{other:enc}" ++ suffix, "E_CODEC_KEY");
-    try reject(prefix ++ "codec i64{decode:dec,encode:enc}codec i64{decode:dec,encode:enc}" ++ suffix, "E_DUPLICATE_CODEC");
-    try reject(prefix ++ "codec i64{decode:missing,encode:enc}" ++ suffix, "E_CODEC_FUNCTION");
-    try reject(prefix ++ "codec i64{decode:dec,encode:missing}" ++ suffix, "E_CODEC_FUNCTION");
-    try reject(prefix ++ "codec i64{decode:dec,encode:enc}private " ++ suffix, "E_CODEC_PRIVATE");
+    try reject(prefix ++
+        \\    codec i64:
+        \\        decode: dec,
+        \\        decode: dec,
+        \\        encode: enc
+        \\
+    ++ suffix, "E_DUPLICATE_CODEC_KEY");
+    try reject(prefix ++
+        \\    codec i64:
+        \\        decode: dec
+        \\
+    ++ suffix, "E_INCOMPLETE_CODEC");
+    try reject(prefix ++
+        \\    codec i64:
+        \\        encode: enc
+        \\
+    ++ suffix, "E_INCOMPLETE_CODEC");
+    try reject(prefix ++
+        \\    codec i64:
+        \\        other: enc
+        \\
+    ++ suffix, "E_CODEC_KEY");
+    try reject(prefix ++
+        \\    codec i64:
+        \\        decode: dec,
+        \\        encode: enc
+        \\
+        \\    codec i64:
+        \\        decode: dec,
+        \\        encode: enc
+        \\
+    ++ suffix, "E_DUPLICATE_CODEC");
+    try reject(prefix ++
+        \\    codec i64:
+        \\        decode: missing,
+        \\        encode: enc
+        \\
+    ++ suffix, "E_CODEC_FUNCTION");
+    try reject(prefix ++
+        \\    codec i64:
+        \\        decode: dec,
+        \\        encode: missing
+        \\
+    ++ suffix, "E_CODEC_FUNCTION");
+    try reject(prefix ++
+        \\    codec i64:
+        \\        decode: dec,
+        \\        encode: enc
+        \\
+    ++ private_decode, "E_CODEC_PRIVATE");
 }
 const Provider = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
@@ -105,7 +178,7 @@ const Provider = struct {
             \\        case d.Decoded.err(e):
             \\            return e
         );
-        if (std.mem.eql(u8, path, "data.my")) return allocator.dupe(u8, "module data;export Wire;export Decoded;export Positive;" ++ source);
+        if (std.mem.eql(u8, path, "data.my")) return allocator.dupe(u8, "module data\nexport Wire\nexport Decoded\nexport Positive\n" ++ source);
         return error.NotFound;
     }
 };
@@ -148,7 +221,13 @@ test "domain codec module relocation and public schemas preserve contracts and o
     try t.checkAllAllocationFailures(stable.allocator(), projectScenario, .{});
 }
 test "domain codec formatting preserves comments entries and checked contracts" {
-    var c = try language.Compilation.init(t.allocator, "format.my", prefix ++ "codec i64{// wire contract\nencode:enc,decode:dec,}" ++ suffix);
+    var c = try language.Compilation.init(t.allocator, "format.my", prefix ++
+        \\    codec i64:
+        \\        # wire contract
+        \\        encode: enc,
+        \\        decode: dec,
+        \\
+    ++ suffix);
     defer c.deinit();
     const formatted = try c.format(t.allocator);
     defer t.allocator.free(formatted);
@@ -158,7 +237,7 @@ test "domain codec formatting preserves comments entries and checked contracts" 
     const stable = try again.format(t.allocator);
     defer t.allocator.free(stable);
     try t.expectEqualStrings(formatted, stable);
-    try t.expect(std.mem.indexOf(u8, formatted, "// wire contract") != null);
+    try t.expect(std.mem.indexOf(u8, formatted, "# wire contract") != null);
 }
 
 const source_call =
@@ -208,7 +287,10 @@ test "source codec operations reject missing contracts invalid arity and backing
         \\def main() -> i64:
         \\    return codec_decode[Positive]()
     , "E_CODEC_ARITY");
-    try reject(source ++ "fn main()->i64{return codec_decode(7);}", "E_CODEC_ARITY");
+    try reject(source ++
+        \\def main() -> i64:
+        \\    return codec_decode(7)
+    , "E_CODEC_ARITY");
     try reject(
         \\def helper[T](x: T) -> T:
         \\    return codec_encode[T](x)
@@ -221,8 +303,24 @@ test "source codec operations reject missing contracts invalid arity and backing
 
 test "source codec operations follow selected method names rather than naming conventions" {
     var c = try language.Compilation.init(t.allocator, "named.my", prefix ++
-        "codec i64{decode:dec,encode:enc}fn dec(x:i64)->R{return new R.ok(wrap[D](x*2));}" ++
-        "fn enc(x:D)->i64{return unwrap(x)+1;}}fn main()->i64{match codec_decode[D](7){R.ok(x)=>{return codec_encode[D](x);},R.err(e)=>{return e;}}}");
+        \\    codec i64:
+        \\        decode: dec,
+        \\        encode: enc
+        \\
+        \\    def dec(x: i64) -> R:
+        \\        return Ok(wrap[D](x * 2))
+        \\
+        \\    def enc(x: D) -> i64:
+        \\        return unwrap(x) + 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    match codec_decode[D](7):
+        \\        case R.ok(x):
+        \\            return codec_encode[D](x)
+        \\        case R.err(e):
+        \\            return e
+    );
     defer c.deinit();
     try t.expectEqual(@as(i64, 15), (try c.execute(t.allocator)).value);
 }

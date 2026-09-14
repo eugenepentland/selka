@@ -28,7 +28,7 @@ test "callbacks infer function values and invoke passed exact signatures" {
         \\    return x + 1
         \\
         \\
-        \\def apply(f: fn(i64) -> i64 effects(), x: i64) -> i64:
+        \\def apply(f: def(i64) -> i64 effects(), x: i64) -> i64:
         \\    return f(x)
         \\
         \\
@@ -40,7 +40,7 @@ test "callbacks infer function values and invoke passed exact signatures" {
 fn reject(source: []const u8, code: []const u8) !void {
     const complete = try std.mem.concat(t.allocator, u8, &.{
         source,
-        if (std.mem.indexOf(u8, source, "fn main") == null)
+        if (std.mem.indexOf(u8, source, "def main") == null)
             \\def main() -> i64:
             \\    return 0
         else
@@ -62,7 +62,7 @@ const allocation_source =
     \\    return Box(value=[n + ctx, n + 1])
     \\
     \\
-    \\def apply[T](f: fn(T, i64) -> Box effects(), ctx: T, n: i64) -> Box:
+    \\def apply[T](f: def(T, i64) -> Box effects(), ctx: T, n: i64) -> Box:
     \\    return f(ctx, n)
     \\
     \\
@@ -115,7 +115,7 @@ const helpers_source =
     \\export transform
     \\
     \\
-    \\def sort_by(a: [4]i64, less: fn(i64, i64) -> bool effects()) -> [4]i64:
+    \\def sort_by(a: [4]i64, less: def(i64, i64) -> bool effects()) -> [4]i64:
     \\    v = a
     \\    i = 0
     \\    while i < 4:
@@ -130,7 +130,7 @@ const helpers_source =
     \\    return v
     \\
     \\
-    \\def transform(a: [4]i64, f: fn(i64) -> i64 effects()) -> [4]i64:
+    \\def transform(a: [4]i64, f: def(i64) -> i64 effects()) -> [4]i64:
     \\    v = a
     \\    i = 0
     \\    while i < 4:
@@ -201,7 +201,7 @@ fn invokeInstruction(instructions: []language.bytecode.Instruction) !*language.b
 
 test "callbacks retain values through records arrays and ordinary generic forwarding" {
     try run(
-        \\type F = fn(i64) -> i64 effects()
+        \\type F = def(i64) -> i64 effects()
         \\
         \\
         \\class Box[T]:
@@ -232,7 +232,7 @@ test "callbacks retain values through records arrays and ordinary generic forwar
         \\    return x + 1
         \\
         \\
-        \\def choose() -> fn(i64) -> i64 effects():
+        \\def choose() -> def(i64) -> i64 effects():
         \\    return inc
         \\
         \\

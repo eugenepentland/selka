@@ -117,7 +117,7 @@ const Provider = struct {
             \\def main() -> i64:
             \\    return 0
         );
-        if (std.mem.eql(u8, path, "data.my")) return allocator.dupe(u8, "module data;export Wire;export Why;export Decoded;export Positive;export Pair;" ++ source);
+        if (std.mem.eql(u8, path, "data.my")) return allocator.dupe(u8, "module data\nexport Wire\nexport Why\nexport Decoded\nexport Positive\nexport Pair\n" ++ source);
         return error.NotFound;
     }
 };

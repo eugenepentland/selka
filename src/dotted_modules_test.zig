@@ -82,11 +82,23 @@ fn scenario(allocator: std.mem.Allocator, main: []const u8, expected_error: ?[]c
     try t.expectEqual(@as(i64, 42), (try language.vm.run(allocator, compilation.code.?)).value);
 }
 const header = "module main\nimport library.api as api\n";
-const dotted = header ++ "export Sample\nstruct Sample{input:api.Inputs}\n" ++
-    "fn main()->i64{let values:List<i64>=[]\nvalues.push(40)\n" ++
-    "let input=api.Inputs{value:values[0]}\nlet boxed=api.Box<api.Inputs>{value:input}\n" ++
-    "let copy=api.identity::<api.Inputs>(boxed.value)\nlet distance=api.Distance.make(api.parse(copy))\n" ++
-    "return api.Distance.number(distance)+api::extra()}";
+const dotted = header ++
+    \\export Sample
+    \\
+    \\
+    \\class Sample:
+    \\    input: api.Inputs
+    \\
+    \\
+    \\def main() -> i64:
+    \\    values: List[i64] = []
+    \\    values.push(40)
+    \\    input = api.Inputs(value=values[0])
+    \\    boxed = api.Box[api.Inputs](value=input)
+    \\    copy = api.identity[api.Inputs](boxed.value)
+    \\    distance = api.Distance.make(api.parse(copy))
+    \\    return api.Distance.number(distance) + api.extra()
+;
 
 // spec: MODULE-DOT-1
 test "dotted imports resolve calls types generic records and domains beside list methods" {
@@ -100,9 +112,16 @@ test "dotted imports resolve calls types generic records and domains beside list
 
 // spec: MODULE-DOT-2
 test "dotted imports preserve function values and generic body type references" {
-    try scenario(t.allocator, header ++ "fn use<T:copy>(unused:T,input:api.Inputs)->i64{return api.parse(input)}\n" ++
-        "fn main()->i64{let parse=api.parse\nlet input=api.Inputs{value:40}\n" ++
-        "return parse(input)+use::<i64>(0,api.Inputs{value:0})}", null);
+    try scenario(t.allocator, header ++
+        \\def use[T: copy](unused: T, input: api.Inputs) -> i64:
+        \\    return api.parse(input)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    parse = api.parse
+        \\    input = api.Inputs(value=40)
+        \\    return parse(input) + use[i64](0, api.Inputs(value=0))
+    , null);
 }
 
 // spec: MODULE-DOT-4
@@ -122,7 +141,17 @@ test "dotted imports retain private symbol private domain and alias shadow check
         \\    _ = api.Distance.raw(42)
         \\    return 42
     , "E_PRIVATE_SYMBOL");
-    try scenario(t.allocator, header ++ "export Sample\nstruct Sample{input:api.Hidden}\nfn main()->i64{return 42}", "E_PRIVATE_SYMBOL");
+    try scenario(t.allocator, header ++
+        \\export Sample
+        \\
+        \\
+        \\class Sample:
+        \\    input: api.Hidden
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 42
+    , "E_PRIVATE_SYMBOL");
     try scenario(t.allocator, header ++
         \\def main() -> i64:
         \\    api = 42
