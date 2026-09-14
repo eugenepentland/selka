@@ -47,8 +47,9 @@ def board(directory, manifest, cases):
 
 
 def unit_main(value):
-    return ('module unit_main;import units;fn main()->i64{return units::Micrometres.number('
-            f'units::Millimetres.toMicro(units::Millimetres.make({value}))' + ');}')
+    return ('module unit_main\nimport units\n\n\ndef main() -> i64:\n'
+            '    return units.Micrometres.number('
+            f'units.Millimetres.toMicro(units.Millimetres.make({value})))\n')
 
 
 def guest_units(directory, manifest, inputs):

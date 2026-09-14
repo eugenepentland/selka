@@ -71,7 +71,7 @@ type Count = i64;                           an `alias` declaration
 host fn put(value: u8) -> i64 effects(host);           a `host_fn` declaration
 ```
 
-There is **no** `record` keyword. Casts are written `T(x)`; neither `T(x)`
+There is **no** `record` keyword. Casts are written `cast<T>(x)`; neither `T(x)`
 nor `x as T` is a cast. Qualified references derive imports, so writing
 `helper::multiply(argument)` is enough to import `helper` and **no import
 statement is ever written**; two aliases that derive the same import are refused.
@@ -89,7 +89,7 @@ utility contract.
 
 The `io` module exposes only raw byte count, indexed reads, and byte writes.
 `effects(host)` declares and propagates these external effects. Byte literals use
-the `u8` suffix; `i64(value)` explicitly widens a byte for arithmetic.
+the `u8` suffix; `cast<i64>(value)` explicitly widens a byte for arithmetic.
 `discard io::put(...)` acknowledges the host's status value. Returning zero from
 `main` commits the buffered output; it is the process status, not the answer.
 

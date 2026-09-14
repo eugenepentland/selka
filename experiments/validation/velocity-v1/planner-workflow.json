@@ -256,7 +256,7 @@
         "signature": "identifier(t: &[]i64, p: i64) -> bool ",
         "type_name": "bool",
         "effects": [],
-        "snippet": "identifier(t: &[]i64, p: i64) -> bool {\n    if std_json::get(t, p, 0) != 3 {\n        return false;\n    }\n    let start = std_json::get(t, p, 1);\n    let end = std_json::get(t, p, 2);\n    let head = new std_ascii::Class {\n        lower: true,\n        upper: false,\n        digit: false,\n        underscore: false,\n        hyphen: false\n    };\n    let tail = new std_ascii::Class {\n        lower: true,\n        upper: false,\n        digit: true,\n        underscore: true,\n        hyphen: true\n    };\n    borrow t[u64(start)..u64(end)] as name {\n        return std_ascii::matches::< i64 >(name, head, tail, 1u64, 32u64);\n    }\n}",
+        "snippet": "identifier(t: &[]i64, p: i64) -> bool {\n    if std_json::get(t, p, 0) != 3 {\n        return false;\n    }\n    let start = std_json::get(t, p, 1);\n    let end = std_json::get(t, p, 2);\n    let head = new std_ascii::Class {\n        lower: true,\n        upper: false,\n        digit: false,\n        underscore: false,\n        hyphen: false\n    };\n    let tail = new std_ascii::Class {\n        lower: true,\n        upper: false,\n        digit: true,\n        underscore: true,\n        hyphen: true\n    };\n    borrow t[cast<u64>(start)..cast<u64>(end)] as name {\n        return std_ascii::matches::< i64 >(name, head, tail, 1u64, 32u64);\n    }\n}",
         "snippet_truncated": false
       },
       {

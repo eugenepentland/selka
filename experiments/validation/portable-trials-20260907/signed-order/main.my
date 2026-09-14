@@ -7,9 +7,9 @@ fn entry(id: i64) -> std_order::Item {
     }
     return new std_order::Item {
         value: id,
-        first: u64(id) * 2u64,
+        first: cast<u64>(id) * 2u64,
         first_len: 1u64,
-        second: u64(id) * 2u64 + 1u64,
+        second: cast<u64>(id) * 2u64 + 1u64,
         second_len: length
     };
 }

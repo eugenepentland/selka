@@ -47,7 +47,7 @@ fn identifier(t: &[]i64, p: i64) -> bool {
         underscore: true,
         hyphen: true
     };
-    borrow t[u64(start)..u64(end)] as name {
+    borrow t[cast<u64>(start)..cast<u64>(end)] as name {
         return std_ascii::matches::< i64 >(name, head, tail, 1u64, 32u64);
     }
 }
@@ -63,7 +63,7 @@ fn quoted(t: &[]i64, p: i64) -> i64 {
     let mut i = std_json::get(t, p, 1);
     let end = std_json::get(t, p, 2);
     while i < end {
-        discard io::put(u8(read_slice(t, i)));
+        discard io::put(cast<u8>(read_slice(t, i)));
         i += 1;
     }
     discard io::put(34u8);

@@ -23,8 +23,8 @@ def repair(work, stage):
     else:
         replace(model, 'total: i64, count: u64', 'net: i64, accepted: u64, rejected: u64')
         replace(ledger, 'total: total, count: count', 'net: total, accepted: count, rejected: 4u64 - count')
-        replace(report, 'reply.total * 100 + i64(reply.count)',
-                'reply.net * 100 + i64(reply.accepted) * 10 + i64(reply.rejected)')
+        replace(report, 'reply.total * 100 + cast<i64>(reply.count)',
+                'reply.net * 100 + cast<i64>(reply.accepted) * 10 + cast<i64>(reply.rejected)')
 
 
 def main():

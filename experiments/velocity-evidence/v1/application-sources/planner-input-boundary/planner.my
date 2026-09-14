@@ -47,8 +47,8 @@ fn lookup(t: &[]i64, ids: &[]i64, n: i64, p: i64) -> i64 {
     borrow ids[0..n] as keys {
         let at = std_collections::lower_bound_by::< i64,
         i64 >(keys, t, p, before);
-        if at < u64(n) && json::equal(t, read_slice(keys, at), p) {
-            return i64(at);
+        if at < cast<u64>(n) && json::equal(t, read_slice(keys, at), p) {
+            return cast<i64>(at);
         }
     }
     return - 1;
@@ -61,8 +61,8 @@ fn graph(t: &[]i64, ids: &[]i64, jobs: &[]Job, n: i64, edges: &mut []std_graph::
         let mut p = read_slice(jobs, i).needs + 1;
         while p < json::next(t, read_slice(jobs, i).needs) {
             write_slice(edges, at, new std_graph::Edge {
-                from: u64(lookup(t, ids, n, p)),
-                to: u64(i)
+                from: cast<u64>(lookup(t, ids, n, p)),
+                to: cast<u64>(i)
             });
             at += 1u64;
             p = json::next(t, p);
@@ -75,7 +75,7 @@ fn edge_count(t: &[]i64, jobs: i64) -> u64 {
     let mut count = 0u64;
     let mut p = jobs + 1;
     while p < json::next(t, jobs) {
-        count += u64(schema::count(t, schema::field(t, p, "needs")));
+        count += cast<u64>(schema::count(t, schema::field(t, p, "needs")));
         p = json::next(t, p);
     }
     return count;
@@ -172,9 +172,9 @@ fn work(t: &[]i64, a: i64, ids: &mut []i64, jobs: &mut []Job, done: &mut []i64, 
         progress = false;
         i = 0;
         while i < n {
-            if std_graph::ready(done, u64(i)) {
-                discard std_graph::take_ready(done, u64(i));
-                discard std_graph::complete(done, edges, u64(i));
+            if std_graph::ready(done, cast<u64>(i)) {
+                discard std_graph::take_ready(done, cast<u64>(i));
+                discard std_graph::complete(done, edges, cast<u64>(i));
                 removed += 1;
                 progress = true;
             }
@@ -200,7 +200,7 @@ fn work(t: &[]i64, a: i64, ids: &mut []i64, jobs: &mut []Job, done: &mut []i64, 
         let mut chosen = - 1;
         i = 0;
         while i < n && chosen < 0 {
-            if std_graph::ready(done, u64(i)) {
+            if std_graph::ready(done, cast<u64>(i)) {
                 chosen = i;
             }
             i += 1;
@@ -219,8 +219,8 @@ fn work(t: &[]i64, a: i64, ids: &mut []i64, jobs: &mut []Job, done: &mut []i64, 
         write_slice(jobs, chosen, update(read_slice(jobs, chosen)) {
             finish: start + read_slice(jobs, chosen).duration
         });
-        discard std_graph::take_ready(done, u64(chosen));
-        discard std_graph::complete(done, edges, u64(chosen));
+        discard std_graph::take_ready(done, cast<u64>(chosen));
+        discard std_graph::complete(done, edges, cast<u64>(chosen));
         removed += 1;
     }
     discard output::layers();
@@ -235,7 +235,7 @@ fn work(t: &[]i64, a: i64, ids: &mut []i64, jobs: &mut []Job, done: &mut []i64, 
         let mut count = 0;
         i = 0;
         while i < n {
-            if std_graph::ready(done, u64(i)) {
+            if std_graph::ready(done, cast<u64>(i)) {
                 write_slice(unknown, count, i);
                 count += 1;
             }
@@ -248,8 +248,8 @@ fn work(t: &[]i64, a: i64, ids: &mut []i64, jobs: &mut []Job, done: &mut []i64, 
             }
             let j = read_slice(unknown, i);
             discard json::quoted(t, read_slice(ids, j));
-            discard std_graph::take_ready(done, u64(j));
-            discard std_graph::complete(done, edges, u64(j));
+            discard std_graph::take_ready(done, cast<u64>(j));
+            discard std_graph::complete(done, edges, cast<u64>(j));
             i += 1;
         }
         removed += count;
@@ -301,7 +301,7 @@ fn storage(t: &[]i64, heap: allocator, a: i64) -> Outcome {
         needs: 0,
         finish: 0
     });
-    let mut done = try std_collections::filled::< i64 >(heap, u64(schema::count(t, a)), 0);
+    let mut done = try std_collections::filled::< i64 >(heap, cast<u64>(schema::count(t, a)), 0);
     let mut unknown = try std_collections::filled::< i64 >(heap, 16384u64, 0);
     let mut scratch = try std_collections::filled::< i64 >(heap, 128u64, 0);
     let mut edges = try std_collections::filled::< std_graph::Edge >(heap, edge_count(t, a), new std_graph::Edge {

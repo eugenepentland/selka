@@ -11,7 +11,7 @@
   "cases": [
     {
       "mode": "success",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,113,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(113));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,113,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(113));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -25,7 +25,7 @@
     },
     {
       "mode": "provider-failure",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,113,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(113));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,113,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(113));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -35,11 +35,11 @@
       "seconds": 0.013838873011991382,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(u8(113));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(cast<u8>(113));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "callback-budget",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,113,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(113));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,113,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(113));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -50,11 +50,11 @@
       "seconds": 0.015957840019837022,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(u8(113));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(cast<u8>(113));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "success",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,96,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(96));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,96,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(96));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -68,7 +68,7 @@
     },
     {
       "mode": "provider-failure",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,96,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(96));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,96,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(96));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -78,11 +78,11 @@
       "seconds": 0.015434351982548833,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:39: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(u8(96));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5277}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:39: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(cast<u8>(96));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5277}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "callback-budget",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,96,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(96));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,96,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(96));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -93,11 +93,11 @@
       "seconds": 0.009554428048431873,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:39: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(u8(96));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6569}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:39: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(cast<u8>(96));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6569}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "success",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,210,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(210));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,210,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(210));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -111,7 +111,7 @@
     },
     {
       "mode": "provider-failure",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,210,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(210));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,210,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(210));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -121,11 +121,11 @@
       "seconds": 0.010318307031411678,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(u8(210));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(cast<u8>(210));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "callback-budget",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,210,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(210));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,210,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(210));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -136,11 +136,11 @@
       "seconds": 0.015350476955063641,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(u8(210));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(cast<u8>(210));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "success",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,106,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(106));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,106,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(106));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -154,7 +154,7 @@
     },
     {
       "mode": "provider-failure",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,106,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(106));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,106,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(106));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -164,11 +164,11 @@
       "seconds": 0.01074783701915294,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(u8(106));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(cast<u8>(106));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "callback-budget",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,106,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(106));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,106,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(106));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -179,11 +179,11 @@
       "seconds": 0.009383581986185163,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(u8(106));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(cast<u8>(106));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "success",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,126,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(126));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,126,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(126));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -197,7 +197,7 @@
     },
     {
       "mode": "provider-failure",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,126,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(126));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,126,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(126));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -207,11 +207,11 @@
       "seconds": 0.01601868000579998,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(u8(126));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(cast<u8>(126));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "callback-budget",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,126,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(126));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,126,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(126));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -222,11 +222,11 @@
       "seconds": 0.01582847797544673,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(u8(126));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(cast<u8>(126));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "success",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,224,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(224));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,224,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(224));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -240,7 +240,7 @@
     },
     {
       "mode": "provider-failure",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,224,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(224));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,224,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(224));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -250,11 +250,11 @@
       "seconds": 0.009178682987112552,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(u8(224));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(cast<u8>(224));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "callback-budget",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,224,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(224));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,224,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(224));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -265,11 +265,11 @@
       "seconds": 0.010263580013997853,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(u8(224));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(cast<u8>(224));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "success",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,131,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(131));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,131,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(131));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -283,7 +283,7 @@
     },
     {
       "mode": "provider-failure",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,131,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(131));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,131,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(131));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -293,11 +293,11 @@
       "seconds": 0.01696975401137024,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(u8(131));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(cast<u8>(131));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "callback-budget",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,131,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(131));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,131,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(131));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -308,11 +308,11 @@
       "seconds": 0.009762857982423156,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(u8(131));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(cast<u8>(131));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "success",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,63,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(63));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,63,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(63));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -326,7 +326,7 @@
     },
     {
       "mode": "provider-failure",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,63,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(63));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,63,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(63));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -336,11 +336,11 @@
       "seconds": 0.009909043030347675,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:39: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(u8(63));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5277}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:39: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(cast<u8>(63));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5277}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "callback-budget",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,63,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(63));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,63,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(63));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -351,11 +351,11 @@
       "seconds": 0.015670221007894725,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:39: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(u8(63));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6569}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:39: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(cast<u8>(63));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6569}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "success",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,119,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(119));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,119,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(119));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -369,7 +369,7 @@
     },
     {
       "mode": "provider-failure",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,119,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(119));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,119,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(119));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -379,11 +379,11 @@
       "seconds": 0.015682400960940868,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(u8(119));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(cast<u8>(119));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "callback-budget",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,119,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(119));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,119,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(119));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -394,11 +394,11 @@
       "seconds": 0.013745221949648112,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(u8(119));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(cast<u8>(119));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "success",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,84,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(84));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,84,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(84));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -412,7 +412,7 @@
     },
     {
       "mode": "provider-failure",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,84,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(84));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,84,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(84));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -422,11 +422,11 @@
       "seconds": 0.016576563008129597,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:39: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(u8(84));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5277}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:39: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(cast<u8>(84));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5277}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "callback-budget",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,84,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(84));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,84,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(84));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -437,11 +437,11 @@
       "seconds": 0.013867409026715904,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:39: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(u8(84));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6569}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:39: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(cast<u8>(84));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6569}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "success",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,179,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(179));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,179,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(179));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -455,7 +455,7 @@
     },
     {
       "mode": "provider-failure",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,179,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(179));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,179,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(179));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -465,11 +465,11 @@
       "seconds": 0.01068329397821799,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(u8(179));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(cast<u8>(179));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "callback-budget",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,179,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(179));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,179,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(179));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -480,11 +480,11 @@
       "seconds": 0.009549709036946297,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(u8(179));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(cast<u8>(179));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "success",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,146,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(146));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,146,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(146));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -498,7 +498,7 @@
     },
     {
       "mode": "provider-failure",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,146,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(146));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,146,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(146));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -508,11 +508,11 @@
       "seconds": 0.013965005986392498,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(u8(146));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(cast<u8>(146));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "callback-budget",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,146,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(146));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,146,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(146));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -523,11 +523,11 @@
       "seconds": 0.011142536997795105,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(u8(146));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(cast<u8>(146));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "success",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,191,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(191));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,191,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(191));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -541,7 +541,7 @@
     },
     {
       "mode": "provider-failure",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,191,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(191));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,191,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(191));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -551,11 +551,11 @@
       "seconds": 0.00986625102814287,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(u8(191));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(cast<u8>(191));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "callback-budget",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,191,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(191));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,191,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(191));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -566,11 +566,11 @@
       "seconds": 0.015921791025903076,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(u8(191));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(cast<u8>(191));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "success",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,7,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(7));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,7,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(7));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -584,7 +584,7 @@
     },
     {
       "mode": "provider-failure",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,7,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(7));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,7,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(7));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -594,11 +594,11 @@
       "seconds": 0.011846685956697911,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:38: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(u8(7));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                       ^\n  in main::main at main.my:4:38\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9056},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9056},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3828},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5228}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":52,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:38: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(cast<u8>(7));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                       ^\n  in main::main at main.my:4:38\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9056},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9056},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3828},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5228}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":52,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "callback-budget",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,7,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(7));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,7,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(7));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -609,11 +609,11 @@
       "seconds": 0.010721181984990835,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:38: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(u8(7));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                       ^\n  in main::main at main.my:4:38\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10348},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10348},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3828},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6520}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":52,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:38: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(cast<u8>(7));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                       ^\n  in main::main at main.my:4:38\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10348},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10348},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3828},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6520}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":52,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "success",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,122,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(122));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,122,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(122));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -627,7 +627,7 @@
     },
     {
       "mode": "provider-failure",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,122,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(122));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,122,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(122));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -637,11 +637,11 @@
       "seconds": 0.01578278699889779,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(u8(122));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(cast<u8>(122));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "callback-budget",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,122,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(122));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,122,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(122));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -652,11 +652,11 @@
       "seconds": 0.013728063961025327,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(u8(122));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(cast<u8>(122));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "success",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,190,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(190));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,190,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(190));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -670,7 +670,7 @@
     },
     {
       "mode": "provider-failure",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,190,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(190));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,190,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(190));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -680,11 +680,11 @@
       "seconds": 0.010404119035229087,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(u8(190));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(cast<u8>(190));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9298},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5326}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "callback-budget",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,190,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(190));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,190,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(190));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -695,11 +695,11 @@
       "seconds": 0.00946414505597204,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(u8(190));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:40: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(cast<u8>(190));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                         ^\n  in main::main at main.my:4:40\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10590},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3972},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6618}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":54,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "success",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,28,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(28));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,28,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(28));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -713,7 +713,7 @@
     },
     {
       "mode": "provider-failure",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,28,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(28));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,28,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(28));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -723,11 +723,11 @@
       "seconds": 0.014585700002498925,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:39: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(u8(28));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5277}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:39: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(cast<u8>(28));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5277}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "callback-budget",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,28,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(28));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,28,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(28));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -738,11 +738,11 @@
       "seconds": 0.01130927202757448,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:39: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(u8(28));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6569}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:39: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(cast<u8>(28));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6569}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "success",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,61,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(61));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,61,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(61));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -756,7 +756,7 @@
     },
     {
       "mode": "provider-failure",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,61,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(61));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,61,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(61));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -766,11 +766,11 @@
       "seconds": 0.00979401299264282,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:39: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(u8(61));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5277}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:39: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(cast<u8>(61));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5277}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "callback-budget",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,61,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(61));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,61,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(61));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -781,11 +781,11 @@
       "seconds": 0.016060500987805426,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:39: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(u8(61));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6569}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:39: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(cast<u8>(61));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6569}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "success",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,17,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(17));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,17,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(17));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -799,7 +799,7 @@
     },
     {
       "mode": "provider-failure",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,17,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(17));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,17,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(17));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -809,11 +809,11 @@
       "seconds": 0.01200649404199794,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:39: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(u8(17));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5277}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:39: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(cast<u8>(17));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5277}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "callback-budget",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,17,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(17));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,17,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(17));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -824,11 +824,11 @@
       "seconds": 0.010637965053319931,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:39: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(u8(17));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6569}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:39: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(cast<u8>(17));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6569}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "success",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,30,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(30));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,30,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(30));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -842,7 +842,7 @@
     },
     {
       "mode": "provider-failure",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,30,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(30));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,30,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(30));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -852,11 +852,11 @@
       "seconds": 0.016372318961657584,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:39: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(u8(30));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5277}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:39: error[R_HOST_FAILURE]: HostFailure\n  discard io::put(cast<u8>(30));discard io::byte(-1); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":9177},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":5277}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     },
     {
       "mode": "callback-budget",
-      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,30,4096){Encoded.ok(bytes)=>{\ndiscard io::put(u8(30));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
+      "source": "module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}\nfn main(heap:allocator)->i64{arena heap as child{\nmatch json_encode::<Encoded>(child,30,4096){Encoded.ok(bytes)=>{\ndiscard io::put(cast<u8>(30));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}",
       "flags": [
         "--memory-report",
         "--max-steps=100000",
@@ -867,7 +867,7 @@
       "seconds": 0.014067016018088907,
       "exit": 1,
       "stdout_hex": "",
-      "stderr": "main.my:4:39: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(u8(30));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6569}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
+      "stderr": "main.my:4:39: error[R_HOST_LIMIT]: HostCallLimit\n  discard io::put(cast<u8>(30));discard io::put(0u8); discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}\n                                        ^\n  in main::main at main.my:4:39\n{\"version\":\"runtime-memory-v1\",\"scope\":\"requested-live-bytes-excluding-source-input-and-allocator-overhead\",\"total\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"vm\":{\"limit\":1000000,\"live\":0,\"peak\":10469},\"host\":{\"limit\":1000000,\"live\":0,\"peak\":129},\"vm_categories\":{\"guest_backing\":{\"limit\":1000000,\"live\":0,\"peak\":3900},\"bookkeeping_and_snapshots\":{\"limit\":1000000,\"live\":0,\"peak\":6569}},\"logical_slots\":{\"buffers\":{\"live_allocations\":0,\"total_capacity\":0,\"created\":1,\"released\":1,\"transfers\":1,\"peak_capacity\":53,\"peak_allocations\":1},\"pools\":{\"live_pools\":0,\"reserved_slots\":0,\"acquired\":0,\"released\":0,\"peak_slots\":0,\"peak_pools\":0}}}\nmylang-io: GuestTrap\n"
     }
   ]
 }

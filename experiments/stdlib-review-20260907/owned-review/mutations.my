@@ -9,5 +9,5 @@ fn work(heap:allocator)->Answer{
  if len_buffer(outer)!=3u64{return new Answer.ok(-7);}
  let last=try take_buffer<Taken<B>>(outer,1);if read_buffer(last,0)!=2u8{return new Answer.ok(-8);}
  let swapped=try take_buffer<Taken<B>>(outer,1);if read_buffer(swapped,0)!=4u8{return new Answer.ok(-9);}
- discard try append_buffer<Status>(outer,try child(heap,6u8));discard try truncate_buffer<Status>(outer,1);let answer=try take_buffer<Taken<B>>(outer,0);if len_buffer(outer)!=0u64{return new Answer.ok(-10);}return new Answer.ok(i64(read_buffer(answer,0)));}
+ discard try append_buffer<Status>(outer,try child(heap,6u8));discard try truncate_buffer<Status>(outer,1);let answer=try take_buffer<Taken<B>>(outer,0);if len_buffer(outer)!=0u64{return new Answer.ok(-10);}return new Answer.ok(cast<i64>(read_buffer(answer,0)));}
 fn main(heap:allocator)->i64{match work(heap){Answer.ok(n)=>{return n;},Answer.err(code)=>{return code;}}}

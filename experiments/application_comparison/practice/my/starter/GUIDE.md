@@ -29,7 +29,7 @@ failure branch must still return the result required by the utility contract.
 
 The `io` host exposes only raw byte count, indexed reads, and byte writes.
 `effects(host)` declares and propagates these external effects. Byte literals
-use the `u8` suffix; `i64(value)` explicitly widens a byte for arithmetic.
+use the `u8` suffix; `cast<i64>(value)` explicitly widens a byte for arithmetic.
 `discard io::put(...)` acknowledges the host's status value. Returning zero from
 `main` commits the buffered output; it is the process status, not the answer.
 
