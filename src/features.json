@@ -4,7 +4,7 @@
   "implemented": {
     "direct-c-scalar-imports-qbe": {
       "kind": "tooling",
-      "summary": "`extern fn` declarations call fixed-arity C scalar functions directly from QBE native builds.",
+      "summary": "`extern def` declarations call fixed-arity C scalar functions directly from QBE native builds.",
       "doc": "docs/c-ffi.md#direct-c-imports"
     },
     "explicit-native-link-inputs": {
