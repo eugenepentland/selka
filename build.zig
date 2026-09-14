@@ -61,9 +61,22 @@ const rss = struct {
     /// Matches the 4 GiB ceiling `mylang run` gives a guest.
     const guest: u64 = 4096 * mib;
 };
-/// Declare a step's resident-memory ceiling where the step is created.
+/// The native tools every guest-running driver needs, and the install step that
+/// produces them, filled in once at the top of `build`. A driver invokes an
+/// uninstalled compiler whose directory holds no tools, so it names them through
+/// the environment the compiler reads.
+var tool_qbe: []const u8 = "";
+var tool_zig: []const u8 = "";
+var install_all: ?*std.Build.Step = null;
+/// Declare a step's resident-memory ceiling, and give it the native tools a guest
+/// build needs; harmless on steps that build no guest.
 fn bounded(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
     step.step.max_rss = bytes;
+    if (tool_qbe.len != 0) {
+        step.setEnvironmentVariable("MYLANG_QBE", tool_qbe);
+        step.setEnvironmentVariable("MYLANG_ZIG", tool_zig);
+        if (install_all) |install| step.step.dependOn(install);
+    }
     return step;
 }
 /// Guardian's `addAllChecks` returns nothing, so bound the check steps it has
@@ -112,6 +125,14 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(exe);
     // Installed beside `mylang`, where the native build driver looks for it before `PATH`.
     const qbe_exe = vendoredQbe(b, target);
+    // Guest-running drivers invoke an uninstalled compiler with no tools beside it
+    // and none on `PATH`; name the vendored tools for them through the environment.
+    // The build runs with the project root as its working directory, and the
+    // install step (an added dependency) puts `qbe` at this path before any driver.
+    const root = std.Io.Dir.cwd().realPathFileAlloc(b.graph.io, ".", b.allocator) catch @panic("build root");
+    tool_qbe = b.pathJoin(&.{ root, "zig-out", "bin", "qbe" });
+    tool_zig = b.graph.zig_exe;
+    install_all = b.getInstallStep();
     // Host applications build their own guests natively, so they carry the same
     // native build driver the compiler does rather than shelling out to it.
     const native_build = b.createModule(.{ .root_source_file = b.path("src/qbe_build.zig"), .target = target, .optimize = optimize });

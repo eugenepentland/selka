@@ -33,13 +33,25 @@ pub const Context = struct {
         const cwd = try std.Io.Dir.cwd().realPathFileAlloc(self.io, ".", self.allocator);
         return std.fs.path.resolve(self.allocator, &.{ cwd, path });
     }
-    /// Resolve an explicit path, then a tool installed beside this compiler, then `PATH`;
-    /// the working directory never selects a build tool.
+    /// The environment variable, if any, that names a bare native tool.
+    fn toolVariable(name: []const u8) ?[]const u8 {
+        if (std.mem.eql(u8, name, "qbe")) return "MYLANG_QBE";
+        if (std.mem.eql(u8, name, "zig")) return "MYLANG_ZIG";
+        return null;
+    }
+    /// Resolve an explicit path, then `MYLANG_QBE`/`MYLANG_ZIG`, then a tool beside
+    /// this compiler, then `PATH`; the working directory never selects a build tool.
     pub fn executable(self: Context, name: []const u8) Error![]const u8 {
         if (std.mem.indexOfScalar(u8, name, '/') != null) {
             if (!self.runnable(name)) return error.ToolNotFound;
             return std.Io.Dir.cwd().realPathFileAlloc(self.io, name, self.allocator);
         }
+        // `MYLANG_QBE` and `MYLANG_ZIG` name the native tools when neither a flag,
+        // a tool beside the compiler, nor `PATH` does — a host or driver run from
+        // an uninstalled binary whose directory holds no tools.
+        if (toolVariable(name)) |variable| if (self.environ.get(variable)) |path| {
+            if (self.runnable(path)) return std.Io.Dir.cwd().realPathFileAlloc(self.io, path, self.allocator);
+        };
         if (self.self_directory.len != 0) {
             const sibling = try std.fs.path.join(self.allocator, &.{ self.self_directory, name });
             if (self.runnable(sibling)) return std.Io.Dir.cwd().realPathFileAlloc(self.io, sibling, self.allocator);
@@ -254,6 +266,9 @@ test "native tools resolve beside the compiler then PATH, never from the working
     try environment.put("PATH", "");
     // A `.mylang-cache/toolchain/qbe` under the current directory is no longer a lookup path.
     try std.testing.expectError(error.ToolNotFound, context.executable("qbe"));
+    // `MYLANG_QBE` names the tool when neither a sibling nor PATH does.
+    try environment.put("MYLANG_QBE", try std.fs.path.join(context.allocator, &.{ searched, "qbe" }));
+    try std.testing.expectEqualStrings(try std.fs.path.join(context.allocator, &.{ searched, "qbe" }), try context.executable("qbe"));
 }
 test "tool stamps distinguish rebuilt tools without rereading their contents" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
