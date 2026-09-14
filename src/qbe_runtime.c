@@ -18,6 +18,12 @@ _Static_assert(offsetof(Context, steps) == 0, "QBE context steps ABI");
 _Static_assert(offsetof(Context, max_steps) == 16, "QBE context step limit ABI");
 _Static_assert(offsetof(Context, active_frame) == 48, "QBE context active frame ABI");
 _Static_assert(offsetof(MylQbeActiveFrame, position) == 8, "QBE frame position ABI");
+/* Stable trap for a guest that outgrew its byte ceiling. It is a runtime trap
+   like any other R_ code, so it exits 1 rather than reporting a host defect. */
+static const char *const memory_budget_code = "R_MEMORY_BUDGET";
+static const char *describe(const char *code) {
+    return strcmp(code, memory_budget_code) ? "native execution failed" : "memory budget exhausted";
+}
 static uint64_t fail(void *context, const char *code) {
     Context *ctx = context;
     if (!ctx->trap) {
@@ -48,7 +54,11 @@ void myl_qbe_fail_empty_separator(void *context) { fail(context, "R_EMPTY_SEPARA
 void myl_qbe_fail_buffer_bounds(void *context) { fail(context, "R_BUFFER_BOUNDS"); }
 void myl_qbe_fail_list_bounds(void *context) { fail(context, "R_LIST_BOUNDS"); }
 void myl_qbe_fail_list_capacity(void *context) { fail(context, "R_LIST_CAPACITY"); }
-void myl_qbe_fail_allocation(void *context) { fail(context, "OutOfMemory"); }
+/* A refused managed allocation names the budget when the heap declined it and
+   the host only when the process itself could not produce the bytes. */
+void myl_qbe_fail_allocation(void *context) {
+    fail(context, ((Context *)context)->heap.exhausted ? memory_budget_code : "OutOfMemory");
+}
 void myl_qbe_fail_iteration(void *context) { fail(context, "R_LIST_ITERATION_MUTATION"); }
 void myl_qbe_fail_assert(void *context) { fail(context, "R_ASSERT"); }
 void myl_qbe_fail_bounds(void *context) {
@@ -286,8 +296,8 @@ int mylang_qbe_run_providers(uint64_t (*entry)(void *), int argc, char **argv, c
     if (mylang_qbe_execute_providers(entry, context.max_steps, context.max_frames, stress, providers, &result)) {
         if (result.trace_count) {
             const MylQbeTrace *at=&result.trace[0];
-            fprintf(stderr,"%s:%" PRIu64 ":%" PRIu64 ": error[%s]: native execution failed\n",at->path,at->line,at->column,result.code);
-        } else fprintf(stderr, "%s: QBE runtime failure\n", result.code);
+            fprintf(stderr,"%s:%" PRIu64 ":%" PRIu64 ": error[%s]: %s\n",at->path,at->line,at->column,result.code,describe(result.code));
+        } else fprintf(stderr, "%s: %s\n", result.code, strcmp(result.code, memory_budget_code) ? "QBE runtime failure" : describe(result.code));
         for (uint64_t i=0; i<result.trace_count; ++i) {
             MylQbeTrace frame = result.trace[i];
             fprintf(stderr, "  in %s at %s:%" PRIu64 ":%" PRIu64 "\n", frame.function, frame.path, frame.line, frame.column);
@@ -312,10 +322,16 @@ int mylang_qbe_execute_config(uint64_t (*entry)(void *), uint64_t steps, uint64_
     *result=(MylQbeResult){0};
     if (!steps || !frames) { result->code="InvalidBudget";return 1; }
     if (frames>SIZE_MAX/sizeof(MylQbeActiveFrame)) { result->code="OutOfMemory";return 1; }
+    /* Read the ceiling and arm the kernel backstop before the first allocation,
+       so a runtime defect cannot outgrow the budget the heap will enforce. */
+    int budgeted=1;
+    size_t budget=myl_native_budget_environment(&budgeted);
+    if (!budgeted) { result->code="InvalidMemoryLimit";return 1; }
+    myl_native_budget_guard(budget);
     Context *context=calloc(1,sizeof *context);
     if (!context) { result->code="OutOfMemory";return 1; }
     context->max_steps=steps;context->max_frames=frames;context->providers=providers;
-    myl_native_heap_init(&context->heap, SIZE_MAX);
+    myl_native_heap_init(&context->heap, budget ? budget : SIZE_MAX);
     context->heap.stress = stress;
     context->frame_data = calloc((size_t)frames, sizeof(MylQbeActiveFrame));
     if (!context->frame_data) context->trap = "OutOfMemory";

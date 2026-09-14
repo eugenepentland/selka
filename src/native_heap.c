@@ -1,7 +1,59 @@
+#define _POSIX_C_SOURCE 200809L
 #include "native_heap.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdalign.h>
+#include <sys/resource.h>
+#if defined(__SANITIZE_ADDRESS__) || defined(__SANITIZE_THREAD__)
+#define MYL_NATIVE_SANITIZED 1
+#elif defined(__has_feature)
+#if __has_feature(address_sanitizer) || __has_feature(thread_sanitizer) || __has_feature(memory_sanitizer)
+#define MYL_NATIVE_SANITIZED 1
+#endif
+#endif
+#ifndef MYL_NATIVE_SANITIZED
+#define MYL_NATIVE_SANITIZED 0
+#endif
+int myl_native_budget_parse(const char *text, size_t *out) {
+    size_t value = 0, scale = 1;
+    const char *cursor = text;
+    if (!text || !out) return 0;
+    for (; *cursor >= '0' && *cursor <= '9'; ++cursor) {
+        size_t digit = (size_t)(*cursor - '0');
+        if (value > (SIZE_MAX - digit) / 10) return 0;
+        value = value * 10 + digit;
+    }
+    if (cursor == text) return 0;
+    if (*cursor == 'K' || *cursor == 'k') scale = ((size_t)1) << 10;
+    else if (*cursor == 'M' || *cursor == 'm') scale = ((size_t)1) << 20;
+    else if (*cursor == 'G' || *cursor == 'g') scale = ((size_t)1) << 30;
+    else if (*cursor) return 0;
+    if (*cursor && cursor[1]) return 0;
+    if (value > SIZE_MAX / scale) return 0;
+    *out = value * scale;
+    return 1;
+}
+size_t myl_native_budget_environment(int *valid) {
+    const char *text = getenv(MYL_NATIVE_BUDGET_VARIABLE);
+    size_t value = 0;
+    if (valid) *valid = 1;
+    if (!text || !*text) return 0;
+    if (myl_native_budget_parse(text, &value)) return value;
+    if (valid) *valid = 0;
+    return 0;
+}
+int myl_native_budget_guard(size_t budget) {
+    struct rlimit ceiling;
+    rlim_t wanted;
+    if (MYL_NATIVE_SANITIZED || !budget) return 0;
+    if (budget > SIZE_MAX - MYL_NATIVE_BUDGET_HEADROOM) return 0;
+    if (getrlimit(RLIMIT_AS, &ceiling)) return 0;
+    wanted = (rlim_t)(budget + MYL_NATIVE_BUDGET_HEADROOM);
+    if (ceiling.rlim_max != RLIM_INFINITY && wanted > ceiling.rlim_max) wanted = ceiling.rlim_max;
+    if (ceiling.rlim_cur != RLIM_INFINITY && ceiling.rlim_cur <= wanted) return 0;
+    ceiling.rlim_cur = wanted;
+    return setrlimit(RLIMIT_AS, &ceiling) == 0;
+}
 struct myl_native_object {
     struct myl_native_object *next, *pending;
     const myl_native_type *element;
@@ -116,7 +168,12 @@ void *myl_native_heap_alloc_at(myl_native_heap *heap, const myl_native_type *ele
     due = due || heap->bytes >= heap->next_collection || bytes > heap->next_collection - heap->bytes;
     /* An escape copy suspends collection because its clones are not yet rooted. */
     if (due && !heap->suspended) myl_native_heap_collect(heap);
-    if (heap->bytes > heap->limit || bytes > heap->limit - heap->bytes) return NULL;
+    /* Refused after a collection, so the budget really is exhausted rather than
+     * merely reached; the caller's trap names the budget, not the host. */
+    if (heap->bytes > heap->limit || bytes > heap->limit - heap->bytes) {
+        heap->exhausted = 1;
+        return NULL;
+    }
     myl_native_object *object = calloc(1, bytes);
     if (!object) return NULL;
     object->next = heap->objects;

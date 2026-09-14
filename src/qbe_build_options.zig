@@ -17,6 +17,7 @@ pub const Options = struct {
     cache: []const u8 = ".mylang-cache/qbe",
     report: bool = false,
     run: bool = false,
+    max_memory: ?u64 = null,
     arguments: []const []const u8 = &.{},
 };
 /// Build usage is independent of run-time guest budgets.
@@ -25,6 +26,7 @@ pub const usage = "usage: mylang build <file.my> (-o <output> | --run) [--projec
     "  --provider FILE  trusted native provider (executables only)\n" ++
     "  --qbe PATH --zig PATH --mode Debug|ReleaseFast --target amd64_sysv\n" ++
     "  --cache-dir DIR --report\n" ++
+    "  --max-memory BYTES  byte ceiling for --run (K/M/G suffixes; default 4G)\n" ++
     "  --run instead of -o: execute temporarily; pass runtime options after --\n";
 /// Parse explicit build flags, rejecting unknown controls.
 pub fn parse(args: []const []const u8) Error!Options {
@@ -55,7 +57,7 @@ pub fn parse(args: []const []const u8) Error!Options {
         };
         if (value.len == 0) return error.InvalidBuildArguments;
         if (@import("native_link.zig").isFlag(@tagName(option)) and !@import("native_link.zig").valid(@tagName(option), value)) return error.InvalidBuildArguments;
-        assign(&result, option, value);
+        try assign(&result, option, value);
     }
     if (result.source.len == 0) return error.InvalidBuildArguments;
     if (result.run) {
@@ -68,7 +70,7 @@ pub fn parse(args: []const []const u8) Error!Options {
     if (!std.mem.eql(u8, result.mode, "Debug") and !std.mem.eql(u8, result.mode, "ReleaseFast")) return error.InvalidBuildArguments;
     return result;
 }
-const Flag = enum { @"--link", @"--link-library", @"--library-path", @"-o", @"--output", @"--project", @"--library", @"--provider", @"--qbe", @"--zig", @"--mode", @"--target", @"--cache-dir", @"--report", @"--run" };
+const Flag = enum { @"--link", @"--link-library", @"--library-path", @"-o", @"--output", @"--project", @"--library", @"--provider", @"--qbe", @"--zig", @"--mode", @"--target", @"--cache-dir", @"--report", @"--run", @"--max-memory" };
 fn boolean(result: *Options, flag: Flag) bool {
     switch (flag) {
         .@"--project" => result.project = true,
@@ -79,7 +81,7 @@ fn boolean(result: *Options, flag: Flag) bool {
     }
     return true;
 }
-fn assign(result: *Options, flag: Flag, value: []const u8) void {
+fn assign(result: *Options, flag: Flag, value: []const u8) Error!void {
     switch (flag) {
         .@"--link", .@"--link-library", .@"--library-path" => {},
         .@"-o", .@"--output" => {
@@ -91,6 +93,7 @@ fn assign(result: *Options, flag: Flag, value: []const u8) void {
         .@"--mode" => result.mode = value,
         .@"--target" => result.target = value,
         .@"--cache-dir" => result.cache = value,
+        .@"--max-memory" => result.max_memory = @import("memory_budget.zig").parse(value) catch return error.InvalidBuildArguments,
         else => unreachable,
     }
 }
@@ -118,6 +121,16 @@ test "temporary native runs accept runtime options and reject persistent output"
     try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "--run", "-o", "out" }));
     try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "--run", "--library" }));
     try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--", "--gc-stress" }));
+}
+
+// spec-case: MEMORY-CEILING-1
+test "a temporary native run accepts a suffixed byte ceiling and rejects malformed text" {
+    try std.testing.expectEqual(@as(?u64, 64 << 20), (try parse(&.{ "main.my", "--run", "--max-memory=64M" })).max_memory);
+    try std.testing.expectEqual(@as(?u64, 1 << 30), (try parse(&.{ "main.my", "--run", "--max-memory", "1G" })).max_memory);
+    // Unresolved by default, so MYLANG_MEMORY_LIMIT and the built-in default still apply.
+    try std.testing.expectEqual(@as(?u64, null), (try parse(&.{ "main.my", "--run" })).max_memory);
+    try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "--run", "--max-memory=eight" }));
+    try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "--run", "--max-memory" }));
 }
 
 test "native link controls are repeatable and reject injected compiler switches" {

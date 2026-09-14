@@ -3,6 +3,7 @@ const std = @import("std");
 const fs = @import("qbe_build_io.zig");
 const v = @import("qbe_build_value.zig");
 const options = @import("native_test_options.zig");
+const budget = @import("memory_budget.zig");
 /// Directory discovery and child-report transport failures.
 pub const Error = fs.Error || std.json.ParseError(std.json.Scanner) || std.Io.Dir.OpenError ||
     std.Io.Dir.SelectiveWalker.Error || std.Io.File.OpenError ||
@@ -37,9 +38,23 @@ pub fn programs(context: fs.Context, source: []const u8) Error![]const []const u
     std.mem.sort([]const u8, found.items, {}, before);
     return found.items;
 }
-/// Run one child command per program, bounded by the core count, and merge the
-/// reports those children write. Each child owns its own project, so the shared
-/// object cache and receipt directory are the only state they contend over.
+/// Workers one directory run may keep busy: `--jobs`/`MYLANG_JOBS` when asked
+/// for, otherwise the cores the machine has, capped by how many per-child
+/// ceilings its free memory holds. A cold fan-out on a loaded machine then
+/// waits instead of pushing the whole machine into swap.
+fn width(context: fs.Context, opts: options.Options, programs_found: usize) usize {
+    return budget.workers(.{
+        .jobs = opts.jobs,
+        .programs = programs_found,
+        .cores = std.Thread.getCpuCount() catch 1,
+        .free = budget.available(context.io),
+        .ceiling = opts.limits.max_memory orelse budget.test_default,
+    });
+}
+/// Run one child command per program, bounded by cores and free memory, and
+/// merge the reports those children write. Each child owns its own project, so
+/// the shared object cache and receipt directory are the only state they
+/// contend over.
 pub fn run(context: fs.Context, opts: options.Options) Error!u8 {
     if (opts.cases != null) return error.DirectoryCasesUnsupported;
     const a = context.allocator;
@@ -50,7 +65,7 @@ pub fn run(context: fs.Context, opts: options.Options) Error!u8 {
     const workspace = try context.temporary(cache);
     defer context.remove(workspace);
     const outcomes = try a.alloc(Outcome, paths.len);
-    const workers = @max(1, @min(paths.len, std.Thread.getCpuCount() catch 1));
+    const workers = width(context, opts, paths.len);
     var start: usize = 0;
     while (start < paths.len) : (start += workers) {
         try wave(context, .{ .compiler = compiler, .options = opts, .workspace = workspace }, paths[start..@min(start + workers, paths.len)], outcomes[start..]);
@@ -88,6 +103,9 @@ fn argv(context: fs.Context, shared: Fanout, source: []const u8) Error![]const [
     try list.appendSlice(a, &.{ "--max-frames", try decimal(a, opts.limits.max_frames) });
     try list.appendSlice(a, &.{ "--max-calls", try decimal(a, opts.limits.max_calls) });
     try list.appendSlice(a, &.{ "--timeout-ms", try decimal(a, opts.limits.timeout_ms) });
+    // Resolved before the fan-out, so every child enforces the same ceiling and
+    // keys its receipts on it rather than rediscovering the environment itself.
+    try list.appendSlice(a, &.{ "--max-memory", try decimal(a, opts.limits.max_memory orelse budget.test_default) });
     if (opts.force) try list.append(a, "--force");
     try @import("native_link.zig").append(context, opts.link_arguments, &list, true);
     return list.items;

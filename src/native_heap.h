@@ -57,12 +57,36 @@ typedef struct {
     size_t collections;
     size_t limit, next_collection;
     int stress;
+    /* Set once an allocation was refused by `limit` rather than by the host
+     * allocator, so the trap names the budget instead of an out-of-memory host. */
+    int exhausted;
     /* Innermost arena depth; 0 is the ordinary tracing heap. Collection is
      * suspended only while one escape copy builds its not-yet-rooted clones. */
     unsigned region_depth;
     int suspended;
     myl_native_arena_statistics arena;
 } myl_native_heap;
+/* Address space granted to a guest process on top of its managed byte budget:
+ * program text, the C library's own arenas and the test harness that loads it.
+ * A trivial native guest needs about 64 MiB of address space before it holds
+ * any managed bytes at all, so the soft budget is always reached first. */
+#define MYL_NATIVE_BUDGET_HEADROOM (((size_t)256) << 20)
+/* Name of the environment variable every spawner sets to publish a guest's byte
+ * ceiling. Bytes, with an optional K, M or G suffix; empty or absent grants none. */
+#define MYL_NATIVE_BUDGET_VARIABLE "MYLANG_MEMORY_LIMIT"
+/* Parse a byte budget written as digits with an optional K, M or G suffix.
+ * Returns 1 and stores the value, or 0 for empty, trailing or overflowing text. */
+int myl_native_budget_parse(const char *text, size_t *out);
+/* The budget named by MYL_NATIVE_BUDGET_VARIABLE, or 0 when it names none.
+ * Stores 0 through `valid` when the variable is present but malformed, so a
+ * caller refuses to run rather than running unbounded. */
+size_t myl_native_budget_environment(int *valid);
+/* Cap this process's address space at `budget` plus MYL_NATIVE_BUDGET_HEADROOM,
+ * the kernel backstop behind the heap's own budget. Never raises an existing
+ * tighter ceiling, and applies none under a sanitizer, whose shadow mapping
+ * reserves far more address space than any budget would allow. Returns 1 when a
+ * ceiling was installed. */
+int myl_native_budget_guard(size_t budget);
 void myl_native_heap_init(myl_native_heap *heap, size_t limit);
 void myl_native_heap_destroy(myl_native_heap *heap);
 void myl_native_root_push(myl_native_heap *heap, myl_native_root *root,

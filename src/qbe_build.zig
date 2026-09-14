@@ -10,6 +10,7 @@ const v = @import("qbe_build_value.zig");
 /// Build errors include frontend transport, native tools and manifest validation.
 pub const Error = fs.Error || std.json.ParseError(std.json.Scanner) || outputs.Error ||
     @import("qbe_build_embed.zig").Error || cache_api.Error ||
+    @import("memory_budget.zig").Error ||
     error{ UnsupportedNativeHost, ZigVersionMismatch, InvalidNativeManifest };
 const abi = "mylang-qbe-native-v3";
 const Record = struct { name: []const u8, symbol: []const u8, key: []const u8, object: []const u8, reused: bool };
@@ -98,14 +99,18 @@ fn build(context: fs.Context, parsed: options.Options) !u8 {
         const stream = if (parsed.run) std.Io.File.stderr() else std.Io.File.stdout();
         try stream.writeStreamingAll(context.io, try std.fmt.allocPrint(a, "{s}\n", .{report}));
     }
-    if (parsed.run) return execute(context, output, parsed.arguments);
+    if (parsed.run) return execute(context, output, parsed);
     return 0;
 }
-fn execute(context: fs.Context, output: []const u8, arguments: []const []const u8) !u8 {
+/// Run the freshly built program under a byte ceiling: `--max-memory` first,
+/// then `MYLANG_MEMORY_LIMIT`, then the single-guest default.
+fn execute(context: fs.Context, output: []const u8, parsed: options.Options) !u8 {
+    const budget = @import("memory_budget.zig");
+    const ceiling = try budget.resolve(parsed.max_memory, context.environ, budget.variable, budget.run_default);
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.append(context.allocator, output);
-    try argv.appendSlice(context.allocator, arguments);
-    var child = try std.process.spawn(context.io, .{ .argv = argv.items });
+    try argv.appendSlice(context.allocator, parsed.arguments);
+    var child = try std.process.spawn(context.io, .{ .argv = argv.items, .environ_map = try context.bounded(ceiling) });
     const term = try child.wait(context.io);
     return switch (term) {
         .exited => |code| code,

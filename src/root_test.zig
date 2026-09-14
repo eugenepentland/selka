@@ -171,6 +171,7 @@ test {
 test {
     _ = @import("native_test_options.zig");
     _ = @import("native_test_receipts.zig");
+    _ = @import("memory_budget.zig");
 }
 
 test {
