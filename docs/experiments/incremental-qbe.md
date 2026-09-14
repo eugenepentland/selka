@@ -59,9 +59,8 @@ mylang build main.my --project --library -o /tmp/guest.so
 mylang build main.my --provider adapter.c --mode ReleaseFast -o /tmp/app
 ```
 
-The previous `scripts/qbe.py` driver remains a development comparison tool. New
-application commands use `mylang build`; its cache namespace is independent of
-the Python driver's cache.
+The previous `scripts/qbe.py` driver was folded into `mylang build` and the
+Zig-native golden parity harness; its cache namespace and Python tooling are gone.
 
 Execution accepts `--max-steps=N`, `--max-frames=N`, and `--gc-stress`. Defaults
 are 10,000,000 steps and 1,024 frames. Guest traps return failure without

@@ -106,7 +106,7 @@ at all is a failure rather than a pass.
 
 `README.md` and `SPEC.md` contribute no executable blocks: the README fences are all
 shell invocations, and `SPEC.md` has no fenced blocks at all. Across the scanned
-documents the gate currently runs 102 examples, type-checks 19 and skips 10. Those
+documents the gate currently runs 102 examples, type-checks 16 and skips 6. Those
 figures are a snapshot; the runner's own summary is the authority. The count grew
 when every implemented feature gained a documented example, which
 [`mylang doc-coverage`](../tooling/documentation-gate.md) now requires.
