@@ -11,6 +11,9 @@ const factories =
     \\domain Net: u64:
     \\    def make(n: u64) -> Net:
     \\        return wrap[Net](n)
+    \\
+    \\
+    \\
 ;
 const helpers =
     \\def pair[T](a: T, b: T) -> [2]T:
@@ -24,6 +27,9 @@ const helpers =
     \\            return True
     \\        i = i + 1u64
     \\    return False
+    \\
+    \\
+    \\
 ;
 fn value(allocator: std.mem.Allocator, source: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(allocator, "arrays.my", source);
@@ -106,7 +112,7 @@ test "generic array templates reject invalid uncalled bodies and invalid lengths
     };
     for (cases) |case| {
         const source = try std.mem.concat(t.allocator, u8, &.{
-            case.source,
+            case.source, "\n\n\n",
             \\def main() -> i64:
             \\    return 0
         });
@@ -128,6 +134,9 @@ const views =
     \\    part = window[T](a)
     \\    _ = part[0]
     \\    return original[0]
+    \\
+    \\
+    \\
 ;
 fn allocations(allocator: std.mem.Allocator) !void {
     try value(allocator, membership, 1);
@@ -273,7 +282,8 @@ test "expanding generic array recursion stops at the specialization budget" {
     , "E_GENERIC_LIMIT");
     var compilation = try language.Compilation.init(t.allocator, "shape-budget.my",
         \\def grow[T](x: T) -> i64:
-        \\    _ = [x, x]
+        \\    pair: [2]T = [x, x]
+        \\    _ = pair
         \\    return grow[[1]T]([x])
         \\
         \\

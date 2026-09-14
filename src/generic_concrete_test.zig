@@ -6,6 +6,9 @@ const schema =
     \\class Sample:
     \\    values: [2]i64
     \\    tag: u8
+    \\
+    \\
+    \\
 ;
 const program = schema ++
     \\def make[T: integer](x: T) -> Sample:
@@ -181,6 +184,7 @@ test "generic concrete shapes reject mismatched nominal values and malformed con
     try reject(
         \\class A:
         \\    n: i64
+        \\    m: i64
         \\
         \\
         \\def f[T](x: T) -> A:

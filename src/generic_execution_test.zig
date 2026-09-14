@@ -59,17 +59,17 @@ test "generic execution preserves nominal values through copy contracts" {
     defer compilation.deinit();
     try t.expectEqual(@as(i64, 7), (try compilation.execute(t.allocator)).value);
     try t.expectEqual(@as(usize, 3), compilation.program.?.functions.len);
-    try t.expectEqualStrings("id::<A>", compilation.program.?.functions[1].name);
-    try t.expectEqualStrings("id::<B>", compilation.program.?.functions[2].name);
+    try t.expectEqualStrings("id[A]", compilation.program.?.functions[1].name);
+    try t.expectEqualStrings("id[B]", compilation.program.?.functions[2].name);
 }
 
 fn limited(count: usize) !void {
     var text_buffer: std.Io.Writer.Allocating = .init(t.allocator);
     defer text_buffer.deinit();
-    for (0..count) |index| try text_buffer.writer.print("fn g{d}<T:copy>()->i64{{return 0;}}", .{index});
-    try text_buffer.writer.writeAll("fn main()->i64{");
-    for (0..count) |index| try text_buffer.writer.print("_ = g{d}::<i64>();", .{index});
-    try text_buffer.writer.writeAll("return g0::<i64>();}");
+    for (0..count) |index| try text_buffer.writer.print("def g{d}[T]() -> i64:\n    return 0\n\n\n", .{index});
+    try text_buffer.writer.writeAll("def main() -> i64:\n");
+    for (0..count) |index| try text_buffer.writer.print("    _ = g{d}[i64]()\n", .{index});
+    try text_buffer.writer.writeAll("    return g0[i64]()\n");
     var compilation = try language.Compilation.init(t.allocator, "limit.my", text_buffer.written());
     defer compilation.deinit();
     if (count == 4096) {
@@ -113,14 +113,14 @@ test "generic diagnostics name concrete types independently of discovery order" 
         try compilation.check();
         var found = false;
         for (compilation.program.?.functions) |function| {
-            if (!std.mem.eql(u8, function.name, "id::<i64>")) continue;
+            if (!std.mem.eql(u8, function.name, "id[i64]")) continue;
             found = true;
             try t.expectEqualSlices(@import("typed.zig").Type, &.{.i64}, function.type_arguments);
         }
         try t.expect(found);
         const dump = try compilation.dump(t.allocator);
         defer t.allocator.free(dump);
-        try t.expect(std.mem.indexOf(u8, dump, "id::<i64>") != null);
+        try t.expect(std.mem.indexOf(u8, dump, "id[i64]") != null);
     }
 }
 test "generic diagnostics retain instantiated names in runtime traces" {
@@ -140,8 +140,8 @@ test "generic diagnostics retain instantiated names in runtime traces" {
     const result = try compilation.execute(t.allocator);
     try t.expectEqualStrings("R_DIVISION_BY_ZERO", result.trap.code);
     try t.expectEqual(@as(usize, 3), result.trap.stack.len);
-    try t.expectEqualStrings("divide::<u8>", result.trap.stack.frames[0].function);
-    try t.expectEqualStrings("forward::<u8>", result.trap.stack.frames[1].function);
+    try t.expectEqualStrings("divide[u8]", result.trap.stack.frames[0].function);
+    try t.expectEqualStrings("forward[u8]", result.trap.stack.frames[1].function);
 }
 
 test "generic execution rejects concrete requirement and arity violations" {

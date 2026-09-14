@@ -149,10 +149,22 @@ test "unused nominal template fields reject unknown names duplicate members and 
         \\    value: T
         \\    value: i64
     , "E_DUPLICATE_FIELD", "value");
-    try reject("union Slot<T:copy>{some:T,some:i64}", "E_DUPLICATE_VARIANT", "some");
-    try reject("union Slot<T:copy>{}", "E_EMPTY_VARIANTS", "Slot");
-    try reject("result Answer<T:copy>{yes:T,no:i64}", "E_RESULT_SCHEMA", "Answer");
-    try reject("result Answer<T:copy>{ok:T,err}", "E_RESULT_SCHEMA", "err");
+    // An enum or union suite cannot be empty, so E_EMPTY_VARIANTS has no source form.
+    try reject(
+        \\union Slot[T]:
+        \\    some: T,
+        \\    some: i64
+    , "E_DUPLICATE_VARIANT", "some");
+    try reject(
+        \\result Answer[T]:
+        \\    yes: T,
+        \\    no: i64
+    , "E_RESULT_SCHEMA", "Answer");
+    try reject(
+        \\result Answer[T]:
+        \\    ok: T,
+        \\    err
+    , "E_RESULT_SCHEMA", "err");
     try reject(
         \\class Box[T]:
         \\    value: T
@@ -171,7 +183,7 @@ test "nominal template applications check arity and constructor kinds inside unu
         \\
         \\class Bad[V]:
         \\    x: Pair[V]
-    , "E_GENERIC_ARITY", "Pair<V>");
+    , "E_GENERIC_ARITY", "Pair[V]");
     try reject(
         \\class Box[T]:
         \\    value: T
@@ -187,7 +199,7 @@ test "nominal template applications check arity and constructor kinds inside unu
         \\
         \\class Bad[T]:
         \\    value: Plain[T]
-    , "E_GENERIC_ARITY", "Plain<T>");
+    , "E_GENERIC_ARITY", "Plain[T]");
     try reject(
         \\class Bad[T]:
         \\    value: T[i64]
@@ -205,6 +217,9 @@ test "nominal template requirements reject insufficient symbolic promises and co
         \\
         \\class Number[T: integer]:
         \\    value: T
+        \\
+        \\
+        \\
     ;
     try reject(prefix ++
         \\class Bad[T]:
@@ -233,7 +248,7 @@ test "nominal template requirements reject insufficient symbolic promises and co
     try reject(prefix ++
         \\class Bad[T]:
         \\    value: Key[Key[i64]]
-    , "E_GENERIC_REQUIREMENT", "Key<i64>");
+    , "E_GENERIC_REQUIREMENT", "Key[i64]");
     var repaired = try language.Compilation.init(t.allocator, "repaired.my", prefix ++
         \\class Good[T: integer]:
         \\    key: Key[T]
@@ -253,6 +268,9 @@ test "nominal template requirements preserve transitive owner and pending result
         \\
         \\
         \\resource File: filesystem
+        \\
+        \\
+        \\
     ;
     try reject(prefix ++
         \\class Bad:
@@ -291,7 +309,7 @@ test "nominal template requirements preserve transitive owner and pending result
         \\
         \\class Bad:
         \\    value: Box[Owner[i64]]
-    , "E_GENERIC_REQUIREMENT", "Owner<i64>");
+    , "E_GENERIC_REQUIREMENT", "Owner[i64]");
     try reject(prefix ++
         \\class Bad:
         \\    value: Box[Box[File]]
@@ -366,8 +384,11 @@ test "nominal guarantee propagation handles long reverse ordered declaration cha
         \\
         \\
         \\resource File: filesystem
+        \\
+        \\
+        \\
     );
-    for (0..1200) |i| try text.writer.print("struct Link{d}{{next:Link{d}}}", .{ i, i + 1 });
+    for (0..1200) |i| try text.writer.print("class Link{d}:\n    next: Link{d}\n\n\n", .{ i, i + 1 });
     try text.writer.writeAll(
         \\class Link1200:
         \\    file: File

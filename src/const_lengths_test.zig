@@ -94,7 +94,7 @@ test "uncalled const length templates reject kind confusion unprovable construct
         , .code = "E_GENERIC_LENGTH" },
     };
     for (cases) |case| {
-        const text = try std.fmt.allocPrint(t.allocator, "{s}fn main()->i64{{return 0;}}", .{case.source});
+        const text = try std.fmt.allocPrint(t.allocator, "{s}\n\n\ndef main() -> i64:\n    return 0\n", .{case.source});
         defer t.allocator.free(text);
         var c = try language.Compilation.init(t.allocator, "invalid.my", text);
         defer c.deinit();
