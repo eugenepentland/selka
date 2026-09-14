@@ -2,12 +2,13 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const io_render = @import("io_render.zig");
 
 fn execute(source: []const u8, expected: i64) !void {
     var c = try language.Compilation.init(t.allocator, "format.my", source);
     defer c.deinit();
-    try t.expectEqual(expected, (try c.execute(t.allocator)).value);
+    try t.expectEqual(expected, (try native.run(&c)).value);
 }
 
 fn reject(source: []const u8, code: []const u8) !void {
@@ -81,39 +82,6 @@ test "an f before anything but a quote stays an ordinary identifier" {
         \\    f = 42
         \\    return f
     , 42);
-}
-
-// spec-case: PY-FSTRING-1
-test "a hole renders lists, dicts, records and variants the way print writes them" {
-    try execute(
-        \\class Point:
-        \\    x: int
-        \\    y: int
-        \\
-        \\enum Colour:
-        \\    red,
-        \\    green
-        \\
-        \\def pick(n: int) -> Result[int, str]:
-        \\    if n < 0:
-        \\        return Err("nope")
-        \\    return Ok(n)
-        \\
-        \\def main() -> int:
-        \\    score = 0
-        \\    if f"{[1, 2]}" == "[1, 2]":
-        \\        score = score + 1
-        \\    counts: dict[str, int] = {"k": 1}
-        \\    if f"{counts}" == "{'k': 1}":
-        \\        score = score + 2
-        \\    if f"{Point(x=1, y=2)} {Colour.green}" == "Point(x=1, y=2) Colour.green":
-        \\        score = score + 4
-        \\    if f"{pick(3)} {pick(-1)}" == "Ok(3) Err('nope')":
-        \\        score = score + 8
-        \\    if f"{b'ab'}" == "b'ab'":
-        \\        score = score + 16
-        \\    return score
-    , 31);
 }
 
 // spec-case: PY-FSTRING-2

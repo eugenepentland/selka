@@ -3,24 +3,25 @@ const std = @import("std");
 const t = std.testing;
 const debug = std.debug;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 
 fn run(source: []const u8, expected: i64) !void {
     var c = try language.Compilation.init(t.allocator, "bytes.my", source);
     defer c.deinit();
-    const result = c.executeWithOptions(t.allocator, .{ .memory = .{ .gc = .{ .stress = true } } }) catch |err| {
+    const result = native.runWithOptions(&c, .{ .gc_stress = true }) catch |err| {
         for (c.diagnostics.items) |d| debug.print("{s}: {s} [{s}]\n", .{ d.code, d.message, c.src.text(d.span) });
         return err;
     };
-    if (result == .trap) debug.print("trap {s}: {s}\n", .{ result.trap.code, result.trap.message });
-    try t.expect(result == .value);
+    if (result.trapped()) debug.print("trap {s}: {s}\n", .{ result.trap.code, result.stderr });
+    try t.expect(!result.trapped());
     try t.expectEqual(expected, result.value);
 }
 
 fn trapped(source: []const u8, code: []const u8) !void {
     var c = try language.Compilation.init(t.allocator, "bytes-trap.my", source);
     defer c.deinit();
-    const result = try c.executeWithOptions(t.allocator, .{ .memory = .{ .gc = .{ .stress = true } } });
-    try t.expect(result == .trap);
+    const result = try native.runWithOptions(&c, .{ .gc_stress = true });
+    try t.expect(result.trapped());
     try t.expectEqualStrings(code, result.trap.code);
 }
 
