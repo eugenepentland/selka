@@ -121,20 +121,28 @@ fn build(context: fs.Context, parsed: options.Options) !u8 {
         const stream = if (parsed.run) std.Io.File.stderr() else std.Io.File.stdout();
         try stream.writeStreamingAll(context.io, try std.fmt.allocPrint(a, "{s}\n", .{report}));
     }
-    if (parsed.run) return execute(context, output, parsed.arguments);
+    if (parsed.run) return spawn(context, output, parsed.arguments);
     return 0;
 }
-fn execute(context: fs.Context, output: []const u8, arguments: []const []const u8) !u8 {
+/// The argument vector for one built program and the options it was given.
+pub fn command(context: fs.Context, output: []const u8, arguments: []const []const u8) Error![]const []const u8 {
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.append(context.allocator, output);
     try argv.appendSlice(context.allocator, arguments);
-    var child = try std.process.spawn(context.io, .{ .argv = argv.items });
-    const term = try child.wait(context.io);
+    return argv.items;
+}
+/// Translate a guest program's termination into the status its command reports.
+pub fn status(term: std.process.Child.Term) u8 {
     return switch (term) {
         .exited => |code| code,
         .signal => |signal| @intCast(@min(255, 128 + @as(u32, @backingInt(signal)))),
         else => 2,
     };
+}
+/// Run a built program with the arguments it was given, returning its exit status.
+pub fn spawn(context: fs.Context, output: []const u8, arguments: []const []const u8) Error!u8 {
+    var child = try std.process.spawn(context.io, .{ .argv = try command(context, output, arguments) });
+    return status(try child.wait(context.io));
 }
 /// Publish the bundled runtime tree once per content hash and reuse it afterwards.
 /// Concurrent builds stage into private directories and rename, so a shared cache

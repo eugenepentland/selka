@@ -354,7 +354,7 @@ depends on it.
 
 - [VM-FUSION-6] Scalar fast paths reuse checked local bindings; invocation argument copies canonicalize integer representations and reject mismatched types before execution.
 
-- [VM-TIMING-1] `run --timings` reports VM execution nanoseconds on stderr, including VM validation, setup and cleanup but excluding source compilation and result output. Timing preserves guest results, dispatch selection, quotas and runtime diagnostics; duplicate options and unsupported commands reject it.
+- [NATIVE-TIMING-1] `run --timings` reports native execution nanoseconds on stderr, covering the guest process and the native build it needed but excluding source compilation. Timing preserves guest results, quotas and runtime diagnostics; duplicate options and unsupported commands reject it.
 
 - [VM-FUSION-7] Fused arithmetic chains preserve evaluation order, intermediate overflow/division traps, original source spans and every logical instruction-budget cutoff.
 

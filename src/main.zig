@@ -18,13 +18,13 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "--max-codec-frames=N --max-codec-calls=N --max-codec-bytes=N --max-codec-values=N\n  " ++
     "invoke-project: --request=path.json (typed-call-v1, schema-pinned public function call; " ++
     "same codec budgets)\n  input-module: reads a typed JSON manifest and writes generated " ++
-    "module source\n  run/run-project: --max-steps=N --max-frames=N --dispatch=optimized|generic --gc-stress " ++
-    "--print-result\n  " ++
+    "module source\n  run/run-project: builds the program natively and runs it; --max-steps=N --max-frames=N --gc-stress " ++
+    "--print-result --cache-dir=DIR --qbe=PATH --zig=PATH (native objects default to .mylang-cache/qbe, shared with build)\n  " ++
     "run/run-project authority: every capability is granted by default; --restrict denies them " ++
     "and enables --allow-read=DIR --allow-write=DIR (repeatable) --allow-clock --allow-random[=SEED] " ++
     "--allow-env[=NAME,...] --allow-all. Under --restrict an entry point requesting an ungranted " ++
     "capability exits 2 before execution; --allow-random=SEED pins the seed in either mode\n  " ++
-    "run: --timings (VM execution nanoseconds on stderr; excludes source compilation)\n  " ++
+    "run: --timings (native execution nanoseconds on stderr; excludes compilation and linking)\n  " ++
     "eval-project: --max-steps=N --max-frames=N --max-eval-bytes=N " ++
     "--evaluation-report|--evaluation-request --inputs=manifest.json (repeat for up to 16 " ++
     "modules; effect-free, parameter-free entry)\n  " ++
@@ -55,6 +55,10 @@ pub fn main(init: std.process.Init) void {
 }
 
 const grants = @import("cli_grants.zig");
+const native_run = @import("native_run.zig");
+const native_options = @import("qbe_build_options.zig");
+/// Execution budgets a run or an evaluation may narrow from the command line.
+const Budgets = struct { max_steps: u64 = 10_000_000, max_frames: u64 = 1024 };
 const Context = struct {
     gpa: std.mem.Allocator,
     arena: *std.heap.ArenaAllocator,
@@ -255,20 +259,7 @@ fn run(init: Context, parsed: Parsed) !u8 {
             defer allocator.free(text);
             try std.Io.File.stdout().writeStreamingAll(init.io, text);
         },
-        .run => switch ((try executeRun(init, &compilation, parsed)) orelse return 2) {
-            .value => |value| {
-                if (!parsed.reporting.print_result) return 0;
-                var buffer: [32]u8 = undefined;
-                const text = try std.fmt.bufPrint(&buffer, "{d}\n", .{value});
-                try std.Io.File.stdout().writeStreamingAll(init.io, text);
-            },
-            .trap => |diagnostic| {
-                const rendered = try diagnostic_output.render(allocator, diagnostic, compilation.src, init.diagnostics);
-                defer allocator.free(rendered);
-                try std.Io.File.stderr().writeStreamingAll(init.io, rendered);
-                return 1;
-            },
-        },
+        .run => return executeRun(init, &compilation, parsed),
     }
     return 0;
 }
@@ -286,32 +277,46 @@ fn reportUngranted(init: Context, flag: []const u8) !u8 {
     return 2;
 }
 
-fn executeRun(init: Context, compilation: *language.Compilation, parsed: Parsed) !?language.vm.Result {
-    var buffer: [4096]u8 = undefined;
-    var stdout = std.Io.File.stdout().writerStreaming(init.io, &buffer);
-    defer flushOutput(&stdout);
-    init.timings.begin(lowering_phase, false);
-    try compilation.emit();
-    if (grants.ungranted(compilation.code.?, parsed.grants)) |flag| {
-        init.timings.end();
-        _ = try reportUngranted(init, flag);
-        return null;
-    }
-    var state: grants.State = undefined;
-    try state.init(init.gpa, init.io, .{ .config = parsed.grants, .environ = init.environ });
-    defer state.deinit();
-    var options = state.apply(parsed.options);
-    options.output = &stdout.interface;
-    init.timings.begin("vm_execution", false);
+/// Build the checked program with the native backend and run it, passing its
+/// standard output and error through and adopting its exit status.
+fn executeRun(init: Context, compilation: *language.Compilation, parsed: Parsed) !u8 {
+    compilation.emit() catch |err| switch (err) {
+        error.SourceError => {
+            try report(init, compilation);
+            return 1;
+        },
+        else => return err,
+    };
+    if (grants.ungranted(compilation.code.?, parsed.grants)) |flag| return reportUngranted(init, flag);
+    const manifest = emitMeasuredNative(init, compilation) catch |err| switch (err) {
+        error.SourceError => {
+            try report(init, compilation);
+            return 1;
+        },
+        else => return err,
+    };
+    defer init.gpa.free(manifest);
+    return runNative(init, parsed, manifest);
+}
+
+/// Publish the emitted units as an executable, run it, and report execution timing.
+fn runNative(init: Context, parsed: Parsed, manifest: []const u8) !u8 {
+    init.timings.begin("native_execution", false);
     const start = std.Io.Timestamp.now(init.io, .awake);
-    const result = try language.vm.runWithOptions(init.gpa, compilation.code.?, options);
+    const status = try native_run.execute(init.gpa, .{
+        .io = init.io,
+        .environ = init.environ,
+        .manifest = manifest,
+        .arguments = parsed.runtime[0..parsed.runtime_count],
+        .settings = parsed.native,
+        .diagnostics = if (init.diagnostics == .json) .json else .text,
+    });
     init.timings.end();
-    if (!parsed.reporting.timings) return result;
+    if (!parsed.reporting.timings) return status;
     const elapsed = start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds;
-    var timing_buffer: [96]u8 = undefined;
-    const text = try std.fmt.bufPrint(&timing_buffer, "timings: bytecode_ns={d}\n", .{elapsed});
-    try init.text(text);
-    return result;
+    var buffer: [96]u8 = undefined;
+    try init.text(try std.fmt.bufPrint(&buffer, "timings: native_ns={d}\n", .{elapsed}));
+    return status;
 }
 
 fn report(init: Context, compilation: *const language.Compilation) !void {
@@ -366,7 +371,10 @@ const Parsed = struct {
     command: Command,
     path: []const u8,
     grants: grants.Config,
-    options: language.vm.Options,
+    budgets: Budgets,
+    native: native_options.Options,
+    runtime: [24][]const u8,
+    runtime_count: usize,
     discovery: language.duplicates.Options,
     reporting: Reporting,
 };
@@ -375,8 +383,8 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     const command = std.meta.stringToEnum(Command, args[0]) orelse return error.Usage;
     var parser: ArgumentParser = .{ .command = command };
     if (command == .@"eval-project") {
-        parser.options.max_steps = parser.evaluation.max_steps;
-        parser.options.max_frames = parser.evaluation.max_frames;
+        parser.budgets.max_steps = parser.evaluation.max_steps;
+        parser.budgets.max_frames = parser.evaluation.max_frames;
     }
     for (args[1..]) |arg| {
         if (std.mem.startsWith(u8, arg, "--diagnostics=")) {
@@ -419,10 +427,14 @@ const ArgumentParser = struct {
     path: ?[]const u8 = null,
     policy: ?[]const u8 = null,
     grants: grants.Config = .{},
-    options: language.vm.Options = .{},
+    budgets: Budgets = .{},
+    native: native_options.Options = .{ .source = "", .run = true },
+    runtime: [24][]const u8 = @splat(""),
+    runtime_count: usize = 0,
     saw_steps: bool = false,
     saw_frames: bool = false,
-    saw_dispatch: bool = false,
+    saw_cache: bool = false,
+    gc_stress: bool = false,
     discovery: language.duplicates.Options = .{},
     reporting: Reporting = .{},
     saw_min: bool = false,
@@ -539,47 +551,53 @@ const ArgumentParser = struct {
         if (!std.mem.startsWith(u8, arg, "--allow-") and !std.mem.eql(u8, arg, grants.restrict_flag)) return false;
         if (self.command != .run and self.command != .@"run-project") return error.Usage;
         if (!try self.grants.parse(arg)) return error.Usage;
+        try self.forward(arg);
         return true;
+    }
+    /// Keep one option for the built program, which parses grants and budgets itself.
+    fn forward(self: *ArgumentParser, arg: []const u8) error{Usage}!void {
+        if (self.runtime_count == self.runtime.len) return error.Usage;
+        self.runtime[self.runtime_count] = arg;
+        self.runtime_count += 1;
+    }
+    fn executes(self: *const ArgumentParser) bool {
+        return self.command == .run or self.command == .@"run-project";
+    }
+    /// Read one non-empty `--flag=value` that only an executing command accepts.
+    fn value(self: *const ArgumentParser, arg: []const u8, flag: []const u8) error{Usage}![]const u8 {
+        if (!self.executes() or arg.len == flag.len) return error.Usage;
+        return arg[flag.len..];
     }
     fn executionOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
         if (std.mem.eql(u8, arg, "--check")) {
             if (!self.checks() or self.format_check) return error.Usage;
             self.format_check = true;
         } else if (std.mem.eql(u8, arg, "--gc-stress")) {
-            if (self.command != .run and self.command != .@"run-project") return error.Usage;
-            if (self.options.memory.gc.stress) return error.Usage;
-            self.options.memory.gc.stress = true;
+            if (!self.executes() or self.gc_stress) return error.Usage;
+            self.gc_stress = true;
+            try self.forward(arg);
         } else if (std.mem.startsWith(u8, arg, "--max-steps=")) {
-            if ((self.command != .run and self.command != .@"run-project" and self.command != .@"eval-project") or self.saw_steps) return error.Usage;
+            if ((!self.executes() and self.command != .@"eval-project") or self.saw_steps) return error.Usage;
             self.saw_steps = true;
-            const digits = arg["--max-steps=".len..];
-            if (digits.len == 0) return error.Usage;
-            for (digits) |ch| if (!std.ascii.isDigit(ch)) {
-                return error.Usage;
-            };
-            self.options.max_steps = std.fmt.parseUnsigned(u64, digits, 10) catch return error.Usage;
-            if (self.options.max_steps == 0) return error.Usage;
+            self.budgets.max_steps = try positive(arg["--max-steps=".len..]);
+            if (self.executes()) try self.forward(arg);
         } else if (std.mem.startsWith(u8, arg, "--max-frames=")) {
-            if ((self.command != .run and self.command != .@"run-project" and self.command != .@"eval-project") or self.saw_frames) return error.Usage;
+            if ((!self.executes() and self.command != .@"eval-project") or self.saw_frames) return error.Usage;
             self.saw_frames = true;
-            const digits = arg["--max-frames=".len..];
-            if (digits.len == 0) return error.Usage;
-            for (digits) |ch| if (!std.ascii.isDigit(ch)) {
-                return error.Usage;
-            };
-            self.options.max_frames = std.fmt.parseUnsigned(u64, digits, 10) catch return error.Usage;
-            if (self.options.max_frames == 0) return error.Usage;
+            self.budgets.max_frames = try positive(arg["--max-frames=".len..]);
+            if (self.executes()) try self.forward(arg);
         } else if (std.mem.eql(u8, arg, "--print-result")) {
-            if ((self.command != .run and self.command != .@"run-project") or self.reporting.print_result) return error.Usage;
+            if (!self.executes() or self.reporting.print_result) return error.Usage;
             self.reporting.print_result = true;
-        } else if (std.mem.eql(u8, arg, "--print-result")) {
-            if ((self.command != .run and self.command != .@"run-project") or self.reporting.print_result) return error.Usage;
-            self.reporting.print_result = true;
-        } else if (std.mem.startsWith(u8, arg, "--dispatch=")) {
-            if ((self.command != .run and self.command != .@"run-project") or self.saw_dispatch) return error.Usage;
-            self.saw_dispatch = true;
-            const mode = arg["--dispatch=".len..];
-            self.options.memory.optimize_dispatch = if (std.mem.eql(u8, mode, "optimized")) true else if (std.mem.eql(u8, mode, "generic")) false else return error.Usage;
+            try self.forward(arg);
+        } else if (std.mem.startsWith(u8, arg, "--cache-dir=")) {
+            if (!self.executes() or self.saw_cache) return error.Usage;
+            self.saw_cache = true;
+            self.native.cache = try self.value(arg, "--cache-dir=");
+        } else if (std.mem.startsWith(u8, arg, "--qbe=")) {
+            self.native.qbe = try self.value(arg, "--qbe=");
+        } else if (std.mem.startsWith(u8, arg, "--zig=")) {
+            self.native.zig = try self.value(arg, "--zig=");
         } else return false;
         return true;
     }
@@ -624,8 +642,8 @@ const ArgumentParser = struct {
             .evaluation_request = self.evaluation_request,
             .evaluation_report = self.evaluation_report,
             .evaluation = .{
-                .max_steps = self.options.max_steps,
-                .max_frames = self.options.max_frames,
+                .max_steps = self.budgets.max_steps,
+                .max_frames = self.budgets.max_frames,
                 .max_bytes = self.evaluation.max_bytes,
             },
             .policy = self.policy,
@@ -635,7 +653,10 @@ const ArgumentParser = struct {
             .command = self.command,
             .path = self.path orelse return error.Usage,
             .grants = self.grants,
-            .options = self.options,
+            .budgets = self.budgets,
+            .native = self.native,
+            .runtime = self.runtime,
+            .runtime_count = self.runtime_count,
             .discovery = self.discovery,
             .reporting = self.reporting,
         };
@@ -726,17 +747,18 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         init.timings.begin(lowering_phase, false);
         try compilation.emit();
         init.timings.end();
+        if (parsed.command == .@"run-project") return runProjectProgram(init, &compilation, parsed);
         if (parsed.evaluation_request) break :result (try evaluationRequest(init, parsed, &project, &compilation)) orelse return 1;
-        init.timings.begin(executionPhase(parsed.command), false);
-        const outcome = if (parsed.command == .@"eval-project") language.evaluation.evaluate(init.gpa, compilation.code.?, &compilation.diagnostics, parsed.evaluation) catch |err| switch (err) {
+        init.timings.begin("evaluation", false);
+        const outcome = language.evaluation.evaluate(init.gpa, compilation.code.?, &compilation.diagnostics, parsed.evaluation) catch |err| switch (err) {
             error.SourceError => {
                 try reportProject(init, &compilation);
                 return 1;
             },
             else => return err,
-        } else (try runProjectProgram(init, compilation.code.?, parsed)) orelse return 2;
+        };
         init.timings.end();
-        if (parsed.command == .@"eval-project") try reportProject(init, &compilation);
+        try reportProject(init, &compilation);
         switch (outcome) {
             .value => |value| break :result (try entryOutcome(init, parsed, &project, value)) orelse return 0,
             .trap => |trap| {
@@ -758,7 +780,6 @@ fn entryOutcome(init: Context, parsed: Parsed, project: *language.project.Projec
         const rendered = try language.evaluation_report.render(init.gpa, project, value, parsed.evaluation, try compilerIdentity(init.io));
         return rendered;
     }
-    if (parsed.command == .@"run-project" and !parsed.reporting.print_result) return null;
     const rendered = try std.fmt.allocPrint(init.gpa, "{d}\n", .{value});
     return rendered;
 }
@@ -770,22 +791,19 @@ fn flushOutput(stdout: *std.Io.File.Writer) void {
     };
 }
 
-/// Stream guest `print` output to stdout and grant only the requested authority.
-fn runProjectProgram(init: Context, code: language.bytecode.Program, parsed: Parsed) !?language.vm.Result {
-    if (grants.ungranted(code, parsed.grants)) |flag| {
-        _ = try reportUngranted(init, flag);
-        return null;
-    }
-    var buffer: [4096]u8 = undefined;
-    var stdout = std.Io.File.stdout().writerStreaming(init.io, &buffer);
-    defer flushOutput(&stdout);
-    var state: grants.State = undefined;
-    try state.init(init.gpa, init.io, .{ .config = parsed.grants, .environ = init.environ });
-    defer state.deinit();
-    var options = state.apply(parsed.options);
-    options.output = &stdout.interface;
-    const outcome = try language.vm.runWithOptions(init.gpa, code, options);
-    return outcome;
+/// Build the checked project with the native backend and run its entry point.
+fn runProjectProgram(init: Context, compilation: *language.project_compile.Compilation, parsed: Parsed) !u8 {
+    if (grants.ungranted(compilation.code.?, parsed.grants)) |flag| return reportUngranted(init, flag);
+    const manifest = emitMeasuredNative(init, compilation) catch |err| switch (err) {
+        error.SourceError => {
+            try reportProject(init, compilation);
+            return 1;
+        },
+        else => return err,
+    };
+    defer init.gpa.free(manifest);
+    try reportProject(init, compilation);
+    return runNative(init, parsed, manifest);
 }
 
 fn emitProjectNative(init: Context, compilation: *language.project_compile.Compilation) !?[]u8 {
@@ -1200,10 +1218,6 @@ fn featureReport(init: std.process.Init) !void {
     defer init.gpa.free(text);
     try std.Io.File.stdout().writeStreamingAll(init.io, text);
     try std.Io.File.stdout().writeStreamingAll(init.io, "\n");
-}
-
-fn executionPhase(command: Command) []const u8 {
-    return if (command == .@"eval-project") "evaluation" else "vm_execution";
 }
 
 fn emitMeasuredNative(init: Context, compilation: anytype) ![]u8 {

@@ -12,6 +12,7 @@ test {
     _ = @import("doc_coverage_command.zig");
 
     _ = @import("native_execute.zig");
+    _ = @import("native_run.zig");
     _ = @import("wiring/native_session.zig");
     _ = @import("qbe_build_test.zig");
     _ = @import("qbe_build.zig");

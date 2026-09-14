@@ -3,6 +3,12 @@ const std = @import("std");
 const testing = std.testing;
 const compiler_path = @import("test_options").compiler_path;
 const arena_example_path = @import("test_options").arena_example_path;
+/// `run` and `run-project` build natively; the fixtures name this build's tools
+/// because the compiler under test is not installed beside them.
+const tools = [_][]const u8{
+    "--qbe=" ++ @import("test_options").qbe_path,
+    "--zig=" ++ @import("test_options").zig_path,
+};
 const host_program =
     \\host def measure(x: i64) -> i64 effects(host)
     \\
@@ -10,10 +16,11 @@ const host_program =
     \\def main() -> i64:
     \\    return measure(6)
 ;
-test "CLI checks host declarations and reports missing VM registration as a located trap" {
+test "CLI checks host declarations and refuses to run one with no registration" {
     try invoke("check", host_program, 0, "", "");
-    try invoke("run", host_program, 1, "", "error[R_HOST_REGISTRATION]");
-    try invokeOptions("run", host_program, &.{"--diagnostics=json"}, 1, "", "\"code\":\"R_HOST_REGISTRATION\"");
+    // Nothing registers a host implementation for a plain `mylang run`, so the
+    // program cannot start; that is a host-boundary refusal, not a guest trap.
+    try invoke("run", host_program, 2, "", "HostMissingRegistration");
 }
 // spec-case: ARENA-MANAGED-1
 test "CLI runs the managed arena example under normal and stress collection" {
@@ -21,6 +28,7 @@ test "CLI runs the managed arena example under normal and stress collection" {
         var args: std.ArrayList([]const u8) = .empty;
         defer args.deinit(testing.allocator);
         try args.appendSlice(testing.allocator, &.{ compiler_path, "run", arena_example_path, "--print-result" });
+        try args.appendSlice(testing.allocator, &tools);
         try args.appendSlice(testing.allocator, options);
         const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
         defer testing.allocator.free(outcome.stdout);
@@ -63,7 +71,7 @@ fn runFixture(command: []const u8, text: []const u8, options: []const []const u8
     defer args.deinit(testing.allocator);
     try args.appendSlice(testing.allocator, &.{ compiler_path, command, path });
     // These fixtures assert the entry point's int result, which `run` now reports only on request.
-    if (std.mem.startsWith(u8, command, "run")) try args.append(testing.allocator, "--print-result");
+    if (std.mem.startsWith(u8, command, "run")) try args.appendSlice(testing.allocator, &(.{"--print-result"} ++ tools));
     try args.appendSlice(testing.allocator, options);
     return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
 }
@@ -71,26 +79,26 @@ test "CLI run and check success" {
     try invoke("run", @embedFile("fixtures/arithmetic.my"), 0, "7\n", "");
     try invoke("check", @embedFile("fixtures/arithmetic.my"), 0, "", "");
 }
-// spec: VM-TIMING-1
+// spec: NATIVE-TIMING-1
 test "CLI execution timings preserve results and runtime diagnostics" {
     const source =
         \\def main() -> i64:
         \\    return 42
     ;
-    for ([_][]const u8{ "--dispatch=optimized", "--dispatch=generic" }) |dispatch| {
-        const outcome = try runFixture("run", source, &.{ "--timings", dispatch });
-        defer testing.allocator.free(outcome.stdout);
-        defer testing.allocator.free(outcome.stderr);
-        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
-        try testing.expectEqualStrings("42\n", outcome.stdout);
-        const prefix = "timings: bytecode_ns=";
-        try testing.expect(std.mem.startsWith(u8, outcome.stderr, prefix));
-        _ = try std.fmt.parseInt(u64, std.mem.trim(u8, outcome.stderr[prefix.len..], "\n"), 10);
-    }
-    try invokeOptions("run",
+    const outcome = try runFixture("run", source, &.{"--timings"});
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    try testing.expectEqualStrings("42\n", outcome.stdout);
+    const prefix = "timings: native_ns=";
+    try testing.expect(std.mem.startsWith(u8, outcome.stderr, prefix));
+    _ = try std.fmt.parseInt(u64, std.mem.trim(u8, outcome.stderr[prefix.len..], "\n"), 10);
+    const trap =
         \\def main() -> i64:
         \\    return divtrunc(1, 0)
-    , &.{"--timings"}, 1, "", "error[R_DIVISION_BY_ZERO]");
+    ;
+    try invokeOptions("run", trap, &.{"--timings"}, 1, "", "error[R_DIVISION_BY_ZERO]");
+    try invokeOptions("run", trap, &.{"--diagnostics=json"}, 1, "", "\"code\":\"R_DIVISION_BY_ZERO\"");
     try invokeOptions("run", source, &.{ "--timings", "--timings" }, 2, "", "usage:");
     try invokeOptions("check", source, &.{"--timings"}, 2, "", "usage:");
 }
@@ -600,6 +608,7 @@ test "CLI checks and runs module programs with private boundaries and cross-file
         defer argv.deinit(testing.allocator);
         try argv.appendSlice(testing.allocator, &.{ compiler_path, command, path });
         try argv.appendSlice(testing.allocator, reporting);
+        if (std.mem.eql(u8, command, "run-project")) try argv.appendSlice(testing.allocator, &tools);
         const result = try std.process.run(testing.allocator, testing.io, .{ .argv = argv.items });
         defer testing.allocator.free(result.stdout);
         defer testing.allocator.free(result.stderr);
@@ -615,7 +624,7 @@ test "CLI checks and runs module programs with private boundaries and cross-file
         \\def value() -> i64:
         \\    return divtrunc(1, 0)
     });
-    const trap = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path, "--print-result" } });
+    const trap = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run-project", path, "--print-result" } ++ tools) });
     defer testing.allocator.free(trap.stdout);
     defer testing.allocator.free(trap.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, trap.term);
@@ -679,7 +688,7 @@ test "CLI checkProjectPolicy distinguishes language failures policy failures and
     try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, denied.term);
     try testing.expectEqualStrings("", denied.stderr);
     for ([_][]const u8{ "language: valid", "import-direction-v1: failed", "edges=1; denied=1", "input -> core: deny; rule=default" }) |part| try testing.expect(std.mem.indexOf(u8, denied.stdout, part) != null);
-    const ordinary = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path, "--print-result" } });
+    const ordinary = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run-project", path, "--print-result" } ++ tools) });
     defer testing.allocator.free(ordinary.stdout);
     defer testing.allocator.free(ordinary.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, ordinary.term);
@@ -1861,7 +1870,7 @@ test "CLI streams program output and reports the entry result only on request" {
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = program });
     const path = try temporary.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
     defer testing.allocator.free(path);
-    const plain = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run", path } });
+    const plain = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run", path } ++ tools) });
     defer testing.allocator.free(plain.stdout);
     defer testing.allocator.free(plain.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, plain.term);
@@ -1899,13 +1908,13 @@ test "CLI resolves the Python capability spellings inside projects that import m
     const grant = try std.fmt.allocPrint(testing.allocator, "--allow-read={s}", .{directory});
     defer testing.allocator.free(grant);
     const granted = try std.process.run(testing.allocator, testing.io, .{
-        .argv = &.{ compiler_path, "run-project", path, "--restrict", "--allow-clock", "--allow-random=5", grant },
+        .argv = &(.{ compiler_path, "run-project", path, "--restrict", "--allow-clock", "--allow-random=5", grant } ++ tools),
     });
     defer testing.allocator.free(granted.stdout);
     defer testing.allocator.free(granted.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, granted.term);
     try testing.expectEqualStrings("clock 0\nentropy 1\nFalse\n", granted.stdout);
-    const ungranted = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path, "--restrict" } });
+    const ungranted = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run-project", path, "--restrict" } ++ tools) });
     defer testing.allocator.free(ungranted.stdout);
     defer testing.allocator.free(ungranted.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, ungranted.term);
@@ -1934,8 +1943,13 @@ test "CLI grants every capability by default and resolves paths against the work
     // a path that leaves it is an ordinary filesystem failure rather than a denial.
     const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);
     defer testing.allocator.free(compiler);
+    // The child runs somewhere else, so the native tools must name themselves.
+    const tool = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, @import("test_options").qbe_path, testing.allocator);
+    defer testing.allocator.free(tool);
+    const qbe = try std.fmt.allocPrint(testing.allocator, "--qbe={s}", .{tool});
+    defer testing.allocator.free(qbe);
     const outcome = try std.process.run(testing.allocator, testing.io, .{
-        .argv = &.{ compiler, "run", entry },
+        .argv = &.{ compiler, "run", entry, qbe, tools[1] },
         .cwd = .{ .path = directory },
     });
     defer testing.allocator.free(outcome.stdout);

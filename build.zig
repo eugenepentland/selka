@@ -122,6 +122,9 @@ pub fn build(b: *std.Build) void {
     const options = b.addOptions();
     options.addOptionPath("compiler_path", exe.getEmittedBin());
     options.addOptionPath("arena_example_path", b.path("examples/arena-managed/main.my"));
+    // `run` builds natively, so the CLI fixtures name the tools this build made.
+    options.addOptionPath("qbe_path", qbe_exe.getEmittedBin());
+    options.addOption([]const u8, "zig_path", b.graph.zig_exe);
     const integration = b.addTest(.{ .test_runner = guardian.testRunner(guardian_dep), .filters = test_filters, .root_module = b.createModule(.{
         .root_source_file = b.path("test/integration.zig"),
         .target = target,
