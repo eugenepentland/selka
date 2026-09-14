@@ -2,6 +2,7 @@
 const std = @import("std");
 const Span = @import("source.zig").Span;
 const diagnostic = @import("diagnostic.zig");
+const removed_names = @import("removed_names.zig");
 /// Lexical token categories, including keywords, punctuation, literals, and end of input.
 pub const Tag = enum {
     eof,
@@ -260,6 +261,13 @@ fn keyword(word: []const u8) Tag {
     inline for (aliases) |alias| if (std.mem.eql(u8, word, alias[0])) return alias[1];
     return .ident;
 }
+fn rejectRemovedWord(sink: *diagnostic.Sink, bytes: []const u8, start: usize, end: usize) diagnostic.Error!void {
+    _ = try removed_names.rejectLexical(sink, .{ .start = start, .end = end }, bytes[start..end]);
+}
+fn rejectRemovedPunctuation(sink: *diagnostic.Sink, ch: u8, next: u8, start: usize, end: usize) diagnostic.Error!void {
+    if (ch == '&') _ = try removed_names.reject(sink, .{ .start = start, .end = end }, "&");
+    if (ch == '=' and next == '>') _ = try removed_names.reject(sink, .{ .start = start, .end = end + 1 }, "=>");
+}
 /// How a token is written in source, for diagnostics that name what was expected.
 /// Keywords and punctuation answer their own spelling; the open categories name
 /// themselves, because no single spelling stands for all of them.
@@ -367,6 +375,7 @@ fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, sink: *
             if (std.ascii.isAlphabetic(ch) or ch == '_') {
                 i += 1;
                 while (i < limit and (std.ascii.isAlphanumeric(bytes[i]) or bytes[i] == '_')) i += 1;
+                try rejectRemovedWord(sink, bytes, start, i);
                 break :blk keyword(bytes[start..i]);
             }
             if (std.ascii.isDigit(ch)) {
@@ -375,6 +384,7 @@ fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, sink: *
             }
             i += 1;
             const next = if (i < limit) bytes[i] else 0;
+            try rejectRemovedPunctuation(sink, ch, next, start, i);
             // `//=` is the one three-byte operator; every other augmented form is a pair.
             if (ch == '/' and next == '/' and i + 1 < limit and bytes[i + 1] == '=') {
                 i += 2;

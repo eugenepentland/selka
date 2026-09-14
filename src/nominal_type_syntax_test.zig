@@ -140,7 +140,8 @@ test "nominal application list and nesting bounds reject excessive syntax" {
     try parseReject(nested, "E_NESTING_LIMIT");
 }
 
-test "unused nominal templates do not become empty executable record schemas" {
+// spec: PRELUDE-TYPES-CATALOG-1
+test "unused nominal templates retain only unconditional concrete prelude schemas" {
     const cases = [_][]const u8{
         \\class Box[T]:
         \\    value: T
@@ -178,7 +179,7 @@ test "unused nominal templates do not become empty executable record schemas" {
         var compilation = try language.Compilation.init(t.allocator, "deferred.my", text);
         defer compilation.deinit();
         try t.expectEqual(@as(i64, 0), (try native.run(&compilation)).value);
-        try t.expectEqual(@as(usize, 0), compilation.program.?.records.len);
+        try t.expectEqual(@as(usize, 3), compilation.program.?.records.len);
     }
     var invalid = try language.Compilation.init(t.allocator, "requirements.my",
         \\class Box[T: missing]:

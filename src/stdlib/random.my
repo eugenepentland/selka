@@ -17,7 +17,7 @@ class Random:
 
 
 # Typed carrier for one host entropy read.
-result Entropy:
+result EntropyReading:
     ok: u64,
     err: int
 
@@ -42,11 +42,11 @@ def seeded(seed: int) -> Random:
 
 
 # A generator seeded from the host entropy capability.
-def from_entropy(capability: random_cap) -> Result[Random, str] effects(random, managed_allocation):
-    match random_u64[Entropy](capability):
-        case Entropy.ok(word):
+def from_entropy(capability: Entropy) -> Result[Random, str] effects(random, managed_allocation):
+    match random_u64[EntropyReading](capability):
+        case EntropyReading.ok(word):
             return Ok(from_word(word))
-        case Entropy.err(code):
+        case EntropyReading.err(code):
             if code == 1:
                 return Err("entropy capability is unavailable")
             if code == 2:

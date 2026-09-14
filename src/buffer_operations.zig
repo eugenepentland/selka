@@ -101,7 +101,6 @@ pub fn method(name: []const u8) ?Kind {
         if (std.mem.eql(u8, name, spelling)) return @field(Kind, spelling);
     }
     if (std.mem.eql(u8, name, "index")) return .index_of;
-    if (std.mem.eql(u8, name, "len")) return .length;
     if (std.mem.eql(u8, name, "startswith")) return .starts_with;
     if (std.mem.eql(u8, name, "endswith")) return .ends_with;
     if (std.mem.eql(u8, name, "isdigit")) return .is_digit;
@@ -110,7 +109,7 @@ pub fn method(name: []const u8) ?Kind {
     inline for (.{ "strip", "lstrip", "rstrip", "upper", "lower", "splitlines", "replace", "count", "zfill" }) |spelling| {
         if (std.mem.eql(u8, name, spelling)) return @field(Kind, spelling);
     }
-    inline for (.{ "get", "contains", "keys", "values", "split", "join", "encode", "decode", "to_list", "hex", "find" }) |spelling| {
+    inline for (.{ "get", "keys", "values", "split", "join", "encode", "decode", "to_list", "hex", "find" }) |spelling| {
         if (std.mem.eql(u8, name, spelling)) return @field(Kind, spelling);
     }
     return null;

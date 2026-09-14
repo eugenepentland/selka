@@ -35,7 +35,7 @@ pub fn optionShape(ty: typed.Type, records: []const typed.Record) ?OptionShape {
 
 /// Number of type arguments for ordinary prelude collection and result types.
 pub fn arity(name: []const u8) ?usize {
-    inline for (.{ "list", "List", "Option" }) |one| if (std.mem.eql(u8, name, one)) return 1;
+    inline for (.{ "list", "Option" }) |one| if (std.mem.eql(u8, name, one)) return 1;
     inline for (.{ "dict", "Result" }) |two| if (std.mem.eql(u8, name, two)) return 2;
     return null;
 }
@@ -58,5 +58,6 @@ pub fn reservedType(name: []const u8) ?typed.Type {
 }
 /// Nonprimitive builtin names accepted by exported module signatures.
 pub fn scalar(name: []const u8) bool {
-    return std.mem.eql(u8, name, "str") or std.mem.eql(u8, name, "bytes") or std.mem.eql(u8, name, "float");
+    if (std.mem.eql(u8, name, "str") or std.mem.eql(u8, name, "bytes") or std.mem.eql(u8, name, "float")) return true;
+    return reservedType(name) != null;
 }

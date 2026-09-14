@@ -9,7 +9,7 @@ pub const Prepared = struct { digest: [32]u8, bodies: []source.Span, enabled: bo
 /// Ignore body contents while preserving source outside bodies and resolved type identities.
 pub fn prepare(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, records: []const typed.Record) error{ OutOfMemory, InternalError }!Prepared {
     const bodies = try allocator.alloc(source.Span, program.functions.len);
-    var enabled = !@import("nominal_type_syntax.zig").presentInSource(program, src);
+    var enabled = !@import("nominal_type_syntax.zig").present(program);
     if (enabled and try functionValues(allocator, src, program)) enabled = false;
     for (program.functions, bodies) |function, *body| {
         body.* = program.statements.items[@backingInt(function.body)].span;

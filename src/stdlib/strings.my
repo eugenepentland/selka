@@ -67,12 +67,12 @@ def all_in(table: str, text: str) -> bool:
 
 # Whether the text is nonempty and made only of decimal digits.
 def is_digit(text: str) -> bool:
-    return all_in(digits(), text)
+    return text.isdigit()
 
 
 # Whether the text is nonempty and made only of ASCII letters.
 def is_alpha(text: str) -> bool:
-    return all_in(letters(), text)
+    return text.isalpha()
 
 
 # Whether the text is nonempty and made only of ASCII letters and digits.
@@ -82,71 +82,47 @@ def is_alnum(text: str) -> bool:
 
 # Whether the text is nonempty and made only of spaces, tabs and line breaks.
 def is_space(text: str) -> bool:
-    return all_in(whitespace(), text)
+    return text.isspace()
 
 
 # Whether the text begins with a prefix; every text starts with the empty one.
 def starts_with(text: str, prefix: str) -> bool:
-    if len(prefix) > len(text):
-        return False
-    return text[0:len(prefix)] == prefix
+    return text.startswith(prefix)
 
 
 # Whether the text ends with a suffix; every text ends with the empty one.
 def ends_with(text: str, suffix: str) -> bool:
-    if len(suffix) > len(text):
-        return False
-    return text[len(text) - len(suffix):len(text)] == suffix
+    return text.endswith(suffix)
 
 
 # First position where a nonempty needle occurs, searching from the front.
 def find(text: str, needle: str) -> Option[int]:
-    if len(needle) == 0:
-        return Some(0)
-    if len(needle) > len(text):
+    position = text.find(needle)
+    if position < 0:
         return None
-    start = 0
-    while start + len(needle) <= len(text):
-        if text[start:start + len(needle)] == needle:
-            return Some(start)
-        start += 1
-    return None
+    return Some(position)
 
 
 # Number of nonoverlapping occurrences of a nonempty needle.
 def count(text: str, needle: str) -> int:
     if len(needle) == 0:
         return 0
-    total = 0
-    start = 0
-    while start + len(needle) <= len(text):
-        if text[start:start + len(needle)] == needle:
-            total += 1
-            start += len(needle)
-        else:
-            start += 1
-    return total
+    return text.count(needle)
 
 
 # Text without leading whitespace.
 def lstrip(text: str) -> str:
-    start = 0
-    while start < len(text) and table_index(whitespace(), text[start]) >= 0:
-        start += 1
-    return text[start:len(text)]
+    return text.lstrip()
 
 
 # Text without trailing whitespace.
 def rstrip(text: str) -> str:
-    end = len(text)
-    while end > 0 and table_index(whitespace(), text[end - 1]) >= 0:
-        end -= 1
-    return text[0:end]
+    return text.rstrip()
 
 
 # Text without leading or trailing whitespace.
 def strip(text: str) -> str:
-    return rstrip(lstrip(text))
+    return text.strip()
 
 
 # Text split on line feeds, with one trailing carriage return removed per line.
@@ -155,7 +131,7 @@ def lines(text: str) -> list[str]:
     if len(text) == 0:
         return out
     for piece in text.split("\n"):
-        if ends_with(piece, "\r"):
+        if piece.endswith("\r"):
             out.append(piece[0:len(piece) - 1])
         else:
             out.append(piece)
@@ -194,64 +170,24 @@ def pad_right(text: str, width: int, fill: str) -> Result[str, str]:
 
 # Text with ASCII lowercase letters replaced by their uppercase forms.
 def upper(text: str) -> str:
-    out = ""
-    for character in text:
-        position = table_index(letters()[0:26], character)
-        if position < 0:
-            out = out + character
-        else:
-            out = out + letters()[26 + position]
-    return out
+    return text.upper()
 
 
 # Text with ASCII uppercase letters replaced by their lowercase forms.
 def lower(text: str) -> str:
-    out = ""
-    for character in text:
-        position = table_index(letters()[26:52], character)
-        if position < 0:
-            out = out + character
-        else:
-            out = out + letters()[position]
-    return out
+    return text.lower()
 
 
 # Every nonoverlapping occurrence of a nonempty needle replaced by a substitute.
 def substitute(text: str, needle: str, insertion: str) -> Result[str, str]:
     if len(needle) == 0:
         return Err("replacement needle must not be empty")
-    return Ok(insertion.join(text.split(needle)))
+    return Ok(text.replace(needle, insertion))
 
 
 # Signed decimal text converted to an integer, rejecting overflow and junk.
 def to_int(text: str) -> Option[int]:
-    if len(text) == 0:
-        return None
-    start = 0
-    negative = False
-    if text[0] == "+" or text[0] == "-":
-        negative = text[0] == "-"
-        start = 1
-    if start >= len(text):
-        return None
-    total = 0
-    index = start
-    while index < len(text):
-        digit = table_index(digits(), text[index])
-        if digit < 0:
-            return None
-        if total < 0 - 922337203685477580:
-            return None
-        total = total * 10
-        if total < 0 - 9223372036854775807 - 1 + digit:
-            return None
-        total = total - digit
-        index += 1
-    if negative:
-        return Some(total)
-    if total == 0 - 9223372036854775807 - 1:
-        return None
-    return Some(0 - total)
+    return int(text)
 
 
 # Largest mantissa that can still take another decimal digit without overflow.

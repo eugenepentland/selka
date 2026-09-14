@@ -95,6 +95,19 @@ pub const Parser = struct {
         self.cursor.pos += 1;
         return token.span;
     }
+    fn declaresFunction(self: Parser, name: Span) bool {
+        var position: usize = 0;
+        var depth: usize = 0;
+        while (position + 1 < self.tokens.len) : (position += 1) {
+            if (self.tokens[position].tag == .indent) depth += 1;
+            if (self.tokens[position].tag == .dedent) depth -|= 1;
+            if (depth != 0 or self.tokens[position].tag != .kw_def) continue;
+            const candidate = self.tokens[position + 1];
+            if (candidate.tag != .ident and candidate.tag != .kw_len and candidate.tag != .kw_replace) continue;
+            if (std.mem.eql(u8, self.src.text(candidate.span), self.src.text(name))) return true;
+        }
+        return false;
+    }
     fn qualifiedTail(self: *Parser, first: Span) diagnostic.Error!Span {
         if (!self.module_syntax) return first;
         if (self.current().tag != .dot or !self.syntax.import_aliases.contains(self.src.text(first))) return first;
@@ -781,7 +794,8 @@ pub const Parser = struct {
                 const close = try self.expect(.rbracket);
                 break :list try self.append(.{ .span = .join(token.span, close.span), .data = .{ .list_literal = try values.toOwnedSlice(self.arena.allocator()) } });
             },
-            .kw_len, .kw_replace, .kw_unwrap => try self.parseBuiltin(token),
+            .kw_len, .kw_replace => if (self.declaresFunction(token.span)) try self.parseLeaf(token) else try self.parseBuiltin(token),
+            .kw_unwrap => try self.parseBuiltin(token),
             .kw_todo => try self.parseHole(token),
             .kw_codec_encode, .kw_codec_decode => try self.parseCodecOperation(token),
             .kw_none => none: {
@@ -1301,7 +1315,8 @@ pub const Parser = struct {
             self.cursor.pos += 1;
             name = try self.declaredName();
         }
-        if (token.tag == .ident and self.sameExpressionLine() and self.take(.lparen)) {
+        const callable_name = token.tag == .ident or token.tag == .kw_len or token.tag == .kw_replace;
+        if (callable_name and self.sameExpressionLine() and self.take(.lparen)) {
             const arguments = try self.callArguments();
             const close = try self.expect(.rparen);
             return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{ .owner = owner, .name = name, .arguments = arguments.values, .argument_names = arguments.names } } });
@@ -1312,7 +1327,7 @@ pub const Parser = struct {
                 const decoded = try byte_literal.decode(self.arena.allocator(), self.src, token.span, self.sink);
                 break :literal if (self.src.text(token.span)[0] != 'b') .{ .text = decoded } else .{ .bytes = decoded };
             },
-            .ident => .{ .name = name },
+            .ident, .kw_len, .kw_replace => .{ .name = name },
             else => .{ .boolean = token.tag == .kw_true },
         } });
     }

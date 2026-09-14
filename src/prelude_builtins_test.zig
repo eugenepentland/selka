@@ -31,6 +31,44 @@ fn reject(text: []const u8, code: []const u8) !void {
     try t.expectEqualStrings(code, compilation.diagnostics.items[0].code);
 }
 
+fn rejectMigration(text: []const u8, replacement: []const u8, token: []const u8) !void {
+    var compilation = try language.Compilation.init(t.allocator, "removed.my", text);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.check());
+    const item = compilation.diagnostics.items[0];
+    try t.expectEqualStrings("E_REMOVED_SPELLING", item.code);
+    try t.expectEqualStrings(token, compilation.src.text(item.span));
+    try t.expect(std.mem.indexOf(u8, item.message, replacement) != null);
+}
+
+fn rejectRemovedLexicalNames() !void {
+    const cases = [_]struct { spelling: []const u8, replacement: []const u8 }{
+        .{ .spelling = "filesystem_cap", .replacement = "Filesystem" },
+        .{ .spelling = "network_cap", .replacement = "Network" },
+        .{ .spelling = "clock_cap", .replacement = "Clock" },
+        .{ .spelling = "random_cap", .replacement = "Entropy" },
+        .{ .spelling = "environment_cap", .replacement = "Environment" },
+        .{ .spelling = "codec_encode", .replacement = "codec" },
+        .{ .spelling = "codec_decode", .replacement = "codec" },
+        .{ .spelling = "f64_add", .replacement = "float" },
+        .{ .spelling = "f64_sub", .replacement = "float" },
+        .{ .spelling = "f64_mul", .replacement = "float" },
+        .{ .spelling = "f64_div", .replacement = "float" },
+        .{ .spelling = "f64_eq", .replacement = "float" },
+        .{ .spelling = "f64_lt", .replacement = "float" },
+        .{ .spelling = "f64_le", .replacement = "float" },
+        .{ .spelling = "f64_sqrt", .replacement = "sqrt" },
+        .{ .spelling = "f64_floor", .replacement = "floor" },
+        .{ .spelling = "f64_ceil", .replacement = "ceil" },
+        .{ .spelling = "f64_trunc", .replacement = "trunc" },
+        .{ .spelling = "f64_abs", .replacement = "abs" },
+        .{ .spelling = "f64_neg", .replacement = "float" },
+        .{ .spelling = "f64_from_u64", .replacement = "float" },
+        .{ .spelling = "f64_to_u64", .replacement = "int" },
+    };
+    for (cases) |case| try rejectMigration(case.spelling, case.replacement, case.spelling);
+}
+
 // spec: PRELUDE-FOLD-1
 test "sum adds a list of ints or floats and rejects other element types" {
     try run("def main() -> int:\n    return sum([1, 2, 3])\n", 6);
@@ -121,4 +159,40 @@ test "a declared function or binding keeps its own prelude name" {
     try run("def main() -> int:\n    max = 5\n    return max + 1\n", 6);
     try run("def main() -> int:\n    sorted = 4\n    return sorted + 1\n", 5);
     try run("def list() -> int:\n    return 9\n\n\ndef main() -> int:\n    return list()\n", 9);
+}
+
+// spec: PRELUDE-SHADOW-2
+test "declared len and replace functions shadow their prelude operations" {
+    try run("def len(value: int) -> int:\n    return value + 1\n\ndef main() -> int:\n    return len(41)\n", 42);
+    try run("def replace(value: int) -> int:\n    return value + 2\n\ndef main() -> int:\n    return replace(40)\n", 42);
+    try reject("def len(left: int, right: int) -> int:\n    return left + right\n\ndef main() -> int:\n    return len(1)\n", "E_ARITY");
+    try reject("def replace() -> int:\n    return 0\n\ndef main() -> int:\n    return replace(1, 2, 3)\n", "E_ARITY");
+}
+
+// spec: CANONICAL-LEN-1
+test "len returns int for every supported receiver and dot len is removed" {
+    try run("def main() -> int:\n    fixed: [2]int = [20, 22]\n    return len(fixed)\n", 2);
+    try run("def main() -> int:\n    values = [1, 2]\n    return len(values)\n", 2);
+    try run("def main() -> int:\n    mapping = {\"a\": 1}\n    return len(mapping)\n", 1);
+    try run("def main() -> int:\n    return len(\"xy\")\n", 2);
+    try run("def main() -> int:\n    raw = b\"ab\"\n    return len(raw)\n", 2);
+    try rejectMigration("def main() -> int:\n    values = [1]\n    return values.len()\n", "len(", "len");
+}
+
+// spec: REMOVED-SPELLING-1
+test "removed names and punctuation report their canonical migration" {
+    try rejectRemovedLexicalNames();
+    try rejectMigration("def main() -> int:\n    values: List[int] = []\n    return len(values)\n", "list[", "List");
+    try rejectMigration("def main() -> int:\n    values = [1]\n    values.push(2)\n    return 0\n", "append", "push");
+    try rejectMigration("def main() -> int:\n    values = {\"a\": 1}\n    if values.contains(\"a\"):\n        return 1\n    return 0\n", "in", "contains");
+    try rejectMigration("def main() -> int:\n    return 1 & 1\n", "no replacement", "&");
+    try rejectMigration("def main() -> int:\n    return 1 => 1\n", "no replacement", "=>");
+}
+
+// spec: PRELUDE-TYPES-2
+test "prelude types are registered from syntax instead of raw source text" {
+    try run("def main() -> int:\n    n = 4 // 2; raw: bytes = \"hi\".encode()\n    return len(raw) + n\n", 4);
+    try run("def main() -> int:\n    raw = \"hi\".encode()\n    return len(raw)\n", 2);
+    try run("def main() -> int:\n    # bytes after a comment stays ordinary syntax\n    raw: bytes = \"hi\".encode()\n    return len(raw) + 40\n", 42);
+    try run("class bytes:\n    value: int\n\nclass str:\n    value: int\n\ndef main() -> int:\n    raw: bytes = bytes(value=20)\n    text: str = str(value=22)\n    return raw.value + text.value\n", 42);
 }

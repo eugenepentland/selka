@@ -129,7 +129,7 @@
     },
     "canonical-prelude-types": {
       "kind": "language",
-      "summary": "`list`, `dict`, `str`, `bytes`, `Option` and `Result` have one identity in every module.",
+      "summary": "`list`, `dict`, `str`, `bytes`, `float`, `Option` and `Result` have one identity in every module without source-text scanning.",
       "doc": "docs/results-and-options.md#canonical-prelude-types"
     },
     "inferred-list-literals-and-slices": {

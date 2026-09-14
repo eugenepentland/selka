@@ -24,10 +24,8 @@ pub fn end(bytes: []const u8, start: usize) usize {
     return at;
 }
 
-/// Only programs spelling float types, conversions, or literals materialize its schema.
-/// Naming the type anywhere counts, including a variant payload or a record field.
+/// Whether the AST contains an operation that needs a concrete float schema.
 pub fn used(src: Source, program: ast.Program) bool {
-    if (@import("nominal_type_syntax.zig").wordUsed(src, &.{"float"})) return true;
     for (program.nodes.items) |node| switch (node.data) {
         .integer => |span| if (isLiteral(src.text(span))) return true,
         .binary => |binary| if (binary.op == .python_div) return true,

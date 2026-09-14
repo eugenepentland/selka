@@ -876,7 +876,7 @@ const Checker = struct {
                     try call_arguments.positional(call, self.sink);
                     const name = self.src.text(call.name);
                     const kind = buffer_operations.method(name) orelse {
-                        if (std.mem.eql(u8, name, "push")) return self.sink.fail("E_REMOVED_SPELLING", call.name, "`push` was removed; use `append(value)`");
+                        _ = try @import("removed_names.zig").reject(self.sink, call.name, name);
                         return self.sink.fail("E_LIST_METHOD", call.name, "unknown managed collection method");
                     };
                     // The everyday vocabulary stays a buffer operation; the
@@ -1202,7 +1202,7 @@ const Checker = struct {
     fn checkCollectionMethod(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
         const call = node.data.method_call;
         const name = self.src.text(call.name);
-        if (std.mem.eql(u8, name, "push")) return self.sink.fail("E_REMOVED_SPELLING", call.name, "`push` was removed; use `append(value)`");
+        _ = try @import("removed_names.zig").reject(self.sink, call.name, name);
         const kind = buffer_operations.method(name) orelse return self.sink.fail("E_COLLECTION_METHOD", call.name, "unknown managed collection method");
         return self.checkListAccess(node, .{ .base = call.base, .kind = kind, .inputs = call.arguments }, temporaries);
     }
@@ -2391,7 +2391,7 @@ const Checker = struct {
                 if (receiver_type.isAggregate() and self.catalog.records[receiver_type.recordIndex()].managed) return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(base, .length, &.{}, true);
                 _ = try self.catalog.array(receiver_type, node.span, self.sink);
                 if (self.requiresHandling(self.nodes.items[@backingInt(base)].ty)) return self.sink.fail(eResultOperation, node.span, "length evaluation would drop result-bearing elements");
-                out.ty = .u64;
+                out.ty = .i64;
                 out.data = .{ .length = base };
             },
             .membership => |membership| return self.checkMembership(node, membership, temporaries),
