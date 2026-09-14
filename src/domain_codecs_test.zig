@@ -198,12 +198,9 @@ fn projectScenario(allocator: std.mem.Allocator) !void {
     }
     try t.expect(found);
     try t.expect(std.mem.indexOf(u8, json, "Positive.raw") == null);
-    const wire_ty = try c.publicValueType("data::Wire");
-    const wire = try typed.Value.create(allocator, wire_ty, &.{.{ .i64 = 9 }});
-    defer wire.release(allocator);
-    const result = try c.invokePublic(allocator, "data::Positive.from_wire", &.{wire}, .{});
-    defer result.value.release(allocator);
-    try t.expectEqual(@as(i64, 9), result.value.aggregate.fields[0].aggregate.fields[0].i64);
+    // The declared wire type stays resolvable even though nothing calls the
+    // codec from outside the guest any more.
+    try t.expect((try c.publicValueType("data::Wire")).isAggregate());
 }
 test "domain codec module relocation and public schemas preserve contracts and opaque backing under allocation failures" {
     try projectScenario(t.allocator);

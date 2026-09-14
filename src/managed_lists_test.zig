@@ -1,4 +1,4 @@
-//! Source-level managed aliases, VM rooting, effects, and storage boundaries.
+//! Source-level managed aliases, native rooting, effects, and storage boundaries.
 const std = @import("std");
 const t = std.testing;
 const debug = std.debug;
@@ -265,4 +265,95 @@ test "managed elements reject owned resources and unchecked results" {
         \\    return len(values)
         ,
     }, "E_GENERIC_REQUIREMENT");
+}
+
+// spec: GC-ROOTS-1
+test "a managed alias keeps one identity and an aggregate snapshot roots its elements" {
+    const source =
+        \\class Holder:
+        \\    items: List[i64]
+        \\
+        \\
+        \\def total(holder: Holder) -> i64:
+        \\    sum = 0
+        \\    for item in holder.items:
+        \\        sum = sum + item
+        \\    return sum
+        \\
+        \\
+        \\def main() -> i64:
+        \\    values: List[i64] = []
+        \\    alias = values
+        \\    alias.push(11)
+        \\    holder = Holder(items=values)
+        \\    alias.push(31)
+        \\    i = 0
+        \\    while i < 40:
+        \\        garbage: List[i64] = []
+        \\        garbage.push(i)
+        \\        i = i + 1
+        \\    return total(holder)
+    ;
+    const result = try execute(source);
+    try t.expectEqual(@as(i64, 42), result.value);
+}
+
+// spec: GC-CYCLES-1
+test "an unreachable managed cycle is reclaimed while a reachable one survives collection" {
+    const source =
+        \\class Node:
+        \\    links: List[Node]
+        \\    value: i64
+        \\
+        \\
+        \\def loop(value: i64) -> Node:
+        \\    node = Node(links=[], value=value)
+        \\    node.links.push(node)
+        \\    return node
+        \\
+        \\
+        \\def main() -> i64:
+        \\    kept = loop(42)
+        \\    i = 0
+        \\    while i < 200:
+        \\        _ = loop(i)
+        \\        i = i + 1
+        \\    inner = kept.links[0u64]
+        \\    return inner.value
+    ;
+    const result = try execute(source);
+    try t.expectEqual(@as(i64, 42), result.value);
+}
+
+// spec: GC-BOUNDARY-1
+test "a managed list read past its initialized bounds is a located trap" {
+    const source =
+        \\def main() -> i64:
+        \\    values: List[i64] = []
+        \\    values.push(7)
+        \\    return values[3u64]
+    ;
+    const result = try execute(source);
+    try t.expect(result.trapped());
+    try t.expectEqualStrings("R_LIST_BOUNDS", result.trap.code);
+    try t.expectEqual(@as(u64, 4), result.trap.line);
+}
+
+// spec: GC-CAPABILITY-1
+test "a managed element declaration refuses a capability, directly or inside a record" {
+    try rejectAll(&.{
+        \\def main(fs: filesystem_cap) -> int:
+        \\    values: List[filesystem_cap] = []
+        \\    values.push(fs)
+        \\    return len(values)
+        ,
+        \\class Holder:
+        \\    fs: filesystem_cap
+        \\
+        \\
+        \\def main(fs: filesystem_cap) -> int:
+        \\    values: List[Holder] = []
+        \\    values.push(Holder(fs=fs))
+        \\    return len(values)
+    }, "E_LIST_CAPABILITY");
 }

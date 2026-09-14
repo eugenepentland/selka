@@ -45,14 +45,6 @@ pub const Type = enum(usize) {
             else => null,
         };
     }
-    /// Return the clock or random provider family represented by this type.
-    pub fn externalKind(self: Type) ?@import("external_capabilities.zig").Kind {
-        return switch (self) {
-            .clock_cap => .clock,
-            .random_cap => .random,
-            else => null,
-        };
-    }
     /// Identify an open file handle, whose cleanup closes a provider resource.
     pub fn isFile(self: Type) bool {
         return self == .file or self == .text_file;
@@ -150,10 +142,6 @@ pub const Value = union(enum) {
         };
     }
 
-    /// Test an owned-resource category without reading an inactive union field.
-    pub fn isOwned(self: Value, kind: std.meta.Tag(OwnedValue)) bool {
-        return self == .owned and self.owned == kind;
-    }
     /// Test an authority category without reading an inactive union field.
     pub fn isCapability(self: Value, kind: std.meta.Tag(CapabilityValue)) bool {
         return self == .capability and self.capability == kind;
@@ -209,31 +197,6 @@ pub const Value = union(enum) {
         return .{ .aggregate = record };
     }
 
-    /// Allocate an aggregate snapshot with selected fields replaced, retaining unchanged fields.
-    pub fn updated(self: Value, allocator: std.mem.Allocator, indices: []const usize, replacements: []const Value) error{ OutOfMemory, InvalidAggregateType, InternalError }!Value {
-        if (self != .aggregate or self.aggregate.moved_fields != null or indices.len != replacements.len) return error.InternalError;
-        for (indices) |index| if (index >= self.aggregate.fields.len) {
-            return error.InternalError;
-        };
-        const out = try create(allocator, self.aggregate.ty, self.aggregate.fields);
-        const fields = @constCast(out.aggregate.fields);
-        for (indices, replacements) |index, replacement| {
-            fields[index].release(allocator);
-            fields[index] = replacement.retain();
-        }
-        return out;
-    }
-
-    /// Success consumes the external allocation handle; failure leaves it owned
-    /// by the caller. Internal retained temporaries share one cleanup record.
-    /// Wrap an external owner in a reference-counted runtime value.
-    pub fn ownExternal(allocator: std.mem.Allocator, ty: Type, store: *external_resources.Store, owner: external_resources.Owner) (external_resources.Error || std.mem.Allocator.Error)!Value {
-        const resource = try allocator.create(ExternalResource);
-        errdefer allocator.destroy(resource);
-        const moved = try store.transfer(owner);
-        resource.* = .{ .ty = ty, .store = store, .owner = moved };
-        return .{ .owned = .{ .external_resource = resource } };
-    }
     /// Add a reference to owned backing and return another value sharing it.
     pub fn retain(self: Value) Value {
         if (self == .managed) self.managed.retain();

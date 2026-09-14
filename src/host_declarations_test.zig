@@ -21,17 +21,18 @@ fn reject(bytes: []const u8, code: []const u8) !void {
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
-test "host calls cannot enter effect-free invocation or compile-time evaluation" {
+test "a host call is rejected under an effect bound that withholds host authority" {
     var c = try language.Compilation.init(t.allocator, "host-eval.my", declaration ++
-        \\def main() -> i64:
+        \\def bounded() -> i64 effects():
         \\    return measure(1)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return bounded()
     );
     defer c.deinit();
-    try c.emit();
-    try t.expectError(error.InvocationEffects, language.vm.invoke(t.allocator, c.code.?, c.code.?.main, &.{}, .{}));
-    var sink: language.diagnostic.Sink = .{ .allocator = c.arena.allocator() };
-    try t.expectError(error.SourceError, language.evaluation.evaluate(t.allocator, c.code.?, &sink, .{}));
-    try t.expectEqualStrings("E_EVAL_EFFECT", sink.items.items[0].code);
+    try t.expectError(error.SourceError, c.check());
+    try t.expectEqualStrings("E_EFFECT_BOUND", c.diagnostics.items[0].code);
 }
 test "host declarations preserve contextual names formatting and separate external implementations" {
     const bytes = declaration ++

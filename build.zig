@@ -37,8 +37,9 @@ const mib: u64 = 1 << 20;
 /// `/usr/bin/time -v` sees. Observed figures are recorded beside each ceiling.
 const rss = struct {
     /// Zig test binaries, which also spawn the compiler. Observed: the schematic root 48M, the CLI root 31M, byte I/O 11M,
-    /// the focused native-test root 13M.
-    const suite: u64 = 512 * mib;
+    /// the focused native-test root 13M. The unit root additionally builds and
+    /// runs every guest program its suites execute, and peaks near 1.1G.
+    const suite: u64 = 2048 * mib;
     /// Python drivers that drive the compiler but build no native programs.
     /// Observed: tests/laws.py 22M, tests/module_scaling.py 18M,
     /// tests/duplicate_scaling.py 25M, tests/docs_examples.py 24M,

@@ -17,50 +17,12 @@ pub const EmitNativeError = EmitError || error{
     WriteFailed,
 };
 
-/// Failures returned by execute; callers must handle these boundary errors.
-pub const ExecuteError = EmitError || error{
-    BorrowConflict,
-    BorrowSuspended,
-    Bounds,
-    CapabilityUnavailable,
-    CapacityLimit,
-    ChildrenActive,
-    Closed,
-    Denied,
-    ExpiredBorrow,
-    Failed,
-    ForeignMemory,
-    IdentityExhausted,
-    InvalidAggregateType,
-    InvalidAllocation,
-    InvalidBudget,
-    InvalidCapability,
-    InvalidDataType,
-    InvalidDataValue,
-    InvalidOwner,
-    InvalidProvider,
-    InvalidValueLimits,
-    MemoryClosed,
-    NoCapacity,
-    NotDataType,
-    ReadOnly,
-    RegionInUse,
-    ResourceLimit,
-    TypeMismatch,
-    Unavailable,
-    ValueCountLimit,
-    ValueDepthLimit,
-    ValueTypeMismatch,
-};
-
 const std = @import("std");
 pub const schema_report = @import("schema_report.zig");
 pub const schema = @import("schema.zig");
 pub const input_manifest = @import("input_manifest.zig");
 /// Deterministic source and compiler identities shared by every tool receipt.
 pub const source_receipt = @import("source_receipt.zig");
-/// Authority-free bounded evaluation retained for the interpreter's own tests.
-pub const evaluation = @import("evaluation.zig");
 pub const import_policy = @import("import_policy.zig");
 pub const embedded_project = @import("embedded_project.zig");
 pub const dependency_report = @import("dependency_report.zig");
@@ -78,10 +40,7 @@ pub const diagnostic = @import("diagnostic.zig");
 /// Versioned diagnostic rendering for CLI and tool consumers.
 pub const diagnostic_output = @import("diagnostic_output.zig");
 /// Trusted typed host registration and copied-value callback boundary.
-pub const host_replay = @import("host_replay.zig");
-pub const host_functions = @import("host_functions.zig");
 /// Program-bound registration adapter for explicitly declared VM host functions.
-pub const vm_host = @import("vm_host.zig");
 /// Parse-only top-level declaration listing for store and tooling consumers.
 pub const declarations = @import("declarations.zig");
 /// Checked mechanical translation from the legacy brace surface to Python syntax.
@@ -97,8 +56,6 @@ pub const navigation = @import("navigation.zig");
 pub const navigation_partial = @import("navigation_partial.zig");
 pub const quality = @import("quality.zig");
 pub const duplicates = @import("duplicates.zig");
-pub const vm_trace = @import("vm_trace.zig");
-pub const vm = @import("vm.zig");
 const disassemble = @import("disassemble.zig");
 
 /// Owns one source unit and all parsed, checked, and lowered data in its arena.
@@ -174,17 +131,6 @@ pub const Compilation = struct {
     pub fn emit(self: *Compilation) EmitError!void {
         try self.check();
         if (self.code == null) self.code = try lower.lower(self.arena.allocator(), self.program.?);
-    }
-
-    /// Execute the lowered entry point using the default VM limits and providers.
-    pub fn execute(self: *Compilation, allocator: std.mem.Allocator) ExecuteError!vm.Result {
-        return self.executeWithOptions(allocator, .{});
-    }
-
-    /// Execute the lowered entry point with explicit VM limits and host providers.
-    pub fn executeWithOptions(self: *Compilation, allocator: std.mem.Allocator, options: vm.Options) ExecuteError!vm.Result {
-        try self.emit();
-        return vm.runWithOptions(allocator, self.code.?, options);
     }
 
     /// Allocate independently compilable scalar QBE units after full checking.

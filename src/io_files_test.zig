@@ -4,7 +4,6 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
-const file_resources = @import("file_resources.zig");
 
 const module = "io-files.my";
 
@@ -295,15 +294,6 @@ test "IO-12 the native backend lowers the whole file surface" {
     try t.expect(std.mem.indexOf(u8, manifest, "myl_qbe_file_method") != null);
     // An open handle is one owned resource word, dropped at every scope exit.
     try t.expect(std.mem.indexOf(u8, manifest, "myl_native_owned_drop") != null);
-}
-
-test "file operations report a readable reason for every provider failure" {
-    try t.expectEqualStrings("no filesystem authority is available", file_resources.reason(error.Unavailable));
-    try t.expectEqualStrings("too many files are open", file_resources.reason(error.ResourceLimit));
-    try t.expectEqualStrings("the file is already closed", file_resources.reason(error.InvalidOwner));
-    try t.expectEqualStrings("the bytes read are not valid UTF-8 text", file_resources.reason(error.InvalidUtf8));
-    try t.expect(std.mem.startsWith(u8, file_resources.reason(error.Denied), "denied"));
-    try t.expect(std.mem.startsWith(u8, file_resources.reason(error.Failed), "failed"));
 }
 
 test "a program with no granted filesystem refuses to start rather than reading anything" {

@@ -50,7 +50,6 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [TOOL-6] Includes calls in untaken paths and cycles when calculating static function reachability.
 ## Evaluation and wire boundaries
 
-- [WIRE-1] Preserves aggregate evaluation results and enforces instruction, frame, and memory limits.
 - [WIRE-2] Rejects duplicate input names, keywords, unsupported input types, and noncanonical or out-of-range values.
 - [WIRE-3] Encodes independently constructed typed values without consuming them and enforces byte, value, and depth limits.
 - [WIRE-4] Rejects duplicate, missing, unknown, and private function entries in domain codec declarations.
@@ -139,15 +138,9 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 
 - [DIAGNOSTIC-JSON-1] CLI --diagnostics=json selects diagnostic-v1 JSON Lines on stderr without changing command results or exit statuses. Source and VM diagnostics preserve stable codes, severity, original-file byte ranges and byte-based line/columns, related/origin/requirement notes, bounded frames and omitted-frame counts. Project-loader related sites retain their own module coordinates. Auxiliary CLI messages are separate message records. Successful check-session warning replay uses the selected format, and cache identity prevents cross-format replay. Default text remains available; invalid command-line syntax and emergency output failures may use text.
 
-- [HOST-REGISTRY-1] The trusted host registry snapshots exact names and ordinary nominal signatures, rejects missing/duplicate/mismatched registrations and insufficient effect grants before callback execution, and rejects authority-bearing signatures. Synchronous sessions deep-copy inputs and outputs, preserve typed result values, enforce call/value/cooperative-work budgets and reject reentrancy/stale sessions. Callbacks own returned values in the provided allocator and must not retain borrowed call data. Guest declarations and VM dispatch follow HOST-SOURCE-1 and HOST-VM-1.
-
 
 - [HOST-SOURCE-1] Contextual host fn declarations have no guest body and require an explicit effects(host, ...) contract. Only ordinary top-level, non-generic copied data signatures are supported; capabilities, managed collections and runtime-owned graphs reject. Main retains a guest body. Host and additional declared effects propagate through ordinary and abstract generic calls, including uncalled templates. Effect-free evaluation/invocation cannot execute these calls. Modules, formatting and disassembly preserve declarations; duplicate discovery excludes external implementations.
 
-- [HOST-VM-1] VM host registrations derive only explicit declarations from independently validated bytecode and bind to the same immutable compiled program/catalog. Preflight checks all bindings and grants before guest operations; ordinary functions cannot be overridden. Calls use one synchronous session per execution with copied values, declared result handling, instruction/frame and callback budgets, located failure/contract/limit traps and allocation-failure cleanup. Malformed host bodies, signatures or effect metadata reject. Guest-native compilation of host declarations is unsupported.
-
-
-- [HOST-INVOKE-1] Host-enabled typed invocation accepts only ordinary copied-value guest signatures and returns a caller-owned typed value or a located trap. Program-bound registrations preflight before guest effects; missing bindings, invalid arguments and hidden public entry names cannot execute callbacks. Pure invocation retains effect-free restrictions. Direct external declarations are not guest entry points. Per-invocation instruction/frame and callback budgets reset, and arguments/results clean up under allocation failures.
 
 - [BOARD-TRIAL-1] The bounded board-validation experiment runs guest bytecode through typed Zig geometry callbacks, compares deterministic reports and callback counts with an independent fixed oracle and standalone Zig implementation, and releases snapshot and callback graphs on allocation failure.
 
@@ -286,18 +279,12 @@ depends on it.
 
 ## Bounded host replay
 
-- [HOST-REPLAY-1] In-memory host transcripts wrap explicit copied-value registrations without adding authority. They record bounded calls, argument fingerprints, copied outcomes and cooperative work; replay checks exact sequence/schema identity and never reinvokes providers. Missing/extra/changed calls invalidate replay. Recording exhaustion or allocation failure leaves an incomplete transcript. Transcripts borrow the checked schema and own their copies; all registrations close before transcript destruction. They are single-threaded debugging artifacts, not portable or secret-free logs.
-
 ## Bounded VM explanations
-
-- [VM-TRACE-1] Optional `memory.trace` observations record instruction/source identity and the top operand before execution into a caller-owned bounded buffer. Scalar values can explain branch conditions; aggregates record only type identity. Full buffers count omitted events without changing guest work/steps or retaining guest owners. Traces are debugging samples, not complete causal proofs or portable replay logs.
 
 
 - [FLOAT-DOMAIN-1] Builtin float is IEEE binary64: separate arithmetic operations with canonical arithmetic NaNs, numeric comparisons in which signed zeros compare equal and every NaN comparison is false, and checked conversion to and from signed integers. The raw f64_* intrinsics over u64 representations remain available for code that owns a bit pattern; the f64 spelling is not a type name.
 
 - [STRUCTURAL-COMPOSITE-1] Structural field and operation signatures substitute fixed arrays and nominal applications. Result obligations remain transferred by value. Invalid unused templates still reject.
-
-- [SOURCE-EVAL-1] Scalar module constants may invoke nongeneric source functions with scalar arguments, locals — an assignment to a fresh name binds it, as it does at run time — branches, loops and recursion. Static validation rejects external effects and unsupported memory/aggregate operations even in untaken paths. Evaluation is limited to 256 nesting levels and 65536 expression, statement and lookup work units, with located errors and no executable publication on failure. Every compilation reevaluates from its complete source/input snapshot with fixed-width target-independent scalar semantics.
 
 
 
@@ -348,18 +335,7 @@ depends on it.
 
 - [VM-AUDIT-1] Scalar-loop execution preserves results, exact instruction budgets and located traps across runtime representation optimizations.
 
-- [VM-FUSION-1] Execution-local fused scalar and array-read sequences preserve original logical instruction counts, located traps and trace events; generic dispatch remains selectable for differential verification.
-- [VM-FUSION-2] Fused dispatch preserves managed list aliases so a callee mutation is visible through every alias.
-- [VM-FUSION-3] Requested bounded traces preserve original operation names, PCs, logical step counts and source spans under both dispatch settings.
-- [VM-FUSION-4] Fusion metadata uses a fixed-size execution-local cache; every injected execution allocation failure releases all owned storage.
-
-- [VM-FUSION-5] Scalar-only calls and returns preserve frame limits and results across frame-array growth; fusion cache collisions preserve original instruction identity.
-
-- [VM-FUSION-6] Scalar fast paths reuse checked local bindings; invocation argument copies canonicalize integer representations and reject mismatched types before execution.
-
 - [NATIVE-TIMING-1] `run --timings` reports native execution nanoseconds on stderr, covering the guest process and the native build it needed but excluding source compilation. Timing preserves guest results, quotas and runtime diagnostics; duplicate options and unsupported commands reject it.
-
-- [VM-FUSION-7] Fused arithmetic chains preserve evaluation order, intermediate overflow/division traps, original source spans and every logical instruction-budget cutoff.
 
 - [PHASE-TIMING-1] One-shot compiler commands and the raw byte I/O host accept opt-in `--timings=json`, emitting versioned phase-timings-v1 JSON Lines on stderr. Records use nonnegative duration_ns, explicit inclusive scope, available work counts and the command exit_code; total includes cleanup and excludes timing serialization. Attempted failing phases remain observable, stdout and default behavior are preserved, and legacy `--timings` remains compatible.
 
@@ -376,11 +352,9 @@ depends on it.
 
 ## Managed tracing heap
 
-- [GC-ROOTS-1] Managed list aliases share stable identity and mutations. Retained execution values, including intermediate values and ordinary aggregate snapshots, root managed objects across allocation and stress collection.
-- [GC-CYCLES-1] Nonmoving tracing collection reclaims unreachable cycles, including cycles through ordinary aggregate fields, and preserves reachable cycles. Sweeping releases all dead-object edges before freeing any managed header.
-- [GC-BOUNDARY-1] Managed list operations enforce element types and bounds and reject foreign-execution managed references.
-- [GC-FAILURE-1] Collector scratch allocation failure leaves the heap unchanged. Failed list allocation or growth preserves retained value cleanup, and execution teardown releases managed backing storage.
-
+- [GC-ROOTS-1] Managed list aliases share stable identity and mutations. Retained values, including intermediate call arguments and ordinary aggregate snapshots, root managed objects across allocation and stress collection.
+- [GC-CYCLES-1] Nonmoving tracing collection reclaims unreachable cycles, including cycles through ordinary aggregate fields and cycles whose last root left a block, and preserves reachable cycles.
+- [GC-BOUNDARY-1] Managed list operations enforce element types, and an out-of-range read or write raises a located list-bounds trap.
 - [GC-SOURCE-1] Managed list aliases in immutable local bindings and helper parameters share mutation without explicit allocator authority.
 - [GC-SOURCE-2] Source programs can construct list/record cycles; a later managed allocation collects an unreachable cycle before execution shutdown.
 - [GC-SOURCE-3] Managed results held as intermediate call arguments or inside ordinary record snapshots survive collection triggered by later arguments and callee allocations.
@@ -395,9 +369,8 @@ depends on it.
 
 ## Managed standard library
 
-- [GC-GRAPH-1] Managed element validation visits each shared aggregate node once, avoiding exponential traversal of shared value graphs.
 - [GC-GENERIC-5] Managed list elements cannot contain allocator or provider capabilities, including nested records, arrays, and instantiated generic elements; declarations reject with E_LIST_CAPABILITY.
-- [GC-CAPABILITY-1] The managed runtime rejects capability values and capabilities nested in aggregates, preserving the source authority boundary for malformed runtime inputs.
+- [GC-CAPABILITY-1] Managed element declarations reject capability values and capabilities nested in aggregates, preserving the source authority boundary.
 
 - [GC-SOURCE-11] Lexical block, break, and continue exits release managed local roots, including roots nested in copyable records, so unreachable cycles can be reclaimed at the next allocation before the enclosing function returns.
 

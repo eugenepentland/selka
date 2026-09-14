@@ -45,47 +45,6 @@ pub const EmitError = error{
     SourceError,
 };
 
-/// Failures returned by invokePublic; callers must handle these boundary errors.
-pub const InvokePublicError = PublicFunctionError || error{
-    BorrowConflict,
-    BorrowSuspended,
-    Bounds,
-    CapabilityUnavailable,
-    CapacityLimit,
-    ChildrenActive,
-    Closed,
-    Denied,
-    ExpiredBorrow,
-    Failed,
-    ForeignMemory,
-    IdentityExhausted,
-    InternalError,
-    InvalidAggregateType,
-    InvalidAllocation,
-    InvalidBudget,
-    InvalidCapability,
-    InvalidDataType,
-    InvalidDataValue,
-    InvalidOwner,
-    InvalidProvider,
-    InvalidValueLimits,
-    InvocationArity,
-    InvocationEffects,
-    MemoryClosed,
-    NoCapacity,
-    NotDataType,
-    PrivateInvocationFunction,
-    ReadOnly,
-    RegionInUse,
-    ResourceLimit,
-    TypeMismatch,
-    Unavailable,
-    UnknownInvocationFunction,
-    ValueCountLimit,
-    ValueDepthLimit,
-    ValueTypeMismatch,
-};
-
 const interfaces = @import("interfaces.zig");
 const syntax = @import("project_syntax.zig");
 const source = @import("source.zig");
@@ -171,33 +130,6 @@ pub const Compilation = struct {
         const unit = self.index.units[original.input];
         const symbol = unit.symbols.items[unit.names.get(self.src.text(declaration)) orelse return error.InternalError];
         return symbol.exported and symbol.kind == .type;
-    }
-    /// Only explicitly exported functions/public methods may be invoked by name.
-    pub fn invokePublic(self: *Compilation, allocator: @import("std").mem.Allocator, name: []const u8, arguments: []const typed.Value, options: @import("vm.zig").InvokeOptions) InvokePublicError!@import("vm.zig").ValueResult {
-        if (options.steps_executed) |steps| steps.* = 0;
-        try self.emit();
-        return @import("vm.zig").invoke(allocator, self.code.?, try self.publicFunction(name), arguments, options);
-    }
-    /// Invoke an explicitly exported guest function through registered host callbacks.
-    pub fn invokePublicWithHost(
-        self: *Compilation,
-        allocator: @import("std").mem.Allocator,
-        name: []const u8,
-        arguments: []const typed.Value,
-        registry: *@import("vm_host.zig").Registry,
-        options: @import("vm.zig").HostInvokeOptions,
-    ) (PublicFunctionError || @import("vm.zig").HostInvokeError)!@import("vm.zig").ValueResult {
-        if (options.execution.steps_executed) |steps| steps.* = 0;
-        try self.emit();
-        return @import("vm.zig").invokeWithHost(allocator, self.code.?, try self.publicFunction(name), arguments, registry, options);
-    }
-    /// Resolve a public callable name, rejecting hidden or unknown functions.
-    pub fn publicFunction(self: *Compilation, name: []const u8) PublicFunctionError!typed.FunctionId {
-        try self.check();
-        for (self.program.?.functions) |function| {
-            if (@import("std").mem.eql(u8, function.name, name) and try self.exported(function)) return function.id;
-        }
-        return error.UnknownPublicFunction;
     }
     /// Lazily lower the checked project into its retained bytecode representation.
     pub fn emit(self: *Compilation) EmitError!void {

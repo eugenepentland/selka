@@ -11,6 +11,7 @@ test {
     _ = @import("doc_coverage.zig");
     _ = @import("doc_coverage_command.zig");
 
+    _ = @import("host_declarations_test.zig");
     _ = @import("native_execute.zig");
     _ = @import("native_run.zig");
     _ = @import("wiring/native_session.zig");
@@ -36,7 +37,6 @@ test {
     _ = @import("python_surface_test.zig");
     _ = @import("unit_test.zig");
     _ = @import("declarations_test.zig");
-    _ = @import("vm_fusion_test.zig");
     _ = @import("stdlib_time_random_test.zig");
     _ = @import("stdlib_math_test.zig");
     _ = @import("stdlib_strings_test.zig");
@@ -46,10 +46,7 @@ test {
     _ = @import("stdlib_json_test.zig");
     _ = @import("stdlib_pool_test.zig");
     _ = @import("const_lengths_test.zig");
-    _ = @import("source_evaluation_test.zig");
     _ = @import("callbacks_test.zig");
-    _ = @import("vm_trace_test.zig");
-    _ = @import("host_replay_test.zig");
     _ = @import("typed_holes_test.zig");
     _ = @import("allocation_budget_test.zig");
     _ = @import("float_operations_test.zig");
@@ -69,10 +66,6 @@ test {
     _ = @import("nominal_type_syntax_test.zig");
     _ = @import("generic_arrays_test.zig");
     _ = @import("domain_equality_test.zig");
-    _ = @import("host_functions_test.zig");
-    _ = @import("vm_host_test.zig");
-    _ = @import("host_declarations_test.zig");
-    _ = @import("host_invocation_test.zig");
     _ = @import("diagnostic_output_test.zig");
     _ = @import("diagnostic_recovery_test.zig");
     _ = @import("generic_inference_test.zig");
@@ -92,7 +85,6 @@ test {
     _ = @import("import_policy_test.zig");
     _ = @import("source_map_test.zig");
     _ = @import("project_test.zig");
-    _ = @import("evaluation_test.zig");
     _ = @import("interfaces_test.zig");
     _ = @import("compiler_test.zig");
     _ = @import("duplicates_test.zig");
@@ -111,7 +103,6 @@ test {
     _ = @import("variants_test.zig");
     _ = @import("tables_test.zig");
     _ = @import("arena_managed_test.zig");
-    _ = @import("gc_regions.zig");
     _ = @import("effects_test.zig");
     _ = @import("input_manifest_test.zig");
     _ = @import("typed_json_test.zig");
@@ -122,12 +113,9 @@ test {
     _ = @import("resource_io_test.zig");
     _ = @import("results_test.zig");
     _ = @import("propagation_test.zig");
-    _ = @import("invocation_test.zig");
     _ = @import("domain_codecs_test.zig");
     _ = @import("runtime_values_test.zig");
-    _ = @import("gc_heap_test.zig");
     _ = @import("managed_values_test.zig");
-    _ = @import("managed_bytes_test.zig");
     _ = @import("python_values_test.zig");
     _ = @import("python_bytes_test.zig");
     _ = @import("managed_lists_test.zig");

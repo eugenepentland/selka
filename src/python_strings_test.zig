@@ -3,10 +3,7 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
-const gc = @import("gc_heap.zig");
 const values = @import("runtime_values.zig");
-const text = @import("managed_text.zig");
-const text_ops = @import("managed_text_ops.zig");
 
 const text_type: values.Type = @fromBackingInt(@intCast(32));
 const list_type: values.Type = @fromBackingInt(@intCast(33));
@@ -112,16 +109,4 @@ test "string methods are rejected on lists and empty needles trap" {
     const result = try native.run(&c);
     try t.expect(result.trapped());
     try t.expectEqualStrings("R_EMPTY_SEPARATOR", result.trap.code);
-}
-
-// spec-case: PY-STR-3
-test "splitLines rejects a value that is not managed text" {
-    var heap = gc.Heap.init(t.allocator);
-    defer heap.deinit();
-    try t.expectError(error.TypeMismatch, text_ops.splitLines(&heap, list_type, .{ .i64 = 1 }));
-    const value = try text.create(&heap, text_type, "a\nb");
-    defer value.release(t.allocator);
-    const lines = try text_ops.splitLines(&heap, list_type, value);
-    defer lines.release(t.allocator);
-    try t.expectEqual(@as(usize, 2), try heap.len(lines));
 }

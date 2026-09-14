@@ -5,8 +5,6 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
-const gc = @import("gc_heap.zig");
-const regions = @import("gc_regions.zig");
 const values = @import("runtime_values.zig");
 
 const list_type: values.Type = @fromBackingInt(@intCast(32));
@@ -434,78 +432,6 @@ test "arena source formatting preserves the with statement" {
     const formatted = try compilation.format(t.allocator);
     defer t.allocator.free(formatted);
     try t.expectEqualStrings(source, formatted);
-}
-
-test "region depth tracks nesting and bulk release frees exactly one depth" {
-    var heap = gc.Heap.init(t.allocator);
-    defer heap.deinit();
-    const outer = try heap.create(list_type, .i64, 0);
-    defer outer.release(t.allocator);
-    regions.begin(&heap);
-    const first = try heap.create(list_type, .i64, 0);
-    try t.expectEqual(@as(u32, 1), first.managed.trace.region);
-    regions.begin(&heap);
-    const second = try heap.create(list_type, .i64, 0);
-    try t.expectEqual(@as(u32, 2), second.managed.trace.region);
-    second.release(t.allocator);
-    regions.end(&heap);
-    try t.expectEqual(@as(u32, 1), heap.regions.depth);
-    first.release(t.allocator);
-    regions.end(&heap);
-}
-
-test "the store barrier rejects younger arena references and allows older ones" {
-    var heap = gc.Heap.init(t.allocator);
-    defer heap.deinit();
-    const older = try heap.create(list_type, list_type, 0);
-    defer older.release(t.allocator);
-    const records = try heap.create(list_type, record_type, 0);
-    defer records.release(t.allocator);
-    regions.begin(&heap);
-    const younger = try heap.create(list_type, list_type, 0);
-    try t.expectError(error.ArenaEscape, heap.append(older, younger));
-    try heap.append(younger, older);
-    const wrapper = try values.Value.create(t.allocator, record_type, &.{younger});
-    try t.expectError(error.ArenaEscape, heap.append(records, wrapper));
-    try t.expect(try regions.retains(&heap, wrapper));
-    try t.expect(!try regions.retains(&heap, older));
-    wrapper.release(t.allocator);
-    younger.release(t.allocator);
-    regions.end(&heap);
-}
-
-test "escape copies arena objects once and shares older objects" {
-    var heap = gc.Heap.init(t.allocator);
-    defer heap.deinit();
-    const older = try heap.create(list_type, .i64, 0);
-    defer older.release(t.allocator);
-    try heap.append(older, .{ .i64 = 1 });
-    regions.begin(&heap);
-    const holder = try heap.create(list_type, list_type, 0);
-    const shared = try heap.create(list_type, list_type, 0);
-    try heap.append(holder, shared);
-    try heap.append(holder, shared);
-    try heap.append(holder, older);
-    try heap.append(shared, holder);
-    const copied = try regions.escape(&heap, holder);
-    defer copied.release(t.allocator);
-    try t.expectEqual(@as(u32, 0), copied.managed.trace.region);
-    try t.expect(copied.managed != holder.managed);
-    const left = try heap.read(copied, 0);
-    defer left.release(t.allocator);
-    const right = try heap.read(copied, 1);
-    defer right.release(t.allocator);
-    try t.expect(left.managed == right.managed);
-    try t.expect(left.managed != shared.managed);
-    const kept = try heap.read(copied, 2);
-    defer kept.release(t.allocator);
-    try t.expect(kept.managed == older.managed);
-    const cycle = try heap.read(left, 0);
-    defer cycle.release(t.allocator);
-    try t.expect(cycle.managed == copied.managed);
-    holder.release(t.allocator);
-    shared.release(t.allocator);
-    regions.end(&heap);
 }
 
 // spec-case: ARENA-MANAGED-6
