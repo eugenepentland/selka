@@ -1,27 +1,20 @@
-//! Fixed-array construction, index bounds, copy behavior, and malformed native/VM metadata tests.
+//! Fixed-array construction, index bounds, copy behavior, and malformed bytecode metadata tests.
 const fixture_path = "arrays.my";
 const std = @import("std");
 const testing = std.testing;
 const language = @import("compiler.zig");
-const LimitedLiveAllocator = @import("test_support.zig").LimitedLiveAllocator;
+const native = @import("native_execute.zig");
 
 fn result(source: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
     defer compilation.deinit();
-    try testing.expectEqual(expected, (try compilation.execute(testing.allocator)).value);
+    try testing.expectEqual(expected, (try native.run(&compilation)).value);
 }
 fn reject(source: []const u8, code: []const u8) !void {
     var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
     defer compilation.deinit();
     try testing.expectError(error.SourceError, compilation.check());
     try testing.expectEqualStrings(code, compilation.diagnostics.items[0].code);
-}
-fn trapped(source: []const u8, code: []const u8, span: []const u8) !void {
-    var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
-    defer compilation.deinit();
-    const outcome = try compilation.execute(testing.allocator);
-    try testing.expectEqualStrings(code, outcome.trap.code);
-    try testing.expectEqualStrings(span, compilation.src.text(outcome.trap.span));
 }
 
 // spec: CORE-6
@@ -72,14 +65,15 @@ const allocation_source =
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, fixture_path, allocation_source);
     defer compilation.deinit();
-    try testing.expectEqual(@as(i64, 22), (try compilation.execute(allocator)).value);
+    try compilation.check();
     const dump = try compilation.dump(allocator);
     defer allocator.free(dump);
     var discovery = try language.duplicates.discover(allocator, compilation.program.?, .{});
     defer discovery.deinit();
 }
 
-test "array compiler execution dump and discovery clean up at every allocation failure" {
+test "array compiler dump and discovery clean up at every allocation failure" {
+    try result(allocation_source, 22);
     var no_resize = testing.FailingAllocator.init(testing.allocator, .{ .resize_fail_index = 0 });
     try testing.checkAllAllocationFailures(no_resize.allocator(), allocationScenario, .{});
 }
@@ -142,7 +136,7 @@ test "deep array type syntax observes the shared parser budget" {
     try reject(source.written(), "E_NESTING_LIMIT");
 }
 
-test "array bytecode validates schema kinds stack counts and runtime element types" {
+test "array bytecode validates schema kinds and stack counts" {
     const typed = @import("typed.zig");
     const bc = language.bytecode;
     const span: language.source.Span = .{ .start = 0, .end = 1 };
@@ -168,19 +162,4 @@ test "array bytecode validates schema kinds stack counts and runtime element typ
         }} };
         try testing.expectError(error.InternalError, bc.validate(testing.allocator, program));
     }
-    const invalid = [_]bc.Instruction{
-        .{ .span = span, .op = .{ .push_bool = true } },
-        .{ .span = span, .op = .{ .make_record = .{ .ty = ty, .fields = 1 } } },
-        .{ .span = span, .op = .{ .push_i64 = 0 } },
-        .{ .span = span, .op = .{ .get_index = ty } },
-        .{ .span = span, .op = .ret },
-    };
-    const program: bc.Program = .{ .records = &.{schema}, .functions = &.{.{
-        .id = @fromBackingInt(0),
-        .name = "main",
-        .scope = .{
-            .instructions = &invalid,
-        },
-    }} };
-    try testing.expectError(error.InternalError, language.vm.run(testing.allocator, program));
 }

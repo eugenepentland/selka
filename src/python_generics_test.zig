@@ -2,11 +2,12 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 
 fn execute(text: []const u8, expected: i64) !void {
     var c = try language.Compilation.init(t.allocator, "generic.my", text);
     defer c.deinit();
-    try t.expectEqual(expected, (try c.execute(t.allocator)).value);
+    try t.expectEqual(expected, (try native.run(&c)).value);
 }
 
 fn reject(text: []const u8, code: []const u8) !void {

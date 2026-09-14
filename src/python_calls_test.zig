@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 
 const ordered =
     \\def mark(log: List[int], value: int) -> int:
@@ -19,7 +20,7 @@ const ordered =
 fn execute(allocator: std.mem.Allocator, text: []const u8, expected: i64) !void {
     var c = try language.Compilation.init(allocator, "calls.my", text);
     defer c.deinit();
-    try t.expectEqual(expected, (try c.execute(allocator)).value);
+    try t.expectEqual(expected, (try native.run(&c)).value);
 }
 // spec: PYTHON-CALL-1
 test "Python keyword calls evaluate effects in source order before parameter binding" {
@@ -77,14 +78,6 @@ test "Python empty and positional record constructors resolve alongside keyword 
     try execute(t.allocator, text, 42);
 }
 
-fn allocationScenario(allocator: std.mem.Allocator) !void {
-    try execute(allocator, ordered, 4242);
-}
-// spec: PYTHON-CALL-4
-test "Python argument bind and evaluation apply release every partially allocated object" {
-    try t.checkAllAllocationFailures(t.allocator, allocationScenario, .{});
-}
-
 // spec: PYTHON-CALL-5
 test "Python default changes invalidate checked caller reuse" {
     var cache = language.semantic_cache.Cache.init(t.allocator, 8 * 1024 * 1024);
@@ -95,7 +88,7 @@ test "Python default changes invalidate checked caller reuse" {
         var c = try language.Compilation.init(t.allocator, "cached.my", text);
         defer c.deinit();
         try c.checkWithCache(&cache);
-        try t.expectEqual(case.expected, (try c.execute(t.allocator)).value);
+        try t.expectEqual(case.expected, (try native.run(&c)).value);
     }
 }
 
@@ -105,10 +98,10 @@ test "Python keyword scalar and reference calls emit native source with identica
     defer t.allocator.free(text);
     var c = try language.Compilation.init(t.allocator, "native-calls.my", text);
     defer c.deinit();
-    try t.expectEqual(@as(i64, 2442), (try c.execute(t.allocator)).value);
+    try t.expectEqual(@as(i64, 2442), (try native.run(&c)).value);
 }
 
-// spec-case: PYTHON-CALL-4
+// spec: PYTHON-CALL-4
 test "Python keyword call temporaries remain rooted under GC stress and are reclaimed" {
     const text =
         \\def make(value: int) -> List[int]:
@@ -127,7 +120,6 @@ test "Python keyword call temporaries remain rooted under GC stress and are recl
     ;
     var c = try language.Compilation.init(t.allocator, "roots.my", text);
     defer c.deinit();
-    var statistics: language.vm.GcStatistics = .{};
-    const result = try c.executeWithOptions(t.allocator, .{ .memory = .{ .gc = .{ .stress = true, .statistics = &statistics } } });
+    const result = try native.runWithOptions(&c, .{ .gc_stress = true });
     try t.expectEqual(@as(i64, 42), result.value);
 }

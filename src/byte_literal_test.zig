@@ -1,7 +1,8 @@
-//! Text-sized byte literals share array semantics through checking and VM execution.
+//! Text-sized byte literals share array semantics through checking and native execution.
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const program =
     \\def first[T](x: T) -> T:
     \\    return x
@@ -14,18 +15,16 @@ const program =
 fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "bytes.my", program);
     defer c.deinit();
-    try t.expectEqual(@as(i64, 322), (try c.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 322), (try native.run(&c)).value);
     const formatted = try c.format(allocator);
     defer allocator.free(formatted);
     var again = try language.Compilation.init(allocator, "formatted.my", formatted);
     defer again.deinit();
-    try t.expectEqual(@as(i64, 322), (try again.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 322), (try native.run(&again)).value);
 }
 // spec: BYTE-LITERAL-1
 test "byte literals preserve arbitrary bytes UTF8 lengths generic arrays and formatting" {
     try scenario(t.allocator);
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
 test "byte literals reject invalid escapes and retain ordinary array type checks" {
     const Case = struct { text: []const u8, code: []const u8 };

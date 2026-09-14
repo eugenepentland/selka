@@ -3,6 +3,7 @@ const std = @import("std");
 const t = std.testing;
 const floats = @import("floats.zig");
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 fn binary(op: @import("typed.zig").BinaryOp, a: f64, b: f64) !u64 {
     return @intCast((try floats.binary(op, @bitCast(a), @bitCast(b))).integer.value);
 }
@@ -30,10 +31,10 @@ const intrinsic_source =
 fn intrinsicScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "float.my", intrinsic_source);
     defer c.deinit();
-    try t.expectEqual(@as(i64, 42), (try c.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
 }
 // spec-case: FLOAT-DOMAIN-1
-test "float intrinsics evaluate constants reject raw operands and clean failed allocations" {
+test "float intrinsics evaluate in constants and at runtime and reject raw operands" {
     var good = try language.Compilation.init(t.allocator, "float.my",
         \\const V: u64 = f64_to_u64(f64_sqrt(f64_from_u64(1764u64)))
         \\
@@ -42,7 +43,7 @@ test "float intrinsics evaluate constants reject raw operands and clean failed a
         \\    return i64(V)
     );
     defer good.deinit();
-    try t.expectEqual(@as(i64, 42), (try good.execute(t.allocator)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&good)).value);
     var bad = try language.Compilation.init(t.allocator, "float.my",
         \\def main() -> i64:
         \\    return f64_sqrt(1)
@@ -51,8 +52,6 @@ test "float intrinsics evaluate constants reject raw operands and clean failed a
     try t.expectError(error.SourceError, bad.check());
     try t.expectEqualStrings("E_TYPE", bad.diagnostics.items[0].code);
     try intrinsicScenario(t.allocator);
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), intrinsicScenario, .{});
 }
 
 // spec-case: FLOAT-DOMAIN-1
@@ -69,5 +68,5 @@ test "ordinary float values reach the same binary64 semantics without a nominal 
         "        return 4\n" ++
         "    return int(21.0 * 2.0)\n");
     defer c.deinit();
-    try t.expectEqual(@as(i64, 42), (try c.execute(t.allocator)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
 }

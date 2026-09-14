@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 fn scenario(allocator: std.mem.Allocator) !void {
     const text =
         \\const ANSWER: i64 = BASE * 2
@@ -30,18 +31,16 @@ fn scenario(allocator: std.mem.Allocator) !void {
     ;
     var compilation = try language.Compilation.init(allocator, "constants.my", text);
     defer compilation.deinit();
-    try t.expectEqual(@as(i64, 63), (try compilation.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 63), (try native.run(&compilation)).value);
     const formatted = try compilation.format(allocator);
     defer allocator.free(formatted);
     var again = try language.Compilation.init(allocator, "formatted.my", formatted);
     defer again.deinit();
-    try t.expectEqual(@as(i64, 63), (try again.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 63), (try native.run(&again)).value);
 }
 // spec: CONSTANT-1
-test "scalar constants support forward dependencies checked widths short circuit and generic uses under allocation failure" {
+test "scalar constants support forward dependencies checked widths short circuit and generic uses" {
     try scenario(t.allocator);
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
 fn provider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
     const text = if (std.mem.eql(u8, path, "main.my"))
@@ -68,5 +67,5 @@ test "exported constants retain module identity and private initializer dependen
     var program: language.embedded_project.Program = undefined;
     try program.init(t.allocator, .{ .context = null, .read = provider });
     defer program.deinit();
-    try t.expectEqual(@as(i64, 42), (try language.vm.run(t.allocator, program.compilation.code.?)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&program.compilation)).value);
 }

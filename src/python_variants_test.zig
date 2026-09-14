@@ -2,11 +2,12 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 
 fn execute(text: []const u8, expected: i64) !void {
     var c = try language.Compilation.init(t.allocator, "variant.my", text);
     defer c.deinit();
-    try t.expectEqual(expected, (try c.execute(t.allocator)).value);
+    try t.expectEqual(expected, (try native.run(&c)).value);
 }
 
 const File = language.embedded_project.File;
@@ -27,8 +28,7 @@ fn executeProject(entries: []File, expected: i64) !void {
     try loaded.load(.{ .context = &files, .read = Files.read }, "main", .{});
     var index = try language.interfaces.build(&loaded);
     var compilation = try language.project_compile.Compilation.init(&index);
-    try compilation.emit();
-    const result = try language.vm.run(t.allocator, compilation.code.?);
+    const result = try native.run(&compilation);
     try t.expectEqual(expected, result.value);
 }
 

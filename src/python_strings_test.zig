@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const gc = @import("gc_heap.zig");
 const values = @import("runtime_values.zig");
 const text = @import("managed_text.zig");
@@ -13,7 +14,7 @@ const list_type: values.Type = @fromBackingInt(@intCast(33));
 fn execute(source: []const u8, expected: i64) !void {
     var c = try language.Compilation.init(t.allocator, "strings.my", source);
     defer c.deinit();
-    try t.expectEqual(expected, (try c.execute(t.allocator)).value);
+    try t.expectEqual(expected, (try native.run(&c)).value);
 }
 
 fn reject(source: []const u8, code: []const u8) !void {
@@ -108,8 +109,8 @@ test "string methods are rejected on lists and empty needles trap" {
     , "E_COLLECTION_METHOD");
     var c = try language.Compilation.init(t.allocator, "strings.my", "def main() -> int:\n    return \"ab\".find(\"\")\n");
     defer c.deinit();
-    const result = try c.execute(t.allocator);
-    try t.expect(result == .trap);
+    const result = try native.run(&c);
+    try t.expect(result.trapped());
     try t.expectEqualStrings("R_EMPTY_SEPARATOR", result.trap.code);
 }
 

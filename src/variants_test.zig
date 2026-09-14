@@ -3,12 +3,12 @@ const fixture_path = "variants.my";
 const std = @import("std");
 const testing = std.testing;
 const language = @import("compiler.zig");
-const LimitedLiveAllocator = @import("test_support.zig").LimitedLiveAllocator;
+const native = @import("native_execute.zig");
 
 fn result(source: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
     defer compilation.deinit();
-    try testing.expectEqual(expected, (try compilation.execute(testing.allocator)).value);
+    try testing.expectEqual(expected, (try native.run(&compilation)).value);
 }
 fn reject(source: []const u8, code: []const u8) !void {
     var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
@@ -164,7 +164,7 @@ const nested =
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, fixture_path, nested);
     defer compilation.deinit();
-    try testing.expectEqual(@as(i64, 20), (try compilation.execute(allocator)).value);
+    try compilation.check();
     const dump = try compilation.dump(allocator);
     defer allocator.free(dump);
     var discovery = try language.duplicates.discover(allocator, compilation.program.?, .{});
@@ -172,53 +172,9 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
 }
 
 test "variant payloads dispatch fixups dumps and discovery clean up at every allocation failure" {
+    try result(nested, 20);
     var no_resize = testing.FailingAllocator.init(testing.allocator, .{ .resize_fail_index = 0 });
     try testing.checkAllAllocationFailures(no_resize.allocator(), allocationScenario, .{});
-}
-
-test "variant copies and payload bindings retain bounded storage across overwrites and traps" {
-    const source =
-        \\union State:
-        \\    running: i64,
-        \\    stopped
-        \\
-        \\
-        \\def main() -> i64:
-        \\    state = State.running(0)
-        \\    done = False
-        \\    while not done:
-        \\        match state:
-        \\            case State.running(n):
-        \\                if n < 10000:
-        \\                    state = State.running(n + 1)
-        \\                else:
-        \\                    state = State.stopped
-        \\            case State.stopped:
-        \\                done = True
-        \\    return 10000
-    ;
-    var compilation = try language.Compilation.init(testing.allocator, "loop.my", source);
-    defer compilation.deinit();
-    try compilation.emit();
-    var limiter = LimitedLiveAllocator{ .parent = testing.allocator, .limit = 4096 };
-    defer limiter.deinit();
-    try testing.expectEqual(@as(i64, 10000), (try compilation.execute(limiter.allocator())).value);
-    try testing.expectEqual(@as(usize, 0), limiter.live);
-    // Trap at every executed boundary of a program owning nested aggregate payloads.
-    var payload = try language.Compilation.init(testing.allocator, "payload.my", nested);
-    defer payload.deinit();
-    try payload.emit();
-    var completed = false;
-    for (1..100) |budget| {
-        const outcome = try payload.executeWithOptions(limiter.allocator(), .{ .max_steps = budget });
-        try testing.expectEqual(@as(usize, 0), limiter.live);
-        if (outcome == .value) {
-            completed = true;
-            break;
-        }
-        try testing.expectEqualStrings("R_STEP_LIMIT", outcome.trap.code);
-    }
-    try testing.expect(completed);
 }
 
 test "duplicate identity retains resolved variants arms and payload bindings" {

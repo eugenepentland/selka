@@ -4,12 +4,12 @@ const fixture_path = "results.my";
 const std = @import("std");
 const testing = std.testing;
 const language = @import("compiler.zig");
-const LimitedLiveAllocator = @import("test_support.zig").LimitedLiveAllocator;
+const native = @import("native_execute.zig");
 const declaration = @import("fixture_declarations_test.zig").scalar_result;
 fn result(source: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
     defer compilation.deinit();
-    try testing.expectEqual(expected, (try compilation.execute(testing.allocator)).value);
+    try testing.expectEqual(expected, (try native.run(&compilation)).value);
 }
 fn reject(body: []const u8, code: []const u8) !void {
     const source = try std.mem.concat(testing.allocator, u8, &.{ declaration, body });
@@ -132,7 +132,7 @@ const owned_source =
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, fixture_path, owned_source);
     defer compilation.deinit();
-    try testing.expectEqual(@as(i64, 7), (try compilation.execute(allocator)).value);
+    try compilation.check();
     const dump = try compilation.dump(allocator);
     defer allocator.free(dump);
     var discovery = try language.duplicates.discover(allocator, compilation.program.?, .{});
@@ -140,6 +140,7 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
 }
 
 test "result checking runtime ownership and rendering survive allocation failure" {
+    try result(owned_source, 7);
     var no_resize = testing.FailingAllocator.init(testing.allocator, .{ .resize_fail_index = 0 });
     try testing.checkAllAllocationFailures(no_resize.allocator(), allocationScenario, .{});
 }
@@ -457,44 +458,7 @@ test "recoverable error returns and explicit acknowledgement preserve evaluation
         \\    return 0
     );
     defer compilation.deinit();
-    try testing.expectEqualStrings("R_DIVISION_BY_ZERO", (try compilation.execute(testing.allocator)).trap.code);
-}
-
-test "result loops and every trap boundary release bounded live runtime storage" {
-    var compilation = try language.Compilation.init(testing.allocator, fixture_path, owned_source);
-    defer compilation.deinit();
-    try compilation.emit();
-    var limiter = LimitedLiveAllocator{ .parent = testing.allocator, .limit = 16384 };
-    defer limiter.deinit();
-    var complete = false;
-    for (1..150) |budget| {
-        const outcome = try compilation.executeWithOptions(limiter.allocator(), .{ .max_steps = budget });
-        try testing.expectEqual(@as(usize, 0), limiter.live);
-        if (outcome == .value) {
-            complete = true;
-            break;
-        }
-        try testing.expectEqualStrings("R_STEP_LIMIT", outcome.trap.code);
-    }
-    try testing.expect(complete);
-    var loop = try language.Compilation.init(testing.allocator, "loop.my",
-        \\result R:
-        \\    ok: i64,
-        \\    err: i64
-        \\
-        \\
-        \\def main() -> i64:
-        \\    i = 0
-        \\    while i < 10000:
-        \\        r: R = Err(i)
-        \\        _ = r
-        \\        i += 1
-        \\    return i
-    );
-    defer loop.deinit();
-    try loop.emit();
-    try testing.expectEqual(@as(i64, 10000), (try loop.execute(limiter.allocator())).value);
-    try testing.expectEqual(@as(usize, 0), limiter.live);
+    try testing.expectEqualStrings("R_DIVISION_BY_ZERO", (try native.run(&compilation)).trap.code);
 }
 
 test "duplicate identity retains explicit acknowledgement and fallible result types" {

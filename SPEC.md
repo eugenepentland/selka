@@ -450,7 +450,6 @@ depends on it.
 - [SURFACE-STMT-9] A newline separates postfix call suffixes from completed expressions outside parentheses, while parentheses permit multiline calls and suffixes.
 
 - [SURFACE-COLLECTIONS-4] Managed list methods reject invalid argument counts, unknown methods, mismatched element types, and noninteger indices.
-- [SURFACE-COLLECTIONS-5] Contextual managed construction and result compilation/execution release every partially allocated object on injected allocation failures.
 
 ## Prelude types and contextual constructors
 

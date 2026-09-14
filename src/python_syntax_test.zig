@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const lexer = @import("lexer.zig");
 const parser = @import("parser.zig");
 const diagnostic = @import("diagnostic.zig");
@@ -33,7 +34,7 @@ const program =
 fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "python.my", program);
     defer c.deinit();
-    try t.expectEqual(@as(i64, 42), (try c.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
     const formatted = try c.format(allocator);
     defer allocator.free(formatted);
     try t.expectEqualStrings(program, formatted);
@@ -62,7 +63,7 @@ test "Python layout retains original spans and ignores blank comment and continu
     try t.expectEqual(@as(usize, 1), virtual_closes);
     var c = try language.Compilation.init(t.allocator, "continuation.my", text);
     defer c.deinit();
-    try t.expectEqual(@as(i64, 42), (try c.execute(t.allocator)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
 }
 
 // spec-case: PYTHON-1
@@ -86,7 +87,7 @@ test "Python generics default to copy and None means unit" {
     const text = "def keep[T](value: T) -> T:\n    result = value\n    return result\n\ndef noop() -> None:\n    return None\n\ndef main() -> int:\n    noop()\n    return keep(42)\n";
     var c = try language.Compilation.init(t.allocator, "generic.my", text);
     defer c.deinit();
-    try t.expectEqual(@as(i64, 42), (try c.execute(t.allocator)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
 }
 
 // spec-case: PYTHON-2
@@ -94,7 +95,7 @@ test "Python parameters rebind and existing locals update across blocks while ne
     const text = "def bump[T: integer](value: T) -> T:\n    value = value + value\n    return value\n\ndef main() -> int:\n    answer = 0\n    if True:\n        answer = bump(21)\n    return answer\n";
     var c = try language.Compilation.init(t.allocator, "scope.my", text);
     defer c.deinit();
-    try t.expectEqual(@as(i64, 42), (try c.execute(t.allocator)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
     var bad = try language.Compilation.init(t.allocator, "scope.my", "def main() -> int:\n    if True:\n        answer = 42\n    return answer\n");
     defer bad.deinit();
     try t.expectError(error.SourceError, bad.check());
@@ -106,7 +107,7 @@ test "Python generic value records use square construction and default copy cons
     const text = "class Box[T]:\n    value: T\n\ndef main() -> int:\n    box = Box[int](value=42)\n    return box.value\n";
     var c = try language.Compilation.init(t.allocator, "box.my", text);
     defer c.deinit();
-    try t.expectEqual(@as(i64, 42), (try c.execute(t.allocator)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
 }
 
 // spec-case: PYTHON-1

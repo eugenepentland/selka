@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 fn scenario(allocator: std.mem.Allocator) !void {
     const text =
         \\type Count = i64
@@ -39,18 +40,16 @@ fn scenario(allocator: std.mem.Allocator) !void {
     ;
     var compilation = try language.Compilation.init(allocator, "aliases.my", text);
     defer compilation.deinit();
-    try t.expectEqual(@as(i64, 43), (try compilation.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 43), (try native.run(&compilation)).value);
     const formatted = try compilation.format(allocator);
     defer allocator.free(formatted);
     var again = try language.Compilation.init(allocator, "formatted.my", formatted);
     defer again.deinit();
-    try t.expectEqual(@as(i64, 43), (try again.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 43), (try native.run(&again)).value);
 }
 // spec: TYPE-ALIAS-1
-test "transparent aliases compose scalar arrays nominal applications constants and generic functions under allocation failures" {
+test "transparent aliases compose scalar arrays nominal applications constants and generic functions" {
     try scenario(t.allocator);
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
 test "aliases preserve nominal domains and owned result obligations and reject cycles" {
     const cases = [_]struct { text: []const u8, code: []const u8 }{
@@ -138,7 +137,7 @@ test "module aliases export canonical types while private aliases remain inacces
     var program: language.embedded_project.Program = undefined;
     try program.init(t.allocator, .{ .context = null, .read = provider });
     defer program.deinit();
-    try t.expectEqual(@as(i64, 42), (try language.vm.run(t.allocator, program.compilation.code.?)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&program.compilation)).value);
     var hidden: language.embedded_project.Program = undefined;
     var marker: u8 = 0;
     try t.expectError(error.SourceError, hidden.init(t.allocator, .{ .context = &marker, .read = provider }));

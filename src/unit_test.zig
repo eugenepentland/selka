@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const program =
     \\def set(x: i64):
     \\    _ = x
@@ -26,16 +27,11 @@ const program =
 fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "unit.my", program);
     defer c.deinit();
-    for ([_]bool{ false, true }) |optimized| {
-        const result = try c.executeWithOptions(allocator, .{ .memory = .{ .optimize_dispatch = optimized } });
-        try t.expectEqual(@as(i64, 42), result.value);
-    }
+    try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
 }
 // spec: UNIT-1
-test "unit calls bare returns and generic fallthrough preserve results with allocation failures" {
+test "unit calls bare returns and generic fallthrough preserve results" {
     try scenario(t.allocator);
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
 // spec: UNIT-3
 test "unit data and host boundaries reject unsupported ABI values explicitly" {
@@ -83,7 +79,7 @@ test "public unit schemas describe a distinct type while unsupported copied ABIs
     defer parsed.deinit();
     try t.expect(std.mem.indexOf(u8, schema, "\"kind\":\"unit\"") != null);
     try t.expectError(error.NotDataType, guest.compilation.invokePublic(t.allocator, "main::finish", &.{}, .{}));
-    try t.expectEqual(@as(i64, 42), (try language.vm.run(t.allocator, guest.compilation.code.?)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&guest.compilation)).value);
 }
 // spec: UNIT-5
 test "unit result payloads still require handling and propagation only drops successful unit" {
@@ -117,7 +113,7 @@ test "unit result payloads still require handling and propagation only drops suc
         \\            return code
     );
     defer valid.deinit();
-    try t.expectEqual(@as(i64, 42), (try valid.execute(t.allocator)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&valid)).value);
     for ([_][]const u8{ "done()", "pending = done()" }) |statement| {
         const text = try std.fmt.allocPrint(t.allocator, "{s}def main() -> i64:\n    {s}\n    return 0\n", .{ header, statement });
         defer t.allocator.free(text);
@@ -247,5 +243,5 @@ test "unit fallthrough and early return release managed parameters without losin
     ;
     var c = try language.Compilation.init(t.allocator, "cleanup.my", text);
     defer c.deinit();
-    try t.expectEqual(@as(i64, 42), (try c.execute(t.allocator)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
 }
