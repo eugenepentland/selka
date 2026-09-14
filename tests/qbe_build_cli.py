@@ -284,8 +284,9 @@ def boundary_acceptance(builder):
 def temporary_runs(builder):
     command = [builder.compiler, 'build', builder.source, '--run', '--report',
                '--qbe', builder.qbe, '--zig', builder.zig, '--cache-dir', builder.cache]
-    def run(extra=(), data=b''):
-        result = subprocess.run(list(map(str, [*command, *extra])), input=data,
+    def run(extra=(), data=b'', result_line=False):
+        argv = [*command, *extra] + (['--', '--print-result'] if result_line else [])
+        result = subprocess.run(list(map(str, argv)), input=data,
                                 capture_output=True, timeout=240, env=builder.env,
                                 cwd=builder.directory)
         reports = [json.loads(line) for line in result.stderr.splitlines()
@@ -299,7 +300,7 @@ def temporary_runs(builder):
     previous = builder.snapshot()
     builder.source.write_text('def square(x: i64) -> i64:\n    return x * x\n\n\n'
                               'def main() -> i64:\n    return square(9)\n')
-    result, reports = run()
+    result, reports = run(result_line=True)
     assert result.returncode == 0 and result.stdout == b'81\n', result
     assert len(reports) == 1
     result, reports = run()
@@ -326,7 +327,7 @@ def temporary_runs(builder):
                         'if(ch==33)raise(SIGTERM);puts("guest output");fputs("guest error\\n",stderr);'
                         'return (MylangClockResult){MYLANG_PROVIDER_OK,ch};}'
                         'MylangNativeProviders mylang_native_providers(void){return (MylangNativeProviders){.clock_now=read_clock};}')
-    result, _ = run(['--provider', provider], b'A')
+    result, _ = run(['--provider', provider], b'A', result_line=True)
     assert result.returncode == 0 and result.stdout == b'guest output\n65\n', result
     assert b'guest error\n' in result.stderr, result
     result, _ = run(['--provider', provider], b'!')
