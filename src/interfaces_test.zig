@@ -740,7 +740,7 @@ test "generic syntax module interfaces retain scoped type names without hiding p
         var project = graph.Project.init(t.allocator);
         defer project.deinit();
         try project.load(files.provider(), "main", .{});
-        var index = try interfaces.buildWithCache(&project, &cache);
+        var index = try interfaces.buildWithCache(&project, &cache, null);
         const merged = try @import("project_syntax.zig").build(&index);
         const parameters = merged.syntax.functions[0].signature.type_parameters;
         try t.expectEqual(@as(usize, 1), parameters.len);

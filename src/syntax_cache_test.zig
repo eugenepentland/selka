@@ -54,7 +54,7 @@ fn execute(allocator: std.mem.Allocator, files: *Files, cache: *Cache, clear: bo
     var project = graph.Project.init(allocator);
     defer project.deinit();
     try project.load(files.provider(), "main", .{});
-    var index = try interfaces.buildWithCache(&project, cache);
+    var index = try interfaces.buildWithCache(&project, cache, null);
     if (clear) cache.clear();
     var compilation = try @import("project_compile.zig").Compilation.init(&index);
     try compilation.emit();

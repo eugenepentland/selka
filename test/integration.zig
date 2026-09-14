@@ -2063,3 +2063,129 @@ test "CLI grants every capability by default and resolves paths against the work
     defer testing.allocator.free(absolute);
     try invokeOptions("run", absolute, &.{"--allow-read=."}, 0, "Ok('alpha\\n')\n0\n", "");
 }
+
+/// Persistent frontend cache counters parsed from the `frontend-cache-v1` report line.
+const CacheCounters = struct { syntax_hits: usize, syntax_misses: usize, verdict_hits: usize, verdict_misses: usize };
+
+fn numberAfter(object: std.json.Value, key: []const u8) usize {
+    const value = object.object.get(key) orelse return 0;
+    return @intCast(value.integer);
+}
+
+fn cacheCounters(stderr: []const u8) !CacheCounters {
+    const marker = std.mem.indexOf(u8, stderr, "frontend-cache-v1") orelse return error.MissingCacheLine;
+    const open = std.mem.lastIndexOfScalar(u8, stderr[0..marker], '{') orelse return error.MissingCacheLine;
+    const close = std.mem.indexOfScalarPos(u8, stderr, marker, '}') orelse return error.MissingCacheLine;
+    var parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, stderr[open .. close + 1], .{});
+    defer parsed.deinit();
+    return .{
+        .syntax_hits = numberAfter(parsed.value, "syntax_hits"),
+        .syntax_misses = numberAfter(parsed.value, "syntax_misses"),
+        .verdict_hits = numberAfter(parsed.value, "verdict_hits"),
+        .verdict_misses = numberAfter(parsed.value, "verdict_misses"),
+    };
+}
+
+/// Check a two-module project under `--report`, returning the parsed counters.
+fn projectCacheCheck(entry: []const u8, cache_dir: []const u8, expected_status: u8) !CacheCounters {
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "check-project", entry, "--report", cache_dir });
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = expected_status }, outcome.term);
+    return cacheCounters(outcome.stderr);
+}
+
+// spec: FRONTEND-CACHE-1
+// spec: FRONTEND-CACHE-2
+test "CLI project checks reuse syntax and verdicts and invalidate only changed modules" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.createDir(testing.io, "app", .default_dir);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app/main.my", .data =
+        \\module main
+        \\
+        \\import helper
+        \\
+        \\def main() -> i64:
+        \\    return helper.answer()
+    });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
+        \\module helper
+        \\
+        \\export answer
+        \\
+        \\def answer() -> i64:
+        \\    return 7
+    });
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "app/main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const temp_root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(temp_root);
+    const cache_root = try std.fs.path.join(testing.allocator, &.{ temp_root, "frontend-cache" });
+    defer testing.allocator.free(cache_root);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_root});
+    defer testing.allocator.free(cache_argument);
+
+    // Cold: two parses stored and the successful verdict is retained.
+    const cold = try projectCacheCheck(entry, cache_argument, 0);
+    try testing.expectEqual(@as(usize, 0), cold.syntax_hits);
+    try testing.expectEqual(@as(usize, 2), cold.syntax_misses);
+    try testing.expectEqual(@as(usize, 0), cold.verdict_hits);
+
+    // Warm: the whole-program verdict comes from disk, so no syntax lookup runs.
+    const warm = try projectCacheCheck(entry, cache_argument, 0);
+    try testing.expectEqual(@as(usize, 1), warm.verdict_hits);
+    try testing.expectEqual(@as(usize, 0), warm.syntax_misses);
+
+    // Editing the dependency invalidates the verdict and only that module's syntax.
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
+        \\module helper
+        \\
+        \\export answer
+        \\
+        \\def answer() -> i64:
+        \\    return 8
+    });
+    const edited = try projectCacheCheck(entry, cache_argument, 0);
+    try testing.expectEqual(@as(usize, 1), edited.syntax_hits);
+    try testing.expectEqual(@as(usize, 1), edited.syntax_misses);
+    try testing.expectEqual(@as(usize, 0), edited.verdict_hits);
+    try testing.expect(edited.verdict_misses >= 1);
+
+    // A rejected edit can never inherit the earlier successful verdict. The
+    // failure is reported and the cache is not consulted again for this content.
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
+        \\module helper
+        \\
+        \\export answer
+        \\
+        \\def answer() -> i64:
+        \\    return True
+    });
+    const broken = try projectCacheCheck(entry, cache_argument, 1);
+    try testing.expectEqual(@as(usize, 0), broken.verdict_hits);
+
+    // Repair the source so the final no-cache run is a successful check.
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
+        \\module helper
+        \\
+        \\export answer
+        \\
+        \\def answer() -> i64:
+        \\    return 8
+    });
+
+    // `--no-cache` opens no cache at all, so it emits no reuse receipt and the
+    // stored successful verdict for the same content is not consulted.
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "check-project", entry, "--report", "--no-cache" });
+    const uncached = try std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+    defer testing.allocator.free(uncached.stdout);
+    defer testing.allocator.free(uncached.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, uncached.term);
+    try testing.expect(std.mem.indexOf(u8, uncached.stderr, "frontend-cache-v1") == null);
+}

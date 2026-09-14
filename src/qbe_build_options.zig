@@ -10,6 +10,12 @@ pub const default_cache = ".mylang-cache/qbe";
 /// build` and `mylang run` are asked for speed, so the fast mode is the default
 /// and an unoptimized build is a deliberate `--mode Debug`.
 pub const default_mode = "ReleaseFast";
+/// `cache` value that disables frontend reuse for one invocation; `--no-cache`
+/// selects it without adding another build-option field. It contains a NUL so it
+/// can never collide with a directory name a caller could actually pass.
+pub const no_cache = "\x00frontend-no-cache";
+/// The flag that selects an explicit cache directory; repeated in usage and parse.
+const cache_dir_flag = "--cache-dir=";
 /// The native driver preserves the Python prototype's build controls.
 pub const Options = struct {
     link_arguments: []const []const u8 = &.{},
@@ -33,7 +39,7 @@ pub const usage = "usage: mylang build <file.my> (-o <output> | --run) [--projec
     "  --link FILE --link-library NAME --library-path DIR (repeatable)\n" ++
     "  --provider FILE  trusted native provider (executables only)\n" ++
     "  --qbe PATH --zig PATH --mode Debug|ReleaseFast (default ReleaseFast) --target amd64_sysv\n" ++
-    "  --cache-dir DIR --report\n" ++
+    "  " ++ cache_dir_flag ++ "DIR  --no-cache  --report\n" ++
     "  --max-memory BYTES  byte ceiling for --run (K/M/G suffixes; default 4G)\n" ++
     "  --run instead of -o: execute temporarily; pass runtime options after --\n";
 /// Parse explicit build flags, rejecting unknown controls.
@@ -49,6 +55,13 @@ pub fn parse(args: []const []const u8) Error!Options {
         if (!std.mem.startsWith(u8, argument, "-")) {
             if (result.source.len != 0) return error.InvalidBuildArguments;
             result.source = argument;
+            continue;
+        }
+        // `--no-cache` is a bare switch with no value; it selects the sentinel
+        // `cache` value so no additional field is needed.
+        if (std.mem.eql(u8, argument, "--no-cache")) {
+            if (!std.mem.eql(u8, result.cache, default_cache)) return error.InvalidBuildArguments;
+            result.cache = no_cache;
             continue;
         }
         const split = std.mem.indexOfScalar(u8, argument, '=') orelse argument.len;
@@ -78,7 +91,24 @@ pub fn parse(args: []const []const u8) Error!Options {
     if (!std.mem.eql(u8, result.mode, "Debug") and !std.mem.eql(u8, result.mode, "ReleaseFast")) return error.InvalidBuildArguments;
     return result;
 }
-const Flag = enum { @"--link", @"--link-library", @"--library-path", @"-o", @"--output", @"--project", @"--library", @"--provider", @"--qbe", @"--zig", @"--mode", @"--target", @"--cache-dir", @"--report", @"--run", @"--max-memory" };
+const Flag = enum {
+    @"--link",
+    @"--link-library",
+    @"--library-path",
+    @"-o",
+    @"--output",
+    @"--project",
+    @"--library",
+    @"--provider",
+    @"--qbe",
+    @"--zig",
+    @"--mode",
+    @"--target",
+    @"--cache-dir",
+    @"--report",
+    @"--run",
+    @"--max-memory",
+};
 fn boolean(result: *Options, flag: Flag) bool {
     switch (flag) {
         .@"--project" => result.project = true,
@@ -100,7 +130,12 @@ fn assign(result: *Options, flag: Flag, value: []const u8) Error!void {
         .@"--zig" => result.zig = value,
         .@"--mode" => result.mode = value,
         .@"--target" => result.target = value,
-        .@"--cache-dir" => result.cache = value,
+        .@"--cache-dir" => {
+            // `--no-cache` and an explicit directory are contradictory in either
+            // order; the bare switch must never be silently overridden.
+            if (std.mem.eql(u8, result.cache, no_cache)) return error.InvalidBuildArguments;
+            result.cache = value;
+        },
         .@"--max-memory" => result.max_memory = @import("memory_budget").parse(value) catch return error.InvalidBuildArguments,
         else => unreachable,
     }
@@ -137,6 +172,14 @@ test "temporary native runs accept runtime options and reject persistent output"
     try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "--run", "-o", "out" }));
     try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "--run", "--library" }));
     try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--", "--gc-stress" }));
+}
+
+test "build options accept --no-cache only without a cache directory" {
+    const parsed = try parse(&.{ "main.my", "-o", "out", "--no-cache" });
+    try std.testing.expectEqualStrings(no_cache, parsed.cache);
+    try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--no-cache", "--cache-dir=dir" }));
+    try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--cache-dir=dir", "--no-cache" }));
+    try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--no-cache", "--no-cache" }));
 }
 
 // spec-case: MEMORY-CEILING-1
