@@ -32,6 +32,33 @@ through it. Use a ceiling, below, to bound a guest.
 zig build test
 ```
 
+## Instruction and frame budgets
+
+Every process that runs guest code also counts **instructions** and **call depth**.
+The defaults are **10,000,000** instructions (`--max-steps`) and **1,024** frames
+(`--max-frames`, including the entry frame) for `mylang run`, `mylang build --run`
+and a binary you built and started yourself. A `mylang test` child starts lower, at
+**1,000,000** instructions, and keeps the same frame default; `--max-steps` and
+`--max-frames` on `mylang test` bound each test process. Raise a budget with the
+flag on whichever command runs the program:
+
+```console
+$ mylang run loop.my --max-steps=1000000
+loop.my:3:13: error[R_STEP_LIMIT]: instruction budget exhausted; raise it with --max-steps=N
+  in main at loop.my:3:13
+$ ./loop --max-steps=500000000        # built binary: the same flags are ordinary arguments
+$ mylang build loop.my --run -- --max-steps=500000000
+```
+
+`R_FRAME_LIMIT` answers "call-depth budget exhausted; raise it with
+--max-frames=N" the same way. The hints appear in text and in the `message` field
+of `--diagnostics=json`. A zero, negative, empty or non-numeric budget is refused
+before the run rather than treated as unlimited.
+
+These counters bound *compiler-generated work*, not elapsed time: one step is a
+dispatch, so a program that calls into a linked C function can spend arbitrary time
+inside that call. The separate byte ceiling below bounds memory, not time.
+
 ## Guest memory ceilings
 
 The budgets above bound what one embedded allocator hands out. A *ceiling*

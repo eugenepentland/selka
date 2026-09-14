@@ -60,12 +60,11 @@ floats and pass infinities and NaNs through unchanged; `math.round` rounds halve
 away from zero. `math.fabs` maps both zeros to positive zero. `math.pow` takes an
 integer exponent and squares repeatedly.
 
-`math.sqrt` reduces its argument by exact powers of four and refines the result
-with Newton iterations. Ordinary `float` values are a private domain over their
-bit pattern, so guest code cannot reach the `f64_sqrt` intrinsic, which consumes a
-`u64` representation. The result is accurate to within one unit in the last place
-rather than guaranteed correctly rounded, and exact for values whose root is
-exactly representable. There are no transcendental functions yet.
+`math.sqrt` calls the binary64 `f64_sqrt` intrinsic on its ordinary `float`
+argument, so it is the correctly rounded square root and is exact for values whose
+root is exactly representable. The `f64_*` intrinsics accept a `float` directly for
+`sqrt`, `floor`, `ceil`, `trunc`, `abs` and `neg`; the `u64` spellings still own raw
+bit patterns. There are no transcendental functions yet.
 
 Prelude `sqrt`, `floor`, `ceil`, `trunc` and `abs` take one `float` and answer a
 `float`, running the host binary64 operation directly, so ordinary guest code never

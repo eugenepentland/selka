@@ -2000,9 +2000,15 @@ const Checker = struct {
         var out: typed.Node = undefined;
         out.span = node.span;
         const operand = self.resolved[@backingInt(u.operand)].?;
-        out.ty = if (u.op == .not) .bool else self.nodes.items[@backingInt(operand)].ty;
+        const operand_ty = self.nodes.items[@backingInt(operand)].ty;
+        out.ty = if (u.op == .not) .bool else operand_ty;
         if (u.op == .neg and numeric_surface.isFloat(out.ty, self.catalog.records)) return self.numericBuilder(node.span).negate(operand);
-        if (u.op == .neg) try self.requireInteger(out.ty, u.op_span) else try self.require(self.nodes.items[@backingInt(operand)].ty, if (u.op == .not) .bool else .u64, u.op_span);
+        // A `float` operand is the binary64 value itself, so the float-in/float-out
+        // `f64_*` operations answer a float instead of demanding a bit pattern.
+        if (@import("float_intrinsics.zig").floatwise(u.op) and numeric_surface.isFloat(operand_ty, self.catalog.records)) {
+            return self.numericBuilder(u.op_span).unary(std.meta.stringToEnum(typed.UnaryOp, @tagName(u.op)).?, operand);
+        }
+        if (u.op == .neg) try self.requireInteger(out.ty, u.op_span) else try self.require(operand_ty, if (u.op == .not) .bool else .u64, u.op_span);
         out.data = .{ .unary = .{ .op = std.meta.stringToEnum(typed.UnaryOp, @tagName(u.op)).?, .operand = operand, .op_span = u.op_span } };
         return out;
     }

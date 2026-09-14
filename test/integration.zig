@@ -186,6 +186,70 @@ test "CLI step budgets count dispatch and reject invalid options" {
     try invokeOptions("check", text, &.{"--max-steps=2"}, 2, "", "usage:");
     try invokeOptions("dump-bytecode", text, &.{"--max-steps=2"}, 2, "", "usage:");
 }
+// spec: BUDGET-HINT-1
+test "CLI budget traps name the flag that raises the budget" {
+    const text =
+        \\def main() -> i64:
+        \\    return 1
+    ;
+    try invokeOptions("run", text, &.{"--max-steps=1"}, 1, "", "raise it with --max-steps=N");
+    try invokeOptions("run", text, &.{ "--max-steps=1", "--diagnostics=json" }, 1, "", "\"message\":\"instruction budget exhausted; raise it with --max-steps=N\"");
+    try invokeOptions("run",
+        \\def inner() -> i64:
+        \\    return 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return inner()
+    , &.{ "--max-frames=1", "--max-steps=1000000" }, 1, "", "raise it with --max-frames=N");
+    try invokeOptions("run",
+        \\def inner() -> i64:
+        \\    return 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return inner()
+    , &.{ "--max-frames=1", "--max-steps=1000000", "--diagnostics=json" }, 1, "", "\"message\":\"call-depth budget exhausted; raise it with --max-frames=N\"");
+    const memory =
+        \\def main() -> i64:
+        \\    values: list[int] = []
+        \\    for r in range(100000000):
+        \\        values.append(r)
+        \\    return len(values)
+    ;
+    try invokeOptions("run", memory, &.{ "--max-steps=4000000000", "--max-memory=32M" }, 1, "", "error[R_MEMORY_BUDGET]: memory budget exhausted");
+}
+// spec-case: BUILD-MODE-1
+test "CLI build report states the default and explicit optimize modes" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
+        \\def main() -> i64:
+        \\    return 42
+    });
+    const path = try temporary.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const directory = std.fs.path.dirname(path).?;
+    const cache = try std.fs.path.join(testing.allocator, &.{ directory, "cache" });
+    defer testing.allocator.free(cache);
+    const output = try std.fs.path.join(testing.allocator, &.{ directory, "program" });
+    defer testing.allocator.free(output);
+    for ([_][]const u8{ "ReleaseFast", "Debug" }) |mode| {
+        var argv: std.ArrayList([]const u8) = .empty;
+        defer argv.deinit(testing.allocator);
+        try argv.appendSlice(testing.allocator, &.{ compiler_path, "build", path, "-o", output, "--report", "--cache-dir", cache });
+        try argv.appendSlice(testing.allocator, &tools);
+        if (!std.mem.eql(u8, mode, "ReleaseFast")) try argv.appendSlice(testing.allocator, &.{ "--mode", mode });
+        const result = try std.process.run(testing.allocator, testing.io, .{ .argv = argv.items });
+        defer testing.allocator.free(result.stdout);
+        defer testing.allocator.free(result.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+        try testing.expectEqualStrings("", result.stderr);
+        const needle = try std.fmt.allocPrint(testing.allocator, "\"mode\":\"{s}\"", .{mode});
+        defer testing.allocator.free(needle);
+        try testing.expect(std.mem.indexOf(u8, result.stdout, needle) != null);
+    }
+}
 // spec: CLI-3
 test "CLI executes the exact plan acceptance programs and recursive functions" {
     try invoke("run", @embedFile("fixtures/sum.my"), 0, "4950\n", "");

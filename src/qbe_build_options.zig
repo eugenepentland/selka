@@ -6,6 +6,10 @@ pub const Error = error{InvalidBuildArguments};
 /// left at this default may share its runtime tree with other projects, while an
 /// explicit `--cache-dir` keeps every artifact hermetically under that directory.
 pub const default_cache = ".mylang-cache/qbe";
+/// Optimize mode a native build uses when no `--mode` selects another: `mylang
+/// build` and `mylang run` are asked for speed, so the fast mode is the default
+/// and an unoptimized build is a deliberate `--mode Debug`.
+pub const default_mode = "ReleaseFast";
 /// The native driver preserves the Python prototype's build controls.
 pub const Options = struct {
     link_arguments: []const []const u8 = &.{},
@@ -16,7 +20,7 @@ pub const Options = struct {
     provider: ?[]const u8 = null,
     qbe: []const u8 = "qbe",
     zig: []const u8 = "zig",
-    mode: []const u8 = "Debug",
+    mode: []const u8 = default_mode,
     target: []const u8 = "amd64_sysv",
     cache: []const u8 = default_cache,
     report: bool = false,
@@ -28,7 +32,7 @@ pub const Options = struct {
 pub const usage = "usage: mylang build <file.my> (-o <output> | --run) [--project] [--library]\n" ++
     "  --link FILE --link-library NAME --library-path DIR (repeatable)\n" ++
     "  --provider FILE  trusted native provider (executables only)\n" ++
-    "  --qbe PATH --zig PATH --mode Debug|ReleaseFast --target amd64_sysv\n" ++
+    "  --qbe PATH --zig PATH --mode Debug|ReleaseFast (default ReleaseFast) --target amd64_sysv\n" ++
     "  --cache-dir DIR --report\n" ++
     "  --max-memory BYTES  byte ceiling for --run (K/M/G suffixes; default 4G)\n" ++
     "  --run instead of -o: execute temporarily; pass runtime options after --\n";
@@ -107,6 +111,14 @@ test "build options accept equals syntax and later tool overrides" {
     try std.testing.expectEqualStrings("second", parsed.qbe);
     try std.testing.expectEqualStrings("ReleaseFast", parsed.mode);
     try std.testing.expect(parsed.project and parsed.report);
+}
+// spec: BUILD-MODE-1
+test "a build that names no optimize mode uses the fast one and Debug stays explicit" {
+    const plain = try parse(&.{ "main.my", "-o", "out" });
+    try std.testing.expectEqualStrings(default_mode, plain.mode);
+    try std.testing.expectEqualStrings("ReleaseFast", (try parse(&.{ "main.my", "--run" })).mode);
+    try std.testing.expectEqualStrings("Debug", (try parse(&.{ "main.my", "-o", "out", "--mode", "Debug" })).mode);
+    try std.testing.expect(std.mem.indexOf(u8, usage, "default ReleaseFast") != null);
 }
 test "build options reject missing values unsupported targets and incompatible provider controls" {
     const invalid = [_][]const []const u8{

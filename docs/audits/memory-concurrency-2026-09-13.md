@@ -40,8 +40,14 @@ Strong, and worth protecting:
 
 - Checked arithmetic, bounds, definite initialisation, exhaustive `match`,
   must-handle `Result`, `?` propagation, nominal domains and enums.
-- Effects and capabilities (`noalloc`, `nogc`, `noio`, explicit allocator,
+- Effects and capabilities (`noalloc`, `noio`, explicit allocator,
   clock, random, filesystem grants). These give local, explainable diagnostics.
+  **Corrected 14 September 2026:** this note originally listed `nogc` beside
+  `noalloc`. No such bound exists — `def f() -> int nogc:` is a syntax error and
+  `effects(nogc)` is `E_UNKNOWN_EFFECT` — and none is needed: the collector runs
+  only while the managed heap grows, so `noalloc`, which rejects the
+  `managed_allocation` effect, already proves a hot function never reaches it.
+  Adding a second spelling for the same proof would be a synonym, not a bound.
 - `--diagnostics=json` with move/borrow/arena provenance and repair fixtures;
   typed holes; bounded VM traces; deterministic host replay.
 - `mylang test` with dependency-aware result reuse; QBE per-function object
@@ -90,8 +96,10 @@ dict, string or object, not a distinct `buffer` type. A function-level form
 (`@arena def f(...)`) covers the common "temporaries die at return, the result
 escapes to the caller's region" pattern.
 
-Keep `nogc` and `noalloc` as the way to *prove* a hot function does not touch
-the heap. They are cheap, local, and agents can act on the diagnostic.
+Keep `noalloc` as the way to *prove* a hot function does not touch the heap
+(**corrected 14 September 2026:** `nogc` does not exist and is not needed — see
+the note in section 1). It is cheap, local, and agents can act on the
+diagnostic.
 
 **Tier 2, "objects live in a table": `Pool[T]` with `Handle[T]`.** Already
 implemented as the `pool` keyword with generational, category-checked handles.
