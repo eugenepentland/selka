@@ -105,29 +105,54 @@ def main() -> int:
 
 ## List methods and indexing
 
-A list answers one method by name, `append(value)`; there is no `insert`, `pop`,
-`remove`, `extend` or `sort`, and length is the free function `len(values)`
-rather than a method. `values[index]` reads a slot and `values[index] = value`
-overwrites one, so an indexed write never grows the list. Negative indexes count
-from the end, and an index outside the list traps with a located `R_LIST_BOUNDS`
-instead of returning a default. Receivers may be arbitrary expressions and nested
-indexes work; the receiver, the index and the assigned value are each evaluated
-exactly once, and a Python-surface indexed write evaluates the assigned value
-before the target it writes into. Ordering helpers live in the
+A list answers the everyday vocabulary. `append(value)` and `extend(other)` add
+one element or copy another list's elements to the end; `insert(index, value)`
+inserts at a position, counting a negative index from the end and clamping to the
+bounds; `pop()` removes and returns the final element and `pop(index)` removes and
+returns an indexed element; `remove(value)` deletes the first equal element;
+`reverse()` reverses in place; `sort()` orders integer or `float` elements
+ascending; `copy()` returns a fresh shallow list; `clear()` empties the list; and
+`index(value)` returns the first equal position. Length stays the free function
+`len(values)`. Every mutating method returns unit, so a discarded `pop` or `index`
+result needs its own binding or `_ =`. An absent `remove` or `index` traps with
+`R_LIST_VALUE`, `pop` on an empty list traps with `R_LIST_BOUNDS`, and `sort`
+rejects an element type that is not an integer or `float`. The legacy `push` is
+gone: it reports `E_REMOVED_SPELLING` and names `append`.
+
+`values[index]` reads a slot and `values[index] = value` overwrites one, so an
+indexed write never grows the list. Negative indexes count from the end, and an
+index outside the list traps with a located `R_LIST_BOUNDS` instead of returning a
+default. Receivers may be arbitrary expressions and nested indexes work; the
+receiver, the index and the assigned value are each evaluated exactly once, and a
+Python-surface indexed write evaluates the assigned value before the target it
+writes into. `values += other` extends the receiver in place, so aliases observe
+the added elements. Ordering helpers also live in the
 [`sort` module](standard-library.md#sort), which returns new lists and leaves its
 input untouched.
 
 ```mylang
 # doc: expect 42
 def main() -> int:
-    scores: list[int] = [10, 20, 30]
+    scores: list[int] = [30, 10, 20]
+    scores.sort()
     scores.append(40)
-    scores[1] = scores[1] + 5
-    if len(scores) != 4:
+    scores.insert(0, 5)
+    scores.remove(5)
+    scores.reverse()
+    scores.extend([7])
+    _ = scores.pop(0)
+    window = scores.copy()
+    window.append(100)
+    if len(scores) != 4 or len(window) != 5:
         return 1
-    if scores[-1] != 40:
+    if scores[0] != 30 or scores[-1] != 7:
         return 2
-    return scores[-1] + scores[1] - scores[0] - 13
+    if scores.index(20) != 1:
+        return 3
+    scores.clear()
+    if len(scores) != 0:
+        return 4
+    return window[0] + window[-1] - 88
 ```
 
 ## Inferred literals and slices
@@ -169,8 +194,16 @@ types the runtime compares and hashes by value. Values are any copyable storable
 type, including lists and other dictionaries. `counts[key]` traps with
 `R_MISSING_KEY` when the key is absent, so `counts.get(key, fallback)` is the
 lookup that always answers, while `counts.keys()` and `counts.values()` allocate
-fresh snapshot lists rather than live views. A dictionary is shared by assignment
-exactly as a list is.
+fresh snapshot lists rather than live views. `counts.pop(key)` removes and returns
+the value and `counts.pop(key, fallback)` answers the fallback when absent;
+`counts.update(other)` replaces existing values in place and appends new keys;
+`counts.setdefault(key, fallback)` returns the existing value or stores the
+fallback; `counts.copy()` returns a fresh shallow dictionary; and
+`counts.clear()` empties it. `counts.pop(key)` without a fallback traps with
+`R_MISSING_KEY`. `counts.items()` allocates a snapshot list of the dictionary's
+values in insertion order, so `for position, value in counts.items()` pairs the
+snapshot position with the value. A dictionary is shared by assignment exactly as
+a list is.
 
 ```mylang
 # doc: expect 42
@@ -179,19 +212,29 @@ def main() -> int:
     counts["pear"] = 2
     counts["apple"] = 3
     counts["pear"] = counts["pear"] + 1
+    counts.update({"plum": 4})
+    _ = counts.setdefault("fig", 5)
+    if counts.setdefault("fig", 9) != 5:
+        return 1
+    if counts.pop("plum") != 4:
+        return 2
+    if counts.pop("kiwi", 7) != 7:
+        return 3
     order: list[str] = []
     for name in counts:
         order.append(name)
     if order[0] != "pear":
-        return 1
+        return 4
     if counts.get("plum", 0) != 0:
-        return 2
-    if len(counts.keys()) != 2:
-        return 3
+        return 5
     total = 0
-    for amount in counts.values():
-        total += amount
-    return total * 7
+    for position, value in counts.items():
+        total += position + value
+    copy = counts.copy()
+    copy.clear()
+    if len(copy) != 0 or len(counts) != 3:
+        return 6
+    return total * 3
 ```
 
 ## Iterating collections
