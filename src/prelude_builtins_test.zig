@@ -95,6 +95,8 @@ test "any and all fold a list of conditions" {
 
 // spec: PRELUDE-ITERATION-1
 test "reversed, list and zip iterate or materialise without a new runtime" {
+    // The body must be able to read every name these forms bind; each binding is
+    // marked initialized before the body even though locals are function-scoped.
     try run("def main() -> int:\n    ys = list(reversed([1, 2]))\n    return len(ys)\n", 2);
     try run("def main() -> int:\n    return list(reversed([4, 5, 6]))[0]\n", 6);
     try run("def main() -> int:\n    for value in reversed([1, 2, 3]):\n        return value\n    return 0\n", 3);

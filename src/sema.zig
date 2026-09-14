@@ -2945,6 +2945,10 @@ const Checker = struct {
             if (try self.topLevel(name) or self.active.contains(self.src.text(name))) return self.sink.fail(eShadowing, name, eIterationShadow);
             self.locals.items[@backingInt(slot)].name = self.src.text(name);
             self.locals.items[@backingInt(slot)].declaration = name;
+            // `reversed`/`zip` bind their names before the body checks, exactly like
+            // the ordinary for-each path; function-scoped locals need the binding
+            // marked initialized or a body read is refused as use-before-assignment.
+            self.locals.items[@backingInt(slot)].ownership.initialized = true;
             try self.active.put(self.allocator, self.src.text(name), slot);
         };
         defer for (names) |maybe_name| if (maybe_name) |name| {

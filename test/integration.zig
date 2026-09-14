@@ -679,14 +679,15 @@ test "CLI run loads a project entry that imports a standard module and leaves si
     const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run", path, "--print-result" } ++ tools) });
     defer testing.allocator.free(result.stdout);
     defer testing.allocator.free(result.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    // `main` returns 42, and a run now exits with its int result.
+    try testing.expectEqual(std.process.Child.Term{ .exited = 42 }, result.term);
     try testing.expectEqualStrings("42\n", result.stdout);
     try testing.expectEqualStrings("", result.stderr);
     // `run-project` stays an explicit alias for the same entry.
     const alias = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run-project", path, "--print-result" } ++ tools) });
     defer testing.allocator.free(alias.stdout);
     defer testing.allocator.free(alias.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, alias.term);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 42 }, alias.term);
     try testing.expectEqualStrings("42\n", alias.stdout);
     // A plain single-file program still takes the original one-unit path.
     try invoke("run", @embedFile("fixtures/arithmetic.my"), 0, "7\n", "");
