@@ -8,7 +8,7 @@ undocumented.
 
 ## Executable examples
 
-`tests/docs_examples.py` extracts every fenced block of `README.md`, `SPEC.md`
+`mylang doctest` extracts every fenced block of `README.md`, `SPEC.md`
 and `docs/**/*.md`, and runs, type-checks or explicitly skips the ones tagged
 `mylang` or `my`. Leading `# doc:` directives pin the expected stdout, the
 expected diagnostic code, or a stated reason for skipping; a block tagged as
@@ -20,7 +20,7 @@ current inventory.
 
 ```sh
 zig build test-docs
-python3 tests/docs_examples.py --compiler zig-out/bin/mylang --filter 'docs/arenas.md' --verbose
+zig-out/bin/mylang doctest . --filter 'docs/arenas.md' --verbose
 ```
 
 ## Feature and export coverage

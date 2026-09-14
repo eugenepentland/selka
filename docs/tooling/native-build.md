@@ -29,9 +29,8 @@ module entry needs `--project`, `--library` produces a shared library, and a
 program using a construct the native backend does not implement fails with
 `E_QBE_UNSUPPORTED` before any output is written. `--report` adds one
 `qbe-build-v1` JSON line naming every compiled function, its cached object and
-whether that object was reused; `zig build test-qbe-build` runs
-`tests/qbe_build_cli.py`, which repeats these builds through a relocated
-compiler with no Python on `PATH`.
+whether that object was reused; `zig build test-qbe-build` repeats these builds through a relocated compiler with
+no Python on `PATH` using the Zig-native build driver tests.
 
 ```console
 $ mylang build examples/factorial.my -o /tmp/factorial --cache-dir /tmp/qbe-cache

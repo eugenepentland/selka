@@ -1,15 +1,16 @@
 # Executable documentation examples
 
-`tests/docs_examples.py` runs every documentation example through the compiler, so a
+`mylang doctest` runs every documentation example through the compiler, so a
 documented program cannot drift away from the language it describes. The default
 `zig build test` gate depends on it through the `test-docs` step.
 
 ```sh
 zig build test-docs
-python3 tests/docs_examples.py --compiler zig-out/bin/mylang
+zig-out/bin/mylang doctest .
 ```
 
-`--compiler PATH` defaults to `zig-out/bin/mylang`. `--filter GLOB` restricts the scan
+The command runs the compiler binary it is invoked as; `zig build` must have installed
+that binary first. `--filter GLOB` restricts the scan
 to matching repository-relative document paths, `--verbose` prints every command,
 diagnostic and skip reason, and `--report PATH` writes a `doc-examples-v1` JSON report.
 

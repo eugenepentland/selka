@@ -1,5 +1,9 @@
 # Compiler-derived agent reference
 
+> The Python reference generator was dropped in the Zig-native tooling fold. This
+> page is retained as a historical design record; use `mylang list-declarations`,
+> `mylang list-interfaces`, and `mylang schema-project` instead.
+
 `scripts/reference.py` writes a small searchable overview and a separate full API
 reference from the selected executable. Agents continue to read, search, and edit
 ordinary files. Nothing injects reference text into later tool responses.

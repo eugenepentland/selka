@@ -332,6 +332,19 @@ pub fn build(b: *std.Build) void {
     compile_tests.dependOn(&qbe_build_unit.step);
     guardian.addAllChecks(b, guardian_exe, qbe_build_step, .{});
     boundedChecks(qbe_build_step);
+    const golden_step = b.step("test-golden", "Replay the checked-in native golden corpora with no Python oracle");
+    const golden_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .filters = test_filters, .root_module = b.createModule(.{
+        .root_source_file = b.path("test/golden_parity.zig"),
+        .target = target,
+        .optimize = optimize,
+    }) });
+    golden_unit.root_module.addOptions("test_options", options);
+    guardian.enableTestDiagnostics(golden_unit.root_module);
+    compile_tests.dependOn(&golden_unit.step);
+    const run_golden = bounded(b.addRunArtifact(golden_unit), rss.suite);
+    run_golden.setCwd(b.path("."));
+    golden_step.dependOn(&run_golden.step);
+    qbe_step.dependOn(golden_step);
     guardian.addAllChecks(b, guardian_exe, qbe_step, .{});
     boundedChecks(qbe_step);
     const agent_tools = b.step("test-agent-tools", "Verify compact feedback, byte-contract fixtures, and compiler-pinned references");
@@ -343,6 +356,24 @@ pub fn build(b: *std.Build) void {
     doc_coverage.has_side_effects = true;
     b.step("test-doc-coverage", "Require a documented example for every feature and standard export").dependOn(&doc_coverage.step);
     test_step.dependOn(&doc_coverage.step);
+    const guest_step = b.step("test-guest", "Run the guest-behavior tests written in the language");
+    const guest_tests = bounded(b.addRunArtifact(exe), rss.suite);
+    guest_tests.addArgs(&.{ "test", "tests/guest", "--cache-dir", ".mylang-cache/guest-tests" });
+    guest_tests.setCwd(b.path("."));
+    guest_tests.has_side_effects = true;
+    guest_step.dependOn(&guest_tests.step);
+    test_step.dependOn(&guest_tests.step);
+    guardian.addAllChecks(b, guardian_exe, guest_step, .{});
+    boundedChecks(guest_step);
+    const doctest_step = b.step("test-docs", "Execute every fenced documentation example");
+    const doctest_run = bounded(b.addRunArtifact(exe), rss.parity);
+    doctest_run.addArgs(&.{ "doctest", "." });
+    doctest_run.setCwd(b.path("."));
+    doctest_run.has_side_effects = true;
+    doctest_step.dependOn(&doctest_run.step);
+    test_step.dependOn(&doctest_run.step);
+    guardian.addAllChecks(b, guardian_exe, doctest_step, .{});
+    boundedChecks(doctest_step);
     const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("src"), b.path("tests"), b.path("test") }, .check = true });
     b.step("fmt-check", "Check canonical Zig formatting").dependOn(&fmt.step);
 }

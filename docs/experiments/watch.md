@@ -1,5 +1,8 @@
 # Automatic project checking
 
+> The Python watch driver was dropped in the Zig-native tooling fold. This page is
+> retained as a historical design record; use `mylang check-session` instead.
+
 Run `python3 scripts/watch.py path/to/main.my --compiler zig-out/bin/mylang` to
 check immediately and recheck after source changes. The driver keeps one
 `check-session` compiler process, preserving its bounded syntax cache while every
