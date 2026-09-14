@@ -59,7 +59,7 @@ fn invoke(command: []const u8, text: []const u8, expected_status: u8, expected_s
 /// output line. A command that does not print a result line, or a non-run command,
 /// yields 0.
 fn resultStatus(printed: []const u8) u8 {
-    const body = std.mem.trimRight(u8, printed, "\n");
+    const body = std.mem.trimEnd(u8, printed, "\n");
     const start = if (std.mem.lastIndexOfScalar(u8, body, '\n')) |index| index + 1 else 0;
     const value = std.fmt.parseInt(i64, body[start..], 10) catch return 0;
     return @truncate(@as(u64, @bitCast(value)));
