@@ -118,7 +118,7 @@ def main():
                          '--compiler', compiler, '--qbe', args.qbe, '--zig', args.zig,
                          '--cache-dir', temp / 'cache'])
             assert built.returncode == 0, (text, built.stderr.decode())
-            native = run([output])
+            native = run([output, '--print-result'])
             assert signature(vm) == signature(native), (text, vm, native)
             count += 1
         for text in extended_cases():
@@ -129,7 +129,7 @@ def main():
                          '--cache-dir', temp / 'cache'])
             assert built.returncode == 0, (text, built.stderr.decode())
             for options in ([], ['--gc-stress']):
-                native = run([output, *options])
+                native = run([output, '--print-result', *options])
                 assert signature(vm) == signature(native), (text, options, vm, native)
             count += 1
         for text, options in (
@@ -142,7 +142,7 @@ def main():
                          '--cache-dir', temp / 'cache'])
             assert built.returncode == 0, built.stderr
             vm = reference.expect([text, options], [compiler, 'run', source, '--print-result', *options])
-            native = run([output, *options])
+            native = run([output, '--print-result', *options])
             assert signature(vm) == signature(native), (text, vm, native)
             count += 1
         for text, options, expected in deep_recursion_cases():
@@ -152,7 +152,7 @@ def main():
                          '--cache-dir', temp / 'cache'])
             assert built.returncode == 0, built.stderr
             vm = reference.expect([text, options], [compiler, 'run', source, '--print-result', *options])
-            native = run([output, *options])
+            native = run([output, '--print-result', *options])
             assert signature(vm) == expected, (options, vm)
             assert signature(native) == expected, (options, native)
             count += 1

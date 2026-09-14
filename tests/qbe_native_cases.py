@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def compare(reference, compiler, source, executable, options, name):
     vm = reference.expect([name, options], [compiler, 'run', source, '--print-result', *options])
-    native = invoke([executable, *options])
+    native = invoke([executable, '--print-result', *options])
     try:
         assert signature(vm) == signature(native)
     except AssertionError as error:

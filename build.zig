@@ -68,6 +68,13 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     }) });
     unit.root_module.addImport("qbe_build_assets", build_assets);
+    // Unit tests execute guest programs natively, so they need the same tools and
+    // one shared object cache that `mylang build` uses.
+    const native_test_options = b.addOptions();
+    native_test_options.addOptionPath("qbe_path", qbe_exe.getEmittedBin());
+    native_test_options.addOption([]const u8, "zig_path", b.graph.zig_exe);
+    native_test_options.addOption([]const u8, "cache_directory", ".mylang-cache/unit-tests");
+    unit.root_module.addOptions("native_test_options", native_test_options);
     const board_module = b.createModule(.{
         .root_source_file = b.path("src/board_trial/runner.zig"),
         .target = target,

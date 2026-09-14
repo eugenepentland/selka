@@ -271,11 +271,12 @@ int mylang_qbe_run_options(uint64_t (*entry)(void *), int argc, char **argv) {
 }
 int mylang_qbe_run_providers(uint64_t (*entry)(void *), int argc, char **argv, const struct MylangNativeProvidersTag *providers) {
     Context context = {.max_steps=10000000, .max_frames=1024};
-    int saw_steps = 0, saw_frames = 0, stress = 0;
+    int saw_steps = 0, saw_frames = 0, stress = 0, print = 0;
     for (int i = 1; i < argc; ++i) {
         if (!strncmp(argv[i], "--max-steps=", 12) && !saw_steps++) context.max_steps = budget(&context, argv[i] + 12);
         else if (!strncmp(argv[i], "--max-frames=", 13) && !saw_frames++) context.max_frames = budget(&context, argv[i] + 13);
         else if (!strcmp(argv[i], "--gc-stress") && !stress) stress = 1;
+        else if (!strcmp(argv[i], "--print-result") && !print) print = 1;
         else fail(&context, "InvalidBudget");
     }
     if (context.trap) {
@@ -294,9 +295,13 @@ int mylang_qbe_run_providers(uint64_t (*entry)(void *), int argc, char **argv, c
         }
         return strncmp(result.code,"R_",2) ? 2:1;
     }
-    int64_t value;
-    memcpy(&value, &result.value, sizeof value);
-    printf("%" PRId64 "\n", value);
+    /* The entry point's integer result is a diagnostic, not program output:
+       `mylang run` and a built executable both report it only when asked. */
+    if (print) {
+        int64_t value;
+        memcpy(&value, &result.value, sizeof value);
+        printf("%" PRId64 "\n", value);
+    }
     return 0;
 }
 int mylang_qbe_execute(uint64_t (*entry)(void *), uint64_t steps, uint64_t frames, MylQbeResult *result) {

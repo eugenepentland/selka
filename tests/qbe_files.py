@@ -204,7 +204,7 @@ def main():
                 shutil.rmtree(work, ignore_errors=True)
                 work.mkdir()
                 prepare(work)
-                native = run([output, *options, *stress], work)
+                native = run([output, '--print-result', *options, *stress], work)
                 assert signature(expected) == signature(native), (text, options, stress, expected, native)
             count += 1
         reference.save()

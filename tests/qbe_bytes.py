@@ -192,7 +192,7 @@ def main():
                          '--cache-dir', temp / 'cache'])
             assert built.returncode == 0, (text, built.stderr.decode())
             for options in ([], ['--gc-stress']):
-                native = run([output, *options])
+                native = run([output, '--print-result', *options])
                 assert signature(vm) == signature(native), (text, options, vm, native)
             count += 1
         reference.save()

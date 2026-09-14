@@ -53,7 +53,7 @@ def compare(args, label, entry, project, argv, cache):
     command = 'run-project' if project else 'run'
     grants = [value for value in argv if value != '--print-result']
     expected = args.reference.expect([label, project, grants], [args.compiler, command, entry, '--print-result', *grants])
-    native = invoke([output, *grants])
+    native = invoke([output, '--print-result', *grants])
     assert signature(expected) == signature(native), (label, argv, expected.stdout, expected.stderr, native.stdout, native.stderr)
 
 

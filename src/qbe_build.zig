@@ -35,28 +35,22 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     defer context.deinit();
     return build(context, parsed);
 }
-fn build(context: fs.Context, parsed: options.Options) !u8 {
+/// A resolved toolchain and object cache, reusable across many native builds.
+pub const Prepared = struct { cache: cache_api.Cache, zig_version: []const u8 };
+/// Resolve the native tools, publish the bundled runtime tree, and open the object cache.
+/// The returned cache owns a private staging directory; release it with `context.remove`.
+pub fn prepare(context: fs.Context, parsed: options.Options) Error!Prepared {
     const a = context.allocator;
-    const compiler = try std.Io.Dir.cwd().realPathFileAlloc(context.io, "/proc/self/exe", a);
     const zig = try context.executable(parsed.zig);
     const qbe = try context.executable(parsed.qbe);
     const version = try context.capture(&.{ zig, "version" });
-    if (fs.exitCode(version.term) != 0) return 2;
+    if (fs.exitCode(version.term) != 0) return error.NativeToolFailed;
     const zig_version = std.mem.trim(u8, version.stdout, "\r\n ");
     try checkVersion(zig_version);
-    const start = std.Io.Timestamp.now(context.io, .awake);
-    const generated = try context.capture(&.{ compiler, if (parsed.project) "emit-project-qbe" else "emit-qbe", try context.absolute(parsed.source) });
-    const code = fs.exitCode(generated.term);
-    if (code != 0) return code;
-    const manifest = (try std.json.parseFromSlice(std.json.Value, a, generated.stdout, .{ .allocate = .alloc_always })).value;
-    try validate(manifest);
-    const frontend = seconds(context, start);
-    const native_start = std.Io.Timestamp.now(context.io, .awake);
     const directory = try context.absolute(parsed.cache);
     try context.mkdir(directory);
     const assets = try materialize(context, directory);
     const temporary = try context.temporary(directory);
-    defer context.remove(temporary);
     const environment = try std.json.Stringify.valueAlloc(a, .{
         .version = "zig-qbe-build-v2",
         .abi = abi,
@@ -68,7 +62,36 @@ fn build(context: fs.Context, parsed: options.Options) !u8 {
         .mode = parsed.mode,
         .target = parsed.target,
     }, .{});
-    const cache: cache_api.Cache = .{ .context = context, .directory = directory, .temporary = temporary, .assets = assets, .environment = environment, .zig = zig, .qbe = qbe, .mode = parsed.mode };
+    return .{
+        .cache = .{ .context = context, .directory = directory, .temporary = temporary, .assets = assets, .environment = environment, .zig = zig, .qbe = qbe, .mode = parsed.mode },
+        .zig_version = zig_version,
+    };
+}
+/// Validate one emitted manifest and link it into `output`, reporting whether the file changed.
+pub fn assemble(cache: cache_api.Cache, parsed: options.Options, manifest: std.json.Value, output: []const u8) Error!bool {
+    try validate(manifest);
+    var state = State{ .context = cache.context, .cache = cache, .manifest = manifest };
+    try state.compile(parsed);
+    return state.link(parsed, output);
+}
+fn build(context: fs.Context, parsed: options.Options) !u8 {
+    const a = context.allocator;
+    const compiler = try std.Io.Dir.cwd().realPathFileAlloc(context.io, "/proc/self/exe", a);
+    const prepared = prepare(context, parsed) catch |err| switch (err) {
+        error.NativeToolFailed => return 2,
+        else => return err,
+    };
+    const cache = prepared.cache;
+    const temporary = cache.temporary;
+    defer context.remove(temporary);
+    const start = std.Io.Timestamp.now(context.io, .awake);
+    const generated = try context.capture(&.{ compiler, if (parsed.project) "emit-project-qbe" else "emit-qbe", try context.absolute(parsed.source) });
+    const code = fs.exitCode(generated.term);
+    if (code != 0) return code;
+    const manifest = (try std.json.parseFromSlice(std.json.Value, a, generated.stdout, .{ .allocate = .alloc_always })).value;
+    try validate(manifest);
+    const frontend = seconds(context, start);
+    const native_start = std.Io.Timestamp.now(context.io, .awake);
     var state = State{ .context = context, .cache = cache, .manifest = manifest };
     const codegen_start = std.Io.Timestamp.now(context.io, .awake);
     try state.compile(parsed);
@@ -92,7 +115,7 @@ fn build(context: fs.Context, parsed: options.Options) !u8 {
             .native_seconds = seconds(context, native_start),
             .target = parsed.target,
             .mode = parsed.mode,
-            .zig_version = zig_version,
+            .zig_version = prepared.zig_version,
             .artifact_kind = if (parsed.library) "shared-library" else "executable",
         }, .{});
         const stream = if (parsed.run) std.Io.File.stderr() else std.Io.File.stdout();

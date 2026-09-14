@@ -321,7 +321,7 @@ def check(args, source, output, cache, text):
     vm = args.reference.expect([text, []], [args.compiler, 'run', source, '--print-result'])
     results = []
     for options in ([], ['--gc-stress']):
-        native = run([output, *options])
+        native = run([output, '--print-result', *options])
         assert signature(vm) == signature(native), (text, options, vm, native)
         results.append(native)
     return results[0]
