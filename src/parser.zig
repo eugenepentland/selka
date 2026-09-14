@@ -1150,17 +1150,22 @@ pub const Parser = struct {
     }
     /// Recognize `Owner.name[T](…)`, a member call carrying explicit type arguments.
     /// The applied-constructor lookahead cannot claim it, because `Owner.name` names a
-    /// function rather than a type, and an import alias joins into one name instead.
+    /// function rather than a type. One `alias.name` pair is excluded: an import alias
+    /// joins into a single qualified name, so `m.f[T](x)` resolves as an ordinary call.
     fn memberApplicationAhead(self: *Parser) bool {
-        if (self.cursor.pos + 4 >= self.tokens.len) return false;
-        const head = self.current();
-        if (head.tag != .ident) return false;
-        if (self.module_syntax and self.syntax.import_aliases.contains(self.src.text(head.span))) return false;
-        if (self.tokens[self.cursor.pos + 1].tag != .dot) return false;
-        const member = self.tokens[self.cursor.pos + 2].tag;
-        if (member != .ident and member != .kw_len and member != .kw_replace) return false;
-        if (self.tokens[self.cursor.pos + 3].tag != .lbracket) return false;
-        var position = self.cursor.pos + 3;
+        var position = self.cursor.pos;
+        if (self.tokens[position].tag != .ident) return false;
+        var segments: usize = 1;
+        while (position + 2 < self.tokens.len and self.tokens[position + 1].tag == .dot) {
+            const member = self.tokens[position + 2].tag;
+            if (member != .ident and member != .kw_len and member != .kw_replace) break;
+            segments += 1;
+            position += 2;
+        }
+        if (segments < 2) return false;
+        if (segments == 2 and self.module_syntax and self.syntax.import_aliases.contains(self.src.text(self.current().span))) return false;
+        position += 1;
+        if (position >= self.tokens.len or self.tokens[position].tag != .lbracket) return false;
         var brackets: usize = 0;
         while (position < self.tokens.len) : (position += 1) {
             switch (self.tokens[position].tag) {
@@ -1192,9 +1197,11 @@ pub const Parser = struct {
 
     fn parseLeaf(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         if (token.tag == .ident and self.memberApplicationAhead()) {
-            const owner = (try self.expect(.ident)).span;
-            _ = try self.expect(.dot);
-            const member = try self.declaredName();
+            var segments: std.ArrayList(Span) = .empty;
+            try segments.append(self.arena.allocator(), (try self.expect(.ident)).span);
+            while (self.take(.dot)) try segments.append(self.arena.allocator(), try self.declaredName());
+            const member = segments.items[segments.items.len - 1];
+            const owner = Span.join(segments.items[0], segments.items[segments.items.len - 2]);
             const type_arguments = try self.squareTypeArguments();
             _ = try self.expect(.lparen);
             const arguments = try self.callArguments();

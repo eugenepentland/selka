@@ -844,14 +844,14 @@ test "generic calls preserve imported declaration identity and private boundarie
         \\    return x
     ;
     try acceptChecked(main, dependency);
-    // A domain member takes its type arguments by inference: `Owner.member[T](x)` has no spelling.
+    // A domain member names its type arguments through its owner: `m.D.make[T](x)`.
     const domain_main =
         \\module main
         \\import units
         \\
         \\
         \\def forward[T](x: T) -> T:
-        \\    return units.D.make(x)
+        \\    return units.D.make[T](x)
         \\
         \\
         \\def main() -> i64:
@@ -867,7 +867,7 @@ test "generic calls preserve imported declaration identity and private boundarie
         \\        return x
         \\
         \\    def make[U](x: U) -> U:
-        \\        return D.hidden(x)
+        \\        return D.hidden[U](x)
     ;
     try acceptChecked(domain_main, domain_dependency);
     try rejectChecked(main,
