@@ -54,12 +54,13 @@ pub const ExecuteError = EmitError || error{
 };
 
 const std = @import("std");
-pub const codec_json = @import("codec_json.zig");
 pub const typed_json = @import("typed_json.zig");
 pub const schema_report = @import("schema_report.zig");
 pub const schema = @import("schema.zig");
 pub const input_manifest = @import("input_manifest.zig");
-pub const evaluation_report = @import("evaluation_report.zig");
+/// Deterministic source and compiler identities shared by every tool receipt.
+pub const source_receipt = @import("source_receipt.zig");
+/// Authority-free bounded evaluation retained for the interpreter's own tests.
 pub const evaluation = @import("evaluation.zig");
 pub const import_policy = @import("import_policy.zig");
 pub const embedded_project = @import("embedded_project.zig");

@@ -49,17 +49,3 @@ pub const InvokeOptions = struct {
     arguments: @import("value_copy.zig").Limits = .{},
     steps_executed: ?*u64 = null,
 };
-/// Injectable checked invocation used by codecs without a dependency on the VM.
-pub const Dispatch = *const fn (
-    std.mem.Allocator,
-    @import("bytecode_model.zig").Program,
-    typed.FunctionId,
-    []const typed.Value,
-    InvokeOptions,
-) InvokeError!ValueResult;
-
-/// Context-bearing synchronous dispatch for compiled providers with no global binding.
-pub const Contextual = struct {
-    context: *anyopaque,
-    dispatch: *const fn (*anyopaque, std.mem.Allocator, @import("bytecode_model.zig").Program, typed.FunctionId, []const typed.Value, InvokeOptions) InvokeError!ValueResult,
-};

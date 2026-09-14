@@ -54,8 +54,6 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [WIRE-2] Rejects duplicate input names, keywords, unsupported input types, and noncanonical or out-of-range values.
 - [WIRE-3] Encodes independently constructed typed values without consuming them and enforces byte, value, and depth limits.
 - [WIRE-4] Rejects duplicate, missing, unknown, and private function entries in domain codec declarations.
-- [WIRE-5] Shares instruction, invocation, traversal, and memory budgets across nested domain codec values.
-- [WIRE-6] Rejects stale schemas, private targets, effects, non-data signatures, and malformed call arguments before execution.
 ## Command line
 
 - [DECLARATION-LIST-1] `list-declarations` prints one parse-only `declarations-v1` JSON document with the declared module name or null for a single-file program, its import names and explicit aliases, its export directives, and every top-level declaration's kind, name, export flag, byte range and attached comment start. The kinds are exactly the top-level constructs the parser accepts: alias, const, struct, enum, union, result, domain, resource, fn and host_fn. An export directive sets the named declaration's flag; unknown and duplicate export directives reject with the existing located diagnostics. Listing requires only parsing, so modules with type or ownership errors still list, and no name resolution, checking or execution is claimed.
