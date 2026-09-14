@@ -181,10 +181,13 @@ test "nested resource wrappers release at scope exit and traps unwind every inst
     defer compilation.deinit();
     var options = box.options();
     // Every budget cuts the first pair at a different boundary; a leaked or
-    // twice-released owner would abort instead of reporting a status of 0 or 1.
+    // twice-released owner would abort instead of returning or trapping cleanly.
+    // The exit status now carries the entry result, so a clean run is one that
+    // either returned normally or trapped with a runtime `R_*` code.
     for (1..90) |budget| {
         options.max_steps = budget;
-        try t.expect((try native.runWithOptions(&compilation, options)).status <= 1);
+        const outcome = try native.runWithOptions(&compilation, options);
+        try t.expect(!outcome.trapped() or std.mem.startsWith(u8, outcome.trap.code, "R_"));
     }
     options.max_steps = null;
     try t.expectEqual(@as(i64, 1000), (try native.runWithOptions(&compilation, options)).value);

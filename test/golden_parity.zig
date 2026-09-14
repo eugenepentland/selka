@@ -103,12 +103,26 @@ const Report = struct {
 };
 
 /// The recorded and observed process signature: exit status plus either stdout
-/// (success) or the first runtime `R_*` code (failure).
+/// (a clean run) or the first runtime `R_*` code (a trap or host failure). The
+/// status no longer marks a failure — a program that returns N now exits N — so
+/// `failed`, read from the diagnostics on stderr, distinguishes the two.
 const Signature = struct {
     returncode: u8,
     stdout: []const u8,
     code: []const u8,
+    failed: bool,
 };
+
+/// Whether a recorded or observed stderr reports a trap or host failure, as
+/// opposed to a clean run (empty, or carrying only an advisory warning). A run
+/// now exits with its entry result, so stderr, not the status, marks a failure.
+fn failedRun(stderr: []const u8) bool {
+    return std.mem.indexOf(u8, stderr, "error[") != null or
+        std.mem.indexOf(u8, stderr, "host failure:") != null or
+        std.mem.indexOf(u8, stderr, "QBE runtime failure") != null or
+        std.mem.startsWith(u8, stderr, "mylang:") or
+        std.mem.startsWith(u8, stderr, "usage:");
+}
 
 /// Absolute tool paths resolved once per run, because every case spawns the
 /// compiler from inside its own scratch working directory.
@@ -298,11 +312,13 @@ fn runRecordedCase(context: *Context, corpus: []const u8, key: []const u8, sourc
         .returncode = expected_rc,
         .stdout = expected_stdout,
         .code = firstDiagnosticCode(expected_stderr),
+        .failed = failedRun(expected_stderr),
     };
     const actual = Signature{
         .returncode = exitCode(result.term) orelse 0xff,
         .stdout = result.stdout,
         .code = firstDiagnosticCode(result.stderr),
+        .failed = failedRun(result.stderr),
     };
 
     context.report.checked += 1;
@@ -384,12 +400,15 @@ fn fixtureSource(name: []const u8) ?[]const u8 {
     return null;
 }
 
-/// Compare two signatures exactly the way the retired `qbe_parity.signature`
-/// did: stdout on success, first `R_*` code on failure.
+/// Compare two signatures: stdout on a clean run, first `R_*` code on a trap or
+/// host failure (whose partial stdout is not stable). A run now exits with its
+/// entry's `int` result, so the status no longer marks a failure; the diagnostics
+/// on stderr do. The recorded status is always part of the signature, so a
+/// program that returns N is expected to exit N (truncated to a byte).
 fn signaturesMatch(expected: Signature, actual: Signature) bool {
     if (expected.returncode != actual.returncode) return false;
-    if (expected.returncode == 0) return std.mem.eql(u8, expected.stdout, actual.stdout);
-    return std.mem.eql(u8, expected.code, actual.code);
+    if (expected.failed or actual.failed) return std.mem.eql(u8, expected.code, actual.code);
+    return std.mem.eql(u8, expected.stdout, actual.stdout);
 }
 
 /// The first `R_*` diagnostic code in `text`, or an empty slice when absent.

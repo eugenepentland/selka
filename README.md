@@ -173,10 +173,16 @@ zig build test-c-ffi --summary all
 Guardian gates each acceptance route. `-Doptimize` selects the host compiler's
 mode. Use a disk-backed `TMPDIR` with sufficient space for large native runs.
 
-The example prints `7`. A successful program result is printed to stdout, not
-used as the exit code. Success exits 0, source errors and guest traps exit 1,
-and usage/I/O/host failures exit 2. Diagnostics go to stderr. Source files
-are currently limited to 16 MiB; excessive syntax nesting is diagnosed.
+The example prints `7` and exits `7`. `def main() -> int`'s return value is the
+process exit status, the way a Python or Go program returns an exit code,
+truncated to the low 8 bits (POSIX `waitpid` semantics: status = value & 0xFF),
+for `mylang run`, `run-project`, and a native executable from `mylang build`.
+`--print-result` prints the value to stdout as before and is now orthogonal to
+the status — you can print it and also exit with it. A source or check error
+exits 1, a runtime trap exits 1 (the trap outranks the return, because the
+program never reached it), and usage/I/O/host failures exit 2. Diagnostics go to
+stderr. Source files are currently limited to 16 MiB; excessive syntax nesting
+is diagnosed.
 
 ## Compiler quality gate
 

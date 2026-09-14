@@ -169,10 +169,13 @@ test "nominal providers unwind traps at every instruction including failed compl
     defer compilation.deinit();
     var options = box.options();
     // Each budget cuts the program at a different boundary; an owner released
-    // twice would abort the process rather than report a status of 0 or 1.
+    // twice would abort the process rather than return or trap cleanly. The exit
+    // status now carries the entry result, so a clean run either returned normally
+    // or trapped with a runtime `R_*` code.
     for (1..110) |budget| {
         options.max_steps = budget;
-        try t.expect((try native.runWithOptions(&compilation, options)).status <= 1);
+        const outcome = try native.runWithOptions(&compilation, options);
+        try t.expect(!outcome.trapped() or std.mem.startsWith(u8, outcome.trap.code, "R_"));
     }
     options.max_steps = null;
     try t.expectEqual(@as(i64, 3), (try native.runWithOptions(&compilation, options)).value);

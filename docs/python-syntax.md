@@ -241,7 +241,8 @@ abstract type require the existing explicit generic contracts.
 
 `print(values...)` writes its arguments separated by spaces with a trailing
 newline, and accepts `sep=` and `end=`. `mylang run` streams that output as it
-happens and reports the entry point's `int` result only with `--print-result`.
+happens; the entry point's `int` result becomes the process exit status
+(truncated to a byte) and is printed to stdout only with `--print-result`.
 
 Files are Python-shaped over explicit authority. The entry point asks for a
 `Filesystem` capability by parameter type and every file call takes that

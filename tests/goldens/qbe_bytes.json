@@ -14,7 +14,7 @@
     "def make() -> list[bytes]:\n    return b\"a,b,c\".split(b\",\")\n\ndef main() -> int:\n    kept = make()\n    i = 0\n    while i < 60:\n        garbage = (b\"x\" + b\"y\").split(b\"x\")\n        i += 1\n    if kept[2] != b\"c\":\n        return 1\n    return len(kept) + len(b\"-\".join(kept))\n",
     []
    ],
-   "returncode": 0,
+   "returncode": 8,
    "stderr": "PGNvcnB1cz4vY2FzZS5teTo4Ojk6IHdhcm5pbmdbV19VTlVTRURfQklORElOR106IGJpbmRpbmcgaXMgbmV2ZXIgcmVhZDsgdXNlIGl0IG9yIHJlbW92ZSBpdCwgcHJlc2VydmluZyBpbml0aWFsaXplciBlZmZlY3RzIHdpdGggYF8gPWAgd2hlbiBuZWVkZWQKICAgICAgICAgIGdhcmJhZ2UgPSAoYiJ4IiArIGIieSIpLnNwbGl0KGIieCIpCiAgICAgICAgICBeCg==",
    "stdout": "OAo="
   },
@@ -23,7 +23,7 @@
     "def main() -> int:\n    values: list[int] = [72, 105]\n    greeting = bytes(values)\n    if greeting != b\"Hi\":\n        return 1\n    octets = greeting.to_list()\n    if len(octets) != 2 or octets[1] != 105:\n        return 2\n    if len(bytes(octets)) != 2:\n        return 3\n    empty: list[int] = []\n    if len(bytes(empty)) != 0:\n        return 4\n    return octets[0] + octets[1]\n",
     []
    ],
-   "returncode": 0,
+   "returncode": 177,
    "stderr": "",
    "stdout": "MTc3Cg=="
   },
@@ -41,7 +41,7 @@
     "class Packet:\n    kind: str\n    payload: bytes\n\ndef main() -> int:\n    packets: list[Packet] = [Packet(kind=\"hello\", payload=b\"\\x01\"), Packet(kind=\"data\", payload=b\"\\x02\\x03\")]\n    index: dict[str, bytes] = {}\n    for packet in packets:\n        index[packet.kind] = packet.payload\n    if len(index) != 2 or index[\"data\"] != b\"\\x02\\x03\":\n        return 1\n    alias = packets[1]\n    if alias.payload != packets[1].payload:\n        return 2\n    total = 0\n    for value in index[\"data\"]:\n        total += value\n    return total + len(index[\"hello\"])\n",
     []
    ],
-   "returncode": 0,
+   "returncode": 6,
    "stderr": "",
    "stdout": "Ngo="
   },
@@ -50,7 +50,7 @@
     "def main() -> int:\n    header = b\"my\"\n    body = b\"lang\"\n    whole = header + body\n    if len(whole) != 6:\n        return 1\n    if whole[0] != 109 or whole[-1] != 103:\n        return 2\n    if whole[2:6] != body or whole[2:99] != body:\n        return 3\n    if len(whole[-1:0]) != 0 or whole[-99:99] != whole:\n        return 4\n    return whole[0] - 67\n",
     []
    ],
-   "returncode": 0,
+   "returncode": 42,
    "stderr": "",
    "stdout": "NDIK"
   },
@@ -59,7 +59,7 @@
     "def text_of(raw: bytes) -> Result[str, str]:\n    return raw.decode()\n\ndef main() -> int:\n    encoded = \"h\\u00e9llo\".encode()\n    if len(encoded) != 6:\n        return 1\n    match text_of(encoded):\n        case Ok(value):\n            if value != \"h\\u00e9llo\":\n                return 2\n        case Err(message):\n            return 0 - len(message)\n    match text_of(b\"\\xff\"):\n        case Ok(other):\n            return 0 - len(other)\n        case Err(message):\n            return len(encoded)\n",
     []
    ],
-   "returncode": 0,
+   "returncode": 6,
    "stderr": "PGNvcnB1cz4vY2FzZS5teToxNzoxODogd2FybmluZ1tXX1VOVVNFRF9CSU5ESU5HXTogYmluZGluZyBpcyBuZXZlciByZWFkOyB1c2UgaXQgb3IgcmVtb3ZlIGl0LCBwcmVzZXJ2aW5nIGluaXRpYWxpemVyIGVmZmVjdHMgd2l0aCBgXyA9YCB3aGVuIG5lZWRlZAogICAgICAgICAgY2FzZSBFcnIobWVzc2FnZSk6CiAgICAgICAgICAgICAgICAgICBeCg==",
    "stdout": "Ngo="
   },
@@ -68,7 +68,7 @@
     "def main() -> int:\n    frame = b\"\\x01\\x02\\x03\\x04\"\n    total = 0\n    for value in frame:\n        total += value\n    for index, value in enumerate(frame):\n        total += index * value\n    return total\n",
     []
    ],
-   "returncode": 0,
+   "returncode": 30,
    "stderr": "",
    "stdout": "MzAK"
   },
@@ -95,7 +95,7 @@
     "def main() -> int:\n    record = b\"GET /index.html\"\n    if not record.startswith(b\"GET \"):\n        return 1\n    if record.endswith(b\".css\"):\n        return 2\n    if record.find(b\"/index\") != 4 or record.find(b\"?query\") != -1:\n        return 3\n    if 47 not in record or b\"html\" not in record:\n        return 4\n    if record == b\"GET /\" or record != b\"GET /index.html\":\n        return 5\n    if b\"\" not in record or record.find(b\"\") != 0:\n        return 6\n    return len(record)\n",
     []
    ],
-   "returncode": 0,
+   "returncode": 15,
    "stderr": "",
    "stdout": "MTUK"
   },
@@ -104,7 +104,7 @@
     "def parse(digits: str) -> Result[bytes, str]:\n    return bytes.fromhex(digits)\n\ndef main() -> int:\n    raw = b\"\\x0f\\xa0\"\n    if raw.hex() != \"0fa0\":\n        return 1\n    if len(b\"\".hex()) != 0:\n        return 2\n    match parse(\"0fa0\"):\n        case Ok(value):\n            if value != raw:\n                return 3\n        case Err(message):\n            return 0 - len(message)\n    match parse(\"0f0\"):\n        case Ok(value):\n            return 0 - len(value)\n        case Err(message):\n            return len(message)\n",
     []
    ],
-   "returncode": 0,
+   "returncode": 54,
    "stderr": "",
    "stdout": "NTQK"
   },
@@ -113,7 +113,7 @@
     "def main() -> int:\n    line = b\"name,age,city\"\n    fields = line.split(b\",\")\n    if len(fields) != 3 or fields[1] != b\"age\":\n        return 1\n    if b\",\".join(fields) != line:\n        return 2\n    edges = b\",a,\".split(b\",\")\n    if len(edges) != 3 or len(edges[0]) != 0 or len(edges[2]) != 0:\n        return 3\n    widths = 0\n    for field in fields:\n        widths += len(field)\n    return widths\n",
     []
    ],
-   "returncode": 0,
+   "returncode": 11,
    "stderr": "",
    "stdout": "MTEK"
   }

@@ -6,7 +6,7 @@
     false,
     []
    ],
-   "returncode": 0,
+   "returncode": 38,
    "stderr": "",
    "stdout": "MzgK"
   },
@@ -26,7 +26,7 @@
     false,
     []
    ],
-   "returncode": 0,
+   "returncode": 177,
    "stderr": "",
    "stdout": "MTc3Cg=="
   },
@@ -59,7 +59,7 @@
     false,
     []
    ],
-   "returncode": 0,
+   "returncode": 131,
    "stderr": "",
    "stdout": "MTMxCg=="
   },
@@ -92,7 +92,7 @@
     false,
     []
    ],
-   "returncode": 0,
+   "returncode": 42,
    "stderr": "",
    "stdout": "NDIK"
   },
@@ -102,7 +102,7 @@
     false,
     []
    ],
-   "returncode": 0,
+   "returncode": 42,
    "stderr": "",
    "stdout": "NDIK"
   },
@@ -112,7 +112,7 @@
     false,
     []
    ],
-   "returncode": 0,
+   "returncode": 30,
    "stderr": "",
    "stdout": "MzAK"
   },
@@ -122,7 +122,7 @@
     false,
     []
    ],
-   "returncode": 0,
+   "returncode": 34,
    "stderr": "",
    "stdout": "MzQK"
   },
@@ -132,7 +132,7 @@
     false,
     []
    ],
-   "returncode": 0,
+   "returncode": 54,
    "stderr": "",
    "stdout": "NTQK"
   },
@@ -142,7 +142,7 @@
     false,
     []
    ],
-   "returncode": 0,
+   "returncode": 42,
    "stderr": "",
    "stdout": "NDIK"
   },
@@ -152,7 +152,7 @@
     true,
     []
    ],
-   "returncode": 0,
+   "returncode": 51,
    "stderr": "",
    "stdout": "NTEK"
   },
@@ -162,7 +162,7 @@
     false,
     []
    ],
-   "returncode": 0,
+   "returncode": 7,
    "stderr": "",
    "stdout": "Nwo="
   },
@@ -172,7 +172,7 @@
     false,
     []
    ],
-   "returncode": 0,
+   "returncode": 42,
    "stderr": "",
    "stdout": "NDIK"
   },
@@ -182,7 +182,7 @@
     false,
     []
    ],
-   "returncode": 0,
+   "returncode": 6,
    "stderr": "",
    "stdout": "Ngo="
   },
@@ -192,7 +192,7 @@
     false,
     []
    ],
-   "returncode": 0,
+   "returncode": 14,
    "stderr": "",
    "stdout": "MTQK"
   },
@@ -202,7 +202,7 @@
     false,
     []
    ],
-   "returncode": 0,
+   "returncode": 15,
    "stderr": "",
    "stdout": "MTUK"
   },
@@ -212,7 +212,7 @@
     false,
     []
    ],
-   "returncode": 0,
+   "returncode": 11,
    "stderr": "",
    "stdout": "MTEK"
   },
@@ -222,7 +222,7 @@
     false,
     []
    ],
-   "returncode": 0,
+   "returncode": 43,
    "stderr": "",
    "stdout": "NDMK"
   },
@@ -232,7 +232,7 @@
     false,
     []
    ],
-   "returncode": 0,
+   "returncode": 204,
    "stderr": "",
    "stdout": "MjA0Cg=="
   },
@@ -242,7 +242,7 @@
     false,
     []
    ],
-   "returncode": 0,
+   "returncode": 6,
    "stderr": "PGNvcnB1cz4vdW5pdDEwL21haW4ubXk6MTg6MTg6IHdhcm5pbmdbV19VTlVTRURfQklORElOR106IGJpbmRpbmcgaXMgbmV2ZXIgcmVhZDsgdXNlIGl0IG9yIHJlbW92ZSBpdCwgcHJlc2VydmluZyBpbml0aWFsaXplciBlZmZlY3RzIHdpdGggYF8gPWAgd2hlbiBuZWVkZWQKICAgICAgICAgIGNhc2UgRXJyKG1lc3NhZ2UpOgogICAgICAgICAgICAgICAgICAgXgo=",
    "stdout": "Ngo="
   },
@@ -252,7 +252,7 @@
     false,
     []
    ],
-   "returncode": 0,
+   "returncode": 186,
    "stderr": "",
    "stdout": "ODEyMgo="
   },
@@ -262,7 +262,7 @@
     false,
     []
    ],
-   "returncode": 0,
+   "returncode": 38,
    "stderr": "",
    "stdout": "MzgK"
   },
