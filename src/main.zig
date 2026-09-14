@@ -794,6 +794,9 @@ fn runProjectProgram(init: Context, code: language.bytecode.Program, parsed: Par
         _ = try reportUngranted(init, flag);
         return null;
     }
+    // A project run executes its guest in this process, so the ceiling is this
+    // process's address space, exactly as for a single-module run.
+    _ = budget.guard(try budget.resolve(parsed.max_memory, init.environ, budget.variable, budget.run_default));
     var buffer: [4096]u8 = undefined;
     var stdout = std.Io.File.stdout().writerStreaming(init.io, &buffer);
     defer flushOutput(&stdout);

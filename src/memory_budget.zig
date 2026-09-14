@@ -152,7 +152,9 @@ test "a flag outranks the environment and the environment outranks the default" 
     try std.testing.expectEqual(test_default, try resolve(null, &environ, variable, test_default));
     try environ.put(variable, "not-a-size");
     try std.testing.expectError(error.InvalidMemoryLimit, resolve(null, &environ, variable, test_default));
-    try std.testing.expectEqualStrings("512", try decimal(std.testing.allocator, 512));
+    const rendered = try decimal(std.testing.allocator, 512);
+    defer std.testing.allocator.free(rendered);
+    try std.testing.expectEqualStrings("512", rendered);
 }
 
 // spec: MEMORY-CEILING-2
