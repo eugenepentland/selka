@@ -242,6 +242,19 @@ anything is undocumented, and 2 for an unusable command line. A missing or malfo
 `features.json`, an unreadable page and an unlistable `src/stdlib` are reported as failures
 rather than host errors. `zig build test-doc-coverage` runs it, and the default `test` step
 depends on it.
+- [DOCTEST-1] `mylang doctest [<repo-root>] [--filter GLOB] [--report PATH] [--verbose]` walks
+`README.md`, `SPEC.md` and every `*.md` under `docs/` recursively, except `docs/legacy/`,
+extracts fenced `mylang`/`my` blocks, and applies the leading `# doc:` directives (`expect`,
+`expect-error`, `check`, `project`, `file`, `skip`, `not-mylang`, `allow-read`, `allow-write`).
+Blocks sharing a `# doc: project <name>` are materialised as one multi-file project under a
+private temporary directory; every unit is then checked, run, check-project-ed or run-project-ed
+by the running compiler with `--diagnostics=json` and the same `--print-result` and
+`--restrict` capability-grant options the documentation gate used before. `expect` compares
+trimmed standard output, `expect-error` compares `diagnostic-v1` codes, and the command reports
+per-document tallies, mis-tagged prose fences and failures. `--report PATH` writes a
+`doc-examples-v1` JSON report, and the command exits 0 only when nothing failed, nothing was
+mis-tagged and at least one executable block was found.
+
 - [DIAGNOSTIC-RECOVERY-1] Semantic checking recovers at ordinary and symbolic function boundaries after a source error, reports independent function faults in source order, and deduplicates repeated errors at the same source range and code. It stops within the failed function and skips whole-program verification when any body is incomplete; syntax, type-catalog, and namespace construction remain prerequisites. A failed check never publishes typed code or permits execution. Repeating a failed compilation check preserves diagnostics rather than appending duplicates.
 
 ## Proven parameter return regions

@@ -43,7 +43,7 @@ zig build test-qbe-build --summary all
 zig build fmt-check
 ```
 
-`zig build test` also runs `mylang doc-coverage .` and `tests/docs_examples.py`.
+`zig build test` also runs `mylang doc-coverage .` and `mylang doctest .`.
 
 ## Memory ceilings (why a runaway guest no longer kills the machine)
 
