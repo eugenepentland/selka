@@ -119,7 +119,7 @@
     },
     "python-assignments-and-value-records": {
       "kind": "language",
-      "summary": "Assignment creates a mutable block-scoped local and records keep value semantics on copy.",
+      "summary": "Assignment creates a mutable function-scoped local and records keep value semantics on copy.",
       "doc": "docs/statements.md#assignments-and-value-records"
     },
     "canonical-prelude-types": {

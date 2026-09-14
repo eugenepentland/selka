@@ -91,15 +91,77 @@ test "Python generics default to copy and None means unit" {
 }
 
 // spec-case: PYTHON-2
-test "Python parameters rebind and existing locals update across blocks while new locals remain lexical" {
+test "Python parameters rebind and existing locals update across blocks" {
     const text = "def bump[T: integer](value: T) -> T:\n    value = value + value\n    return value\n\ndef main() -> int:\n    answer = 0\n    if True:\n        answer = bump(21)\n    return answer\n";
     var c = try language.Compilation.init(t.allocator, "scope.my", text);
     defer c.deinit();
     try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
+    // A name assigned only on one branch is not definitely bound afterwards.
     var bad = try language.Compilation.init(t.allocator, "scope.my", "def main() -> int:\n    if True:\n        answer = 42\n    return answer\n");
     defer bad.deinit();
     try t.expectError(error.SourceError, bad.check());
-    try t.expectEqualStrings("E_UNKNOWN_NAME", bad.diagnostics.items[0].code);
+    try t.expectEqualStrings("E_UNBOUND", bad.diagnostics.items[0].code);
+}
+
+fn scopeValue(text: []const u8) !i64 {
+    var c = try language.Compilation.init(t.allocator, "scope.my", text);
+    defer c.deinit();
+    return (try native.run(&c)).value;
+}
+
+fn scopeReject(text: []const u8, code: []const u8) !void {
+    var c = try language.Compilation.init(t.allocator, "scope.my", text);
+    defer c.deinit();
+    try t.expectError(error.SourceError, c.check());
+    try t.expectEqualStrings(code, c.diagnostics.items[0].code);
+}
+
+// spec: PY-SCOPE-1
+test "PY-SCOPE-1 a name first assigned inside a loop body is visible after the block" {
+    // total = 2 + 9 = 11, last = 9, so total + last = 20.
+    try t.expectEqual(@as(i64, 20), try scopeValue(
+        \\def main() -> int:
+        \\    total = 0
+        \\    for row in [[1, 2], [3, 9]]:
+        \\        last = row[1]
+        \\        total = total + last
+        \\    return total + last
+    ));
+    // A name assigned in both branches of an if/else is bound afterwards.
+    try t.expectEqual(@as(i64, 5), try scopeValue(
+        \\def main() -> int:
+        \\    flag = True
+        \\    if flag:
+        \\        chosen = 5
+        \\    else:
+        \\        chosen = 9
+        \\    return chosen
+    ));
+}
+
+// spec: PY-SCOPE-2
+test "PY-SCOPE-2 reading a name unbound on some path is rejected" {
+    try scopeReject(
+        \\def main() -> int:
+        \\    flag = True
+        \\    if flag:
+        \\        chosen = 5
+        \\    return chosen
+    , "E_UNBOUND");
+    // A name never assigned before the read stays E_UNKNOWN_NAME.
+    try scopeReject(
+        \\def main() -> int:
+        \\    return missing
+    , "E_UNKNOWN_NAME");
+    // A method call reads its receiver, so a maybe-unbound owner is rejected too.
+    try scopeReject(
+        \\def main() -> int:
+        \\    flag = True
+        \\    if flag:
+        \\        data = [1, 2]
+        \\    data.append(3)
+        \\    return 0
+    , "E_UNBOUND");
 }
 
 // spec-case: PYTHON-3

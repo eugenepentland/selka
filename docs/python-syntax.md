@@ -269,8 +269,10 @@ resource cleanup retain their checked contracts; the
 This is a Python-style statically checked language, not a Python interpreter.
 In particular:
 
-- New locals are block-scoped. Initialize a local before an `if` or loop if it is
-  needed afterward; nested blocks can reassign that existing local.
+- Locals are function-scoped, like Python: a name assigned anywhere in the body is
+  one binding, in scope from its first assignment onward, so a name first assigned
+  inside an `if` or a loop is usable afterward. Reading it on a path that may not
+  have assigned it is a static `E_UNBOUND`.
 - Integers have fixed width, conditions require booleans, and records are values.
 - Binary64 arithmetic follows IEEE behavior, including infinities/NaNs on floating
   division by zero. It does not raise Python exceptions.

@@ -459,3 +459,30 @@ test "ARENA-MANAGED-6 noalloc still rejects arena allocation while entering a sc
     ;
     try t.expectEqual(@as(i64, 7), try value(source));
 }
+
+// spec: ARENA-MANAGED-9
+test "ARENA-MANAGED-9 a managed binding first assigned inside an arena is confined once the block ends" {
+    // Function scoping keeps `data` in scope after the block, but reading a managed
+    // value that lived in the released region is a static escape, not a dangling read.
+    try reject(
+        \\def main() -> int:
+        \\    with arena() as scratch:
+        \\        data = [1, 2, 3]
+        \\    return len(data)
+    , "E_ARENA_ESCAPE");
+    // A scalar first assigned inside the arena carries no reference and reads freely.
+    try t.expectEqual(@as(i64, 4), try value(
+        \\def main() -> int:
+        \\    with arena() as scratch:
+        \\        found = 4
+        \\    return found
+    ));
+    // Reassigning the name after the block re-homes it and clears the confinement.
+    try t.expectEqual(@as(i64, 2), try value(
+        \\def main() -> int:
+        \\    with arena() as scratch:
+        \\        data = [1, 2, 3]
+        \\    data = [9, 9]
+        \\    return len(data)
+    ));
+}

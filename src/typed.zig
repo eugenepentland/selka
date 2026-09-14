@@ -249,8 +249,8 @@ pub const Local = struct {
     ty: Type,
     mutable: bool,
 };
-/// Compile-time ownership availability and managed arena provenance.
-pub const LocalOwnership = struct { transfer_span: ?Span = null, arena_depth: usize = 0, transfer_available: bool = false };
+/// Compile-time ownership availability, definite-assignment, and arena confinement.
+pub const LocalOwnership = struct { transfer_span: ?Span = null, initialized: bool = false, arena_confined: bool = false, transfer_available: bool = false };
 /// Static binding reads and writes used by quality diagnostics.
 pub const LocalUsage = struct { temporary: bool = false, reads: usize = 0, writes: usize = 0 };
 

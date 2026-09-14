@@ -235,17 +235,17 @@ test "scope types immutability and structural return diagnostics" {
     }
 }
 
-test "binding warnings distinguish writes from reads and sibling identities" {
+test "binding warnings distinguish writes from reads across function-scoped blocks" {
     const text =
         \\def main() -> i64:
         \\    unused = 1
         \\    write_only = 2
         \\    write_only = 3
         \\    if True:
-        \\        x = 4
+        \\        branch_only = 4
         \\    if True:
-        \\        x = 5
-        \\        return x
+        \\        used = 5
+        \\        return used
         \\    return 0
     ;
     var compilation = try language.Compilation.init(testing.allocator, "warnings.my", text);
@@ -257,8 +257,10 @@ test "binding warnings distinguish writes from reads and sibling identities" {
     try testing.expectEqualStrings("W_UNUSED_BINDING", warnings[1].code);
     try testing.expectEqualStrings("unused", compilation.src.text(warnings[0].span));
     try testing.expectEqualStrings("write_only", compilation.src.text(warnings[1].span));
-    try testing.expectEqualStrings("x", compilation.src.text(warnings[2].span));
-    try testing.expectEqual(std.mem.indexOf(u8, text, "x = 4").?, warnings[2].span.start);
+    // A binding assigned only inside a branch and never read still warns, and its
+    // span points at the assignment that introduced it.
+    try testing.expectEqualStrings("branch_only", compilation.src.text(warnings[2].span));
+    try testing.expectEqual(std.mem.indexOf(u8, text, "branch_only = 4").?, warnings[2].span.start);
     for (warnings) |warning| try testing.expectEqual(language.diagnostic.Severity.warning, warning.severity);
     try compilation.check();
     try testing.expectEqual(@as(usize, 3), compilation.diagnostics.items.len);
@@ -875,7 +877,7 @@ test "control flow requires boolean conditions and conservative complete returns
         .{ .body = "_ = 1 and True\n    return 0", .code = "E_TYPE" },
         .{ .body = "x = True\n    x += False\n    return 0", .code = "E_TYPE" },
         .{ .body = "1 + 2\n    return 0", .code = "E_EXPLICIT_DISCARD_REQUIRED" },
-        .{ .body = "if True:\n        local = 1\n    return local", .code = "E_UNKNOWN_NAME" },
+        .{ .body = "if True:\n        local = 1\n    return local", .code = "E_UNBOUND" },
     };
     for (cases) |case| {
         const text = try std.fmt.allocPrint(testing.allocator,

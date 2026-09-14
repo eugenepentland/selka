@@ -59,6 +59,7 @@ const Names = @import("module_names.zig").Names;
 const LoopScope = struct { id: usize, before: []const Pending, arenas: usize = 0, exited: bool = false };
 const ArenaScope = struct { name: []const u8, declaration: source.Span, watermark: typed.LocalId };
 const eArenaEscape = "E_ARENA_ESCAPE";
+const eUnbound = "E_UNBOUND";
 const eArenaBinding = "E_ARENA_BINDING";
 const eWithResource = "E_WITH_RESOURCE";
 const eFileArgument = "E_FILE_ARGUMENT";
@@ -454,6 +455,38 @@ const Checker = struct {
     fn resolve(self: *Checker, name: source.Span) Error!typed.LocalId {
         return self.active.get(self.src.text(name)) orelse self.sink.fail("E_UNKNOWN_NAME", name, "name is not defined in this scope");
     }
+    /// Reject reading a function-scoped binding that no path reaching here has
+    /// assigned, or one that names a managed value confined to a released arena.
+    fn requireReadable(self: *Checker, slot: typed.LocalId, name: source.Span) Error!void {
+        const local = self.locals.items[@backingInt(slot)];
+        if (local.ownership.arena_confined) return self.sink.failRelated(
+            eArenaEscape,
+            name,
+            "names a managed value that lives in a released `with arena()` scope; an arena value cannot be read after the block, so copy it out with `arena.escape(...)` into a binding declared before the block",
+            .{ .span = local.declaration, .message = "arena-managed binding first assigned here" },
+        );
+        if (!local.ownership.initialized) return self.sink.failRelated(
+            eUnbound,
+            name,
+            "name may be read before it is assigned; some control-flow path reaching here leaves it unbound",
+            .{ .span = local.declaration, .message = "binding first assigned here" },
+        );
+    }
+    /// Snapshot every local's definite-assignment flag for later branch merging.
+    fn initSnapshot(self: *Checker) Error![]bool {
+        const state = try self.allocator.alloc(bool, self.locals.items.len);
+        for (self.locals.items, state) |local, *flag| flag.* = local.ownership.initialized;
+        return state;
+    }
+    /// Restore definite-assignment flags to a snapshot; locals created since it are
+    /// treated as unassigned on the path being started.
+    fn initRestore(self: *Checker, state: []const bool) void {
+        for (self.locals.items, 0..) |*local, index| local.ownership.initialized = index < state.len and state[index];
+    }
+    /// Keep a local assigned after a branch only when both paths assigned it.
+    fn initIntersect(self: *Checker, state: []const bool) void {
+        for (self.locals.items, 0..) |*local, index| local.ownership.initialized = local.ownership.initialized and (index < state.len and state[index]);
+    }
     const Literal = integer_literal.Literal;
     fn literal(self: *Checker, span: source.Span, allow_minimum: bool) Error!Literal {
         return integer_literal.parse(self.src, span, allow_minimum, self.sink);
@@ -731,6 +764,7 @@ const Checker = struct {
                 }
             }
             if (call.owner) |owner| if (self.active.get(self.src.text(owner))) |slot| {
+                try self.requireReadable(slot, owner);
                 const value_type = self.locals.items[@backingInt(slot)].ty;
                 if (value_type.isFile()) {
                     try call_arguments.positional(call, self.sink);
@@ -824,6 +858,7 @@ const Checker = struct {
         const b: collections.Builder(Checker) = .{ .checker = self, .span = root.span };
         if (root.data == .name) {
             const owner = try self.resolve(root.data.name);
+            try self.requireReadable(owner, root.data.name);
             if (!self.locals.items[@backingInt(owner)].mutable) return self.sink.fail(eImmutable, root.span, "record field assignment requires a mutable binding");
             self.locals.items[@backingInt(owner)].usage.writes += 1;
             self.locals.items[@backingInt(owner)].usage.reads += 1;
@@ -888,6 +923,7 @@ const Checker = struct {
         if (try self.topLevel(name) or self.active.contains(text)) return self.sink.fail(eShadowing, name, "comprehension binding shadows an active declaration");
         self.locals.items[@backingInt(slot)].name = text;
         self.locals.items[@backingInt(slot)].declaration = name;
+        self.locals.items[@backingInt(slot)].ownership.initialized = true;
         try self.active.put(self.allocator, text, slot);
     }
 
@@ -1542,6 +1578,7 @@ const Checker = struct {
         }
         if (!self.active.contains(self.src.text(name)) and try self.functionValue(name, out)) return;
         const slot = try self.resolve(name);
+        try self.requireReadable(slot, name);
         if (self.transfers(self.locals.items[@backingInt(slot)].ty)) {
             const local = &self.locals.items[@backingInt(slot)];
             if (!local.ownership.transfer_available) return self.sink.failTransfer(
@@ -2244,7 +2281,7 @@ const Checker = struct {
         if (try self.topLevel(declared) or self.active.contains(name)) return self.sink.fail(eShadowing, declared, "file name shadows an active name");
         for (self.arenas.items) |active| if (std.mem.eql(u8, active.name, name)) return self.sink.fail(eShadowing, declared, "file name shadows an enclosing arena scope");
         const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
-        try self.locals.append(self.allocator, .{ .name = name, .declaration = declared, .ty = value_type, .mutable = false, .usage = .{ .reads = 1 } });
+        try self.locals.append(self.allocator, .{ .name = name, .declaration = declared, .ty = value_type, .mutable = false, .ownership = .{ .initialized = true }, .usage = .{ .reads = 1 } });
         try self.active.put(self.allocator, name, slot);
         defer _ = self.active.remove(name);
         const body = try self.statement(scope.body);
@@ -2263,13 +2300,22 @@ const Checker = struct {
         try self.arenas.append(self.allocator, .{ .name = name, .declaration = scope.name orelse stmt.span, .watermark = watermark });
         defer _ = self.arenas.pop();
         const body = try self.statement(scope.body);
+        // A managed binding first assigned inside the arena lives in the released
+        // region. Function scoping keeps its name visible after the block, so confine
+        // it: reading it once the region is gone is E_ARENA_ESCAPE, not a dangling read.
+        for (self.locals.items[@backingInt(watermark)..]) |*local| {
+            if (try self.managedBearing(local.ty)) local.ownership.arena_confined = true;
+        }
         flow.terminates = body.terminates;
         return .{ .with_scope = .{ .slot = watermark, .resource = null, .body = body.id } };
     }
     fn statementBlock(self: *Checker, stmt: ast.Statement, children: @FieldType(@FieldType(ast.Statement, "data"), "block"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         const first_local = self.locals.items.len;
+        // Plain (copyable and garbage-collected) locals are function-scoped and stay
+        // visible after the block. A move-only resource carries a cleanup obligation
+        // discharged at block exit, so it remains confined to the block.
         defer for (self.locals.items[first_local..]) |local| {
-            _ = self.active.remove(local.name);
+            if (typed.moveOnly(local.ty, self.catalog.records)) _ = self.active.remove(local.name);
         };
         var checked: std.ArrayList(typed.StatementId) = .empty;
         var looping = false;
@@ -2285,7 +2331,7 @@ const Checker = struct {
             try self.requireHandled(first_local, stmt.span);
             var owned: std.ArrayList(typed.LocalId) = .empty;
             for (self.locals.items[first_local..], first_local..) |local, index| {
-                if (try self.needsLocalCleanup(local.ty)) try owned.append(self.allocator, @fromBackingInt(index));
+                if (typed.moveOnly(local.ty, self.catalog.records)) try owned.append(self.allocator, @fromBackingInt(index));
             }
             flow.owned_cleanup = try owned.toOwnedSlice(self.allocator);
         }
@@ -2373,6 +2419,7 @@ const Checker = struct {
                 slot = @fromBackingInt(self.locals.items.len);
                 try self.locals.append(self.allocator, .{
                     .ownership = .{
+                        .initialized = true,
                         .transfer_available = self.transfers(payload.?),
                     },
                     .name = name,
@@ -2412,15 +2459,29 @@ const Checker = struct {
         const condition = try self.expression(branch.condition);
         try self.require(self.nodes.items[@backingInt(condition)].ty, .bool, self.syntax.nodes.items[@backingInt(branch.condition)].span);
         const before = try self.pendingState(self.locals.items.len);
+        const init_before = try self.initSnapshot();
         const then_body = try self.statement(branch.then_body);
         const then_state = try self.pendingState(before.len);
+        const init_then = try self.initSnapshot();
         self.restorePending(before);
+        self.initRestore(init_before);
         const else_body = if (branch.else_body) |other| try self.statement(other) else null;
+        const then_terminates = then_body.terminates;
+        const else_terminates = if (else_body) |other| other.terminates else false;
+        // Merge definite assignment: a name is bound after the `if` only when every
+        // path that continues bound it. A path that diverges contributes nothing.
+        if (then_terminates and !else_terminates) {
+            // Continuation is the else path, already reflected in the flags.
+        } else if (else_terminates and !then_terminates) {
+            self.initRestore(init_then);
+        } else if (!then_terminates and !else_terminates) {
+            self.initIntersect(init_then);
+        }
         if (!then_body.terminates) {
             if (else_body == null or !else_body.?.terminates) try self.samePending(then_state, stmt.span, eResultPath);
             self.restorePending(then_state);
         }
-        flow.terminates = then_body.terminates and if (else_body) |other| other.terminates else false;
+        flow.terminates = then_terminates and else_terminates;
         return .{ .branch = .{ .condition = condition, .then_body = then_body.id, .else_body = if (else_body) |other| other.id else null } };
     }
     fn statementLoop(self: *Checker, stmt: ast.Statement, loop: @FieldType(@FieldType(ast.Statement, "data"), "loop"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
@@ -2466,6 +2527,7 @@ const Checker = struct {
         for (names, slots) |maybe_name, slot| if (maybe_name) |name| {
             self.locals.items[@backingInt(slot)].name = self.src.text(name);
             self.locals.items[@backingInt(slot)].declaration = name;
+            self.locals.items[@backingInt(slot)].ownership.initialized = true;
             try self.active.put(self.allocator, self.src.text(name), slot);
         };
         defer for (names) |maybe_name| if (maybe_name) |name| {
@@ -2512,7 +2574,7 @@ const Checker = struct {
         try self.requireInteger(element, range.name);
         try self.require(self.nodes.items[@backingInt(end)].ty, element, self.syntax.nodes.items[@backingInt(range.end)].span);
         const index: typed.LocalId = @fromBackingInt(self.locals.items.len);
-        try self.locals.append(self.allocator, .{ .name = name, .declaration = range.name, .ty = element, .mutable = false, .usage = .{ .reads = 1 } });
+        try self.locals.append(self.allocator, .{ .name = name, .declaration = range.name, .ty = element, .mutable = false, .ownership = .{ .initialized = true }, .usage = .{ .reads = 1 } });
         const limit: typed.LocalId = @fromBackingInt(self.locals.items.len);
         try self.locals.append(self.allocator, .{ .name = "<range-limit>", .declaration = range.name, .ty = element, .mutable = false, .usage = .{ .reads = 1, .temporary = true } });
         try self.active.put(self.allocator, name, index);
@@ -2553,7 +2615,7 @@ const Checker = struct {
         try self.samePending(loop.before, stmt.span, eResultLoop);
         var owned: std.ArrayList(typed.LocalId) = .empty;
         for (self.locals.items[loop.before.len..], loop.before.len..) |local, index| {
-            if (try self.needsLocalCleanup(local.ty)) try owned.append(self.allocator, @fromBackingInt(index));
+            if (typed.moveOnly(local.ty, self.catalog.records)) try owned.append(self.allocator, @fromBackingInt(index));
         }
         if (!continuing) self.loops.active.items[self.loops.active.items.len - 1].exited = true;
         flow.terminates = true;
@@ -2606,6 +2668,7 @@ const Checker = struct {
         const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
         try self.locals.append(self.allocator, .{
             .ownership = .{
+                .initialized = true,
                 .transfer_available = self.transfers(value_type),
             },
             .name = name,
@@ -2625,6 +2688,7 @@ const Checker = struct {
             return self.sink.fail(eImmutable, a.name, "this binding cannot be assigned");
         var value = try self.expressionExpected(a.value, self.locals.items[@backingInt(slot)].ty);
         if (a.op != .set) {
+            try self.requireReadable(slot, a.name);
             try self.requireInteger(self.locals.items[@backingInt(slot)].ty, a.op_span);
             try self.require(self.nodes.items[@backingInt(value)].ty, self.locals.items[@backingInt(slot)].ty, a.op_span);
             self.locals.items[@backingInt(slot)].usage.reads += 1;
@@ -2647,6 +2711,10 @@ const Checker = struct {
             self.locals.items[@backingInt(slot)].ownership.transfer_span = null;
         }
         self.locals.items[@backingInt(slot)].usage.writes += 1;
+        // A reassignment definitely binds the name on this path and re-homes it out
+        // of any arena it was previously confined to.
+        self.locals.items[@backingInt(slot)].ownership.initialized = true;
+        self.locals.items[@backingInt(slot)].ownership.arena_confined = false;
         return .{ .assign = .{ .slot = slot, .value = value } };
     }
     fn bindParameters(self: *Checker, function: ast.Function) Error!void {
@@ -2679,6 +2747,7 @@ const Checker = struct {
                     .ty = parameter_type,
                     .mutable = function.policy.host == null,
                     .ownership = .{
+                        .initialized = true,
                         .transfer_available = self.transfers(parameter_type),
                     },
                 },

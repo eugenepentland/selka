@@ -82,8 +82,12 @@ This prints `34`. `shared` appears twice in `holder`; the copy has two reference
 to a single new list, not two independent lists.
 
 Assign the escaped value to a binding declared **before** the block, then use it
-after the block. New bindings are block-scoped, so a binding created inside the
-block is not visible afterwards.
+after the block. Locals are function-scoped, so a binding first created inside the
+block is still in scope afterwards — but a managed one is *confined*: it lives in
+the released region, so reading it after the block is a static `E_ARENA_ESCAPE`
+rather than a dangling read. Reassigning the name after the block re-homes it to
+the current region and clears the confinement, and a scalar carries nothing and is
+read freely.
 
 The arena binding itself is opaque. It cannot be stored in a variable, passed to a
 function, returned, compared, or shadowed; the only thing you can write is

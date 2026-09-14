@@ -84,8 +84,14 @@ use a ```mylang block; `kind: "tooling"` features may use a ```bash or ```consol
 
 ## Where the language differs from Python
 
-- **Locals are block-scoped.** A name first assigned inside `with`, `if` or `for` is not
-  visible after the block. Pre-declare it before the block and reassign inside.
+- **Locals are function-scoped, like Python.** An assignment to a name anywhere in the
+  body is one binding, in scope from its first assignment to the end of the function, so a
+  name first assigned inside `with`, `if`, `elif`, `else`, `for` or `while` stays visible
+  after the block and a nested block reassigns the same binding. Reading a name on a path
+  that may not have assigned it yet is a static `E_UNBOUND`; a name never assigned is
+  `E_UNKNOWN_NAME`. The `for` loop variable and `match` payload binding stay scoped to
+  their block. A managed value first assigned inside `with arena()` is confined: reading
+  it after the block is `E_ARENA_ESCAPE`, not a dangling read.
 - **`range()` is not accepted as a comprehension source.** `[x for x in range(10)]` is
   rejected; comprehend over a list, or use a `for` loop.
 - **`def main() -> int`'s value is the process exit status**, truncated to the low 8
