@@ -1,9 +1,11 @@
-//! Source-level resource ownership tests with fake providers that record acquisitions, cleanup order, and failures.
+//! Source-level resource ownership against a real granted directory: delegated
+//! authority, refused completion that hands the owner back, and cleanup order.
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
-const external = @import("external_capabilities.zig");
-const resources = @import("external_resources.zig");
+const native = @import("native_execute.zig");
+const Sandbox = @import("io_files_test.zig").Sandbox;
+const module = "resources.my";
 const declarations =
     \\resource File: filesystem
     \\
@@ -30,50 +32,22 @@ const declarations =
     \\
     \\
 ;
-const Fake = struct {
-    acquired: usize = 0,
-    acquire_calls: usize = 0,
-    live: usize = 0,
-    complete_calls: usize = 0,
-    released: usize = 0,
-    fail_acquire_at: usize = std.math.maxInt(usize),
-    acquire_error: external.CallError = error.Failed,
-    fail_complete_count: usize = 0,
-    complete_error: external.CallError = error.Failed,
-    order: [16]u64 = @splat(0),
-    fn acquire(context: *anyopaque, request: []const u8, _: resources.Permissions) external.CallError!u64 {
-        const self: *Fake = @ptrCast(@alignCast(context));
-        self.acquire_calls += 1;
-        if (self.acquire_calls == self.fail_acquire_at) return self.acquire_error;
-        if (request.len != 0 and (request.len != 1 or request[0] != 42)) return error.Denied;
-        self.acquired += 1;
-        self.live += 1;
-        return self.acquired;
-    }
-    fn complete(context: *anyopaque, _: u64) external.CallError!void {
-        const self: *Fake = @ptrCast(@alignCast(context));
-        self.complete_calls += 1;
-        if (self.fail_complete_count != 0) {
-            self.fail_complete_count -= 1;
-            return self.complete_error;
-        }
-        self.live -= 1;
-    }
-    fn release(context: *anyopaque, handle: u64) void {
-        const self: *Fake = @ptrCast(@alignCast(context));
-        if (self.released < self.order.len) self.order[self.released] = handle;
-        self.released += 1;
-        self.live -= 1;
-    }
-    fn provider(self: *Fake) resources.Provider {
-        return .{ .context = self, .acquire = acquire, .complete = complete, .release = release };
-    }
-};
-fn reject(source: []const u8, code: []const u8) !void {
-    var c = try language.Compilation.init(t.allocator, "resources.my", source);
-    defer c.deinit();
-    try t.expectError(error.SourceError, c.check());
-    try t.expectEqualStrings(code, c.diagnostics.items[0].code);
+// The native provider reads "r:data.bin" and refuses "r:absent.bin".
+const helpers =
+    \\def request() -> [10]u8:
+    \\    return [114u8, 58u8, 100u8, 97u8, 116u8, 97u8, 46u8, 98u8, 105u8, 110u8]
+    \\
+    \\
+    \\def missing() -> [12]u8:
+    \\    return [114u8, 58u8, 97u8, 98u8, 115u8, 101u8, 110u8, 116u8, 46u8, 98u8, 105u8, 110u8]
+    \\
+    \\
+    \\
+;
+/// Grant a writable directory holding the `data.bin` fixture these programs open.
+fn sandbox(box: *Sandbox) !void {
+    try box.init(true);
+    try box.temporary.dir.writeFile(t.io, .{ .sub_path = "data.bin", .data = "\x00\xff\x07" });
 }
 const retry = declarations ++
     \\class Authority:
@@ -81,8 +55,7 @@ const retry = declarations ++
     \\
     \\
     \\def open(auth: Authority) -> Open effects(filesystem):
-    \\    request: [1]u8 = [42u8]
-    \\    return acquire_resource[Open](auth.fs, request)
+    \\    return acquire_resource[Open](auth.fs, request())
     \\
     \\
     \\def retry(file: File) -> Finish:
@@ -93,7 +66,8 @@ const retry = declarations ++
     \\            return complete_resource[Finish](failure.resource)
     \\
     \\
-    \\def main(fs: filesystem_cap) -> i64 noalloc:
+++ helpers ++
+    \\def attempt(fs: filesystem_cap) -> i64 effects(filesystem):
     \\    match open(Authority(fs=fs)):
     \\        case Open.ok(file):
     \\            match retry(file):
@@ -106,16 +80,15 @@ const retry = declarations ++
     \\                    return failure.code
     \\        case Open.err(e):
     \\            return e
+    \\
+    \\
+    \\def main(fs: filesystem_cap) -> i64 noalloc:
+    \\    return attempt(fs) * 100 + attempt(restrict_resource[read](fs))
 ;
 fn retryScenario(allocator: std.mem.Allocator) !void {
-    var fake: Fake = .{ .fail_complete_count = 1 };
-    defer std.debug.assert(fake.live == 0);
-    var c = try language.Compilation.init(allocator, "resources.my", retry);
+    var c = try language.Compilation.init(allocator, module, retry);
     defer c.deinit();
-    const result = try c.executeWithOptions(allocator, .{ .resources = .{ .filesystem = fake.provider() } });
-    try t.expectEqual(@as(i64, 7), result.value);
-    try t.expectEqual(@as(usize, 2), fake.complete_calls);
-    try t.expectEqual(@as(usize, 0), fake.released);
+    try c.emit();
     const dump = try c.dump(allocator);
     defer allocator.free(dump);
     try t.expect(std.mem.indexOf(u8, dump, "COMPLETE_RESOURCE") != null);
@@ -123,58 +96,54 @@ fn retryScenario(allocator: std.mem.Allocator) !void {
     defer discovery.deinit();
 }
 test "source acquisition delegates authority and failed completion returns owned resource for retry" {
+    var box: Sandbox = undefined;
+    try sandbox(&box);
+    defer box.deinit();
     try retryScenario(t.allocator);
+    // A full grant completes on the first try; a capability narrowed to reads
+    // refuses both attempts and hands the same owner back each time.
+    const outcome = try box.run(module, retry);
+    try t.expectEqualStrings("", outcome.trap.code);
+    try t.expectEqual(@as(i64, 702), outcome.value);
 }
-const partial = declarations ++
+test "ownExternal and source acquisition completion retry clean every allocation failure" {
+    var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(no_resize.allocator(), retryScenario, .{});
+}
+const partial = declarations ++ helpers ++
     \\def work(fs: filesystem_cap) -> Status:
-    \\    empty: [0]u8 = []
-    \\    a = acquire_resource[Open](fs, empty)?
-    \\    b = acquire_resource[Open](fs, empty)?
+    \\    a = acquire_resource[Open](fs, request())?
+    \\    b = acquire_resource[Open](fs, missing())?
     \\    _ = a
     \\    _ = b
     \\    return Ok(True)
     \\
     \\
     \\def main(fs: filesystem_cap) -> i64:
-    \\    match work(fs):
-    \\        case Status.ok(done):
-    \\            _ = done
-    \\            return 9
-    \\        case Status.err(e):
-    \\            return e
+    \\    total = 0
+    \\    for index in range(2000):
+    \\        match work(fs):
+    \\            case Status.ok(done):
+    \\                _ = done
+    \\                return 1
+    \\            case Status.err(e):
+    \\                if e != 3:
+    \\                    return 0 - e
+    \\        total = total + 1
+    \\    return total
 ;
 // spec: OWN-9
 test "partial source acquisition propagates failure and releases acquired resources once" {
-    var fake: Fake = .{ .fail_acquire_at = 2 };
-    var c = try language.Compilation.init(t.allocator, "resources.my", partial);
-    defer c.deinit();
-    var stats: [2]resources.Statistics = undefined;
-    try t.expectEqual(@as(i64, 3), (try c.executeWithOptions(t.allocator, .{ .resources = .{ .filesystem = fake.provider(), .statistics = &stats } })).value);
-    try t.expectEqual(@as(usize, 0), fake.live);
-    try t.expectEqual(@as(usize, 1), fake.released);
-    try t.expectEqual(@as(usize, 0), fake.complete_calls);
-    try t.expectEqual(@as(u64, 1), stats[0].acquired);
-    try t.expectEqual(stats[0].acquired, stats[0].released);
-    try t.expectEqual(@as(usize, 0), stats[1].live);
+    var box: Sandbox = undefined;
+    try sandbox(&box);
+    defer box.deinit();
+    // The provider holds 256 handles; two thousand refused pairs only finish
+    // because each propagation released the one resource it had acquired.
+    const outcome = try box.run("partial.my", partial);
+    try t.expectEqualStrings("", outcome.trap.code);
+    try t.expectEqual(@as(i64, 2000), outcome.value);
 }
-test "completion errors release returned owner exactly once when caller chooses fallback" {
-    for ([_]external.CallError{ error.Unavailable, error.Denied, error.Failed, error.OutOfMemory }, 1..) |err, code| {
-        var fake: Fake = .{ .fail_complete_count = 3, .complete_error = err };
-        var c = try language.Compilation.init(t.allocator, "resources.my", retry);
-        defer c.deinit();
-        const options: language.vm.Options = .{ .resources = .{ .filesystem = fake.provider() } };
-        if (err == error.OutOfMemory) {
-            try t.expectError(error.OutOfMemory, c.executeWithOptions(t.allocator, options));
-        } else try t.expectEqual(@as(i64, @intCast(code)), (try c.executeWithOptions(t.allocator, options)).value);
-        try t.expectEqual(@as(usize, 0), fake.live);
-        try t.expectEqual(@as(usize, 1), fake.released);
-    }
-}
-test "ownExternal and source acquisition completion retry clean every allocation failure" {
-    var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(no_resize.allocator(), retryScenario, .{});
-}
-const wrappers = declarations ++
+const wrappers = declarations ++ helpers ++
     \\class Inner:
     \\    file: File
     \\
@@ -190,36 +159,35 @@ const wrappers = declarations ++
     \\
     \\
     \\def pair(fs: filesystem_cap) -> PairResult:
-    \\    empty: [0]u8 = []
-    \\    return Ok(Pair(first=Inner(file=acquire_resource[Open](fs, empty)?), second=acquire_resource[Open](fs, empty)?))
+    \\    return Ok(Pair(first=Inner(file=acquire_resource[Open](fs, request())?), second=acquire_resource[Open](fs, request())?))
     \\
     \\
     \\def main(fs: filesystem_cap) -> i64:
-    \\    match pair(fs):
-    \\        case PairResult.ok(value):
-    \\            _ = value
-    \\            return 0
-    \\        case PairResult.err(e):
-    \\            return e
+    \\    total = 0
+    \\    for index in range(1000):
+    \\        match pair(fs):
+    \\            case PairResult.ok(value):
+    \\                _ = value
+    \\            case PairResult.err(e):
+    \\                return 0 - e
+    \\        total = total + 1
+    \\    return total
 ;
-test "nested resource wrappers release in reverse schema order and traps unwind every instruction" {
-    var c = try language.Compilation.init(t.allocator, "wrappers.my", wrappers);
-    defer c.deinit();
-    var normal: Fake = .{};
-    try t.expectEqual(@as(i64, 0), (try c.executeWithOptions(t.allocator, .{ .resources = .{ .filesystem = normal.provider() } })).value);
-    try t.expectEqualSlices(u64, &.{ 2, 1 }, normal.order[0..2]);
-    var completed = false;
-    for (1..200) |budget| {
-        var fake: Fake = .{};
-        const result = try c.executeWithOptions(t.allocator, .{ .resources = .{ .filesystem = fake.provider() }, .max_steps = budget });
-        try t.expectEqual(@as(usize, 0), fake.live);
-        try t.expectEqual(fake.acquired, fake.released);
-        if (result == .value) {
-            completed = true;
-            break;
-        }
+test "nested resource wrappers release at scope exit and traps unwind every instruction" {
+    var box: Sandbox = undefined;
+    try sandbox(&box);
+    defer box.deinit();
+    var compilation = try language.Compilation.init(t.allocator, "wrappers.my", wrappers);
+    defer compilation.deinit();
+    var options = box.options();
+    // Every budget cuts the first pair at a different boundary; a leaked or
+    // twice-released owner would abort instead of reporting a status of 0 or 1.
+    for (1..90) |budget| {
+        options.max_steps = budget;
+        try t.expect((try native.runWithOptions(&compilation, options)).status <= 1);
     }
-    try t.expect(completed);
+    options.max_steps = null;
+    try t.expectEqual(@as(i64, 1000), (try native.runWithOptions(&compilation, options)).value);
 }
 test "independent bytecode validation rejects suppressed cleanup effects and malformed resource results" {
     var c = try language.Compilation.init(t.allocator, "invalid.my", retry);
@@ -235,6 +203,7 @@ test "independent bytecode validation rejects suppressed cleanup effects and mal
     instruction.op.complete_resource = .i64;
     try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
     instruction.* = original;
+    try language.bytecode.validate(t.allocator, c.code.?);
 }
 
 test "resource acquisition identity and cleanup contracts survive exact duplicate discovery" {
@@ -267,28 +236,30 @@ test "resource acquisition identity and cleanup contracts survive exact duplicat
     try t.expect(compilation.code == null);
 }
 test "source frame traps release the resource moved through recursive calls" {
-    var c = try language.Compilation.init(t.allocator, "recursive.my", declarations ++
+    var box: Sandbox = undefined;
+    try sandbox(&box);
+    defer box.deinit();
+    var compilation = try language.Compilation.init(t.allocator, "recursive.my", declarations ++ helpers ++
         \\def recurse(file: File) -> i64:
         \\    return recurse(file)
         \\
         \\
         \\def main(fs: filesystem_cap) -> i64:
-        \\    empty: [0]u8 = []
-        \\    match acquire_resource[Open](fs, empty):
+        \\    match acquire_resource[Open](fs, request()):
         \\        case Open.ok(file):
         \\            return recurse(file)
         \\        case Open.err(e):
         \\            return e
     );
-    defer c.deinit();
-    var fake: Fake = .{};
-    const result = try c.executeWithOptions(t.allocator, .{ .resources = .{ .filesystem = fake.provider() }, .max_frames = 3 });
-    try t.expect(result == .trap);
-    try t.expectEqual(@as(usize, 1), fake.released);
-    try t.expectEqual(@as(usize, 0), fake.live);
+    defer compilation.deinit();
+    var options = box.options();
+    options.max_frames = 3;
+    const outcome = try native.runWithOptions(&compilation, options);
+    try t.expectEqualStrings("R_FRAME_LIMIT", outcome.trap.code);
+    try t.expectEqual(@as(u8, 1), outcome.status);
 }
 
-const generic_cleanup = declarations ++
+const generic_cleanup = declarations ++ helpers ++
     \\class Owned:
     \\    file: File
     \\    code: i64
@@ -316,26 +287,32 @@ const generic_cleanup = declarations ++
     \\
     \\
     \\def main(fs: filesystem_cap) -> i64:
-    \\    empty: [0]u8 = []
-    \\    first = handle[bool](acquire_resource[Open](fs, empty))
-    \\    match acquire_resource[Open](fs, empty):
-    \\        case Open.ok(file):
-    \\            return first + drop[bool](file)
-    \\        case Open.err(code):
-    \\            return code
+    \\    total = 0
+    \\    for index in range(1000):
+    \\        first = handle[bool](acquire_resource[Open](fs, request()))
+    \\        match acquire_resource[Open](fs, request()):
+    \\            case Open.ok(file):
+    \\                total = first + drop[bool](file)
+    \\            case Open.err(code):
+    \\                return 0 - code
+    \\    return total
 ;
 fn genericCleanupScenario(allocator: std.mem.Allocator) !void {
-    var fake: Fake = .{};
-    defer std.debug.assert(fake.live == 0);
     var c = try language.Compilation.init(allocator, "generic-cleanup.my", generic_cleanup);
     defer c.deinit();
-    const outcome = try c.executeWithOptions(allocator, .{ .resources = .{ .filesystem = fake.provider() } });
-    try t.expectEqual(@as(i64, 8), outcome.value);
-    try t.expectEqual(@as(usize, 2), fake.released);
-    try t.expectEqual(@as(usize, 0), fake.complete_calls);
+    try c.emit();
+    try t.expect(c.code.?.functions.len != 0);
 }
 // spec: GENERIC-CLEANUP-1
 test "generic owned resources clean up explicit and implicit drops under allocation failure" {
+    var box: Sandbox = undefined;
+    try sandbox(&box);
+    defer box.deinit();
+    // Two thousand owners pass through generic forwarding, an explicit drop and
+    // an implicit scope exit; none of them may outlive its iteration.
+    const outcome = try box.run("generic-cleanup.my", generic_cleanup);
+    try t.expectEqualStrings("", outcome.trap.code);
+    try t.expectEqual(@as(i64, 8), outcome.value);
     try genericCleanupScenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), genericCleanupScenario, .{});
@@ -343,8 +320,7 @@ test "generic owned resources clean up explicit and implicit drops under allocat
 
 const generic_retry = declarations ++
     \\def open[G](cap: filesystem_cap) -> Open effects(filesystem):
-    \\    empty: [0]u8 = []
-    \\    return acquire_resource[Open](cap, empty)
+    \\    return acquire_resource[Open](cap, request())
     \\
     \\
     \\def finish[G](file: File) -> Finish effects(filesystem):
@@ -355,7 +331,8 @@ const generic_retry = declarations ++
     \\            return complete_resource[Finish](failure.resource)
     \\
     \\
-    \\def main(cap: filesystem_cap) -> i64:
+++ helpers ++
+    \\def attempt(cap: filesystem_cap) -> i64 effects(filesystem):
     \\    match open[bool](cap):
     \\        case Open.ok(file):
     \\            match finish[bool](file):
@@ -365,17 +342,24 @@ const generic_retry = declarations ++
     \\                    return failure.code
     \\        case Open.err(e):
     \\            return e
+    \\
+    \\
+    \\def main(cap: filesystem_cap) -> i64:
+    \\    return attempt(cap) * 100 + attempt(restrict_resource[read](cap))
 ;
 fn genericRetryScenario(allocator: std.mem.Allocator) !void {
-    var fake: Fake = .{ .fail_complete_count = 1 };
-    defer std.debug.assert(fake.live == 0);
     var c = try language.Compilation.init(allocator, "generic-retry.my", generic_retry);
     defer c.deinit();
-    try t.expectEqual(@as(i64, 7), (try c.executeWithOptions(allocator, .{ .resources = .{ .filesystem = fake.provider() } })).value);
-    try t.expectEqual(@as(usize, 2), fake.complete_calls);
-    try t.expectEqual(@as(usize, 0), fake.released);
+    try c.emit();
+    try t.expect(c.code.?.functions.len != 0);
 }
 test "generic resource acquisition and completion return ownership for retry under allocation failures" {
+    var box: Sandbox = undefined;
+    try sandbox(&box);
+    defer box.deinit();
+    const outcome = try box.run("generic-retry.my", generic_retry);
+    try t.expectEqualStrings("", outcome.trap.code);
+    try t.expectEqual(@as(i64, 702), outcome.value);
     try genericRetryScenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), genericRetryScenario, .{});

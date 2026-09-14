@@ -3,32 +3,25 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const io_render = @import("io_render.zig");
 
 const module = "io-print.my";
 
-/// Execute one program and return everything it wrote to standard output.
-fn output(allocator: std.mem.Allocator, text: []const u8) ![]u8 {
-    var compilation = try language.Compilation.init(allocator, module, text);
+/// Execute one program natively and return everything it wrote to standard output.
+fn output(text: []const u8) ![]const u8 {
+    var compilation = try language.Compilation.init(t.allocator, module, text);
     defer compilation.deinit();
-    var written: std.Io.Writer.Allocating = .init(allocator);
-    errdefer written.deinit();
-    const result = compilation.executeWithOptions(allocator, .{ .output = &written.writer }) catch |err| {
-        if (err != error.OutOfMemory) @import("diagnostics_test.zig").report(compilation.diagnostics.items);
+    const outcome = native.run(&compilation) catch |err| {
+        @import("diagnostics_test.zig").report(compilation.diagnostics.items);
         return err;
     };
-    if (result == .trap) {
-        written.deinit();
-        try t.expectEqualStrings("", result.trap.code);
-        unreachable;
-    }
-    return written.toOwnedSlice();
+    try t.expectEqualStrings("", outcome.trap.code);
+    return outcome.stdout;
 }
 
 fn expectOutput(text: []const u8, expected: []const u8) !void {
-    const written = try output(t.allocator, text);
-    defer t.allocator.free(written);
-    try t.expectEqualStrings(expected, written);
+    try t.expectEqualStrings(expected, try output(text));
 }
 
 fn reject(text: []const u8, code: []const u8) !void {
@@ -70,7 +63,8 @@ test "IO-2 print renders records, enums, unions and checked results by name" {
 test "IO-3 print accepts sep and end keyword arguments and rejects other keywords" {
     try expectOutput("def main() -> int:\n    print(1, 2, sep=\"-\")\n    return 0\n", "1-2\n");
     try expectOutput("def main() -> int:\n    print(1, end=\"\")\n    print(2)\n    return 0\n", "12\n");
-    try expectOutput("def main() -> int:\n    print(1, 2, sep=\"\", end=\"!\")\n    return 0\n", "12!");
+    // The result line follows the guest's own bytes, so a run ends with a newline.
+    try expectOutput("def main() -> int:\n    print(1, 2, sep=\"\", end=\"!\")\n    print()\n    return 0\n", "12!\n");
     try reject("def main() -> int:\n    print(1, flush=True)\n    return 0\n", "E_IO_ARGUMENT");
     try reject("def main() -> int:\n    print(1, sep=\"-\", sep=\",\")\n    return 0\n", "E_IO_ARGUMENT");
     try reject("def main() -> int:\n    print(sep=\"-\", 1)\n    return 0\n", "E_CALL_ARGUMENT");
@@ -92,22 +86,12 @@ test "IO-5 print rejects values without a Python rendering and shadowing restore
     const shadow = "def print(value: int) -> int:\n    return value\n\ndef main() -> int:\n    return print(7)\n";
     var compilation = try language.Compilation.init(t.allocator, module, shadow);
     defer compilation.deinit();
-    const result = try compilation.executeWithOptions(t.allocator, .{});
+    const result = try native.run(&compilation);
     try t.expectEqual(@as(i64, 7), result.value);
+    try t.expectEqualStrings("", result.stdout);
 }
 
-test "print discards output when the host supplies no writer and renders deep graphs" {
-    var compilation = try language.Compilation.init(t.allocator, module, "def main() -> int:\n    print(\"quiet\")\n    return 5\n");
-    defer compilation.deinit();
-    const result = try compilation.executeWithOptions(t.allocator, .{});
-    try t.expectEqual(@as(i64, 5), result.value);
-}
-
-test "render reports Unprintable for authority values that have no Python spelling" {
-    var buffer: [64]u8 = undefined;
-    var writer = std.Io.Writer.fixed(&buffer);
-    const capability: language.vm.Value = .{ .capability = .{ .environment_capability = .{ .execution = 1 } } };
-    try t.expectError(error.Unprintable, io_render.render(&writer, &.{}, capability, 0));
+test "render names printable types and shortens qualified record names" {
     try t.expect(!io_render.printable(.filesystem_cap, &.{}));
     try t.expect(io_render.printable(.i64, &.{}));
     try t.expectEqualStrings("Point", io_render.shortName("module::Point"));

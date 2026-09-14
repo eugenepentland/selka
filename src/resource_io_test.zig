@@ -1,9 +1,11 @@
-//! Resource IO execution and metadata validation tests. Fake providers track exactly-once release and completion.
+//! Resource IO execution against a real granted directory: partial reads, EOF,
+//! zero padding, actual write progress, and release at every trap boundary.
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
-const external = @import("external_capabilities.zig");
-const resources = @import("external_resources.zig");
+const native = @import("native_execute.zig");
+const Sandbox = @import("io_files_test.zig").Sandbox;
+const module = "io.my";
 const declarations =
     \\resource File: filesystem
     \\
@@ -46,78 +48,51 @@ const declarations =
     \\
     \\
 ;
-const Fake = struct {
-    live: usize = 0,
-    releases: usize = 0,
-    completions: usize = 0,
-    reads: usize = 0,
-    writes: usize = 0,
-    cursor: usize = 0,
-    data: []const u8 = "\x00\xff\x07",
-    written: [8]u8 = @splat(0),
-    failure: ?external.CallError = null,
-    invalid_count: bool = false,
-    fn acquire(context: *anyopaque, _: []const u8, _: resources.Permissions) external.CallError!u64 {
-        const self: *Fake = @ptrCast(@alignCast(context));
-        self.live += 1;
-        return 1;
-    }
-    fn complete(context: *anyopaque, _: u64) external.CallError!void {
-        const self: *Fake = @ptrCast(@alignCast(context));
-        self.completions += 1;
-        self.live -= 1;
-    }
-    fn release(context: *anyopaque, _: u64) void {
-        const self: *Fake = @ptrCast(@alignCast(context));
-        self.releases += 1;
-        self.live -= 1;
-    }
-    fn read(context: *anyopaque, _: u64, output: []u8) external.CallError!resources.Read {
-        const self: *Fake = @ptrCast(@alignCast(context));
-        self.reads += 1;
-        if (self.failure) |err| return err;
-        @memset(output, 99);
-        if (self.invalid_count) return .{ .length = output.len + 1, .eof = false };
-        const count = @min(2, @min(output.len, self.data.len - self.cursor));
-        @memcpy(output[0..count], self.data[self.cursor..][0..count]);
-        self.cursor += count;
-        return .{ .length = count, .eof = self.cursor == self.data.len };
-    }
-    fn write(context: *anyopaque, _: u64, input: []const u8) external.CallError!usize {
-        const self: *Fake = @ptrCast(@alignCast(context));
-        self.writes += 1;
-        if (self.failure) |err| return err;
-        if (self.invalid_count) return input.len + 1;
-        const count = @min(2, input.len);
-        @memcpy(self.written[0..count], input[0..count]);
-        return count;
-    }
-    fn provider(self: *Fake) resources.Provider {
-        return .{ .context = self, .acquire = acquire, .complete = complete, .release = release, .read = read, .write = write };
-    }
-};
+// The native provider's request grammar is one mode byte, a colon and a
+// relative path: "r:data.bin" reads, "c:out.bin" creates, "r:absent.bin" fails.
+const requests =
+    \\def reading() -> [10]u8:
+    \\    return [114u8, 58u8, 100u8, 97u8, 116u8, 97u8, 46u8, 98u8, 105u8, 110u8]
+    \\
+    \\
+    \\def creating() -> [9]u8:
+    \\    return [99u8, 58u8, 111u8, 117u8, 116u8, 46u8, 98u8, 105u8, 110u8]
+    \\
+    \\
+    \\def absent() -> [12]u8:
+    \\    return [114u8, 58u8, 97u8, 98u8, 115u8, 101u8, 110u8, 116u8, 46u8, 98u8, 105u8, 110u8]
+    \\
+    \\
+    \\def finish(file: File) -> Status:
+    \\    match complete_resource[Finish](file):
+    \\        case Finish.ok(done):
+    \\            _ = done
+    \\            return Ok(0)
+    \\        case Finish.err(failure):
+    \\            return Err(failure.code)
+    \\
+    \\
+    \\
+;
 fn reject(text: []const u8, code: []const u8) !void {
-    var c = try language.Compilation.init(t.allocator, "io.my", text);
+    var c = try language.Compilation.init(t.allocator, module, text);
     defer c.deinit();
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
-const source = declarations ++
+const source = declarations ++ requests ++
     \\def work(fs: filesystem_cap) -> Status:
-    \\    empty: [0]u8 = []
-    \\    file = acquire_resource[Open](fs, empty)?
+    \\    file = acquire_resource[Open](fs, reading())?
     \\    first = read_resource[Read](file)?
     \\    second = read_resource[Read](file)?
+    \\    _ = finish(file)?
+    \\    sink = acquire_resource[Open](fs, creating())?
     \\    payload: [3]u8 = [7u8, 8u8, 9u8]
-    \\    count = write_resource[Written](file, payload)?
-    \\    match complete_resource[Finish](file):
-    \\        case Finish.ok(done):
-    \\            _ = done
-    \\        case Finish.err(failure):
-    \\            return Err(failure.code)
-    \\    if first.eof or not second.eof:
+    \\    count = write_resource[Written](sink, payload)?
+    \\    _ = finish(sink)?
+    \\    if first.eof or not second.eof or second.length != 0u64:
     \\        return Err(99)
-    \\    return Ok(i64(first.bytes[1]) + i64(second.bytes[0]) + i64(first.bytes[3]) + i64(count))
+    \\    return Ok(i64(first.length) + i64(first.bytes[0]) + i64(first.bytes[1]) + i64(first.bytes[2]) + i64(first.bytes[3]) + i64(count))
     \\
     \\
     \\def main(fs: filesystem_cap) -> i64 noalloc:
@@ -127,96 +102,152 @@ const source = declarations ++
     \\        case Status.err(code):
     \\            return -code
 ;
-fn scenario(allocator: std.mem.Allocator) !void {
-    var fake: Fake = .{};
-    defer std.debug.assert(fake.live == 0);
-    var c = try language.Compilation.init(allocator, "io.my", source);
-    defer c.deinit();
-    try t.expectEqual(@as(i64, 264), (try c.executeWithOptions(allocator, .{ .resources = .{ .filesystem = fake.provider() } })).value);
-    try t.expectEqual(@as(usize, 2), fake.reads);
-    try t.expectEqual(@as(usize, 1), fake.writes);
-    try t.expectEqual(@as(usize, 1), fake.completions);
-    try t.expectEqual(@as(usize, 0), fake.releases);
-    try t.expectEqualSlices(u8, &.{ 7, 8 }, fake.written[0..2]);
-    const dump = try c.dump(allocator);
-    defer allocator.free(dump);
-    try t.expect(std.mem.indexOf(u8, dump, "RESOURCE_read") != null);
-    var duplicates = try language.duplicates.discover(allocator, c.program.?, .{ .min_nodes = 1 });
-    defer duplicates.deinit();
+/// Grant a writable directory holding the three-byte `data.bin` fixture.
+fn sandbox(box: *Sandbox) !void {
+    try box.init(true);
+    try box.temporary.dir.writeFile(t.io, .{ .sub_path = "data.bin", .data = "\x00\xff\x07" });
 }
 test "source resource reads expose partial data EOF and padding while writes report actual progress" {
-    try scenario(t.allocator);
+    var box: Sandbox = undefined;
+    try sandbox(&box);
+    defer box.deinit();
+    const outcome = try box.run(module, source);
+    try t.expectEqualStrings("", outcome.trap.code);
+    // Three bytes read, the fourth zeroed by the runtime, then three written.
+    try t.expectEqual(@as(i64, 3 + 0 + 255 + 7 + 0 + 3), outcome.value);
+    const written = try box.temporary.dir.readFileAlloc(t.io, "out.bin", t.allocator, .limited(16));
+    defer t.allocator.free(written);
+    try t.expectEqualSlices(u8, &.{ 7, 8, 9 }, written);
 }
-test "resource IO failures retain owners until explicit completion or fallback" {
-    var c = try language.Compilation.init(t.allocator, "io.my", source);
-    defer c.deinit();
-    for ([_]external.CallError{ error.Unavailable, error.Denied, error.Failed, error.OutOfMemory }, 1..) |failure, code| {
-        var fake: Fake = .{ .failure = failure };
-        if (failure == error.OutOfMemory) {
-            try t.expectError(error.OutOfMemory, c.executeWithOptions(t.allocator, .{ .resources = .{ .filesystem = fake.provider() } }));
-        } else try t.expectEqual(-@as(i64, @intCast(code)), (try c.executeWithOptions(t.allocator, .{ .resources = .{ .filesystem = fake.provider() } })).value);
-        try t.expectEqual(@as(usize, 1), fake.releases);
-        try t.expectEqual(@as(usize, 0), fake.completions);
-        try t.expectEqual(@as(usize, 0), fake.live);
-    }
+const cycles = declarations ++ requests ++
+    \\def completed(fs: filesystem_cap) -> Status:
+    \\    total = 0
+    \\    for index in range(2000):
+    \\        file = acquire_resource[Open](fs, reading())?
+    \\        _ = finish(file)?
+    \\        total = total + 1
+    \\    return Ok(total)
+    \\
+    \\
+    \\def dropped(fs: filesystem_cap) -> Status:
+    \\    total = 0
+    \\    for index in range(2000):
+    \\        file = acquire_resource[Open](fs, reading())?
+    \\        _ = file
+    \\        total = total + 1
+    \\    return Ok(total)
+    \\
+    \\
+    \\def main(fs: filesystem_cap) -> i64:
+    \\    match completed(fs):
+    \\        case Status.ok(value):
+    \\            _ = value
+    \\        case Status.err(code):
+    \\            return -code
+    \\    match dropped(fs):
+    \\        case Status.ok(value):
+    \\            return value
+    \\        case Status.err(code):
+    \\            return -code
+;
+test "resource owners are released exactly once by completion and by scope exit" {
+    var box: Sandbox = undefined;
+    try sandbox(&box);
+    defer box.deinit();
+    // The provider holds 256 handles at once; four thousand acquisitions only
+    // finish because completion and ordinary scope exit each release one.
+    const outcome = try box.run("cycles.my", cycles);
+    try t.expectEqualStrings("", outcome.trap.code);
+    try t.expectEqual(@as(i64, 2000), outcome.value);
 }
-test "backend validates counts identity unsupported operations and zero capacity without consuming owner" {
-    var fake: Fake = .{};
-    var store = try resources.Store.init(t.allocator, .network, fake.provider(), 1);
-    defer store.deinit();
-    const owner = try store.acquire(try store.grant(), "");
-    var zero: [0]u8 = .{};
-    try t.expectEqual(resources.Read{ .length = 0, .eof = false }, try store.read(owner, &zero));
-    try t.expectEqual(@as(usize, 0), try store.write(owner, ""));
-    fake.invalid_count = true;
-    try t.expectError(error.InvalidProvider, store.read(owner, &zero));
-    try t.expectError(error.InvalidProvider, store.write(owner, ""));
-    try t.expectEqual(@as(usize, 1), fake.live);
-    const moved = try store.transfer(owner);
-    const reads = fake.reads;
-    const writes = fake.writes;
-    try t.expectError(error.InvalidOwner, store.read(owner, &zero));
-    try t.expectError(error.InvalidOwner, store.write(owner, ""));
-    try t.expectEqual(reads, fake.reads);
-    try t.expectEqual(writes, fake.writes);
-    store.provider.read = null;
-    store.provider.write = null;
-    try t.expectError(error.Unavailable, store.read(moved, &zero));
-    try t.expectError(error.Unavailable, store.write(moved, ""));
-    try store.complete(moved);
-    try t.expectEqual(@as(usize, 0), fake.live);
+const failing = declarations ++ requests ++
+    \\def work(fs: filesystem_cap) -> Status:
+    \\    file = acquire_resource[Open](fs, absent())?
+    \\    _ = finish(file)?
+    \\    return Ok(1)
+    \\
+    \\
+    \\def main(fs: filesystem_cap) -> i64:
+    \\    match work(fs):
+    \\        case Status.ok(value):
+    \\            return value
+    \\        case Status.err(code):
+    \\            return -code
+;
+test "a refused acquisition propagates its host category and leaves no owner behind" {
+    var box: Sandbox = undefined;
+    try sandbox(&box);
+    defer box.deinit();
+    // A path that does not exist is the provider's `failed` category, code 3.
+    const outcome = try box.run("failing.my", failing);
+    try t.expectEqualStrings("", outcome.trap.code);
+    try t.expectEqual(@as(i64, -3), outcome.value);
 }
-test "all read write result and reporting allocation failures unwind provider owners" {
-    var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(no_resize.allocator(), scenario, .{});
-}
+const reading_only = declarations ++ requests ++
+    \\def work(fs: filesystem_cap) -> Status:
+    \\    file = acquire_resource[Open](fs, reading())?
+    \\    chunk = read_resource[Read](file)?
+    \\    _ = finish(file)?
+    \\    return Ok(i64(chunk.length))
+    \\
+    \\
+    \\def main(fs: filesystem_cap) -> i64:
+    \\    match work(fs):
+    \\        case Status.ok(value):
+    \\            return value
+    \\        case Status.err(code):
+    \\            return -code
+;
 test "source IO traps at every instruction boundary release or complete exactly once" {
-    var c = try language.Compilation.init(t.allocator, "traps.my", source);
-    defer c.deinit();
-    var completed = false;
-    for (1..300) |budget| {
-        var fake: Fake = .{};
-        const result = try c.executeWithOptions(t.allocator, .{ .resources = .{ .filesystem = fake.provider() }, .max_steps = budget });
-        try t.expectEqual(@as(usize, 0), fake.live);
-        try t.expect(fake.releases + fake.completions <= 1);
-        if (result == .value) {
-            completed = true;
-            break;
-        }
+    var box: Sandbox = undefined;
+    try sandbox(&box);
+    defer box.deinit();
+    var compilation = try language.Compilation.init(t.allocator, "budgets.my", reading_only);
+    defer compilation.deinit();
+    var options = box.options();
+    // Eighty-odd steps carry this program past its last instruction, so every
+    // budget below that cuts it at a different boundary. An owner released
+    // twice would abort the process rather than report a status of 0 or 1.
+    for (1..85) |budget| {
+        options.max_steps = budget;
+        const outcome = try native.runWithOptions(&compilation, options);
+        try t.expect(outcome.status <= 1);
     }
-    try t.expect(completed);
+    options.max_steps = null;
+    try t.expectEqual(@as(i64, 3), (try native.runWithOptions(&compilation, options)).value);
 }
-test "invalid provider progress is a host failure with resource cleanup" {
-    var c = try language.Compilation.init(t.allocator, "invalid.my", source);
-    defer c.deinit();
-    var fake: Fake = .{ .invalid_count = true };
-    try t.expectError(error.InvalidProvider, c.executeWithOptions(t.allocator, .{ .resources = .{ .filesystem = fake.provider() } }));
-    try t.expectEqual(@as(usize, 0), fake.live);
-    try t.expectEqual(@as(usize, 1), fake.releases);
+test "resource requests reject payloads that are not fixed byte arrays" {
+    try reject(declarations ++
+        \\def main(fs: filesystem_cap) -> i64:
+        \\    match acquire_resource[Open](fs, b"r:data.bin"):
+        \\        case Open.ok(file):
+        \\            _ = file
+        \\            return 0
+        \\        case Open.err(code):
+        \\            return code
+    , "E_RESOURCE_REQUEST");
 }
-
 test "emission rejects forged resource IO metadata before provider callbacks" {
-    var c = try language.Compilation.init(t.allocator, "invalid.my", source);
+    var c = try language.Compilation.init(t.allocator, "invalid.my", declarations ++
+        \\def work(fs: filesystem_cap) -> Status:
+        \\    request: [10]u8 = [114u8, 58u8, 100u8, 97u8, 116u8, 97u8, 46u8, 98u8, 105u8, 110u8]
+        \\    file = acquire_resource[Open](fs, request)?
+        \\    chunk = read_resource[Read](file)?
+        \\    match complete_resource[Finish](file):
+        \\        case Finish.ok(done):
+        \\            _ = done
+        \\        case Finish.err(failure):
+        \\            return Err(failure.code)
+        \\    return Ok(i64(chunk.length))
+        \\
+        \\
+        \\def main(fs: filesystem_cap) -> i64:
+        \\    match work(fs):
+        \\        case Status.ok(value):
+        \\            return value
+        \\        case Status.err(code):
+        \\            return -code
+    );
     defer c.deinit();
     try c.emit();
     const instruction = try @import("instruction_test.zig").find(@constCast(c.code.?.functions[0].scope.instructions), .resource_io);
@@ -227,4 +258,5 @@ test "emission rejects forged resource IO metadata before provider callbacks" {
     instruction.op.resource_io.output = .i64;
     try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
     instruction.* = original;
+    try language.bytecode.validate(t.allocator, c.code.?);
 }

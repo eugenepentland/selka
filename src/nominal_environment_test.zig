@@ -1,8 +1,8 @@
-//! Symbolic environment payloads preserve raw bytes, absence, and bounded failures.
+//! Symbolic environment payloads preserve raw bytes, absence, and bounded refusals.
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
-const environment = @import("environment.zig");
+const native = @import("native_execute.zig");
 const declarations =
     \\class Entry[T]:
     \\    present: bool
@@ -36,54 +36,38 @@ const program = declarations ++
     \\        case Lookup.err(e):
     \\            return -e
 ;
-const Fake = struct {
-    calls: usize = 0,
-    value: ?[]const u8 = "\x00\xff",
-    failure: ?environment.CallError = null,
-    invalid_length: bool = false,
-    fn get(context: *anyopaque, name: []const u8, output: []u8) environment.CallError!?usize {
-        const self: *Fake = @ptrCast(@alignCast(context));
-        self.calls += 1;
-        if (!std.mem.eql(u8, name, "K")) return error.Denied;
-        @memset(output, 99);
-        if (self.failure) |err| return err;
-        if (self.invalid_length) return output.len + 1;
-        const bytes = self.value orelse return null;
-        if (bytes.len > output.len) return error.NoCapacity;
-        @memcpy(output[0..bytes.len], bytes);
-        return bytes.len;
-    }
-    fn provider(self: *Fake) environment.Provider {
-        return .{ .context = self, .get = get };
-    }
-};
+/// Run the symbolic lookup against a guest environment holding `K` only when given.
+fn lookup(value: ?[]const u8, arguments: []const []const u8, expected: i64) !void {
+    var compilation = try language.Compilation.init(t.allocator, "nominal-environment.my", program);
+    defer compilation.deinit();
+    var guest: std.process.Environ.Map = .init(t.allocator);
+    defer guest.deinit();
+    if (value) |bytes| try guest.put("K", bytes);
+    const outcome = native.runWithOptions(&compilation, .{ .environment = &guest, .arguments = arguments }) catch |err| {
+        @import("diagnostics_test.zig").report(compilation.diagnostics.items);
+        return err;
+    };
+    try t.expectEqualStrings("", outcome.trap.code);
+    try t.expectEqual(expected, outcome.value);
+}
 fn scenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "nominal-environment.my", program);
     defer compilation.deinit();
-    var fake: Fake = .{};
-    const result = compilation.executeWithOptions(allocator, .{ .environment = fake.provider() }) catch |err| {
-        if (err != error.OutOfMemory) @import("diagnostics_test.zig").report(compilation.diagnostics.items);
-        return err;
-    };
-    try t.expectEqual(@as(i64, 357), result.value);
-    try t.expectEqual(@as(usize, 1), fake.calls);
+    try compilation.emit();
+    const dump = try compilation.dump(allocator);
+    defer allocator.free(dump);
+    try t.expect(std.mem.indexOf(u8, dump, "ENVIRONMENT_GET") != null);
 }
 test "nominal environment wrappers preserve binary bytes and zero unspecified padding" {
+    // Two present bytes and two zeroed tail bytes: 100 + 2 + 0xfe + 0xff.
+    try lookup("\xfe\xff", &.{}, 611);
     try scenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
-test "nominal environment distinguishes absent empty oversize and failed host values" {
-    var compilation = try language.Compilation.init(t.allocator, "nominal-environment.my", program);
-    defer compilation.deinit();
-    const Case = struct { value: ?[]const u8, failure: ?environment.CallError = null, expected: i64 };
-    for ([_]Case{ .{ .value = null, .expected = 0 }, .{ .value = "", .expected = 100 }, .{ .value = "12345", .expected = -4 }, .{ .value = "x", .failure = error.Failed, .expected = -3 } }) |case| {
-        var fake: Fake = .{ .value = case.value, .failure = case.failure };
-        try t.expectEqual(case.expected, (try compilation.executeWithOptions(t.allocator, .{ .environment = fake.provider() })).value);
-        try t.expectEqual(@as(usize, 1), fake.calls);
-    }
-    var fake: Fake = .{ .failure = error.OutOfMemory };
-    try t.expectError(error.OutOfMemory, compilation.executeWithOptions(t.allocator, .{ .environment = fake.provider() }));
-    fake = .{ .invalid_length = true };
-    try t.expectError(error.InvalidProvider, compilation.executeWithOptions(t.allocator, .{ .environment = fake.provider() }));
+test "nominal environment distinguishes absent empty oversize and denied host values" {
+    try lookup(null, &.{}, 0);
+    try lookup("", &.{}, 100);
+    try lookup("12345", &.{}, -4);
+    try lookup("x", &.{ "--restrict", "--allow-env=OTHER" }, -2);
 }

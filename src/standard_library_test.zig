@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const fixture = @import("stdlib_fixture.zig");
 const source =
     "module main\nimport sort\n" ++
@@ -18,7 +19,7 @@ test "standard modules load through embedded providers and execute reserved sour
     var program: language.embedded_project.Program = undefined;
     try program.init(t.allocator, .{ .context = null, .read = read });
     defer program.deinit();
-    const outcome = try language.vm.run(t.allocator, program.compilation.code.?);
+    const outcome = try native.run(&program.compilation);
     try t.expectEqual(@as(i64, 10), outcome.value);
     try t.expectEqual(@as(usize, 2), program.loaded.modules.items.len);
 }

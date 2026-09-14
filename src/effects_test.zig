@@ -2,6 +2,7 @@ const fixture_path = "effects.my";
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const sets = @import("effect_set.zig");
 fn reject(source: []const u8, code: []const u8, text: []const u8) !void {
     var c = try language.Compilation.init(t.allocator, fixture_path, source);
@@ -14,7 +15,7 @@ fn reject(source: []const u8, code: []const u8, text: []const u8) !void {
 fn result(source: []const u8, expected: i64) !void {
     var c = try language.Compilation.init(t.allocator, fixture_path, source);
     defer c.deinit();
-    try t.expectEqual(expected, (try c.execute(t.allocator)).value);
+    try t.expectEqual(expected, (try native.run(&c)).value);
 }
 
 const allocate_body = "def allocate() -> int:\n    items: list[int] = []\n    return len(items)\n\n";
@@ -85,7 +86,8 @@ test "noalloc permits scalar edits while the managed caller declares its allocat
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, fixture_path, accepted);
     defer c.deinit();
-    try t.expectEqual(@as(i64, 14), (try c.execute(allocator)).value);
+    try c.emit();
+    try t.expectEqual(sets.bit(.managed_allocation), c.program.?.functions[2].policy.effects);
     const dump = try c.dump(allocator);
     defer allocator.free(dump);
     var found = try language.duplicates.discover(allocator, c.program.?, .{ .min_nodes = 1 });
