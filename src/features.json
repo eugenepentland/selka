@@ -1,7 +1,6 @@
 {
   "language_version": "0.1.0",
-  "primary_backend": "vm",
-  "native_backend": "qbe-with-host-support",
+  "primary_backend": "qbe",
   "implemented": {
     "direct-c-scalar-imports-qbe": {
       "kind": "tooling",
@@ -280,7 +279,7 @@
     },
     "typed-json": {
       "kind": "language",
-      "summary": "Exported signatures over JSON-compatible types are validated and encoded as `typed-json-v1`.",
+      "summary": "Exported signatures over JSON-compatible types are checked, rendered by `schema-project`, and carried as `typed-json-v1` test arguments and expectations.",
       "doc": "docs/typed-json.md#typed-json-boundaries"
     },
     "scoped-directory-and-endpoint-providers": {
@@ -368,11 +367,6 @@
       "summary": "Runtime byte budgets nest, so an inner region can never exceed the region containing it.",
       "doc": "docs/tooling/runtime-budgets.md#nested-byte-budgets"
     },
-    "memory-accounting-categories": {
-      "kind": "tooling",
-      "summary": "Runtime memory reports separate the VM and host totals, and split the VM's between guest backing and bookkeeping.",
-      "doc": "docs/tooling/runtime-budgets.md#memory-accounting-categories"
-    },
     "guest-memory-ceilings": {
       "kind": "tooling",
       "summary": "Every process that runs guest code runs under a byte ceiling the heap traps on and the kernel backs with RLIMIT_AS.",
@@ -388,30 +382,10 @@
       "summary": "`todo[T]()` declares an unfinished implementation with a checked type and blocks publication.",
       "doc": "docs/typed-holes.md#typed-holes"
     },
-    "bounded-vm-trace": {
-      "kind": "tooling",
-      "summary": "A bounded VM trace records the last instructions before a trap for inspection.",
-      "doc": "docs/tooling/agent-tools.md#bounded-vm-traces"
-    },
-    "in-memory-host-replay": {
-      "kind": "tooling",
-      "summary": "Host calls made during one execution are recorded and replayed without the host.",
-      "doc": "docs/tooling/agent-tools.md#in-memory-host-replay"
-    },
     "named-executable-laws": {
       "kind": "tooling",
       "summary": "A named law is an executable property statement checked with the rest of the suite.",
       "doc": "docs/tooling/agent-tools.md#named-executable-laws"
-    },
-    "isolated-process-workers": {
-      "kind": "tooling",
-      "summary": "Bounded parallel work runs in isolated processes exchanging copied typed messages.",
-      "doc": "docs/tooling/workers.md#isolated-process-workers"
-    },
-    "bounded-scalar-source-evaluation": {
-      "kind": "tooling",
-      "summary": "`eval-project` runs an effect-free parameter-free entry point under explicit step and byte budgets.",
-      "doc": "docs/tooling/evaluation.md#bounded-scalar-source-evaluation"
     },
     "deterministic-test-provider-fixtures": {
       "kind": "tooling",
@@ -541,16 +515,16 @@
     "constants": "bounded-scalar-expressions-and-nongeneric-source-functions",
     "iteration": "range(end/start,end), list/str/dict foreach and enumerate; fixed bounds and structural mutation checks",
     "native_runtime": "QBE only; host effects require explicit ABI registration",
-    "workers": "host-facing copied typed messages; no guest spawn syntax",
+    "workers": "no host worker facility and no guest spawn syntax; parallelism is one guest process per task",
     "floating_point": "float literals, ordinary operators, signed int conversions; IEEE binary64; standard sqrt and decimal parsing are accurate rather than correctly rounded; no transcendentals",
     "callbacks": "generic signatures, exact effect ceilings, explicit readonly context borrows, no captures or reference results",
     "semantic_reuse": "conservative function-body queries; generics constants aliases and inferred callback schemas check fresh",
     "text_data": "managed Unicode scalar strings and managed bytes; host byte I/O keeps its scalar ABI",
     "time_random": "Unix wall clock and explicit entropy capabilities; deterministic noncryptographic SplitMix64",
     "managed_lists": "copyable shared aliases; automatic growth; no owned/resource elements, borrowed interiors, untraced storage embedding, or host escape",
-    "gc": "single-threaded nonmoving tracing; retained VM values root intermediates; collect-on-allocation stress option",
+    "gc": "single-threaded nonmoving tracing; retained guest values root intermediates; collect-on-allocation stress option",
     "python": "static fixed-width types, block-scoped locals, value records; indentation is the only block syntax",
-    "dictionaries": "managed insertion order; homogeneous int or str keys and copyable values; VM and QBE",
+    "dictionaries": "managed insertion order; homogeneous int or str keys and copyable values",
     "native_tests": "fresh QBE processes; exported typed-call-compatible signatures; positive deterministic receipts only; frontend checks fresh; provider snapshots at most128sources/16MiB",
     "standard_library": "ten embedded Python-syntax modules over managed types: math, strings, sort, path, hex, base64, json, pool, random, time"
   },
@@ -573,11 +547,31 @@
     },
     "legacy-syntax": {
       "date": "2026-09-13",
-      "note": "the brace dialect: fn/let/let mut/struct/new, `T { \u2026 }` record literals, `::` qualification, `::<T>` turbofish, `cast<T>(x)`, `//` comments, `{ }` scope blocks, match expressions, `true`/`false`/`unit`, `else if` and `a..b` ranges. Indentation, `def`/`class`, `T(f=v)`, `alias.name`, `f[T](x)`, `T(x)`, `#` comments, `match`/`case`, `True`/`False`/`None`, `elif` and `range(a, b)` are the surface."
+      "note": "the brace dialect: fn/let/let mut/struct/new, `T { … }` record literals, `::` qualification, `::<T>` turbofish, `cast<T>(x)`, `//` comments, `{ }` scope blocks, match expressions, `true`/`false`/`unit`, `else if` and `a..b` ranges. Indentation, `def`/`class`, `T(f=v)`, `alias.name`, `f[T](x)`, `T(x)`, `#` comments, `match`/`case`, `True`/`False`/`None`, `elif` and `range(a, b)` are the surface."
     },
     "value-producing-matches": {
       "date": "2026-09-13",
       "note": "`match e { P => v }` had only a brace spelling and no Python one; a `match` statement whose arms return covers the same programs."
+    },
+    "bounded-scalar-source-evaluation": {
+      "date": "2026-09-14",
+      "note": "the eval-project command, its step/frame/eval-byte budgets and its eval-report-v1 / evaluation-request documents. It executed a parameter-free entry in the compiler's own process; `mylang run` builds the program natively and runs it instead."
+    },
+    "bounded-vm-trace": {
+      "date": "2026-09-14",
+      "note": "vm_trace.Trace and the vm.Options.memory.trace hook. The ring of recent instructions it sampled was an interpreter artifact; a native guest reports a source-mapped call stack at its trap instead."
+    },
+    "in-memory-host-replay": {
+      "date": "2026-09-14",
+      "note": "host_replay.Transcript and its recorded call comparison. It wrapped an interpreter provider registration, and a natively built guest calls its registered provider directly."
+    },
+    "isolated-process-workers": {
+      "date": "2026-09-14",
+      "note": "scripts/workers.py and its typed-call-v1 job pool. Each job dispatched one guest call through invoke-project; nothing replaces it, and the language still has no spawn syntax."
+    },
+    "memory-accounting-categories": {
+      "date": "2026-09-14",
+      "note": "mylang-io --memory-report, --max-runtime-bytes, --max-vm-bytes and --max-host-bytes, and the runtime-memory-v1 split of VM bytes into guest backing and bookkeeping. There is no VM allocator to split; guest-memory-ceilings bounds a guest process instead."
     }
   }
 }

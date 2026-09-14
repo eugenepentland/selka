@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate typed inputs and execute their checked imported values at all widths."""
+"""Generate typed input modules and check them into a project without touching its sources."""
 import argparse
 import hashlib
 import json
@@ -17,6 +17,7 @@ def main():
         manifest = root / 'inputs.json'
         entries = []
         conditions = []
+        signatures = set()
         for signed in (True, False):
             for width in (8, 16, 32, 64):
                 ty = ('i' if signed else 'u') + str(width)
@@ -26,9 +27,11 @@ def main():
                     entries.append({'name': name, 'type': ty, 'value': str(value)})
                     literal = str(value) + ('' if ty == 'i64' else ty)
                     conditions.append(f'v.{name}() == {literal}')
+                    signatures.add((f'config.values::{name}', ty))
         for name, value, literal in (('enabled', 'true', 'True'), ('disabled', 'false', 'False')):
             entries.append({'name': name, 'type': 'bool', 'value': value})
             conditions.append(f'v.{name}() == {literal}')
+            signatures.add((f'config.values::{name}', 'bool'))
         document = {'version': 1, 'module': 'config.values', 'values': entries}
         manifest.write_text(json.dumps(document))
 
@@ -49,40 +52,43 @@ def main():
         entry = root / 'main.my'
         entry.write_text('module main\nimport config.values as v\n\n\ndef main() -> i64:\n    if ' +
                          ' and '.join(conditions) + ':\n        return 7\n    return 0\n')
-        result = subprocess.run([compiler, 'eval-project', str(entry)], text=True, capture_output=True, timeout=90)
-        assert result.returncode == 0 and result.stdout == '7\n', result.stderr
-        def evaluate_inputs(status=0, *extra):
-            result = subprocess.run([compiler, 'eval-project', str(entry), f'--inputs={manifest}', *extra],
+        # The generated module is ordinary source: building and running the project natively
+        # is what proves every integer-width extreme and both booleans survive generation.
+        executed = subprocess.run([compiler, 'run-project', str(entry), '--print-result'],
+                                  text=True, capture_output=True, timeout=300)
+        assert executed.returncode == 0 and executed.stdout == '7\n', executed.stderr
+
+        def schema(status=0, *extra):
+            result = subprocess.run([compiler, 'schema-project', str(entry), f'--inputs={manifest}', *extra],
                                     text=True, capture_output=True, timeout=90)
             assert result.returncode == status, (result.returncode, result.stderr)
             if status:
                 assert result.stdout == ''
             return result
 
+        # A declared input is checked in place of the module's file, so a stale file is
+        # ignored and a missing one is supplied -- and neither is written back to disk.
         source.write_text('deliberately stale invalid generated source')
-        assert evaluate_inputs().stdout == '7\n'
+        declared = json.loads(schema().stdout)
         assert source.read_text() == 'deliberately stale invalid generated source'
         source.unlink()
         config.rmdir()
-        assert evaluate_inputs().stdout == '7\n'
+        assert json.loads(schema().stdout) == declared
         assert not source.exists()
-        entries[0]['value'] = '-127'
-        manifest.write_text(json.dumps(document))
-        assert evaluate_inputs().stdout == '0\n'
-        entries[0]['value'] = '-128'
-        manifest.write_text(json.dumps(document))
-        receipt = json.loads(evaluate_inputs(0, '--evaluation-report').stdout)
-        generated_now = generate().stdout
-        generated_input = next(s for s in receipt['request']['sources'] if s['module'] == 'config.values')
-        assert generated_input['sha256'] == hashlib.sha256(generated_now.encode()).hexdigest()
-        assert evaluate_inputs(2, f'--inputs={manifest}').stdout == ''
+        # The checked schema names every generated export with the type the manifest declared.
+        assert {(f['name'], f['result']) for f in declared['functions'] if f['name'].startswith('config.values::')} == signatures
+        report = json.loads(schema(0, '--schema-report').stdout)
+        generated_input = next(s for s in report['source']['sources'] if s['module'] == 'config.values')
+        assert generated_input['sha256'] == hashlib.sha256(generate().stdout.encode()).hexdigest()
+        assert generated_input['path'] == 'config/values.my'
+        assert schema(2, f'--inputs={manifest}').stdout == ''
         original_entry = entry.read_text()
         entry.write_text('module main\n\n\ndef main() -> i64:\n    return 0\n')
-        assert 'not imported' in evaluate_inputs(2).stderr
+        assert 'not imported' in schema(2).stderr
         entry.write_text(original_entry)
         document['module'] = 'main'
         manifest.write_text(json.dumps(document))
-        assert 'not the entry module' in evaluate_inputs(2).stderr
+        assert 'not the entry module' in schema(2).stderr
         document['module'] = 'config.values'
         manifest.write_text(json.dumps(document))
         for bad in ('{"version":1,"version":1,"module":"config","values":[]}',
@@ -112,10 +118,8 @@ def main():
                              '\n\ndef main() -> i64:\n    return ' +
                              ' + '.join(f'm{i}.value()' for i in range(count)) + '\n')
 
-        def multi(files, status=0, request=False):
-            command = [compiler, 'eval-project', str(entry), *[f'--inputs={file}' for file in files]]
-            if request:
-                command.append('--evaluation-request')
+        def multi(files, status=0, *extra):
+            command = [compiler, 'schema-project', str(entry), *[f'--inputs={file}' for file in files], *extra]
             result = subprocess.run(command, text=True, capture_output=True, timeout=90)
             assert result.returncode == status, (result.returncode, result.stderr)
             if status:
@@ -123,11 +127,12 @@ def main():
             return result
 
         multi_entry(16)
-        assert multi(bindings[:16]).stdout == '120\n'
-        ordered = json.loads(multi(bindings[:16], request=True).stdout)
-        reversed_inputs = json.loads(multi(list(reversed(bindings[:16])), request=True).stdout)
-        assert ordered == reversed_inputs, 'binding flag order changed the request'
-        assert len(ordered['request']['sources']) == 17
+        ordered = json.loads(multi(bindings[:16]).stdout)
+        reversed_inputs = json.loads(multi(list(reversed(bindings[:16]))).stdout)
+        assert ordered == reversed_inputs, 'binding flag order changed the schema'
+        assert len(ordered['functions']) == 16
+        report = json.loads(multi(bindings[:16], 0, '--schema-report').stdout)
+        assert len(report['source']['sources']) == 17
         assert 'usage:' in multi(bindings, status=2).stderr
         duplicate = root / 'duplicate.json'
         duplicate.write_bytes(bindings[0].read_bytes())
@@ -136,16 +141,17 @@ def main():
         for file in bindings[:9]:
             data = file.read_bytes()
             file.write_bytes(data + b' ' * (1024 * 1024 - len(data)))
-        assert multi(bindings[:8]).stdout == '28\n'
+        assert len(json.loads(multi(bindings[:8]).stdout)['functions']) == 8
         assert 'byte budget exceeded' in multi(bindings[:9], status=2).stderr
         main_bytes = b'module main\n\n\ndef main() -> i64:\n    return 0\n'
         entry.write_bytes(main_bytes + b' ' * (4 * 1024 * 1024 - len(main_bytes)))
-        assert multi([]).stdout == '0\n'
+        assert multi([]).returncode == 0
         with entry.open('ab') as stream:
             stream.write(b' ')
         assert 'E_PROJECT_BYTES' in multi([], status=1).stderr
         print('typed input manifests: deterministic generation, source digest, all integer width extrema, '
-              'booleans, checked imported evaluation, strict JSON/duplicate/path/value rejection, and budgets passed')
+              'booleans, native execution of the generated module, checked declared inputs over untouched '
+              'sources, strict JSON/duplicate/path/value rejection, and budgets passed')
 
 
 if __name__ == '__main__':

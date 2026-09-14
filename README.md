@@ -1,19 +1,22 @@
 # mylang
 
-An experimental statically checked, interpreted language implemented in Zig.
-The custom bytecode VM is the primary runtime while we develop the language's
-semantics and test whether agents can write and repair correct code more reliably.
-The implementation follows [the revision 3 plan](docs/plan.md) and
-[interpreter-first roadmap](docs/experiments/interpreter-first.md). The working
-language name and `.my` extension are provisional.
+An experimental statically checked, compiled language implemented in Zig.
+Programs are compiled to native code; we develop the language's semantics to test
+whether agents can write and repair correct code more reliably. The implementation
+follows [the revision 3 plan](docs/plan.md). The working language name and `.my`
+extension are provisional.
 
-The optional [incremental QBE native backend](docs/experiments/incremental-qbe.md)
-builds executables with `mylang build`, reusing individual native function objects
-while checking the frontend fresh. It supports the current typed operations, managed collections, resources,
-and embedding APIs on Linux x86-64; persistent frontend caching remains future work.
+The [incremental QBE native backend](docs/experiments/incremental-qbe.md) is the
+only runtime. `mylang build` produces an executable, reusing individual native
+function objects while checking the frontend fresh, and `mylang run` is that same
+build followed by running the result. The bytecode interpreter that used to sit
+beside it was removed on 2026-09-14; bytecode survives only as the internal IR
+QBE consumes. The backend supports the current typed operations, managed
+collections, resources and embedding APIs on Linux x86-64; persistent frontend
+caching remains future work.
 
-Typed VM host-library calls now execute through explicit registrations. The
-[board-validation trial](experiments/board_trial/README.md) runs on the VM and
+Typed host-library calls execute through explicit registrations. The
+[board-validation trial](experiments/board_trial/README.md)
 matches a standalone Zig baseline against 87 fixed oracle cases and 60 transformed
 cases. Three exploratory agent maintenance blocks have since completed; see
 [the audit](docs/audits/feature-completeness-2026-09-07.md). These do not establish
@@ -97,7 +100,7 @@ annotations. The schematic guest uses them throughout its application model. See
 ## Real schematic pilot
 
 The [Straps LMX2595 SVG pilot](experiments/schematic/README.md) parses the local
-Netlisp DSL and renders a schematic inside the bytecode VM. It includes a generated
+Netlisp DSL and renders a schematic from a natively built guest. It includes a generated
 SVG, reproducible inputs and independent netlist acceptance. This is a bounded
 single-subcircuit application; full Netlisp evaluation remains outside its scope.
 
@@ -107,14 +110,14 @@ Use an installed `mylang` binary to check/run `.my` projects from disk. The two
 pilot hosts also load disk source explicitly: `schematic-svg --project DIRECTORY`
 and `board-trial --project DIRECTORY`, followed by their input paths. The directory
 contains `main.my` and its imports. Each invocation reads the current source and
-compiles it to VM bytecode in memory. No Zig or Guardian invocation is needed for
+builds it natively. No Zig or Guardian invocation is needed for
 application edits; rebuild the host when changing the implementation or wrappers.
 
 See the [implementation and phased development plan](docs/experiments/incremental-development.md)
 for commands and acceptance. [Incremental verification](docs/experiments/verification-runtime.md)
 now provides opt-in affected-suite selection, shared receipts, local agent scheduling
 and combined-merge certificates. The [development host](docs/experiments/development-host.md)
-reloads the schematic in one VM process. Existing production gates remain full gates;
+reloads the schematic in one host process. Existing production gates remain full gates;
 finer semantic-query caching is conditional on measurements.
 
 The development tools keep the ordinary read/edit/check workflow:
@@ -143,9 +146,8 @@ zig build test -Doptimize=ReleaseFast --summary all
 zig build fmt-check
 ```
 
-`zig build test` runs checker/VM, actual CLI, and interpreter/tooling integration
-acceptance. `zig build test-interpreter` is an explicit alias. CI uses this
-default suite in Debug and ReleaseFast.
+`zig build test` runs the checker, actual CLI, and runtime/tooling integration
+acceptance. CI uses this default suite in Debug and ReleaseFast.
 
 While iterating, `-Dtest-filter=SUBSTRING` narrows the Zig suites to the tests
 whose name contains that text. `zig build test-units -Dtest-filter=arena` runs
@@ -164,7 +166,7 @@ zig build test-native-tests --summary all
 zig build test-c-ffi --summary all
 ```
 
-Guardian gates each acceptance route. `-Doptimize` selects the host compiler/VM
+Guardian gates each acceptance route. `-Doptimize` selects the host compiler's
 mode. Use a disk-backed `TMPDIR` with sufficient space for large native runs.
 
 The example prints `7`. A successful program result is printed to stdout, not
@@ -197,8 +199,8 @@ merge handling.
 
 [SPEC.md](SPEC.md) links implemented behaviors to executable regression tests.
 [Versioned JSON diagnostics](docs/experiments/json-diagnostics.md) are available
-with `--diagnostics=json`. Source locations, notes, VM traces and cached warnings
-stay on stderr; command results keep their stdout format.
+with `--diagnostics=json`. Source locations, notes, guest stack traces and cached
+warnings stay on stderr; command results keep their stdout format.
 
 [Ownership diagnostic provenance](docs/experiments/diagnostic-provenance.md) now
 shows the invalid use, the earlier transfer, and the value declaration.
@@ -210,7 +212,7 @@ cache is ignored.
 
 ## Current implementation
 
-The [typed VM host interface](docs/experiments/host-functions.md) supports explicit
+The [typed host interface](docs/experiments/host-functions.md) supports explicit
 `host def` declarations, transitive effects and program-bound registrations. It
 copies ordinary values through bounded synchronous sessions, including imported
 calls and typed results. Host-enabled typed application invocation now accepts
@@ -218,8 +220,9 @@ snapshots and returns owned reports through exported guest functions.
 Runtime-owned boundary values reject.
 
 The scalar MVP (M0–M5) is implemented and audited: owned source buffers, source locations, lexer,
-parser, separate untyped/typed representations, per-function instructions,
-an iterative VM with typed locals, jumps, and explicit call frames, deterministic dumps, binding diagnostics, and actual-CLI tests.
+parser, separate untyped/typed representations, per-function instructions with
+typed locals, jumps and explicit call frames, deterministic dumps, binding
+diagnostics, and actual-CLI tests.
 
 The accepted subset has one `def main() -> int` and typed helper functions, with
 local bindings, assignment,
@@ -326,8 +329,8 @@ syntactically valid code without requiring completed type checking.
 [Project verification](docs/experiments/verification-driver.md) uses
 `python3 scripts/verify.py verify.json`. Filters select explicit steps and their
 dependencies; reports distinguish selected success from full-manifest success.
-The eight Python driver tests also run under `zig build test`, alongside the
-core/CLI suites and the interpreter/tooling integration drivers.
+The Python driver tests also run under `zig build test`, alongside the
+core/CLI suites and the runtime/tooling integration drivers.
 
 Source programs use [declared codec operations](docs/experiments/source-codecs.md)
 to convert between domain values and their typed wire representations.
@@ -352,12 +355,12 @@ validates unused template fields, identities and argument requirements.
 [Finite layout checking](docs/experiments/nominal-layouts.md) now distinguishes
 stored recursion from finite nesting and phantom arguments.
 [Concrete nominal instances](docs/experiments/nominal-instances.md) now execute
-records, unions, results and enum templates on the VM, preserving argument
+records, unions, results and enum templates, preserving argument
 identity, ownership and typed host contracts.
 `examples/nominal-instances.my` returns `16`.
 [Symbolic nominal bodies](docs/experiments/nominal-bodies.md) now check `Box<T>`
 fields, variant payloads, result propagation and ownership before calls,
-then specialize the discovered concrete types for the VM.
+then specialize the discovered concrete types.
 `examples/nominal-bodies.my` returns `7`.
 [Generic provider contracts](docs/experiments/nominal-providers.md) now support
 resource/environment result wrappers and fully substituted byte-array inputs.
@@ -418,32 +421,21 @@ Neither command writes source files; see [module formatting](docs/experiments/mo
 top-level declarations with their kinds, exports and original byte ranges. It resolves
 no imports and checks nothing; see [declaration listing](docs/experiments/list-declarations.md).
 
-`eval-project` provides [restricted evaluation](docs/experiments/restricted-evaluation.md)
-for effect-free, parameter-free project entry points, with explicit step, frame,
-and VM-memory budgets. Checked schemas and exact successful-check caching are
-implemented below; finer semantic reuse remains measurement-driven.
-
-Use `eval-project --evaluation-report` for a JSON [dependency receipt](docs/experiments/evaluation-reports.md)
-containing the exact result, source/import hashes, budgets, and running compiler identity.
-
-`eval-project --evaluation-request` computes the same request identity after checking
-eligibility, without executing the entry or claiming a result.
-
-`python3 scripts/evaluate.py examples/modules/main.my --cache-dir .mylang-cache`
-provides [persistent evaluation reuse](docs/experiments/evaluation-cache.md). Hits
-still check the current project and explicitly report that VM execution was skipped.
-
-Add `--compare-to path.json` to the evaluation cache driver to explain changes against
-a saved request, evaluation report, or cache entry (`--max-changes` bounds the output).
+`eval-project`, which ran a project entry point in the compiler's own process,
+was removed on 2026-09-14 along with the interpreter it needed; so were its
+evaluation reports and its persistent evaluation cache. Run a program with
+`mylang run`, which builds it natively and executes it. Checked schemas and exact
+successful-check caching are implemented below; finer semantic reuse remains
+measurement-driven.
 
 `input-module` validates [typed JSON input manifests](docs/experiments/input-manifests.md)
 and emits ordinary exported functions. The example at `examples/input-values/`
-evaluates to 64. `eval-project --inputs=examples/input-values/inputs.json` generates
-the declared module in memory; the cache driver also accepts `--inputs` and reads it
-fresh on every lookup.
+evaluates to 64. `schema-project --inputs=examples/input-values/inputs.json`
+supplies the declared module in memory, checking it in place of the file on disk
+without writing one.
 
 Repeat `--inputs` for multiple declared modules (up to 16 manifests and 8 MiB combined).
-Conflicting module bindings reject; flag order does not change the request identity.
+Conflicting module bindings reject; flag order does not change the rendered schema.
 
 Public schemas can now be derived from checked module contracts:
 
@@ -459,17 +451,14 @@ owners/capabilities retain opaque reconstruction boundaries. This establishes
 data bindings, domain codecs, Python callable wrappers, and generation receipt/cache
 integration are implemented as described below.
 
-Ordinary typed values now have a bounded JSON codec:
-
-```sh
-zig-out/bin/mylang check-value-project examples/schema/main.my \
-  --value=examples/schema/message-value.json
-```
-
-The command checks source and data, materializes owned compiler values, and writes
-canonical `typed-json-v1`. It supports integer/boolean values, records, arrays,
-enum tables, enums, unions, and results. Duplicate/unknown keys and invalid values
-reject; opaque types require future explicit codecs. See the
+Ordinary typed values have a bounded JSON representation derived from the checked
+declarations. It supports integer/boolean values, records, arrays, enum tables,
+enums, unions, and results. Duplicate/unknown keys and invalid values reject;
+opaque types require future explicit codecs. The `check-value-project` command
+that validated a standalone value document was removed on 2026-09-14; the
+representation is now reached through `schema-project` and through
+`mylang test --cases`, which carries a test's arguments and expected result in it.
+See [typed JSON boundaries](docs/typed-json.md) and the
 [wire contract, limits, and remaining integration](docs/experiments/typed-json.md).
 
 Generate standalone Python data bindings from the checked public schema:
@@ -522,25 +511,19 @@ described below.
 
 Domains can now declare [explicit codec contracts](docs/experiments/domain-codecs.md)
 linking an ordinary wire type to checked public decoder/encoder methods. The schema
-records those contracts while preserving opaque backing. [Executed JSON codecs](docs/experiments/domain-json.md)
-now use them with shared budgets; Python calls also use these contracts. See [the example](examples/domain-codecs/main.my).
-
-Try a declared domain codec with:
+records those contracts while preserving opaque backing. See
+[the example](examples/domain-codecs/main.my) and inspect the contracts with:
 
 ```sh
-zig-out/bin/mylang check-value-project examples/domain-codecs/main.my --value=examples/domain-codecs/value.json
+zig-out/bin/mylang schema-project examples/domain-codecs/main.my
 ```
 
-[invoke-project](docs/experiments/checked-calls.md) now calls exported functions from
-a schema-pinned typed-call-v1 request with named JSON arguments. Domain codecs and
-the target share operation budgets. This supplies the call boundary for generated
-Python wrappers described below.
-
-Generated Python bindings also expose `Client`, `CALLS`, and nominal domain wire
-objects for exported effect-free calls. Calls use the selected compiler and project
-through the schema-pinned JSON protocol; standalone data codecs remain independent
-of the compiler. See [generated Python calls](docs/experiments/python-calls.md) for
-usage, budgets, error handling, and unsupported boundaries.
+The commands that executed a declared codec — `check-value-project` and
+`invoke-project` — were removed on 2026-09-14 with the interpreter they ran on,
+and so were the generated Python call wrappers built over `invoke-project`.
+Declared codec contracts are still checked and still rendered in the schema.
+Standalone Python *data* bindings remain independent of the compiler and are
+described above.
 
 Schema generation, JSON calls, and Python binding generation accept repeated
 `--inputs` manifests. Generated clients accept `inputs=(path, ...)` and reread the

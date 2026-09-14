@@ -16,15 +16,15 @@ Each timing is one JSON object on stderr:
 are emitted at command return, including attempted phases on source, host and
 runtime failures. Ordinary failure diagnostics remain visible; use compiler
 `--diagnostics=json` when the entire stderr stream must be JSON Lines. The byte
-host retains its text diagnostics and optional runtime memory JSON records, so
-consumers should select `kind: "timing"`. Timing records never go to stdout.
+host retains its text diagnostics, so consumers should select
+`kind: "timing"`. Timing records never go to stdout.
 
 `duration_ns` measures elapsed awake-clock nanoseconds and is nonnegative.
 `counts` contains only available observations, shared across that command's
 records; missing counts are omitted, not estimated. Source bytes and module
 counts describe the loaded source graph; AST and typed-node counts include
 expression and statement nodes. Host input bytes are the successfully read
-request size; output bytes count successfully published bytes. No VM instruction
+request size; output bytes count successfully published bytes. No instruction
 or host-call count is inferred.
 
 Measured intervals are disjoint. `total` is an inclusive parent: **do not add it
@@ -40,18 +40,22 @@ mean their durations should be added to a second measure of their children.
 - Project `source_load_parse` prepares generated inputs and loads source with
   header parsing, dependency discovery and hashes. `frontend` builds interfaces,
   combines syntax and checks the project. These phases are disjoint.
-- `bytecode_lowering` runs after checking, before `vm_execution`. VM execution
-  includes VM validation, setup and cleanup, and registered host callbacks;
-  compiler result output is outside it. `evaluation` labels compile-time
-  evaluation rather than ordinary VM execution.
-- `native_emission` covers native validation and C rendering after the separately
-  measured `bytecode_lowering`. `bytecode_dump_inclusive` includes lowering and disassembly;
-  `format_inclusive` includes parsing and formatting. `discovery` measures
-  duplicate analysis. Other commands may report only applicable boundaries.
+- `bytecode_lowering` runs after checking and lowers the checked program to the
+  internal bytecode the native backend consumes. `native_emission` covers native
+  validation and QBE rendering after that separately measured lowering.
+- `run` and `run-project` report `native_execution`: the guest child process plus
+  the native build it needed, excluding compiler result output. Compile-time
+  constant evaluation happens inside `frontend` and is not reported separately.
+- `bytecode_dump_inclusive` includes lowering and disassembly; `format_inclusive`
+  includes parsing and formatting. `discovery` measures duplicate analysis.
+  `declaration_listing` covers parse-only listing. Other commands may report only
+  applicable boundaries.
 - Byte host `compilation_inclusive` uses the existing embedded-project API,
   which loads, parses, checks and lowers together. No separate lowering time is
-  claimed there. `stdin_read`, `vm_execution` and `stdout_write` are separate;
-  host registry/grant setup remains in total. Failed guests publish no output.
+  claimed there. `stdin_read`, `stdout_write` and the guest-execution phase are
+  separate; that phase is still emitted under its legacy name `vm_execution`
+  although the guest now runs as a native process. Host registry/grant setup
+  remains in total. Failed guests publish no output.
 
 Run protocol checks without performance thresholds:
 

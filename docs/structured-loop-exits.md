@@ -31,7 +31,7 @@ more precise loop analysis could establish that the owner will not be used again
 Loop return analysis still permits the condition to be initially false; a return
 after the loop remains necessary when the function could fall through.
 
-Lowering uses the existing checked jumps, local drops and arena endings. VM and
-QBE native execution therefore share the same exit cleanup sequence.
+Lowering uses the existing checked jumps, local drops and arena endings, so every
+exit path shares the same cleanup sequence.
 The formatter, source maps, generic checker and duplicate analysis preserve the
 new statements.

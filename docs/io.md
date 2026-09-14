@@ -73,8 +73,7 @@ def main() -> int noio:
 ```
 
 Write `effects(output)` to permit printing under an explicit bound. `print`
-runs on the QBE native backend as well as the VM, with byte-identical
-rendering.
+runs on the QBE native backend, the only runtime.
 
 ## What `mylang run` prints
 
@@ -266,8 +265,8 @@ Generic function bodies reject file operations. The native backend runs them.
 
 ## The native backend
 
-`print` and every file operation run on the QBE native backend as well as the
-VM, so `mylang build` and `mylang build --run` accept a program that uses them.
+`print` and every file operation run on the QBE native backend, so `mylang
+build` and `mylang build --run` accept a program that uses them.
 A native executable grants every capability by default, exactly as `mylang run`
 does, and takes the same `--restrict` and `--allow-*` options; `mylang build
 --run` forwards them after `--`:

@@ -67,12 +67,13 @@ mylang-io --project app --max-input=1048576 --max-output=1048576 \
   --max-steps=10000000 --max-calls=10000 --max-work=4000000
 ```
 
-Defaults remain 2 MiB input, 128 MiB output, 2 billion VM steps, and 300 million
-host calls/work units. Zero input/output capacity is valid; execution budgets
-must be positive. Invalid and duplicated flags reject before running the guest.
+Defaults remain 2 MiB input, 128 MiB output, 2 billion guest steps, and 300
+million host calls/work units. Zero input/output capacity is valid; execution
+budgets must be positive. Invalid and duplicated flags reject before running the guest.
 Input is bounded by its configured limit plus one detection byte. Output remains
 bounded by its configured capacity, with fixed-size block copies at the host
-boundary; VM metadata and source parsing have their existing separate budgets.
+boundary; bytecode metadata and source parsing have their existing separate
+budgets.
 
 Reproduce the end-to-end comparison with:
 

@@ -5,10 +5,21 @@
 > legacy arena scopes), the C backend and the brace dialect these entries are written
 > in — `fn`, `let`, `struct`, `new T { … }`, `::` qualification, `//` comments — are gone.
 > Entries below that describe any of them are history; see [legacy/](legacy/) and [the current language reference](current-language.md).
+>
+> Removed on 2026-09-14: the bytecode interpreter that ran the programs these entries
+> record. QBE native code is the only runtime — `mylang run` and `run-project` build the
+> program and execute it in a child process, `mylang build` writes the executable, and
+> `mylang test` runs each guest test as a fresh native process — and the `eval-project`,
+> `check-value-project` and `invoke-project` commands went with the interpreter.
+> Bytecode survives only as the compiler's internal IR that QBE consumes. Dated entries
+> below that describe the interpreter, a VM, or two backends are history.
 
-The scalar MVP and substantial post-MVP experiments are implemented. The
+The scalar MVP and substantial post-MVP experiments are implemented, and all of them now
+run as native code: the compiler checks a program, lowers it to its internal bytecode IR,
+and QBE compiles that to an amd64 Linux executable. The
 [revision 3 plan](plan.md) and [current roadmap](experiments/roadmap.md) define
-active priorities; the dated entries below preserve milestone evidence.
+active priorities; the dated entries below preserve milestone evidence, including the
+entries written while a bytecode interpreter was the runtime.
 
 ## 2026-09-06: Interpreter-first direction adopted
 

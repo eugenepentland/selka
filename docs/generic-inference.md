@@ -26,4 +26,4 @@ Inference matches checked argument types against parameter signatures, following
 
 The entire list is either explicit or inferred. Return context and requirements alone do not supply arguments: a parameter appearing only in the return type or only in a constraint requires explicit specialization. Inference does not choose defaults, perform coercions, infer nominal constructor syntax, or infer generic function values. Unmaterialized phantom types within nominal arguments also require explicit specialization. Missing or conflicting information produces `E_GENERIC_INFERENCE` with a related parameter declaration when available.
 
-Both the VM and the QBE native backend consume the existing concretely specialized checked program; inference adds no runtime work.
+The QBE native backend consumes the existing concretely specialized checked program; inference adds no runtime work.

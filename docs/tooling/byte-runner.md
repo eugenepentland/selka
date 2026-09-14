@@ -22,7 +22,7 @@ traversal opens every component with symlink following disabled and final opens
 reject symlinks too. A TCP request must match a configured endpoint name exactly
 before the pre-parsed numeric address is dialled: there is no DNS, TLS, redirect
 or process launching, and each transfer is capped at 64 KiB with partial progress
-reported. These are blocking synchronous providers, VM instruction budgets are
+reported. These are blocking synchronous providers, guest instruction budgets are
 not wall-clock deadlines, and effects that already happened are not rolled back
 when the guest fails afterwards.
 
@@ -64,12 +64,12 @@ values: `--max-input`, `--max-output`, `--max-steps`, `--max-calls` and
 must be positive. Unknown flags, repeated limits, non-decimal values and overflow
 are rejected before the guest is invoked, so a mistyped budget never runs with a
 default silently substituted. Defaults are 2 MiB of input, 128 MiB of
-unpublished output, 2,000,000,000 VM steps and 300,000,000 host calls and work
+unpublished output, 2,000,000,000 guest steps and 300,000,000 host calls and work
 units. Input is bounded by its configured limit plus one detection byte, and
-output is bounded by its configured capacity; source parsing and VM metadata keep
-their own separate budgets. Exhausting a host budget traps the guest, and because
-output is published only after a successful zero exit, a trapped run publishes
-nothing at all.
+output is bounded by its configured capacity; source parsing and bytecode
+metadata keep their own separate budgets. Exhausting a host budget traps the
+guest, and because output is published only after a successful zero exit, a
+trapped run publishes nothing at all.
 
 ```console
 $ printf 'hello bytes' | mylang-io --project examples/contract-echo

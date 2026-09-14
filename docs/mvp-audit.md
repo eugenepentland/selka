@@ -4,10 +4,17 @@
 > declarations, the `allocator` capability, references and slices, lexical borrows and
 > legacy arena scopes) and the C backend are gone. Entries below that describe them are
 > history; see [legacy/](legacy/) and [the current language reference](current-language.md).
+>
+> Removed on 2026-09-14: the bytecode interpreter this audit inspected. QBE native code is
+> the only runtime — `run` builds the program and executes it in a child process, `build`
+> writes the executable — and the `eval-project`, `check-value-project` and
+> `invoke-project` commands went with the interpreter. Bytecode survives only as the
+> compiler's internal IR that QBE consumes, which `dump-bytecode` still prints. The VM
+> evidence recorded below is history.
 
-Scope: the scalar compiler and VM in plan sections 4–13, on Guardian's exact
-Zig `0.17.0-dev.1683+5ceec001b` snapshot. Plan sections 15 and 18 explicitly
-reserve ownership, effects, duplicate discovery, conversions, schemas, and
+Scope: the scalar compiler and the then-current bytecode VM in plan sections 4–13,
+on Guardian's exact Zig `0.17.0-dev.1683+5ceec001b` snapshot. Plan sections 15 and 18
+explicitly reserve ownership, effects, duplicate discovery, conversions, schemas, and
 other quality contracts for later experiments. They are not implemented.
 
 The previous milestones established M0–M4. This audit inspects their actual

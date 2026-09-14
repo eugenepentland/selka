@@ -17,7 +17,7 @@ def main() -> i64:
     return i64(CHECKSUM)
 ```
 
-This extends the existing constant evaluator. It does not run an unrestricted macro system or call the separate `eval-project` tool. No new source keyword is required.
+This extends the existing constant evaluator, which runs inside the checker. It is not an unrestricted macro system, and it is the only way source runs at tool time: there is no separate command that executes a project without building it. No new source keyword is required.
 
 Supported callees are nongeneric free functions with integer/bool parameters and results. Integer aliases are accepted. Arguments evaluate once, left to right. Bodies may contain scalar bindings and assignments, `_ = expression` discards, return, if/else, while, integer range for, break and continue. Calls may recurse within the nesting/work limits. Imported functions retain normal name and visibility checks, and each call has its own lexical locals.
 
@@ -29,6 +29,6 @@ Arithmetic uses the existing fixed-width evaluator, including checked, wrapping,
 
 Each compilation evaluates against its complete source and input-module snapshot. Results are cached only within an individual evaluation; no cross-compilation generated-result cache is introduced. Changed imported input source is therefore evaluated anew, while existing compiler/checker cache identity rules continue to include the whole snapshot and compiler identity. Future target-dependent builtins would require an explicit target dependency before they could be admitted.
 
-The final constant getter contains a folded scalar literal. Guest execution does not rerun the source computation: a regression computes a 1,000-iteration loop during checking, then reads the constant with a ten-step guest budget. Getter calls retain ordinary call/step accounting.
+The final constant getter contains a folded scalar literal. The built program does not rerun the source computation: a regression computes a 1,000-iteration loop during checking, then reads the constant with a ten-step guest budget. Getter calls retain ordinary call/step accounting.
 
 This stage deliberately excludes generated aggregate tables, schema ASTs, generic/domain function evaluation and arbitrary compile-time I/O. Those require further explicit value/authority/budget design. Focused tests cover runtime equivalence, allocation failure, changed input modules, lexical isolation, forbidden effects and located limits; a native example verifies the folded result survives native emission.

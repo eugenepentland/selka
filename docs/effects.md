@@ -84,8 +84,8 @@ def main() -> int:
 - A function takes at most one effect annotation, and it is a ceiling on the
   inferred set rather than a signature the callee must match exactly.
 - `managed_allocation` is a guest-level classification. It says nothing about the
-  host allocations the VM makes for frames, operand stacks or result wrappers, so
-  a `noalloc` function is not a promise of an allocation-free process.
+  host allocations the runtime makes for frames, stack slots or result wrappers,
+  so a `noalloc` function is not a promise of an allocation-free process.
 - The bound is not an authority grant. A function annotated `effects(filesystem)`
   still needs a `Filesystem` value to do anything with the filesystem, and that
   value comes from the entry point's parameters — which `mylang run` provisions

@@ -1,7 +1,9 @@
 # mylang — working rules
 
-A Python-syntax statically checked language. Zig compiler (`src/`), bytecode VM plus a
-QBE native backend (amd64 Linux only). QBE is vendored under `vendor/qbe` and built by
+A Python-syntax statically checked language. Zig compiler (`src/`) with a QBE native
+backend as its only runtime (amd64 Linux only) — `mylang run` builds the program and
+executes it. Bytecode survives only as the internal IR QBE consumes; there is no
+interpreter. QBE is vendored under `vendor/qbe` and built by
 `zig build` into `zig-out/bin/qbe`. Zig is pinned by `.zigversion`; the build panics on
 any other toolchain.
 
@@ -21,10 +23,12 @@ any other toolchain.
   `test/integration.zig`. Neither runs Python drivers or Guardian. The filter also
   applies to `zig build test` and `test-compile`. A filter that names nothing fails
   rather than reporting green, so filter one root at a time.
-- `zig-out/bin/mylang test <entry.my|dir> --filter SUBSTRING` — guest (`.my`) tests.
+- `zig-out/bin/mylang test <entry.my|dir> --filter SUBSTRING` — guest (`.my`) tests,
+  each built and run as its own native process.
   A bare substring matches anywhere in the qualified name; a pattern containing
   `*`, `?` or `[` is a glob. A directory runs every `.my` entry under it in parallel.
-  Results are reused per test, so an unchanged rerun is near-free.
+  Results are reused per test, so an unchanged rerun is near-free. A first run pays
+  for the native build; the object cache makes later runs cheap.
 - `zig build test-docs` — executes every fenced documentation example.
 - `zig-out/bin/mylang doc-coverage .` — checks the feature/doc contract (below).
 - Targeted Python drivers: `zig build test-qbe-build`, `test-native-tests`, `test-byte-io`, …
@@ -84,8 +88,9 @@ use a ```mylang block; `kind: "tooling"` features may use a ```bash or ```consol
   visible after the block. Pre-declare it before the block and reassign inside.
 - **`range()` is not accepted as a comprehension source.** `[x for x in range(10)]` is
   rejected; comprehend over a list, or use a `for` loop.
-- **`def main() -> int`'s value is not the exit status.** It is printed by
-  `mylang run prog.my --print-result`. The process exit status is separate.
+- **`def main() -> int`'s value is not the exit status.** `mylang run prog.my` builds
+  the program and runs it; `--print-result` prints the entry point's value. The
+  process exit status is separate.
 - **No tuples. No methods on classes. No closures.** Records are values; functions are
   top-level and take their state as parameters.
 - **File access needs a capability parameter on the entry point.** Write
@@ -94,8 +99,9 @@ use a ```mylang block; `kind: "tooling"` features may use a ```bash or ```consol
 - **`print` contributes the `output` effect.** An unbounded `def main() -> int` may
   print, but under an explicit bound (`noio`) it is rejected — write `effects(output)`
   on any function in the chain that prints.
-- **`mylang run` grants every capability** unless you pass `--restrict`. Native builds
-  (`mylang build`) grant only what the entry point's parameters ask for.
+- **`mylang run` grants every capability** unless you pass `--restrict` — it builds the
+  program natively and runs it in a child process. A binary from `mylang build` grants
+  every capability too; `--restrict` after `--` denies them.
 - Integers have fixed width, conditions must be `bool`, lists are homogeneous, ranges
   take one or two arguments, and slices have no step.
 

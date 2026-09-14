@@ -38,8 +38,7 @@ propagating an error. Arena dependencies follow the produced value, so returning
 a scratch-backed owned value out of a match still rejects.
 
 Ordinary and generic functions share these rules. Lowering uses exhaustive
-variant dispatch; the VM and the QBE native backend share it, owned payload
-cleanup included.
+variant dispatch, owned payload cleanup included.
 
 ## Wildcard arms
 

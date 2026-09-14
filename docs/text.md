@@ -65,8 +65,8 @@ scalar alone, and `zfill` keeps a leading sign in front of its padding. An empty
 needle traps `R_EMPTY_SEPARATOR`, and these methods are rejected on lists and
 dictionaries. `ljust` and `rjust` are absent; use
 [`strings.pad_left` and `strings.pad_right`](standard-library.md#strings). Every
-one of these methods runs on the QBE native backend as well as the VM, over the
-same immutable text runtime, with byte-identical answers and the same traps.
+one of these methods runs on the QBE native backend, over a single immutable
+text runtime.
 
 ```mylang
 # doc: expect 43
@@ -186,9 +186,8 @@ the signed 64-bit range cannot hold, so a valid-looking but oversized literal
 never silently wraps, while `float` is correctly rounded: a magnitude above
 binary64's range answers an infinity and one below it a signed zero.
 
-One implementation serves both backends — the VM calls it directly and a native
-build links the same compiled grammar — and one shared table of vectors drives
-the Zig unit test and the native parity driver, so `mylang run` and `mylang build`
+One compiled grammar serves every build, and one shared table of vectors drives
+the Zig unit test and the native driver, so `mylang run` and `mylang build`
 cannot disagree about which text is a number or about the value it names.
 
 ```mylang

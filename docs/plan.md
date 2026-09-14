@@ -6,24 +6,33 @@
 > `fn`, `let`, `struct`, `new T { … }`, `::` qualification, `//` comments. Entries below
 > that describe any of them are history; see [legacy/](legacy/) and
 > [the current language reference](current-language.md).
+>
+> Removed on 2026-09-14: the bytecode interpreter. QBE native code is the only runtime —
+> `mylang run` and `run-project` build the program and execute it in a child process,
+> `mylang build` writes the executable, and `mylang test` runs each guest test as a fresh
+> native process — and the `eval-project`, `check-value-project` and `invoke-project`
+> commands went with the interpreter. Bytecode survives only as the compiler's internal
+> IR that QBE consumes. Dated entries below that describe the interpreter, a VM, or two
+> backends are history.
 
-Native execution is outside the active roadmap-completion goal. Preserve the
-ability to add a backend later, but do not implement or extend native execution
-as part of completing this roadmap. The current goal is to develop the language
-on its bytecode VM; a future decision can reopen native work.
+Native execution is the only runtime, and completing this roadmap means completing it
+natively. The bytecode interpreter was removed on 2026-09-14; the bytecode that remains
+is the compiler's internal IR, and QBE is the backend that consumes it. Keep the typed
+IR and the language rules independent of that backend so a second one stays possible,
+but do not maintain a parallel interpreted execution path.
 
 Current development-tooling priority (2026-09-07): [disk projects and incremental
 verification](experiments/incremental-development.md). Disk-loaded schematic and board hosts are implemented;
 ordinary `.my` edits use the installed executable without rebuilding Zig or running
 Guardian. Opt-in dependency inventories/affected-suite testing, shared successful
 receipts, a local agent scheduler and combined-merge certificates are implemented.
-The schematic has a persistent VM development host with request-boundary reloads.
-These are bounded tools with explicit input contracts; production gates remain full
-gates while shadow evidence is gathered. Profiling is implemented; finer semantic
-query reuse remains conditional because measured schematic checks are already small.
-The linked plan and runtime guides specify limitations and acceptance evidence.
+The schematic development host builds its guest natively and rebuilds it at request
+boundaries. These are bounded tools with explicit input contracts; production gates
+remain full gates while shadow evidence is gathered. Profiling is implemented; finer
+semantic query reuse remains conditional because measured schematic checks are already
+small. The linked plan and runtime guides specify limitations and acceptance evidence.
 
-Status: revision 3, interpreter-first direction adopted on 2026-09-06. Scalar MVP M0–M5 and substantial post-MVP experiments are implemented. The current priorities below supersede older sequencing and dated “next” statements; completed experiments remain historical evidence.
+Status: revision 3; the interpreter-first direction adopted on 2026-09-06 was reversed on 2026-09-14, when the bytecode interpreter was removed and QBE native code became the only runtime. Scalar MVP M0–M5 and substantial post-MVP experiments are implemented. The current priorities below supersede older sequencing and dated “next” statements; completed experiments remain historical evidence.
 
 Working executable name: `mylang`. Working source extension: `.my`.
 
@@ -31,22 +40,22 @@ Purpose: a plan for an experimental implementation, not a finished language spec
 
 Revision 2 introduced Guardian-derived quality proposals. Revision 3 prioritizes
 language semantics, diagnostics, typed host calls, and real application evidence.
-Native compilation is deferred until the design is mature and a measured need
-justifies revisiting it. Sections 4–14 preserve the original scalar MVP contract;
-dated implementation entries record what was demonstrated at each checkpoint.
+Native compilation, deferred through both revisions, became the only runtime on
+2026-09-14. Sections 4–14 preserve the original scalar MVP contract; dated
+implementation entries record what was demonstrated at each checkpoint.
 
 ## 1. Project direction
 
-Build a small, statically checked, interpreted language that helps agents write,
+Build a small, statically checked, compiled language that helps agents write,
 understand, and modify correct code with fewer mistakes and less repair effort.
-Use a small custom bytecode VM implemented in Zig as the primary runtime while
-the design develops. The VM executes real application code; it is also useful for
-source-level debugging and inspecting semantics.
+Compile through QBE to native amd64 Linux code: that is the only runtime, and it
+executes real application code. Source-level explanation comes from the compiler's own
+diagnostics and reports, not from a second, interpreted execution path.
 
-The existing parser, checker, separate typed IR, and VM remain the foundation.
-Checking and lowering to bytecode are compilation steps within this interpreted
-workflow. Zig builds the host implementation; it does not consume guest bytecode.
-Keep Guardian on the Zig implementation with blocking checks and no frozen
+The existing parser, checker, separate typed IR, and bytecode lowering remain the
+foundation; that bytecode is now the internal IR the QBE backend consumes rather than
+something a VM executes. Zig builds the host implementation; it does not consume guest
+bytecode. Keep Guardian on the Zig implementation with blocking checks and no frozen
 violation baselines. Language guarantees and advisory application-code reports
 remain separate from Guardian's implementation-quality policies.
 
@@ -61,9 +70,9 @@ explicit types, schemas, and interfaces where that improves the program.
 
 ### Current implementation order
 
-1. Use the implemented interpreter acceptance workflow (`zig build test` or
-   `test-interpreter`); native integration is optional (`test-native`, with
-   `test-all` combining both). Local array/buffer views and concrete or generic fixed-array input slice
+1. Use the implemented acceptance workflow (`zig build test`); native compilation,
+   runtime and build acceptance run through `zig build test-qbe` and
+   `test-qbe-build`. Local array/buffer views and concrete or generic fixed-array input slice
    results are implemented, along with arena/reset origin and escape checks.
    [Generic fixed arrays](experiments/generic-arrays.md) now support nested `[N]T`
    construction and substitution with explicit numeric lengths.
@@ -72,7 +81,7 @@ explicit types, schemas, and interfaces where that improves the program.
    Whole-value/partial-field moves, borrow conflicts, arena escapes and invalid
    reference returns now retain causal, declaration and contract evidence, with
    executed repair fixtures. [Versioned CLI diagnostics](experiments/json-diagnostics.md)
-   now expose that evidence, VM traces and cached warnings with `--diagnostics=json`. The initial
+   now expose that evidence, source-mapped trap call stacks and cached warnings with `--diagnostics=json`. The initial
    [optional-value audit](experiments/optional-values.md) retains named unions and
    checked results; measure application usability before adding convenience syntax.
 3. The [typed VM host interface](experiments/host-functions.md) now supports
@@ -114,34 +123,33 @@ until this application evidence exists.
 
 ### Runtime and future backends
 
-Keep VM semantics clear and execution bounded. Do not schedule instruction fusion,
-adaptive optimization, JIT work, or interpreter speed competitions. Profile actual
+Keep runtime semantics clear and execution bounded. Do not schedule instruction fusion,
+adaptive optimization, JIT work, or code-generation speed competitions. Profile actual
 application workloads before optimizing. Wasm remains an optional future runtime
 experiment if its sandboxing or infrastructure solves a concrete need.
 
-A typed host call lets interpreted code use an existing native library. It does
-not require compiling the language to native code. Host wrappers are trusted:
-the checker cannot prove arbitrary Zig/C/Rust safe. Keep raw pointers inside that
-boundary and define input/output ownership, reference validity, and failure
-behavior before exposing a function to guest code.
+A typed host call lets guest code use an existing native library without hand-written
+bindings at each call site. Host wrappers are trusted: the checker cannot prove
+arbitrary Zig/C/Rust safe. Keep raw pointers inside that boundary and define
+input/output ownership, reference validity, and failure behavior before exposing a
+function to guest code.
 
-Retain completed C emission, native ABI/binding work, and parity fixtures as
-experimental assets and historical evidence. Further native backend coverage,
-borrowed/capability native ABIs, native compilation performance, LLVM, and direct
-x86_64 Linux output are deferred, with no current delivery date. New language
-features need interpreter acceptance, not new native parity as a completion gate.
-Existing native commands may support only their documented experimental subset.
+QBE is the only backend. The removed C emission, its native ABI and binding work, and
+the parity fixtures that compared two backends remain historical evidence. Borrowed and
+capability native ABIs, native compilation performance, LLVM, and direct x86_64 Linux
+output are still open, with no current delivery date. A new language feature needs
+native acceptance; there is no second runtime left to keep in parity. Native commands
+may support only their documented subset.
 
-Keep typed IR independent of VM bytecode. Types, ownership, cleanup, evaluation
-order, effects, overflow, and bounds behavior belong to the language definition.
-A future backend must implement those same rules. Revisit native compilation
-when representative projects establish stable semantics and measurements show a
-need that the typed host boundary does not adequately address.
+Keep the typed IR independent of the bytecode the backend consumes. Types, ownership,
+cleanup, evaluation order, effects, overflow, and bounds behavior belong to the
+language definition. A second backend, if one is ever added, must implement those same
+rules.
 
-The detailed acceptance and trial design is in
-[the interpreter-first roadmap](experiments/interpreter-first.md). The test workflow
-now follows that direction: the default suite executes interpreter acceptance,
-with native compilation integration available through explicit optional targets.
+[The interpreter-first roadmap](experiments/interpreter-first.md) records the direction
+adopted on 2026-09-06 and reversed on 2026-09-14; read it as history. The gate is now
+`zig build test` for the checker, CLI and tooling regressions, with `test-qbe` and
+`test-qbe-build` covering native compilation, the runtime and native builds.
 
 ## 2. Long-term language goals
 
