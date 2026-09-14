@@ -58,7 +58,7 @@ fn execute(allocator: std.mem.Allocator, files: *Files, cache: *Cache, clear: bo
     if (clear) cache.clear();
     var compilation = try @import("project_compile.zig").Compilation.init(&index);
     try compilation.emit();
-    const result = try @import("vm.zig").run(allocator, compilation.code.?);
+    const result = try @import("native_execute.zig").run(&compilation);
     return result.value;
 }
 fn scenario(allocator: std.mem.Allocator) !void {

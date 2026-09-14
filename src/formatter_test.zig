@@ -3,6 +3,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const lexer = @import("lexer.zig");
 const diagnostic = @import("diagnostic.zig");
 
@@ -50,7 +51,7 @@ test "an accepted program is its own canonical text, comments and blank lines in
     try roundTrip(t.allocator, text);
     var c = try language.Compilation.init(t.allocator, "fmt.my", text);
     defer c.deinit();
-    try t.expectEqual(@as(i64, 3), (try c.execute(t.allocator)).value);
+    try t.expectEqual(@as(i64, 3), (try native.run(&c)).value);
 }
 
 test "formatter handles empty and comment-only input canonically" {

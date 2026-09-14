@@ -2,11 +2,12 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const debug = std.debug;
 fn run(text: []const u8) !void {
     var compilation = try language.Compilation.init(t.allocator, "builtin.my", text);
     defer compilation.deinit();
-    const result = compilation.executeWithOptions(t.allocator, .{ .memory = .{ .gc = .{ .stress = true } } }) catch |err| {
+    const result = native.runWithOptions(&compilation, .{ .gc_stress = true }) catch |err| {
         for (compilation.diagnostics.items) |diag| debug.print("{s}: {s} ({s})\n", .{ diag.code, diag.message, compilation.src.text(diag.span) });
         return err;
     };
@@ -80,7 +81,7 @@ test "builtin List and Result share identity across imported module signatures" 
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
     try compilation.emit();
-    try t.expectEqual(@as(i64, 42), (try language.vm.run(t.allocator, compilation.code.?)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&compilation)).value);
 }
 
 const ShadowModules = struct {
@@ -120,7 +121,7 @@ test "module-local List declaration shadows the prelude only inside its module" 
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
     try compilation.emit();
-    try t.expectEqual(@as(i64, 42), (try language.vm.run(t.allocator, compilation.code.?)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&compilation)).value);
 }
 
 const ConstructorModules = struct {
@@ -161,7 +162,7 @@ test "module-local Ok and Err functions shadow contextual constructors in generi
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
     try compilation.emit();
-    try t.expectEqual(@as(i64, 42), (try language.vm.run(t.allocator, compilation.code.?)).value);
+    try t.expectEqual(@as(i64, 42), (try native.run(&compilation)).value);
 }
 
 // spec: BUILTIN-CONTEXT-1

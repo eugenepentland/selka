@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const Cache = language.semantic_cache.Cache;
 const prefix =
     \\def helper(n: i64) -> i64:
@@ -31,8 +32,8 @@ fn compare(allocator: std.mem.Allocator, cache: *Cache, bytes: []const u8, expec
         try fresh.check();
         for (fresh.program.?.functions, cached.program.?.functions) |a, b|
             try t.expectEqual(a.policy.effects, b.policy.effects);
-        try t.expectEqual(number, (try cached.execute(allocator)).value);
-        try t.expectEqual(number, (try fresh.execute(allocator)).value);
+        try t.expectEqual(number, (try native.run(&cached)).value);
+        try t.expectEqual(number, (try native.run(&fresh)).value);
     } else {
         try rejected(cached.checkWithCache(cache));
         try rejected(fresh.check());
