@@ -90,8 +90,8 @@ def collect(nodes: list[s.Node], lanes: list[s.Node]) -> Result[list[Port], int]
             while lane < s.at(lanes, 1).next:
                 if not signalForm(lanes, lane) or s.at(lanes, lane).next < lane + 4 or not direction(s.at(lanes, lane + 3).span):
                     return fail(s.at(lanes, lane).span)
-                name = s.at(lanes, lane + 2).span
-                original = name
+                label = s.at(lanes, lane + 2).span
+                original = label
                 pre = prefix
                 renamed = False
                 rename = i + 4
@@ -100,14 +100,14 @@ def collect(nodes: list[s.Node], lanes: list[s.Node]) -> Result[list[Port], int]
                         if renamed:
                             return fail(s.at(nodes, rename).span)
                         renamed = True
-                        name = s.at(nodes, rename + 3).span
+                        label = s.at(nodes, rename + 3).span
                         pre = text.empty()
                     rename = s.at(nodes, rename).next
-                if not text.identifier(name) or out.len() == 32u64:
-                    return fail(name)
+                if not text.identifier(label) or out.len() == 32u64:
+                    return fail(label)
                 out.append(Port(
                     prefix=pre,
-                    name=name,
+                    name=label,
                     direction=s.at(lanes, lane + 3).span
                 ))
                 lane = s.at(lanes, lane).next

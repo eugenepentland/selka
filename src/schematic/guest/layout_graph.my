@@ -119,15 +119,15 @@ def build(parts: list[c.Part], pins: list[c.Pin]) -> list[Net]:
         i = 0
         while i < len(edges):
             edge = edges[i]
-            a = nets[edge.a]
-            b = nets[edge.b]
-            if a.distance + 1 < b.distance  or (a.owner >= 0 and b.owner >= 0 and a.distance + 1 == b.distance and pins[a.owner].number < pins[b.owner].number):
-                nets[edge.b].owner = a.owner
-                nets[edge.b].distance = a.distance + 1
+            head = nets[edge.a]
+            tail = nets[edge.b]
+            if head.distance + 1 < tail.distance  or (head.owner >= 0 and tail.owner >= 0 and head.distance + 1 == tail.distance and pins[head.owner].number < pins[tail.owner].number):
+                nets[edge.b].owner = head.owner
+                nets[edge.b].distance = head.distance + 1
                 changed = True
-            if b.distance + 1 < a.distance  or (a.owner >= 0 and b.owner >= 0 and b.distance + 1 == a.distance and pins[b.owner].number < pins[a.owner].number):
-                nets[edge.a].owner = b.owner
-                nets[edge.a].distance = b.distance + 1
+            if tail.distance + 1 < head.distance  or (head.owner >= 0 and tail.owner >= 0 and tail.distance + 1 == head.distance and pins[tail.owner].number < pins[head.owner].number):
+                nets[edge.a].owner = tail.owner
+                nets[edge.a].distance = tail.distance + 1
                 changed = True
             i += 1
         passes += 1
