@@ -182,7 +182,7 @@ test "binding transfer and explicit release cannot silently drop results" {
         \\
         \\
         \\def main() -> i64:
-        \\    _ = Err(7)
+        \\    _ = R.err(7)
         \\    return 0
     , 0);
     try reject(
@@ -453,7 +453,7 @@ test "recoverable error returns and explicit acknowledgement preserve evaluation
         \\
         \\
         \\def main() -> i64:
-        \\    _ = Ok(divtrunc(1, 0))
+        \\    _ = R.ok(divtrunc(1, 0))
         \\    return 0
     );
     defer compilation.deinit();

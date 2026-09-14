@@ -159,12 +159,34 @@ test "managed bounds traps release all execution roots and backing" {
 // spec: GC-SOURCE-6
 test "noalloc rejects transitive managed allocation while permitting fixed-slot mutation" {
     for ([_][]const u8{ "noalloc", "noalloc" }) |bound| {
-        const create_source = try std.fmt.allocPrint(t.allocator, "fn make()->List<i64>{{return [];}}" ++
-            "fn constrained()->List<i64> {s}{{return make();}}fn main()->i64{{return 0;}}", .{bound});
+        const create_source = try std.fmt.allocPrint(t.allocator,
+            \\def make() -> List[i64]:
+            \\    return []
+            \\
+            \\
+            \\def constrained() -> List[i64] {s}:
+            \\    return make()
+            \\
+            \\
+            \\def main() -> i64:
+            \\    return 0
+            \\
+        , .{bound});
         defer t.allocator.free(create_source);
         try reject(create_source, "E_EFFECT_BOUND");
-        const append_source = try std.fmt.allocPrint(t.allocator, "fn grow(values:List<i64>)->unit{{values.push(42);}}" ++
-            "fn constrained(values:List<i64>)->unit {s}{{grow(values);}}fn main()->i64{{return 0;}}", .{bound});
+        const append_source = try std.fmt.allocPrint(t.allocator,
+            \\def grow(values: List[i64]) -> None:
+            \\    values.push(42)
+            \\
+            \\
+            \\def constrained(values: List[i64]) -> None {s}:
+            \\    grow(values)
+            \\
+            \\
+            \\def main() -> i64:
+            \\    return 0
+            \\
+        , .{bound});
         defer t.allocator.free(append_source);
         try reject(append_source, "E_EFFECT_BOUND");
     }
@@ -226,15 +248,38 @@ test "managed cycles lose local and record roots on block break and continue exi
         \\class Holder:
         \\    nodes: List[Node]
     ;
-    const cycle = "let nodes:List<Node>=[];nodes.push(new Node{children:nodes,value:42});" ++
-        "let holder=new Holder{nodes:nodes};let alias=holder.nodes;if len(alias)!=1{return 1;}";
     const bodies = [_][]const u8{
-        "{" ++ cycle ++ "}",
-        "while true{" ++ cycle ++ "break;}",
-        "let mut i=0;while i<1{i=i+1;" ++ cycle ++ "continue;}",
+        \\    if True:
+        \\        nodes: List[Node] = []
+        \\        nodes.push(Node(children=nodes, value=42))
+        \\        holder = Holder(nodes=nodes)
+        \\        alias = holder.nodes
+        \\        if len(alias) != 1:
+        \\            return 1
+        ,
+        \\    while True:
+        \\        nodes: List[Node] = []
+        \\        nodes.push(Node(children=nodes, value=42))
+        \\        holder = Holder(nodes=nodes)
+        \\        alias = holder.nodes
+        \\        if len(alias) != 1:
+        \\            return 1
+        \\        break
+        ,
+        \\    i = 0
+        \\    while i < 1:
+        \\        i = i + 1
+        \\        nodes: List[Node] = []
+        \\        nodes.push(Node(children=nodes, value=42))
+        \\        holder = Holder(nodes=nodes)
+        \\        alias = holder.nodes
+        \\        if len(alias) != 1:
+        \\            return 1
+        \\        continue
+        ,
     };
     for (bodies) |body| {
-        const source = try std.mem.concat(t.allocator, u8, &.{ prefix, "fn main()->i64{", body, "let spare:List<i64>=[];_ = spare;return 42;}" });
+        const source = try std.mem.concat(t.allocator, u8, &.{ prefix, "\n\n\ndef main() -> i64:\n", body, "\n    spare: List[i64] = []\n    _ = spare\n    return 42\n" });
         defer t.allocator.free(source);
         var statistics: language.vm.GcStatistics = .{};
         try t.expectEqual(@as(i64, 42), (try execute(source, &statistics)).value);

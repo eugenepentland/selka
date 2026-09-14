@@ -148,7 +148,11 @@ test "Python indexed assignment evaluates RHS before receiver and index exactly 
 // spec-case: PYTHON-3
 test "Python payloadless enum values use ordinary dotted members" {
     try run(
-        \\enum Kind { atom, group }
+        \\enum Kind:
+        \\    atom,
+        \\    group
+        \\
+        \\
         \\def main() -> int:
         \\    kind = Kind.atom
         \\    if kind == Kind.atom:
@@ -174,7 +178,11 @@ const PythonModules = struct {
             \\module helpers
             \\export answer
             \\export Kind
-            \\enum Kind { atom, group }
+            \\enum Kind:
+            \\    atom,
+            \\    group
+            \\
+            \\
             \\def answer(values: list[int], key: str, number: float) -> Result[dict[str, int], int]:
             \\    if number != 1.5:
             \\        return Err(2)

@@ -37,7 +37,7 @@ test "fixed arrays have structural types preserve copies and support every integ
         \\    return first(a) + b[0] + b[1]
     , 15);
     for ([_][]const u8{ "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64" }) |width| {
-        const source = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ let a = new [2]u8 [7u8, 9u8]; return i64(a[1{s}]); }}", .{width});
+        const source = try std.fmt.allocPrint(testing.allocator, "def main() -> i64:\n    a: [2]u8 = [7u8, 9u8]\n    return i64(a[1{s}])\n", .{width});
         defer testing.allocator.free(source);
         try result(source, 9);
     }
@@ -136,9 +136,9 @@ test "array duplicate identity preserves length element type index replacement a
 test "deep array type syntax observes the shared parser budget" {
     var source: std.Io.Writer.Allocating = .init(testing.allocator);
     defer source.deinit();
-    try source.writer.writeAll("struct Deep { value: ");
+    try source.writer.writeAll("class Deep:\n    value: ");
     for (0..300) |_| try source.writer.writeAll("[1]");
-    try source.writer.writeAll("i64 } fn main() -> i64 { return 0; }");
+    try source.writer.writeAll("i64\n\n\ndef main() -> i64:\n    return 0\n");
     try reject(source.written(), "E_NESTING_LIMIT");
 }
 

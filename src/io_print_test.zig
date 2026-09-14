@@ -56,9 +56,9 @@ test "IO-1 print renders scalars, text, bytes and containers with Python spellin
 test "IO-2 print renders records, enums, unions and checked results by name" {
     const record = "class Point:\n    x: int\n    y: int\n\ndef main() -> int:\n    print(Point(x=1, y=2))\n    return 0\n";
     try expectOutput(record, "Point(x=1, y=2)\n");
-    const colours = "enum Colour { red, green }\ndef main() -> int:\n    print(Colour.green)\n    return 0\n";
+    const colours = "enum Colour:\n    red,\n    green\n\n\ndef main() -> int:\n    print(Colour.green)\n    return 0\n";
     try expectOutput(colours, "Colour.green\n");
-    const shape = "union Shape { dot: i64, gap }\ndef main() -> int:\n    print(new Shape.dot(7))\n    print(new Shape.gap)\n    return 0\n";
+    const shape = "union Shape:\n    dot: i64,\n    gap\n\n\ndef main() -> int:\n    print(Shape.dot(7))\n    print(Shape.gap)\n    return 0\n";
     try expectOutput(shape, "Shape.dot(7)\nShape.gap\n");
     const checked = "def pick(n: int) -> Result[int, str]:\n    if n < 0:\n        return Err(\"negative\")\n    return Ok(n)\n\ndef main() -> int:\n    print(pick(3))\n    print(pick(-1))\n    return 0\n";
     try expectOutput(checked, "Ok(3)\nErr('negative')\n");

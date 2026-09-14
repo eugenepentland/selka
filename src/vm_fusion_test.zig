@@ -261,11 +261,11 @@ test "quickening metadata and execution clean every injected allocation failure"
 test "fusion cache collisions and scalar frame growth preserve results" {
     const increments = comptime blk: {
         var text: []const u8 = "";
-        for (0..140) |_| text = text ++ "n+=1;";
+        for (0..140) |_| text = text ++ "n += 1; ";
         break :blk text;
     };
     const sources = [_][]const u8{
-        "fn main()->i64{let mut n=0;let mut i=0;while i<3{" ++ increments ++ "i+=1;}return n;}",
+        "def main() -> i64:\n    n = 0\n    i = 0\n    while i < 3:\n        " ++ increments ++ "i += 1\n    return n\n",
         \\def f(n: i64) -> i64:
         \\    if n < 1:
         \\        return n

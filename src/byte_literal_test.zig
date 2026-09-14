@@ -30,10 +30,10 @@ test "byte literals preserve arbitrary bytes UTF8 lengths generic arrays and for
 test "byte literals reject invalid escapes and retain ordinary array type checks" {
     const Case = struct { text: []const u8, code: []const u8 };
     for ([_]Case{
-        .{ .text = "fn main()->i64{return len(\"\\q\");}", .code = "E_BYTE_ESCAPE" },
-        .{ .text = "fn main()->i64{return len(\"\\x+f\");}", .code = "E_BYTE_ESCAPE" },
-        .{ .text = "fn main()->i64{return len(\"\\x0\");}", .code = "E_BYTE_ESCAPE" },
-        .{ .text = "fn main()->i64{return len(\"x\n\");}", .code = "E_BYTE_LITERAL" },
+        .{ .text = "def main() -> i64:\n    return len(\"\\q\")\n", .code = "E_BYTE_ESCAPE" },
+        .{ .text = "def main() -> i64:\n    return len(\"\\x+f\")\n", .code = "E_BYTE_ESCAPE" },
+        .{ .text = "def main() -> i64:\n    return len(\"\\x0\")\n", .code = "E_BYTE_ESCAPE" },
+        .{ .text = "def main() -> i64:\n    return len(\"x\n\")\n", .code = "E_BYTE_LITERAL" },
         .{ .text =
         \\def f() -> [1]u8:
         \\    return b"ab"
@@ -53,10 +53,10 @@ test "byte literals reject invalid escapes and retain ordinary array type checks
 test "byte literal decoded size limit reports E_BYTE_LITERAL_LIMIT before lowering" {
     const text = try t.allocator.alloc(u8, 65536 + 1 + 40);
     defer t.allocator.free(text);
-    const prefix = "fn main()->i64{return len(\"";
+    const prefix = "def main() -> i64:\n    return len(\"";
     @memcpy(text[0..prefix.len], prefix);
     @memset(text[prefix.len..][0..65537], 'a');
-    const suffix = "\");}";
+    const suffix = "\")\n";
     @memcpy(text[prefix.len + 65537 ..][0..suffix.len], suffix);
     var c = try language.Compilation.init(t.allocator, "large.my", text[0 .. prefix.len + 65537 + suffix.len]);
     defer c.deinit();

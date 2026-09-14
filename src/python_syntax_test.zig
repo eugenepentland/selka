@@ -57,7 +57,7 @@ test "Python layout retains original spans and ignores blank comment and continu
         try t.expect(token.span.start >= last);
         try t.expect(token.span.end <= text.len);
         last = token.span.end;
-        if (token.tag == .rbrace and token.span.start == token.span.end) virtual_closes += 1;
+        if (token.tag == .dedent and token.span.start == token.span.end) virtual_closes += 1;
     }
     try t.expectEqual(@as(usize, 1), virtual_closes);
     var c = try language.Compilation.init(t.allocator, "continuation.my", text);
