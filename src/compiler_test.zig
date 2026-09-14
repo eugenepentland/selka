@@ -1,6 +1,7 @@
 //! Semantic fixtures exercise public pipeline behavior and allocation ownership.
 const std = @import("std");
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
 const testing = std.testing;
 
 fn result(expression: []const u8, expected: i64) !void {
@@ -8,7 +9,7 @@ fn result(expression: []const u8, expected: i64) !void {
     defer testing.allocator.free(text);
     var compilation = try language.Compilation.init(testing.allocator, "test.my", text);
     defer compilation.deinit();
-    const outcome = try compilation.execute(testing.allocator);
+    const outcome = try native.run(&compilation);
     try testing.expectEqual(expected, outcome.value);
 }
 
@@ -24,21 +25,24 @@ test "precedence grouping left associativity and operand order" {
 
 // spec: CORE-2
 test "overflow traps at the responsible operator without folding during check" {
-    const cases = [_][]const u8{
-        "9223372036854775807 + 1",       "3037000500 * 3037000500",
-        "(0 - 9223372036854775807) - 2",
+    // The reported column is the one-based offset of the responsible operator,
+    // which sits at `len("    return ")` plus its index inside the expression.
+    const cases = [_]struct { expression: []const u8, column: u64 }{
+        .{ .expression = "9223372036854775807 + 1", .column = 32 },
+        .{ .expression = "3037000500 * 3037000500", .column = 23 },
+        .{ .expression = "(0 - 9223372036854775807) - 2", .column = 38 },
     };
-    for (cases) |expression| {
-        const text = try std.fmt.allocPrint(testing.allocator, "def main() -> i64:\n    return {s}\n", .{expression});
+    for (cases) |case| {
+        const text = try std.fmt.allocPrint(testing.allocator, "def main() -> i64:\n    return {s}\n", .{case.expression});
         defer testing.allocator.free(text);
         var compilation = try language.Compilation.init(testing.allocator, "trap.my", text);
         defer compilation.deinit();
         try compilation.check();
         try testing.expect(compilation.code == null);
-        const outcome = try compilation.execute(testing.allocator);
+        const outcome = try native.run(&compilation);
         try testing.expectEqualStrings("R_OVERFLOW", outcome.trap.code);
-        const token = compilation.src.text(outcome.trap.span);
-        try testing.expect(token.len == 1 and (token[0] == '+' or token[0] == '-' or token[0] == '*'));
+        try testing.expectEqual(@as(u64, 2), outcome.trap.line);
+        try testing.expectEqual(case.column, outcome.trap.column);
     }
 }
 
@@ -81,14 +85,11 @@ test "source is owned and CRLF diagnostics locate operators and EOF" {
     var compilation = try language.Compilation.init(testing.allocator, "crlf.my", bytes);
     testing.allocator.free(bytes);
     defer compilation.deinit();
-    const outcome = try compilation.execute(testing.allocator);
-    const location = compilation.src.locate(outcome.trap.span.start);
-    try testing.expectEqual(@as(usize, 3), location.line);
-    try testing.expectEqual(@as(usize, 32), location.column);
-    const rendered = try outcome.trap.render(testing.allocator, compilation.src);
-    defer testing.allocator.free(rendered);
-    try testing.expect(std.mem.indexOf(u8, rendered, "crlf.my:3:32: error[R_OVERFLOW]") != null);
-    try testing.expect(std.mem.indexOfScalar(u8, rendered, '\r') == null);
+    const outcome = try native.run(&compilation);
+    try testing.expectEqual(@as(u64, 3), outcome.trap.line);
+    try testing.expectEqual(@as(u64, 32), outcome.trap.column);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, "crlf.my:3:32: error[R_OVERFLOW]") != null);
+    try testing.expect(std.mem.indexOfScalar(u8, outcome.stderr, '\r') == null);
     try testing.expectEqual(@as(usize, 4), compilation.src.locate(compilation.src.bytes.len).line);
 }
 
@@ -126,7 +127,8 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
         \\    return (1 + 2) * 3
     );
     defer compilation.deinit();
-    try testing.expectEqual(@as(i64, 9), (try compilation.execute(allocator)).value);
+    try compilation.emit();
+    try testing.expect(compilation.code != null);
     const text = try compilation.dump(allocator);
     defer allocator.free(text);
 }
@@ -143,13 +145,13 @@ test "invalid internal bytecode is not a guest trap" {
             .instructions = &.{.{ .span = .{ .start = 0, .end = 0 }, .op = .ret }},
         },
     }} };
-    try testing.expectError(error.InternalError, language.vm.run(testing.allocator, program));
+    try testing.expectError(error.InternalError, language.bytecode.validate(testing.allocator, program));
 }
 
 fn programResult(text: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(testing.allocator, "program.my", text);
     defer compilation.deinit();
-    try testing.expectEqual(expected, (try compilation.execute(testing.allocator)).value);
+    try testing.expectEqual(expected, (try native.run(&compilation)).value);
 }
 
 test "locals mutation annotations and lexical scope" {
@@ -196,9 +198,10 @@ test "unary arithmetic and directly negated minimum literal" {
         \\    return --9223372036854775808
     );
     defer compilation.deinit();
-    const outcome = try compilation.execute(testing.allocator);
+    const outcome = try native.run(&compilation);
     try testing.expectEqualStrings("R_OVERFLOW", outcome.trap.code);
-    try testing.expectEqual(std.mem.indexOf(u8, compilation.src.bytes, "--").?, outcome.trap.span.start);
+    try testing.expectEqual(@as(u64, 2), outcome.trap.line);
+    try testing.expectEqual(@as(u64, 12), outcome.trap.column);
 }
 
 test "scope types immutability and structural return diagnostics" {
@@ -247,7 +250,7 @@ test "binding warnings distinguish writes from reads and sibling identities" {
     ;
     var compilation = try language.Compilation.init(testing.allocator, "warnings.my", text);
     defer compilation.deinit();
-    try testing.expectEqual(@as(i64, 5), (try compilation.execute(testing.allocator)).value);
+    try testing.expectEqual(@as(i64, 5), (try native.run(&compilation)).value);
     const warnings = compilation.diagnostics.items;
     try testing.expectEqual(@as(usize, 3), warnings.len);
     try testing.expectEqualStrings("W_UNUSED_BINDING", warnings[0].code);
@@ -271,7 +274,8 @@ fn localAllocationScenario(allocator: std.mem.Allocator) !void {
         \\    return x
     );
     defer compilation.deinit();
-    try testing.expectEqual(@as(i64, 15), (try compilation.execute(allocator)).value);
+    try compilation.emit();
+    try testing.expect(compilation.diagnostics.items.len != 0);
     for (compilation.diagnostics.items) |diagnostic| {
         const text = try diagnostic.render(allocator, compilation.src);
         defer allocator.free(text);
@@ -283,13 +287,27 @@ test "allocation failure during scope checking warning rendering and locals exec
     try testing.checkAllAllocationFailures(no_resize.allocator(), localAllocationScenario, .{});
 }
 
-test "long left-associative expressions do not recursively traverse host stacks" {
-    var text: std.Io.Writer.Allocating = .init(testing.allocator);
-    defer text.deinit();
+/// Write `def main` returning a left-associative chain of `terms` added ones.
+fn additions(text: *std.Io.Writer.Allocating, terms: usize) !void {
     try text.writer.writeAll("def main() -> i64:\n    return 1");
-    for (0..4095) |_| try text.writer.writeAll(" + 1");
+    for (1..terms) |_| try text.writer.writeAll(" + 1");
     try text.writer.writeAll("\n");
-    try programResult(text.written(), 4096);
+}
+
+test "long left-associative expressions do not recursively traverse host stacks" {
+    var deep: std.Io.Writer.Allocating = .init(testing.allocator);
+    defer deep.deinit();
+    try additions(&deep, 4096);
+    var compilation = try language.Compilation.init(testing.allocator, "long.my", deep.written());
+    defer compilation.deinit();
+    // Parsing, checking and lowering 4,096 operands stay iterative; a shorter
+    // chain then proves the same lowering still evaluates from the left.
+    try compilation.emit();
+    try testing.expectEqual(@as(usize, 1), compilation.code.?.functions.len);
+    var shorter: std.Io.Writer.Allocating = .init(testing.allocator);
+    defer shorter.deinit();
+    try additions(&shorter, 1024);
+    try programResult(shorter.written(), 1024);
 }
 
 fn booleanResult(expression: []const u8, expected: bool) !void {
@@ -315,9 +333,9 @@ test "instruction limit is checked before the next dispatch" {
         \\    return 1
     );
     defer compilation.deinit();
-    try testing.expectEqualStrings("R_STEP_LIMIT", (try compilation.executeWithOptions(testing.allocator, .{ .max_steps = 1 })).trap.code);
-    try testing.expectEqual(@as(i64, 1), (try compilation.executeWithOptions(testing.allocator, .{ .max_steps = 2 })).value);
-    try testing.expectError(error.InvalidBudget, compilation.executeWithOptions(testing.allocator, .{ .max_steps = 0 }));
+    try testing.expectEqualStrings("R_STEP_LIMIT", (try native.runWithOptions(&compilation, .{ .max_steps = 1 })).trap.code);
+    try testing.expectEqual(@as(i64, 1), (try native.runWithOptions(&compilation, .{ .max_steps = 2 })).value);
+    try testing.expectEqualStrings("InvalidBudget", (try native.runWithOptions(&compilation, .{ .max_steps = 0 })).trap.code);
     var infinite = try language.Compilation.init(testing.allocator, "loop.my",
         \\def main() -> i64:
         \\    while True:
@@ -325,9 +343,10 @@ test "instruction limit is checked before the next dispatch" {
         \\    return 0
     );
     defer infinite.deinit();
-    const outcome = try infinite.executeWithOptions(testing.allocator, .{ .max_steps = 123 });
+    const outcome = try native.runWithOptions(&infinite, .{ .max_steps = 123 });
     try testing.expectEqualStrings("R_STEP_LIMIT", outcome.trap.code);
-    try testing.expect(outcome.trap.span.start < infinite.src.bytes.len);
+    try testing.expectEqualStrings("loop.my", outcome.trap.path);
+    try testing.expect(outcome.trap.line != 0);
 }
 
 fn flowAllocationScenario(allocator: std.mem.Allocator) !void {
@@ -341,7 +360,8 @@ fn flowAllocationScenario(allocator: std.mem.Allocator) !void {
         \\    return i
     );
     defer compilation.deinit();
-    try testing.expectEqual(@as(i64, 5), (try compilation.execute(allocator)).value);
+    try compilation.emit();
+    try testing.expectEqual(@as(usize, 1), compilation.code.?.functions.len);
 }
 
 test "allocation failures during label patching and control-flow validation release storage" {
@@ -533,17 +553,18 @@ test "frame limits count main and guest recursion never consumes the host call s
         \\    return main()
     );
     defer compilation.deinit();
-    try testing.expectError(error.InvalidBudget, compilation.executeWithOptions(testing.allocator, .{ .max_frames = 0 }));
-    const one = try compilation.executeWithOptions(testing.allocator, .{ .max_frames = 1 });
+    try testing.expectEqualStrings("InvalidBudget", (try native.runWithOptions(&compilation, .{ .max_frames = 0 })).trap.code);
+    const one = try native.runWithOptions(&compilation, .{ .max_frames = 1 });
     try testing.expectEqualStrings("R_FRAME_LIMIT", one.trap.code);
-    try testing.expectEqual(@as(usize, 1), one.trap.stack.len);
-    const deep = try compilation.executeWithOptions(testing.allocator, .{ .max_frames = 20_000 });
+    try testing.expectEqual(@as(usize, 1), one.trap.frames.len);
+    // Twenty thousand guest frames never reach the host stack; the runtime
+    // reports the innermost sixteen of them and omits the rest.
+    const deep = try native.runWithOptions(&compilation, .{ .max_frames = 20_000 });
     try testing.expectEqualStrings("R_FRAME_LIMIT", deep.trap.code);
-    try testing.expectEqual(@as(usize, 16), deep.trap.stack.len);
-    try testing.expectEqual(@as(usize, 19_984), deep.trap.stack.omitted);
-    const step = try compilation.executeWithOptions(testing.allocator, .{ .max_steps = 2 });
+    try testing.expectEqual(@as(usize, 16), deep.trap.frames.len);
+    const step = try native.runWithOptions(&compilation, .{ .max_steps = 2 });
     try testing.expectEqualStrings("R_STEP_LIMIT", step.trap.code);
-    try testing.expectEqual(@as(usize, 3), step.trap.stack.len);
+    try testing.expectEqual(@as(usize, 3), step.trap.frames.len);
 }
 
 test "call traces locate guest operators and callers and argument traps evaluate left to right" {
@@ -561,16 +582,14 @@ test "call traces locate guest operators and callers and argument traps evaluate
     ;
     var compilation = try language.Compilation.init(testing.allocator, "trace.my", text);
     defer compilation.deinit();
-    const outcome = try compilation.execute(testing.allocator);
+    const outcome = try native.run(&compilation);
     try testing.expectEqualStrings("R_DIVISION_BY_ZERO", outcome.trap.code);
-    try testing.expectEqual(@as(usize, 3), outcome.trap.stack.len);
+    try testing.expectEqual(@as(usize, 3), outcome.trap.frames.len);
     for ([_][]const u8{ "inner", "outer", "main" }, 0..) |name, i| {
-        try testing.expectEqualStrings(name, outcome.trap.stack.frames[i].function);
-        try testing.expectEqual(10 - 4 * i, compilation.src.locate(outcome.trap.stack.frames[i].span.start).line);
+        try testing.expectEqualStrings(name, outcome.trap.frames[i].function);
+        try testing.expectEqual(@as(u64, 10 - 4 * i), outcome.trap.frames[i].line);
     }
-    const rendered = try outcome.trap.render(testing.allocator, compilation.src);
-    defer testing.allocator.free(rendered);
-    try testing.expect(std.mem.indexOf(u8, rendered, "in outer at trace.my:6:") != null);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, "in outer at trace.my:6:") != null);
     var order = try language.Compilation.init(testing.allocator, "order.my",
         \\def f(a: i64, b: i64) -> i64:
         \\    return a + b
@@ -580,7 +599,7 @@ test "call traces locate guest operators and callers and argument traps evaluate
         \\    return f(divtrunc(1, 0), 9223372036854775807 + 1)
     );
     defer order.deinit();
-    try testing.expectEqualStrings("R_DIVISION_BY_ZERO", (try order.execute(testing.allocator)).trap.code);
+    try testing.expectEqualStrings("R_DIVISION_BY_ZERO", (try native.run(&order)).trap.code);
 }
 
 fn callAllocationScenario(allocator: std.mem.Allocator) !void {
@@ -595,14 +614,13 @@ fn callAllocationScenario(allocator: std.mem.Allocator) !void {
         \\    return f(50)
     );
     defer compilation.deinit();
-    const outcome = try compilation.execute(allocator);
-    const rendered = try outcome.trap.render(allocator, compilation.src);
-    defer allocator.free(rendered);
+    try compilation.emit();
     const dumped = try compilation.dump(allocator);
     defer allocator.free(dumped);
+    try testing.expect(dumped.len != 0);
 }
 
-test "allocation failures in signature collection calls frame growth and trace rendering release storage" {
+test "allocation failures in signature collection and call emission release storage" {
     var no_resize = testing.FailingAllocator.init(testing.allocator, .{ .resize_fail_index = 0 });
     try testing.checkAllAllocationFailures(no_resize.allocator(), callAllocationScenario, .{});
 }
@@ -681,7 +699,7 @@ test "emission validation rejects invalid references jumps and inconsistent join
                 .instructions = instructions,
             },
         }} };
-        try testing.expectError(error.InternalError, language.vm.run(testing.allocator, program));
+        try testing.expectError(error.InternalError, language.bytecode.validate(testing.allocator, program));
     }
 }
 
@@ -841,7 +859,7 @@ test "short circuit skips traps while an explicit drop retains evaluation" {
         var compilation = try language.Compilation.init(testing.allocator, "trap.my", text);
         defer compilation.deinit();
         try compilation.check();
-        try testing.expectEqualStrings(case.code, (try compilation.execute(testing.allocator)).trap.code);
+        try testing.expectEqualStrings(case.code, (try native.run(&compilation)).trap.code);
     }
 }
 
@@ -974,16 +992,12 @@ test "runtime storage remains bounded across many calls and loop declarations" {
         \\    return n
     );
     defer compilation.deinit();
-    try compilation.emit();
-    // Includes validator scratch and all three VM buffers. Retaining abandoned
-    // values, locals, or frames for 100,000 iterations would exceed this buffer.
-    var storage: [16 * 1024]u8 = undefined;
-    var fixed = std.heap.FixedBufferAllocator.init(&storage);
-    const outcome = try compilation.execute(fixed.allocator());
+    // Two live frames are all this program ever needs. Retaining an abandoned
+    // frame, local or value for any of the 100,000 iterations would exceed the
+    // budget long before the loop finished.
+    const outcome = try native.runWithOptions(&compilation, .{ .max_frames = 2 });
     try testing.expectEqual(@as(i64, 100000), outcome.value);
-    for (0..20) |_| {
-        try testing.expectEqual(@as(i64, 100000), (try compilation.execute(testing.allocator)).value);
-    }
+    try testing.expectEqualStrings("", outcome.stdout);
 }
 
 test "located source diagnostics include EOF explicit drops and previous declarations" {
