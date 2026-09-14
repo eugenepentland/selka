@@ -243,7 +243,7 @@ const State = struct {
         if (parsed.provider) |provider_source| try self.provider(provider_source);
         var args: std.ArrayList([]const u8) = .empty;
         try args.appendSlice(a, try self.cache.flags());
-        if (parsed.library) try args.append(a, "-shared");
+        if (parsed.library) try args.appendSlice(a, &library_link_arguments);
         try args.appendSlice(a, self.objects.items);
         try @import("native_link.zig").append(self.context, parsed.link_arguments, &args, false);
         // Unreferenced runtime sections leave with the archive members nothing pulled.
@@ -270,6 +270,10 @@ const State = struct {
         try self.objects.append(a, object);
     }
 };
+/// Shared-library link controls: bind the library's own descriptor references
+/// internally so a guest object's non-PIC relocations resolve without symbol
+/// interposition.
+const library_link_arguments = [_][]const u8{ "-shared", "-Wl,-Bsymbolic" };
 fn less(_: void, left: std.json.Value, right: std.json.Value) bool {
     return std.mem.lessThan(u8, v.text(v.get(left, "symbol")), v.text(v.get(right, "symbol")));
 }
@@ -334,4 +338,10 @@ test "the runtime tree is published once per content hash and reused by later bu
     try context.write(marker, "kept");
     try std.testing.expectEqualStrings(first, try materialize(context, cache));
     try std.testing.expectEqualStrings("kept", try context.read(marker));
+}
+// spec-case: QBE-2
+test "shared library links bind their own data descriptor symbols" {
+    try std.testing.expectEqual(@as(usize, 2), library_link_arguments.len);
+    try std.testing.expectEqualStrings("-shared", library_link_arguments[0]);
+    try std.testing.expectEqualStrings("-Wl,-Bsymbolic", library_link_arguments[1]);
 }
