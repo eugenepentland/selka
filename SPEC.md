@@ -81,6 +81,7 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [CLI-5] Persistent checking sessions reuse unchanged parses and allow clearing retained cache storage between requests.
 - [CLI-6] The removed C-backend command names `emit-c` and `emit-project-c` fail with a migration that names `emit-qbe` and `emit-project-qbe`; no live C backend or VM command remains in the CLI surface.
 - [FRONTEND-CACHE-2] An ordinary one-shot `check-project` may reuse a successful whole-program verdict from the persistent cache only after loading every module fresh and comparing each module name, path and source byte against the content-addressed key; reused warnings are replayed and interface/semantic work is skipped. Failed checks are never stored, a compiler or diagnostic-format change misses, and `--report`/`--timings` expose reuse and miss counts.
+- [FRONTEND-CACHE-3] Cached module syntax round-trips every field of the parsed program, including expression lambdas, so a warm lookup checks the same program a cold parse would.
 
 
 

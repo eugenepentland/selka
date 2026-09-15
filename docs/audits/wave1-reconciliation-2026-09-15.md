@@ -75,6 +75,9 @@ reach nominal aggregate positions. The first integration exposed 112 failing
 tests and three doctest blocks; the fixup commit migrated 57 fixture, golden,
 example and inline-test files, and the follow-up repaired capability resolution
 in nominal expressions, restored signed `len` in generic bodies, and updated the
-tests that encoded the old pre-simplification behaviour. Two caches must be
-distrusted while iterating: stale `.mylang-cache` receipts made one probe report
-a false lambda failure until the cache was cleared.
+tests that encoded the old pre-simplification behaviour. One cache correctness bug surfaced
+and was fixed here: the persisted syntax payload (`frontend_cache.zig`) did not
+carry the new `Program.lambdas` field, so a cold `run` of a lambda program
+passed and every warm run failed with `E_UNKNOWN_NAME`. The payload now
+round-trips lambdas and the cache identity is bumped to `v2`
+(`FRONTEND-CACHE-3`).

@@ -224,3 +224,33 @@ test "single-file check stores and reuses parsed syntax through the same cache" 
     try t.expectEqual(@as(usize, 1), cache.statistics.syntax.misses);
     try t.expectEqual(nodes, second.syntax.?.nodes.items.len);
 }
+
+// spec: FRONTEND-CACHE-3
+test "cached syntax retains expression lambdas across a warm lookup" {
+    var temp = t.tmpDir(.{});
+    defer temp.cleanup();
+    const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    var caller = std.heap.ArenaAllocator.init(t.allocator);
+    defer caller.deinit();
+    var cache = openCache(root);
+    var files: Files = .{ .bytes =
+        \\module main
+        \\
+        \\
+        \\def apply(callback: def(int) -> int effects(), value: int) -> int:
+        \\    return callback(value)
+        \\
+        \\
+        \\def main() -> int:
+        \\    return apply(lambda value: value * 2, 21)
+    };
+    var project = language.project.Project.init(t.allocator);
+    defer project.deinit();
+    try load(&project, &files);
+    const index = try language.interfaces.buildWithCache(&project, null, null);
+    const module = project.modules.items[0];
+    try cache.rememberSyntax(module.src, module.header.body_start, index.units[0].syntax);
+    const hit = (try cache.lookupSyntax(caller.allocator(), module.src, module.header.body_start)).?;
+    try t.expectEqual(@as(usize, 1), hit.lambdas.len);
+}

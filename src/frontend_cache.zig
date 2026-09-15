@@ -81,7 +81,7 @@ pub const Cache = struct {
     }
     fn identityHash(self: *Cache) [32]u8 {
         var hash = std.crypto.hash.sha2.Sha256.init(.{});
-        hash.update("frontend-cache-identity-v1");
+        hash.update("frontend-cache-identity-v2");
         hash.update(self.identity);
         var out: [32]u8 = undefined;
         hash.final(&out);
@@ -130,6 +130,7 @@ pub const Cache = struct {
             .nodes = syntax.nodes.items,
             .statements = syntax.statements.items,
             .functions = syntax.functions,
+            .lambdas = syntax.lambdas,
         }) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => return,
@@ -389,6 +390,7 @@ const StoredSyntax = struct {
     nodes: []ast.Node,
     statements: []ast.Statement,
     functions: []const ast.Function,
+    lambdas: []const ast.Lambda,
 };
 
 fn decodeSyntax(allocator: std.mem.Allocator, payload: []const u8) !ast.Program {
@@ -400,5 +402,6 @@ fn decodeSyntax(allocator: std.mem.Allocator, payload: []const u8) !ast.Program 
         .nodes = std.ArrayList(ast.Node).fromOwnedSlice(stored.nodes),
         .statements = std.ArrayList(ast.Statement).fromOwnedSlice(stored.statements),
         .functions = stored.functions,
+        .lambdas = stored.lambdas,
     };
 }
