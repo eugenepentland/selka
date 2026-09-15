@@ -563,20 +563,20 @@ fn runMatrix() !void {
     };
 
     const cases = [_]Case{
-        .{ .name = "whitespace outside", .base = &base, .edited = &ws_out, .accepted = true, .reused = 0, .checked = 3 },
+        .{ .name = "whitespace outside", .base = &base, .edited = &ws_out, .accepted = true, .reused = 3, .checked = 0 },
         .{ .name = "whitespace inside", .base = &base, .edited = &ws_in, .accepted = true, .reused = 2, .checked = 1 },
-        .{ .name = "comment outside", .base = &base, .edited = &comment_out, .accepted = true, .reused = 0, .checked = 3 },
+        .{ .name = "comment outside", .base = &base, .edited = &comment_out, .accepted = true, .reused = 3, .checked = 0 },
         .{ .name = "comment inside", .base = &base, .edited = &comment_in, .accepted = true, .reused = 2, .checked = 1 },
         .{ .name = "private body", .base = &base, .edited = &private_body_file, .accepted = true, .reused = 2, .checked = 1 },
-        .{ .name = "exported signature", .base = &base, .edited = &signature, .accepted = true, .reused = 0, .checked = 3 },
-        .{ .name = "rejected exported signature", .base = &base, .edited = &rejected, .accepted = false, .reused = 0, .checked = 3 },
-        .{ .name = "effect bound", .base = &base, .edited = &effects, .accepted = true, .reused = 0, .checked = 3 },
-        .{ .name = "constant value", .base = &constant_b, .edited = &constant_e, .accepted = true, .reused = 0, .checked = 4 },
-        .{ .name = "record field shape", .base = &record_b, .edited = &record_e, .accepted = true, .reused = 0, .checked = 3 },
+        .{ .name = "exported signature", .base = &base, .edited = &signature, .accepted = true, .reused = 1, .checked = 2 },
+        .{ .name = "rejected exported signature", .base = &base, .edited = &rejected, .accepted = false, .reused = 1, .checked = 2 },
+        .{ .name = "effect bound", .base = &base, .edited = &effects, .accepted = true, .reused = 1, .checked = 2 },
+        .{ .name = "constant value", .base = &constant_b, .edited = &constant_e, .accepted = true, .reused = 2, .checked = 2 },
+        .{ .name = "record field shape", .base = &record_b, .edited = &record_e, .accepted = true, .reused = 2, .checked = 1 },
         .{ .name = "union shape", .base = &union_b, .edited = &union_e, .accepted = true, .reused = 0, .checked = 3 },
-        .{ .name = "import list", .base = &import_b, .edited = &import_e, .accepted = true, .reused = 0, .checked = 3 },
-        .{ .name = "generic template body", .base = &generic_b, .edited = &generic_e, .accepted = true, .reused = 0, .checked = 3 },
-        .{ .name = "specialization argument", .base = &spec_b, .edited = &spec_e, .accepted = true, .reused = 0, .checked = 3 },
+        .{ .name = "import list", .base = &import_b, .edited = &import_e, .accepted = true, .reused = 1, .checked = 2 },
+        .{ .name = "generic template body", .base = &generic_b, .edited = &generic_e, .accepted = true, .reused = 1, .checked = 2 },
+        .{ .name = "specialization argument", .base = &spec_b, .edited = &spec_e, .accepted = true, .reused = 1, .checked = 2 },
     };
     for (cases) |case| try expectCase(t.allocator, case);
 }

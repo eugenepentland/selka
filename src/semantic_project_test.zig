@@ -139,6 +139,8 @@ test "dotted imported function values keep callback type catalogs fresh across c
         \\    return 42
     ;
     try agree(&files, &cache);
+    // Callable values stay on the fresh path for C1; the ordinary `data.value`
+    // body still publishes a reusable snapshot.
     try t.expectEqual(@as(usize, 0), cache.statistics.reused);
-    try t.expect(cache.statistics.bypassed >= 2);
+    try t.expectEqual(@as(usize, 0), cache.statistics.bypassed);
 }

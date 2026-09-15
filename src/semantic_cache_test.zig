@@ -32,8 +32,11 @@ fn compare(allocator: std.mem.Allocator, cache: *Cache, bytes: []const u8, expec
     if (expected) |number| {
         try cached.checkWithCache(cache);
         try fresh.check();
-        for (fresh.program.?.functions, cached.program.?.functions) |a, b|
+        for (fresh.program.?.functions, cached.program.?.functions) |a, b| {
             try t.expectEqual(a.policy.effects, b.policy.effects);
+            try t.expectEqualSlices(u16, a.signature.mutates, b.signature.mutates);
+            try t.expect(a.signature.return_origin.eql(b.signature.return_origin));
+        }
         try t.expectEqual(number, (try native.run(&cached)).value);
         try t.expectEqual(number, (try native.run(&fresh)).value);
     } else {
@@ -89,10 +92,12 @@ test "semantic cache reuses unchanged checked bodies after edits and preserves d
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
 // spec: SEMANTIC-CACHE-2
-test "semantic cache falls back for declaration type constant generic and alias changes" {
+test "declaration and type identity changes invalidate dependents while unrelated declarations preserve reuse" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     try compare(t.allocator, &cache, prefix ++ suffix, 42);
+    try t.expectEqual(@as(usize, 3), cache.statistics.checked);
+    // The helper signature changes; every caller that references it misses.
     try compare(t.allocator, &cache,
         \\def helper(n: bool) -> i64:
         \\    return 1
@@ -100,6 +105,11 @@ test "semantic cache falls back for declaration type constant generic and alias 
         \\
         \\
     ++ suffix, null);
+    // `keep` does not reference `helper`, so it is reusable even in the failed
+    // request; the caller that references the changed signature is not.
+    const reused_before_unrelated = cache.statistics.reused;
+    // An unrelated declaration inserted ahead of the same functions preserves the
+    // three ordinary bodies: the dependency digests and stable identities match.
     try compare(t.allocator, &cache,
         \\class Item:
         \\    n: i64
@@ -107,7 +117,9 @@ test "semantic cache falls back for declaration type constant generic and alias 
         \\
         \\
     ++ prefix ++ suffix, 42);
-    try t.expectEqual(@as(usize, 0), cache.statistics.reused);
+    try t.expectEqual(reused_before_unrelated + 3, cache.statistics.reused);
+    // Referenced constant value changes invalidate the reader; the alias form is
+    // rechecked because its declaration identity differs from the constant.
     try compare(t.allocator, &cache,
         \\const N: i64 = 1
         \\
@@ -137,21 +149,22 @@ test "semantic cache falls back for declaration type constant generic and alias 
         \\def main() -> i64:
         \\    return Number(42)
     , 42);
-    try t.expectEqual(@as(usize, 0), cache.statistics.reused);
-    try t.expect(cache.statistics.bypassed >= 4);
+    try t.expectEqual(reused_before_unrelated + 3, cache.statistics.reused);
 }
 // spec-case: SEMANTIC-CACHE-2
 // spec-case: CONSTANT-2
-test "semantic cache bypasses managed constants across literal edits" {
+test "managed constant edits invalidate dependent bodies while unrelated constants reuse" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const main = "def main() -> int:\n    return len(S) + B[0]\n";
     try compare(t.allocator, &cache, "const S: str = \"a\"\nconst B: bytes = b\"A\"\n" ++ main, 66);
     try compare(t.allocator, &cache, "const S: str = \"é🙂\"\nconst B: bytes = b\"B\"\n" ++ main, 68);
     try compare(t.allocator, &cache, "const S: str = \"a\" + \"b\"\nconst B: bytes = b\"B\"\n" ++ main, null);
-    try t.expectEqual(@as(usize, 0), cache.statistics.reused);
-    try t.expectEqual(@as(usize, 0), cache.statistics.stored);
-    try t.expect(cache.statistics.bypassed >= 3);
+    // `B` is unchanged in the second request and reused there; every reader of the
+    // edited `S` misses because the constant fingerprint participates in its context.
+    try t.expectEqual(@as(usize, 1), cache.statistics.reused);
+    try t.expectEqual(@as(usize, 2), cache.statistics.stored);
+    try t.expectEqual(@as(usize, 0), cache.statistics.bypassed);
 }
 // spec: SEMANTIC-CACHE-3
 test "semantic cache InvalidRelocation never accepts foreign source or expression identities" {
@@ -216,7 +229,7 @@ test "semantic cache keeps inferred callback schemas fresh across changed bodies
 }
 
 // spec-case: SEMANTIC-CACHE-2
-test "semantic cache bypasses constant length function and nominal specializations" {
+test "constant-length and nominal specializations stay on the fresh path" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const function =
@@ -252,8 +265,7 @@ test "semantic cache bypasses constant length function and nominal specializatio
         \\    return x.items[0]
     , 43);
     try t.expectEqual(@as(usize, 0), cache.statistics.reused);
-    try t.expectEqual(@as(usize, 0), cache.statistics.stored);
-    try t.expectEqual(@as(usize, 4), cache.statistics.bypassed);
+    try t.expectEqual(@as(usize, 0), cache.statistics.bypassed);
 }
 
 // spec: SEMANTIC-CACHE-4
@@ -343,4 +355,153 @@ test "semantic cache contract fingerprint forces a fresh check and identical con
     try compare(t.allocator, &cache, prefix ++ suffix, 42);
     try t.expectEqual(@as(usize, 6), cache.statistics.reused);
     try t.expectEqual(after_base_checked + 6, cache.statistics.checked);
+}
+
+test "per-function reuse ignores an unused generic and reuses unchanged ordinary bodies" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const generic = "def identity[T](value: T) -> T:\n    return value\n\n\n";
+    const second = "def second() -> i64:\n    return 7\n\n\n";
+    const main = "def main() -> i64:\n    return first() + second()\n";
+    try compare(t.allocator, &cache, "def first() -> i64:\n    return 1\n" ++ second ++ main ++ generic, 8);
+    try t.expectEqual(@as(usize, 3), cache.statistics.checked);
+    try t.expectEqual(@as(usize, 0), cache.statistics.bypassed);
+    try compare(t.allocator, &cache, "def first() -> i64:\n    return 2\n" ++ second ++ main ++ generic, 9);
+    // The edited body is rechecked; the other two ordinary bodies are reused even
+    // though the program still contains an unused generic template.
+    try t.expectEqual(@as(usize, 2), cache.statistics.reused);
+    try t.expectEqual(@as(usize, 4), cache.statistics.checked);
+}
+
+test "insert delete and reorder unrelated declarations preserve function and type identities" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const ordered =
+        \\class A:
+        \\    n: i64
+        \\
+        \\
+        \\class B:
+        \\    n: i64
+        \\
+        \\
+        \\def first() -> i64:
+        \\    return 1
+        \\
+        \\
+        \\def unused() -> i64:
+        \\    return 9
+        \\
+        \\
+        \\def main() -> i64:
+        \\    a = A(n=40)
+        \\    b = B(n=1)
+        \\    return a.n + b.n + first()
+    ;
+    try compare(t.allocator, &cache, ordered, 42);
+    try t.expectEqual(@as(usize, 3), cache.statistics.checked);
+    const shuffled =
+        \\class B:
+        \\    n: i64
+        \\
+        \\
+        \\class A:
+        \\    n: i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    a = A(n=40)
+        \\    b = B(n=1)
+        \\    return a.n + b.n + first()
+        \\
+        \\
+        \\def first() -> i64:
+        \\    return 1
+    ;
+    const before = cache.statistics.reused;
+    try compare(t.allocator, &cache, shuffled, 42);
+    // `unused` was deleted, both records and `main` moved ahead of `first`, and
+    // the fresh catalog ordinals differ; stable identities still remap the two
+    // surviving bodies.
+    try t.expectEqual(before + 2, cache.statistics.reused);
+}
+
+test "a negative name lookup misses when a declaration is introduced later" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const base = "def main() -> i64:\n    print(\"hi\")\n    return 1\n";
+    try compare(t.allocator, &cache, base, 1);
+    const introduced =
+        \\def print(message: str) -> None:
+        \\    _ = message
+        \\
+        \\
+        \\def main() -> i64:
+        \\    print("hi")
+        \\    return 1
+    ;
+    const before = cache.statistics.reused;
+    try compare(t.allocator, &cache, introduced, 1);
+    // `print` used to resolve to the reserved builtin (a recorded negative
+    // lookup); introducing a declaration changes resolution, so `main` misses
+    // even though its body bytes are unchanged.
+    try t.expectEqual(before, cache.statistics.reused);
+}
+
+test "reused bodies relocate diagnostics and warnings after code moves" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const base =
+        \\def helper() -> i64:
+        \\    unused = 41
+        \\    return 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return helper()
+    ;
+    try compare(t.allocator, &cache, base, 1);
+    const moved =
+        \\def unrelated() -> i64:
+        \\    return 9
+        \\
+        \\
+        \\
+    ++ base;
+    const before = cache.statistics.reused;
+    // `compare` renders every diagnostic from both the cached and fresh program,
+    // so an unrelocated warning span fails the comparison.
+    try compare(t.allocator, &cache, moved, 1);
+    try t.expectEqual(before + 2, cache.statistics.reused);
+}
+
+test "mutation summaries are recomputed rather than copied with a reused body" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const writing =
+        \\def touch(values: list[int]) -> None:
+        \\    values[0] = 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    values = [1]
+        \\    touch(values)
+        \\    return values[0]
+    ;
+    try compare(t.allocator, &cache, writing, 1);
+    const reading =
+        \\def touch(values: list[int]) -> None:
+        \\    _ = values
+        \\
+        \\
+        \\def main() -> i64:
+        \\    values = [1]
+        \\    touch(values)
+        \\    return values[0]
+    ;
+    const before = cache.statistics.reused;
+    // `main` is unchanged and reused; its `mutates`/`return_origin` summary is
+    // recomputed by the mandatory global effect pass and must match fresh.
+    try compare(t.allocator, &cache, reading, 1);
+    try t.expectEqual(before + 1, cache.statistics.reused);
 }
