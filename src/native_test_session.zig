@@ -48,6 +48,25 @@ pub const Session = struct {
             .source = source,
         };
     }
+    /// Declaration/interface check: parse every reachable module and validate
+    /// exported signatures, visibility and explicit ceilings without checking any
+    /// body. The returned manifest is `interface-contracts-v1`.
+    pub fn interfaceCheck(self: Session, source: []const u8) Error!std.json.Value {
+        const output = try self.context.capture(&.{ self.compiler, "list-interfaces", "--contracts", source });
+        const code = fs.exitCode(output.term);
+        if (code != 0) {
+            std.Io.File.stderr().writeStreamingAll(self.context.io, output.stderr) catch |err| switch (err) {
+                error.BrokenPipe => {},
+                else => {},
+            };
+            return switch (code) {
+                2 => error.ProjectConfigurationFailed,
+                3 => error.ProjectPolicyRejected,
+                else => error.NativeToolFailed,
+            };
+        }
+        return (try std.json.parseFromSlice(std.json.Value, self.context.allocator, output.stdout, .{ .allocate = .alloc_always })).value;
+    }
     /// Fresh semantic checking always precedes result reuse, including warm builds.
     pub fn check(self: Session, source: []const u8) Error!Project {
         const output = try self.context.capture(&.{ self.compiler, "emit-project-qbe", source });
