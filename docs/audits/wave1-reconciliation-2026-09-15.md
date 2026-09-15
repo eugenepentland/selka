@@ -21,7 +21,7 @@ commit rather than against a moving set of worktrees.
     selected, 46 at target, 11 not yet, **zero regressions**.
   - `selfhost/prototype/{lexer,parser,bench}.my` run through the installed
     compiler.
-- **Final gate after Wave 1.1:**
+- **Final gate after Wave 1.1:** commit `039a4a4`.
   - `zig build test --summary all` — 39/39 steps, 850/850 unit tests.
   - `zig build test-qbe --summary all` — 36/36 steps.
   - `zig build test-qbe-build --summary all` — 22/22 steps.
@@ -31,6 +31,22 @@ commit rather than against a moving set of worktrees.
   - Guardian feedback: `run-all: 88 check(s) passed` in the `zig build test`
     gate, with the Wave 1.1 files in the diff-scoped review set. No Guardian
     findings remained.
+- **Final Wave 1.2 baseline:** commit `f232b71`.
+  - `match` arms now start from the same pre-match definite-assignment state.
+    Continuing arms are intersected, terminating arms contribute no
+    continuation, and payload bindings stay arm-scoped.
+  - Reader-facing docs teach `record`, while `class` compatibility remains.
+  - The self-hosting plan now records function scope instead of block scope.
+  - The three 14 September audit plans, the handoff, and the concurrency
+    proposal are committed as planning inputs.
+  - Final gate after Wave 1.2: `zig build test --summary all` — 39/39 steps,
+    944/944 tests; `zig build test-qbe --summary all` — 36/36 steps;
+    `zig build test-qbe-build --summary all` — 22/22 steps;
+    `zig build fmt-check` — pass.
+  - Guardian feedback: the Wave 1.1 and Wave 1.2 commits both passed the
+    whole-tree commit-hook Guardian run (`run-all: 88 check(s) passed`), and
+    the post-commit `zig build test` gate passed its own Guardian step. No
+    Guardian findings remained.
 
 ## Simplification workstream state (W1–W9)
 
@@ -53,7 +69,7 @@ commit rather than against a moving set of worktrees.
 - `selfhost/prototype/api_report.md`
 - this report
 
-## Open decisions and blockers after Wave 1.1
+## Open decisions and blockers after Wave 1.2
 
 1. **D1 resolved.** `docs/adr/D1-block-scope.md` now records function-scoped
    locals with sound definite assignment. `sema.zig` snapshots initialization
@@ -74,6 +90,9 @@ commit rather than against a moving set of worktrees.
 5. **Not Wave 1 and still open:** list concat/repeat, the expressions group
    (conditional expression, chained comparisons, tuples, `is None`, `Option`
    equality), and incremental identity/invalidation (Wave 3).
+6. **Match definite assignment resolved in Wave 1.2.** Every arm starts from the
+   pre-match initialization state, continuing arms are intersected, terminating
+   arms contribute no continuation, and payload bindings remain arm-scoped.
 
 ## Wave 1.1 stabilization
 
