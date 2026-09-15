@@ -82,6 +82,7 @@ identity, and a damaged frontend entry that recomputes a clean result.
 
 ## Gates run
 
+- `zig build test` (full documented gate) — exit 0.
 - `zig build test-units` — 918 passed, 0 failed.
 - `zig build test-cli` — 78 passed, 0 failed.
 - `zig build test-doc-coverage` — 0 failures.
