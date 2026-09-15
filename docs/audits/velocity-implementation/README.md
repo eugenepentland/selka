@@ -51,8 +51,8 @@ Branches are cut from the baseline SHA. Worktrees live under
 | M1 | `codex/velocity-m1` | `velocity-m1` | `14f6f0c` | W0 + E2 | **done** — mutation classification/metadata; merged in `44a0bfe` |
 | M2 | `codex/velocity-m2` | `velocity-m2` | `44a0bfe` | M1, E1 | **in progress** |
 | M3 | `codex/velocity-m3` | `velocity-m3` | M2+E2 integrated | M2, E2 | blocked |
-| C1 | `codex/velocity-c1` | `velocity-c1` | `44a0bfe` | C0, E2, M1 | **in progress** |
-| C2 | `codex/velocity-c2` | `velocity-c2` | C1+M2 integrated | C1, M2 | blocked |
+| C1 | `codex/velocity-c1` | `velocity-c1` | `44a0bfe` | C0, E2, M1 | **done** — per-function deps/remap; merged in `b8a512a` |
+| C2 | `codex/velocity-c2` | `velocity-c2` | C1+M2 integrated | C1, M2 | blocked on M2 |
 | C3 | `codex/velocity-c3` | `velocity-c3` | C2 integrated | C2 | blocked |
 | C4 | `codex/velocity-c4` | `velocity-c4` | C3+P1 integrated | C3, P1 | blocked |
 | P1 | `codex/velocity-p1` | `velocity-p1` | M3+E2 integrated | E2, M3 | blocked |
@@ -90,4 +90,5 @@ Never share a mutable checkout, installed binary or `zig-out`/`.zig-cache`.
 | 2026-09-15 | `2c0e270` | E2 | explicit exported ceilings + repository migration; focused interface/export/generic/navigation green |
 | 2026-09-15 | `88e7fb6` / `5988575` | A1 | required project import policy; 20 policy units / 9 policy CLI tests green |
 | 2026-09-15 | `44a0bfe` | M1 | mutation effect + `mutates` grammar + write/origin metadata; 23 M1 regressions green |
+| 2026-09-15 | `b8a512a` | C1 | per-function body reuse + stable remapping; 36 semantic / 25 incremental / 30 invalidation / 61 cache tests green |
 | 2026-09-15 | (note) | build cache | a warm `.zig-cache` can keep a stale generated `qbe_build_assets` module after large `src/` edits; cold `zig build test-units` passes 969/969. Final gate must be cold. |
