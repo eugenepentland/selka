@@ -54,7 +54,7 @@ const Emitter = struct {
     fn emitPrint(self: *Emitter, span: Span, output: @FieldType(@FieldType(typed.Node, "data"), "print")) !void {
         const types = try self.allocator.alloc(typed.Type, output.arguments.len);
         for (output.arguments, types) |argument, *ty| ty.* = self.program.nodes[@backingInt(argument)].ty;
-        try self.instruction(span, .{ .print = .{ .types = types, .separator = output.separator != null, .terminator = output.terminator != null } });
+        try self.instruction(span, .{ .print = .{ .sink = output.sink, .types = types, .separator = output.separator != null, .terminator = output.terminator != null } });
         if (output.terminator) |value| try self.push(.{ .expression = value });
         if (output.separator) |value| try self.push(.{ .expression = value });
         var index = output.arguments.len;

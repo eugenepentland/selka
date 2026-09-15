@@ -13,6 +13,12 @@ uint64_t myl_qbe_grant_external(void *context,unsigned kind) {
     if (!available) { myl_qbe_fail(context,"CapabilityUnavailable");return 0; }
     return UINT64_MAX-kind;
 }
+uint64_t myl_qbe_grant_external_checked(void *context,unsigned kind,const char *flag) {
+    const MylangNativeProviders *p=providers(context);
+    int available=kind==0 ? p->clock_now!=NULL:kind==1 ? p->random_u64!=NULL:kind==2 && p->environment_get!=NULL;
+    if (!available) { myl_qbe_fail_missing_capability(context,flag);return 0; }
+    return UINT64_MAX-kind;
+}
 int myl_qbe_external_read(void *context,uint64_t authority,unsigned kind,uint64_t *output) {
     if (kind>1 || authority!=UINT64_MAX-kind) { myl_qbe_fail_capability(context);return -1; }
     const MylangNativeProviders *p=providers(context);

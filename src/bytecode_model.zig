@@ -77,7 +77,7 @@ pub const FileAccess = struct { kind: @import("file_operations.zig").Access, mod
 /// Method on an open handle held in a local slot, with one optional operand.
 pub const FileMethod = struct { kind: @import("file_operations.zig").Method, owner: typed.LocalId, text: bool, argument: bool, output: typed.Type, shapes: typed.FileShapes };
 /// Static argument types and whether explicit `sep=`/`end=` operands follow them.
-pub const Print = struct { types: []const typed.Type, separator: bool, terminator: bool };
+pub const Print = struct { sink: typed.Sink = .stdout, types: []const typed.Type, separator: bool, terminator: bool };
 /// Checked function signature, locals, and instruction body.
 pub const Function = struct {
     policy: typed.FunctionPolicy = .{},

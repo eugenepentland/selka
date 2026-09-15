@@ -38,7 +38,18 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     // owns a reclaiming arena over `gpa` rather than the process's own arena.
     var context = try fs.Context.init(process.gpa, process.io, process.environ_map);
     defer context.deinit();
-    return build(context, parsed);
+    const controls = try runtimeControls(context.allocator, args);
+    return build(context, parsed, controls);
+}
+/// Collect runtime/authority controls from a `build --run` command line. They are
+/// forwarded before the `--` guest delimiter and revalidated by the native runtime.
+fn runtimeControls(allocator: std.mem.Allocator, args: []const []const u8) ![]const []const u8 {
+    var list: std.ArrayList([]const u8) = .empty;
+    for (args) |argument| {
+        if (std.mem.eql(u8, argument, "--")) break;
+        if (options.runtimeControl(argument)) try list.append(allocator, argument);
+    }
+    return list.toOwnedSlice(allocator);
 }
 /// A resolved toolchain and object cache, reusable across many native builds.
 pub const Prepared = struct { cache: cache_api.Cache, zig_version: []const u8 };
@@ -87,7 +98,7 @@ fn frontendCompiler(context: fs.Context) fs.Error![]const u8 {
     if (context.environ.get("MYLANG_HOST_COMPILER")) |path| return context.allocator.dupe(u8, path);
     return std.Io.Dir.cwd().realPathFileAlloc(context.io, "/proc/self/exe", context.allocator);
 }
-fn build(context: fs.Context, parsed: options.Options) !u8 {
+fn build(context: fs.Context, parsed: options.Options, controls: []const []const u8) !u8 {
     const a = context.allocator;
     const compiler = try frontendCompiler(context);
     const prepared = prepare(context, parsed) catch |err| switch (err) {
@@ -149,7 +160,7 @@ fn build(context: fs.Context, parsed: options.Options) !u8 {
         const stream = if (parsed.run) std.Io.File.stderr() else std.Io.File.stdout();
         try stream.writeStreamingAll(context.io, try std.fmt.allocPrint(a, "{s}\n", .{report}));
     }
-    if (parsed.run) return spawn(context, output, parsed);
+    if (parsed.run) return spawnParts(context, output, controls, parsed);
     return 0;
 }
 /// The argument vector for one built program and the options it was given.
@@ -175,8 +186,15 @@ pub fn ceiling(context: fs.Context, parsed: options.Options) Error!*const std.pr
 }
 /// Run a built program with the arguments it was given, under its byte ceiling.
 pub fn spawn(context: fs.Context, output: []const u8, parsed: options.Options) Error!u8 {
+    return spawnParts(context, output, &.{}, parsed);
+}
+/// Spawn with runtime controls collected before the guest delimiter.
+fn spawnParts(context: fs.Context, output: []const u8, controls: []const []const u8, parsed: options.Options) Error!u8 {
+    var arguments: std.ArrayList([]const u8) = .empty;
+    try arguments.appendSlice(context.allocator, controls);
+    try arguments.appendSlice(context.allocator, parsed.arguments);
     var child = try std.process.spawn(context.io, .{
-        .argv = try command(context, output, parsed.arguments),
+        .argv = try command(context, output, arguments.items),
         .environ_map = try ceiling(context, parsed),
     });
     return status(try child.wait(context.io));

@@ -860,12 +860,14 @@ const Checker = struct {
         };
         out.data = .{ .file_method = .{ .kind = operation.kind, .owner = slot, .text = text, .argument = argument, .shapes = shapes } };
     }
-    /// `print` is reserved unless a local binding or declared function shadows it.
-    fn printBuiltin(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
-        if (call.owner != null or !std.mem.eql(u8, self.src.text(call.name), "print")) return false;
-        if (self.active.contains("print") or self.functions.contains("print")) return false;
-        if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return false;
-        return true;
+    /// `print`/`eprint` are reserved unless a local binding or declared function shadows the spelling.
+    fn outputBuiltin(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?typed.Sink {
+        if (call.owner != null or call.type_arguments.len != 0) return null;
+        const name = self.src.text(call.name);
+        const sink: typed.Sink = if (std.mem.eql(u8, name, "print")) .stdout else if (std.mem.eql(u8, name, "eprint")) .stderr else return null;
+        if (self.active.contains(name) or self.functions.contains(name)) return null;
+        if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return null;
+        return sink;
     }
     fn checkPrintOperand(self: *Checker, id: ast.NodeId, expected_text: bool) Error!typed.NodeId {
         const value = self.resolved[@backingInt(id)].?;
@@ -882,12 +884,13 @@ const Checker = struct {
         );
         return value;
     }
-    fn checkPrint(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
+    fn checkPrint(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), sink: typed.Sink, out: *typed.Node) Error!void {
         const split = try io_builtins.printArguments(self.src, call, self.sink);
         const arguments = try self.allocator.alloc(typed.NodeId, split.values.len);
         for (split.values, arguments) |id, *slot| slot.* = try self.checkPrintOperand(id, false);
         out.ty = .unit;
         out.data = .{ .print = .{
+            .sink = sink,
             .arguments = arguments,
             .separator = if (split.separator) |id| try self.checkPrintOperand(id, true) else null,
             .terminator = if (split.terminator) |id| try self.checkPrintOperand(id, true) else null,
@@ -1557,7 +1560,7 @@ const Checker = struct {
             }
             return true;
         }
-        if (try self.printBuiltin(call)) {
+        if (try self.outputBuiltin(call)) |_| {
             _ = try io_builtins.printArguments(self.src, call, self.sink);
             // Only a keyword operand needs the text type, and only then is it materialized.
             const text_type = if (call.argument_names.len == 0) null else try collections.preludeType(&self.catalog, "str", node.span);
@@ -2128,7 +2131,7 @@ const Checker = struct {
             return;
         }
         if (try self.fileAccessBuiltin(input)) |kind| return self.checkFileAccess(node, input, kind, out);
-        if (try self.printBuiltin(input)) return self.checkPrint(node, input, out);
+        if (try self.outputBuiltin(input)) |sink| return self.checkPrint(node, input, sink, out);
         if (self.byteConversion(input)) |conversion| return self.checkByteConversion(node, input, conversion, out);
         if (try self.resultConstructor(input)) |ok| {
             try call_arguments.positional(input, self.sink);
@@ -2449,16 +2452,24 @@ const Checker = struct {
             },
             .propagate => |operand| {
                 const value = self.resolved[@backingInt(operand)].?;
-                const input = typed.resultShape(self.nodes.items[@backingInt(value)].ty, self.catalog.records) orelse return self.sink.fail("E_TRY_TYPE", node.span, "try requires a declared fallible result");
-                const output = typed.resultShape(self.return_type, self.catalog.records) orelse return self.sink.fail("E_TRY_RETURN", node.span, "try requires a function returning a declared result type");
-                try self.require(input.error_type, output.error_type, node.span);
+                const input_ty = self.nodes.items[@backingInt(value)].ty;
+                var element: typed.Type = undefined;
+                if (typed.resultShape(input_ty, self.catalog.records)) |input| {
+                    const output = typed.resultShape(self.return_type, self.catalog.records) orelse return self.sink.fail("E_TRY_RETURN", node.span, "try requires a function returning a declared result type");
+                    try self.require(input.error_type, output.error_type, node.span);
+                    element = input.ok_type;
+                } else if (prelude.optionShape(input_ty, self.catalog.records)) |input| {
+                    const output = prelude.optionShape(self.return_type, self.catalog.records) orelse return self.sink.fail("E_TRY_RETURN", node.span, "try requires a function returning an Option type");
+                    try self.require(input.element, output.element, node.span);
+                    element = input.element;
+                } else return self.sink.fail("E_TRY_TYPE", node.span, "try requires a declared result or option");
                 try self.requireHandled(0, node.span);
                 for (temporaries[0 .. temporaries.len - 1]) |temporary| if (self.requiresHandling(temporary)) return self.sink.fail(
                     "E_RESULT_PROPAGATION",
                     node.span,
                     "propagation could drop a pending result temporary; handle or transfer it before this expression",
                 );
-                out.ty = input.ok_type;
+                out.ty = element;
                 out.data = .{ .propagate = .{ .value = value, .output = self.return_type } };
             },
             .variant => |variant| {
@@ -3468,7 +3479,7 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
         if (entry_capabilities & bit != 0) return sink.fail("E_MAIN", parameter.name, "entry requests at most one value parameter of each capability kind");
         entry_capabilities |= bit;
     }
-    if (!entry_adapter.supported(try checker.ty(entry.signature.return_type), checker.catalog.records)) return sink.fail("E_TYPE", entry.signature.return_type, "main must return int, None, or Result<None/int,int>");
+    if (!entry_adapter.supported(try checker.ty(entry.signature.return_type), checker.catalog.records)) return sink.fail("E_TYPE", entry.signature.return_type, "main must return int, None, Result<None/int,int>, or Result[int,str]");
     var checked_functions: std.ArrayList(typed.Function) = .empty;
     var i: usize = 0;
     while (i < checker.instance_keys.items.len and (!contracts_failed or i < checker.ordinary_count)) : (i += 1) {

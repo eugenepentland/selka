@@ -75,6 +75,12 @@ def main() -> int noio:
 Write `effects(output)` to permit printing under an explicit bound. `print`
 runs on the QBE native backend, the only runtime.
 
+`eprint` is the standard-error spelling of `print`. It accepts the same values
+and `sep=`/`end=` keywords, writes only standard error, and contributes the same
+`output` effect. The two streams are buffered and flushed independently, so a
+`print` line never mixes with an `eprint` line even when both are used together.
+Byte-exact stream separation is covered by the native CLI tests.
+
 ## What `mylang run` prints and returns
 
 `mylang run` streams program output to standard output as it happens and does
@@ -102,7 +108,11 @@ exit 0
 
 A runtime trap outranks the return and exits 1, because the program never
 reached its `return`. `run-project` and a native executable from `mylang build`
-follow the same rule.
+follow the same rule. An entry point may also return `Result[int, str]`:
+`Ok(code)` carries the same status rule, while `Err(message)` writes exactly one
+`message` line to standard error and exits 1. Exit codes are truncated to the
+low eight bits, so `Ok(300)` exits 44. `--print-result` still prints the carried
+integer status, independent of the diagnostic on stderr.
 
 ## Arguments
 
@@ -177,6 +187,16 @@ renames, and directory scoping does not distinguish hard links to the same inode
 A compromised compiler, or a host that edits the adapters, is outside this
 boundary. `--restrict` is a way to say what a program is allowed to reach, not a
 containment mechanism.
+
+## Environment
+
+Environment access needs an explicit `Environment` entry parameter. The existing
+`environment_get[Lookup](env, name)` operation returns the declared lookup record
+and distinguishes absent, empty, present, denied and capacity failures without an
+ambient environment map. `mylang run` and installed executables grant the process
+environment by default; under `--restrict`, `--allow-env[=NAME,...]` selects the
+visible names. All launch paths now report an ungranted capability with the same
+stderr line and exit 2.
 
 ## Files
 

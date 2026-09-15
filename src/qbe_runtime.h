@@ -30,14 +30,17 @@ typedef struct {
     void *frame_allocations;
     int guest_argc;
     char **guest_argv;
+    int reported;
 } MylQbeContext;
 typedef struct {
     uint64_t value, steps;
     const char *code;
     MylQbeTrace trace[16];
     uint64_t trace_count, omitted_frames;
+    int reported;
 } MylQbeResult;
 void myl_qbe_fail_capability(void *);
+void myl_qbe_fail_missing_capability(void *, const char *flag);
 uint64_t myl_qbe_on_stack(uint64_t (*entry)(void *), MylQbeContext *);
 void *myl_qbe_frame_allocate(void *, uint64_t bytes);
 void myl_qbe_frame_release(void *, void *);
@@ -73,12 +76,14 @@ int mylang_qbe_execute_providers(uint64_t (*entry)(void *), uint64_t steps, uint
 void myl_qbe_fail(void *, const char *);
 void myl_qbe_fail_equality(void *, int status);
 uint64_t myl_qbe_grant_resource(void *, unsigned kind);
+uint64_t myl_qbe_grant_resource_checked(void *, unsigned kind, const char *flag);
 uint64_t myl_qbe_restrict_resource(void *, uint64_t authority, unsigned permissions);
 int myl_qbe_resource_new(void *, uint64_t authority, unsigned kind, const unsigned char *, size_t, myl_native_resource **);
 int myl_qbe_resource_complete(void *, myl_native_resource *);
 int myl_qbe_resource_read(void *, myl_native_resource *, unsigned char *, size_t, size_t *, int *);
 int myl_qbe_resource_write(void *, myl_native_resource *, const unsigned char *, size_t, size_t *);
 uint64_t myl_qbe_grant_external(void *, unsigned kind);
+uint64_t myl_qbe_grant_external_checked(void *, unsigned kind, const char *flag);
 int myl_qbe_external_read(void *, uint64_t authority, unsigned kind, uint64_t *output);
 int myl_qbe_environment_get(void *, uint64_t authority, const unsigned char *key, size_t length, unsigned char *output, size_t capacity, size_t *written, int *present);
 int mylang_qbe_execute_gc(uint64_t (*entry)(void *), uint64_t steps, uint64_t frames, int stress, MylQbeResult *result);

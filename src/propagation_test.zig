@@ -100,6 +100,48 @@ test "bytecode validates propagation result identity and failure stack targets" 
     try testing.expectError(error.InternalError, language.bytecode.validate(testing.allocator, program));
 }
 
+// spec: OPTION-TRY-1
+test "option propagation unwraps Some and forwards None" {
+    try result(
+        \\def first(values: list[i64]) -> Option[i64]:
+        \\    if len(values) == 0:
+        \\        return None
+        \\    return Some(values[0])
+        \\
+        \\
+        \\def pick(values: list[i64]) -> Option[i64]:
+        \\    value = first(values)?
+        \\    return Some(value + 1)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    match pick([41]):
+        \\        case Some(value):
+        \\            return value
+        \\        case None:
+        \\            return 0
+    , 42);
+    try result(
+        \\def first(values: list[i64]) -> Option[i64]:
+        \\    if len(values) == 0:
+        \\        return None
+        \\    return Some(values[0])
+        \\
+        \\
+        \\def pick(values: list[i64]) -> Option[i64]:
+        \\    value = first(values)?
+        \\    return Some(value + 1)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    match pick([]):
+        \\        case Some(value):
+        \\            return value
+        \\        case None:
+        \\            return 7
+    , 7);
+}
+
 // spec: CORE-11
 test "try unwraps success and remaps errors between nominal result types by named cases" {
     try result(

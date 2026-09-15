@@ -18,7 +18,9 @@ pub fn Lower(comptime E: type) type {
             const separator = terminator - @intFromBool(output.separator);
             const base = separator - output.types.len;
             const sink = self.temp();
-            try self.print(" %v{d} =l call $myl_qbe_print_begin(l %ctx)\n", .{sink});
+            const begin = if (output.sink == .stderr) "myl_qbe_eprint_begin" else "myl_qbe_print_begin";
+            const finish = if (output.sink == .stderr) "myl_qbe_eprint_finish" else "myl_qbe_print_finish";
+            try self.print(" %v{d} =l call ${s}(l %ctx)\n", .{ sink, begin });
             try self.checkFailure("failure");
             for (output.types, 0..) |ty, index| {
                 if (index != 0) try gap(E, self, sink, output.separator, separator);
@@ -30,7 +32,7 @@ pub fn Lower(comptime E: type) type {
             if (output.terminator) {
                 try self.print(raw_call, .{ sink, try self.load("s", terminator) });
             } else try self.print(" call $myl_qbe_print_byte(l %v{d}, w 10)\n", .{sink});
-            try self.print(" call $myl_qbe_print_finish(l %ctx, l %v{d})\n", .{sink});
+            try self.print(" call ${s}(l %ctx, l %v{d})\n", .{ finish, sink });
             try self.checkFailure("failure");
             try self.print(" storel 0, %s{d}\n", .{base});
         }

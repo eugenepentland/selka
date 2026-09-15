@@ -65,7 +65,14 @@ pub fn entry(allocator: std.mem.Allocator, manifest: std.json.Value, provider: b
 }
 fn grant(name: []const u8) Error![]const u8 {
     const names = [_][]const u8{ "allocator", "clock_cap", "random_cap", "environment_cap", "filesystem_cap", "network_cap" };
-    const calls = [_][]const u8{ "UINT64_C(1)", "myl_qbe_grant_external(ctx,0)", "myl_qbe_grant_external(ctx,1)", "myl_qbe_grant_external(ctx,2)", "myl_qbe_grant_resource(ctx,0)", "myl_qbe_grant_resource(ctx,1)" };
+    const calls = [_][]const u8{
+        "UINT64_C(1)",
+        "myl_qbe_grant_external_checked(ctx,0,\"--allow-clock\")",
+        "myl_qbe_grant_external_checked(ctx,1,\"--allow-random\")",
+        "myl_qbe_grant_external_checked(ctx,2,\"--allow-env\")",
+        "myl_qbe_grant_resource_checked(ctx,0,\"--allow-read=DIR\")",
+        "myl_qbe_grant_resource_checked(ctx,1,\"--allow-endpoint\")",
+    };
     for (names, calls) |type_name, call| if (std.mem.eql(u8, name, type_name)) return call;
     return error.UnsupportedNativeEntry;
 }
@@ -90,7 +97,7 @@ test "entry and location metadata retain provider setup and byte-escaped source 
     defer parsed.deinit();
     const generated = try entry(std.testing.allocator, parsed.value, true);
     defer std.testing.allocator.free(generated);
-    try std.testing.expect(std.mem.indexOf(u8, generated, "myl_qbe_grant_external(ctx,0)") != null);
+    try std.testing.expect(std.mem.indexOf(u8, generated, "myl_qbe_grant_external_checked(ctx,0,\"--allow-clock\")") != null);
     try std.testing.expect(std.mem.indexOf(u8, generated, "mylang_qbe_run_grants(entry_run,argc,argv,&providers)") != null);
     const locations = try metadata(std.testing.allocator, parsed.value);
     defer std.testing.allocator.free(locations);

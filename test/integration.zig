@@ -92,6 +92,113 @@ fn runFixture(command: []const u8, text: []const u8, options: []const []const u8
     return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
 }
 
+// spec-case: CAPABILITY-3
+test "run build --run and installed executables share the restricted capability diagnostic" {
+    const program =
+        \\def main(clock: Clock) -> int:
+        \\    _ = clock
+        \\    return 0
+    ;
+    const message = "mylang: --restrict is active and this command line did not grant a capability the entry point requests; pass --allow-clock, or drop --restrict to grant every capability\n";
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "cap.my", .data = program });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "cap.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const output = try std.fs.path.join(testing.allocator, &.{ root, "cap-bin" });
+    defer testing.allocator.free(output);
+
+    var run_argv: std.ArrayList([]const u8) = .empty;
+    defer run_argv.deinit(testing.allocator);
+    try run_argv.appendSlice(testing.allocator, &.{ compiler_path, "run", path, "--restrict" });
+    try run_argv.appendSlice(testing.allocator, &tools);
+    const run = try std.process.run(testing.allocator, testing.io, .{ .argv = run_argv.items });
+    defer testing.allocator.free(run.stdout);
+    defer testing.allocator.free(run.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, run.term);
+    try testing.expectEqualStrings("", run.stdout);
+    try testing.expectEqualStrings(message, run.stderr);
+
+    var build_argv: std.ArrayList([]const u8) = .empty;
+    defer build_argv.deinit(testing.allocator);
+    try build_argv.appendSlice(testing.allocator, &.{ compiler_path, "build", path, "--run", "--restrict" });
+    try build_argv.appendSlice(testing.allocator, &tools);
+    const build = try std.process.run(testing.allocator, testing.io, .{ .argv = build_argv.items });
+    defer testing.allocator.free(build.stdout);
+    defer testing.allocator.free(build.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, build.term);
+    try testing.expectEqualStrings("", build.stdout);
+    try testing.expectEqualStrings(message, build.stderr);
+
+    var link_argv: std.ArrayList([]const u8) = .empty;
+    defer link_argv.deinit(testing.allocator);
+    try link_argv.appendSlice(testing.allocator, &.{ compiler_path, "build", path, "-o", output });
+    try link_argv.appendSlice(testing.allocator, &tools);
+    const link = try std.process.run(testing.allocator, testing.io, .{ .argv = link_argv.items });
+    defer testing.allocator.free(link.stdout);
+    defer testing.allocator.free(link.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, link.term);
+    const installed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ output, "--restrict" } });
+    defer testing.allocator.free(installed.stdout);
+    defer testing.allocator.free(installed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, installed.term);
+    try testing.expectEqualStrings("", installed.stdout);
+    try testing.expectEqualStrings(message, installed.stderr);
+}
+
+// spec: RESULT-MAIN-1
+test "CLI maps Result main ok and err to status codes and one diagnostic" {
+    const ok =
+        \\def main(args: list[str]) -> Result[int, str]:
+        \\    if len(args) == 0:
+        \\        return Err("missing name")
+        \\    return Ok(7)
+    ;
+    const accepted = try runFixture("run", ok, &.{ "--", "x" });
+    defer testing.allocator.free(accepted.stdout);
+    defer testing.allocator.free(accepted.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 7 }, accepted.term);
+    try testing.expectEqualStrings("7\n", accepted.stdout);
+    try testing.expectEqualStrings("", accepted.stderr);
+
+    const rejected = try runFixture("run", ok, &.{});
+    defer testing.allocator.free(rejected.stdout);
+    defer testing.allocator.free(rejected.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
+    try testing.expectEqualStrings("1\n", rejected.stdout);
+    try testing.expectEqualStrings("missing name\n", rejected.stderr);
+
+    const wrapped =
+        \\def main() -> Result[int, str]:
+        \\    return Ok(300)
+    ;
+    const status = try runFixture("run", wrapped, &.{});
+    defer testing.allocator.free(status.stdout);
+    defer testing.allocator.free(status.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 44 }, status.term);
+    try testing.expectEqualStrings("300\n", status.stdout);
+    try testing.expectEqualStrings("", status.stderr);
+}
+
+// spec: EPRINT-1
+test "CLI separates eprint stderr from print stdout byte-exactly" {
+    const program =
+        \\def main() -> int:
+        \\    print("out", 1)
+        \\    eprint("err", 7, sep="-", end="!\n")
+        \\    eprint()
+        \\    return 0
+    ;
+    const outcome = try runFixture("run", program, &.{});
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    try testing.expectEqualStrings("out 1\n0\n", outcome.stdout);
+    try testing.expectEqualStrings("err-7!\n\n", outcome.stderr);
+}
+
 // spec-case: ARGV-1
 test "CLI forwards guest arguments after -- for run and build --run" {
     var temp = testing.tmpDir(.{});

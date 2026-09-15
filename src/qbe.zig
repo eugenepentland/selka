@@ -12,6 +12,7 @@ const diagnostic = @import("diagnostic.zig");
 const Source = @import("source.zig").Source;
 const entry_adapter = @import("entry_adapter.zig");
 const native_descriptors = @import("native_descriptors.zig");
+const prelude = @import("prelude.zig");
 /// Failures producing independent QBE native units.
 pub const GenerateError = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 const drop_local = " call $myl_native_owned_drop(l %heap, l extern ${s}, l %l{d})\n";
@@ -740,20 +741,34 @@ const Emitter = struct {
             .file_method => |call| try @import("qbe_files.zig").Lower(Emitter).method(self, call, stack),
             .try_result => |propagate| {
                 const source = try self.load("s", h - 1);
-                const input = typed.resultShape(propagate.input, self.program.records).?;
-                const output = typed.resultShape(propagate.output, self.program.records).?;
-                const tag = self.temp();
-                const success = self.temp();
-                try self.print(" %v{d} =l loaduw %v{d}\n %v{d} =l ceql %v{d}, {d}\n", .{ tag, source, success, tag, input.ok_tag });
-                try self.print(" jnz %v{d}, @tryok{d}, @tryerror{d}\n@tryerror{d}\n", .{ success, tag, tag, tag });
-                const pointer = try self.aggregatePointer();
-                try self.print(" storew {d}, %v{d}\n", .{ output.error_tag, pointer });
-                const payload = try self.readValue(try self.address(source, (try self.layout(propagate.input)).payload_offset), input.error_type);
-                try self.writeValue(try self.address(pointer, (try self.layout(propagate.output)).payload_offset), payload, output.error_type);
-                for (stack[0 .. h - 1], 0..) |ty, slot| try self.dropOperand(slot, ty);
-                try self.store(0, pointer);
-                try self.print(" jmp @i{d}\n@tryok{d}\n", .{ propagate.error_target, tag });
-                try self.store(h - 1, try self.readValue(try self.address(source, (try self.layout(propagate.input)).payload_offset), input.ok_type));
+                const input_offset = (try self.layout(propagate.input)).payload_offset;
+                if (typed.resultShape(propagate.input, self.program.records)) |input| {
+                    const output = typed.resultShape(propagate.output, self.program.records).?;
+                    const tag = self.temp();
+                    const success = self.temp();
+                    try self.print(" %v{d} =l loaduw %v{d}\n %v{d} =l ceql %v{d}, {d}\n", .{ tag, source, success, tag, input.ok_tag });
+                    try self.print(" jnz %v{d}, @tryok{d}, @tryerror{d}\n@tryerror{d}\n", .{ success, tag, tag, tag });
+                    const pointer = try self.aggregatePointer();
+                    try self.print(" storew {d}, %v{d}\n", .{ output.error_tag, pointer });
+                    const payload = try self.readValue(try self.address(source, input_offset), input.error_type);
+                    try self.writeValue(try self.address(pointer, (try self.layout(propagate.output)).payload_offset), payload, output.error_type);
+                    for (stack[0 .. h - 1], 0..) |ty, slot| try self.dropOperand(slot, ty);
+                    try self.store(0, pointer);
+                    try self.print(" jmp @i{d}\n@tryok{d}\n", .{ propagate.error_target, tag });
+                    try self.store(h - 1, try self.readValue(try self.address(source, input_offset), input.ok_type));
+                } else if (prelude.optionShape(propagate.input, self.program.records)) |input| {
+                    const output = prelude.optionShape(propagate.output, self.program.records).?;
+                    const tag = self.temp();
+                    const success = self.temp();
+                    try self.print(" %v{d} =l loaduw %v{d}\n %v{d} =l ceql %v{d}, {d}\n", .{ tag, source, success, tag, input.some });
+                    try self.print(" jnz %v{d}, @tryok{d}, @tryerror{d}\n@tryerror{d}\n", .{ success, tag, tag, tag });
+                    const pointer = try self.aggregatePointer();
+                    try self.print(" storew {d}, %v{d}\n", .{ output.none, pointer });
+                    for (stack[0 .. h - 1], 0..) |ty, slot| try self.dropOperand(slot, ty);
+                    try self.store(0, pointer);
+                    try self.print(" jmp @i{d}\n@tryok{d}\n", .{ propagate.error_target, tag });
+                    try self.store(h - 1, try self.readValue(try self.address(source, input_offset), input.element));
+                } else return error.InternalError;
             },
             .function_value => |value| try self.print(" storel extern ${s}, %s{d}\n", .{ self.units[@backingInt(value.function)].symbol, h }),
             .invoke => |callback_type| try self.invoke(callback_type, stack),

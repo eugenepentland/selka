@@ -6,6 +6,7 @@ const external_resources = @import("external_resources.zig");
 const model = @import("bytecode_model.zig");
 const ManagedKind = @import("runtime_values.zig").ManagedKind;
 const BufferOperation = @FieldType(@FieldType(Instruction, "op"), "buffer_operation");
+const prelude = @import("prelude.zig");
 pub const Predicate = model.Predicate;
 pub const Equality = model.Equality;
 pub const SwitchArm = model.SwitchArm;
@@ -401,9 +402,18 @@ fn validateOpUpdateRecord(allocator: std.mem.Allocator, program: Program, update
 }
 
 fn validateOpTryResult(program: Program, function: Function, propagate: @FieldType(@FieldType(Instruction, "op"), "try_result")) Error!void {
-    const input = typed.resultShape(propagate.input, program.records) orelse return error.InternalError;
-    const output = typed.resultShape(propagate.output, program.records) orelse return error.InternalError;
-    if (input.error_type != output.error_type or propagate.output != function.signature.return_type or propagate.error_target >= function.scope.instructions.len) return error.InternalError;
+    if (propagate.output != function.signature.return_type or propagate.error_target >= function.scope.instructions.len) return error.InternalError;
+    if (typed.resultShape(propagate.input, program.records)) |input| {
+        const output = typed.resultShape(propagate.output, program.records) orelse return error.InternalError;
+        if (input.error_type != output.error_type) return error.InternalError;
+        return;
+    }
+    if (prelude.optionShape(propagate.input, program.records)) |input| {
+        const output = prelude.optionShape(propagate.output, program.records) orelse return error.InternalError;
+        if (input.element != output.element) return error.InternalError;
+        return;
+    }
+    return error.InternalError;
 }
 
 fn validateOpCall(program: Program, function: Function, id: @FieldType(@FieldType(Instruction, "op"), "call")) Error!void {

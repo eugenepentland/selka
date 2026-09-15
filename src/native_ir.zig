@@ -2,6 +2,7 @@
 const std = @import("std");
 const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
+const prelude = @import("prelude.zig");
 /// Invalid bytecode, unsupported lowering, or allocation failure.
 pub const AnalyzeError = error{ InternalError, UnsupportedOperation, OutOfMemory };
 /// Reachable instruction inputs and required operand storage.
@@ -111,7 +112,7 @@ const Analyzer = struct {
                 },
                 .try_result => |propagate| {
                     pops = 1;
-                    result = typed.resultShape(propagate.input, self.program.records).?.ok_type;
+                    result = if (typed.resultShape(propagate.input, self.program.records)) |shape| shape.ok_type else prelude.optionShape(propagate.input, self.program.records).?.element;
                 },
                 .function_value => |value| result = value.ty,
                 .invoke => |callback_type| {

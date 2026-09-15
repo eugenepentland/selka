@@ -25,11 +25,19 @@ const Builder = struct {
 /// exports it and no public interface names it.
 pub const wrapper_name = "<entry>";
 
-/// Accept unit or checked scalar-status results in addition to the legacy int entry.
+/// Accept unit or checked status results in addition to the legacy int entry.
 pub fn supported(ty: typed.Type, records: []const typed.Record) bool {
     if (ty == .i64 or ty == .unit) return true;
     const shape = typed.resultShape(ty, records) orelse return false;
-    return (shape.ok_type == .unit or shape.ok_type == .i64) and shape.error_type == .i64;
+    if (shape.ok_type != .unit and shape.ok_type != .i64) return false;
+    if (shape.error_type == .i64) return true;
+    return shape.ok_type == .i64 and textType(shape.error_type, records);
+}
+/// Whether `ty` is the managed string type used by `main -> Result[int, str]`.
+fn textType(ty: typed.Type, records: []const typed.Record) bool {
+    if (!ty.isAggregate() or ty.recordIndex() >= records.len) return false;
+    const record = records[ty.recordIndex()];
+    return record.managed and record.collection.kind == .string;
 }
 
 /// Element type of an entry point's optional first `list[str]` parameter.
@@ -70,11 +78,18 @@ pub fn adapt(allocator: std.mem.Allocator, program: *typed.Program) std.mem.Allo
     }
     const call = try builder.node(result_type, .{ .call = .{ .function = entry.id, .arguments = arguments } });
     const zero = try builder.node(.i64, .{ .integer = 0 });
+    const one = try builder.node(.i64, .{ .integer = 1 });
     const body = if (shape) |result| match_body: {
         const error_slot: typed.LocalId = @fromBackingInt(count);
-        locals[count] = .{ .name = "<entry-error>", .declaration = entry.declaration, .ty = .i64, .mutable = false, .usage = .{ .reads = 1, .temporary = true } };
-        const error_value = try builder.node(.i64, .{ .local = error_slot });
-        const error_body = try builder.statement(.{ .ret = error_value }, true);
+        locals[count] = .{ .name = "<entry-error>", .declaration = entry.declaration, .ty = result.error_type, .mutable = false, .usage = .{ .reads = 1, .temporary = true } };
+        const error_value = try builder.node(result.error_type, .{ .local = error_slot });
+        const error_body = if (textType(result.error_type, program.records)) failed: {
+            const message_node = try builder.node(.unit, .{ .print = .{ .sink = .stderr, .arguments = try allocator.dupe(typed.NodeId, &.{error_value}), .separator = null, .terminator = null } });
+            const message = try builder.statement(.{ .discard = message_node }, false);
+            const failed_ret = try builder.statement(.{ .ret = one }, true);
+            const children = try allocator.dupe(typed.StatementId, &.{ message, failed_ret });
+            break :failed try builder.statement(.{ .block = children }, true);
+        } else try builder.statement(.{ .ret = error_value }, true);
         var success_slot: ?typed.LocalId = null;
         var success_value = zero;
         if (result.ok_type == .i64) {

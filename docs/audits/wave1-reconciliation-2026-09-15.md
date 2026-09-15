@@ -83,10 +83,11 @@ commit rather than against a moving set of worktrees.
    replacement diagnostic and final removal are still pending.
 3. **W4 prelude decision resolved.** The public prelude stays as landed. The
    compiler is not required to use every public helper.
-4. **Wave 2 boundary work remains.** `Cell[T]`, `main -> Result`, `eprint`,
-   restricted-capability stderr parity, constant `str`/`bytes`, and optional
-   propagation are still the next plan items. Item 1 has since landed: argv,
-   the `--` delimiter, and `build --run` module detection.
+4. **Wave 2 boundary work remains.** `Cell[T]` and constant `str`/`bytes` are
+the remaining items. Item 1 landed argv, the `--` delimiter, and `build --run`
+module detection; `eprint`, explicit environment access, restricted-capability
+stderr parity, `main -> Result[int, str]`, and `?` over `Option` have since
+landed as well.
 5. **Not Wave 1 and still open:** list concat/repeat, the expressions group
    (conditional expression, chained comparisons, tuples, `is None`, `Option`
    equality), and incremental identity/invalidation (Wave 3).

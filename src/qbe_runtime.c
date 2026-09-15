@@ -74,6 +74,13 @@ void *myl_qbe_argv_list(void *context, const myl_native_type *element) {
 void *myl_qbe_root_mark(void *context) { return ((Context *)context)->heap.roots; }
 void myl_qbe_root_restore(void *context, void *mark) { ((Context *)context)->heap.roots = mark; }
 void myl_qbe_fail_capability(void *context) { fail(context, "R_CAPABILITY"); }
+void myl_qbe_fail_missing_capability(void *context, const char *flag) {
+    if (flag) fprintf(stderr, "mylang: --restrict is active and this command line did not grant a capability the entry point requests; pass %s, or drop --restrict to grant every capability\n", flag);
+    else fputs("mylang: --restrict is active and this command line did not grant a capability the entry point requests; pass an --allow-* flag, or drop --restrict to grant every capability\n", stderr);
+    Context *ctx = context;
+    ctx->reported = 1;
+    fail(context, "CapabilityUnavailable");
+}
 void myl_qbe_fail_slice(void *context) { fail(context, "R_SLICE_BOUNDS"); }
 void myl_qbe_fail_slice_step(void *context) { fail(context, "R_SLICE_STEP"); }
 void myl_qbe_fail_text_bounds(void *context) { fail(context, "R_TEXT_BOUNDS"); }
@@ -343,6 +350,7 @@ int mylang_qbe_run_providers(uint64_t (*entry)(void *), int argc, char **argv, c
     MylQbeResult result;
     if (execute_config_args(entry, context.max_steps, context.max_frames, stress, providers, NULL, guest_count, guest, &result)) {
         free(guest);
+        if (result.reported) return 2;
         if (result.trace_count) {
             const MylQbeTrace *at=&result.trace[0];
             fprintf(stderr,"%s:%" PRIu64 ":%" PRIu64 ": error[%s]: %s\n",at->path,at->line,at->column,result.code,describe(result.code));
@@ -399,6 +407,7 @@ static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64
     result->code = context->trap;
     result->trace_count = context->trace_count;
     result->omitted_frames = context->omitted_frames;
+    result->reported = context->reported;
     memcpy(result->trace, context->trace, sizeof result->trace);
     if (context->cleanup) context->cleanup(context);
     while (context->frame_allocations) myl_qbe_frame_release(context,(NativeFrameAllocation *)context->frame_allocations+1);

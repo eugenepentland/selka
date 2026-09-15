@@ -27,11 +27,11 @@ boundary work and `Cell[T]` land and the one-version delay is satisfied.
 ### Pending Wave 2 boundary work
 
 - `Cell[T]` construction plus `.value` read and replacement.
-- `main -> Result`, `eprint`, and restricted-capability stderr parity.
-- `const` `str`/`bytes` and `?` propagation over `Option`.
+- `const` `str`/`bytes`.
 
-Wave 2 item 1 has landed: `main(args: list[str], ...)`, the `--` guest boundary,
-and `build --run` module detection are available.
+Wave 2 items 1-3 have landed: `main(args: list[str], ...)`, the `--` guest
+boundary, `build --run` module detection, `eprint`, explicit environment access,
+`main -> Result[int, str]`, and `?` over `Option` are available.
 
 ### Migration in progress
 
@@ -131,8 +131,9 @@ The entry point may take `args: list[str]`, followed by `Filesystem` and
 `Environment`. It reads project files only through the filesystem capability,
 reads selected environment values explicitly, writes normal machine output to
 stdout and diagnostics through the canonical stderr operation, and returns
-`int` or `Result[int, str]`. The `list[str]` argument and `--` launch boundary are
-implemented; stderr and the environment operations remain Wave 2 work.
+`int` or `Result[int, str]`. The `list[str]` argument, `--` launch boundary,
+`eprint`, explicit environment access, and checked exit results are implemented;
+`Cell[T]` and constant `str`/`bytes` remain Wave 2 work.
 
 ## Runtime boundary
 

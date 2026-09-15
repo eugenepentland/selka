@@ -46,6 +46,14 @@ uint64_t myl_qbe_grant_resource(void *context,unsigned kind) {
     if (!p->acquire || !p->complete || !p->release) { myl_qbe_fail(ctx,"CapabilityUnavailable");return 0; }
     return (uint64_t)(INT64_C(-16)-(int64_t)(kind*8+p->permissions));
 }
+uint64_t myl_qbe_grant_resource_checked(void *context,unsigned kind,const char *flag) {
+    MylQbeContext *ctx=context;
+    if (kind>1) { myl_qbe_fail(ctx,"InvalidCapability");return 0; }
+    const MylangResourceProvider *p=provider(ctx,kind);
+    if (p->permissions & ~7u) { myl_qbe_fail(ctx,"InvalidCapability");return 0; }
+    if (!p->acquire || !p->complete || !p->release) { myl_qbe_fail_missing_capability(ctx,flag);return 0; }
+    return (uint64_t)(INT64_C(-16)-(int64_t)(kind*8+p->permissions));
+}
 static int authority(MylQbeContext *ctx,uint64_t bits,unsigned *kind,unsigned *permissions) {
     int64_t value;memcpy(&value,&bits,8);
     if (value < -31 || value > -16) { myl_qbe_fail(ctx,"InvalidCapability");return 0; }

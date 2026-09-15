@@ -100,8 +100,10 @@ pub const FileAccess = struct { kind: @import("file_operations.zig").Access, mod
 pub const FileMethod = struct { kind: @import("file_operations.zig").Method, owner: LocalId, text: bool, argument: ?NodeId, shapes: FileShapes };
 /// Nominal payload schemas a file operation needs to build its result.
 pub const FileShapes = struct { text: Type, bytes: Type, list: Type };
-/// Rendered arguments and the optional `sep=`/`end=` text of one `print` call.
-pub const Print = struct { arguments: []const NodeId, separator: ?NodeId, terminator: ?NodeId };
+/// Which standard stream one `print` or `eprint` call writes to.
+pub const Sink = enum { stdout, stderr };
+/// Rendered arguments and the optional `sep=`/`end=` text of one output call.
+pub const Print = struct { sink: Sink = .stdout, arguments: []const NodeId, separator: ?NodeId, terminator: ?NodeId };
 /// Resolved aggregate field index and the expression supplying its value.
 pub const FieldInit = struct { index: usize, value: NodeId };
 /// Named aggregate field with its declaration location and resolved type.

@@ -2,6 +2,20 @@
 const std = @import("std");
 /// Malformed or unsupported command-line build controls.
 pub const Error = error{InvalidBuildArguments};
+/// Whether `argument` is a runtime/authority control that `build --run` should
+/// forward to the temporary executable instead of interpreting as a build flag.
+pub fn runtimeControl(argument: []const u8) bool {
+    if (std.mem.eql(u8, argument, "--restrict")) return true;
+    if (std.mem.eql(u8, argument, "--allow-clock")) return true;
+    if (std.mem.eql(u8, argument, "--allow-all")) return true;
+    if (std.mem.eql(u8, argument, "--gc-stress")) return true;
+    if (std.mem.eql(u8, argument, "--print-result")) return true;
+    inline for (.{ "--allow-read=", "--allow-write=", "--allow-random", "--allow-env", "--max-steps=", "--max-frames=" }) |prefix| {
+        if (std.mem.startsWith(u8, argument, prefix)) return true;
+        if (std.mem.eql(u8, argument, prefix[0 .. prefix.len - 1])) return true;
+    }
+    return false;
+}
 /// The per-project object cache used when no `--cache-dir` selects another; a build
 /// left at this default may share its runtime tree with other projects, while an
 /// explicit `--cache-dir` keeps every artifact hermetically under that directory.
@@ -55,6 +69,7 @@ pub fn parse(args: []const []const u8) Error!Options {
             result.arguments = args[index..];
             break;
         }
+        if (runtimeControl(argument)) continue;
         if (!std.mem.startsWith(u8, argument, "-")) {
             if (result.source.len != 0) return error.InvalidBuildArguments;
             result.source = argument;

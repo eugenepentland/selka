@@ -173,6 +173,7 @@ fn parse(allocator: std.mem.Allocator, text: []const u8) Error!Trap {
         const place = position(line[split + 4 ..]) orelse continue;
         try frames.append(allocator, .{ .function = line[5..split], .path = place.path, .line = place.line, .column = place.column });
     }
+    if (std.mem.startsWith(u8, first, "mylang: --restrict is active")) return .{ .code = "CapabilityUnavailable", .frames = frames.items };
     if (std.mem.indexOf(u8, first, ": error[")) |marker| {
         const rest = first[marker + 8 ..];
         const close = std.mem.indexOfScalar(u8, rest, ']') orelse return error.UnreadableNativeResult;
