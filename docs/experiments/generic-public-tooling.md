@@ -3,7 +3,7 @@
 `mylang schema-project main.my --schema-report` now checks all bodies and reports
 exported generic functions and nominal constructors in a separate
 `schema.generic_templates` array. Ordinary concrete exports, functions, and their
-reachable type graphs remain in the existing schema fields. The inventory is versioned `generic-templates-v1`. Its `contract` is marked
+reachable type graphs remain in the existing schema fields. The inventory is versioned `generic-templates-v2`. Its `contract` is marked
 `callable: false` and `requires_explicit_instantiation: true`: discovering a generic
 API does not make it a concrete typed-call endpoint. Export a concrete wrapper to
 use `invoke-project` with a particular instantiation.
@@ -24,6 +24,13 @@ and explicit effects. The `codec` requirement appears alongside builtin `copy`,
 private representation. Requirements are conjunctive. Existing implication rules
 still apply (`integer` implies `equality`, which implies `copy`); `codec` does not
 implicitly promise `copy`.
+
+Named constraints are published two ways: an exported constraint has its own
+non-callable `constraint` template carrying its subject and expanded promises, and
+an exported generic parameter lists each named bound under `named_requirements`
+with the bound spelling, its declaring module, and the expanded
+builtin/field/operation promises it contributes. Expanded signatures substitute
+the declaration's subject for the consuming parameter.
 
 Symbolic type spellings resolve in the declaration module. The module and direct
 import-alias identities are included, so consumers need not interpret an imported
