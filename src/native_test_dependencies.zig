@@ -242,6 +242,7 @@ test "metadata rejects InvalidType for a forged function target" {
     try std.testing.expectError(error.InvalidType, describe(a, .{ .functions = &functions }, 0, "bad IL", &catalog, &.{}));
 }
 
+// spec-case: EFFECT-CEILING-1
 test "an exported declared ceiling does not suppress body-change invalidation" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();

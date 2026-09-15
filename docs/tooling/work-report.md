@@ -6,6 +6,10 @@ is equal"; it does not mean the command reused a stored result. `work-report-v1`
 counts executions and true cache hits at the sites that perform them, so a
 forced fresh check with equal fingerprints still reports the work it performed.
 
+```text
+$ mylang check-project app/main.my --report
+```
+
 ## Emission and versions
 
 `mylang check`, `check-project`, `run`, `run-project`, `emit-qbe`,

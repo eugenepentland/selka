@@ -1942,6 +1942,7 @@ fn projectDiagnostic(index: *interfaces.Index, code: []const u8) !?diagnostic_mo
     return null;
 }
 
+// spec: EFFECT-CEILING-1
 test "exported ceilings are required while private helpers keep inference and suggestions are body-derived" {
     const accepted =
         \\module main

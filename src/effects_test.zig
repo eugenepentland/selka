@@ -144,6 +144,7 @@ test "effect rendering propagates a full writer failure" {
     try t.expectError(error.WriteFailed, sets.write(&writer, sets.bit(.managed_allocation)));
 }
 
+// spec-case: EFFECT-CEILING-1
 test "declared ceilings reject hidden effects through generic and callback calls" {
     // A generic body that hides an allocating call behind an empty ceiling rejects
     // once it is instantiated, exactly like an ordinary direct call.

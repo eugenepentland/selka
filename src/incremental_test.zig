@@ -280,6 +280,7 @@ test "effect-bound edits change the function interface hash" {
     try t.expect(!std.mem.eql(u8, interface, declaration(second, "main", "touch").interface_sha256.?));
 }
 
+// spec-case: EFFECT-CEILING-1
 test "an exported body edit inside its declared ceiling preserves the API fingerprint and still changes the body hash" {
     const output_body =
         \\module main
@@ -612,6 +613,7 @@ test "default argument values change the declaration interface" {
     try t.expect(!std.mem.eql(u8, d0.project_interface_sha256, d1.project_interface_sha256));
 }
 
+// spec-case: EFFECT-CEILING-1
 test "keyword parameter names and generic requirements stay in the public contract" {
     const named_step =
         \\module main
