@@ -171,12 +171,40 @@ pub const RecordShape = struct {
         return self.array != null or self.domain != null or self.variants != null;
     }
 };
+/// Sound upper bound on the inputs a returned value may alias.
+/// `fresh` requires proof; `unknown` is the conservative default and is never
+/// treated as `fresh` or as `params(empty)`.
+pub const ReturnOrigin = union(enum) {
+    fresh,
+    params: []const u16,
+    unknown,
+
+    /// Compare two return-origin bounds by exact normalized content.
+    pub fn eql(a: ReturnOrigin, b: ReturnOrigin) bool {
+        return switch (a) {
+            .fresh => switch (b) {
+                .fresh => true,
+                else => false,
+            },
+            .unknown => switch (b) {
+                .unknown => true,
+                else => false,
+            },
+            .params => |left| switch (b) {
+                .params => |right| std.mem.eql(u16, left, right),
+                else => false,
+            },
+        };
+    }
+};
 /// Checked obligations, type-argument visibility and an optional explicit domain wire contract.
-/// Exact value parameter/result types and declared callback effect ceiling.
+/// Exact value parameter/result types, declared effect ceiling and mutation contract.
 pub const Callable = struct {
     parameters: []const Type,
     return_type: Type,
     effects: effect_set.Mask,
+    mutates: []const u16 = &.{},
+    return_origin: ReturnOrigin = .unknown,
     /// Every callback parameter is an ordinary operand-stack value.
     pub fn valueCount(self: Callable) usize {
         return self.parameters.len;
@@ -293,11 +321,26 @@ pub const FunctionPolicy = struct {
     restricted: bool = false,
     conversion: bool = false,
 };
+/// Managed-write facts recorded before M2 origin enforcement.
+pub const MutationFacts = struct {
+    /// Any managed receiver write in the body.
+    writes: bool = false,
+    /// A write not proven to target definitely fresh local storage.
+    external: bool = false,
+};
 /// Resolved value result and parameter count of a checked function.
 pub const FunctionSignature = struct {
     constant_arguments: []const ?usize = &.{},
     return_type: Type = .i64,
     parameter_count: usize = 0,
+    /// Inferred parameter positions this function may write, normalized and sorted.
+    mutates: []const u16 = &.{},
+    /// Inferred upper bound on inputs returned values may alias.
+    return_origin: ReturnOrigin = .unknown,
+    /// Declared `mutates(...)` footprint; empty also spells an omitted clause.
+    declared_mutates: []const u16 = &.{},
+    /// Write facts kept separate so a fresh-local write can stay unenforced.
+    mutation_facts: MutationFacts = .{},
 };
 /// Checked function body and its lexical local table.
 pub const FunctionScope = struct {

@@ -11,7 +11,11 @@ const Span = source.Span;
 pub const Id = enum(usize) { _ };
 /// Semantic identity category; parameters remain scoped to their declaring template.
 pub const Base = union(enum) {
-    callback: struct { effects: @import("effect_set.zig").Mask },
+    callback: struct {
+        effects: @import("effect_set.zig").Mask,
+        mutates: []const u16 = &.{},
+        return_origin: typed.ReturnOrigin = .unknown,
+    },
     builtin: typed.Type,
     length: usize,
     parameter: struct { declaration: usize, index: usize },
@@ -21,17 +25,71 @@ pub const Base = union(enum) {
 /// Ordered semantic identity accepted by layout materialization.
 pub const Key = struct { base: Base, arguments: []const Id };
 const KeyContext = struct {
+    fn hashBase(hasher: *std.hash.Wyhash, base: Base) void {
+        switch (base) {
+            .callback => |callback| {
+                std.hash.autoHash(hasher, @as(u8, 0));
+                std.hash.autoHash(hasher, callback.effects);
+                std.hash.autoHash(hasher, callback.mutates.len);
+                for (callback.mutates) |position| std.hash.autoHash(hasher, position);
+                switch (callback.return_origin) {
+                    .fresh => std.hash.autoHash(hasher, @as(u8, 0)),
+                    .params => |positions| {
+                        std.hash.autoHash(hasher, @as(u8, 1));
+                        std.hash.autoHash(hasher, positions.len);
+                        for (positions) |position| std.hash.autoHash(hasher, position);
+                    },
+                    .unknown => std.hash.autoHash(hasher, @as(u8, 2)),
+                }
+            },
+            .builtin => |ty| {
+                std.hash.autoHash(hasher, @as(u8, 1));
+                std.hash.autoHash(hasher, ty);
+            },
+            .length => |length| {
+                std.hash.autoHash(hasher, @as(u8, 2));
+                std.hash.autoHash(hasher, length);
+            },
+            .parameter => |parameter| {
+                std.hash.autoHash(hasher, @as(u8, 3));
+                std.hash.autoHash(hasher, parameter);
+            },
+            .named => |declaration| {
+                std.hash.autoHash(hasher, @as(u8, 4));
+                std.hash.autoHash(hasher, declaration);
+            },
+            .array => |array| {
+                std.hash.autoHash(hasher, @as(u8, 5));
+                std.hash.autoHash(hasher, array);
+            },
+        }
+    }
+    fn equalBase(a: Base, b: Base) bool {
+        return switch (a) {
+            .callback => |left| switch (b) {
+                .callback => |right| left.effects == right.effects and
+                    std.mem.eql(u16, left.mutates, right.mutates) and
+                    typed.ReturnOrigin.eql(left.return_origin, right.return_origin),
+                else => false,
+            },
+            .builtin => |left| b == .builtin and b.builtin == left,
+            .length => |left| b == .length and b.length == left,
+            .parameter => |left| b == .parameter and left.declaration == b.parameter.declaration and left.index == b.parameter.index,
+            .named => |left| b == .named and b.named == left,
+            .array => |left| b == .array and left.length == b.array.length and left.key == b.array.key and left.length_parameter == b.array.length_parameter,
+        };
+    }
     /// Hash declaration, parameter and ordered argument identities without pointer identity.
     pub fn hash(_: KeyContext, key: Key) u64 {
         var hasher = std.hash.Wyhash.init(0);
-        std.hash.autoHash(&hasher, key.base);
+        hashBase(&hasher, key.base);
         std.hash.autoHash(&hasher, key.arguments.len);
         for (key.arguments) |argument| std.hash.autoHash(&hasher, argument);
         return hasher.final();
     }
     /// Compare canonical identities, including nominal bases and scoped symbolic parameters.
     pub fn eql(_: KeyContext, a: Key, b: Key) bool {
-        return std.meta.eql(a.base, b.base) and std.mem.eql(Id, a.arguments, b.arguments);
+        return equalBase(a.base, b.base) and std.mem.eql(Id, a.arguments, b.arguments);
     }
 };
 const Map = std.HashMapUnmanaged(Key, Id, KeyContext, std.hash_map.default_max_load_percentage);
@@ -99,6 +157,8 @@ pub const Graph = struct {
                 for (callback.arguments, 0..) |argument, i| arguments_out[i] = try self.resolve(argument, arguments, callback.syntax.span);
                 break :result self.intern(.{ .base = .{ .callback = .{
                     .effects = callback.syntax.effect_bound.allowed,
+                    .mutates = callback.syntax.mutates,
+                    .return_origin = .unknown,
                 } }, .arguments = arguments_out[0..callback.arguments.len] }, callback.syntax.span);
             },
             .builtin => |ty| self.intern(.{ .base = .{ .builtin = ty }, .arguments = &.{} }, span),

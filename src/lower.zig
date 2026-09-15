@@ -460,6 +460,10 @@ pub fn lower(allocator: std.mem.Allocator, program: typed.Program) LowerError!bc
             .signature = .{
                 .parameter_count = function.signature.parameter_count,
                 .return_type = function.signature.return_type,
+                .mutates = function.signature.mutates,
+                .return_origin = function.signature.return_origin,
+                .declared_mutates = function.signature.declared_mutates,
+                .mutation_facts = function.signature.mutation_facts,
             },
             .scope = .{
                 .locals = function.scope.locals,

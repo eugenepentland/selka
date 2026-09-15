@@ -1,4 +1,5 @@
 //! Recursive generic type shapes retain parameters and resolved nominal identities.
+const std = @import("std");
 const typed = @import("typed.zig");
 const requirements = @import("generic_requirements.zig");
 const callables = @import("callables.zig");
@@ -6,7 +7,13 @@ const effect_set = @import("effect_set.zig");
 /// An abstract type; arrays preserve their element expression without representative substitution.
 pub const Value = union(enum) { callback: *const Callback, length: usize, length_parameter: usize, concrete: typed.Type, parameter: usize, array: *const Array, nominal: *Nominal };
 /// A callback signature retains abstract argument types without storing context values.
-pub const Callback = struct { parameters: []const Value, result: Value, effects: effect_set.Mask };
+pub const Callback = struct {
+    parameters: []const Value,
+    result: Value,
+    effects: effect_set.Mask,
+    mutates: []const u16 = &.{},
+    return_origin: typed.ReturnOrigin = .unknown,
+};
 /// Symbolic applications keep declaration identity and ordered arguments, with lazy stored-member caches.
 pub const Nominal = struct { declaration: usize, arguments: []const Value, schema: ?*Schema = null, properties: ?Properties = null };
 /// A declared field or variant payload after substitution into the caller's parameter scope.
@@ -57,6 +64,7 @@ fn sameCallback(a: Callback, other: Value, catalog: Catalog) bool {
     if (other == .callback) {
         const b = other.callback;
         if (a.effects != b.effects) return false;
+        if (!std.mem.eql(u16, a.mutates, b.mutates) or !typed.ReturnOrigin.eql(a.return_origin, b.return_origin)) return false;
         if (a.parameters.len != b.parameters.len or !same(a.result, b.result, catalog)) return false;
         for (a.parameters, b.parameters) |x, y| if (!same(x, y, catalog)) return false;
         return true;
@@ -64,6 +72,7 @@ fn sameCallback(a: Callback, other: Value, catalog: Catalog) bool {
     if (other != .concrete) return false;
     const b = @import("callables.zig").signature(other.concrete, catalog.records) orelse return false;
     if (a.effects != b.effects) return false;
+    if (!std.mem.eql(u16, a.mutates, b.mutates) or !typed.ReturnOrigin.eql(a.return_origin, b.return_origin)) return false;
     if (a.parameters.len != b.parameters.len or !same(a.result, .{ .concrete = b.return_type }, catalog)) return false;
     for (a.parameters, b.parameters) |x, y| if (!same(x, .{ .concrete = y }, catalog)) return false;
     return true;
@@ -113,12 +122,38 @@ fn callbackEffects(value: Value, catalog: Catalog) ?effect_set.Mask {
         else => null,
     };
 }
+fn callbackMutates(value: Value, catalog: Catalog) ?[]const u16 {
+    return switch (value) {
+        .callback => |callback| callback.mutates,
+        .concrete => |ty| block: {
+            const signature = callables.signature(ty, catalog.records) orelse break :block null;
+            break :block signature.mutates;
+        },
+        else => null,
+    };
+}
+fn callbackReturnOrigin(value: Value, catalog: Catalog) ?typed.ReturnOrigin {
+    return switch (value) {
+        .callback => |callback| callback.return_origin,
+        .concrete => |ty| block: {
+            const signature = callables.signature(ty, catalog.records) orelse break :block null;
+            break :block signature.return_origin;
+        },
+        else => null,
+    };
+}
 /// Directional callback assignability for symbolic values: parameters and result
 /// stay exact, while the implementation effect ceiling must be a subset.
 pub fn callbackAssignable(implementation: Value, destination: Value, catalog: Catalog) bool {
     const implementation_effects = callbackEffects(implementation, catalog) orelse return false;
     const destination_effects = callbackEffects(destination, catalog) orelse return false;
     if (implementation_effects & ~destination_effects != 0) return false;
+    const implementation_mutates = callbackMutates(implementation, catalog) orelse return false;
+    const destination_mutates = callbackMutates(destination, catalog) orelse return false;
+    if (!callables.positionSubset(implementation_mutates, destination_mutates)) return false;
+    const implementation_origin = callbackReturnOrigin(implementation, catalog) orelse return false;
+    const destination_origin = callbackReturnOrigin(destination, catalog) orelse return false;
+    if (!callables.originSubset(implementation_origin, destination_origin)) return false;
     const implementation_count = callbackParameterCount(implementation, catalog) orelse return false;
     const destination_count = callbackParameterCount(destination, catalog) orelse return false;
     if (implementation_count != destination_count) return false;
@@ -142,6 +177,7 @@ fn sameIdentity(value: Value, id: @import("nominal_layouts.zig").Id, catalog: Ca
         if (node.key.base != .callback or node.key.arguments.len != callback.parameters.len + 1) return false;
         const contract = node.key.base.callback;
         if (callback.effects != contract.effects) return false;
+        if (!std.mem.eql(u16, callback.mutates, contract.mutates) or !typed.ReturnOrigin.eql(callback.return_origin, contract.return_origin)) return false;
         for (callback.parameters, node.key.arguments[0..callback.parameters.len]) |parameter, key| if (!sameIdentity(parameter, key, catalog)) return false;
         return sameIdentity(callback.result, node.key.arguments[callback.parameters.len], catalog);
     }

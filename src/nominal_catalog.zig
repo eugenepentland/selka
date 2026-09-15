@@ -10,6 +10,7 @@ const Catalog = @import("type_catalog.zig").Catalog;
 const Names = @import("module_names.zig").Names;
 const Error = diagnostic.Error;
 const Store = @import("nominal_state.zig").Store;
+const callables = @import("callables.zig");
 const Context = @FieldType(Store, "context");
 const Identities = @FieldType(Store, "identities");
 const Builder = struct {
@@ -89,8 +90,9 @@ const Builder = struct {
         const result_name = self.identities.items.items[@backingInt(node.key.arguments[parameter_count])].name orelse return;
         output.writer.writeAll(result_name) catch return error.OutOfMemory;
         output.writer.writeAll(" effects(") catch return error.OutOfMemory;
-        @import("callables.zig").writeEffects(&output.writer, node.key.base.callback.effects) catch return error.OutOfMemory;
+        callables.writeEffects(&output.writer, node.key.base.callback.effects) catch return error.OutOfMemory;
         output.writer.writeByte(')') catch return error.OutOfMemory;
+        callables.writeMutates(&output.writer, node.key.base.callback.mutates) catch return error.OutOfMemory;
         const name = try output.toOwnedSlice();
         if (name.len > 1024 * 1024) return self.nameLimit(node.site);
         self.identities.items.items[id].name = name;
@@ -155,9 +157,11 @@ const Builder = struct {
                     .parameters = parameters[0 .. node.key.arguments.len - 1],
                     .return_type = try self.runtimeType(node.key.arguments[node.key.arguments.len - 1]),
                     .effects = node.key.base.callback.effects,
+                    .mutates = node.key.base.callback.mutates,
+                    .return_origin = node.key.base.callback.return_origin,
                 };
                 for (storage.items) |record| if (record.contract.callback) |existing| {
-                    if (@import("callables.zig").equal(existing, contract)) {
+                    if (callables.equal(existing, contract)) {
                         identity.ty = record.id;
                         break;
                     }
@@ -272,6 +276,8 @@ const Builder = struct {
                     .parameters = parameters,
                     .return_type = try self.runtimeType(node.key.arguments[parameters.len]),
                     .effects = node.key.base.callback.effects,
+                    .mutates = node.key.base.callback.mutates,
+                    .return_origin = node.key.base.callback.return_origin,
                 };
                 continue;
             }

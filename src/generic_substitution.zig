@@ -56,6 +56,8 @@ pub fn resolve(allocator: std.mem.Allocator, catalog: *@import("type_catalog.zig
             .parameters = inputs[0..callback.parameters.len],
             .return_type = result,
             .effects = callback.effect_bound.allowed,
+            .mutates = callback.mutates,
+            .return_origin = .unknown,
         }, span, sink);
     };
     if (catalog.templates.applications.get(span.start)) |template| {
