@@ -186,6 +186,7 @@ test "declared ceilings reject hidden effects through generic and callback calls
     , "E_EFFECT_BOUND", "exceeds declared bound");
 }
 
+// spec: MUTATION-METADATA-1
 test "M1 direct input writes carry mutation facts while reads do not" {
     var c = try language.Compilation.init(t.allocator, fixture_path,
         \\def touch(values: list[int]) -> None effects():

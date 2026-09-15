@@ -110,6 +110,7 @@ test {
     _ = @import("tables_test.zig");
     _ = @import("arena_managed_test.zig");
     _ = @import("effects_test.zig");
+    _ = @import("mutation.zig");
     _ = @import("input_manifest_test.zig");
     _ = @import("typed_json_test.zig");
     _ = @import("external_capabilities_test.zig");
