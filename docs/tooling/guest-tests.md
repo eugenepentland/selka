@@ -92,10 +92,17 @@ passed main::test_sum
 ## Isolated source provider fixtures
 
 A case may carry a `providers` object mapping existing dependency `.my` paths to
-replacement source text. The runner copies a bounded inventory of the project's
-sources into a private directory, applies the replacements there, checks the
-result, and verifies that the selected test's parameters, result type and
-exported data layouts are unchanged. The original files are never modified. A
+replacement source text. The runner parses every reachable module and validates
+its exported declarations and interfaces first, then copies a bounded inventory
+of the project's sources into a private directory, applies the replacements
+there, and fully checks only the selected provider graph. A replacement is
+validated against every public contract it replaces — names, defaults, types
+and nominal identities, data shapes, generic requirements, declared effects,
+mutation footprints and return-origin bounds — with the directional subset
+relation: a narrower implementation is accepted, a stronger one rejects. The
+unselected production bodies are not checked, so an unfinished body may be
+`todo[T]()` or contain a body type error while its declarations stay valid,
+but a production interface error or a syntax error still rejects. The original files are never modified. A
 fixture cannot replace the test entry or introduce a path the project does not
 already have; source snapshots reject symbolic links and are bounded to 16 MiB,
 with at most 128 files for a provider snapshot. Invalid fixture source or a

@@ -3570,6 +3570,7 @@ fn p1Invoke(entry: []const u8, cases_path: ?[]const u8, cache: []const u8) !std.
 }
 
 // spec-case: NATIVE-TEST-3
+// spec: NATIVE-TEST-5
 test "P1 selects a validated fake while the unfinished production body is never checked" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
