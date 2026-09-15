@@ -17,9 +17,11 @@ pub const RefSet = struct {
     allocator: std.mem.Allocator,
     functions: std.AutoHashMapUnmanaged(usize, void) = .empty,
     records: std.AutoHashMapUnmanaged(usize, void) = .empty,
-    /// True when the tree stores or invokes a callable value, whose inferred
-    /// contract is not yet a stable dependency fact for C1.
-    callbacks: bool = false,
+    /// True when the tree stores a function value, which interns a callable
+    /// contract record during checking.
+    function_values: bool = false,
+    /// True when the tree indirectly invokes a callable-typed slot.
+    invokes: bool = false,
 
     /// Initialize an accumulator tied to one allocator.
     pub fn init(allocator: std.mem.Allocator) RefSet {
@@ -67,7 +69,8 @@ pub fn collectRefs(allocator: std.mem.Allocator, function: typed.Function, nodes
     refs.collect([]const typed.Node, nodes) catch return error.OutOfMemory;
     refs.collect([]const typed.Statement, statements) catch return error.OutOfMemory;
     for (nodes) |node| switch (node.data) {
-        .function_value, .invoke => refs.callbacks = true,
+        .function_value => refs.function_values = true,
+        .invoke => refs.invokes = true,
         else => {},
     };
 }

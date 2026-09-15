@@ -341,14 +341,14 @@ test "semantic cache contract fingerprint forces a fresh check and identical con
     try t.expectEqual(after_base_checked, cache.statistics.checked);
 
     // Same source, same cache, different runtime ABI contract: no body may be reused.
-    cache.contract = contract_b;
+    cache.context.contract = contract_b;
     try compare(t.allocator, &cache, prefix ++ suffix, 42);
     try t.expectEqual(@as(usize, 3), cache.statistics.reused);
     try t.expectEqual(after_base_checked + 3, cache.statistics.checked);
 
     // Returning to the original contract is a miss until its bodies are published,
     // then the identical contract reuses them again.
-    cache.contract = contract_a;
+    cache.context.contract = contract_a;
     try compare(t.allocator, &cache, prefix ++ suffix, 42);
     try t.expectEqual(@as(usize, 3), cache.statistics.reused);
     try t.expectEqual(after_base_checked + 6, cache.statistics.checked);
@@ -505,4 +505,225 @@ test "mutation summaries are recomputed rather than copied with a reused body" {
     // recomputed by the mandatory global effect pass and must match fresh.
     try compare(t.allocator, &cache, reading, 1);
     try t.expectEqual(before + 1, cache.statistics.reused);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "declared callback slots and matching function values reuse when the contract is stable" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const program =
+        \\def apply(f: def(i64) -> i64 effects(), x: i64) -> i64 effects():
+        \\    return f(x)
+        \\
+        \\
+        \\def one(x: i64) -> i64 effects():
+        \\    return x + 1
+        \\
+        \\
+        \\def main() -> i64 effects():
+        \\    return apply(one, 41)
+    ;
+    try compare(t.allocator, &cache, program, 42);
+    try t.expectEqual(@as(usize, 0), cache.statistics.reused);
+    try t.expectEqual(@as(usize, 3), cache.statistics.checked);
+    // The declared callback parameter is interned before checking and `one`'s
+    // contract matches it exactly, so the callable slot has a stable remap.
+    try t.expectEqual(@as(usize, 0), cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.function_value)]);
+
+    // Only the callee body changes: `main` still stores the same declared
+    // callback contract, so its body reuses and revalidates globally.
+    const edited =
+        \\def apply(f: def(i64) -> i64 effects(), x: i64) -> i64 effects():
+        \\    return f(x) + 0
+        \\
+        \\
+        \\def one(x: i64) -> i64 effects():
+        \\    return x + 1
+        \\
+        \\
+        \\def main() -> i64 effects():
+        \\    return apply(one, 41)
+    ;
+    const before = cache.statistics.reused;
+    try compare(t.allocator, &cache, edited, 42);
+    try t.expectEqual(before + 2, cache.statistics.reused);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "a function value with no matching declared callback misses with its exact reason" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const program =
+        \\def apply(f: def(i64) -> i64 effects(output), x: i64) -> i64 effects(output):
+        \\    return f(x)
+        \\
+        \\
+        \\def one(x: i64) -> i64 effects():
+        \\    return x + 1
+        \\
+        \\
+        \\def main() -> i64 effects(output):
+        \\    return apply(one, 41)
+    ;
+    try compare(t.allocator, &cache, program, 42);
+    // `one`'s own contract differs from the declared callback parameter, so its
+    // callable contract record is interned while checking and cannot be remapped.
+    try t.expect(cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.function_value)] > 0);
+    const before = cache.statistics.reused;
+    try compare(t.allocator, &cache, program, 42);
+    // `apply` and `one` reuse; `main` is rechecked with its reported reason.
+    try t.expectEqual(before + 2, cache.statistics.reused);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "generic specialization references miss with their exact reason" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const program =
+        \\def identity[T](value: T) -> T:
+        \\    return value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return identity[i64](42)
+    ;
+    try compare(t.allocator, &cache, program, 42);
+    try t.expect(cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.generic_specialization)] > 0);
+    const before = cache.statistics.reused;
+    try compare(t.allocator, &cache, program, 42);
+    try t.expectEqual(before, cache.statistics.reused);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "pre-collected array types reuse while a changed referenced contract invalidates dependents" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const program =
+        \\def pair() -> [2]i64:
+        \\    return [1, 2]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return pair()[0]
+    ;
+    try compare(t.allocator, &cache, program, 1);
+    const before = cache.statistics.reused;
+    try compare(t.allocator, &cache, program, 1);
+    // The fixed array layout is collected with the declaration, so the ordinary
+    // bodies remap it by stable identity and reuse.
+    try t.expectEqual(before + 2, cache.statistics.reused);
+
+    const edited =
+        \\def pair() -> [3]i64:
+        \\    return [1, 2, 3]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return pair()[0]
+    ;
+    const before_signature = cache.statistics.reused;
+    try compare(t.allocator, &cache, edited, 1);
+    // `pair`'s signature changed, so `main`'s resolved dependency changed too.
+    try t.expectEqual(before_signature, cache.statistics.reused);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "semantic cache binds the mutation contract version and effects contract" {
+    const contract_a = try cache_key.Contract.default.fingerprint(t.allocator);
+    defer t.allocator.free(contract_a);
+    var cache = Cache.initWithContract(t.allocator, 4 * 1024 * 1024, contract_a);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, prefix ++ suffix, 42);
+    const baseline_reused = cache.statistics.reused;
+    const baseline_checked = cache.statistics.checked;
+
+    // A changed mutation-contract encoding must invalidate every retained body.
+    cache.context.mutation_contract = "mutation-v2";
+    try compare(t.allocator, &cache, prefix ++ suffix, 42);
+    try t.expectEqual(baseline_reused, cache.statistics.reused);
+    try t.expectEqual(baseline_checked + 3, cache.statistics.checked);
+    cache.context.mutation_contract = language.semantic_cache.mutation_contract_version;
+    try compare(t.allocator, &cache, prefix ++ suffix, 42);
+    try t.expectEqual(baseline_checked + 6, cache.statistics.checked);
+
+    // A changed declared effect contract is a different context even for the
+    // same bytes; returning to the original contract is a fresh miss again.
+    var effects_changed = cache_key.Contract.default;
+    effects_changed.effects = "effects-v2";
+    const contract_b = try effects_changed.fingerprint(t.allocator);
+    defer t.allocator.free(contract_b);
+    cache.context.contract = contract_b;
+    try compare(t.allocator, &cache, prefix ++ suffix, 42);
+    try t.expectEqual(baseline_checked + 9, cache.statistics.checked);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "a reused caller recomputes its return-origin bound after a callee alias change" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const base =
+        \\def source(values: list[int]) -> list[int]:
+        \\    return values
+        \\
+        \\
+        \\def caller(values: list[int]) -> list[int]:
+        \\    return source(values)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    values = [1]
+        \\    result = caller(values)
+        \\    return result[0]
+    ;
+    const edited =
+        \\def source(values: list[int]) -> list[int]:
+        \\    return [values[0]]
+        \\
+        \\
+        \\def caller(values: list[int]) -> list[int]:
+        \\    return source(values)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    values = [1]
+        \\    result = caller(values)
+        \\    return result[0]
+    ;
+    try compare(t.allocator, &cache, base, 1);
+    const base_caller_contract = storedContract(&cache, "caller");
+    // The alias change is real: `source` returns a parameter in the base and a
+    // freshly allocated list after the edit.
+    {
+        var first = try language.Compilation.init(t.allocator, "probe.my", base);
+        defer first.deinit();
+        try first.check();
+        var second = try language.Compilation.init(t.allocator, "probe.my", edited);
+        defer second.deinit();
+        try second.check();
+        try t.expect(!functionReturnOrigin(first.program.?, "source").eql(functionReturnOrigin(second.program.?, "source")));
+        try t.expect(!functionReturnOrigin(first.program.?, "caller").eql(functionReturnOrigin(second.program.?, "caller")));
+    }
+    const before = cache.statistics.reused;
+    const before_checked = cache.statistics.checked;
+    // `caller` and `main` reuse and are recomputed by the mandatory M2 pass;
+    // only `source`, whose body changed, is checked fresh.
+    try compare(t.allocator, &cache, edited, 1);
+    try t.expectEqual(before + 2, cache.statistics.reused);
+    try t.expectEqual(before_checked + 1, cache.statistics.checked);
+    // The reused caller's persisted checked contract is refreshed from the
+    // global pass, so a return-origin change is visible to C2 admission.
+    try t.expect(!std.mem.eql(u8, &base_caller_contract, &storedContract(&cache, "caller")));
+}
+
+/// Borrow one retained entry's checked contract digest by declaration key suffix.
+fn storedContract(cache: *Cache, key_suffix: []const u8) [32]u8 {
+    for (cache.entries) |entry| {
+        if (std.mem.endsWith(u8, entry.meta.identity.key, key_suffix)) return entry.meta.identity.checked_contract;
+    }
+    unreachable;
+}
+
+fn functionReturnOrigin(program: @import("typed.zig").Program, name: []const u8) @import("typed.zig").ReturnOrigin {
+    for (program.functions) |function| if (std.mem.eql(u8, function.name, name)) return function.signature.return_origin;
+    unreachable;
 }

@@ -9,7 +9,7 @@ pub const FunctionRef = struct { id: typed.FunctionId, key: []const u8 };
 /// One stable nominal-type identity exchanged for a fresh catalog ordinal.
 pub const RecordRef = struct { index: usize, key: []const u8 };
 /// Relocatable declaration facts retained for one checked function.
-pub const Identity = struct { key: []const u8, context: [32]u8, body: source.Span, region: source.Span };
+pub const Identity = struct { key: []const u8, context: [32]u8, body: source.Span, region: source.Span, checked_contract: [32]u8 = @splat(0) };
 /// Declaration dependencies and catalog cardinalities of one retained snapshot.
 pub const Metadata = struct {
     identity: Identity,
@@ -76,6 +76,7 @@ pub const Entry = struct {
             .context = spec.identity.context,
             .body = spec.identity.body,
             .region = spec.identity.region,
+            .checked_contract = spec.identity.checked_contract,
         };
         generation.references += 1;
         return .{

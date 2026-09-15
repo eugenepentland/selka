@@ -860,11 +860,20 @@ fn listModules(init: Context, parsed: Parsed) !u8 {
     return status;
 }
 
-/// Report a semantic cache that could not be consulted for this invocation.
+/// Report a semantic cache that could not be consulted for this invocation,
+/// plus each exact conservative fresh-path reason observed since `before`.
 fn recordSemanticBypass(init: Context, functions: *const language.semantic_cache.Cache, before: ?language.semantic_cache.Statistics) void {
     const prior = before orelse language.semantic_cache.Statistics{};
     const delta = functions.statistics.bypassed - prior.bypassed;
     if (delta != 0) recordBypass(init, "semantic-reuse-unavailable", delta);
+    var index: usize = 0;
+    while (index < language.semantic_cache.miss_reason_count) : (index += 1) {
+        const count = functions.statistics.misses[index] - prior.misses[index];
+        if (count == 0) continue;
+        const why: language.semantic_cache.MissReason = @fromBackingInt(@intCast(index));
+        if (why == .cache_disabled) continue;
+        recordBypass(init, language.semantic_cache.missReasonName(why), count);
+    }
 }
 
 /// Result of the required-policy frontend gate. `status` means the command must
@@ -1732,6 +1741,19 @@ fn validEntryBasename(basename: []const u8) bool {
     return std.mem.indexOfScalar(u8, name, '.') == null;
 }
 
+/// Bind the full Wave-3 contract plus the message the C2 persistence context
+/// needs: compiler identity, bootstrap language, target, effects-v3, runtime ABI,
+/// relevant flags and the mutation-contract version. Persistence itself is C2;
+/// this fingerprint only partitions retained bodies inside the session.
+fn semanticCacheContract(init: Context) ![]const u8 {
+    const allocator = init.arena.allocator();
+    var contract = language.semantic_cache.Contract.default;
+    const compiler_hex = std.fmt.bytesToHex(build_identity, .lower);
+    contract.compiler_identity = try allocator.dupe(u8, &compiler_hex);
+    contract.flags = "";
+    return contract.fingerprint(allocator);
+}
+
 const SessionCache = struct {
     syntax: language.syntax_cache.Cache,
     semantic: language.check_cache.Cache,
@@ -1747,10 +1769,11 @@ fn checkSession(init: Context, parsed: Parsed) !u8 {
         try init.text("check-session: entry must be an identifier.my file\n");
         return 2;
     }
+    const contract_fingerprint = try semanticCacheContract(init);
     var cache: SessionCache = .{
         .syntax = language.syntax_cache.Cache.init(init.gpa, .{}),
         .semantic = language.check_cache.Cache.init(init.gpa, 16 * 1024 * 1024),
-        .functions = language.semantic_cache.Cache.init(init.gpa, 16 * 1024 * 1024),
+        .functions = language.semantic_cache.Cache.initWithContract(init.gpa, 16 * 1024 * 1024, contract_fingerprint),
     };
     defer cache.syntax.deinit();
     defer cache.semantic.deinit();

@@ -66,6 +66,9 @@ pub const Compilation = struct {
         if (self.program != null) return;
         for (self.diagnostics.items.items) |item| if (item.severity == .err) return error.SourceError;
         var names: Names = .{ .index = self.index, .src = self.src };
+        // Bind this project's lexical module/import identities so semantic
+        // dependency resolution is per-module instead of global-by-spelling.
+        if (cache) |semantic| semantic.resolution = self.index;
         self.program = try @import("sema.zig").checkCached(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names, cache);
     }
     /// Allocate independently compilable scalar QBE units after full project checking.
