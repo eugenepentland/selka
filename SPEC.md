@@ -127,6 +127,26 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 
 - [GENERIC-DIAGNOSTIC-1] Checked specializations retain explicit ordered concrete type arguments. Human-readable function names include those types, preserve qualified nominal names, and do not depend on discovery ordinals. Traces and reports use these names, while public-root selection uses specialization metadata rather than spelling.
 
+## Named constraints
+
+- [NAMED-CONSTRAINT-SYNTAX-1] A top-level `constraint NAME[SUBJECT] = REQUIREMENTS` names one subject binder whose right-hand side reuses the `+` requirement grammar. The parser rejects non-bare subjects, applied bounds such as `Prices[int]`, named or self references on the declaration's right-hand side, and requirement lists beyond the existing limit; the declaration and its bound references survive owned AST copying, relocation, formatting, declaration listing, and module-interface checks.
+- [NAMED-CONSTRAINT-MODULE-1] Constraint declarations participate in the module declaration namespace and explicit exports with a distinct kind, resolve before signatures are checked, and accept bare and `alias.Name` function type-parameter bounds; an exported generic signature may use an exported constraint.
+- [NAMED-CONSTRAINT-MODULE-2] Named bounds only apply to function type parameters. Records, unions, domains and constant-length parameters reject them, and a constraint name is not a value type: `policy: Prices` and `Prices[int]` report a declaration-kind error.
+- [NAMED-CONSTRAINT-MODULE-3] Importing or naming a private constraint from another module rejects with the existing privacy diagnostic, an exported generic whose named bound is not exported rejects with `E_PRIVATE_INTERFACE`, and an undefined bound name reports `E_GENERIC_REQUIREMENT` at the bound.
+- [NAMED-CONSTRAINT-MODULE-4] Constraint declarations obey existing namespace rules: a collision with another declaration or an import alias reports `E_DUPLICATE_SYMBOL` or `E_IMPORT_ALIAS`.
+- [NAMED-CONSTRAINT-MODULE-5] Resolving a constraint identity outside the mapped project source is an internal error rather than a silently wrong declaration.
+- [NAMED-CONSTRAINT-MODULE-6] A constraint subject may not shadow a module declaration, a direct import alias, or a builtin type, and an exported constraint's nested requirement signature may not expose private types.
+- [NAMED-CONSTRAINT-MODULE-7] Same-module and imported exported constraints resolve to the same declaration identity through the ordinary direct-import and alias rules, so interface and semantic checking cannot disagree.
+- [NAMED-CONSTRAINT-CACHE-1] Constraint declarations and their named bound references round trip through the persistent parsed-syntax cache under the bumped frontend format version; the in-memory syntax cache copies them with the rest of the declaration tables.
+- [NAMED-CONSTRAINT-SEMANTICS-1] A named bound expands to the same builtin/field/operation contract as the equivalent inline bound, so generic calls, concrete conformance and forwarding accept and reject the same operations in both spellings, and independently declared names with equivalent requirements satisfy the same obligations.
+- [NAMED-CONSTRAINT-SEMANTICS-2] The declaration's subject substitutes by type-parameter identity recursively through supported composite signature forms, so an operation requiring `list[P]` accepts the provider's `list[Provider]` without rewriting source text or capturing a consumer's same-spelled name.
+- [NAMED-CONSTRAINT-SEMANTICS-3] Required operation effect ceilings compare as before: a concrete method whose declared effects are a subset is accepted, one that exceeds the ceiling rejects with `E_GENERIC_ARGUMENT`, and callers are checked against the full required ceiling.
+- [NAMED-CONSTRAINT-SEMANTICS-4] Forwarding uses the existing implication rules: a stronger named bound may forward to a weaker one, and a weaker bound cannot forward to a stronger one even when the forwarding function is never called. Named and inline forms behave identically.
+- [NAMED-CONSTRAINT-SEMANTICS-5] Expansion counts unique explicitly required members and builtins, including implied guarantees, before applying the existing 16-requirement limit, and reports `E_GENERIC_LIMIT` when the expanded contract exceeds it.
+- [NAMED-CONSTRAINT-SEMANTICS-6] Identical members from distinct bundles or from a bundle and an inline list coalesce; a repeated same-name field or operation with a different resolved type or effect ceiling rejects with `E_GENERIC_REQUIREMENT` and `E_PRIVATE_INTERFACE`-style related locations, and repeating one resolved declaration through two aliases rejects as a duplicate.
+- [NAMED-CONSTRAINT-SEMANTICS-7] Unused constraint declarations are still checked: an invalid subject, an unknown or shadowed name, a nested named reference, a structural field without `copy`, or an unknown requirement signature type rejects before any provider or call exists.
+- [NAMED-CONSTRAINT-FIXTURE-1] The acceptance fixture checks and tests its fake-only `fake_tests.my` entry successfully with `production.my` absent and with an invalid unimported `production.my`, and the production entry still rejects the invalid imported body once `main.my` imports it.
+
 
 
 

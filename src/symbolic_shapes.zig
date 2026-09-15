@@ -1,5 +1,6 @@
 //! Resolve nominal fields and contracts without assigning runtime IDs to type parameters.
 const body_limit = "E_GENERIC_BODY_LIMIT";
+const generic_requirements = @import("generic_requirements.zig");
 const std = @import("std");
 const symbolic = @import("symbolic_types.zig");
 const templates = @import("nominal_templates.zig");
@@ -16,7 +17,7 @@ pub const Context = struct {
     catalog: @import("type_catalog.zig").Catalog,
     src: source.Source,
     sink: *diagnostic.Sink,
-    parameters: []const @import("generic_requirements.zig").Parameter,
+    parameters: []const generic_requirements.Parameter,
     contracts: struct { cleanup: []const @import("effect_set.zig").Mask },
     work: *usize,
 
@@ -77,9 +78,14 @@ pub const Context = struct {
             },
         };
     }
-    fn sourceType(self: Context, span: source.Span, depth: usize) Error!Value {
+    fn sourceType(self: Context, span: source.Span, depth: usize, aliases: []const generic_requirements.SubjectAlias) Error!Value {
         try self.charge(span);
         if (depth == 256) return self.sink.fail(body_limit, span, "structural field type exceeds 256 levels");
+        for (aliases) |alias| {
+            if (alias.scope.start > span.start or alias.scope.end < span.end) continue;
+            if (!std.mem.eql(u8, self.src.text(span), self.src.text(alias.name))) continue;
+            return .{ .parameter = alias.parameter };
+        }
         for (self.parameters, 0..) |parameter, i| {
             if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(span))) {
                 if (parameter.constant_length) return self.sink.fail(diagnostic.generic_length, span, "const length parameters are values, not types");
@@ -89,13 +95,13 @@ pub const Context = struct {
         if (self.catalog.templates.applications.get(span.start)) |template| {
             var arguments: [16]Value = undefined;
             const required = self.catalog.templates.store.?.index.declarations.items[template.declaration].parameters;
-            for (template.syntax.arguments, required, 0..) |argument, parameter, i| arguments[i] = if (parameter.constant_length) try self.lengthArgument(argument) else try self.sourceType(argument, depth + 1);
+            for (template.syntax.arguments, required, 0..) |argument, parameter, i| arguments[i] = if (parameter.constant_length) try self.lengthArgument(argument) else try self.sourceType(argument, depth + 1, aliases);
             return self.nominal(template.declaration, arguments[0..template.arguments.len]);
         }
         if (self.catalog.arrays.templates.get(span.start)) |template| {
             const array = try self.arena.allocator().create(symbolic.Array);
             const size: Value = if (template.length_parameter) |at| try self.lengthArgument(at) else .{ .length = template.length };
-            array.* = .{ .length = if (size == .length) size.length else 0, .length_parameter = if (size == .length_parameter) size.length_parameter else null, .element = try self.sourceType(template.syntax.element, depth + 1) };
+            array.* = .{ .length = if (size == .length) size.length else 0, .length_parameter = if (size == .length_parameter) size.length_parameter else null, .element = try self.sourceType(template.syntax.element, depth + 1, aliases) };
             return .{ .array = array };
         }
         return .{ .concrete = try self.catalog.resolve(self.src, span, self.sink) };
@@ -204,7 +210,7 @@ pub const Context = struct {
             const declared = self.parameters[value.parameter].field_requirements;
             const fields = try self.arena.allocator().alloc(symbolic.Field, declared.len);
             for (declared, fields) |field, *out| {
-                out.* = .{ .name = self.src.text(field.name), .span = field.name, .ty = try self.sourceType(field.ty, 0) };
+                out.* = .{ .name = self.src.text(field.name), .span = field.name, .ty = try self.sourceType(field.ty, 0, generic_requirements.subjectAliases(self.parameters[value.parameter])) };
             }
             return .{ .kind = .record, .fields = fields };
         }

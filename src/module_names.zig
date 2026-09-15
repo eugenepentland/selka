@@ -1,5 +1,7 @@
 //! Semantic name adapter: mapped source spans retain their declaring module.
 const std = @import("std");
+const ast = @import("ast.zig");
+const graph = @import("project.zig");
 const source = @import("source.zig");
 const interfaces = @import("interfaces.zig");
 const diagnostic = @import("diagnostic.zig");
@@ -35,11 +37,32 @@ pub const Names = struct {
         const id = self.index.resolve(.{ .from = original.input, .alias = qualified.alias, .name = name, .kind = kind, .owner = current_owner, .span = original.span }) catch |err| {
             if (err != error.SourceError) return err;
             const problem = self.index.project.problem orelse return error.InternalError;
-            const at = self.src.mappedSpan(problem.site.module, problem.site.span) catch return error.InternalError;
-            if (problem.related) |related| return sink.failRelated(problem.code, at, problem.message, .{ .span = self.src.mappedSpan(related.module, related.span) catch return error.InternalError, .message = "declaration is here" });
-            return sink.fail(problem.code, at, problem.message);
+            return self.mapProblem(problem, sink);
         };
         return std.fmt.allocPrint(self.allocator(), "{s}::{s}", .{ self.index.project.modules.items[id.module].name, self.index.units[id.module].symbols.items[id.symbol].name });
+    }
+    /// Resolve a named constraint bound and map failures through this merged source.
+    pub fn constraintIdentity(self: Names, bound: ast.BoundReference, sink: *diagnostic.Sink) diagnostic.Error!interfaces.Identity {
+        const original = self.src.originalSpan(bound.name) catch return error.InternalError;
+        if (original.input >= self.index.units.len or original.input >= self.index.project.modules.items.len) return error.InternalError;
+        const alias = if (bound.alias) |span| self.src.text(span) else null;
+        return self.index.resolve(.{
+            .from = original.input,
+            .alias = alias,
+            .name = self.src.text(bound.name),
+            .kind = .constraint,
+            .owner = null,
+            .span = original.span,
+        }) catch |err| {
+            if (err != error.SourceError) return err;
+            const problem = self.index.project.problem orelse return error.InternalError;
+            return self.mapProblem(problem, sink);
+        };
+    }
+    fn mapProblem(self: Names, problem: graph.Problem, sink: *diagnostic.Sink) diagnostic.Error {
+        const at = self.src.mappedSpan(problem.site.module, problem.site.span) catch return error.InternalError;
+        if (problem.related) |related| return sink.failRelated(problem.code, at, problem.message, .{ .span = self.src.mappedSpan(related.module, related.span) catch return error.InternalError, .message = "declaration is here" });
+        return sink.fail(problem.code, at, problem.message);
     }
     /// Inspect declaration kind before selecting a call or constructor resolver.
     /// The selected resolver still enforces import visibility and privacy.

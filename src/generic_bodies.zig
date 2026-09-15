@@ -52,6 +52,7 @@ const Checker = struct {
     function_index: usize,
     sink: *diagnostic.Sink,
     parameters: []const requirements.Parameter,
+    requirement_aliases: []const requirements.SubjectAlias = &.{},
     result: Symbolic,
     expected_types: std.AutoHashMapUnmanaged(source.Span, Symbolic) = .empty,
     functions: *const FunctionMap,
@@ -111,6 +112,12 @@ const Checker = struct {
         self.work += 1;
     }
     fn ty(self: *Checker, span: source.Span) Error!Symbolic {
+        for (self.requirement_aliases) |alias| {
+            if (alias.scope.start > span.start or alias.scope.end < span.end) continue;
+            if (!std.mem.eql(u8, self.src.text(span), self.src.text(alias.name))) continue;
+            if (alias.parameter >= self.parameters.len) return error.InternalError;
+            return .{ .parameter = alias.parameter };
+        }
         for (self.program.types.expressions.callbacks) |callback| if (callback.span.start == span.start) {
             try self.enter(span);
             defer self.depth -= 1;
@@ -319,6 +326,12 @@ const Checker = struct {
         return function;
     }
     fn substitutedLength(self: *Checker, span: source.Span, parameters: []const ast.TypeParameter, arguments: []const Symbolic) Error!Symbolic {
+        for (self.requirement_aliases) |alias| {
+            if (alias.scope.start > span.start or alias.scope.end < span.end) continue;
+            if (!std.mem.eql(u8, self.src.text(span), self.src.text(alias.name))) continue;
+            if (alias.parameter >= arguments.len) return error.InternalError;
+            return arguments[alias.parameter];
+        }
         for (parameters, arguments) |parameter, argument| {
             if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(span))) {
                 if (!parameter.constant_length) return self.sink.fail(diagnostic.generic_length, span, "expected a constant parameter");
@@ -328,6 +341,12 @@ const Checker = struct {
         return self.lengthType(span);
     }
     fn substituted(self: *Checker, span: source.Span, parameters: []const ast.TypeParameter, arguments: []const Symbolic) Error!Symbolic {
+        for (self.requirement_aliases) |alias| {
+            if (alias.scope.start > span.start or alias.scope.end < span.end) continue;
+            if (!std.mem.eql(u8, self.src.text(span), self.src.text(alias.name))) continue;
+            if (alias.parameter >= arguments.len) return error.InternalError;
+            return arguments[alias.parameter];
+        }
         for (self.program.types.expressions.callbacks) |callback| if (callback.span.start == span.start) {
             try self.enter(span);
             defer self.depth -= 1;
@@ -365,6 +384,18 @@ const Checker = struct {
         const text = self.src.text(span);
         for (parameters, arguments) |parameter, argument| if (std.mem.eql(u8, text, self.src.text(parameter.name))) return argument;
         return self.concreteType(span);
+    }
+    fn tyWithAliases(self: *Checker, span: source.Span, aliases: []const requirements.SubjectAlias) Error!Symbolic {
+        const previous = self.requirement_aliases;
+        self.requirement_aliases = aliases;
+        defer self.requirement_aliases = previous;
+        return self.ty(span);
+    }
+    fn substitutedWithAliases(self: *Checker, span: source.Span, parameters: []const ast.TypeParameter, arguments: []const Symbolic, aliases: []const requirements.SubjectAlias) Error!Symbolic {
+        const previous = self.requirement_aliases;
+        self.requirement_aliases = aliases;
+        defer self.requirement_aliases = previous;
+        return self.substituted(span, parameters, arguments);
     }
     fn resolveCall(self: *Checker, raw: Call) Error!Call {
         const applied = try @import("call_type_arguments.zig").split(self.src, self.program, self.module_names, raw, self.sink);
@@ -750,8 +781,9 @@ const Checker = struct {
         if (function.policy.conversion) return self.sink.fail(eUnsupported, span, "generic conversions still need abstract checking");
         if (invocation.type_arguments.len != 0 and invocation.type_arguments.len != signature.type_parameters.len) return self.sink.fail("E_GENERIC_ARITY", span, "explicit type argument count does not match generic parameters");
         if (invocation.arguments.len != signature.parameters.len) return self.sink.fail("E_ARITY", span, "argument count does not match function parameters");
-        const required = try requirements.resolve(self.allocator, self.src, signature.type_parameters, self.sink);
-        defer self.allocator.free(required);
+        var provider: @import("constraint_lookup.zig").Provider = .{ .program = self.program, .src = self.src, .names = self.module_names };
+        const required = try requirements.resolveBounds(self.allocator, self.src, signature.type_parameters, self.sink, provider.lookup());
+        defer requirements.deinitResolved(self.allocator, required);
         const arguments = try self.allocator.alloc(Symbolic, required.len);
         defer self.allocator.free(arguments);
         const inferred = invocation.type_arguments.len == 0 and required.len != 0;
@@ -805,44 +837,51 @@ const Checker = struct {
     fn operationCall(self: *Checker, invocation: Call) Error!?Symbolic {
         const owner = invocation.owner orelse return null;
         var contract: ?ast.Operation = null;
-        var symbolic_owner = false;
-        for (self.parameters) |parameter| if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(owner))) {
-            symbolic_owner = true;
+        var owner_index: ?usize = null;
+        for (self.parameters, 0..) |parameter, index| if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(owner))) {
+            owner_index = index;
             for (parameter.operation_requirements) |operation| if (std.mem.eql(u8, self.src.text(operation.name), self.src.text(invocation.name))) {
                 contract = operation;
                 break;
             };
         };
-        if (!symbolic_owner) return null;
+        const resolved_owner = owner_index orelse return null;
+        const aliases = requirements.subjectAliases(self.parameters[resolved_owner]);
         const operation = contract orelse return self.sink.fail("E_GENERIC_REQUIREMENT", invocation.name, "type parameter does not declare this operation");
         if (invocation.type_arguments.len != 0 or invocation.arguments.len != operation.parameters.len)
             return self.sink.fail("E_ARITY", invocation.name, "structural operation requires its declared value/reference arguments and no type arguments");
         for (invocation.arguments, operation.parameters) |input, parameter| {
-            const expected = try self.ty(parameter.ty);
+            const expected = try self.tyWithAliases(parameter.ty, aliases);
             const node = self.program.nodes.items[@backingInt(input)];
             try self.same(try self.expression(input), expected, node.span);
         }
         self.effect_masks[self.function_index] |= operation.effect_bound.allowed;
-        const result = try self.ty(operation.return_type);
+        const result = try self.tyWithAliases(operation.return_type, aliases);
         return result;
+    }
+    /// Find the operation a parameter's own requirements promise under a given name.
+    fn findProvidedOperation(self: *Checker, parameter_index: usize, operation_name: source.Span) ?ast.Operation {
+        for (self.parameters[parameter_index].operation_requirements) |provided| {
+            if (std.mem.eql(u8, self.src.text(provided.name), self.src.text(operation_name))) return provided;
+        }
+        return null;
     }
     fn structural(self: *Checker, argument: Symbolic, required: requirements.Parameter, parameters: []const ast.TypeParameter, arguments: []const Symbolic) Error!void {
         if (required.field_requirements.len != 0) {
             const shape = try self.shapes().requireRecord(argument, required.name, false);
             for (required.field_requirements) |field| {
                 const index = try self.shapes().memberIndex(shape, field.name);
-                try self.same(shape.fields[index].ty.?, try self.substituted(field.ty, parameters, arguments), field.name);
+                try self.same(shape.fields[index].ty.?, try self.substitutedWithAliases(field.ty, parameters, arguments, requirements.subjectAliases(required)), field.name);
             }
         }
         for (required.operation_requirements) |operation| {
             var actual: ?ast.Operation = null;
             var concrete = false;
+            var provider_aliases: []const requirements.SubjectAlias = &.{};
             switch (argument) {
-                .parameter => |index| for (self.parameters[index].operation_requirements) |provided| {
-                    if (std.mem.eql(u8, self.src.text(provided.name), self.src.text(operation.name))) {
-                        actual = provided;
-                        break;
-                    }
+                .parameter => |index| {
+                    provider_aliases = requirements.subjectAliases(self.parameters[index]);
+                    actual = self.findProvidedOperation(index, operation.name);
                 },
                 .concrete => |target| {
                     const function = try (@import("structural_constraints.zig").Context{ .src = self.src, .catalog = &self.catalog, .program = self.program, .sink = self.sink }).method(target, operation.name);
@@ -855,21 +894,22 @@ const Checker = struct {
             if (provided.effect_bound.allowed & ~operation.effect_bound.allowed != 0 or provided.parameters.len != operation.parameters.len)
                 return self.sink.fail(eArgument, operation.name, "forwarded operation arity or effects do not imply the contract");
             for (provided.parameters, operation.parameters) |input, expected| {
-                const actual_type = if (concrete) try self.concreteType(input.ty) else try self.ty(input.ty);
-                try self.same(actual_type, try self.substituted(expected.ty, parameters, arguments), expected.name);
+                const actual_type = if (concrete) try self.concreteType(input.ty) else try self.tyWithAliases(input.ty, provider_aliases);
+                try self.same(actual_type, try self.substitutedWithAliases(expected.ty, parameters, arguments, requirements.subjectAliases(required)), expected.name);
             }
-            const result = if (concrete) try self.concreteType(provided.return_type) else try self.ty(provided.return_type);
-            try self.same(result, try self.substituted(operation.return_type, parameters, arguments), operation.name);
+            const result = if (concrete) try self.concreteType(provided.return_type) else try self.tyWithAliases(provided.return_type, provider_aliases);
+            try self.same(result, try self.substitutedWithAliases(operation.return_type, parameters, arguments, requirements.subjectAliases(required)), operation.name);
         }
     }
     fn validateStructural(self: *Checker) Error!void {
         for (self.parameters) |parameter| {
             for (parameter.field_requirements) |field| {
-                if (try self.transfers(try self.ty(field.ty))) return self.sink.fail("E_GENERIC_REQUIREMENT", field.ty, "structural fields require a copyable field type without result obligations");
+                const transferable = try self.transfers(try self.tyWithAliases(field.ty, requirements.subjectAliases(parameter)));
+                if (transferable) return self.sink.fail("E_GENERIC_REQUIREMENT", field.ty, "structural fields require a copyable field type without result obligations");
             }
             for (parameter.operation_requirements) |operation| {
-                _ = try self.ty(operation.return_type);
-                for (operation.parameters) |input| _ = try self.ty(input.ty);
+                _ = try self.tyWithAliases(operation.return_type, requirements.subjectAliases(parameter));
+                for (operation.parameters) |input| _ = try self.tyWithAliases(input.ty, requirements.subjectAliases(parameter));
             }
         }
     }
@@ -1488,14 +1528,15 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
     while (cursor < pending.items.len) : (cursor += 1) {
         const function = program.functions[pending.items[cursor]];
         if (function.policy.host != null) continue;
-        const parameters = requirements.resolve(allocator, src, function.signature.type_parameters, sink) catch |err| switch (err) {
+        var provider: @import("constraint_lookup.zig").Provider = .{ .program = program, .src = src, .names = module_names };
+        const parameters = requirements.resolveBounds(allocator, src, function.signature.type_parameters, sink, provider.lookup()) catch |err| switch (err) {
             error.SourceError => {
                 failed = true;
                 continue;
             },
             else => return err,
         };
-        defer allocator.free(parameters);
+        defer requirements.deinitResolved(allocator, parameters);
         var checker: Checker = .{
             .allocator = allocator,
             .field_arena = std.heap.ArenaAllocator.init(allocator),

@@ -394,3 +394,197 @@ fn compositeLifecycle(allocator: std.mem.Allocator) !void {
     defer copy.deinit();
     try t.expectEqual(@as(i64, 7), (try native.run(&copy)).value);
 }
+
+// Confirm the shared contract executes, forwards, and interchanges with its inline equivalent.
+// spec: NAMED-CONSTRAINT-SEMANTICS-1
+test "named constraints execute forward and interchange with inline bounds" {
+    try run(
+        \\constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
+        \\
+        \\def checkout[P: Prices](policy: P, subtotal: int) -> int effects():
+        \\    return P.price(policy, subtotal) + 500
+        \\
+        \\def forward[Q: Prices](policy: Q, subtotal: int) -> int effects():
+        \\    return checkout[Q](policy, subtotal)
+        \\
+        \\def inline_checkout[P: copy + op(price(policy: P, subtotal: int) -> int effects())](policy: P, subtotal: int) -> int effects():
+        \\    return P.price(policy, subtotal) + 500
+        \\
+        \\def named_to_inline[P: Prices](policy: P, subtotal: int) -> int effects():
+        \\    return inline_checkout[P](policy, subtotal)
+        \\
+        \\def inline_to_named[P: copy + op(price(policy: P, subtotal: int) -> int effects())](policy: P, subtotal: int) -> int effects():
+        \\    return forward[P](policy, subtotal)
+        \\
+        \\domain DiscountPrices: int:
+        \\    def make(discount: int) -> DiscountPrices:
+        \\        return wrap[DiscountPrices](discount)
+        \\
+        \\    def price(policy: DiscountPrices, subtotal: int) -> int effects():
+        \\        return subtotal - unwrap(policy)
+        \\
+        \\domain FixedPrices: int:
+        \\    def make(amount: int) -> FixedPrices:
+        \\        return wrap[FixedPrices](amount)
+        \\
+        \\    def price(policy: FixedPrices, subtotal: int) -> int effects():
+        \\        _ = subtotal
+        \\        return unwrap(policy)
+        \\
+        \\def main() -> int:
+        \\    real = DiscountPrices.make(250)
+        \\    fake = FixedPrices.make(1750)
+        \\    assert forward(real, 2000) == 2250
+        \\    assert named_to_inline(fake, 2000) == 2250
+        \\    assert inline_to_named(real, 2000) == 2250
+        \\    return 9
+    , 9);
+}
+// The subject substitutes by identity inside a composite requirement signature.
+// spec: NAMED-CONSTRAINT-SEMANTICS-2
+test "named constraints substitute the subject through composite signatures" {
+    try run(
+        \\constraint Render[P] = copy + op(render(p: P, extra: list[P]) -> int effects())
+        \\
+        \\domain D: int:
+        \\    def make(n: int) -> D:
+        \\        return wrap[D](n)
+        \\
+        \\    def render(p: D, extra: list[D]) -> int effects():
+        \\        _ = p
+        \\        return len(extra)
+        \\
+        \\def count[P: Render](p: P, extra: list[P]) -> int effects():
+        \\    return P.render(p, extra)
+        \\
+        \\def main() -> int:
+        \\    d = D.make(1)
+        \\    return count[D](d, [d, d]) + 1
+    , 3);
+}
+// All declared effects stay inside the required ceiling; exceeding it rejects conformance.
+// spec: NAMED-CONSTRAINT-SEMANTICS-3
+test "named constraint operation ceilings accept subsets and reject excess" {
+    try run(
+        \\constraint Priced[P] = copy + op(price(policy: P) -> int effects())
+        \\
+        \\domain D: int:
+        \\    def make(n: int) -> D:
+        \\        return wrap[D](n)
+        \\
+        \\    def price(policy: D) -> int effects():
+        \\        return unwrap(policy)
+        \\
+        \\def total[P: Priced](policy: P) -> int effects():
+        \\    return P.price(policy)
+        \\
+        \\def main() -> int:
+        \\    return total[D](D.make(4))
+    , 4);
+    try reject(
+        \\constraint Priced[P] = copy + op(price(policy: P) -> int effects())
+        \\
+        \\domain D: int:
+        \\    def make(n: int) -> D:
+        \\        return wrap[D](n)
+        \\
+        \\    def price(policy: D) -> int effects(output):
+        \\        print("x")
+        \\        return unwrap(policy)
+        \\
+        \\def total[P: Priced](policy: P) -> int effects():
+        \\    return P.price(policy)
+        \\
+        \\def main() -> int:
+        \\    return total[D](D.make(4))
+    , "E_GENERIC_ARGUMENT");
+}
+// A weaker bound may not forward to a stronger one, even when the function is never called.
+// spec: NAMED-CONSTRAINT-SEMANTICS-4
+test "named constraints reject weaker to stronger forwarding universally" {
+    try reject(
+        \\constraint HasValue[T] = copy + field(value: int)
+        \\
+        \\def read[T: HasValue](v: T) -> int:
+        \\    return v.value
+        \\
+        \\def forward[U: copy](v: U) -> int:
+        \\    return read[U](v)
+        \\
+        \\def main() -> int:
+        \\    return 0
+    , "E_GENERIC_BODY_UNSUPPORTED");
+    try reject(
+        \\def read[T: copy + field(value: int)](v: T) -> int:
+        \\    return v.value
+        \\
+        \\def forward[U: copy](v: U) -> int:
+        \\    return read[U](v)
+        \\
+        \\def main() -> int:
+        \\    return 0
+    , "E_GENERIC_BODY_UNSUPPORTED");
+}
+// Expansion counts unique explicit requirements, including those added by a named bundle.
+// spec: NAMED-CONSTRAINT-SEMANTICS-5
+test "named constraint expansion enforces the requirement limit" {
+    try reject(
+        \\constraint Wide[T] = copy + field(f0: int) + field(f1: int) + field(f2: int) + field(f3: int) + field(f4: int) + field(f5: int) + field(f6: int) + field(f7: int) + field(f8: int) + field(f9: int) + field(f10: int) + field(f11: int) + field(f12: int) + field(f13: int) + field(f14: int)
+        \\
+        \\def f[T: Wide + codec](v: T) -> int:
+        \\    _ = v
+        \\    return 0
+        \\
+        \\def main() -> int:
+        \\    return 0
+    , "E_GENERIC_LIMIT");
+}
+// Identical bundles coalesce; the same member with a different type rejects.
+// spec: NAMED-CONSTRAINT-SEMANTICS-6
+test "named constraints coalesce identical members and reject conflicts" {
+    try run(
+        \\constraint A[T] = copy + field(value: int)
+        \\constraint B[T] = copy + field(value: int)
+        \\
+        \\record Box:
+        \\    value: int
+        \\
+        \\def f[T: A + B](v: T) -> int:
+        \\    return v.value
+        \\
+        \\def main() -> int:
+        \\    return f[Box](Box(value=3))
+    , 3);
+    try reject(
+        \\constraint A[T] = copy + field(value: int)
+        \\constraint B[T] = copy + field(value: bool)
+        \\
+        \\def f[T: A + B](v: T) -> int:
+        \\    return v.value
+        \\
+        \\def main() -> int:
+        \\    return 0
+    , "E_GENERIC_REQUIREMENT");
+}
+// Unused invalid constraint declarations still reject their names, signatures, and rules.
+// spec: NAMED-CONSTRAINT-SEMANTICS-7
+test "named constraints reject unused invalid definitions" {
+    try reject(
+        \\constraint Bad[P] = field(x: int)
+        \\
+        \\def main() -> int:
+        \\    return 0
+    , "E_GENERIC_REQUIREMENT");
+    try reject(
+        \\constraint Bad[P] = copy + field(x: Bogus)
+        \\
+        \\def main() -> int:
+        \\    return 0
+    , "E_UNKNOWN_TYPE");
+    try reject(
+        \\constraint Bad[P] = copy + op(go(v: P) -> Bogus effects())
+        \\
+        \\def main() -> int:
+        \\    return 0
+    , "E_UNKNOWN_TYPE");
+}

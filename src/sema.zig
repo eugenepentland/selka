@@ -339,7 +339,9 @@ const Checker = struct {
         const function = self.syntax.functions[@backingInt(declaration)];
         if (call.type_arguments.len != 0 and call.type_arguments.len != function.signature.type_parameters.len) return self.sink.fail("E_GENERIC_ARITY", span, "explicit type argument count does not match generic parameters");
         if (self.ordinary_ids[@backingInt(declaration)]) |id| return id;
-        const required = try @import("generic_requirements.zig").resolve(self.allocator, self.src, function.signature.type_parameters, self.sink);
+        var provider: @import("constraint_lookup.zig").Provider = .{ .program = self.syntax, .src = self.src, .names = self.catalog.module_names };
+        const required = try @import("generic_requirements.zig").resolveBounds(self.allocator, self.src, function.signature.type_parameters, self.sink, provider.lookup());
+        defer @import("generic_requirements.zig").deinitResolved(self.allocator, required);
         const arguments = try self.allocator.alloc(typed.Type, required.len);
         const lengths = try self.allocator.alloc(?usize, required.len);
         @memset(lengths, null);

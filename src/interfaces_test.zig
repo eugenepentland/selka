@@ -5,7 +5,10 @@ const duplicates_module = @import("duplicates.zig");
 const std = @import("std");
 const t = std.testing;
 const graph = @import("project.zig");
+const ast = @import("ast.zig");
 const interfaces = @import("interfaces.zig");
+const module_names = @import("module_names.zig");
+const project_syntax = @import("project_syntax.zig");
 const native = @import("native_execute.zig");
 const File = struct { path: []const u8, bytes: []const u8 };
 const Files = struct {
@@ -251,7 +254,7 @@ fn mergedScenario(allocator: std.mem.Allocator) !void {
     defer project.deinit();
     try project.load(files.provider(), "main", .{});
     var index = try interfaces.build(&project);
-    const merged = try @import("project_syntax.zig").build(&index);
+    const merged = try project_syntax.build(&index);
     try t.expectEqual(index.units[0].syntax.functions.len + index.units[1].syntax.functions.len, merged.syntax.functions.len);
     for (merged.syntax.functions, merged.function_modules) |function, module| {
         const at = merged.src.locate(function.name.start);
@@ -659,10 +662,10 @@ test "AST relocation rejects dangling expression and statement identities" {
     const statements = index.units[0].syntax.statements.items;
     const saved = statements[0];
     statements[0].data = .{ .ret = @fromBackingInt(index.units[0].syntax.nodes.items.len) };
-    try t.expectError(error.InvalidNodeId, @import("project_syntax.zig").build(&index));
+    try t.expectError(error.InvalidNodeId, project_syntax.build(&index));
     statements[0] = saved;
     @constCast(index.units[0].syntax.functions)[0].body = @fromBackingInt(statements.len);
-    try t.expectError(error.InvalidStatementId, @import("project_syntax.zig").build(&index));
+    try t.expectError(error.InvalidStatementId, project_syntax.build(&index));
 }
 test "public type selection rejects private and unknown nominal types" {
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes =
@@ -741,7 +744,7 @@ test "generic syntax module interfaces retain scoped type names without hiding p
         defer project.deinit();
         try project.load(files.provider(), "main", .{});
         var index = try interfaces.buildWithCache(&project, &cache, null);
-        const merged = try @import("project_syntax.zig").build(&index);
+        const merged = try project_syntax.build(&index);
         const parameters = merged.syntax.functions[0].signature.type_parameters;
         try t.expectEqual(@as(usize, 1), parameters.len);
         try t.expectEqualStrings("copy", merged.src.text(parameters[0].requirements[0]));
@@ -769,6 +772,256 @@ test "generic requirements checkGenericRequirements validates exported and uncal
         \\def main() -> i64:
         \\    return 0
     , "E_GENERIC_REQUIREMENT");
+}
+
+fn namedConstraintIndexScenario(allocator: std.mem.Allocator) !void {
+    const text =
+        \\module main
+        \\export Prices
+        \\export total
+        \\
+        \\
+        \\constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
+        \\
+        \\
+        \\def total[P: Prices](policy: P, subtotal: int) -> int effects():
+        \\    return P.price(policy, subtotal)
+    ;
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = text }} };
+    var project = graph.Project.init(allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    const syntax = index.units[0].syntax;
+    try t.expectEqual(@as(usize, 1), syntax.types.constraints.len);
+    const constraint = syntax.types.constraints[0];
+    const id = try index.resolve(.{ .from = 0, .alias = null, .name = "Prices", .kind = .constraint, .owner = null, .span = constraint.name });
+    try t.expectEqual(interfaces.Kind.constraint, index.units[id.module].symbols.items[id.symbol].kind);
+    const rendered = try index.render(allocator);
+    defer allocator.free(rendered);
+    try t.expect(std.mem.indexOf(u8, rendered, "export constraint Prices") != null);
+    const merged = try project_syntax.build(&index);
+    try t.expectEqual(@as(usize, 1), merged.syntax.types.constraints.len);
+    var sink: @import("diagnostic.zig").Sink = .{ .allocator = allocator };
+    defer sink.deinit();
+    var names: module_names.Names = .{ .index = &index, .src = merged.src };
+    const resolved = try names.constraintIdentity(.{ .alias = null, .name = merged.syntax.types.constraints[0].name }, &sink);
+    try t.expectEqual(@as(usize, 0), resolved.module);
+}
+
+fn namedConstraintImportScenario(allocator: std.mem.Allocator) !void {
+    var files: Files = .{ .entries = &.{
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\import contracts
+        \\export total
+        \\
+        \\
+        \\def total[P: contracts.Prices](policy: P, subtotal: int) -> int effects():
+        \\    return P.price(policy, subtotal)
+        },
+        .{ .path = "contracts.my", .bytes =
+        \\module contracts
+        \\export Prices
+        \\
+        \\
+        \\constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
+        },
+    } };
+    var project = graph.Project.init(allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    const bound = index.units[0].syntax.functions[0].signature.type_parameters[0].named_requirements[0];
+    const identity = try index.resolve(.{ .from = 0, .alias = "contracts", .name = "Prices", .kind = .constraint, .owner = null, .span = bound.name });
+    try t.expectEqual(@as(usize, 1), identity.module);
+    const rendered = try index.render(allocator);
+    defer allocator.free(rendered);
+    try t.expect(std.mem.indexOf(u8, rendered, "export constraint Prices") != null);
+}
+
+// spec: NAMED-CONSTRAINT-MODULE-7
+test "named constraints resolve imported exported constraints" {
+    try namedConstraintImportScenario(t.allocator);
+}
+
+// spec: NAMED-CONSTRAINT-MODULE-1
+test "named constraints index export render and accept function bounds" {
+    try namedConstraintIndexScenario(t.allocator);
+}
+
+// spec: NAMED-CONSTRAINT-MODULE-2
+test "named constraints reject nominal bounds and wrong kinds" {
+    try reject(
+        \\module main
+        \\export Box
+        \\
+        \\
+        \\constraint Prices[P] = copy
+        \\
+        \\
+        \\class Box[T: Prices]:
+        \\    pass
+    , "E_GENERIC_REQUIREMENT");
+    try reject(
+        \\module main
+        \\export Box
+        \\
+        \\
+        \\constraint Prices[P] = copy
+        \\
+        \\
+        \\union Box[T: Prices]:
+        \\    item: T
+    , "E_GENERIC_REQUIREMENT");
+    try reject(
+        \\module main
+        \\export f
+        \\
+        \\
+        \\constraint Prices[P] = copy
+        \\
+        \\
+        \\def f(x: Prices) -> int:
+        \\    return 0
+    , "E_SYMBOL_KIND");
+    try reject(
+        \\module main
+        \\export f
+        \\
+        \\
+        \\constraint Prices[P] = copy
+        \\
+        \\
+        \\def f(x: Prices[int]) -> int:
+        \\    return 0
+    , "E_SYMBOL_KIND");
+}
+
+// spec: NAMED-CONSTRAINT-MODULE-3
+test "named constraints enforce private interface exposure and unknown names" {
+    try reject(
+        \\module main
+        \\export f
+        \\
+        \\
+        \\constraint Prices[P] = copy
+        \\
+        \\
+        \\def f[T: Prices](x: T) -> T:
+        \\    return x
+    , "E_PRIVATE_INTERFACE");
+    try reject(
+        \\module main
+        \\export f
+        \\
+        \\
+        \\def f[T: unknown](x: T) -> T:
+        \\    return x
+    , "E_GENERIC_REQUIREMENT");
+    try reject(
+        \\module main
+        \\export Prices
+        \\
+        \\
+        \\class Secret:
+        \\    pass
+        \\
+        \\
+        \\constraint Prices[P] = copy + op(price(policy: P, secret: Secret) -> int effects())
+    , "E_PRIVATE_INTERFACE");
+}
+
+// spec: NAMED-CONSTRAINT-MODULE-4
+test "named constraints participate in duplicate declaration checks" {
+    try reject(
+        \\module main
+        \\
+        \\
+        \\class Prices:
+        \\    pass
+        \\
+        \\
+        \\constraint Prices[P] = copy
+    , "E_DUPLICATE_SYMBOL");
+}
+
+// spec: NAMED-CONSTRAINT-MODULE-6
+test "named constraints reject subject shadowing declarations imports and builtins" {
+    try reject(
+        \\module main
+        \\export f
+        \\
+        \\
+        \\class P:
+        \\    pass
+        \\
+        \\
+        \\constraint Prices[P] = copy
+        \\
+        \\
+        \\def f(x: i64) -> int:
+        \\    return 0
+    , "E_SHADOWING");
+    try reject(
+        \\module main
+        \\import units
+        \\
+        \\
+        \\constraint Prices[units] = copy
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_SHADOWING");
+    try reject(
+        \\module main
+        \\
+        \\
+        \\constraint Prices[int] = copy
+    , "E_GENERIC_PARAMETER");
+}
+
+// spec: NAMED-CONSTRAINT-MODULE-5
+test "named constraints constraintIdentity reports unmapped sources as internal errors" {
+    const text =
+        \\module main
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ;
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = text }} };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var sink: @import("diagnostic.zig").Sink = .{ .allocator = t.allocator };
+    defer sink.deinit();
+    var names: module_names.Names = .{ .index = &index, .src = project.modules.items[0].src };
+    const bound: ast.BoundReference = .{ .alias = null, .name = project.modules.items[0].header.declaration };
+    try t.expectError(error.InternalError, names.constraintIdentity(bound, &sink));
+}
+
+fn expectNamedConstraintLocatedErrors() !void {
+    try reject(
+        \\module main
+        \\export f
+        \\
+        \\
+        \\def f[T: unknown](x: T) -> T:
+        \\    return x
+    , "E_GENERIC_REQUIREMENT");
+    try reject(
+        \\module main
+        \\
+        \\
+        \\constraint Prices[P] = field(tag: P)
+    , "E_GENERIC_REQUIREMENT");
+}
+
+test "named constraints resolveConstraint and checkConstraint report located errors" {
+    try expectNamedConstraintLocatedErrors();
 }
 
 test "generic body contracts respect module-local declaration and import scopes" {
@@ -920,7 +1173,7 @@ fn genericCallsScenario(allocator: std.mem.Allocator) !void {
     defer project.deinit();
     try project.load(files.provider(), "main", .{});
     var index = try interfaces.build(&project);
-    const merged = try @import("project_syntax.zig").build(&index);
+    const merged = try project_syntax.build(&index);
     var names: @import("module_names.zig").Names = .{ .index = &index, .src = merged.src };
     var sink: @import("diagnostic.zig").Sink = .{ .allocator = project.arena.allocator() };
     try @import("generic_bodies.zig").checkWithNames(allocator, merged.src, merged.syntax, &sink, &names);

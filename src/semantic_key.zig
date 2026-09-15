@@ -19,7 +19,7 @@ pub fn prepare(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
         enabled = false;
     };
     var hash = Hash.init(.{});
-    hash.update("semantic-functions-v1");
+    hash.update("semantic-functions-v2");
     fingerprint(&hash, []const u8, src.path);
     for (src.origins) |origin| fingerprint(&hash, []const u8, origin.original.path);
     const ordered = try allocator.dupe(source.Span, bodies);

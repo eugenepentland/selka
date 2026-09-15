@@ -4,6 +4,7 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const typed = @import("typed.zig");
 const requirements = @import("generic_requirements.zig");
+const diagnostic = @import("diagnostic.zig");
 fn contract(requirement: requirements.Requirement) requirements.Set {
     var result: requirements.Set = .{};
     result.include(requirement);
@@ -34,7 +35,7 @@ fn resolution(allocator: std.mem.Allocator) !void {
     );
     defer compilation.deinit();
     try compilation.parse();
-    var sink: @import("diagnostic.zig").Sink = .{ .allocator = compilation.arena.allocator() };
+    var sink: diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
     const resolved = try requirements.resolve(allocator, compilation.src, compilation.syntax.?.functions[0].signature.type_parameters, &sink);
     defer allocator.free(resolved);
     try t.expectEqual(@as(usize, 2), resolved.len);
@@ -102,7 +103,7 @@ test "generic requirement resolution frees partial results for malformed caller 
         .{ .parameters = &.{ .{ .name = name, .requirements = &.{copy_name} }, .{ .name = name, .requirements = &.{copy_name} } }, .code = "E_GENERIC_PARAMETER" },
     };
     for (cases) |case| {
-        var sink: @import("diagnostic.zig").Sink = .{ .allocator = compilation.arena.allocator() };
+        var sink: diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
         try t.expectError(error.SourceError, requirements.resolve(t.allocator, compilation.src, case.parameters, &sink));
         try t.expectEqualStrings(case.code, sink.items.items[0].code);
     }
@@ -163,4 +164,61 @@ test "generic requirements preserve nominal identity and ownership obligations" 
         try t.expectEqual(case.equality, contract(.equality).accepts(ty, records));
         try t.expect(!contract(.integer).accepts(ty, records));
     }
+}
+
+const valid_named_bound =
+    \\constraint Prices[P] = copy + field(tag: P)
+    \\
+    \\
+    \\def f[T: Prices](x: T) -> T:
+    \\    return x
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return 0
+;
+const invalid_named_bound =
+    \\constraint Prices[P] = field(tag: P)
+    \\
+    \\
+    \\def f[T: Prices](x: T) -> T:
+    \\    return x
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return 0
+;
+
+fn resolveBoundsScenario(allocator: std.mem.Allocator) !void {
+    var compilation = try language.Compilation.init(allocator, "resolve-bounds.my", valid_named_bound);
+    defer compilation.deinit();
+    try compilation.parse();
+    var sink: diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
+    var provider: @import("constraint_lookup.zig").Provider = .{ .program = compilation.syntax.?, .src = compilation.src };
+    const resolved = try requirements.resolveBounds(allocator, compilation.src, compilation.syntax.?.functions[0].signature.type_parameters, &sink, provider.lookup());
+    defer requirements.deinitResolved(allocator, resolved);
+    try t.expectEqual(@as(usize, 1), resolved.len);
+    try t.expect(resolved[0].requirements.implies(contract(.copy)));
+    try t.expectEqual(@as(usize, 1), resolved[0].field_requirements.len);
+}
+
+test "named constraints resolveBounds releases allocation failures" {
+    try resolveBoundsScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), resolveBoundsScenario, .{});
+}
+
+fn resolveOneBoundScenario() !void {
+    var compilation = try language.Compilation.init(t.allocator, "resolve-one-bound.my", invalid_named_bound);
+    defer compilation.deinit();
+    try compilation.parse();
+    var sink: diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
+    var provider: @import("constraint_lookup.zig").Provider = .{ .program = compilation.syntax.?, .src = compilation.src };
+    try t.expectError(error.SourceError, requirements.resolveBounds(t.allocator, compilation.src, compilation.syntax.?.functions[0].signature.type_parameters, &sink, provider.lookup()));
+    try t.expectEqualStrings("E_GENERIC_REQUIREMENT", sink.items.items[0].code);
+    try t.expectEqualStrings("structural field contracts require copy to exclude hidden ownership and result obligations", sink.items.items[0].message);
+}
+
+test "named constraints resolveOneBound reports located errors" {
+    try resolveOneBoundScenario();
 }

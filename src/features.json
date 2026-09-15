@@ -526,6 +526,11 @@
       "kind": "tooling",
       "summary": "`mylang doc-coverage` fails the build when an implemented feature or a standard export has no documented example.",
       "doc": "docs/tooling/documentation-gate.md#feature-and-export-coverage"
+    },
+    "named-constraints": {
+      "kind": "language",
+      "summary": "`constraint Name[Subject] = ...` names a reusable structural requirement shared by function type parameters.",
+      "doc": "docs/generics.md#named-constraints"
     }
   },
   "unsupported": [

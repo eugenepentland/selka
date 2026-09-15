@@ -154,6 +154,8 @@ pub const FunctionPolicy = struct {
     restricted: bool = false,
     conversion: bool = false,
 };
+/// One named bound requirement; `alias` is null for a same-module name.
+pub const BoundReference = struct { alias: ?Span = null, name: Span };
 /// Named type variable with explicit source-spelled requirements.
 pub const TypeParameter = struct {
     default_copy: bool = false,
@@ -162,6 +164,7 @@ pub const TypeParameter = struct {
     requirements: []const Span,
     field_requirements: []const Parameter = &.{},
     operation_requirements: []const Operation = &.{},
+    named_requirements: []const BoundReference = &.{},
 };
 /// Explicit public domain operation required by a structural generic contract.
 pub const Operation = struct {
@@ -169,6 +172,14 @@ pub const Operation = struct {
     parameters: []const Parameter,
     return_type: Span,
     effect_bound: effect_set.Bound,
+};
+/// Named reusable structural contract over exactly one subject binder.
+/// `subject` carries the right-hand requirement lists; its own `named_requirements`
+/// stays empty because V1 forbids constraint-to-constraint references.
+pub const Constraint = struct {
+    name: Span,
+    span: Span,
+    subject: TypeParameter,
 };
 /// Source parameter and result spellings of one declared function.
 pub const FunctionSignature = struct { type_parameters: []const TypeParameter = &.{}, parameters: []const Parameter, return_type: Span };
@@ -194,6 +205,7 @@ pub const TypeDeclarations = struct {
     variants: []const Variants = &.{},
     expressions: TypeExpressions = .{},
     records: []const Record = &.{},
+    constraints: []const Constraint = &.{},
 };
 
 /// Parsed nominal application; the base name and each type argument retain exact source spans.

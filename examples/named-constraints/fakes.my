@@ -1,0 +1,11 @@
+module fakes
+export FixedPrices
+
+
+domain FixedPrices: int:
+    def make(amount: int) -> FixedPrices:
+        return wrap[FixedPrices](amount)
+
+    def price(policy: FixedPrices, subtotal: int) -> int effects():
+        _ = subtotal
+        return unwrap(policy)

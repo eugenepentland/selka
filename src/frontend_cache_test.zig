@@ -2,6 +2,8 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const ast = @import("ast.zig");
+const source = @import("source.zig");
 const Cache = language.frontend_cache.Cache;
 
 const Files = struct {
@@ -253,4 +255,49 @@ test "cached syntax retains expression lambdas across a warm lookup" {
     try cache.rememberSyntax(module.src, module.header.body_start, index.units[0].syntax);
     const hit = (try cache.lookupSyntax(caller.allocator(), module.src, module.header.body_start)).?;
     try t.expectEqual(@as(usize, 1), hit.lambdas.len);
+}
+
+fn syntaxSpan(bytes: []const u8, needle: []const u8) source.Span {
+    const at = std.mem.indexOf(u8, bytes, needle) orelse return .{ .start = bytes.len, .end = bytes.len };
+    return .{ .start = at, .end = at + needle.len };
+}
+
+// spec: NAMED-CONSTRAINT-CACHE-1
+test "frontend cache retains named constraints across a syntax round trip" {
+    var temp = t.tmpDir(.{});
+    defer temp.cleanup();
+    const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    var caller = std.heap.ArenaAllocator.init(t.allocator);
+    defer caller.deinit();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    var cache = openCache(root);
+    const bytes = "constraint Prices[P] = copy;";
+    const src = try source.Source.init(allocator, "main.my", bytes);
+    const requirements = try allocator.dupe(source.Span, &.{syntaxSpan(bytes, "copy")});
+    const constraints = try allocator.alloc(ast.Constraint, 1);
+    constraints[0] = .{
+        .name = syntaxSpan(bytes, "Prices"),
+        .span = syntaxSpan(bytes, "constraint Prices[P] = copy"),
+        .subject = .{
+            .name = syntaxSpan(bytes, "P"),
+            .requirements = requirements,
+        },
+    };
+    const program: ast.Program = .{
+        .types = .{ .constraints = constraints },
+        .nodes = .empty,
+        .statements = .empty,
+        .functions = &.{},
+        .lambdas = &.{},
+    };
+    try cache.rememberSyntax(src, 0, program);
+    const hit = (try cache.lookupSyntax(caller.allocator(), src, 0)).?;
+    try t.expectEqual(@as(usize, 1), hit.types.constraints.len);
+    try t.expectEqualStrings("Prices", src.text(hit.types.constraints[0].name));
+    try t.expectEqualStrings("P", src.text(hit.types.constraints[0].subject.name));
+    try t.expectEqual(@as(usize, 1), hit.types.constraints[0].subject.requirements.len);
+    try t.expectEqualStrings("copy", src.text(hit.types.constraints[0].subject.requirements[0]));
 }

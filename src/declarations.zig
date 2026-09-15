@@ -24,6 +24,7 @@ pub const Kind = enum {
     @"fn",
     host_fn,
     extern_fn,
+    constraint,
 };
 
 /// Zero-based half-open byte range over the original file bytes.
@@ -231,6 +232,8 @@ const Scan = struct {
                 .{ .kind = .result, .braced = true }
             else if (self.word(self.pos, "record"))
                 .{ .kind = .@"struct", .braced = true }
+            else if (self.word(self.pos, "constraint"))
+                .{ .kind = .constraint, .braced = false }
             else
                 null,
             else => null,
@@ -283,6 +286,7 @@ fn declared(syntax: ast.Program, kind: Kind, index: usize) ?source.Span {
         .resource => if (index < types.resources.len) types.resources[index].name else null,
         .@"enum", .@"union", .result => variantName(types.variants, kind, index),
         .@"const", .@"fn", .host_fn, .extern_fn => functionName(syntax.functions, kind, index),
+        .constraint => if (index < types.constraints.len) types.constraints[index].name else null,
     };
 }
 

@@ -132,6 +132,38 @@ def main() -> int:
     return boxed[Frame, int](frame)
 ```
 
+## Named constraints
+
+A constraint names a structural contract once so several functions can share it.
+`constraint Name[Subject] = REQUIREMENTS` binds exactly one subject type; a
+function parameter uses it as a bound, `def f[T: Name](...)`. The subject is
+local to the declaration, so the same contract can be written with any binder
+spelling. A bound may combine names with builtins and inline requirements —
+`T: Prices + codec + field(tag: bool)` — and a qualified import works:
+`T: contracts.Prices`. Constraints are transparent: a type satisfies one
+structurally, without an `implements` declaration, and two names with equivalent
+requirements satisfy the same forwarding obligations. A constraint is not a
+value type, so `policy: Prices` and `Prices[int]` are rejected, and a named
+bound is only valid on a function type parameter.
+
+```mylang
+# doc: expect 42
+constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
+
+def total[P: Prices](policy: P, subtotal: int) -> int effects():
+    return P.price(policy, subtotal)
+
+domain DiscountPrices: int:
+    def make(discount: int) -> DiscountPrices:
+        return wrap[DiscountPrices](discount)
+
+    def price(policy: DiscountPrices, subtotal: int) -> int effects():
+        return subtotal - unwrap(policy)
+
+def main() -> int:
+    return total(DiscountPrices.make(8), 50)
+```
+
 ## Limits
 
 - A declaration takes at most 16 combined type and constant-length arguments, and

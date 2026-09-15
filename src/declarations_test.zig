@@ -14,6 +14,10 @@ const kinds_module =
     \\type Count = i64
     \\
     \\
+    \\# reusable contract
+    \\constraint Prices[P] = copy
+    \\
+    \\
     \\export Count
     \\
     \\
@@ -70,6 +74,7 @@ const Wire = struct {
 const Expected = struct { kind: []const u8, name: []const u8, exported: bool, text: []const u8, comment: ?[]const u8 = null };
 const expected_declarations = [_]Expected{
     .{ .kind = "alias", .name = "Count", .exported = true, .text = "type Count = i64", .comment = "# leading comment" },
+    .{ .kind = "constraint", .name = "Prices", .exported = false, .text = "constraint Prices[P] = copy", .comment = "# reusable contract" },
     .{ .kind = "const", .name = "LIMIT", .exported = false, .text = "const LIMIT: Count = 3" },
     .{ .kind = "struct", .name = "Job", .exported = false, .text =
     \\class Job:

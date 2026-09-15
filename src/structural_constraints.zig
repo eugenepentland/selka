@@ -14,8 +14,8 @@ pub const Context = struct {
     program: ast.Program,
     sink: *diagnostic.Sink,
     lengths: []const ?usize = &.{},
-    fn ty(self: Context, allocator: std.mem.Allocator, span: source.Span, parameters: []const ast.TypeParameter, arguments: []const typed.Type) Error!typed.Type {
-        return @import("generic_substitution.zig").resolve(allocator, self.catalog, self.src, self.sink, .{ .span = span, .parameters = parameters, .arguments = arguments, .lengths = self.lengths });
+    fn ty(self: Context, allocator: std.mem.Allocator, span: source.Span, parameters: []const ast.TypeParameter, arguments: []const typed.Type, aliases: []const requirements.SubjectAlias) Error!typed.Type {
+        return @import("generic_substitution.zig").resolve(allocator, self.catalog, self.src, self.sink, .{ .span = span, .parameters = parameters, .arguments = arguments, .lengths = self.lengths, .aliases = aliases });
     }
     /// Resolve an explicitly public, nongeneric domain method with a declared effect ceiling.
     pub fn method(self: Context, target: typed.Type, name: source.Span) Error!ast.Function {
@@ -39,7 +39,7 @@ pub const Context = struct {
             for (parameter.field_requirements) |field| {
                 var found = false;
                 for (record.fields) |actual| if (std.mem.eql(u8, actual.name, self.src.text(field.name))) {
-                    found = actual.ty == try self.ty(allocator, field.ty, parameters, arguments);
+                    found = actual.ty == try self.ty(allocator, field.ty, parameters, arguments, requirements.subjectAliases(parameter));
                     break;
                 };
                 if (!found) return self.sink.fail(eArgument, field.name, "type lacks a required field with the declared type");
@@ -50,10 +50,10 @@ pub const Context = struct {
             if (function.policy.effect_bound.?.allowed & ~operation.effect_bound.allowed != 0) return self.sink.fail(eArgument, operation.name, "operation effect ceiling exceeds the required contract");
             if (function.signature.parameters.len != operation.parameters.len) return self.sink.fail(eArgument, operation.name, "operation parameter count differs from contract");
             for (function.signature.parameters, operation.parameters) |actual, expected| {
-                if (try self.catalog.resolve(self.src, actual.ty, self.sink) != try self.ty(allocator, expected.ty, parameters, arguments))
+                if (try self.catalog.resolve(self.src, actual.ty, self.sink) != try self.ty(allocator, expected.ty, parameters, arguments, requirements.subjectAliases(parameter)))
                     return self.sink.fail(eArgument, expected.name, "operation parameter type differs from contract");
             }
-            if (try self.catalog.resolve(self.src, function.signature.return_type, self.sink) != try self.ty(allocator, operation.return_type, parameters, arguments))
+            if (try self.catalog.resolve(self.src, function.signature.return_type, self.sink) != try self.ty(allocator, operation.return_type, parameters, arguments, requirements.subjectAliases(parameter)))
                 return self.sink.fail(eArgument, operation.name, "operation result type differs from contract");
         }
     }

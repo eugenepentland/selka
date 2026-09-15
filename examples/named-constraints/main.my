@@ -1,0 +1,9 @@
+module main
+import checkout
+import production
+
+
+def main() -> int:
+    real = production.DiscountPrices.make(250)
+    assert checkout.total(real, 2000) == 2250
+    return 0

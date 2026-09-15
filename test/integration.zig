@@ -2772,3 +2772,109 @@ test "run build --run and installed executables accept more than 256 guest argum
     try testing.expectEqualStrings("", installed.stdout);
     try testing.expectEqualStrings("", installed.stderr);
 }
+const named_constraint_contracts =
+    \\module contracts
+    \\export Prices
+    \\
+    \\
+    \\constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
+;
+const named_constraint_checkout =
+    \\module checkout
+    \\import contracts
+    \\export total
+    \\
+    \\
+    \\def total[P: contracts.Prices](policy: P, subtotal: int) -> int effects():
+    \\    return P.price(policy, subtotal) + 500
+;
+const named_constraint_fakes =
+    \\module fakes
+    \\export FixedPrices
+    \\
+    \\
+    \\domain FixedPrices: int:
+    \\    def make(amount: int) -> FixedPrices:
+    \\        return wrap[FixedPrices](amount)
+    \\
+    \\    def price(policy: FixedPrices, subtotal: int) -> int effects():
+    \\        _ = subtotal
+    \\        return unwrap(policy)
+;
+const named_constraint_fake_tests =
+    \\module fake_tests
+    \\import checkout
+    \\import fakes
+    \\export test_checkout
+    \\
+    \\
+    \\def main() -> int:
+    \\    assert test_checkout()
+    \\    return 0
+    \\
+    \\
+    \\def test_checkout() -> bool:
+    \\    return checkout.total(fakes.FixedPrices.make(1750), 2000) == 2250
+;
+const named_constraint_production_invalid =
+    \\module production
+    \\import contracts
+    \\export DiscountPrices
+    \\
+    \\
+    \\domain DiscountPrices: int:
+    \\    def make(discount: int) -> DiscountPrices:
+    \\        return wrap[DiscountPrices](discount)
+    \\
+    \\    def price(policy: DiscountPrices, subtotal: int) -> int effects():
+    \\        return missing_name(policy, subtotal)
+;
+const named_constraint_main =
+    \\module main
+    \\import checkout
+    \\import production
+    \\
+    \\
+    \\def main() -> int:
+    \\    real = production.DiscountPrices.make(250)
+    \\    assert checkout.total(real, 2000) == 2250
+    \\    return 0
+;
+
+fn acceptNamedConstraintFake(testing_: *std.testing.TmpDir, allocator: std.mem.Allocator) !void {
+    const entry = try testing_.dir.realPathFileAlloc(testing.io, "fake_tests.my", allocator);
+    defer allocator.free(entry);
+    const result = try std.process.run(allocator, testing.io, .{ .argv = &.{ compiler_path, "test", entry, "--filter", "test_checkout" } });
+    defer allocator.free(result.stdout);
+    defer allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    // A warm cache reports the same outcome as `cached`; both mean the entry passed.
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "test_checkout") != null);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "0 failed") != null);
+}
+
+// spec: NAMED-CONSTRAINT-FIXTURE-1
+test "named constraints fake-only entry ignores an absent or invalid production module" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "contracts.my", .data = named_constraint_contracts });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "checkout.my", .data = named_constraint_checkout });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "fakes.my", .data = named_constraint_fakes });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "fake_tests.my", .data = named_constraint_fake_tests });
+    try acceptNamedConstraintFake(&temp, testing.allocator);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "production.my", .data = named_constraint_production_invalid });
+    try acceptNamedConstraintFake(&temp, testing.allocator);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = named_constraint_main });
+    const main_path = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(main_path);
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "run", main_path });
+    try args.appendSlice(testing.allocator, &tools);
+    const rejected = try std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+    defer testing.allocator.free(rejected.stdout);
+    defer testing.allocator.free(rejected.stderr);
+    try testing.expect(rejected.term != .exited or rejected.term.exited != 0);
+    try testing.expect(std.mem.indexOf(u8, rejected.stderr, "E_UNKNOWN_SYMBOL") != null);
+    try testing.expect(std.mem.indexOf(u8, rejected.stderr, "missing_name") != null);
+}

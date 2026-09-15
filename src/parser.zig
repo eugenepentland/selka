@@ -12,6 +12,7 @@ const lex = @import("lexer.zig");
 const Span = @import("source.zig").Span;
 const diagnostic = @import("diagnostic.zig");
 const byte_literal = @import("byte_literal.zig");
+const requirements = @import("generic_requirements.zig");
 const format_strings = @import("format_strings.zig");
 /// Tokens that may stand inside an explicit type-argument list: a name, a constant
 /// length, nested brackets, and every type the lexer spells as a keyword.
@@ -41,6 +42,14 @@ fn typeArgumentToken(tag: lex.Tag) bool {
     };
 }
 
+/// One `+`-separated requirement list split by form before it is attached to a
+/// type parameter or a constraint definition's subject.
+const RequirementCollections = struct {
+    builtins: std.ArrayList(Span) = .empty,
+    fields: std.ArrayList(ast.Parameter) = .empty,
+    operations: std.ArrayList(ast.Operation) = .empty,
+    names: std.ArrayList(ast.BoundReference) = .empty,
+};
 /// Token cursor and allocator-backed syntax builder with bounded recursive nesting.
 pub const Parser = struct {
     src: @import("source.zig").Source,
@@ -269,11 +278,18 @@ pub const Parser = struct {
         var domains: std.ArrayList(ast.Domain) = .empty;
         var resources: std.ArrayList(ast.Domain) = .empty;
         var variants: std.ArrayList(ast.Variants) = .empty;
+        var constraints: std.ArrayList(ast.Constraint) = .empty;
         while (self.current().tag != .eof) {
             if (self.module_syntax and self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "export")) {
                 self.cursor.pos += 1;
                 _ = try self.declaredName();
                 _ = try self.expect(.semicolon);
+                continue;
+            }
+            if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "constraint")) {
+                const head = self.current().span;
+                self.cursor.pos += 1;
+                try constraints.append(self.arena.allocator(), try self.constraintDeclaration(head));
                 continue;
             }
             if (self.take(.kw_type)) {
@@ -379,6 +395,7 @@ pub const Parser = struct {
                     .aliases = try self.syntax.types.aliases.toOwnedSlice(self.arena.allocator()),
                 },
                 .records = try records.toOwnedSlice(self.arena.allocator()),
+                .constraints = try constraints.toOwnedSlice(self.arena.allocator()),
             },
 
             .nodes = self.syntax.nodes,
@@ -470,40 +487,102 @@ pub const Parser = struct {
             }
             _ = try self.expect(.colon);
             if (constant_length) {
-                _ = try self.expect(.kw_u64);
+                if (self.current().tag != .kw_u64) return self.sink.fail(eRequirement, self.current().span, "named constraint bounds are not permitted on constant-length parameters");
+                _ = self.take(.kw_u64);
                 try parameters.append(self.arena.allocator(), .{ .name = name, .requirements = &.{}, .constant_length = true });
                 if (!self.take(.comma)) break;
                 continue;
             }
-            var requirements: std.ArrayList(Span) = .empty;
-            var fields: std.ArrayList(ast.Parameter) = .empty;
-            var operations: std.ArrayList(ast.Operation) = .empty;
-            while (true) {
-                const requirement = (try self.expect(.ident)).span;
-                if (requirements.items.len + fields.items.len + operations.items.len == 16) return self.sink.fail(eGenericLimit, requirement, "at most 16 requirements are permitted");
-                if (std.mem.eql(u8, self.src.text(requirement), "field")) {
-                    _ = try self.expect(.lparen);
-                    const field = try self.constraintParameter();
-                    _ = try self.expect(.rparen);
-                    try fields.append(self.arena.allocator(), field);
-                } else if (std.mem.eql(u8, self.src.text(requirement), "op")) {
-                    try operations.append(self.arena.allocator(), try self.operationConstraint());
-                } else {
-                    for (requirements.items) |previous| if (std.mem.eql(u8, self.src.text(previous), self.src.text(requirement))) return self.sink.fail(eRequirement, requirement, "duplicate type requirement");
-                    try requirements.append(self.arena.allocator(), requirement);
-                }
-                if (!self.take(.plus)) break;
-            }
+            var collected = try self.requirementList(true, null);
             try parameters.append(self.arena.allocator(), .{
                 .name = name,
-                .requirements = try requirements.toOwnedSlice(self.arena.allocator()),
-                .field_requirements = try fields.toOwnedSlice(self.arena.allocator()),
-                .operation_requirements = try operations.toOwnedSlice(self.arena.allocator()),
+                .requirements = try collected.builtins.toOwnedSlice(self.arena.allocator()),
+                .field_requirements = try collected.fields.toOwnedSlice(self.arena.allocator()),
+                .operation_requirements = try collected.operations.toOwnedSlice(self.arena.allocator()),
+                .named_requirements = try collected.names.toOwnedSlice(self.arena.allocator()),
             });
             if (!self.take(.comma)) break;
         }
         _ = try self.expect(.rbracket);
         return parameters.toOwnedSlice(self.arena.allocator());
+    }
+    /// Parse one `+`-separated requirement list, rejecting named references when
+    /// `allow_named` is false and reporting them against `owner` when it is the
+    /// declaration's own subject.
+    fn requirementList(self: *Parser, allow_named: bool, owner: ?Span) diagnostic.Error!RequirementCollections {
+        var result: RequirementCollections = .{};
+        const allocator = self.arena.allocator();
+        while (true) {
+            const requirement = (try self.expect(.ident)).span;
+            const text = self.src.text(requirement);
+            const count = result.builtins.items.len + result.fields.items.len + result.operations.items.len + result.names.items.len;
+            if (count == 16) return self.sink.fail(eGenericLimit, requirement, "at most 16 requirements are permitted");
+            if (std.mem.eql(u8, text, "field")) {
+                _ = try self.expect(.lparen);
+                const field = try self.constraintParameter();
+                _ = try self.expect(.rparen);
+                try result.fields.append(allocator, field);
+            } else if (std.mem.eql(u8, text, "op")) {
+                try result.operations.append(allocator, try self.operationConstraint());
+            } else if (std.meta.stringToEnum(requirements.Requirement, text) != null) {
+                for (result.builtins.items) |previous| if (std.mem.eql(u8, self.src.text(previous), text)) return self.sink.fail(eRequirement, requirement, "duplicate type requirement");
+                try result.builtins.append(allocator, requirement);
+            } else {
+                const reference = try self.boundReference(requirement);
+                if (!allow_named) {
+                    const self_reference = owner != null and reference.alias == null and std.mem.eql(u8, self.src.text(owner.?), self.src.text(reference.name));
+                    return self.sink.fail(eRequirement, requirement, if (self_reference) "a constraint definition cannot refer to itself" else "a constraint definition cannot reference another named constraint");
+                }
+                for (result.names.items) |previous| {
+                    const both_unqualified = previous.alias == null and reference.alias == null;
+                    const same_alias = both_unqualified or (previous.alias != null and reference.alias != null and std.mem.eql(u8, self.src.text(previous.alias.?), self.src.text(reference.alias.?)));
+                    const same_name = std.mem.eql(u8, self.src.text(previous.name), self.src.text(reference.name));
+                    if (same_alias and same_name) return self.sink.fail(eRequirement, requirement, "duplicate type requirement");
+                }
+                try result.names.append(allocator, reference);
+            }
+            if (!self.take(.plus)) break;
+        }
+        return result;
+    }
+    /// Parse one bound reference after its first identifier was consumed; a
+    /// qualified alias is only admitted in module syntax.
+    fn boundReference(self: *Parser, first: Span) diagnostic.Error!ast.BoundReference {
+        if (self.module_syntax and self.current().tag == .dot and self.syntax.import_aliases.contains(self.src.text(first)) and self.sameExpressionLine()) {
+            self.cursor.pos += 1;
+            const name = try self.declaredName();
+            try self.rejectBoundArguments();
+            return .{ .alias = first, .name = name };
+        }
+        try self.rejectBoundArguments();
+        return .{ .alias = null, .name = first };
+    }
+    fn rejectBoundArguments(self: *Parser) diagnostic.Error!void {
+        if (self.current().tag == .lbracket) return self.sink.fail(eRequirement, self.current().span, "a named constraint bound cannot take type arguments");
+    }
+    /// Parse `constraint NAME[SUBJECT] = REQUIREMENTS;` after its contextual head.
+    fn constraintDeclaration(self: *Parser, head: Span) diagnostic.Error!ast.Constraint {
+        const name = (try self.expect(.ident)).span;
+        _ = try self.expect(.lbracket);
+        if (self.current().tag != .ident) return self.sink.fail(syntax_code, self.current().span, "constraint subject must be one bare name");
+        const subject_name = (try self.expect(.ident)).span;
+        if (self.current().tag != .rbracket) return self.sink.fail(syntax_code, self.current().span, "constraint subject must be one bare name with no bound, default, or const parameter");
+        _ = try self.expect(.rbracket);
+        _ = try self.expect(.equal);
+        var collected = try self.requirementList(false, name);
+        const end = try self.expect(.semicolon);
+        const allocator = self.arena.allocator();
+        return .{
+            .name = name,
+            .span = .join(head, end.span),
+            .subject = .{
+                .name = subject_name,
+                .requirements = try collected.builtins.toOwnedSlice(allocator),
+                .field_requirements = try collected.fields.toOwnedSlice(allocator),
+                .operation_requirements = try collected.operations.toOwnedSlice(allocator),
+                .named_requirements = try collected.names.toOwnedSlice(allocator),
+            },
+        };
     }
     fn constraintParameter(self: *Parser) diagnostic.Error!ast.Parameter {
         const name = (try self.expect(.ident)).span;

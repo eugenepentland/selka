@@ -8,14 +8,39 @@ const diagnostic = @import("diagnostic.zig");
 const lexer = @import("lexer.zig");
 const parser = @import("parser.zig");
 const typed = @import("typed.zig");
+const generic_requirements = @import("generic_requirements.zig");
+const structural_declarations = @import("structural_declarations.zig");
 /// Distinguish type declarations from callable declarations during name resolution.
-pub const Kind = enum { type, function };
+pub const Kind = enum { type, function, constraint };
 /// Identify a declaration by its module and local symbol index.
 pub const Identity = struct { module: usize, symbol: usize };
 /// Store declaration visibility and optional domain-owner restrictions.
 pub const Symbol = struct { name: []const u8, kind: Kind, span: source.Span, exported: bool = false, owner: ?[]const u8 = null, restricted: bool = false };
 /// Store parsed module declarations and their local name index.
 pub const Unit = struct { syntax: ast.Program, symbols: std.ArrayList(Symbol) = .empty, names: std.StringHashMapUnmanaged(usize) = .empty };
+/// One named bound resolution plus the caller-local span that exposed it.
+const BoundResolution = struct { identity: Identity, span: source.Span };
+/// A resolved constraint identity and the declaring syntax that describes it.
+const ConstraintResolution = struct { identity: Identity, declaration: *const ast.Constraint };
+/// Interface-time named-bound lookup that records each resolved constraint identity.
+const ConstraintLookup = struct {
+    index: *Index,
+    module: usize,
+    bounds: std.ArrayList(BoundResolution),
+    fn find(ctx: *anyopaque, reference: ast.BoundReference, sink: *diagnostic.Sink) diagnostic.Error!generic_requirements.Definition {
+        const self: *ConstraintLookup = @ptrCast(@alignCast(ctx));
+        const resolution = try self.index.constraintDeclaration(self.module, reference, sink);
+        const bound_span = if (reference.alias) |alias| source.Span.join(alias, reference.name) else reference.name;
+        try self.bounds.append(self.index.project.arena.allocator(), .{ .identity = resolution.identity, .span = bound_span });
+        return .{
+            .module = resolution.identity.module,
+            .name = resolution.declaration.name,
+            .subject = resolution.declaration.subject.name,
+            .scope = resolution.declaration.span,
+            .body = &resolution.declaration.subject,
+        };
+    }
+};
 /// Storage belongs to project.arena. Do not retain this index after project.deinit.
 pub const Index = struct {
     project: *graph.Project,
@@ -64,6 +89,35 @@ pub const Index = struct {
         if (symbol.restricted and !sameOwner(target == from, owner, symbol.owner.?)) return self.project.fail("E_PRIVATE_FUNCTION", "private domain function requires the same declaring domain", site, declaration);
         if (symbol.kind != kind) return self.project.fail("E_SYMBOL_KIND", "declaration has the wrong kind for this reference", site, declaration);
         return .{ .module = target, .symbol = symbol_id };
+    }
+    fn resolveConstraint(self: *Index, module: usize, reference: ast.BoundReference, sink: *diagnostic.Sink) diagnostic.Error!Identity {
+        const src = self.project.modules.items[module].src;
+        const alias = if (reference.alias) |span| src.text(span) else null;
+        return self.resolve(.{
+            .from = module,
+            .alias = alias,
+            .name = src.text(reference.name),
+            .kind = .constraint,
+            .owner = null,
+            .span = reference.name,
+        }) catch |err| {
+            if (err != error.SourceError) return err;
+            const problem = self.project.problem orelse return error.InternalError;
+            if (std.mem.eql(u8, problem.code, "E_UNKNOWN_SYMBOL")) return sink.fail(
+                diagnostic.generic_requirement,
+                reference.name,
+                "unknown requirement; expected copy, equality, integer, codec, storable, or a declared constraint",
+            );
+            return sink.fail(problem.code, problem.site.span, problem.message);
+        };
+    }
+    fn constraintDeclaration(self: *Index, module: usize, reference: ast.BoundReference, sink: *diagnostic.Sink) diagnostic.Error!ConstraintResolution {
+        const identity = try self.resolveConstraint(module, reference, sink);
+        const symbol = self.units[identity.module].symbols.items[identity.symbol];
+        for (self.units[identity.module].syntax.types.constraints) |*constraint| {
+            if (constraint.name.start == symbol.span.start and constraint.name.end == symbol.span.end) return .{ .identity = identity, .declaration = constraint };
+        }
+        return error.InternalError;
     }
     fn signatureType(self: *Index, module: usize, span: source.Span) diagnostic.Error!void {
         const syntax = self.units[module].syntax;
@@ -144,25 +198,44 @@ pub const Index = struct {
         }
         return &.{};
     }
-    fn checkNominalParameters(self: *Index, module: usize, parameters: []const ast.TypeParameter) diagnostic.Error!void {
-        try self.checkGenericRequirements(module, parameters);
+    fn checkParameterShadowing(self: *Index, module: usize, parameter: ast.TypeParameter) diagnostic.Error!void {
         const src = self.project.modules.items[module].src;
-        for (parameters) |parameter| {
-            const name = src.text(parameter.name);
-            const site: graph.Site = .{ .module = module, .span = parameter.name };
-            if (self.units[module].names.get(name)) |symbol| return self.project.fail("E_SHADOWING", "type parameter shadows a module declaration", site, .{ .module = module, .span = self.units[module].symbols.items[symbol].span });
-            for (self.project.modules.items[module].imports) |imported| {
-                if (std.mem.eql(u8, name, imported.alias)) return self.project.fail("E_SHADOWING", "type parameter shadows an import alias", site, .{ .module = module, .span = imported.span });
-            }
+        const name = src.text(parameter.name);
+        const site: graph.Site = .{ .module = module, .span = parameter.name };
+        if (typed.Type.fromName(name) != null) return self.project.fail("E_GENERIC_PARAMETER", "type parameter cannot shadow a builtin type", site, null);
+        if (self.units[module].names.get(name)) |symbol| return self.project.fail("E_SHADOWING", "type parameter shadows a module declaration", site, .{ .module = module, .span = self.units[module].symbols.items[symbol].span });
+        for (self.project.modules.items[module].imports) |imported| {
+            if (std.mem.eql(u8, name, imported.alias)) return self.project.fail("E_SHADOWING", "type parameter shadows an import alias", site, .{ .module = module, .span = imported.span });
         }
     }
-    fn checkGenericRequirements(self: *Index, module: usize, parameters: []const ast.TypeParameter) diagnostic.Error!void {
-        var sink: diagnostic.Sink = .{ .allocator = self.project.arena.allocator() };
-        _ = @import("generic_requirements.zig").resolve(sink.allocator, self.project.modules.items[module].src, parameters, &sink) catch |err| {
-            if (err != error.SourceError) return err;
-            const problem = sink.items.items[0];
-            return self.project.fail(problem.code, problem.message, .{ .module = module, .span = problem.span }, null);
+    fn checkNominalParameters(self: *Index, module: usize, parameters: []const ast.TypeParameter) diagnostic.Error!void {
+        for (parameters) |parameter| if (parameter.named_requirements.len != 0) {
+            const reference = parameter.named_requirements[0];
+            return self.project.fail(
+                diagnostic.generic_requirement,
+                "named constraints may only bound function type parameters",
+                .{ .module = module, .span = boundSpan(reference) },
+                null,
+            );
         };
+        _ = try self.checkGenericRequirements(module, parameters);
+        for (parameters) |parameter| try self.checkParameterShadowing(module, parameter);
+    }
+    fn checkGenericRequirements(self: *Index, module: usize, parameters: []const ast.TypeParameter) diagnostic.Error![]const BoundResolution {
+        const allocator = self.project.arena.allocator();
+        var sink: diagnostic.Sink = .{ .allocator = allocator };
+        var lookup_state: ConstraintLookup = .{ .index = self, .module = module, .bounds = .empty };
+        const lookup: generic_requirements.Lookup = .{ .ctx = &lookup_state, .find = ConstraintLookup.find };
+        generic_requirements.validateBounds(allocator, self.project.modules.items[module].src, parameters, &sink, lookup) catch |err| {
+            if (err != error.SourceError) return err;
+            return self.emitSinkProblem(module, &sink);
+        };
+        return lookup_state.bounds.toOwnedSlice(allocator);
+    }
+    fn emitSinkProblem(self: *Index, module: usize, sink: *diagnostic.Sink) diagnostic.Error {
+        if (sink.items.items.len == 0) return error.InternalError;
+        const problem = sink.items.items[0];
+        return self.project.fail(problem.code, problem.message, .{ .module = module, .span = problem.span }, null);
     }
     fn genericSignatureType(self: *Index, module: usize, span: source.Span, parameters: []const ast.TypeParameter) diagnostic.Error!void {
         const src = self.project.modules.items[module].src;
@@ -181,6 +254,39 @@ pub const Index = struct {
             return self.genericSignatureType(module, array.element, parameters);
         }
         try self.signatureType(module, span);
+    }
+    fn checkConstraint(self: *Index, module: usize, constraint: ast.Constraint) diagnostic.Error!void {
+        const project = self.project;
+        const src = project.modules.items[module].src;
+        if (constraint.subject.name.start == constraint.subject.name.end) return project.fail(
+            diagnostic.generic_requirement,
+            "constraint requires exactly one subject binder",
+            .{ .module = module, .span = constraint.name },
+            null,
+        );
+        if (constraint.subject.named_requirements.len != 0) {
+            const reference = constraint.subject.named_requirements[0];
+            return project.fail(
+                diagnostic.generic_requirement,
+                "a constraint right-hand side may not reference another named constraint",
+                .{ .module = module, .span = boundSpan(reference) },
+                null,
+            );
+        }
+        try self.checkParameterShadowing(module, constraint.subject);
+        var sink: diagnostic.Sink = .{ .allocator = project.arena.allocator() };
+        structural_declarations.validate(src, constraint.subject, parameterCopy(src, constraint.subject), &sink) catch |err| {
+            if (err != error.SourceError) return err;
+            return self.emitSinkProblem(module, &sink);
+        };
+        const symbol_id = self.units[module].names.get(src.text(constraint.name)) orelse return error.InternalError;
+        if (!self.units[module].symbols.items[symbol_id].exported) return;
+        const parameters: [1]ast.TypeParameter = .{constraint.subject};
+        for (constraint.subject.field_requirements) |field| try self.genericSignatureType(module, field.ty, &parameters);
+        for (constraint.subject.operation_requirements) |operation| {
+            for (operation.parameters) |input| try self.genericSignatureType(module, input.ty, &parameters);
+            try self.genericSignatureType(module, operation.return_type, &parameters);
+        }
     }
     fn checkSignatures(self: *Index, module: usize) diagnostic.Error!void {
         const project = self.project;
@@ -202,11 +308,23 @@ pub const Index = struct {
         for (unit.syntax.types.domains) |domain| {
             if (unit.symbols.items[unit.names.get(project.modules.items[module].src.text(domain.name)).?].exported) try self.signatureType(module, domain.backing);
         }
+        for (unit.syntax.types.constraints) |constraint| {
+            try self.checkConstraint(module, constraint);
+        }
         for (unit.syntax.functions) |function| {
-            try self.checkGenericRequirements(module, function.signature.type_parameters);
+            const bounds = try self.checkGenericRequirements(module, function.signature.type_parameters);
             const src = project.modules.items[module].src;
             const name = if (function.policy.owner) |owner| try std.fmt.allocPrint(allocator, "{s}.{s}", .{ src.text(owner), src.text(function.name) }) else src.text(function.name);
             if (!unit.symbols.items[unit.names.get(name).?].exported) continue;
+            for (bounds) |bound| {
+                const symbol = unit.symbols.items[bound.identity.symbol];
+                if (!symbol.exported) return project.fail(
+                    "E_PRIVATE_INTERFACE",
+                    "exported generic function exposes an unexported constraint",
+                    .{ .module = module, .span = bound.span },
+                    .{ .module = bound.identity.module, .span = symbol.span },
+                );
+            }
             for (function.signature.type_parameters) |parameter| {
                 for (parameter.field_requirements) |field| try self.genericSignatureType(module, field.ty, function.signature.type_parameters);
                 for (parameter.operation_requirements) |operation| {
@@ -234,6 +352,17 @@ pub const Index = struct {
         return output.toOwnedSlice();
     }
 };
+fn boundSpan(reference: ast.BoundReference) source.Span {
+    return if (reference.alias) |alias| source.Span.join(alias, reference.name) else reference.name;
+}
+fn parameterCopy(src: source.Source, parameter: ast.TypeParameter) bool {
+    if (parameter.default_copy) return true;
+    for (parameter.requirements) |span| {
+        const name = src.text(span);
+        if (std.mem.eql(u8, name, "copy") or std.mem.eql(u8, name, "equality") or std.mem.eql(u8, name, "integer")) return true;
+    }
+    return false;
+}
 /// Parse and index every module before checking exported signature visibility.
 pub fn build(project: *graph.Project) (diagnostic.Error || error{IncompleteProject})!Index {
     return buildWithCache(project, null, null);
@@ -253,6 +382,7 @@ pub fn buildWithCache(project: *graph.Project, cache: ?*@import("syntax_cache.zi
             for (@field(syntax.types, field)) |declaration| try index.add(module_id, declaration.name, .type, null, false);
         }
         for (syntax.types.expressions.aliases) |alias| try index.add(module_id, alias.name, .type, null, false);
+        for (syntax.types.constraints) |constraint| try index.add(module_id, constraint.name, .constraint, null, false);
         for (syntax.functions) |function| try index.add(module_id, function.name, .function, function.policy.owner, function.policy.restricted);
         for (module.exports) |exported| {
             const id = index.units[module_id].names.get(exported.name) orelse return project.fail("E_UNKNOWN_EXPORT", "export names no local declaration", .{ .module = module_id, .span = exported.span }, null);
