@@ -374,7 +374,7 @@ the same value, written without an exponent.
 
 ```text
 # doc: not-mylang
-record Pool[T: copy + storable]: ...  class Handle[T: copy + storable]: ...
+record Pool[T: copy + storable]: ...  record Handle[T: copy + storable]: ...
 
 create[T: copy + storable](values: list[T]) -> Pool[T]
 insert[T: copy + storable](store: Pool[T], value: T) -> Handle[T]
@@ -489,7 +489,7 @@ def main() -> int:
 
 ```text
 # doc: not-mylang
-record Duration:                      class Instant:
+record Duration:                      record Instant:
     nanoseconds: int                     unix_nanoseconds: int
 
 nanoseconds(count: int) -> Duration

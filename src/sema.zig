@@ -561,6 +561,16 @@ const Checker = struct {
     fn initIntersect(self: *Checker, state: []const bool) void {
         for (self.locals.items, 0..) |*local, index| local.ownership.initialized = local.ownership.initialized and (index < state.len and state[index]);
     }
+    /// Merge one continuing match arm's definite-assignment snapshot into the
+    /// intersection over all continuing arms.
+    fn mergeMatchInit(self: *Checker, merged: *?[]bool) Error!void {
+        const current = try self.initSnapshot();
+        if (merged.*) |prior| {
+            self.initRestore(prior);
+            self.initIntersect(current);
+            merged.* = try self.initSnapshot();
+        } else merged.* = current;
+    }
     const Literal = integer_literal.Literal;
     fn literal(self: *Checker, span: source.Span, allow_minimum: bool) Error!Literal {
         return integer_literal.parse(self.src, span, allow_minimum, self.sink);
@@ -2876,14 +2886,19 @@ const Checker = struct {
         @memset(seen, null);
         var arms: std.ArrayList(typed.MatchArm) = .empty;
         const before = try self.pendingState(self.locals.items.len);
+        const init_before = try self.initSnapshot();
         var continuation: ?[]Pending = null;
+        var continuation_init: ?[]bool = null;
         flow.terminates = true;
         for (match.arms, 0..) |arm, position| {
             self.restorePending(before);
+            // Every arm starts from the same pre-match definite-assignment state.
+            self.initRestore(init_before);
             if (wildcard(self.src, arm)) {
                 if (position + 1 != match.arms.len) return self.sink.fail(eWildcardArm, arm.name, "`case _` must be the last arm of a match");
                 const body = try self.statement(arm.body);
                 if (!body.terminates) {
+                    try self.mergeMatchInit(&continuation_init);
                     if (continuation) |state| try self.samePending(state, stmt.span, eResultPath) else continuation = try self.pendingState(before.len);
                 }
                 flow.terminates = flow.terminates and body.terminates;
@@ -2905,8 +2920,9 @@ const Checker = struct {
                 },
             );
             const first_local = self.locals.items.len;
-            defer for (self.locals.items[first_local..]) |local| {
-                _ = self.active.remove(local.name);
+            var payload_name: ?[]const u8 = null;
+            defer if (payload_name) |name| {
+                _ = self.active.remove(name);
             };
             var slot: ?typed.LocalId = null;
             if (arm.binding) |binding| {
@@ -2924,9 +2940,11 @@ const Checker = struct {
                     .mutable = false,
                 });
                 try self.active.put(self.allocator, name, slot.?);
+                payload_name = name;
             }
             var body = try self.statement(arm.body);
             if (!body.terminates) {
+                try self.mergeMatchInit(&continuation_init);
                 try self.requireHandled(first_local, stmt.span);
                 if (slot) |payload_slot| if (try self.needsLocalCleanup(payload.?)) {
                     const children = try self.allocator.dupe(typed.StatementId, &.{body.id});
@@ -2944,6 +2962,7 @@ const Checker = struct {
             return self.sink.failRelated("E_INCOMPLETE_MATCH", stmt.span, message, .{ .span = variant.declaration, .message = "unhandled variant declared here" });
         };
         if (continuation) |state| self.restorePending(state);
+        if (continuation_init) |state| self.initRestore(state) else self.initRestore(init_before);
         return .{ .match = .{ .value = value, .arms = try arms.toOwnedSlice(self.allocator) } };
     }
     fn statementDiscard(self: *Checker, stmt: ast.Statement, expr: @FieldType(@FieldType(ast.Statement, "data"), "discard"), _: *StatementFlow) Error!@FieldType(typed.Statement, "data") {

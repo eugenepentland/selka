@@ -29,7 +29,7 @@ Expensive geometry can remain in Zig/C/Rust behind explicit typed wrappers.
 QBE is the only native backend. LLVM and a custom native backend remain future
 work.
 
-The language reads like Python: `def`, `class`, indented blocks, ordinary
+The language reads like Python: `def`, `record`, indented blocks, ordinary
 assignments, `list[T]`, strings, dictionaries, and tracing GC — with static types
 and checked results kept explicit. [The language guide](docs/python-syntax.md)
 covers it; see the [GC example](examples/gc-default/main.my) and

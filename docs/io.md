@@ -111,7 +111,7 @@ The entry point declares the authority it needs by parameter type. `Filesystem`,
 existing `filesystem_cap`, `network_cap`, `clock_cap`, `random_cap` and
 `environment_cap` types, and name exactly the same checked types. They resolve
 only when no declared or imported type claims the name, so a module with its own
-`class Clock` still gets its own type.
+`record Clock` still gets its own type.
 
 `mylang run` and `run-project` grant every capability by default: the filesystem
 with no directory restriction, the clock, entropy and the whole process

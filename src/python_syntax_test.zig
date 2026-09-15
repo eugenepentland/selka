@@ -231,6 +231,109 @@ test "PY-SCOPE-2 reading a name unbound on some path is rejected" {
     , "E_UNBOUND");
 }
 
+const match_choice =
+    \\enum Choice:
+    \\    first,
+    \\    second
+    \\
+    \\
+;
+
+// spec: PY-SCOPE-3
+test "match merges definite assignment across continuing arms" {
+    // Every continuing arm assigns the same function-scoped local.
+    try t.expectEqual(@as(i64, 42), try scopeValue(match_choice ++
+        \\def main() -> int:
+        \\    match Choice.first:
+        \\        case Choice.first:
+        \\            answer = 42
+        \\        case Choice.second:
+        \\            answer = 0
+        \\    return answer
+    ));
+    // A terminating arm contributes no continuing path.
+    try t.expectEqual(@as(i64, 42), try scopeValue(match_choice ++
+        \\def main() -> int:
+        \\    match Choice.first:
+        \\        case Choice.first:
+        \\            return 42
+        \\        case Choice.second:
+        \\            answer = 0
+        \\    return answer
+    ));
+    // The wildcard body is the continuation path for every variant it covers.
+    try t.expectEqual(@as(i64, 42), try scopeValue(match_choice ++
+        \\def main() -> int:
+        \\    match Choice.first:
+        \\        case Choice.first:
+        \\            return 42
+        \\        case _:
+        \\            answer = 0
+        \\    return answer
+    ));
+    // A predeclared local is already definite, even when one arm skips it.
+    try t.expectEqual(@as(i64, 42), try scopeValue(match_choice ++
+        \\def main() -> int:
+        \\    answer = 0
+        \\    match Choice.first:
+        \\        case Choice.first:
+        \\            answer = 42
+        \\        case Choice.second:
+        \\            pass
+        \\    return answer
+    ));
+}
+
+// spec-case: PY-SCOPE-3
+test "match rejects locals unassigned on a continuing arm" {
+    try scopeReject(match_choice ++
+        \\def main() -> int:
+        \\    match Choice.first:
+        \\        case Choice.first:
+        \\            answer = 42
+        \\        case Choice.second:
+        \\            pass
+        \\    return answer
+    , "E_UNBOUND");
+    // An assignment in a terminating arm does not bind the continuing path.
+    try scopeReject(match_choice ++
+        \\def main() -> int:
+        \\    match Choice.first:
+        \\        case Choice.first:
+        \\            answer = 42
+        \\            return answer
+        \\        case Choice.second:
+        \\            pass
+        \\    return answer
+    , "E_UNBOUND");
+    // A wildcard continuation that does not assign cannot consume another
+    // arm's assignment.
+    try scopeReject(match_choice ++
+        \\def main() -> int:
+        \\    match Choice.first:
+        \\        case Choice.first:
+        \\            answer = 42
+        \\        case _:
+        \\            pass
+        \\    return answer
+    , "E_UNBOUND");
+}
+
+// spec-case: PY-SCOPE-3
+test "match payload bindings remain scoped to their arm" {
+    try scopeReject(
+        \\union Box:
+        \\    only: int
+        \\
+        \\
+        \\def main() -> int:
+        \\    match Box.only(42):
+        \\        case Box.only(value):
+        \\            pass
+        \\    return value
+    , "E_UNKNOWN_NAME");
+}
+
 // spec: PY-RECORD-1
 test "record is the canonical declaration head without reserving the name" {
     try t.expectEqual(@as(i64, 42), try scopeValue(

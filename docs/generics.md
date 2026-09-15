@@ -33,7 +33,7 @@ def main() -> int:
 
 ## Generic records and unions
 
-`class Name[T]:` and `union Name[T]:` take the same parameter lists. An instance
+`record Name[T]:` and `union Name[T]:` take the same parameter lists. An instance
 is identified by the declaration plus its ordered arguments, so `Box[int]` and
 `Box[bool]` are unrelated types that never share a schema, and two declarations
 with identical fields stay distinct. Construct a generic record with its
