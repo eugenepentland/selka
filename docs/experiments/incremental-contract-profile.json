@@ -2,6 +2,12 @@
   "version": "incremental-contract-profile-v1",
   "workload": "selfhost/prototype/bench.my",
   "scope": "single-module compiler-shaped lexer/builder workload; private-body edit only; local sequential checking, cold includes process startup",
+  "machine": {
+    "hostname": "linuxserver",
+    "platform": "Linux 7.0.0-31-generic x86_64",
+    "logical_cpus": 20,
+    "note": "Debug compiler build; benchmark measured while the machine was otherwise idle."
+  },
   "edit": {
     "before": "line_count = 4000",
     "after": "line_count = 4001"

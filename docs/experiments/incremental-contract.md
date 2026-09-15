@@ -146,7 +146,9 @@ The reference compiler-shaped workload is
 [`selfhost/prototype/bench.my`](../../selfhost/prototype/bench.my), a
 4,000-piece source builder and lexer. On the recorded reference machine, a
 private-body edit (`line_count = 4000` to `4001`) measured through
-`scripts/profile_development.py` with five samples is:
+`scripts/profile_development.py` with seven samples on the named reference
+machine (`linuxserver`, Linux 7.0.0 x86_64, 20 logical CPUs, Debug compiler
+build) is:
 
 ```text
 cold check    median 20.4 ms  p95 23.2 ms
