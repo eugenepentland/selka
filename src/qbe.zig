@@ -73,7 +73,7 @@ pub fn generateWithInterface(allocator: std.mem.Allocator, program: bytecode.Pro
         .schema = interface.schema,
         .runtime_data = runtime_data,
         .version = "qbe-units-v1",
-        .abi = "mylang-qbe-native-v3",
+        .abi = "mylang-qbe-native-v4",
         .functions = units,
         .entry = units[@backingInt(program.main)].symbol,
     }, .{});

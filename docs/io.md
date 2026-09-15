@@ -114,6 +114,30 @@ follow the same rule. An entry point may also return `Result[int, str]`:
 low eight bits, so `Ok(300)` exits 44. `--print-result` still prints the carried
 integer status, independent of the diagnostic on stderr.
 
+## Runtime diagnostics
+
+A native trap keeps its original code, primary location, call stack and omitted
+frame count. Where the failing operation already evaluated the values, the trap
+also carries a bounded versioned detail: bounds failures report the original
+index (negative values preserved) and the receiver length; integer division and
+checked overflow report the evaluated operands and width where available. A trap
+is sticky: the first trap's detail is retained even if later operations would
+also fail.
+
+`mylang run` renders that detail in text and, with `--diagnostics json`, under
+`trap_detail` in the structured diagnostic. Both come from the same captured
+values, so text does not reparse its own output and no receiver, index or
+expression is reevaluated for a diagnostic. Detail-free traps (step and memory
+budgets, capability and host failures) omit the field. Guests are separate
+native processes, so children emit exactly one newline-terminated record
+`\x1eMYLANG-TRAP ` followed by a bounded JSON object on standard error; a host
+that sees no record behaves exactly as before, and ordinary standard output,
+diagnostics and exit statuses are unchanged.
+
+```text
+example.my:2:12: error[R_LIST_BOUNDS]: native execution failed (index 14, length 1)
+```
+
 ## Arguments
 
 A `main(args: list[str], ...)` entry point receives guest arguments as input

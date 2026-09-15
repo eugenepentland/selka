@@ -229,7 +229,7 @@ test "native execution reports entry results, guest output and located traps" {
     try std.testing.expectEqual(@as(i64, 0), failure.trap.detail.values.right);
 }
 
-// spec-case: QBE-2
+// spec: QBE-TRAP-DETAIL-1
 test "native execution reports original bounds indexes for read write pop array text and bytes" {
     const Case = struct {
         source: []const u8,
@@ -271,7 +271,7 @@ test "native execution reports original bounds indexes for read write pop array 
     }
 }
 
-// spec-case: QBE-2
+// spec-case: QBE-TRAP-DETAIL-1
 test "native execution keeps the first trap detail and leaves budget traps detail-free" {
     var first = try language.Compilation.init(std.testing.allocator, "first.my",
         \\def main() -> i64:

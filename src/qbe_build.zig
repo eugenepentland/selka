@@ -13,7 +13,7 @@ pub const Error = fs.Error || std.json.ParseError(std.json.Scanner) || outputs.E
     @import("qbe_build_embed.zig").Error || cache_api.Error ||
     @import("memory_budget").Error ||
     error{ UnsupportedNativeHost, ZigVersionMismatch, InvalidNativeManifest };
-const abi = "mylang-qbe-native-v3";
+const abi = "mylang-qbe-native-v4";
 const Record = struct { name: []const u8, symbol: []const u8, key: []const u8, object: []const u8, reused: bool };
 /// Fixed runtime translation units archived together once per build environment.
 const runtime_units = [_][]const u8{
@@ -460,7 +460,7 @@ test "native build rejects incompatible tools targets and malformed manifests" {
     try std.testing.expectError(error.ZigVersionMismatch, checkVersion("unrelated-version"));
     try std.testing.expectError(error.InvalidNativeManifest, validate(.null));
     const value = try std.json.parseFromSlice(std.json.Value, std.testing.allocator,
-        \\{"version":"qbe-units-v1","abi":"mylang-qbe-native-v3","entry":"1bad","functions":[{"symbol":"1bad","il":""}]}
+        \\{"version":"qbe-units-v1","abi":"mylang-qbe-native-v4","entry":"1bad","functions":[{"symbol":"1bad","il":""}]}
     , .{});
     defer value.deinit();
     try std.testing.expectError(error.InvalidNativeManifest, validate(value.value));
