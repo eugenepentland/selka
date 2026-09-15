@@ -1,0 +1,201 @@
+workload,family,target_lines,state,sample,wall_ms,peak_rss_kb,exit,timed_out,parsed_performed,parsed_reused,checked_performed,checked_reused,specializations_performed,lowered_performed,emitted_performed,links_performed,tests_performed,tests_cached,tests_executed,reused_results,bypassed
+maintained-guest,maintained,,cold,0,135.313,31020,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,cold,1,136.056,31244,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,cold,2,132.331,31536,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,cold,3,124.393,31504,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,cold,4,126.733,31156,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,cold,5,130.784,31052,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,cold,6,129.711,31180,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,cold,7,139.939,31088,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,cold,8,128.273,31248,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,cold,9,129.115,31116,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,cold,10,133.192,31180,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,cold,11,130.216,31096,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,cold,12,126.391,31300,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,cold,13,129.759,31344,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,cold,14,127.598,31504,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,cold,15,127.441,31152,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,cold,16,131.920,31504,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,cold,17,127.568,31504,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,cold,18,135.036,31244,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,cold,19,125.892,31260,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,unchanged,0,42.908,16024,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-guest,maintained,,unchanged,1,44.219,16024,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-guest,maintained,,unchanged,2,48.102,16028,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-guest,maintained,,unchanged,3,37.796,16032,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-guest,maintained,,unchanged,4,37.314,16032,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-guest,maintained,,unchanged,5,46.150,16036,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-guest,maintained,,unchanged,6,46.062,16040,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-guest,maintained,,unchanged,7,39.551,16044,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-guest,maintained,,unchanged,8,44.327,16044,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-guest,maintained,,unchanged,9,50.619,16044,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-guest,maintained,,unchanged,10,50.776,16048,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-guest,maintained,,unchanged,11,41.534,16048,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-guest,maintained,,unchanged,12,37.110,16052,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-guest,maintained,,unchanged,13,46.704,16056,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-guest,maintained,,unchanged,14,41.921,16060,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-guest,maintained,,unchanged,15,40.761,16064,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-guest,maintained,,unchanged,16,49.074,16068,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-guest,maintained,,unchanged,17,39.071,16068,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-guest,maintained,,unchanged,18,39.625,16072,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-guest,maintained,,unchanged,19,38.587,16076,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-guest,maintained,,no_cache,0,100.720,31144,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-guest,maintained,,no_cache,1,95.370,31304,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-guest,maintained,,no_cache,2,96.376,31304,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-guest,maintained,,no_cache,3,97.150,31240,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-guest,maintained,,no_cache,4,95.920,31304,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-guest,maintained,,no_cache,5,100.156,31144,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-guest,maintained,,no_cache,6,99.749,31268,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-guest,maintained,,no_cache,7,100.241,31272,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-guest,maintained,,no_cache,8,96.906,31276,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-guest,maintained,,no_cache,9,97.876,31108,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-guest,maintained,,no_cache,10,100.199,31012,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-guest,maintained,,no_cache,11,101.623,31304,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-guest,maintained,,no_cache,12,98.344,31368,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-guest,maintained,,no_cache,13,97.726,31368,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-guest,maintained,,no_cache,14,105.726,31108,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-guest,maintained,,no_cache,15,95.448,31304,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-guest,maintained,,no_cache,16,105.065,31088,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-guest,maintained,,no_cache,17,106.997,31108,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-guest,maintained,,no_cache,18,95.735,31208,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-guest,maintained,,no_cache,19,104.188,31108,0,False,14,0,114,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-guest,maintained,,implementation_edit,0,102.343,28592,0,False,1,13,115,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,implementation_edit,1,106.362,28560,0,False,1,13,115,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,implementation_edit,2,111.810,28460,0,False,1,13,115,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,implementation_edit,3,105.744,28624,0,False,1,13,115,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,implementation_edit,4,103.848,28880,0,False,1,13,115,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,implementation_edit,5,107.177,28720,0,False,1,13,115,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,implementation_edit,6,105.559,28620,0,False,1,13,115,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,implementation_edit,7,107.213,28656,0,False,1,13,115,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,implementation_edit,8,110.337,28656,0,False,1,13,115,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,implementation_edit,9,106.275,28720,0,False,1,13,115,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,implementation_edit,10,115.297,28684,0,False,1,13,115,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,implementation_edit,11,111.114,28592,0,False,1,13,115,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,implementation_edit,12,106.764,28880,0,False,1,13,115,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,implementation_edit,13,109.272,28784,0,False,1,13,115,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,implementation_edit,14,114.396,28684,0,False,1,13,115,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,implementation_edit,15,115.786,28524,0,False,1,13,115,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,implementation_edit,16,113.764,28524,0,False,1,13,115,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,implementation_edit,17,110.857,28620,0,False,1,13,115,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,implementation_edit,18,113.099,28684,0,False,1,13,115,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,implementation_edit,19,118.979,28684,0,False,1,13,115,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-guest,maintained,,session_implementation_edit,0,73.450,,,,,,,,,,,,,,,,
+maintained-guest,maintained,,session_implementation_edit,1,72.610,,,,,,,,,,,,,,,,
+maintained-guest,maintained,,session_implementation_edit,2,72.434,,,,,,,,,,,,,,,,
+maintained-guest,maintained,,session_implementation_edit,3,72.865,,,,,,,,,,,,,,,,
+maintained-guest,maintained,,session_implementation_edit,4,73.323,,,,,,,,,,,,,,,,
+maintained-guest,maintained,,session_implementation_edit,5,70.311,,,,,,,,,,,,,,,,
+maintained-guest,maintained,,session_implementation_edit,6,71.654,,,,,,,,,,,,,,,,
+maintained-guest,maintained,,session_implementation_edit,7,72.833,,,,,,,,,,,,,,,,
+maintained-guest,maintained,,session_implementation_edit,8,73.719,,,,,,,,,,,,,,,,
+maintained-guest,maintained,,session_implementation_edit,9,73.166,,,,,,,,,,,,,,,,
+maintained-guest,maintained,,session_implementation_edit,10,72.934,,,,,,,,,,,,,,,,
+maintained-guest,maintained,,session_implementation_edit,11,73.520,,,,,,,,,,,,,,,,
+maintained-guest,maintained,,session_implementation_edit,12,108.371,,,,,,,,,,,,,,,,
+maintained-guest,maintained,,session_implementation_edit,13,157.955,,,,,,,,,,,,,,,,
+maintained-guest,maintained,,session_implementation_edit,14,169.635,,,,,,,,,,,,,,,,
+maintained-guest,maintained,,session_implementation_edit,15,169.507,,,,,,,,,,,,,,,,
+maintained-guest,maintained,,session_implementation_edit,16,152.691,,,,,,,,,,,,,,,,
+maintained-guest,maintained,,session_implementation_edit,17,93.640,,,,,,,,,,,,,,,,
+maintained-guest,maintained,,session_implementation_edit,18,105.997,,,,,,,,,,,,,,,,
+maintained-guest,maintained,,session_implementation_edit,19,114.154,,,,,,,,,,,,,,,,
+maintained-prototype,maintained,,cold,0,46.991,17008,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-prototype,maintained,,cold,1,38.531,17012,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-prototype,maintained,,cold,2,49.426,17012,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-prototype,maintained,,cold,3,44.205,17016,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-prototype,maintained,,cold,4,39.229,17016,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-prototype,maintained,,cold,5,33.358,17024,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-prototype,maintained,,cold,6,31.023,17024,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-prototype,maintained,,cold,7,37.041,17024,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-prototype,maintained,,cold,8,43.024,17028,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-prototype,maintained,,cold,9,29.848,17036,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-prototype,maintained,,cold,10,39.296,17036,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-prototype,maintained,,cold,11,27.855,17036,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-prototype,maintained,,cold,12,40.981,17040,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-prototype,maintained,,cold,13,40.424,17048,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-prototype,maintained,,cold,14,41.716,16928,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-prototype,maintained,,cold,15,31.068,17052,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-prototype,maintained,,cold,16,25.435,17052,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-prototype,maintained,,cold,17,29.551,17060,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-prototype,maintained,,cold,18,29.448,17060,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-prototype,maintained,,cold,19,33.857,17060,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+maintained-prototype,maintained,,unchanged,0,23.789,17080,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,unchanged,1,14.020,17080,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,unchanged,2,13.876,17080,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,unchanged,3,21.808,17080,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,unchanged,4,18.496,17088,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,unchanged,5,19.274,17092,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,unchanged,6,22.128,17096,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,unchanged,7,18.959,17096,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,unchanged,8,19.975,17096,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,unchanged,9,23.677,17096,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,unchanged,10,18.452,17100,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,unchanged,11,20.036,17108,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,unchanged,12,19.952,17108,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,unchanged,13,20.722,17096,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,unchanged,14,19.485,17116,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,unchanged,15,20.298,17084,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,unchanged,16,22.014,17116,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,unchanged,17,19.651,17120,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,unchanged,18,15.443,17120,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,unchanged,19,23.751,17124,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,no_cache,0,26.617,17124,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-prototype,maintained,,no_cache,1,20.105,17128,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-prototype,maintained,,no_cache,2,24.134,17132,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-prototype,maintained,,no_cache,3,23.651,17136,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-prototype,maintained,,no_cache,4,20.484,17144,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-prototype,maintained,,no_cache,5,20.731,17144,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-prototype,maintained,,no_cache,6,21.915,17144,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-prototype,maintained,,no_cache,7,19.896,17148,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-prototype,maintained,,no_cache,8,21.332,17152,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-prototype,maintained,,no_cache,9,20.127,17152,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-prototype,maintained,,no_cache,10,22.157,17156,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-prototype,maintained,,no_cache,11,19.136,17164,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-prototype,maintained,,no_cache,12,19.883,17168,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-prototype,maintained,,no_cache,13,22.800,17172,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-prototype,maintained,,no_cache,14,20.372,17176,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-prototype,maintained,,no_cache,15,19.786,17176,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-prototype,maintained,,no_cache,16,22.086,17180,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-prototype,maintained,,no_cache,17,21.146,16992,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-prototype,maintained,,no_cache,18,25.709,17156,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-prototype,maintained,,no_cache,19,26.502,17192,0,False,2,0,22,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+maintained-prototype,maintained,,implementation_edit,0,16.322,17208,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,implementation_edit,1,16.132,17212,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,implementation_edit,2,18.434,17212,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,implementation_edit,3,17.065,17216,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,implementation_edit,4,14.504,17216,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,implementation_edit,5,24.520,17036,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,implementation_edit,6,21.359,17232,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,implementation_edit,7,15.135,17236,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,implementation_edit,8,14.125,17236,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,implementation_edit,9,16.143,17244,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,implementation_edit,10,18.971,17244,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,implementation_edit,11,14.291,17248,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,implementation_edit,12,21.477,17248,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,implementation_edit,13,23.354,17248,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,implementation_edit,14,15.841,17252,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,implementation_edit,15,20.383,17252,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,implementation_edit,16,14.096,17260,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,implementation_edit,17,16.522,17260,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,implementation_edit,18,23.801,17264,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,implementation_edit,19,18.294,17272,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+maintained-prototype,maintained,,session_implementation_edit,0,2.612,,,,,,,,,,,,,,,,
+maintained-prototype,maintained,,session_implementation_edit,1,2.440,,,,,,,,,,,,,,,,
+maintained-prototype,maintained,,session_implementation_edit,2,2.375,,,,,,,,,,,,,,,,
+maintained-prototype,maintained,,session_implementation_edit,3,2.533,,,,,,,,,,,,,,,,
+maintained-prototype,maintained,,session_implementation_edit,4,2.396,,,,,,,,,,,,,,,,
+maintained-prototype,maintained,,session_implementation_edit,5,2.579,,,,,,,,,,,,,,,,
+maintained-prototype,maintained,,session_implementation_edit,6,2.352,,,,,,,,,,,,,,,,
+maintained-prototype,maintained,,session_implementation_edit,7,2.391,,,,,,,,,,,,,,,,
+maintained-prototype,maintained,,session_implementation_edit,8,2.436,,,,,,,,,,,,,,,,
+maintained-prototype,maintained,,session_implementation_edit,9,2.402,,,,,,,,,,,,,,,,
+maintained-prototype,maintained,,session_implementation_edit,10,2.445,,,,,,,,,,,,,,,,
+maintained-prototype,maintained,,session_implementation_edit,11,2.363,,,,,,,,,,,,,,,,
+maintained-prototype,maintained,,session_implementation_edit,12,2.344,,,,,,,,,,,,,,,,
+maintained-prototype,maintained,,session_implementation_edit,13,2.318,,,,,,,,,,,,,,,,
+maintained-prototype,maintained,,session_implementation_edit,14,2.362,,,,,,,,,,,,,,,,
+maintained-prototype,maintained,,session_implementation_edit,15,2.320,,,,,,,,,,,,,,,,
+maintained-prototype,maintained,,session_implementation_edit,16,2.461,,,,,,,,,,,,,,,,
+maintained-prototype,maintained,,session_implementation_edit,17,2.355,,,,,,,,,,,,,,,,
+maintained-prototype,maintained,,session_implementation_edit,18,2.428,,,,,,,,,,,,,,,,
+maintained-prototype,maintained,,session_implementation_edit,19,2.443,,,,,,,,,,,,,,,,
