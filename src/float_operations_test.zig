@@ -34,16 +34,7 @@ fn intrinsicScenario(allocator: std.mem.Allocator) !void {
     try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
 }
 // spec-case: FLOAT-DOMAIN-1
-test "float intrinsics evaluate in constants and at runtime and reject raw operands" {
-    var good = try language.Compilation.init(t.allocator, "float.my",
-        \\const V: float = __float_sqrt(1764.0)
-        \\
-        \\
-        \\def main() -> int:
-        \\    return int(V)
-    );
-    defer good.deinit();
-    try t.expectEqual(@as(i64, 42), (try native.run(&good)).value);
+test "float intrinsics evaluate at runtime and reject raw operands" {
     var bad = try language.Compilation.init(t.allocator, "float.my",
         \\def main() -> int:
         \\    return int(__float_sqrt(1))

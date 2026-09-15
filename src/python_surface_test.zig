@@ -113,7 +113,12 @@ test "len and replace name ordinary declarations and members" {
         \\
         \\def main() -> int:
         \\    text = "a-b"
-        \\    return len(text.replace("-", "+")) * 14
+        \\    changed = text.replace("-", "+")
+        \\    if changed != "a+b":
+        \\        return 1
+        \\    if replace(21) != 42:
+        \\        return 2
+        \\    return len(41)
     , 42);
 }
 

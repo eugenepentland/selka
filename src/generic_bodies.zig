@@ -508,7 +508,7 @@ const Checker = struct {
             .strip, .lstrip, .rstrip, .upper, .lower, .replace, .zfill => owner,
             .is_digit, .is_alpha, .is_space => .{ .concrete = .bool },
             .count => .{ .concrete = .i64 },
-            .length => .{ .concrete = if (family == .list) typed.Type.u64 else .i64 },
+            .length => .{ .concrete = .i64 },
             .read, .get => element,
             .contains => .{ .concrete = .bool },
             .append, .write => .{ .concrete = .unit },
@@ -950,7 +950,7 @@ const Checker = struct {
                 if (self.shapes().managed(base)) break :result .{ .concrete = .i64 };
                 _ = try self.arrayShape(base, node.span);
                 if ((try self.requiresHandling(base))) return self.sink.fail(eResultOperation, node.span, "length would drop result-bearing elements");
-                break :result .{ .concrete = .u64 };
+                break :result .{ .concrete = .i64 };
             },
             .index => |access| result: {
                 const base = try self.expression(access.base);

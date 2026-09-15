@@ -46,15 +46,22 @@ test "generic instances distinguish nominal types with identical representation"
     defer compilation.deinit();
     try compilation.check();
     const records = compilation.program.?.records;
-    try t.expectEqual(@as(usize, 2), records.len);
-    try t.expectEqual(records[0].shape.domain, records[1].shape.domain);
+    var first: ?typed.Record = null;
+    var second: ?typed.Record = null;
+    for (records) |record| {
+        if (std.mem.eql(u8, record.name, "A")) first = record;
+        if (std.mem.eql(u8, record.name, "B")) second = record;
+    }
+    const a_record = first orelse return error.TestUnexpectedResult;
+    const b_record = second orelse return error.TestUnexpectedResult;
+    try t.expectEqual(a_record.shape.domain, b_record.shape.domain);
     var registry: Registry = .{};
     defer registry.deinit(t.allocator);
-    const a = try insert(&registry, t.allocator, 0, &.{records[0].id});
-    const b = try insert(&registry, t.allocator, 0, &.{records[1].id});
+    const a = try insert(&registry, t.allocator, 0, &.{a_record.id});
+    const b = try insert(&registry, t.allocator, 0, &.{b_record.id});
     const builtin = try insert(&registry, t.allocator, 0, &.{.i64});
     try t.expect(a != b and a != builtin and b != builtin);
-    try t.expectEqual(a, try insert(&registry, t.allocator, 0, &.{records[0].id}));
+    try t.expectEqual(a, try insert(&registry, t.allocator, 0, &.{a_record.id}));
 }
 test "generic instances limits preserve existing identities and ordered traversal" {
     var registry: Registry = .{};

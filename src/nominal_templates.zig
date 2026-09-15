@@ -222,6 +222,13 @@ pub const Index = struct {
             return .{ .parameter = id };
         }
         if (typed.Type.fromName(ctx.src.text(span))) |ty| return .{ .builtin = ty };
+        // Canonical capability/file spellings are scalar builtins, not nominal
+        // declarations, so a record field or array element reaches them here.
+        // A declared type of the same name still wins.
+        if (@import("prelude.zig").reservedType(ctx.src.text(span))) |reserved| {
+            const claimed = if (ctx.names) |names| (try names.symbolKind(span)) != null else self.names.contains(ctx.src.text(span));
+            if (!claimed) return .{ .builtin = reserved };
+        }
         if (self.syntax.aliases.count() != 0 and !(self.names.contains(ctx.src.text(span)) and self.declarations.items[self.names.get(ctx.src.text(span)).?].builtin_name != null)) {
             const alias_name = if (ctx.names) |names| try names.reference(span, .type, null, null, ctx.sink) else ctx.src.text(span);
             if (self.syntax.aliases.getPtr(alias_name)) |alias| {

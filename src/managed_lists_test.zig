@@ -355,5 +355,18 @@ test "a managed element declaration refuses a capability, directly or inside a r
         \\    values: list[Holder] = []
         \\    values.append(Holder(fs=fs))
         \\    return len(values)
+        ,
+        \\class Holder:
+        \\    fs: Filesystem
+        \\
+        \\
+        \\class Outer:
+        \\    holder: Holder
+        \\
+        \\
+        \\def main(fs: Filesystem) -> int:
+        \\    values: list[Outer] = []
+        \\    values.append(Outer(holder=Holder(fs=fs)))
+        \\    return len(values)
     }, "E_LIST_CAPABILITY");
 }

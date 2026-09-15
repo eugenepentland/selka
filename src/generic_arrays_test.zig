@@ -22,11 +22,11 @@ const helpers =
     \\
     \\
     \\def contains[T: equality](a: [2]T, n: T) -> bool:
-    \\    i = 0u64
+    \\    i = 0
     \\    while i < len(a):
     \\        if a[i] == n:
     \\            return True
-    \\        i = i + 1u64
+    \\        i = i + 1
     \\    return False
     \\
     \\
@@ -297,4 +297,17 @@ test "expanding generic array recursion stops at the specialization budget" {
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqualStrings("E_GENERIC_LIMIT", compilation.diagnostics.items[0].code);
     try t.expectEqualStrings("generic array specialization exceeds 4096 distinct shapes", compilation.diagnostics.items[0].message);
+}
+
+// spec-case: CANONICAL-LEN-1
+test "generic fixed array length is signed int like every other len" {
+    try value(t.allocator,
+        \\def count[T](a: [2]T) -> int:
+        \\    n: int = len(a)
+        \\    return n
+        \\
+        \\
+        \\def main() -> int:
+        \\    return count[int]([7, 8])
+    , 2);
 }
