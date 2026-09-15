@@ -9,6 +9,9 @@ pub const embed_prelude =
     \\#include <string.h>
     \\#include <stdlib.h>
     \\#include <stdatomic.h>
+    \\_Static_assert(sizeof(MylangTrapDetail)==sizeof(MylQbeTrapDetail),"trap detail ABI");
+    \\_Static_assert(offsetof(MylangTrapDetail,length)==offsetof(MylQbeTrapDetail,length),"trap detail layout");
+    \\_Static_assert(offsetof(MylangTrapDetail,operation)==offsetof(MylQbeTrapDetail,operation),"trap detail layout");
     \\static atomic_flag busy = ATOMIC_FLAG_INIT;
     \\static const MylangScalar *inputs;
     \\static size_t selected;
@@ -35,6 +38,7 @@ pub const embed_prelude =
     \\    out->status=status;out->steps=result.steps;out->code=result.code;
     \\    if (!status) memcpy(&out->value,&result.value,sizeof out->value);
     \\    out->frame_count=result.trace_count;out->omitted_frames=result.omitted_frames;
+    \\    memcpy(&out->trap_detail,&result.trap_detail,sizeof out->trap_detail);
     \\    for (uint64_t i=0;i<result.trace_count;++i)
     \\        out->frames[i]=(MylangRunFrame){result.trace[i].function,result.trace[i].path,result.trace[i].line,result.trace[i].column};
     \\    if (result.trace_count) {out->path=result.trace[0].path;out->line=result.trace[0].line;out->column=result.trace[0].column;}

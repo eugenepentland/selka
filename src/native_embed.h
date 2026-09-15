@@ -2,7 +2,7 @@
 #define MYLANG_NATIVE_EMBED_H
 #include <stdint.h>
 #include <stddef.h>
-#define MYLANG_NATIVE_EMBED_ABI 1
+#define MYLANG_NATIVE_EMBED_ABI 2
 /* Include native_providers.h first. Build generated C with MYLANG_EMBED.
    One generated program per linked library. No guest pointer escapes this ABI. */
 typedef struct {
@@ -10,6 +10,16 @@ typedef struct {
     const MylangNativeProviders *providers; /* NULL grants no external authority */
 } MylangRunOptions;
 typedef struct { const char *function, *path; size_t line, column; } MylangRunFrame;
+/* Bounded typed first-trap values, appended in native ABI v2. Mirror of
+   `MylQbeTrapDetail` in qbe_runtime.h; zero `version` means no detail. */
+typedef struct {
+    uint32_t version, present;
+    int64_t index;
+    uint64_t length;
+    int64_t left, right;
+    uint64_t width;
+    const char *operation;
+} MylangTrapDetail;
 typedef struct {
     int status; /* 0=value, 1=guest trap, 2=host failure (including Busy) */
     int64_t value;
@@ -17,6 +27,7 @@ typedef struct {
     const char *code, *path;
     size_t line, column, frame_count, omitted_frames;
     MylangRunFrame frames[16];
+    MylangTrapDetail trap_detail;
 } MylangRunResult;
 /* Diagnostic strings remain valid while the generated library is loaded.
    Each call resets guest state and releases guest storage before returning.

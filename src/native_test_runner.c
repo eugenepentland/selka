@@ -39,6 +39,10 @@ static void result(const MylangCodecResult *out, const MylangWireNode *nodes) {
     put_number(UINT64_C(0x3154534554594c4d));
     put_number((uint64_t)run->status); put_number(run->steps);
     put_number(out->value.node_count); put_number(run->frame_count); put_number(run->omitted_frames);
+    put_number(run->trap_detail.version); put_number(run->trap_detail.present);
+    put_number((uint64_t)run->trap_detail.index); put_number(run->trap_detail.length);
+    put_number((uint64_t)run->trap_detail.left); put_number((uint64_t)run->trap_detail.right);
+    put_number(run->trap_detail.width); put_string(run->trap_detail.operation);
     put_string(run->code); put_string(out->domain); put_number((uint64_t)out->rejected);
     if (run->frame_count > 16 || out->value.node_count > TEST_NODE_LIMIT) fail("InvalidNativeTestResponse");
     for (size_t i = 0; i < run->frame_count; ++i) {

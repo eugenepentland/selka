@@ -12,6 +12,7 @@ const native_build = @import("qbe_build.zig");
 const wiring = @import("wiring/native_session.zig");
 const budget = @import("memory_budget");
 const language = @import("compiler.zig");
+const trap_detail = @import("native_trap_detail.zig");
 
 /// Native build, tool and child-process failures a guest execution can report.
 pub const Error = wiring.Error || language.EmitNativeError ||
@@ -21,13 +22,15 @@ pub const Error = wiring.Error || language.EmitNativeError ||
 /// One native stack frame the runtime reported beneath a trap.
 pub const Frame = struct { function: []const u8, path: []const u8, line: u64, column: u64 };
 
-/// A native trap: the runtime code, the source position, and the reported frames.
+/// A native trap: the runtime code, the source position, the reported frames,
+/// and the bounded detail the runtime captured at the failing operation.
 pub const Trap = struct {
     code: []const u8,
     path: []const u8 = "",
     line: u64 = 0,
     column: u64 = 0,
     frames: []const Frame = &.{},
+    detail: trap_detail.Detail = .{},
 };
 
 /// One native execution: the entry point's result, the trap that ended the run,
@@ -135,7 +138,10 @@ fn spawn(executable: []const u8, options: Options) Error!Run {
     // its `--print-result` line to stdout, which `divide` reads.
     if (outcome.term != .exited or outcome.stderr.len != 0) {
         const trap = parse(allocator, outcome.stderr) catch Trap{ .code = "" };
-        return .{ .trap = trap, .stdout = outcome.stdout, .stderr = outcome.stderr, .status = status, .failed = true };
+        // The machine record is transport, not a diagnostic: keep `stderr` as the
+        // human text the caller saw before structured traps existed.
+        const cleaned = trap_detail.strip(allocator, outcome.stderr) catch outcome.stderr;
+        return .{ .trap = trap, .stdout = outcome.stdout, .stderr = cleaned, .status = status, .failed = true };
     }
     const reported = try divide(outcome.stdout);
     return .{ .value = reported.value, .stdout = reported.output, .stderr = outcome.stderr, .status = status };
@@ -166,6 +172,7 @@ fn divide(text: []const u8) Error!struct { output: []const u8, value: i64 } {
 fn parse(allocator: std.mem.Allocator, text: []const u8) Error!Trap {
     var lines = std.mem.splitScalar(u8, text, '\n');
     const first = lines.first();
+    const detail = trap_detail.parse(allocator, text) orelse trap_detail.Detail{};
     var frames: std.ArrayList(Frame) = .empty;
     while (lines.next()) |line| {
         if (!std.mem.startsWith(u8, line, "  in ")) continue;
@@ -173,15 +180,15 @@ fn parse(allocator: std.mem.Allocator, text: []const u8) Error!Trap {
         const place = position(line[split + 4 ..]) orelse continue;
         try frames.append(allocator, .{ .function = line[5..split], .path = place.path, .line = place.line, .column = place.column });
     }
-    if (std.mem.startsWith(u8, first, "mylang: --restrict is active")) return .{ .code = "CapabilityUnavailable", .frames = frames.items };
+    if (std.mem.startsWith(u8, first, "mylang: --restrict is active")) return .{ .code = "CapabilityUnavailable", .frames = frames.items, .detail = detail };
     if (std.mem.indexOf(u8, first, ": error[")) |marker| {
         const rest = first[marker + 8 ..];
         const close = std.mem.indexOfScalar(u8, rest, ']') orelse return error.UnreadableNativeResult;
         const place = position(first[0..marker]) orelse return error.UnreadableNativeResult;
-        return .{ .code = rest[0..close], .path = place.path, .line = place.line, .column = place.column, .frames = frames.items };
+        return .{ .code = rest[0..close], .path = place.path, .line = place.line, .column = place.column, .frames = frames.items, .detail = detail };
     }
     const colon = std.mem.indexOfScalar(u8, first, ':') orelse return error.UnreadableNativeResult;
-    return .{ .code = first[0..colon], .frames = frames.items };
+    return .{ .code = first[0..colon], .frames = frames.items, .detail = detail };
 }
 
 /// Split a trailing `path:line:column` locator, which paths may themselves contain colons.
@@ -217,6 +224,73 @@ test "native execution reports entry results, guest output and located traps" {
     try std.testing.expect(failure.trapped());
     try std.testing.expectEqual(@as(u64, 2), failure.trap.line);
     try std.testing.expectEqual(@as(u8, 1), failure.status);
+    try std.testing.expectEqual(trap_detail.Operation.div, failure.trap.detail.operation);
+    try std.testing.expectEqual(@as(i64, 1), failure.trap.detail.values.left);
+    try std.testing.expectEqual(@as(i64, 0), failure.trap.detail.values.right);
+}
+
+// spec-case: QBE-2
+test "native execution reports original bounds indexes for read write pop array text and bytes" {
+    const Case = struct {
+        source: []const u8,
+        code: []const u8,
+        operation: trap_detail.Operation,
+        index: ?i64,
+        length: u64,
+        /// The human text the runtime rendered from the same structured detail.
+        text: []const u8,
+    };
+    const cases = [_]Case{
+        .{ .source = "def main() -> i64:\n    xs = [1]\n    return xs[14]\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = 14, .length = 1, .text = "(index 14, length 1)" },
+        .{ .source = "def main() -> i64:\n    xs = [1, 2]\n    return xs[-5]\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = -5, .length = 2, .text = "(index -5, length 2)" },
+        .{ .source = "def main() -> i64:\n    xs = [1, 2]\n    xs[-5] = 9\n    return 0\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = -5, .length = 2, .text = "(index -5, length 2)" },
+        .{ .source = "def main() -> i64:\n    xs: list[i64] = []\n    return xs.pop()\n", .code = "R_LIST_BOUNDS", .operation = .pop, .index = null, .length = 0, .text = "(length 0)" },
+        .{ .source = "def main() -> i64:\n    xs = [1, 2]\n    return xs.pop(7)\n", .code = "R_LIST_BOUNDS", .operation = .pop, .index = 7, .length = 2, .text = "(index 7, length 2)" },
+        .{ .source = "def main() -> i64:\n    xs: [3]int = [1, 2, 3]\n    return xs[7]\n", .code = "R_INDEX_BOUNDS", .operation = .index, .index = 7, .length = 3, .text = "(index 7, length 3)" },
+        .{ .source = "def main() -> i64:\n    s = \"abc\"\n    _ = s[9]\n    return 0\n", .code = "R_TEXT_BOUNDS", .operation = .index, .index = 9, .length = 3, .text = "(index 9, length 3)" },
+        .{ .source = "def main() -> i64:\n    b = b\"abc\"\n    _ = b[-9]\n    return 0\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = -9, .length = 3, .text = "(index -9, length 3)" },
+    };
+    for (cases) |case| {
+        var compilation = try language.Compilation.init(std.testing.allocator, "bounds.my", case.source);
+        defer compilation.deinit();
+        const outcome = try run(&compilation);
+        try std.testing.expect(outcome.trapped());
+        try std.testing.expectEqualStrings(case.code, outcome.trap.code);
+        try std.testing.expectEqual(case.operation, outcome.trap.detail.operation);
+        try std.testing.expectEqual(case.length, outcome.trap.detail.values.length);
+        try std.testing.expect(outcome.trap.detail.has(trap_detail.present_length));
+        if (case.index) |index| {
+            try std.testing.expect(outcome.trap.detail.has(trap_detail.present_index));
+            try std.testing.expectEqual(index, outcome.trap.detail.values.index);
+        } else {
+            try std.testing.expect(!outcome.trap.detail.has(trap_detail.present_index));
+        }
+        // The text diagnostic quotes the same values, without the machine record.
+        try std.testing.expect(std.mem.indexOf(u8, outcome.stderr, case.text) != null);
+        try std.testing.expect(std.mem.indexOf(u8, outcome.stderr, trap_detail.marker) == null);
+    }
+}
+
+// spec-case: QBE-2
+test "native execution keeps the first trap detail and leaves budget traps detail-free" {
+    var first = try language.Compilation.init(std.testing.allocator, "first.my",
+        \\def main() -> i64:
+        \\    return divtrunc(1, 0) + (9223372036854775807 + 1)
+    );
+    defer first.deinit();
+    const outcome = try run(&first);
+    try std.testing.expectEqualStrings("R_DIVISION_BY_ZERO", outcome.trap.code);
+    try std.testing.expectEqual(trap_detail.Operation.div, outcome.trap.detail.operation);
+    var loop = try language.Compilation.init(std.testing.allocator, "budget.my",
+        \\def main() -> i64:
+        \\    while True:
+        \\        pass
+        \\    return 0
+    );
+    defer loop.deinit();
+    const limited = try runWithOptions(&loop, .{ .max_steps = 17 });
+    try std.testing.expectEqualStrings("R_STEP_LIMIT", limited.trap.code);
+    try std.testing.expectEqual(@as(u32, 0), limited.trap.detail.version);
 }
 
 test "native execution honours step budgets and separates the result line from output" {

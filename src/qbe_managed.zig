@@ -9,7 +9,6 @@ const store_unit = " storel 0, %s{d}\n";
 const copy_scratch = " %v{d} =l copy %s{d}\n";
 const load_scratch = " %v{d} =l loadl %s{d}\n";
 const allocation_failure = @import("qbe_format.zig").allocation_failure;
-const bounds_failure = "myl_qbe_fail_list_bounds";
 const list_value_failure = "myl_qbe_fail_list_value";
 const missing_key_failure = "myl_qbe_fail_missing_key";
 const numeric_surface = @import("numeric_surface.zig");
@@ -19,6 +18,12 @@ const bytes_lower = @import("qbe_bytes.zig");
 const text_lower = @import("qbe_text.zig");
 const arena_lower = @import("qbe_arena.zig");
 const dictionary_write = " %v{d} =w call $myl_native_dictionary_write(l %heap, l %v{d}, l %v{d}, l %v{d})\n";
+const dictionary_length = " %v{d} =l call $myl_native_dictionary_length(l %v{d})\n";
+/// Detail-carrying bounds helper shared by indexable receivers.
+const index_failure = "myl_qbe_fail_index_bounds";
+/// List element access normalizes a negative index in the checked frontend; the
+/// runtime helper subtracts the length back to recover the original index.
+const normalized_index_failure = "myl_qbe_fail_normalized_index_bounds";
 /// Bind managed lowering to the concrete emitter without dependency cycles.
 pub fn Lower(comptime E: type) type {
     return struct {
@@ -87,8 +92,9 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
         },
         .read => {
             const index_value = try self.load("s", base);
+            const length = try receiverLength(E, self, list);
             try self.print(" %v{d} =w call $myl_native_list_get(l %v{d}, l %v{d}, l %agg{d})\n", .{ output, list, index_value, self.pc });
-            try self.require(output, bounds_failure);
+            try requireIndexBounds(E, self, output, index_value, length, normalized_index_failure);
             try self.store(base, try self.readValue(try self.aggregatePointer(), op.output));
         },
         .append, .write => {
@@ -102,8 +108,9 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
                 try self.require(output, allocation_failure);
             } else {
                 const index_value = try self.load("s", base);
+                const length = try receiverLength(E, self, list);
                 try self.print(" %v{d} =w call $myl_native_list_set(l %v{d}, l %v{d}, l %v{d})\n", .{ output, list, index_value, value_pointer });
-                try self.require(output, bounds_failure);
+                try requireIndexBounds(E, self, output, index_value, length, normalized_index_failure);
             }
             try self.print(store_unit, .{base});
         },
@@ -126,13 +133,15 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
         },
         .pop, .pop_at => {
             const pointer = try self.aggregatePointer();
+            const length = try receiverLength(E, self, list);
             if (op.kind == .pop_at) {
                 const index_value = try self.load("s", base);
                 try self.print(" %v{d} =w call $myl_native_list_pop_at(l %v{d}, l %v{d}, l %agg{d})\n", .{ output, list, index_value, self.pc });
+                try requireIndexBounds(E, self, output, index_value, length, "myl_qbe_fail_pop_at_bounds");
             } else {
                 try self.print(" %v{d} =w call $myl_native_list_pop(l %v{d}, l %agg{d})\n", .{ output, list, self.pc });
+                try requirePopBounds(E, self, output, length);
             }
-            try self.require(output, bounds_failure);
             try self.store(base, try self.readValue(pointer, op.output));
         },
         .remove => {
@@ -206,6 +215,24 @@ fn checkedPointer(comptime E: type, self: *E, result: usize, slot: usize) Error!
     try self.require(result, allocation_failure);
     try self.store(slot, result);
 }
+/// Require `result`, otherwise raise a bounds trap carrying the already-loaded
+/// original index and receiver length. `failure` names the detail-carrying
+/// runtime helper; both values are captured, never recomputed.
+fn requireIndexBounds(comptime E: type, self: *E, result: usize, index: usize, length: usize, failure: []const u8) Error!void {
+    const label = self.temp();
+    try self.print(" jnz %v{d}, @success{d}, @failed{d}\n@failed{d}\n call ${s}(l %ctx, l %v{d}, l %v{d})\n jmp @failure\n@success{d}\n", .{ result, label, label, label, failure, index, length, label });
+}
+/// Require a pop that has no caller index; report the receiver length only.
+fn requirePopBounds(comptime E: type, self: *E, result: usize, length: usize) Error!void {
+    const label = self.temp();
+    try self.print(" jnz %v{d}, @success{d}, @failed{d}\n@failed{d}\n call $myl_qbe_fail_pop_bounds(l %ctx, l %v{d})\n jmp @failure\n@success{d}\n", .{ result, label, label, label, length, label });
+}
+/// Load one native list-like header word (length for lists, text and bytes).
+fn receiverLength(comptime E: type, self: *E, receiver: usize) Error!usize {
+    const length = self.temp();
+    try self.print(load_word, .{ length, receiver });
+    return length;
+}
 /// Construct immutable text, an ordinary managed list, or an ordered dictionary.
 fn emitConstruct(comptime E: type, self: *E, record: @FieldType(@FieldType(bytecode.Instruction, "op"), "make_record"), stack: []const typed.Type) Error!void {
     const schema = self.program.records[record.ty.recordIndex()];
@@ -243,7 +270,7 @@ fn emitLength(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.T
     const input = try self.load("s", base);
     const result = self.temp();
     if (self.program.records[ty.recordIndex()].collection.kind == .dictionary) {
-        try self.print(" %v{d} =l call $myl_native_dictionary_length(l %v{d})\n", .{ result, input });
+        try self.print(dictionary_length, .{ result, input });
     } else {
         try self.print(load_word, .{ result, input });
     }
@@ -289,16 +316,18 @@ fn emitIndex(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Ty
             try self.store(base, try self.readValue(try self.aggregatePointer(), schema.shape.buffer.?));
         }
     } else {
-        const at = try normalizedIndex(E, self, input, try self.load("s", base + 1), stack[base + 1]);
+        const raw_index = try self.load("s", base + 1);
+        const at = try normalizedIndex(E, self, input, raw_index, stack[base + 1]);
+        const length = try receiverLength(E, self, input);
         if (replacing) {
             const value = try operandPointer(E, self, schema.shape.buffer.?, base + 2);
             try arena_lower.Lower(E).barrier(self, input, schema.shape.buffer.?, value);
             try self.print(" %v{d} =w call $myl_native_list_set(l %v{d}, l %v{d}, l %v{d})\n", .{ result, input, at, value });
-            try self.require(result, bounds_failure);
+            try requireIndexBounds(E, self, result, raw_index, length, index_failure);
             try self.store(base, input);
         } else {
             try self.print(" %v{d} =w call $myl_native_list_get(l %v{d}, l %v{d}, l %agg{d})\n", .{ result, input, at, self.pc });
-            try self.require(result, bounds_failure);
+            try requireIndexBounds(E, self, result, raw_index, length, index_failure);
             try self.store(base, try self.readValue(try self.aggregatePointer(), schema.shape.buffer.?));
         }
     }
@@ -383,13 +412,13 @@ fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: [
     const result = self.temp();
     switch (op.kind) {
         .length => {
-            try self.print(" %v{d} =l call $myl_native_dictionary_length(l %v{d})\n", .{ result, input });
+            try self.print(dictionary_length, .{ result, input });
             try self.store(base, result);
         },
         .iteration_check => {
             const actual = self.temp();
             const expected = try self.load("s", base);
-            try self.print(" %v{d} =l call $myl_native_dictionary_length(l %v{d})\n %v{d} =l ceql %v{d}, %v{d}\n", .{ actual, input, result, actual, expected });
+            try self.print(dictionary_length ++ " %v{d} =l ceql %v{d}, %v{d}\n", .{ actual, input, result, actual, expected });
             try self.require(result, iteration_failure);
             try self.print(store_unit, .{base});
         },
@@ -399,8 +428,10 @@ fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: [
         },
         .key_at => {
             const at = try self.load("s", base);
+            const length = self.temp();
+            try self.print(dictionary_length, .{ length, input });
             try self.print(" %v{d} =w call $myl_native_dictionary_key_at(l %v{d}, l %v{d}, l %agg{d})\n", .{ result, input, at, self.pc });
-            try self.require(result, bounds_failure);
+            try requireIndexBounds(E, self, result, at, length, index_failure);
             try self.store(base, try self.readValue(try self.aggregatePointer(), op.output));
         },
         .read, .get, .contains, .write => {
@@ -482,7 +513,7 @@ fn textAt(comptime E: type, self: *E, input: usize, at: usize, ty: typed.Type, r
     const size = self.temp();
     const valid = self.temp();
     try self.print(" %v{d} =l loadl %v{d}\n %v{d} =l cultl %v{d}, %v{d}\n", .{ size, input, valid, normalized, size });
-    try self.require(valid, "myl_qbe_fail_text_bounds");
+    try requireIndexBounds(E, self, valid, at, size, "myl_qbe_fail_text_bounds_detail");
     try self.print(" %v{d} =l call $myl_native_text_at(l %heap, l %v{d}, l %v{d})\n", .{ result, input, normalized });
     try checkedPointer(E, self, result, base);
 }

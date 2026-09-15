@@ -4,13 +4,37 @@
 #include "native_heap.h"
 
 struct MylangNativeProvidersTag;
-/* Native ABI v2: execution context and sticky structured traps.
+/* Native ABI v3: execution context and sticky structured traps.
  * One context belongs to a synchronous execution; helpers do not terminate hosts.
  * Context prefix is an ABI contract for inline budget checks. */
 typedef struct { const char *path; uint64_t line, column; } MylQbeLocation;
 typedef struct { const char *name; const MylQbeLocation *locations; uint64_t count; } MylQbeFunction;
 typedef struct { const MylQbeFunction *function; uint64_t position, native_bytes; } MylQbeActiveFrame;
 typedef struct { const char *function, *path; uint64_t line, column; } MylQbeTrace;
+/* Bounded typed values captured at the first failing operation. `present` is a
+ * bitmask over the MYL_QBE_TRAP_PRESENT_* bits; an absent field is zero and is
+ * omitted from both the text suffix and the structured transport. `operation`
+ * is a static bounded name ("index", "pop", "add", ...). */
+typedef struct {
+    uint32_t version;   /* 1 */
+    uint32_t present;   /* bitmask; absent fields are zero and omitted downstream */
+    int64_t  index;     /* original index, negative preserved */
+    uint64_t length;    /* collection/object length at the failure */
+    int64_t  left;      /* arithmetic operand where captured */
+    int64_t  right;     /* arithmetic operand where captured */
+    uint64_t width;     /* element width / integer width where relevant */
+    const char *operation; /* static bounded name, e.g. "index", "pop", "div" */
+} MylQbeTrapDetail;
+#define MYL_QBE_TRAP_DETAIL_VERSION UINT32_C(1)
+#define MYL_QBE_TRAP_PRESENT_INDEX  UINT32_C(1)
+#define MYL_QBE_TRAP_PRESENT_LENGTH UINT32_C(2)
+#define MYL_QBE_TRAP_PRESENT_LEFT   UINT32_C(4)
+#define MYL_QBE_TRAP_PRESENT_RIGHT  UINT32_C(8)
+#define MYL_QBE_TRAP_PRESENT_WIDTH  UINT32_C(16)
+/* Marker beginning the one-line machine record a native child appends to
+ * stderr after its human-readable trap diagnostic. The record JSON carries the
+ * same `MylQbeTrapDetail` fields. */
+#define MYL_QBE_TRAP_RECORD_MARKER "\x1eMYLANG-TRAP "
 typedef struct {
     uint64_t steps, frames, max_steps, max_frames;
     const char *trap;
@@ -31,6 +55,7 @@ typedef struct {
     int guest_argc;
     char **guest_argv;
     int reported;
+    MylQbeTrapDetail trap_detail;
 } MylQbeContext;
 typedef struct {
     uint64_t value, steps;
@@ -38,6 +63,7 @@ typedef struct {
     MylQbeTrace trace[16];
     uint64_t trace_count, omitted_frames;
     int reported;
+    MylQbeTrapDetail trap_detail;
 } MylQbeResult;
 void myl_qbe_fail_capability(void *);
 void myl_qbe_fail_missing_capability(void *, const char *flag);
@@ -66,6 +92,20 @@ void myl_qbe_fail_allocation(void *context);
 void myl_qbe_fail_iteration(void *context);
 void myl_qbe_fail_assert(void *context);
 void myl_qbe_fail_bounds(void *context);
+/* Detailed variants record the original values first seen at the failing
+ * operation. They are the only paths that populate `trap_detail`; the
+ * detail-less entry points above stay for callers without captured values. */
+void myl_qbe_fail_index_bounds(void *context, int64_t index, uint64_t length);
+/* `length` has already been added to a negative source index by the checked
+ * frontend; recover the original by subtracting it back. */
+void myl_qbe_fail_normalized_index_bounds(void *context, int64_t normalized_index, uint64_t length);
+void myl_qbe_fail_pop_bounds(void *context, uint64_t length);
+void myl_qbe_fail_pop_at_bounds(void *context, int64_t index, uint64_t length);
+void myl_qbe_fail_text_bounds_detail(void *context, int64_t index, uint64_t length);
+void myl_qbe_fail_array_bounds(void *context, int64_t index, uint64_t length);
+/* `binary_op` is the typed.BinaryOp ordinal (0=add, 1=sub, 2=mul, 3=div, ...). */
+void myl_qbe_fail_division(void *context, uint64_t binary_op, int64_t left, int64_t right);
+void myl_qbe_fail_overflow_op(void *context, uint64_t binary_op, int64_t left, int64_t right, uint64_t width);
 myl_native_heap *myl_qbe_heap(void *context);
 uint64_t myl_qbe_failed(void *context);
 void myl_qbe_float_check(void *context);

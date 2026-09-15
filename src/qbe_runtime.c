@@ -3,6 +3,7 @@
 #include "native_collections.h"
 #include "native_text.h"
 #include <inttypes.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,6 +33,67 @@ static const char *describe(const char *code) {
     if (!strcmp(code, "R_FRAME_LIMIT")) return "call-depth budget exhausted; raise it with --max-frames=N";
     return strncmp(code, "R_", 2) ? "QBE runtime failure" : "native execution failed";
 }
+/* Append one formatted fragment; returns 0 when the bounded buffer would
+   truncate. The caller keeps the buffer NUL terminated on success. */
+static int append(char *out, size_t size, size_t *used, const char *format, ...) {
+    va_list arguments;
+    va_start(arguments, format);
+    int written = vsnprintf(out + *used, size - *used, format, arguments);
+    va_end(arguments);
+    if (written < 0 || (size_t)written >= size - *used) return 0;
+    *used += (size_t)written;
+    return 1;
+}
+/* Human-readable suffix rendered from the same detail the JSON record carries.
+   Writes nothing (0) when no reportable fields are present. */
+static size_t detail_text(const MylQbeTrapDetail *detail, char *out, size_t size) {
+    if (size == 0) return 0;
+    size_t used = 0;
+    out[0] = 0;
+    if (!detail->version) return 0;
+    uint32_t present = detail->present;
+    if (present & MYL_QBE_TRAP_PRESENT_INDEX) {
+        if (!append(out, size, &used, " (index %" PRId64, detail->index)) return 0;
+        if ((present & MYL_QBE_TRAP_PRESENT_LENGTH) &&
+            !append(out, size, &used, ", length %" PRIu64, detail->length)) return 0;
+        if (!append(out, size, &used, ")")) return 0;
+    } else if (present & MYL_QBE_TRAP_PRESENT_LENGTH) {
+        if (!append(out, size, &used, " (length %" PRIu64 ")", detail->length)) return 0;
+    } else if (present & (MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT | MYL_QBE_TRAP_PRESENT_WIDTH)) {
+        if (!append(out, size, &used, " (%s:", detail->operation ? detail->operation : "arithmetic")) return 0;
+        if ((present & MYL_QBE_TRAP_PRESENT_LEFT) &&
+            !append(out, size, &used, " left %" PRId64, detail->left)) return 0;
+        if ((present & MYL_QBE_TRAP_PRESENT_RIGHT) &&
+            !append(out, size, &used, ", right %" PRId64, detail->right)) return 0;
+        if ((present & MYL_QBE_TRAP_PRESENT_WIDTH) &&
+            !append(out, size, &used, ", width %" PRIu64, detail->width)) return 0;
+        if (!append(out, size, &used, ")")) return 0;
+    }
+    return used;
+}
+/* One bounded line of JSON for the structured transport. Only present numeric
+   fields are emitted, matching the downstream `trap_detail` object. */
+static size_t detail_json(const MylQbeTrapDetail *detail, char *out, size_t size) {
+    if (size == 0) return 0;
+    size_t used = 0;
+    out[0] = 0;
+    if (!detail->version) return 0;
+    uint32_t present = detail->present;
+    if (!append(out, size, &used, "{\"version\":%u,\"operation\":\"%s\"",
+                detail->version, detail->operation ? detail->operation : "operation")) return 0;
+    if ((present & MYL_QBE_TRAP_PRESENT_INDEX) &&
+        !append(out, size, &used, ",\"index\":%" PRId64, detail->index)) return 0;
+    if ((present & MYL_QBE_TRAP_PRESENT_LENGTH) &&
+        !append(out, size, &used, ",\"length\":%" PRIu64, detail->length)) return 0;
+    if ((present & MYL_QBE_TRAP_PRESENT_LEFT) &&
+        !append(out, size, &used, ",\"left\":%" PRId64, detail->left)) return 0;
+    if ((present & MYL_QBE_TRAP_PRESENT_RIGHT) &&
+        !append(out, size, &used, ",\"right\":%" PRId64, detail->right)) return 0;
+    if ((present & MYL_QBE_TRAP_PRESENT_WIDTH) &&
+        !append(out, size, &used, ",\"width\":%" PRIu64, detail->width)) return 0;
+    if (!append(out, size, &used, "}")) return 0;
+    return used;
+}
 static uint64_t fail(void *context, const char *code) {
     Context *ctx = context;
     if (!ctx->trap) {
@@ -46,6 +108,39 @@ static uint64_t fail(void *context, const char *code) {
         ctx->omitted_frames = ctx->frames > ctx->trace_count ? ctx->frames-ctx->trace_count : 0;
     }
     return 0;
+}
+/* Synthetic operation codes for the value-producing helpers that do not carry a
+   typed.BinaryOp ordinal. Kept outside the 0..6 binary range. */
+#define MYL_QBE_OPERATION_CAST UINT64_C(100)
+#define MYL_QBE_OPERATION_NEG  UINT64_C(101)
+/* Map the operation that was already evaluated to a stable diagnostic name. */
+static const char *operation_name(uint64_t op) {
+    switch (op) {
+        case 0: return "add";
+        case 1: return "sub";
+        case 2: return "mul";
+        case 3: return "div";
+        case 4: return "rem";
+        case 5: return "floor_div";
+        case 6: return "floor_rem";
+        case MYL_QBE_OPERATION_CAST: return "cast";
+        case MYL_QBE_OPERATION_NEG: return "neg";
+        default: return "arithmetic";
+    }
+}
+/* Record the typed detail only for the first trap; later failures leave the
+   sticky first-trap detail untouched, exactly like the trap code itself. */
+static uint64_t fail_detail(void *context, const char *code, const char *operation,
+                            uint32_t present, int64_t index, uint64_t length,
+                            int64_t left, int64_t right, uint64_t width) {
+    Context *ctx = context;
+    if (!ctx->trap) ctx->trap_detail = (MylQbeTrapDetail){
+        .version = MYL_QBE_TRAP_DETAIL_VERSION,
+        .present = present, .index = index, .length = length,
+        .left = left, .right = right, .width = width,
+        .operation = operation ? operation : "operation",
+    };
+    return fail(context, code);
 }
 void myl_qbe_fail(void *context, const char *code) { fail(context, code); }
 void myl_qbe_fail_equality(void *context, int status) { fail(context, status == -2 ? "CapacityLimit" : "OutOfMemory"); }
@@ -100,6 +195,40 @@ void myl_qbe_fail_assert(void *context) { fail(context, "R_ASSERT"); }
 void myl_qbe_fail_bounds(void *context) {
     fail(context, "R_INDEX_BOUNDS");
 }
+void myl_qbe_fail_index_bounds(void *context, int64_t index, uint64_t length) {
+    fail_detail(context, "R_LIST_BOUNDS", "index",
+        MYL_QBE_TRAP_PRESENT_INDEX | MYL_QBE_TRAP_PRESENT_LENGTH, index, length, 0, 0, 0);
+}
+void myl_qbe_fail_normalized_index_bounds(void *context, int64_t index, uint64_t length) {
+    const int64_t original = index < 0 ? index - (int64_t)length : index;
+    fail_detail(context, "R_LIST_BOUNDS", "index",
+        MYL_QBE_TRAP_PRESENT_INDEX | MYL_QBE_TRAP_PRESENT_LENGTH, original, length, 0, 0, 0);
+}
+void myl_qbe_fail_pop_bounds(void *context, uint64_t length) {
+    fail_detail(context, "R_LIST_BOUNDS", "pop",
+        MYL_QBE_TRAP_PRESENT_LENGTH, 0, length, 0, 0, 0);
+}
+void myl_qbe_fail_pop_at_bounds(void *context, int64_t index, uint64_t length) {
+    fail_detail(context, "R_LIST_BOUNDS", "pop",
+        MYL_QBE_TRAP_PRESENT_INDEX | MYL_QBE_TRAP_PRESENT_LENGTH, index, length, 0, 0, 0);
+}
+void myl_qbe_fail_text_bounds_detail(void *context, int64_t index, uint64_t length) {
+    fail_detail(context, "R_TEXT_BOUNDS", "index",
+        MYL_QBE_TRAP_PRESENT_INDEX | MYL_QBE_TRAP_PRESENT_LENGTH, index, length, 0, 0, 0);
+}
+void myl_qbe_fail_array_bounds(void *context, int64_t index, uint64_t length) {
+    fail_detail(context, "R_INDEX_BOUNDS", "index",
+        MYL_QBE_TRAP_PRESENT_INDEX | MYL_QBE_TRAP_PRESENT_LENGTH, index, length, 0, 0, 0);
+}
+void myl_qbe_fail_division(void *context, uint64_t binary_op, int64_t left, int64_t right) {
+    fail_detail(context, "R_DIVISION_BY_ZERO", operation_name(binary_op),
+        MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT, 0, 0, left, right, 0);
+}
+void myl_qbe_fail_overflow_op(void *context, uint64_t binary_op, int64_t left, int64_t right, uint64_t width) {
+    fail_detail(context, "R_OVERFLOW", operation_name(binary_op),
+        MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT | MYL_QBE_TRAP_PRESENT_WIDTH,
+        0, 0, left, right, width);
+}
 myl_native_heap *myl_qbe_heap(void *context) {
     return &((Context *)context)->heap;
 }
@@ -114,21 +243,32 @@ static Wide decode(uint64_t value, uint64_t is_signed) {
     memcpy(&signed_value, &value, sizeof signed_value);
     return is_signed ? (Wide)signed_value : (Wide)value;
 }
+/* Reinterpret already-evaluated bits as the signed operand the diagnostic shows. */
+static int64_t as_i64(uint64_t value, uint64_t is_signed) {
+    int64_t signed_value;
+    memcpy(&signed_value, &value, sizeof signed_value);
+    return is_signed ? signed_value : (int64_t)value;
+}
 static Wide modulus(void *context, uint64_t width) {
     if (!width || width > 64) return fail(context, "R_INTERNAL");
     return (Wide)1 << width;
 }
-static uint64_t checked(void *context, Wide value, uint64_t is_signed, uint64_t width) {
+static uint64_t checked(void *context, Wide value, uint64_t is_signed, uint64_t width,
+                        uint64_t operation, uint32_t present, int64_t left, int64_t right) {
     Wide mod = modulus(context, width), maximum = (mod >> !!is_signed) - 1;
     Wide minimum = is_signed ? -(mod >> 1) : 0;
-    if (value < minimum || value > maximum) return fail(context, "R_OVERFLOW");
+    if (value < minimum || value > maximum)
+        return fail_detail(context, "R_OVERFLOW", operation_name(operation),
+            present | MYL_QBE_TRAP_PRESENT_WIDTH, 0, 0, left, right, width);
     return (uint64_t)value;
 }
 uint64_t myl_qbe_int_cast(void *context, uint64_t from_signed, uint64_t to_signed, uint64_t width, uint64_t value) {
-    return checked(context, decode(value, from_signed), to_signed, width);
+    return checked(context, decode(value, from_signed), to_signed, width,
+        MYL_QBE_OPERATION_CAST, MYL_QBE_TRAP_PRESENT_LEFT, as_i64(value, from_signed), 0);
 }
 uint64_t myl_qbe_int_neg(void *context, uint64_t is_signed, uint64_t width, uint64_t value) {
-    return checked(context, -decode(value, is_signed), is_signed, width);
+    return checked(context, -decode(value, is_signed), is_signed, width,
+        MYL_QBE_OPERATION_NEG, MYL_QBE_TRAP_PRESENT_LEFT, as_i64(value, is_signed), 0);
 }
 uint64_t myl_qbe_int_binary(void *context, uint64_t op, uint64_t is_signed, uint64_t width, uint64_t left, uint64_t right) {
     Wide a = decode(left, is_signed), b = decode(right, is_signed), result = 0;
@@ -138,9 +278,14 @@ uint64_t myl_qbe_int_binary(void *context, uint64_t op, uint64_t is_signed, uint
     switch (op) {
         case 0: result = a + b; break;
         case 1: result = a - b; break;
-        case 2: if (__builtin_mul_overflow(a, b, &result)) return fail(context, "R_OVERFLOW"); break;
+        case 2: if (__builtin_mul_overflow(a, b, &result))
+            return fail_detail(context, "R_OVERFLOW", operation_name(op),
+                MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT | MYL_QBE_TRAP_PRESENT_WIDTH,
+                0, 0, (int64_t)a, (int64_t)b, width);
+            break;
         case 3: case 4: case 5: case 6: {
-            if (!b) return fail(context, "R_DIVISION_BY_ZERO");
+            if (!b) return fail_detail(context, "R_DIVISION_BY_ZERO", operation_name(op),
+                MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT, 0, 0, (int64_t)a, (int64_t)b, 0);
             Wide q = a / b, r = a % b;
             if (op >= 5 && r && ((r < 0) != (b < 0))) { --q; r += b; }
             result = (op == 3 || op == 5) ? q : r;
@@ -172,7 +317,8 @@ uint64_t myl_qbe_int_binary(void *context, uint64_t op, uint64_t is_signed, uint
             return (uint64_t)(result < minimum ? minimum : result > maximum ? maximum : result);
         default: return fail(context, "R_INTERNAL");
     }
-    return checked(context, result, is_signed, width);
+    return checked(context, result, is_signed, width, op,
+        MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT, (int64_t)a, (int64_t)b);
 wrapping:
     result = (Wide)(raw & mask);
     return (uint64_t)(is_signed && result > maximum ? result - mod : result);
@@ -351,14 +497,19 @@ int mylang_qbe_run_providers(uint64_t (*entry)(void *), int argc, char **argv, c
     if (execute_config_args(entry, context.max_steps, context.max_frames, stress, providers, NULL, guest_count, guest, &result)) {
         free(guest);
         if (result.reported) return 2;
+        char suffix[192] = "";
+        (void)detail_text(&result.trap_detail, suffix, sizeof suffix);
         if (result.trace_count) {
             const MylQbeTrace *at=&result.trace[0];
-            fprintf(stderr,"%s:%" PRIu64 ":%" PRIu64 ": error[%s]: %s\n",at->path,at->line,at->column,result.code,describe(result.code));
-        } else fprintf(stderr, "%s: %s\n", result.code, describe(result.code));
+            fprintf(stderr,"%s:%" PRIu64 ":%" PRIu64 ": error[%s]: %s%s\n",at->path,at->line,at->column,result.code,describe(result.code),suffix);
+        } else fprintf(stderr, "%s: %s%s\n", result.code, describe(result.code), suffix);
         for (uint64_t i=0; i<result.trace_count; ++i) {
             MylQbeTrace frame = result.trace[i];
             fprintf(stderr, "  in %s at %s:%" PRIu64 ":%" PRIu64 "\n", frame.function, frame.path, frame.line, frame.column);
         }
+        char record[256];
+        if (detail_json(&result.trap_detail, record, sizeof record) != 0)
+            fprintf(stderr, "%s%s\n", MYL_QBE_TRAP_RECORD_MARKER, record);
         return strncmp(result.code,"R_",2) ? 2:1;
     }
     free(guest);
@@ -408,6 +559,7 @@ static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64
     result->trace_count = context->trace_count;
     result->omitted_frames = context->omitted_frames;
     result->reported = context->reported;
+    result->trap_detail = context->trap_detail;
     memcpy(result->trace, context->trace, sizeof result->trace);
     if (context->cleanup) context->cleanup(context);
     while (context->frame_allocations) myl_qbe_frame_release(context,(NativeFrameAllocation *)context->frame_allocations+1);
