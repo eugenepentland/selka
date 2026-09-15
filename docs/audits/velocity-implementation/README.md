@@ -52,10 +52,11 @@ Branches are cut from the baseline SHA. Worktrees live under
 | M2 | `codex/velocity-m2` | `velocity-m2` | `44a0bfe` | M1, E1 | **done** — origin/alias/call enforcement; merged in `8d5b84b` |
 | M3 | `codex/velocity-m3` | `velocity-m3` | `8d5b84b` | M2, E2 | **done** — corpus repair, navigation exposure, runnable docs; merged in `75bb69a` |
 | C1 | `codex/velocity-c1` | `velocity-c1` | `44a0bfe` | C0, E2, M1 | **done** — per-function deps/remap; merged in `b8a512a` |
-| C2 | `codex/velocity-c2` | `velocity-c2` | C1+M2 integrated | C1, M2 | **not started** — required for cross-process reuse |
+| C1R | `codex/velocity-c1r` | `velocity-c1r` | `d150335` | C1 | **in progress** — close module-identity/resolved-dependency/eligibility/contract-binding gaps |
+| C2 | `codex/velocity-c2` | `velocity-c2` | C1R integrated | C1, C1R, M2 | **blocked on C1R** — persist checked bodies across processes |
 | C3 | `codex/velocity-c3` | `velocity-c3` | C2 integrated | C2 | **not started** |
 | C4 | `codex/velocity-c4` | `velocity-c4` | C3+P1 integrated | C3, P1 | **not started** |
-| P1 | `codex/velocity-p1` | `velocity-p1` | M3+E2 integrated | E2, M3 | **not started** |
+| P1 | `codex/velocity-p1` | `velocity-p1` | `d150335` | E2, M3 | **in progress** — checked provider substitution |
 | A1 | `codex/velocity-a1` | `velocity-a1` | `161c4e4` | W0 | **done** — required project policy; merged in `1f3a...` (`88e7fb6`) |
 | S1 | `codex/velocity-s1` | `velocity-s1` | `5988575` | C0 (+ final core) | **done (partial evidence)** — harness repaired, 10k/100k samples; objectives not met; merged in `21d104e` |
 | D2 | `codex/velocity-d2` | `velocity-d2` | final core | each feature | **not started** |
@@ -96,4 +97,5 @@ Never share a mutable checkout, installed binary or `zig-out`/`.zig-cache`.
 | 2026-09-15 | `75bb69a` | M3 | corpus activation, navigation exposure, runnable mutation docs |
 | 2026-09-15 | `75bb69a` | final gate | cold build + Debug 1110/1110 (39/39 steps); ReleaseFast 1109/1110, 1 skipped (39/39 steps); Guardian 88/88 |
 | 2026-09-15 | `26e8121` | follow-up | formatter `mutates(...)` spacing + standalone runner trailing-option tolerance; final gate Debug 1128/1128, ReleaseFast 1127/1128 (1 skipped), Guardian 88/88 |
+| 2026-09-15 | `d150335` | C1R/P1 start | C1 gap closure and checked-provider substitution launched from the integrated tree |
 | 2026-09-15 | (note) | build cache | a warm `.zig-cache` can keep a stale generated `qbe_build_assets` module after large `src/` edits; cold `zig build test-units` passes 969/969. Final gate must be cold. |
