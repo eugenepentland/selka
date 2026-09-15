@@ -173,7 +173,10 @@ pub fn render(allocator: std.mem.Allocator, index: *interfaces.Index, program: t
         .exports = roots.items,
         .functions = functions,
         .types = definitions.items,
-        .generic_templates_version = "generic-templates-v1",
+        // Named bound spellings, exported constraints and their expanded promises
+        // are additive under a bumped nested template format. The top-level
+        // `language-schema-v1` document keys and meanings are unchanged.
+        .generic_templates_version = "generic-templates-v2",
         .generic_templates = try @import("generic_api.zig").collect(scratch, index),
     }, .{ .emit_null_optional_fields = false });
 }

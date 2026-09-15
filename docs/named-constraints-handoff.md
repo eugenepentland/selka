@@ -40,17 +40,19 @@ Status: implemented on branch `nc-20260915` (worktree
 All commands run in the worktree with the pinned Zig (0.17.0-dev.1683).
 
 ```text
-zig build                                  guardian run-all: 88 checks passed
+zig build (Guardian whole-tree)             88 checks passed
 zig build fmt-check                        pass
-GUARDIAN_SKIP_CHECKS=1 zig build test-units    884/885 pass (1 pre-existing failure)
-GUARDIAN_SKIP_CHECKS=1 zig build test-cli      76/76 pass
+GUARDIAN_SKIP_CHECKS=1 zig build test-units    905/905 pass
+GUARDIAN_SKIP_CHECKS=1 zig build test-cli      79/79 pass
 GUARDIAN_SKIP_CHECKS=1 zig build test-docs     0 failed (docs/generics.md 5 run)
 mylang doc-coverage .                      0 failures
+python3 /tmp/nc-probes/run.py <binary>     18/18 review repros
 ```
 
-Named-constraint focused suites (all green): 32 tests matching
-`named constraints`, plus 46 `interfaces`, 143 `generic`, 32 `structural`, and
-the 11 `QBE emission release partial allocations` tests.
+Named-constraint focused suites (all green): 46 matching `named constraints`,
+17 `namespace`, 10 `generic api`, 34 `schema`, 53 `interfaces`, 38
+`structural`, 147 `generic`, and the 11 `QBE emission release partial
+allocations` tests.
 
 The end-to-end acceptance fixture is `examples/named-constraints/`:
 
@@ -67,34 +69,53 @@ main.my with that invalid imported production.my                             -> 
 
 ## Known pre-existing issues (not caused by this change)
 
-- `managed_lists_test.test.bytecode rejects managed metadata on an ordinary
-  aggregate` fails at the base commit too (verified in a clean worktree), so
-  `zig build test` cannot be fully green. `zig build` (the Guardian install
-  gate) is green.
 - `mylang check <module-file>` reports `E_SYNTAX: expected def` for any module
   file, including `examples/modules/main.my` at the base commit. Use `run`,
   `test`, or `list-modules` for module projects.
 
+## Review fixes (2026-09-15)
+
+`docs/audits/named-constraints-review-2026-09-15.md` reported eight findings;
+all are fixed on this branch:
+
+1. Exported imported constraints index the defining module's symbol table, so a
+   mismatched consumer table can no longer panic or misreport privacy.
+2. Concrete names inside a named declaration resolve in the declaring scope. A
+   consumer type parameter can no longer capture a same-spelled declaration
+   type, in universal checking or concrete conformance, including composites.
+3. Requirement merging compares resolved identities and subject positions
+   (nominal record/template identity, parameter index, array and callback shape)
+   instead of source spelling: distinct same-spelled types conflict, while
+   alpha-renamed, inline/named and composite equivalents coalesce.
+4. Module preflight uses the implied builtin `Set` (`equality` and `integer`
+   imply `copy`) and imported definitions supply their `copy` guarantee, so
+   standalone and module checking agree. The expanded 16-requirement limit is
+   enforced once, after identity-aware coalescing.
+5. `generic_api.zig` publishes exported constraints as non-callable
+   `constraint` templates and each exported generic parameter's named bound
+   spelling, declaring module and expanded promises, under
+   `generic-templates-v2`.
+6. Standalone programs enforce the constraint declaration namespace (duplicates
+   and collisions with records, variants, domains, resources, aliases and
+   top-level functions), whether or not either declaration is used.
+7. Unused constraint declarations get the full structural validity check, so
+   result-bearing or move-only fields reject before any provider exists.
+8. The review's 18 repros are kept as a permanent regression suite
+   (`test/named_constraints_probes.zig`, driven by `test/integration.zig`, spec
+   tag `NAMED-CONSTRAINT-REVIEW-1`).
+
 ## Deferred work
 
-- Public checked-schema/tooling exposure: `src/generic_api.zig` ignores
-  `TypeParameter.named_requirements`, so an exported generic's named bound
-  spelling and expanded contract are not yet in the checked template schema or
-  navigation output. `interfaces.render` (the pre-body inventory) does list
-  exported constraint declarations. Adding the expanded contract needs a
-  schema version bump and a designed agent-facing shape.
-- The interface-time `validateBounds` limit count counts each bundle's declared
-  items without cross-bundle coalescing, so a bound whose bundles overlap could
-  be rejected there but accepted by the semantic `resolveBounds`. The semantic
-  path is authoritative for compilation.
+- Navigation and source-inventory expansion of constraints is separate; the
+  pre-body `interfaces.render` inventory lists the declaration name only.
 - Runtime interface values, methods/receivers, constraint inheritance,
   multi-parameter constraints, associated types, fine-grained persistent
   generic-body caching, and optimization policy remain out of scope per the
   brief.
 
-## Environment note
+## Branching note
 
-The shared checkout `/home/epentland/ai/canopy/mylang` was being modified and
-`git stash`-ed by an unrelated concurrent agent, so this work was isolated in
-`mylang-worktrees/named-constraints-20260915` (branch `nc-20260915`) based on
-`4d21b85`. It must be rebased/merged when the main checkout stabilizes.
+The original feature landed on `main` at `da3aabf`. These review fixes live on
+`nc-fixes-20260915`, based on `wave3/base` (`3c0b41f`), which already contains
+the feature commit plus wave3 work. The merged main checkout should prefer this
+branch.

@@ -588,3 +588,60 @@ test "named constraints reject unused invalid definitions" {
         \\    return 0
     , "E_UNKNOWN_TYPE");
 }
+
+// Equivalent named and inline operation contracts coalesce across binder spellings.
+// spec-case: NAMED-CONSTRAINT-SEMANTICS-6
+test "named constraints coalesce alpha-renamed subject overlaps" {
+    try run(
+        \\constraint Id[P] = copy + op(identity(x: P) -> P effects())
+        \\def forward[T: Id + op(identity(x: T) -> T effects())](x: T) -> T effects():
+        \\    return T.identity(x)
+        \\def main() -> int:
+        \\    return 0
+    , 0);
+    try run(
+        \\constraint A[P] = copy + op(identity(x: list[P]) -> int effects())
+        \\constraint B[Q] = copy + op(identity(x: list[Q]) -> int effects())
+        \\def use[T: A + B](x: T) -> int:
+        \\    return 0
+        \\def main() -> int:
+        \\    return 0
+    , 0);
+    try run(
+        \\constraint A[T] = copy + field(f0: int) + field(f1: int) + field(f2: int) + field(f3: int) + field(f4: int) + field(f5: int) + field(f6: int) + field(f7: int)
+        \\constraint B[T] = copy + field(f0: int) + field(f1: int) + field(f2: int) + field(f3: int) + field(f4: int) + field(f5: int) + field(f6: int) + field(f7: int)
+        \\def f[T: A + B](x: T) -> int:
+        \\    return 0
+        \\def main() -> int:
+        \\    return 0
+    , 0);
+}
+// Unused declarations still reject result-bearing and identity-conflicting members.
+// spec-case: NAMED-CONSTRAINT-SEMANTICS-7
+test "named constraints reject unused result-bearing fields" {
+    try reject(
+        \\constraint Bad[T] = copy + field(value: Result[int, int])
+        \\def main() -> int:
+        \\    return 0
+    , "E_GENERIC_REQUIREMENT");
+    try reject(
+        \\constraint Bad[T] = copy + field(value: Donations)
+        \\def main() -> int:
+        \\    return 0
+    , "E_UNKNOWN_TYPE");
+}
+
+// Exercise the identity normalization and key construction used by merging.
+// spec-case: NAMED-CONSTRAINT-SEMANTICS-6
+test "named constraints normalizeOne and canonicalOperation coalesce valid declarations" {
+    try run(
+        \\constraint A[P] = copy + field(value: int)
+        \\constraint B[Q] = copy + field(value: int)
+        \\record Box:
+        \\    value: int
+        \\def f[T: A + B](v: T) -> int:
+        \\    return v.value
+        \\def main() -> int:
+        \\    return f[Box](Box(value=3))
+    , 3);
+}

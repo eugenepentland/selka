@@ -52,8 +52,51 @@ pub const Sources = struct {
 fn less(_: void, a: Scope, b: Scope) bool {
     return a.span.start < b.span.start;
 }
+/// One standalone declaration name and whether a constraint owns it.
+const StandaloneName = struct { span: source.Span, constraint: bool };
+/// Bind one declaration name; only conflicts involving a constraint report here so other
+/// declaration kinds keep their existing duplicate diagnostics from later checking phases.
+fn addStandaloneName(allocator: std.mem.Allocator, src: source.Source, names: *std.StringHashMapUnmanaged(StandaloneName), name: source.Span, constraint: bool, sink: *diagnostic.Sink) diagnostic.Error!void {
+    const key = src.text(name);
+    if (names.get(key)) |previous| {
+        if (previous.constraint or constraint) return sink.failRelated("E_DUPLICATE_SYMBOL", name, "module declaration name is already bound", .{ .span = previous.span, .message = "declaration is here" });
+        return;
+    }
+    try names.put(allocator, key, .{ .span = name, .constraint = constraint });
+}
+/// Add nominal type declarations in the module index's declaration order.
+fn addStandaloneTypes(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, names: *std.StringHashMapUnmanaged(StandaloneName), sink: *diagnostic.Sink) diagnostic.Error!void {
+    inline for (.{ "records", "domains", "variants", "resources" }) |category| for (@field(program.types, category)) |declaration| try addStandaloneName(allocator, src, names, declaration.name, false, sink);
+}
+/// Add transparent type aliases, which share the type declaration namespace.
+fn addStandaloneAliases(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, names: *std.StringHashMapUnmanaged(StandaloneName), sink: *diagnostic.Sink) diagnostic.Error!void {
+    for (program.types.expressions.aliases) |alias| try addStandaloneName(allocator, src, names, alias.name, false, sink);
+}
+/// Add top-level function names; domain methods are owner-qualified and stay separate.
+fn addStandaloneFunctions(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, names: *std.StringHashMapUnmanaged(StandaloneName), sink: *diagnostic.Sink) diagnostic.Error!void {
+    for (program.functions) |function| {
+        if (function.policy.owner != null) continue;
+        try addStandaloneName(allocator, src, names, function.name, false, sink);
+    }
+}
+/// Add named constraints, the only declarations whose conflicts report here.
+fn addStandaloneConstraints(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, names: *std.StringHashMapUnmanaged(StandaloneName), sink: *diagnostic.Sink) diagnostic.Error!void {
+    for (program.types.constraints) |constraint| try addStandaloneName(allocator, src, names, constraint.name, true, sink);
+}
+/// Enforce the constraint declaration namespace for a standalone program before any use resolves.
+/// The interfaces index performs the equivalent pass for module projects; standalone files
+/// have no index, so duplicate and colliding constraint declarations are rejected here.
+fn checkStandaloneConstraintNamespace(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) diagnostic.Error!void {
+    var names: std.StringHashMapUnmanaged(StandaloneName) = .empty;
+    defer names.deinit(allocator);
+    try addStandaloneTypes(allocator, src, program, &names, sink);
+    try addStandaloneAliases(allocator, src, program, &names, sink);
+    try addStandaloneConstraints(allocator, src, program, &names, sink);
+    try addStandaloneFunctions(allocator, src, program, &names, sink);
+}
 /// Resolve every concrete application/array before body checking, deferring only declared variables.
 pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, index: *templates.Index, graph: *layouts.Graph, sink: *diagnostic.Sink) diagnostic.Error!Sources {
+    if (index.context.names == null) try checkStandaloneConstraintNamespace(allocator, src, program, sink);
     var result: Sources = .{};
     try result.addScopes(allocator, src, program, index.context.names, sink);
     for (program.types.constraints) |constraint| {

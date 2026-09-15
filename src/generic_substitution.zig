@@ -4,6 +4,7 @@ const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 const Span = @import("source.zig").Span;
 const diagnostic = @import("diagnostic.zig");
+const generic_requirements = @import("generic_requirements.zig");
 /// Declaration parameters and concrete arguments for one source signature.
 pub const Binding = struct {
     span: Span,
@@ -32,17 +33,20 @@ pub fn resolve(allocator: std.mem.Allocator, catalog: *@import("type_catalog.zig
     const arguments = binding.arguments;
     const depth = binding.depth;
     if (depth == 256) return sink.fail(diagnostic.generic_limit, span, "composite signature exceeds 256 nesting levels");
-    for (binding.aliases) |alias| {
-        if (alias.scope.start > span.start or alias.scope.end < span.end) continue;
-        if (!std.mem.eql(u8, src.text(span), src.text(alias.name))) continue;
-        if (alias.parameter >= arguments.len) return error.InternalError;
-        return arguments[alias.parameter];
-    }
-    for (parameters, arguments) |parameter, argument| {
-        if (std.mem.eql(u8, src.text(parameter.name), src.text(span))) {
-            if (parameter.constant_length) return sink.fail(diagnostic.generic_length, span, "a const length parameter is a value, not a type");
-            return argument;
-        }
+    switch (generic_requirements.matchScope(binding.aliases, src, span)) {
+        .subject => |parameter| {
+            if (parameter >= arguments.len) return error.InternalError;
+            return arguments[parameter];
+        },
+        .foreign => {},
+        .local => {
+            for (parameters, arguments) |parameter, argument| {
+                if (std.mem.eql(u8, src.text(parameter.name), src.text(span))) {
+                    if (parameter.constant_length) return sink.fail(diagnostic.generic_length, span, "a const length parameter is a value, not a type");
+                    return argument;
+                }
+            }
+        },
     }
     if (catalog.templates.store) |store| if (store.index.syntax.callbacks.get(span.start)) |callback| {
         var inputs: [16]typed.Type = undefined;

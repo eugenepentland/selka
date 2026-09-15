@@ -2924,3 +2924,38 @@ test "named constraints fake-only entry ignores an absent or invalid production 
     try testing.expect(std.mem.indexOf(u8, rejected.stderr, "E_UNKNOWN_SYMBOL") != null);
     try testing.expect(std.mem.indexOf(u8, rejected.stderr, "missing_name") != null);
 }
+
+const named_probes = @import("named_constraints_probes.zig");
+
+fn runNamedConstraintProbe(allocator: std.mem.Allocator, probe: named_probes.Probe) !void {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    for (probe.files) |file| try temp.dir.writeFile(testing.io, .{ .sub_path = file.name, .data = file.body });
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", allocator);
+    defer allocator.free(entry);
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(allocator);
+    try args.appendSlice(allocator, &.{ compiler_path, probe.command, entry });
+    if (std.mem.eql(u8, probe.command, "check-project")) try args.append(allocator, "--no-cache");
+    const result = try std.process.run(allocator, testing.io, .{ .argv = args.items });
+    defer allocator.free(result.stdout);
+    defer allocator.free(result.stderr);
+    if (probe.expect_success) {
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    } else {
+        try testing.expect(result.term != .exited or result.term.exited != 0);
+        if (probe.diagnostic.len != 0) try testing.expect(std.mem.indexOf(u8, result.stderr, probe.diagnostic) != null);
+    }
+}
+
+fn runNamedConstraintProbes(allocator: std.mem.Allocator) !void {
+    for (named_probes.probes) |probe| try runNamedConstraintProbe(allocator, probe);
+}
+
+// The named-constraints review repros stay executable: imported export identity,
+// declaration-scoped type resolution, identity-based merging, implied copy,
+// normalized limits, standalone namespace rules, and unused declaration checks.
+// spec: NAMED-CONSTRAINT-REVIEW-1
+test "named constraints review repros keep their repaired checking outcomes" {
+    try runNamedConstraintProbes(testing.allocator);
+}

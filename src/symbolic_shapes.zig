@@ -1,6 +1,8 @@
 //! Resolve nominal fields and contracts without assigning runtime IDs to type parameters.
 const body_limit = "E_GENERIC_BODY_LIMIT";
 const generic_requirements = @import("generic_requirements.zig");
+const type_catalog = @import("type_catalog.zig");
+const ast = @import("ast.zig");
 const std = @import("std");
 const symbolic = @import("symbolic_types.zig");
 const templates = @import("nominal_templates.zig");
@@ -14,7 +16,7 @@ const Properties = symbolic.Properties;
 /// Function-local shape resolution; allocated shapes borrow compilation metadata and argument values.
 pub const Context = struct {
     arena: *std.heap.ArenaAllocator,
-    catalog: @import("type_catalog.zig").Catalog,
+    catalog: type_catalog.Catalog,
     src: source.Source,
     sink: *diagnostic.Sink,
     parameters: []const generic_requirements.Parameter,
@@ -81,16 +83,10 @@ pub const Context = struct {
     fn sourceType(self: Context, span: source.Span, depth: usize, aliases: []const generic_requirements.SubjectAlias) Error!Value {
         try self.charge(span);
         if (depth == 256) return self.sink.fail(body_limit, span, "structural field type exceeds 256 levels");
-        for (aliases) |alias| {
-            if (alias.scope.start > span.start or alias.scope.end < span.end) continue;
-            if (!std.mem.eql(u8, self.src.text(span), self.src.text(alias.name))) continue;
-            return .{ .parameter = alias.parameter };
-        }
-        for (self.parameters, 0..) |parameter, i| {
-            if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(span))) {
-                if (parameter.constant_length) return self.sink.fail(diagnostic.generic_length, span, "const length parameters are values, not types");
-                return .{ .parameter = i };
-            }
+        const scope = generic_requirements.matchScope(aliases, self.src, span);
+        switch (scope) {
+            .subject => |index| return .{ .parameter = index },
+            .foreign, .local => {},
         }
         if (self.catalog.templates.applications.get(span.start)) |template| {
             var arguments: [16]Value = undefined;
@@ -103,6 +99,14 @@ pub const Context = struct {
             const size: Value = if (template.length_parameter) |at| try self.lengthArgument(at) else .{ .length = template.length };
             array.* = .{ .length = if (size == .length) size.length else 0, .length_parameter = if (size == .length_parameter) size.length_parameter else null, .element = try self.sourceType(template.syntax.element, depth + 1, aliases) };
             return .{ .array = array };
+        }
+        if (scope == .local) {
+            for (self.parameters, 0..) |parameter, i| {
+                if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(span))) {
+                    if (parameter.constant_length) return self.sink.fail(diagnostic.generic_length, span, "const length parameters are values, not types");
+                    return .{ .parameter = i };
+                }
+            }
         }
         return .{ .concrete = try self.catalog.resolve(self.src, span, self.sink) };
     }
@@ -310,3 +314,137 @@ pub const Context = struct {
         return error.InternalError;
     }
 };
+/// Coalesce equivalent expanded requirement members by resolved identity and
+/// reject same-name members whose resolved types differ. Spans stay in their
+/// declaring coordinate space; only the comparison is normalized, so nominal
+/// identities and alpha-renamed subjects compare structurally.
+pub fn normalizeRequirements(
+    allocator: std.mem.Allocator,
+    catalog: type_catalog.Catalog,
+    src: source.Source,
+    parameters: []const generic_requirements.Parameter,
+    sink: *diagnostic.Sink,
+) Error![]const generic_requirements.Parameter {
+    if (parameters.len == 0) return parameters;
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    var work: usize = 0;
+    const context: Context = .{
+        .arena = &arena,
+        .catalog = catalog,
+        .src = src,
+        .sink = sink,
+        .parameters = parameters,
+        .contracts = .{ .cleanup = &.{} },
+        .work = &work,
+    };
+    const output = try allocator.alloc(generic_requirements.Parameter, parameters.len);
+    for (parameters, output) |parameter, *item| item.* = try normalizeOne(allocator, context, parameter);
+    return output;
+}
+fn normalizeOne(allocator: std.mem.Allocator, context: Context, parameter: generic_requirements.Parameter) Error!generic_requirements.Parameter {
+    const aliases = generic_requirements.subjectAliases(parameter);
+    const Seen = struct { key: []const u8, span: source.Span };
+    var fields: std.ArrayList(ast.Parameter) = .empty;
+    defer fields.deinit(allocator);
+    var seen_fields: std.StringHashMapUnmanaged(Seen) = .empty;
+    defer seen_fields.deinit(allocator);
+    for (parameter.field_requirements) |field| {
+        const key = try canonical(allocator, context.catalog, try context.sourceType(field.ty, 0, aliases));
+        const name = context.src.text(field.name);
+        if (seen_fields.get(name)) |previous| {
+            if (!std.mem.eql(u8, previous.key, key))
+                return context.sink.failRelated(diagnostic.generic_requirement, field.name, "conflicting structural field requirement", .{ .span = previous.span, .message = "previous requirement is here" });
+            continue;
+        }
+        try seen_fields.put(allocator, name, .{ .key = key, .span = field.name });
+        try fields.append(allocator, field);
+    }
+    var operations: std.ArrayList(ast.Operation) = .empty;
+    defer operations.deinit(allocator);
+    var seen_operations: std.StringHashMapUnmanaged(Seen) = .empty;
+    defer seen_operations.deinit(allocator);
+    for (parameter.operation_requirements) |operation| {
+        const key = try canonicalOperation(allocator, context, operation, aliases);
+        const name = context.src.text(operation.name);
+        if (seen_operations.get(name)) |previous| {
+            if (!std.mem.eql(u8, previous.key, key))
+                return context.sink.failRelated(diagnostic.generic_requirement, operation.name, "conflicting structural operation requirement", .{ .span = previous.span, .message = "previous requirement is here" });
+            continue;
+        }
+        try seen_operations.put(allocator, name, .{ .key = key, .span = operation.name });
+        try operations.append(allocator, operation);
+    }
+    const aliases_copy: ?*const generic_requirements.AliasSet = if (parameter.aliases) |set| copy: {
+        const items = try allocator.dupe(generic_requirements.SubjectAlias, set.items);
+        errdefer allocator.free(items);
+        const created = try allocator.create(generic_requirements.AliasSet);
+        errdefer allocator.destroy(created);
+        created.* = .{ .items = items };
+        break :copy created;
+    } else null;
+    return .{
+        .constant_length = parameter.constant_length,
+        .name = parameter.name,
+        .requirements = parameter.requirements,
+        .field_requirements = try allocator.dupe(ast.Parameter, fields.items),
+        .operation_requirements = try allocator.dupe(ast.Operation, operations.items),
+        .aliases = aliases_copy,
+    };
+}
+fn canonicalOperation(allocator: std.mem.Allocator, context: Context, operation: ast.Operation, aliases: []const generic_requirements.SubjectAlias) Error![]const u8 {
+    var output: std.Io.Writer.Allocating = .init(allocator);
+    errdefer output.deinit();
+    output.writer.print("op({d})", .{operation.effect_bound.allowed}) catch return error.OutOfMemory;
+    for (operation.parameters) |parameter| {
+        output.writer.writeByte('|') catch return error.OutOfMemory;
+        output.writer.writeAll(try canonical(allocator, context.catalog, try context.sourceType(parameter.ty, 0, aliases))) catch return error.OutOfMemory;
+    }
+    output.writer.writeAll("->") catch return error.OutOfMemory;
+    output.writer.writeAll(try canonical(allocator, context.catalog, try context.sourceType(operation.return_type, 0, aliases))) catch return error.OutOfMemory;
+    return output.toOwnedSlice();
+}
+fn canonical(allocator: std.mem.Allocator, catalog: type_catalog.Catalog, value: Value) Error![]const u8 {
+    var output: std.Io.Writer.Allocating = .init(allocator);
+    errdefer output.deinit();
+    try writeCanonical(&output.writer, catalog, value);
+    return output.toOwnedSlice();
+}
+fn writeCanonical(writer: *std.Io.Writer, catalog: type_catalog.Catalog, value: Value) Error!void {
+    switch (value) {
+        .parameter => |index| writer.print("p{d}", .{index}) catch return error.OutOfMemory,
+        .length => |count| writer.print("l{d}", .{count}) catch return error.OutOfMemory,
+        .length_parameter => |index| writer.print("lp{d}", .{index}) catch return error.OutOfMemory,
+        .concrete => |ty| {
+            if (ty.isAggregate()) {
+                writer.print("r{d}", .{ty.recordIndex()}) catch return error.OutOfMemory;
+            } else writer.print("b{s}", .{@tagName(ty)}) catch return error.OutOfMemory;
+        },
+        .nominal => |nominal| {
+            writer.print("n{d}(", .{nominal.declaration}) catch return error.OutOfMemory;
+            for (nominal.arguments) |argument| {
+                writer.writeByte(',') catch return error.OutOfMemory;
+                try writeCanonical(writer, catalog, argument);
+            }
+            writer.writeByte(')') catch return error.OutOfMemory;
+        },
+        .array => |array| {
+            writer.print("a{d},{?d}[", .{ array.length, array.length_parameter }) catch return error.OutOfMemory;
+            try writeCanonical(writer, catalog, array.element);
+            writer.writeByte(']') catch return error.OutOfMemory;
+            if (array.key) |key| {
+                writer.writeByte('k') catch return error.OutOfMemory;
+                if (key.isAggregate()) writer.print("{d}", .{key.recordIndex()}) catch return error.OutOfMemory else writer.print("{s}", .{@tagName(key)}) catch return error.OutOfMemory;
+            }
+        },
+        .callback => |callback| {
+            writer.print("c({d}", .{callback.effects}) catch return error.OutOfMemory;
+            for (callback.parameters) |parameter| {
+                writer.writeByte(',') catch return error.OutOfMemory;
+                try writeCanonical(writer, catalog, parameter);
+            }
+            writer.writeAll(")->") catch return error.OutOfMemory;
+            try writeCanonical(writer, catalog, callback.result);
+        },
+    }
+}

@@ -172,3 +172,134 @@ test "public generic schemas retain structural field operation and codec constra
         \\    return 0
     ));
 }
+
+const named_contracts =
+    \\module contracts
+    \\export HasValue
+    \\export Prices
+    \\
+    \\
+    \\constraint Prices[Provider] = copy + op(price(policy: Provider, subtotal: i64) -> i64 effects())
+    \\
+    \\
+    \\constraint HasValue[T] = copy + field(value: i64)
+    \\
+    \\
+    \\constraint Hidden[H] = copy + op(secret(item: H) -> i64 effects())
+;
+const named_library =
+    \\module lib
+    \\import contracts
+    \\export total
+    \\export value_of
+    \\
+    \\
+    \\def total[P: contracts.Prices](policy: P, subtotal: i64) -> i64 effects():
+    \\    return P.price(policy, subtotal)
+    \\
+    \\
+    \\def value_of[T: contracts.HasValue](item: T) -> i64:
+    \\    return item.value
+;
+const named_entry =
+    \\module main
+    \\import lib as api
+    \\export run
+    \\
+    \\
+    \\def run(x: i64) -> i64:
+    \\    return x
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return 0
+;
+const NamedFiles = struct {
+    contracts: []const u8,
+    fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
+        const self: *NamedFiles = @ptrCast(@alignCast(context.?));
+        return language.embedded_project.read(allocator, &.{
+            File{ .path = "main.my", .bytes = named_entry },
+            File{ .path = "lib.my", .bytes = named_library },
+            File{ .path = "contracts.my", .bytes = self.contracts },
+        }, path, limit);
+    }
+};
+fn inspectNamed(allocator: std.mem.Allocator, contracts_source: []const u8) ![]u8 {
+    var files: NamedFiles = .{ .contracts = contracts_source };
+    var project = language.project.Project.init(allocator);
+    defer project.deinit();
+    try project.load(.{ .context = &files, .read = NamedFiles.read }, "main", .{});
+    var index = try language.interfaces.build(&project);
+    var compilation = try language.project_compile.Compilation.init(&index);
+    return language.schema_report.render(allocator, &compilation, .{
+        .compiler_sha256 = @splat(42),
+        .zig_version = "test",
+        .architecture = "x86_64",
+        .os = "linux",
+        .abi = "gnu",
+        .optimize = "Debug",
+    });
+}
+// spec-case: GENERIC-API-1
+test "public schema publishes exported constraints and replaceIdentifier expands named bounds without leaking private ones" {
+    const bytes = try inspectNamed(t.allocator, named_contracts);
+    defer t.allocator.free(bytes);
+    const parsed = try std.json.parseFromSlice(std.json.Value, t.allocator, bytes, .{});
+    defer parsed.deinit();
+    const schema = parsed.value.object.get("schema").?.object;
+    try t.expectEqualStrings("generic-templates-v2", schema.get("generic_templates_version").?.string);
+    const templates = schema.get("generic_templates").?.array.items;
+    try t.expectEqual(@as(usize, 4), templates.len);
+
+    // Exported constraint: distinct non-callable kind with its own expanded operation.
+    const has_value = templates[0].object;
+    try t.expectEqualStrings("contracts::HasValue", has_value.get("name").?.string);
+    try t.expectEqualStrings("constraint", has_value.get("kind").?.string);
+    try t.expect(!has_value.get("contract").?.object.get("callable").?.bool);
+    const has_value_expanded = has_value.get("contract").?.object.get("constraint").?.object.get("expanded").?.object;
+    try t.expectEqualStrings("value", has_value_expanded.get("field_requirements").?.array.items[0].object.get("name").?.string);
+    try t.expectEqualStrings("i64", has_value_expanded.get("field_requirements").?.array.items[0].object.get("type").?.string);
+
+    const prices = templates[1].object;
+    try t.expectEqualStrings("contracts::Prices", prices.get("name").?.string);
+    try t.expectEqualStrings("constraint", prices.get("kind").?.string);
+    const constraint = prices.get("contract").?.object.get("constraint").?.object;
+    try t.expectEqualStrings("Provider", constraint.get("subject").?.string);
+    const expanded = constraint.get("expanded").?.object;
+    try t.expectEqualStrings("copy", expanded.get("requirements").?.array.items[0].string);
+    const price = expanded.get("operation_requirements").?.array.items[0].object;
+    try t.expectEqualStrings("price", price.get("name").?.string);
+    // The declaration's own subject spelling is retained in its template.
+    try t.expectEqualStrings("Provider", price.get("parameters").?.array.items[0].object.get("type").?.string);
+    try t.expectEqualStrings("i64", price.get("result").?.string);
+
+    const total = templates[2].object;
+    try t.expectEqualStrings("lib::total", total.get("name").?.string);
+    try t.expectEqualStrings("function", total.get("kind").?.string);
+    const parameter = total.get("contract").?.object.get("type_parameters").?.array.items[0].object;
+    try t.expectEqualStrings("copy", parameter.get("requirements").?.array.items[0].string);
+    const top_operation = parameter.get("operation_requirements").?.array.items[0].object;
+    try t.expectEqualStrings("price", top_operation.get("name").?.string);
+    // The consuming parameter spelling substitutes for the bound's subject.
+    try t.expectEqualStrings("P", top_operation.get("parameters").?.array.items[0].object.get("type").?.string);
+    const named = parameter.get("named_requirements").?.array.items;
+    try t.expectEqual(@as(usize, 1), named.len);
+    try t.expectEqualStrings("contracts.Prices", named[0].object.get("name").?.string);
+    try t.expectEqualStrings("contracts", named[0].object.get("module").?.string);
+    const bound = named[0].object.get("expanded").?.object;
+    try t.expectEqualStrings("copy", bound.get("requirements").?.array.items[0].string);
+    try t.expectEqualStrings("price", bound.get("operation_requirements").?.array.items[0].object.get("name").?.string);
+    try t.expectEqualStrings("P", bound.get("operation_requirements").?.array.items[0].object.get("parameters").?.array.items[0].object.get("type").?.string);
+
+    // Field-bound generic exposes the expanded field promise too.
+    const value_of = templates[3].object;
+    try t.expectEqualStrings("lib::value_of", value_of.get("name").?.string);
+    const value_parameter = value_of.get("contract").?.object.get("type_parameters").?.array.items[0].object;
+    try t.expectEqualStrings("value", value_parameter.get("field_requirements").?.array.items[0].object.get("name").?.string);
+    const value_named = value_parameter.get("named_requirements").?.array.items[0].object;
+    try t.expectEqualStrings("contracts.HasValue", value_named.get("name").?.string);
+    try t.expectEqualStrings("value", value_named.get("expanded").?.object.get("field_requirements").?.array.items[0].object.get("name").?.string);
+
+    for (templates) |template| try t.expect(!std.mem.eql(u8, template.object.get("name").?.string, "contracts::Hidden"));
+}

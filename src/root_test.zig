@@ -99,6 +99,7 @@ test {
     _ = @import("generic_api_test.zig");
     _ = @import("syntax_cache_large_test.zig");
     _ = @import("structural_constraints_test.zig");
+    _ = @import("named_constraints_namespace_test.zig");
     _ = @import("formatter_test.zig");
     _ = @import("value_test.zig");
     _ = @import("records_test.zig");

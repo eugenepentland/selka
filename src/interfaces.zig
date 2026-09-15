@@ -38,6 +38,11 @@ const ConstraintLookup = struct {
             .subject = resolution.declaration.subject.name,
             .scope = resolution.declaration.span,
             .body = &resolution.declaration.subject,
+            // Requirement spans belong to the defining module's source coordinates.
+            .copyable = generic_requirements.explicitCopyable(
+                self.index.project.modules.items[resolution.identity.module].src,
+                resolution.declaration.subject.requirements,
+            ),
         };
     }
 };
@@ -317,7 +322,8 @@ pub const Index = struct {
             const name = if (function.policy.owner) |owner| try std.fmt.allocPrint(allocator, "{s}.{s}", .{ src.text(owner), src.text(function.name) }) else src.text(function.name);
             if (!unit.symbols.items[unit.names.get(name).?].exported) continue;
             for (bounds) |bound| {
-                const symbol = unit.symbols.items[bound.identity.symbol];
+                // The identity's symbol index belongs to the defining module's table.
+                const symbol = self.units[bound.identity.module].symbols.items[bound.identity.symbol];
                 if (!symbol.exported) return project.fail(
                     "E_PRIVATE_INTERFACE",
                     "exported generic function exposes an unexported constraint",

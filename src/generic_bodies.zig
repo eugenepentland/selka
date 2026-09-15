@@ -16,6 +16,7 @@ const Error = diagnostic.Error;
 const effects = @import("effects.zig");
 const effect_set = @import("effect_set.zig");
 const Names = @import("module_names.zig").Names;
+const constraint_lookup = @import("constraint_lookup.zig");
 const variant_calls = @import("variant_calls.zig");
 const arrays = @import("array_literals.zig");
 const truncating = @import("truncating_math.zig");
@@ -112,12 +113,6 @@ const Checker = struct {
         self.work += 1;
     }
     fn ty(self: *Checker, span: source.Span) Error!Symbolic {
-        for (self.requirement_aliases) |alias| {
-            if (alias.scope.start > span.start or alias.scope.end < span.end) continue;
-            if (!std.mem.eql(u8, self.src.text(span), self.src.text(alias.name))) continue;
-            if (alias.parameter >= self.parameters.len) return error.InternalError;
-            return .{ .parameter = alias.parameter };
-        }
         for (self.program.types.expressions.callbacks) |callback| if (callback.span.start == span.start) {
             try self.enter(span);
             defer self.depth -= 1;
@@ -140,10 +135,19 @@ const Checker = struct {
             return self.arrayWithLength(length, try self.ty(template.syntax.element), span);
         }
         const text = self.src.text(span);
-        for (self.parameters, 0..) |parameter, index| if (std.mem.eql(u8, text, self.src.text(parameter.name))) {
-            if (parameter.constant_length) return self.sink.fail(diagnostic.generic_length, span, "const length parameters are values, not types");
-            return .{ .parameter = index };
-        };
+        switch (requirements.matchScope(self.requirement_aliases, self.src, span)) {
+            .subject => |index| {
+                if (index >= self.parameters.len) return error.InternalError;
+                return .{ .parameter = index };
+            },
+            .foreign => {},
+            .local => {
+                for (self.parameters, 0..) |parameter, index| if (std.mem.eql(u8, text, self.src.text(parameter.name))) {
+                    if (parameter.constant_length) return self.sink.fail(diagnostic.generic_length, span, "const length parameters are values, not types");
+                    return .{ .parameter = index };
+                };
+            },
+        }
         return self.concreteType(span);
     }
     fn callbackType(self: *Checker, syntax: ast.CallbackType, parameters: []const Symbolic, result: Symbolic) Error!Symbolic {
@@ -326,27 +330,24 @@ const Checker = struct {
         return function;
     }
     fn substitutedLength(self: *Checker, span: source.Span, parameters: []const ast.TypeParameter, arguments: []const Symbolic) Error!Symbolic {
-        for (self.requirement_aliases) |alias| {
-            if (alias.scope.start > span.start or alias.scope.end < span.end) continue;
-            if (!std.mem.eql(u8, self.src.text(span), self.src.text(alias.name))) continue;
-            if (alias.parameter >= arguments.len) return error.InternalError;
-            return arguments[alias.parameter];
-        }
-        for (parameters, arguments) |parameter, argument| {
-            if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(span))) {
-                if (!parameter.constant_length) return self.sink.fail(diagnostic.generic_length, span, "expected a constant parameter");
-                return argument;
-            }
+        switch (requirements.matchScope(self.requirement_aliases, self.src, span)) {
+            .subject => |index| {
+                if (index >= arguments.len) return error.InternalError;
+                return arguments[index];
+            },
+            .foreign => return self.lengthType(span),
+            .local => {
+                for (parameters, arguments) |parameter, argument| {
+                    if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(span))) {
+                        if (!parameter.constant_length) return self.sink.fail(diagnostic.generic_length, span, "expected a constant parameter");
+                        return argument;
+                    }
+                }
+            },
         }
         return self.lengthType(span);
     }
     fn substituted(self: *Checker, span: source.Span, parameters: []const ast.TypeParameter, arguments: []const Symbolic) Error!Symbolic {
-        for (self.requirement_aliases) |alias| {
-            if (alias.scope.start > span.start or alias.scope.end < span.end) continue;
-            if (!std.mem.eql(u8, self.src.text(span), self.src.text(alias.name))) continue;
-            if (alias.parameter >= arguments.len) return error.InternalError;
-            return arguments[alias.parameter];
-        }
         for (self.program.types.expressions.callbacks) |callback| if (callback.span.start == span.start) {
             try self.enter(span);
             defer self.depth -= 1;
@@ -382,7 +383,16 @@ const Checker = struct {
             return self.arrayWithLength(length, try self.substituted(template.syntax.element, parameters, arguments), span);
         }
         const text = self.src.text(span);
-        for (parameters, arguments) |parameter, argument| if (std.mem.eql(u8, text, self.src.text(parameter.name))) return argument;
+        switch (requirements.matchScope(self.requirement_aliases, self.src, span)) {
+            .subject => |index| {
+                if (index >= arguments.len) return error.InternalError;
+                return arguments[index];
+            },
+            .foreign => {},
+            .local => {
+                for (parameters, arguments) |parameter, argument| if (std.mem.eql(u8, text, self.src.text(parameter.name))) return argument;
+            },
+        }
         return self.concreteType(span);
     }
     fn tyWithAliases(self: *Checker, span: source.Span, aliases: []const requirements.SubjectAlias) Error!Symbolic {
@@ -781,7 +791,7 @@ const Checker = struct {
         if (function.policy.conversion) return self.sink.fail(eUnsupported, span, "generic conversions still need abstract checking");
         if (invocation.type_arguments.len != 0 and invocation.type_arguments.len != signature.type_parameters.len) return self.sink.fail("E_GENERIC_ARITY", span, "explicit type argument count does not match generic parameters");
         if (invocation.arguments.len != signature.parameters.len) return self.sink.fail("E_ARITY", span, "argument count does not match function parameters");
-        var provider: @import("constraint_lookup.zig").Provider = .{ .program = self.program, .src = self.src, .names = self.module_names };
+        var provider: constraint_lookup.Provider = .{ .program = self.program, .src = self.src, .names = self.module_names };
         const required = try requirements.resolveBounds(self.allocator, self.src, signature.type_parameters, self.sink, provider.lookup());
         defer requirements.deinitResolved(self.allocator, required);
         const arguments = try self.allocator.alloc(Symbolic, required.len);
@@ -1492,12 +1502,12 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
 /// Check symbolic bodies against the same concrete type catalog used by specialization.
 pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, catalog: Catalog) Error!void {
     const module_names = catalog.module_names;
-    var has_generic = false;
+    var has_work = program.types.constraints.len != 0;
     for (program.functions) |function| if (function.signature.type_parameters.len != 0) {
-        has_generic = true;
+        has_work = true;
         break;
     };
-    if (!has_generic) return;
+    if (!has_work) return;
     const cleanup_masks = try effects.cleanupMasks(allocator, catalog.records);
     defer allocator.free(cleanup_masks);
     const effect_masks = try allocator.alloc(effect_set.Mask, program.functions.len);
@@ -1528,8 +1538,16 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
     while (cursor < pending.items.len) : (cursor += 1) {
         const function = program.functions[pending.items[cursor]];
         if (function.policy.host != null) continue;
-        var provider: @import("constraint_lookup.zig").Provider = .{ .program = program, .src = src, .names = module_names };
-        const parameters = requirements.resolveBounds(allocator, src, function.signature.type_parameters, sink, provider.lookup()) catch |err| switch (err) {
+        var provider: constraint_lookup.Provider = .{ .program = program, .src = src, .names = module_names };
+        const raw = requirements.resolveBounds(allocator, src, function.signature.type_parameters, sink, provider.lookup()) catch |err| switch (err) {
+            error.SourceError => {
+                failed = true;
+                continue;
+            },
+            else => return err,
+        };
+        defer requirements.deinitResolved(allocator, raw);
+        const parameters = @import("symbolic_shapes.zig").normalizeRequirements(allocator, catalog, src, raw, sink) catch |err| switch (err) {
             error.SourceError => {
                 failed = true;
                 continue;
@@ -1561,6 +1579,44 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
         defer checker.active.deinit(allocator);
         defer checker.expected_types.deinit(allocator);
         checker.checkFunction(function) catch |err| switch (err) {
+            error.SourceError => failed = true,
+            else => return err,
+        };
+    }
+    for (program.types.constraints) |*constraint| {
+        var provider: constraint_lookup.Provider = .{ .program = program, .src = src, .names = module_names };
+        const parameters = requirements.resolveBounds(allocator, src, &.{constraint.subject}, sink, provider.lookup()) catch |err| switch (err) {
+            error.SourceError => {
+                failed = true;
+                continue;
+            },
+            else => return err,
+        };
+        defer requirements.deinitResolved(allocator, parameters);
+        var checker: Checker = .{
+            .allocator = allocator,
+            .field_arena = std.heap.ArenaAllocator.init(allocator),
+            .src = src,
+            .program = program,
+            .catalog = catalog,
+            .cleanup_masks = cleanup_masks,
+            .effect_masks = effect_masks,
+            .effect_calls = &effect_calls,
+            .function_index = 0,
+            .sink = sink,
+            .parameters = parameters,
+            .result = undefined,
+            .module_names = module_names,
+            .functions = &functions,
+            .pending = &pending,
+            .scheduled = scheduled,
+            .owner = null,
+        };
+        defer checker.field_arena.deinit();
+        defer checker.locals.deinit(allocator);
+        defer checker.active.deinit(allocator);
+        defer checker.expected_types.deinit(allocator);
+        checker.validateStructural() catch |err| switch (err) {
             error.SourceError => failed = true,
             else => return err,
         };

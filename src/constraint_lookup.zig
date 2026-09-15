@@ -39,10 +39,13 @@ pub const Provider = struct {
     fn findLocal(self: *Provider, reference: ast.BoundReference, sink: *diagnostic.Sink) diagnostic.Error!requirements.Definition {
         if (reference.alias != null) return sink.fail(diagnostic.generic_requirement, reference.name, "a qualified constraint name requires module syntax");
         const name = self.src.text(reference.name);
+        var found: ?*const ast.Constraint = null;
         for (self.program.types.constraints) |*constraint| {
             if (!std.mem.eql(u8, name, self.src.text(constraint.name))) continue;
-            return self.definition(null, constraint);
+            if (found) |previous| return sink.failRelated("E_DUPLICATE_SYMBOL", constraint.name, "module declaration name is already bound", .{ .span = previous.name, .message = "declaration is here" });
+            found = constraint;
         }
+        if (found) |constraint| return self.definition(null, constraint);
         return sink.fail(diagnostic.generic_requirement, reference.name, "unknown constraint name");
     }
 

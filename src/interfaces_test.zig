@@ -1,6 +1,7 @@
 //! Module interface and export privacy tests covering qualified names, semantic checking, execution, and allocation failures.
 const project_compile_module = @import("project_compile.zig");
 const units_path = "units.my";
+const contracts_module = "contracts.my";
 const duplicates_module = @import("duplicates.zig");
 const std = @import("std");
 const t = std.testing;
@@ -820,7 +821,7 @@ fn namedConstraintImportScenario(allocator: std.mem.Allocator) !void {
         \\def total[P: contracts.Prices](policy: P, subtotal: int) -> int effects():
         \\    return P.price(policy, subtotal)
         },
-        .{ .path = "contracts.my", .bytes =
+        .{ .path = contracts_module, .bytes =
         \\module contracts
         \\export Prices
         \\
@@ -1022,6 +1023,189 @@ fn expectNamedConstraintLocatedErrors() !void {
 
 test "named constraints resolveConstraint and checkConstraint report located errors" {
     try expectNamedConstraintLocatedErrors();
+}
+
+fn acceptNamedConstraintModule(main: []const u8, contracts: []const u8) !void {
+    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = main }, .{ .path = contracts_module, .bytes = contracts } } };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try project_compile_module.Compilation.init(&index);
+    try compilation.check();
+    try compilation.emit();
+    try t.expectEqual(@as(i64, 0), (try native.run(&compilation)).value);
+}
+
+fn rejectNamedConstraintModule(main: []const u8, contracts: []const u8, code: []const u8) !void {
+    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = main }, .{ .path = contracts_module, .bytes = contracts } } };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    project.load(files.provider(), "main", .{}) catch |err| {
+        try t.expectEqual(error.SourceError, err);
+        try t.expectEqualStrings(code, project.problem.?.code);
+        return;
+    };
+    try t.expectError(error.SourceError, interfaces.build(&project));
+    try t.expectEqualStrings(code, project.problem.?.code);
+    const message = try project.renderProblem(t.allocator);
+    defer t.allocator.free(message);
+}
+
+// spec-case: NAMED-CONSTRAINT-MODULE-7
+test "named constraints accept an imported exported bound when the defining module has more declarations" {
+    try acceptNamedConstraintModule(
+        \\module main
+        \\import contracts
+        \\export f
+        \\export g
+        \\
+        \\
+        \\def f[T: contracts.C](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def g[T: contracts.C](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ,
+        \\module contracts
+        \\export C
+        \\
+        \\
+        \\record One:
+        \\    a: int
+        \\
+        \\
+        \\record Two:
+        \\    a: int
+        \\
+        \\
+        \\record Three:
+        \\    a: int
+        \\
+        \\
+        \\constraint C[T] = copy
+    );
+}
+
+// spec-case: NAMED-CONSTRAINT-MODULE-7
+test "named constraints accept an imported exported bound when the defining module is smaller" {
+    try acceptNamedConstraintModule(
+        \\module main
+        \\import contracts
+        \\export f
+        \\
+        \\
+        \\def f[T: contracts.C](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ,
+        \\module contracts
+        \\export C
+        \\
+        \\
+        \\record One:
+        \\    a: int
+        \\
+        \\
+        \\constraint C[T] = copy
+    );
+}
+
+// spec-case: NAMED-CONSTRAINT-MODULE-3
+test "named constraints reject an unexported constraint imported from another module" {
+    try rejectNamedConstraintModule(
+        \\module main
+        \\import contracts
+        \\export f
+        \\
+        \\
+        \\def f[T: contracts.C](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ,
+        \\module contracts
+        \\
+        \\
+        \\constraint C[T] = copy
+    , "E_PRIVATE_SYMBOL");
+}
+
+// spec-case: NAMED-CONSTRAINT-MODULE-3
+test "named constraints reject a same-module unexported constraint exposed by an exported generic" {
+    try reject(
+        \\module main
+        \\export f
+        \\
+        \\
+        \\constraint C[T] = copy
+        \\
+        \\
+        \\def f[T: C](x: T) -> T:
+        \\    return x
+    , "E_PRIVATE_INTERFACE");
+}
+
+// spec-case: NAMED-CONSTRAINT-SEMANTICS-1
+test "named constraints supply copy from an imported constraint to a structural field bound" {
+    try acceptNamedConstraintModule(
+        \\module main
+        \\import contracts
+        \\
+        \\
+        \\def value[T: contracts.C + field(value: int)](x: T) -> int:
+        \\    return x.value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ,
+        \\module contracts
+        \\export C
+        \\
+        \\
+        \\constraint C[T] = copy
+    );
+}
+
+// spec-case: NAMED-CONSTRAINT-SEMANTICS-5
+test "named constraints accept implied copy from equality with a structural field" {
+    try acceptChecked(
+        \\module main
+        \\
+        \\
+        \\def value[T: equality + field(value: int)](x: T) -> int:
+        \\    return x.value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "module units\n");
+}
+
+// spec-case: NAMED-CONSTRAINT-SEMANTICS-7
+test "named constraints reject a structural field bound without copy" {
+    try reject(
+        \\module main
+        \\
+        \\
+        \\def value[T: field(value: int)](x: T) -> int:
+        \\    return x.value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_GENERIC_REQUIREMENT");
 }
 
 test "generic body contracts respect module-local declaration and import scopes" {

@@ -63,6 +63,27 @@ pub const AliasSet = struct { items: []SubjectAlias };
 pub fn subjectAliases(parameter: Parameter) []const SubjectAlias {
     return if (parameter.aliases) |set| set.items else &.{};
 }
+/// How one source span relates to the named-bundle scopes attached to a parameter.
+pub const ScopeMatch = union(enum) {
+    /// The span is the named declaration's subject and maps to this parameter.
+    subject: usize,
+    /// The span is declared inside a named declaration but is not its subject.
+    foreign,
+    /// The span belongs to the consuming declaration's own scope.
+    local,
+};
+/// Classify a span: only a matched subject may become a consumer type-parameter
+/// identity; every other leaf inside a named declaration resolves in the
+/// declaration's own scope, never by consumer binder spelling.
+pub fn matchScope(aliases: []const SubjectAlias, src: source.Source, span: source.Span) ScopeMatch {
+    var foreign = false;
+    for (aliases) |alias| {
+        if (alias.scope.start > span.start or alias.scope.end < span.end) continue;
+        foreign = true;
+        if (std.mem.eql(u8, src.text(span), src.text(alias.name))) return .{ .subject = alias.parameter };
+    }
+    return if (foreign) .foreign else .local;
+}
 /// A named structural contract resolved to its declaration in the active source coordinates.
 pub const Definition = struct {
     module: ?usize = null,
@@ -204,14 +225,14 @@ fn validateOneBound(allocator: std.mem.Allocator, src: source.Source, parameter:
     var counts: Counts = .{};
     defer counts.deinit(allocator);
     if (parameter.default_copy) counts.builtins |= @as(u5, 1) << @backingInt(Requirement.copy);
-    var ignored: Set = .{};
-    try addBuiltinSpans(src, parameter.requirements, sink, &counts.builtins, &ignored);
+    var resolved: Set = .{};
+    try addBuiltinSpans(src, parameter.requirements, sink, &counts.builtins, &resolved);
     for (parameter.field_requirements) |field| try counts.fields.put(allocator, src.text(field.name), {});
     for (parameter.operation_requirements) |operation| try counts.operations.put(allocator, src.text(operation.name), {});
     var identities: std.ArrayList(ConstraintIdentity) = .empty;
     defer identities.deinit(allocator);
     var named_count: usize = 0;
-    var copyable = counts.builtins & (@as(u5, 1) << @backingInt(Requirement.copy)) != 0;
+    var copyable = resolved.contains(.copy);
     for (parameter.named_requirements) |reference| {
         const definition = try lookup.find(lookup.ctx, reference, sink);
         copyable = copyable or definition.copyable;
@@ -232,7 +253,9 @@ fn validateOneBound(allocator: std.mem.Allocator, src: source.Source, parameter:
     try structural_declarations.validate(src, parameter, copyable, sink);
     if (counts.builtins == 0 and counts.fields.count() == 0 and counts.operations.count() == 0 and named_count == 0)
         return sink.fail(eRequirement, parameter.name, msg_explicit_requirement);
-    if (counts.total() + named_count > 16) return sink.fail(e_generic_limit, parameter.name, msg_requirement_limit);
+    // The expanded 16-requirement limit needs resolved member identities, which
+    // only the semantic normalization pass has; the parser still bounds each
+    // source list, so preflight stays bounded.
 }
 fn resolveOneBound(allocator: std.mem.Allocator, src: source.Source, parameter: ast.TypeParameter, sink: *diagnostic.Sink, lookup: Lookup, index: usize) diagnostic.Error!Parameter {
     if (parameter.constant_length) {
@@ -280,12 +303,23 @@ fn resolveOneBound(allocator: std.mem.Allocator, src: source.Source, parameter: 
         explicit |= body_explicit;
         set.bits |= body_set.bits;
         try aliases.append(allocator, .{ .name = definition.subject, .scope = definition.scope, .parameter = index });
-        for (definition.body.field_requirements) |field| try mergeField(allocator, src, aliases.items, &fields, field, sink);
-        for (definition.body.operation_requirements) |operation| try mergeOperation(allocator, src, aliases.items, &operations, operation, sink);
+        try fields.appendSlice(allocator, definition.body.field_requirements);
+        try operations.appendSlice(allocator, definition.body.operation_requirements);
     }
     if (explicit == 0 and fields.items.len == 0 and operations.items.len == 0)
         return sink.fail(eRequirement, parameter.name, msg_explicit_requirement);
-    if (@as(usize, @popCount(explicit)) + fields.items.len + operations.items.len > 16)
+    // Apply the inline contract's own rules now; cross-bundle identities are
+    // coalesced later by the semantic normalization pass.
+    try structural_declarations.validate(src, parameter, set.contains(.copy), sink);
+    var distinct_fields: std.StringHashMapUnmanaged(void) = .empty;
+    defer distinct_fields.deinit(allocator);
+    for (fields.items) |field| try distinct_fields.put(allocator, src.text(field.name), {});
+    var distinct_operations: std.StringHashMapUnmanaged(void) = .empty;
+    defer distinct_operations.deinit(allocator);
+    for (operations.items) |operation| try distinct_operations.put(allocator, src.text(operation.name), {});
+    // The limit counts unique explicit builtins and unique member names; merging
+    // equivalent members keeps that count and conflicting members reject later.
+    if (@as(usize, @popCount(explicit)) + distinct_fields.count() + distinct_operations.count() > 16)
         return sink.fail(e_generic_limit, parameter.name, msg_requirement_limit);
     const field_slice = try allocator.dupe(ast.Parameter, fields.items);
     errdefer allocator.free(field_slice);
@@ -299,13 +333,6 @@ fn resolveOneBound(allocator: std.mem.Allocator, src: source.Source, parameter: 
         created.* = .{ .items = items };
         break :set created;
     };
-    const synthetic: ast.TypeParameter = .{
-        .name = parameter.name,
-        .requirements = &.{},
-        .field_requirements = field_slice,
-        .operation_requirements = operation_slice,
-    };
-    try structural_declarations.validate(src, synthetic, set.contains(.copy), sink);
     return .{
         .name = parameter.name,
         .constant_length = false,
@@ -325,57 +352,6 @@ fn addBuiltinSpans(src: source.Source, spans: []const source.Span, sink: *diagno
         explicit.* |= bit;
         set.include(requirement);
     }
-}
-fn mergeField(allocator: std.mem.Allocator, src: source.Source, aliases: []const SubjectAlias, fields: *std.ArrayList(ast.Parameter), candidate: ast.Parameter, sink: *diagnostic.Sink) diagnostic.Error!void {
-    for (fields.items) |existing| {
-        if (!std.mem.eql(u8, src.text(existing.name), src.text(candidate.name))) continue;
-        if (!sameCanonical(src, existing.ty, candidate.ty, aliases)) return sink.failRelated(
-            eRequirement,
-            candidate.name,
-            "conflicting structural field requirement",
-            .{ .span = existing.name, .message = "previous requirement is here" },
-        );
-        return;
-    }
-    try fields.append(allocator, candidate);
-}
-fn mergeOperation(allocator: std.mem.Allocator, src: source.Source, aliases: []const SubjectAlias, operations: *std.ArrayList(ast.Operation), candidate: ast.Operation, sink: *diagnostic.Sink) diagnostic.Error!void {
-    for (operations.items) |existing| {
-        if (!std.mem.eql(u8, src.text(existing.name), src.text(candidate.name))) continue;
-        if (!sameOperation(src, existing, candidate, aliases)) return sink.failRelated(
-            eRequirement,
-            candidate.name,
-            "conflicting structural operation requirement",
-            .{ .span = existing.name, .message = "previous requirement is here" },
-        );
-        return;
-    }
-    try operations.append(allocator, candidate);
-}
-fn sameOperation(src: source.Source, left: ast.Operation, right: ast.Operation, aliases: []const SubjectAlias) bool {
-    if (left.parameters.len != right.parameters.len) return false;
-    if (left.effect_bound.allowed != right.effect_bound.allowed) return false;
-    for (left.parameters, right.parameters) |a, b| if (!sameCanonical(src, a.ty, b.ty, aliases)) return false;
-    return sameCanonical(src, left.return_type, right.return_type, aliases);
-}
-const CanonicalType = union(enum) { subject, text: []const u8 };
-fn canonical(src: source.Span, src_bytes: source.Source, aliases: []const SubjectAlias) CanonicalType {
-    for (aliases) |alias| {
-        if (alias.scope.start > src.start or alias.scope.end < src.end) continue;
-        if (std.mem.eql(u8, src_bytes.text(src), src_bytes.text(alias.name))) return .subject;
-    }
-    return .{ .text = src_bytes.text(src) };
-}
-fn sameCanonical(src: source.Source, left: source.Span, right: source.Span, aliases: []const SubjectAlias) bool {
-    const a = canonical(left, src, aliases);
-    const b = canonical(right, src, aliases);
-    return switch (a) {
-        .subject => b == .subject,
-        .text => |text| switch (b) {
-            .subject => false,
-            .text => |other| std.mem.eql(u8, text, other),
-        },
-    };
 }
 fn identityOf(definition: Definition) ConstraintIdentity {
     return .{ .module = definition.module, .start = definition.name.start, .end = definition.name.end };
