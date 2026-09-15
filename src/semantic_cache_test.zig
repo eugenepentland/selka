@@ -357,6 +357,7 @@ test "semantic cache contract fingerprint forces a fresh check and identical con
     try t.expectEqual(after_base_checked + 6, cache.statistics.checked);
 }
 
+// spec: SEMANTIC-CACHE-7
 test "per-function reuse ignores an unused generic and reuses unchanged ordinary bodies" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();

@@ -81,7 +81,7 @@ example below is the guest project they would govern.
 module helper
 export value
 
-def value() -> int:
+def value() -> int effects():
     return 42
 ```
 

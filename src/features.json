@@ -402,6 +402,11 @@
       "summary": "A discovered entry-anchored mylang.json makes its import_policy required for ordinary check, build, run, project and native-test commands before any cached success, with config and policy identity in receipts.",
       "doc": "docs/tooling/import-policy.md#enforcement"
     },
+    "per-function-body-reuse": {
+      "kind": "tooling",
+      "summary": "Ordinary checked bodies reuse per function with stable declaration identities and dependency digests, so an unrelated generic, alias, constant or callback no longer disables reuse.",
+      "doc": "docs/tooling/work-report.md#compiler-work-and-reuse-report"
+    },
     "actual-work-report": {
       "kind": "tooling",
       "summary": "Versioned work-report-v1 separates unchanged fingerprints from actual result reuse and reports per-stage performed, reused and skipped work with bypass reasons and session deltas.",

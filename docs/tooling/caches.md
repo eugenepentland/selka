@@ -165,9 +165,11 @@ functions that did not change can still be reused. Reuse is conservative and
 independently owned: a snapshot carries its own spans, nodes, statements and
 locals, relocated into the current source, and any relocation that cannot be
 validated falls back to checking fresh rather than trusting a stale reference.
-A changed declaration, type or import identity invalidates body reuse, generic,
-constant and alias configurations always check fresh, and the region, effect and
-codec passes rerun completely after every body edit — so reusing a caller never
+Reuse is per function: a changed declaration, type or import identity, a
+referenced constant, a scope/visibility lookup or a negative lookup that later
+resolves invalidates only the bodies that depend on it, while an unrelated
+generic, constant, alias or callback no longer disables reuse. Region, effect,
+mutation and codec passes rerun completely after every body edit — so reusing a caller never
 reuses a callee's effect verdict, and a callee that gains an effect still rejects
 an unchanged effect-bounded caller. The `functions` counters report bodies
 actually reused and actually checked. In this single-module session `perimeter`
