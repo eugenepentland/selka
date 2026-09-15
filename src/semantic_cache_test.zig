@@ -291,22 +291,22 @@ test "semantic cache rechecks transitive effects when only a callee body changes
 
 // spec-case: INCREMENTAL-KEYS-1
 test "specialization key mixes template arguments provider abi and compiler" {
-    const first = try semantic_key.specializationKey(t.allocator, "mod::id", &.{ "i64", "bool" }, "provider-v1", "runtime-abi-v0-unfrozen", "compiler-a");
+    const first = try semantic_key.specializationKey(t.allocator, "mod::id", &.{ "i64", "bool" }, "provider-v1", "runtime-abi-v1", "compiler-a");
     defer t.allocator.free(first);
-    const same = try semantic_key.specializationKey(t.allocator, "mod::id", &.{ "i64", "bool" }, "provider-v1", "runtime-abi-v0-unfrozen", "compiler-a");
+    const same = try semantic_key.specializationKey(t.allocator, "mod::id", &.{ "i64", "bool" }, "provider-v1", "runtime-abi-v1", "compiler-a");
     defer t.allocator.free(same);
     try t.expectEqualStrings(first, same);
     try t.expectEqual(@as(usize, 64), first.len);
 
-    const template = try semantic_key.specializationKey(t.allocator, "mod::other", &.{ "i64", "bool" }, "provider-v1", "runtime-abi-v0-unfrozen", "compiler-a");
+    const template = try semantic_key.specializationKey(t.allocator, "mod::other", &.{ "i64", "bool" }, "provider-v1", "runtime-abi-v1", "compiler-a");
     defer t.allocator.free(template);
-    const reordered = try semantic_key.specializationKey(t.allocator, "mod::id", &.{ "bool", "i64" }, "provider-v1", "runtime-abi-v0-unfrozen", "compiler-a");
+    const reordered = try semantic_key.specializationKey(t.allocator, "mod::id", &.{ "bool", "i64" }, "provider-v1", "runtime-abi-v1", "compiler-a");
     defer t.allocator.free(reordered);
-    const provider = try semantic_key.specializationKey(t.allocator, "mod::id", &.{ "i64", "bool" }, "provider-v2", "runtime-abi-v0-unfrozen", "compiler-a");
+    const provider = try semantic_key.specializationKey(t.allocator, "mod::id", &.{ "i64", "bool" }, "provider-v2", "runtime-abi-v1", "compiler-a");
     defer t.allocator.free(provider);
-    const abi = try semantic_key.specializationKey(t.allocator, "mod::id", &.{ "i64", "bool" }, "provider-v1", "runtime-abi-v1", "compiler-a");
+    const abi = try semantic_key.specializationKey(t.allocator, "mod::id", &.{ "i64", "bool" }, "provider-v1", "runtime-abi-v2", "compiler-a");
     defer t.allocator.free(abi);
-    const compiler = try semantic_key.specializationKey(t.allocator, "mod::id", &.{ "i64", "bool" }, "provider-v1", "runtime-abi-v0-unfrozen", "compiler-b");
+    const compiler = try semantic_key.specializationKey(t.allocator, "mod::id", &.{ "i64", "bool" }, "provider-v1", "runtime-abi-v1", "compiler-b");
     defer t.allocator.free(compiler);
     for ([_][]const u8{ template, reordered, provider, abi, compiler }) |changed|
         try t.expect(!std.mem.eql(u8, first, changed));
@@ -317,7 +317,7 @@ test "semantic cache contract fingerprint forces a fresh check and identical con
     const contract_a = try cache_key.Contract.default.fingerprint(t.allocator);
     defer t.allocator.free(contract_a);
     var runtime = cache_key.Contract.default;
-    runtime.runtime_abi = "runtime-abi-v1";
+    runtime.runtime_abi = "runtime-abi-v2";
     const contract_b = try runtime.fingerprint(t.allocator);
     defer t.allocator.free(contract_b);
     var cache = Cache.initWithContract(t.allocator, 4 * 1024 * 1024, contract_a);

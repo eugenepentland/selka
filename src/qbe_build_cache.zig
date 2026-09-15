@@ -23,7 +23,7 @@ pub const Contract = struct {
     pub const default: Contract = .{
         .bootstrap_language = "bootstrap-v1",
         .target = "native",
-        .runtime_abi = "runtime-abi-v0-unfrozen",
+        .runtime_abi = "runtime-abi-v1",
         .effects = "effects-v1",
         .flags = "",
         .compiler_identity = "",
@@ -241,7 +241,7 @@ test "qbe object cache identity folds the wave 3 contract dimensions" {
     defer context.allocator.free(repeat);
     try std.testing.expectEqualStrings(base, repeat);
     var changed = cache;
-    changed.contract.runtime_abi = "runtime-abi-v1";
+    changed.contract.runtime_abi = "runtime-abi-v2";
     const other = try changed.identity("qbe", "unit");
     defer context.allocator.free(other);
     try std.testing.expect(!std.mem.eql(u8, base, other));

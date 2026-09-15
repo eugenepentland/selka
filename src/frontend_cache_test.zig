@@ -330,7 +330,7 @@ test "frontend cache contract dimensions invalidate syntax and verdict keys for 
     var variants: [6]cache_key.Contract = .{ base, base, base, base, base, base };
     variants[0].bootstrap_language = "bootstrap-v2";
     variants[1].target = "wasm32";
-    variants[2].runtime_abi = "runtime-abi-v1";
+    variants[2].runtime_abi = "runtime-abi-v2";
     variants[3].effects = "effects-v2";
     variants[4].flags = "--release";
     variants[5].compiler_identity = "sha256:deadbeef";

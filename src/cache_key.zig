@@ -20,11 +20,11 @@ pub const Contract = struct {
     compiler_identity: []const u8,
 
     /// Conservative default used until a host supplies its own identity.
-    /// `runtime_abi` is a placeholder until Wave 4 freezes `runtime-abi-v1`.
+    /// `runtime_abi` is frozen at `runtime-abi-v1`; additions to the native ABI bump it.
     pub const default: Contract = .{
         .bootstrap_language = "bootstrap-v1",
         .target = "native",
-        .runtime_abi = "runtime-abi-v0-unfrozen",
+        .runtime_abi = "runtime-abi-v1",
         .effects = "effects-v1",
         .flags = "",
         .compiler_identity = "",
@@ -89,7 +89,7 @@ test "cache key fingerprints are stable and every contract dimension changes the
     const variants = [_]Contract{
         .{ .bootstrap_language = "bootstrap-v2", .target = base.target, .runtime_abi = base.runtime_abi, .effects = base.effects, .flags = base.flags, .compiler_identity = base.compiler_identity },
         .{ .bootstrap_language = base.bootstrap_language, .target = "wasm32", .runtime_abi = base.runtime_abi, .effects = base.effects, .flags = base.flags, .compiler_identity = base.compiler_identity },
-        .{ .bootstrap_language = base.bootstrap_language, .target = base.target, .runtime_abi = "runtime-abi-v1", .effects = base.effects, .flags = base.flags, .compiler_identity = base.compiler_identity },
+        .{ .bootstrap_language = base.bootstrap_language, .target = base.target, .runtime_abi = "runtime-abi-v2", .effects = base.effects, .flags = base.flags, .compiler_identity = base.compiler_identity },
         .{ .bootstrap_language = base.bootstrap_language, .target = base.target, .runtime_abi = base.runtime_abi, .effects = "effects-v2", .flags = base.flags, .compiler_identity = base.compiler_identity },
         .{ .bootstrap_language = base.bootstrap_language, .target = base.target, .runtime_abi = base.runtime_abi, .effects = base.effects, .flags = "--release", .compiler_identity = base.compiler_identity },
         .{ .bootstrap_language = base.bootstrap_language, .target = base.target, .runtime_abi = base.runtime_abi, .effects = base.effects, .flags = base.flags, .compiler_identity = "sha256:abc" },
