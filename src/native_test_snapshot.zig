@@ -2,6 +2,7 @@
 const std = @import("std");
 const fs = @import("qbe_build_io.zig");
 const v = @import("qbe_build_value.zig");
+const project_config = @import("project_config.zig");
 /// Source races and invalid provider contracts discard test results.
 pub const Error = fs.Error || std.Io.Dir.OpenError || std.Io.Dir.SelectiveWalker.Error ||
     std.Io.File.StatError || std.Io.File.ReadPositionalError ||
@@ -9,12 +10,17 @@ pub const Error = fs.Error || std.Io.Dir.OpenError || std.Io.Dir.SelectiveWalker
 const byte_limit = 16 * 1024 * 1024;
 /// Captured bytes are independent of subsequent source edits.
 pub const File = struct { path: []const u8, data: []const u8, hash: []const u8 };
+/// Captured required-configuration files and their combined policy identity.
+pub const Support = struct { files: []const File = &.{}, policy_identity: ?[]const u8 = null };
 /// Paths and bytes belong to the enclosing native build context.
 pub const Snapshot = struct {
     root: []const u8,
     entry: []const u8,
     entry_path: []const u8,
     files: []const File,
+    /// Required `mylang.json` and its relative policy file, mirrored so the
+    /// materialized entry discovers the same configuration as the live project.
+    support: Support = .{},
     identity: []const u8,
     excluded: ?[]const u8 = null,
 };
@@ -52,8 +58,65 @@ pub fn captureExcluding(context: fs.Context, entry: []const u8, excluded: ?[]con
     std.mem.sort(File, files.items, {}, less);
     const name = std.fs.path.basename(absolute);
     if (find(files.items, name) == null) return error.InvalidTestSnapshot;
-    return .{ .root = root, .entry = name, .entry_path = absolute, .files = files.items, .identity = try identity(context.allocator, name, files.items), .excluded = excluded };
+    const support = try captureSupport(context, absolute);
+    return .{
+        .root = root,
+        .entry = name,
+        .entry_path = absolute,
+        .files = files.items,
+        .support = support,
+        .identity = try identity(context.allocator, name, files.items, support.files),
+        .excluded = excluded,
+    };
 }
+
+/// Capture the winning `mylang.json` and, when it names a relative policy, the
+/// resolved policy bytes. A malformed configuration is still copied verbatim so
+/// the shared frontend gate reports the precise error; the policy identity is
+/// only published for a configuration that loads.
+fn captureSupport(context: fs.Context, entry_absolute: []const u8) Error!Support {
+    const config_path = project_config.discover(context.allocator, context.io, entry_absolute) catch return error.InvalidTestSnapshot;
+    const absolute_config = config_path orelse return .{ .files = &.{} };
+    const config_bytes = readAbsolute(context, absolute_config, project_config.max_config_bytes) catch return error.InvalidTestSnapshot;
+    var support: std.ArrayList(File) = .empty;
+    try support.append(context.allocator, .{
+        .path = try strippedPath(context.allocator, absolute_config),
+        .data = config_bytes,
+        .hash = try fs.hash(context.allocator, config_bytes),
+    });
+    var failure: project_config.Failure = .{};
+    var config = project_config.load(context.allocator, context.io, absolute_config, &failure) catch
+        return .{ .files = try support.toOwnedSlice(context.allocator) };
+    defer config.deinit();
+    var policy_identity: ?[]const u8 = null;
+    if (config.policy) |policy| {
+        if (!policy.absolute) {
+            // Re-read the exact bytes into this context rather than borrowing the
+            // parsed configuration's storage, whose arena lifetime ends here.
+            const policy_bytes = try readAbsolute(context, policy.path, project_config.max_config_bytes);
+            try support.append(context.allocator, .{
+                .path = try strippedPath(context.allocator, policy.path),
+                .data = policy_bytes,
+                .hash = try fs.hash(context.allocator, policy_bytes),
+            });
+        }
+        var identity_buffer: [64]u8 = undefined;
+        if (config.cacheIdentity(&identity_buffer)) policy_identity = try context.allocator.dupe(u8, &identity_buffer);
+    }
+    return .{ .files = try support.toOwnedSlice(context.allocator), .policy_identity = policy_identity };
+}
+
+fn readAbsolute(context: fs.Context, path: []const u8, limit: usize) Error![]const u8 {
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(context.io, path, context.allocator, .limited(limit + 1));
+    if (bytes.len > limit) return error.InvalidTestSnapshot;
+    return bytes;
+}
+
+/// Strip a leading filesystem root so the path can be mirrored beneath a temp root.
+fn strippedPath(allocator: std.mem.Allocator, path: []const u8) Error![]const u8 {
+    return allocator.dupe(u8, std.mem.trimStart(u8, path, "/"));
+}
+
 fn ignored(context: fs.Context, root: []const u8, item: std.Io.Dir.Walker.Entry, excluded: ?[]const u8) Error!bool {
     const names = [_][]const u8{ ".mylang-cache", ".zig-cache", "zig-out", ".git" };
     if (item.kind == .directory or item.kind == .sym_link) {
@@ -82,9 +145,10 @@ fn read(context: fs.Context, directory: std.Io.Dir, path: []const u8, limit: usi
     if (count != stat.size) return error.SourceChanged;
     return buffer[0..count];
 }
-fn identity(allocator: std.mem.Allocator, entry: []const u8, files: []const File) Error![]const u8 {
-    const pairs = try allocator.alloc([2][]const u8, files.len);
-    for (files, pairs) |file, *pair| pair.* = .{ file.path, file.hash };
+fn identity(allocator: std.mem.Allocator, entry: []const u8, files: []const File, support: []const File) Error![]const u8 {
+    const pairs = try allocator.alloc([2][]const u8, files.len + support.len);
+    for (files, pairs[0..files.len]) |file, *pair| pair.* = .{ file.path, file.hash };
+    for (support, pairs[files.len..]) |file, *pair| pair.* = .{ file.path, file.hash };
     const encoded = try std.json.Stringify.valueAlloc(allocator, .{ .version = "worker-source-v1", .entry = entry, .files = pairs }, .{});
     return fs.hash(allocator, encoded);
 }
@@ -93,15 +157,39 @@ pub fn verify(context: fs.Context, snapshot: Snapshot) Error!void {
     const current = try captureExcluding(context, snapshot.entry_path, snapshot.excluded);
     if (!std.mem.eql(u8, current.identity, snapshot.identity)) return error.SourceChanged;
 }
-/// Materialize captured bytes for checking and code generation without rereading live sources.
+/// Materialize captured bytes for checking and code generation without rereading
+/// live sources. Absolute paths are mirrored beneath the temp root so a
+/// configuration discovered above the entry directory is still found by the
+/// materialized entry's walk-up discovery.
 pub fn materialize(context: fs.Context, snapshot: Snapshot, directory: []const u8) Error!Snapshot {
-    const root = try context.absolute(directory);
+    const temp_root = try context.absolute(directory);
+    const root = try mirrorPath(context.allocator, temp_root, snapshot.root);
     for (snapshot.files) |file| {
         const path = try std.fs.path.join(context.allocator, &.{ root, file.path });
         try context.mkdir(std.fs.path.dirname(path).?);
         try context.write(path, file.data);
     }
-    return .{ .root = root, .entry = snapshot.entry, .entry_path = try std.fs.path.join(context.allocator, &.{ root, snapshot.entry }), .files = snapshot.files, .identity = snapshot.identity };
+    for (snapshot.support.files) |file| {
+        const path = try std.fs.path.join(context.allocator, &.{ temp_root, file.path });
+        try context.mkdir(std.fs.path.dirname(path).?);
+        try context.write(path, file.data);
+    }
+    return .{
+        .root = root,
+        .entry = snapshot.entry,
+        .entry_path = try std.fs.path.join(context.allocator, &.{ root, snapshot.entry }),
+        .files = snapshot.files,
+        .support = snapshot.support,
+        .identity = snapshot.identity,
+    };
+}
+
+/// Place an absolute path under `temp_root` with its root stripped, preserving
+/// every ancestor directory so walk-up discovery observes the same hierarchy.
+fn mirrorPath(allocator: std.mem.Allocator, temp_root: []const u8, absolute: []const u8) Error![]const u8 {
+    const relative = std.mem.trimStart(u8, absolute, "/");
+    if (relative.len == 0) return allocator.dupe(u8, temp_root);
+    return std.fs.path.join(allocator, &.{ temp_root, relative });
 }
 /// Replace only existing dependency sources in a private snapshot directory.
 pub fn replace(context: fs.Context, snapshot: Snapshot, replacements: std.json.Value, directory: []const u8) Error!Snapshot {
@@ -114,17 +202,24 @@ pub fn replace(context: fs.Context, snapshot: Snapshot, replacements: std.json.V
     }
     try verify(context, snapshot);
     var total: usize = 0;
+    const temp_root = try context.absolute(directory);
+    const root = try mirrorPath(context.allocator, temp_root, snapshot.root);
     for (snapshot.files) |file| {
         const replacement = replacements.object.get(file.path);
         const data = if (replacement) |value| value.string else file.data;
         total = std.math.add(usize, total, file.path.len) catch return error.InvalidTestProviders;
         total = std.math.add(usize, total, data.len) catch return error.InvalidTestProviders;
         if (total > byte_limit) return error.InvalidTestProviders;
-        const target = try std.fs.path.join(context.allocator, &.{ directory, file.path });
+        const target = try std.fs.path.join(context.allocator, &.{ root, file.path });
         try context.mkdir(std.fs.path.dirname(target).?);
         try context.write(target, data);
     }
-    return capture(context, try std.fs.path.join(context.allocator, &.{ directory, snapshot.entry }));
+    for (snapshot.support.files) |file| {
+        const target = try std.fs.path.join(context.allocator, &.{ temp_root, file.path });
+        try context.mkdir(std.fs.path.dirname(target).?);
+        try context.write(target, file.data);
+    }
+    return capture(context, try std.fs.path.join(context.allocator, &.{ root, snapshot.entry }));
 }
 /// Require provider snapshots to preserve exported types and the selected test ABI.
 pub fn compatible(original: std.json.Value, replacement: std.json.Value, name: []const u8) Error!void {

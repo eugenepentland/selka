@@ -1,3 +1,5 @@
+//! Unit tests for the import-direction policy evaluator and the `mylang.json`
+//! project configuration that makes the policy required for ordinary commands.
 const std = @import("std");
 const t = std.testing;
 const policy = @import("import_policy.zig");
@@ -132,4 +134,115 @@ test "policy parsing rejects invalid actions and byte and rule budgets" {
     const bytes = try std.json.Stringify.valueAlloc(t.allocator, policy.Document{ .version = 1, .default_action = .deny, .rules = entries }, .{});
     defer t.allocator.free(bytes);
     try t.expectError(error.TooManyPolicyRules, policy.Policy.parse(t.allocator, bytes));
+}
+
+const project_config = @import("project_config.zig");
+const valid_policy = "{\"version\":1,\"default_action\":\"allow\",\"rules\":[]}";
+
+fn writeTmp(dir: *std.testing.TmpDir, path: []const u8, data: []const u8) !void {
+    if (std.fs.path.dirname(path)) |parent| try dir.dir.createDirPath(t.io, parent);
+    try dir.dir.writeFile(t.io, .{ .sub_path = path, .data = data });
+}
+
+fn loadTmp(dir: *std.testing.TmpDir, path: []const u8, failure: *project_config.Failure) !project_config.Config {
+    const absolute = try dir.dir.realPathFileAlloc(t.io, path, t.allocator);
+    defer t.allocator.free(absolute);
+    return project_config.load(t.allocator, t.io, absolute, failure);
+}
+
+test "project config discovery walks up from the entry and resolves policy beside the winning config" {
+    var temp = t.tmpDir(.{});
+    defer temp.cleanup();
+    try writeTmp(&temp, "mylang.json", "{\"version\":1}");
+    try writeTmp(&temp, "nested/policy.json", valid_policy);
+    try writeTmp(&temp, "nested/mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
+    try writeTmp(&temp, "nested/deeper/entry.my", "module entry\n");
+
+    const entry = try temp.dir.realPathFileAlloc(t.io, "nested/deeper/entry.my", t.allocator);
+    defer t.allocator.free(entry);
+    const found = (try project_config.discover(t.allocator, t.io, entry)).?;
+    defer t.allocator.free(found);
+    try t.expect(std.mem.endsWith(u8, found, "nested/mylang.json"));
+    try t.expect(!std.mem.endsWith(u8, found, "deeper/mylang.json"));
+
+    var failure: project_config.Failure = .{};
+    var loaded = try project_config.load(t.allocator, t.io, found, &failure);
+    defer loaded.deinit();
+    try t.expectEqual(@as(u32, 1), loaded.document.version);
+    try t.expect(loaded.hasPolicy());
+    const policy_path = loaded.policy.?.path;
+    try t.expect(std.mem.endsWith(u8, policy_path, "nested/policy.json"));
+    try t.expect(!loaded.policy.?.absolute);
+
+    var first_identity: [64]u8 = undefined;
+    try t.expect(loaded.cacheIdentity(&first_identity));
+    try writeTmp(&temp, "nested/policy.json", "{\"version\":1,\"default_action\":\"deny\",\"rules\":[]}");
+    var changed = try project_config.load(t.allocator, t.io, found, &failure);
+    defer changed.deinit();
+    var second_identity: [64]u8 = undefined;
+    try t.expect(changed.cacheIdentity(&second_identity));
+    try t.expect(!std.mem.eql(u8, &first_identity, &second_identity));
+    const receipt = try changed.receipt(t.allocator);
+    defer {
+        t.allocator.free(receipt.config_sha256);
+        if (receipt.policy_sha256) |value| t.allocator.free(value);
+    }
+    try t.expectEqual(@as(usize, 64), receipt.config_sha256.len);
+    try t.expectEqual(@as(usize, 64), receipt.policy_sha256.?.len);
+}
+
+test "project config rejects unknown duplicate malformed and unsupported shapes" {
+    var temp = t.tmpDir(.{});
+    defer temp.cleanup();
+    const cases = [_]struct { body: []const u8, want: anyerror }{
+        .{ .body = "{", .want = error.InvalidJson },
+        .{ .body = "{\"version\":1,\"version\":1}", .want = error.DuplicateField },
+        .{ .body = "{\"version\":1,\"extra\":true}", .want = error.UnknownField },
+        .{ .body = "{\"version\":\"1\"}", .want = error.InvalidVersion },
+        .{ .body = "{\"version\":2}", .want = error.UnsupportedVersion },
+        .{ .body = "{}", .want = error.MissingVersion },
+        .{ .body = "{\"version\":1,\"import_policy\":7}", .want = error.InvalidImportPolicy },
+        .{ .body = "{\"version\":1,\"import_policy\":\"\"}", .want = error.InvalidImportPolicy },
+    };
+    for (cases, 0..) |item, index| {
+        const name = try std.fmt.allocPrint(t.allocator, "case{d}.json", .{index});
+        defer t.allocator.free(name);
+        try writeTmp(&temp, name, item.body);
+        const path = try temp.dir.realPathFileAlloc(t.io, name, t.allocator);
+        defer t.allocator.free(path);
+        var failure: project_config.Failure = .{};
+        try t.expectError(item.want, project_config.load(t.allocator, t.io, path, &failure));
+        try t.expect(failure.path.len != 0);
+        try t.expectEqual(@as(u64, 1), failure.location.line);
+    }
+}
+
+test "project config reports missing oversized and unreadable files" {
+    var temp = t.tmpDir(.{});
+    defer temp.cleanup();
+    var failure: project_config.Failure = .{};
+    const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const missing = try std.fs.path.join(t.allocator, &.{ root, "absent" });
+    defer t.allocator.free(missing);
+    try t.expectError(error.MissingConfig, project_config.load(t.allocator, t.io, missing, &failure));
+
+    try temp.dir.createDir(t.io, "as-directory", .default_dir);
+    const directory_path = try temp.dir.realPathFileAlloc(t.io, "as-directory", t.allocator);
+    defer t.allocator.free(directory_path);
+    try t.expectError(error.ReadFailed, project_config.load(t.allocator, t.io, directory_path, &failure));
+
+    const huge = try t.allocator.alloc(u8, project_config.max_config_bytes + 1);
+    defer t.allocator.free(huge);
+    @memset(huge, ' ');
+    try writeTmp(&temp, "huge.json", huge);
+    try t.expectError(error.ConfigTooLarge, loadTmp(&temp, "huge.json", &failure));
+
+    try writeTmp(&temp, "policy.json", valid_policy);
+    try writeTmp(&temp, "config.json", "{\"version\":1,\"import_policy\":\"missing-policy.json\"}");
+    try t.expectError(error.MissingImportPolicy, loadTmp(&temp, "config.json", &failure));
+
+    try writeTmp(&temp, "big-policy.json", huge);
+    try writeTmp(&temp, "config-big.json", "{\"version\":1,\"import_policy\":\"big-policy.json\"}");
+    try t.expectError(error.PolicyTooLarge, loadTmp(&temp, "config-big.json", &failure));
 }

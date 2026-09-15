@@ -3091,3 +3091,343 @@ fn runNamedConstraintProbes(allocator: std.mem.Allocator) !void {
 test "named constraints review repros keep their repaired checking outcomes" {
     try runNamedConstraintProbes(testing.allocator);
 }
+
+fn runCompiler(allocator: std.mem.Allocator, argv: []const []const u8) !std.process.RunResult {
+    return std.process.run(allocator, testing.io, .{ .argv = argv });
+}
+
+fn writeProjectFile(dir: *std.testing.TmpDir, path: []const u8, data: []const u8) !void {
+    if (std.fs.path.dirname(path)) |parent| try dir.dir.createDirPath(testing.io, parent);
+    try dir.dir.writeFile(testing.io, .{ .sub_path = path, .data = data });
+}
+
+const policy_allow = "{\"version\":1,\"default_action\":\"allow\",\"rules\":[]}";
+const policy_deny = "{\"version\":1,\"default_action\":\"deny\",\"rules\":[]}";
+const policy_project_main = "module main\nimport helper\ndef main() -> int:\n    return helper.value()\n";
+const policy_project_helper = "module helper\nexport value\ndef value() -> int:\n    return 7\n";
+
+test "loadConfiguredPolicy enforces mylang.json across ordinary project commands cold warm and after policy-only edits" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try writeProjectFile(&temp, "main.my", policy_project_main);
+    try writeProjectFile(&temp, "helper.my", policy_project_helper);
+    try writeProjectFile(&temp, "mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
+    try writeProjectFile(&temp, "policy.json", policy_deny);
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
+    defer testing.allocator.free(cache);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
+    defer testing.allocator.free(cache_argument);
+    const output = try std.fs.path.join(testing.allocator, &.{ root, "program" });
+    defer testing.allocator.free(output);
+    const explicit_policy = try std.fmt.allocPrint(testing.allocator, "--policy={s}/policy.json", .{root});
+    defer testing.allocator.free(explicit_policy);
+
+    // Cold and warm `check-project`: a required denial cannot be skipped by the cache.
+    for (0..2) |_| {
+        const denied = try runCompiler(testing.allocator, &.{ compiler_path, "check-project", entry, cache_argument });
+        defer testing.allocator.free(denied.stdout);
+        defer testing.allocator.free(denied.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, denied.term);
+        try testing.expectEqualStrings("", denied.stdout);
+        try testing.expect(std.mem.indexOf(u8, denied.stderr, "import-direction-v1: failed") != null);
+        try testing.expect(std.mem.indexOf(u8, denied.stderr, "main -> helper: deny") != null);
+    }
+
+    // `build` and `run-project` go through the same required-policy gate.
+    var build_args: std.ArrayList([]const u8) = .empty;
+    defer build_args.deinit(testing.allocator);
+    try build_args.appendSlice(testing.allocator, &.{ compiler_path, "build", entry, "--project", "-o", output, cache_argument });
+    try build_args.appendSlice(testing.allocator, &tools);
+    const built = try runCompiler(testing.allocator, build_args.items);
+    defer testing.allocator.free(built.stdout);
+    defer testing.allocator.free(built.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, built.term);
+
+    var run_args: std.ArrayList([]const u8) = .empty;
+    defer run_args.deinit(testing.allocator);
+    try run_args.appendSlice(testing.allocator, &.{ compiler_path, "run-project", entry, "--print-result", cache_argument });
+    try run_args.appendSlice(testing.allocator, &tools);
+    const run_denied = try runCompiler(testing.allocator, run_args.items);
+    defer testing.allocator.free(run_denied.stdout);
+    defer testing.allocator.free(run_denied.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, run_denied.term);
+    try testing.expectEqualStrings("", run_denied.stdout);
+
+    // Explicit `check-policy` inspection keeps working and names its own policy.
+    const explicit = try runCompiler(testing.allocator, &.{ compiler_path, "check-policy", entry, explicit_policy });
+    defer testing.allocator.free(explicit.stdout);
+    defer testing.allocator.free(explicit.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, explicit.term);
+    try testing.expect(std.mem.indexOf(u8, explicit.stdout, "import-direction-v1: failed") != null);
+
+    // A policy-only edit flips acceptance; the earlier deny never wrote a pass.
+    try writeProjectFile(&temp, "policy.json", policy_allow);
+    for (0..2) |_| {
+        const allowed = try runCompiler(testing.allocator, &.{ compiler_path, "check-project", entry, cache_argument });
+        defer testing.allocator.free(allowed.stdout);
+        defer testing.allocator.free(allowed.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, allowed.term);
+        try testing.expectEqualStrings("", allowed.stderr);
+    }
+    const allowed_run = try runCompiler(testing.allocator, run_args.items);
+    defer testing.allocator.free(allowed_run.stdout);
+    defer testing.allocator.free(allowed_run.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 7 }, allowed_run.term);
+    try testing.expectEqualStrings("7\n", allowed_run.stdout);
+
+    // A stricter policy-only edit must invalidate the warm allowed pass.
+    try writeProjectFile(&temp, "policy.json", policy_deny);
+    const stricter = try runCompiler(testing.allocator, &.{ compiler_path, "check-project", entry, cache_argument });
+    defer testing.allocator.free(stricter.stdout);
+    defer testing.allocator.free(stricter.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, stricter.term);
+    try testing.expect(std.mem.indexOf(u8, stricter.stderr, "main -> helper: deny") != null);
+}
+
+test "loadConfiguredPolicy policy discovery anchors to the entry file instead of the shell working directory" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try writeProjectFile(&temp, "entry/main.my", policy_project_main);
+    try writeProjectFile(&temp, "entry/helper.my", policy_project_helper);
+    try writeProjectFile(&temp, "entry/mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
+    try writeProjectFile(&temp, "entry/policy.json", policy_deny);
+    try writeProjectFile(&temp, "elsewhere/main.my", "module main\ndef main() -> int:\n    return 0\n");
+    try writeProjectFile(&temp, "elsewhere/mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
+    try writeProjectFile(&temp, "elsewhere/policy.json", policy_allow);
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "entry/main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    var elsewhere = try temp.dir.openDir(testing.io, "elsewhere", .{ .iterate = false });
+    defer elsewhere.close(testing.io);
+    // The child runs from another directory, so the compiler must name itself absolutely.
+    const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);
+    defer testing.allocator.free(compiler);
+
+    const result = try std.process.run(testing.allocator, testing.io, .{
+        .argv = &.{ compiler, "check-project", entry },
+        .cwd = .{ .dir = elsewhere },
+    });
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    // Running from the allow-policy directory must not select that policy for an
+    // entry whose own project denies the import.
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, result.term);
+    try testing.expect(std.mem.indexOf(u8, result.stderr, "main -> helper: deny") != null);
+}
+
+test "configured policy never disables independent import-cycle rejection" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try writeProjectFile(&temp, "main.my", "module main\nimport helper\ndef main() -> int:\n    return helper.value()\n");
+    try writeProjectFile(&temp, "helper.my", "module helper\nimport main\nexport value\ndef value() -> int:\n    return 0\n");
+    try writeProjectFile(&temp, "mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    for ([_][]const u8{ policy_allow, policy_deny }) |body| {
+        try writeProjectFile(&temp, "policy.json", body);
+        const result = try runCompiler(testing.allocator, &.{ compiler_path, "check-project", entry });
+        defer testing.allocator.free(result.stdout);
+        defer testing.allocator.free(result.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, result.term);
+        try testing.expect(std.mem.indexOf(u8, result.stderr, "E_IMPORT_CYCLE") != null);
+    }
+}
+
+test "loadConfiguredPolicy policy reports missing and malformed configuration as host status 2" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try writeProjectFile(&temp, "main.my", policy_project_main);
+    try writeProjectFile(&temp, "helper.my", policy_project_helper);
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+
+    const malformed = [_][]const u8{
+        "{\"version\":1,\"import_policy\":\"absent.json\"}",
+        "{\"version\":2,\"import_policy\":\"policy.json\"}",
+        "{\"version\":1,\"typo\":true}",
+        "not json at all",
+    };
+    for (malformed) |body| {
+        try writeProjectFile(&temp, "mylang.json", body);
+        const result = try runCompiler(testing.allocator, &.{ compiler_path, "check-project", entry });
+        defer testing.allocator.free(result.stdout);
+        defer testing.allocator.free(result.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, result.term);
+        try testing.expectEqualStrings("", result.stdout);
+        try testing.expect(std.mem.indexOf(u8, result.stderr, "E_PROJECT_CONFIG") != null);
+    }
+}
+
+test "loadConfiguredPolicy policy statuses parseDocument HostConfiguration and PolicyViolation" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try writeProjectFile(&temp, "main.my", policy_project_main);
+    try writeProjectFile(&temp, "helper.my", policy_project_helper);
+    try writeProjectFile(&temp, "mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
+    try writeProjectFile(&temp, "policy.json", policy_deny);
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+
+    const denied = try runCompiler(testing.allocator, &.{ compiler_path, "check-project", entry });
+    defer testing.allocator.free(denied.stdout);
+    defer testing.allocator.free(denied.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, denied.term);
+    try testing.expect(std.mem.indexOf(u8, denied.stderr, "main -> helper: deny") != null);
+
+    try writeProjectFile(&temp, "mylang.json", "{");
+    const malformed = try runCompiler(testing.allocator, &.{ compiler_path, "check-project", entry });
+    defer testing.allocator.free(malformed.stdout);
+    defer testing.allocator.free(malformed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, malformed.term);
+    try testing.expect(std.mem.indexOf(u8, malformed.stderr, "E_PROJECT_CONFIG") != null);
+}
+
+test "loadConfiguredPolicy policy applies to native test preparation ProjectConfigurationFailed and ProjectPolicyRejected" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try writeProjectFile(&temp, "tests.my",
+        \\module tests
+        \\import helper
+        \\export test_policy
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+        \\
+        \\
+        \\def test_policy() -> bool:
+        \\    return helper.value() == 7
+    );
+    try writeProjectFile(&temp, "helper.my", "module helper\nexport value\ndef value() -> int:\n    return 7\n");
+    try writeProjectFile(&temp, "mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
+    try writeProjectFile(&temp, "policy.json", policy_allow);
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "tests.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, "test-cache" });
+    defer testing.allocator.free(cache);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
+    defer testing.allocator.free(cache_argument);
+
+    const allowed = try runCompiler(testing.allocator, &.{ compiler_path, "test", entry, "--filter", "test_policy", cache_argument });
+    defer testing.allocator.free(allowed.stdout);
+    defer testing.allocator.free(allowed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, allowed.term);
+    try testing.expect(std.mem.indexOf(u8, allowed.stdout, "test_policy") != null);
+
+    try writeProjectFile(&temp, "policy.json", policy_deny);
+    const denied = try runCompiler(testing.allocator, &.{ compiler_path, "test", entry, "--filter", "test_policy", cache_argument });
+    defer testing.allocator.free(denied.stdout);
+    defer testing.allocator.free(denied.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, denied.term);
+    try testing.expect(std.mem.indexOf(u8, denied.stderr, "tests -> helper: deny") != null);
+
+    try writeProjectFile(&temp, "mylang.json", "{");
+    const malformed = try runCompiler(testing.allocator, &.{ compiler_path, "test", entry, "--filter", "test_policy", cache_argument });
+    defer testing.allocator.free(malformed.stdout);
+    defer testing.allocator.free(malformed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, malformed.term);
+    try testing.expect(std.mem.indexOf(u8, malformed.stderr, "E_PROJECT_CONFIG") != null);
+}
+
+test "validateUnitConfiguredPolicy checks required configuration for single-unit commands" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try writeProjectFile(&temp, "main.my", "def main() -> int:\n    return 0\n");
+    try writeProjectFile(&temp, "mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
+    try writeProjectFile(&temp, "policy.json", policy_deny);
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+
+    // A unit has no import edges, so a well-formed policy is satisfied.
+    const allowed = try runCompiler(testing.allocator, &.{ compiler_path, "check", entry });
+    defer testing.allocator.free(allowed.stdout);
+    defer testing.allocator.free(allowed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, allowed.term);
+
+    try writeProjectFile(&temp, "mylang.json", "{\"version\":1,\"import_policy\":\"absent.json\"}");
+    const missing = try runCompiler(testing.allocator, &.{ compiler_path, "check", entry });
+    defer testing.allocator.free(missing.stdout);
+    defer testing.allocator.free(missing.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, missing.term);
+    try testing.expect(std.mem.indexOf(u8, missing.stderr, "E_PROJECT_CONFIG") != null);
+
+    try writeProjectFile(&temp, "mylang.json", "not json");
+    const malformed = try runCompiler(testing.allocator, &.{ compiler_path, "check", entry });
+    defer testing.allocator.free(malformed.stdout);
+    defer testing.allocator.free(malformed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, malformed.term);
+    try testing.expect(std.mem.indexOf(u8, malformed.stderr, "E_PROJECT_CONFIG") != null);
+}
+
+test "loadConfiguredPolicy policy discovery above the native test entry enforces the ancestor config" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try writeProjectFile(&temp, "nested/tests.my",
+        \\module tests
+        \\import helper
+        \\export test_policy
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+        \\
+        \\
+        \\def test_policy() -> bool:
+        \\    return helper.value() == 7
+    );
+    try writeProjectFile(&temp, "nested/helper.my", "module helper\nexport value\ndef value() -> int:\n    return 7\n");
+    try writeProjectFile(&temp, "mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
+    try writeProjectFile(&temp, "policy.json", policy_deny);
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "nested/tests.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, "test-cache" });
+    defer testing.allocator.free(cache);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
+    defer testing.allocator.free(cache_argument);
+
+    const denied = try runCompiler(testing.allocator, &.{ compiler_path, "test", entry, "--filter", "test_policy", cache_argument });
+    defer testing.allocator.free(denied.stdout);
+    defer testing.allocator.free(denied.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, denied.term);
+    try testing.expect(std.mem.indexOf(u8, denied.stderr, "tests -> helper: deny") != null);
+}
+
+test "loadConfiguredPolicy policy identity participates in project-dependencies receipts" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try writeProjectFile(&temp, "main.my", policy_project_main);
+    try writeProjectFile(&temp, "helper.my", policy_project_helper);
+    try writeProjectFile(&temp, "mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
+    try writeProjectFile(&temp, "policy.json", policy_allow);
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, "receipt-cache" });
+    defer testing.allocator.free(cache);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
+    defer testing.allocator.free(cache_argument);
+
+    const first = try runCompiler(testing.allocator, &.{ compiler_path, "project-dependencies", entry, cache_argument });
+    defer testing.allocator.free(first.stdout);
+    defer testing.allocator.free(first.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term);
+    try testing.expect(std.mem.indexOf(u8, first.stdout, "\"policy\"") != null);
+    try testing.expect(std.mem.indexOf(u8, first.stdout, "\"config_sha256\"") != null);
+
+    try writeProjectFile(&temp, "policy.json", "{\"version\":1,\"default_action\":\"deny\",\"rules\":[]}");
+    const second = try runCompiler(testing.allocator, &.{ compiler_path, "project-dependencies", entry, cache_argument });
+    defer testing.allocator.free(second.stdout);
+    defer testing.allocator.free(second.stderr);
+    // A stricter policy denies the ordinary receipt command before it can be
+    // produced, which is the acceptance-relevant identity change.
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, second.term);
+    try testing.expect(std.mem.indexOf(u8, second.stderr, "main -> helper: deny") != null);
+}

@@ -5,6 +5,8 @@ const project_compile = @import("project_compile.zig");
 const incremental = @import("incremental.zig");
 /// Exact manifest bytes consumed during input generation, rather than a later disk read.
 pub const Manifest = struct { module: []const u8, path: []const u8, sha256: []const u8 };
+/// Required-policy content identity recorded beside the checked source graph.
+pub const Policy = struct { config_sha256: []const u8, policy_sha256: ?[]const u8 = null };
 /// Checking errors and receipt allocation failures remain distinct.
 pub const RenderError = project_compile.CheckError || receipt.InputsError || incremental.Error;
 /// Allocate lowercase SHA-256 for the supplied raw bytes.
@@ -21,7 +23,7 @@ fn contractFor(scratch: std.mem.Allocator, identity: receipt.Identity) std.mem.A
     };
 }
 /// Return an owned complete receipt only after checking all reachable modules.
-pub fn render(allocator: std.mem.Allocator, compilation: *project_compile.Compilation, identity: receipt.Identity, manifests: []const Manifest) RenderError![]u8 {
+pub fn render(allocator: std.mem.Allocator, compilation: *project_compile.Compilation, identity: receipt.Identity, manifests: []const Manifest, policy: ?Policy) RenderError![]u8 {
     try compilation.check();
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
@@ -32,6 +34,7 @@ pub fn render(allocator: std.mem.Allocator, compilation: *project_compile.Compil
         .version = "project-dependencies-v1",
         .complete = true,
         .entry = graph.modules.items[0].name,
+        .policy = policy,
         .implementation = try receipt.implementation(scratch, identity),
         .inputs = try receipt.inputs(scratch, graph),
         .manifests = manifests,
@@ -41,7 +44,7 @@ pub fn render(allocator: std.mem.Allocator, compilation: *project_compile.Compil
 /// Return an owned best-effort receipt for a project whose checking failed. This
 /// never runs or publishes a successful verdict; it exists so a rejected edit can
 /// still be explained against the previous baseline.
-pub fn renderPartial(allocator: std.mem.Allocator, compilation: *project_compile.Compilation, identity: receipt.Identity, manifests: []const Manifest) RenderError![]u8 {
+pub fn renderPartial(allocator: std.mem.Allocator, compilation: *project_compile.Compilation, identity: receipt.Identity, manifests: []const Manifest, policy: ?Policy) RenderError![]u8 {
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
     const scratch = arena.allocator();
@@ -51,6 +54,7 @@ pub fn renderPartial(allocator: std.mem.Allocator, compilation: *project_compile
         .version = "project-dependencies-v1",
         .complete = false,
         .entry = graph.modules.items[0].name,
+        .policy = policy,
         .implementation = try receipt.implementation(scratch, identity),
         .inputs = try receipt.inputs(scratch, graph),
         .manifests = manifests,
