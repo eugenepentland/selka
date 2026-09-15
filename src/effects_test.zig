@@ -1,9 +1,15 @@
+//! Focused effect-inference regressions, including M1 mutation footprints and ceilings.
 const fixture_path = "effects.my";
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const sets = @import("effect_set.zig");
+const typed = @import("typed.zig");
+const callables = @import("callables.zig");
+const lower = @import("lower.zig");
+const bytecode_model = @import("bytecode_model.zig");
+const effect_engine = @import("effects.zig");
 fn reject(source: []const u8, code: []const u8, text: []const u8) !void {
     var c = try language.Compilation.init(t.allocator, fixture_path, source);
     defer c.deinit();
@@ -178,4 +184,332 @@ test "declared ceilings reject hidden effects through generic and callback calls
         \\def main() -> i64:
         \\    return call(tick)
     , "E_EFFECT_BOUND", "exceeds declared bound");
+}
+
+test "M1 direct input writes carry mutation facts while reads do not" {
+    var c = try language.Compilation.init(t.allocator, fixture_path,
+        \\def touch(values: list[int]) -> None effects():
+        \\    values[0] = 1
+        \\
+        \\
+        \\def peek(values: list[int]) -> int effects():
+        \\    return values[0]
+        \\
+        \\
+        \\def main() -> int effects(managed_allocation):
+        \\    values = [7]
+        \\    touch(values)
+        \\    return peek(values)
+    );
+    defer c.deinit();
+    try c.check();
+    var touch_found = false;
+    var peek_found = false;
+    for (c.program.?.functions) |function| {
+        if (std.mem.eql(u8, function.name, "touch")) {
+            touch_found = true;
+            try t.expectEqualSlices(u16, &.{0}, function.signature.mutates);
+            try t.expect(function.signature.mutation_facts.writes);
+        } else if (std.mem.eql(u8, function.name, "peek")) {
+            peek_found = true;
+            try t.expectEqual(@as(usize, 0), function.signature.mutates.len);
+            try t.expect(!function.signature.mutation_facts.writes);
+        }
+    }
+    try t.expect(touch_found and peek_found);
+}
+
+test "M1 mutates clause parses normalizes and publishes checked metadata" {
+    var c = try language.Compilation.init(t.allocator, fixture_path,
+        \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
+        \\    values[0] = 1
+        \\
+        \\
+        \\def main() -> int effects():
+        \\    return 0
+    );
+    defer c.deinit();
+    try c.check();
+    try c.emit();
+    var found = false;
+    for (c.program.?.functions) |function| {
+        if (!std.mem.eql(u8, function.name, "touch")) continue;
+        found = true;
+        try t.expectEqualSlices(u16, &.{0}, function.signature.mutates);
+        try t.expectEqualSlices(u16, &.{0}, function.signature.declared_mutates);
+        try t.expect(function.signature.mutation_facts.writes);
+        try t.expect((function.policy.effect_bound.?.allowed & sets.bit(.mutation)) != 0);
+    }
+    try t.expect(found);
+}
+
+test "M1 mutates errors are declaration-site diagnostics" {
+    try reject(
+        \\def touch(values: list[int]) -> None effects(mutation) mutates(missing):
+        \\    values.append(1)
+        \\
+        \\
+        \\def main() -> int effects():
+        \\    return 0
+    , "E_UNKNOWN_MUTATES", "binder");
+    try reject(
+        \\def touch(values: list[int]) -> None effects() mutates(values):
+        \\    _ = values
+        \\
+        \\
+        \\def main() -> int effects():
+        \\    return 0
+    , "E_MUTATES_EFFECT", "mutation effect");
+}
+
+test "M1 definitely fresh local construction does not require mutation permission" {
+    var c = try language.Compilation.init(t.allocator, fixture_path,
+        \\def main() -> int effects(managed_allocation):
+        \\    values = [7]
+        \\    values.append(8)
+        \\    return values[0]
+    );
+    defer c.deinit();
+    try c.check();
+    try c.emit();
+    try t.expectEqual(@as(usize, 0), c.program.?.functions[0].signature.mutates.len);
+    try t.expect((c.program.?.functions[0].policy.effects & sets.bit(.mutation)) == 0);
+}
+
+test "M1 unused generic body accepts a direct mutation fact without enforcing M2" {
+    var c = try language.Compilation.init(t.allocator, fixture_path,
+        \\def touch[T](values: list[T], item: T) -> None effects():
+        \\    values[0] = item
+        \\
+        \\
+        \\def main() -> int effects():
+        \\    return 0
+    );
+    defer c.deinit();
+    try c.check();
+    var found = false;
+    for (c.syntax.?.functions) |function| {
+        if (!std.mem.eql(u8, c.src.text(function.name), "touch")) continue;
+        found = true;
+        try t.expect(function.signature.inferred_mutation_writes);
+        try t.expectEqualSlices(u16, &.{0}, function.signature.inferred_mutates);
+    }
+    try t.expect(found);
+    try c.emit();
+}
+
+test "M1 callback body carries its direct mutation fact" {
+    var c = try language.Compilation.init(t.allocator, fixture_path,
+        \\def apply(f: def(values: list[int]) -> None effects()) -> None effects():
+        \\    _ = f
+        \\
+        \\
+        \\def main() -> int effects(managed_allocation):
+        \\    apply(lambda values: values.clear())
+        \\    return 0
+    );
+    defer c.deinit();
+    try c.check();
+    var found = false;
+    for (c.program.?.functions) |function| {
+        if (!std.mem.startsWith(u8, function.name, "lambda@")) continue;
+        found = true;
+        try t.expectEqualSlices(u16, &.{0}, function.signature.mutates);
+        try t.expect(function.signature.mutation_facts.writes);
+    }
+    try t.expect(found);
+}
+
+test "M1 callable assignability accepts narrower mutation footprints and return origins" {
+    const parameters = [_]typed.Type{.i64};
+    const destination = typed.Callable{
+        .parameters = &parameters,
+        .return_type = .i64,
+        .effects = sets.bit(.mutation) | sets.bit(.clock),
+        .mutates = &[_]u16{ 0, 1 },
+        .return_origin = .{ .params = &[_]u16{ 0, 1 } },
+    };
+    const implementation = typed.Callable{
+        .parameters = &parameters,
+        .return_type = .i64,
+        .effects = 0,
+        .mutates = &[_]u16{1},
+        .return_origin = .{ .params = &[_]u16{0} },
+    };
+    try t.expect(callables.assignable(implementation, destination));
+    try t.expect(!callables.assignable(.{
+        .parameters = &parameters,
+        .return_type = .i64,
+        .effects = 0,
+        .mutates = &[_]u16{1},
+        .return_origin = .unknown,
+    }, destination));
+    try t.expect(callables.originSubset(.fresh, destination.return_origin));
+}
+
+test "M1 forged or missing IR mutation summaries reject" {
+    var c = try language.Compilation.init(t.allocator, fixture_path,
+        \\def touch(values: list[int]) -> None effects():
+        \\    values[0] = 1
+        \\
+        \\
+        \\def main() -> int effects(managed_allocation):
+        \\    values = [7]
+        \\    touch(values)
+        \\    return values[0]
+    );
+    defer c.deinit();
+    try c.check();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const program = try lower.lower(arena.allocator(), c.program.?);
+    var forged = false;
+    for (@constCast(program.functions)) |*function| {
+        if (!std.mem.eql(u8, function.name, "touch")) continue;
+        function.signature.mutation_facts = .{};
+        function.signature.mutates = &.{};
+        forged = true;
+    }
+    try t.expect(forged);
+    try t.expectError(error.InternalError, effect_engine.validate(t.allocator, program));
+}
+
+test "M1 callback mutates metadata survives source checking and callable interning" {
+    var c = try language.Compilation.init(t.allocator, fixture_path,
+        \\def apply(f: def(values: list[int]) -> None effects(mutation) mutates(values)) -> None effects():
+        \\    _ = f
+        \\
+        \\
+        \\def main() -> int effects():
+        \\    return 0
+    );
+    defer c.deinit();
+    try c.check();
+    var found = false;
+    for (c.program.?.records) |record| {
+        const contract = record.contract.callback orelse continue;
+        if (contract.mutates.len == 1 and contract.mutates[0] == 0) found = true;
+    }
+    try t.expect(found);
+}
+
+test "M1 mutates metadata survives AST copy and relocation" {
+    var c = try language.Compilation.init(t.allocator, fixture_path,
+        \\def apply(f: def(values: list[int]) -> None effects(mutation) mutates(values)) -> None effects():
+        \\    _ = f
+        \\
+        \\
+        \\def main() -> int effects():
+        \\    return 0
+    );
+    defer c.deinit();
+    try c.parse();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const copied = try @import("ast_copy.zig").clone(arena.allocator(), c.syntax.?);
+    try t.expectEqual(@as(usize, 1), copied.types.expressions.callbacks.len);
+    const callback = copied.types.expressions.callbacks[0];
+    try t.expectEqualSlices(u16, &.{0}, callback.mutates);
+    try t.expectEqual(@as(usize, 1), callback.parameter_names.len);
+    try t.expect(callback.parameter_names[0] != null);
+}
+
+test "M1 effect enum appends mutation without moving existing bits" {
+    try t.expectEqual(@as(sets.Mask, 0x1ff), sets.all);
+    try t.expectEqual(@as(usize, 9), std.meta.tags(sets.Effect).len);
+    try t.expectEqual(@as(sets.Mask, 1 << 7), sets.bit(.output));
+    try t.expectEqual(@as(sets.Mask, 1 << 8), sets.bit(.mutation));
+}
+
+const mutation_forms =
+    \\def slot(values: list[int]) -> None effects():
+    \\    values[0] = 1
+    \\
+    \\
+    \\def augment(values: list[int]) -> None effects():
+    \\    values[0] += 1
+    \\
+    \\
+    \\def append(values: list[int]) -> None effects(managed_allocation):
+    \\    values.append(1)
+    \\
+    \\
+    \\def extend(values: list[int], other: list[int]) -> None effects(managed_allocation):
+    \\    values.extend(other)
+    \\
+    \\
+    \\def insert(values: list[int]) -> None effects(managed_allocation):
+    \\    values.insert(0, 1)
+    \\
+    \\
+    \\def remove(values: list[int]) -> None effects():
+    \\    values.remove(1)
+    \\
+    \\
+    \\def pop(values: list[int]) -> None effects():
+    \\    _ = values.pop()
+    \\
+    \\
+    \\def clear(values: list[int]) -> None effects():
+    \\    values.clear()
+    \\
+    \\
+    \\def reverse(values: list[int]) -> None effects():
+    \\    values.reverse()
+    \\
+    \\
+    \\def sort(values: list[int]) -> None effects():
+    \\    values.sort()
+    \\
+    \\
+    \\def update(mapping: dict[str, int]) -> None effects(managed_allocation):
+    \\    mapping["answer"] = 1
+    \\
+    \\
+    \\def delete(mapping: dict[str, int]) -> None effects(managed_allocation):
+    \\    _ = mapping.pop("answer")
+    \\
+    \\
+    \\def set_cell(cell: Cell[int]) -> None effects():
+    \\    cell.value = 1
+    \\
+    \\
+    \\def main() -> int effects():
+    \\    return 0
+;
+
+test "M1 every managed write form contributes a mutation fact" {
+    var c = try language.Compilation.init(t.allocator, fixture_path, mutation_forms);
+    defer c.deinit();
+    try c.check();
+    const expected = [_][]const u8{ "slot", "augment", "append", "extend", "insert", "remove", "pop", "clear", "reverse", "sort", "update", "delete", "set_cell" };
+    for (expected) |name| {
+        var found = false;
+        for (c.program.?.functions) |function| {
+            if (!std.mem.eql(u8, function.name, name)) continue;
+            found = true;
+            try t.expect(function.signature.mutation_facts.writes);
+            try t.expectEqualSlices(u16, &.{0}, function.signature.mutates);
+        }
+        try t.expect(found);
+    }
+}
+
+test "M1 mutates clause normalizes duplicate names to sorted positions" {
+    var c = try language.Compilation.init(t.allocator, fixture_path,
+        \\def touch(a: list[int], b: list[int]) -> None effects(mutation) mutates(b, a, b):
+        \\    a[0] = 1
+        \\    b[0] = 2
+        \\
+        \\
+        \\def main() -> int effects():
+        \\    return 0
+    );
+    defer c.deinit();
+    try c.check();
+    for (c.program.?.functions) |function| {
+        if (!std.mem.eql(u8, function.name, "touch")) continue;
+        try t.expectEqualSlices(u16, &.{ 0, 1 }, function.signature.declared_mutates);
+        try t.expectEqualSlices(u16, &.{ 0, 1 }, function.signature.mutates);
+    }
 }

@@ -12,6 +12,8 @@ const typed = @import("typed.zig");
 const sets = @import("effect_set.zig");
 const Span = @import("source.zig").Span;
 const diagnostic = @import("diagnostic.zig");
+const mutation = @import("mutation.zig");
+const bytecode_model = @import("bytecode_model.zig");
 const Witness = struct { span: Span, via: ?usize = null };
 const Edge = struct { caller: usize, span: Span };
 fn allocatingSequence(records: []const typed.Record, ty: typed.Type) bool {
@@ -24,6 +26,180 @@ fn allocatingElement(records: []const typed.Record, ty: typed.Type) bool {
     if (!ty.isAggregate() or ty.recordIndex() >= records.len) return false;
     return records[ty.recordIndex()].collection.kind == .string;
 }
+/// Inferred per-function mutation footprint and return-origin bound.
+const Facts = struct {
+    mutates: []const u16,
+    return_origin: typed.ReturnOrigin,
+    mutation_facts: typed.MutationFacts,
+};
+
+const ReturnContext = struct {
+    allocator: std.mem.Allocator,
+    positions: *std.ArrayList(u16),
+    saw_params: *bool,
+    unknown: *bool,
+};
+
+/// Record the sound return-origin contribution of one returned expression.
+fn returnContribution(program: typed.Program, function: typed.Function, value: typed.NodeId, ctx: *ReturnContext) error{OutOfMemory}!void {
+    const node = program.nodes[@backingInt(value)];
+    if (!node.ty.isAggregate()) return;
+    if (mutation.nodeInput(program, function, value)) |position| {
+        ctx.saw_params.* = true;
+        try mutation.insertPosition(ctx.positions, ctx.allocator, position);
+        return;
+    }
+    switch (node.data) {
+        .integer, .boolean, .unit, .function_value, .environment_get, .external_read => {},
+        .local, .call, .invoke, .complete_resource, .acquire_resource, .acquire_buffer, .array, .record, .variant, .update => {
+            if (node.ty.isAggregate()) ctx.unknown.* = true;
+        },
+        .binary, .unary, .cast, .wrap, .unwrap, .length, .field, .index, .replace, .buffer_operation, .file_access, .file_method, .print, .arena_escape, .block_value, .propagate, .restrict_resource => {
+            if (node.ty.isAggregate()) ctx.unknown.* = true;
+        },
+        .resource_io => {
+            if (node.ty.isAggregate()) ctx.unknown.* = true;
+        },
+    }
+}
+
+/// Whether a type is a managed aggregate whose fresh outer identity can be proven here.
+fn isManagedAggregate(program: typed.Program, ty: typed.Type) bool {
+    return ty.isAggregate() and ty.recordIndex() < program.records.len and program.records[ty.recordIndex()].managed;
+}
+
+/// Whether a returned local is initialized from a definitely fresh constructed value.
+fn blockValueFresh(program: typed.Program, body: typed.StatementId, value: typed.NodeId, depth: usize) bool {
+    if (depth == 256) return false;
+    const returned = program.nodes[@backingInt(value)];
+    if (returned.data != .local) return false;
+    const block = program.statements[@backingInt(body)].data.block;
+    for (block) |statement_id| {
+        const statement = program.statements[@backingInt(statement_id)];
+        switch (statement.data) {
+            .initialize => |store| if (store.slot == returned.data.local) return isFreshValue(program, store.value, depth + 1),
+            else => {},
+        }
+    }
+    return false;
+}
+
+/// Whether an expression constructs a fresh outer managed value below this pass.
+fn isFreshValue(program: typed.Program, value: typed.NodeId, depth: usize) bool {
+    if (depth == 256) return false;
+    const node = program.nodes[@backingInt(value)];
+    if (!isManagedAggregate(program, node.ty)) return false;
+    return switch (node.data) {
+        .acquire_buffer => true,
+        .array, .record => true,
+        .block_value => |block| blockValueFresh(program, block.body, block.value, depth + 1),
+        else => false,
+    };
+}
+
+/// Resolve a value's direct parameter origin through simple local copies.
+fn valueOrigin(program: typed.Program, function: typed.Function, value: typed.NodeId, origins: []const ?u16, depth: usize) ?u16 {
+    if (depth == 256) return null;
+    const node = program.nodes[@backingInt(value)];
+    switch (node.data) {
+        .local => |slot| {
+            const index = @backingInt(slot);
+            if (index < function.signature.parameter_count) return @intCast(index);
+            return if (index < origins.len) origins[index] else null;
+        },
+        .field => |field| return valueOrigin(program, function, field.base, origins, depth + 1),
+        .index => |index| return valueOrigin(program, function, index.base, origins, depth + 1),
+        .cast, .wrap, .unwrap => |operand| return valueOrigin(program, function, operand, origins, depth + 1),
+        .propagate => |propagate| return valueOrigin(program, function, propagate.value, origins, depth + 1),
+        .block_value => |block| return valueOrigin(program, function, block.value, origins, depth + 1),
+        else => return mutation.nodeInput(program, function, value),
+    }
+}
+
+const ExpressionMutationContext = struct {
+    allocator: std.mem.Allocator,
+    program: typed.Program,
+    function: typed.Function,
+    fresh: []const bool,
+    origins: []const ?u16,
+    positions: *std.ArrayList(u16),
+};
+
+/// Record one expression write unless the receiver is a proven-fresh local.
+/// Returns true when a managed receiver write was found, fresh-local or not.
+fn recordExpressionMutation(ctx: *const ExpressionMutationContext, node: typed.Node) error{OutOfMemory}!?bool {
+    const witness = mutation.typedNode(ctx.program, ctx.function, node) orelse return null;
+    if (witness.operation != .receiver_write) return null;
+    const owner_is_fresh = if (witness.owner) |owner| @backingInt(owner) < ctx.fresh.len and ctx.fresh[@backingInt(owner)] else false;
+    if (!owner_is_fresh) {
+        const input = witness.input orelse if (witness.owner) |owner| ctx.origins[@backingInt(owner)] else null;
+        if (input) |position| try mutation.insertPosition(ctx.positions, ctx.allocator, position);
+    }
+    return !owner_is_fresh;
+}
+
+/// Infer one function's direct write footprint and return-origin bound from its checked body.
+fn inferFacts(allocator: std.mem.Allocator, program: typed.Program, function: typed.Function) error{ OutOfMemory, InternalError }!Facts {
+    var mutate_positions: std.ArrayList(u16) = .empty;
+    defer mutate_positions.deinit(allocator);
+    var return_positions: std.ArrayList(u16) = .empty;
+    defer return_positions.deinit(allocator);
+    var saw_params = false;
+    var saw_write = false;
+    var saw_external = false;
+    var unknown = function.policy.host != null or function.policy.c_abi;
+    const fresh = try allocator.alloc(bool, function.scope.locals.len);
+    defer allocator.free(fresh);
+    @memset(fresh, false);
+    const origins = try allocator.alloc(?u16, function.scope.locals.len);
+    defer allocator.free(origins);
+    @memset(origins, null);
+    var walker = try @import("typed_walk.zig").Walker.init(allocator, program, function.scope.body);
+    defer walker.deinit();
+    while (try walker.next()) |item| switch (item) {
+        .expression => |id| {
+            const write = try recordExpressionMutation(&.{
+                .allocator = allocator,
+                .program = program,
+                .function = function,
+                .fresh = fresh,
+                .origins = origins,
+                .positions = &mutate_positions,
+            }, program.nodes[@backingInt(id)]);
+            if (write) |external| {
+                saw_write = true;
+                saw_external = external or saw_external;
+            }
+        },
+        .statement => |id| {
+            const statement = program.statements[@backingInt(id)];
+            switch (statement.data) {
+                .initialize => |store| if (@backingInt(store.slot) < fresh.len) {
+                    fresh[@backingInt(store.slot)] = isFreshValue(program, store.value, 0);
+                    origins[@backingInt(store.slot)] = valueOrigin(program, function, store.value, origins, 0);
+                },
+                .assign => |store| if (@backingInt(store.slot) < fresh.len) {
+                    fresh[@backingInt(store.slot)] = isFreshValue(program, store.value, 0);
+                    origins[@backingInt(store.slot)] = valueOrigin(program, function, store.value, origins, 0);
+                },
+                .ret => |value| {
+                    var ctx: ReturnContext = .{
+                        .allocator = allocator,
+                        .positions = &return_positions,
+                        .saw_params = &saw_params,
+                        .unknown = &unknown,
+                    };
+                    try returnContribution(program, function, value, &ctx);
+                },
+                else => {},
+            }
+        },
+    };
+    const mutates = try mutate_positions.toOwnedSlice(allocator);
+    const return_origin: typed.ReturnOrigin = if (unknown) .unknown else if (saw_params) .{ .params = try return_positions.toOwnedSlice(allocator) } else .fresh;
+    return .{ .mutates = mutates, .return_origin = return_origin, .mutation_facts = .{ .writes = saw_write, .external = saw_external } };
+}
+
 const State = struct { mask: sets.Mask = 0, witnesses: [std.meta.tags(sets.Effect).len]?Witness = @splat(null), callers: std.ArrayList(Edge) = .empty, queued: bool = false };
 const Graph = struct {
     allocator: std.mem.Allocator,
@@ -127,6 +303,27 @@ fn appendBoundViolation(allocator: std.mem.Allocator, ctx: BoundContext, index: 
     }) catch return error.OutOfMemory;
 }
 
+/// Report every exported declaration that lacks an explicit effect ceiling.
+fn reportMissingCeilings(
+    allocator: std.mem.Allocator,
+    program: typed.Program,
+    graph: *const Graph,
+    exported: []const bool,
+    sink: *diagnostic.Sink,
+) diagnostic.Error!bool {
+    var missing = false;
+    for (program.functions, 0..) |function, index| {
+        if (index >= exported.len or !exported[index]) continue;
+        if (function.policy.effect_bound != null) continue;
+        var suggested = graph.states[index].mask;
+        if (function.signature.mutation_facts.external) suggested |= sets.bit(.mutation);
+        const message = try suggestedCeiling(allocator, suggested);
+        sink.items.append(allocator, .{ .code = effect_ceiling, .span = function.declaration, .message = message }) catch return error.OutOfMemory;
+        missing = true;
+    }
+    return missing;
+}
+
 /// Infer transitive effects and reject function bodies that exceed declared effect bounds.
 pub fn check(allocator: std.mem.Allocator, program: typed.Program, exported: []const bool, sink: *diagnostic.Sink) diagnostic.Error!void {
     var graph = try Graph.init(allocator, program.functions.len);
@@ -139,6 +336,14 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, exported: []c
     for (program.functions, 0..) |function, index| {
         if (function.policy.host) |span| try seedHost(&graph, index, function.policy.effect_bound, span);
         try seedOwnership(&graph, index, function.signature.return_type, function.scope.locals, function.declaration, cleanup_masks);
+        const facts = inferFacts(allocator, program, function) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.InternalError => return error.InternalError,
+        };
+        const mutable = @constCast(&program.functions[index]);
+        mutable.signature.mutates = facts.mutates;
+        mutable.signature.return_origin = facts.return_origin;
+        mutable.signature.mutation_facts = facts.mutation_facts;
         var walker = try @import("typed_walk.zig").Walker.init(allocator, program, function.scope.body);
         defer walker.deinit();
         while (try walker.next()) |item| if (item == .expression) {
@@ -171,7 +376,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, exported: []c
                 },
                 .invoke => |call| {
                     const contract = @import("callables.zig").signature(program.nodes[@backingInt(call.callee)].ty, program.records).?;
-                    inline for (std.meta.tags(sets.Effect)) |effect| if (contract.effects & sets.bit(effect) != 0) graph.direct(index, effect, node.span);
+                    inline for (std.meta.tags(sets.Effect)) |effect| if (effect != .mutation and contract.effects & sets.bit(effect) != 0) graph.direct(index, effect, node.span);
                 },
                 .call => |call| graph.call(index, @backingInt(call.function), node.span) catch |err| switch (err) {
                     error.OutOfMemory => return error.OutOfMemory,
@@ -205,15 +410,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, exported: []c
     // suggestion is derived from this body's inferred transitive effects (a
     // bound, never an unconditional `effects(all)`), and remains distinct from
     // the raw inferred mask stored below for diagnostics/cacheability.
-    var missing_ceiling = false;
-    for (program.functions, 0..) |function, index| {
-        if (index >= exported.len or !exported[index]) continue;
-        if (function.policy.effect_bound != null) continue;
-        const message = try suggestedCeiling(allocator, graph.states[index].mask);
-        sink.items.append(allocator, .{ .code = effect_ceiling, .span = function.declaration, .message = message }) catch return error.OutOfMemory;
-        missing_ceiling = true;
-    }
-    if (missing_ceiling) return error.SourceError;
+    if (try reportMissingCeilings(allocator, program, &graph, exported, sink)) return error.SourceError;
     for (@constCast(program.functions), 0..) |*function, index| function.policy.effects = graph.states[index].mask;
     var violated = false;
     for (program.functions, 0..) |function, index| {
@@ -247,7 +444,9 @@ pub fn checkAbstract(allocator: std.mem.Allocator, functions: []const @import("a
     var missing_ceiling = false;
     for (functions, 0..) |function, index| {
         if (!exported[index] or function.policy.effect_bound != null) continue;
-        const message = try suggestedCeiling(allocator, graph.states[index].mask);
+        var suggested = graph.states[index].mask;
+        if (function.signature.inferred_mutation_writes) suggested |= sets.bit(.mutation);
+        const message = try suggestedCeiling(allocator, suggested);
         sink.items.append(allocator, .{ .code = effect_ceiling, .span = function.name, .message = message }) catch return error.OutOfMemory;
         missing_ceiling = true;
     }
@@ -274,8 +473,114 @@ pub fn checkAbstract(allocator: std.mem.Allocator, functions: []const @import("a
     if (violated) return error.SourceError;
 }
 
+/// Check one instruction-level mutation witness against the checked summary.
+fn instructionSummaryValid(function: bytecode_model.Function, witness: mutation.Witness) bool {
+    if (witness.operation != .receiver_write) return true;
+    if (!function.signature.mutation_facts.writes) return false;
+    const input = witness.input orelse return true;
+    return containsPosition(function.signature.mutates, input);
+}
+
+/// Seed the independently recomputed effects contributed by one instruction.
+fn seedInstructionEffects(
+    program: bytecode_model.Program,
+    function: bytecode_model.Function,
+    graph: *Graph,
+    index: usize,
+    instruction: bytecode_model.Instruction,
+) ValidateError!void {
+    switch (instruction.op) {
+        .acquire_resource => |acquire| {
+            const shape = typed.resultShape(acquire.output, program.records) orelse return error.InternalError;
+            const kind = typed.resourceKind(shape.ok_type, program.records) orelse return error.InternalError;
+            graph.direct(index, kind.effect(), instruction.span);
+        },
+        .complete_resource => |output| {
+            const shape = typed.completionShape(output, program.records) orelse return error.InternalError;
+            graph.direct(index, typed.resourceKind(shape.resource_type, program.records).?.effect(), instruction.span);
+        },
+        .resource_io => |io| {
+            if (@backingInt(io.owner) >= function.scope.locals.len) return error.InternalError;
+            const kind = typed.resourceKind(function.scope.locals[@backingInt(io.owner)].ty, program.records) orelse return error.InternalError;
+            graph.direct(index, kind.effect(), instruction.span);
+        },
+        .environment_get => graph.direct(index, .environment, instruction.span),
+        .print => graph.direct(index, .output, instruction.span),
+        .file_access, .file_method => graph.direct(index, .filesystem, instruction.span),
+        .external_read => |read| graph.direct(index, read.kind.effect(), instruction.span),
+        .cast_integer => |ty| if (allocatingSequence(program.records, ty)) {
+            graph.direct(index, .managed_allocation, instruction.span);
+        },
+        .make_record => |record| if (try managedType(program.records, record.ty)) {
+            graph.direct(index, .managed_allocation, instruction.span);
+        },
+        .binary_integer => |binary| if (binary.op == .add and allocatingSequence(program.records, binary.ty)) {
+            graph.direct(index, .managed_allocation, instruction.span);
+        },
+        .get_index => |ty| if (allocatingElement(program.records, ty)) {
+            graph.direct(index, .managed_allocation, instruction.span);
+        },
+        .acquire_buffer => |ty| if (try managedType(program.records, ty)) graph.direct(index, .managed_allocation, instruction.span) else return error.InternalError,
+        .buffer_operation => |op| {
+            if (@backingInt(op.owner) >= function.scope.locals.len) return error.InternalError;
+            const managed = try managedType(program.records, function.scope.locals[@backingInt(op.owner)].ty);
+            const dictionary = program.records[function.scope.locals[@backingInt(op.owner)].ty.recordIndex()].collection.kind == .dictionary;
+            if (managed and @import("buffer_operations.zig").managedAllocation(op.kind, dictionary)) {
+                graph.direct(index, .managed_allocation, instruction.span);
+            }
+        },
+        .invoke => |ty| {
+            const contract = @import("callables.zig").signature(ty, program.records) orelse return error.InternalError;
+            inline for (std.meta.tags(sets.Effect)) |effect| if (effect != .mutation and contract.effects & sets.bit(effect) != 0) graph.direct(index, effect, instruction.span);
+        },
+        .call => |callee| try graph.call(index, @backingInt(callee), instruction.span),
+        .arena_escape => graph.direct(index, .managed_allocation, instruction.span),
+        .begin_arena,
+        .end_arena,
+        .restrict_resource,
+        .function_value,
+        .push_i64,
+        .add_i64_checked,
+        .sub_i64_checked,
+        .mul_i64_checked,
+        .div_i64_checked,
+        .rem_i64_checked,
+        .unary_float,
+        .neg_i64_checked,
+        .cmp_i64,
+        .try_result,
+        .push_bool,
+        .push_unit,
+        .push_integer,
+        .wrap_domain,
+        .make_variant,
+        .switch_variant,
+        .cmp_domain,
+        .cmp_enum,
+        .unwrap_domain,
+        .neg_integer,
+        .update_record,
+        .get_field,
+        .replace_index,
+        .array_length,
+        .move_local,
+        .drop_local,
+        .load_local,
+        .store_local,
+        .cmp_bool,
+        .not_bool,
+        .pop,
+        .acknowledge,
+        .jump,
+        .jump_if_false,
+        .assert_true,
+        .ret,
+        => {},
+    }
+}
+
 /// Independently recompute effects from emitted operations, including all call forms.
-pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.zig").Program) ValidateError!void {
+pub fn validate(allocator: std.mem.Allocator, program: bytecode_model.Program) ValidateError!void {
     var graph = try Graph.init(allocator, program.functions.len);
     defer graph.deinit();
     const cleanup_masks = try cleanupMasks(allocator, program.records);
@@ -283,99 +588,25 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
     for (program.functions, 0..) |function, index| {
         if (function.policy.host) |span| try seedHost(&graph, index, function.policy.effect_bound, span);
         try seedOwnership(&graph, index, function.signature.return_type, function.scope.locals, .{ .start = 0, .end = 0 }, cleanup_masks);
-        for (function.scope.instructions) |instruction| switch (instruction.op) {
-            .acquire_resource => |acquire| {
-                const shape = typed.resultShape(acquire.output, program.records) orelse return error.InternalError;
-                const kind = typed.resourceKind(shape.ok_type, program.records) orelse return error.InternalError;
-                graph.direct(index, kind.effect(), instruction.span);
-            },
-            .complete_resource => |output| {
-                const shape = typed.completionShape(output, program.records) orelse return error.InternalError;
-                graph.direct(index, typed.resourceKind(shape.resource_type, program.records).?.effect(), instruction.span);
-            },
-            .resource_io => |io| {
-                if (@backingInt(io.owner) >= function.scope.locals.len) return error.InternalError;
-                const kind = typed.resourceKind(function.scope.locals[@backingInt(io.owner)].ty, program.records) orelse return error.InternalError;
-                graph.direct(index, kind.effect(), instruction.span);
-            },
-            .environment_get => graph.direct(index, .environment, instruction.span),
-            .print => graph.direct(index, .output, instruction.span),
-            .file_access, .file_method => graph.direct(index, .filesystem, instruction.span),
-            .external_read => |read| graph.direct(index, read.kind.effect(), instruction.span),
-            .cast_integer => |ty| if (allocatingSequence(program.records, ty)) {
-                graph.direct(index, .managed_allocation, instruction.span);
-            },
-            .make_record => |record| if (try managedType(program.records, record.ty)) {
-                graph.direct(index, .managed_allocation, instruction.span);
-            },
-            .binary_integer => |binary| if (binary.op == .add and allocatingSequence(program.records, binary.ty)) {
-                graph.direct(index, .managed_allocation, instruction.span);
-            },
-            .get_index => |ty| if (allocatingElement(program.records, ty)) {
-                graph.direct(index, .managed_allocation, instruction.span);
-            },
-            .acquire_buffer => |ty| if (try managedType(program.records, ty)) graph.direct(index, .managed_allocation, instruction.span) else return error.InternalError,
-            .buffer_operation => |op| {
-                if (@backingInt(op.owner) >= function.scope.locals.len) return error.InternalError;
-                const managed = try managedType(program.records, function.scope.locals[@backingInt(op.owner)].ty);
-                const dictionary = program.records[function.scope.locals[@backingInt(op.owner)].ty.recordIndex()].collection.kind == .dictionary;
-                if (managed and @import("buffer_operations.zig").managedAllocation(op.kind, dictionary)) {
-                    graph.direct(index, .managed_allocation, instruction.span);
-                }
-            },
-            .invoke => |ty| {
-                const contract = @import("callables.zig").signature(ty, program.records) orelse return error.InternalError;
-                inline for (std.meta.tags(sets.Effect)) |effect| if (contract.effects & sets.bit(effect) != 0) graph.direct(index, effect, instruction.span);
-            },
-            .call => |callee| try graph.call(index, @backingInt(callee), instruction.span),
-            .arena_escape => graph.direct(index, .managed_allocation, instruction.span),
-            .begin_arena,
-            .end_arena,
-            .restrict_resource,
-            .function_value,
-            .push_i64,
-            .add_i64_checked,
-            .sub_i64_checked,
-            .mul_i64_checked,
-            .div_i64_checked,
-            .rem_i64_checked,
-            .unary_float,
-            .neg_i64_checked,
-            .cmp_i64,
-            .try_result,
-            .push_bool,
-            .push_unit,
-            .push_integer,
-            .wrap_domain,
-            .make_variant,
-            .switch_variant,
-            .cmp_domain,
-            .cmp_enum,
-            .unwrap_domain,
-            .neg_integer,
-            .update_record,
-            .get_field,
-            .replace_index,
-            .array_length,
-            .move_local,
-            .drop_local,
-            .load_local,
-            .store_local,
-            .cmp_bool,
-            .not_bool,
-            .pop,
-            .acknowledge,
-            .jump,
-            .jump_if_false,
-            .assert_true,
-            .ret,
-            => {},
-        };
+        for (function.scope.instructions) |instruction| {
+            if (mutation.instruction(program, function, instruction.op, instruction.span)) |witness| {
+                if (!instructionSummaryValid(function, witness)) return error.InternalError;
+            }
+            try seedInstructionEffects(program, function, &graph, index, instruction);
+        }
+        if (!normalizedPositions(function.signature.mutates, function.signature.parameter_count)) return error.InternalError;
+        if (!positionsInRange(function.signature.declared_mutates, function.signature.parameter_count)) return error.InternalError;
+        switch (function.signature.return_origin) {
+            .params => |positions| if (!normalizedPositions(positions, function.signature.parameter_count)) return error.InternalError,
+            else => {},
+        }
     }
     try graph.infer();
     for (program.functions, graph.states) |function, state| {
-        if (function.policy.effects != state.mask) return error.InternalError;
-        if (function.policy.effect_bound) |bound| if (bound.allowed & ~sets.all != 0 or state.mask & ~bound.allowed != 0) return error.InternalError;
+        const masked_state = state.mask & ~sets.bit(.mutation);
+        const masked_policy = function.policy.effects & ~sets.bit(.mutation);
+        if (masked_policy != masked_state) return error.InternalError;
+        if (function.policy.effect_bound) |bound| if (bound.allowed & ~sets.all != 0 or masked_state & ~bound.allowed != 0) return error.InternalError;
     }
 }
 
@@ -447,6 +678,28 @@ fn seedHost(graph: *Graph, index: usize, bound: ?sets.Bound, span: Span) error{I
     const allowed = (bound orelse return error.InternalError).allowed;
     if (allowed & ~sets.all != 0 or allowed & sets.bit(.host) == 0) return error.InternalError;
     for (std.meta.tags(sets.Effect)) |effect| if (allowed & sets.bit(effect) != 0) graph.direct(index, effect, span);
+}
+
+fn containsPosition(positions: []const u16, position: u16) bool {
+    for (positions) |candidate| if (candidate == position) return true;
+    return false;
+}
+
+fn positionsInRange(positions: []const u16, parameter_count: usize) bool {
+    for (positions) |position| if (position >= parameter_count) return false;
+    return true;
+}
+
+fn normalizedPositions(positions: []const u16, parameter_count: usize) bool {
+    if (!positionsInRange(positions, parameter_count)) return false;
+    for (positions, 0..) |position, i| {
+        if (i != 0 and positions[i - 1] >= position) return false;
+    }
+    return true;
+}
+
+fn stateBit(mask: sets.Mask, effect: sets.Effect) sets.Mask {
+    return mask & sets.bit(effect);
 }
 
 fn managedType(records: []const typed.Record, ty: typed.Type) ValidateError!bool {

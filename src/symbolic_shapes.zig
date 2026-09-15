@@ -51,7 +51,13 @@ pub const Context = struct {
                 const values = try self.arena.allocator().alloc(Value, callback.arguments.len);
                 for (callback.arguments, values) |argument, *value| value.* = try self.expression(argument, arguments, depth + 1, span);
                 const signature = try self.arena.allocator().create(symbolic.Callback);
-                signature.* = .{ .parameters = values[0 .. values.len - 1], .result = values[values.len - 1], .effects = callback.syntax.effect_bound.allowed };
+                signature.* = .{
+                    .parameters = values[0 .. values.len - 1],
+                    .result = values[values.len - 1],
+                    .effects = callback.syntax.effect_bound.allowed,
+                    .mutates = callback.syntax.mutates,
+                    .return_origin = .unknown,
+                };
                 break :result .{ .callback = signature };
             },
             .builtin => |ty| .{ .concrete = ty },
@@ -94,7 +100,13 @@ pub const Context = struct {
             const parameters = try self.arena.allocator().alloc(Value, callback.parameters.len);
             for (callback.parameters, parameters) |input, *out| out.* = try self.sourceType(input, depth + 1, aliases);
             const signature = try self.arena.allocator().create(symbolic.Callback);
-            signature.* = .{ .parameters = parameters, .result = try self.sourceType(callback.return_type, depth + 1, aliases), .effects = callback.effect_bound.allowed };
+            signature.* = .{
+                .parameters = parameters,
+                .result = try self.sourceType(callback.return_type, depth + 1, aliases),
+                .effects = callback.effect_bound.allowed,
+                .mutates = callback.mutates,
+                .return_origin = .unknown,
+            };
             return .{ .callback = signature };
         };
         if (self.catalog.templates.applications.get(span.start)) |template| {
@@ -448,6 +460,18 @@ fn writeCanonical(writer: *std.Io.Writer, catalog: type_catalog.Catalog, value: 
         },
         .callback => |callback| {
             writer.print("c({d}", .{callback.effects}) catch return error.OutOfMemory;
+            if (callback.mutates.len != 0) {
+                writer.writeByte('m') catch return error.OutOfMemory;
+                for (callback.mutates) |position| writer.print("{d},", .{position}) catch return error.OutOfMemory;
+            }
+            switch (callback.return_origin) {
+                .unknown => {},
+                .fresh => writer.writeByte('f') catch return error.OutOfMemory,
+                .params => |positions| {
+                    writer.writeByte('p') catch return error.OutOfMemory;
+                    for (positions) |position| writer.print("{d},", .{position}) catch return error.OutOfMemory;
+                },
+            }
             for (callback.parameters) |parameter| {
                 writer.writeByte(',') catch return error.OutOfMemory;
                 try writeCanonical(writer, catalog, parameter);

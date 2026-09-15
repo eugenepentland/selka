@@ -23,7 +23,14 @@ pub const Symbol = struct {
     details: Details = .{},
     context: Context = .{},
 
-    const Details = struct { signature: []const u8 = "", type_name: []const u8 = "", effects: []const []const u8 = &.{} };
+    const Details = struct {
+        signature: []const u8 = "",
+        type_name: []const u8 = "",
+        effects: []const []const u8 = &.{},
+        mutates: []const u16 = &.{},
+        return_origin: []const u8 = "unknown",
+        mutation_writes: bool = false,
+    };
     const Context = struct { snippet: []const u8 = "", snippet_truncated: bool = false };
 
     /// Keep the navigation-v1 wire format flat while grouping internal facts.
@@ -37,6 +44,9 @@ pub const Symbol = struct {
             .signature = self.details.signature,
             .type_name = self.details.type_name,
             .effects = self.details.effects,
+            .mutates = self.details.mutates,
+            .return_origin = self.details.return_origin,
+            .mutation_writes = self.details.mutation_writes,
             .snippet = self.context.snippet,
             .snippet_truncated = self.context.snippet_truncated,
         });
@@ -44,6 +54,14 @@ pub const Symbol = struct {
 };
 /// A resolved syntactic relationship; it does not claim dynamic execution or test coverage.
 pub const Reference = struct { from: []const u8, to: []const u8, kind: []const u8, location: Location };
+fn originName(origin: typed.ReturnOrigin) []const u8 {
+    return switch (origin) {
+        .fresh => "fresh",
+        .params => "params",
+        .unknown => "unknown",
+    };
+}
+
 const Builder = struct {
     allocator: std.mem.Allocator,
     compilation: *pc.Compilation,
@@ -159,6 +177,15 @@ const Builder = struct {
             if (merged & effect_set.bit(effect) != 0) try effects.append(self.allocator, @tagName(effect));
         }
         self.symbols.items[slot].details.effects = try effects.toOwnedSlice(self.allocator);
+        self.symbols.items[slot].details.mutates = if (self.symbols.items[slot].exported and function.policy.effect_bound != null)
+            function.signature.declared_mutates
+        else
+            function.signature.mutates;
+        self.symbols.items[slot].details.return_origin = if (self.symbols.items[slot].exported and function.policy.effect_bound != null)
+            "unknown"
+        else
+            originName(function.signature.return_origin);
+        self.symbols.items[slot].details.mutation_writes = function.signature.mutation_facts.writes;
         try self.edge(owner, self.typeId(program, function.signature.return_type), "returns", function.declaration);
         for (function.scope.locals, 0..) |local, i| {
             if (local.usage.temporary) continue;

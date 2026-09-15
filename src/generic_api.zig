@@ -83,6 +83,8 @@ const Signature = struct {
     parameters: ?[]const Value = null,
     result: ?[]const u8 = null,
     declared_effects: ?[]const []const u8 = null,
+    declared_mutates: ?[]const u16 = null,
+    return_origin: ?[]const u8 = null,
 };
 const Shape = struct { fields: ?[]const Value = null, cases: ?[]const Case = null };
 const Subject = struct { aliases: []const generic_requirements.SubjectAlias, name: []const u8 };
@@ -258,6 +260,8 @@ const Context = struct {
         out.contract.signature.result = self.src.text(declaration.signature.return_type);
         if (declaration.policy.effect_bound) |bound| {
             out.contract.signature.declared_effects = try self.effectNames(bound.allowed);
+            out.contract.signature.declared_mutates = declaration.signature.mutates;
+            out.contract.signature.return_origin = "unknown";
         }
         return out;
     }

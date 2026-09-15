@@ -2,8 +2,8 @@
 const std = @import("std");
 pub const Mask = u16;
 /// Independent capability effects tracked by source checking and interface reports.
-pub const Effect = enum(u3) { filesystem, network, clock, random, environment, host, managed_allocation, output };
-pub const all: Mask = 0b11111111;
+pub const Effect = enum(u4) { filesystem, network, clock, random, environment, host, managed_allocation, output, mutation };
+pub const all: Mask = 0b1_1111_1111;
 /// `noio` withholds external byte streams: files, sockets and standard output.
 pub const io: Mask = bit(.filesystem) | bit(.network) | bit(.output);
 /// Declared allowed-effect mask and the source annotation that imposed it.

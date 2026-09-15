@@ -226,6 +226,9 @@ const Checker = struct {
                 .constant_arguments = self.instance_keys.items[i].lengths,
                 .return_type = self.return_type,
                 .parameter_count = function.signature.parameters.len,
+                .mutates = function.signature.mutates,
+                .return_origin = .unknown,
+                .declared_mutates = function.signature.mutates,
             },
             .scope = .{
                 .body = body.id,
@@ -272,7 +275,13 @@ const Checker = struct {
         const name = try std.fmt.allocPrint(self.allocator, "lambda@{d}", .{lambda.span.start});
         return .{
             .policy = .{ .effect_bound = .{ .span = lambda.span, .allowed = contract.effects } },
-            .signature = .{ .return_type = contract.return_type, .parameter_count = contract.parameters.len },
+            .signature = .{
+                .return_type = contract.return_type,
+                .parameter_count = contract.parameters.len,
+                .mutates = contract.mutates,
+                .return_origin = contract.return_origin,
+                .declared_mutates = contract.mutates,
+            },
             .scope = .{ .body = body, .locals = try self.locals.toOwnedSlice(self.allocator) },
             .id = @fromBackingInt(self.lambda_start + index),
             .name = name,
@@ -801,7 +810,7 @@ const Checker = struct {
             return self.sink.fail("E_PRELUDE_TYPE", input.span, "sorted key requires a list input");
         const element = input_schema.shape.buffer.?;
         const parameters = try self.allocator.dupe(typed.Type, &.{element});
-        const callback = try callables.intern(self.allocator, &self.catalog, .{ .parameters = parameters, .return_type = .i64, .effects = 0 }, call.argument_names[1].?, self.sink);
+        const callback = try callables.intern(self.allocator, &self.catalog, .{ .parameters = parameters, .return_type = .i64, .effects = 0, .mutates = &.{}, .return_origin = .fresh }, call.argument_names[1].?, self.sink);
         try self.hint(call.arguments[1], callback);
     }
     /// Whole-path file helpers are reserved under the same shadowing rule as `print`.
@@ -2016,7 +2025,13 @@ const Checker = struct {
             parameter.* = try self.catalog.resolve(self.src, input.ty, self.sink);
         }
         const result = try self.catalog.resolve(self.src, function.signature.return_type, self.sink);
-        out.ty = try callables.intern(self.allocator, &self.catalog, .{ .parameters = parameters, .return_type = result, .effects = bound.allowed }, name, self.sink);
+        out.ty = try callables.intern(self.allocator, &self.catalog, .{
+            .parameters = parameters,
+            .return_type = result,
+            .effects = bound.allowed,
+            .mutates = function.signature.mutates,
+            .return_origin = .unknown,
+        }, name, self.sink);
         out.data = .{ .function_value = self.ordinary_ids[@backingInt(declaration)] orelse return error.InternalError };
         return true;
     }

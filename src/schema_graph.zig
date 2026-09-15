@@ -15,7 +15,13 @@ const Field = struct { name: []const u8, type: []const u8 };
 const Case = struct { name: []const u8, payload: ?[]const u8 };
 const Codec = struct { wire: []const u8, decode: []const u8, encode: []const u8, error_type: []const u8 };
 const Definition = struct {
-    callback: ?struct { parameters: []const []const u8, result: []const u8, effects: @import("effect_set.zig").Mask } = null,
+    callback: ?struct {
+        parameters: []const []const u8,
+        result: []const u8,
+        effects: @import("effect_set.zig").Mask,
+        mutates: []const u16 = &.{},
+        return_origin: []const u8 = "unknown",
+    } = null,
     codec: ?Codec = null,
     name: []const u8,
     kind: enum { unit, callback, integer, boolean, capability, record, array, table, domain, enumeration, tagged_union, result, list, buffer, resource, pool, handle },
@@ -37,7 +43,14 @@ const Definition = struct {
 };
 const Parameter = struct { name: []const u8, type: []const u8, mode: enum { value } };
 const ReturnReference = struct { parameter: usize, mutable: bool, slice: bool };
-const Function = struct { name: []const u8, parameters: []const Parameter, result: []const u8, effects: []const []const u8 };
+const Function = struct {
+    name: []const u8,
+    parameters: []const Parameter,
+    result: []const u8,
+    effects: []const []const u8,
+    mutates: []const u16 = &.{},
+    return_origin: []const u8 = "unknown",
+};
 const Graph = struct {
     allocator: std.mem.Allocator,
     records: []const typed.Record,
@@ -71,7 +84,13 @@ const Graph = struct {
             for (contract.parameters, parameters) |parameter, *out_type| out_type.* = try self.reference(parameter);
             out.kind = .callback;
             out.@"opaque" = true;
-            out.callback = .{ .parameters = parameters, .result = try self.reference(contract.return_type), .effects = contract.effects };
+            out.callback = .{
+                .parameters = parameters,
+                .result = try self.reference(contract.return_type),
+                .effects = contract.effects,
+                .mutates = contract.mutates,
+                .return_origin = originName(contract.return_origin),
+            };
             return out;
         }
         // Domains may only be constructed through their checked factories. Runtime
@@ -112,6 +131,13 @@ fn lessFunction(_: void, a: Function, b: Function) bool {
 }
 fn lessName(_: void, a: []const u8, b: []const u8) bool {
     return std.mem.lessThan(u8, a, b);
+}
+fn originName(origin: typed.ReturnOrigin) []const u8 {
+    return switch (origin) {
+        .fresh => "fresh",
+        .params => "params",
+        .unknown => "unknown",
+    };
 }
 /// Checks all bodies before deriving anything. Output is owned by allocator;
 /// temporary graph storage is released, including on allocation failure.
@@ -157,11 +183,17 @@ pub fn render(allocator: std.mem.Allocator, index: *interfaces.Index, program: t
         inline for (std.meta.tags(effects.Effect)) |effect| {
             if (public_ceiling & effects.bit(effect) != 0) try names.append(scratch, @tagName(effect));
         }
+        // A declared ceiling publishes its normalized `mutates(...)` bound. A
+        // private/unbounded helper presents the inferred summary instead.
+        const public_mutates = if (function.policy.effect_bound != null) function.signature.declared_mutates else function.signature.mutates;
+        const public_origin = if (function.policy.effect_bound != null) typed.ReturnOrigin.unknown else function.signature.return_origin;
         output.* = .{
             .name = function.name,
             .parameters = parameters,
             .result = try graph.reference(function.signature.return_type),
             .effects = names.items,
+            .mutates = public_mutates,
+            .return_origin = originName(public_origin),
         };
     }
     var definitions: std.ArrayList(Definition) = .empty;

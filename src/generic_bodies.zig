@@ -15,6 +15,7 @@ const requirements = @import("generic_requirements.zig");
 const Error = diagnostic.Error;
 const effects = @import("effects.zig");
 const effect_set = @import("effect_set.zig");
+const mutation = @import("mutation.zig");
 const Names = @import("module_names.zig").Names;
 const constraint_lookup = @import("constraint_lookup.zig");
 const variant_calls = @import("variant_calls.zig");
@@ -49,6 +50,10 @@ const Checker = struct {
     catalog: Catalog,
     cleanup_masks: []const effect_set.Mask,
     effect_masks: []effect_set.Mask,
+    /// Per-function bitmask of parameter positions written by this body (M1 direct only).
+    mutation_masks: []u16,
+    /// Per-function write fact before parameter-origin resolution.
+    mutation_write_masks: []bool,
     effect_calls: *std.ArrayList(effects.AbstractCall),
     function_index: usize,
     sink: *diagnostic.Sink,
@@ -152,7 +157,13 @@ const Checker = struct {
     }
     fn callbackType(self: *Checker, syntax: ast.CallbackType, parameters: []const Symbolic, result: Symbolic) Error!Symbolic {
         const signature = try self.field_arena.allocator().create(symbolic.Callback);
-        signature.* = .{ .parameters = parameters, .result = result, .effects = syntax.effect_bound.allowed };
+        signature.* = .{
+            .parameters = parameters,
+            .result = result,
+            .effects = syntax.effect_bound.allowed,
+            .mutates = syntax.mutates,
+            .return_origin = .unknown,
+        };
         return .{ .callback = signature };
     }
     fn lengthType(self: *Checker, span: source.Span) Error!Symbolic {
@@ -211,6 +222,35 @@ const Checker = struct {
     }
     fn seedEffect(self: *Checker, effect: effect_set.Effect) void {
         self.effect_masks[self.function_index] |= effect_set.bit(effect);
+    }
+    /// Resolve the direct value-parameter index addressed by a source expression.
+    fn parameterIndex(self: *Checker, id: ast.NodeId, depth: usize) ?u16 {
+        if (depth == 256) return null;
+        const node = self.program.nodes.items[@backingInt(id)];
+        const parameter_count = self.program.functions[self.function_index].signature.parameters.len;
+        return switch (node.data) {
+            .name => |name| if (self.active.get(self.src.text(name))) |slot| if (slot < parameter_count) @intCast(slot) else null else null,
+            .field => |field| self.parameterIndex(field.base, depth + 1),
+            .index => |index| self.parameterIndex(index.base, depth + 1),
+            else => null,
+        };
+    }
+    /// Resolve the direct value-parameter index named by a binder span.
+    fn parameterIndexAt(self: *Checker, span: source.Span) ?u16 {
+        const slot = self.active.get(self.src.text(span)) orelse return null;
+        const parameter_count = self.program.functions[self.function_index].signature.parameters.len;
+        if (slot >= parameter_count) return null;
+        return @intCast(slot);
+    }
+    /// Record one managed write and its direct enclosing input, if known.
+    fn seedManagedWrite(self: *Checker, input: ?u16) void {
+        self.mutation_write_masks[self.function_index] = true;
+        if (input) |position| self.mutation_masks[self.function_index] |= @as(u16, 1) << @intCast(position);
+    }
+    /// Record a collection operation using the shared buffer classification.
+    fn seedCollectionWrite(self: *Checker, kind: BufferKind, dictionary: bool, input: ?u16) void {
+        const classification = mutation.buffer(kind, dictionary);
+        if (classification.writes_receiver) self.seedManagedWrite(input);
     }
     fn pendingObligation(self: *Checker, binding: Local) Error!bool {
         return binding.available and try self.requiresHandling(binding.ty);
@@ -455,6 +495,7 @@ const Checker = struct {
             if (!binding.mutable) return self.sink.fail(diagnostic.immutable, root_node.span, "record field assignment requires a mutable binding");
             try self.runtimeOwner(root_node.data.name, true);
         } else if (root_node.data != .index) return self.sink.fail("E_ASSIGNMENT_TARGET", root_node.span, "field assignment requires a mutable local record or list slot");
+        self.seedManagedWrite(self.parameterIndex(root, 0));
         const expected = try self.expression(assignment.target);
         try self.compatible(try self.expressionExpected(assignment.value, expected), expected, node.span);
         return .{ .concrete = .unit };
@@ -552,7 +593,7 @@ const Checker = struct {
         self.seedEffect(.managed_allocation);
         return expected.?;
     }
-    fn collectionOperation(self: *Checker, owner: Symbolic, operation: struct { kind: BufferKind, inputs: []const ast.NodeId, span: source.Span }) Error!Symbolic {
+    fn collectionOperation(self: *Checker, owner: Symbolic, operation: struct { kind: BufferKind, inputs: []const ast.NodeId, span: source.Span, owner_node: ?ast.NodeId = null }) Error!Symbolic {
         const family = self.shapes().collectionKind(owner) orelse return self.sink.fail(eListType, operation.span, "operation requires a managed collection");
         const element = try self.collectionElement(owner, operation.span);
         const key = if (family == .dictionary) try self.shapes().collectionKey(owner, operation.span) else element;
@@ -579,10 +620,11 @@ const Checker = struct {
             if (integer) try self.supports(try self.expression(input), .integer, operation.span) else try self.compatible(try self.expressionExpected(input, expected), expected, operation.span);
         }
         if (buffer_operations.managedAllocation(kind, family == .dictionary) or (family == .string and kind == .read)) self.seedEffect(.managed_allocation);
+        self.seedCollectionWrite(kind, family == .dictionary, if (operation.owner_node) |node_id| self.parameterIndex(node_id, 0) else null);
         return output;
     }
     fn listOperation(self: *Checker, node: ast.Node, operation: @FieldType(@FieldType(ast.Node, "data"), "list_operation")) Error!Symbolic {
-        return self.collectionOperation(try self.expression(operation.base), .{ .kind = operation.kind, .inputs = operation.arguments, .span = node.span });
+        return self.collectionOperation(try self.expression(operation.base), .{ .kind = operation.kind, .inputs = operation.arguments, .span = node.span, .owner_node = operation.base });
     }
     fn listMethod(self: *Checker, node: ast.Node) Error!Symbolic {
         const method = node.data.method_call;
@@ -596,6 +638,7 @@ const Checker = struct {
         const assignment = node.data.index_assignment;
         const target = self.program.nodes.items[@backingInt(assignment.target)];
         const expected = try self.expression(assignment.target);
+        self.seedManagedWrite(self.parameterIndex(assignment.target, 0));
         try self.augmentedTarget(assignment.op, expected, node.span);
         try self.compatible(try self.expressionExpected(assignment.value, expected), expected, node.span);
         if (target.data == .index) if (self.program.nodes.items[@backingInt(target.data.index.base)].data == .name)
@@ -1166,6 +1209,8 @@ const Checker = struct {
         }
         try self.runtimeOwner(operation.owner, false);
         if (operation.kind == .append) self.seedEffect(.managed_allocation);
+        const dictionary = (self.shapes().collectionKind(owner.ty) orelse .list) == .dictionary;
+        self.seedCollectionWrite(operation.kind, dictionary, self.parameterIndexAt(operation.owner));
         if (operation.kind.mutates()) return .{ .concrete = .unit };
         const success: Symbolic = if (operation.kind == .read) element else .{ .concrete = .u64 };
         return self.symbolicOperationResult(null, success, eListType);
@@ -1520,6 +1565,12 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
     const effect_masks = try allocator.alloc(effect_set.Mask, program.functions.len);
     defer allocator.free(effect_masks);
     @memset(effect_masks, 0);
+    const mutation_masks = try allocator.alloc(u16, program.functions.len);
+    defer allocator.free(mutation_masks);
+    @memset(mutation_masks, 0);
+    const mutation_write_masks = try allocator.alloc(bool, program.functions.len);
+    defer allocator.free(mutation_write_masks);
+    @memset(mutation_write_masks, false);
     var effect_calls: std.ArrayList(effects.AbstractCall) = .empty;
     defer effect_calls.deinit(allocator);
     var functions: FunctionMap = .empty;
@@ -1570,6 +1621,8 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
             .catalog = catalog,
             .cleanup_masks = cleanup_masks,
             .effect_masks = effect_masks,
+            .mutation_masks = mutation_masks,
+            .mutation_write_masks = mutation_write_masks,
             .effect_calls = &effect_calls,
             .function_index = pending.items[cursor],
             .sink = sink,
@@ -1608,6 +1661,8 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
             .catalog = catalog,
             .cleanup_masks = cleanup_masks,
             .effect_masks = effect_masks,
+            .mutation_masks = mutation_masks,
+            .mutation_write_masks = mutation_write_masks,
             .effect_calls = &effect_calls,
             .function_index = 0,
             .sink = sink,
@@ -1635,6 +1690,17 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
     defer allocator.free(exported);
     for (program.functions, 0..) |function, index| {
         exported[index] = if (module_names) |names| names.index.functionExported(names.src, function.name) else false;
+    }
+    for (program.functions, 0..) |function, index| {
+        const mask = mutation_masks[index];
+        var inferred_mutates: std.ArrayList(u16) = .empty;
+        var bit: u5 = 0;
+        while (bit < 16) : (bit += 1) {
+            if (mask & (@as(u16, 1) << @intCast(bit)) != 0) try inferred_mutates.append(allocator, bit);
+        }
+        const mutable = @constCast(&program.functions[index]);
+        mutable.signature.inferred_mutates = try inferred_mutates.toOwnedSlice(allocator);
+        mutable.signature.inferred_mutation_writes = function.signature.inferred_mutation_writes or mask != 0 or mutation_write_masks[index];
     }
     try effects.checkAbstract(allocator, program.functions, effect_masks, effect_calls.items, exported, sink);
 }

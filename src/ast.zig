@@ -182,7 +182,17 @@ pub const Constraint = struct {
     subject: TypeParameter,
 };
 /// Source parameter and result spellings of one declared function.
-pub const FunctionSignature = struct { type_parameters: []const TypeParameter = &.{}, parameters: []const Parameter, return_type: Span };
+pub const FunctionSignature = struct {
+    type_parameters: []const TypeParameter = &.{},
+    parameters: []const Parameter,
+    return_type: Span,
+    /// Normalized parameter positions from an optional `mutates(...)` clause.
+    mutates: []const u16 = &.{},
+    /// Abstract-checked direct input positions, retained for interface consumers.
+    inferred_mutates: []const u16 = &.{},
+    /// Whether the abstract body performed a managed receiver write.
+    inferred_mutation_writes: bool = false,
+};
 
 /// Fixed integer length or enum key spelling of an array/table type.
 pub const ArrayIndex = union(enum) { length: Span, enum_type: Span };
@@ -215,6 +225,15 @@ pub const TypeApplication = struct { span: Span, name: Span, arguments: []const 
 pub const TypeAlias = struct { name: Span, target: Span };
 /// Structural type syntax, concrete nominal applications and transparent aliases.
 /// Noncapturing callable value signature with an explicit effect ceiling.
-pub const CallbackType = struct { span: Span, parameters: []const Span, return_type: Span, effect_bound: effect_set.Bound };
+pub const CallbackType = struct {
+    span: Span,
+    parameters: []const Span,
+    /// Optional binder spelling per parameter; names are excluded from identity.
+    parameter_names: []const ?Span = &.{},
+    return_type: Span,
+    effect_bound: effect_set.Bound,
+    /// Normalized parameter positions from an optional `mutates(...)` clause.
+    mutates: []const u16 = &.{},
+};
 /// Source catalog of structural types and nominal type applications.
 pub const TypeExpressions = struct { callbacks: []const CallbackType = &.{}, arrays: []const ArrayType = &.{}, applications: []const TypeApplication = &.{}, aliases: []const TypeAlias = &.{} };

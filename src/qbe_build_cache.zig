@@ -24,7 +24,7 @@ pub const Contract = struct {
         .bootstrap_language = "bootstrap-v1",
         .target = "native",
         .runtime_abi = "runtime-abi-v1",
-        .effects = "effects-v1",
+        .effects = "effects-v3",
         .flags = "",
         .compiler_identity = "",
     };
@@ -245,4 +245,9 @@ test "qbe object cache identity folds the wave 3 contract dimensions" {
     const other = try changed.identity("qbe", "unit");
     defer context.allocator.free(other);
     try std.testing.expect(!std.mem.eql(u8, base, other));
+}
+
+test "native object cache mirror uses the effects-v3 contract" {
+    const testing = std.testing;
+    try testing.expectEqualStrings("effects-v3", Contract.default.effects);
 }

@@ -713,6 +713,36 @@ test "schema rendering rejects an exported declaration missing its checked type"
     try t.expectError(error.InvalidCheckedType, @import("schema.zig").render(t.allocator, &compilation));
 }
 
+test "public schema renders normalized mutates metadata and callback contracts" {
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes =
+        \\module main
+        \\export touch
+        \\export apply
+        \\
+        \\
+        \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
+        \\    values[0] = 1
+        \\
+        \\
+        \\def apply(f: def(values: list[int]) -> None effects(mutation) mutates(values)) -> None effects():
+        \\    _ = f
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    }} };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try project_compile_module.Compilation.init(&index);
+    const schema = try @import("schema.zig").render(t.allocator, &compilation);
+    defer t.allocator.free(schema);
+    try t.expect(std.mem.indexOf(u8, schema, "\"name\":\"main::touch\"") != null);
+    try t.expect(std.mem.indexOf(u8, schema, "\"mutates\":[0]") != null);
+    try t.expect(std.mem.indexOf(u8, schema, "\"return_origin\":\"unknown\"") != null);
+}
+
 test "generic syntax module interfaces retain scoped type names without hiding private concrete types" {
     try reject(
         \\module main

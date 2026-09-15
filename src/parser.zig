@@ -199,18 +199,34 @@ pub const Parser = struct {
     }
     fn callbackType(self: *Parser, first: Span) diagnostic.Error!Span {
         _ = try self.expect(.lparen);
+        const allocator = self.arena.allocator();
         var parameters: std.ArrayList(Span) = .empty;
+        var names: std.ArrayList(?Span) = .empty;
         if (self.current().tag != .rparen) while (true) {
             if (parameters.items.len == 16) return self.sink.fail(eGenericLimit, first, "callbacks support at most 16 value parameters");
-            try parameters.append(self.arena.allocator(), try self.typeName());
+            var name: ?Span = null;
+            if (self.current().tag == .ident and self.tokens[self.cursor.pos + 1].tag == .colon) {
+                name = (try self.expect(.ident)).span;
+                _ = try self.expect(.colon);
+            }
+            try parameters.append(allocator, try self.typeName());
+            try names.append(allocator, name);
             if (!self.take(.comma) or self.current().tag == .rparen) break;
         };
         _ = try self.expect(.rparen);
         _ = try self.expect(.arrow);
         const result = try self.typeName();
         const bound = try self.effectBound() orelse return self.sink.fail("E_CALLBACK_EFFECTS", first, "callback types require an explicit effects ceiling");
+        const mutates = try self.mutatesClause(names.items, bound);
         const span: Span = .join(first, self.tokens[self.cursor.pos - 1].span);
-        try self.syntax.types.callbacks.append(self.arena.allocator(), .{ .span = span, .parameters = try parameters.toOwnedSlice(self.arena.allocator()), .return_type = result, .effect_bound = bound });
+        try self.syntax.types.callbacks.append(allocator, .{
+            .span = span,
+            .parameters = try parameters.toOwnedSlice(allocator),
+            .parameter_names = try names.toOwnedSlice(allocator),
+            .return_type = result,
+            .effect_bound = bound,
+            .mutates = mutates,
+        });
         return span;
     }
     fn nominalTypeName(self: *Parser) diagnostic.Error!Span {
@@ -426,6 +442,9 @@ pub const Parser = struct {
         }
         const effect_bound = try self.effectBound();
         if (host) |span| if (effect_bound.?.allowed & effects.bit(.host) == 0) return self.sink.fail("E_HOST_EFFECTS", span, "host declarations must include the host effect");
+        var parameter_names: std.ArrayList(?Span) = .empty;
+        for (parameters.items) |parameter| try parameter_names.append(self.arena.allocator(), parameter.name);
+        const mutates = try self.mutatesClause(parameter_names.items, effect_bound);
         if (c_abi and !annotated_return) return self.sink.fail("E_EXTERN_SIGNATURE", name.span, "extern functions require an explicit return type (unit for C void)");
         const body = if (host != null) try self.addStatement(.{ .span = (try self.expect(.semicolon)).span, .data = .{ .block = &.{} } }) else try self.block();
         return .{
@@ -441,6 +460,7 @@ pub const Parser = struct {
                 .type_parameters = type_parameters,
                 .parameters = try parameters.toOwnedSlice(self.arena.allocator()),
                 .return_type = return_type,
+                .mutates = mutates,
             },
             .name = name.span,
             .body = body,
@@ -606,6 +626,44 @@ pub const Parser = struct {
         _ = try self.expect(.rparen);
         return .{ .name = name, .parameters = try parameters.toOwnedSlice(self.arena.allocator()), .return_type = result, .effect_bound = bound };
     }
+    /// Parse one optional `mutates(name, ...)` clause and normalize names to
+    /// zero-based parameter positions. Absence and `mutates()` both yield the
+    /// empty footprint. A nonempty clause requires the mutation effect bit.
+    fn mutatesClause(self: *Parser, names: []const ?Span, bound: ?effects.Bound) diagnostic.Error![]const u16 {
+        const token = self.current();
+        if (token.tag != .ident or !std.mem.eql(u8, self.src.text(token.span), "mutates")) return &.{};
+        self.cursor.pos += 1;
+        _ = try self.expect(.lparen);
+        var positions: [16]u16 = undefined;
+        var count: usize = 0;
+        if (self.current().tag != .rparen) while (true) {
+            const name = try self.expect(.ident);
+            var position: ?u16 = null;
+            for (names, 0..) |candidate, index| {
+                if (candidate == null) continue;
+                if (!std.mem.eql(u8, self.src.text(candidate.?), self.src.text(name.span))) continue;
+                position = @intCast(index);
+                break;
+            }
+            const at = position orelse return self.sink.fail("E_UNKNOWN_MUTATES", name.span, "`mutates` names a parameter binder in this signature");
+            var duplicate = false;
+            for (positions[0..count]) |previous| if (previous == at) {
+                duplicate = true;
+                break;
+            };
+            if (!duplicate) {
+                if (count == positions.len) return self.sink.fail(eGenericLimit, name.span, "mutates accepts at most 16 input positions");
+                positions[count] = at;
+                count += 1;
+            }
+            if (!self.take(.comma) or self.current().tag == .rparen) break;
+        };
+        _ = try self.expect(.rparen);
+        const allowed = if (bound) |declared| declared.allowed else 0;
+        if (allowed & effects.bit(.mutation) == 0) return self.sink.fail("E_MUTATES_EFFECT", token.span, "`mutates(...)` requires the mutation effect in the preceding effects ceiling");
+        std.mem.sort(u16, positions[0..count], {}, std.sort.asc(u16));
+        return self.arena.allocator().dupe(u16, positions[0..count]) catch return error.OutOfMemory;
+    }
     fn effectBound(self: *Parser) diagnostic.Error!?effects.Bound {
         const sets = effects;
         const token = self.current();
@@ -625,7 +683,7 @@ pub const Parser = struct {
             const effect = std.meta.stringToEnum(sets.Effect, self.src.text(name.span)) orelse return self.sink.fail(
                 "E_UNKNOWN_EFFECT",
                 name.span,
-                "unknown effect; expected managed_allocation, filesystem, network, clock, random, environment, output, or host",
+                "unknown effect; expected managed_allocation, filesystem, network, clock, random, environment, output, mutation, or host",
             );
             if (allowed & sets.bit(effect) != 0) return self.sink.fail("E_DUPLICATE_EFFECT", name.span, "effect appears more than once in this bound");
             allowed |= sets.bit(effect);
