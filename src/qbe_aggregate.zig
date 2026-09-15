@@ -66,7 +66,7 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
             }
             const invalid = self.temp();
             try self.print(" %v{d} =l cugel %v{d}, {d}\n jnz %v{d}, @bounds{d}, @index{d}\n", .{ invalid, index, layout_value.count, invalid, invalid, invalid });
-            try self.print("@bounds{d}\n call $myl_qbe_fail_bounds(l %ctx)\n jmp @failure\n@index{d}\n", .{ invalid, invalid });
+            try self.print("@bounds{d}\n call $myl_qbe_fail_array_bounds(l %ctx, l %v{d}, l {d})\n jmp @failure\n@index{d}\n", .{ invalid, index, layout_value.count, invalid });
             if (replacing) {
                 const copy = try self.aggregatePointer();
                 try self.print(" blit %v{d}, %v{d}, {d}\n", .{ source, copy, layout_value.size });

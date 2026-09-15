@@ -101,7 +101,8 @@ pub fn Lower(comptime E: type) type {
                 try self.print(" %v{d} =l cultl %v{d}, %v{d}\n", .{ overflow, if (op == .add) result else left, if (op == .add) left else right });
             }
             try self.print(" jnz %v{d}, @overflow{d}, @checked{d}\n@overflow{d}\n", .{ overflow, result, result, result });
-            try self.print(" call $myl_qbe_fail_overflow(l %ctx)\n jmp @failure\n@checked{d}\n", .{result});
+            // Capture the already-evaluated operands and width for the sticky trap detail.
+            try self.print(" call $myl_qbe_fail_overflow_op(l %ctx, l {d}, l %v{d}, l %v{d}, l {d})\n jmp @failure\n@checked{d}\n", .{ @backingInt(op), left, right, bits, result });
         }
     };
 }

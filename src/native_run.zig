@@ -11,6 +11,7 @@ const fs = @import("qbe_build_io.zig");
 const builder = @import("qbe_build.zig");
 const options = @import("qbe_build_options.zig");
 const bundled = @import("qbe_build_assets");
+const trap_detail = @import("native_trap_detail.zig");
 
 /// Native build, tool and child-process failures raised while running a program.
 pub const Error = builder.Error;
@@ -35,32 +36,81 @@ pub fn execute(allocator: std.mem.Allocator, request: Request) Error!u8 {
     var context = try fs.Context.init(allocator, request.io, request.environ);
     defer context.deinit();
     const path = try publish(context, request.settings, request.manifest);
-    if (request.diagnostics == .text) return builder.spawn(context, path, request.settings);
-    return observe(context, path, request.settings);
-}
-
-/// Run the program with its diagnostics captured, so a trap the native runtime
-/// located can be re-rendered as JSON. Standard output still streams through.
-fn observe(context: fs.Context, path: []const u8, settings: options.Options) Error!u8 {
-    const argv = try builder.command(context, path, settings.arguments);
+    const argv = try builder.command(context, path, request.settings.arguments);
     var child = try std.process.spawn(context.io, .{
         .argv = argv,
-        .environ_map = try builder.ceiling(context, settings),
+        .environ_map = try builder.ceiling(context, request.settings),
         .stderr = .pipe,
     });
-    var buffer: [4096]u8 = undefined;
+    switch (request.diagnostics) {
+        // Capture the whole stream so the structured record can be consumed and
+        // re-rendered as `diagnostic-v1`. Standard output still streams through.
+        .json => {
+            var buffer: [4096]u8 = undefined;
+            var reader = child.stderr.?.readerStreaming(context.io, &buffer);
+            const captured = reader.interface.allocRemaining(context.allocator, .limited(4 * 1024 * 1024)) catch "";
+            const outcome = builder.status(try child.wait(context.io));
+            try translate(context, captured);
+            return outcome;
+        },
+        // Stream line by line, dropping only the bounded machine record. The
+        // human diagnostic text and its order are otherwise passed through.
+        .text => {
+            try filterText(context, &child);
+            return builder.status(try child.wait(context.io));
+        },
+    }
+}
+
+/// Forward the child's stderr, omitting the one bounded trap-detail record line.
+fn filterText(context: fs.Context, child: *std.process.Child) Error!void {
+    var buffer: [65536]u8 = undefined;
     var reader = child.stderr.?.readerStreaming(context.io, &buffer);
-    const captured = reader.interface.allocRemaining(context.allocator, .limited(4 * 1024 * 1024)) catch "";
-    const outcome = builder.status(try child.wait(context.io));
-    try translate(context, captured);
-    return outcome;
+    const stderr = std.Io.File.stderr();
+    while (true) {
+        const line = reader.interface.takeDelimiterInclusive('\n') catch |err| switch (err) {
+            error.EndOfStream => break,
+            // The bounded record never fills this buffer, so an oversized line is
+            // ordinary output: forward the remainder unchanged.
+            error.StreamTooLong => {
+                const rest = reader.interface.allocRemaining(context.allocator, .limited(64 * 1024 * 1024)) catch break;
+                try stderr.writeStreamingAll(context.io, rest);
+                break;
+            },
+            error.ReadFailed => break,
+        };
+        if (std.mem.startsWith(u8, line, trap_detail.marker)) continue;
+        try stderr.writeStreamingAll(context.io, line);
+    }
 }
 
 /// One `path:line:column` locator the native runtime printed.
 const Place = struct { path: []const u8, line: u64, column: u64 };
 
-/// Re-emit captured runtime diagnostics as `diagnostic-v1` JSON lines.
+/// The `trap_detail` object. Optional numeric fields are omitted when absent, so
+/// the JSON carries only values the runtime actually captured.
+const JsonDetail = struct {
+    version: u32,
+    operation: []const u8,
+    index: ?i64 = null,
+    length: ?u64 = null,
+    left: ?i64 = null,
+    right: ?i64 = null,
+    width: ?u64 = null,
+};
+
+/// Re-emit captured runtime diagnostics as `diagnostic-v1` JSON lines. Source
+/// code, location and stack still come from the native text; numeric detail is
+/// read from the bounded structured record rather than extracted from the
+/// human message.
 fn translate(context: fs.Context, text: []const u8) Error!void {
+    const record = try renderJson(context, text) orelse return passthrough(context, text);
+    try passthrough(context, try std.fmt.allocPrint(context.allocator, "{s}\n", .{record}));
+}
+
+/// Render one `diagnostic-v1` record, or null when `text` carries no located
+/// guest trap the runtime can reinterpret.
+fn renderJson(context: fs.Context, text: []const u8) Error!?[]u8 {
     var frames: std.ArrayList(struct { function: []const u8, location: Located }) = .empty;
     var lines = std.mem.splitScalar(u8, text, '\n');
     const first = lines.first();
@@ -70,11 +120,20 @@ fn translate(context: fs.Context, text: []const u8) Error!void {
         const at = position(line[split + 4 ..]) orelse continue;
         try frames.append(context.allocator, .{ .function = line[5..split], .location = located(at) });
     }
-    const marker = std.mem.indexOf(u8, first, ": error[") orelse return passthrough(context, text);
+    const marker = std.mem.indexOf(u8, first, ": error[") orelse return null;
     const rest = first[marker + 8 ..];
-    const close = std.mem.indexOfScalar(u8, rest, ']') orelse return passthrough(context, text);
-    const at = position(first[0..marker]) orelse return passthrough(context, text);
+    const close = std.mem.indexOfScalar(u8, rest, ']') orelse return null;
+    const at = position(first[0..marker]) orelse return null;
     const body = if (std.mem.indexOf(u8, rest[close..], "]: ")) |offset| rest[close + offset + 3 ..] else "native execution failed";
+    const structured: ?JsonDetail = if (trap_detail.parse(context.allocator, text)) |value| .{
+        .version = value.version,
+        .operation = value.operation.name(),
+        .index = if (value.has(trap_detail.present_index)) value.values.index else null,
+        .length = if (value.has(trap_detail.present_length)) value.values.length else null,
+        .left = if (value.has(trap_detail.present_left)) value.values.left else null,
+        .right = if (value.has(trap_detail.present_right)) value.values.right else null,
+        .width = if (value.has(trap_detail.present_width)) value.values.width else null,
+    } else null;
     const record = try std.json.Stringify.valueAlloc(context.allocator, .{
         .version = "diagnostic-v1",
         .kind = "diagnostic",
@@ -85,9 +144,10 @@ fn translate(context: fs.Context, text: []const u8) Error!void {
             .location = located(at),
             .notes = &[_]u32{},
             .stack = .{ .frames = frames.items, .omitted = 0 },
+            .trap_detail = structured,
         },
-    }, .{});
-    try passthrough(context, try std.fmt.allocPrint(context.allocator, "{s}\n", .{record}));
+    }, .{ .emit_null_optional_fields = false });
+    return record;
 }
 
 /// The JSON location shape shared with source diagnostics; byte spans are the
@@ -172,4 +232,38 @@ test "a run identity separates programs, toolchains and build modes" {
     try std.testing.expect(!std.mem.eql(u8, first, second));
     try std.testing.expect(!std.mem.eql(u8, first, try identity(context, release, "{\"functions\":[]}")));
     try std.testing.expectEqualStrings(first, try identity(context, settings, "{\"functions\":[]}"));
+}
+
+test "native JSON traps attach structured detail from the machine record" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const captured = "main.my:2:12: error[R_LIST_BOUNDS]: native execution failed (index 14, length 1)\n" ++
+        "  in at at main.my:2:12\n" ++ trap_detail.marker ++ "{\"version\":1,\"operation\":\"index\",\"index\":14,\"length\":1}\n";
+    const record = (try renderJson(context, captured)).?;
+    var parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, record, .{});
+    defer parsed.deinit();
+    const diagnostic = parsed.value.object.get("diagnostic").?;
+    try std.testing.expectEqualStrings("R_LIST_BOUNDS", diagnostic.object.get("code").?.string);
+    const detail = diagnostic.object.get("trap_detail").?;
+    try std.testing.expectEqualStrings("index", detail.object.get("operation").?.string);
+    try std.testing.expectEqual(@as(i64, 14), detail.object.get("index").?.integer);
+    try std.testing.expectEqual(@as(i64, 1), detail.object.get("length").?.integer);
+    const frames = diagnostic.object.get("stack").?.object.get("frames").?.array.items;
+    try std.testing.expectEqual(@as(usize, 1), frames.len);
+    try std.testing.expectEqualStrings("at", frames[0].object.get("function").?.string);
+    // An absent numeric field is omitted, never serialized as zero.
+    const without_index = (try renderJson(context, "main.my:3:12: error[R_LIST_BOUNDS]: native execution failed\n" ++ trap_detail.marker ++ "{\"version\":1,\"operation\":\"pop\",\"length\":0}\n")).?;
+    var plain = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, without_index, .{});
+    defer plain.deinit();
+    const plain_detail = plain.value.object.get("diagnostic").?.object.get("trap_detail").?;
+    try std.testing.expect(plain_detail.object.get("index") == null);
+    try std.testing.expectEqual(@as(i64, 0), plain_detail.object.get("length").?.integer);
+    // A runtime that emitted no record (or an older one) renders exactly the
+    // pre-existing diagnostic shape: no trap_detail key at all.
+    const legacy = (try renderJson(context, "main.my:2:12: error[R_LIST_BOUNDS]: native execution failed\n  in at at main.my:2:12\n")).?;
+    var old = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, legacy, .{});
+    defer old.deinit();
+    try std.testing.expect(old.value.object.get("diagnostic").?.object.get("trap_detail") == null);
 }

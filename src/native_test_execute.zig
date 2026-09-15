@@ -3,6 +3,7 @@ const std = @import("std");
 const fs = @import("qbe_build_io.zig");
 const v = @import("qbe_build_value.zig");
 const wire = @import("native_test_wire.zig");
+const trap_detail = @import("native_trap_detail.zig");
 const budget = @import("memory_budget");
 const Value = std.json.Value;
 const infrastructure_failure = "infrastructure-failure";
@@ -114,13 +115,33 @@ fn response(a: std.mem.Allocator, types: []const Value, result_type: []const u8,
     const count = try reader.number();
     const frame_count = try reader.number();
     const omitted = try reader.number();
+    // Read the wire detail sequentially before constructing the value; struct
+    // literal evaluation order is not a stream contract.
+    const detail_version: u32 = @intCast(try reader.number());
+    const detail_present: u32 = @intCast(try reader.number());
+    const detail_index: i64 = @bitCast(try reader.number());
+    const detail_length: u64 = try reader.number();
+    const detail_left: i64 = @bitCast(try reader.number());
+    const detail_right: i64 = @bitCast(try reader.number());
+    const detail_width: u64 = try reader.number();
+    const detail_operation = trap_detail.Detail.operationFromName(try reader.text());
+    const detail: trap_detail.Detail = .{
+        .version = detail_version,
+        .present = detail_present,
+        .operation = detail_operation,
+        .values = .{ .index = detail_index, .length = detail_length, .left = detail_left, .right = detail_right, .width = detail_width },
+    };
     const code = try reader.text();
     const domain = try reader.text();
     const rejected = try reader.number();
     if (status > 2 or frame_count > 16 or count > 100000) return error.InvalidNativeTestResponse;
     var diagnostics: std.Io.Writer.Allocating = .init(a);
     defer diagnostics.deinit();
-    if (code.len != 0) try diagnostics.writer.print("{s}\n", .{code});
+    if (code.len != 0) {
+        try diagnostics.writer.writeAll(code);
+        try detail.writeText(&diagnostics.writer);
+        try diagnostics.writer.writeAll("\n");
+    }
     if (domain.len != 0) try diagnostics.writer.print("domain: {s}; rejected: {d}\n", .{ domain, rejected });
     for (0..@intCast(frame_count)) |_| {
         const function = try reader.text();
@@ -147,7 +168,8 @@ test "native runner response reports source traces and rejects malformed bytes" 
     var buffer: std.Io.Writer.Allocating = .init(a);
     defer buffer.deinit();
     const w = &buffer.writer;
-    for ([_]u64{ magic, 1, 17, 0, 1, 0 }) |number| try w.writeInt(u64, number, .little);
+    for ([_]u64{ magic, 1, 17, 0, 1, 0, 1, 12, 0, 0, 1, 0, 0 }) |number| try w.writeInt(u64, number, .little);
+    try string(w, "div");
     try string(w, "R_DIVISION_BY_ZERO");
     try string(w, "");
     try w.writeInt(u64, 0, .little);
@@ -157,7 +179,7 @@ test "native runner response reports source traces and rejects malformed bytes" 
     try w.writeInt(u64, 21, .little);
     const outcome = try response(a, &.{}, "i64", buffer.written());
     try std.testing.expectEqualStrings("trap", outcome.status);
-    try std.testing.expectEqualStrings("R_DIVISION_BY_ZERO\n  in main::test_trap at main.my:7:21\n", outcome.diagnostics);
+    try std.testing.expectEqualStrings("R_DIVISION_BY_ZERO (div: left 1, right 0)\n  in main::test_trap at main.my:7:21\n", outcome.diagnostics);
     try std.testing.expectError(error.InvalidNativeTestResponse, response(a, &.{}, "i64", "bad"));
 }
 
