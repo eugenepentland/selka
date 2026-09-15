@@ -78,36 +78,36 @@ fn reject(body: []const u8, code: []const u8) !void {
 // spec: GENERIC-PROVIDER-1
 test "generic externalValue and environmentValue enforce capability kinds and result shapes" {
     try reject(
-        \\def f[T](cap: random_cap) -> R:
+        \\def f[T](cap: Entropy) -> R:
         \\    return clock_now[R](cap)
     , "E_GENERIC_TYPE");
     try reject(
-        \\def f[T](cap: clock_cap) -> Random:
+        \\def f[T](cap: Clock) -> Random:
         \\    return clock_now[Random](cap)
     , "E_EXTERNAL_RESULT");
     try reject(
-        \\def f[T](cap: random_cap) -> R:
+        \\def f[T](cap: Entropy) -> R:
         \\    return random_u64[R](cap)
     , "E_EXTERNAL_RESULT");
     try reject(
-        \\def f[T](cap: environment_cap) -> R:
+        \\def f[T](cap: Environment) -> R:
         \\    return environment_get[R](cap, [])
     , "E_ENVIRONMENT_RESULT");
     try reject(
-        \\def f[T](cap: clock_cap) -> Env:
+        \\def f[T](cap: Clock) -> Env:
         \\    return environment_get[Env](cap, [])
     , "E_GENERIC_TYPE");
     try reject(
-        \\def f[T](cap: environment_cap) -> Env:
+        \\def f[T](cap: Environment) -> Env:
         \\    return environment_get[Env](cap, [1])
     , "E_ENVIRONMENT_NAME");
     try reject(
-        \\def f[T](cap: random_cap) -> i64 effects():
+        \\def f[T](cap: Entropy) -> i64 effects():
         \\    _ = random_u64[Random](cap)
         \\    return 0
     , "E_EFFECT_BOUND");
     try reject(
-        \\def f[T](cap: environment_cap) -> i64 effects():
+        \\def f[T](cap: Environment) -> i64 effects():
         \\    name: [0]u8 = []
         \\    _ = environment_get[Env](cap, name)
         \\    return 0
@@ -116,17 +116,17 @@ test "generic externalValue and environmentValue enforce capability kinds and re
 
 test "generic acquireResource and completeResource preserve kind byte request and ownership contracts" {
     try reject(
-        \\def f[T](cap: filesystem_cap) -> R:
+        \\def f[T](cap: Filesystem) -> R:
         \\    empty: [0]u8 = []
         \\    return acquire_resource[R](cap, empty)
     , "E_RESOURCE_RESULT");
     try reject(
-        \\def f[T](cap: network_cap) -> Open:
+        \\def f[T](cap: Network) -> Open:
         \\    empty: [0]u8 = []
         \\    return acquire_resource[Open](cap, empty)
     , "E_GENERIC_TYPE");
     try reject(
-        \\def f[T](cap: filesystem_cap) -> Open:
+        \\def f[T](cap: Filesystem) -> Open:
         \\    return acquire_resource[Open](cap, 0)
     , "E_RESOURCE_REQUEST");
     try reject(
@@ -143,7 +143,7 @@ test "generic acquireResource and completeResource preserve kind byte request an
         \\    return complete_resource[Finish](file)
     , "E_OWNED_CONSUMED");
     try reject(
-        \\def f[T](cap: filesystem_cap) -> Open noio:
+        \\def f[T](cap: Filesystem) -> Open noio:
         \\    empty: [0]u8 = []
         \\    return acquire_resource[Open](cap, empty)
     , "E_EFFECT_BOUND");

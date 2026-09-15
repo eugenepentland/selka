@@ -102,7 +102,7 @@ const helpers =
     \\    return leaf(2)
     \\
     \\
-    \\def unused(c: clock_cap) -> i64:
+    \\def unused(c: Clock) -> i64:
     \\    _ = clock_now[Time](c)
     \\    return 0
     \\
@@ -230,11 +230,11 @@ test "generic calls reject reachable clock effects even behind cycles and false 
         \\    err: i64
         \\
         \\
-        \\def helper(c: clock_cap) -> i64:
+        \\def helper(c: Clock) -> i64:
         \\    return hidden(c)
         \\
         \\
-        \\def hidden(c: clock_cap) -> i64:
+        \\def hidden(c: Clock) -> i64:
         \\    if False:
         \\        _ = clock_now[Time](c)
         \\        return helper(c)
@@ -244,13 +244,13 @@ test "generic calls reject reachable clock effects even behind cycles and false 
         \\
     ;
     var ordinary = try language.Compilation.init(t.allocator, "ordinary.my", effectful ++
-        \\def main(c: clock_cap) -> i64:
+        \\def main(c: Clock) -> i64:
         \\    return helper(c)
     );
     defer ordinary.deinit();
     try ordinary.check();
     var generic = try language.Compilation.init(t.allocator, "generic.my", effectful ++
-        \\def f[T](x: T, c: clock_cap) -> i64 effects():
+        \\def f[T](x: T, c: Clock) -> i64 effects():
         \\    _ = x
         \\    return helper(c)
         \\

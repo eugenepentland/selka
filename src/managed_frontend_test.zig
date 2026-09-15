@@ -38,7 +38,7 @@ test "managed list formatting preserves contextual list case identifiers" {
         \\
         \\
         \\def main() -> i64:
-        \\    values: List[i64] = []
+        \\    values: list[i64] = []
         \\    values.append(42)
         \\    return values[0]
     );
@@ -52,12 +52,12 @@ test "managed list formatting preserves contextual list case identifiers" {
 // spec: GC-GENERIC-1
 test "managed generic list creation mutation and copy identity preserve shared aliases" {
     try evaluate(
-        \\def make[T]() -> List[T]:
-        \\    items: List[T] = []
+        \\def make[T]() -> list[T]:
+        \\    items: list[T] = []
         \\    return items
         \\
         \\
-        \\def add[T](items: List[T], value: T):
+        \\def add[T](items: list[T], value: T):
         \\    items.append(value)
         \\
         \\
@@ -78,11 +78,11 @@ test "managed nominal recursive list record edges allow finite reference graphs"
     try evaluate(
         \\class Node[T]:
         \\    value: T
-        \\    children: List[Node[T]]
+        \\    children: list[Node[T]]
         \\
         \\
         \\def main() -> i64:
-        \\    children: List[Node[i64]] = []
+        \\    children: list[Node[i64]] = []
         \\    node = Node[i64](value=42, children=children)
         \\    children.append(node)
         \\    child = children[0]
@@ -94,20 +94,20 @@ test "managed nominal recursive list record edges allow finite reference graphs"
 test "managed lists reject nested and generic capabilities before helper alias escape" {
     const cases = [_][]const u8{
         \\class Box:
-        \\    value: [1]clock_cap
+        \\    value: [1]Clock
         \\
         \\
         \\def main() -> i64:
-        \\    values: List[Box] = []
+        \\    values: list[Box] = []
         \\    return i64(len(values))
         ,
         \\def hold[T](sample: T) -> i64:
-        \\    values: List[T] = []
+        \\    values: list[T] = []
         \\    return i64(len(values))
         \\
         \\
-        \\def main(clock: clock_cap) -> i64:
-        \\    return hold[clock_cap](clock)
+        \\def main(clock: Clock) -> i64:
+        \\    return hold[Clock](clock)
         ,
     };
     for (cases) |bytes| {

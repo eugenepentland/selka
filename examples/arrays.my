@@ -3,11 +3,11 @@ class Samples:
 
 
 def sum(values: [3]int) -> int:
-    index = 0u64
+    index = 0
     total = 0
     while index < len(values):
         total += values[index]
-        index += 1u64
+        index += 1
     return total
 
 

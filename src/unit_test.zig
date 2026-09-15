@@ -213,18 +213,18 @@ test "unit remains distinct and implicit discard cannot lose ordinary or fallibl
 test "unit fallthrough and early return release managed parameters without losing result obligations" {
     const text =
         \\result A:
-        \\    ok: List[i64],
+        \\    ok: list[i64],
         \\    err: i64
         \\
         \\
-        \\def consume(values: List[i64], early: bool):
+        \\def consume(values: list[i64], early: bool):
         \\    _ = len(values)
         \\    if early:
         \\        return
         \\
         \\
         \\def produce() -> A:
-        \\    values: List[i64] = []
+        \\    values: list[i64] = []
         \\    values.append(1)
         \\    values.append(2)
         \\    return Ok(values)

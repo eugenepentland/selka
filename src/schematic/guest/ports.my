@@ -62,7 +62,7 @@ def collect(nodes: list[s.Node], lanes: list[s.Node]) -> Result[list[Port], int]
             dir = s.at(nodes, i + 3)
             if i + 3 >= s.at(nodes, i).next or name.kind != s.Kind.string or not text.identifier(name.span) or not direction(dir.span):
                 return fail(name.span)
-            if out.len() == 32u64:
+            if len(out) == 32:
                 return fail(name.span)
             out.append(Port(
                 prefix=text.empty(),
@@ -103,7 +103,7 @@ def collect(nodes: list[s.Node], lanes: list[s.Node]) -> Result[list[Port], int]
                         label = s.at(nodes, rename + 3).span
                         pre = text.empty()
                     rename = s.at(nodes, rename).next
-                if not text.identifier(label) or out.len() == 32u64:
+                if not text.identifier(label) or len(out) == 32:
                     return fail(label)
                 out.append(Port(
                     prefix=pre,

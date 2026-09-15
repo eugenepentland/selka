@@ -2,7 +2,7 @@
  "entries": {
   "030f5271ee8ed005ef3c372a2bf3b23a": {
    "case": [
-    "class Box:\n    row: List[i64]\n\n\ndef main() -> i64:\n    a: List[i64] = []\n    a.push(42)\n    box = Box(row=a)\n    rows: List[List[i64]] = []\n    rows.push(box.row)\n    i = 0\n    while i < 20:\n        garbage: List[i64] = []\n        garbage.push(i)\n        i += 1\n    inner = rows[0u64]\n    return inner[0u64]\n",
+    "class Box:\n    row: list[i64]\n\n\ndef main() -> i64:\n    a: list[i64] = []\n    a.append(42)\n    box = Box(row=a)\n    rows: list[list[i64]] = []\n    rows.append(box.row)\n    i = 0\n    while i < 20:\n        garbage: list[i64] = []\n        garbage.append(i)\n        i += 1\n    inner = rows[0u64]\n    return inner[0u64]\n",
     []
    ],
    "returncode": 42,
@@ -78,7 +78,7 @@
   },
   "357d2dd6ebbdc21bfcaed11e56f6d82e": {
    "case": [
-    "def main() -> i64:\n    xs: List[i64] = []\n    return xs[0u64]\n",
+    "def main() -> i64:\n    xs: list[i64] = []\n    return xs[0u64]\n",
     []
    ],
    "returncode": 1,
@@ -168,7 +168,7 @@
   },
   "4dabec5922560cff1734b00fd167c2ce": {
    "case": [
-    "def main() -> i64:\n    if f64_div(0u64, 0u64) != 9221120237041090560u64:\n        return 1\n    if not f64_eq(0u64, 9223372036854775808u64):\n        return 2\n    return i64(f64_to_u64(f64_add(f64_from_u64(20u64), f64_from_u64(22u64))))\n",
+    "def main() -> i64:\n    if 0.0 / 0.0 == 0.0 / 0.0:\n        return 1\n    if 0.0 != -0.0:\n        return 2\n    return int(20.0 + 22.0)\n",
     []
    ],
    "returncode": 42,
@@ -222,7 +222,7 @@
   },
   "60e3e205c0992957460cabbb31277c2e": {
    "case": [
-    "domain ComponentId: u64:\n    def make(raw: u64) -> ComponentId:\n        return wrap[ComponentId](raw)\n\n\ndomain NetId: u64:\n    def make(raw: u64) -> NetId:\n        return wrap[NetId](raw)\n\n\ndef pair[T](first: T, second: T) -> [2]T:\n    return [first, second]\n\n\ndef contains[T: equality](items: [2]T, needle: T) -> bool:\n    index = 0u64\n    while index < len(items):\n        if items[index] == needle:\n            return True\n        index += 1u64\n    return False\n\n\ndef main() -> i64:\n    components = pair[ComponentId](ComponentId.make(1u64), ComponentId.make(2u64))\n    nets = pair[NetId](NetId.make(8u64), NetId.make(9u64))\n    score = 0\n    if contains[ComponentId](components, ComponentId.make(2u64)):\n        score += 1\n    if contains[NetId](nets, NetId.make(9u64)):\n        score += 2\n    return score\n",
+    "domain ComponentId: u64:\n    def make(raw: u64) -> ComponentId:\n        return wrap[ComponentId](raw)\n\n\ndomain NetId: u64:\n    def make(raw: u64) -> NetId:\n        return wrap[NetId](raw)\n\n\ndef pair[T](first: T, second: T) -> [2]T:\n    return [first, second]\n\n\ndef contains[T: equality](items: [2]T, needle: T) -> bool:\n    index = 0\n    while index < int(len(items)):\n        if items[index] == needle:\n            return True\n        index += 1\n    return False\n\n\ndef main() -> i64:\n    components = pair[ComponentId](ComponentId.make(1u64), ComponentId.make(2u64))\n    nets = pair[NetId](NetId.make(8u64), NetId.make(9u64))\n    score = 0\n    if contains[ComponentId](components, ComponentId.make(2u64)):\n        score += 1\n    if contains[NetId](nets, NetId.make(9u64)):\n        score += 2\n    return score\n",
     []
    ],
    "returncode": 3,
@@ -510,7 +510,7 @@
   },
   "bc0431e24fee96612b5fc499dc6414c2": {
    "case": [
-    "class Samples:\n    values: [3]i64\n\n\ndef sum(values: [3]i64) -> i64:\n    index = 0u64\n    total = 0\n    while index < len(values):\n        total += values[index]\n        index += 1u64\n    return total\n\n\ndef main() -> i64:\n    original = Samples(values=[4, 7, 9])\n    changed = original\n    changed.values = replace(original.values, 1, 11)\n    return sum(original.values) + sum(changed.values)\n",
+    "class Samples:\n    values: [3]i64\n\n\ndef sum(values: [3]i64) -> i64:\n    index = 0\n    total = 0\n    while index < len(values):\n        total += values[index]\n        index += 1\n    return total\n\n\ndef main() -> i64:\n    original = Samples(values=[4, 7, 9])\n    changed = original\n    changed.values = replace(original.values, 1, 11)\n    return sum(original.values) + sum(changed.values)\n",
     []
    ],
    "returncode": 44,
@@ -600,7 +600,7 @@
   },
   "d54f49d93ad22d7d05838f09604be5ca": {
    "case": [
-    "def build() -> List[i64]:\n    xs: List[i64] = []\n    i = 0\n    while i < 40:\n        xs.push(i)\n        i += 1\n    return xs\n\n\ndef main() -> i64:\n    xs = build()\n    alias = xs\n    alias[2u64] = 42\n    return xs[2u64] + len(xs)\n",
+    "def build() -> list[i64]:\n    xs: list[i64] = []\n    i = 0\n    while i < 40:\n        xs.append(i)\n        i += 1\n    return xs\n\n\ndef main() -> i64:\n    xs = build()\n    alias = xs\n    alias[2u64] = 42\n    return xs[2u64] + len(xs)\n",
     []
    ],
    "returncode": 82,

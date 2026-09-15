@@ -32,7 +32,7 @@ const helpers =
     \\
 ;
 const program = fixture.declarations ++ helpers ++
-    \\def work[T](fs: filesystem_cap) -> Status[T]:
+    \\def work[T](fs: Filesystem) -> Status[T]:
     \\    file = acquire_resource[Open[T]](fs, reading())?
     \\    chunk = read_resource[Read[T]](file)?
     \\    second = read_resource[Read[T]](file)?
@@ -57,7 +57,7 @@ const program = fixture.declarations ++ helpers ++
     \\    return Ok(i64(chunk.length) + i64(chunk.bytes[0]) + i64(chunk.bytes[1]) + i64(chunk.bytes[2]) + i64(chunk.bytes[3]) + i64(n) + i64(second.length) + i64(m))
     \\
     \\
-    \\def restricted(fs: filesystem_cap) -> i64 effects(filesystem):
+    \\def restricted(fs: Filesystem) -> i64 effects(filesystem):
     \\    match acquire_resource[Open[bool]](restrict_resource[read](fs), reading()):
     \\        case Open.ok(file):
     \\            match finish[bool](file):
@@ -71,7 +71,7 @@ const program = fixture.declarations ++ helpers ++
     \\            return e
     \\
     \\
-    \\def main(fs: filesystem_cap) -> i64:
+    \\def main(fs: Filesystem) -> i64:
     \\    match work[bool](fs):
     \\        case Status.ok(n):
     \\            return n * 10 + restricted(fs)
@@ -111,7 +111,7 @@ test "nominal providers unwind every compiler allocation failure" {
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
 const failing = fixture.declarations ++ helpers ++
-    \\def work[T](fs: filesystem_cap) -> Status[T]:
+    \\def work[T](fs: Filesystem) -> Status[T]:
     \\    file = acquire_resource[Open[T]](fs, reading())?
     \\    absent = acquire_resource[Open[T]](fs, missing())?
     \\    _ = file
@@ -119,7 +119,7 @@ const failing = fixture.declarations ++ helpers ++
     \\    return Ok(0)
     \\
     \\
-    \\def main(fs: filesystem_cap) -> i64:
+    \\def main(fs: Filesystem) -> i64:
     \\    total = 0
     \\    for index in range(2000):
     \\        match work[bool](fs):
@@ -142,7 +142,7 @@ test "nominal providers propagate host failures and release acquired owners exac
     try t.expectEqual(@as(i64, 2000), outcome.value);
 }
 const trapping = fixture.declarations ++ helpers ++
-    \\def work[T](fs: filesystem_cap) -> Status[T]:
+    \\def work[T](fs: Filesystem) -> Status[T]:
     \\    file = acquire_resource[Open[T]](fs, reading())?
     \\    chunk = read_resource[Read[T]](file)?
     \\    match finish[T](file):
@@ -154,7 +154,7 @@ const trapping = fixture.declarations ++ helpers ++
     \\    return Ok(i64(chunk.length))
     \\
     \\
-    \\def main(fs: filesystem_cap) -> i64:
+    \\def main(fs: Filesystem) -> i64:
     \\    match work[bool](fs):
     \\        case Status.ok(n):
     \\            return n

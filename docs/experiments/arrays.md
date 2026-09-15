@@ -9,11 +9,11 @@ pending work.
 
 ```mylang
 def sum(values: [3]i64) -> i64:
-    index = 0u64
+    index = 0
     total = 0
     while index < len(values):
         total += values[index]
-        index += 1u64
+        index += 1
     return total
 
 
@@ -54,7 +54,7 @@ right before bounds checking, like an ordinary call; an invalid index does not
 skip evaluation of the replacement. The replacement must have the exact element
 type. Both `replace` and `len` are reserved keywords.
 
-`len(array)` returns a `u64`. Its operand is evaluated and released, even though
+`len(array)` returns an `int`. Its operand is evaluated and released, even though
 the length is statically known; initializer traps are never erased. Empty arrays
 have length zero and no valid index. Whole-array equality is not defined; compare
 selected elements explicitly. Mutable bindings can be reassigned, but indexed

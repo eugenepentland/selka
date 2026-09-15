@@ -50,14 +50,14 @@ def calculate(books: int, cables: int, adapters: int) -> Invoice:
     lines: [3]Line = [Line(product=catalog.Product.book, count=quantity.Count.parse(books)?), Line(product=catalog.Product.cable, count=quantity.Count.parse(cables)?), Line(product=catalog.Product.adapter, count=quantity.Count.parse(adapters)?)]
     gross = money.Cents.make(0u64)
     items = 0u16
-    index = 0u64
+    index = 0
     while index < len(lines):
         line = lines[index]
         count = quantity.Count.number(line.count)
         cents = money.Cents.number(catalog.price(line.product)) * int(count)
         gross = money.Cents.add(gross, money.Cents.make(u64(cents)))
         items += count
-        index += 1u64
+        index += 1
     discount = 0
     if items >= 10u16:
         discount = divtrunc(money.Cents.number(gross), 10)

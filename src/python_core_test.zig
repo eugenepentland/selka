@@ -42,7 +42,7 @@ const Modules = struct {
             \\                return 1
             \\        case Option.none:
             \\            return 2
-            \\    numbers: List[i64] = values.items()
+            \\    numbers: list[i64] = values.items()
             \\    if len(numbers) != 2:
             \\        return 3
             \\    match values.answer():
@@ -54,7 +54,7 @@ const Modules = struct {
     }
 };
 // spec: PYTHON-CORE-1
-test "prelude List Result and Option keep one identity across modules and spellings" {
+test "prelude list Result and Option keep one identity across modules and spellings" {
     var project = language.project.Project.init(t.allocator);
     defer project.deinit();
     try project.load(.{ .context = null, .read = Modules.read }, "main", .{});

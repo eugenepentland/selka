@@ -13,11 +13,11 @@ def pair[T](first: T, second: T) -> [2]T:
 
 
 def contains[T: equality](items: [2]T, needle: T) -> bool:
-    index = 0u64
-    while index < len(items):
+    index = 0
+    while index < int(len(items)):
         if items[index] == needle:
             return True
-        index += 1u64
+        index += 1
     return False
 
 

@@ -35,9 +35,9 @@ const domain =
 const helpers =
     \\def round[T](ignored: T, n: i64) -> i64:
     \\    _ = ignored
-    \\    match codec_decode[Positive](Wire(n=n)):
+    \\    match Positive.from_wire(Wire(n=n)):
     \\        case Decoded.ok(x):
-    \\            return codec_encode[Positive](x).n
+    \\            return Positive.to_wire(x).n
     \\        case Decoded.err(e):
     \\            return e
     \\
@@ -83,9 +83,9 @@ const Modules = struct {
             \\
             \\def f[T](x: T) -> i64:
             \\    _ = x
-            \\    match codec_decode[m.Positive](m.Wire(n=23)):
+            \\    match m.Positive.from_wire(m.Wire(n=23)):
             \\        case m.Decoded.ok(p):
-            \\            return codec_encode[m.Positive](p).n
+            \\            return m.Positive.to_wire(p).n
             \\        case m.Decoded.err(e):
             \\            return e
             \\
@@ -126,14 +126,14 @@ test "generic codecs preserve domain privacy arity input types and result obliga
     , "E_PRIVATE_FUNCTION");
     try reject(
         \\def f[T]() -> Decoded:
-        \\    return codec_decode[Positive]()
-    , "E_CODEC_ARITY");
+        \\    return Positive.from_wire()
+    , "E_ARITY");
     try reject(
         \\def f[T](n: T) -> Wire:
-        \\    return codec_encode[Positive](n)
+        \\    return Positive.to_wire(n)
     , "E_GENERIC_TYPE");
     try reject(
         \\def f[T](n: T) -> T:
-        \\    return codec_encode[T](n)
-    , "E_GENERIC_BODY_UNSUPPORTED");
+        \\    return T.to_wire(n)
+    , "E_GENERIC_REQUIREMENT");
 }

@@ -81,7 +81,7 @@ fn reject(text: []const u8, code: []const u8) !void {
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
 const source = declarations ++ requests ++
-    \\def work(fs: filesystem_cap) -> Status:
+    \\def work(fs: Filesystem) -> Status:
     \\    file = acquire_resource[Open](fs, reading())?
     \\    first = read_resource[Read](file)?
     \\    second = read_resource[Read](file)?
@@ -95,7 +95,7 @@ const source = declarations ++ requests ++
     \\    return Ok(i64(first.length) + i64(first.bytes[0]) + i64(first.bytes[1]) + i64(first.bytes[2]) + i64(first.bytes[3]) + i64(count))
     \\
     \\
-    \\def main(fs: filesystem_cap) -> i64 noalloc:
+    \\def main(fs: Filesystem) -> i64 noalloc:
     \\    match work(fs):
     \\        case Status.ok(value):
     \\            return value
@@ -120,7 +120,7 @@ test "source resource reads expose partial data EOF and padding while writes rep
     try t.expectEqualSlices(u8, &.{ 7, 8, 9 }, written);
 }
 const cycles = declarations ++ requests ++
-    \\def completed(fs: filesystem_cap) -> Status:
+    \\def completed(fs: Filesystem) -> Status:
     \\    total = 0
     \\    for index in range(2000):
     \\        file = acquire_resource[Open](fs, reading())?
@@ -129,7 +129,7 @@ const cycles = declarations ++ requests ++
     \\    return Ok(total)
     \\
     \\
-    \\def dropped(fs: filesystem_cap) -> Status:
+    \\def dropped(fs: Filesystem) -> Status:
     \\    total = 0
     \\    for index in range(2000):
     \\        file = acquire_resource[Open](fs, reading())?
@@ -138,7 +138,7 @@ const cycles = declarations ++ requests ++
     \\    return Ok(total)
     \\
     \\
-    \\def main(fs: filesystem_cap) -> i64:
+    \\def main(fs: Filesystem) -> i64:
     \\    match completed(fs):
     \\        case Status.ok(value):
     \\            _ = value
@@ -161,13 +161,13 @@ test "resource owners are released exactly once by completion and by scope exit"
     try t.expectEqual(@as(i64, 2000), outcome.value);
 }
 const failing = declarations ++ requests ++
-    \\def work(fs: filesystem_cap) -> Status:
+    \\def work(fs: Filesystem) -> Status:
     \\    file = acquire_resource[Open](fs, absent())?
     \\    _ = finish(file)?
     \\    return Ok(1)
     \\
     \\
-    \\def main(fs: filesystem_cap) -> i64:
+    \\def main(fs: Filesystem) -> i64:
     \\    match work(fs):
     \\        case Status.ok(value):
     \\            return value
@@ -184,14 +184,14 @@ test "a refused acquisition propagates its host category and leaves no owner beh
     try t.expectEqual(@as(i64, -3), outcome.value);
 }
 const reading_only = declarations ++ requests ++
-    \\def work(fs: filesystem_cap) -> Status:
+    \\def work(fs: Filesystem) -> Status:
     \\    file = acquire_resource[Open](fs, reading())?
     \\    chunk = read_resource[Read](file)?
     \\    _ = finish(file)?
     \\    return Ok(i64(chunk.length))
     \\
     \\
-    \\def main(fs: filesystem_cap) -> i64:
+    \\def main(fs: Filesystem) -> i64:
     \\    match work(fs):
     \\        case Status.ok(value):
     \\            return value
@@ -220,7 +220,7 @@ test "source IO traps at every instruction boundary release or complete exactly 
 }
 test "resource requests reject payloads that are not fixed byte arrays" {
     try reject(declarations ++
-        \\def main(fs: filesystem_cap) -> i64:
+        \\def main(fs: Filesystem) -> i64:
         \\    match acquire_resource[Open](fs, b"r:data.bin"):
         \\        case Open.ok(file):
         \\            _ = file
@@ -231,7 +231,7 @@ test "resource requests reject payloads that are not fixed byte arrays" {
 }
 test "emission rejects forged resource IO metadata before provider callbacks" {
     var c = try language.Compilation.init(t.allocator, "invalid.my", declarations ++
-        \\def work(fs: filesystem_cap) -> Status:
+        \\def work(fs: Filesystem) -> Status:
         \\    request: [10]u8 = [114u8, 58u8, 100u8, 97u8, 116u8, 97u8, 46u8, 98u8, 105u8, 110u8]
         \\    file = acquire_resource[Open](fs, request)?
         \\    chunk = read_resource[Read](file)?
@@ -243,7 +243,7 @@ test "emission rejects forged resource IO metadata before provider callbacks" {
         \\    return Ok(i64(chunk.length))
         \\
         \\
-        \\def main(fs: filesystem_cap) -> i64:
+        \\def main(fs: Filesystem) -> i64:
         \\    match work(fs):
         \\        case Status.ok(value):
         \\            return value

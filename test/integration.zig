@@ -448,7 +448,7 @@ test "CLI checks resource data operations effects and required mutation without 
         \\    err: i64
         \\
         \\
-        \\def write_once(fs: filesystem_cap) -> i64 effects(filesystem):
+        \\def write_once(fs: Filesystem) -> i64 effects(filesystem):
         \\    request: [1]u8 = [42u8]
         \\    match acquire_resource[Open](fs, request):
         \\        case Open.ok(file):
@@ -459,7 +459,7 @@ test "CLI checks resource data operations effects and required mutation without 
         \\            return code
         \\
         \\
-        \\def main(fs: filesystem_cap) -> i64:
+        \\def main(fs: Filesystem) -> i64:
         \\    return write_once(fs)
     ;
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_IMMUTABLE]");
@@ -1759,7 +1759,7 @@ test "CLI checks external capabilities but cannot silently grant ambient provide
         \\    err: i64
         \\
         \\
-        \\def main(c: clock_cap) -> i64 effects():
+        \\def main(c: Clock) -> i64 effects():
         \\    _ = clock_now[T](c)
         \\    return 0
     ;
@@ -1786,7 +1786,7 @@ test "CLI checks bounded environment access without granting ambient process acc
         \\    err: i64
         \\
         \\
-        \\def main(env: environment_cap) -> i64 effects():
+        \\def main(env: Environment) -> i64 effects():
         \\    _ = environment_get[Lookup](env, [75u8])
         \\    return 0
     ;
@@ -1802,7 +1802,7 @@ test "CLI exposes resource permission attenuation and rejects malformed permissi
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
     try testing.expect(std.mem.indexOf(u8, dumped.stdout, "RESTRICT_RESOURCE permissions=1 -> filesystem_cap") != null);
     const invalid =
-        \\def main(fs: filesystem_cap) -> i64:
+        \\def main(fs: Filesystem) -> i64:
         \\    _ = restrict_resource[read, read](fs)
         \\    return 0
     ;

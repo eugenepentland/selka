@@ -34,7 +34,7 @@ result Status:
     ok: int,
     err: int
 
-def work(fs: filesystem_cap) -> Status effects(filesystem):
+def work(fs: Filesystem) -> Status effects(filesystem):
     request: [1]u8 = [42u8]
     file = acquire_resource[Open](fs, request)?
     chunk = read_resource[Read](file)?
@@ -44,7 +44,7 @@ def work(fs: filesystem_cap) -> Status effects(filesystem):
     return Ok(int(chunk.length) + int(written))
 
 
-def main(fs: filesystem_cap) -> int noalloc:
+def main(fs: Filesystem) -> int noalloc:
     match work(fs):
         case Status.ok(value):
             return value

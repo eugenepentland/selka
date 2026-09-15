@@ -27,8 +27,8 @@ slices since 2026-09-13, so a resource value is never borrowed: reading and
 writing one go through the fixed-array operations in
 [resource reads and writes](resource-io.md), and completion consumes the owner.
 
-`acquire_resource[Open](fs, request)` requires `filesystem_cap` for a filesystem
-resource or `network_cap` for a network resource. The result success must be the
+`acquire_resource[Open](fs, request)` requires `Filesystem` for a filesystem
+resource or `Network` for a network resource. The result success must be the
 nominal resource and the error must be a 64-bit `int`. Request values currently are fixed
 `[N]u8` arrays, including empty arrays; element order and all byte values are
 preserved. Capabilities and requests evaluate once, in that order. The adapter
@@ -86,7 +86,7 @@ def retry(file: File) -> Finish effects(filesystem):
             return complete_resource[Finish](failure.resource)
 
 
-def main(fs: filesystem_cap) -> int effects(filesystem):
+def main(fs: Filesystem) -> int effects(filesystem):
     request: [1]u8 = [42u8]
     match acquire_resource[Open](fs, request):
         case Open.ok(file):

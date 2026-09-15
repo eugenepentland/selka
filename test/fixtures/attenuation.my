@@ -16,11 +16,11 @@ result Read:
     err: int
 
 
-def delegate(fs: filesystem_cap) -> filesystem_cap effects():
+def delegate(fs: Filesystem) -> Filesystem effects():
     return restrict_resource[read](fs)
 
 
-def main(fs: filesystem_cap) -> int:
+def main(fs: Filesystem) -> int:
     reader = delegate(fs)
     request: [1]u8 = [42u8]
     match acquire_resource[Open](reader, request):

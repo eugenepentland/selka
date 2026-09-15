@@ -5,7 +5,7 @@ const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 
 const ordered =
-    \\def mark(log: List[int], value: int) -> int:
+    \\def mark(log: list[int], value: int) -> int:
     \\    log.append(value)
     \\    return value
     \\
@@ -13,7 +13,7 @@ const ordered =
     \\    return a * 10 + b
     \\
     \\def main() -> int:
-    \\    log: List[int] = []
+    \\    log: list[int] = []
     \\    answer = combine(b=mark(log, 2), a=mark(log, 4))
     \\    return answer + log[0] * 100 + log[1] * 1000
 ;
@@ -47,7 +47,7 @@ test "Python defaults reject mutable expressions and mismatched scalar types" {
     for ([_][]const u8{
         "def bad(a: int = True):\n    pass\n\ndef main() -> int:\n    return 0\n",
         "def bad(a: int = 1, b: int):\n    pass\n\ndef main() -> int:\n    return 0\n",
-        "def bad(a: List[int] = []):\n    pass\n\ndef main() -> int:\n    return 0\n",
+        "def bad(a: list[int] = []):\n    pass\n\ndef main() -> int:\n    return 0\n",
         "def bad(a: int = 1 + 2):\n    pass\n\ndef main() -> int:\n    return 0\n",
     }) |text| {
         var c = try language.Compilation.init(t.allocator, "default.my", text);
@@ -104,12 +104,12 @@ test "Python keyword scalar and reference calls emit native source with identica
 // spec: PYTHON-CALL-4
 test "Python keyword call temporaries remain rooted under GC stress and are reclaimed" {
     const text =
-        \\def make(value: int) -> List[int]:
-        \\    xs: List[int] = []
+        \\def make(value: int) -> list[int]:
+        \\    xs: list[int] = []
         \\    xs.append(value)
         \\    return xs
         \\
-        \\def use(first: List[int], second: List[int]) -> int:
+        \\def use(first: list[int], second: list[int]) -> int:
         \\    return first[0] * 10 + second[0]
         \\
         \\def main() -> int:

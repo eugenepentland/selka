@@ -22,11 +22,11 @@ const program = declarations ++
     \\    return [x]
     \\
     \\
-    \\def lookup[T](env: environment_cap) -> Lookup[T]:
+    \\def lookup[T](env: Environment) -> Lookup[T]:
     \\    return environment_get[Lookup[T]](env, singleton[u8](75u8))
     \\
     \\
-    \\def main(env: environment_cap) -> i64:
+    \\def main(env: Environment) -> i64:
     \\    match lookup[bool](env):
     \\        case Lookup.ok(entry):
     \\            sum = i64(entry.length) + i64(entry.bytes[0]) + i64(entry.bytes[1]) + i64(entry.bytes[2]) + i64(entry.bytes[3])

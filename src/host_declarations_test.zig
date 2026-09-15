@@ -157,7 +157,7 @@ test "host source declarations require explicit value signatures effects and gue
         \\    host def f() -> i64 effects(host)
     ++ main_source, "E_HOST_DECLARATION");
     try reject(
-        \\host def f() -> clock_cap effects(host)
+        \\host def f() -> Clock effects(host)
     ++ main_source, "E_HOST_SIGNATURE");
     try reject(
         \\resource File: filesystem
@@ -166,7 +166,7 @@ test "host source declarations require explicit value signatures effects and gue
         \\host def f(x: File) -> i64 effects(host)
     ++ main_source, "E_HOST_SIGNATURE");
     try reject(
-        \\host def f(x: List[i64]) -> i64 effects(host)
+        \\host def f(x: list[i64]) -> i64 effects(host)
     ++ main_source, "E_HOST_SIGNATURE");
     try reject(
         \\host def f() -> i64 effects(host):

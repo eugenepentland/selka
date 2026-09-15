@@ -46,7 +46,7 @@ def handle[T](r: Open) -> int effects(filesystem):
             return code
 
 
-def main(fs: filesystem_cap) -> int:
+def main(fs: Filesystem) -> int:
     empty: [0]u8 = []
     first = handle[bool](acquire_resource[Open](fs, empty))
     match acquire_resource[Open](fs, empty):

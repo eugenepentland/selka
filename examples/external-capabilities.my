@@ -8,13 +8,13 @@ result Random:
     err: int
 
 
-def sample(clock: clock_cap, rng: random_cap) -> Time effects(clock, random):
+def sample(clock: Clock, rng: Entropy) -> Time effects(clock, random):
     now = clock_now[Time](clock)?
     _ = random_u64[Random](rng)?
     return Ok(now)
 
 
-def main(clock: clock_cap, rng: random_cap) -> int noio:
+def main(clock: Clock, rng: Entropy) -> int noio:
     match sample(clock, rng):
         case Time.ok(now):
             return now

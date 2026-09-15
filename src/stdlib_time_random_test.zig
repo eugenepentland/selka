@@ -11,7 +11,7 @@ test "standard time random boundary arithmetic and pinned deterministic vectors"
 const failed = "        case Err(_):\n";
 const authority =
     "module main\nimport time\nimport random\n" ++
-    "def main(clock: clock_cap, entropy: random_cap) -> int:\n" ++
+    "def main(clock: Clock, entropy: Entropy) -> int:\n" ++
     "    match time.now(clock):\n" ++
     "        case Ok(instant):\n" ++
     "            if instant.unix_nanoseconds <= 0:\n" ++
@@ -36,7 +36,7 @@ test "standard time random calls reach the machine only through granted capabili
 
 const seeded =
     "module main\nimport random\n" ++
-    "def main(entropy: random_cap) -> int:\n" ++
+    "def main(entropy: Entropy) -> int:\n" ++
     "    match random.from_entropy(entropy):\n" ++
     "        case Ok(generator):\n" ++
     "            replay = random.from_word(generator.state[0])\n" ++
@@ -47,8 +47,8 @@ const seeded =
     "            return 2\n";
 // spec: STANDARD-TIME-RANDOM-3
 test "standard time random calls preserve effect ceilings and reproducible draws" {
-    try fixture.reject(t.allocator, "module main\nimport time\ndef main(c: clock_cap) -> int effects():\n    _ = time.now(c)\n    return 0\n");
-    try fixture.reject(t.allocator, "module main\nimport random\ndef main(c: random_cap) -> int noalloc:\n    _ = random.from_entropy(c)\n    return 0\n");
+    try fixture.reject(t.allocator, "module main\nimport time\ndef main(c: Clock) -> int effects():\n    _ = time.now(c)\n    return 0\n");
+    try fixture.reject(t.allocator, "module main\nimport random\ndef main(c: Entropy) -> int noalloc:\n    _ = random.from_entropy(c)\n    return 0\n");
     try fixture.expect(t.allocator, seeded, .{ .arguments = &.{"--allow-random=42"} }, 42);
     try fixture.expect(t.allocator, seeded, .{}, 42);
 }

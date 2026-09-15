@@ -28,7 +28,7 @@ test "inferred literal indexing negative indices and append" {
 test "contextual nested lists and receiver fields" {
     try run(
         \\class Box:
-        \\    items: List[i64]
+        \\    items: list[i64]
         \\
         \\
         \\def make() -> Box:
@@ -38,7 +38,7 @@ test "contextual nested lists and receiver fields" {
         \\def main() -> i64:
         \\    b = make()
         \\    b.items.append(2)
-        \\    rows: List[List[i64]] = [b.items, []]
+        \\    rows: list[list[i64]] = [b.items, []]
         \\    return rows[0][0] + rows[0][-1]
     , 42);
 }
@@ -92,23 +92,23 @@ test "field receiver index and right side run once in order under collection str
         \\    x: i64
         \\
         \\
-        \\def receiver(log: List[i64], rows: List[Point]) -> List[Point]:
+        \\def receiver(log: list[i64], rows: list[Point]) -> list[Point]:
         \\    log.append(1)
         \\    return rows
         \\
         \\
-        \\def index(log: List[i64]) -> i64:
+        \\def index(log: list[i64]) -> i64:
         \\    log.append(2)
         \\    return 0
         \\
         \\
-        \\def value(log: List[i64]) -> i64:
+        \\def value(log: list[i64]) -> i64:
         \\    log.append(3)
         \\    return 42
         \\
         \\
         \\def main() -> i64:
-        \\    log: List[i64] = []
+        \\    log: list[i64] = []
         \\    rows = [Point(x=0)]
         \\    receiver(log, rows)[index(log)].x = value(log)
         \\    if len(log) != 3:
@@ -125,12 +125,12 @@ test "generic record slot updates and list aliases remain copyable" {
         \\    value: T
         \\
         \\
-        \\def set[T](cells: List[Cell[T]], value: T):
+        \\def set[T](cells: list[Cell[T]], value: T):
         \\    cells[0].value = value
         \\
         \\
         \\def main() -> i64:
-        \\    cells: List[Cell[i64]] = [Cell[i64](value=1)]
+        \\    cells: list[Cell[i64]] = [Cell[i64](value=1)]
         \\    set(cells, 42)
         \\    return cells[0].value
     , 42);
@@ -333,7 +333,7 @@ test "absent list and dictionary values trap instead of returning a sentinel" {
         , .code = "R_LIST_VALUE" },
         .{ .source =
         \\def main() -> i64:
-        \\    xs: List[i64] = []
+        \\    xs: list[i64] = []
         \\    return xs.pop()
         , .code = "R_LIST_BOUNDS" },
         .{ .source =
@@ -356,7 +356,7 @@ test "outer annotated postfix expressions do not contaminate literal element inf
     try run(
         \\def main() -> i64:
         \\    value: i64 = [42][0]
-        \\    row: List[i64] = [[value]][0]
+        \\    row: list[i64] = [[value]][0]
         \\    return row[0]
     , 42);
 }
@@ -386,7 +386,7 @@ test "field writeback preserves sibling changes made by its right hand side" {
         \\    y: i64
         \\
         \\
-        \\def change(rows: List[Point]) -> i64:
+        \\def change(rows: list[Point]) -> i64:
         \\    rows[0].y = 2
         \\    return 40
         \\
@@ -401,8 +401,8 @@ test "field writeback preserves sibling changes made by its right hand side" {
 // spec: PY-COLLECTIONS-6
 test "generic lists preserve literal foreach slice and write element types" {
     try run(
-        \\def duplicate[T: copy + storable](value: T) -> List[T]:
-        \\    values: List[T] = [value]
+        \\def duplicate[T: copy + storable](value: T) -> list[T]:
+        \\    values: list[T] = [value]
         \\    values.append(value)
         \\    copy = values[:]
         \\    for item in copy:

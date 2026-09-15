@@ -51,7 +51,7 @@ fn sandbox(box: *Sandbox) !void {
 }
 const retry = declarations ++
     \\class Authority:
-    \\    fs: filesystem_cap
+    \\    fs: Filesystem
     \\
     \\
     \\def open(auth: Authority) -> Open effects(filesystem):
@@ -67,7 +67,7 @@ const retry = declarations ++
     \\
     \\
 ++ helpers ++
-    \\def attempt(fs: filesystem_cap) -> i64 effects(filesystem):
+    \\def attempt(fs: Filesystem) -> i64 effects(filesystem):
     \\    match open(Authority(fs=fs)):
     \\        case Open.ok(file):
     \\            match retry(file):
@@ -82,7 +82,7 @@ const retry = declarations ++
     \\            return e
     \\
     \\
-    \\def main(fs: filesystem_cap) -> i64 noalloc:
+    \\def main(fs: Filesystem) -> i64 noalloc:
     \\    return attempt(fs) * 100 + attempt(restrict_resource[read](fs))
 ;
 fn retryScenario(allocator: std.mem.Allocator) !void {
@@ -111,7 +111,7 @@ test "ownExternal and source acquisition completion retry clean every allocation
     try t.checkAllAllocationFailures(no_resize.allocator(), retryScenario, .{});
 }
 const partial = declarations ++ helpers ++
-    \\def work(fs: filesystem_cap) -> Status:
+    \\def work(fs: Filesystem) -> Status:
     \\    a = acquire_resource[Open](fs, request())?
     \\    b = acquire_resource[Open](fs, missing())?
     \\    _ = a
@@ -119,7 +119,7 @@ const partial = declarations ++ helpers ++
     \\    return Ok(True)
     \\
     \\
-    \\def main(fs: filesystem_cap) -> i64:
+    \\def main(fs: Filesystem) -> i64:
     \\    total = 0
     \\    for index in range(2000):
     \\        match work(fs):
@@ -158,11 +158,11 @@ const wrappers = declarations ++ helpers ++
     \\    err: i64
     \\
     \\
-    \\def pair(fs: filesystem_cap) -> PairResult:
+    \\def pair(fs: Filesystem) -> PairResult:
     \\    return Ok(Pair(first=Inner(file=acquire_resource[Open](fs, request())?), second=acquire_resource[Open](fs, request())?))
     \\
     \\
-    \\def main(fs: filesystem_cap) -> i64:
+    \\def main(fs: Filesystem) -> i64:
     \\    total = 0
     \\    for index in range(1000):
     \\        match pair(fs):
@@ -211,17 +211,17 @@ test "independent bytecode validation rejects suppressed cleanup effects and mal
 
 test "resource acquisition identity and cleanup contracts survive exact duplicate discovery" {
     const source = declarations ++
-        \\def a(fs: filesystem_cap) -> Open effects(filesystem):
+        \\def a(fs: Filesystem) -> Open effects(filesystem):
         \\    request: [1]u8 = [42u8]
         \\    return acquire_resource[Open](fs, request)
         \\
         \\
-        \\def b(dir: filesystem_cap) -> Open effects(filesystem):
+        \\def b(dir: Filesystem) -> Open effects(filesystem):
         \\    request: [1]u8 = [42u8]
         \\    return acquire_resource[Open](dir, request)
         \\
         \\
-        \\def c(dir: filesystem_cap) -> Open effects(filesystem):
+        \\def c(dir: Filesystem) -> Open effects(filesystem):
         \\    request: [1]u8 = [43u8]
         \\    return acquire_resource[Open](dir, request)
         \\
@@ -247,7 +247,7 @@ test "source frame traps release the resource moved through recursive calls" {
         \\    return recurse(file)
         \\
         \\
-        \\def main(fs: filesystem_cap) -> i64:
+        \\def main(fs: Filesystem) -> i64:
         \\    match acquire_resource[Open](fs, request()):
         \\        case Open.ok(file):
         \\            return recurse(file)
@@ -289,7 +289,7 @@ const generic_cleanup = declarations ++ helpers ++
     \\            return code
     \\
     \\
-    \\def main(fs: filesystem_cap) -> i64:
+    \\def main(fs: Filesystem) -> i64:
     \\    total = 0
     \\    for index in range(1000):
     \\        first = handle[bool](acquire_resource[Open](fs, request()))
@@ -322,7 +322,7 @@ test "generic owned resources clean up explicit and implicit drops under allocat
 }
 
 const generic_retry = declarations ++
-    \\def open[G](cap: filesystem_cap) -> Open effects(filesystem):
+    \\def open[G](cap: Filesystem) -> Open effects(filesystem):
     \\    return acquire_resource[Open](cap, request())
     \\
     \\
@@ -335,7 +335,7 @@ const generic_retry = declarations ++
     \\
     \\
 ++ helpers ++
-    \\def attempt(cap: filesystem_cap) -> i64 effects(filesystem):
+    \\def attempt(cap: Filesystem) -> i64 effects(filesystem):
     \\    match open[bool](cap):
     \\        case Open.ok(file):
     \\            match finish[bool](file):
@@ -347,7 +347,7 @@ const generic_retry = declarations ++
     \\            return e
     \\
     \\
-    \\def main(cap: filesystem_cap) -> i64:
+    \\def main(cap: Filesystem) -> i64:
     \\    return attempt(cap) * 100 + attempt(restrict_resource[read](cap))
 ;
 fn genericRetryScenario(allocator: std.mem.Allocator) !void {

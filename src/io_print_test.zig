@@ -81,7 +81,7 @@ test "IO-4 print contributes the output effect that noio withholds" {
 
 // spec: IO-5
 test "IO-5 print rejects values without a Python rendering and shadowing restores the name" {
-    const capability = "def main(fs: filesystem_cap) -> int:\n    print(fs)\n    return 0\n";
+    const capability = "def main(fs: Filesystem) -> int:\n    print(fs)\n    return 0\n";
     try reject(capability, "E_IO_ARGUMENT");
     const shadow = "def print(value: int) -> int:\n    return value\n\ndef main() -> int:\n    return print(7)\n";
     var compilation = try language.Compilation.init(t.allocator, module, shadow);
@@ -100,7 +100,7 @@ test "render names printable types and shortens qualified record names" {
 // spec-case: IO-5
 test "generic function bodies reject the reserved io builtins with a located diagnostic" {
     try reject("def show[T](value: T) -> int:\n    print(value)\n    return 0\n\ndef main() -> int:\n    return show(7)\n", "E_GENERIC_BODY_UNSUPPORTED");
-    try reject("def look[T](fs: filesystem_cap, value: T) -> int:\n    _ = exists(fs, \"x\")\n    return 0\n\ndef main(fs: filesystem_cap) -> int:\n    return look(fs, 7)\n", "E_GENERIC_BODY_UNSUPPORTED");
+    try reject("def look[T](fs: Filesystem, value: T) -> int:\n    _ = exists(fs, \"x\")\n    return 0\n\ndef main(fs: Filesystem) -> int:\n    return look(fs, 7)\n", "E_GENERIC_BODY_UNSUPPORTED");
 }
 
 // spec: IO-6

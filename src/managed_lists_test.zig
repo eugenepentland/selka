@@ -48,13 +48,13 @@ test "bytecode rejects managed metadata on an ordinary aggregate" {
 // spec: GC-SOURCE-1
 test "managed aliases mutate immutable bindings across helpers without allocator authority" {
     const source =
-        \\def change(values: List[i64]):
+        \\def change(values: list[i64]):
         \\    values.append(40)
         \\    values[0u64] = 42
         \\
         \\
         \\def main() -> i64:
-        \\    values: List[i64] = []
+        \\    values: list[i64] = []
         \\    alias = values
         \\    change(alias)
         \\    if len(values) != 1:
@@ -69,12 +69,12 @@ test "managed aliases mutate immutable bindings across helpers without allocator
 test "managed recursive record cycles are traced at a later managed allocation" {
     const source =
         \\class Node:
-        \\    children: List[Node]
+        \\    children: list[Node]
         \\    value: i64
         \\
         \\
         \\def cycle():
-        \\    nodes: List[Node] = []
+        \\    nodes: list[Node] = []
         \\    nodes.append(Node(children=nodes, value=42))
         \\    node = nodes[0u64]
         \\    alias = node.children
@@ -83,7 +83,7 @@ test "managed recursive record cycles are traced at a later managed allocation" 
         \\
         \\def main() -> i64:
         \\    cycle()
-        \\    spare: List[Node] = []
+        \\    spare: list[Node] = []
         \\    _ = spare
         \\    return 42
     ;
@@ -94,16 +94,16 @@ test "managed recursive record cycles are traced at a later managed allocation" 
 test "managed intermediate call arguments and record snapshots survive collection" {
     const source =
         \\class Holder:
-        \\    values: List[i64]
+        \\    values: list[i64]
         \\
         \\
-        \\def make() -> List[i64]:
-        \\    values: List[i64] = []
+        \\def make() -> list[i64]:
+        \\    values: list[i64] = []
         \\    values.append(42)
         \\    return values
         \\
         \\
-        \\def consume(first: Holder, second: List[i64]) -> i64:
+        \\def consume(first: Holder, second: list[i64]) -> i64:
         \\    second.append(9)
         \\    values = first.values
         \\    return values[0u64]
@@ -123,7 +123,7 @@ test "managed bounds reads and writes produce located list bounds traps" {
     }) |operation| {
         const source = try std.fmt.allocPrint(t.allocator,
             \\def main() -> i64:
-            \\    values: List[i64] = []
+            \\    values: list[i64] = []
             \\    {s}
         , .{operation});
         defer t.allocator.free(source);
@@ -138,11 +138,11 @@ test "managed bounds reads and writes produce located list bounds traps" {
 test "noalloc rejects transitive managed allocation while permitting fixed-slot mutation" {
     for ([_][]const u8{ "noalloc", "noalloc" }) |bound| {
         const create_source = try std.fmt.allocPrint(t.allocator,
-            \\def make() -> List[i64]:
+            \\def make() -> list[i64]:
             \\    return []
             \\
             \\
-            \\def constrained() -> List[i64] {s}:
+            \\def constrained() -> list[i64] {s}:
             \\    return make()
             \\
             \\
@@ -153,11 +153,11 @@ test "noalloc rejects transitive managed allocation while permitting fixed-slot 
         defer t.allocator.free(create_source);
         try reject(create_source, "E_EFFECT_BOUND");
         const append_source = try std.fmt.allocPrint(t.allocator,
-            \\def grow(values: List[i64]) -> None:
+            \\def grow(values: list[i64]) -> None:
             \\    values.append(42)
             \\
             \\
-            \\def constrained(values: List[i64]) -> None {s}:
+            \\def constrained(values: list[i64]) -> None {s}:
             \\    grow(values)
             \\
             \\
@@ -169,17 +169,17 @@ test "noalloc rejects transitive managed allocation while permitting fixed-slot 
         try reject(append_source, "E_EFFECT_BOUND");
     }
     const source =
-        \\def fixed(values: List[i64]) noalloc:
+        \\def fixed(values: list[i64]) noalloc:
         \\    values[0u64] = 42
         \\
         \\
-        \\def inspect(values: List[i64]) -> i64 noalloc:
+        \\def inspect(values: list[i64]) -> i64 noalloc:
         \\    fixed(values)
         \\    return values[0u64]
         \\
         \\
         \\def main() -> i64:
-        \\    values: List[i64] = []
+        \\    values: list[i64] = []
         \\    values.append(0)
         \\    return inspect(values)
     ;
@@ -190,16 +190,16 @@ test "noalloc rejects transitive managed allocation while permitting fixed-slot 
 test "managed cycles lose local and record roots on block break and continue exits" {
     const prefix =
         \\class Node:
-        \\    children: List[Node]
+        \\    children: list[Node]
         \\    value: i64
         \\
         \\
         \\class Holder:
-        \\    nodes: List[Node]
+        \\    nodes: list[Node]
     ;
     const bodies = [_][]const u8{
         \\    if True:
-        \\        nodes: List[Node] = []
+        \\        nodes: list[Node] = []
         \\        nodes.append(Node(children=nodes, value=42))
         \\        holder = Holder(nodes=nodes)
         \\        alias = holder.nodes
@@ -207,7 +207,7 @@ test "managed cycles lose local and record roots on block break and continue exi
         \\            return 1
         ,
         \\    while True:
-        \\        nodes: List[Node] = []
+        \\        nodes: list[Node] = []
         \\        nodes.append(Node(children=nodes, value=42))
         \\        holder = Holder(nodes=nodes)
         \\        alias = holder.nodes
@@ -218,7 +218,7 @@ test "managed cycles lose local and record roots on block break and continue exi
         \\    i = 0
         \\    while i < 1:
         \\        i = i + 1
-        \\        nodes: List[Node] = []
+        \\        nodes: list[Node] = []
         \\        nodes.append(Node(children=nodes, value=42))
         \\        holder = Holder(nodes=nodes)
         \\        alias = holder.nodes
@@ -228,7 +228,7 @@ test "managed cycles lose local and record roots on block break and continue exi
         ,
     };
     for (bodies) |body| {
-        const source = try std.mem.concat(t.allocator, u8, &.{ prefix, "\n\n\ndef main() -> i64:\n", body, "\n    spare: List[i64] = []\n    _ = spare\n    return 42\n" });
+        const source = try std.mem.concat(t.allocator, u8, &.{ prefix, "\n\n\ndef main() -> i64:\n", body, "\n    spare: list[i64] = []\n    _ = spare\n    return 42\n" });
         defer t.allocator.free(source);
         try t.expectEqual(@as(i64, 42), (try execute(source)).value);
     }
@@ -241,7 +241,7 @@ test "managed elements reject owned resources and unchecked results" {
         \\
         \\
         \\def main() -> i64:
-        \\    values: List[File] = []
+        \\    values: list[File] = []
         \\    return len(values)
         ,
         \\resource File: filesystem
@@ -252,7 +252,7 @@ test "managed elements reject owned resources and unchecked results" {
         \\
         \\
         \\def main() -> i64:
-        \\    values: List[Wrapper] = []
+        \\    values: list[Wrapper] = []
         \\    return len(values)
         ,
         \\result Answer:
@@ -261,7 +261,7 @@ test "managed elements reject owned resources and unchecked results" {
         \\
         \\
         \\def main() -> i64:
-        \\    values: List[Answer] = []
+        \\    values: list[Answer] = []
         \\    return len(values)
         ,
     }, "E_GENERIC_REQUIREMENT");
@@ -271,7 +271,7 @@ test "managed elements reject owned resources and unchecked results" {
 test "a managed alias keeps one identity and an aggregate snapshot roots its elements" {
     const source =
         \\class Holder:
-        \\    items: List[i64]
+        \\    items: list[i64]
         \\
         \\
         \\def total(holder: Holder) -> i64:
@@ -282,14 +282,14 @@ test "a managed alias keeps one identity and an aggregate snapshot roots its ele
         \\
         \\
         \\def main() -> i64:
-        \\    values: List[i64] = []
+        \\    values: list[i64] = []
         \\    alias = values
         \\    alias.append(11)
         \\    holder = Holder(items=values)
         \\    alias.append(31)
         \\    i = 0
         \\    while i < 40:
-        \\        garbage: List[i64] = []
+        \\        garbage: list[i64] = []
         \\        garbage.append(i)
         \\        i = i + 1
         \\    return total(holder)
@@ -302,7 +302,7 @@ test "a managed alias keeps one identity and an aggregate snapshot roots its ele
 test "an unreachable managed cycle is reclaimed while a reachable one survives collection" {
     const source =
         \\class Node:
-        \\    links: List[Node]
+        \\    links: list[Node]
         \\    value: i64
         \\
         \\
@@ -329,7 +329,7 @@ test "an unreachable managed cycle is reclaimed while a reachable one survives c
 test "a managed list read past its initialized bounds is a located trap" {
     const source =
         \\def main() -> i64:
-        \\    values: List[i64] = []
+        \\    values: list[i64] = []
         \\    values.append(7)
         \\    return values[3u64]
     ;
@@ -342,17 +342,17 @@ test "a managed list read past its initialized bounds is a located trap" {
 // spec: GC-CAPABILITY-1
 test "a managed element declaration refuses a capability, directly or inside a record" {
     try rejectAll(&.{
-        \\def main(fs: filesystem_cap) -> int:
-        \\    values: List[filesystem_cap] = []
+        \\def main(fs: Filesystem) -> int:
+        \\    values: list[Filesystem] = []
         \\    values.append(fs)
         \\    return len(values)
         ,
         \\class Holder:
-        \\    fs: filesystem_cap
+        \\    fs: Filesystem
         \\
         \\
-        \\def main(fs: filesystem_cap) -> int:
-        \\    values: List[Holder] = []
+        \\def main(fs: Filesystem) -> int:
+        \\    values: list[Holder] = []
         \\    values.append(Holder(fs=fs))
         \\    return len(values)
     }, "E_LIST_CAPABILITY");

@@ -9,12 +9,12 @@ result Lookup:
     err: int
 
 
-def lookup(env: environment_cap) -> Lookup effects(environment):
+def lookup(env: Environment) -> Lookup effects(environment):
     # The injected provider defines which names it permits; these bytes spell K.
     return environment_get[Lookup](env, [75u8])
 
 
-def main(env: environment_cap) -> int noio:
+def main(env: Environment) -> int noio:
     match lookup(env):
         case Lookup.ok(entry):
             if entry.present:

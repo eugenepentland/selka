@@ -162,9 +162,9 @@ const Provider = struct {
             \\
             \\
             \\def main() -> i64:
-            \\    match codec_decode[d.Positive](d.Wire(n=7)):
+            \\    match d.Positive.from_wire(d.Wire(n=7)):
             \\        case d.Decoded.ok(x):
-            \\            return codec_encode[d.Positive](x).n
+            \\            return d.Positive.to_wire(x).n
             \\        case d.Decoded.err(e):
             \\            return e
         );
@@ -229,9 +229,9 @@ test "domain codec formatting preserves comments entries and checked contracts" 
 
 const source_call =
     \\def main() -> i64:
-    \\    match codec_decode[Positive](Wire(n=7)):
+    \\    match Positive.from_wire(Wire(n=7)):
     \\        case Decoded.ok(x):
-    \\            return codec_encode[Positive](x).n
+    \\            return Positive.to_wire(x).n
     \\        case Decoded.err(e):
     \\            return e
 ;
@@ -242,7 +242,7 @@ fn sourceScenario(allocator: std.mem.Allocator) !void {
     try t.expectEqual(@as(i64, 7), result.value);
     const formatted = try c.format(allocator);
     defer allocator.free(formatted);
-    try t.expect(std.mem.indexOf(u8, formatted, "codec_decode[Positive]") != null);
+    try t.expect(std.mem.indexOf(u8, formatted, "Positive.from_wire") != null);
     var again = try language.Compilation.init(allocator, "formatted.my", formatted);
     defer again.deinit();
     try t.expectEqual(@as(i64, 7), (try native.run(&again)).value);
@@ -253,39 +253,39 @@ test "source codec operations resolve declared methods and preserve formatting u
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), sourceScenario, .{});
 }
-test "source codec operations reject missing contracts invalid arity and backing bypass" {
+test "domain codec methods reject missing methods invalid arity and backing bypass" {
     try reject(
         \\domain D: i64:
         \\    pass
         \\
         \\
         \\def main() -> i64:
-        \\    return codec_encode[D](0)
-    , "E_CODEC_REQUIRED");
+        \\    return D.to_wire(0)
+    , "E_UNKNOWN_FUNCTION");
     try reject(
         \\def main() -> i64:
-        \\    return codec_decode[i64](0)
+        \\    return i64.from_wire(0)
+    , "E_SYNTAX");
+    try reject(source ++
+        \\def main() -> i64:
+        \\    return Positive.to_wire(7)
     , "E_TYPE");
     try reject(source ++
         \\def main() -> i64:
-        \\    return codec_encode[Positive](7)
+        \\    return Positive.from_wire()
+    , "E_ARITY");
+    try reject(source ++
+        \\def main() -> i64:
+        \\    return Positive.from_wire(7)
     , "E_TYPE");
-    try reject(source ++
-        \\def main() -> i64:
-        \\    return codec_decode[Positive]()
-    , "E_CODEC_ARITY");
-    try reject(source ++
-        \\def main() -> i64:
-        \\    return codec_decode(7)
-    , "E_CODEC_ARITY");
     try reject(
         \\def helper[T](x: T) -> T:
-        \\    return codec_encode[T](x)
+        \\    return T.to_wire(x)
         \\
         \\
         \\def main() -> i64:
         \\    return 0
-    , "E_GENERIC_BODY_UNSUPPORTED");
+    , "E_GENERIC_REQUIREMENT");
 }
 
 test "source codec operations follow selected method names rather than naming conventions" {
@@ -302,9 +302,9 @@ test "source codec operations follow selected method names rather than naming co
         \\
         \\
         \\def main() -> i64:
-        \\    match codec_decode[D](7):
+        \\    match D.dec(7):
         \\        case R.ok(x):
-        \\            return codec_encode[D](x)
+        \\            return D.enc(x)
         \\        case R.err(e):
         \\            return e
     );

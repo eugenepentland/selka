@@ -20,25 +20,25 @@ test "list syntax rejects invalid methods element types and indices" {
     const cases = [_]struct { text: []const u8, code: []const u8 }{
         .{ .text =
         \\def main() -> i64:
-        \\    values: List[i64] = []
+        \\    values: list[i64] = []
         \\    values.append()
         \\    return 0
         , .code = "E_ARITY" },
         .{ .text =
         \\def main() -> i64:
-        \\    values: List[i64] = []
+        \\    values: list[i64] = []
         \\    values.append(True)
         \\    return 0
         , .code = "E_TYPE" },
         .{ .text =
         \\def main() -> i64:
-        \\    values: List[i64] = []
+        \\    values: list[i64] = []
         \\    values[False] = 1
         \\    return 0
         , .code = "E_TYPE" },
         .{ .text =
         \\def main() -> i64:
-        \\    values: List[i64] = []
+        \\    values: list[i64] = []
         \\    values.remove(True)
         \\    return 0
         , .code = "E_TYPE" },
@@ -75,27 +75,27 @@ test "record constructors without new support generic records and trailing field
 test "list methods indexing and indexed assignment share aliases" {
     try evaluate(
         \\def main() -> i64:
-        \\    values: List[i64] = []
+        \\    values: list[i64] = []
         \\    alias = values
         \\    alias.append(10)
         \\    values[0] = 41
-        \\    return alias[0] + i64(values.len())
+        \\    return alias[0] + len(values)
     , 42);
 }
 
 // spec: SURFACE-COLLECTIONS-3
 test "generic list methods retain element type checking" {
     try evaluate(
-        \\def add[T](values: List[T], value: T):
+        \\def add[T](values: list[T], value: T):
         \\    values.append(value)
         \\
         \\
-        \\def first[T](values: List[T]) -> T:
+        \\def first[T](values: list[T]) -> T:
         \\    return values[0]
         \\
         \\
         \\def main() -> i64:
-        \\    values: List[i64] = []
+        \\    values: list[i64] = []
         \\    add(values, 42)
         \\    return first(values)
     , 42);

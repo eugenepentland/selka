@@ -15,10 +15,10 @@ fn run(text: []const u8) !void {
 }
 
 // spec: BUILTIN-CONTEXT-5
-test "generic List Result and contextual constructors keep symbolic type parameters" {
+test "generic list Result and contextual constructors keep symbolic type parameters" {
     try run(
-        \\def singleton[T](value: T) -> List[T]:
-        \\    values: List[T] = []
+        \\def singleton[T](value: T) -> list[T]:
+        \\    values: list[T] = []
         \\    values.append(value)
         \\    return values
         \\
@@ -53,7 +53,7 @@ const Modules = struct {
             \\
             \\
             \\def main() -> i64:
-            \\    values: List[i64] = []
+            \\    values: list[i64] = []
             \\    values.append(42)
             \\    match model.answer(values):
             \\        case Result.ok(n):
@@ -66,7 +66,7 @@ const Modules = struct {
             \\export answer
             \\
             \\
-            \\def answer(values: List[i64]) -> Result[i64, i64]:
+            \\def answer(values: list[i64]) -> Result[i64, i64]:
             \\    return Ok(values[0])
         );
         return error.NotFound;
@@ -74,7 +74,7 @@ const Modules = struct {
 };
 
 // spec: BUILTIN-CONTEXT-8
-test "builtin List and Result share identity across imported module signatures" {
+test "builtin list and Result share identity across imported module signatures" {
     var project = language.project.Project.init(t.allocator);
     defer project.deinit();
     try project.load(.{ .context = null, .read = Modules.read }, "main", .{});
@@ -92,7 +92,7 @@ const ShadowModules = struct {
             \\
             \\
             \\def main() -> i64:
-            \\    values: List[i64] = []
+            \\    values: list[i64] = []
             \\    values.append(21)
             \\    return values[0] + model.answer()
         );
@@ -101,12 +101,12 @@ const ShadowModules = struct {
             \\export answer
             \\
             \\
-            \\class List[T]:
+            \\class Bucket[T]:
             \\    value: T
             \\
             \\
             \\def answer() -> i64:
-            \\    value = List[i64](value=21)
+            \\    value = Bucket[i64](value=21)
             \\    return value.value
         );
         return error.NotFound;
@@ -114,7 +114,7 @@ const ShadowModules = struct {
 };
 
 // spec: BUILTIN-CONTEXT-9
-test "module-local List declaration shadows the prelude only inside its module" {
+test "module-local Bucket declaration remains distinct from the prelude list" {
     var project = language.project.Project.init(t.allocator);
     defer project.deinit();
     try project.load(.{ .context = null, .read = ShadowModules.read }, "main", .{});
@@ -166,14 +166,14 @@ test "module-local Ok and Err functions shadow contextual constructors in generi
 }
 
 // spec: BUILTIN-CONTEXT-1
-test "builtin List and Result resolve without imports or explicit declarations" {
+test "builtin list and Result resolve without imports or explicit declarations" {
     try run(
         \\def answer() -> Result[i64, i64]:
         \\    return Ok(42)
         \\
         \\
         \\def main() -> i64:
-        \\    values: List[i64] = []
+        \\    values: list[i64] = []
         \\    values.append(42)
         \\    match answer():
         \\        case Result.ok(n):
@@ -186,7 +186,7 @@ test "builtin List and Result resolve without imports or explicit declarations" 
 // spec: BUILTIN-CONTEXT-2
 test "empty lists and Ok Err inherit binding return and argument contexts" {
     try run(
-        \\def empty() -> List[i64]:
+        \\def empty() -> list[i64]:
         \\    return []
         \\
         \\
@@ -203,7 +203,7 @@ test "empty lists and Ok Err inherit binding return and argument contexts" {
         \\
         \\
         \\def main() -> i64:
-        \\    values: List[i64] = []
+        \\    values: list[i64] = []
         \\    values.append(42)
         \\    result: Result[i64, i64] = Err(values[0u64])
         \\    _ = result
@@ -215,10 +215,10 @@ test "empty lists and Ok Err inherit binding return and argument contexts" {
 test "record fields and nested list elements propagate empty list context" {
     try run(
         \\class Holder:
-        \\    values: List[i64]
+        \\    values: list[i64]
         \\
         \\
-        \\def choose(value: Holder, other: List[i64]) -> i64:
+        \\def choose(value: Holder, other: list[i64]) -> i64:
         \\    _ = other
         \\    xs = value.values
         \\    xs.append(42)
@@ -226,8 +226,8 @@ test "record fields and nested list elements propagate empty list context" {
         \\
         \\
         \\def main() -> i64:
-        \\    nested: List[List[i64]] = []
-        \\    inner: List[i64] = []
+        \\    nested: list[list[i64]] = []
+        \\    inner: list[i64] = []
         \\    nested.append(inner)
         \\    return choose(Holder(values=[]), [])
     );
@@ -250,7 +250,7 @@ test "Ok unit values preserve fallible result handling" {
 }
 
 // spec: BUILTIN-CONTEXT-7
-test "declared List and Result types retain their own nominal identity" {
+test "builtin list and declared Result types retain their own nominal identity" {
     try run(
         \\result Result:
         \\    ok: i64,
@@ -262,7 +262,7 @@ test "declared List and Result types retain their own nominal identity" {
         \\
         \\
         \\def main() -> i64:
-        \\    values: List[i64] = []
+        \\    values: list[i64] = []
         \\    values.append(42)
         \\    if values[0u64] != 42:
         \\        return 0
@@ -296,12 +296,12 @@ test "contextual constructors reject ambiguity mismatched payloads and capabilit
     , "E_TYPE");
     try reject(
         \\def main() -> i64:
-        \\    values: List[clock_cap] = []
+        \\    values: list[Clock] = []
         \\    return 0
     , "E_LIST_CAPABILITY");
     try reject(
         \\def main() -> i64:
-        \\    values: List[i64, bool] = []
+        \\    values: list[i64, bool] = []
         \\    return 0
     , "E_GENERIC_ARITY");
 }

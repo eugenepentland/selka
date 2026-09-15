@@ -28,14 +28,14 @@ fn reject(source: []const u8, code: []const u8) !void {
 // seed zero, and that word's high bit proves the sample keeps all its bits.
 const forwarded = declarations ++
     \\class Authority:
-    \\    clock: clock_cap
+    \\    clock: Clock
     \\
     \\
     \\def read(auth: Authority) -> Time effects(clock):
     \\    return clock_now[Time](auth.clock)
     \\
     \\
-    \\def main(rng: random_cap, clock: clock_cap) -> i64 noio:
+    \\def main(rng: Entropy, clock: Clock) -> i64 noio:
     \\    match read(Authority(clock=clock)):
     \\        case Time.ok(now):
     \\            match random_u64[Random](rng):
@@ -77,7 +77,7 @@ test "every grant an entry point names is materialized before its body runs" {
     try t.expectEqualStrings("CapabilityUnavailable", withheld.trap.code);
     try t.expectEqualStrings("", withheld.stdout);
     var unused = try language.Compilation.init(t.allocator, "unused.my",
-        \\def main(clock: clock_cap) -> i64 effects():
+        \\def main(clock: Clock) -> i64 effects():
         \\    _ = clock
         \\    return 1
     );
@@ -87,7 +87,7 @@ test "every grant an entry point names is materialized before its body runs" {
     try t.expectEqualStrings("CapabilityUnavailable", refused.trap.code);
 }
 const generic_provider_source = declarations ++
-    \\def read[G](clock: clock_cap, random: random_cap) -> Time effects(clock,random):
+    \\def read[G](clock: Clock, random: Entropy) -> Time effects(clock,random):
     \\    now = clock_now[Time](clock)?
     \\    first = random_u64[Random](random)?
     \\    second = random_u64[Random](random)?
@@ -98,7 +98,7 @@ const generic_provider_source = declarations ++
     \\    return Time.ok(42)
     \\
     \\
-    \\def main(clock: clock_cap, random: random_cap) -> i64:
+    \\def main(clock: Clock, random: Entropy) -> i64:
     \\    match read[bool](clock, random):
     \\        case Time.ok(n):
     \\            return n
@@ -123,25 +123,25 @@ test "generic provider reads preserve values callback counts and allocation clea
 }
 test "clock and random bounds propagate through calls independently of noio and noalloc" {
     try reject(declarations ++
-        \\def read(c: clock_cap) -> Time:
+        \\def read(c: Clock) -> Time:
         \\    return clock_now[Time](c)
         \\
         \\
-        \\def main(c: clock_cap) -> i64 effects():
+        \\def main(c: Clock) -> i64 effects():
         \\    _ = read(c)
         \\    return 0
     , "E_EFFECT_BOUND");
     try reject(declarations ++
-        \\def read(r: random_cap) -> Random:
+        \\def read(r: Entropy) -> Random:
         \\    return random_u64[Random](r)
         \\
         \\
-        \\def main(r: random_cap) -> i64 effects(clock):
+        \\def main(r: Entropy) -> i64 effects(clock):
         \\    _ = read(r)
         \\    return 0
     , "E_EFFECT_BOUND");
     var c = try language.Compilation.init(t.allocator, module, declarations ++
-        \\def main(c: clock_cap, r: random_cap) -> i64 noalloc:
+        \\def main(c: Clock, r: Entropy) -> i64 noalloc:
         \\    _ = clock_now[Time](c)
         \\    _ = random_u64[Random](r)
         \\    return 0
@@ -154,7 +154,7 @@ test "clock and random bounds propagate through calls independently of noio and 
 }
 test "repeated provider reads keep the guest inside one frame" {
     var c = try language.Compilation.init(t.allocator, module, declarations ++
-        \\def main(c: clock_cap) -> i64:
+        \\def main(c: Clock) -> i64:
         \\    n = 0
         \\    while n < 10000:
         \\        _ = clock_now[Time](c)
@@ -169,7 +169,7 @@ test "repeated provider reads keep the guest inside one frame" {
 }
 test "clock reads advance monotonically while a short circuited operand never reads" {
     var c = try language.Compilation.init(t.allocator, module, declarations ++
-        \\def positive(c: clock_cap) -> bool:
+        \\def positive(c: Clock) -> bool:
         \\    match clock_now[Time](c):
         \\        case Time.ok(v):
         \\            return v > 0
@@ -178,7 +178,7 @@ test "clock reads advance monotonically while a short circuited operand never re
         \\            return False
         \\
         \\
-        \\def main(c: clock_cap) -> i64:
+        \\def main(c: Clock) -> i64:
         \\    _ = False and positive(c)
         \\    first = 0
         \\    match clock_now[Time](c):
@@ -202,7 +202,7 @@ test "clock reads advance monotonically while a short circuited operand never re
 }
 test "external emission rejects a forged result shape before any provider call" {
     var c = try language.Compilation.init(t.allocator, module, declarations ++
-        \\def main(c: clock_cap) -> i64:
+        \\def main(c: Clock) -> i64:
         \\    _ = clock_now[Time](c)
         \\    return 0
     );

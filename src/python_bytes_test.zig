@@ -75,7 +75,7 @@ test "PY-BYTES-1 membership accepts a byte scalar or a contiguous subsequence" {
         \\        return 4
         \\    if b"" not in raw:
         \\        return 5
-        \\    if not raw.contains(97) or not raw.contains(b"pha"):
+        \\    if 97 not in raw or b"pha" not in raw:
         \\        return 6
         \\    return 42
     , 42);

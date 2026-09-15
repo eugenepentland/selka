@@ -92,7 +92,7 @@ const dotted = header ++
     \\
     \\
     \\def main() -> i64:
-    \\    values: List[i64] = []
+    \\    values: list[i64] = []
     \\    values.append(40)
     \\    input = api.Inputs(value=values[0])
     \\    boxed = api.Box[api.Inputs](value=input)

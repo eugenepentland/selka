@@ -40,14 +40,14 @@ fn lookup(source: []const u8, value: ?[]const u8, arguments: []const []const u8,
 }
 const forwarded = declarations ++
     \\class Authority:
-    \\    env: environment_cap
+    \\    env: Environment
     \\
     \\
     \\def lookup(auth: Authority) -> Lookup effects(environment):
     \\    return environment_get[Lookup](auth.env, [75u8])
     \\
     \\
-    \\def main(environment: environment_cap) -> i64 noio:
+    \\def main(environment: Environment) -> i64 noio:
     \\    match lookup(Authority(env=environment)):
     \\        case Lookup.ok(entry):
     \\            if entry.present:
@@ -77,7 +77,7 @@ test "environment grants delegate explicitly and missing empty and present value
 }
 test "environment returns raw bytes and canonical zero padding" {
     try lookup(declarations ++
-        \\def main(env: environment_cap) -> i64:
+        \\def main(env: Environment) -> i64:
         \\    match environment_get[Lookup](env, [75u8]):
         \\        case Lookup.ok(entry):
         \\            return i64(entry.bytes[0]) + i64(entry.bytes[1]) + i64(entry.bytes[2]) + i64(entry.bytes[3])
@@ -120,7 +120,7 @@ const zero_capacity = declarations ++
     \\    err: i64
     \\
     \\
-    \\def main(env: environment_cap) -> i64:
+    \\def main(env: Environment) -> i64:
     \\    match environment_get[Absent](env, [75u8]):
     \\        case Absent.ok(entry):
     \\            if entry.present:
@@ -136,12 +136,12 @@ test "zero capacity environment values distinguish absent empty and too large" {
     try lookup(zero_capacity, "x", &.{}, -4);
 }
 const generic_environment = declarations ++
-    \\def lookup[G](cap: environment_cap) -> Lookup effects(environment):
+    \\def lookup[G](cap: Environment) -> Lookup effects(environment):
     \\    name: [1]u8 = [75u8]
     \\    return environment_get[Lookup](cap, name)
     \\
     \\
-    \\def main(cap: environment_cap) -> i64:
+    \\def main(cap: Environment) -> i64:
     \\    match lookup[bool](cap):
     \\        case Lookup.ok(e):
     \\            return i64(e.length) + i64(e.bytes[0]) + i64(e.bytes[1])

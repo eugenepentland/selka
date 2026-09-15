@@ -1,3 +1,9 @@
+list str type#17
+  element u32 (managed)
+list bytes type#18
+  element u8 (managed)
+domain float type#19
+  backing u64 (private)
 function main() -> i64
   0000  PUSH_I64 1  ; 2:12
   0001  PUSH_I64 2  ; 2:16

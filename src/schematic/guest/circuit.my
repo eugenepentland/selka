@@ -105,7 +105,7 @@ def collectParts(nodes: list[s.Node]) -> Result[list[Part], int]:
             if spec.kind == s.Kind.list:
                 family = s.at(nodes, i + 4).span
                 value = s.at(nodes, i + 5).span
-            if out.len() == 128u64:
+            if len(out) == 128:
                 _ = io.issue(5, 0, ref.span.start)
                 return Err(5)
             j = 0
@@ -170,7 +170,7 @@ def collectPins(nodes: list[s.Node], parts: list[Part], pinout: list[s.Node]) ->
                             _ = io.issue(15, 0, s.at(nodes, p).span.start)
                             return Err(15)
                         j += 1
-                    if out.len() == 1024u64:
+                    if len(out) == 1024:
                         _ = io.issue(5, 0, net.start)
                         return Err(5)
                     out.append(Pin(
