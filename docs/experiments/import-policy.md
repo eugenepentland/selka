@@ -1,4 +1,4 @@
-# Optional dependency-direction policy
+# Dependency-direction policy
 
 `check-policy` first checks the complete reachable module program, then evaluates
 an explicitly supplied policy file against its resolved direct imports:
@@ -7,10 +7,15 @@ an explicitly supplied policy file against its resolved direct imports:
 zig build run -- check-policy examples/modules/main.my --policy=examples/modules/import-policy.json
 ```
 
-Ordinary `check-project` and `run-project` do not load policy, even if a JSON file
-exists alongside the entry. Language errors cannot be suppressed by policy. The
-policy path is an explicit host CLI path, relative to the working directory unless
-absolute; it is not implicitly searched in module directories.
+Ordinary project commands additionally require a discovered `mylang.json`
+configuration that names an `import_policy`. The first `mylang.json` from the
+entry file's directory up toward the filesystem root wins; the policy path is
+resolved against that configuration's directory, never the shell working
+directory, and never a JSON file that merely sits beside the entry. A missing or
+malformed required configuration fails with host status 2. Language errors
+cannot be suppressed by policy, and `check-policy --policy=path` remains the
+explicit inspection path. See [required project import policy](../tooling/import-policy.md)
+for the discovery rules, statuses and examples.
 
 ```json
 {

@@ -76,7 +76,48 @@ def snapshot(entry, lock_path, directory):
             destination = directory / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_bytes(data)
+    copy_project_config(app_root, directory)
     return manifest
+
+
+def copy_project_config(app_root, directory):
+    """Mirror the nearest mylang.json into the staged application root.
+
+    A configuration in the entry directory brings its relative policy along so
+    the compiler's own discovery and enforcement run against the locked
+    snapshot. An ancestor configuration is still copied, but a relative policy
+    that would escape the staged root is deliberately left out: the compiler
+    then reports a missing required policy instead of silently skipping it.
+    """
+    for base in (app_root, *app_root.parents):
+        config = base / 'mylang.json'
+        if not config.is_file():
+            continue
+        raw = navigate.bounded_read(config, MAX_BYTES)
+        (directory / 'mylang.json').write_bytes(raw)
+        if base != app_root:
+            return
+        try:
+            document = json.loads(raw)
+        except ValueError:
+            return
+        if not isinstance(document, dict):
+            return
+        policy = document.get('import_policy')
+        if not isinstance(policy, str) or not policy:
+            return
+        candidate = PurePosixPath(policy)
+        if candidate.is_absolute():
+            return
+        if '..' in candidate.parts:
+            return
+        target = base / policy
+        if not target.is_file():
+            return
+        destination = directory / policy
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(navigate.bounded_read(target, MAX_BYTES))
+        return
 
 
 def run(entry, lock_path, compiler, action, receipt_path=None):

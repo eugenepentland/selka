@@ -7,13 +7,15 @@ const output = @import("diagnostic_output.zig");
 /// Cumulative outcomes; retained bytes count the owned entry arena capacity.
 pub const Statistics = struct { hits: usize = 0, misses: usize = 0, stored: usize = 0, bypassed: usize = 0, retained_bytes: usize = 0 };
 const Input = struct { name: []const u8, path: []const u8, bytes: []const u8 };
-const Entry = struct { arena: std.heap.ArenaAllocator, inputs: []const Input, warnings: []const u8, format: output.Format };
+const Entry = struct { arena: std.heap.ArenaAllocator, inputs: []const Input, warnings: []const u8, format: output.Format, policy_identity: ?[]const u8 = null };
 /// Caller-serialized in-memory reuse under one running compiler implementation.
 /// Only successful complete checks may be remembered; failed requests stay fresh.
 pub const Cache = struct {
     allocator: std.mem.Allocator,
     max_bytes: usize,
     format: output.Format = .text,
+    /// Required import policy identity for the current request, when configured.
+    policy_identity: ?[]const u8 = null,
     entry: ?Entry = null,
     statistics: Statistics = .{},
     /// Create an empty cache; zero capacity disables retention.
@@ -34,7 +36,7 @@ pub const Cache = struct {
     pub fn lookup(self: *Cache, loaded: *const project.Project) ?[]const u8 {
         if (loaded.progress.complete and loaded.problem == null) {
             if (self.entry) |entry| {
-                if (entry.format == self.format and matches(entry.inputs, loaded.modules.items)) {
+                if (entry.format == self.format and matches(entry.inputs, loaded.modules.items) and identityMatches(entry.policy_identity, self.policy_identity)) {
                     self.statistics.hits += 1;
                     return entry.warnings;
                 }
@@ -66,6 +68,7 @@ pub const Cache = struct {
             warnings.writer.writeAll(text) catch return error.OutOfMemory;
         }
         const text = try warnings.toOwnedSlice();
+        const policy_identity = if (self.policy_identity) |identity| try allocator.dupe(u8, identity) else null;
         const bytes = arena.queryCapacity();
         if (bytes > self.max_bytes) {
             arena.deinit();
@@ -73,11 +76,15 @@ pub const Cache = struct {
             return;
         }
         self.clear();
-        self.entry = .{ .arena = arena, .inputs = inputs, .warnings = text, .format = self.format };
+        self.entry = .{ .arena = arena, .inputs = inputs, .warnings = text, .format = self.format, .policy_identity = policy_identity };
         self.statistics.retained_bytes = bytes;
         self.statistics.stored += 1;
     }
 };
+fn identityMatches(stored: ?[]const u8, current: ?[]const u8) bool {
+    if (stored) |left| return if (current) |right| std.mem.eql(u8, left, right) else false;
+    return current == null;
+}
 fn matches(inputs: []const Input, modules: []const project.Module) bool {
     if (inputs.len != modules.len) return false;
     for (inputs, modules) |input, module| {

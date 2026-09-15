@@ -84,6 +84,7 @@ pub fn main(init: std.process.Init) void {
 }
 
 const grants = @import("cli_grants.zig");
+const project_config = @import("project_config.zig");
 const module_syntax = @import("module_syntax.zig");
 const native_run = @import("native_run.zig");
 const native_options = @import("qbe_build_options.zig");
@@ -264,6 +265,9 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
     // `run-project` does. A plain single-file program skips this and keeps the
     // original one-unit path byte-for-byte.
     if (parsed.command == .run and module_syntax.usesModuleSyntax(bytes)) return listModules(init, parsed);
+    // A single-unit program has no import edges, but a configured project still
+    // owns the same required configuration contract; validate it before checking.
+    validateUnitConfiguredPolicy(init, parsed) catch |err| return policyFailureStatus(err);
     if (parsed.command == .run and parsed.reporting.explain_invalidation) {
         try std.Io.File.stderr().writeStreamingAll(init.io, usage);
         return 2;
@@ -854,6 +858,148 @@ fn recordSemanticBypass(init: Context, functions: *const language.semantic_cache
     if (delta != 0) recordBypass(init, "semantic-reuse-unavailable", delta);
 }
 
+/// Result of the required-policy frontend gate. `status` means the command must
+/// return that status immediately; `config` owns a validated configuration whose
+/// `identity` participates in caches and receipts.
+const ConfiguredPolicy = struct {
+    config: ?project_config.Config = null,
+    identity: ?[64]u8 = null,
+    fn deinit(self: *ConfiguredPolicy) void {
+        if (self.config) |*config| config.deinit();
+    }
+};
+
+/// Validate a discovered `mylang.json` for a single-unit command. A unit has no
+/// import edges, so the policy itself is trivially satisfied; this still rejects
+/// a missing or malformed configuration or policy instead of skipping it.
+fn validateUnitConfiguredPolicy(init: Context, parsed: Parsed) !void {
+    const config_path = project_config.discover(init.gpa, init.io, parsed.path) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        try init.text("mylang: cannot inspect the entry directory for mylang.json\n");
+        return error.HostConfiguration;
+    } orelse return;
+    defer init.gpa.free(config_path);
+    var failure: project_config.Failure = .{};
+    var config = project_config.load(init.gpa, init.io, config_path, &failure) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => {
+            const message = try std.fmt.allocPrint(init.gpa, "{s}:{d}:{d}: error[E_PROJECT_CONFIG]: {s}\n", .{
+                failure.path, failure.location.line, failure.location.column, failure.detail,
+            });
+            defer init.gpa.free(message);
+            try init.text(message);
+            return error.HostConfiguration;
+        },
+    };
+    defer config.deinit();
+    const policy_file = config.policy orelse return;
+    var policy = language.import_policy.Policy.parse(init.gpa, policy_file.bytes) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => {
+            const message = try std.fmt.allocPrint(init.gpa, "{s}: error[E_PROJECT_CONFIG]: invalid import policy: {s}\n", .{
+                policy_file.path, @errorName(err),
+            });
+            defer init.gpa.free(message);
+            try init.text(message);
+            return error.HostConfiguration;
+        },
+    };
+    policy.deinit();
+}
+
+/// Map the required-policy gate's sentinel errors back to host statuses. Any
+/// other failure is a real host error and propagates unchanged.
+fn policyFailureStatus(err: anyerror) anyerror!u8 {
+    return switch (err) {
+        error.HostConfiguration => 2,
+        error.PolicyViolation => 3,
+        else => err,
+    };
+}
+
+/// Discover and enforce the entry project's configured `mylang.json` policy.
+/// Discovery starts at the entry file's directory and never consults the shell
+/// working directory. `check-policy` is exempt because it inspects an explicit
+/// policy path. Missing or malformed configuration returns host status 2; a
+/// resolved import that violates the policy returns status 3.
+fn loadConfiguredPolicy(init: Context, parsed: Parsed, project: *const language.project.Project, frontend: ?*language.frontend_cache.Cache, verdict: ?*language.check_cache.Cache) !ConfiguredPolicy {
+    if (parsed.command == .@"check-policy") return .{};
+    const config_path = project_config.discover(init.gpa, init.io, parsed.path) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        try init.text("mylang: cannot inspect the entry directory for mylang.json\n");
+        return error.HostConfiguration;
+    } orelse return .{};
+    defer init.gpa.free(config_path);
+
+    var failure: project_config.Failure = .{};
+    var config = project_config.load(init.gpa, init.io, config_path, &failure) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => {
+            const message = try std.fmt.allocPrint(init.gpa, "{s}:{d}:{d}: error[E_PROJECT_CONFIG]: {s}\n", .{
+                failure.path, failure.location.line, failure.location.column, failure.detail,
+            });
+            defer init.gpa.free(message);
+            try init.text(message);
+            return error.HostConfiguration;
+        },
+    };
+    var config_transferred = false;
+    errdefer if (!config_transferred) config.deinit();
+    if (!config.hasPolicy()) {
+        setPolicyIdentity(frontend, verdict, null);
+        config_transferred = true;
+        return .{ .config = config };
+    }
+
+    var policy = language.import_policy.Policy.parse(init.gpa, config.policy.?.bytes) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => {
+            const message = try std.fmt.allocPrint(init.gpa, "{s}: error[E_PROJECT_CONFIG]: invalid import policy: {s}\n", .{
+                config.policy.?.path, @errorName(err),
+            });
+            defer init.gpa.free(message);
+            try init.text(message);
+            return error.HostConfiguration;
+        },
+    };
+    defer policy.deinit();
+    var policy_report = language.import_policy.evaluate(init.gpa, project, policy) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => {
+            try init.text("mylang: configured import policy cannot be evaluated because the project graph is incomplete\n");
+            return error.HostConfiguration;
+        },
+    };
+    defer policy_report.deinit();
+    if (policy_report.denied != 0) {
+        const text = try language.import_policy.render(init.gpa, policy_report, project, policy);
+        defer init.gpa.free(text);
+        try init.text(text);
+        return error.PolicyViolation;
+    }
+    var identity: [64]u8 = undefined;
+    const has_identity = config.cacheIdentity(&identity);
+    setPolicyIdentity(frontend, verdict, if (has_identity) identity[0..] else null);
+    config_transferred = true;
+    return .{ .config = config, .identity = if (has_identity) identity else null };
+}
+
+/// Publish the required-policy identity to the caches whose verdict must not
+/// outlive a policy change. Null restores today's behavior for unconfigured projects.
+fn setPolicyIdentity(frontend: ?*language.frontend_cache.Cache, verdict: ?*language.check_cache.Cache, identity: ?[]const u8) void {
+    if (frontend) |opened| opened.runtime.policy_identity = identity;
+    if (verdict) |opened| opened.policy_identity = identity;
+}
+
+/// Build the policy identity recorded in `project-dependencies-v1` receipts.
+/// Strings belong to the command arena and live until the process exits.
+fn configuredPolicyReceipt(allocator: std.mem.Allocator, configured: *const ConfiguredPolicy) !?language.dependency_report.Policy {
+    const config = if (configured.config) |*value| value else return null;
+    if (!config.hasPolicy()) return null;
+    const receipt = try config.receipt(allocator);
+    return .{ .config_sha256 = receipt.config_sha256, .policy_sha256 = receipt.policy_sha256 };
+}
+
 fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_cache.Cache, verdict: ?*language.check_cache.Cache, functions: ?*language.semantic_cache.Cache) !u8 {
     const frontend = parsed.frontend;
     const frontend_start = if (parsed.reporting.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
@@ -872,6 +1018,12 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     init.timings.counts.modules = project.modules.items.len;
     init.timings.counts.source_bytes = project.counts.bytes;
     init.timings.end();
+    // Required architectural policy is a frontend gate: discover and evaluate
+    // it after the resolved graph is loaded but before any cached success can be
+    // replayed. A project without `mylang.json` keeps its previous behavior.
+    var configured = loadConfiguredPolicy(init, parsed, &project, frontend, verdict) catch |err| return policyFailureStatus(err);
+    defer configured.deinit();
+    const policy_receipt = try configuredPolicyReceipt(init.arena.allocator(), &configured);
     if (try surfaceProject(init, &project, parsed)) |status| return status;
     if (try replayStoredVerdict(init, parsed, &project, verdict, frontend)) return 0;
     const output = if (parsed.command != .@"list-modules") result: {
@@ -912,7 +1064,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         var dependency_receipt: ?[]u8 = null;
         defer if (dependency_receipt) |bytes| init.gpa.free(bytes);
         if (parsed.command == .@"project-dependencies" or parsed.reporting.explain_invalidation) {
-            dependency_receipt = try dependencyReport(init, &compilation, files.inputs);
+            dependency_receipt = try dependencyReport(init, &compilation, files.inputs, policy_receipt);
         }
         if (parsed.reporting.explain_invalidation) try reportInvalidation(init, parsed, dependency_receipt.?, executed, true);
         if (parsed.command == .@"emit-project-qbe") break :result (try emitProjectNative(init, &compilation)) orelse return 1;
@@ -1319,10 +1471,10 @@ fn dependencyManifests(allocator: std.mem.Allocator, inputs: []const GeneratedIn
     return manifests;
 }
 
-fn dependencyReport(init: Context, compilation: *language.project_compile.Compilation, inputs: []const GeneratedInput) ![]u8 {
+fn dependencyReport(init: Context, compilation: *language.project_compile.Compilation, inputs: []const GeneratedInput, policy: ?language.dependency_report.Policy) ![]u8 {
     const manifests = try dependencyManifests(init.gpa, inputs);
     defer init.gpa.free(manifests);
-    return language.dependency_report.render(init.gpa, compilation, try compilerIdentity(init.io), manifests);
+    return language.dependency_report.render(init.gpa, compilation, try compilerIdentity(init.io), manifests, policy);
 }
 
 /// Lower a project before its receipt is built when the command will emit, so
@@ -1346,7 +1498,7 @@ fn lowerForReceipt(init: Context, compilation: *language.project_compile.Compila
 fn reportFailedInvalidation(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation, inputs: []const GeneratedInput) !void {
     const manifests = try dependencyManifests(init.gpa, inputs);
     defer init.gpa.free(manifests);
-    const current = language.dependency_report.renderPartial(init.gpa, compilation, try compilerIdentity(init.io), manifests) catch |err| switch (err) {
+    const current = language.dependency_report.renderPartial(init.gpa, compilation, try compilerIdentity(init.io), manifests, null) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => return,
     };
@@ -1612,7 +1764,11 @@ fn sessionCheck(init: Context, parsed: Parsed, cache: *SessionCache) !void {
     const status = listModulesWithCache(request_init, request, &cache.syntax, &cache.semantic, &cache.functions) catch |err| {
         cache.verdict_reuses += observation.work.reused_results;
         cache.specializations += observation.work.stages[@backingInt(invalidation.WorkStage.instantiated_specializations)].performed;
-        try sessionReply(init, .{ .action = "check", .status = 2, .failure = @errorName(err) }, before, cache, observation.work);
+        const reported: u8 = switch (err) {
+            error.PolicyViolation => 3,
+            else => 2,
+        };
+        try sessionReply(init, .{ .action = "check", .status = reported, .failure = @errorName(err) }, before, cache, observation.work);
         return;
     };
     cache.verdict_reuses += observation.work.reused_results;

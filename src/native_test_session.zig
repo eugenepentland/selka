@@ -8,7 +8,8 @@ const options = @import("native_test_options.zig");
 const environment = @import("native_test_environment.zig");
 const execute = @import("native_test_execute.zig");
 /// Test setup, changed inputs, malformed compiler output and tool failures.
-pub const Error = fs.Error || snapshot.Error || execute.Error || std.json.ParseError(std.json.Scanner);
+pub const Error = fs.Error || snapshot.Error || execute.Error || std.json.ParseError(std.json.Scanner) ||
+    error{ ProjectConfigurationFailed, ProjectPolicyRejected };
 /// One freshly checked project or provider variant.
 pub const Project = struct { source: []const u8, manifest: std.json.Value, schema: std.json.Value, directory: []const u8, executor: ?execute.Executor = null };
 /// Invocation-owned paths and tool fingerprints.
@@ -50,7 +51,21 @@ pub const Session = struct {
     /// Fresh semantic checking always precedes result reuse, including warm builds.
     pub fn check(self: Session, source: []const u8) Error!Project {
         const output = try self.context.capture(&.{ self.compiler, "emit-project-qbe", source });
-        if (fs.exitCode(output.term) != 0) return error.NativeToolFailed;
+        const code = fs.exitCode(output.term);
+        if (code != 0) {
+            // The child ran the same required-policy frontend gate as ordinary
+            // commands; forward its located diagnostic and preserve the status.
+            // A failed best-effort write must not mask the child's real status.
+            std.Io.File.stderr().writeStreamingAll(self.context.io, output.stderr) catch |err| switch (err) {
+                error.BrokenPipe => {},
+                else => {},
+            };
+            return switch (code) {
+                2 => error.ProjectConfigurationFailed,
+                3 => error.ProjectPolicyRejected,
+                else => error.NativeToolFailed,
+            };
+        }
         const manifest = (try std.json.parseFromSlice(std.json.Value, self.context.allocator, output.stdout, .{ .allocate = .alloc_always })).value;
         const schema = v.get(manifest, "schema");
         if (schema != .string) return error.InvalidNativeTestManifest;
@@ -83,6 +98,7 @@ pub const Session = struct {
             .reference = v.get(function, "return_reference"),
             .mode = self.options.mode,
             .limits = self.options.limits,
+            .policy = self.source.support.policy_identity,
         }, .{});
         return fs.hash(self.context.allocator, bytes);
     }

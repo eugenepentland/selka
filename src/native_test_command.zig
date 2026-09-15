@@ -48,14 +48,22 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     const session = try sessions.Session.init(context, opts);
     defer context.remove(session.temporary);
     const captured = try snapshot.materialize(context, session.source, try context.temporary(session.temporary));
-    var project = try session.check(captured.entry_path);
+    var project = session.check(captured.entry_path) catch |err| switch (err) {
+        error.ProjectConfigurationFailed => return 2,
+        error.ProjectPolicyRejected => return 3,
+        else => return err,
+    };
     const config_bytes = if (opts.cases) |path| try context.read(path) else "null";
     const config = (try std.json.parseFromSlice(std.json.Value, context.allocator, config_bytes, .{ .allocate = .alloc_always })).value;
     const selected = try cases.discover(context.allocator, project.schema, config, opts.filter);
     const results = try context.allocator.alloc(receipts.Result, selected.len);
     const directory = try std.fs.path.join(context.allocator, &.{ session.directory, "results" });
     try context.mkdir(directory);
-    for (selected, results) |case, *result| result.* = try perform(session, &project, case, directory);
+    for (selected, results) |case, *result| result.* = perform(session, &project, case, directory) catch |err| switch (err) {
+        error.ProjectConfigurationFailed => return 2,
+        error.ProjectPolicyRejected => return 3,
+        else => return err,
+    };
     try session.verify();
     if (opts.cases) |path| {
         if (!std.mem.eql(u8, config_bytes, try context.read(path))) return error.SourceChanged;

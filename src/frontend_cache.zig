@@ -54,7 +54,15 @@ pub const Statistics = struct {
 };
 
 /// Allocator and I/O handle shared by every cache operation.
-const Runtime = struct { allocator: std.mem.Allocator, io: std.Io };
+const Runtime = struct {
+    allocator: std.mem.Allocator,
+    io: std.Io,
+    /// Required import policy identity when the entry project configures one.
+    /// Only the successful-verdict key consumes it: a changed or stricter
+    /// policy must not replay an earlier pass, while syntax parsing stays
+    /// independent of policy acceptance.
+    policy_identity: ?[]const u8 = null,
+};
 
 /// One bounded, caller-serialized directory of immutable entries.
 pub const Cache = struct {
@@ -244,6 +252,12 @@ pub const Cache = struct {
         frame(&hash, self.identity);
         const contract = self.contractHex();
         hash.update(&contract);
+        if (self.runtime.policy_identity) |identity| {
+            hash.update("policy");
+            frame(&hash, identity);
+        } else {
+            hash.update("no-policy");
+        }
         hash.update(&digest);
         hash.update(&.{@backingInt(format)});
         var out: [32]u8 = undefined;
