@@ -448,7 +448,7 @@ test "work report session totals are the sum of request deltas" {
     var first: invalidation.Work = .{ .command = "check-project" };
     first.set(.parsed_modules, 3, 0);
     first.set(.checked_bodies, 5, 0);
-    const first_summary = invalidation.summarize(first);
+    const first_summary = invalidation.summarize(&first);
     try t.expectEqual(@as(usize, 3), first_summary.request.parsed_modules.performed);
     try t.expectEqual(@as(usize, 3), first_summary.session.parsed_modules.performed);
 
@@ -464,7 +464,7 @@ test "work report session totals are the sum of request deltas" {
         .{},
         .{},
     };
-    const second_summary = invalidation.summarize(second);
+    const second_summary = invalidation.summarize(&second);
     try t.expectEqual(@as(usize, 1), second_summary.request.parsed_modules.performed);
     try t.expectEqual(@as(usize, 2), second_summary.request.parsed_modules.reused);
     try t.expectEqual(@as(usize, 4), second_summary.session.parsed_modules.performed);
@@ -474,4 +474,15 @@ test "work report session totals are the sum of request deltas" {
         second_summary.session.parsed_modules.performed - first_summary.session.parsed_modules.performed,
         second_summary.request.parsed_modules.performed,
     );
+}
+
+// spec-case: WORK-REPORT-1
+test "summarized bypasses remain owned by the work observation" {
+    var work: invalidation.Work = .{ .command = "check-project" };
+    work.addBypass("cache-disabled", 2);
+    const summary = invalidation.summarize(&work);
+    const text = try std.json.Stringify.valueAlloc(t.allocator, .{ .bypassed = summary.bypassed }, .{});
+    defer t.allocator.free(text);
+    try t.expect(std.mem.indexOf(u8, text, "cache-disabled") != null);
+    try t.expect(std.mem.indexOf(u8, text, "\"count\":2") != null);
 }

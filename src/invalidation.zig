@@ -300,7 +300,7 @@ pub const Summary = struct {
 };
 
 /// Summarize a work observation into request deltas and session totals.
-pub fn summarize(work: Work) Summary {
+pub fn summarize(work: *const Work) Summary {
     const cumulative = work.session orelse work.stages;
     return .{
         .fingerprint_unchanged = work.fingerprint_unchanged,

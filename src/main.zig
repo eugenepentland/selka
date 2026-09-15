@@ -1872,7 +1872,7 @@ fn sessionReply(
     var work = request_work;
     work.session = sessionStages(cache);
     work.session_reused_results = cache.verdict_reuses;
-    const summary = invalidation.summarize(work);
+    const summary = invalidation.summarize(&work);
     const text = try std.json.Stringify.valueAlloc(init.gpa, .{
         .version = "check-session-v1",
         .action = reply.action,
