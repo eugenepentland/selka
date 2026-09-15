@@ -10,7 +10,9 @@ sources and compiler that produced it. The design record is
 
 The command prints one `navigation-v1` JSON document: `symbols` for module-
 qualified declarations and locals, each with its original source range,
-signature, checked type name, effects and a bounded snippet; `references` for
+signature, checked type name, named effects, the normalized `mutates` input
+positions, a `return_origin` bound (`fresh`, `params` or `unknown`), whether the
+body performs any managed write (`mutation_writes`), and a bounded snippet; `references` for
 resolved call, read, write, field and type edges; and `snapshot` for every loaded
 module's path, byte length and SHA-256 alongside the compiler's own identity.
 Those relationships are static, so they are not runtime coverage and not proof

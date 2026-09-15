@@ -21,7 +21,7 @@ def has[T: equality](slots: [4]m.Slot[T], needle: T, end: u64) -> bool effects()
 
 def checkComponents(slots: [4]m.Slot[ids.ComponentId]) -> m.Preflight effects():
     i = 0u64
-    while i < len(slots):
+    while i < u64(len(slots)):
         match slots[i]:
             case m.Slot[ids.ComponentId].none:
                 pass
@@ -36,7 +36,7 @@ def checkComponents(slots: [4]m.Slot[ids.ComponentId]) -> m.Preflight effects():
 
 def checkNets(slots: [4]m.Slot[ids.NetId]) -> m.Preflight effects():
     i = 0u64
-    while i < len(slots):
+    while i < u64(len(slots)):
         match slots[i]:
             case m.Slot[ids.NetId].none:
                 pass

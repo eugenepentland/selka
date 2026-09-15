@@ -206,6 +206,57 @@ test "navigation jsonStringify preserves flat wire facts and reports a full writ
     var rejected: std.json.Stringify = .{ .writer = &full };
     try t.expectError(error.WriteFailed, symbol.jsonStringify(&rejected));
 }
+// spec-case: NAVIGATION-1
+test "navigation publishes declared mutation footprints and return origins" {
+    const parsed = try document(
+        \\module main
+        \\
+        \\
+        \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
+        \\    values[0] = 1
+        \\
+        \\
+        \\def pick(values: list[int]) -> list[int] effects():
+        \\    return values
+        \\
+        \\
+        \\def total(values: list[int]) -> int effects():
+        \\    return len(values)
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1]
+        \\    touch(values)
+        \\    picked = pick(values)
+        \\    picked[0] = 2
+        \\    return total(picked)
+    );
+    defer parsed.deinit();
+    var saw_touch = false;
+    var saw_pick = false;
+    var saw_total = false;
+    for (parsed.value.object.get("symbols").?.array.items) |item| {
+        const symbol = item.object;
+        const name = symbol.get("name").?.string;
+        if (std.mem.eql(u8, name, "touch")) {
+            saw_touch = true;
+            try t.expect(symbol.get("mutation_writes").?.bool);
+            try t.expectEqual(@as(i64, 0), symbol.get("mutates").?.array.items[0].integer);
+        }
+        if (std.mem.eql(u8, name, "pick")) {
+            saw_pick = true;
+            try t.expectEqualStrings("params", symbol.get("return_origin").?.string);
+            try t.expect(!symbol.get("mutation_writes").?.bool);
+        }
+        if (std.mem.eql(u8, name, "total")) {
+            saw_total = true;
+            try t.expectEqual(@as(usize, 0), symbol.get("mutates").?.array.items.len);
+            try t.expectEqualStrings("fresh", symbol.get("return_origin").?.string);
+            try t.expect(!symbol.get("mutation_writes").?.bool);
+        }
+    }
+    try t.expect(saw_touch and saw_pick and saw_total);
+}
 
 test "navigation excerpts retain complete UTF8 at the size bound" {
     const prefix = "module main\nimport data\n\n\ndef main() -> i64:\n    # ";

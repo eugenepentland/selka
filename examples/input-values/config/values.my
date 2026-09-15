@@ -3,9 +3,9 @@ module config.values
 export batch_size
 export enabled
 
-def batch_size() -> u16:
+def batch_size() -> u16 effects():
     return 64u16
 
 
-def enabled() -> bool:
+def enabled() -> bool effects():
     return True

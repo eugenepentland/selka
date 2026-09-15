@@ -12,12 +12,12 @@ def region(board: m.Board, item: m.Region) -> m.Preflight:
     if not item.blocks.component and not item.blocks.track and not item.blocks.via:
         return Err(m.Failure.input(m.InputProblem.empty_blocks))
     i = 0u64
-    while i < len(item.allow_nets):
+    while i < u64(len(item.allow_nets)):
         match item.allow_nets[i]:
             case m.Slot[ids.NetId].none:
                 pass
             case m.Slot[ids.NetId].some(net):
-                if not inventory.has[ids.NetId](board.nets, net, len(board.nets)):
+                if not inventory.has[ids.NetId](board.nets, net, u64(len(board.nets))):
                     return Err(m.Failure.input(m.InputProblem.unknown_allow_net))
         i = i + 1u64
     return Ok(True)
@@ -28,13 +28,13 @@ def feature(board: m.Board, item: m.Feature) -> m.Preflight:
         return Err(m.Failure.input(m.InputProblem.invalid_bounds))
     match item:
         case m.Feature.component(value):
-            if not inventory.has[ids.ComponentId](board.components, value.id, len(board.components)):
+            if not inventory.has[ids.ComponentId](board.components, value.id, u64(len(board.components))):
                 return Err(m.Failure.input(m.InputProblem.missing_component))
         case m.Feature.track(value):
-            if not inventory.has[ids.NetId](board.nets, value.net, len(board.nets)):
+            if not inventory.has[ids.NetId](board.nets, value.net, u64(len(board.nets))):
                 return Err(m.Failure.input(m.InputProblem.missing_net))
         case m.Feature.via(value):
-            if not inventory.has[ids.NetId](board.nets, value.net, len(board.nets)):
+            if not inventory.has[ids.NetId](board.nets, value.net, u64(len(board.nets))):
                 return Err(m.Failure.input(m.InputProblem.missing_net))
     return Ok(True)
 
@@ -45,7 +45,7 @@ def preflight(board: m.Board) -> m.Preflight effects():
     _ = inventory.checkComponents(board.components)?
     _ = inventory.checkNets(board.nets)?
     i = 0u64
-    while i < len(board.regions):
+    while i < u64(len(board.regions)):
         match board.regions[i]:
             case m.Slot[m.Region].none:
                 pass
@@ -53,7 +53,7 @@ def preflight(board: m.Board) -> m.Preflight effects():
                 _ = region(board, value)?
         i = i + 1u64
     i = 0u64
-    while i < len(board.features):
+    while i < u64(len(board.features)):
         match board.features[i]:
             case m.Slot[m.Feature].none:
                 pass

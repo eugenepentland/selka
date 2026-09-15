@@ -28,12 +28,16 @@ manifest under the `incremental` object of the `project-dependencies-v1` receipt
 
 The observable interface hash of a declaration (`interface_sha256`) includes only
 what a dependant can observe: canonical name and kind, parameter and return
-types, explicit generic parameters and requirements, effect ceiling and inferred
-effect set, capability/restriction flags, exported record fields or union
-variants, and public layout flags. It excludes function bodies, comments,
-formatting, diagnostic spans, private declarations and local names. A body edit
-with an unchanged interface does not change the interface hash; a signature,
-effect, constant, record or union change does.
+types, explicit generic parameters and requirements, the declared effect ceiling,
+the normalized `mutates(...)` input footprint and the published `return_origin`
+bound, capability/restriction flags, exported record fields or union variants,
+and public layout flags. It excludes function bodies, comments, formatting,
+diagnostic spans, private declarations, local names and inferred implementation
+facts. A body edit with an unchanged interface does not change the interface hash;
+a signature, declared effect ceiling, mutation footprint, constant, record or
+union change does. A body that uses a different subset of the same declared
+ceiling keeps the public interface hash but still invalidates runtime-test
+receipts because the body hash changed.
 
 ```console
 $ mylang project-dependencies app/main.my | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["incremental"]["version"]); print(d["incremental"]["project_interface_sha256"])'
@@ -46,9 +50,10 @@ incremental-identities-v2
 An exported-interface fingerprint is independent of the implementation body.
 A private body edit rechecks and re-emits that body but does not recheck callers
 whose imported interface did not change. Inferred effects are the one subtle
-case: body reuse never reuses an effect verdict, because effects are recomputed
-over the whole call graph after every check, so adding an effect in a callee body
-still rejects an unchanged effect-bounded caller.
+case: body reuse never reuses an effect or mutation verdict, because both are
+recomputed over the whole call graph after every check, so adding an effect or an
+input-mutation footprint in a callee body still rejects an unchanged bounded
+caller.
 
 ## Query stages
 
@@ -77,12 +82,12 @@ the same six dimensions:
 | compiler build identity | the build-time digest already embedded in the compiler |
 | bootstrap-language version | `bootstrap-v1` |
 | target | the selected native target |
-| runtime ABI | `runtime-abi-v0-unfrozen` until Wave 4 freezes `runtime-abi-v1` |
-| effects/capabilities contract | `effects-v1` |
+| runtime ABI | `runtime-abi-v1` |
+| effects/capabilities/mutation contract | `effects-v3` |
 | relevant flags | the invoking command's frontend flags |
 
 ```text
-contract fingerprint = SHA256(compiler_identity, bootstrap-v1, target, runtime-abi-v0-unfrozen, effects-v1, flags)
+contract fingerprint = SHA256(compiler_identity, bootstrap-v1, target, runtime-abi-v1, effects-v3, flags)
 ```
 
 The fingerprint is folded into the persistent syntax key, the whole-program
@@ -123,9 +128,10 @@ $ mylang check-project app/main.my --explain-invalidation --report --cache-dir=.
 
 Every incremental scenario is compared against a clean rebuild. The invalidation
 matrix in `src/invalidation_matrix_test.zig` asserts all of the following for
-whitespace, comments, private bodies, exported signatures, effects, constants,
-record and union shape, imports, generic templates, specialization arguments,
-runtime ABI, compiler version and damaged cache entries:
+whitespace, comments, private bodies, exported signatures, effects and mutation
+footprints, constants, record and union shape, imports, generic templates,
+specialization arguments, runtime ABI, compiler version and damaged cache
+entries:
 
 - the accepted/rejected status is identical;
 - the diagnostic JSON is identical (codes, messages, causes and order);

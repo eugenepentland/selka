@@ -32,7 +32,10 @@ not a JSON Schema standard document. It describes:
   Parameters retain names, referenced types, and value/shared/exclusive reference
   or slice modes. Results reference a type. Reference returns additionally record
   their zero-based source parameter index, mutability, and slice status. Effects
-  list the inferred transitive effects in the language effect declaration order.
+  list the declared public ceiling in the language effect declaration order.
+  `mutates` lists the zero-based parameter positions the exported contract may
+  write, and `return_origin` is `fresh`, `params`, or `unknown`; an exported
+  contract that publishes no return-alias bound defaults to `unknown`.
 - `types`: the transitive public type graph, sorted by name. References use names,
   never compiler-local numeric type IDs. Structural array/table names incorporate
   the qualified identities of their element and key types.
@@ -74,8 +77,10 @@ and can change the output. This is not a byte-level source receipt or compiler
 identity fingerprint.
 
 Derivation does not establish a wire format, target memory layout, foreign ABI,
-codec, or external-data validator. Explicit effect bounds are not emitted separately
-from inferred effects. [Ordinary typed JSON serialization/deserialization](typed-json.md) now uses this
+codec, or external-data validator. A body that stays inside its declared ceiling
+keeps the same public `effects`, `mutates` and `return_origin` contract even though
+the inferred implementation facts change; inferred facts are not emitted as the
+public ceiling. [Ordinary typed JSON serialization/deserialization](typed-json.md) now uses this
 checked type model. [Generated Python data bindings](python-bindings.md) now consume the checked public
 schema. Domain codec declarations, external key mappings, callable foreign wrappers,
 and finer incremental compilation remain roadmap work.

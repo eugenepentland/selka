@@ -103,7 +103,7 @@ def features() -> [8]m.Slot[m.Feature]:
     ]
 
 
-def board() -> m.Board effects():
+def board() -> m.Board effects(host):
     return m.Board(
         outline=rect(wire.OUTLINE),
         components=components(),
