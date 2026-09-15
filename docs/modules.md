@@ -41,13 +41,18 @@ Every capability is granted by default; `--restrict` denies capabilities except
 those named by `--allow-*` options.
 
 The related native routes use the same runtime contract with command-specific
-front ends. `mylang build main.my --run -- <runtime-options>` executes a temporary
+front ends. `mylang build main.my --run -- <guest-arguments>` executes a temporary
 binary, while `mylang build main.my -o app` creates an executable that accepts the
-same runtime options directly. Today `build` requires `--project` for a module
-entry even though `run` auto-detects it. `mylang test main.my` builds each guest
-test as a separate native child with no ambient capabilities and returns an
-aggregate runner status. Wave 1 has no guest `argv` parameter: these arguments
-configure execution and are not application data.
+same runtime options directly. `build --run` auto-detects a module entry exactly
+like `run`; a persistent `build main.my -o app` still requires `--project` for a
+module project. `mylang test main.my` builds each guest test as a separate native
+child with no ambient capabilities and returns an aggregate runner status.
+
+A `main(args: list[str], ...)` entry point receives only guest arguments: values
+after `--` for `mylang run` and `build --run`, and OS arguments after `argv[0]`
+for an installed executable. Runtime controls stay before the delimiter for a
+command and before the first `--` for an installed program. Values are validated
+UTF-8; invalid platform bytes fail at the host boundary before guest execution.
 
 One observable gap remains in this baseline: under `--restrict`, `run` reports a
 missing entry capability with a command-line preflight diagnostic, while

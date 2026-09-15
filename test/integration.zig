@@ -91,6 +91,198 @@ fn runFixture(command: []const u8, text: []const u8, options: []const []const u8
     try args.appendSlice(testing.allocator, options);
     return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
 }
+
+// spec-case: ARGV-1
+test "CLI forwards guest arguments after -- for run and build --run" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const program =
+        \\def main(args: list[str]) -> int:
+        \\    print("count", len(args))
+        \\    for value in args:
+        \\        print("[" + value + "]")
+        \\    return 0
+    ;
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = program });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const guest = [_][]const u8{ "", "héllo wörld", "two words", "--print-result", "--max-steps=9" };
+    const expected = "count 5\n[]\n[héllo wörld]\n[two words]\n[--print-result]\n[--max-steps=9]\n";
+
+    var run_argv: std.ArrayList([]const u8) = .empty;
+    defer run_argv.deinit(testing.allocator);
+    try run_argv.appendSlice(testing.allocator, &.{ compiler_path, "run", path, "--print-result" });
+    try run_argv.appendSlice(testing.allocator, &tools);
+    try run_argv.append(testing.allocator, "--");
+    try run_argv.appendSlice(testing.allocator, &guest);
+    const run = try std.process.run(testing.allocator, testing.io, .{ .argv = run_argv.items });
+    defer testing.allocator.free(run.stdout);
+    defer testing.allocator.free(run.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, run.term);
+    try testing.expectEqualStrings(expected ++ "0\n", run.stdout);
+    try testing.expectEqualStrings("", run.stderr);
+
+    var stress_run_argv: std.ArrayList([]const u8) = .empty;
+    defer stress_run_argv.deinit(testing.allocator);
+    try stress_run_argv.appendSlice(testing.allocator, &.{ compiler_path, "run", path, "--print-result", "--gc-stress" });
+    try stress_run_argv.appendSlice(testing.allocator, &tools);
+    try stress_run_argv.append(testing.allocator, "--");
+    try stress_run_argv.appendSlice(testing.allocator, &guest);
+    const stress_run = try std.process.run(testing.allocator, testing.io, .{ .argv = stress_run_argv.items });
+    defer testing.allocator.free(stress_run.stdout);
+    defer testing.allocator.free(stress_run.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, stress_run.term);
+    try testing.expectEqualStrings(expected ++ "0\n", stress_run.stdout);
+    try testing.expectEqualStrings("", stress_run.stderr);
+
+    var empty_run_argv: std.ArrayList([]const u8) = .empty;
+    defer empty_run_argv.deinit(testing.allocator);
+    try empty_run_argv.appendSlice(testing.allocator, &.{ compiler_path, "run", path, "--print-result" });
+    try empty_run_argv.appendSlice(testing.allocator, &tools);
+    const empty_run = try std.process.run(testing.allocator, testing.io, .{ .argv = empty_run_argv.items });
+    defer testing.allocator.free(empty_run.stdout);
+    defer testing.allocator.free(empty_run.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, empty_run.term);
+    try testing.expectEqualStrings("count 0\n0\n", empty_run.stdout);
+    try testing.expectEqualStrings("", empty_run.stderr);
+
+    var invalid_run_argv: std.ArrayList([]const u8) = .empty;
+    defer invalid_run_argv.deinit(testing.allocator);
+    try invalid_run_argv.appendSlice(testing.allocator, &.{ compiler_path, "run", path, "--print-result" });
+    try invalid_run_argv.appendSlice(testing.allocator, &tools);
+    try invalid_run_argv.appendSlice(testing.allocator, &.{ "--", "\xff" });
+    const invalid_run = try std.process.run(testing.allocator, testing.io, .{ .argv = invalid_run_argv.items });
+    defer testing.allocator.free(invalid_run.stdout);
+    defer testing.allocator.free(invalid_run.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, invalid_run.term);
+    try testing.expectEqualStrings("", invalid_run.stdout);
+    try testing.expect(std.mem.indexOf(u8, invalid_run.stderr, "not valid UTF-8") != null);
+
+    var build_argv: std.ArrayList([]const u8) = .empty;
+    defer build_argv.deinit(testing.allocator);
+    try build_argv.appendSlice(testing.allocator, &.{ compiler_path, "build", path, "--run" });
+    try build_argv.appendSlice(testing.allocator, &tools);
+    try build_argv.append(testing.allocator, "--");
+    try build_argv.appendSlice(testing.allocator, &guest);
+    const build = try std.process.run(testing.allocator, testing.io, .{ .argv = build_argv.items });
+    defer testing.allocator.free(build.stdout);
+    defer testing.allocator.free(build.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, build.term);
+    try testing.expectEqualStrings(expected, build.stdout);
+    try testing.expectEqualStrings("", build.stderr);
+
+    var empty_build_argv: std.ArrayList([]const u8) = .empty;
+    defer empty_build_argv.deinit(testing.allocator);
+    try empty_build_argv.appendSlice(testing.allocator, &.{ compiler_path, "build", path, "--run" });
+    try empty_build_argv.appendSlice(testing.allocator, &tools);
+    const empty_build = try std.process.run(testing.allocator, testing.io, .{ .argv = empty_build_argv.items });
+    defer testing.allocator.free(empty_build.stdout);
+    defer testing.allocator.free(empty_build.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, empty_build.term);
+    try testing.expectEqualStrings("count 0\n", empty_build.stdout);
+    try testing.expectEqualStrings("", empty_build.stderr);
+}
+
+// spec-case: ARGV-1
+test "build --run detects module projects and installed binaries receive the same argv" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.createDir(testing.io, "app", .default_dir);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app/main.my", .data =
+        \\module main
+        \\import helper
+        \\
+        \\def main(args: list[str]) -> int:
+        \\    print(helper.render(args))
+        \\    return 0
+    });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
+        \\module helper
+        \\
+        \\export render
+        \\
+        \\def render(args: list[str]) -> str:
+        \\    out = ""
+        \\    for value in args:
+        \\        out = out + "[" + value + "]"
+        \\    return out
+    });
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "app/main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const output = try std.fs.path.join(testing.allocator, &.{ root, "program" });
+    defer testing.allocator.free(output);
+    const guest = [_][]const u8{ "", "héllo wörld", "two words", "--print-result" };
+    const expected = "[][héllo wörld][two words][--print-result]\n";
+
+    var run_argv: std.ArrayList([]const u8) = .empty;
+    defer run_argv.deinit(testing.allocator);
+    try run_argv.appendSlice(testing.allocator, &.{ compiler_path, "build", entry, "--run" });
+    try run_argv.appendSlice(testing.allocator, &tools);
+    try run_argv.append(testing.allocator, "--");
+    try run_argv.appendSlice(testing.allocator, &guest);
+    const run = try std.process.run(testing.allocator, testing.io, .{ .argv = run_argv.items });
+    defer testing.allocator.free(run.stdout);
+    defer testing.allocator.free(run.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, run.term);
+    try testing.expectEqualStrings(expected, run.stdout);
+    try testing.expectEqualStrings("", run.stderr);
+
+    var link_argv: std.ArrayList([]const u8) = .empty;
+    defer link_argv.deinit(testing.allocator);
+    try link_argv.appendSlice(testing.allocator, &.{ compiler_path, "build", entry, "--project", "-o", output });
+    try link_argv.appendSlice(testing.allocator, &tools);
+    const link = try std.process.run(testing.allocator, testing.io, .{ .argv = link_argv.items });
+    defer testing.allocator.free(link.stdout);
+    defer testing.allocator.free(link.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, link.term);
+    try testing.expectEqualStrings("", link.stderr);
+
+    var install_argv: std.ArrayList([]const u8) = .empty;
+    defer install_argv.deinit(testing.allocator);
+    try install_argv.append(testing.allocator, output);
+    try install_argv.append(testing.allocator, "--");
+    try install_argv.appendSlice(testing.allocator, &guest);
+    const installed = try std.process.run(testing.allocator, testing.io, .{ .argv = install_argv.items });
+    defer testing.allocator.free(installed.stdout);
+    defer testing.allocator.free(installed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, installed.term);
+    try testing.expectEqualStrings(expected, installed.stdout);
+    try testing.expectEqualStrings("", installed.stderr);
+
+    var installed_stress_argv: std.ArrayList([]const u8) = .empty;
+    defer installed_stress_argv.deinit(testing.allocator);
+    try installed_stress_argv.appendSlice(testing.allocator, &.{ output, "--gc-stress", "--" });
+    try installed_stress_argv.appendSlice(testing.allocator, &guest);
+    const installed_stress = try std.process.run(testing.allocator, testing.io, .{ .argv = installed_stress_argv.items });
+    defer testing.allocator.free(installed_stress.stdout);
+    defer testing.allocator.free(installed_stress.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, installed_stress.term);
+    try testing.expectEqualStrings(expected, installed_stress.stdout);
+    try testing.expectEqualStrings("", installed_stress.stderr);
+
+    var installed_empty_argv: std.ArrayList([]const u8) = .empty;
+    defer installed_empty_argv.deinit(testing.allocator);
+    try installed_empty_argv.append(testing.allocator, output);
+    const installed_empty = try std.process.run(testing.allocator, testing.io, .{ .argv = installed_empty_argv.items });
+    defer testing.allocator.free(installed_empty.stdout);
+    defer testing.allocator.free(installed_empty.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, installed_empty.term);
+    try testing.expectEqualStrings("\n", installed_empty.stdout);
+    try testing.expectEqualStrings("", installed_empty.stderr);
+
+    var installed_invalid_argv: std.ArrayList([]const u8) = .empty;
+    defer installed_invalid_argv.deinit(testing.allocator);
+    try installed_invalid_argv.appendSlice(testing.allocator, &.{ output, "--", "\xff" });
+    const installed_invalid = try std.process.run(testing.allocator, testing.io, .{ .argv = installed_invalid_argv.items });
+    defer testing.allocator.free(installed_invalid.stdout);
+    defer testing.allocator.free(installed_invalid.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, installed_invalid.term);
+    try testing.expectEqualStrings("", installed_invalid.stdout);
+    try testing.expect(std.mem.indexOf(u8, installed_invalid.stderr, "not valid UTF-8") != null);
+}
+
 test "CLI run and check success" {
     try invoke("run", @embedFile("fixtures/arithmetic.my"), 0, "7\n", "");
     try invoke("check", @embedFile("fixtures/arithmetic.my"), 0, "", "");

@@ -10,6 +10,8 @@ const typed = @import("typed.zig");
 const native_types = @import("native_types.zig");
 const diagnostic = @import("diagnostic.zig");
 const Source = @import("source.zig").Source;
+const entry_adapter = @import("entry_adapter.zig");
+const native_descriptors = @import("native_descriptors.zig");
 /// Failures producing independent QBE native units.
 pub const GenerateError = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 const drop_local = " call $myl_native_owned_drop(l %heap, l extern ${s}, l %l{d})\n";
@@ -47,7 +49,9 @@ pub fn generateWithInterface(allocator: std.mem.Allocator, program: bytecode.Pro
     const entry_function = program.functions[@backingInt(program.main)];
     const entry_parameters = try a.alloc([]const u8, entry_function.signature.parameter_count);
     for (entry_parameters, entry_function.scope.locals[0..entry_parameters.len]) |*parameter, local| parameter.* = layouts.identity(local.ty) catch |err| return layoutError(err);
-    const descriptors = @import("native_descriptors.zig").generate(a, &layouts) catch |err| return layoutError(err);
+    const entry_argv_element = if (entry_function.signature.parameter_count != 0) entry_adapter.argvElement(entry_function.scope.locals[0].ty, program.records) else null;
+    const entry_argv = if (entry_argv_element) |element| native_descriptors.symbol(a, &layouts, element) catch |err| return layoutError(err) else null;
+    const descriptors = native_descriptors.generate(a, &layouts) catch |err| return layoutError(err);
     const renderers = @import("native_render.zig").generate(a, &layouts, program) catch |err| return layoutError(err);
     // A program that never prints carries no renderers, and copies nothing.
     const runtime_data = if (renderers.len == 0) descriptors else try std.mem.concat(a, u8, &.{ descriptors, renderers });
@@ -62,6 +66,7 @@ pub fn generateWithInterface(allocator: std.mem.Allocator, program: bytecode.Pro
         .host = host,
         .text_format = text_format,
         .entry_parameters = entry_parameters,
+        .entry_argv_element = entry_argv,
         .wire_types = wire_types,
         .codecs = codecs,
         .schema = interface.schema,
@@ -560,7 +565,7 @@ const Emitter = struct {
     }
     /// Shared lowering primitive for target operation emitters.
     pub fn descriptor(self: *Emitter, ty: typed.Type) GenerateError![]const u8 {
-        return @import("native_descriptors.zig").symbol(self.allocator, self.layouts, ty) catch |err| return layoutError(err);
+        return native_descriptors.symbol(self.allocator, self.layouts, ty) catch |err| return layoutError(err);
     }
     fn roots(self: *Emitter, stack: []const typed.Type) GenerateError!void {
         var count: usize = 0;

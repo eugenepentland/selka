@@ -59,7 +59,7 @@ commit rather than against a moving set of worktrees.
 | W5 program edge | **W5a lambda landed.** Expression-bodied, contextually typed, non-capturing lambdas over the existing callback value, including `sorted(xs, key=...)`. W5b (`main -> Result`), W5c (`const` bytes/str) and W5d (`?` on `Option`) are Wave 2 boundary work and remain probes. | `wave1/lambda` |
 | W7 docs and examples | **Landed.** Guide/reference/performance pages reconciled, examples migrated to the canonical surface, legacy history moved out of the reader's path. | `wave1/docs`, `wave1/fixup` |
 | W8 idiom harness | **Landed and honest.** The driver no longer treats `main`'s integer result as a false regression; classifier self-test added; `test-idioms` back in `zig build test`. | `wave1/docs` |
-| W9 one `run` command | **Verified.** `mylang run <file.my>` auto-detects `module`/`import`/`export`; `run-project` remains the explicit alias. Two real W9 gaps are recorded: `build --run` does not auto-detect a module entry, and restricted-capability stderr differs between `run` and native execution. | `wave1/docs` |
+| W9 one `run` command | **Verified.** `mylang run <file.my>` auto-detects `module`/`import`/`export`; `run-project` remains the explicit alias. One recorded W9 gap remains: restricted-capability stderr differs between `run` and native execution. `build --run` module auto-detection landed with Wave 2 item 1. | `wave1/docs`, Wave 2 item 1 |
 
 ## Wave 0 paper trail produced
 
@@ -83,10 +83,10 @@ commit rather than against a moving set of worktrees.
    replacement diagnostic and final removal are still pending.
 3. **W4 prelude decision resolved.** The public prelude stays as landed. The
    compiler is not required to use every public helper.
-4. **Wave 2 boundary work remains.** `Cell[T]`, `main -> Result`, argv,
-   `eprint`, restricted-capability stderr parity, `build --run` module
-   detection, constant `str`/`bytes`, and optional propagation are still the
-   next plan items.
+4. **Wave 2 boundary work remains.** `Cell[T]`, `main -> Result`, `eprint`,
+   restricted-capability stderr parity, constant `str`/`bytes`, and optional
+   propagation are still the next plan items. Item 1 has since landed: argv,
+   the `--` delimiter, and `build --run` module detection.
 5. **Not Wave 1 and still open:** list concat/repeat, the expressions group
    (conditional expression, chained comparisons, tuples, `is None`, `Option`
    equality), and incremental identity/invalidation (Wave 3).

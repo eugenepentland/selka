@@ -1,5 +1,7 @@
 /* Separately compiled scalar runtime. Keep it independent of declaration order. */
 #include "qbe_runtime.h"
+#include "native_collections.h"
+#include "native_text.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,6 +16,7 @@
 typedef __int128 Wide;
 typedef unsigned __int128 UnsignedWide;
 typedef MylQbeContext Context;
+static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64_t frames, int stress, const struct MylangNativeProvidersTag *providers, void (*initialize)(void *), int guest_argc, char **guest_argv, MylQbeResult *result);
 _Static_assert(offsetof(Context, steps) == 0, "QBE context steps ABI");
 _Static_assert(offsetof(Context, max_steps) == 16, "QBE context step limit ABI");
 _Static_assert(offsetof(Context, active_frame) == 48, "QBE context active frame ABI");
@@ -48,6 +51,25 @@ void myl_qbe_fail(void *context, const char *code) { fail(context, code); }
 void myl_qbe_fail_equality(void *context, int status) { fail(context, status == -2 ? "CapacityLimit" : "OutOfMemory"); }
 uint64_t myl_qbe_failed(void *context) {
     return ((Context *)context)->trap != NULL;
+}
+void *myl_qbe_argv_list(void *context, const myl_native_type *element) {
+    static const myl_native_type pointer_type = { .size=sizeof(void *), .alignment=_Alignof(void *), .kind=MYL_NATIVE_POINTER };
+    Context *ctx = context;
+    myl_native_list *list = myl_native_list_new(&ctx->heap, element, (size_t)ctx->guest_argc);
+    if (!list) { myl_qbe_fail_allocation(context); return NULL; }
+    /* Keep the growing list visible across each string allocation; appending the
+       old backing copies the value before growing, but a stress collection can
+       still run before the list itself is rooted by the append helper. */
+    myl_native_root root;
+    myl_native_root_push(&ctx->heap, &root, &list, &pointer_type);
+    for (int i = 0; i < ctx->guest_argc; ++i) {
+        const char *argument = ctx->guest_argv[i];
+        myl_native_text *text = myl_native_text_from_utf8(&ctx->heap, (const unsigned char *)argument, strlen(argument));
+        if (!text) { myl_qbe_fail_allocation(context); myl_native_root_pop(&ctx->heap, &root); return NULL; }
+        if (!myl_native_list_append(&ctx->heap, list, &text)) { myl_qbe_fail_allocation(context); myl_native_root_pop(&ctx->heap, &root); return NULL; }
+    }
+    myl_native_root_pop(&ctx->heap, &root);
+    return list;
 }
 void *myl_qbe_root_mark(void *context) { return ((Context *)context)->heap.roots; }
 void myl_qbe_root_restore(void *context, void *mark) { ((Context *)context)->heap.roots = mark; }
@@ -289,19 +311,38 @@ int mylang_qbe_run_options(uint64_t (*entry)(void *), int argc, char **argv) {
 int mylang_qbe_run_providers(uint64_t (*entry)(void *), int argc, char **argv, const struct MylangNativeProvidersTag *providers) {
     Context context = {.max_steps=10000000, .max_frames=1024};
     int saw_steps = 0, saw_frames = 0, stress = 0, print = 0;
+    int delimiter = 0;
+    char **guest = calloc(argc > 1 ? (size_t)argc : 1, sizeof *guest);
+    if (!guest) { fputs("OutOfMemory: QBE runtime failure\n", stderr); return 2; }
+    int guest_count = 0;
     for (int i = 1; i < argc; ++i) {
-        if (!strncmp(argv[i], "--max-steps=", 12) && !saw_steps++) context.max_steps = budget(&context, argv[i] + 12);
-        else if (!strncmp(argv[i], "--max-frames=", 13) && !saw_frames++) context.max_frames = budget(&context, argv[i] + 13);
-        else if (!strcmp(argv[i], "--gc-stress") && !stress) stress = 1;
-        else if (!strcmp(argv[i], "--print-result") && !print) print = 1;
-        else fail(&context, "InvalidBudget");
+        if (!delimiter && !strcmp(argv[i], "--")) {
+            delimiter = 1;
+            continue;
+        }
+        if (!delimiter) {
+            if (!strncmp(argv[i], "--max-steps=", 12) && !saw_steps++) { context.max_steps = budget(&context, argv[i] + 12); continue; }
+            if (!strncmp(argv[i], "--max-frames=", 13) && !saw_frames++) { context.max_frames = budget(&context, argv[i] + 13); continue; }
+            if (!strcmp(argv[i], "--gc-stress") && !stress) { stress = 1; continue; }
+            if (!strcmp(argv[i], "--print-result") && !print) { print = 1; continue; }
+        }
+        guest[guest_count++] = argv[i];
     }
     if (context.trap) {
         fprintf(stderr, "%s: QBE runtime failure\n", context.trap);
+        free(guest);
         return 2;
     }
+    for (int i = 0; i < guest_count; ++i) {
+        if (!myl_native_text_valid_utf8((const unsigned char *)guest[i], strlen(guest[i]))) {
+            fprintf(stderr, "mylang: guest argument is not valid UTF-8\n");
+            free(guest);
+            return 2;
+        }
+    }
     MylQbeResult result;
-    if (mylang_qbe_execute_providers(entry, context.max_steps, context.max_frames, stress, providers, &result)) {
+    if (execute_config_args(entry, context.max_steps, context.max_frames, stress, providers, NULL, guest_count, guest, &result)) {
+        free(guest);
         if (result.trace_count) {
             const MylQbeTrace *at=&result.trace[0];
             fprintf(stderr,"%s:%" PRIu64 ":%" PRIu64 ": error[%s]: %s\n",at->path,at->line,at->column,result.code,describe(result.code));
@@ -312,6 +353,7 @@ int mylang_qbe_run_providers(uint64_t (*entry)(void *), int argc, char **argv, c
         }
         return strncmp(result.code,"R_",2) ? 2:1;
     }
+    free(guest);
     /* The entry point's integer result becomes the process exit status, the way
        a Python or Go program returns an exit code, truncated to the low 8 bits
        (POSIX `waitpid` semantics: status = value & 0xFF). `--print-result` is now
@@ -332,7 +374,7 @@ int mylang_qbe_execute_gc(uint64_t (*entry)(void *), uint64_t steps, uint64_t fr
 int mylang_qbe_execute_providers(uint64_t (*entry)(void *), uint64_t steps, uint64_t frames, int stress, const struct MylangNativeProvidersTag *providers, MylQbeResult *result) {
     return mylang_qbe_execute_config(entry,steps,frames,stress,providers,NULL,result);
 }
-int mylang_qbe_execute_config(uint64_t (*entry)(void *), uint64_t steps, uint64_t frames, int stress, const struct MylangNativeProvidersTag *providers, void (*initialize)(void *), MylQbeResult *result) {
+static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64_t frames, int stress, const struct MylangNativeProvidersTag *providers, void (*initialize)(void *), int guest_argc, char **guest_argv, MylQbeResult *result) {
     *result=(MylQbeResult){0};
     if (!steps || !frames) { result->code="InvalidBudget";return 1; }
     if (frames>SIZE_MAX/sizeof(MylQbeActiveFrame)) { result->code="OutOfMemory";return 1; }
@@ -345,6 +387,7 @@ int mylang_qbe_execute_config(uint64_t (*entry)(void *), uint64_t steps, uint64_
     Context *context=calloc(1,sizeof *context);
     if (!context) { result->code="OutOfMemory";return 1; }
     context->max_steps=steps;context->max_frames=frames;context->providers=providers;
+    context->guest_argc=guest_argc;context->guest_argv=guest_argv;
     myl_native_heap_init(&context->heap, budget ? budget : SIZE_MAX);
     context->heap.stress = stress;
     context->frame_data = calloc((size_t)frames, sizeof(MylQbeActiveFrame));
@@ -366,7 +409,9 @@ int mylang_qbe_execute_config(uint64_t (*entry)(void *), uint64_t steps, uint64_
     free(context);
     return failed;
 }
-
+int mylang_qbe_execute_config(uint64_t (*entry)(void *), uint64_t steps, uint64_t frames, int stress, const struct MylangNativeProvidersTag *providers, void (*initialize)(void *), MylQbeResult *result) {
+    return execute_config_args(entry,steps,frames,stress,providers,initialize,0,NULL,result);
+}
 int mylang_qbe_run(uint64_t (*entry)(void *)) {
     return mylang_qbe_run_options(entry, 0, NULL);
 }

@@ -7,6 +7,7 @@ const options = @import("qbe_build_options.zig");
 const cache_api = @import("qbe_build_cache.zig");
 const outputs = @import("qbe_build_outputs.zig");
 const v = @import("qbe_build_value.zig");
+const module_syntax = @import("module_syntax.zig");
 /// Build errors include frontend transport, native tools and manifest validation.
 pub const Error = fs.Error || std.json.ParseError(std.json.Scanner) || outputs.Error ||
     @import("qbe_build_embed.zig").Error || cache_api.Error ||
@@ -100,8 +101,12 @@ fn build(context: fs.Context, parsed: options.Options) !u8 {
     // The frontend child reuses its persistent content-addressed cache by default.
     // An explicit `--cache-dir` keeps the frontend under that same root; the
     // `no_cache` sentinel disables reuse for this build.
+    // `build --run` follows `run`'s project detection: a source that opens as a
+    // module should load its imports rather than being treated as one unit.
+    var project = parsed.project;
+    if (!project and parsed.run) project = module_syntax.usesModuleSyntax(try context.read(try context.absolute(parsed.source)));
     var arguments: std.ArrayList([]const u8) = .empty;
-    try arguments.appendSlice(a, &.{ compiler, if (parsed.project) "emit-project-qbe" else "emit-qbe", try context.absolute(parsed.source) });
+    try arguments.appendSlice(a, &.{ compiler, if (project) "emit-project-qbe" else "emit-qbe", try context.absolute(parsed.source) });
     if (std.mem.eql(u8, parsed.cache, options.no_cache)) {
         try arguments.append(a, "--no-cache");
     } else if (!std.mem.eql(u8, parsed.cache, options.default_cache)) {

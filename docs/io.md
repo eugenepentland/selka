@@ -104,6 +104,29 @@ A runtime trap outranks the return and exits 1, because the program never
 reached its `return`. `run-project` and a native executable from `mylang build`
 follow the same rule.
 
+## Arguments
+
+A `main(args: list[str], ...)` entry point receives guest arguments as input
+data, never authority. `mylang run` and `build --run` reserve their own compiler
+and runtime options before `--` and pass every value after it in order:
+
+```console
+$ mylang run report.my -- --format=json "two words" ""
+```
+
+The list never contains a synthetic program name. An installed executable
+takes OS arguments after `argv[0]` the same way; use `--` to separate its
+runtime controls from flag-looking guest values. Every argument is validated as
+Unicode before guest execution, and invalid platform bytes fail with a stable
+host-boundary diagnostic on stderr.
+
+```mylang
+# doc: expect count 0
+def main(args: list[str]) -> int:
+    print("count", len(args))
+    return 0
+```
+
 ## Capabilities
 
 The entry point declares the authority it needs by parameter type. `Filesystem`,

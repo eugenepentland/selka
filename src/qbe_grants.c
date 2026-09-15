@@ -166,9 +166,15 @@ int mylang_qbe_run_grants(uint64_t (*entry)(void *), int argc, char **argv, cons
     if (!kept) { fputs("OutOfMemory: QBE runtime failure\n", stderr); return 2; }
     int count = 0;
     if (argc > 0) kept[count++] = argv[0];
+    int delimiter = 0;
     for (int i = 1; i < argc; ++i) {
+        if (!delimiter && !strcmp(argv[i], "--")) {
+            kept[count++] = argv[i];
+            delimiter = 1;
+            continue;
+        }
         int matched = 0;
-        if (!accept(&grants, argv[i], &matched) && matched) {
+        if (!delimiter && !accept(&grants, argv[i], &matched) && matched) {
             fprintf(stderr, "mylang: the option %s is not a usable capability grant\n", argv[i]);
             free(kept);
             return 2;

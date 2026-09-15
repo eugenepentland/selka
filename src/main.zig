@@ -43,6 +43,7 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "and enables --allow-read=DIR --allow-write=DIR (repeatable) --allow-clock --allow-random[=SEED] " ++
     "--allow-env[=NAME,...] --allow-all. Under --restrict an entry point requesting an ungranted " ++
     "capability exits 2 before execution; --allow-random=SEED pins the seed in either mode\n  " ++
+    "run/run-project: -- ends compiler options; every later value is a guest argument\n  " ++
     "run: --timings (native execution nanoseconds on stderr; excludes compilation and linking)\n  " ++
     "schema-project: --inputs=manifest.json (repeat for up to 16 modules)\n  " ++
     "discover-duplicates/discover-project-duplicates: --min-nodes=N " ++
@@ -79,6 +80,7 @@ pub fn main(init: std.process.Init) void {
 }
 
 const grants = @import("cli_grants.zig");
+const module_syntax = @import("module_syntax.zig");
 const native_run = @import("native_run.zig");
 const native_options = @import("qbe_build_options.zig");
 /// Execution budgets a run or an evaluation may narrow from the command line.
@@ -187,7 +189,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
     // module-only import/export) loads its reachable graph exactly as
     // `run-project` does. A plain single-file program skips this and keeps the
     // original one-unit path byte-for-byte.
-    if (parsed.command == .run and entryUsesModuleSyntax(bytes)) return listModules(init, parsed);
+    if (parsed.command == .run and module_syntax.usesModuleSyntax(bytes)) return listModules(init, parsed);
     if (parsed.command == .@"input-module") {
         var manifest = (try parseInputManifest(init, parsed.path, bytes)) orelse return 2;
         defer manifest.deinit();
@@ -426,7 +428,7 @@ const Parsed = struct {
     grants: grants.Config,
     budgets: Budgets,
     native: native_options.Options,
-    runtime: [24][]const u8,
+    runtime: [256][]const u8,
     runtime_count: usize,
     discovery: language.duplicates.Options,
     reporting: Reporting,
@@ -444,6 +446,16 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     const command = std.meta.stringToEnum(Command, args[0]) orelse return error.Usage;
     var parser: ArgumentParser = .{ .command = command };
     for (args[1..]) |arg| {
+        if (parser.after_delimiter) {
+            try parser.appendRuntime(arg);
+            continue;
+        }
+        if (std.mem.eql(u8, arg, "--")) {
+            if (!parser.executes()) return error.Usage;
+            try parser.appendRuntime("--");
+            parser.after_delimiter = true;
+            continue;
+        }
         if (std.mem.startsWith(u8, arg, "--diagnostics=")) {
             if (parser.reporting.diagnostics != null) return error.Usage;
             parser.reporting.diagnostics = std.meta.stringToEnum(diagnostic_output.Format, arg["--diagnostics=".len..]) orelse return error.Usage;
@@ -489,8 +501,9 @@ const ArgumentParser = struct {
     grants: grants.Config = .{},
     budgets: Budgets = .{},
     native: native_options.Options = .{ .source = "", .run = true },
-    runtime: [24][]const u8 = @splat(""),
+    runtime: [256][]const u8 = @splat(""),
     runtime_count: usize = 0,
+    after_delimiter: bool = false,
     saw_steps: bool = false,
     saw_frames: bool = false,
     gc_stress: bool = false,
@@ -579,6 +592,10 @@ const ArgumentParser = struct {
     }
     /// Keep one option for the built program, which parses grants and budgets itself.
     fn forward(self: *ArgumentParser, arg: []const u8) error{Usage}!void {
+        return self.appendRuntime(arg);
+    }
+    /// Append one raw child argument, including the `--` guest delimiter.
+    fn appendRuntime(self: *ArgumentParser, arg: []const u8) error{Usage}!void {
         if (self.runtime_count == self.runtime.len) return error.Usage;
         self.runtime[self.runtime_count] = arg;
         self.runtime_count += 1;
@@ -1075,31 +1092,6 @@ fn checkImportedInputs(init: Context, inputs: []const GeneratedInput, project: *
         return false;
     };
     return true;
-}
-
-/// Whether the entry source names a project rather than a plain single-file
-/// program. A project file opens with `module NAME`; a leading `import`/`export`
-/// directive is module-only too, so it routes to the loader for the clearer
-/// missing-header diagnostic. Anything else - including the assignments
-/// `module = 1`, `import = 2` and `export = 3` - keeps the single-file path.
-fn entryUsesModuleSyntax(bytes: []const u8) bool {
-    var cursor: usize = 0;
-    while (true) {
-        while (cursor < bytes.len and std.ascii.isWhitespace(bytes[cursor])) cursor += 1;
-        if (cursor >= bytes.len or bytes[cursor] != '#') break;
-        while (cursor < bytes.len and bytes[cursor] != '\n') cursor += 1;
-    }
-    const start = cursor;
-    while (cursor < bytes.len and (std.ascii.isAlphanumeric(bytes[cursor]) or bytes[cursor] == '_')) cursor += 1;
-    const keyword = bytes[start..cursor];
-    const directive = std.mem.eql(u8, keyword, "module") or std.mem.eql(u8, keyword, "import") or std.mem.eql(u8, keyword, "export");
-    if (!directive) return false;
-    while (cursor < bytes.len and (bytes[cursor] == ' ' or bytes[cursor] == '\t')) cursor += 1;
-    if (cursor >= bytes.len) return false;
-    // The directive must be followed by a name: `module units`, `import math`,
-    // `export count`. A newline or operator here means an ordinary expression.
-    const next = bytes[cursor];
-    return std.ascii.isAlphabetic(next) or next == '_';
 }
 
 /// Resolve the persistent frontend cache directory for this invocation.

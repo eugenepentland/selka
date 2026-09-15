@@ -41,7 +41,7 @@ pub const usage = "usage: mylang build <file.my> (-o <output> | --run) [--projec
     "  --qbe PATH --zig PATH --mode Debug|ReleaseFast (default ReleaseFast) --target amd64_sysv\n" ++
     "  " ++ cache_dir_flag ++ "DIR  --no-cache  --report\n" ++
     "  --max-memory BYTES  byte ceiling for --run (K/M/G suffixes; default 4G)\n" ++
-    "  --run instead of -o: execute temporarily; pass runtime options after --\n";
+    "  --run instead of -o: execute temporarily; pass guest arguments after --\n";
 /// Parse explicit build flags, rejecting unknown controls.
 pub fn parse(args: []const []const u8) Error!Options {
     var result: Options = .{ .link_arguments = args };
@@ -49,7 +49,10 @@ pub fn parse(args: []const []const u8) Error!Options {
     while (index < args.len) : (index += 1) {
         const argument = args[index];
         if (std.mem.eql(u8, argument, "--")) {
-            result.arguments = args[index + 1 ..];
+            // Keep the delimiter in the child argument vector so the runtime can
+            // distinguish guest arguments from its own options, including a guest
+            // value that happens to spell `--print-result` or `--max-steps`.
+            result.arguments = args[index..];
             break;
         }
         if (!std.mem.startsWith(u8, argument, "-")) {
@@ -167,8 +170,9 @@ test "build options reject missing values unsupported targets and incompatible p
 test "temporary native runs accept runtime options and reject persistent output" {
     const parsed = try parse(&.{ "main.my", "--run", "--", "--max-steps=12", "--gc-stress" });
     try std.testing.expect(parsed.run);
-    try std.testing.expectEqualStrings("--max-steps=12", parsed.arguments[0]);
-    try std.testing.expectEqual(@as(usize, 2), parsed.arguments.len);
+    try std.testing.expectEqualStrings("--", parsed.arguments[0]);
+    try std.testing.expectEqualStrings("--max-steps=12", parsed.arguments[1]);
+    try std.testing.expectEqual(@as(usize, 3), parsed.arguments.len);
     try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "--run", "-o", "out" }));
     try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "--run", "--library" }));
     try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--", "--gc-stress" }));

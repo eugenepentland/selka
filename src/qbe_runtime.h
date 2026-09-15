@@ -28,6 +28,8 @@ typedef struct {
     uint64_t native_stack_bytes, native_stack_limit;
     uintptr_t native_stack_bottom;
     void *frame_allocations;
+    int guest_argc;
+    char **guest_argv;
 } MylQbeContext;
 typedef struct {
     uint64_t value, steps;
@@ -44,6 +46,10 @@ void myl_qbe_enter_at(void *context, const MylQbeFunction *function);
 void myl_qbe_step_at(void *context, uint64_t position);
 void *myl_qbe_root_mark(void *context);
 void myl_qbe_root_restore(void *context, void *mark);
+/* Build a managed list[str] from the guest arguments the runtime filtered.
+ * `element` is the generated descriptor for the list's str element. Returns
+ * NULL after setting an allocation trap. */
+void *myl_qbe_argv_list(void *context, const myl_native_type *element);
 void myl_qbe_fail_slice(void *context);
 void myl_qbe_fail_slice_step(void *context);
 void myl_qbe_fail_text_bounds(void *context);

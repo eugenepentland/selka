@@ -32,6 +32,19 @@ pub fn supported(ty: typed.Type, records: []const typed.Record) bool {
     return (shape.ok_type == .unit or shape.ok_type == .i64) and shape.error_type == .i64;
 }
 
+/// Element type of an entry point's optional first `list[str]` parameter.
+/// Returns null when `ty` is any other shape.
+pub fn argvElement(ty: typed.Type, records: []const typed.Record) ?typed.Type {
+    if (!ty.isAggregate() or ty.recordIndex() >= records.len) return null;
+    const list = records[ty.recordIndex()];
+    if (!list.managed or list.collection.kind != .list) return null;
+    const element = list.shape.buffer orelse return null;
+    if (!element.isAggregate() or element.recordIndex() >= records.len) return null;
+    const text = records[element.recordIndex()];
+    if (!text.managed or text.collection.kind != .string) return null;
+    return element;
+}
+
 /// Append a checked wrapper, preserving the user function's signature for ordinary calls.
 pub fn adapt(allocator: std.mem.Allocator, program: *typed.Program) std.mem.Allocator.Error!void {
     const entry = program.functions[@backingInt(program.main)];

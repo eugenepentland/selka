@@ -35,15 +35,22 @@ pub fn entry(allocator: std.mem.Allocator, manifest: std.json.Value, provider: b
     const w = &buffer.writer;
     const name = v.text(v.get(manifest, "entry"));
     const parameters = v.array(v.get(manifest, "entry_parameters"));
+    const argv_element = v.text(v.get(manifest, "entry_argv_element"));
+    if (argv_element.len != 0 and parameters.len == 0) return error.UnsupportedNativeEntry;
     const uses_packed = parameters.len > 128;
     try w.writeAll("#include \"qbe_grants.h\"\n#include \"native_providers.h\"\n#include <stdlib.h>\nextern void myl_qbe_host_begin(void *);\n");
+    if (argv_element.len != 0) try w.print("extern const myl_native_type {s};\n", .{argv_element});
     try w.print("extern uint64_t {s}(void *", .{name});
     if (uses_packed) try w.writeAll(",uint64_t *") else for (parameters) |_| try w.writeAll(",uint64_t");
     try w.writeAll(");\nstatic uint64_t entry_run(void *ctx) {\n myl_qbe_host_begin(ctx); if(myl_qbe_failed(ctx))return 0;\n");
     if (uses_packed) try w.print("uint64_t *arguments=calloc({d},sizeof *arguments);if(!arguments){{myl_qbe_fail_allocation(ctx);return 0;}}\n", .{parameters.len});
     for (parameters, 0..) |parameter, index| {
         if (uses_packed) try w.print("arguments[{d}]=", .{index}) else try w.print("uint64_t arg{d}=", .{index});
-        try w.print("{s};\n", .{try grant(v.text(parameter))});
+        if (index == 0 and argv_element.len != 0) {
+            try w.print("(uint64_t)myl_qbe_argv_list(ctx,&{s});\n", .{argv_element});
+        } else {
+            try w.print("{s};\n", .{try grant(v.text(parameter))});
+        }
     }
     try w.writeAll("if(myl_qbe_failed(ctx)){");
     if (uses_packed) try w.writeAll("free(arguments);");
@@ -63,8 +70,18 @@ fn grant(name: []const u8) Error![]const u8 {
     return error.UnsupportedNativeEntry;
 }
 
+// spec-case: ARGV-1
 test "entry metadata rejects ordinary values as implicit capability grants" {
     try std.testing.expectError(error.UnsupportedNativeEntry, grant("i64"));
+}
+test "entry metadata builds the optional argv list before calling the guest" {
+    const parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator,
+        \\{"entry":"main_native","entry_parameters":["str_list"],"entry_argv_element":"myl_t_str","functions":[{"symbol":"main_native","name":"main","locations":[]}]}
+    , .{});
+    defer parsed.deinit();
+    const generated = try entry(std.testing.allocator, parsed.value, false);
+    defer std.testing.allocator.free(generated);
+    try std.testing.expect(std.mem.indexOf(u8, generated, "myl_qbe_argv_list(ctx,&myl_t_str)") != null);
 }
 test "entry and location metadata retain provider setup and byte-escaped source paths" {
     const parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator,

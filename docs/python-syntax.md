@@ -275,17 +275,18 @@ plus `read_text`, `write_text`, `exists`, `listdir`, `mkdir` and `remove`.
 
 Use `mylang run <entry.my>` for both standalone files and module entries. The
 command detects `module`, `import`, and `export` headers and loads the reachable
-project; `run-project` remains an explicit alias. Compiler and runtime options
-belong before a separating `--` when the command provides one. In Wave 1 there is
-no general application-argument parameter yet, so arguments after `--` are native
-runtime options such as `--restrict`, not a guest `argv` list.
+project; `run-project` remains an explicit alias. An entry point may declare
+`args: list[str]` first. Compiler and runtime options belong before a separating
+`--`; every value after it is a guest argument, including option-looking values.
 
 `mylang build <entry.my> --run` and an executable produced with `-o` use the same
-native runtime and integer exit-status rule. A module entry still requires
-`mylang build <entry.my> --project ...`; project auto-detection currently belongs
-to `run`. `mylang test <entry.my>` also builds native children, but reports the
-test runner's aggregate status rather than treating a test function's value as a
-process exit status. Guest tests receive no ambient capabilities.
+native runtime and integer exit-status rule. `build --run` auto-detects a module
+entry like `run`; a persistent module build still requires `--project`. An
+installed executable receives OS arguments after `argv[0]` as guest data, with a
+`--` separating its own runtime controls from the list. `mylang test <entry.my>`
+also builds native children, but reports the test runner's aggregate status rather
+than treating a test function's value as a process exit status. Guest tests
+receive no ambient capabilities.
 
 Capability denial currently has two diagnostic renderings: `run` catches a
 missing restricted grant before execution, while `build --run` and installed

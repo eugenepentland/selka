@@ -60,7 +60,9 @@ fn validateEntry(program: Program) Error!void {
     if (main.policy.owner != null) return error.InternalError;
     if (main.policy.restricted) return error.InternalError;
     var entry_capabilities: u8 = 0;
-    for (main.scope.locals[0..main.signature.parameter_count]) |parameter| {
+    var first_capability: usize = 0;
+    if (main.signature.parameter_count != 0 and @import("entry_adapter.zig").argvElement(main.scope.locals[0].ty, program.records) != null) first_capability = 1;
+    for (main.scope.locals[first_capability..main.signature.parameter_count]) |parameter| {
         const index = parameter.ty.capabilityIndex() orelse return error.InternalError;
         const bit = @as(u8, 1) << index;
         if (entry_capabilities & bit != 0) return error.InternalError;

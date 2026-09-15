@@ -67,6 +67,7 @@ const unsupported_list = "operation is not supported by lists";
 const method_arity = "collection method argument count differs from its signature";
 
 const ast = @import("ast.zig");
+const entry_adapter = @import("entry_adapter.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
@@ -3388,6 +3389,15 @@ fn checkGenericContracts(src: source.Source, program: ast.Program, sink: *diagno
 pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!typed.Program {
     return checkCached(allocator, src, program, sink, module_names, null);
 }
+/// Return the index of the first capability parameter after an optional argv list.
+fn entryParameterStart(parameters: []const ast.Parameter, checker: *Checker, sink: *diagnostic.Sink) Error!usize {
+    if (parameters.len == 0) return 0;
+    const first_ty = try checker.ty(parameters[0].ty);
+    if (entry_adapter.argvElement(first_ty, checker.catalog.records) != null) return 1;
+    if (first_ty.capabilityIndex() != null) return 0;
+    return sink.fail("E_MAIN", parameters[0].ty, "entry parameters must be `args: list[str]` followed by capabilities");
+}
+
 /// Reuse supported checked bodies, then rerun all cross-function validation passes.
 pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names, cache: ?*@import("semantic_cache.zig").Cache) Error!typed.Program {
     defer normalizeDiagnostics(sink);
@@ -3448,14 +3458,17 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     const entry = program.functions[@backingInt(main_declaration)];
     const main = ordinary_ids[@backingInt(main_declaration)] orelse return sink.fail("E_MAIN", entry.name, "main cannot have type parameters");
     if (entry.policy.host != null or entry.policy.constant) return sink.fail("E_MAIN", entry.name, "main must have a guest function body");
+    // An entry point may take `args: list[str]` first, followed by at most one
+    // capability of each kind. The list is input data, never authority.
     var entry_capabilities: u8 = 0;
-    for (entry.signature.parameters) |parameter| {
-        const index = (try checker.ty(parameter.ty)).capabilityIndex() orelse return sink.fail("E_MAIN", parameter.ty, "entry parameters must be capabilities");
+    const first_capability = try entryParameterStart(entry.signature.parameters, &checker, sink);
+    for (entry.signature.parameters[first_capability..]) |parameter| {
+        const index = (try checker.ty(parameter.ty)).capabilityIndex() orelse return sink.fail("E_MAIN", parameter.ty, "entry parameters must be `args: list[str]` followed by capabilities");
         const bit = @as(u8, 1) << index;
         if (entry_capabilities & bit != 0) return sink.fail("E_MAIN", parameter.name, "entry requests at most one value parameter of each capability kind");
         entry_capabilities |= bit;
     }
-    if (!@import("entry_adapter.zig").supported(try checker.ty(entry.signature.return_type), checker.catalog.records)) return sink.fail("E_TYPE", entry.signature.return_type, "main must return int, None, or Result<None/int,int>");
+    if (!entry_adapter.supported(try checker.ty(entry.signature.return_type), checker.catalog.records)) return sink.fail("E_TYPE", entry.signature.return_type, "main must return int, None, or Result<None/int,int>");
     var checked_functions: std.ArrayList(typed.Function) = .empty;
     var i: usize = 0;
     while (i < checker.instance_keys.items.len and (!contracts_failed or i < checker.ordinary_count)) : (i += 1) {
@@ -3495,7 +3508,7 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
         .main = main,
         .records = checker.catalog.records,
     };
-    try @import("entry_adapter.zig").adapt(allocator, &checked);
+    try entry_adapter.adapt(allocator, &checked);
     try @import("effects.zig").check(allocator, checked, sink);
     try @import("domain_codecs.zig").check(allocator, src, program.types.domains, checker.catalog, .{ .items = functions, .names = executable_names }, sink);
     try warnBindings(allocator, functions, sink);
