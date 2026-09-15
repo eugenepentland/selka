@@ -1,0 +1,1211 @@
+{
+  "date": "2026-09-15",
+  "prepared_by": "W0 baseline verification agent",
+  "branch": "codex/velocity-w0-verify",
+  "base_commit": "66e96cebd4f6894757d13d79ea23227804e5b4de",
+  "base_commit_requested": "66e96ce",
+  "ledger_baseline_commit": "9ce142e98cb22e684622ed1d5678071d6944206e",
+  "toolchain": {
+    "zig_version": "0.17.0-dev.1683+5ceec001b",
+    "zig_path": "/home/epentland/.local/bin/zig",
+    "pinned_zig_path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "compiler_sha256": "289f0d40687db20e3902079e4b26fbbb4d3dc8feb201ffb6a2d0d19c5e14ac39",
+    "compiler_identity_features": "fff3e012da1d2ae9e5a60c916245f2479ace96d82d4ba743c21a3733f5b965f4",
+    "historical_compiler_identity": "c54d594e5ad606891c187bfaade3a9bd86270e4c62cc367361b1b74cf2d76dbf",
+    "frozen_w0_ledger_compiler_identity": "fff3e012da1d2ae9e5a60c916245f2479ace96d82d4ba743c21a3733f5b965f4",
+    "compiler_identity_matches_ledger": true,
+    "qbe_binary_sha256": "d487fef310973586a38c35fcbd24d3c4a1e0787b702cdcdf8b9cc3f718da4f9b",
+    "qbe_version": "1.3",
+    "qbe_vendor_is_submodule": false,
+    "qbe_vendor_git_resolves_to": "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify",
+    "qbe_vendor_tree_sha256": "1129930aab91f9e9282189e1d517d6483b92669c02e773b2e765a0634717bd04",
+    "feature_manifest_sha256": "0f5a0813e7af41312477d654eaaa5f9300ee4245e1199ed9a2b0327ceff1c34a",
+    "os": "Ubuntu 26.04 LTS",
+    "kernel": "Linux 7.0.0-31-generic",
+    "arch": "x86_64",
+    "libc": "ldd (Ubuntu GLIBC 2.43-2ubuntu2.4) 2.43"
+  },
+  "gates": [
+    {
+      "command": "zig build",
+      "exit": 0,
+      "result": "PASS",
+      "counts": "no tests; produced zig-out/bin/{mylang,qbe,board-trial,mylang-io,schematic-svg}",
+      "notes": "Guardian ran diff-scoped vs a9e29d4: 88/88 checks passed. Report-only findings: 4 file-size, 88 line-length. Not a whole-tree Guardian run."
+    },
+    {
+      "command": "zig build test --summary all",
+      "exit": 1,
+      "result": "FAIL",
+      "counts": "Build Summary: 37/39 steps succeeded (1 failed); 1054/1054 Zig tests passed (11+7+13+80+943).",
+      "notes": "Failed step is `run exe mylang failure`: `./zig-out/bin/mylang doctest .` exits 1 because docs/audits/development-velocity-proposals-2026-09-15.md:141 has a fenced block tagged `text` that looks like guest source (1 mis-tagged block). All Zig test roots passed."
+    },
+    {
+      "command": "zig build fmt-check",
+      "exit": 0,
+      "result": "PASS",
+      "counts": "formatting check only (no test count)",
+      "notes": "Clean exit, no output."
+    },
+    {
+      "command": "zig build test-doc-coverage",
+      "exit": 0,
+      "result": "PASS",
+      "counts": "110 documented features (80 language, 30 tooling) across 41 pages; 10 standard modules and 140 exports; 0 failures.",
+      "notes": ""
+    },
+    {
+      "command": "zig build test-docs",
+      "exit": 1,
+      "result": "FAIL",
+      "counts": "205 files scanned, 409 blocks found, 112 run, 21 checked, 10 skipped, 1 mis-tagged, 0 failed.",
+      "notes": "The single mis-tagged block is docs/audits/development-velocity-proposals-2026-09-15.md:141 (historical audit file, left unchanged). The gate treats a mis-tag as failure."
+    },
+    {
+      "command": "zig build test-qbe",
+      "exit": 0,
+      "result": "PASS",
+      "counts": "104/104 tests passed: test-c-ffi 23, test-native-tests 43, test-qbe-build 37, test-golden 1. Golden parity checked 231 (source 175, fixtures 56), skipped 373, mismatches 0.",
+      "notes": "test-native-tests ran here as a dependency and passed 43/43."
+    },
+    {
+      "command": "zig build test-native-tests",
+      "exit": 0,
+      "result": "PASS",
+      "counts": "0 tests re-executed in this invocation (build cache satisfied by the immediately preceding `zig build test-qbe`); that run selected and passed 43/43 native-test tests.",
+      "notes": "The command wrote no per-test output because the run step was cached. Counts above are the underlying step's counts from the preceding invocation."
+    },
+    {
+      "command": "zig build test -Doptimize=ReleaseFast --summary all",
+      "exit": 1,
+      "result": "FAIL",
+      "counts": "Build Summary: 36/39 steps succeeded (2 failed); 1052/1054 tests passed (2 failed).",
+      "notes": "Two deterministic ReleaseFast unit failures: (1) persist_codec.test.codec rejects truncated and malformed bytes: expected error.InvalidEncoding, found .{ .b = void }; (2) incremental_test.test.materialize, dupModule, dupDeclaration, dupNominal, dupSpecialization and dupFragment release partial copies: expected 41, found 1 (checkAllAllocationFailures). The doctest step also exited 1 on the same mis-tagged block, and one ReleaseFast test compilation reported peak 2.31 GB vs the declared 2.15 GB bound (`compile test fast native failure`)."
+    },
+    {
+      "command": "zig build test-units -Doptimize=ReleaseFast --summary all (supplementary)",
+      "exit": 1,
+      "result": "FAIL (confirmatory)",
+      "counts": "Build Summary: 20/22 steps succeeded (1 failed); 941/943 tests passed (2 failed).",
+      "notes": "Targeted re-run confirms the two ReleaseFast unit failures are deterministic and not concurrency artifacts."
+    }
+  ],
+  "probe_counts": {
+    "total": 42,
+    "verified": 34,
+    "still_open": 8,
+    "already_fixed": 0,
+    "unexpected": 0
+  },
+  "probes": [
+    {
+      "index": 0,
+      "name": "features",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "Feature manifest is byte-for-byte identical to the audit; only `compiler_sha256` differs (rebuilt baseline identity `fff3e012...`).",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "--features"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "--features"
+      ]
+    },
+    {
+      "index": 1,
+      "name": "unannotated_output",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "Private helper may still print under inferred effects. E2 adds a distinct exported-helper rejection; this private case is expected to stay valid.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/unannotated_output/main.my",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check",
+        "/tmp/w0-evidence/run/unannotated_output/main.my",
+        "--no-cache"
+      ]
+    },
+    {
+      "index": 2,
+      "name": "empty_effects_reject_output",
+      "original_returncode": 1,
+      "new_returncode": 1,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "Rejection preserved with the same `E_EFFECT_BOUND` location.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/empty_effects_reject_output/main.my",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check",
+        "/tmp/w0-evidence/run/empty_effects_reject_output/main.my",
+        "--no-cache"
+      ]
+    },
+    {
+      "index": 3,
+      "name": "empty_effects_mutate_argument",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "still-open",
+      "target_package": "M2/M3",
+      "note": "Native run still exits 0 and the caller observes values[0] == 42; `effects()` still permits writes through a shared list.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "run",
+        "/tmp/mylang-proposals-audit-7usu4hu1/empty_effects_mutate_argument/main.my",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir=/tmp/mylang-proposals-audit-7usu4hu1/native-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "run",
+        "/tmp/w0-evidence/run/empty_effects_mutate_argument/main.my",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir=/tmp/w0-evidence/run/native-cache"
+      ]
+    },
+    {
+      "index": 4,
+      "name": "empty_effects_reject_append",
+      "original_returncode": 1,
+      "new_returncode": 1,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "Rejection preserved; append still contributes `managed_allocation`.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/empty_effects_reject_append/main.my",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check",
+        "/tmp/w0-evidence/run/empty_effects_reject_append/main.my",
+        "--no-cache"
+      ]
+    },
+    {
+      "index": 5,
+      "name": "record_nested_alias",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "still-open",
+      "target_package": "M2/M3",
+      "note": "Native run still exits 0; a write through a copied record's shared list is still invisible in the effect signature.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "run",
+        "/tmp/mylang-proposals-audit-7usu4hu1/record_nested_alias/main.my",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir=/tmp/mylang-proposals-audit-7usu4hu1/native-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "run",
+        "/tmp/w0-evidence/run/record_nested_alias/main.my",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir=/tmp/w0-evidence/run/native-cache"
+      ]
+    },
+    {
+      "index": 6,
+      "name": "missing_parameter_type",
+      "original_returncode": 1,
+      "new_returncode": 1,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/missing_parameter_type/main.my",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check",
+        "/tmp/w0-evidence/run/missing_parameter_type/main.my",
+        "--no-cache"
+      ]
+    },
+    {
+      "index": 7,
+      "name": "omitted_return_is_unit",
+      "original_returncode": 1,
+      "new_returncode": 1,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/omitted_return_is_unit/main.my",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check",
+        "/tmp/w0-evidence/run/omitted_return_is_unit/main.my",
+        "--no-cache"
+      ]
+    },
+    {
+      "index": 8,
+      "name": "int_float_conversion",
+      "original_returncode": 1,
+      "new_returncode": 1,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/int_float_conversion/main.my",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check",
+        "/tmp/w0-evidence/run/int_float_conversion/main.my",
+        "--no-cache"
+      ]
+    },
+    {
+      "index": 9,
+      "name": "option_direct_field",
+      "original_returncode": 1,
+      "new_returncode": 1,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/option_direct_field/main.my",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check",
+        "/tmp/w0-evidence/run/option_direct_field/main.my",
+        "--no-cache"
+      ]
+    },
+    {
+      "index": 10,
+      "name": "unhandled_result",
+      "original_returncode": 1,
+      "new_returncode": 1,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/unhandled_result/main.my",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check",
+        "/tmp/w0-evidence/run/unhandled_result/main.my",
+        "--no-cache"
+      ]
+    },
+    {
+      "index": 11,
+      "name": "explicit_result_discard",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/explicit_result_discard/main.my",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check",
+        "/tmp/w0-evidence/run/explicit_result_discard/main.my",
+        "--no-cache"
+      ]
+    },
+    {
+      "index": 12,
+      "name": "exhaustive_union_base",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/exhaustive_union_base/main.my",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check",
+        "/tmp/w0-evidence/run/exhaustive_union_base/main.my",
+        "--no-cache"
+      ]
+    },
+    {
+      "index": 13,
+      "name": "exhaustive_union_added",
+      "original_returncode": 1,
+      "new_returncode": 1,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/exhaustive_union_added/main.my",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check",
+        "/tmp/w0-evidence/run/exhaustive_union_added/main.my",
+        "--no-cache"
+      ]
+    },
+    {
+      "index": 14,
+      "name": "wildcard_union_added",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/wildcard_union_added/main.my",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check",
+        "/tmp/w0-evidence/run/wildcard_union_added/main.my",
+        "--no-cache"
+      ]
+    },
+    {
+      "index": 15,
+      "name": "aliases_are_transparent",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/aliases_are_transparent/main.my",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check",
+        "/tmp/w0-evidence/run/aliases_are_transparent/main.my",
+        "--no-cache"
+      ]
+    },
+    {
+      "index": 16,
+      "name": "domains_are_distinct",
+      "original_returncode": 1,
+      "new_returncode": 1,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/domains_are_distinct/main.my",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check",
+        "/tmp/w0-evidence/run/domains_are_distinct/main.my",
+        "--no-cache"
+      ]
+    },
+    {
+      "index": 17,
+      "name": "callback_effect_subset",
+      "original_returncode": 1,
+      "new_returncode": 1,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "still-open",
+      "target_package": "E1",
+      "note": "Still rejected: a `effects()` implementation does not satisfy a destination declaring `effects(output)` (exact-mask relation).",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/callback_effect_subset/main.my",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check",
+        "/tmp/w0-evidence/run/callback_effect_subset/main.my",
+        "--no-cache"
+      ]
+    },
+    {
+      "index": 18,
+      "name": "formatter_whitespace",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "still-open",
+      "target_package": "F1",
+      "note": "`fmt` still returns the noncanonical input bytes unchanged (`value=  40+2`).",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "fmt",
+        "/tmp/mylang-proposals-audit-7usu4hu1/formatter_whitespace/main.my"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "fmt",
+        "/tmp/w0-evidence/run/formatter_whitespace/main.my"
+      ]
+    },
+    {
+      "index": 19,
+      "name": "formatter_check_whitespace",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "still-open",
+      "target_package": "F1",
+      "note": "`fmt --check` still exits 0 on noncanonical bytes, so it does not detect differences.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "fmt",
+        "/tmp/mylang-proposals-audit-7usu4hu1/formatter_check_whitespace/main.my",
+        "--check"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "fmt",
+        "/tmp/w0-evidence/run/formatter_check_whitespace/main.my",
+        "--check"
+      ]
+    },
+    {
+      "index": 20,
+      "name": "trap_metadata",
+      "original_returncode": 1,
+      "new_returncode": 1,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "still-open",
+      "target_package": "D1",
+      "note": "Bounds trap status, primary location and call stack are preserved, but no index/length values and no structured `trap_detail` are emitted.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "run",
+        "/tmp/mylang-proposals-audit-7usu4hu1/trap_metadata/main.my",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir=/tmp/mylang-proposals-audit-7usu4hu1/native-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "run",
+        "/tmp/w0-evidence/run/trap_metadata/main.my",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir=/tmp/w0-evidence/run/native-cache"
+      ]
+    },
+    {
+      "index": 21,
+      "name": "ordinary_check_ignores_policy",
+      "original_returncode": 0,
+      "new_returncode": 1,
+      "variant_returncode": 0,
+      "behavior_matches_record": true,
+      "comparison": "intended-fixture (recorded sources are self-inconsistent)",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "Recorded `sources` are self-inconsistent: the recorded cyclic helper makes the recorded command exit 1 (`E_IMPORT_CYCLE`), not the recorded 0. With the audit's intended valid two-module fixture the command exits 0 with no output, matching the record; the adjacent `policy.json` has no magic effect.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check-project",
+        "/tmp/mylang-proposals-audit-7usu4hu1/policy/main.my",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check-project",
+        "/tmp/w0-evidence/run/policy/main.my",
+        "--no-cache"
+      ]
+    },
+    {
+      "index": 22,
+      "name": "explicit_policy_enforced",
+      "original_returncode": 3,
+      "new_returncode": 1,
+      "variant_returncode": 3,
+      "behavior_matches_record": true,
+      "comparison": "intended-fixture (recorded sources are self-inconsistent)",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "Same cyclic-source inconsistency. With the valid fixture and the exact recovered `policy.json` (sha256 `451b4a50...`), exit 3 and stdout are byte-identical to the record, including `config-sha256`.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check-policy",
+        "/tmp/mylang-proposals-audit-7usu4hu1/policy/main.my",
+        "--policy=/tmp/mylang-proposals-audit-7usu4hu1/policy/policy.json",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check-policy",
+        "/tmp/w0-evidence/run/policy/main.my",
+        "--policy=/tmp/w0-evidence/run/policy/policy.json",
+        "--no-cache"
+      ]
+    },
+    {
+      "index": 23,
+      "name": "cycle_rejected",
+      "original_returncode": 1,
+      "new_returncode": 1,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "Recorded cyclic fixture reproduced exactly: exit 1, `E_IMPORT_CYCLE` with the same spans.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check-project",
+        "/tmp/mylang-proposals-audit-7usu4hu1/policy/main.my",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check-project",
+        "/tmp/w0-evidence/run/policy/main.my",
+        "--no-cache"
+      ]
+    },
+    {
+      "index": 24,
+      "name": "default_257_module_limit",
+      "original_returncode": 1,
+      "new_returncode": 1,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "Regenerated 257-file chain; exit 1, `E_MODULE_LIMIT` at `m255.my:2:8` exactly as recorded.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check-project",
+        "/tmp/mylang-proposals-audit-7usu4hu1/module-limit/m0.my",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check-project",
+        "/tmp/w0-evidence/run/module-limit/m0.my",
+        "--no-cache"
+      ]
+    },
+    {
+      "index": 25,
+      "name": "selective_tests_cold",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "Both tests executed and passed. Receipt keys differ because the key includes compiler identity; statuses, dependency ids and step counts are identical.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "test",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/main.my",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "test",
+        "/tmp/w0-evidence/run/tests/main.my",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/tmp/w0-evidence/run/tests/cache"
+      ]
+    },
+    {
+      "index": 26,
+      "name": "selective_tests_warm",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "Both cached, 0 executed. Same as record (keys differ with compiler identity).",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "test",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/main.my",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "test",
+        "/tmp/w0-evidence/run/tests/main.my",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/tmp/w0-evidence/run/tests/cache"
+      ]
+    },
+    {
+      "index": 27,
+      "name": "selective_tests_helper_edit",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "One test reran/passed, one stayed cached; same as record (keys differ with compiler identity).",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "test",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/main.my",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "test",
+        "/tmp/w0-evidence/run/tests/main.my",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/tmp/w0-evidence/run/tests/cache"
+      ]
+    },
+    {
+      "index": 28,
+      "name": "selective_tests_unused_edit",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "Both cached; same as record (keys differ with compiler identity).",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "test",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/main.my",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "test",
+        "/tmp/w0-evidence/run/tests/main.my",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/tmp/w0-evidence/run/tests/cache"
+      ]
+    },
+    {
+      "index": 29,
+      "name": "selective_tests_force",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "Both force-executed and passed; same as record (keys differ with compiler identity).",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "test",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/main.my",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/cache",
+        "--force"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "test",
+        "/tmp/w0-evidence/run/tests/main.my",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/tmp/w0-evidence/run/tests/cache",
+        "--force"
+      ]
+    },
+    {
+      "index": 30,
+      "name": "selective_tests_invalid_edit",
+      "original_returncode": 2,
+      "new_returncode": 2,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "Setup rejected with exit 2 and identical `E_TYPE` diagnostic; no cached success reported.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "test",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/main.my",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "test",
+        "/tmp/w0-evidence/run/tests/main.my",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/tmp/w0-evidence/run/tests/cache"
+      ]
+    },
+    {
+      "index": 31,
+      "name": "session_ordinary",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "Interactive replies match on statuses and every counter; only `retained_bytes` differ. The edit rechecks 1 body and reuses 2.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check-session",
+        "/tmp/mylang-proposals-audit-7usu4hu1/session_ordinary/main.my"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check-session",
+        "/tmp/w0-evidence/run/session_ordinary/main.my"
+      ]
+    },
+    {
+      "index": 32,
+      "name": "session_generic",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "still-open",
+      "target_package": "C1/C3",
+      "note": "The edit rechecks all ordinary bodies with 0 reused and 2 bypassed; an unused generic still disables the ordinary body-cache path.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check-session",
+        "/tmp/mylang-proposals-audit-7usu4hu1/session_generic/main.my"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check-session",
+        "/tmp/w0-evidence/run/session_generic/main.my"
+      ]
+    },
+    {
+      "index": 33,
+      "name": "extern_missing_required_host_annotation",
+      "original_returncode": 1,
+      "new_returncode": 1,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "Rejection preserved with the same `E_HOST_EFFECTS` diagnostic.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/noio-host/main.my",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check",
+        "/tmp/w0-evidence/run/noio-host/main.my",
+        "--no-cache"
+      ]
+    },
+    {
+      "index": 34,
+      "name": "custom_effect_name",
+      "original_returncode": 1,
+      "new_returncode": 1,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "Unknown effect `db` still rejects with the same `E_UNKNOWN_EFFECT` list.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/custom-effect/main.my",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check",
+        "/tmp/w0-evidence/run/custom-effect/main.my",
+        "--no-cache"
+      ]
+    },
+    {
+      "index": 35,
+      "name": "named_constraint_production",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "Named-constraint production example passes at baseline `9ce142e`, which includes the named-constraint fixes.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "run",
+        "/tmp/mylang-proposals-audit-7usu4hu1/named/main.my",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir=/tmp/mylang-proposals-audit-7usu4hu1/native-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "run",
+        "/tmp/w0-evidence/run/named/main.my",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir=/tmp/w0-evidence/run/native-cache"
+      ]
+    },
+    {
+      "index": 36,
+      "name": "named_constraint_fake_test",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "Fake-provider test passes. Receipt key differs with compiler identity; dependencies and step count identical.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "test",
+        "/tmp/mylang-proposals-audit-7usu4hu1/named/fake_tests.my",
+        "--json",
+        "--force",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/tmp/mylang-proposals-audit-7usu4hu1/named-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "test",
+        "/tmp/w0-evidence/run/named/fake_tests.my",
+        "--json",
+        "--force",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/tmp/w0-evidence/run/named-cache"
+      ]
+    },
+    {
+      "index": 37,
+      "name": "one_shot_cold",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "Cold report counters and `stages` are byte-identical to the record.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check-project",
+        "/tmp/mylang-proposals-audit-7usu4hu1/oneshot/main.my",
+        "--report",
+        "--cache-dir=/tmp/mylang-proposals-audit-7usu4hu1/oneshot/cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check-project",
+        "/tmp/w0-evidence/run/oneshot/main.my",
+        "--report",
+        "--cache-dir=/tmp/w0-evidence/run/oneshot/cache"
+      ]
+    },
+    {
+      "index": 38,
+      "name": "one_shot_warm",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "Verdict hit count 1 and all `stages` are byte-identical to the record.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check-project",
+        "/tmp/mylang-proposals-audit-7usu4hu1/oneshot/main.my",
+        "--report",
+        "--cache-dir=/tmp/mylang-proposals-audit-7usu4hu1/oneshot/cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check-project",
+        "/tmp/w0-evidence/run/oneshot/main.my",
+        "--report",
+        "--cache-dir=/tmp/w0-evidence/run/oneshot/cache"
+      ]
+    },
+    {
+      "index": 39,
+      "name": "one_shot_edit",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "still-open",
+      "target_package": "C2",
+      "note": "The edited one-shot project misses the verdict and rechecks bodies (`check_body` miss); checked bodies are still not persisted across processes.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check-project",
+        "/tmp/mylang-proposals-audit-7usu4hu1/oneshot/main.my",
+        "--report",
+        "--cache-dir=/tmp/mylang-proposals-audit-7usu4hu1/oneshot/cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check-project",
+        "/tmp/w0-evidence/run/oneshot/main.my",
+        "--report",
+        "--cache-dir=/tmp/w0-evidence/run/oneshot/cache"
+      ]
+    },
+    {
+      "index": 40,
+      "name": "one_shot_invalid",
+      "original_returncode": 1,
+      "new_returncode": 1,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "Exit 1 with the same `E_TYPE` diagnostic and no verdict stored; identical to record.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check-project",
+        "/tmp/mylang-proposals-audit-7usu4hu1/oneshot/main.my",
+        "--report",
+        "--cache-dir=/tmp/mylang-proposals-audit-7usu4hu1/oneshot/cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check-project",
+        "/tmp/w0-evidence/run/oneshot/main.my",
+        "--report",
+        "--cache-dir=/tmp/w0-evidence/run/oneshot/cache"
+      ]
+    },
+    {
+      "index": 41,
+      "name": "noio_allows_host",
+      "original_returncode": 0,
+      "new_returncode": 0,
+      "variant_returncode": null,
+      "behavior_matches_record": true,
+      "comparison": "verbatim",
+      "disposition": "verified",
+      "target_package": null,
+      "note": "`noio` still accepts an explicitly declared `effects(host)` call; the documented narrow meaning is preserved.",
+      "original_command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/noio-host/main.my",
+        "--no-cache"
+      ],
+      "adapted_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/velocity-w0-verify/zig-out/bin/mylang",
+        "check",
+        "/tmp/w0-evidence/run/noio-host/main.my",
+        "--no-cache"
+      ]
+    }
+  ],
+  "guardian_commit_hook": {
+    "scope": "whole-tree",
+    "checks_passed": 88,
+    "report_only": {
+      "file_size": 4,
+      "function_length": 12,
+      "line_length": 2937
+    }
+  },
+  "other_findings": [
+    "Doc example gate fails on historical audit file docs/audits/development-velocity-proposals-2026-09-15.md:141 (fenced block tagged `text` looks like guest source) in Debug and ReleaseFast.",
+    "ReleaseFast has two deterministic unit-test failures not present in Debug: persist_codec truncated/malformed bytes, and incremental_test partial-copy release (expected 41, found 1).",
+    "One ReleaseFast test compilation reported peak RSS 2.31 GB vs the 2.15 GB declared bound; targeted unit rerun did not reproduce it.",
+    "zig build test-native-tests was cache-satisfied; the underlying step passed 43/43 immediately before as a dependency of test-qbe."
+  ],
+  "not_reproduced": [
+    {
+      "probe": "ordinary_check_ignores_policy",
+      "reason": "Recorded sources contain an import cycle (helper imports main) that exits 1, contradicting the recorded rc 0. Reproduced with the audit's intended non-cyclic fixture plus adjacent policy.json: exit 0, no output."
+    },
+    {
+      "probe": "explicit_policy_enforced",
+      "reason": "Same cyclic-source inconsistency. Reproduced with the intended non-cyclic fixture and the exact recovered policy.json (sha256 451b4a50...): exit 3 and byte-identical stdout including config-sha256."
+    }
+  ],
+  "limitations": [
+    "Historical compiler binary c54d594e... was not re-run.",
+    "No large-project scale/latency/memory benchmark.",
+    "Guardian runs inside zig build were diff-scoped (88 checks); the evidence commit hook ran a whole-tree Guardian gate (88/88 passed).",
+    "vendor/qbe has no independent git metadata; identity is .qbeversion plus content/binary hashes.",
+    "Raw gate logs and fixture run tree are under /tmp/w0-evidence and are not committed."
+  ],
+  "guardian_feedback": "docs/audits/velocity-implementation/guardian-w0-verify.md"
+}
