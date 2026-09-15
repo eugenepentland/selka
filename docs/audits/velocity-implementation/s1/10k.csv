@@ -1,0 +1,322 @@
+workload,family,target_lines,state,sample,wall_ms,peak_rss_kb,exit,timed_out,parsed_performed,parsed_reused,checked_performed,checked_reused,specializations_performed,lowered_performed,emitted_performed,links_performed,tests_performed,tests_cached,tests_executed,reused_results,bypassed
+ordinary-10k,ordinary,10000,cold,0,386.079,57312,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,cold,1,390.575,57216,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,cold,2,388.658,57244,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,cold,3,386.106,57184,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,cold,4,384.571,57216,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,cold,5,389.642,57020,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,cold,6,396.226,57028,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,cold,7,391.307,56828,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,cold,8,385.711,57180,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,cold,9,388.439,57280,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,cold,10,393.554,57280,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,cold,11,388.390,57216,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,cold,12,391.868,57248,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,cold,13,391.976,57248,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,cold,14,398.353,57212,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,cold,15,392.993,57344,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,cold,16,398.904,57312,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,cold,17,401.105,57188,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,cold,18,396.121,57084,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,cold,19,391.876,57244,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,unchanged,0,96.645,30944,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,1,103.881,30944,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,2,100.684,30944,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,3,105.124,30944,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,4,96.576,30944,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,5,103.890,30756,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,6,99.111,30948,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,7,98.431,30948,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,8,99.119,30948,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,9,99.022,30948,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,10,98.710,30948,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,11,102.563,30948,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,12,103.597,30948,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,13,103.439,30948,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,14,105.545,30948,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,15,102.410,30948,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,16,98.013,30948,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,17,110.932,30948,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,18,100.969,30948,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,19,99.875,30768,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,no_cache,0,283.435,56892,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,1,293.014,57184,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,2,288.257,57184,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,3,277.223,57116,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,4,289.066,57116,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,5,280.663,57116,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,6,287.361,57184,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,7,282.550,57116,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,8,282.617,57216,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,9,290.973,57060,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,10,290.056,57060,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,11,291.635,57060,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,12,283.320,57216,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,13,280.830,57024,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,14,285.016,57216,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,15,278.273,57052,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,16,287.988,57184,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,17,293.950,56956,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,18,281.013,57216,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,19,277.422,56988,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,0,279.492,47484,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,1,285.116,47296,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,2,289.019,47392,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,3,282.290,47484,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,4,281.733,47584,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,5,285.916,47328,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,6,279.972,47584,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,7,282.021,47552,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,8,290.205,47324,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,9,282.014,47584,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,10,275.288,47324,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,11,279.149,47424,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,12,280.559,47324,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,13,285.488,47552,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,14,278.658,47456,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,15,280.790,47488,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,16,280.572,47484,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,17,279.495,47584,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,18,292.410,47484,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,19,282.033,47584,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,0,285.841,47488,0,False,2,64,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,1,279.181,46976,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,2,282.689,47360,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,3,279.564,47104,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,4,289.221,46972,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,5,277.653,46812,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,6,281.479,46976,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,7,279.022,47100,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,8,284.302,47200,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,9,283.936,47200,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,10,283.391,46972,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,11,280.051,47136,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,12,275.993,47004,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,13,286.492,46976,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,14,281.861,47136,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,15,286.698,47200,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,16,283.720,47040,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,17,278.591,47132,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,18,288.649,47076,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,19,282.070,47200,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,signature_edit,0,283.452,47488,0,False,2,64,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,signature_edit,1,281.519,47324,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,signature_edit,2,276.800,47324,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,signature_edit,3,279.258,47584,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,signature_edit,4,283.522,47456,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,signature_edit,5,281.370,47392,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,signature_edit,6,281.358,47296,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,signature_edit,7,288.117,47328,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,signature_edit,8,278.781,47484,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,signature_edit,9,287.913,47168,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,signature_edit,10,284.903,47104,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,signature_edit,11,285.781,47268,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,signature_edit,12,286.062,47552,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,signature_edit,13,290.310,47324,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,signature_edit,14,280.158,47456,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,signature_edit,15,277.106,47484,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,signature_edit,16,278.096,47328,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,signature_edit,17,280.904,47484,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,signature_edit,18,290.744,47324,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,signature_edit,19,281.820,47520,0,False,1,65,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,session_implementation_edit,0,213.232,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,1,213.031,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,2,212.806,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,3,212.510,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,4,212.614,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,5,211.580,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,6,213.076,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,7,212.650,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,8,212.729,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,9,213.103,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,10,213.367,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,11,213.103,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,12,212.723,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,13,212.812,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,14,212.570,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,15,213.381,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,16,212.976,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,17,213.139,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,18,213.159,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,19,212.652,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,0,211.055,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,1,211.627,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,2,211.302,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,3,211.613,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,4,212.136,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,5,210.632,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,6,211.725,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,7,211.531,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,8,210.865,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,9,211.197,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,10,211.127,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,11,211.236,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,12,211.164,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,13,212.770,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,14,211.111,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,15,211.117,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,16,211.334,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,17,211.455,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,18,219.921,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,19,211.357,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,forced_tests,0,6953.491,111240,0,False,,,,,,,,,,0,1,,
+ordinary-10k,ordinary,10000,forced_tests,1,6889.010,111048,0,False,,,,,,,,,,0,1,,
+ordinary-10k,ordinary,10000,forced_tests,2,7834.774,113124,0,False,,,,,,,,,,0,1,,
+managed-10k,managed,10000,cold,0,580.223,59948,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,cold,1,630.026,59892,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,cold,2,596.831,59948,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,cold,3,608.446,60048,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,cold,4,604.996,59788,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,cold,5,594.481,59948,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,cold,6,579.094,60048,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,cold,7,589.929,59888,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,cold,8,600.995,59888,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,cold,9,591.169,59340,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,cold,10,587.768,59888,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,cold,11,585.108,59948,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,cold,12,580.973,59824,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,cold,13,567.798,59888,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,cold,14,557.630,59788,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,cold,15,551.700,59920,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,cold,16,550.659,59920,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,cold,17,551.947,59820,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,cold,18,601.464,59824,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,cold,19,638.556,59788,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,unchanged,0,133.506,30064,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,1,165.323,30064,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,2,158.986,30064,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,3,166.184,30064,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,4,156.263,30064,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,5,144.436,30064,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,6,151.233,30064,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,7,159.736,30064,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,8,162.751,30064,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,9,153.848,30064,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,10,143.177,30064,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,11,124.859,30064,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,12,147.187,30064,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,13,132.772,30064,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,14,149.492,30064,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,15,131.917,30064,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,16,115.334,30064,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,17,120.033,30064,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,18,117.726,30064,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,19,119.738,30064,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,no_cache,0,473.159,59752,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,1,451.000,59848,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,2,446.325,59524,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,3,439.292,59588,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,4,440.459,59720,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,5,439.520,59784,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,6,441.770,59848,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,7,439.804,59720,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,8,439.095,59752,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,9,434.952,59560,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,10,442.077,59624,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,11,435.052,59720,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,12,441.362,59460,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,13,440.572,59588,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,14,439.312,59624,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,15,435.266,59588,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,16,436.567,59588,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,17,438.405,59848,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,18,433.455,59560,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,19,449.329,59428,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,0,437.200,50832,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,1,437.580,50516,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,2,430.998,50412,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,3,436.910,50572,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,4,439.601,50476,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,5,446.312,50316,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,6,575.658,50572,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,7,558.969,50060,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,8,518.036,50508,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,9,493.285,50412,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,10,466.635,50284,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,11,472.630,50832,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,12,483.731,50284,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,13,489.341,50412,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,14,470.863,50252,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,15,474.610,50608,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,16,439.824,50704,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,17,440.879,50384,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,18,437.503,50672,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,19,442.810,50608,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,0,520.491,50608,0,False,2,66,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,1,435.284,50384,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,2,439.049,50192,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,3,441.605,50384,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,4,442.254,50416,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,5,441.223,50384,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,6,447.887,50448,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,7,435.039,50476,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,8,437.207,50188,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,9,447.772,50348,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,10,441.551,50252,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,11,440.099,50348,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,12,437.708,50608,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,13,443.092,50608,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,14,441.864,50320,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,15,442.193,50608,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,16,446.266,50384,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,17,440.393,50348,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,18,449.286,50448,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,19,437.358,50320,0,False,1,67,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,union_edit,0,431.936,50412,0,False,2,66,2723,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,union_edit,1,439.862,50124,0,False,1,67,2723,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,union_edit,2,445.674,50252,0,False,1,67,2723,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,union_edit,3,443.587,50356,0,False,1,67,2723,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,union_edit,4,437.888,50124,0,False,1,67,2723,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,provider_edit,0,446.764,50732,0,False,2,66,2754,0,126,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,provider_edit,1,448.141,50540,0,False,1,67,2754,0,126,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,provider_edit,2,451.195,50928,0,False,1,67,2754,0,126,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,provider_edit,3,443.875,50928,0,False,1,67,2754,0,126,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,provider_edit,4,442.144,50604,0,False,1,67,2754,0,126,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,effect_edit,0,437.112,50832,0,False,2,66,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,effect_edit,1,436.989,50832,0,False,2,66,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,effect_edit,2,439.309,50608,0,False,2,66,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,effect_edit,3,436.445,50540,0,False,2,66,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,effect_edit,4,439.737,50348,0,False,2,66,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]"
+managed-10k,managed,10000,session_implementation_edit,0,360.365,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,1,363.172,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,2,362.732,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,3,361.090,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,4,365.500,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,5,363.185,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,6,364.350,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,7,366.654,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,8,364.346,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,9,359.498,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,10,363.728,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,11,360.298,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,12,363.170,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,13,358.812,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,14,358.033,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,15,359.503,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,16,360.000,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,17,357.905,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,18,358.442,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,19,358.478,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,0,358.780,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,1,357.134,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,2,367.976,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,3,374.054,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,4,367.505,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,5,364.796,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,6,364.452,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,7,364.953,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,8,364.464,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,9,370.271,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,10,367.897,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,11,365.608,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,12,364.512,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,13,370.812,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,14,365.150,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,15,364.835,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,16,365.686,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,17,361.148,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,18,366.355,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,19,365.292,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,forced_tests,0,7250.026,107784,0,False,,,,,,,,,,0,1,,
+managed-10k,managed,10000,forced_tests,1,7225.504,107748,0,False,,,,,,,,,,0,1,,
+managed-10k,managed,10000,forced_tests,2,7185.833,108428,0,False,,,,,,,,,,0,1,,

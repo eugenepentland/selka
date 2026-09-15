@@ -1,0 +1,5922 @@
+{
+  "version": "large-project-profile-v2",
+  "smoke_validation": {
+    "ordinary": {
+      "exit": 0,
+      "wall_ms": 18.24389200191945,
+      "peak_rss_kb": 15876,
+      "work_report": {
+        "version": "work-report-v1",
+        "command": "check-project",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 10,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 51,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "bypassed": [
+          {
+            "reason": "semantic-reuse-unavailable",
+            "count": 1
+          },
+          {
+            "reason": "cache-disabled",
+            "count": 1
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 10,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 51,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      "diagnostic": "",
+      "accepted": true,
+      "run": {
+        "exit": 149,
+        "wall_ms": 66.49609201122075,
+        "peak_rss_kb": 16860,
+        "stdout": "149",
+        "stderr": "",
+        "accepted": true,
+        "acceptance": "stdout is a decimal guest result and stderr carries no diagnostic; exit is the truncated guest return value"
+      }
+    },
+    "managed": {
+      "exit": 0,
+      "wall_ms": 23.692839007708244,
+      "peak_rss_kb": 15888,
+      "work_report": {
+        "version": "work-report-v1",
+        "command": "check-project",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 7,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 46,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 6,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "bypassed": [
+          {
+            "reason": "semantic-reuse-unavailable",
+            "count": 1
+          },
+          {
+            "reason": "cache-disabled",
+            "count": 1
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 7,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 46,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 6,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      "diagnostic": "",
+      "accepted": true,
+      "run": {
+        "exit": 115,
+        "wall_ms": 79.82433200231753,
+        "peak_rss_kb": 18176,
+        "stdout": "6003",
+        "stderr": "",
+        "accepted": true,
+        "acceptance": "stdout is a decimal guest result and stderr carries no diagnostic; exit is the truncated guest return value"
+      }
+    },
+    "maintained": {
+      "exit": 0,
+      "wall_ms": 100.99088100832887,
+      "peak_rss_kb": 31080,
+      "work_report": {
+        "version": "work-report-v1",
+        "command": "check-project",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 14,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 114,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "bypassed": [
+          {
+            "reason": "semantic-reuse-unavailable",
+            "count": 1
+          },
+          {
+            "reason": "cache-disabled",
+            "count": 1
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 14,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 114,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      "diagnostic": "",
+      "accepted": true
+    }
+  },
+  "generated_at_unix": 1789508190.2177145,
+  "generator_sha256": "9cb579c34039a923110ee3aa2abbf2b3d4f4e01a9590e08b249c2683c23caec6",
+  "compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/velocity-s1/zig-out/bin/mylang",
+    "sha256": "df7e16a1b5b00a3ff188c57c5f89d3d4ae20494ae8a5733f30ab15ecd638bc40",
+    "features_compiler_sha256": "34e66576d40e60c998c102c105de07cd49a43f8a0a99ebba046039cadb41908f",
+    "zig_version": "0.17.0-dev.1683+5ceec001b"
+  },
+  "method": {
+    "wall_time": "process-start-to-exit, including dynamic linking, source load and command work",
+    "memory": "child ru_maxrss from wait4, per sample",
+    "percentile": "nearest-rank; sorted ascending; index ceil(0.95*n)-1",
+    "samples_per_state": 20,
+    "forced_test_samples": 3,
+    "warmup": "one warm check before sampling for unchanged/edit states",
+    "edit_independence": "each sample writes a deterministic edit token unique to that sample",
+    "validation": "check-project --no-cache --report must exit 0 before any timing; run-project for <=20k-line workloads"
+  },
+  "limits": [
+    {
+      "subsystem": "checking/build loader",
+      "source": "src/project.zig",
+      "budgets": {
+        "max_modules": 256,
+        "max_imports": 4096,
+        "max_file_bytes": 4194304,
+        "max_total_bytes": 16777216,
+        "max_file_bytes_human": "4 MiB",
+        "max_total_bytes_human": "16 MiB"
+      },
+      "all_patterns_present": true,
+      "missing_patterns": []
+    },
+    {
+      "subsystem": "project configuration",
+      "source": "src/project_config.zig",
+      "budgets": {
+        "max_config_bytes": 1048576,
+        "max_config_bytes_human": "1 MiB"
+      },
+      "all_patterns_present": true,
+      "missing_patterns": []
+    },
+    {
+      "subsystem": "navigation index",
+      "source": "src/navigation.zig",
+      "budgets": {
+        "max_symbols": 50000,
+        "max_references": 250000
+      },
+      "all_patterns_present": true,
+      "missing_patterns": []
+    },
+    {
+      "subsystem": "native test snapshot/provider materialization",
+      "source": "src/native_test_snapshot.zig",
+      "budgets": {
+        "max_bytes": 16777216,
+        "max_entries": 50000,
+        "max_bytes_human": "16 MiB"
+      },
+      "all_patterns_present": true,
+      "missing_patterns": []
+    },
+    {
+      "subsystem": "python navigation source inventory",
+      "source": "scripts/navigate.py",
+      "budgets": {
+        "max_bytes": 16777216,
+        "max_entries": 50000,
+        "max_bytes_human": "16 MiB"
+      },
+      "all_patterns_present": true,
+      "missing_patterns": []
+    },
+    {
+      "subsystem": "package materialization",
+      "source": "scripts/packages.py",
+      "budgets": {
+        "max_bytes": 16777216,
+        "max_bytes_human": "16 MiB"
+      },
+      "all_patterns_present": true,
+      "missing_patterns": []
+    },
+    {
+      "subsystem": "agent store materialization",
+      "source": "scripts/store.py",
+      "budgets": {
+        "max_file_bytes": 8388608,
+        "max_total_bytes": 67108864,
+        "max_file_bytes_human": "8 MiB",
+        "max_total_bytes_human": "64 MiB"
+      },
+      "all_patterns_present": true,
+      "missing_patterns": []
+    }
+  ],
+  "limit_findings": [
+    {
+      "finding": "module/import counts are bounded only by the loader",
+      "detail": "src/project.zig rejects module 257 with E_MODULE_LIMIT and import 4097 with E_IMPORT_LIMIT, but src/native_test_snapshot.zig, scripts/navigate.py and scripts/packages.py enforce only byte/entry budgets. A 257-module project can therefore be snapshotted or materialized and then fail ordinary checking.",
+      "sources": [
+        "src/project.zig",
+        "src/native_test_snapshot.zig",
+        "scripts/navigate.py",
+        "scripts/packages.py"
+      ],
+      "action": "reported, not changed: a consistent fix must add the shared module/import budget to the snapshot, inventory and package paths, not only to project.zig."
+    },
+    {
+      "finding": "store byte budgets are larger than the compiler budgets",
+      "detail": "scripts/store.py allows 8 MiB per file and 64 MiB total; the loader allows 4 MiB per file and 16 MiB total. The store accepts projects the compiler later rejects with E_PROJECT_BYTES.",
+      "sources": [
+        "scripts/store.py",
+        "src/project.zig"
+      ],
+      "action": "reported, not changed: lowering the store without measuring existing store users would be a behavior change outside the S1 measurement package."
+    },
+    {
+      "finding": "navigation has its own symbol/reference budgets",
+      "detail": "src/navigation.zig caps navigation at 50000 symbols and 250000 references. The measured 100k-line ordinary workload checks in a few seconds but index-project reports host failure NavigationLimit; navigation limits are not part of the loader/snapshot/package budget set.",
+      "sources": [
+        "src/navigation.zig"
+      ],
+      "action": "reported; the measured NavigationLimit is preserved in workload metrics and is an unsupported workload for navigation, never a timing sample."
+    },
+    {
+      "finding": "configuration budget is a separate 1 MiB ceiling",
+      "detail": "src/project_config.zig caps mylang.json and a relative import policy at 1 MiB independently of the source budget.",
+      "sources": [
+        "src/project_config.zig"
+      ],
+      "action": "documented in the shared limits table; no measurement justifies changing it."
+    }
+  ],
+  "workloads": [
+    {
+      "family": "managed",
+      "label": "managed-100k",
+      "target_lines": 100000,
+      "generated": {
+        "providers": 64,
+        "functions_per_provider": 502,
+        "lines": 99878,
+        "bytes": 1954866
+      },
+      "entry": "/tmp/s1-100k-m/sources/managed-100k/main.my",
+      "validation": {
+        "exit": 0,
+        "wall_ms": 3466.5054119977867,
+        "peak_rss_kb": 480548,
+        "work_report": {
+          "version": "work-report-v1",
+          "command": "check-project",
+          "reused": false,
+          "parsed_modules": {
+            "status": "miss",
+            "performed": 68,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "status": "miss",
+            "performed": 32708,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "status": "miss",
+            "performed": 128,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "status": "skipped",
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "status": "skipped",
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "status": "skipped",
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "status": "skipped",
+            "performed": 0,
+            "reused": 0
+          },
+          "reused_results": 0,
+          "session_reused_results": 0,
+          "bypassed": [
+            {
+              "reason": "semantic-reuse-unavailable",
+              "count": 1
+            },
+            {
+              "reason": "cache-disabled",
+              "count": 1
+            }
+          ],
+          "session": {
+            "parsed_modules": {
+              "performed": 68,
+              "reused": 0
+            },
+            "checked_bodies": {
+              "performed": 32708,
+              "reused": 0
+            },
+            "instantiated_specializations": {
+              "performed": 128,
+              "reused": 0
+            },
+            "lowered_functions": {
+              "performed": 0,
+              "reused": 0
+            },
+            "emitted_fragments": {
+              "performed": 0,
+              "reused": 0
+            },
+            "links": {
+              "performed": 0,
+              "reused": 0
+            },
+            "executed_tests": {
+              "performed": 0,
+              "reused": 0
+            }
+          }
+        },
+        "diagnostic": "",
+        "accepted": true
+      },
+      "status": "measured",
+      "metrics": {
+        "lines": 99878,
+        "bytes": 1954866,
+        "my_files": 68,
+        "module_report": {
+          "status": "ok",
+          "modules": 68,
+          "imports": 130,
+          "module_depth": 3,
+          "list_modules_ms": 774.6549919975223,
+          "list_modules_peak_rss_kb": 47108
+        },
+        "functions_checked": 32708,
+        "checked_bodies": 32708,
+        "specializations": 128,
+        "call_graph": {
+          "status": "unsupported",
+          "exit": 2,
+          "stderr": "mylang: host failure: NavigationLimit\n",
+          "wall_ms": 3539.023334000376
+        }
+      },
+      "states": {
+        "cold": {
+          "state": "cold",
+          "summary": {
+            "samples_ms": [
+              4095.008262011106,
+              4098.46255199227,
+              4099.009341007331,
+              4122.630605997983,
+              4156.126202986343
+            ],
+            "count": 5,
+            "median_ms": 4099.009341007331,
+            "p95_ms": 4156.126202986343,
+            "min_ms": 4095.008262011106,
+            "max_ms": 4156.126202986343,
+            "percentile_method": "nearest-rank; sorted ascending; index ceil(0.95*n)-1"
+          },
+          "peak_rss_kb_max": 480796,
+          "samples": [
+            {
+              "state": "cold",
+              "wall_ms": 4122.630605997983,
+              "peak_rss_kb": 480628,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": false,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "cold",
+              "wall_ms": 4098.46255199227,
+              "peak_rss_kb": 480776,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": false,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "cold",
+              "wall_ms": 4099.009341007331,
+              "peak_rss_kb": 480692,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": false,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "cold",
+              "wall_ms": 4095.008262011106,
+              "peak_rss_kb": 480796,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": false,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "cold",
+              "wall_ms": 4156.126202986343,
+              "peak_rss_kb": 480556,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": false,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            }
+          ],
+          "status": "measured"
+        },
+        "unchanged": {
+          "state": "unchanged",
+          "summary": {
+            "samples_ms": [
+              898.1360600009793,
+              898.59171299031,
+              903.3273630047916,
+              905.7502640062012,
+              905.8350330014946
+            ],
+            "count": 5,
+            "median_ms": 903.3273630047916,
+            "p95_ms": 905.8350330014946,
+            "min_ms": 898.1360600009793,
+            "max_ms": 905.8350330014946,
+            "percentile_method": "nearest-rank; sorted ascending; index ceil(0.95*n)-1"
+          },
+          "peak_rss_kb_max": 47728,
+          "samples": [
+            {
+              "state": "unchanged",
+              "wall_ms": 898.1360600009793,
+              "peak_rss_kb": 47600,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": []
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "unchanged",
+              "wall_ms": 905.7502640062012,
+              "peak_rss_kb": 47404,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": []
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "unchanged",
+              "wall_ms": 898.59171299031,
+              "peak_rss_kb": 47564,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": []
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "unchanged",
+              "wall_ms": 903.3273630047916,
+              "peak_rss_kb": 47728,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": []
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "unchanged",
+              "wall_ms": 905.8350330014946,
+              "peak_rss_kb": 47404,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": []
+              },
+              "diagnostic": ""
+            }
+          ],
+          "status": "measured"
+        },
+        "no_cache": {
+          "state": "no_cache",
+          "summary": {
+            "samples_ms": [
+              3304.0321660082554,
+              3398.265587995411,
+              3449.392427006387,
+              3584.4681179878535,
+              3950.9838160010986
+            ],
+            "count": 5,
+            "median_ms": 3449.392427006387,
+            "p95_ms": 3950.9838160010986,
+            "min_ms": 3304.0321660082554,
+            "max_ms": 3950.9838160010986,
+            "percentile_method": "nearest-rank; sorted ascending; index ceil(0.95*n)-1"
+          },
+          "peak_rss_kb_max": 480484,
+          "samples": [
+            {
+              "state": "no_cache",
+              "wall_ms": 3398.265587995411,
+              "peak_rss_kb": 480228,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": false,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  },
+                  {
+                    "reason": "cache-disabled",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "no_cache",
+              "wall_ms": 3304.0321660082554,
+              "peak_rss_kb": 480484,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": false,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  },
+                  {
+                    "reason": "cache-disabled",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "no_cache",
+              "wall_ms": 3584.4681179878535,
+              "peak_rss_kb": 480388,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": false,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  },
+                  {
+                    "reason": "cache-disabled",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "no_cache",
+              "wall_ms": 3449.392427006387,
+              "peak_rss_kb": 480324,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": false,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  },
+                  {
+                    "reason": "cache-disabled",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "no_cache",
+              "wall_ms": 3950.9838160010986,
+              "peak_rss_kb": 480228,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": false,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  },
+                  {
+                    "reason": "cache-disabled",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            }
+          ],
+          "status": "measured"
+        },
+        "implementation_edit": {
+          "state": "implementation_edit",
+          "summary": {
+            "samples_ms": [
+              3221.8402550061,
+              3231.733933003852,
+              3233.103149003,
+              3234.76043100527,
+              3238.586343009956,
+              3240.415338994353,
+              3241.5302919980604,
+              3248.814519000007,
+              3251.6527910047444,
+              3254.384444997413,
+              3255.500781000592,
+              3259.5058089937083,
+              3266.2456639955053,
+              3267.1725840045838,
+              3270.2108599914936,
+              3270.840107012191,
+              3275.2451819978887,
+              3279.5558890065877,
+              3314.316575997509,
+              3404.5678690017667
+            ],
+            "count": 20,
+            "median_ms": 3254.9426129990024,
+            "p95_ms": 3314.316575997509,
+            "min_ms": 3221.8402550061,
+            "max_ms": 3404.5678690017667,
+            "percentile_method": "nearest-rank; sorted ascending; index ceil(0.95*n)-1"
+          },
+          "peak_rss_kb_max": 370244,
+          "samples": [
+            {
+              "state": "implementation_edit",
+              "wall_ms": 3404.5678690017667,
+              "peak_rss_kb": 370068,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "implementation_edit",
+              "wall_ms": 3275.2451819978887,
+              "peak_rss_kb": 370088,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "implementation_edit",
+              "wall_ms": 3270.840107012191,
+              "peak_rss_kb": 370000,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "implementation_edit",
+              "wall_ms": 3267.1725840045838,
+              "peak_rss_kb": 369904,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "implementation_edit",
+              "wall_ms": 3254.384444997413,
+              "peak_rss_kb": 370244,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "implementation_edit",
+              "wall_ms": 3259.5058089937083,
+              "peak_rss_kb": 370024,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "implementation_edit",
+              "wall_ms": 3231.733933003852,
+              "peak_rss_kb": 370080,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "implementation_edit",
+              "wall_ms": 3251.6527910047444,
+              "peak_rss_kb": 370084,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "implementation_edit",
+              "wall_ms": 3248.814519000007,
+              "peak_rss_kb": 369956,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "implementation_edit",
+              "wall_ms": 3266.2456639955053,
+              "peak_rss_kb": 370044,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "implementation_edit",
+              "wall_ms": 3270.2108599914936,
+              "peak_rss_kb": 369784,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "implementation_edit",
+              "wall_ms": 3314.316575997509,
+              "peak_rss_kb": 369856,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "implementation_edit",
+              "wall_ms": 3279.5558890065877,
+              "peak_rss_kb": 369816,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "implementation_edit",
+              "wall_ms": 3233.103149003,
+              "peak_rss_kb": 370060,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "implementation_edit",
+              "wall_ms": 3241.5302919980604,
+              "peak_rss_kb": 370044,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "implementation_edit",
+              "wall_ms": 3255.500781000592,
+              "peak_rss_kb": 369976,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "implementation_edit",
+              "wall_ms": 3240.415338994353,
+              "peak_rss_kb": 369832,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "implementation_edit",
+              "wall_ms": 3238.586343009956,
+              "peak_rss_kb": 369944,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "implementation_edit",
+              "wall_ms": 3221.8402550061,
+              "peak_rss_kb": 370092,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "implementation_edit",
+              "wall_ms": 3234.76043100527,
+              "peak_rss_kb": 369792,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            }
+          ],
+          "status": "measured"
+        },
+        "constant_edit": {
+          "state": "constant_edit",
+          "summary": {
+            "samples_ms": [
+              3213.612870997167,
+              3420.7603090035263,
+              3425.2002610010095,
+              3425.8057389961323,
+              3544.920034997631,
+              3601.3302210049005,
+              3624.004386991146,
+              3657.9154289938742,
+              3688.4974020067602,
+              3721.4218139997683,
+              3761.299613994197,
+              3777.56331198907,
+              3867.8790090052644,
+              3881.440045995987,
+              3893.933907005703,
+              4068.0136820010375,
+              4853.793921996839,
+              4908.541629003594,
+              4915.5434489948675,
+              5308.0272450024495
+            ],
+            "count": 20,
+            "median_ms": 3741.3607139969827,
+            "p95_ms": 4915.5434489948675,
+            "min_ms": 3213.612870997167,
+            "max_ms": 5308.0272450024495,
+            "percentile_method": "nearest-rank; sorted ascending; index ceil(0.95*n)-1"
+          },
+          "peak_rss_kb_max": 369980,
+          "samples": [
+            {
+              "state": "constant_edit",
+              "wall_ms": 3213.612870997167,
+              "peak_rss_kb": 369980,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 2,
+                  "reused": 66
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "constant_edit",
+              "wall_ms": 3544.920034997631,
+              "peak_rss_kb": 368164,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "constant_edit",
+              "wall_ms": 3657.9154289938742,
+              "peak_rss_kb": 368368,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "constant_edit",
+              "wall_ms": 3420.7603090035263,
+              "peak_rss_kb": 368188,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "constant_edit",
+              "wall_ms": 3425.8057389961323,
+              "peak_rss_kb": 367548,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "constant_edit",
+              "wall_ms": 3425.2002610010095,
+              "peak_rss_kb": 368016,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "constant_edit",
+              "wall_ms": 3688.4974020067602,
+              "peak_rss_kb": 368240,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "constant_edit",
+              "wall_ms": 3721.4218139997683,
+              "peak_rss_kb": 368076,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "constant_edit",
+              "wall_ms": 3881.440045995987,
+              "peak_rss_kb": 367884,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "constant_edit",
+              "wall_ms": 3761.299613994197,
+              "peak_rss_kb": 368192,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "constant_edit",
+              "wall_ms": 3624.004386991146,
+              "peak_rss_kb": 368132,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "constant_edit",
+              "wall_ms": 3601.3302210049005,
+              "peak_rss_kb": 368312,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "constant_edit",
+              "wall_ms": 3893.933907005703,
+              "peak_rss_kb": 368028,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "constant_edit",
+              "wall_ms": 4915.5434489948675,
+              "peak_rss_kb": 367944,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "constant_edit",
+              "wall_ms": 4908.541629003594,
+              "peak_rss_kb": 367912,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "constant_edit",
+              "wall_ms": 5308.0272450024495,
+              "peak_rss_kb": 367564,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "constant_edit",
+              "wall_ms": 4853.793921996839,
+              "peak_rss_kb": 368024,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "constant_edit",
+              "wall_ms": 4068.0136820010375,
+              "peak_rss_kb": 367920,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "constant_edit",
+              "wall_ms": 3867.8790090052644,
+              "peak_rss_kb": 367904,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "constant_edit",
+              "wall_ms": 3777.56331198907,
+              "peak_rss_kb": 367992,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            }
+          ],
+          "status": "measured"
+        },
+        "union_edit": {
+          "state": "union_edit",
+          "summary": {
+            "samples_ms": [
+              3440.1880710065598,
+              3498.4648499957984,
+              3669.4600000046194,
+              3726.6236540017417,
+              3742.6677730109077
+            ],
+            "count": 5,
+            "median_ms": 3669.4600000046194,
+            "p95_ms": 3742.6677730109077,
+            "min_ms": 3440.1880710065598,
+            "max_ms": 3742.6677730109077,
+            "percentile_method": "nearest-rank; sorted ascending; index ceil(0.95*n)-1"
+          },
+          "peak_rss_kb_max": 364732,
+          "samples": [
+            {
+              "state": "union_edit",
+              "wall_ms": 3669.4600000046194,
+              "peak_rss_kb": 364732,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 2,
+                  "reused": 66
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32207,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "union_edit",
+              "wall_ms": 3498.4648499957984,
+              "peak_rss_kb": 364528,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32207,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "union_edit",
+              "wall_ms": 3742.6677730109077,
+              "peak_rss_kb": 364652,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32207,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "union_edit",
+              "wall_ms": 3726.6236540017417,
+              "peak_rss_kb": 364456,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32207,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "union_edit",
+              "wall_ms": 3440.1880710065598,
+              "peak_rss_kb": 364524,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32207,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            }
+          ],
+          "status": "measured"
+        },
+        "provider_edit": {
+          "state": "provider_edit",
+          "summary": {
+            "samples_ms": [
+              3483.9723100012634,
+              3525.670914998045,
+              3560.064302990213,
+              3676.4540540025337,
+              3810.745569993742
+            ],
+            "count": 5,
+            "median_ms": 3560.064302990213,
+            "p95_ms": 3810.745569993742,
+            "min_ms": 3483.9723100012634,
+            "max_ms": 3810.745569993742,
+            "percentile_method": "nearest-rank; sorted ascending; index ceil(0.95*n)-1"
+          },
+          "peak_rss_kb_max": 370064,
+          "samples": [
+            {
+              "state": "provider_edit",
+              "wall_ms": 3810.745569993742,
+              "peak_rss_kb": 370064,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 2,
+                  "reused": 66
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32706,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 126,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "provider_edit",
+              "wall_ms": 3676.4540540025337,
+              "peak_rss_kb": 368116,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32706,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 126,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "provider_edit",
+              "wall_ms": 3525.670914998045,
+              "peak_rss_kb": 368408,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32706,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 126,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "provider_edit",
+              "wall_ms": 3483.9723100012634,
+              "peak_rss_kb": 368368,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32706,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 126,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "provider_edit",
+              "wall_ms": 3560.064302990213,
+              "peak_rss_kb": 368268,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 1,
+                  "reused": 67
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32706,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 126,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            }
+          ],
+          "status": "measured"
+        },
+        "effect_edit": {
+          "state": "effect_edit",
+          "summary": {
+            "samples_ms": [
+              3497.216001007473,
+              3497.978973988211,
+              3498.879881997709,
+              3514.6888260060223,
+              3626.1720010079443
+            ],
+            "count": 5,
+            "median_ms": 3498.879881997709,
+            "p95_ms": 3626.1720010079443,
+            "min_ms": 3497.216001007473,
+            "max_ms": 3626.1720010079443,
+            "percentile_method": "nearest-rank; sorted ascending; index ceil(0.95*n)-1"
+          },
+          "peak_rss_kb_max": 368320,
+          "samples": [
+            {
+              "state": "effect_edit",
+              "wall_ms": 3626.1720010079443,
+              "peak_rss_kb": 368136,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 2,
+                  "reused": 66
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "effect_edit",
+              "wall_ms": 3497.978973988211,
+              "peak_rss_kb": 367964,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 2,
+                  "reused": 66
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "effect_edit",
+              "wall_ms": 3514.6888260060223,
+              "peak_rss_kb": 368296,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 2,
+                  "reused": 66
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "effect_edit",
+              "wall_ms": 3498.879881997709,
+              "peak_rss_kb": 368108,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 2,
+                  "reused": 66
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            },
+            {
+              "state": "effect_edit",
+              "wall_ms": 3497.216001007473,
+              "peak_rss_kb": 368320,
+              "exit": 0,
+              "timed_out": false,
+              "stages": {
+                "parsed_modules": {
+                  "status": "miss",
+                  "performed": 2,
+                  "reused": 66
+                },
+                "checked_bodies": {
+                  "status": "miss",
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "status": "miss",
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "status": "skipped",
+                  "performed": 0,
+                  "reused": 0
+                },
+                "reused": true,
+                "bypassed": [
+                  {
+                    "reason": "semantic-reuse-unavailable",
+                    "count": 1
+                  }
+                ]
+              },
+              "diagnostic": ""
+            }
+          ],
+          "status": "measured"
+        },
+        "session_implementation_edit": {
+          "state": "session_edit",
+          "summary": {
+            "samples_ms": [
+              3345.747597006266,
+              3348.892698006239,
+              3350.759373002802,
+              3352.3044870089507,
+              3352.4812149989884,
+              3355.7856230036123,
+              3358.661549995304,
+              3360.3626760013867,
+              3362.4032929947134,
+              3372.756983997533,
+              3374.0004900028,
+              3387.657068989938,
+              3406.1288730008528,
+              3417.927115006023,
+              3434.8628770094365,
+              3490.9543639951153,
+              3581.494323996594,
+              3583.512432000134,
+              3630.437825995614,
+              3665.8972409932176
+            ],
+            "count": 20,
+            "median_ms": 3373.3787370001664,
+            "p95_ms": 3630.437825995614,
+            "min_ms": 3345.747597006266,
+            "max_ms": 3665.8972409932176,
+            "percentile_method": "nearest-rank; sorted ascending; index ceil(0.95*n)-1"
+          },
+          "samples": [
+            {
+              "wall_ms": 3581.494323996594,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3583.512432000134,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3665.8972409932176,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3630.437825995614,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3490.9543639951153,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3434.8628770094365,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3406.1288730008528,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3374.0004900028,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3372.756983997533,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3417.927115006023,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3387.657068989938,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3362.4032929947134,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3355.7856230036123,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3358.661549995304,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3350.759373002802,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3360.3626760013867,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3352.4812149989884,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3348.892698006239,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3345.747597006266,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3352.3044870089507,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            }
+          ],
+          "status": "measured"
+        },
+        "session_constant_edit": {
+          "state": "session_edit",
+          "summary": {
+            "samples_ms": [
+              3338.776072007022,
+              3339.3787580134813,
+              3344.2334279970964,
+              3349.992490999284,
+              3353.637712993077,
+              3362.1622919890797,
+              3374.073279002914,
+              3379.1907999984687,
+              3403.9062629890395,
+              3420.0830339977983,
+              3439.103035008884,
+              3440.2381510008126,
+              3464.0156459936406,
+              3480.8371609979076,
+              3502.4299939977936,
+              3823.692095000297,
+              3921.349900003406,
+              3932.1080340014305,
+              3958.3746479911497,
+              3971.6182649863185
+            ],
+            "count": 20,
+            "median_ms": 3429.593034503341,
+            "p95_ms": 3958.3746479911497,
+            "min_ms": 3338.776072007022,
+            "max_ms": 3971.6182649863185,
+            "percentile_method": "nearest-rank; sorted ascending; index ceil(0.95*n)-1"
+          },
+          "samples": [
+            {
+              "wall_ms": 3420.0830339977983,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3353.637712993077,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3374.073279002914,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3338.776072007022,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3344.2334279970964,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3403.9062629890395,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3379.1907999984687,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3362.1622919890797,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3349.992490999284,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3339.3787580134813,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3440.2381510008126,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3502.4299939977936,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3480.8371609979076,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3439.103035008884,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3464.0156459936406,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3921.349900003406,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3958.3746479911497,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3971.6182649863185,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3932.1080340014305,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            },
+            {
+              "wall_ms": 3823.692095000297,
+              "status": 0,
+              "reused": false,
+              "request": {
+                "parsed_modules": {
+                  "performed": 68,
+                  "reused": 0
+                },
+                "checked_bodies": {
+                  "performed": 32708,
+                  "reused": 0
+                },
+                "instantiated_specializations": {
+                  "performed": 128,
+                  "reused": 0
+                },
+                "lowered_functions": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "emitted_fragments": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "links": {
+                  "performed": 0,
+                  "reused": 0
+                },
+                "executed_tests": {
+                  "performed": 0,
+                  "reused": 0
+                }
+              },
+              "diagnostic": null
+            }
+          ],
+          "status": "measured"
+        }
+      },
+      "objectives": {
+        "target_lines": 100000,
+        "implementation_edit": {
+          "p95_ms": 3314.316575997509,
+          "under_500ms": false
+        },
+        "constant_edit": {
+          "p95_ms": 4915.5434489948675,
+          "under_500ms": false
+        },
+        "cold": {
+          "p95_ms": 4156.126202986343,
+          "under_500ms": false
+        }
+      }
+    }
+  ]
+}
