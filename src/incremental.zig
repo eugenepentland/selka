@@ -8,11 +8,11 @@ const std = @import("std");
 const ast = @import("ast.zig");
 const diagnostic = @import("diagnostic.zig");
 const effect_set = @import("effect_set.zig");
+const ids = @import("identity.zig");
 const bytecode = @import("bytecode.zig");
 const interface = @import("interfaces.zig");
 const lexer = @import("lexer.zig");
 const project_compile = @import("project_compile.zig");
-const schema_graph = @import("schema_graph.zig");
 const source = @import("source.zig");
 const typed = @import("typed.zig");
 
@@ -68,8 +68,18 @@ pub const Fragment = struct {
     identity: []const u8,
 };
 
+/// Build inputs a check-only manifest cannot derive from the checked program.
+/// Specialization keys must distinguish target/runtime layout and compiler build,
+/// so callers supply them explicitly instead of baking in placeholders.
+pub const Contract = struct {
+    compiler_sha256: []const u8,
+    target_abi: []const u8,
+};
+
 /// Debug manifest for incremental identities; all strings are allocator-owned.
 pub const Report = struct {
+    /// False when built from a partial (rejected) check; fields are best-effort.
+    complete: bool = true,
     version: []const u8,
     project_interface_sha256: []const u8,
     modules: []const Module,
@@ -80,42 +90,73 @@ pub const Report = struct {
 
 /// Derive a module identity from its canonical module name.
 pub fn moduleIdentity(allocator: std.mem.Allocator, name: []const u8) Error![]const u8 {
-    return hashFields(allocator, "mylang-module-v1", &.{name});
+    return ids.moduleIdentity(allocator, name) catch error.OutOfMemory;
 }
 
 /// Derive a declaration identity from module identity, kind, owner and local name.
 pub fn declarationIdentity(allocator: std.mem.Allocator, module: []const u8, kind: []const u8, owner: ?[]const u8, name: []const u8) Error![]const u8 {
-    return hashFields(allocator, "mylang-declaration-v1", &.{ module, kind, owner orelse "", name });
+    return ids.declarationIdentity(allocator, module, kind, owner, name) catch error.OutOfMemory;
 }
 
 /// Derive a body identity from its declaration identity and exact body bytes.
 pub fn bodyIdentity(allocator: std.mem.Allocator, declaration: []const u8, bytes: []const u8) Error![]const u8 {
-    return hashFields(allocator, "mylang-body-v1", &.{ declaration, bytes });
+    return ids.bodyIdentity(allocator, declaration, bytes) catch error.OutOfMemory;
 }
 
 /// Derive an exported-interface item identity from module, kind, owner and name.
 pub fn interfaceItemIdentity(allocator: std.mem.Allocator, module: []const u8, kind: []const u8, owner: ?[]const u8, name: []const u8) Error![]const u8 {
-    return hashFields(allocator, "mylang-interface-item-v1", &.{ module, kind, owner orelse "", name });
+    return ids.interfaceItemIdentity(allocator, module, kind, owner, name) catch error.OutOfMemory;
 }
 
 /// Derive a nominal type or generic-template identity; `kind` separates the two.
 pub fn typeIdentity(allocator: std.mem.Allocator, module: []const u8, kind: []const u8, name: []const u8) Error![]const u8 {
-    return hashFields(allocator, "mylang-type-v1", &.{ module, kind, name });
+    return ids.typeIdentity(allocator, module, kind, name) catch error.OutOfMemory;
 }
 
 /// Derive a generic specialization identity from its canonical cache key.
 pub fn specializationIdentity(allocator: std.mem.Allocator, template_identity: []const u8, arguments_sha256: []const u8, provider_sha256: []const u8, target_abi: []const u8, compiler_sha256: []const u8) Error![]const u8 {
-    return hashFields(allocator, "mylang-specialization-v1", &.{ template_identity, arguments_sha256, provider_sha256, target_abi, compiler_sha256 });
+    return ids.specializationIdentity(allocator, template_identity, arguments_sha256, provider_sha256, target_abi, compiler_sha256) catch error.OutOfMemory;
 }
 
 /// Derive an emitted function/data fragment identity.
 pub fn fragmentIdentity(allocator: std.mem.Allocator, symbol_identity: []const u8, kind: []const u8, normalized_bytes: []const u8) Error![]const u8 {
-    return hashFields(allocator, "mylang-fragment-v1", &.{ symbol_identity, kind, normalized_bytes });
+    return ids.fragmentIdentity(allocator, symbol_identity, kind, normalized_bytes) catch error.OutOfMemory;
 }
 
-/// Derive a whole-project exported-interface fingerprint from the checked schema.
-pub fn interfaceFingerprint(allocator: std.mem.Allocator, schema: []const u8) Error![]const u8 {
-    return hashFields(allocator, "mylang-interface-v1", &.{schema});
+const InterfaceComponent = struct { identity: []const u8, interface_sha256: []const u8 };
+
+fn interfaceComponentLess(_: void, a: InterfaceComponent, b: InterfaceComponent) bool {
+    if (!std.mem.eql(u8, a.identity, b.identity)) return std.mem.lessThan(u8, a.identity, b.identity);
+    return std.mem.lessThan(u8, a.interface_sha256, b.interface_sha256);
+}
+
+/// Fingerprint the observable project interface: sorted exported-interface item
+/// identities and their complete semantic interface fingerprints. Source
+/// metadata, comments, formatting and private declarations are excluded.
+pub fn projectInterfaceFingerprint(allocator: std.mem.Allocator, modules: []const Module) Error![]const u8 {
+    var components: std.ArrayList(InterfaceComponent) = .empty;
+    defer components.deinit(allocator);
+    for (modules) |module| for (module.declarations) |declaration| {
+        const interface_identity = declaration.interface_identity orelse continue;
+        try components.append(allocator, .{
+            .identity = interface_identity,
+            .interface_sha256 = declaration.interface_sha256 orelse "",
+        });
+    };
+    std.mem.sort(InterfaceComponent, components.items, {}, interfaceComponentLess);
+    var hash = std.crypto.hash.sha2.Sha256.init(.{});
+    hash.update("mylang-project-interface-v1");
+    for (components.items) |component| {
+        hash.update(&.{0});
+        var length: [8]u8 = undefined;
+        std.mem.writeInt(u64, &length, component.identity.len, .little);
+        hash.update(&length);
+        hash.update(component.identity);
+        std.mem.writeInt(u64, &length, component.interface_sha256.len, .little);
+        hash.update(&length);
+        hash.update(component.interface_sha256);
+    }
+    return allocator.dupe(u8, &std.fmt.bytesToHex(hash.finalResult(), .lower)) catch error.OutOfMemory;
 }
 
 /// Release a report allocated by `describe` with the same allocator.
@@ -133,20 +174,12 @@ pub fn deinit(self: Report, allocator: std.mem.Allocator) void {
 }
 
 /// Build the stable-identity debug manifest for one checked project.
-pub fn describe(allocator: std.mem.Allocator, compilation: *project_compile.Compilation) Error!Report {
+pub fn describe(allocator: std.mem.Allocator, compilation: *project_compile.Compilation, contract: Contract) Error!Report {
     try compilation.check();
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
     const scratch = arena.allocator();
     const program = compilation.program.?;
-
-    const roots = compilation.exportRoots(scratch) catch |err| return classify(err);
-    const schema = schema_graph.render(scratch, compilation.index, program, roots) catch |err| switch (err) {
-        error.OutOfMemory => return error.OutOfMemory,
-        error.SourceError => return error.SourceError,
-        else => return error.InternalError,
-    };
-    const project_interface = try interfaceFingerprint(scratch, schema);
 
     var modules: std.ArrayList(Module) = .empty;
     for (compilation.index.units, 0..) |unit, module_index| {
@@ -178,6 +211,11 @@ pub fn describe(allocator: std.mem.Allocator, compilation: *project_compile.Comp
         });
     }
     std.mem.sort(Module, modules.items, {}, lessModule);
+    // Compose the project interface from the sorted semantic fingerprints of the
+    // exported interface items only. This excludes source paths, spans and
+    // source hashes, and includes exported constants and declared effect ceilings
+    // through each declaration's `interface_sha256`.
+    const project_interface = try projectInterfaceFingerprint(scratch, modules.items);
 
     // Declaration lookup by canonical module-qualified name. Values borrow the
     // scratch report storage and only live for the duration of `describe`.
@@ -222,9 +260,12 @@ pub fn describe(allocator: std.mem.Allocator, compilation: *project_compile.Comp
         const base_name = specializationBaseName(function.name);
         const info = declarations_by_name.get(base_name) orelse continue;
         const arguments_sha = try argumentsFingerprint(scratch, function, program.records);
-        const provider_sha = if (info.interface_sha256) |hash| hash else try hashFields(scratch, "mylang-provider-unavailable-v1", &.{base_name});
-        const target_abi = "target-unspecified";
-        const compiler_sha = "compiler-unspecified";
+        // The provider fingerprint is the concrete argument shape (record fields,
+        // variants and layout flags), not the generic template's interface: a
+        // field inserted before an accessed field changes generated offsets.
+        const provider_sha = try providerFingerprint(scratch, function, program.records);
+        const target_abi = contract.target_abi;
+        const compiler_sha = contract.compiler_sha256;
         try specializations.append(scratch, .{
             .name = try scratch.dupe(u8, function.name),
             .identity = try specializationIdentity(scratch, info.identity, arguments_sha, provider_sha, target_abi, compiler_sha),
@@ -242,12 +283,90 @@ pub fn describe(allocator: std.mem.Allocator, compilation: *project_compile.Comp
 
     return materialize(allocator, .{
         .version = "incremental-identities-v2",
+        .complete = true,
         .project_interface_sha256 = project_interface,
         .modules = modules.items,
         .types = types.items,
         .specializations = specializations.items,
         .fragments = fragments.items,
     });
+}
+
+/// Build a best-effort manifest from a project whose bodies did not all check.
+/// This never calls `check()`, publishes no verdict, and leaves typed-only tables
+/// empty; callers use it to explain a rejection rather than to reuse work.
+pub fn describePartial(allocator: std.mem.Allocator, compilation: *project_compile.Compilation) Error!Report {
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    const scratch = arena.allocator();
+
+    var modules: std.ArrayList(Module) = .empty;
+    for (compilation.index.units, 0..) |unit, module_index| {
+        const module_name = compilation.index.project.modules.items[module_index].name;
+        const module_identity = try moduleIdentity(scratch, module_name);
+        const module_src = compilation.index.project.modules.items[module_index].src;
+        var declarations: std.ArrayList(Declaration) = .empty;
+        for (unit.symbols.items) |symbol| {
+            const kind = @tagName(symbol.kind);
+            const decl_identity = try declarationIdentity(scratch, module_name, kind, symbol.owner, symbol.name);
+            const body = declarationBody(unit.syntax, module_src, symbol);
+            const body_sha = if (body) |bytes| try bodyIdentity(scratch, decl_identity, bytes) else null;
+            const iface = try astDeclarationInterface(scratch, unit, symbol, module_src);
+            const item_identity = if (symbol.exported) try interfaceItemIdentity(scratch, module_name, kind, symbol.owner, symbol.name) else null;
+            try declarations.append(scratch, .{
+                .name = try scratch.dupe(u8, symbol.name),
+                .kind = kind,
+                .identity = decl_identity,
+                .body_sha256 = body_sha,
+                .interface_sha256 = iface,
+                .interface_identity = item_identity,
+            });
+        }
+        std.mem.sort(Declaration, declarations.items, {}, lessDeclaration);
+        try modules.append(scratch, .{
+            .name = try scratch.dupe(u8, module_name),
+            .identity = module_identity,
+            .declarations = try declarations.toOwnedSlice(scratch),
+        });
+    }
+    std.mem.sort(Module, modules.items, {}, lessModule);
+    const project_interface = try projectInterfaceFingerprint(scratch, modules.items);
+    return materialize(allocator, .{
+        .version = "incremental-identities-v2",
+        .complete = false,
+        .project_interface_sha256 = project_interface,
+        .modules = modules.items,
+        .types = &.{},
+        .specializations = &.{},
+        .fragments = &.{},
+    });
+}
+
+/// AST-only interface fallback for a rejected check, mirroring the typed paths in
+/// `declarationInterface` without requiring a checked program.
+fn astDeclarationInterface(scratch: std.mem.Allocator, unit: interface.Unit, symbol: interface.Symbol, src: source.Source) Error!?[]const u8 {
+    switch (symbol.kind) {
+        .function => {
+            const function = findAstFunction(unit.syntax, symbol.span) orelse return null;
+            if (function.policy.constant) {
+                const span = unit.syntax.statements.items[@backingInt(function.body)].span;
+                const value = try normalizedDeclarationHash(scratch, src, "constant", span);
+                return value;
+            }
+            const value = try normalizedDeclarationHash(scratch, src, function_kind, functionSpan(unit.syntax, function));
+            return value;
+        },
+        .type => {
+            const declaration = findAstType(unit, symbol.span) orelse return null;
+            const value = try normalizedDeclarationHash(scratch, src, astTypeCategory(declaration), astTypeSpan(declaration));
+            return value;
+        },
+        .constraint => {
+            const constraint = findAstConstraint(unit.syntax, symbol.span) orelse return null;
+            const value = try normalizedDeclarationHash(scratch, src, "constraint", constraint.span);
+            return value;
+        },
+    }
 }
 
 const DeclInfo = struct {
@@ -290,6 +409,12 @@ fn declarationInterface(scratch: std.mem.Allocator, module_name: []const u8, uni
                 var out: std.Io.Writer.Allocating = .init(scratch);
                 defer out.deinit();
                 try writeTypedFunction(&out.writer, function, program.records);
+                // The typed encoder cannot see AST-only default values, so append the
+                // normalized declaration header (which includes defaults) as well.
+                if (ast_function) |declared| {
+                    try writerWrite(&out.writer, "\x00");
+                    try writerWrite(&out.writer, try normalizeSpan(scratch, src, functionSpan(unit.syntax, declared)));
+                }
                 const bytes = out.toOwnedSlice() catch return error.OutOfMemory;
                 const hash = try hashFields(scratch, declaration_interface_domain, &.{ function_kind, bytes });
                 return hash;
@@ -496,6 +621,21 @@ fn argumentsFingerprint(scratch: std.mem.Allocator, function: typed.Function, re
     }
     const bytes = out.toOwnedSlice() catch return error.OutOfMemory;
     return hashFields(scratch, "mylang-specialization-arguments-v1", &.{bytes});
+}
+
+fn providerFingerprint(scratch: std.mem.Allocator, function: typed.Function, records: []const typed.Record) Error![]const u8 {
+    var out: std.Io.Writer.Allocating = .init(scratch);
+    defer out.deinit();
+    for (function.type_arguments) |argument| {
+        try writerWrite(&out.writer, typed.typeName(argument, records));
+        try writerWrite(&out.writer, "\x00");
+        if (argument.isAggregate() and argument.recordIndex() < records.len) {
+            try writeTypedRecord(&out.writer, records[argument.recordIndex()], records);
+        }
+        try writerWrite(&out.writer, "\x01");
+    }
+    const bytes = out.toOwnedSlice() catch return error.OutOfMemory;
+    return hashFields(scratch, "mylang-specialization-provider-v1", &.{bytes});
 }
 
 fn specializationKey(scratch: std.mem.Allocator, template_identity: []const u8, arguments_sha256: []const u8, provider_sha256: []const u8, target_abi: []const u8, compiler_sha256: []const u8) Error![]const u8 {
@@ -710,9 +850,13 @@ fn aliasSpan(alias: ast.TypeAlias) source.Span {
 fn functionSpan(syntax: ast.Program, function: ast.Function) source.Span {
     var end = @max(function.name.end, typeParametersEnd(function.signature.type_parameters));
     end = @max(end, function.signature.return_type.end);
-    for (function.signature.parameters) |parameter| end = @max(end, @max(parameter.name.end, parameter.ty.end));
+    for (function.signature.parameters) |parameter| {
+        end = @max(end, @max(parameter.name.end, parameter.ty.end));
+        // A default value is part of the callable contract: two declarations with
+        // different defaults accept the same calls with different behavior.
+        if (parameter.default_value) |value| end = @max(end, syntax.nodes.items[@backingInt(value)].span.end);
+    }
     if (function.policy.effect_bound) |bound| end = @max(end, bound.span.end);
-    _ = syntax;
     return .{ .start = function.name.start, .end = end };
 }
 
@@ -774,20 +918,7 @@ fn writerPrint(writer: *std.Io.Writer, comptime format: []const u8, args: anytyp
 }
 
 fn hashFields(allocator: std.mem.Allocator, domain: []const u8, fields: []const []const u8) Error![]const u8 {
-    var hash = std.crypto.hash.sha2.Sha256.init(.{});
-    hash.update(domain);
-    hash.update("\x00");
-    for (fields) |field| {
-        var length: [8]u8 = undefined;
-        std.mem.writeInt(u64, &length, field.len, .little);
-        hash.update(&length);
-        hash.update(field);
-    }
-    return hex(allocator, hash.finalResult());
-}
-
-fn hex(allocator: std.mem.Allocator, digest: Hash) Error![]const u8 {
-    return allocator.dupe(u8, &std.fmt.bytesToHex(digest, .lower)) catch error.OutOfMemory;
+    return ids.hashFields(allocator, domain, fields) catch error.OutOfMemory;
 }
 
 fn freeModule(allocator: std.mem.Allocator, module: Module) void {
@@ -876,6 +1007,7 @@ fn materialize(allocator: std.mem.Allocator, src: Report) Error!Report {
     }
     return .{
         .version = version,
+        .complete = src.complete,
         .project_interface_sha256 = project_interface,
         .modules = modules,
         .types = types,

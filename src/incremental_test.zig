@@ -15,14 +15,20 @@ const Files = struct {
         return error.NotFound;
     }
 };
+const test_contract: incremental.Contract = .{ .compiler_sha256 = "test-compiler-v1", .target_abi = "x86_64-linux-gnu" };
+
 fn describe(entries: []const File, allocator: std.mem.Allocator) !incremental.Report {
+    return describeWith(entries, allocator, test_contract);
+}
+
+fn describeWith(entries: []const File, allocator: std.mem.Allocator, contract: incremental.Contract) !incremental.Report {
     var files: Files = .{ .entries = entries };
     var project = language.project.Project.init(allocator);
     defer project.deinit();
     try project.load(.{ .context = &files, .read = Files.read }, "main", .{});
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
-    return incremental.describe(allocator, &compilation);
+    return incremental.describe(allocator, &compilation, contract);
 }
 fn declaration(report: incremental.Report, module: []const u8, name: []const u8) incremental.Declaration {
     for (report.modules) |unit| if (std.mem.eql(u8, unit.name, module)) {
@@ -420,6 +426,198 @@ test "typeIdentity distinguishes a nominal type from a generic template of the s
     const stable = try incremental.typeIdentity(t.allocator, "main", "record", "Box");
     defer t.allocator.free(stable);
     try t.expectEqualStrings(nominal_identity, stable);
+}
+
+// spec: INCREMENTAL-INTERFACE-1
+test "project interface follows exported constants and effect ceilings but not comments" {
+    const consts_41 =
+        \\module main
+        \\export K
+        \\
+        \\
+        \\const K: i64 = 41
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return K
+    ;
+    const consts_42 =
+        \\module main
+        \\export K
+        \\
+        \\
+        \\const K: i64 = 42
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return K
+    ;
+    var consts = [_]File{.{ .path = "main.my", .bytes = consts_41 }};
+    const c0 = try describe(&consts, t.allocator);
+    defer incremental.deinit(c0, t.allocator);
+    consts[0].bytes = consts_42;
+    const c1 = try describe(&consts, t.allocator);
+    defer incremental.deinit(c1, t.allocator);
+    try t.expect(!std.mem.eql(u8, c0.project_interface_sha256, c1.project_interface_sha256));
+
+    const effect_clock =
+        \\module main
+        \\export tick
+        \\
+        \\
+        \\def tick() -> i64 effects(clock):
+        \\    return 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return tick()
+    ;
+    const effect_random =
+        \\module main
+        \\export tick
+        \\
+        \\
+        \\def tick() -> i64 effects(random):
+        \\    return 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return tick()
+    ;
+    var effects = [_]File{.{ .path = "main.my", .bytes = effect_clock }};
+    const e0 = try describe(&effects, t.allocator);
+    defer incremental.deinit(e0, t.allocator);
+    effects[0].bytes = effect_random;
+    const e1 = try describe(&effects, t.allocator);
+    defer incremental.deinit(e1, t.allocator);
+    try t.expect(!std.mem.eql(u8, e0.project_interface_sha256, e1.project_interface_sha256));
+
+    const generic =
+        \\module main
+        \\export id
+        \\
+        \\
+        \\def id[T](n: T) -> T:
+        \\    return n
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return id[i64](41)
+    ;
+    const generic_comment =
+        \\module main
+        \\# unrelated comment before the generic
+        \\export id
+        \\
+        \\
+        \\def id[T](n: T) -> T:
+        \\    return n
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return id[i64](41)
+    ;
+    var generic_files = [_]File{.{ .path = "main.my", .bytes = generic }};
+    const g0 = try describe(&generic_files, t.allocator);
+    defer incremental.deinit(g0, t.allocator);
+    generic_files[0].bytes = generic_comment;
+    const g1 = try describe(&generic_files, t.allocator);
+    defer incremental.deinit(g1, t.allocator);
+    try t.expectEqualStrings(g0.project_interface_sha256, g1.project_interface_sha256);
+}
+
+// spec-case: INCREMENTAL-INTERFACE-1
+test "default argument values change the declaration interface" {
+    const default_41 =
+        \\module main
+        \\export value
+        \\
+        \\
+        \\def value(n: i64 = 41) -> i64:
+        \\    return n
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return value()
+    ;
+    const default_42 =
+        \\module main
+        \\export value
+        \\
+        \\
+        \\def value(n: i64 = 42) -> i64:
+        \\    return n
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return value()
+    ;
+    var entries = [_]File{.{ .path = "main.my", .bytes = default_41 }};
+    const d0 = try describe(&entries, t.allocator);
+    defer incremental.deinit(d0, t.allocator);
+    const interface_zero = declaration(d0, "main", "value").interface_sha256.?;
+    entries[0].bytes = default_42;
+    const d1 = try describe(&entries, t.allocator);
+    defer incremental.deinit(d1, t.allocator);
+    const interface_one = declaration(d1, "main", "value").interface_sha256.?;
+    try t.expect(!std.mem.eql(u8, interface_zero, interface_one));
+    try t.expect(!std.mem.eql(u8, d0.project_interface_sha256, d1.project_interface_sha256));
+}
+
+// spec: INCREMENTAL-SPEC-1
+// spec-case: INCREMENTAL-SPEC-1
+test "specialization key follows the concrete provider shape and target contract" {
+    const payload_one =
+        \\module main
+        \\export HasValue
+        \\export value_of
+        \\constraint HasValue[T] = copy + field(value: i64)
+        \\
+        \\
+        \\record Payload:
+        \\    value: i64
+        \\
+        \\
+        \\def value_of[T: HasValue](item: T) -> i64:
+        \\    return item.value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return value_of(Payload(value=7))
+    ;
+    const payload_padded =
+        \\module main
+        \\export HasValue
+        \\export value_of
+        \\constraint HasValue[T] = copy + field(value: i64)
+        \\
+        \\
+        \\record Payload:
+        \\    padding: i64
+        \\    value: i64
+        \\
+        \\
+        \\def value_of[T: HasValue](item: T) -> i64:
+        \\    return item.value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return value_of(Payload(padding=0, value=7))
+    ;
+    var entries = [_]File{.{ .path = "main.my", .bytes = payload_one }};
+    const s0 = try describe(&entries, t.allocator);
+    defer incremental.deinit(s0, t.allocator);
+    try t.expectEqual(@as(usize, 1), s0.specializations.len);
+    const key0 = s0.specializations[0].key_sha256;
+    entries[0].bytes = payload_padded;
+    const s1 = try describe(&entries, t.allocator);
+    defer incremental.deinit(s1, t.allocator);
+    try t.expect(!std.mem.eql(u8, key0, s1.specializations[0].key_sha256));
+
+    entries[0].bytes = payload_one;
+    const other_target = try describeWith(&entries, t.allocator, .{ .compiler_sha256 = "test-compiler-v1", .target_abi = "aarch64-linux-gnu" });
+    defer incremental.deinit(other_target, t.allocator);
+    try t.expect(!std.mem.eql(u8, key0, other_target.specializations[0].key_sha256));
 }
 
 test "materialize, dupModule, dupDeclaration, dupNominal, dupSpecialization and dupFragment release partial copies" {

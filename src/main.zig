@@ -89,12 +89,27 @@ const native_run = @import("native_run.zig");
 const native_options = @import("qbe_build_options.zig");
 /// Execution budgets a run or an evaluation may narrow from the command line.
 const Budgets = struct { max_steps: u64 = 10_000_000, max_frames: u64 = 1024 };
-/// Per-stage hit/miss observations collected when an invalidation explanation ran.
-const StageTally = struct { hits: usize = 0, misses: usize = 0 };
+/// Per-stage observations collected when an invalidation explanation ran.
+const StageTally = struct { hits: usize = 0, misses: usize = 0, skipped: usize = 0 };
 const RunObservation = struct {
     stages: [std.meta.tags(invalidation.Stage).len]StageTally = @splat(.{}),
+    /// Which stages this command actually executed. Skipped stages are never
+    /// reported as reuse.
+    executed: [std.meta.tags(invalidation.Stage).len]bool = @splat(true),
     has_invalidation: bool = false,
 };
+
+/// Stages a command actually runs. Lowering/emission/linking only happen for
+/// commands that produce or execute a native artifact.
+fn executedStages(command: Command) [std.meta.tags(invalidation.Stage).len]bool {
+    var out: [std.meta.tags(invalidation.Stage).len]bool = @splat(true);
+    const lowers = command == .run or command == .@"run-project" or command == .@"emit-project-qbe";
+    const links = command == .run or command == .@"run-project";
+    out[@backingInt(invalidation.Stage.lower_function)] = lowers;
+    out[@backingInt(invalidation.Stage.emit_fragment)] = lowers;
+    out[@backingInt(invalidation.Stage.link)] = links;
+    return out;
+}
 const Context = struct {
     gpa: std.mem.Allocator,
     arena: *std.heap.ArenaAllocator,
@@ -160,7 +175,7 @@ fn dispatch(process: std.process.Init) !u8 {
 fn run(init: Context, parsed: Parsed) !u8 {
     if (parsed.command == .@"check-session") return checkSession(init, parsed);
     var frontend_cache = openFrontendCache(init, parsed);
-    var observation: RunObservation = .{};
+    var observation: RunObservation = .{ .executed = executedStages(parsed.command) };
     var command_init = init;
     command_init.observation = &observation;
     var with_frontend = parsed;
@@ -787,6 +802,9 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         compilation.checkWithCache(functions) catch |err| switch (err) {
             error.SourceError => {
                 try reportProject(init, &compilation);
+                if (parsed.reporting.explain_invalidation) {
+                    try reportFailedInvalidation(init, parsed, &compilation, files.inputs);
+                }
                 return 1;
             },
             else => return err,
@@ -794,6 +812,17 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         init.timings.counts.ast_nodes = compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len;
         init.timings.counts.typed_nodes = compilation.program.?.nodes.len + compilation.program.?.statements.len;
         init.timings.end();
+        const executed = executedStages(parsed.command);
+        // A command that lowers must do so before the receipt is built: emitted
+        // fragments are real inputs to the lower/emit/link explanation, not an
+        // empty table that can only compare equal.
+        if (!try lowerForReceipt(init, &compilation, executed)) {
+            try reportProject(init, &compilation);
+            if (parsed.reporting.explain_invalidation) {
+                try reportFailedInvalidation(init, parsed, &compilation, files.inputs);
+            }
+            return 1;
+        }
         // One receipt serves both the invalidation comparison and, for
         // `project-dependencies`, the normal stdout payload.
         var dependency_receipt: ?[]u8 = null;
@@ -801,7 +830,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         if (parsed.command == .@"project-dependencies" or parsed.reporting.explain_invalidation) {
             dependency_receipt = try dependencyReport(init, &compilation, files.inputs);
         }
-        if (parsed.reporting.explain_invalidation) try reportInvalidation(init, parsed, dependency_receipt.?);
+        if (parsed.reporting.explain_invalidation) try reportInvalidation(init, parsed, dependency_receipt.?, executed, true);
         if (parsed.command == .@"emit-project-qbe") break :result (try emitProjectNative(init, &compilation)) orelse return 1;
         try reportProject(init, &compilation);
         if (parsed.command == .@"project-dependencies") break :result try init.gpa.dupe(u8, dependency_receipt.?);
@@ -936,6 +965,12 @@ fn replayFrontendVerdict(init: Context, command: Command, project: *const langua
     const warnings = (try cache.lookupVerdict(init.gpa, project, init.diagnostics)) orelse return false;
     defer init.gpa.free(warnings);
     try std.Io.File.stderr().writeStreamingAll(init.io, warnings);
+    if (init.observation) |observation| {
+        // Only loading sources ran; every semantic stage was answered by the
+        // stored verdict, so none of them may be reported as fresh work.
+        observation.executed = @splat(false);
+        observation.executed[@backingInt(invalidation.Stage.load_source)] = true;
+    }
     return true;
 }
 
@@ -1119,11 +1154,44 @@ fn prepareInputs(init: Context, parsed: Parsed, basename: []const u8) !?[]Genera
     return inputs;
 }
 
-fn dependencyReport(init: Context, compilation: *language.project_compile.Compilation, inputs: []const GeneratedInput) ![]u8 {
-    const manifests = try init.gpa.alloc(language.dependency_report.Manifest, inputs.len);
-    defer init.gpa.free(manifests);
+fn dependencyManifests(allocator: std.mem.Allocator, inputs: []const GeneratedInput) ![]language.dependency_report.Manifest {
+    const manifests = try allocator.alloc(language.dependency_report.Manifest, inputs.len);
     for (manifests, inputs) |*manifest, input| manifest.* = .{ .module = input.module, .path = input.manifest_path, .sha256 = input.manifest_sha256 };
+    return manifests;
+}
+
+fn dependencyReport(init: Context, compilation: *language.project_compile.Compilation, inputs: []const GeneratedInput) ![]u8 {
+    const manifests = try dependencyManifests(init.gpa, inputs);
+    defer init.gpa.free(manifests);
     return language.dependency_report.render(init.gpa, compilation, try compilerIdentity(init.io), manifests);
+}
+
+/// Lower a project before its receipt is built when the command will emit, so
+/// the receipt's fragment table is populated with real inputs. Returns false
+/// when lowering reported a source error; the caller reports diagnostics.
+fn lowerForReceipt(init: Context, compilation: *language.project_compile.Compilation, executed: [std.meta.tags(invalidation.Stage).len]bool) !bool {
+    if (!executed[@backingInt(invalidation.Stage.lower_function)]) return true;
+    init.timings.begin(lowering_phase, false);
+    defer init.timings.end();
+    compilation.emit() catch |err| switch (err) {
+        error.SourceError => return false,
+        else => return err,
+    };
+    return true;
+}
+
+/// Explain a rejected edit against the previous baseline without publishing a
+/// successful verdict. A project that failed to load has no receipt to compare,
+/// so the explanation is simply omitted rather than fabricated.
+fn reportFailedInvalidation(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation, inputs: []const GeneratedInput) !void {
+    const manifests = try dependencyManifests(init.gpa, inputs);
+    defer init.gpa.free(manifests);
+    const current = language.dependency_report.renderPartial(init.gpa, compilation, try compilerIdentity(init.io), manifests) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return,
+    };
+    defer init.gpa.free(current);
+    try reportInvalidation(init, parsed, current, executedStages(parsed.command), false);
 }
 
 fn checkImportedInputs(init: Context, inputs: []const GeneratedInput, project: *const language.project.Project) !bool {
@@ -1205,7 +1273,7 @@ fn writeInvalidationBaseline(init: Context, path: []const u8, current: []const u
 
 /// Emit one `invalidation-report-v1` line and, when caching is enabled, advance
 /// the baseline so the next run explains against this receipt.
-fn reportInvalidation(init: Context, parsed: Parsed, current: []const u8) !void {
+fn reportInvalidation(init: Context, parsed: Parsed, current: []const u8, executed: [std.meta.tags(invalidation.Stage).len]bool, publish: bool) !void {
     const path = try invalidationBaselinePath(init, parsed);
     defer init.gpa.free(path);
 
@@ -1213,17 +1281,19 @@ fn reportInvalidation(init: Context, parsed: Parsed, current: []const u8) !void 
     if (!parsed.no_cache) previous = try readInvalidationBaseline(init, path);
     defer if (previous) |bytes| init.gpa.free(bytes);
 
-    var explanation = try invalidation.explain(init.gpa, previous, current);
+    var explanation = try invalidation.explain(init.gpa, previous, current, &executed);
     defer explanation.deinit(init.gpa);
 
     if (init.observation) |observation| {
         observation.has_invalidation = true;
+        observation.executed = executed;
         observation.stages = @splat(.{});
         for (explanation.queries) |query| {
             const index = @backingInt(query.stage);
             switch (query.status) {
                 .hit => observation.stages[index].hits += 1,
                 .miss => observation.stages[index].misses += 1,
+                .skipped => observation.stages[index].skipped += 1,
             }
         }
     }
@@ -1234,7 +1304,7 @@ fn reportInvalidation(init: Context, parsed: Parsed, current: []const u8) !void 
     defer init.gpa.free(line);
     try std.Io.File.stderr().writeStreamingAll(init.io, line);
 
-    if (!parsed.no_cache) writeInvalidationBaseline(init, path, current);
+    if (publish and !parsed.no_cache) writeInvalidationBaseline(init, path, current);
 }
 
 /// Report persistent frontend reuse when the caller asked for `--report` or
@@ -1248,8 +1318,20 @@ fn reportFrontendCounters(init: Context, cache: *const language.frontend_cache.C
     if (observation.has_invalidation) {
         stages = observation.stages;
     } else {
-        stages[@backingInt(invalidation.Stage.lex_parse)] = .{ .hits = stats.syntax.hits, .misses = stats.syntax.misses };
-        stages[@backingInt(invalidation.Stage.resolve_interface)] = .{ .hits = stats.verdict.hits, .misses = stats.verdict.misses };
+        for (&stages, 0..) |*tally, index| {
+            if (!observation.executed[index]) {
+                tally.skipped = 1;
+            } else if (index == @backingInt(invalidation.Stage.lex_parse)) {
+                tally.hits = stats.syntax.hits;
+                tally.misses = stats.syntax.misses;
+            } else if (index == @backingInt(invalidation.Stage.resolve_interface)) {
+                tally.hits = stats.verdict.hits;
+                tally.misses = stats.verdict.misses;
+            } else {
+                // Executed fresh with no dedicated cache instrumentation.
+                tally.misses = 1;
+            }
+        }
     }
     const json = try std.json.Stringify.valueAlloc(init.gpa, .{
         .version = "frontend-cache-v1",

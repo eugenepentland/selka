@@ -13,6 +13,13 @@ pub fn hashBytes(allocator: std.mem.Allocator, bytes: []const u8) std.mem.Alloca
     std.crypto.hash.sha2.Sha256.hash(bytes, &digest, .{});
     return std.fmt.allocPrint(allocator, "{s}", .{std.fmt.bytesToHex(digest, .lower)});
 }
+/// Build the target/compiler contract a specialization key must distinguish.
+fn contractFor(scratch: std.mem.Allocator, identity: receipt.Identity) std.mem.Allocator.Error!incremental.Contract {
+    return .{
+        .compiler_sha256 = try std.fmt.allocPrint(scratch, "{s}", .{std.fmt.bytesToHex(identity.compiler_sha256, .lower)}),
+        .target_abi = try std.fmt.allocPrint(scratch, "{s}-{s}-{s}", .{ identity.architecture, identity.os, identity.abi }),
+    };
+}
 /// Return an owned complete receipt only after checking all reachable modules.
 pub fn render(allocator: std.mem.Allocator, compilation: *project_compile.Compilation, identity: receipt.Identity, manifests: []const Manifest) RenderError![]u8 {
     try compilation.check();
@@ -20,10 +27,29 @@ pub fn render(allocator: std.mem.Allocator, compilation: *project_compile.Compil
     defer arena.deinit();
     const scratch = arena.allocator();
     const graph = compilation.index.project;
-    const identities = try incremental.describe(scratch, compilation);
+    const identities = try incremental.describe(scratch, compilation, try contractFor(scratch, identity));
     return std.json.Stringify.valueAlloc(allocator, .{
         .version = "project-dependencies-v1",
         .complete = true,
+        .entry = graph.modules.items[0].name,
+        .implementation = try receipt.implementation(scratch, identity),
+        .inputs = try receipt.inputs(scratch, graph),
+        .manifests = manifests,
+        .incremental = identities,
+    }, .{});
+}
+/// Return an owned best-effort receipt for a project whose checking failed. This
+/// never runs or publishes a successful verdict; it exists so a rejected edit can
+/// still be explained against the previous baseline.
+pub fn renderPartial(allocator: std.mem.Allocator, compilation: *project_compile.Compilation, identity: receipt.Identity, manifests: []const Manifest) RenderError![]u8 {
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    const scratch = arena.allocator();
+    const graph = compilation.index.project;
+    const identities = try incremental.describePartial(scratch, compilation);
+    return std.json.Stringify.valueAlloc(allocator, .{
+        .version = "project-dependencies-v1",
+        .complete = false,
         .entry = graph.modules.items[0].name,
         .implementation = try receipt.implementation(scratch, identity),
         .inputs = try receipt.inputs(scratch, graph),

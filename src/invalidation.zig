@@ -27,6 +27,7 @@ const identity_field = "identity";
 const function_declaration_kind = "function";
 const specializations_field = "specializations";
 const fragments_field = "fragments";
+const fragment_label = "fragment";
 const compiler_label = "compiler";
 const module_label = "module:";
 const module_prefix = "module:{s}";
@@ -49,8 +50,9 @@ pub fn stageName(stage: Stage) []const u8 {
     return @tagName(stage);
 }
 
-/// Whether a query was satisfied by the baseline or had to miss.
-pub const Status = enum { hit, miss };
+/// Whether a query was satisfied by the baseline, had to miss, or did not run
+/// for this command at all. Skipped stages are never reported as reuse.
+pub const Status = enum { hit, miss, skipped };
 
 /// One stage's outcome.  `key` is a canonical shortened digest of the query
 /// input; `first_changed` is owned only on a miss.
@@ -66,6 +68,8 @@ pub const Explanation = struct {
     queries: []const Query,
     hits: usize,
     misses: usize,
+    /// Stages that the current command did not execute; never counted as reuse.
+    skipped: usize,
 
     /// Free every string and slice allocated by `explain`.
     pub fn deinit(self: Explanation, allocator: std.mem.Allocator) void {
@@ -82,7 +86,7 @@ pub const Explanation = struct {
 /// `previous == null` makes every stage miss with `first_changed` equal to
 /// `"no-baseline"`; an unparsable baseline makes every stage miss with
 /// `"corrupt-baseline"`.  Only an unparsable `current` returns an error.
-pub fn explain(allocator: std.mem.Allocator, previous: ?[]const u8, current: []const u8) Error!Explanation {
+pub fn explain(allocator: std.mem.Allocator, previous: ?[]const u8, current: []const u8, executed: []const bool) Error!Explanation {
     var arena_state = std.heap.ArenaAllocator.init(allocator);
     defer arena_state.deinit();
     const arena = arena_state.allocator();
@@ -91,19 +95,22 @@ pub fn explain(allocator: std.mem.Allocator, previous: ?[]const u8, current: []c
         error.OutOfMemory => return error.OutOfMemory,
         else => return error.InvalidCurrent,
     };
+    if (!validReceipt(current_value)) return error.InvalidCurrent;
 
-    if (previous == null) return allMiss(allocator, "no-baseline");
+    if (previous == null) return allMiss(allocator, "no-baseline", executed);
 
     const previous_value = std.json.parseFromSliceLeaky(std.json.Value, arena, previous.?, .{}) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
-        else => return allMiss(allocator, "corrupt-baseline"),
+        else => return allMiss(allocator, "corrupt-baseline", executed),
     };
+    if (!validReceipt(previous_value)) return allMiss(allocator, "corrupt-baseline", executed);
 
     const stages = std.meta.tags(Stage);
     const queries = try allocator.alloc(Query, stages.len);
     var filled: usize = 0;
     var hits: usize = 0;
     var misses: usize = 0;
+    var skipped: usize = 0;
     errdefer {
         for (queries[0..filled]) |query| {
             allocator.free(query.key);
@@ -113,20 +120,28 @@ pub fn explain(allocator: std.mem.Allocator, previous: ?[]const u8, current: []c
     }
 
     for (stages, 0..) |stage, index| {
+        const ran = index < executed.len and executed[index];
+        if (!ran) {
+            const key = try allocator.dupe(u8, stageName(stage));
+            queries[index] = .{ .stage = stage, .status = .skipped, .key = key, .first_changed = null };
+            skipped += 1;
+            filled = index + 1;
+            continue;
+        }
         const outcome = try compareStage(arena, stage, previous_value, current_value);
         const key = try allocator.dupe(u8, outcome.key);
         errdefer allocator.free(key);
         const first_changed = if (outcome.first_changed) |name| try allocator.dupe(u8, name) else null;
-        if (outcome.status == .hit) {
-            hits += 1;
-        } else {
-            misses += 1;
+        switch (outcome.status) {
+            .hit => hits += 1,
+            .miss => misses += 1,
+            .skipped => skipped += 1,
         }
         queries[index] = .{ .stage = stage, .status = outcome.status, .key = key, .first_changed = first_changed };
         filled = index + 1;
     }
 
-    return .{ .queries = queries, .hits = hits, .misses = misses };
+    return .{ .queries = queries, .hits = hits, .misses = misses, .skipped = skipped };
 }
 
 /// Render one `invalidation-report-v1` JSON object (no trailing newline).
@@ -135,14 +150,17 @@ pub fn render(allocator: std.mem.Allocator, explanation: Explanation) Error![]u8
         .version = "invalidation-report-v1",
         .hits = explanation.hits,
         .misses = explanation.misses,
+        .skipped = explanation.skipped,
         .queries = explanation.queries,
     }, .{ .emit_null_optional_fields = false });
 }
 
-fn allMiss(allocator: std.mem.Allocator, reason: []const u8) Error!Explanation {
+fn allMiss(allocator: std.mem.Allocator, reason: []const u8, executed: []const bool) Error!Explanation {
     const stages = std.meta.tags(Stage);
     const queries = try allocator.alloc(Query, stages.len);
     var filled: usize = 0;
+    var misses: usize = 0;
+    var skipped: usize = 0;
     errdefer {
         for (queries[0..filled]) |query| {
             allocator.free(query.key);
@@ -151,13 +169,41 @@ fn allMiss(allocator: std.mem.Allocator, reason: []const u8) Error!Explanation {
         allocator.free(queries);
     }
     for (stages, 0..) |stage, index| {
+        const ran = index < executed.len and executed[index];
         const key = try allocator.dupe(u8, stageName(stage));
         errdefer allocator.free(key);
-        const first_changed = try allocator.dupe(u8, reason);
-        queries[index] = .{ .stage = stage, .status = .miss, .key = key, .first_changed = first_changed };
+        if (!ran) {
+            queries[index] = .{ .stage = stage, .status = .skipped, .key = key, .first_changed = null };
+            skipped += 1;
+        } else {
+            const first_changed = try allocator.dupe(u8, reason);
+            queries[index] = .{ .stage = stage, .status = .miss, .key = key, .first_changed = first_changed };
+            misses += 1;
+        }
         filled = index + 1;
     }
-    return .{ .queries = queries, .hits = 0, .misses = stages.len };
+    return .{ .queries = queries, .hits = 0, .misses = misses, .skipped = skipped };
+}
+
+/// Validate the receipt shape before comparing. A syntactically valid `{}` is
+/// not a baseline: it must name the version, carry an implementation identity,
+/// an inputs array and an incremental module table.
+fn validReceipt(root: std.json.Value) bool {
+    if (root != .object) return false;
+    const version = stringOf(member(root, "version")) orelse return false;
+    if (!std.mem.eql(u8, version, "project-dependencies-v1")) return false;
+    const implementation = implementationOf(root) orelse return false;
+    if (stringOf(objectMember(implementation, compiler_sha256_field)) == null) return false;
+    switch (member(root, "inputs") orelse return false) {
+        .array => {},
+        else => return false,
+    }
+    const incremental = incrementalOf(root) orelse return false;
+    switch (objectMember(incremental, "modules") orelse return false) {
+        .array => {},
+        else => return false,
+    }
+    return true;
 }
 
 const Outcome = struct { status: Status, key: []const u8, first_changed: ?[]const u8 };
@@ -316,6 +362,15 @@ fn scalarTextOrEmpty(arena: std.mem.Allocator, value: ?std.json.Value) std.mem.A
     return scalarText(arena, inner);
 }
 
+fn optionalText(value: std.json.Value, name: []const u8) []const u8 {
+    const inner = member(value, name) orelse return "";
+    return switch (inner) {
+        .null => "",
+        .string => |text| text,
+        else => "",
+    };
+}
+
 fn elementName(arena: std.mem.Allocator, value: std.json.Value) std.mem.Allocator.Error![]const u8 {
     switch (value) {
         .string => |text| return text,
@@ -403,9 +458,11 @@ fn functionComponents(arena: std.mem.Allocator, root: std.json.Value) std.mem.Al
             if (!std.mem.eql(u8, kind, function_declaration_kind)) continue;
             try components.append(arena, .{
                 .name = stringOf(member(declaration, "name")) orelse "",
-                .value = try std.fmt.allocPrint(arena, "{s}\x1f{s}", .{
+                .value = try std.fmt.allocPrint(arena, "{s}\x1f{s}\x1f{s}\x1f{s}", .{
                     module_name,
                     stringOf(member(declaration, identity_field)) orelse "",
+                    optionalText(declaration, "interface_sha256"),
+                    optionalText(declaration, "body_sha256"),
                 }),
             });
         }
@@ -575,7 +632,7 @@ fn fragmentFingerprint(arena: std.mem.Allocator, root: std.json.Value) std.mem.A
     const components = try namedArrayComponents(arena, root, fragments_field);
     if (components.len != 0) builder.markPresent();
     for (components) |component| {
-        builder.field("fragment", component.name);
+        builder.field(fragment_label, component.name);
         builder.field("value", component.value);
     }
     return .{ .key = try builder.finish(arena), .present = builder.present };
@@ -584,7 +641,7 @@ fn fragmentFingerprint(arena: std.mem.Allocator, root: std.json.Value) std.mem.A
 fn fragmentFirstChanged(arena: std.mem.Allocator, previous: std.json.Value, current: std.json.Value) std.mem.Allocator.Error![]const u8 {
     const changed = firstChangedComponent(try namedArrayComponents(arena, previous, fragments_field), try namedArrayComponents(arena, current, fragments_field));
     if (changed) |name| return name;
-    return "fragment";
+    return fragment_label;
 }
 
 const LinkField = struct { present: bool, text: []const u8 };
@@ -623,6 +680,13 @@ fn linkFingerprint(arena: std.mem.Allocator, root: std.json.Value) std.mem.Alloc
     if (runtime_abi.present or target.present) builder.markPresent();
     builder.field(runtime_abi_field, runtime_abi.text);
     builder.field(target_field, target.text);
+    // Linking consumes the emitted fragments, so a changed fragment invalidates it.
+    const fragments = try namedArrayComponents(arena, root, fragments_field);
+    if (fragments.len != 0) builder.markPresent();
+    for (fragments) |component| {
+        builder.field(fragment_label, component.name);
+        builder.field("value", component.value);
+    }
     return .{ .key = try builder.finish(arena), .present = builder.present };
 }
 
@@ -640,6 +704,12 @@ fn linkFirstChanged(arena: std.mem.Allocator, previous: std.json.Value, current:
     const previous_target = try linkField(arena, previous, target_field);
     const current_target = try linkField(arena, current, target_field);
     if (!std.mem.eql(u8, previous_target.text, current_target.text)) return target_field;
+
+    const changed_fragment = firstChangedComponent(
+        try namedArrayComponents(arena, previous, fragments_field),
+        try namedArrayComponents(arena, current, fragments_field),
+    );
+    if (changed_fragment) |name| return name;
 
     return "toolchain";
 }

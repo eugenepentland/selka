@@ -2594,6 +2594,24 @@ fn cacheCounters(stderr: []const u8) !CacheCounters {
     };
 }
 
+/// Parse the `invalidation-report-v1` line out of `stderr`.
+fn invalidationReport(stderr: []const u8) !std.json.Parsed(std.json.Value) {
+    const marker = std.mem.indexOf(u8, stderr, "invalidation-report-v1") orelse return error.MissingInvalidationLine;
+    const object = jsonObjectContaining(stderr, marker) orelse return error.MissingInvalidationLine;
+    return std.json.parseFromSlice(std.json.Value, testing.allocator, object, .{});
+}
+
+fn stageQuery(report: std.json.Value, name: []const u8) !std.json.Value {
+    for (report.object.get("queries").?.array.items) |query| {
+        if (std.mem.eql(u8, query.object.get("stage").?.string, name)) return query;
+    }
+    return error.MissingStage;
+}
+
+fn stageStatus(report: std.json.Value, name: []const u8) ![]const u8 {
+    return (try stageQuery(report, name)).object.get("status").?.string;
+}
+
 /// Check a two-module project under `--report`, returning the parsed counters.
 fn projectCacheCheck(entry: []const u8, cache_dir: []const u8, expected_status: u8) !CacheCounters {
     var args: std.ArrayList([]const u8) = .empty;
@@ -2696,6 +2714,117 @@ test "CLI project checks reuse syntax and verdicts and invalidate only changed m
     defer testing.allocator.free(uncached.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, uncached.term);
     try testing.expect(std.mem.indexOf(u8, uncached.stderr, "frontend-cache-v1") == null);
+}
+
+// spec: INVALIDATION-EXECUTION-1
+test "CLI invalidation reports actual query work and marks unexecuted stages skipped" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.createDir(testing.io, "app", .default_dir);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app/main.my", .data =
+        \\module main
+        \\import helper
+        \\
+        \\def main() -> i64:
+        \\    return helper.answer()
+    });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
+        \\module helper
+        \\export answer
+        \\
+        \\def answer() -> i64:
+        \\    return 40
+    });
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "app/main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const temp_root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(temp_root);
+    const cache_root = try std.fs.path.join(testing.allocator, &.{ temp_root, "invalidation-cache" });
+    defer testing.allocator.free(cache_root);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_root});
+    defer testing.allocator.free(cache_argument);
+
+    // Seed a baseline with a check-only command, then edit a private body.
+    var seed_args: std.ArrayList([]const u8) = .empty;
+    defer seed_args.deinit(testing.allocator);
+    try seed_args.appendSlice(testing.allocator, &.{ compiler_path, "check-project", entry, "--explain-invalidation", cache_argument });
+    const seed = try std.process.run(testing.allocator, testing.io, .{ .argv = seed_args.items });
+    defer testing.allocator.free(seed.stdout);
+    defer testing.allocator.free(seed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, seed.term);
+
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
+        \\module helper
+        \\export answer
+        \\
+        \\def answer() -> i64:
+        \\    return 41
+    });
+    var check_args: std.ArrayList([]const u8) = .empty;
+    defer check_args.deinit(testing.allocator);
+    try check_args.appendSlice(testing.allocator, &.{ compiler_path, "check-project", entry, "--explain-invalidation", "--report", cache_argument });
+    const check = try std.process.run(testing.allocator, testing.io, .{ .argv = check_args.items });
+    defer testing.allocator.free(check.stdout);
+    defer testing.allocator.free(check.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, check.term);
+    var report = try invalidationReport(check.stderr);
+    defer report.deinit();
+    try testing.expectEqualStrings("miss", try stageStatus(report.value, "check_body"));
+    // A check-only command never lowers, emits or links, so those stages must be
+    // skipped rather than reported as reuse.
+    for ([_][]const u8{ "lower_function", "emit_fragment", "link" }) |name| {
+        try testing.expectEqualStrings("skipped", try stageStatus(report.value, name));
+    }
+    try testing.expect(std.mem.indexOf(u8, check.stderr, "\"skipped\":") != null);
+
+    // A command that does lower/emit/link must report real misses for those
+    // stages after a body edit, and its executed result must change.
+    try temp.dir.createDir(testing.io, "runapp", .default_dir);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "runapp/main.my", .data =
+        \\module main
+        \\import helper
+        \\
+        \\def main() -> i64:
+        \\    return helper.answer()
+    });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "runapp/helper.my", .data =
+        \\module helper
+        \\export answer
+        \\
+        \\def answer() -> i64:
+        \\    return 42
+    });
+    const run_entry = try temp.dir.realPathFileAlloc(testing.io, "runapp/main.my", testing.allocator);
+    defer testing.allocator.free(run_entry);
+    const run_cache_root = try std.fs.path.join(testing.allocator, &.{ temp_root, "run-cache" });
+    defer testing.allocator.free(run_cache_root);
+    const run_cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{run_cache_root});
+    defer testing.allocator.free(run_cache_argument);
+    var run_args: std.ArrayList([]const u8) = .empty;
+    defer run_args.deinit(testing.allocator);
+    try run_args.appendSlice(testing.allocator, &.{ compiler_path, "run", run_entry, "--explain-invalidation", run_cache_argument, tools[0], tools[1] });
+    const first = try std.process.run(testing.allocator, testing.io, .{ .argv = run_args.items });
+    defer testing.allocator.free(first.stdout);
+    defer testing.allocator.free(first.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 42 }, first.term);
+
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "runapp/helper.my", .data =
+        \\module helper
+        \\export answer
+        \\
+        \\def answer() -> i64:
+        \\    return 43
+    });
+    const second = try std.process.run(testing.allocator, testing.io, .{ .argv = run_args.items });
+    defer testing.allocator.free(second.stdout);
+    defer testing.allocator.free(second.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 43 }, second.term);
+    var run_report = try invalidationReport(second.stderr);
+    defer run_report.deinit();
+    for ([_][]const u8{ "check_body", "lower_function", "emit_fragment", "link" }) |name| {
+        try testing.expectEqualStrings("miss", try stageStatus(run_report.value, name));
+    }
+    try testing.expectEqualStrings("module:helper::answer", (try stageQuery(run_report.value, "check_body")).object.get("first_changed").?.string);
 }
 
 // spec: CAPABILITY-DIAG-1

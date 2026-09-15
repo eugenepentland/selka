@@ -123,6 +123,12 @@ fn buildDoc(arena: std.mem.Allocator, options: Options) ![]u8 {
     return std.json.Stringify.valueAlloc(arena, document, .{ .emit_null_optional_fields = false });
 }
 
+const all_executed: [std.meta.tags(invalidation.Stage).len]bool = @splat(true);
+
+fn explain(allocator: std.mem.Allocator, previous: ?[]const u8, current: []const u8) !invalidation.Explanation {
+    return invalidation.explain(allocator, previous, current, &all_executed);
+}
+
 fn queryFor(explanation: invalidation.Explanation, stage: invalidation.Stage) invalidation.Query {
     for (explanation.queries) |query| if (query.stage == stage) return query;
     unreachable;
@@ -150,7 +156,7 @@ test "invalidation identical receipts hit every stage" {
     const arena = arena_state.allocator();
     const previous = try buildDoc(arena, .{});
     const current = try buildDoc(arena, .{});
-    var explanation = try invalidation.explain(t.allocator, previous, current);
+    var explanation = try explain(t.allocator, previous, current);
     defer explanation.deinit(t.allocator);
     try t.expectEqual(@as(usize, 9), explanation.hits);
     try t.expectEqual(@as(usize, 0), explanation.misses);
@@ -164,7 +170,7 @@ test "invalidation source hash misses load and lex but not interface or body" {
     const arena = arena_state.allocator();
     const previous = try buildDoc(arena, .{});
     const current = try buildDoc(arena, .{ .data_sha = "sha-data-b" });
-    var explanation = try invalidation.explain(t.allocator, previous, current);
+    var explanation = try explain(t.allocator, previous, current);
     defer explanation.deinit(t.allocator);
     try expectMiss(explanation, .load_source, "module:data");
     try expectMiss(explanation, .lex_parse, "module:data");
@@ -179,7 +185,7 @@ test "invalidation interface hash misses resolve while module and body stay hit"
     const arena = arena_state.allocator();
     const previous = try buildDoc(arena, .{});
     const current = try buildDoc(arena, .{ .interface_sha = "interface-b" });
-    var explanation = try invalidation.explain(t.allocator, previous, current);
+    var explanation = try explain(t.allocator, previous, current);
     defer explanation.deinit(t.allocator);
     try expectHit(explanation, .load_source);
     try expectHit(explanation, .lex_parse);
@@ -189,17 +195,18 @@ test "invalidation interface hash misses resolve while module and body stay hit"
 }
 
 // spec-case: INVALIDATION-REPORT-1
-test "invalidation private body misses check_body only for that declaration" {
+test "invalidation private body misses check_body and lowering for that declaration" {
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();
     const arena = arena_state.allocator();
     const previous = try buildDoc(arena, .{});
     const current = try buildDoc(arena, .{ .helper_body = "body-data-helper-b" });
-    var explanation = try invalidation.explain(t.allocator, previous, current);
+    var explanation = try explain(t.allocator, previous, current);
     defer explanation.deinit(t.allocator);
     try expectMiss(explanation, .check_body, "module:data::helper");
     try expectHit(explanation, .resolve_interface);
-    try expectHit(explanation, .lower_function);
+    // Lowering consumes the checked body, so a body edit must invalidate it.
+    try expectMiss(explanation, .lower_function, "helper");
 }
 
 // spec-case: INVALIDATION-REPORT-1
@@ -209,7 +216,7 @@ test "invalidation compiler identity misses load and link" {
     const arena = arena_state.allocator();
     const previous = try buildDoc(arena, .{});
     const current = try buildDoc(arena, .{ .compiler_sha = "compiler-b" });
-    var explanation = try invalidation.explain(t.allocator, previous, current);
+    var explanation = try explain(t.allocator, previous, current);
     defer explanation.deinit(t.allocator);
     try expectMiss(explanation, .load_source, "compiler");
     try expectMiss(explanation, .link, "compiler");
@@ -223,7 +230,7 @@ test "invalidation runtime ABI change misses link only" {
     const arena = arena_state.allocator();
     const previous = try buildDoc(arena, .{});
     const current = try buildDoc(arena, .{ .runtime_abi = "abi-v2" });
-    var explanation = try invalidation.explain(t.allocator, previous, current);
+    var explanation = try explain(t.allocator, previous, current);
     defer explanation.deinit(t.allocator);
     try expectMiss(explanation, .link, "runtime-abi");
     try expectHit(explanation, .load_source);
@@ -236,11 +243,11 @@ test "invalidation missing and corrupt baselines miss every stage without error"
     const arena = arena_state.allocator();
     const current = try buildDoc(arena, .{});
 
-    var no_baseline = try invalidation.explain(t.allocator, null, current);
+    var no_baseline = try explain(t.allocator, null, current);
     defer no_baseline.deinit(t.allocator);
     try expectAllMiss(no_baseline, "no-baseline");
 
-    var corrupt = try invalidation.explain(t.allocator, "{not json", current);
+    var corrupt = try explain(t.allocator, "{not json", current);
     defer corrupt.deinit(t.allocator);
     try expectAllMiss(corrupt, "corrupt-baseline");
 }
@@ -254,49 +261,49 @@ test "invalidation covers declaration, specialization, function, fragment and to
 
     {
         const current = try buildDoc(arena, .{ .data_identity = "id-data-b" });
-        var explanation = try invalidation.explain(t.allocator, previous, current);
+        var explanation = try explain(t.allocator, previous, current);
         defer explanation.deinit(t.allocator);
         try expectMiss(explanation, .collect_declarations, "module:data");
     }
     {
         const current = try buildDoc(arena, .{ .specialization_a = "data::value@i32" });
-        var explanation = try invalidation.explain(t.allocator, previous, current);
+        var explanation = try explain(t.allocator, previous, current);
         defer explanation.deinit(t.allocator);
         try expectMiss(explanation, .instantiate_specialization, "data::value@i32");
     }
     {
         const current = try buildDoc(arena, .{ .value_identity = "decl-data-value-b" });
-        var explanation = try invalidation.explain(t.allocator, previous, current);
+        var explanation = try explain(t.allocator, previous, current);
         defer explanation.deinit(t.allocator);
         try expectMiss(explanation, .lower_function, "value");
     }
     {
         const current = try buildDoc(arena, .{ .fragment_a = "data::value-v2" });
-        var explanation = try invalidation.explain(t.allocator, previous, current);
+        var explanation = try explain(t.allocator, previous, current);
         defer explanation.deinit(t.allocator);
         try expectMiss(explanation, .emit_fragment, "data::value");
     }
     {
         const current = try buildDoc(arena, .{ .target = "aarch64-linux" });
-        var explanation = try invalidation.explain(t.allocator, previous, current);
+        var explanation = try explain(t.allocator, previous, current);
         defer explanation.deinit(t.allocator);
         try expectMiss(explanation, .link, "target");
     }
     {
         const current = try buildDoc(arena, .{ .zig_version = "0.18.0-dev" });
-        var explanation = try invalidation.explain(t.allocator, previous, current);
+        var explanation = try explain(t.allocator, previous, current);
         defer explanation.deinit(t.allocator);
         try expectMiss(explanation, .link, "toolchain");
     }
     {
         const current = try buildDoc(arena, .{ .include_specializations = false });
-        var explanation = try invalidation.explain(t.allocator, previous, current);
+        var explanation = try explain(t.allocator, previous, current);
         defer explanation.deinit(t.allocator);
         try expectMiss(explanation, .instantiate_specialization, "absent");
     }
     {
         const current = try buildDoc(arena, .{ .include_fragments = false });
-        var explanation = try invalidation.explain(t.allocator, previous, current);
+        var explanation = try explain(t.allocator, previous, current);
         defer explanation.deinit(t.allocator);
         try expectMiss(explanation, .emit_fragment, "absent");
     }
@@ -308,9 +315,46 @@ test "invalidation explain rejects InvalidCurrent and allMiss baseline is covere
     defer arena_state.deinit();
     const arena = arena_state.allocator();
     const current = try buildDoc(arena, .{});
-    try t.expectError(error.InvalidCurrent, invalidation.explain(t.allocator, null, "{not json"));
-    var explanation = try invalidation.explain(t.allocator, null, current);
+    try t.expectError(error.InvalidCurrent, invalidation.explain(t.allocator, null, "{not json", &all_executed));
+    var explanation = try explain(t.allocator, null, current);
     explanation.deinit(t.allocator);
+}
+
+// spec-case: INVALIDATION-REPORT-1
+// spec: INVALIDATION-BASELINE-1
+// spec-case: INVALIDATION-EXECUTION-1
+test "skipped stages are never reported as reuse and a structurally empty baseline is corrupt" {
+    var arena_state = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    const previous = try buildDoc(arena, .{});
+    const current = try buildDoc(arena, .{ .data_sha = "sha-data-b" });
+    var executed: [std.meta.tags(invalidation.Stage).len]bool = @splat(true);
+    executed[@backingInt(invalidation.Stage.lower_function)] = false;
+    executed[@backingInt(invalidation.Stage.emit_fragment)] = false;
+    executed[@backingInt(invalidation.Stage.link)] = false;
+    var explanation = try invalidation.explain(t.allocator, previous, current, &executed);
+    defer explanation.deinit(t.allocator);
+    try t.expectEqual(@as(usize, 3), explanation.skipped);
+    try t.expectEqual(invalidation.Status.skipped, queryFor(explanation, .lower_function).status);
+    try t.expectEqual(invalidation.Status.skipped, queryFor(explanation, .emit_fragment).status);
+    try t.expectEqual(invalidation.Status.skipped, queryFor(explanation, .link).status);
+    try t.expect(queryFor(explanation, .load_source).status == .miss);
+
+    // `{}` parses as JSON but is not a receipt: it must be treated as corrupt, not
+    // silently compared into hits.
+    var corrupt = try invalidation.explain(t.allocator, "{}", current, &all_executed);
+    defer corrupt.deinit(t.allocator);
+    try t.expectEqual(@as(usize, 0), corrupt.hits);
+    try t.expectEqual(@as(usize, 9), corrupt.misses);
+    for (std.meta.tags(invalidation.Stage)) |stage| try expectMiss(corrupt, stage, "corrupt-baseline");
+
+    // A changed body hash invalidates lowering, since lowering consumes the body.
+    const body_changed = try buildDoc(arena, .{ .value_body = "body-data-value-2" });
+    var changed = try invalidation.explain(t.allocator, previous, body_changed, &all_executed);
+    defer changed.deinit(t.allocator);
+    try expectMiss(changed, .check_body, "module:data::value");
+    try expectMiss(changed, .lower_function, "value");
 }
 
 // spec-case: INVALIDATION-REPORT-1
@@ -320,7 +364,7 @@ test "invalidation render emits all stages in order with the version" {
     const arena = arena_state.allocator();
     const previous = try buildDoc(arena, .{});
     const current = try buildDoc(arena, .{ .data_sha = "sha-data-b" });
-    var explanation = try invalidation.explain(t.allocator, previous, current);
+    var explanation = try explain(t.allocator, previous, current);
     defer explanation.deinit(t.allocator);
     const rendered = try invalidation.render(t.allocator, explanation);
     defer t.allocator.free(rendered);
