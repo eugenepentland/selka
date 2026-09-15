@@ -466,6 +466,14 @@ Exit criteria:
 - incremental rules are documented as public tooling behavior rather than incidental
   implementation details.
 
+**Status: complete (2026-09-15).** The Zig incremental contract landed: stable content-derived identities
+for all seven identity kinds, per-declaration interface fingerprints, the nine-stage query model,
+`--explain-invalidation` plus per-stage `--report` counts, the six-dimension cache-key contract,
+generic-specialization keys, and the clean/warm invalidation matrix. See
+[Wave 3 completion](wave3-incremental-2026-09-15.md) and the public
+[incremental contract](../experiments/incremental-contract.md). Generic/nominal reuse remains
+conservative and the runtime ABI key is still the `runtime-abi-v0-unfrozen` placeholder until Wave 4.
+
 ### Wave 4 — Freeze `runtime-abi-v1`
 
 Document and test the narrow interface available to generated QBE:

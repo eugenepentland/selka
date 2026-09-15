@@ -149,12 +149,12 @@ private-body edit (`line_count = 4000` to `4001`) measured through
 `scripts/profile_development.py` with five samples is:
 
 ```text
-cold check    median 17.6 ms  p95 21.1 ms
-warm verdict  median  2.3 ms  p95  2.4 ms
-edited check  median  6.9 ms  p95  7.7 ms
+cold check    median 20.4 ms  p95 23.2 ms
+warm verdict  median  2.4 ms  p95  2.6 ms
+edited check  median  7.6 ms  p95  8.6 ms
 ```
 
-The warm-edit p95 budget is 500 ms; the recorded warm-edit p95 is 7.7 ms. A
+The warm-edit p95 budget is 500 ms; the recorded warm-edit p95 is 8.6 ms. A
 timing report is only valid with its expected reuse counts, so the recorded
 profile is stored with the measurement in
 [`incremental-contract-profile.json`](incremental-contract-profile.json) and the
