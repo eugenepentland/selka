@@ -2534,11 +2534,57 @@ fn numberAfter(object: std.json.Value, key: []const u8) usize {
     return @intCast(value.integer);
 }
 
+/// Return the complete JSON object that contains `marker`.  Braces inside
+/// strings and escaped quotes do not affect nesting, so the `stages` object on
+/// the `frontend-cache-v1` line can nest freely.  The slice borrows `bytes`.
+fn jsonObjectContaining(bytes: []const u8, marker: usize) ?[]const u8 {
+    var index: usize = 0;
+    while (index < bytes.len) {
+        if (bytes[index] != '{') {
+            index += 1;
+            continue;
+        }
+        var depth: usize = 0;
+        var in_string = false;
+        var escaped = false;
+        var cursor = index;
+        var closed = false;
+        while (cursor < bytes.len) : (cursor += 1) {
+            const character = bytes[cursor];
+            if (in_string) {
+                if (escaped) {
+                    escaped = false;
+                } else if (character == '\\') {
+                    escaped = true;
+                } else if (character == '"') {
+                    in_string = false;
+                }
+                continue;
+            }
+            switch (character) {
+                '"' => in_string = true,
+                '{' => depth += 1,
+                '}' => {
+                    if (depth == 0) break;
+                    depth -= 1;
+                    if (depth == 0) {
+                        closed = true;
+                        break;
+                    }
+                },
+                else => {},
+            }
+        }
+        if (closed and index <= marker and marker <= cursor) return bytes[index .. cursor + 1];
+        index = if (closed) cursor + 1 else index + 1;
+    }
+    return null;
+}
+
 fn cacheCounters(stderr: []const u8) !CacheCounters {
     const marker = std.mem.indexOf(u8, stderr, "frontend-cache-v1") orelse return error.MissingCacheLine;
-    const open = std.mem.lastIndexOfScalar(u8, stderr[0..marker], '{') orelse return error.MissingCacheLine;
-    const close = std.mem.indexOfScalarPos(u8, stderr, marker, '}') orelse return error.MissingCacheLine;
-    var parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, stderr[open .. close + 1], .{});
+    const object = jsonObjectContaining(stderr, marker) orelse return error.MissingCacheLine;
+    var parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, object, .{});
     defer parsed.deinit();
     return .{
         .syntax_hits = numberAfter(parsed.value, "syntax_hits"),
