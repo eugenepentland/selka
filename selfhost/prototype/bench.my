@@ -11,7 +11,7 @@ enum TokenKind:
     eof
 
 
-class Token:
+record Token:
     kind: TokenKind
     start: int
     end: int

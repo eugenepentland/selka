@@ -8,7 +8,7 @@ pub const executable_tags = [_][]const u8{ "mylang", "my" };
 /// Info-string tags that show a command or a transcript for a tooling feature.
 pub const command_tags = [_][]const u8{ "bash", "sh", "console", "text" };
 /// Source keywords that introduce a definition a standard module can export.
-pub const definition_keywords = [_][]const u8{ "def", "class", "union", "enum", "type", "const" };
+pub const definition_keywords = [_][]const u8{ "def", "record", "class", "union", "enum", "type", "const" };
 
 /// One fenced code block: its info string and the text between the fences.
 pub const Fence = struct { info: []const u8, body: []const u8 };

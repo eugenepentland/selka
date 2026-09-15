@@ -13,7 +13,7 @@ enum Color:
     blue
 
 
-class Point:
+record Point:
     x: i64
     y: i64
 

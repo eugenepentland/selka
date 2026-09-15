@@ -8,14 +8,14 @@ export find
 export rail
 
 
-class Net:
+record Net:
     span: text.Span
     group: int
     owner: int
     distance: int
 
 
-class Edge:
+record Edge:
     a: int
     b: int
 

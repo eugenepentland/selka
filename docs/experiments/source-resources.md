@@ -70,7 +70,7 @@ result Open:
     ok: File,
     err: int
 
-class Failure:
+record Failure:
     code: int
     resource: File
 

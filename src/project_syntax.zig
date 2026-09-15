@@ -77,5 +77,21 @@ pub fn build(index: *interfaces.Index) BuildError!Merged {
             @field(if (is_expression) merged.types.expressions else merged.types, field) = try declarations.toOwnedSlice(allocator);
         }
     }
+    // Lambdas are syntax-only callable bodies: they are not module exports, but
+    // their spans and body node identities must be relocated with the same map
+    // as the rest of the merged syntax or a module program loses them.
+    var lambdas: std.ArrayList(ast.Lambda) = .empty;
+    for (index.units, ranges, 0..) |unit, range, module| {
+        const map: Remap = .{
+            .src = src,
+            .module = module,
+            .nodes = range.node_start,
+            .statements = range.statement_start,
+            .node_count = unit.syntax.nodes.items.len,
+            .statement_count = unit.syntax.statements.items.len,
+        };
+        for (unit.syntax.lambdas) |lambda| try lambdas.append(allocator, try map.value(allocator, ast.Lambda, lambda));
+    }
+    merged.lambdas = try lambdas.toOwnedSlice(allocator);
     return .{ .src = src, .syntax = merged, .modules = ranges, .function_modules = try function_modules.toOwnedSlice(allocator) };
 }

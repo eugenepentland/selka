@@ -19,14 +19,14 @@ enum TokenKind:
     eof
 
 
-class Token:
+record Token:
     kind: TokenKind
     start: int
     end: int
     line: int
 
 
-class ParseError:
+record ParseError:
     line: int
     column: int
     expected: str
@@ -45,7 +45,7 @@ enum NodeKind:
     expression_stmt
 
 
-class Node:
+record Node:
     kind: NodeKind
     start: int
     end: int
@@ -54,7 +54,7 @@ class Node:
     value: int
 
 
-class Parser:
+record Parser:
     source: str
     tokens: list[Token]
     cursor: list[int]

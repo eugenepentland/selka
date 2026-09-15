@@ -3,7 +3,7 @@
 Generic functions and nominal declarations can mix type parameters with explicit bounded length values:
 
 ```my
-class Chunk[T, const N: u64]:
+record Chunk[T, const N: u64]:
     items: [N]T
 
 

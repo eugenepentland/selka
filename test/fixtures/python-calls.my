@@ -1,4 +1,4 @@
-class Empty:
+record Empty:
     pass
 
 

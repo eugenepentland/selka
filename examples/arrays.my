@@ -1,4 +1,4 @@
-class Samples:
+record Samples:
     values: [3]int
 
 

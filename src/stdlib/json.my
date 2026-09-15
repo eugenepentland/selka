@@ -35,7 +35,7 @@ union Json:
 
 
 # One position inside the UTF-8 form of a document; the cell is shared by copies.
-class Scanner:
+record Scanner:
     data: bytes
     position: list[int]
 

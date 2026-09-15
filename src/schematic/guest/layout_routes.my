@@ -8,7 +8,7 @@ export build
 export external
 
 
-class Segment:
+record Segment:
     x1: int
     y1: int
     x2: int

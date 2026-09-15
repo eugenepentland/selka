@@ -66,7 +66,7 @@ mistake. Ceremony that does not buy a correctness guarantee is a defect.
 
 Concretely, the goal has five parts:
 
-- **Python-like syntax, statically typed.** `def`, indentation, `class`, ordinary
+- **Python-like syntax, statically typed.** `def`, indentation, `record`, ordinary
   assignment, `list[T]`, strings, dictionaries, `for ... in`, comprehensions and
   familiar builtins, with types checked before execution. Mylang should not surprise a
   Python reader; every difference from Python must be deliberate, documented and rare.

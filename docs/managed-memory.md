@@ -36,7 +36,7 @@ List elements can be ordinary copyable values, records, and other managed lists.
 Recursive graphs through list references are supported:
 
 ```text
-class Node:
+record Node:
     value: int
     children: list[Node]
 ```
@@ -411,7 +411,7 @@ through the managed collections their fields hold.
 
 ```mylang
 # doc: expect 42
-class Node:
+record Node:
     name: str
     peers: list[Node]
 

@@ -1,8 +1,8 @@
-class Sample:
+record Sample:
     value: u8
 
 
-class WideSample:
+record WideSample:
     value: u64
 
 

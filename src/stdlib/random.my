@@ -12,7 +12,7 @@ export shuffle
 
 # One SplitMix64 stream. The state lives in a managed cell, so copies of a
 # Random value advance together instead of forking the sequence.
-class Random:
+record Random:
     state: list[u64]
 
 

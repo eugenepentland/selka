@@ -1,10 +1,10 @@
-class Source:
+record Source:
     x: int
     y: int
     note: bool
 
 
-class View:
+record View:
     distance: int
 
 

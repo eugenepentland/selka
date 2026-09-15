@@ -131,7 +131,7 @@ number before interpolating it. The `f` prefix is Python-surface only.
 
 ```mylang
 # doc: expect 42
-class Point:
+record Point:
     x: int
     y: int
 

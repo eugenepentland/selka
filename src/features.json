@@ -239,7 +239,7 @@
     },
     "nominal-records": {
       "kind": "language",
-      "summary": "`class` declares a nominal record of annotated fields with value semantics.",
+      "summary": "`record` declares a nominal value record of annotated fields; `class` remains the compatibility spelling.",
       "doc": "docs/records-and-unions.md#records"
     },
     "tagged-unions": {
@@ -548,7 +548,7 @@
     "time_random": "Unix wall clock and explicit entropy capabilities; deterministic noncryptographic SplitMix64",
     "managed_lists": "copyable shared aliases; automatic growth; no owned/resource elements, borrowed interiors, untraced storage embedding, or host escape",
     "gc": "single-threaded nonmoving tracing; retained guest values root intermediates; collect-on-allocation stress option",
-    "python": "static fixed-width types, block-scoped locals, value records; indentation is the only block syntax",
+    "python": "static fixed-width types, function-scoped locals with E_UNBOUND definite assignment, value records; indentation is the only block syntax",
     "dictionaries": "managed insertion order; homogeneous int or str keys and copyable values",
     "native_tests": "fresh QBE processes; exported typed-call-compatible signatures; positive deterministic receipts only; frontend checks fresh; provider snapshots at most128sources/16MiB",
     "standard_library": "ten embedded Python-syntax modules over managed types: math, strings, sort, path, hex, base64, json, pool, random, time"

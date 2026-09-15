@@ -1,6 +1,6 @@
 # Records, unions and enums
 
-These are the language's user-declared data types. `class` groups named fields into
+These are the language's user-declared data types. `record` groups named fields into
 one value, `union` names a closed set of alternatives with optional payloads, and
 `enum` names a closed set with no payloads at all. All three are nominal: two
 declarations with identical shapes are different types, and a value of one is never
@@ -11,7 +11,7 @@ written. For the syntax these examples use, see the
 
 ## Records
 
-`class` declares a value record. Every field carries a type annotation, and the record
+`record` declares a value record. Every field carries a type annotation, and the record
 has no methods, no inheritance and no implicit `self` — a function that operates on a
 record takes it as an ordinary parameter. Assignment and argument passing copy the
 fields, so writing `point.x = ...` inside a helper changes only that helper's copy;
@@ -21,11 +21,11 @@ field assignment updates a record local or a record held in a list slot.
 
 ```mylang
 # doc: expect 14
-class Point:
+record Point:
     x: int
     y: int
 
-class Segment:
+record Segment:
     start: Point
     end: Point
 
@@ -53,18 +53,18 @@ declaration order, named arguments bind by field name in any order, and the two 
 mixed as long as every positional argument precedes the first named one. Construction is
 complete: every field must be supplied, and a missing one is rejected with
 `E_INCOMPLETE_CONSTRUCTION` naming the field and its declaration. Record fields do not
-take default values — writing `green: int = 2` in a `class` body is a syntax error — so
+take default values — writing `green: int = 2` in a `record` body is a syntax error — so
 a defaulted field has to become a defaulted parameter on a constructor function you
 write yourself. An empty record declares `pass` and is constructed with no arguments.
 
 ```mylang
 # doc: expect 321
-class Colour:
+record Colour:
     red: int
     green: int
     blue: int
 
-class Marker:
+record Marker:
     pass
 
 def main() -> int:
@@ -144,7 +144,7 @@ nothing supplies them.
 
 ```mylang
 # doc: expect 26
-class Point:
+record Point:
     x: int
     y: int
 
@@ -205,7 +205,7 @@ enum Status:
     missing,
     failed
 
-class Window:
+record Window:
     samples: [3]int
 
 def codes() -> [Status]int:

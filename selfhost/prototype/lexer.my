@@ -23,20 +23,20 @@ enum TokenKind:
     eof
 
 
-class Token:
+record Token:
     kind: TokenKind
     start: int
     end: int
     line: int
 
 
-class LexError:
+record LexError:
     line: int
     column: int
     message: str
 
 
-class LexResult:
+record LexResult:
     tokens: list[Token]
     errors: list[LexError]
 

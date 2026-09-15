@@ -17,7 +17,7 @@ import shared.units
 export Measurement
 
 
-class Measurement:
+record Measurement:
     distance: units.Distance
 ```
 

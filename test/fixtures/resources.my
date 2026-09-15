@@ -5,7 +5,7 @@ result Open:
     err: int
 
 
-class Failure:
+record Failure:
     code: int
     resource: File
 

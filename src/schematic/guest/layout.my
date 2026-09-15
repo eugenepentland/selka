@@ -8,12 +8,12 @@ export height
 export rail
 
 
-class Point:
+record Point:
     x: int
     y: int
 
 
-class Row:
+record Row:
     index: int
     group: int
     height: int

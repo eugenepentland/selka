@@ -13,7 +13,7 @@ export group
 export displayNet
 
 
-class Part:
+record Part:
     node: int
     ref: text.Span
     family: text.Span
@@ -21,7 +21,7 @@ class Part:
     kind: int
 
 
-class Pin:
+record Pin:
     part: int
     number: int
     net: text.Span

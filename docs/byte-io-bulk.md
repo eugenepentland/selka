@@ -10,7 +10,7 @@ export read_block
 export write_block
 
 
-class Block:
+record Block:
     bytes: [256]u8
     count: i64
 

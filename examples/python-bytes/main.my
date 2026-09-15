@@ -2,7 +2,7 @@ module main
 
 # Parse a length-prefixed binary record set the way Python code would: managed
 # byte strings, integer octets, and a checked result instead of an exception.
-class Record:
+record Record:
     tag: str
     body: bytes
 

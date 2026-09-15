@@ -10,12 +10,12 @@ export Invoice
 export calculate
 
 
-class Line:
+record Line:
     product: catalog.Product
     count: quantity.Count
 
 
-class Totals:
+record Totals:
     gross: money.Cents
     discount: money.Cents
     tax: money.Cents
@@ -26,7 +26,7 @@ class Totals:
     items: u16
 
 
-class Receipt:
+record Receipt:
     gross: int
     discount: int
     tax: int

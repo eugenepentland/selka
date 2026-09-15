@@ -4,7 +4,7 @@ export Decoded
 export Positive
 
 
-class Wire:
+record Wire:
     n: int
 
 

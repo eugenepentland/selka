@@ -192,7 +192,7 @@ shares one traced object. Dictionary keys remain `int` or `str`.
 
 ```mylang
 # doc: expect 6
-class Packet:
+record Packet:
     kind: str
     payload: bytes
 

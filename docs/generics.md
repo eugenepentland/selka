@@ -46,7 +46,7 @@ and `E_GENERIC_INFERENCE` is reported when no context supplies them.
 
 ```mylang
 # doc: expect 42
-class Box[T]:
+record Box[T]:
     value: T
 
 union Slot[T]:
@@ -82,10 +82,10 @@ call rejects with `E_GENERIC_BODY_UNSUPPORTED`.
 
 ```mylang
 # doc: expect 42
-class Reading:
+record Reading:
     value: int
 
-class TaggedReading:
+record TaggedReading:
     tag: bool
     value: int
 
@@ -111,16 +111,16 @@ second parameter carries the element type that shape is written in terms of. The
 same substitution reaches through fixed-array lengths and nominal applications,
 so `field(items: [2]U)` and `field(box: Box[U])` constrain `T` and bind `U` in
 one signature. A repeated requirement name rejects with `E_GENERIC_REQUIREMENT`,
-as does a structural requirement written on a `class` or `union` declaration
+as does a structural requirement written on a `record` or `union` declaration
 rather than on a function parameter; an invalid template rejects even when it is
 never called.
 
 ```mylang
 # doc: expect 42
-class Box[U]:
+record Box[U]:
     value: U
 
-class Frame:
+record Frame:
     items: [2]int
     box: Box[int]
 

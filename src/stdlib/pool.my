@@ -14,7 +14,7 @@ export handles
 
 # A slot store with generational handles. The fields are managed lists, so a
 # copy of a Pool value refers to the same store rather than a snapshot.
-class Pool[T: copy + storable]:
+record Pool[T: copy + storable]:
     slots: list[T]
     generations: list[int]
     live: list[bool]
@@ -24,7 +24,7 @@ class Pool[T: copy + storable]:
 
 # A copyable reference to one slot. A handle whose slot was reused or removed
 # no longer matches, so every lookup through it reports absence.
-class Handle[T: copy + storable]:
+record Handle[T: copy + storable]:
     index: int
     generation: int
 

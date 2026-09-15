@@ -1,8 +1,8 @@
-class Reading:
+record Reading:
     value: int
 
 
-class TaggedReading:
+record TaggedReading:
     tag: bool
     value: int
 

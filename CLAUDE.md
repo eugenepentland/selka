@@ -85,13 +85,15 @@ use a ```mylang block; `kind: "tooling"` features may use a ```bash or ```consol
 ## Where the language differs from Python
 
 - **Locals are function-scoped, like Python.** An assignment to a name anywhere in the
-  body is one binding, in scope from its first assignment to the end of the function, so a
-  name first assigned inside `with`, `if`, `elif`, `else`, `for` or `while` stays visible
-  after the block and a nested block reassigns the same binding. Reading a name on a path
-  that may not have assigned it yet is a static `E_UNBOUND`; a name never assigned is
-  `E_UNKNOWN_NAME`. The `for` loop variable and `match` payload binding stay scoped to
-  their block. A managed value first assigned inside `with arena()` is confined: reading
-  it after the block is `E_ARENA_ESCAPE`, not a dangling read.
+  body is one binding, in scope from its first assignment to the end of the function, and
+  a nested block reassigns the same binding. Reading a name on a path that may not have
+  assigned it yet is a static `E_UNBOUND`; a name never assigned is `E_UNKNOWN_NAME`.
+  Because every `while`, ordinary `for`, `range`, `reversed` and `zip` loop may execute
+  zero times, an assignment made only in the loop body does not make the name definitely
+  assigned after the loop; predeclare it before the loop. The `for` loop variable and
+  `match` payload binding stay scoped to their block. A managed value first assigned
+  inside `with arena()` is confined: reading it after the block is `E_ARENA_ESCAPE`, not a
+  dangling read.
 - **`range()` is a comprehension source, just like in a `for` loop.** `[x for x in
   range(10)]` and `[x for x in range(a, b)]` build a list of the range's integer values;
   comprehending over a list, string or dictionary works too.

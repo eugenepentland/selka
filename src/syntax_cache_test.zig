@@ -165,3 +165,24 @@ test "cached quoted byte arrays survive source relocation and cache eviction" {
     try t.expectEqual(@as(usize, 2), cache.statistics.hits);
     try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);
 }
+
+// spec-case: FRONTEND-CACHE-3
+test "in-memory syntax cache preserves expression lambdas across a hit" {
+    var cache = Cache.init(t.allocator, .{});
+    defer cache.deinit();
+    var files: Files = .{ .main =
+        \\module main
+        \\
+        \\
+        \\def apply(f: def(int) -> int effects(), value: int) -> int:
+        \\    return f(value)
+        \\
+        \\
+        \\def main() -> int:
+        \\    return apply(lambda value: value * 2, 21)
+    };
+    try t.expectEqual(@as(i64, 42), try execute(t.allocator, &files, &cache, false));
+    try t.expectEqual(@as(i64, 42), try execute(t.allocator, &files, &cache, false));
+    try t.expectEqual(@as(usize, 1), cache.statistics.stored);
+    try t.expectEqual(@as(usize, 1), cache.statistics.hits);
+}

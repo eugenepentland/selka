@@ -36,7 +36,7 @@ optionals as `Ok(...)`, `Err(...)`, `Some(...)` and `None`:
 ```mylang
 # doc: expect Point(x=1, y=2) Colour.green
 # doc: expect Ok(3) Err('nope') Some(4) None
-class Point:
+record Point:
     x: int
     y: int
 

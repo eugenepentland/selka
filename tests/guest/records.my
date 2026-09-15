@@ -5,12 +5,12 @@ export test_unions
 export test_arrays_and_tables
 
 
-class Point:
+record Point:
     x: int
     y: int
 
 
-class Segment:
+record Segment:
     start: Point
     end: Point
     visible: bool

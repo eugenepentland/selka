@@ -17,7 +17,7 @@ result Open:
     ok: File,
     err: int
 
-class Chunk:
+record Chunk:
     bytes: [16]u8
     length: u64
     eof: bool

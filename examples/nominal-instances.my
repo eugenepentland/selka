@@ -1,4 +1,4 @@
-class Box[T]:
+record Box[T]:
     value: T
 
 

@@ -14,15 +14,16 @@ statements live in.
 side; `name: T = value` annotates it when the value supplies nothing to infer
 from, as an empty list or dictionary literal does. Locals are function-scoped,
 like Python: an assignment to a name anywhere in the body is one binding, in scope
-from its first assignment to the end of the function, so a name first assigned
-inside a `with`, `if`, `elif`, `else`, `for` or `while` block stays visible after
-the block and a nested block reassigns the same binding rather than shadowing it.
-Its type is fixed at the first assignment. Reading a name on a control-flow path
-that may not have assigned it — the branch of an `if` with no matching `else`, for
-instance — is rejected with `E_UNBOUND`; a name never assigned before the read is
-still `E_UNKNOWN_NAME`. An assignment in a `for` or `while` body counts as binding
-the name after the loop. The `for` loop variable itself, a `match` payload binding,
-and a move-only resource stay scoped to their own block. A `class` declares a value record with annotated fields and named
+from its first assignment to the end of the function, and a nested block
+reassigns the same binding rather than shadowing it. Its type is fixed at the
+first assignment. Reading a name on a control-flow path that may not have assigned
+it — the branch of an `if` with no matching `else`, for instance — is rejected
+with `E_UNBOUND`; a name never assigned before the read is still `E_UNKNOWN_NAME`.
+Because every `for` or `while` loop may execute zero times, an assignment made only
+in the loop body does not bind the name after the loop; predeclare it before the
+loop when it is read afterward. An assignment in every continuing `if`/`elif`/`else`
+branch does bind the name afterwards. The `for` loop variable itself, a `match`
+payload binding, and a move-only resource stay scoped to their own block. A `record` declares a value record with annotated fields and named
 construction, and assigning a record copies its fields, so the copy's scalar
 fields move independently of the original. That copy is shallow: a managed field
 — a list, dictionary, string or record holding one — still refers to the same
@@ -31,7 +32,7 @@ behave everywhere else.
 
 ```mylang
 # doc: expect 42
-class Tally:
+record Tally:
     count: int
     seen: list[int]
 

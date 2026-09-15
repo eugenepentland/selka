@@ -32,7 +32,7 @@ union Slot[T]:
     some: T
 
 
-class Rect:
+record Rect:
     x: units.Micrometres
     y: units.Micrometres
     width: units.Micrometres
@@ -56,25 +56,25 @@ enum Layer:
     inner
 
 
-class Blocks:
+record Blocks:
     component: bool
     track: bool
     via: bool
 
 
-class Component:
+record Component:
     id: ids.ComponentId
     face: Face
     rect: Rect
 
 
-class Track:
+record Track:
     net: ids.NetId
     layer: Layer
     rect: Rect
 
 
-class Via:
+record Via:
     net: ids.NetId
     rect: Rect
 
@@ -85,14 +85,14 @@ union Feature:
     via: Via
 
 
-class Region:
+record Region:
     rect: Rect
     face: RegionFace
     blocks: Blocks
     allow_nets: [4]Slot[ids.NetId]
 
 
-class Board:
+record Board:
     outline: Rect
     components: [4]Slot[ids.ComponentId]
     nets: [4]Slot[ids.NetId]
@@ -151,13 +151,13 @@ union RegionIndex:
     keepout: u64
 
 
-class Violation:
+record Violation:
     feature: u64
     kind: ViolationKind
     region: RegionIndex
 
 
-class Report:
+record Report:
     violations: u64
     first: Slot[Violation]
 

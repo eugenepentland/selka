@@ -2,7 +2,7 @@
 # loudest() allocate lands in the arena and is released in bulk at the end of the
 # block; only the escaped copy survives. Prints 38.
 # Run with: zig-out/bin/mylang run examples/arena-managed/main.my
-class Reading:
+record Reading:
     sensor: int
     samples: list[int]
 

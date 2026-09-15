@@ -3,7 +3,7 @@ export Stats
 export analyze
 
 
-class Stats:
+record Stats:
     sum: int
     squares: int
 

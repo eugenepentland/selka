@@ -47,7 +47,14 @@ pub const Parser = struct {
     arena: *std.heap.ArenaAllocator,
     tokens: []const lex.Token,
     sink: *diagnostic.Sink,
-    cursor: struct { pos: usize = 0, depth: usize = 0, delimiters: usize = 0 } = .{},
+    cursor: struct {
+        pos: usize = 0,
+        depth: usize = 0,
+        delimiters: usize = 0,
+        /// Bit 0/1 records a top-level `def len`/`def replace`, indexed once at
+        /// parse start so each prelude call does not rescan the token stream.
+        shadowing: u2 = 0,
+    } = .{},
     module_syntax: bool = false,
     syntax: struct {
         nodes: std.ArrayList(ast.Node) = .empty,
@@ -98,7 +105,25 @@ pub const Parser = struct {
         self.cursor.pos += 1;
         return token.span;
     }
-    fn declaresFunction(self: Parser, name: Span) bool {
+    /// Only the compiler-embedded standard modules may spell the private
+    /// `__float_sqrt` intrinsic. A matching `@stdlib/` path is not enough: the
+    /// source bytes must be the exact embedded module.
+    fn trustedStdlib(self: Parser) bool {
+        const prefix = "@stdlib/";
+        if (!std.mem.startsWith(u8, self.src.path, prefix)) return false;
+        const embedded = @import("standard_library.zig").source(self.src.path[prefix.len..]) orelse return false;
+        return std.mem.eql(u8, embedded, self.src.bytes);
+    }
+    /// `record` is the canonical declaration head but remains an ordinary name in
+    /// expressions, so this is contextual at the top level rather than a keyword.
+    fn takeRecordHead(self: *Parser) bool {
+        if (self.current().tag != .ident or !std.mem.eql(u8, self.src.text(self.current().span), "record")) return false;
+        self.cursor.pos += 1;
+        return true;
+    }
+    /// Record top-level `def len`/`def replace` once so shadowing checks are
+    /// constant-time instead of a fresh full token scan for every prelude call.
+    fn indexShadowingDeclarations(self: *Parser) void {
         var position: usize = 0;
         var depth: usize = 0;
         while (position + 1 < self.tokens.len) : (position += 1) {
@@ -107,9 +132,14 @@ pub const Parser = struct {
             if (depth != 0 or self.tokens[position].tag != .kw_def) continue;
             const candidate = self.tokens[position + 1];
             if (candidate.tag != .ident and candidate.tag != .kw_len and candidate.tag != .kw_replace) continue;
-            if (std.mem.eql(u8, self.src.text(candidate.span), self.src.text(name))) return true;
+            const name = self.src.text(candidate.span);
+            if (std.mem.eql(u8, name, "len")) self.cursor.shadowing |= 1;
+            if (std.mem.eql(u8, name, "replace")) self.cursor.shadowing |= 2;
         }
-        return false;
+    }
+    fn declaresFunction(self: Parser, name: Span) bool {
+        const bit: u2 = if (std.mem.eql(u8, self.src.text(name), "len")) 1 else 2;
+        return self.cursor.shadowing & bit != 0;
     }
     fn qualifiedTail(self: *Parser, first: Span) diagnostic.Error!Span {
         if (!self.module_syntax) return first;
@@ -233,6 +263,7 @@ pub const Parser = struct {
     }
     /// Parse a complete source program, retaining syntax and diagnostics in the supplied allocator.
     pub fn parse(self: *Parser) diagnostic.Error!ast.Program {
+        self.indexShadowingDeclarations();
         var functions: std.ArrayList(ast.Function) = .empty;
         var records: std.ArrayList(ast.Record) = .empty;
         var domains: std.ArrayList(ast.Domain) = .empty;
@@ -313,7 +344,7 @@ pub const Parser = struct {
                 try domains.append(self.arena.allocator(), .{ .name = name.span, .backing = backing, .codec = codec });
                 continue;
             }
-            if (self.take(.kw_class)) {
+            if (self.take(.kw_class) or self.takeRecordHead()) {
                 const name = try self.expect(.ident);
                 const type_parameters = try self.typeParameters();
                 _ = try self.expect(.indent);
@@ -785,7 +816,11 @@ pub const Parser = struct {
             .kw_saturating_sub,
             .kw_saturating_mul,
             => try self.parseIntegerOperation(token),
-            .kw_f64_sqrt, .kw_f64_floor, .kw_f64_ceil, .kw_f64_trunc, .kw_f64_abs, .kw_f64_neg, .kw_f64_from_u64, .kw_f64_to_u64 => try self.parseFloatUnary(token),
+            .kw_f64_sqrt => if (self.trustedStdlib())
+                try self.parseFloatUnary(token)
+            else
+                return self.sink.fail("E_INTERNAL_NAME", token.span, "`__float_sqrt` is reserved for compiler-internal standard-library sources; use the public `sqrt` operation"),
+            .kw_f64_floor, .kw_f64_ceil, .kw_f64_trunc, .kw_f64_abs, .kw_f64_neg, .kw_f64_from_u64, .kw_f64_to_u64 => try self.parseFloatUnary(token),
             .kw_wrap => try self.parseWrap(token),
             .kw_i8, .kw_i16, .kw_i32, .kw_i64, .kw_u8, .kw_u16, .kw_u32, .kw_u64 => try self.parseWidthConversion(token),
             .lbracket => list: {

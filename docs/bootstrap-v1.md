@@ -1,21 +1,57 @@
 # Bootstrap v1 language subset
 
-`bootstrap-v1` is the complete language contract allowed in the self-hosted
+`bootstrap-v1` is the candidate language contract allowed in the self-hosted
 compiler. It is a whitelist, not a survey of everything mylang implements. The
 compiler may adopt an item only after it is implemented and satisfies the
 one-version delay in [D7](adr/D7-feature-delay.md).
 
-Two accepted items are not reconciled with commit `8420528`: lexical block scope
-must replace that tree's function-scoped locals, and `record` must replace
-`class`. `Cell[T]` is also pending. The bootstrap grammar is not ready to freeze
-until those assigned changes land or their ADRs are revised.
+This document is **not frozen**. It freezes only after the Wave 2 program
+boundary work and `Cell[T]` land and the one-version delay is satisfied.
+
+## Status
+
+### Implemented now
+
+- `module`, `import`, `export`, and the declaration forms listed below.
+- Function-scoped locals with `E_UNBOUND` definite assignment. Every `while`,
+  ordinary `for`, `range`, `reversed` and `zip` loop is treated as
+  potentially zero-iteration, so only predeclared state is definite after the
+  loop.
+- Contextually typed, expression-bodied noncapturing `lambda`.
+- The existing prelude builtins, including `sum`, `min`, `max`, `sorted`, `any`,
+  `all`, `reversed`, `list`, and `zip`. The compiler does not use every one of
+  them, but they stay part of the public vocabulary.
+- The standard-library functions listed under Standard library, subject to the
+  effects and capability limits below.
+
+### Pending Wave 2 boundary work
+
+- `Cell[T]` construction plus `.value` read and replacement.
+- `main -> Result`, argv, `eprint`, restricted-capability stderr parity, and
+  `build --run` module detection.
+- `const` `str`/`bytes` and `?` propagation over `Option`.
+
+### Migration in progress
+
+- The accepted `record` spelling from [D2](adr/D2-record-keyword.md) is now a
+  contextual declaration head, and repository examples and standard-library
+  modules use it. `class` remains accepted during the compatibility window;
+  final removal waits on the planned agent-idiom check and the one-version
+  delay.
+
+### Deferred from compiler internals
+
+- `json`, `pool`, `random`, and `time` standard modules.
+- `network`, `clock`, `random`, unrestricted `host`, ambient authority, and
+  compile-time I/O.
 
 ## Syntax and declarations
 
 - UTF-8 source, `#` comments, newline/indentation suites, and parentheses for
   continuation; no brace dialect or semicolon-dependent style.
 - `module`, `import`, and `export`; top-level `const`, `type`, `record`, `enum`,
-  `union`, `result`, and `def` declarations.
+  `union`, `result`, and `def` declarations. `class` remains the compatibility
+  declaration head during the migration window.
 - Annotated parameters, fields, non-unit results, generic `[T]` parameters with
   the existing `copy`, `storable`, `integer`, and `equality` requirements, and
   explicit or inferred call type arguments.
@@ -28,7 +64,8 @@ until those assigned changes land or their ADRs are revised.
 - Arithmetic, comparisons, Boolean operators, membership, indexing, slicing,
   calls, field access, f-strings, comprehensions, and contextually typed,
   expression-bodied noncapturing `lambda`.
-- Lexically block-scoped introduced locals. Lambdas use only parameters and
+- Function-scoped introduced locals with sound zero-iteration loop handling, as
+  described in [D1](adr/D1-block-scope.md). Lambdas use only parameters and
   module constants; nested functions, captures, tuples, inheritance, record
   methods, exceptions, pointers, references, and compile-time I/O are excluded.
 

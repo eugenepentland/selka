@@ -75,7 +75,7 @@ export Distance
 export make
 export metres
 
-class Distance:
+record Distance:
     value: int
 
 def make(value: int) -> Distance:
@@ -113,7 +113,7 @@ module prices
 export Price
 export total
 
-class Price:
+record Price:
     cents: int
 
 def total(first: Price, second: Price) -> Price:

@@ -5,15 +5,15 @@ export test_generic_results
 export test_structural_contracts
 
 
-class Box[T]:
+record Box[T]:
     value: T
 
 
-class Reading:
+record Reading:
     value: int
 
 
-class TaggedReading:
+record TaggedReading:
     tag: bool
     value: int
 

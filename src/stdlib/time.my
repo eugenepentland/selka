@@ -18,12 +18,12 @@ export expired
 
 
 # A signed span of wall-clock time, counted in nanoseconds.
-class Duration:
+record Duration:
     nanoseconds: int
 
 
 # A point on the host's Unix clock, counted in nanoseconds since the epoch.
-class Instant:
+record Instant:
     unix_nanoseconds: int
 
 

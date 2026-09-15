@@ -140,7 +140,7 @@ pushes its element type into an inner `[]`.
 
 ```mylang
 # doc: expect 9
-class Batch:
+record Batch:
     names: list[str]
     counts: dict[str, int]
 
@@ -171,7 +171,7 @@ function instead; the contextual constructors never shadow a declaration you wro
 
 ## Builtin list and result types
 
-`list[T]` and `Result[T, E]` are part of the prelude. They need no `class` declaration
+`list[T]` and `Result[T, E]` are part of the prelude. They need no `record` declaration
 and no import, they are spellable in annotations, record fields, parameters, return types
 and exported module signatures, and they use the same managed-list and checked-result
 semantics as everything else on this page. Both work under generic type parameters, so a

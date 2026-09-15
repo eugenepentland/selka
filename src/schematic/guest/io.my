@@ -20,7 +20,7 @@ domain Document: int:
         return unwrap(document)
 
 
-class Inputs:
+record Inputs:
     circuit: Document
     pinout: Document
     interface: Document

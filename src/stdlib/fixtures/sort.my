@@ -2,7 +2,7 @@ module main
 import sort
 
 
-class Entry:
+record Entry:
     name: str
     score: int
 

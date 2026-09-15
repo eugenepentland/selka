@@ -1,6 +1,6 @@
 # D5: Lambdas are noncapturing only
 
-Status: accepted; Wave 1 implementation pending integration.
+Status: accepted; Wave 1 implemented, with project-merge and cache-copy coverage completed in the Wave 1.1 stabilization pass.
 
 ## Rule
 
@@ -18,4 +18,7 @@ allocation, and invalidation edges outside the existing function-value model.
 
 Named top-level callbacks remain valid. Concise callback sites may migrate to
 lambdas, but state is passed as an explicit parameter or managed `Cell`. A capture
-diagnostic points to the name and recommends one of those repairs.
+diagnostic points to the name and recommends one of those repairs. Module
+projects, the persistent frontend cache and the in-memory syntax cache all carry
+`Program.lambdas`, so a warm path checks the same lambda program a cold parse
+would.

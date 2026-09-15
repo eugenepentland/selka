@@ -2989,7 +2989,13 @@ const Checker = struct {
         self.loops.next += 1;
         try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .arenas = self.arenas.items.len });
         defer _ = self.loops.active.pop();
+        const init_before = try self.initSnapshot();
         const body = try self.statement(loop.body);
+        // A loop may execute zero times, so assignments made only in its body
+        // cannot make a pre-existing local definitely assigned after the loop.
+        // Locals first introduced in the body remain resolvable by name but
+        // report E_UNBOUND until a later assignment on this path initializes them.
+        self.initRestore(init_before);
         if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
         self.restorePending(before);
         // `while True:` without a break has no exit, so control never reaches what follows.
@@ -3035,7 +3041,9 @@ const Checker = struct {
         self.loops.next += 1;
         try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .arenas = self.arenas.items.len });
         defer _ = self.loops.active.pop();
+        const init_before = try self.initSnapshot();
         const body = try self.statement(each.body);
+        self.initRestore(init_before);
         if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
         self.restorePending(before);
         const i = try b.read(index);
@@ -3093,7 +3101,9 @@ const Checker = struct {
         const before = try self.pendingState(self.locals.items.len);
         try self.loops.active.append(self.allocator, .{ .id = walk.loop, .before = before, .arenas = self.arenas.items.len });
         defer _ = self.loops.active.pop();
+        const init_before = try self.initSnapshot();
         const body = try self.statement(each.body);
+        self.initRestore(init_before);
         if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
         self.restorePending(before);
         if (zip) |pair| {
@@ -3138,7 +3148,9 @@ const Checker = struct {
         self.loops.next += 1;
         try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .arenas = self.arenas.items.len });
         defer _ = self.loops.active.pop();
+        const init_before = try self.initSnapshot();
         const body = try self.statement(range.body);
+        self.initRestore(init_before);
         if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
         self.restorePending(before);
         const step: typed.StatementId = @fromBackingInt(self.statements.items.len);

@@ -96,6 +96,8 @@ pub const Compilation = struct {
         if (function.type_arguments.len != 0) return false;
         // The synthesized entry wrapper of a unit or Result main has no declaration.
         if (@import("std").mem.eql(u8, function.name, @import("entry_adapter.zig").wrapper_name)) return false;
+        // Expression lambdas are synthesized callable bodies, not module declarations.
+        if (@import("std").mem.startsWith(u8, function.name, "lambda@")) return false;
         const original = self.src.originalSpan(function.declaration) catch return error.InternalError;
         if (original.input >= self.index.units.len or original.input >= self.index.project.modules.items.len) return error.InternalError;
         const unit = self.index.units[original.input];

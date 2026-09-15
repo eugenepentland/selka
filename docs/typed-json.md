@@ -32,7 +32,7 @@ enum Status:
     ready,
     failed
 
-class Sample:
+record Sample:
     sequence: u64
     status: Status
 

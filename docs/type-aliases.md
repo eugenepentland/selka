@@ -7,7 +7,7 @@ type Count = i64
 type Counts = [2]Count
 
 
-class Pair[T]:
+record Pair[T]:
     left: T
     right: T
 

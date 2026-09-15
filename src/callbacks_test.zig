@@ -214,6 +214,30 @@ test "callbacks drive sorting and visitor helpers across module boundaries" {
     try t.expectEqual(@as(i64, 82), (try native.run(&program.compilation)).value);
 }
 
+const module_lambda_source =
+    \\module main
+    \\
+    \\
+    \\def apply(f: def(int) -> int effects(), value: int) -> int:
+    \\    return f(value)
+    \\
+    \\
+    \\def main() -> int:
+    \\    return apply(lambda value: value * 2, 21)
+;
+fn moduleLambdaRead(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
+    if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
+    if (module_lambda_source.len > limit) return error.TooLarge;
+    return allocator.dupe(u8, module_lambda_source);
+}
+// spec-case: PY-LAMBDA-1
+test "module projects preserve expression lambdas through merging and execution" {
+    var program: language.embedded_project.Program = undefined;
+    try program.init(t.allocator, .{ .context = null, .read = moduleLambdaRead });
+    defer program.deinit();
+    try t.expectEqual(@as(i64, 42), (try native.run(&program.compilation)).value);
+}
+
 test "callbacks reject forged target signatures and invalid dynamic calls" {
     const source =
         \\def f(x: i64) -> i64 effects():

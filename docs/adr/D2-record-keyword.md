@@ -1,6 +1,6 @@
 # D2: Use `record` for value records
 
-Status: accepted for `bootstrap-v1`; not yet implemented.
+Status: accepted for `bootstrap-v1`; canonical `record` head implemented and repository example/stdlib sources migrated. `class` remains accepted during the compatibility window.
 
 ## Rule
 
@@ -16,7 +16,10 @@ adding class behavior merely to justify the old keyword.
 
 ## Compatibility consequence
 
-The parser and formatter must learn `record`, the repository must migrate, and
-`class` may be accepted for one compatibility window with a structured
-replacement diagnostic. Formatter output switches immediately; after the window,
-`class` is rejected. The rename remains subject to the planned agent-idiom check.
+The parser now accepts `record Name:` as a contextual declaration head while
+leaving `record` usable as an ordinary identifier outside declaration position.
+The repository examples and standard library have migrated to `record`; the
+remaining inline fixtures use the compatibility spelling. `class` remains
+accepted for one compatibility window. A structured replacement diagnostic and
+the final `class` removal still depend on the planned agent-idiom check and the
+one-version delay.

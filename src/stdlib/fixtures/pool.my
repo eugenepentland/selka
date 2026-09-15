@@ -2,7 +2,7 @@ module main
 import pool
 
 
-class Node:
+record Node:
     label: str
     weight: int
 

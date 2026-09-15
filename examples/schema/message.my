@@ -9,7 +9,7 @@ enum Status:
     failed
 
 
-class Header:
+record Header:
     sequence: u64
     status: Status
 

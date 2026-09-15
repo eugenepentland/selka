@@ -15,7 +15,7 @@ export components
 
 
 # A path split into everything before its final suffix and that suffix.
-class Split:
+record Split:
     root: str
     extension: str
 

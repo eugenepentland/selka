@@ -3,7 +3,7 @@
 Ten modules ship inside the compiler. They are ordinary Python-style guest source
 built on the managed types described in the [Python-style guide](python-syntax.md),
 [managed memory](managed-memory.md) and [managed byte strings](bytes.md): `list`,
-`dict`, `str`, `bytes`, value `class` records, `Option` and `Result`. There is no
+`dict`, `str`, `bytes`, value `record` records, `Option` and `Result`. There is no
 allocator to thread and no storage tier to choose.
 
 Import a module by name; projects do not copy these files.
@@ -163,7 +163,7 @@ only generic requirements.
 module main
 import sort
 
-class Entry:
+record Entry:
     name: str
     score: int
 
@@ -186,7 +186,7 @@ def main() -> int:
 
 ```text
 # doc: not-mylang
-class Split:
+record Split:
     root: str
     extension: str
 
@@ -374,7 +374,7 @@ the same value, written without an exponent.
 
 ```text
 # doc: not-mylang
-class Pool[T: copy + storable]: ...  class Handle[T: copy + storable]: ...
+record Pool[T: copy + storable]: ...  class Handle[T: copy + storable]: ...
 
 create[T: copy + storable](values: list[T]) -> Pool[T]
 insert[T: copy + storable](store: Pool[T], value: T) -> Handle[T]
@@ -438,7 +438,7 @@ yet spell `create[int]()`. Pass an empty annotated list for an empty pool.
 
 ```text
 # doc: not-mylang
-class Random: ...
+record Random: ...
 
 seeded(seed: int) -> Random          from_word(word: u64) -> Random
 from_entropy(capability: random_cap) -> Result[Random, str] effects(random, managed_allocation)
@@ -489,7 +489,7 @@ def main() -> int:
 
 ```text
 # doc: not-mylang
-class Duration:                      class Instant:
+record Duration:                      class Instant:
     nanoseconds: int                     unix_nanoseconds: int
 
 nanoseconds(count: int) -> Duration

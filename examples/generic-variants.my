@@ -1,4 +1,4 @@
-class Payload:
+record Payload:
     n: int
 
 

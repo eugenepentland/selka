@@ -11,11 +11,11 @@ with a related location pointing to `Key`'s requirement:
 
 ```mylang
 # doc: expect-error E_GENERIC_REQUIREMENT
-class Key[T: equality]:
+record Key[T: equality]:
     value: T
 
 
-class Bad[U]:
+record Bad[U]:
     key: Key[U]
 
 

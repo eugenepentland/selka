@@ -23,7 +23,7 @@ domain Seconds: u32:
         return unwrap(value)
 
 
-class Measurement:
+record Measurement:
     distance: Millimeters
     elapsed: Seconds
 

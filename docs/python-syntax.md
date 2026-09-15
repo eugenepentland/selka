@@ -1,6 +1,6 @@
 # The language
 
-This is the language guide. There is one syntax: `def`, `class`, indentation and
+This is the language guide. There is one syntax: `def`, `record`, indentation and
 `#` comments. The compiler checks types before execution and manages ordinary
 lists, strings and dictionaries with tracing GC. There are no allocator arguments
 or ownership annotations in ordinary data code.
@@ -27,7 +27,7 @@ Here is the same single-file shape with ordinary records and a list:
 
 ```mylang
 # doc: expect 42
-class Node:
+record Node:
     value: int
     children: list[Node]
 
@@ -45,7 +45,7 @@ Save it as `main.my` too; `check` type-checks either file without building. The
 [instructions](../experiments/schematic/README.md) describe rendering and GC
 stress testing.
 
-Write `def`, `class`, four-space indentation, `#` comments, `True`, `False`,
+Write `def`, `record`, four-space indentation, `#` comments, `True`, `False`,
 `None`, and `and`/`or`/`not`. A statement ends at its newline; a `;` separates two
 statements written on one line, as it does in Python. Parenthesized expressions and
 collection literals may continue across lines. Tabs in indentation are rejected.
@@ -173,7 +173,7 @@ arguments from the expected type.
 
 ```mylang
 # doc: expect 42
-class Point:
+record Point:
     x: int
     y: int
 
@@ -310,9 +310,11 @@ This is a Python-style statically checked language, not a Python interpreter.
 In particular:
 
 - Locals are function-scoped, like Python: a name assigned anywhere in the body is
-  one binding, in scope from its first assignment onward, so a name first assigned
-  inside an `if` or a loop is usable afterward. Reading it on a path that may not
-  have assigned it is a static `E_UNBOUND`.
+  one binding, in scope from its first assignment onward. Reading it on a path that
+  may not have assigned it is a static `E_UNBOUND`. Because a `for` or `while` loop
+  may execute zero times, an assignment made only in the loop body does not make the
+  name definitely assigned after the loop; predeclare it before the loop if it is read
+  afterward.
 - Integers have fixed width, conditions require booleans, and records are values.
 - Binary64 arithmetic follows IEEE behavior, including infinities/NaNs on floating
   division by zero. It does not raise Python exceptions.

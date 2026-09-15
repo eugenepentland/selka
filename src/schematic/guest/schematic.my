@@ -7,7 +7,7 @@ export Schematic
 export build
 
 
-class Schematic:
+record Schematic:
     nodes: list[sexpr.Node]
     parts: list[circuit.Part]
     pins: list[circuit.Pin]

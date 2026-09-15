@@ -12,7 +12,7 @@ export identifier
 export folded
 
 
-class Span:
+record Span:
     file: int
     start: int
     end: int

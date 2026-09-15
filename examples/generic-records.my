@@ -1,4 +1,4 @@
-class Sample:
+record Sample:
     values: [2]int
     tag: u8
 

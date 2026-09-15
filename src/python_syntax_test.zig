@@ -117,11 +117,12 @@ fn scopeReject(text: []const u8, code: []const u8) !void {
 }
 
 // spec: PY-SCOPE-1
-test "PY-SCOPE-1 a name first assigned inside a loop body is visible after the block" {
+test "PY-SCOPE-1 predeclared loop state and complete branches bind after the block" {
     // total = 2 + 9 = 11, last = 9, so total + last = 20.
     try t.expectEqual(@as(i64, 20), try scopeValue(
         \\def main() -> int:
         \\    total = 0
+        \\    last = 0
         \\    for row in [[1, 2], [3, 9]]:
         \\        last = row[1]
         \\        total = total + last
@@ -137,6 +138,72 @@ test "PY-SCOPE-1 a name first assigned inside a loop body is visible after the b
         \\        chosen = 9
         \\    return chosen
     ));
+    // Every loop form may execute zero times, so predeclared state is required
+    // before the loop and remains definitely assigned after it.
+    try t.expectEqual(@as(i64, 3), try scopeValue(
+        \\def main() -> int:
+        \\    answer = 0
+        \\    i = 0
+        \\    while i < 3:
+        \\        answer = answer + i
+        \\        i += 1
+        \\    return answer
+    ));
+    try t.expectEqual(@as(i64, 10), try scopeValue(
+        \\def main() -> int:
+        \\    total = 0
+        \\    for i in range(5):
+        \\        total = total + i
+        \\    return total
+    ));
+    try t.expectEqual(@as(i64, 6), try scopeValue(
+        \\def main() -> int:
+        \\    total = 0
+        \\    for i in reversed([1, 2, 3]):
+        \\        total = total + i
+        \\    return total
+    ));
+    try t.expectEqual(@as(i64, 11), try scopeValue(
+        \\def main() -> int:
+        \\    total = 0
+        \\    for a, b in zip([1, 2], [3, 4]):
+        \\        total = total + a * b
+        \\    return total
+    ));
+}
+
+// spec-case: PY-SCOPE-2
+test "PY-SCOPE-2 assignments only in a loop body are unbound after the loop" {
+    try scopeReject(
+        \\def main() -> int:
+        \\    while False:
+        \\        answer = 42
+        \\    return answer
+    , "E_UNBOUND");
+    try scopeReject(
+        \\def main() -> int:
+        \\    for item in [1, 2]:
+        \\        answer = item
+        \\    return answer
+    , "E_UNBOUND");
+    try scopeReject(
+        \\def main() -> int:
+        \\    for item in range(2):
+        \\        answer = item
+        \\    return answer
+    , "E_UNBOUND");
+    try scopeReject(
+        \\def main() -> int:
+        \\    for item in reversed([1, 2]):
+        \\        answer = item
+        \\    return answer
+    , "E_UNBOUND");
+    try scopeReject(
+        \\def main() -> int:
+        \\    for a, b in zip([1, 2], [3, 4]):
+        \\        answer = a + b
+        \\    return answer
+    , "E_UNBOUND");
 }
 
 // spec: PY-SCOPE-2
@@ -162,6 +229,30 @@ test "PY-SCOPE-2 reading a name unbound on some path is rejected" {
         \\    data.append(3)
         \\    return 0
     , "E_UNBOUND");
+}
+
+// spec: PY-RECORD-1
+test "record is the canonical declaration head without reserving the name" {
+    try t.expectEqual(@as(i64, 42), try scopeValue(
+        \\record Point:
+        \\    x: int
+        \\    y: int
+        \\
+        \\
+        \\def main() -> int:
+        \\    record = Point(x=20, y=22)
+        \\    return record.x + record.y
+    ));
+    try t.expectEqual(@as(i64, 42), try scopeValue(
+        \\class LegacyPoint:
+        \\    x: int
+        \\    y: int
+        \\
+        \\
+        \\def main() -> int:
+        \\    point = LegacyPoint(x=20, y=22)
+        \\    return point.x + point.y
+    ));
 }
 
 // spec-case: PYTHON-3

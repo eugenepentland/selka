@@ -127,7 +127,7 @@ The single exception is `escape`, whose result belongs to the enclosing region:
 
 ```mylang
 # doc: expect 38
-class Reading:
+record Reading:
     sensor: int
     samples: list[int]
 

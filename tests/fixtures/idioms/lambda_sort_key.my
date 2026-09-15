@@ -1,4 +1,4 @@
-class Person:
+record Person:
     age: int
 
 def main() -> int:

@@ -21,6 +21,16 @@ commit rather than against a moving set of worktrees.
     selected, 46 at target, 11 not yet, **zero regressions**.
   - `selfhost/prototype/{lexer,parser,bench}.my` run through the installed
     compiler.
+- **Final gate after Wave 1.1:**
+  - `zig build test --summary all` — 39/39 steps, 850/850 unit tests.
+  - `zig build test-qbe --summary all` — 36/36 steps.
+  - `zig build test-qbe-build --summary all` — 22/22 steps.
+  - `zig build fmt-check` — pass.
+  - Focused parse probe: 4,000 ordinary expressions 0.03 s, 4,000 `len`
+    calls 0.05 s, with no quadratic growth.
+  - Guardian feedback: `run-all: 88 check(s) passed` in the `zig build test`
+    gate, with the Wave 1.1 files in the diff-scoped review set. No Guardian
+    findings remained.
 
 ## Simplification workstream state (W1–W9)
 
@@ -43,29 +53,49 @@ commit rather than against a moving set of worktrees.
 - `selfhost/prototype/api_report.md`
 - this report
 
-## Open decisions and blockers
+## Open decisions and blockers after Wave 1.1
 
-1. **D1 conflict (must be resolved before `bootstrap-v1` freezes).** The plan
-   keeps block-scoped locals; commit `8420528` implements function-scoped locals
-   with `E_UNBOUND`. The ADR records the plan's decision and the code
-   disagreement; reconciling them changes the language and is not part of
-   Wave 1.
-2. **D2 `record` rename (must be resolved before the grammar freezes).** The ADR
-   accepts `record`; the tree still uses `class`. The plan requires an
-   agent-idiom comparison and a migration window before the rename is committed.
-3. **W4 minimum-versus-probes tension.** The prototype's measured minimum is much
-   smaller than the landed prelude. Decide whether the extra builtins stay
-   (they are cheap, total, and probe-required) or are removed once the probes
-   change.
-4. **Wave 2 boundary work.** `edge_main_result`, `edge_option_try`,
-   `edge_const_str`, `edge_const_bytes`, plus argv/`eprint`/environment
-   operations, are the next plan items and are covered by the four remaining
-   program-edge probes.
-5. **W9 follow-ups.** `build --run` module auto-detection and the
-   restricted-capability stderr mismatch need compiler changes.
-6. **Not Wave 1 and still open:** list concat/repeat, the expressions group
+1. **D1 resolved.** `docs/adr/D1-block-scope.md` now records function-scoped
+   locals with sound definite assignment. `sema.zig` snapshots initialization
+   around every `while`, ordinary `for`, `range`, `reversed` and `zip` loop and
+   conservatively restores it on exit. Native regressions cover all five loop
+   forms.
+2. **D2 `record` migration started.** `record Name:` is a contextual declaration
+   head, `record` remains an ordinary name outside declaration position, and
+   repository examples plus standard-library sources use the new spelling.
+   `class` remains accepted during the compatibility window; the structured
+   replacement diagnostic and final removal are still pending.
+3. **W4 prelude decision resolved.** The public prelude stays as landed. The
+   compiler is not required to use every public helper.
+4. **Wave 2 boundary work remains.** `Cell[T]`, `main -> Result`, argv,
+   `eprint`, restricted-capability stderr parity, `build --run` module
+   detection, constant `str`/`bytes`, and optional propagation are still the
+   next plan items.
+5. **Not Wave 1 and still open:** list concat/repeat, the expressions group
    (conditional expression, chained comparisons, tuples, `is None`, `Option`
    equality), and incremental identity/invalidation (Wave 3).
+
+## Wave 1.1 stabilization
+
+The first green Wave 1 gate missed two release-blocking correctness paths and
+three follow-up surfaces. The stabilization pass changed:
+
+- **Loop definite assignment** in `src/sema.zig`. A name assigned only in a
+  potentially zero-iteration loop body is `E_UNBOUND` after the loop instead of
+  reading uninitialized native storage.
+- **Lambda preservation** in project merging (`src/project_syntax.zig`),
+  canonical AST copies (`src/ast_copy.zig`), and project export roots
+  (`src/project_compile.zig`). A module program with a lambda checks and runs,
+  and the in-memory syntax cache matches a cold parse.
+- **Prelude shadowing cost** in `src/parser.zig`: top-level `def len`/`def
+  replace` declarations are indexed once at parse start instead of rescanning
+  the complete token stream for every call. A 4,000-call probe dropped from the
+  reported quadratic path to ordinary-expression cost.
+- **Private intrinsic spelling**: ordinary source now receives
+  `E_INTERNAL_NAME` for `__float_sqrt`; only embedded `@stdlib/` sources may use
+  it. The public `sqrt` operation remains the canonical user spelling.
+- **Planning metadata**: D1, D5, `features.json`, `bootstrap-v1`, and this
+  receipt now agree with the implementation.
 
 ## Notes on the migration
 

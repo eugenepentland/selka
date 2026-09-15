@@ -8,7 +8,7 @@ directly in a callback argument:
 
 ```mylang
 # doc: expect 12
-class Person:
+record Person:
     age: int
 
 def main() -> int:

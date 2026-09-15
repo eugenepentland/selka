@@ -130,7 +130,7 @@ record otherwise, so `Box[int](item=0)` remains record construction.
 def identity[T](value: T) -> T:
     return value
 
-class Box[T]:
+record Box[T]:
     item: T
 
 def main() -> int:

@@ -229,6 +229,8 @@ const Scan = struct {
                 .{ .kind = .resource, .braced = false }
             else if (self.word(self.pos, "result"))
                 .{ .kind = .result, .braced = true }
+            else if (self.word(self.pos, "record"))
+                .{ .kind = .@"struct", .braced = true }
             else
                 null,
             else => null,

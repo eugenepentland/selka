@@ -1,9 +1,9 @@
-class Point:
+record Point:
     x: int
     y: int
 
 
-class Segment:
+record Segment:
     start: Point
     end: Point
     visible: bool

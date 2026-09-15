@@ -9,7 +9,7 @@ export validate
 export equal
 
 
-class Port:
+record Port:
     prefix: text.Span
     name: text.Span
     direction: text.Span

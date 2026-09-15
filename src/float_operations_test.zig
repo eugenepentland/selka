@@ -25,7 +25,7 @@ test "binary64 IEEE boundaries canonical NaNs signed zero and FloatConversion" {
 
 const intrinsic_source =
     \\def main() -> int:
-    \\    root = int(__float_sqrt(1764.0))
+    \\    root = int(sqrt(1764.0))
     \\    return root
 ;
 fn intrinsicScenario(allocator: std.mem.Allocator) !void {
@@ -37,7 +37,7 @@ fn intrinsicScenario(allocator: std.mem.Allocator) !void {
 test "float intrinsics evaluate at runtime and reject raw operands" {
     var bad = try language.Compilation.init(t.allocator, "float.my",
         \\def main() -> int:
-        \\    return int(__float_sqrt(1))
+        \\    return int(sqrt(1))
     );
     defer bad.deinit();
     try t.expectError(error.SourceError, bad.check());
@@ -74,7 +74,7 @@ test "a float-in float-out intrinsic takes a float operand and answers a float" 
         \\        return 2
         \\    if trunc(0.0 - 1.9) != 0.0 - 1.0 or abs(0.0 - 2.5) != 2.5:
         \\        return 3
-        \\    if __float_sqrt(value) != root:
+        \\    if sqrt(value) != root:
         \\        return 4
         \\    return int(abs(0.0 - root))
     );
@@ -88,4 +88,24 @@ test "a float-in float-out intrinsic takes a float operand and answers a float" 
     defer raw.deinit();
     try t.expectError(error.SourceError, raw.check());
     try t.expectEqualStrings("E_REMOVED_SPELLING", raw.diagnostics.items[0].code);
+}
+
+// spec: INTERNAL-NAME-1
+test "the reserved intrinsic spelling is rejected in ordinary source" {
+    var c = try language.Compilation.init(t.allocator, "float.my",
+        \\def main() -> int:
+        \\    return int(__float_sqrt(1764.0))
+    );
+    defer c.deinit();
+    try t.expectError(error.SourceError, c.check());
+    try t.expectEqualStrings("E_INTERNAL_NAME", c.diagnostics.items[0].code);
+    // A source path that merely looks like the embedded library does not grant
+    // the intrinsic: the bytes must be the compiler-owned module.
+    var spoof = try language.Compilation.init(t.allocator, "@stdlib/math.my",
+        \\def main() -> int:
+        \\    return int(__float_sqrt(1764.0))
+    );
+    defer spoof.deinit();
+    try t.expectError(error.SourceError, spoof.check());
+    try t.expectEqualStrings("E_INTERNAL_NAME", spoof.diagnostics.items[0].code);
 }

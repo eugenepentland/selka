@@ -1,4 +1,4 @@
-class Pair:
+record Pair:
     values: [2]int
     flag: bool
 

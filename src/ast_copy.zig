@@ -65,6 +65,7 @@ fn cloneInner(map: Mapper, allocator: std.mem.Allocator, input: ast.Program) !as
         .nodes = .fromOwnedSlice(try map.value(allocator, []ast.Node, input.nodes.items)),
         .statements = .fromOwnedSlice(try map.value(allocator, []ast.Statement, input.statements.items)),
         .functions = try map.value(allocator, []const ast.Function, input.functions),
+        .lambdas = try map.value(allocator, []const ast.Lambda, input.lambdas),
         .types = try map.value(allocator, ast.TypeDeclarations, input.types),
     };
 }

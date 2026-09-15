@@ -19,7 +19,7 @@ a passing check.
 
 ```mylang
 # doc: expect-error E_TYPED_HOLE
-class Invoice:
+record Invoice:
     subtotal: int
     tax: int
 

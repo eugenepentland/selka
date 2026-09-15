@@ -284,7 +284,7 @@ under it.
 ```text
 # doc: not-mylang
 # This example prints 39 and returns 7.
-class Point:
+record Point:
     x: int
     y: int
 

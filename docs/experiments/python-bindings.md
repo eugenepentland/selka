@@ -56,7 +56,7 @@ Every generated class has a deterministic Python identifier beginning `T_`.
 Every record field begins `f_`; enum members begin `v_`. ASCII letters/digits remain
 literal, while other UTF-8 bytes become `_xHH`, including underscores. Because the
 escape character is itself escaped, source names cannot collide after conversion.
-For example, field `class` becomes `f_class`, and `f_x` becomes `f_f_x5fx`. Module
+For example, field `record` becomes `f_class`, and `f_x` becomes `f_f_x5fx`. Module
 qualification remains part of class identities. Clients may directly import the
 emitted class names for static annotations, or use registry aliases as above.
 

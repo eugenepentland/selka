@@ -6,7 +6,7 @@ domain D: i64:
         return unwrap(value)
 
 
-class Pair:
+record Pair:
     tag: D
     bytes: [2]u8
 
