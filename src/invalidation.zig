@@ -24,7 +24,7 @@ const optimize_field = "optimize";
 const runtime_abi_field = "runtime_abi";
 const target_field = "target";
 const identity_field = "identity";
-const function_kind = "function";
+const function_declaration_kind = "function";
 const specializations_field = "specializations";
 const fragments_field = "fragments";
 const compiler_label = "compiler";
@@ -400,7 +400,7 @@ fn functionComponents(arena: std.mem.Allocator, root: std.json.Value) std.mem.Al
         const module_name = stringOf(member(module, "name")) orelse "";
         for (arrayOf(member(module, "declarations"))) |declaration| {
             const kind = stringOf(member(declaration, "kind")) orelse "";
-            if (!std.mem.eql(u8, kind, function_kind)) continue;
+            if (!std.mem.eql(u8, kind, function_declaration_kind)) continue;
             try components.append(arena, .{
                 .name = stringOf(member(declaration, "name")) orelse "",
                 .value = try std.fmt.allocPrint(arena, "{s}\x1f{s}", .{
@@ -558,7 +558,7 @@ fn lowerFunctionFingerprint(arena: std.mem.Allocator, root: std.json.Value) std.
     const components = try functionComponents(arena, root);
     if (components.len != 0) builder.markPresent();
     for (components) |component| {
-        builder.field(function_kind, component.name);
+        builder.field(function_declaration_kind, component.name);
         builder.field(identity_field, component.value);
     }
     return .{ .key = try builder.finish(arena), .present = builder.present };
@@ -567,7 +567,7 @@ fn lowerFunctionFingerprint(arena: std.mem.Allocator, root: std.json.Value) std.
 fn lowerFunctionFirstChanged(arena: std.mem.Allocator, previous: std.json.Value, current: std.json.Value) std.mem.Allocator.Error![]const u8 {
     const changed = firstChangedComponent(try functionComponents(arena, previous), try functionComponents(arena, current));
     if (changed) |name| return name;
-    return function_kind;
+    return function_declaration_kind;
 }
 
 fn fragmentFingerprint(arena: std.mem.Allocator, root: std.json.Value) std.mem.Allocator.Error!Fingerprint {

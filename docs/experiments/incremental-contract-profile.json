@@ -1,0 +1,48 @@
+{
+  "version": "incremental-contract-profile-v1",
+  "workload": "selfhost/prototype/bench.my",
+  "scope": "single-module compiler-shaped lexer/builder workload; private-body edit only; local sequential checking, cold includes process startup",
+  "edit": {
+    "before": "line_count = 4000",
+    "after": "line_count = 4001"
+  },
+  "repeats": 5,
+  "warm_edit_p95_budget_ms": 500,
+  "cold_check": {
+    "samples": [
+      21.052086995041464,
+      12.797035000403412,
+      13.32301099319011,
+      17.64472699869657,
+      19.36866799951531
+    ],
+    "median_ms": 17.64472699869657,
+    "p95_ms": 21.052086995041464
+  },
+  "warm_verdict": {
+    "samples": [
+      2.343951004149858,
+      2.251263002108317,
+      2.2621860043727793,
+      2.2570459987036884,
+      2.4030690037761815
+    ],
+    "median_ms": 2.2621860043727793,
+    "p95_ms": 2.4030690037761815
+  },
+  "edited_check": {
+    "samples": [
+      7.746019997284748,
+      7.108337995305192,
+      6.869138996989932,
+      6.884558002639096,
+      6.619704996410292
+    ],
+    "median_ms": 6.884558002639096,
+    "p95_ms": 7.746019997284748
+  },
+  "expected_reuse": {
+    "edited_check": "the edited module is reparsed and rechecked; unchanged declarations reuse their checked bodies and the unchanged project interface keeps callers out of the recheck"
+  },
+  "compiler_sha256": "2ce82c9874e253bca9f0ee0ef2c3de05b88e6c0610a9191e79034d0cc2ad750f"
+}

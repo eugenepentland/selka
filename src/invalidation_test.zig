@@ -143,6 +143,7 @@ fn expectAllMiss(explanation: invalidation.Explanation, first_changed: []const u
     for (std.meta.tags(invalidation.Stage)) |stage| try expectMiss(explanation, stage, first_changed);
 }
 
+// spec: INVALIDATION-REPORT-1
 test "invalidation identical receipts hit every stage" {
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();
@@ -156,6 +157,7 @@ test "invalidation identical receipts hit every stage" {
     for (std.meta.tags(invalidation.Stage)) |stage| try expectHit(explanation, stage);
 }
 
+// spec-case: INVALIDATION-REPORT-1
 test "invalidation source hash misses load and lex but not interface or body" {
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();
@@ -170,6 +172,7 @@ test "invalidation source hash misses load and lex but not interface or body" {
     try expectHit(explanation, .check_body);
 }
 
+// spec-case: INVALIDATION-REPORT-1
 test "invalidation interface hash misses resolve while module and body stay hit" {
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();
@@ -185,6 +188,7 @@ test "invalidation interface hash misses resolve while module and body stay hit"
     try expectHit(explanation, .check_body);
 }
 
+// spec-case: INVALIDATION-REPORT-1
 test "invalidation private body misses check_body only for that declaration" {
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();
@@ -198,6 +202,7 @@ test "invalidation private body misses check_body only for that declaration" {
     try expectHit(explanation, .lower_function);
 }
 
+// spec-case: INVALIDATION-REPORT-1
 test "invalidation compiler identity misses load and link" {
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();
@@ -211,6 +216,7 @@ test "invalidation compiler identity misses load and link" {
     try expectHit(explanation, .lex_parse);
 }
 
+// spec-case: INVALIDATION-REPORT-1
 test "invalidation runtime ABI change misses link only" {
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();
@@ -223,6 +229,7 @@ test "invalidation runtime ABI change misses link only" {
     try expectHit(explanation, .load_source);
 }
 
+// spec-case: INVALIDATION-REPORT-1
 test "invalidation missing and corrupt baselines miss every stage without error" {
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();
@@ -238,6 +245,7 @@ test "invalidation missing and corrupt baselines miss every stage without error"
     try expectAllMiss(corrupt, "corrupt-baseline");
 }
 
+// spec-case: INVALIDATION-REPORT-1
 test "invalidation covers declaration, specialization, function, fragment and toolchain stages" {
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();
@@ -294,6 +302,7 @@ test "invalidation covers declaration, specialization, function, fragment and to
     }
 }
 
+// spec-case: INVALIDATION-REPORT-1
 test "invalidation explain rejects InvalidCurrent and allMiss baseline is covered" {
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();
@@ -304,6 +313,7 @@ test "invalidation explain rejects InvalidCurrent and allMiss baseline is covere
     explanation.deinit(t.allocator);
 }
 
+// spec-case: INVALIDATION-REPORT-1
 test "invalidation render emits all stages in order with the version" {
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();

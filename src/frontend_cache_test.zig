@@ -303,6 +303,7 @@ test "frontend cache retains named constraints across a syntax round trip" {
     try t.expectEqualStrings("copy", src.text(hit.types.constraints[0].subject.requirements[0]));
 }
 
+// spec-case: INCREMENTAL-KEYS-1
 test "frontend cache contract dimensions invalidate syntax and verdict keys for identical sources" {
     var temp = t.tmpDir(.{});
     defer temp.cleanup();

@@ -531,6 +531,26 @@
       "kind": "language",
       "summary": "`constraint Name[Subject] = ...` names a reusable structural requirement shared by function type parameters.",
       "doc": "docs/generics.md#named-constraints"
+    },
+    "stable-incremental-identities": {
+      "kind": "tooling",
+      "summary": "Compiler identities for modules, declarations, bodies, types, specializations and emitted fragments are content-derived and stable across unrelated edits.",
+      "doc": "docs/experiments/incremental-contract.md#stable-identities"
+    },
+    "invalidation-report": {
+      "kind": "tooling",
+      "summary": "`--explain-invalidation` reports per-stage hit/miss and the first changed dependency against a stored baseline; `--report` adds per-stage counts.",
+      "doc": "docs/experiments/incremental-contract.md#invalidation-observability"
+    },
+    "incremental-cache-contract": {
+      "kind": "tooling",
+      "summary": "Incremental cache keys include compiler identity, bootstrap version, target, runtime ABI, effects/capabilities contract and flags.",
+      "doc": "docs/experiments/incremental-contract.md#cache-key-contract"
+    },
+    "clean-warm-invalidation-matrix": {
+      "kind": "tooling",
+      "summary": "A clean-versus-warm invalidation matrix proves status, diagnostics, interface manifest, QBE and reuse counts agree.",
+      "doc": "docs/experiments/incremental-contract.md#correctness-clean-versus-warm"
     }
   },
   "unsupported": [

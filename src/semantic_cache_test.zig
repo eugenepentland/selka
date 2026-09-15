@@ -215,6 +215,7 @@ test "semantic cache keeps inferred callback schemas fresh across changed bodies
     try t.expectEqual(@as(usize, 0), cache.statistics.reused);
 }
 
+// spec-case: SEMANTIC-CACHE-2
 test "semantic cache bypasses constant length function and nominal specializations" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
@@ -288,6 +289,7 @@ test "semantic cache rechecks transitive effects when only a callee body changes
     try t.expect(cache.statistics.stored > 0);
 }
 
+// spec-case: INCREMENTAL-KEYS-1
 test "specialization key mixes template arguments provider abi and compiler" {
     const first = try semantic_key.specializationKey(t.allocator, "mod::id", &.{ "i64", "bool" }, "provider-v1", "runtime-abi-v0-unfrozen", "compiler-a");
     defer t.allocator.free(first);
@@ -310,6 +312,7 @@ test "specialization key mixes template arguments provider abi and compiler" {
         try t.expect(!std.mem.eql(u8, first, changed));
 }
 
+// spec-case: INCREMENTAL-KEYS-1
 test "semantic cache contract fingerprint forces a fresh check and identical contract reuses" {
     const contract_a = try cache_key.Contract.default.fingerprint(t.allocator);
     defer t.allocator.free(contract_a);

@@ -228,6 +228,7 @@ test "the runtime units merge in one build-obj invocation naming every source" {
     try std.testing.expectEqualStrings("-femit-bin=/tmp/out.o", argv[argv.len - 1]);
 }
 
+// spec-case: INCREMENTAL-KEYS-1
 test "qbe object cache identity folds the wave 3 contract dimensions" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
     defer environment.deinit();

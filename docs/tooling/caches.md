@@ -34,7 +34,14 @@ build-time identity (a digest of every file under `src`, the Zig toolchain and t
 optimize mode), so a rebuilt compiler can never read an older build's entries.
 
 The cache has two independent layers, and both are always keyed by the compiler
-identity and a format version:
+identity, a format version and the six-dimension cache contract: compiler build
+identity, bootstrap-language version, target, runtime ABI, effects/capabilities
+contract and invoking flags. The contract fingerprint is mixed into every syntax,
+verdict, checked-body, specialization and native-object key, so changing any
+dimension invalidates an entry even when the source bytes are identical. The
+on-disk format is `mylang-frontend-cache-v3`; the runtime ABI dimension is
+`runtime-abi-v0-unfrozen` until Wave 4 freezes `runtime-abi-v1`. See
+[the incremental contract](../experiments/incremental-contract.md#cache-key-contract).
 
 | layer | stored | key also includes | skipped on a hit | still runs fresh |
 | --- | --- | --- | --- | --- |
@@ -74,17 +81,30 @@ list owns exactly its items and never advertises capacity it did not allocate.
   currently unread" file: the caller always reloads every module first.
 
 `--report` prints one `frontend-cache-v1` JSON receipt on stderr; `--timings=json`
-adds the same JSON receipt alongside the phase-timing lines. Plain `--timings`
-keeps its existing `timings: native_ns=<integer>` text protocol and does not emit
-a receipt. `mylang build --report` keeps its own native `qbe-build-v1` receipt on
-its usual stream; the frontend counters are available from `check`, `run` and
+adds the same JSON receipt alongside the phase-timing lines. The receipt now also
+carries a `stages` object with a hit/miss count for each of the nine incremental
+query stages. Plain `--timings` keeps its existing
+`timings: native_ns=<integer>` text protocol and does not emit a receipt.
+`mylang build --report` keeps its own native `qbe-build-v1` receipt on its usual
+stream; the frontend counters are available from `check`, `run` and
 `check-project` (or any command with `--timings=json`).
+
+`--explain-invalidation` compares the current checked project against the
+previous `project-dependencies-v1` receipt and prints one
+`invalidation-report-v1` line on stderr, naming the hit/miss status and the first
+changed dependency for every stage. The baseline lives at
+`<cache-dir>/invalidation/<entry>.json`, is deliberately not partitioned by
+compiler identity so a compiler change can be explained, and `--no-cache` reads
+and writes no baseline. A missing baseline is nine misses with `"no-baseline"`;
+a corrupt baseline is nine misses with `"corrupt-baseline"` rather than a
+failure.
 
 ```console
 $ mylang check-project app/main.my --report --cache-dir=.mylang-cache/qbe
-{"version":"frontend-cache-v1","syntax_hits":0,"syntax_misses":2,"syntax_stored":2,"verdict_hits":0,"verdict_misses":1,"verdict_stored":1,"damaged":0,"bypassed":0,"evicted":0,"retained_bytes":685}
-$ mylang check-project app/main.my --report --cache-dir=.mylang-cache/qbe
-{"version":"frontend-cache-v1","syntax_hits":0,"syntax_misses":0,"syntax_stored":0,"verdict_hits":1,"verdict_misses":0,"verdict_stored":0,"damaged":0,"bypassed":0,"evicted":0,"retained_bytes":0}
+{"version":"frontend-cache-v1","syntax_hits":0,"syntax_misses":2,"syntax_stored":2,"verdict_hits":0,"verdict_misses":1,"verdict_stored":1,"damaged":0,"bypassed":0,"evicted":0,"retained_bytes":685,"stages":{"load_source":{"hits":0,"misses":0},"lex_parse":{"hits":0,"misses":2},"resolve_interface":{"hits":1,"misses":0}}}
+$ mylang check-project app/main.my --explain-invalidation --report --cache-dir=.mylang-cache/qbe
+{"version":"invalidation-report-v1","hits":6,"misses":3,"queries":[{"stage":"load_source","status":"miss","key":"...","first_changed":"module:main"},{"stage":"resolve_interface","status":"hit","key":"..."},{"stage":"check_body","status":"miss","key":"...","first_changed":"module:main::main"}]}
+{"version":"frontend-cache-v1","syntax_hits":2,"syntax_misses":0,...,"stages":{"load_source":{"hits":1,"misses":0},"lex_parse":{"hits":1,"misses":0},"resolve_interface":{"hits":1,"misses":0}}}
 ```
 
 ## Syntax cache

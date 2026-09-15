@@ -76,6 +76,7 @@ fn frame(hash: *Sha256, bytes: []const u8) void {
 
 const testing = std.testing;
 
+// spec: INCREMENTAL-KEYS-1
 test "cache key fingerprints are stable and every contract dimension changes them" {
     const base = Contract.default;
     const first = try base.fingerprint(testing.allocator);
@@ -100,6 +101,7 @@ test "cache key fingerprints are stable and every contract dimension changes the
     }
 }
 
+// spec-case: INCREMENTAL-KEYS-1
 test "cache key equality compares all six fields and treats empty as a value" {
     const base = Contract.default;
     try testing.expect(Contract.eql(base, base));

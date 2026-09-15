@@ -581,6 +581,7 @@ fn runMatrix() !void {
     for (cases) |case| try expectCase(t.allocator, case);
 }
 
+// spec: INVALIDATION-MATRIX-1
 test "invalidation matrix clean and warm results agree with exact reuse deltas" {
     try runMatrix();
 }
@@ -606,6 +607,7 @@ fn checkSingle(allocator: std.mem.Allocator, cache: *Cache, bytes: []const u8) !
 
 // The runtime ABI and compiler-version proof: identical source, identical
 // `semantic_cache` instance, only the contract fingerprint changes.
+// spec-case: INVALIDATION-MATRIX-1
 test "invalidation matrix runtime abi and compiler identity are required cache keys" {
     var cache = Cache.init(t.allocator, 8 * 1024 * 1024);
     defer cache.deinit();
@@ -649,6 +651,7 @@ test "invalidation matrix runtime abi and compiler identity are required cache k
 
 // The frontend cache's compiler-identity dimension is proven in
 // frontend_cache_test.zig; here the damaged-entry fallback is checked end to end.
+// spec-case: INVALIDATION-MATRIX-1
 test "invalidation matrix damaged frontend entries recompute the clean program" {
     var temp = t.tmpDir(.{});
     defer temp.cleanup();
@@ -691,6 +694,7 @@ test "invalidation matrix damaged frontend entries recompute the clean program" 
 
 // The native-build module cannot import the language module's cache_key.zig, so
 // its shadow contract must stay byte-for-byte identical.
+// spec-case: INCREMENTAL-KEYS-1
 test "invalidation matrix qbe contract shadow matches the canonical fingerprint" {
     const canonical = try cache_key.Contract.default.fingerprint(t.allocator);
     defer t.allocator.free(canonical);
