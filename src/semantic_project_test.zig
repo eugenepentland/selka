@@ -144,3 +144,210 @@ test "dotted imported function values keep callback type catalogs fresh across c
     try t.expectEqual(@as(usize, 0), cache.statistics.reused);
     try t.expectEqual(@as(usize, 0), cache.statistics.bypassed);
 }
+
+/// Check one project without lowering or running it, so tests can read the
+/// semantic cache's actual execution-site counters.
+fn checkOnly(files: *Files, cache: *Cache) !void {
+    var project = language.project.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(.{ .context = files, .read = Files.read }, "main", .{});
+    var index = try language.interfaces.build(&project);
+    var compilation = try language.project_compile.Compilation.init(&index);
+    try compilation.checkWithCache(cache);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "module insert and reorder with an unused generic preserve ordinary body reuse" {
+    const main_unordered =
+        \\module main
+        \\import a
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return a.first() + a.second()
+    ;
+    const main_reordered =
+        \\module main
+        \\import util
+        \\import a
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return a.first() + a.second()
+    ;
+    const a =
+        \\module a
+        \\export first
+        \\export second
+        \\
+        \\
+        \\def first() -> i64 effects():
+        \\    return 1
+        \\
+        \\
+        \\def second() -> i64 effects():
+        \\    return 7
+        \\
+        \\
+        \\def unused[T](value: T) -> T:
+        \\    return value
+    ;
+    const util =
+        \\module util
+        \\
+        \\
+        \\def unused[T](value: T) -> T:
+        \\    return value
+    ;
+    var base = [_]File{ .{ .path = "main.my", .bytes = main_unordered }, .{ .path = "a.my", .bytes = a } };
+    var files: Files = .{ .entries = &base };
+    var cache = Cache.init(t.allocator, 8 * 1024 * 1024);
+    defer cache.deinit();
+    try checkOnly(&files, &cache);
+    try t.expectEqual(@as(usize, 3), cache.statistics.checked);
+
+    const before = cache.statistics.reused;
+    const before_checked = cache.statistics.checked;
+    var edited = [_]File{
+        .{ .path = "main.my", .bytes = main_reordered },
+        .{ .path = "util.my", .bytes = util },
+        .{ .path = "a.my", .bytes = a },
+    };
+    var reordered: Files = .{ .entries = &edited };
+    try checkOnly(&reordered, &cache);
+    // Module input positions changed and an unrelated module with an unused
+    // generic was added, but every ordinary body is byte-identical.
+    try t.expectEqual(before + 3, cache.statistics.reused);
+    try t.expectEqual(before_checked, cache.statistics.checked);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "same bare name in two modules resolves to distinct identities" {
+    var entries = [_]File{
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\import a
+        \\import b
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return a.run() + b.run()
+        },
+        .{ .path = "a.my", .bytes =
+        \\module a
+        \\export helper
+        \\export run
+        \\
+        \\
+        \\def helper() -> i64 effects():
+        \\    return 1
+        \\
+        \\
+        \\def run() -> i64 effects():
+        \\    return helper()
+        },
+        .{ .path = "b.my", .bytes =
+        \\module b
+        \\export helper
+        \\export run
+        \\
+        \\
+        \\def helper() -> i64 effects():
+        \\    return 2
+        \\
+        \\
+        \\def run() -> i64 effects():
+        \\    return helper()
+        },
+    };
+    var files: Files = .{ .entries = &entries };
+    var cache = Cache.init(t.allocator, 8 * 1024 * 1024);
+    defer cache.deinit();
+    try checkOnly(&files, &cache);
+    try t.expectEqual(@as(usize, 5), cache.statistics.checked);
+
+    entries[1].bytes =
+        \\module a
+        \\export helper
+        \\export run
+        \\
+        \\
+        \\def helper() -> i64 effects():
+        \\    return 11
+        \\
+        \\
+        \\def run() -> i64 effects():
+        \\    return helper()
+    ;
+    const before = cache.statistics.reused;
+    const before_checked = cache.statistics.checked;
+    try checkOnly(&files, &cache);
+    // `a.helper` changed and only `a.run`'s resolved dependency moved with it;
+    // `b.helper`/`b.run` and `main` are untouched even though a bare `helper`
+    // is declared twice in the project.
+    try t.expectEqual(before + 4, cache.statistics.reused);
+    try t.expectEqual(before_checked + 1, cache.statistics.checked);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "adding an unrelated import directive does not invalidate ordinary bodies" {
+    const a_base =
+        \\module a
+        \\export helper
+        \\
+        \\
+        \\def helper() -> i64 effects():
+        \\    return 1
+    ;
+    const a_imported =
+        \\module a
+        \\import b
+        \\export helper
+        \\
+        \\
+        \\def helper() -> i64 effects():
+        \\    return 1
+    ;
+    var base = [_]File{
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\import a
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return a.helper()
+        },
+        .{ .path = "a.my", .bytes = a_base },
+    };
+    var files: Files = .{ .entries = &base };
+    var cache = Cache.init(t.allocator, 8 * 1024 * 1024);
+    defer cache.deinit();
+    try checkOnly(&files, &cache);
+    try t.expectEqual(@as(usize, 2), cache.statistics.checked);
+
+    const before = cache.statistics.reused;
+    var edited = [_]File{
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\import a
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return a.helper()
+        },
+        .{ .path = "a.my", .bytes = a_imported },
+        .{ .path = "b.my", .bytes =
+        \\module b
+        \\
+        \\
+        \\def unused[T](value: T) -> T:
+        \\    return value
+        },
+    };
+    var imported: Files = .{ .entries = &edited };
+    try checkOnly(&imported, &cache);
+    // The import list change is not itself a dependency: only bodies whose
+    // resolved references actually changed miss.
+    try t.expectEqual(before + 2, cache.statistics.reused);
+    try t.expectEqual(@as(usize, 2), cache.statistics.checked);
+}

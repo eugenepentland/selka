@@ -613,7 +613,7 @@ test "invalidation matrix runtime abi and compiler identity are required cache k
     defer cache.deinit();
     const abi_fp = try cache_key.Contract.default.fingerprint(t.allocator);
     defer t.allocator.free(abi_fp);
-    cache.contract = abi_fp;
+    cache.context.contract = abi_fp;
     try checkSingle(t.allocator, &cache, single_source);
     try t.expectEqual(@as(usize, 3), cache.statistics.checked);
     try checkSingle(t.allocator, &cache, single_source);
@@ -624,7 +624,7 @@ test "invalidation matrix runtime abi and compiler identity are required cache k
     abi_changed.runtime_abi = "runtime-abi-v2";
     const changed_abi_fp = try abi_changed.fingerprint(t.allocator);
     defer t.allocator.free(changed_abi_fp);
-    cache.contract = changed_abi_fp;
+    cache.context.contract = changed_abi_fp;
     try checkSingle(t.allocator, &cache, single_source);
     try t.expectEqual(@as(usize, 3), cache.statistics.reused);
     try t.expectEqual(@as(usize, 6), cache.statistics.checked);
@@ -633,14 +633,14 @@ test "invalidation matrix runtime abi and compiler identity are required cache k
     compiler_changed.compiler_identity = "sha256:changed";
     const changed_compiler_fp = try compiler_changed.fingerprint(t.allocator);
     defer t.allocator.free(changed_compiler_fp);
-    cache.contract = changed_compiler_fp;
+    cache.context.contract = changed_compiler_fp;
     try checkSingle(t.allocator, &cache, single_source);
     try t.expectEqual(@as(usize, 3), cache.statistics.reused);
     try t.expectEqual(@as(usize, 9), cache.statistics.checked);
 
     // Returning to the ABI contract is still a miss until its entry is published,
     // then identical work is reused again.
-    cache.contract = changed_abi_fp;
+    cache.context.contract = changed_abi_fp;
     try checkSingle(t.allocator, &cache, single_source);
     try t.expectEqual(@as(usize, 3), cache.statistics.reused);
     try t.expectEqual(@as(usize, 12), cache.statistics.checked);

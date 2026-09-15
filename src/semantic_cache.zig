@@ -7,13 +7,99 @@ const source = @import("source.zig");
 const key = @import("semantic_key.zig");
 const copy = @import("semantic_copy.zig");
 const owned = @import("semantic_entry.zig");
+const interfaces = @import("interfaces.zig");
+const cache_key = @import("cache_key.zig");
+
+/// Re-exported so host wiring can bind the full contract without depending on
+/// the compiler module's internal file layout.
+pub const Contract = cache_key.Contract;
+/// Version of the M1/M2 mutation-contract encoding that semantic entries embed.
+/// A change invalidates every retained body just like a changed effect contract.
+pub const mutation_contract_version = "mutation-v1";
 
 /// Observations count actual checked or copied bodies, including changed-source
 /// requests. `checked` increments at the `checkFunction` execution site and
 /// `reused` increments only when a stored body is actually copied. The
 /// `work-report-v1` receipt reads these counters rather than inferring reuse from
 /// equal digests.
-pub const Statistics = struct { reused: usize = 0, checked: usize = 0, stored: usize = 0, bypassed: usize = 0, retained_bytes: usize = 0 };
+pub const MissReason = enum {
+    /// Reuse was never consulted because the cache holds no retention budget.
+    cache_disabled,
+    /// The request ordinal is not one of the prepared ordinary functions.
+    not_ordinary,
+    /// No retained entry has this stable declaration identity.
+    no_entry,
+    /// The resolved dependency digest changed.
+    context_changed,
+    /// The declaration region length changed.
+    region_length_changed,
+    /// The declaration region bytes changed.
+    region_bytes_changed,
+    /// A referenced function identity is absent from the fresh catalog.
+    missing_function,
+    /// A referenced function identity is ambiguous in the fresh catalog.
+    ambiguous_function,
+    /// A referenced record identity is absent from the fresh catalog.
+    missing_record,
+    /// A referenced record identity is ambiguous in the fresh catalog.
+    ambiguous_record,
+    /// Copying the retained tree failed a relocation check.
+    relocation_failed,
+    /// A referenced generic specialization would not exist without checking.
+    generic_specialization,
+    /// A referenced dynamically interned record cannot be remapped before checking.
+    interned_record,
+    /// A stored function value would require an interned callable contract.
+    function_value,
+    /// The retained tree was too large to keep.
+    over_budget,
+};
+pub const miss_reason_count = std.meta.tags(MissReason).len;
+pub const MissCounts = [miss_reason_count]usize;
+
+/// Human-readable work-report reason tag for one conservative miss.
+pub fn missReasonName(reason: MissReason) []const u8 {
+    return switch (reason) {
+        .cache_disabled => "cache-disabled",
+        .not_ordinary => "not-ordinary-body",
+        .no_entry => "no-retained-body",
+        .context_changed => "dependencies-changed",
+        .region_length_changed => "declaration-region-length-changed",
+        .region_bytes_changed => "declaration-region-changed",
+        .missing_function => "missing-function-identity",
+        .ambiguous_function => "ambiguous-function-identity",
+        .missing_record => "missing-record-identity",
+        .ambiguous_record => "ambiguous-record-identity",
+        .relocation_failed => "relocation-failed",
+        .generic_specialization => "generic-specialization",
+        .interned_record => "interned-record",
+        .function_value => "function-value",
+        .over_budget => "over-budget",
+    };
+}
+
+/// Observations count actual checked or copied bodies, including changed-source
+/// requests. `checked` increments at the `checkFunction` execution site and
+/// `reused` increments only when a stored body is actually copied. The
+/// `work-report-v1` receipt reads these counters rather than inferring reuse from
+/// equal digests.
+pub const Statistics = struct {
+    reused: usize = 0,
+    checked: usize = 0,
+    stored: usize = 0,
+    bypassed: usize = 0,
+    retained_bytes: usize = 0,
+    /// Conservative per-reason miss counts for bodies that were not reused. These
+    /// name an exact cause even when the body is checked fresh.
+    misses: MissCounts = @splat(0),
+};
+
+/// One host-bound semantic cache context. C2 persists this fingerprint so an
+/// entry can never be admitted across an incompatible build or mutation contract.
+pub const Context = struct {
+    contract: []const u8 = "",
+    mutation_contract: []const u8 = mutation_contract_version,
+};
 
 /// Caller-serialized cache; returned typed trees never borrow retained storage.
 pub const Cache = struct {
@@ -23,10 +109,13 @@ pub const Cache = struct {
     entries: []owned.Entry = &.{},
     /// Stable declaration identity -> retained entry ordinal.
     index: std.StringHashMapUnmanaged(usize) = .empty,
-    /// Wave-3 contract fingerprint mixed into every prepared dependency digest.
-    /// Empty preserves the historical behavior for callers that have not resolved
-    /// a contract; a changed fingerprint forces a fresh check with no body reuse.
-    contract: []const u8 = "",
+    /// Persistence-facing cache context: the Wave-3 contract fingerprint plus
+    /// the M1/M2 mutation-contract version. A changed context forces a fresh
+    /// check with no body reuse.
+    context: Context = .{},
+    /// Lexical module/import identities for the current project compilation.
+    /// Single-unit callers leave this null and resolve against their one module.
+    resolution: ?*interfaces.Index = null,
 
     /// Zero retention bytes disables reuse without changing checking behavior.
     pub fn init(allocator: std.mem.Allocator, max_bytes: usize) Cache {
@@ -34,7 +123,7 @@ pub const Cache = struct {
     }
     /// Create a cache bound to an explicit Wave-3 contract fingerprint.
     pub fn initWithContract(allocator: std.mem.Allocator, max_bytes: usize, contract: []const u8) Cache {
-        return .{ .allocator = allocator, .max_bytes = max_bytes, .contract = contract };
+        return .{ .allocator = allocator, .max_bytes = max_bytes, .context = .{ .contract = contract } };
     }
     /// Release every retained tree and source generation.
     pub fn deinit(self: *Cache) void {
@@ -51,7 +140,7 @@ pub const Cache = struct {
     }
     /// Begin after fresh declaration/type collection, before checking any body.
     pub fn begin(self: *Cache, allocator: std.mem.Allocator, src: source.Source, syntax: ast.Program, records: []const typed.Record) error{ OutOfMemory, InternalError }!Session {
-        const prepared = try key.prepare(allocator, src, syntax, records, self.contract);
+        const prepared = try key.prepare(allocator, src, syntax, self.context.contract, self.context.mutation_contract, self.resolution);
         // Per-function eligibility: an unrelated generic, alias, constant or
         // callback no longer disables ordinary-body reuse. A zero-retention cache
         // still reports a bypass because reuse was never consulted.
@@ -78,10 +167,24 @@ pub const Cache = struct {
             .prepared = prepared,
             .ranges = ranges,
             .reuse = .{ .enabled = enabled, .functions = reused },
-            .function_map = function_map,
-            .record_map = record_map,
+            .remap = .{
+                .functions = function_map,
+                .records = record_map,
+                .initial_record_count = records.len,
+            },
         };
     }
+};
+
+/// Fresh-catalog remap tables for one request.
+const Remap = struct {
+    /// Stable function identity -> fresh ordinary instance ordinal.
+    functions: std.StringHashMapUnmanaged(usize),
+    /// Record name -> fresh catalog ordinal (ambiguous names are `maxInt`).
+    records: std.StringHashMapUnmanaged(usize),
+    /// Catalog records that existed before body checking. Records appended while
+    /// checking (callable contracts, structural arrays) have no stable remap yet.
+    initial_record_count: usize,
 };
 
 /// Per-function reuse state for one check request.
@@ -91,41 +194,42 @@ pub const Session = struct {
     prepared: key.Prepared,
     ranges: []copy.Range,
     reuse: Reuse,
-    /// Stable function identity -> fresh ordinary instance ordinal.
-    function_map: std.StringHashMapUnmanaged(usize),
-    /// Record name -> fresh catalog ordinal (ambiguous names are `maxInt`).
-    record_map: std.StringHashMapUnmanaged(usize),
+    /// Fresh-catalog remap tables for this request.
+    remap: Remap,
 
     /// Copy one unchanged checked local tree, remapping declaration and catalog
     /// identities. Any missing or ambiguous remap is a miss.
     pub fn lookup(self: *Session, allocator: std.mem.Allocator, index: usize, nodes: *std.ArrayList(typed.Node), statements: *std.ArrayList(typed.Statement)) error{ OutOfMemory, InternalError }!?typed.Function {
+        // A disabled cache or a first request with no retained snapshot is a
+        // whole-cache bypass already counted by `begin`; do not manufacture a
+        // per-body reason when reuse was never a candidate.
         if (!self.reuse.enabled) return null;
-        if (index >= self.prepared.ordinary_ast.len) return null;
+        if (index >= self.prepared.ordinary_ast.len) return self.reason(.not_ordinary);
         const ast_index = self.prepared.ordinary_ast[index];
-        const entry_index = self.cache.index.get(self.prepared.keys[ast_index]) orelse return null;
+        const entry_index = self.cache.index.get(self.prepared.keys[ast_index]) orelse return self.reason(.no_entry);
         const entry = &self.cache.entries[entry_index];
-        if (!std.mem.eql(u8, &entry.meta.identity.context, &self.prepared.contexts[ast_index])) return null;
+        if (!std.mem.eql(u8, &entry.meta.identity.context, &self.prepared.contexts[ast_index])) return self.reason(.context_changed);
         const before = entry.meta.identity.body;
         const after = self.prepared.bodies[ast_index];
-        if (before.end - before.start != after.end - after.start) return null;
-        if (!std.mem.eql(u8, entry.generation.bytes[before.start..before.end], self.src.bytes[after.start..after.end])) return null;
+        if (before.end - before.start != after.end - after.start) return self.reason(.region_length_changed);
+        if (!std.mem.eql(u8, entry.generation.bytes[before.start..before.end], self.src.bytes[after.start..after.end])) return self.reason(.region_bytes_changed);
         const old_region = entry.meta.identity.region;
         const new_region = self.prepared.regions[ast_index];
-        if (old_region.end - old_region.start != new_region.end - new_region.start) return null;
-        if (!std.mem.eql(u8, entry.generation.bytes[old_region.start..old_region.end], self.src.bytes[new_region.start..new_region.end])) return null;
+        if (old_region.end - old_region.start != new_region.end - new_region.start) return self.reason(.region_length_changed);
+        if (!std.mem.eql(u8, entry.generation.bytes[old_region.start..old_region.end], self.src.bytes[new_region.start..new_region.end])) return self.reason(.region_bytes_changed);
 
         const functions = try allocator.alloc(?typed.FunctionId, entry.meta.old_function_count);
         @memset(functions, null);
         for (entry.meta.function_refs) |reference| {
-            const fresh = self.function_map.get(reference.key) orelse return null;
-            if (fresh == std.math.maxInt(usize)) return null;
+            const fresh = self.remap.functions.get(reference.key) orelse return self.reason(.missing_function);
+            if (fresh == std.math.maxInt(usize)) return self.reason(.ambiguous_function);
             functions[@backingInt(reference.id)] = @fromBackingInt(fresh);
         }
         const records = try allocator.alloc(?typed.Type, entry.meta.old_record_count);
         @memset(records, null);
         for (entry.meta.record_refs) |reference| {
-            const fresh = self.record_map.get(reference.key) orelse return null;
-            if (fresh == std.math.maxInt(usize)) return null;
+            const fresh = self.remap.records.get(reference.key) orelse return self.reason(.missing_record);
+            if (fresh == std.math.maxInt(usize)) return self.reason(.ambiguous_record);
             records[reference.index] = @fromBackingInt(fresh + typed.Type.record_base);
         }
         var segment = [_]copy.Segment{.{ .before = old_region, .after = new_region.start }};
@@ -139,18 +243,22 @@ pub const Session = struct {
             .functions = functions,
             .records = records,
         };
-        const function = mapper.copy(allocator, typed.Function, entry.function) catch |err| return miss(err);
-        const copied_nodes = mapper.copy(allocator, []const typed.Node, entry.nodes) catch |err| return miss(err);
-        const copied_statements = mapper.copy(allocator, []const typed.Statement, entry.statements) catch |err| return miss(err);
+        const function = mapper.copy(allocator, typed.Function, entry.function) catch |err| return self.relocationMiss(err);
+        const copied_nodes = mapper.copy(allocator, []const typed.Node, entry.nodes) catch |err| return self.relocationMiss(err);
+        const copied_statements = mapper.copy(allocator, []const typed.Statement, entry.statements) catch |err| return self.relocationMiss(err);
         try nodes.appendSlice(allocator, copied_nodes);
         try statements.appendSlice(allocator, copied_statements);
         self.reuse.functions[index] = true;
         self.cache.statistics.reused += 1;
         return function;
     }
-    fn miss(err: copy.Error) error{ OutOfMemory, InternalError }!?typed.Function {
+    fn reason(self: *Session, why: MissReason) ?typed.Function {
+        self.cache.statistics.misses[@backingInt(why)] += 1;
+        return null;
+    }
+    fn relocationMiss(self: *Session, err: copy.Error) error{ OutOfMemory, InternalError }!?typed.Function {
         return switch (err) {
-            error.InvalidRelocation => null,
+            error.InvalidRelocation => self.reason(.relocation_failed),
             error.OutOfMemory => error.OutOfMemory,
             error.InternalError => error.InternalError,
         };
@@ -186,7 +294,12 @@ pub const Session = struct {
             if (self.reuse.functions[i]) if (cache.index.get(stable_key)) |old_index| if (!used[old_index]) {
                 used[old_index] = true;
                 try fresh.append(cache.allocator, false);
-                pending.append(cache.allocator, cache.entries[old_index]) catch |err| return err;
+                var transferred = cache.entries[old_index];
+                // Refresh the persisted checked contract from this request's
+                // mandatory global passes so a reused body never carries an
+                // obsolete inferred `mutates`/return-origin bound.
+                transferred.meta.identity.checked_contract = key.contractDigest(program.functions[i]);
+                pending.append(cache.allocator, transferred) catch |err| return err;
                 try new_index.put(cache.allocator, pending.items[pending.items.len - 1].meta.identity.key, pending.items.len - 1);
                 continue;
             };
@@ -195,38 +308,64 @@ pub const Session = struct {
             var refs = copy.RefSet.init(cache.allocator);
             defer refs.deinit();
             try copy.collectRefs(cache.allocator, program.functions[i], program.nodes[range.nodes.start..range.nodes.end], program.statements[range.statements.start..range.statements.end], &refs);
-            if (refs.callbacks or callbackTyped(program.functions[i], program.records)) continue;
-            var unstable = false;
-            var function_iterator = refs.functions.keyIterator();
-            while (function_iterator.next()) |id| if (id.* >= ordinary_count) {
-                unstable = true;
-                break;
-            };
-            if (unstable) continue;
+            // A body that references a concrete specialization cannot be reused
+            // without re-instantiating it, so it stays on the fresh path with an
+            // explicit reason until C3.
             const function_refs = try cache.allocator.alloc(owned.FunctionRef, refs.functions.count());
             defer cache.allocator.free(function_refs);
+            var function_iterator = refs.functions.keyIterator();
             var function_count: usize = 0;
-            function_iterator = refs.functions.keyIterator();
+            var specialization = false;
             while (function_iterator.next()) |id| {
+                if (id.* >= ordinary_count) {
+                    specialization = true;
+                    break;
+                }
                 function_refs[function_count] = .{
                     .id = @fromBackingInt(id.*),
                     .key = self.prepared.keys[self.prepared.ordinary_ast[id.*]],
                 };
                 function_count += 1;
             }
+            if (specialization) {
+                cache.statistics.misses[@backingInt(MissReason.generic_specialization)] += 1;
+                continue;
+            }
+            // Every referenced aggregate must have a stable identity that exists
+            // before checking. A declared callback, record or prelude type does;
+            // a callable contract or structural array interned while checking does
+            // not, so the body stays fresh with the exact reason.
             const record_refs = try cache.allocator.alloc(owned.RecordRef, refs.records.count());
             defer cache.allocator.free(record_refs);
-            var record_count: usize = 0;
             var record_iterator = refs.records.keyIterator();
+            var record_count: usize = 0;
+            var unstable: ?MissReason = null;
             while (record_iterator.next()) |index| {
                 if (index.* >= program.records.len) {
-                    unstable = true;
+                    unstable = .missing_record;
                     break;
                 }
-                record_refs[record_count] = .{ .index = index.*, .key = program.records[index.*].name };
+                if (index.* >= self.remap.initial_record_count) {
+                    const callable = declaredCallback(program.records, index.*);
+                    unstable = if (callable and (refs.function_values or refs.invokes)) .function_value else .interned_record;
+                    break;
+                }
+                const name = program.records[index.*].name;
+                const fresh_index = self.remap.records.get(name) orelse {
+                    unstable = .missing_record;
+                    break;
+                };
+                if (fresh_index == std.math.maxInt(usize)) {
+                    unstable = .ambiguous_record;
+                    break;
+                }
+                record_refs[record_count] = .{ .index = index.*, .key = name };
                 record_count += 1;
             }
-            if (unstable) continue;
+            if (unstable) |why| {
+                cache.statistics.misses[@backingInt(why)] += 1;
+                continue;
+            }
             if (generation == null) generation = try owned.Generation.create(cache.allocator, self.src.bytes, self.prepared.bodies);
             const spec: owned.Spec = .{
                 .identity = .{
@@ -234,6 +373,7 @@ pub const Session = struct {
                     .context = self.prepared.contexts[ast_index],
                     .body = self.prepared.bodies[ast_index],
                     .region = self.prepared.regions[ast_index],
+                    .checked_contract = key.contractDigest(program.functions[i]),
                 },
                 .function_refs = function_refs,
                 .record_refs = record_refs,
@@ -276,20 +416,9 @@ const Reuse = struct {
     functions: []bool,
 };
 
-/// C1 keeps callable values and callback-typed slots on the fresh path because
-/// their inferred effect/mutation contract is not yet a stable dependency fact.
-fn callbackTyped(function: typed.Function, records: []const typed.Record) bool {
-    if (function.signature.return_type.isAggregate()) {
-        const index = function.signature.return_type.recordIndex();
-        if (index < records.len and records[index].contract.callback != null) return true;
-    }
-    for (function.type_arguments) |ty| if (ty.isAggregate()) {
-        const index = ty.recordIndex();
-        if (index < records.len and records[index].contract.callback != null) return true;
-    };
-    for (function.scope.locals) |local| if (local.ty.isAggregate()) {
-        const index = local.ty.recordIndex();
-        if (index < records.len and records[index].contract.callback != null) return true;
-    };
-    return false;
+/// Whether one referenced aggregate is a declared callable-typed slot. Declared
+/// callbacks are interned before checking, so they have a stable remap; callable
+/// contracts interned while checking are handled as `interned_record` misses.
+fn declaredCallback(records: []const typed.Record, index: usize) bool {
+    return index < records.len and records[index].contract.callback != null;
 }
