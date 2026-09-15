@@ -96,8 +96,9 @@ test "a callback type names itself the way the surface writes it" {
     defer c.deinit();
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings("E_TYPE", c.diagnostics.items[0].code);
-    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "def@") != null);
+    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "def(i64) -> i64 effects()") != null);
     try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "fn") == null);
+    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "def@") == null);
 }
 
 fn reject(source: []const u8, code: []const u8) !void {
@@ -370,4 +371,204 @@ test "callbacks reject malformed invoke metadata and dispatch dynamically select
         return;
     }
     try t.expect(false);
+}
+
+// spec-case: CALLBACK-1
+test "E1 pure callbacks enter output-permitting slots and the reverse direction rejects" {
+    try run(
+        \\def pure(x: i64) -> i64 effects():
+        \\    return x + 1
+        \\
+        \\
+        \\def apply(f: def(i64) -> i64 effects(output), x: i64) -> i64:
+        \\    return f(x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return apply(pure, 41)
+    , 42);
+
+    const reverse =
+        \\def impure(x: i64) -> i64 effects(output):
+        \\    print(x)
+        \\    return x
+        \\
+        \\
+        \\def apply(f: def(i64) -> i64 effects(), x: i64) -> i64:
+        \\    return f(x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return apply(impure, 1)
+    ;
+    var c = try language.Compilation.init(t.allocator, "effect-reverse.my", reverse);
+    defer c.deinit();
+    try t.expectError(error.SourceError, c.check());
+    try t.expectEqualStrings("E_TYPE", c.diagnostics.items[0].code);
+    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "expected def(i64) -> i64 effects()") != null);
+    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "found def(i64) -> i64 effects(output)") != null);
+    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "def@") == null);
+    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "effects(0)") == null);
+
+    // The destination ceiling still governs the call inside `apply`, even though
+    // the concrete target is pure.
+    try reject(
+        \\def pure(x: i64) -> i64 effects():
+        \\    return x + 1
+        \\
+        \\
+        \\def apply(f: def(i64) -> i64 effects(output), x: i64) -> i64 effects():
+        \\    return f(x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return apply(pure, 41)
+    , "E_EFFECT_BOUND");
+}
+
+// spec-case: CALLBACK-1
+test "E1 stored and returned callbacks retain the destination effect contract" {
+    try run(
+        \\type Sink = def(i64) -> i64 effects(output)
+        \\
+        \\
+        \\def pure(x: i64) -> i64 effects():
+        \\    return x + 1
+        \\
+        \\
+        \\def stash() -> Sink:
+        \\    return pure
+        \\
+        \\
+        \\def invoke(f: Sink, x: i64) -> i64:
+        \\    return f(x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    stored = pure
+        \\    returned = stash()
+        \\    return invoke(stored, 10) + invoke(returned, 31)
+    , 43);
+}
+
+// spec-case: CALLBACK-1
+test "E1 generic callback parameters use the same directional relation" {
+    try run(
+        \\def pure(x: i64) -> i64 effects():
+        \\    return x + 1
+        \\
+        \\
+        \\def apply[T](f: def(T) -> T effects(output), value: T) -> T:
+        \\    return f(value)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return apply[int](pure, 41)
+    , 42);
+}
+
+// spec-case: CALLBACK-1
+test "E1 unused declarations and unrelated callback shapes stay rejected" {
+    try reject(
+        \\def impure(x: i64) -> i64 effects(output):
+        \\    print(x)
+        \\    return x
+        \\
+        \\
+        \\def unused() -> i64:
+        \\    f: def(i64) -> i64 effects() = impure
+        \\    return f(0)
+        \\
+    , "E_TYPE");
+    try reject(
+        \\def wrong_parameter(x: bool) -> i64 effects():
+        \\    return 0
+        \\
+        \\
+        \\def apply(f: def(i64) -> i64 effects(output), x: i64) -> i64:
+        \\    return f(x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return apply(wrong_parameter, 1)
+    , "E_TYPE");
+    try reject(
+        \\def wrong_result(x: i64) -> bool effects():
+        \\    return True
+        \\
+        \\
+        \\def apply(f: def(i64) -> i64 effects(output), x: i64) -> i64:
+        \\    return f(x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return apply(wrong_result, 1)
+    , "E_TYPE");
+}
+
+// spec-case: CALLBACK-1
+test "E1 unused generic declarations use the directional callback relation" {
+    try run(
+        \\def unused[T](f: def(T) -> T effects(), value: T) -> T:
+        \\    g: def(T) -> T effects(output) = f
+        \\    return value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , 0);
+    try reject(
+        \\def unused[T](f: def(T) -> T effects(output), value: T) -> T:
+        \\    g: def(T) -> T effects() = f
+        \\    return value
+        \\
+    , "E_GENERIC_TYPE");
+}
+
+test "E1 native target validation agrees with the checker on effect ceilings" {
+    const source =
+        \\def pure(x: i64) -> i64 effects():
+        \\    return x + 1
+        \\
+        \\
+        \\def output_only(x: i64) -> i64 effects(output):
+        \\    return x + 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    f = pure
+        \\    _ = output_only(0)
+        \\    return f(1)
+    ;
+    var c = try language.Compilation.init(t.allocator, "native-effect-validation.my", source);
+    defer c.deinit();
+    try c.emit();
+    const pure = try functionIndex(c.code.?, "pure");
+    const output_only = try functionIndex(c.code.?, "output_only");
+    const original = c.code.?;
+    const functions = try t.allocator.dupe(language.bytecode.Function, original.functions);
+    defer t.allocator.free(functions);
+    const main_index = @backingInt(original.main);
+    const instructions = try t.allocator.dupe(language.bytecode.Instruction, functions[main_index].scope.instructions);
+    defer t.allocator.free(instructions);
+    functions[main_index].scope.instructions = instructions;
+    var program = original;
+    program.functions = functions;
+    var forged = false;
+    for (instructions) |*instruction| {
+        if (instruction.op != .function_value) continue;
+        if (@backingInt(instruction.op.function_value.function) != pure) continue;
+        instruction.op.function_value.function = @fromBackingInt(output_only);
+        forged = true;
+        try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, program));
+        break;
+    }
+    try t.expect(forged);
+}
+
+fn functionIndex(program: language.bytecode.Program, needle: []const u8) !usize {
+    for (program.functions, 0..) |function, index| {
+        if (std.mem.eql(u8, function.name, needle) or std.mem.endsWith(u8, function.name, needle)) return index;
+    }
+    return error.NotFound;
 }

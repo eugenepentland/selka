@@ -55,6 +55,11 @@ memory or freedom from traps, and local mutation of fixed storage is not an
 effect at all. A function that needs one effect and no others writes it out, as
 in `def present(fs: Filesystem, path: str) -> bool effects(filesystem):`.
 
+Callback parameters follow the same rule directionally: a callable whose
+declared ceiling is a subset of the destination contract's ceiling may fill that
+slot, but a call through a stored or returned callback uses the destination
+ceiling, not the concrete target's smaller ceiling.
+
 ## What a bound rejects
 
 Exceeding a bound is `E_EFFECT_BOUND`, reported at the annotation rather than at

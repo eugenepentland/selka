@@ -528,10 +528,14 @@ const Checker = struct {
         }
     }
     fn require(self: *Checker, actual: typed.Type, expected: typed.Type, span: source.Span) Error!void {
-        if (actual != expected) {
-            const message = try std.fmt.allocPrint(self.allocator, "expected {s}, found {s}", .{ typed.typeName(expected, self.catalog.records), typed.typeName(actual, self.catalog.records) });
-            return self.sink.fail("E_TYPE", span, message);
+        if (actual == expected) return;
+        if (callables.signature(actual, self.catalog.records)) |implementation| {
+            if (callables.signature(expected, self.catalog.records)) |destination| {
+                if (callables.assignable(implementation, destination)) return;
+            }
         }
+        const message = try std.fmt.allocPrint(self.allocator, "expected {s}, found {s}", .{ typed.typeName(expected, self.catalog.records), typed.typeName(actual, self.catalog.records) });
+        return self.sink.fail("E_TYPE", span, message);
     }
     fn resolve(self: *Checker, name: source.Span) Error!typed.LocalId {
         return self.active.get(self.src.text(name)) orelse self.sink.fail("E_UNKNOWN_NAME", name, "name is not defined in this scope");
