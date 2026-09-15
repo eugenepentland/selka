@@ -181,7 +181,7 @@ const Writer = struct {
         } else if (self.force_space_after_colon) {
             if (!isCloser(tag)) try self.space();
             self.force_space_after_colon = false;
-        } else if (!named_equal and self.needSpaceBefore(tag)) {
+        } else if (!named_equal and (self.needSpaceBefore(tag) or self.isMutationClause(token))) {
             try self.space();
         }
 
@@ -211,6 +211,12 @@ const Writer = struct {
         self.prev_tag = tag;
         self.prev_minus_unary = unary_minus;
         self.prev_real_end = token.span.end;
+    }
+
+    /// `effects(mutation) mutates(...)`: the clause is a word after `)`, not a call.
+    fn isMutationClause(self: *const Writer, token: lex.Token) bool {
+        if (token.tag != .ident or self.prev_tag != .rparen) return false;
+        return std.mem.eql(u8, self.bytes[token.span.start..token.span.end], "mutates");
     }
 
     fn isNamedArgumentEqual(self: *const Writer) bool {

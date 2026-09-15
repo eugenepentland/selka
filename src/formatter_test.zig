@@ -258,3 +258,13 @@ test "formatter still rejects invalid syntax and reports its source diagnostic" 
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.format(t.allocator));
 }
+
+// spec-case: TOOL-5
+test "formatter keeps the mutates clause separated from the effect ceiling" {
+    const expected =
+        \\def replace_first(values: list[int], replacement: int) -> None effects(mutation) mutates(values):
+        \\    values[0] = replacement
+        \\
+    ;
+    try expectCanonical(t.allocator, "def replace_first(values: list[int], replacement: int) -> None effects(mutation)  mutates(values):\n    values[0] = replacement\n", expected);
+}

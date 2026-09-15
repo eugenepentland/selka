@@ -30,7 +30,7 @@ pub fn main(init: std.process.Init) !void {
 /// Serve the native build driver's frontend request from this same executable,
 /// so a board application needs no separately installed compiler to build itself.
 fn emit(init: std.process.Init, args: []const []const u8) !bool {
-    if (args.len != 3 or !std.mem.eql(u8, args[1], "emit-project-qbe")) return false;
+    if (args.len < 3 or !std.mem.eql(u8, args[1], "emit-project-qbe")) return false;
     const allocator = init.arena.allocator();
     var program: @import("mylang").embedded_project.Program = undefined;
     try program.initDisk(allocator, init.io, std.fs.path.dirname(args[2]) orelse ".");
