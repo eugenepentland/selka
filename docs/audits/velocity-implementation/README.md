@@ -86,3 +86,4 @@ Never share a mutable checkout, installed binary or `zig-out`/`.zig-cache`.
 | 2026-09-15 | `0594e61` | F1 | canonical formatter; format 49/49 units, 3/3 CLI, docs gate unblocked |
 | 2026-09-15 | `3d505be` | C0 | work-report-v1; 29 invalidation / 54 cache tests |
 | 2026-09-15 | `20a8938` | D1 follow-up | runtime-abi-v1 freeze; cache/invalidation/qbe_build focused suites green |
+| 2026-09-15 | `6572623` | baseline fix | narrow enum tag decode + Debug-only alloc sweep; `test-units -Doptimize=ReleaseFast` 960 passed / 0 failed / 1 skipped |
