@@ -472,7 +472,8 @@ for all seven identity kinds, per-declaration interface fingerprints, the nine-s
 generic-specialization keys, and the clean/warm invalidation matrix. See
 [Wave 3 completion](wave3-incremental-2026-09-15.md) and the public
 [incremental contract](../experiments/incremental-contract.md). Generic/nominal reuse remains
-conservative and the runtime ABI key is still the `runtime-abi-v0-unfrozen` placeholder until Wave 4.
+conservative, explicit effect ceilings on exported declarations remain a follow-up, and the runtime
+ABI key is still the `runtime-abi-v0-unfrozen` placeholder until Wave 4.
 
 ### Wave 4 — Freeze `runtime-abi-v1`
 

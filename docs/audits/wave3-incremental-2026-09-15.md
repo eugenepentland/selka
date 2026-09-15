@@ -102,5 +102,14 @@ identity, and a damaged frontend entry that recomputes a clean result.
 - The cache contract carries accurate defaults for the current single native
   target and empty flag set. Wave 4 must replace `runtime-abi-v0-unfrozen` with
   `runtime-abi-v1` and wire the frozen manifest into `Contract`.
+- Explicit effect ceilings on exported declarations are not enforced; effects
+  remain inferred. This is sound for reuse because `effects.check` recomputes
+  every function's effect set over the resolved call graph after body reuse, so a
+  callee body that adds an effect still rejects an unchanged effect-bounded
+  caller, and a changed inferred effect changes the declaration's
+  `interface_sha256` so callers are rechecked. Requiring an explicit ceiling on
+  every exported declaration is a separate semantic change (and a repository-wide
+  migration) that should land independently if the interface stability is still
+  judged worth it.
 - `--report` reports per-stage hit/miss counts; the first-changed dependency is
   carried by `invalidation-report-v1`, which `--explain-invalidation` emits.
