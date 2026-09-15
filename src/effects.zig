@@ -406,18 +406,32 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, exported: []c
         // fallback cleanup effect, including on traps and propagated errors.
     }
     try graph.infer();
+    // M2: enforce the checked call-duration mutation guarantee. This computes
+    // transitive write footprints and return-alias bounds to a fixed point,
+    // attributes writes to caller inputs through aliases and calls, and rejects
+    // writes that exceed a declared ceiling or unknown-overlap call arguments.
+    const mutation_violated = @import("origins.zig").check(allocator, program, exported, sink) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+    };
     // E2: every exported declaration must publish an explicit ceiling. The
     // suggestion is derived from this body's inferred transitive effects (a
     // bound, never an unconditional `effects(all)`), and remains distinct from
     // the raw inferred mask stored below for diagnostics/cacheability.
-    if (try reportMissingCeilings(allocator, program, &graph, exported, sink)) return error.SourceError;
-    for (@constCast(program.functions), 0..) |*function, index| function.policy.effects = graph.states[index].mask;
-    var violated = false;
+    const missing_ceilings = try reportMissingCeilings(allocator, program, &graph, exported, sink);
+    for (@constCast(program.functions), 0..) |*function, index| {
+        function.policy.effects = graph.states[index].mask;
+        if (function.signature.mutation_facts.external) function.policy.effects |= sets.bit(.mutation);
+    }
+    var violated = mutation_violated or missing_ceilings;
     for (program.functions, 0..) |function, index| {
         const bound = function.policy.effect_bound orelse continue;
         const forbidden = function.policy.effects & ~bound.allowed;
         if (forbidden == 0) continue;
         for (std.meta.tags(sets.Effect)) |effect| {
+            // `mutation` permission and footprint violations are reported by
+            // origins.check with argument witnesses; the effect graph does not
+            // carry a mutation witness.
+            if (effect == .mutation) continue;
             if (forbidden & sets.bit(effect) == 0) continue;
             try appendBoundViolation(allocator, .{ .program = program, .graph = &graph }, index, effect, bound, sink);
             violated = true;
@@ -450,8 +464,7 @@ pub fn checkAbstract(allocator: std.mem.Allocator, functions: []const @import("a
         sink.items.append(allocator, .{ .code = effect_ceiling, .span = function.name, .message = message }) catch return error.OutOfMemory;
         missing_ceiling = true;
     }
-    if (missing_ceiling) return error.SourceError;
-    var violated = false;
+    var violated = missing_ceiling;
     for (functions, 0..) |function, index| {
         const bound = function.policy.effect_bound orelse continue;
         const forbidden = graph.states[index].mask & ~bound.allowed;
@@ -470,7 +483,37 @@ pub fn checkAbstract(allocator: std.mem.Allocator, functions: []const @import("a
             violated = true;
         }
     }
+    // M2: an abstract generic body that writes an input must publish the same
+    // `effects(mutation)` and `mutates(...)` permission an ordinary body needs.
+    for (functions) |function| {
+        // Ordinary bodies are enforced by the concrete origin pass with full
+        // freshness and call substitution; only abstract generic templates are
+        // checked here.
+        if (function.signature.type_parameters.len == 0) continue;
+        // The abstract classifier does not track fresh local storage, so an
+        // unattributed write may be a local builder. Concrete specializations
+        // re-check those bodies with full origin analysis; only writes tied to a
+        // declared input position are enforced here.
+        const inferred = positionMask(function.signature.inferred_mutates);
+        if (inferred == 0) continue;
+        const bound = function.policy.effect_bound orelse continue;
+        const has_permission = bound.allowed & sets.bit(.mutation) != 0;
+        const permitted = positionMask(function.signature.mutates);
+        if (has_permission and inferred & ~permitted == 0) continue;
+        sink.items.append(sink.allocator, .{
+            .code = "E_MUTATION_PERMISSION",
+            .span = bound.span,
+            .message = "managed write in a generic body exceeds its declared mutation contract",
+        }) catch return error.OutOfMemory;
+        violated = true;
+    }
     if (violated) return error.SourceError;
+}
+
+fn positionMask(positions: []const u16) sets.Mask {
+    var mask: u16 = 0;
+    for (positions) |position| mask |= @as(u16, 1) << @intCast(position);
+    return mask;
 }
 
 /// Check one instruction-level mutation witness against the checked summary.
@@ -596,6 +639,11 @@ pub fn validate(allocator: std.mem.Allocator, program: bytecode_model.Program) V
         }
         if (!normalizedPositions(function.signature.mutates, function.signature.parameter_count)) return error.InternalError;
         if (!positionsInRange(function.signature.declared_mutates, function.signature.parameter_count)) return error.InternalError;
+        if (function.policy.effect_bound) |bound| {
+            const declared = positionMask(function.signature.declared_mutates);
+            if (positionMask(function.signature.mutates) & ~declared != 0) return error.InternalError;
+            if (function.signature.mutation_facts.external and bound.allowed & sets.bit(.mutation) == 0) return error.InternalError;
+        }
         switch (function.signature.return_origin) {
             .params => |positions| if (!normalizedPositions(positions, function.signature.parameter_count)) return error.InternalError,
             else => {},

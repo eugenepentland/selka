@@ -48,7 +48,9 @@ pub const Witness = struct {
 /// Classify one resolved buffer/collection operation.
 pub fn buffer(kind: buffer_operations.Kind, dictionary: bool) Classification {
     const allocates = buffer_operations.managedAllocation(kind, dictionary);
-    if (kind == .copy) return .{ .operation = .shallow_copy, .writes_receiver = false, .severs_outer = true };
+    // Copies and slices allocate a fresh outer container while retaining the
+    // origins of any managed elements they carry; they never write the receiver.
+    if (kind == .copy or kind == .slice or kind == .slice_step) return .{ .operation = .shallow_copy, .writes_receiver = false, .severs_outer = true };
     if (kind.mutates()) return .{ .operation = .receiver_write, .writes_receiver = true, .severs_outer = allocates };
     return .{ .operation = .read, .writes_receiver = false, .severs_outer = false };
 }
@@ -149,6 +151,8 @@ test "buffer classification separates receiver writes from shallow copies" {
     try t.expect(buffer(.update, true).writes_receiver);
     try t.expect(!buffer(.copy, false).writes_receiver);
     try t.expect(buffer(.copy, false).severs_outer);
+    try t.expect(!buffer(.slice, false).writes_receiver);
+    try t.expect(buffer(.slice, false).severs_outer);
     try t.expect(!buffer(.length, false).writes_receiver);
     try t.expect(!buffer(.index_of, false).writes_receiver);
 }

@@ -59,7 +59,7 @@ def occupied[T: copy + storable](store: Pool[T], handle: Handle[T]) -> bool effe
 
 
 # Add a value and return the handle that names it.
-def insert[T: copy + storable](store: Pool[T], value: T) -> Handle[T] effects(managed_allocation):
+def insert[T: copy + storable](store: Pool[T], value: T) -> Handle[T] effects(mutation, managed_allocation) mutates(store):
     store.counters[1] = store.counters[1] + 1
     top = store.counters[0]
     if top > 0:
@@ -82,7 +82,7 @@ def get[T: copy + storable](store: Pool[T], handle: Handle[T]) -> Option[T] effe
 
 
 # Replace the value a handle names, reporting whether the handle was live.
-def set[T: copy + storable](store: Pool[T], handle: Handle[T], value: T) -> bool effects():
+def set[T: copy + storable](store: Pool[T], handle: Handle[T], value: T) -> bool effects(mutation) mutates(store):
     if not occupied(store, handle):
         return False
     store.slots[handle.index] = value
@@ -90,7 +90,7 @@ def set[T: copy + storable](store: Pool[T], handle: Handle[T], value: T) -> bool
 
 
 # Release the slot a handle names, reporting whether the handle was live.
-def remove[T: copy + storable](store: Pool[T], handle: Handle[T]) -> bool effects(managed_allocation):
+def remove[T: copy + storable](store: Pool[T], handle: Handle[T]) -> bool effects(mutation, managed_allocation) mutates(store):
     if not occupied(store, handle):
         return False
     slot = handle.index
