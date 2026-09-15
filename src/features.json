@@ -429,7 +429,7 @@
     },
     "bounded-guest-callbacks": {
       "kind": "language",
-      "summary": "A callback parameter declares its signature and an exact effect ceiling.",
+      "summary": "A callback parameter declares its signature and an effect ceiling; an implementation callable may use a subset of the destination's effects.",
       "doc": "docs/functions.md#bounded-callbacks"
     },
     "changed-source-function-body-cache": {
