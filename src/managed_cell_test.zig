@@ -85,3 +85,78 @@ test "Cell rejects result obligations equality and rendering" {
         \\    return build().value
     , "E_EFFECT_BOUND");
 }
+
+// spec: CELL-COLLECTION-1
+test "Cell is rejected by collection and prelude operations instead of crashing" {
+    try reject(
+        \\def main() -> int:
+        \\    cell = Cell(value=1)
+        \\    sorted(cell, key=lambda x: x)
+        \\    return 0
+    , "E_PRELUDE_TYPE");
+    try reject(
+        \\def first[T](cell: Cell[T]) -> T:
+        \\    return cell[0]
+        \\
+        \\
+        \\def main() -> int:
+        \\    cell = Cell(value=1)
+        \\    return first(cell)
+    , "E_LIST_TYPE");
+}
+
+// spec: CELL-GENERIC-1
+test "generic Cell construction is recognized and tracks allocation effects" {
+    try run(
+        \\def make[T](value: T) -> Cell[T]:
+        \\    return Cell(value=value)
+        \\
+        \\
+        \\def main() -> int:
+        \\    cell = make(41)
+        \\    return cell.value + 1
+    , 42);
+    try reject(
+        \\def make[T](value: T) -> Cell[T] noalloc:
+        \\    return Cell(value=value)
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    , "E_EFFECT_BOUND");
+    try reject(
+        \\def make[T](value: T) -> Cell[T] noalloc:
+        \\    return Cell[T](value=value)
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    , "E_EFFECT_BOUND");
+}
+
+// spec: CELL-EQUALITY-1
+test "Cell equality is rejected for membership search and nested containers" {
+    try reject(
+        \\def main() -> int:
+        \\    cell = Cell(value=1)
+        \\    if cell in [cell]:
+        \\        return 1
+        \\    return 0
+    , "E_CELL_EQUALITY");
+    try reject(
+        \\def main() -> int:
+        \\    values = [Cell(value=1)]
+        \\    return values.index(Cell(value=1))
+    , "E_CELL_EQUALITY");
+    try reject(
+        \\record Holder:
+        \\    cell: Cell[int]
+        \\
+        \\
+        \\def main() -> int:
+        \\    item = Holder(cell=Cell(value=1))
+        \\    if item in [item]:
+        \\        return 1
+        \\    return 0
+    , "E_CELL_EQUALITY");
+}

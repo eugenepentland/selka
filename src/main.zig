@@ -119,9 +119,12 @@ fn dispatch(process: std.process.Init) !u8 {
         try std.Io.File.stderr().writeStreamingAll(process.io, message);
         return 2;
     }
-    const parsed = parseArgs(args[1..]) catch {
-        try std.Io.File.stderr().writeStreamingAll(process.io, usage);
-        return 2;
+    const parsed = parseArgs(process.arena.allocator(), args[1..]) catch |err| switch (err) {
+        error.Usage => {
+            try std.Io.File.stderr().writeStreamingAll(process.io, usage);
+            return 2;
+        },
+        error.OutOfMemory => return error.OutOfMemory,
     };
     var timings = language.timings.Profile.init(process.io, parsed.reporting.timings_json, .compiler);
     const init: Context = .{
@@ -365,7 +368,7 @@ fn runNative(init: Context, parsed: Parsed, manifest: []const u8) !u8 {
     init.timings.begin("native_execution", false);
     const start = std.Io.Timestamp.now(init.io, .awake);
     var settings = parsed.native;
-    settings.arguments = parsed.runtime[0..parsed.runtime_count];
+    settings.arguments = parsed.runtime;
     settings.max_memory = parsed.max_memory;
     const status = try native_run.execute(init.gpa, .{
         .io = init.io,
@@ -415,6 +418,8 @@ const Command = enum {
     @"discover-duplicates",
     @"report-quality",
 };
+const ArgError = error{ Usage, OutOfMemory };
+
 const Parsed = struct {
     schema_report: bool,
     inputs: [16][]const u8,
@@ -428,8 +433,7 @@ const Parsed = struct {
     grants: grants.Config,
     budgets: Budgets,
     native: native_options.Options,
-    runtime: [256][]const u8,
-    runtime_count: usize,
+    runtime: []const []const u8,
     discovery: language.duplicates.Options,
     reporting: Reporting,
     max_memory: ?u64,
@@ -441,10 +445,10 @@ const Parsed = struct {
     /// work; null for commands (or sessions) that do not.
     frontend: ?*language.frontend_cache.Cache = null,
 };
-fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
+fn parseArgs(allocator: std.mem.Allocator, args: []const []const u8) ArgError!Parsed {
     if (args.len < 2) return error.Usage;
     const command = std.meta.stringToEnum(Command, args[0]) orelse return error.Usage;
-    var parser: ArgumentParser = .{ .command = command };
+    var parser: ArgumentParser = .{ .command = command, .allocator = allocator };
     for (args[1..]) |arg| {
         if (parser.after_delimiter) {
             try parser.appendRuntime(arg);
@@ -501,8 +505,8 @@ const ArgumentParser = struct {
     grants: grants.Config = .{},
     budgets: Budgets = .{},
     native: native_options.Options = .{ .source = "", .run = true },
-    runtime: [256][]const u8 = @splat(""),
-    runtime_count: usize = 0,
+    allocator: std.mem.Allocator,
+    runtime: std.ArrayList([]const u8) = .empty,
     after_delimiter: bool = false,
     saw_steps: bool = false,
     saw_frames: bool = false,
@@ -583,7 +587,7 @@ const ArgumentParser = struct {
         };
     }
     /// Authority options apply only to the commands that execute a program.
-    fn grantOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+    fn grantOption(self: *ArgumentParser, arg: []const u8) ArgError!bool {
         if (!std.mem.startsWith(u8, arg, "--allow-") and !std.mem.eql(u8, arg, grants.restrict_flag)) return false;
         if (self.command != .run and self.command != .@"run-project") return error.Usage;
         if (!try self.grants.parse(arg)) return error.Usage;
@@ -591,14 +595,12 @@ const ArgumentParser = struct {
         return true;
     }
     /// Keep one option for the built program, which parses grants and budgets itself.
-    fn forward(self: *ArgumentParser, arg: []const u8) error{Usage}!void {
+    fn forward(self: *ArgumentParser, arg: []const u8) ArgError!void {
         return self.appendRuntime(arg);
     }
     /// Append one raw child argument, including the `--` guest delimiter.
-    fn appendRuntime(self: *ArgumentParser, arg: []const u8) error{Usage}!void {
-        if (self.runtime_count == self.runtime.len) return error.Usage;
-        self.runtime[self.runtime_count] = arg;
-        self.runtime_count += 1;
+    fn appendRuntime(self: *ArgumentParser, arg: []const u8) ArgError!void {
+        try self.runtime.append(self.allocator, arg);
     }
     fn executes(self: *const ArgumentParser) bool {
         return self.command == .run or self.command == .@"run-project";
@@ -608,7 +610,7 @@ const ArgumentParser = struct {
         if (!self.executes() or arg.len == flag.len) return error.Usage;
         return arg[flag.len..];
     }
-    fn executionOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+    fn executionOption(self: *ArgumentParser, arg: []const u8) ArgError!bool {
         if (std.mem.eql(u8, arg, "--check")) {
             if (!self.checks() or self.format_check) return error.Usage;
             self.format_check = true;
@@ -667,7 +669,7 @@ const ArgumentParser = struct {
         } else return false;
         return true;
     }
-    fn finish(self: *ArgumentParser) error{Usage}!Parsed {
+    fn finish(self: *ArgumentParser) ArgError!Parsed {
         if (self.saw_work and !self.discovery.approximate) return error.Usage;
         if (self.command == .@"fmt-project" and !self.format_check) return error.Usage;
         if (self.command == .@"check-policy" and self.policy == null) return error.Usage;
@@ -684,8 +686,7 @@ const ArgumentParser = struct {
             .grants = self.grants,
             .budgets = self.budgets,
             .native = self.native,
-            .runtime = self.runtime,
-            .runtime_count = self.runtime_count,
+            .runtime = self.runtime.items,
             .discovery = self.discovery,
             .reporting = self.reporting,
             .max_memory = self.max_memory,

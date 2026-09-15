@@ -2651,3 +2651,124 @@ test "CLI project checks reuse syntax and verdicts and invalidate only changed m
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, uncached.term);
     try testing.expect(std.mem.indexOf(u8, uncached.stderr, "frontend-cache-v1") == null);
 }
+
+// spec: CAPABILITY-DIAG-1
+test "multiple missing capabilities report exactly one identical diagnostic" {
+    const program =
+        \\def main(fs: Filesystem, env: Environment) -> int:
+        \\    _ = fs
+        \\    _ = env
+        \\    return 0
+    ;
+    const message = "mylang: --restrict is active and this command line did not grant a capability the entry point requests; pass --allow-read=DIR, or drop --restrict to grant every capability\n";
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "cap.my", .data = program });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "cap.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const output = try std.fs.path.join(testing.allocator, &.{ root, "cap-bin" });
+    defer testing.allocator.free(output);
+
+    var run_argv: std.ArrayList([]const u8) = .empty;
+    defer run_argv.deinit(testing.allocator);
+    try run_argv.appendSlice(testing.allocator, &.{ compiler_path, "run", path, "--restrict" });
+    try run_argv.appendSlice(testing.allocator, &tools);
+    const run = try std.process.run(testing.allocator, testing.io, .{ .argv = run_argv.items });
+    defer testing.allocator.free(run.stdout);
+    defer testing.allocator.free(run.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, run.term);
+    try testing.expectEqualStrings("", run.stdout);
+    try testing.expectEqualStrings(message, run.stderr);
+
+    var build_argv: std.ArrayList([]const u8) = .empty;
+    defer build_argv.deinit(testing.allocator);
+    try build_argv.appendSlice(testing.allocator, &.{ compiler_path, "build", path, "--run", "--restrict" });
+    try build_argv.appendSlice(testing.allocator, &tools);
+    const build = try std.process.run(testing.allocator, testing.io, .{ .argv = build_argv.items });
+    defer testing.allocator.free(build.stdout);
+    defer testing.allocator.free(build.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, build.term);
+    try testing.expectEqualStrings("", build.stdout);
+    try testing.expectEqualStrings(message, build.stderr);
+
+    var link_argv: std.ArrayList([]const u8) = .empty;
+    defer link_argv.deinit(testing.allocator);
+    try link_argv.appendSlice(testing.allocator, &.{ compiler_path, "build", path, "-o", output });
+    try link_argv.appendSlice(testing.allocator, &tools);
+    const link = try std.process.run(testing.allocator, testing.io, .{ .argv = link_argv.items });
+    defer testing.allocator.free(link.stdout);
+    defer testing.allocator.free(link.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, link.term);
+    const installed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ output, "--restrict" } });
+    defer testing.allocator.free(installed.stdout);
+    defer testing.allocator.free(installed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, installed.term);
+    try testing.expectEqualStrings("", installed.stdout);
+    try testing.expectEqualStrings(message, installed.stderr);
+}
+
+// spec: ARGV-LIMIT-1
+test "run build --run and installed executables accept more than 256 guest arguments" {
+    const program =
+        \\def main(args: list[str]) -> int:
+        \\    return len(args)
+    ;
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "args.my", .data = program });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "args.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const output = try std.fs.path.join(testing.allocator, &.{ root, "args-bin" });
+    defer testing.allocator.free(output);
+    var guest: [260][]const u8 = @splat("x");
+
+    var run_argv: std.ArrayList([]const u8) = .empty;
+    defer run_argv.deinit(testing.allocator);
+    try run_argv.appendSlice(testing.allocator, &.{ compiler_path, "run", path });
+    try run_argv.appendSlice(testing.allocator, &tools);
+    try run_argv.append(testing.allocator, "--");
+    try run_argv.appendSlice(testing.allocator, &guest);
+    const run = try std.process.run(testing.allocator, testing.io, .{ .argv = run_argv.items });
+    defer testing.allocator.free(run.stdout);
+    defer testing.allocator.free(run.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 4 }, run.term);
+    try testing.expectEqualStrings("", run.stdout);
+    try testing.expectEqualStrings("", run.stderr);
+
+    var build_argv: std.ArrayList([]const u8) = .empty;
+    defer build_argv.deinit(testing.allocator);
+    try build_argv.appendSlice(testing.allocator, &.{ compiler_path, "build", path, "--run" });
+    try build_argv.appendSlice(testing.allocator, &tools);
+    try build_argv.append(testing.allocator, "--");
+    try build_argv.appendSlice(testing.allocator, &guest);
+    const build = try std.process.run(testing.allocator, testing.io, .{ .argv = build_argv.items });
+    defer testing.allocator.free(build.stdout);
+    defer testing.allocator.free(build.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 4 }, build.term);
+    try testing.expectEqualStrings("", build.stdout);
+    try testing.expectEqualStrings("", build.stderr);
+
+    var link_argv: std.ArrayList([]const u8) = .empty;
+    defer link_argv.deinit(testing.allocator);
+    try link_argv.appendSlice(testing.allocator, &.{ compiler_path, "build", path, "-o", output });
+    try link_argv.appendSlice(testing.allocator, &tools);
+    const link = try std.process.run(testing.allocator, testing.io, .{ .argv = link_argv.items });
+    defer testing.allocator.free(link.stdout);
+    defer testing.allocator.free(link.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, link.term);
+    var installed_argv: std.ArrayList([]const u8) = .empty;
+    defer installed_argv.deinit(testing.allocator);
+    try installed_argv.append(testing.allocator, output);
+    try installed_argv.append(testing.allocator, "--");
+    try installed_argv.appendSlice(testing.allocator, &guest);
+    const installed = try std.process.run(testing.allocator, testing.io, .{ .argv = installed_argv.items });
+    defer testing.allocator.free(installed.stdout);
+    defer testing.allocator.free(installed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 4 }, installed.term);
+    try testing.expectEqualStrings("", installed.stdout);
+    try testing.expectEqualStrings("", installed.stderr);
+}

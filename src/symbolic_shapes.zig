@@ -155,6 +155,24 @@ pub const Context = struct {
         }
         return .{ .ok_type = ok orelse return null, .error_type = failure orelse return null };
     }
+    /// Recognize a symbolic optional payload while keeping the parameter intact.
+    pub fn matchOption(self: Context, value: Value, span: source.Span) Error!?symbolic.OptionShape {
+        if (self.kind(value) != .variants) return null;
+        const shape = try self.schema(value, span);
+        if (shape.fields.len != 2) return null;
+        var element: ?Value = null;
+        var none = false;
+        for (shape.fields) |field| {
+            if (std.mem.eql(u8, field.name, "some")) {
+                element = field.ty orelse return null;
+            } else if (std.mem.eql(u8, field.name, "none")) {
+                if (field.ty != null) return null;
+                none = true;
+            } else return null;
+        }
+        if (!none) return null;
+        return .{ .element = element orelse return null };
+    }
     /// Resolve a record/variant schema, caching substituted nominal members without expanding phantom arguments.
     pub fn schema(self: Context, value: Value, span: source.Span) Error!Schema {
         try self.charge(span);

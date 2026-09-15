@@ -54,11 +54,9 @@ for an installed executable. Runtime controls stay before the delimiter for a
 command and before the first `--` for an installed program. Values are validated
 UTF-8; invalid platform bytes fail at the host boundary before guest execution.
 
-One observable gap remains in this baseline: under `--restrict`, `run` reports a
-missing entry capability with a command-line preflight diagnostic, while
-`build --run` and an installed executable report `CapabilityUnavailable: QBE
-runtime failure`. All three exit 2 and deny execution, but their stderr text is
-not yet identical.
+Under `--restrict`, all launch paths report the first missing entry capability
+with the same stderr line and exit 2 before guest execution. The generated entry
+stops after the first failed grant instead of reporting every missing capability.
 
 ## Disk modules
 

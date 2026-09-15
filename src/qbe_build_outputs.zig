@@ -2,6 +2,8 @@
 const std = @import("std");
 const v = @import("qbe_build_value.zig");
 const host = @import("qbe_build_host.zig");
+/// One packed-argument cleanup shared by every early grant exit.
+const free_arguments = "free(arguments);";
 /// Metadata, allocation, and unsupported executable-entry failures.
 pub const Error = host.Error || error{UnsupportedNativeEntry};
 /// Emit typed runtime descriptors, host bridges, and source-location tables.
@@ -51,13 +53,16 @@ pub fn entry(allocator: std.mem.Allocator, manifest: std.json.Value, provider: b
         } else {
             try w.print("{s};\n", .{try grant(v.text(parameter))});
         }
+        try w.writeAll("if(myl_qbe_failed(ctx)){");
+        if (uses_packed) try w.writeAll(free_arguments);
+        try w.writeAll("return 0;}\n");
     }
     try w.writeAll("if(myl_qbe_failed(ctx)){");
-    if (uses_packed) try w.writeAll("free(arguments);");
+    if (uses_packed) try w.writeAll(free_arguments);
     try w.print("return 0;}} uint64_t answer={s}(ctx", .{name});
     if (uses_packed) try w.writeAll(",arguments") else for (parameters, 0..) |_, index| try w.print(",arg{d}", .{index});
     try w.writeAll(");");
-    if (uses_packed) try w.writeAll("free(arguments);");
+    if (uses_packed) try w.writeAll(free_arguments);
     try w.writeAll("return answer;}\nint main(int argc,char **argv){");
     if (provider) try w.writeAll("MylangNativeProviders providers=mylang_native_providers();");
     try w.print("return mylang_qbe_run_grants(entry_run,argc,argv,{s});}}\n", .{if (provider) "&providers" else "NULL"});

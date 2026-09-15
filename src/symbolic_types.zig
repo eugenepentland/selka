@@ -15,6 +15,8 @@ pub const Schema = struct { kind: @import("nominal_templates.zig").Kind, fields:
 pub const Properties = struct { move_only: bool = false, requires_handling: bool = false, cleanup: @import("effect_set.zig").Mask = 0 };
 /// Named result payload types before runtime specialization.
 pub const ResultShape = struct { ok_type: Value, error_type: Value };
+/// Named optional payload before runtime specialization.
+pub const OptionShape = struct { element: Value };
 const Catalog = @import("type_catalog.zig").Catalog;
 /// Structural fixed-array shape with a concrete length and optional enum key.
 pub const Array = struct { element: Value, length: usize, length_parameter: ?usize = null, key: ?typed.Type = null };

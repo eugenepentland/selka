@@ -244,3 +244,37 @@ test "uncalled generic templates cannot drop duplicate or overwrite results" {
         \\    return 0
     , "E_RESULT_OVERWRITE");
 }
+
+// spec: OPTION-TRY-2
+test "generic option propagation unwraps Some forwards None and rejects a result return" {
+    try run(
+        \\def forward[T](value: Option[T]) -> Option[T]:
+        \\    item = value?
+        \\    return Some(item)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    match forward[i64](Some(41)):
+        \\        case Some(value):
+        \\            return value
+        \\        case None:
+        \\            return 0
+    , 41);
+    try run(
+        \\def forward[T](value: Option[T]) -> Option[T]:
+        \\    item = value?
+        \\    return Some(item)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    match forward[i64](None):
+        \\        case Some(value):
+        \\            return value
+        \\        case None:
+        \\            return 7
+    , 7);
+    try reject(
+        \\def broken[T](value: Option[T]) -> i64:
+        \\    return value?
+    , "E_TRY_RETURN");
+}

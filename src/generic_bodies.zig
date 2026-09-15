@@ -393,8 +393,8 @@ const Checker = struct {
         return contract.result;
     }
     fn collectionElement(self: *Checker, owner: Symbolic, span: source.Span) Error!Symbolic {
-        if (!self.shapes().managed(owner)) return self.sink.fail(eListType, span, "operation requires a managed list");
-        if (self.shapes().collectionKind(owner) == .string) return owner;
+        const kind = self.shapes().collectionKind(owner) orelse return self.sink.fail(eListType, span, "operation requires a managed list, string, or dictionary");
+        if (kind == .string) return owner;
         return (try self.shapes().container(owner, span)).?.element;
     }
     fn fieldAssignment(self: *Checker, node: ast.Node) Error!Symbolic {
@@ -647,6 +647,27 @@ const Checker = struct {
         try self.same(try self.expressionExpected(invocation.arguments[0], element), element, span);
         return expected;
     }
+    fn cellConstructor(self: *Checker, invocation: Call, span: source.Span) Error!?Symbolic {
+        if (invocation.owner != null or invocation.type_arguments.len != 0) return null;
+        const name = self.src.text(invocation.name);
+        if (!std.mem.eql(u8, name, "Cell")) return null;
+        if (self.active.contains(name) or self.functions.contains(name)) return null;
+        if (self.module_names) |names| if (try names.topLevel(invocation.name)) return null;
+        const store = self.catalog.templates.store orelse return null;
+        const declaration = store.index.names.get("Cell") orelse return null;
+        const builtin = store.index.declarations.items[declaration].builtin_name orelse return null;
+        if (!std.mem.eql(u8, builtin, "Cell")) return null;
+        if (invocation.arguments.len != 1) return self.sink.fail("E_ARITY", span, "Cell requires one value argument");
+        const keyword = if (invocation.argument_names.len == 0) null else invocation.argument_names[0];
+        if (keyword == null or !std.mem.eql(u8, self.src.text(keyword.?), "value"))
+            return self.sink.fail("E_UNKNOWN_FIELD", invocation.name, "construct Cell with value=initial");
+        const value = try self.expression(invocation.arguments[0]);
+        if (try self.requiresHandling(value)) return self.sink.fail("E_CELL_ELEMENT", span, "Cell contents must be copyable, storable values without Result, Option, resources, capabilities, or result obligations");
+        try self.supports(value, .storable, span);
+        self.seedEffect(.managed_allocation);
+        const cell = try self.shapes().nominal(declaration, &.{value});
+        return cell;
+    }
     fn numericLiteral(self: *Checker, span: source.Span, minimum: bool) Error!Symbolic {
         const expected = self.expected_types.get(span);
         if (float_syntax.isLiteral(self.src.text(span)) or (expected != null and self.isFloat(expected.?))) return self.floatType();
@@ -690,6 +711,7 @@ const Checker = struct {
         if (try self.truncatingHelper(input_call, span)) |value| return value;
         if (try self.variantConstruction(input_call, span)) |value| return value;
         if (try self.managedMethod(input_call, span)) |value| return value;
+        if (try self.cellConstructor(input_call, span)) |value| return value;
         if (try self.contextualResult(input_call, span)) |value| return value;
         if (try self.contextualOption(input_call, span)) |value| return value;
         if (try self.scalarConstructor(input_call, span)) |value| return value;
@@ -703,7 +725,7 @@ const Checker = struct {
     }
     fn call(self: *Checker, input_call: Call, span: source.Span) Error!Symbolic {
         if (try self.specialCall(input_call, span)) |value| {
-            try call_arguments.positional(input_call, self.sink);
+            if (!std.mem.eql(u8, self.src.text(input_call.name), "Cell")) try call_arguments.positional(input_call, self.sink);
             return value;
         }
         const resolved = try self.resolveCall(input_call);
@@ -1082,12 +1104,21 @@ const Checker = struct {
     fn propagateValue(self: *Checker, operand: ast.NodeId, span: source.Span) Error!Symbolic {
         const temporaries = self.temporary_results;
         const value = try self.expression(operand);
-        const input = try self.resultShape(value, span, "E_TRY_TYPE");
-        const output = try self.resultShape(self.result, span, eTryReturn);
-        try self.same(input.error_type, output.error_type, span);
-        try self.requireHandled(0, span);
-        if (temporaries != 0) return self.sink.fail("E_RESULT_PROPAGATION", span, "propagation could drop an already evaluated result temporary");
-        return input.ok_type;
+        if (try self.shapes().matchResult(value, span)) |input| {
+            const output = try self.resultShape(self.result, span, eTryReturn);
+            try self.same(input.error_type, output.error_type, span);
+            try self.requireHandled(0, span);
+            if (temporaries != 0) return self.sink.fail("E_RESULT_PROPAGATION", span, "propagation could drop an already evaluated result temporary");
+            return input.ok_type;
+        }
+        if (try self.shapes().matchOption(value, span)) |input| {
+            const output = (try self.shapes().matchOption(self.result, span)) orelse return self.sink.fail(eTryReturn, span, "try requires a function returning an Option type");
+            try self.same(input.element, output.element, span);
+            try self.requireHandled(0, span);
+            if (temporaries != 0) return self.sink.fail("E_RESULT_PROPAGATION", span, "propagation could drop an already evaluated result temporary");
+            return input.element;
+        }
+        return self.sink.fail("E_TRY_TYPE", span, "try requires a declared result or option");
     }
     fn enumMember(self: *Checker, field: @FieldType(@FieldType(ast.Node, "data"), "field"), span: source.Span) Error!?Symbolic {
         const base = self.program.nodes.items[@backingInt(field.base)];
@@ -1183,6 +1214,7 @@ const Checker = struct {
     fn recordValue(self: *Checker, record: @FieldType(@FieldType(ast.Node, "data"), "record"), span: source.Span) Error!Symbolic {
         const result = try self.ty(record.name);
         try self.recordFields(result, record.fields, true, span);
+        if (self.shapes().managed(result)) self.seedEffect(.managed_allocation);
         return result;
     }
     fn recordFields(self: *Checker, ty_value: Symbolic, fields: []const ast.FieldInit, complete: bool, span: source.Span) Error!void {

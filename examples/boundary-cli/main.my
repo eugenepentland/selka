@@ -1,7 +1,7 @@
 module main
 import summary
 
-class Entry:
+record Entry:
     bytes: [16]u8
     length: u64
     present: bool
