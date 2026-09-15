@@ -189,7 +189,7 @@ test "declared ceilings reject hidden effects through generic and callback calls
 // spec: MUTATION-METADATA-1
 test "M1 direct input writes carry mutation facts while reads do not" {
     var c = try language.Compilation.init(t.allocator, fixture_path,
-        \\def touch(values: list[int]) -> None effects():
+        \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
         \\    values[0] = 1
         \\
         \\
@@ -277,9 +277,18 @@ test "M1 definitely fresh local construction does not require mutation permissio
     try t.expect((c.program.?.functions[0].policy.effects & sets.bit(.mutation)) == 0);
 }
 
-test "M1 unused generic body accepts a direct mutation fact without enforcing M2" {
-    var c = try language.Compilation.init(t.allocator, fixture_path,
+// spec-case: MUTATION-METADATA-1
+test "M2 unused generic body enforces its declared mutation contract" {
+    try reject(
         \\def touch[T](values: list[T], item: T) -> None effects():
+        \\    values[0] = item
+        \\
+        \\
+        \\def main() -> int effects():
+        \\    return 0
+    , "E_MUTATION_PERMISSION", "generic");
+    var c = try language.Compilation.init(t.allocator, fixture_path,
+        \\def touch[T](values: list[T], item: T) -> None effects(mutation) mutates(values):
         \\    values[0] = item
         \\
         \\
@@ -301,7 +310,7 @@ test "M1 unused generic body accepts a direct mutation fact without enforcing M2
 
 test "M1 callback body carries its direct mutation fact" {
     var c = try language.Compilation.init(t.allocator, fixture_path,
-        \\def apply(f: def(values: list[int]) -> None effects()) -> None effects():
+        \\def apply(f: def(values: list[int]) -> None effects(mutation) mutates(values)) -> None effects():
         \\    _ = f
         \\
         \\
@@ -350,7 +359,7 @@ test "M1 callable assignability accepts narrower mutation footprints and return 
 
 test "M1 forged or missing IR mutation summaries reject" {
     var c = try language.Compilation.init(t.allocator, fixture_path,
-        \\def touch(values: list[int]) -> None effects():
+        \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
         \\    values[0] = 1
         \\
         \\
@@ -423,55 +432,55 @@ test "M1 effect enum appends mutation without moving existing bits" {
 }
 
 const mutation_forms =
-    \\def slot(values: list[int]) -> None effects():
+    \\def slot(values: list[int]) -> None effects(mutation) mutates(values):
     \\    values[0] = 1
     \\
     \\
-    \\def augment(values: list[int]) -> None effects():
+    \\def augment(values: list[int]) -> None effects(mutation) mutates(values):
     \\    values[0] += 1
     \\
     \\
-    \\def append(values: list[int]) -> None effects(managed_allocation):
+    \\def append(values: list[int]) -> None effects(mutation, managed_allocation) mutates(values):
     \\    values.append(1)
     \\
     \\
-    \\def extend(values: list[int], other: list[int]) -> None effects(managed_allocation):
+    \\def extend(values: list[int], other: list[int]) -> None effects(mutation, managed_allocation) mutates(values):
     \\    values.extend(other)
     \\
     \\
-    \\def insert(values: list[int]) -> None effects(managed_allocation):
+    \\def insert(values: list[int]) -> None effects(mutation, managed_allocation) mutates(values):
     \\    values.insert(0, 1)
     \\
     \\
-    \\def remove(values: list[int]) -> None effects():
+    \\def remove(values: list[int]) -> None effects(mutation) mutates(values):
     \\    values.remove(1)
     \\
     \\
-    \\def pop(values: list[int]) -> None effects():
+    \\def pop(values: list[int]) -> None effects(mutation) mutates(values):
     \\    _ = values.pop()
     \\
     \\
-    \\def clear(values: list[int]) -> None effects():
+    \\def clear(values: list[int]) -> None effects(mutation) mutates(values):
     \\    values.clear()
     \\
     \\
-    \\def reverse(values: list[int]) -> None effects():
+    \\def reverse(values: list[int]) -> None effects(mutation) mutates(values):
     \\    values.reverse()
     \\
     \\
-    \\def sort(values: list[int]) -> None effects():
+    \\def sort(values: list[int]) -> None effects(mutation) mutates(values):
     \\    values.sort()
     \\
     \\
-    \\def update(mapping: dict[str, int]) -> None effects(managed_allocation):
+    \\def update(mapping: dict[str, int]) -> None effects(mutation, managed_allocation) mutates(mapping):
     \\    mapping["answer"] = 1
     \\
     \\
-    \\def delete(mapping: dict[str, int]) -> None effects(managed_allocation):
+    \\def delete(mapping: dict[str, int]) -> None effects(mutation, managed_allocation) mutates(mapping):
     \\    _ = mapping.pop("answer")
     \\
     \\
-    \\def set_cell(cell: Cell[int]) -> None effects():
+    \\def set_cell(cell: Cell[int]) -> None effects(mutation) mutates(cell):
     \\    cell.value = 1
     \\
     \\
@@ -513,4 +522,443 @@ test "M1 mutates clause normalizes duplicate names to sorted positions" {
         try t.expectEqualSlices(u16, &.{ 0, 1 }, function.signature.declared_mutates);
         try t.expectEqualSlices(u16, &.{ 0, 1 }, function.signature.mutates);
     }
+}
+
+// spec-case: MUTATION-METADATA-1
+test "M2 direct list dict and Cell writes require mutation permission" {
+    try reject(
+        \\def touch(values: list[int]) -> None effects():
+        \\    values[0] = 1
+        \\
+        \\
+        \\def main() -> int effects(managed_allocation):
+        \\    values = [1]
+        \\    touch(values)
+        \\    return 0
+    , "E_MUTATION_PERMISSION", "exceeds its contract");
+    try reject(
+        \\def touch(mapping: dict[str, int]) -> None effects(managed_allocation):
+        \\    mapping["answer"] = 1
+        \\
+        \\
+        \\def main() -> int effects(managed_allocation):
+        \\    mapping: dict[str, int] = {}
+        \\    touch(mapping)
+        \\    return 0
+    , "E_MUTATION_PERMISSION", "exceeds its contract");
+    try reject(
+        \\def set_value(cell: Cell[int]) -> None effects():
+        \\    cell.value = 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    cell = Cell(value=0)
+        \\    set_value(cell)
+        \\    return 0
+    , "E_MUTATION_PERMISSION", "exceeds its contract");
+}
+
+// spec-case: MUTATION-METADATA-1
+test "M2 declared mutation permits direct writes and runs natively" {
+    try result(
+        \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
+        \\    values[0] = 42
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1]
+        \\    touch(values)
+        \\    if values[0] != 42:
+        \\        return 1
+        \\    return 0
+    , 0);
+}
+
+// spec-case: MUTATION-METADATA-1
+test "M2 nested record aliases keep the input origin" {
+    try reject(
+        \\record Box:
+        \\    values: list[int]
+        \\
+        \\
+        \\def change(box: Box) -> None effects():
+        \\    alias = box.values
+        \\    alias[0] = 42
+        \\
+        \\
+        \\def main() -> int:
+        \\    box = Box(values=[1])
+        \\    change(box)
+        \\    return 0
+    , "E_MUTATION_PERMISSION", "exceeds its contract");
+    try result(
+        \\record Box:
+        \\    values: list[int]
+        \\
+        \\
+        \\def change(box: Box) -> None effects(mutation) mutates(box):
+        \\    alias = box.values
+        \\    alias[0] = 42
+        \\
+        \\
+        \\def main() -> int:
+        \\    box = Box(values=[1])
+        \\    change(box)
+        \\    if box.values[0] != 42:
+        \\        return 1
+        \\    return 0
+    , 0);
+}
+
+// spec-case: MUTATION-METADATA-1
+test "M2 shallow copy severs only the outer container" {
+    try result(
+        \\def edit(values: list[int]) -> None effects(managed_allocation):
+        \\    copy = values.copy()
+        \\    copy[0] = 99
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1]
+        \\    edit(values)
+        \\    if values[0] != 1:
+        \\        return 1
+        \\    return 0
+    , 0);
+    try reject(
+        \\def edit(values: list[list[int]]) -> None effects(managed_allocation):
+        \\    copy = values.copy()
+        \\    copy[0][0] = 99
+        \\
+        \\
+        \\def main() -> int:
+        \\    inner = [1]
+        \\    values = [inner]
+        \\    edit(values)
+        \\    return 0
+    , "E_MUTATION_PERMISSION", "exceeds its contract");
+}
+
+// spec-case: MUTATION-METADATA-1
+test "M2 identity-returning helpers do not launder input origins" {
+    try reject(
+        \\def identity(values: list[int]) -> list[int] effects():
+        \\    return values
+        \\
+        \\
+        \\def overwrite(values: list[int]) -> None effects(mutation) mutates(values):
+        \\    values[0] = 1
+        \\
+        \\
+        \\def launder(values: list[int]) -> None effects():
+        \\    alias = identity(values)
+        \\    overwrite(alias)
+        \\
+        \\
+        \\def main() -> int effects(managed_allocation):
+        \\    values = [1]
+        \\    launder(values)
+        \\    return 0
+    , "E_MUTATION_PERMISSION", "exceeds its contract");
+    try result(
+        \\def identity(values: list[int]) -> list[int] effects():
+        \\    return values
+        \\
+        \\
+        \\def overwrite(values: list[int]) -> None effects(mutation) mutates(values):
+        \\    values[0] = 42
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1]
+        \\    alias = identity(values)
+        \\    overwrite(alias)
+        \\    if values[0] != 42:
+        \\        return 1
+        \\    return 0
+    , 0);
+}
+
+// spec-case: MUTATION-METADATA-1
+test "M2 return wrappers keep borrowed descendant origins" {
+    try reject(
+        \\record Box:
+        \\    values: list[int]
+        \\
+        \\
+        \\def boxed(values: list[int]) -> Box effects():
+        \\    return Box(values=values)
+        \\
+        \\
+        \\def overwrite(box: Box) -> None effects(mutation) mutates(box):
+        \\    box.values[0] = 1
+        \\
+        \\
+        \\def launder(values: list[int]) -> None effects(managed_allocation):
+        \\    overwrite(boxed(values))
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1]
+        \\    launder(values)
+        \\    return 0
+    , "E_MUTATION_PERMISSION", "exceeds its contract");
+}
+
+test "M2 fresh containers may be built inserted into and read locally" {
+    try result(
+        \\def build() -> list[int] effects(managed_allocation):
+        \\    values: list[int] = []
+        \\    values.append(1)
+        \\    values.append(2)
+        \\    return values
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = build()
+        \\    return values[0] + values[1] - 3
+    , 0);
+}
+
+// spec-case: MUTATION-METADATA-1
+test "M2 branches and loops attribute writes to the receiver origin" {
+    try result(
+        \\def fill(values: list[int], count: int) -> None effects(mutation) mutates(values):
+        \\    index = 0
+        \\    while index < count:
+        \\        if index % 2 == 0:
+        \\            values[index] = index
+        \\        else:
+        \\            values[index] = 0 - index
+        \\        index += 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [0, 0]
+        \\    fill(values, 2)
+        \\    return values[0] + values[1]
+    , -1);
+    try reject(
+        \\def fill(values: list[int], count: int) -> None effects():
+        \\    index = 0
+        \\    while index < count:
+        \\        values[index] = index
+        \\        index += 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [0, 0]
+        \\    fill(values, 2)
+        \\    return 0
+    , "E_MUTATION_PERMISSION", "exceeds its contract");
+}
+
+// spec-case: MUTATION-METADATA-1
+test "M2 recursive helpers propagate mutation footprints to a fixed point" {
+    try result(
+        \\def touch(values: list[int], depth: int) -> None effects(mutation) mutates(values):
+        \\    if depth == 0:
+        \\        return
+        \\    touch(values, depth - 1)
+        \\    values[0] = 7
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1]
+        \\    touch(values, 2)
+        \\    if values[0] != 7:
+        \\        return 1
+        \\    return 0
+    , 0);
+    try reject(
+        \\def touch(values: list[int], depth: int) -> None effects():
+        \\    if depth == 0:
+        \\        return
+        \\    touch(values, depth - 1)
+        \\    values[0] = 7
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1]
+        \\    touch(values, 2)
+        \\    return 0
+    , "E_MUTATION_PERMISSION", "exceeds its contract");
+}
+
+// spec-case: MUTATION-METADATA-1
+test "M2 generic helpers carry mutation permissions to specializations" {
+    try result(
+        \\def touch[T](values: list[T], item: T) -> None effects(mutation) mutates(values):
+        \\    values[0] = item
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1]
+        \\    touch[int](values, 5)
+        \\    if values[0] != 5:
+        \\        return 1
+        \\    return 0
+    , 0);
+}
+
+// spec-case: MUTATION-METADATA-1
+test "M2 indirect callbacks obey mutation contracts" {
+    try result(
+        \\def apply(f: def(values: list[int]) -> None effects(mutation) mutates(values), values: list[int]) -> None effects(mutation) mutates(values):
+        \\    f(values)
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1]
+        \\    apply(lambda values: values.clear(), values)
+        \\    if len(values) != 0:
+        \\        return 1
+        \\    return 0
+    , 0);
+    try reject(
+        \\def apply(f: def(values: list[int]) -> None effects(), values: list[int]) -> None effects():
+        \\    f(values)
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1]
+        \\    apply(lambda values: values.clear(), values)
+        \\    return 0
+    , "E_MUTATION_PERMISSION", "exceeds its contract");
+}
+
+// spec-case: MUTATION-METADATA-1
+test "M2 writable and read-only arguments that may overlap reject" {
+    try reject(
+        \\def touch(x: list[int], y: list[int]) -> None effects(mutation) mutates(x):
+        \\    x[0] = 1
+        \\    _ = y[0]
+        \\
+        \\
+        \\def use(values: list[int]) -> None effects(mutation) mutates(values):
+        \\    touch(values, values)
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1]
+        \\    use(values)
+        \\    return 0
+    , "E_MUTATION_OVERLAP", "may alias");
+    try reject(
+        \\def touch(x: list[int], y: list[int]) -> None effects(mutation) mutates(x):
+        \\    x[0] = 1
+        \\    _ = y[0]
+        \\
+        \\
+        \\def use(a: list[int], b: list[int]) -> None effects(mutation) mutates(a):
+        \\    touch(a, b)
+        \\
+        \\
+        \\def main() -> int:
+        \\    a = [1]
+        \\    b = [2]
+        \\    use(a, b)
+        \\    return 0
+    , "E_MUTATION_OVERLAP", "may alias");
+    try result(
+        \\def touch(x: list[int], y: list[int]) -> None effects(mutation) mutates(x):
+        \\    x[0] = 1
+        \\    _ = y[0]
+        \\
+        \\
+        \\def main() -> int:
+        \\    a = [1]
+        \\    b = a.copy()
+        \\    touch(a, b)
+        \\    return 0
+    , 0);
+}
+
+// spec-case: MUTATION-METADATA-1
+test "M2 two writable aliases remain permitted" {
+    try result(
+        \\def write_both(x: list[int], y: list[int]) -> None effects(mutation) mutates(x, y):
+        \\    x[0] = 1
+        \\    y[0] = 2
+        \\
+        \\
+        \\def use(values: list[int]) -> None effects(mutation) mutates(values):
+        \\    write_both(values, values)
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [0, 0]
+        \\    use(values)
+        \\    return values[0] + values[1] - 3
+    , -1);
+}
+
+// spec-case: MUTATION-METADATA-1
+test "M2 read-only queries require no mutation permission" {
+    try result(
+        \\def total(values: list[int]) -> int effects():
+        \\    return len(values)
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1, 2, 3]
+        \\    return total(values) - 3
+    , 0);
+}
+
+// spec-case: MUTATION-METADATA-1
+test "M2 disjoint managed argument types are proven independent" {
+    try result(
+        \\record Box:
+        \\    values: list[int]
+        \\
+        \\
+        \\def write_text(pieces: list[str], box: Box) -> None effects(mutation, managed_allocation) mutates(pieces):
+        \\    pieces.append("x")
+        \\    _ = box
+        \\
+        \\
+        \\def use(pieces: list[str], box: Box) -> None effects(mutation, managed_allocation) mutates(pieces):
+        \\    write_text(pieces, box)
+        \\
+        \\
+        \\def main() -> int:
+        \\    pieces: list[str] = []
+        \\    box = Box(values=[1])
+        \\    use(pieces, box)
+        \\    return 0
+    , 0);
+}
+
+// spec-case: MUTATION-METADATA-1
+test "M2 cached callers are revalidated when a callee gains a mutation" {
+    const Cache = language.semantic_cache.Cache;
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const before =
+        \\def helper(values: list[int]) -> int effects():
+        \\    return values[0]
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [0]
+        \\    return helper(values)
+    ;
+    var first = try language.Compilation.init(t.allocator, "edited.my", before);
+    defer first.deinit();
+    try first.checkWithCache(&cache);
+    try t.expectEqual(@as(i64, 0), (try native.run(&first)).value);
+    const after =
+        \\def helper(values: list[int]) -> int effects():
+        \\    values[0] = 1
+        \\    return values[0]
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [0]
+        \\    return helper(values)
+    ;
+    var second = try language.Compilation.init(t.allocator, "edited.my", after);
+    defer second.deinit();
+    try t.expectError(error.SourceError, second.checkWithCache(&cache));
 }

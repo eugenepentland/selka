@@ -170,11 +170,11 @@ test "noalloc rejects transitive managed allocation while permitting fixed-slot 
         try reject(append_source, "E_EFFECT_BOUND");
     }
     const source =
-        \\def fixed(values: list[i64]) noalloc:
+        \\def fixed(values: list[i64]) -> None effects(mutation) mutates(values):
         \\    values[0u64] = 42
         \\
         \\
-        \\def inspect(values: list[i64]) -> i64 noalloc:
+        \\def inspect(values: list[i64]) -> i64 effects(mutation) mutates(values):
         \\    fixed(values)
         \\    return values[0u64]
         \\
