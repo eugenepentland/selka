@@ -29,7 +29,8 @@ fn rejectAll(sources: []const []const u8, code: []const u8) !void {
 test "bytecode rejects managed metadata on an ordinary aggregate" {
     var compilation = try language.Compilation.init(t.allocator, "forged-managed.my",
         \\class Record:
-        \\    value: i64
+        \\    left: i64
+        \\    right: i64
         \\
         \\
         \\def main() -> i64:
