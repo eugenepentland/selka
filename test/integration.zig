@@ -3716,3 +3716,45 @@ test "P1 rejects every incompatible replacement dimension" {
         };
     }
 }
+
+// spec-case: NATIVE-TEST-3
+test "P1 ignores an unselected production body type error while its declarations stay valid" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const production_body_error =
+        \\module production
+        \\export Stub
+        \\
+        \\
+        \\domain Stub: int:
+        \\    def make(discount: int) -> Stub effects():
+        \\        return wrap[Stub](discount)
+        \\
+        \\    def price(policy: Stub, subtotal: int) -> int effects(mutation) mutates(policy):
+        \\        return True
+    ;
+    try writeProjectFile(&temp, "main.my", p1_main);
+    try writeProjectFile(&temp, "production.my", production_body_error);
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const root = std.fs.path.dirname(entry).?;
+    const cases_path = try std.fs.path.join(testing.allocator, &.{ root, "cases.json" });
+    defer testing.allocator.free(cases_path);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
+    defer testing.allocator.free(cache);
+
+    const fake = try p1Fake("effects(mutation) mutates(policy)", "_ = subtotal");
+    defer testing.allocator.free(fake);
+    try p1WriteCases(&temp, "cases.json", "production.my", fake);
+    const selected = try p1Invoke(entry, cases_path, cache);
+    defer testing.allocator.free(selected.stdout);
+    defer testing.allocator.free(selected.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, selected.term);
+    try testing.expect(std.mem.indexOf(u8, selected.stdout, "\"passed\":1") != null);
+
+    const full = try p1Invoke(entry, null, cache);
+    defer testing.allocator.free(full.stdout);
+    defer testing.allocator.free(full.stderr);
+    try testing.expect(full.term != .exited or full.term.exited != 0);
+    try testing.expect(std.mem.indexOf(u8, full.stderr, "E_TYPE") != null);
+}
