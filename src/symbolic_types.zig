@@ -1,10 +1,12 @@
 //! Recursive generic type shapes retain parameters and resolved nominal identities.
 const typed = @import("typed.zig");
 const requirements = @import("generic_requirements.zig");
+const callables = @import("callables.zig");
+const effect_set = @import("effect_set.zig");
 /// An abstract type; arrays preserve their element expression without representative substitution.
 pub const Value = union(enum) { callback: *const Callback, length: usize, length_parameter: usize, concrete: typed.Type, parameter: usize, array: *const Array, nominal: *Nominal };
 /// A callback signature retains abstract argument types without storing context values.
-pub const Callback = struct { parameters: []const Value, result: Value, effects: @import("effect_set.zig").Mask };
+pub const Callback = struct { parameters: []const Value, result: Value, effects: effect_set.Mask };
 /// Symbolic applications keep declaration identity and ordered arguments, with lazy stored-member caches.
 pub const Nominal = struct { declaration: usize, arguments: []const Value, schema: ?*Schema = null, properties: ?Properties = null };
 /// A declared field or variant payload after substitution into the caller's parameter scope.
@@ -12,7 +14,7 @@ pub const Field = struct { name: []const u8, span: @import("source.zig").Span, t
 /// Shared view of concrete and parameterized record/variant members.
 pub const Schema = struct { kind: @import("nominal_templates.zig").Kind, fields: []const Field, key: ?typed.Type = null };
 /// Stored-value contracts are independent of nominal argument identity.
-pub const Properties = struct { move_only: bool = false, requires_handling: bool = false, cleanup: @import("effect_set.zig").Mask = 0 };
+pub const Properties = struct { move_only: bool = false, requires_handling: bool = false, cleanup: effect_set.Mask = 0 };
 /// Named result payload types before runtime specialization.
 pub const ResultShape = struct { ok_type: Value, error_type: Value };
 /// Named optional payload before runtime specialization.
@@ -69,6 +71,66 @@ fn sameCallback(a: Callback, other: Value, catalog: Catalog) bool {
 fn sameConcrete(value: Value, ty: typed.Type, catalog: Catalog) bool {
     const store = catalog.templates.store orelse return false;
     return sameIdentity(value, store.semantic(ty) orelse return false, catalog);
+}
+fn callbackParameterCount(value: Value, catalog: Catalog) ?usize {
+    return switch (value) {
+        .callback => |callback| callback.parameters.len,
+        .concrete => |ty| block: {
+            const signature = callables.signature(ty, catalog.records) orelse break :block null;
+            break :block signature.parameters.len;
+        },
+        else => null,
+    };
+}
+fn callbackParameter(value: Value, index: usize, catalog: Catalog) ?Value {
+    return switch (value) {
+        .callback => |callback| if (index < callback.parameters.len) callback.parameters[index] else null,
+        .concrete => |ty| block: {
+            const signature = callables.signature(ty, catalog.records) orelse break :block null;
+            if (index >= signature.parameters.len) break :block null;
+            break :block .{ .concrete = signature.parameters[index] };
+        },
+        else => null,
+    };
+}
+fn callbackResult(value: Value, catalog: Catalog) ?Value {
+    return switch (value) {
+        .callback => |callback| callback.result,
+        .concrete => |ty| block: {
+            const signature = callables.signature(ty, catalog.records) orelse break :block null;
+            break :block .{ .concrete = signature.return_type };
+        },
+        else => null,
+    };
+}
+fn callbackEffects(value: Value, catalog: Catalog) ?effect_set.Mask {
+    return switch (value) {
+        .callback => |callback| callback.effects,
+        .concrete => |ty| block: {
+            const signature = callables.signature(ty, catalog.records) orelse break :block null;
+            break :block signature.effects;
+        },
+        else => null,
+    };
+}
+/// Directional callback assignability for symbolic values: parameters and result
+/// stay exact, while the implementation effect ceiling must be a subset.
+pub fn callbackAssignable(implementation: Value, destination: Value, catalog: Catalog) bool {
+    const implementation_effects = callbackEffects(implementation, catalog) orelse return false;
+    const destination_effects = callbackEffects(destination, catalog) orelse return false;
+    if (implementation_effects & ~destination_effects != 0) return false;
+    const implementation_count = callbackParameterCount(implementation, catalog) orelse return false;
+    const destination_count = callbackParameterCount(destination, catalog) orelse return false;
+    if (implementation_count != destination_count) return false;
+    const implementation_result = callbackResult(implementation, catalog) orelse return false;
+    const destination_result = callbackResult(destination, catalog) orelse return false;
+    if (!same(implementation_result, destination_result, catalog)) return false;
+    for (0..implementation_count) |index| {
+        const implementation_parameter = callbackParameter(implementation, index, catalog) orelse return false;
+        const destination_parameter = callbackParameter(destination, index, catalog) orelse return false;
+        if (!same(implementation_parameter, destination_parameter, catalog)) return false;
+    }
+    return true;
 }
 fn sameIdentity(value: Value, id: @import("nominal_layouts.zig").Id, catalog: Catalog) bool {
     const store = catalog.templates.store.?;

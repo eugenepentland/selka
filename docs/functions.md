@@ -172,18 +172,20 @@ def main() -> int:
 
 ## Bounded callbacks
 
-A parameter that accepts a function value declares the exact signature and the
-exact effect ceiling it will take, and the match is exact in both directions: a
-callback declared `effects()` rejects a function that prints, and a callback
-declared `effects(output)` equally rejects a pure one, reporting `E_TYPE` with
-the two signatures side by side. There is no widening or narrowing at the
-boundary, so the ceiling is a statement about what invoking the callback may
-cause, and a helper that calls an `effects(output)` callback must admit `output`
-in its own bound. Generic helpers may declare parameter-dependent callback
-signatures, which is how [`sort.sort_by_key`](standard-library.md) takes an
-integer key function over an arbitrary element type. Captured environments stay
-rejected here too, so a callback that needs context takes it as another
-parameter.
+A parameter that accepts a function value declares the destination signature
+and effect ceiling. Parameter and result types stay invariant, but the
+implementation's declared effect ceiling may be a subset of the destination's:
+a pure callback may fill an `effects(output)` slot, while a callback that may
+print may not fill an `effects()` slot. Rejected substitutions report `E_TYPE`
+with both canonical source contracts and named effects; a rejected substitution
+reads `expected def(int) -> int effects(), found def(int) -> int effects(output)`.
+Calls through stored or returned callbacks still use the destination
+contract's ceiling, so a helper that calls an `effects(output)` callback must
+admit `output` in its own bound even when the concrete target passed in is pure.
+Generic helpers may declare parameter-dependent callback signatures, which is how
+[`sort.sort_by_key`](standard-library.md) takes an integer key function over an
+arbitrary element type. Captured environments stay rejected here too, so a
+callback that needs context takes it as another parameter.
 
 ```mylang
 # doc: expect 40

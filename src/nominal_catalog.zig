@@ -29,9 +29,9 @@ const Builder = struct {
         var array_prefix: ?[]u8 = null;
         defer if (array_prefix) |prefix| allocator.free(prefix);
         switch (node.key.base) {
-            .callback => |mask| {
-                array_prefix = try std.fmt.allocPrint(allocator, "def@{d}:", .{mask.effects});
-                base = array_prefix.?;
+            .callback => {
+                try self.appendCallbackName(id, node);
+                return;
             },
             .parameter => return,
             .length => |value| {
@@ -72,6 +72,29 @@ const Builder = struct {
         if (node.key.base == .named and node.key.arguments.len != 0) output.writer.writeByte('>') catch return error.OutOfMemory;
         self.identities.items.items[id].name = try output.toOwnedSlice();
         self.identities.name_bytes += size + punctuation;
+    }
+    /// Render a callback schema in the same canonical source form used by diagnostics.
+    fn appendCallbackName(self: *Builder, id: usize, node: layouts.Node) Error!void {
+        const allocator = self.context.allocator;
+        var output: std.Io.Writer.Allocating = .init(allocator);
+        defer output.deinit();
+        output.writer.writeAll("def(") catch return error.OutOfMemory;
+        const parameter_count = node.key.arguments.len - 1;
+        for (node.key.arguments[0..parameter_count], 0..) |argument, index| {
+            if (index != 0) output.writer.writeAll(", ") catch return error.OutOfMemory;
+            const parameter_name = self.identities.items.items[@backingInt(argument)].name orelse return;
+            output.writer.writeAll(parameter_name) catch return error.OutOfMemory;
+        }
+        output.writer.writeAll(") -> ") catch return error.OutOfMemory;
+        const result_name = self.identities.items.items[@backingInt(node.key.arguments[parameter_count])].name orelse return;
+        output.writer.writeAll(result_name) catch return error.OutOfMemory;
+        output.writer.writeAll(" effects(") catch return error.OutOfMemory;
+        @import("callables.zig").writeEffects(&output.writer, node.key.base.callback.effects) catch return error.OutOfMemory;
+        output.writer.writeByte(')') catch return error.OutOfMemory;
+        const name = try output.toOwnedSlice();
+        if (name.len > 1024 * 1024) return self.nameLimit(node.site);
+        self.identities.items.items[id].name = name;
+        self.identities.name_bytes += name.len;
     }
     fn nameLimit(self: Builder, span: source.Span) Error {
         return self.context.sink.fail(diagnostic.generic_limit, span, "nominal type display names exceed the 1 MiB compilation budget");

@@ -82,7 +82,7 @@ const Checker = struct {
         try self.seedCleanup(self.result);
         for (function.signature.parameters) |parameter| {
             const parameter_type = try self.ty(parameter.ty);
-            if (parameter.default_value) |value| try self.same(try self.expressionExpected(value, parameter_type), parameter_type, parameter.ty);
+            if (parameter.default_value) |value| try self.compatible(try self.expressionExpected(value, parameter_type), parameter_type, parameter.ty);
             try self.bindMode(parameter.name, parameter_type, function.policy.host == null);
         }
         const implicit_unit = symbolic.same(self.result, .{ .concrete = .unit }, self.catalog);
@@ -253,6 +253,13 @@ const Checker = struct {
     fn same(self: *Checker, actual: Symbolic, expected: Symbolic, span: source.Span) Error!void {
         if (!symbolic.same(actual, expected, self.catalog)) return self.sink.fail("E_GENERIC_TYPE", span, "types differ; distinct type parameters remain distinct even with identical requirements");
     }
+    /// Value compatibility allows a callback implementation to promise fewer
+    /// effects than its destination; structural parameter/result comparisons stay `same`.
+    fn compatible(self: *Checker, actual: Symbolic, expected: Symbolic, span: source.Span) Error!void {
+        if (symbolic.same(actual, expected, self.catalog)) return;
+        if (symbolic.callbackAssignable(actual, expected, self.catalog)) return;
+        return self.sink.fail("E_GENERIC_TYPE", span, "types differ; distinct type parameters remain distinct even with identical requirements");
+    }
     fn supports(self: *Checker, ty_value: Symbolic, requirement: requirements.Requirement, span: source.Span) Error!void {
         const supported = symbolic.supports(ty_value, requirement, self.parameters, self.catalog);
         if (!supported) {
@@ -291,7 +298,7 @@ const Checker = struct {
         self.locals.shrinkRetainingCapacity(before);
     }
     fn returnValue(self: *Checker, value: ast.NodeId, span: source.Span) Error!void {
-        try self.same(try self.expressionExpected(value, self.result), self.result, span);
+        try self.compatible(try self.expressionExpected(value, self.result), self.result, span);
         try self.requireHandled(0, span);
     }
     fn bind(self: *Checker, name: source.Span, ty_value: Symbolic, mutable: bool) Error!void {
@@ -428,7 +435,7 @@ const Checker = struct {
         };
         if (invocation.type_arguments.len != 0 or invocation.arguments.len != contract.parameters.len) return self.sink.fail("E_ARITY", invocation.name, "callback arguments must match its signature");
         for (invocation.arguments, contract.parameters) |input, parameter| {
-            try self.same(try self.expression(input), parameter, invocation.name);
+            try self.compatible(try self.expression(input), parameter, invocation.name);
         }
         self.effect_masks[self.function_index] |= contract.effects;
         return contract.result;
@@ -449,7 +456,7 @@ const Checker = struct {
             try self.runtimeOwner(root_node.data.name, true);
         } else if (root_node.data != .index) return self.sink.fail("E_ASSIGNMENT_TARGET", root_node.span, "field assignment requires a mutable local record or list slot");
         const expected = try self.expression(assignment.target);
-        try self.same(try self.expressionExpected(assignment.value, expected), expected, node.span);
+        try self.compatible(try self.expressionExpected(assignment.value, expected), expected, node.span);
         return .{ .concrete = .unit };
     }
     /// Build an enum-indexed table from a dict literal whose context already demands `[Kind]T`.
@@ -475,7 +482,7 @@ const Checker = struct {
         if (try self.requiresHandling(element)) return self.sink.fail(eResultOperation, node.span, "dictionary values cannot contain pending results");
         for (entries, 0..) |input, index| {
             const target = if (index % 2 == 0) key else element;
-            try self.same(try self.expressionExpected(input, target), target, node.span);
+            try self.compatible(try self.expressionExpected(input, target), target, node.span);
         }
         self.seedEffect(.managed_allocation);
         return expected.?;
@@ -485,7 +492,7 @@ const Checker = struct {
         const shape = try self.arrayShape(expected, node.span);
         if (shape.length_parameter != null) return self.sink.fail(diagnostic.generic_length, node.span, "array literal construction requires a fixed length in an uncalled template");
         if (inputs.len != shape.length) return self.sink.fail("E_ARRAY_LENGTH", node.span, "list literal length differs from the expected fixed array");
-        for (inputs) |input| try self.same(try self.expressionExpected(input, shape.element), shape.element, node.span);
+        for (inputs) |input| try self.compatible(try self.expressionExpected(input, shape.element), shape.element, node.span);
         return expected;
     }
     /// A comprehension iterates one collection or integer range and yields a list of its
@@ -500,7 +507,7 @@ const Checker = struct {
         try self.bind(each.name, element, false);
         defer _ = self.active.remove(text);
         const produced = try self.expression(each.output);
-        if (each.filter) |condition| try self.same(try self.expression(condition), .{ .concrete = .bool }, span);
+        if (each.filter) |condition| try self.compatible(try self.expression(condition), .{ .concrete = .bool }, span);
         try self.supports(produced, .copy, span);
         try self.supports(produced, .storable, span);
         self.seedEffect(.managed_allocation);
@@ -511,7 +518,7 @@ const Checker = struct {
     fn rangeElement(self: *Checker, bounds: @FieldType(ast.Comprehension.Source, "range"), name: source.Span, span: source.Span) Error!Symbolic {
         const element: Symbolic = if (self.program.nodes.items[@backingInt(bounds.start)].data == .unit) .{ .concrete = .i64 } else try self.expression(bounds.start);
         try self.supports(element, .integer, name);
-        try self.same(try self.expression(bounds.end), element, span);
+        try self.compatible(try self.expression(bounds.end), element, span);
         return element;
     }
 
@@ -536,7 +543,7 @@ const Checker = struct {
         if (inputs.len == 0 and expected == null) return self.sink.fail("E_LIST_INFERENCE", node.span, "empty list requires an expected List type");
         for (inputs) |input| {
             const value = if (element) |ty_value| try self.expressionExpected(input, ty_value) else try self.expression(input);
-            if (element) |ty_value| try self.same(value, ty_value, node.span) else element = value;
+            if (element) |ty_value| try self.compatible(value, ty_value, node.span) else element = value;
         }
         try self.supports(element.?, .copy, node.span);
         try self.supports(element.?, .storable, node.span);
@@ -569,7 +576,7 @@ const Checker = struct {
         for (operation.inputs, 0..) |input, index| {
             const integer = family != .dictionary and index == 0 and (kind == .read or kind == .write);
             const expected = if (family == .dictionary) (if (index == 0) key else element) else if (kind == .join) try self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{owner}) else element;
-            if (integer) try self.supports(try self.expression(input), .integer, operation.span) else try self.same(try self.expressionExpected(input, expected), expected, operation.span);
+            if (integer) try self.supports(try self.expression(input), .integer, operation.span) else try self.compatible(try self.expressionExpected(input, expected), expected, operation.span);
         }
         if (buffer_operations.managedAllocation(kind, family == .dictionary) or (family == .string and kind == .read)) self.seedEffect(.managed_allocation);
         return output;
@@ -590,7 +597,7 @@ const Checker = struct {
         const target = self.program.nodes.items[@backingInt(assignment.target)];
         const expected = try self.expression(assignment.target);
         try self.augmentedTarget(assignment.op, expected, node.span);
-        try self.same(try self.expressionExpected(assignment.value, expected), expected, node.span);
+        try self.compatible(try self.expressionExpected(assignment.value, expected), expected, node.span);
         if (target.data == .index) if (self.program.nodes.items[@backingInt(target.data.index.base)].data == .name)
             try self.runtimeOwner(self.program.nodes.items[@backingInt(target.data.index.base)].data.name, true);
         return .{ .concrete = .unit };
@@ -685,7 +692,7 @@ const Checker = struct {
         if (invocation.arguments.len != 1) return self.sink.fail("E_ARITY", span, "Some requires one payload");
         const expected = self.expected_types.get(span) orelse return self.sink.fail("E_OPTION_INFERENCE", span, "Some requires an expected Option type");
         const element = try self.optionElement(expected, span);
-        try self.same(try self.expressionExpected(invocation.arguments[0], element), element, span);
+        try self.compatible(try self.expressionExpected(invocation.arguments[0], element), element, span);
         return expected;
     }
     fn cellConstructor(self: *Checker, invocation: Call, span: source.Span) Error!?Symbolic {
@@ -718,7 +725,7 @@ const Checker = struct {
             }
         }
         const value = if (expected_element) |element| try self.expressionExpected(invocation.arguments[0], element) else try self.expression(invocation.arguments[0]);
-        if (expected_element) |element| try self.same(value, element, span);
+        if (expected_element) |element| try self.compatible(value, element, span);
         if (try self.requiresHandling(value)) return self.sink.fail("E_CELL_ELEMENT", span, "Cell contents must be copyable, storable values without Result, Option, resources, capabilities, or result obligations");
         try self.supports(value, .storable, span);
         self.seedEffect(.managed_allocation);
@@ -740,7 +747,7 @@ const Checker = struct {
         const expected = self.expected_types.get(span) orelse return self.sink.fail("E_RESULT_INFERENCE", span, "Ok and Err require an expected Result type");
         const shape = try self.resultShape(expected, span, "E_TYPE");
         const payload = if (ok) shape.ok_type else shape.error_type;
-        try self.same(try self.expressionExpected(invocation.arguments[0], payload), payload, span);
+        try self.compatible(try self.expressionExpected(invocation.arguments[0], payload), payload, span);
         return expected;
     }
     fn textConstructor(self: *Checker, call_value: Call, span: source.Span) Error!?Symbolic {
@@ -811,7 +818,7 @@ const Checker = struct {
             const parameter = signature.parameters[input_index];
             const expected = try self.substituted(parameter.ty, signature.type_parameters, arguments);
             const node = self.program.nodes.items[@backingInt(input)];
-            try self.same(if (actuals) |values| values[input_index] else try self.expressionExpected(input, expected), expected, node.span);
+            try self.compatible(if (actuals) |values| values[input_index] else try self.expressionExpected(input, expected), expected, node.span);
         }
         return self.substituted(signature.return_type, signature.type_parameters, arguments);
     }
@@ -863,7 +870,7 @@ const Checker = struct {
         for (invocation.arguments, operation.parameters) |input, parameter| {
             const expected = try self.tyWithAliases(parameter.ty, aliases);
             const node = self.program.nodes.items[@backingInt(input)];
-            try self.same(try self.expression(input), expected, node.span);
+            try self.compatible(try self.expression(input), expected, node.span);
         }
         self.effect_masks[self.function_index] |= operation.effect_bound.allowed;
         const result = try self.tyWithAliases(operation.return_type, aliases);
@@ -961,7 +968,7 @@ const Checker = struct {
             .wrap => |wrap| result: {
                 const operand = try self.expression(wrap.value);
                 const target = try self.ty(wrap.ty);
-                try self.same(operand, try self.domainBacking(target, node.span), node.span);
+                try self.compatible(operand, try self.domainBacking(target, node.span), node.span);
                 break :result target;
             },
             .unwrap => |input| try self.domainBacking(try self.expression(input), node.span),
@@ -986,7 +993,7 @@ const Checker = struct {
                 const needle = try self.expression(membership.needle);
                 const container = try self.expression(membership.container);
                 const expected = if (self.shapes().collectionKind(container) == .dictionary) try self.shapes().collectionKey(container, node.span) else try self.collectionElement(container, node.span);
-                try self.same(needle, expected, node.span);
+                try self.compatible(needle, expected, node.span);
                 break :member .{ .concrete = .bool };
             },
             .dictionary_literal => |entries| try self.dictionaryLiteral(node, entries),
@@ -1007,7 +1014,7 @@ const Checker = struct {
                     try self.expression(unary.operand);
                 if (unary.op == .neg) {
                     if (!self.isFloat(operand)) try self.supports(operand, .integer, unary.op_span);
-                } else try self.same(operand, .{ .concrete = if (unary.op == .not) .bool else .u64 }, unary.op_span);
+                } else try self.compatible(operand, .{ .concrete = if (unary.op == .not) .bool else .u64 }, unary.op_span);
                 break :result operand;
             },
             .binary => |operation| try self.binary(operation),
@@ -1025,7 +1032,7 @@ const Checker = struct {
                 const base = try self.expression(replacement.base);
                 const shape = try self.arrayIndex(base, replacement.index, node.span);
                 if ((try self.requiresHandling(shape.element))) return self.sink.fail(eResultOperation, node.span, "replacement would drop a result-bearing element");
-                try self.same(try self.expression(replacement.value), shape.element, node.span);
+                try self.compatible(try self.expression(replacement.value), shape.element, node.span);
                 break :result base;
             },
             .field => |field| result: {
@@ -1049,7 +1056,7 @@ const Checker = struct {
                 const base = try self.expression(access.base);
                 if (self.shapes().managed(base)) {
                     if (self.shapes().collectionKind(base) == .dictionary) {
-                        try self.same(try self.expression(access.index), try self.shapes().collectionKey(base, node.span), node.span);
+                        try self.compatible(try self.expression(access.index), try self.shapes().collectionKey(base, node.span), node.span);
                     } else try self.supports(try self.expression(access.index), .integer, node.span);
                     if (self.shapes().collectionKind(base) == .string) self.seedEffect(.managed_allocation);
                     break :result try self.collectionElement(base, node.span);
@@ -1071,7 +1078,7 @@ const Checker = struct {
         const success: typed.Type = if (read.kind == .clock) .i64 else .u64;
         const result = try self.operationResult(read.ty, success, "E_EXTERNAL_RESULT");
         const authority: typed.Type = if (read.kind == .clock) .clock_cap else .random_cap;
-        try self.same(try self.expression(read.capability), .{ .concrete = authority }, self.program.nodes.items[@backingInt(read.capability)].span);
+        try self.compatible(try self.expression(read.capability), .{ .concrete = authority }, self.program.nodes.items[@backingInt(read.capability)].span);
         self.seedEffect(read.kind.effect());
         return result;
     }
@@ -1083,7 +1090,7 @@ const Checker = struct {
     fn environmentValue(self: *Checker, get: @FieldType(@FieldType(ast.Node, "data"), "environment_get")) Error!Symbolic {
         const result = try self.ty(get.ty);
         if (try provider_shapes.payload(self.shapes(), result, .environment, get.ty) == null) return self.sink.fail("E_ENVIRONMENT_RESULT", get.ty, "environment result requires bytes, length and present success fields with i64 error");
-        try self.same(try self.expression(get.capability), .{ .concrete = .environment_cap }, self.program.nodes.items[@backingInt(get.capability)].span);
+        try self.compatible(try self.expression(get.capability), .{ .concrete = .environment_cap }, self.program.nodes.items[@backingInt(get.capability)].span);
         try self.byteInput(get.name, "E_ENVIRONMENT_NAME");
         self.seedEffect(.environment);
         return result;
@@ -1094,7 +1101,7 @@ const Checker = struct {
         const kind = provider_shapes.resource(shape.ok_type, self.catalog.records) orelse return self.sink.fail(diagnostic.resource_result, acquire.ty, "acquisition success must be a resource");
         if (!symbolic.same(shape.error_type, .{ .concrete = .i64 }, self.catalog)) return self.sink.fail(diagnostic.resource_result, acquire.ty, "acquisition error must be i64");
         const authority: typed.Type = if (kind == .filesystem) .filesystem_cap else .network_cap;
-        try self.same(try self.expression(acquire.capability), .{ .concrete = authority }, self.program.nodes.items[@backingInt(acquire.capability)].span);
+        try self.compatible(try self.expression(acquire.capability), .{ .concrete = authority }, self.program.nodes.items[@backingInt(acquire.capability)].span);
         const request_type = try self.expression(acquire.request);
         const owned_bytes = if (request_type == .concrete) typed.acquisitionBytes(request_type.concrete, self.catalog.records) else false;
         if (!provider_shapes.bytes(request_type, self.catalog.records) and !owned_bytes)
@@ -1109,7 +1116,7 @@ const Checker = struct {
             complete.ty,
             "completion requires bool success and an error record containing the resource and i64 code",
         );
-        try self.same(try self.expression(complete.value), fields[0].?, self.program.nodes.items[@backingInt(complete.value)].span);
+        try self.compatible(try self.expression(complete.value), fields[0].?, self.program.nodes.items[@backingInt(complete.value)].span);
         self.seedEffect(provider_shapes.resource(fields[0].?, self.catalog.records).?.effect());
         return result;
     }
@@ -1155,7 +1162,7 @@ const Checker = struct {
             const writes_element = index == 1 and operation.kind == .write;
             const value = if (operation.kind == .append or writes_element) try self.expressionExpected(input, element) else try self.expression(input);
             const at = self.program.nodes.items[@backingInt(input)].span;
-            if (operation.kind == .append or writes_element) try self.same(value, element, at) else try self.supports(value, .integer, at);
+            if (operation.kind == .append or writes_element) try self.compatible(value, element, at) else try self.supports(value, .integer, at);
         }
         try self.runtimeOwner(operation.owner, false);
         if (operation.kind == .append) self.seedEffect(.managed_allocation);
@@ -1225,7 +1232,7 @@ const Checker = struct {
         const tag = try self.shapes().memberIndex(shape, variant.name);
         const payload = shape.fields[tag].ty;
         if ((payload != null) != (variant.value != null)) return self.sink.fail("E_VARIANT_PAYLOAD", span, "construction must supply exactly the declared payload");
-        if (variant.value) |value| try self.same(try self.expressionExpected(value, payload.?), payload.?, span);
+        if (variant.value) |value| try self.compatible(try self.expressionExpected(value, payload.?), payload.?, span);
         return result;
     }
     fn patternTag(self: *Checker, value: Symbolic, variants: symbolic.Schema, type_span: source.Span, name: source.Span) Error!usize {
@@ -1273,7 +1280,7 @@ const Checker = struct {
     fn arrayIndex(self: *Checker, base: Symbolic, input: ast.NodeId, span: source.Span) Error!symbolic.Array {
         const shape = try self.arrayShape(base, span);
         const index = try self.expression(input);
-        if (shape.key) |key| try self.same(index, .{ .concrete = key }, span) else try self.supports(index, .integer, span);
+        if (shape.key) |key| try self.compatible(index, .{ .concrete = key }, span) else try self.supports(index, .integer, span);
         return shape;
     }
     fn recordValue(self: *Checker, record: @FieldType(@FieldType(ast.Node, "data"), "record"), span: source.Span) Error!Symbolic {
@@ -1293,7 +1300,7 @@ const Checker = struct {
             if (seen[index]) return self.sink.fail(if (table_key != null) "E_DUPLICATE_KEY" else "E_DUPLICATE_FIELD", field.name, "named entry is initialized more than once");
             seen[index] = true;
             if (!complete and (try self.requiresHandling(shape.fields[index].ty.?))) return self.sink.fail(eResultOperation, field.name, "update would drop a result-bearing field");
-            try self.same(try self.expressionExpected(field.value, shape.fields[index].ty.?), shape.fields[index].ty.?, field.name);
+            try self.compatible(try self.expressionExpected(field.value, shape.fields[index].ty.?), shape.fields[index].ty.?, field.name);
         }
         if (complete) for (seen) |present| {
             if (!present) return self.sink.fail(if (table_key != null) "E_INCOMPLETE_TABLE" else "E_MISSING_FIELD", span, "named construction must initialize every entry");
@@ -1315,7 +1322,7 @@ const Checker = struct {
                 else => self.sink.fail("E_FLOAT_OPERATION", operation.op_span, "float supports arithmetic and numeric comparison"),
             };
         }
-        try self.same(right, left, operation.op_span);
+        try self.compatible(right, left, operation.op_span);
         if (self.shapes().managed(left)) {
             if (operation.op == .eq or operation.op == .ne) return .{ .concrete = .bool };
             if (operation.op == .add and self.shapes().collectionKind(left) == .string) {
@@ -1325,8 +1332,8 @@ const Checker = struct {
             return self.sink.fail("E_TEXT_OPERATOR", operation.op_span, "collection supports equality and str supports concatenation");
         }
         switch (operation.op) {
-            .f64_add, .f64_sub, .f64_mul, .f64_div, .f64_eq, .f64_lt, .f64_le => try self.same(left, .{ .concrete = .u64 }, operation.op_span),
-            .logical_and, .logical_or => try self.same(left, .{ .concrete = .bool }, operation.op_span),
+            .f64_add, .f64_sub, .f64_mul, .f64_div, .f64_eq, .f64_lt, .f64_le => try self.compatible(left, .{ .concrete = .u64 }, operation.op_span),
+            .logical_and, .logical_or => try self.compatible(left, .{ .concrete = .bool }, operation.op_span),
             .eq, .ne => try self.supports(left, .equality, operation.op_span),
             else => try self.supports(left, .integer, operation.op_span),
         }
@@ -1369,7 +1376,7 @@ const Checker = struct {
         return terminated;
     }
     fn branchValue(self: *Checker, branch: @FieldType(@FieldType(ast.Statement, "data"), "branch"), span: source.Span) Error!bool {
-        try self.same(try self.expression(branch.condition), .{ .concrete = .bool }, span);
+        try self.compatible(try self.expression(branch.condition), .{ .concrete = .bool }, span);
         const before = try self.pendingState(self.locals.items.len);
         defer self.allocator.free(before);
         const left = try self.statement(branch.then_body);
@@ -1397,11 +1404,11 @@ const Checker = struct {
             },
             .assertion => |claim| {
                 const condition = try self.expression(claim.condition);
-                try self.same(condition, .{ .concrete = .bool }, statement_value.span);
+                try self.compatible(condition, .{ .concrete = .bool }, statement_value.span);
             },
             .binding => |binding| {
                 const value = if (binding.annotation) |annotation| try self.expressionExpected(binding.value, try self.ty(annotation)) else try self.expression(binding.value);
-                if (binding.annotation) |annotation| try self.same(value, try self.ty(annotation), annotation);
+                if (binding.annotation) |annotation| try self.compatible(value, try self.ty(annotation), annotation);
                 try self.bind(binding.name, value, binding.mutable);
             },
             .assignment => |assignment| {
@@ -1413,7 +1420,7 @@ const Checker = struct {
                 const target = try self.local(assignment.name);
                 if (!target.mutable) return self.sink.fail(diagnostic.immutable, assignment.name, "assignment requires a mutable binding");
                 const value = try self.expressionExpected(assignment.value, target.ty);
-                try self.same(value, target.ty, assignment.op_span);
+                try self.compatible(value, target.ty, assignment.op_span);
                 if (assignment.op != .set) try self.augmentedTarget(assignment.op, target.ty, assignment.op_span);
                 if ((try self.transfers(target.ty))) {
                     if ((try self.pendingObligation(target.*))) return self.sink.fail("E_RESULT_OVERWRITE", assignment.name, "assignment would overwrite an unhandled result");
@@ -1451,7 +1458,7 @@ const Checker = struct {
             .for_range => |range| {
                 const element: Symbolic = if (self.program.nodes.items[@backingInt(range.start)].data == .unit) .{ .concrete = .i64 } else try self.expression(range.start);
                 try self.supports(element, .integer, range.name);
-                try self.same(try self.expression(range.end), element, range.name);
+                try self.compatible(try self.expression(range.end), element, range.name);
                 const first = self.locals.items.len;
                 try self.bind(range.name, element, false);
                 defer self.endScope(first);
@@ -1472,7 +1479,7 @@ const Checker = struct {
             .loop => |loop| {
                 const before = try self.pendingState(self.locals.items.len);
                 defer self.allocator.free(before);
-                try self.same(try self.expression(loop.condition), .{ .concrete = .bool }, statement_value.span);
+                try self.compatible(try self.expression(loop.condition), .{ .concrete = .bool }, statement_value.span);
                 try self.samePending(before, statement_value.span, diagnostic.result_loop);
                 const previous = self.loop_pending;
                 self.loop_pending = before;
