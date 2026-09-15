@@ -63,5 +63,7 @@ guardian: line-length: 1544 finding(s) — report-only
 guardian: run-all: 88 check(s) passed
 ```
 
-`zig build fmt-check` exit 0. `~/ai/canopy/guardian-zig/FEEDBACK.md` was not
-edited.
+`zig build fmt-check` exit 0. The commit hook then ran the whole-tree Guardian
+gate: `run-all: whole-tree run`, `run-all: 88 check(s) passed` (4 file-size,
+12 function-length and 3018 line-length report-only findings).
+`~/ai/canopy/guardian-zig/FEEDBACK.md` was not edited.

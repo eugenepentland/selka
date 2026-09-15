@@ -355,8 +355,8 @@ results, edit distributions and affected-test behaviour remain open.
 
 ## 8. Verification
 
-- `zig build` from the worktree (Guardian runs diff-scoped); result recorded in
-  the completion report.
+- `zig build`: exit 0; Guardian diff-scoped run-all 88/88 passed.
+- Commit hook: whole-tree Guardian `run-all: whole-tree run`, 88/88 passed.
 - `zig build fmt-check` (no Zig source touched; must exit 0).
 - `python3 scripts/profile_large_project.py --help` and smoke runs exercised the
   harness itself.
@@ -407,7 +407,8 @@ Artifacts:
 
 ## 10. Guardian
 
-Guardian ran during `zig build`/commit. The concrete feedback entry is
+Guardian ran during `zig build` (diff-scoped 88/88) and on the commit
+(whole-tree 88/88). The concrete feedback entry is
 `docs/audits/velocity-implementation/guardian-s1.md`; it records the validated
 generator, edit independence, bounded-failure probes, the `--cache-dir`/session
 friction, the navigation and 16 MiB semantic-cache budget findings, and the
