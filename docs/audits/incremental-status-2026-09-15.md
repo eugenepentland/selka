@@ -1,19 +1,34 @@
-# Incremental compilation and testing: verified status
+# Incremental compilation and testing: historical verified status (2026-09-15)
 
-Verified 2026-09-15 against the current installed compiler, pinned for the
+Verified 2026-09-15 against the then-current installed compiler, pinned for the
 experiments. The checkout was `89198ff` with the named-constraint fixes and
 concurrent incremental work uncommitted. Executable and compiler identities,
 commands, source fixtures and results are in
 [the evidence](incremental-status-2026-09-15-probes.json).
 
+> **Scope and W0 reconciliation.** This page is a historical experiment record
+> from checkout `89198ff`, not a claim about the W0 baseline commit `9ce142e`
+> and not a statement that every compiler path already executes the behavior
+> described. Each "reuse", "cached", "hit" or "checked" claim below is scoped to
+> the specific command, fixture and compiler identity recorded in
+> [the evidence](incremental-status-2026-09-15-probes.json). Generics, one-shot
+> commands and test preparation are explicitly *different* paths in that
+> document. W0 independently re-ran the related development-velocity audit
+> probes against the pinned baseline compiler; the per-probe comparison and
+> measured limits are in
+> [velocity-implementation/w0-baseline-evidence.md](velocity-implementation/w0-baseline-evidence.md).
+> On the probes W0 re-ran, the baseline reproduced the qualitative path results
+> recorded here; no measurement below was contradicted.
+
 ## Conclusion
 
-The tested cache paths preserve correctness and selective test execution works.
-Compilation reuse remains conservative, especially for programs using generics
-and named constraints. This is useful incremental tooling, but it does not yet
-meet a goal of recompiling only the affected generic implementation after edits.
+Within the measured paths, the tested cache paths preserve correctness and
+selective test execution works. Compilation reuse remains conservative,
+especially for programs using generics and named constraints. This is useful
+incremental tooling, but it does not yet meet a goal of recompiling only the
+affected generic implementation after edits.
 
-## Observed behavior
+## Observed behavior (historical measurements; each row scoped to its recorded command)
 
 | Experiment | Result |
 | --- | --- |
@@ -33,7 +48,8 @@ meet a goal of recompiling only the affected generic implementation after edits.
 
 The targeted suites also passed: **26 invalidation tests and 43 native-test
 tests**, including the clean-versus-warm equivalence matrix. The build-wired
-Guardian gate passed all 88 checks.
+Guardian gate passed all 88 checks; that run was diff-scoped against `a9e29d4`,
+not a whole-tree run.
 
 ## Remaining limits
 
@@ -56,7 +72,10 @@ Guardian gate passed all 88 checks.
    fingerprints. Its new `skipped` status correctly excludes lowering, emission
    and linking for a check-only command, but matching executed-stage fingerprints
    still do not establish that work was reused. Use actual syntax/verdict counts,
-   session `functions` counters and test `passed`/`cached` results for that.
+   session `functions` counters and test `passed`/`cached` results for that. The
+   W0-frozen contract replaces this comparison with a `work-report-v1` shape that
+   keeps `fingerprint_unchanged` distinct from `reused`; the older explanation
+   hits are comparison-only and must not be read as execution counters.
 
 The earlier rebuild-cache warning was not reproduced in the cross-version
 experiment. That is evidence for the tested compiler-identity transition, not
