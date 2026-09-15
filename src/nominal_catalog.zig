@@ -260,7 +260,10 @@ const Builder = struct {
             const declaration = self.index.declarations.items[id];
             schema.declaration = declaration.name;
             switch (declaration.kind) {
-                .record => try self.fields(node, schema, declaration),
+                .record => {
+                    try self.fields(node, schema, declaration);
+                    schema.managed = declaration.managed;
+                },
                 .variants, .result, .enumeration => try self.variants(node, schema, declaration),
                 .buffer => {
                     schema.shape.buffer = try self.runtimeType(node.edges[0].target);

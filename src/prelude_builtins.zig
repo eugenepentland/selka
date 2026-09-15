@@ -113,7 +113,7 @@ fn familyOf(comptime Checker: type, checker: *Checker, ty: typed.Type) ?Family {
 
 /// Recognize the element type of a list argument the folds accept.
 fn listElement(comptime Checker: type, checker: *Checker, ty: typed.Type, span: source.Span) Error!typed.Type {
-    if (!ty.isAggregate() or !checker.catalog.records[ty.recordIndex()].managed) return checker.sink.fail(unsupported, span, "this prelude builtin requires a list");
+    if (!ty.isAggregate() or !checker.catalog.records[ty.recordIndex()].isCollection()) return checker.sink.fail(unsupported, span, "this prelude builtin requires a list");
     const schema = checker.catalog.records[ty.recordIndex()];
     if (schema.collection.kind != .list) return checker.sink.fail(unsupported, span, "this prelude builtin requires a list of int, float or str values");
     return schema.shape.buffer.?;
@@ -121,7 +121,7 @@ fn listElement(comptime Checker: type, checker: *Checker, ty: typed.Type, span: 
 
 /// Recognize the element type of a list or string argument `reversed` accepts.
 fn sequenceElement(comptime Checker: type, checker: *Checker, ty: typed.Type, span: source.Span) Error!typed.Type {
-    if (!ty.isAggregate() or !checker.catalog.records[ty.recordIndex()].managed) return checker.sink.fail(unsupported, span, "reversed requires a list or str");
+    if (!ty.isAggregate() or !checker.catalog.records[ty.recordIndex()].isCollection()) return checker.sink.fail(unsupported, span, "reversed requires a list or str");
     const schema = checker.catalog.records[ty.recordIndex()];
     return switch (schema.collection.kind) {
         .list => schema.shape.buffer.?,
@@ -569,7 +569,7 @@ fn rangeListCall(comptime Checker: type, checker: *Checker, span: source.Span, a
 fn copyListCall(comptime Checker: type, checker: *Checker, span: source.Span, input: typed.NodeId) Error!typed.Node {
     const b = builder(Checker, checker, span);
     const ty = nodeType(Checker, checker, input);
-    const sequence = ty.isAggregate() and checker.catalog.records[ty.recordIndex()].managed;
+    const sequence = ty.isAggregate() and checker.catalog.records[ty.recordIndex()].isCollection();
     if (!sequence or checker.catalog.records[ty.recordIndex()].collection.kind != .list)
         return checker.sink.fail(unsupported, span, "list requires a list, range or reversed source");
     return b.slice(input, null, null);
@@ -699,7 +699,7 @@ fn reserveZipCall(comptime Checker: type, checker: *Checker, span: source.Span, 
 /// Element type of a sequence the iteration builtins walk over. A string walks
 /// one code point at a time, so its element type is the string type itself.
 fn elementOf(comptime Checker: type, checker: *Checker, list: typed.Type, span: source.Span) Error!typed.Type {
-    if (!list.isAggregate() or !checker.catalog.records[list.recordIndex()].managed) return checker.sink.fail(unsupported, span, "iteration requires a list or str");
+    if (!list.isAggregate() or !checker.catalog.records[list.recordIndex()].isCollection()) return checker.sink.fail(unsupported, span, "iteration requires a list or str");
     const schema = checker.catalog.records[list.recordIndex()];
     return switch (schema.collection.kind) {
         .list => schema.shape.buffer.?,

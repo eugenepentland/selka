@@ -9,8 +9,9 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
     const h = stack.len;
     switch (op) {
         .make_record => |record| {
-            if (self.program.records[record.ty.recordIndex()].managed) return managed_lower.Lower(@TypeOf(self.*)).construct(self, record, stack);
-            const pointer = try self.aggregatePointer();
+            const schema = self.program.records[record.ty.recordIndex()];
+            if (schema.isCollection()) return managed_lower.Lower(@TypeOf(self.*)).construct(self, record, stack);
+            const pointer = if (schema.isCell()) try allocateCell(@TypeOf(self), self, record.ty) else try self.aggregatePointer();
             for (0..record.fields) |i| {
                 const field_index = if (record.order.len == 0) i else record.order[i];
                 const member = try self.field(record.ty, field_index);
@@ -21,16 +22,28 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
         .get_field => |index| {
             const source = try self.load("s", h - 1);
             const member = try self.field(stack[h - 1], index);
-            const value = try self.readValue(try self.address(source, member.offset), member.ty);
+            var value = try self.readValue(try self.address(source, member.offset), member.ty);
+            if (self.program.records[stack[h - 1].recordIndex()].isCell() and !self.isScalar(member.ty)) {
+                const snapshot = try self.aggregatePointer();
+                try self.writeValue(snapshot, value, member.ty);
+                value = snapshot;
+            }
             try self.store(h - 1, value);
         },
         .update_record => |record| {
-            const pointer = try self.aggregatePointer();
             const base = h - record.indices.len - 1;
             const source = try self.load("s", base);
-            try self.print(" blit %v{d}, %v{d}, {d}\n", .{ source, pointer, (try self.layout(record.ty)).size });
+            const cell = self.program.records[record.ty.recordIndex()].isCell();
+            const pointer = if (cell) source else try self.aggregatePointer();
+            if (!cell) try self.print(" blit %v{d}, %v{d}, {d}\n", .{ source, pointer, (try self.layout(record.ty)).size });
             for (record.indices, 0..) |index, i| {
                 const member = try self.field(record.ty, index);
+                if (cell) {
+                    const value_pointer = self.temp();
+                    const operand = if (self.isScalar(member.ty)) "copy" else "loadl";
+                    try self.print(" %v{d} =l {s} %s{d}\n", .{ value_pointer, operand, base + 1 + i });
+                    try @import("qbe_arena.zig").Lower(@TypeOf(self.*)).barrier(self, pointer, member.ty, value_pointer);
+                }
                 try self.writeValue(try self.address(pointer, member.offset), try self.load("s", base + 1 + i), member.ty);
             }
             try self.store(base, pointer);
@@ -84,7 +97,7 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
             for (dispatch.arms, 0..) |arm, i| {
                 const matches = self.temp();
                 try self.print(" %v{d} =l ceql %v{d}, {d}\n jnz %v{d}, @arm{d}, @armnext{d}\n@arm{d}\n", .{ matches, tag, i, matches, matches, matches, matches });
-                try armPayload(self, dispatch.ty, arm.slot, i, pointer);
+                try armPayload(@TypeOf(self), self, dispatch.ty, arm.slot, i, pointer);
                 try self.print(" jmp @i{d}\n@armnext{d}\n", .{ arm.target, matches });
             }
             try self.print(" jmp @failure\n", .{});
@@ -93,7 +106,14 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
     }
 }
 
-fn armPayload(self: anytype, ty_value: typed.Type, slot_value: ?typed.LocalId, i: usize, pointer: usize) Error!void {
+fn allocateCell(comptime E: type, self: E, ty: typed.Type) Error!usize {
+    const pointer = self.temp();
+    try self.print(" %v{d} =l call $myl_native_heap_alloc(l %heap, l extern ${s}_body, l 1)\n", .{ pointer, try self.descriptor(ty) });
+    try self.require(pointer, @import("qbe_format.zig").allocation_failure);
+    return pointer;
+}
+
+fn armPayload(comptime E: type, self: E, ty_value: typed.Type, slot_value: ?typed.LocalId, i: usize, pointer: usize) Error!void {
     if (slot_value) |slot| {
         const ty = self.function.scope.locals[@backingInt(slot)].ty;
         const payload = try self.readValue(try self.address(pointer, (try self.layout(ty_value)).payload_offset), ty);

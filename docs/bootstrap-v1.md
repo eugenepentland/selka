@@ -24,14 +24,15 @@ boundary work and `Cell[T]` land and the one-version delay is satisfied.
 - The standard-library functions listed under Standard library, subject to the
   effects and capability limits below.
 
-### Pending Wave 2 boundary work
+### Wave 2 boundary work
 
-- `Cell[T]` construction plus `.value` read and replacement.
-- `const` `str`/`bytes`.
+Wave 2 is complete in the current compiler:
 
-Wave 2 items 1-3 have landed: `main(args: list[str], ...)`, the `--` guest
-boundary, `build --run` module detection, `eprint`, explicit environment access,
-`main -> Result[int, str]`, and `?` over `Option` are available.
+- `main(args: list[str], ...)`, the `--` guest boundary, and `build --run`
+  module detection;
+- `eprint`, explicit environment access, and `main -> Result[int, str]`;
+- `?` over `Option` and literal `const str`/`bytes`; and
+- `Cell[T]` construction, `.value` reads and replacement with managed sharing.
 
 ### Migration in progress
 
@@ -76,8 +77,9 @@ boundary, `build --run` module detection, `eprint`, explicit environment access,
 The allowed types are `int`, `float`, `bool`, `None`, `str`, `bytes`, `list[T]`,
 `dict[K, V]`, `Option[T]`, `Result[T, E]`, declared value types, noncapturing
 function values, and `Cell[T]`. `Cell` permits only construction plus `.value`
-read and replacement. Fixed integers and arrays may appear only in runtime ABI or
-codec adapters, not ordinary compiler data structures.
+read and replacement, and its element may be a scalar or another copyable,
+storable managed value. Fixed integers and arrays may appear only in runtime ABI
+or codec adapters, not ordinary compiler data structures.
 
 Lists may use `append`, `pop`, `clear`, `extend`, `index`, `remove`, `reverse`,
 `sort`, `copy`, indexed get/set, slicing, length, concatenation, repetition, and

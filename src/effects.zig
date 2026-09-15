@@ -98,7 +98,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
                 .cast => if (allocatingSequence(program.records, node.ty)) {
                     graph.direct(index, .managed_allocation, node.span);
                 },
-                .array => if (node.ty.isAggregate() and program.records[node.ty.recordIndex()].managed) {
+                .array, .record => if (node.ty.isAggregate() and program.records[node.ty.recordIndex()].managed) {
                     graph.direct(index, .managed_allocation, node.span);
                 },
                 .binary => |binary| if (binary.op == .add and allocatingSequence(program.records, node.ty)) {
@@ -135,7 +135,6 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
                 .unwrap,
                 .replace,
                 .length,
-                .record,
                 .update,
                 .field,
                 .unary,

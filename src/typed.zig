@@ -135,6 +135,14 @@ pub const Record = struct {
     pub fn isRecord(self: Record) bool {
         return !self.shape.hasRuntimeIdentity() and !self.shape.hasValueRepresentation();
     }
+    /// The builtin Cell is the sole managed record; user records retain value semantics.
+    pub fn isCell(self: Record) bool {
+        return self.managed and self.isRecord();
+    }
+    /// Managed collection operations require an element buffer, unlike Cell fields.
+    pub fn isCollection(self: Record) bool {
+        return self.managed and self.shape.buffer != null;
+    }
     /// Identify a payload-free enum schema.
     pub fn isEnum(self: Record) bool {
         return if (self.shape.variants) |v| !v.is_union else false;
@@ -175,7 +183,15 @@ pub const Callable = struct {
     }
 };
 /// Ownership and public schema policy for each concrete type.
-pub const RecordContract = struct { callback: ?Callable = null, public_arguments: bool = true, codec: ?Codec = null, codec_declared: bool = false, move_only: bool = false, storable: bool = true, requires_handling: bool = false };
+pub const RecordContract = struct {
+    callback: ?Callable = null,
+    public_arguments: bool = true,
+    codec: ?Codec = null,
+    codec_declared: bool = false,
+    move_only: bool = false,
+    storable: bool = true,
+    requires_handling: bool = false,
+};
 /// Payload types and case tags of a checked ok/err result schema.
 pub const ResultShape = struct { ok_type: Type, error_type: Type, ok_tag: usize, error_tag: usize };
 /// Recognize a valid fallible result and return its payload types and tags.

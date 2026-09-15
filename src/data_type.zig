@@ -35,7 +35,7 @@ fn checkMode(allocator: std.mem.Allocator, records: []const typed.Record, root: 
         if (!ty.isAggregate()) return error.NotDataType;
         const record = records[ty.recordIndex()];
         if (record.contract.callback != null) return error.NotDataType;
-        if (record.shape.hasRuntimeIdentity() or record.contract.move_only) return error.NotDataType;
+        if (record.managed or record.shape.hasRuntimeIdentity() or record.contract.move_only) return error.NotDataType;
         if (record.shape.domain) |backing| {
             const next = switch (mode) {
                 .reject => return error.NotDataType,

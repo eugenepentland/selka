@@ -40,7 +40,12 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
 fn validateRecords(program: Program) Error!void {
     for (program.records, 0..) |record, i| {
         if (@backingInt(record.id) != i + typed.Type.record_base) return error.InternalError;
-        if (record.managed and record.shape.buffer == null) return error.InternalError;
+        if (record.managed) {
+            if (!record.isCollection()) {
+                if (!record.isCell()) return error.InternalError;
+            }
+        }
+        if (record.isCell() and (record.fields.len != 1 or !std.mem.eql(u8, record.fields[0].name, "value"))) return error.InternalError;
         try validateResourceRecord(record);
         try validateBufferRecord(program, record);
         if (record.shape.variants) |variants| try validateVariantRecord(program, record, variants);
@@ -62,7 +67,9 @@ fn validateEntry(program: Program) Error!void {
     if (main.policy.restricted) return error.InternalError;
     var entry_capabilities: u8 = 0;
     var first_capability: usize = 0;
-    if (main.signature.parameter_count != 0 and @import("entry_adapter.zig").argvElement(main.scope.locals[0].ty, program.records) != null) first_capability = 1;
+    if (main.signature.parameter_count != 0) {
+        if (@import("entry_adapter.zig").argvElement(main.scope.locals[0].ty, program.records) != null) first_capability = 1;
+    }
     for (main.scope.locals[first_capability..main.signature.parameter_count]) |parameter| {
         const index = parameter.ty.capabilityIndex() orelse return error.InternalError;
         const bit = @as(u8, 1) << index;

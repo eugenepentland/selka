@@ -438,6 +438,7 @@ const Emitter = struct {
         return switch (self.function.scope.instructions[pc].op) {
             .make_record,
             .make_variant,
+            .get_field,
             .update_record,
             .replace_index,
             .get_index,
@@ -655,6 +656,11 @@ const Emitter = struct {
     }
     /// Resolve a field to its native offset and exact type.
     pub fn field(self: *Emitter, ty: typed.Type, index: usize) GenerateError!native_types.Field {
+        if (self.program.records[ty.recordIndex()].isCell()) {
+            const body = self.layouts.heapLayout(ty) catch |err| return layoutError(err);
+            defer self.layouts.releaseLayout(body);
+            return body.fields[index];
+        }
         const value = try self.layout(ty);
         if (value.kind == .array) return .{ .offset = value.stride * index, .ty = value.fields[0].ty };
         return value.fields[index];

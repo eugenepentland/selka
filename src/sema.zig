@@ -67,6 +67,7 @@ const unsupported_list = "operation is not supported by lists";
 const method_arity = "collection method argument count differs from its signature";
 
 const ast = @import("ast.zig");
+const nominal_catalog = @import("nominal_catalog.zig");
 const entry_adapter = @import("entry_adapter.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
@@ -905,6 +906,10 @@ const Checker = struct {
         if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return false;
         return true;
     }
+    fn cellConstructor(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?usize {
+        if (self.active.contains("Cell") or self.functions.contains("Cell")) return null;
+        return @import("cell_types.zig").constructor(self.src, self.catalog, call, self.sink);
+    }
     fn expectedOption(self: *Checker, node: ast.Node) Error!struct { ty: typed.Type, shape: prelude.OptionShape } {
         const expected = self.expected_types.get(node.span) orelse return self.sink.fail("E_OPTION_INFERENCE", node.span, "Some requires an expected Option type");
         const shape = prelude.optionShape(expected, self.catalog.records) orelse return self.sink.fail("E_TYPE", node.span, "Some requires an expected Option type");
@@ -978,7 +983,7 @@ const Checker = struct {
                     node.data = .{ .file_operation = .{ .kind = kind, .owner = owner, .argument = if (call.arguments.len == 0) null else call.arguments[0] } };
                     return node;
                 }
-                if (value_type.isAggregate() and self.catalog.records[value_type.recordIndex()].managed) {
+                if (value_type.isAggregate() and self.catalog.records[value_type.recordIndex()].isCollection()) {
                     try call_arguments.positional(call, self.sink);
                     const name = self.src.text(call.name);
                     const kind = buffer_operations.method(name) orelse {
@@ -1004,7 +1009,7 @@ const Checker = struct {
         return node;
     }
     fn listElement(self: *Checker, ty_value: typed.Type, span: source.Span) Error!typed.Type {
-        if (!ty_value.isAggregate() or !self.catalog.records[ty_value.recordIndex()].managed) return self.sink.fail(eListType, span, needs_list);
+        if (!ty_value.isAggregate() or !self.catalog.records[ty_value.recordIndex()].isCollection()) return self.sink.fail(eListType, span, needs_list);
         if (self.catalog.records[ty_value.recordIndex()].collection.kind != .list) return self.sink.fail(eListType, span, needs_list);
         return self.catalog.records[ty_value.recordIndex()].shape.buffer orelse return self.sink.fail(eListType, span, needs_list);
     }
@@ -1088,7 +1093,7 @@ const Checker = struct {
             const builder = self.numericBuilder(span);
             return builder.append(try builder.binary(augmentedOperator(op), left, right, self.sink));
         }
-        if (left_type.isAggregate() and self.catalog.records[left_type.recordIndex()].managed) {
+        if (left_type.isAggregate() and self.catalog.records[left_type.recordIndex()].isCollection()) {
             const sequence = self.catalog.records[left_type.recordIndex()].collection.kind;
             if (op != .add or sequence == .dictionary) return self.sink.fail(eTextOperator, span, "a managed collection augments with `+=` only, and str, bytes and list are the types that support it");
         } else {
@@ -1120,7 +1125,7 @@ const Checker = struct {
         const access = root.data.index;
         const base = try self.expressionWithTemporaries(access.base, temporaries);
         const ty_value = self.nodes.items[@backingInt(base)].ty;
-        if (!ty_value.isAggregate() or !self.catalog.records[ty_value.recordIndex()].managed) return self.sink.fail(eCollectionMethod, root.span, "indexed field assignment requires a list or dictionary");
+        if (!ty_value.isAggregate() or !self.catalog.records[ty_value.recordIndex()].isCollection()) return self.sink.fail(eCollectionMethod, root.span, "indexed field assignment requires a list or dictionary");
         const schema = self.catalog.records[ty_value.recordIndex()];
         if (schema.collection.kind == .string or schema.collection.kind == .bytes) return self.sink.fail(eCollectionMethod, root.span, "str and bytes are immutable");
         const element = schema.shape.buffer.?;
@@ -1186,7 +1191,7 @@ const Checker = struct {
         };
         const iterable = try self.expressionWithTemporaries(iterable_node, temporaries);
         const iterable_type = self.nodes.items[@backingInt(iterable)].ty;
-        if (!iterable_type.isAggregate() or !self.catalog.records[iterable_type.recordIndex()].managed) return self.sink.fail(eCollectionMethod, node.span, "iteration requires a list, str, or dictionary");
+        if (!iterable_type.isAggregate() or !self.catalog.records[iterable_type.recordIndex()].isCollection()) return self.sink.fail(eCollectionMethod, node.span, "iteration requires a list, str, or dictionary");
         const schema = self.catalog.records[iterable_type.recordIndex()];
         const element = switch (schema.collection.kind) {
             .list => schema.shape.buffer.?,
@@ -1316,7 +1321,7 @@ const Checker = struct {
         const slice = node.data.slice;
         const base = try self.expressionWithTemporaries(slice.base, temporaries);
         const input = self.nodes.items[@backingInt(base)].ty;
-        if (!input.isAggregate() or !self.catalog.records[input.recordIndex()].managed) return self.sink.fail(eCollectionMethod, node.span, "slicing requires a list or str");
+        if (!input.isAggregate() or !self.catalog.records[input.recordIndex()].isCollection()) return self.sink.fail(eCollectionMethod, node.span, "slicing requires a list or str");
         const schema = self.catalog.records[input.recordIndex()];
         if (schema.collection.kind == .dictionary) return self.sink.fail(eCollectionMethod, node.span, "dictionary keys do not support slices");
         const start = if (slice.start) |value| try self.expressionWithTemporaries(value, temporaries) else null;
@@ -1338,7 +1343,7 @@ const Checker = struct {
         const inputs = operation.inputs;
         const base = try self.expressionWithTemporaries(base_input, temporaries);
         const owner_type = self.nodes.items[@backingInt(base)].ty;
-        const managed_owner = owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].managed;
+        const managed_owner = owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].isCollection();
         const dictionary = managed_owner and self.catalog.records[owner_type.recordIndex()].collection.kind == .dictionary;
         // `pop` is one Python name with an optional argument; its arity selects the
         // list-tail, list-index, dictionary-key or dictionary-default form.
@@ -1721,6 +1726,13 @@ const Checker = struct {
             },
             .call => |call| {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
+                if (try self.cellConstructor(call) != null) {
+                    if (self.expected_types.get(node.span)) |expected| if (expected.isAggregate() and self.catalog.records[expected.recordIndex()].isCell()) {
+                        try self.hint(call.arguments[0], self.catalog.records[expected.recordIndex()].fields[0].ty);
+                    };
+                    try work.append(self.allocator, .{ .id = call.arguments[0] });
+                    return true;
+                }
                 if (try self.queueBuiltinCall(work, id, call, node)) return true;
                 if (call.owner == null and self.active.contains(self.src.text(call.name))) {
                     var index = call.arguments.len;
@@ -1763,7 +1775,7 @@ const Checker = struct {
     }
     fn collectionListType(self: *Checker, element: typed.Type, span: source.Span) Error!typed.Type {
         const state = self.catalog.templates.store orelse return error.InternalError;
-        return @import("nominal_catalog.zig").instantiateLengths(&self.catalog, state.index.names.get("List").?, &.{element}, &.{}, span);
+        return nominal_catalog.instantiateLengths(&self.catalog, state.index.names.get("List").?, &.{element}, &.{}, span);
     }
     fn checkTextDictionary(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation), owner: typed.LocalId, out: *typed.Node) Error!void {
         const local = self.locals.items[@backingInt(owner)];
@@ -1860,7 +1872,7 @@ const Checker = struct {
     fn checkBufferOperation(self: *Checker, _: ast.Node, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation), out: *typed.Node) Error!void {
         const owner = try self.resolve(operation.owner);
         const local = &self.locals.items[@backingInt(owner)];
-        if (!local.ty.isAggregate() or !self.catalog.records[local.ty.recordIndex()].managed) return self.sink.fail(eListType, operation.owner, needs_list);
+        if (!local.ty.isAggregate() or !self.catalog.records[local.ty.recordIndex()].isCollection()) return self.sink.fail(eListType, operation.owner, needs_list);
         local.usage.reads += 1;
         if (operation.kind.mutates()) local.usage.writes += 1;
         const element = self.catalog.records[local.ty.recordIndex()].shape.buffer.?;
@@ -2116,6 +2128,13 @@ const Checker = struct {
         out.data = .{ .cast = value };
     }
     fn checkCall(self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
+        if (try self.cellConstructor(input)) |declaration| {
+            const value = self.resolved[@backingInt(input.arguments[0])].?;
+            const element = self.nodes.items[@backingInt(value)].ty;
+            out.ty = try nominal_catalog.instantiateLengths(&self.catalog, declaration, &.{element}, &.{}, node.span);
+            out.data = .{ .record = try self.allocator.dupe(typed.FieldInit, &.{.{ .index = 0, .value = value }}) };
+            return;
+        }
         if (try self.checkPreludeCall(node, input, out)) return;
         if (try self.floatIntrinsic(input)) |op| return self.checkFloatIntrinsic(node, input, op, out);
         if (try self.numericConversion(input)) |floating| return self.checkNumericConversion(node, input, floating, out);
@@ -2217,7 +2236,7 @@ const Checker = struct {
             const state = self.catalog.templates.store orelse return error.InternalError;
             const key = self.nodes.items[@backingInt(self.resolved[@backingInt(entries[0])].?)].ty;
             const value = self.nodes.items[@backingInt(self.resolved[@backingInt(entries[1])].?)].ty;
-            out.ty = try @import("nominal_catalog.zig").instantiateLengths(&self.catalog, state.index.names.get("dict").?, &.{ key, value }, &.{}, node.span);
+            out.ty = try nominal_catalog.instantiateLengths(&self.catalog, state.index.names.get("dict").?, &.{ key, value }, &.{}, node.span);
         }
         if (!out.ty.isAggregate() or self.catalog.records[out.ty.recordIndex()].collection.kind != .dictionary) return self.sink.fail("E_DICT_TYPE", node.span, "dictionary literal requires dict key/value types");
         const schema = self.catalog.records[out.ty.recordIndex()];
@@ -2277,11 +2296,13 @@ const Checker = struct {
         const lt = self.nodes.items[@backingInt(left)].ty;
         const rt = self.nodes.items[@backingInt(right)].ty;
         try self.require(rt, lt, b.op_span);
+        if ((b.op == .eq or b.op == .ne) and lt.isAggregate() and self.catalog.records[lt.recordIndex()].collection.contains_cell)
+            return self.sink.fail("E_CELL_EQUALITY", b.op_span, "Cell equality is not defined, including inside collections");
         if (numeric_surface.isFloat(lt, self.catalog.records)) {
             out.* = try self.checkFloatBinary(out.span, b.op, left, right);
             return;
         }
-        const text_operands = lt.isAggregate() and self.catalog.records[lt.recordIndex()].managed;
+        const text_operands = lt.isAggregate() and self.catalog.records[lt.recordIndex()].isCollection();
         if (text_operands) {
             const sequence = self.catalog.records[lt.recordIndex()].collection.kind;
             const concatenation = b.op == .add and (sequence == .string or sequence == .bytes);
@@ -2324,7 +2345,7 @@ const Checker = struct {
         const needle = try self.expressionWithTemporaries(membership.needle, temporaries);
         const container = try self.expressionWithTemporaries(membership.container, temporaries);
         const container_type = self.nodes.items[@backingInt(container)].ty;
-        if (!container_type.isAggregate() or !self.catalog.records[container_type.recordIndex()].managed) return self.sink.fail("E_MEMBERSHIP", node.span, "membership requires a list, dictionary, or str");
+        if (!container_type.isAggregate() or !self.catalog.records[container_type.recordIndex()].isCollection()) return self.sink.fail("E_MEMBERSHIP", node.span, "membership requires a list, dictionary, or str");
         const schema = self.catalog.records[container_type.recordIndex()];
         var member = needle;
         const expected = switch (schema.collection.kind) {
@@ -2382,7 +2403,7 @@ const Checker = struct {
             out.data = .{ .index = .{ .base = base, .index = index_value } };
             return;
         }
-        if (receiver_type.isAggregate() and self.catalog.records[receiver_type.recordIndex()].managed) {
+        if (receiver_type.isAggregate() and self.catalog.records[receiver_type.recordIndex()].isCollection()) {
             out.* = try (collections.Builder(Checker){ .checker = self, .span = node.span }).access(base, .read, &.{index_value}, false);
             return;
         }
@@ -2510,7 +2531,7 @@ const Checker = struct {
                     out.data = .{ .length = base };
                     return out;
                 }
-                if (receiver_type.isAggregate() and self.catalog.records[receiver_type.recordIndex()].managed) return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(base, .length, &.{}, true);
+                if (receiver_type.isAggregate() and self.catalog.records[receiver_type.recordIndex()].isCollection()) return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(base, .length, &.{}, true);
                 _ = try self.catalog.array(receiver_type, node.span, self.sink);
                 if (self.requiresHandling(self.nodes.items[@backingInt(base)].ty)) return self.sink.fail(eResultOperation, node.span, "length evaluation would drop result-bearing elements");
                 out.ty = .i64;
@@ -3041,7 +3062,7 @@ const Checker = struct {
         const b: collections.Builder(Checker) = .{ .checker = self, .span = stmt.span };
         const iterable = try self.expression(each.iterable);
         const iterable_type = self.nodes.items[@backingInt(iterable)].ty;
-        if (!iterable_type.isAggregate() or !self.catalog.records[iterable_type.recordIndex()].managed) return self.sink.fail(eCollectionMethod, stmt.span, "iteration requires a list, str, or dictionary");
+        if (!iterable_type.isAggregate() or !self.catalog.records[iterable_type.recordIndex()].isCollection()) return self.sink.fail(eCollectionMethod, stmt.span, "iteration requires a list, str, or dictionary");
         const schema = self.catalog.records[iterable_type.recordIndex()];
         const element = switch (schema.collection.kind) {
             .list => schema.shape.buffer.?,
@@ -3280,7 +3301,7 @@ const Checker = struct {
             const target_type = self.locals.items[@backingInt(slot)].ty;
             try self.require(self.nodes.items[@backingInt(value)].ty, target_type, a.op_span);
             // `values += other` is Python's in-place extend, not a fresh list.
-            if (a.op == .add and target_type.isAggregate() and self.catalog.records[target_type.recordIndex()].managed and self.catalog.records[target_type.recordIndex()].collection.kind == .list) {
+            if (a.op == .add and target_type.isAggregate() and self.catalog.records[target_type.recordIndex()].isCollection() and self.catalog.records[target_type.recordIndex()].collection.kind == .list) {
                 const b: collections.Builder(Checker) = .{ .checker = self, .span = a.op_span };
                 const arguments = try self.allocator.alloc(typed.NodeId, 1);
                 arguments[0] = value;

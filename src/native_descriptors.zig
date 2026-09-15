@@ -68,7 +68,7 @@ fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, 
     var collection_kind: usize = 0;
     var element: []const u8 = "NULL";
     var key: []const u8 = "NULL";
-    if (layout.kind == .managed) {
+    if (layout.kind == .managed and catalog.records[ty.recordIndex()].isCollection()) {
         const record = catalog.records[ty.recordIndex()];
         collection_kind = switch (record.collection.kind) {
             .list => 1,

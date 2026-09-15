@@ -23,7 +23,7 @@ const Checker = struct {
             requires_handling = array.length != 0 and typed.requiresHandling(array.element, records);
             can_store = can_store and (array.length == 0 or typed.storable(array.element, records));
             move_only = array.length != 0 and typed.moveOnly(array.element, records);
-        } else {
+        } else if (!schema.managed) {
             for (schema.fields) |field| {
                 requires_handling = requires_handling or typed.requiresHandling(field.ty, records);
                 can_store = can_store and typed.storable(field.ty, records);
@@ -92,15 +92,16 @@ pub fn validate(allocator: std.mem.Allocator, records: []typed.Record, sink: *di
     var checker: Checker = .{ .allocator = allocator, .records = records, .sink = sink };
     try checker.validateLayouts();
     // Managed edges do not affect value layout, but all their elements must be copyable.
-    for (records) |schema| if (schema.managed) {
+    for (records) |schema| if (schema.isCollection()) {
         const element = schema.shape.buffer.?;
         if (!typed.storable(element, records) or typed.moveOnly(element, records)) return sink.fail("E_LIST_ELEMENT", schema.declaration, "managed list elements must be copyable values without resources or result obligations");
     };
     const capabilities = try dependencies(allocator, records, true);
     defer allocator.free(capabilities);
-    for (records) |schema| if (schema.managed) {
+    for (records) |schema| if (schema.isCollection()) {
         if (carries(schema.shape.buffer.?, capabilities, true)) return sink.fail("E_LIST_CAPABILITY", schema.declaration, "managed list elements cannot contain allocator or provider capabilities");
     };
+    try @import("cell_types.zig").validate(allocator, records, sink);
 }
 
 fn carries(ty: typed.Type, contains: []const bool, capability: bool) bool {

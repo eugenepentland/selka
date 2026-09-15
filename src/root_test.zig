@@ -131,6 +131,7 @@ test {
     _ = @import("standard_library_test.zig");
     _ = @import("loop_exit_test.zig");
     _ = @import("constants_test.zig");
+    _ = @import("managed_cell_test.zig");
     _ = @import("for_range_test.zig");
     _ = @import("type_aliases_test.zig");
 }

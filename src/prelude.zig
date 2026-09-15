@@ -35,7 +35,7 @@ pub fn optionShape(ty: typed.Type, records: []const typed.Record) ?OptionShape {
 
 /// Number of type arguments for ordinary prelude collection and result types.
 pub fn arity(name: []const u8) ?usize {
-    inline for (.{ "list", "Option" }) |one| if (std.mem.eql(u8, name, one)) return 1;
+    inline for (.{ "list", "Option", "Cell" }) |one| if (std.mem.eql(u8, name, one)) return 1;
     inline for (.{ "dict", "Result" }) |two| if (std.mem.eql(u8, name, two)) return 2;
     return null;
 }

@@ -106,6 +106,7 @@ pub const Index = struct {
         declaration.fields = fields_out;
     }
     fn addPrelude(self: *Index, program: ast.Program) Error!void {
+        try self.addCell();
         try self.addBuiltin("List", 1, .buffer);
         if (!self.names.contains("list")) try self.names.put(self.context.allocator, "list", self.names.get("List").?);
         try self.addBuiltin("Result", 2, .result);
@@ -117,6 +118,13 @@ pub const Index = struct {
         if (text_declaration.builtin_name != null) text_declaration.fields = try self.context.allocator.dupe(Field, &.{.{ .name = .{ .start = 0, .end = 0 }, .ty = .{ .builtin = .u32 } }});
         try self.addByteString();
         try self.addBuiltin("dict", 2, .buffer);
+    }
+    fn addCell(self: *Index) Error!void {
+        try self.addBuiltin("Cell", 1, .record);
+        const declaration = &self.declarations.items[self.names.get("Cell") orelse return];
+        if (declaration.builtin_name == null) return;
+        declaration.managed = true;
+        declaration.fields = try self.context.allocator.dupe(Field, &.{.{ .name = declaration.name, .ty = .{ .parameter = 0 }, .builtin_name = "value" }});
     }
     /// Materialize the managed byte string for an operation that needs its schema
     /// without the source naming `bytes`; a declared type of that name still wins.

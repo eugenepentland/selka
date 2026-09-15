@@ -116,7 +116,7 @@ pub const Context = struct {
     }
     /// Distinguish symbolic managed lists, strings, and dictionaries.
     pub fn collectionKind(self: Context, value: Value) ?@import("runtime_values.zig").ManagedKind {
-        if (!self.managed(value)) return null;
+        if (!self.managed(value) or self.kind(value) != .buffer) return null;
         if (value == .concrete) return self.catalog.records[value.concrete.recordIndex()].collection.kind;
         const declaration = self.catalog.templates.store.?.index.declarations.items[value.nominal.declaration];
         if (declaration.builtin_name) |name| {
