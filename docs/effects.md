@@ -32,7 +32,7 @@ def main() -> int effects(output):
 
 ## The vocabulary
 
-There are eight effects. `effects(...)` names the allowed set exactly; an empty
+There are nine effects. `effects(...)` names the allowed set exactly; an empty
 list allows none, order carries no meaning, and an unknown or repeated name is a
 source error.
 
@@ -46,13 +46,15 @@ source error.
 | `environment` | reading process environment variables |
 | `output` | `print` |
 | `host` | calling a host-provided implementation, such as an `extern def` |
+| `mutation` | writing caller-owned managed state reachable from an input, subject to the declared `mutates(...)` footprint |
 
 `noalloc` and `noio` are shorthands for the two common ceilings. `noalloc`
 excludes `managed_allocation` and permits everything else. `noio` excludes
 `filesystem`, `network` and `output` together, and permits allocation, the clock,
 randomness and the environment. Neither promises determinism, termination, bounded
-memory or freedom from traps, and local mutation of fixed storage is not an
-effect at all. A function that needs one effect and no others writes it out, as
+memory or freedom from traps. Writing definitely-fresh local storage or fixed
+scalar/record storage is not an observable effect; writing caller-owned managed
+state is the separate `mutation` effect described below. A function that needs one effect and no others writes it out, as
 in `def present(fs: Filesystem, path: str) -> bool effects(filesystem):`.
 
 Callback parameters follow the same rule directionally: a callable whose
@@ -98,6 +100,56 @@ def main() -> int:
 - The bytecode validator recomputes every summary from the emitted instructions
   and rejects a forged annotation, so an effect cannot be hidden by editing
   metadata.
+
+## Mutation contracts
+
+`effects(mutation)` permits externally observable writes to managed state.
+A signature may also carry `mutates(a, b)`, naming the parameters whose
+reachable mutable objects it may write. Names normalize to parameter positions,
+an unknown name is an error at the declaration, and the clause requires the
+`mutation` effect. Omitting the clause, or writing `mutates()`, permits no
+caller-owned input to be written; a function with no `mutation` effect cannot
+modify caller-owned managed state at all.
+
+The guarantee is for the duration of the call and covers lists, dictionaries,
+`Cell`, and mutable descendants reached through records, arrays, options, unions,
+collections and recursive graphs. A value-record copy does not sever the origin
+of its managed descendants, and returning or wrapping an input does not make it
+fresh. Definitely-fresh local storage may always be built and mutated. A shallow
+`.copy()` severs only the outer container.
+
+If a writable input graph may overlap a read-only input, the call rejects unless
+the compiler can prove the two are disjoint; passing the same value twice is the
+simplest case. Two writable aliases are permitted and ordinary sequential
+ordering applies. Unknown possible overlap is treated as overlap, so a caller
+that intends two independent arguments either declares both writable or builds an
+independent snapshot.
+
+```mylang
+# doc: expect 7
+def replace_first(values: list[int], replacement: int) -> None effects(mutation) mutates(values):
+    values[0] = replacement
+
+def main() -> int effects(managed_allocation, output):
+    values = [1]
+    replace_first(values, 7)
+    print(values[0])
+    return 0
+```
+
+An unpermitted write is rejected at the write site and reported against the
+declared ceiling:
+
+```mylang
+# doc: expect-error E_MUTATION_PERMISSION
+def overwrite(values: list[int]) -> None effects():
+    values[0] = 42
+
+def main() -> int:
+    values = [1]
+    overwrite(values)
+    return 0
+```
 
 ## Related pages
 

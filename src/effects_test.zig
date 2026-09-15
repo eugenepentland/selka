@@ -525,6 +525,7 @@ test "M1 mutates clause normalizes duplicate names to sorted positions" {
 }
 
 // spec-case: MUTATION-METADATA-1
+// spec: MUTATION-ENFORCE-1
 test "M2 direct list dict and Cell writes require mutation permission" {
     try reject(
         \\def touch(values: list[int]) -> None effects():

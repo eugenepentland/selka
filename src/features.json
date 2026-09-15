@@ -402,6 +402,11 @@
       "summary": "A discovered entry-anchored mylang.json makes its import_policy required for ordinary check, build, run, project and native-test commands before any cached success, with config and policy identity in receipts.",
       "doc": "docs/tooling/import-policy.md#enforcement"
     },
+    "checked-mutation-contracts": {
+      "kind": "language",
+      "summary": "effects(mutation) with mutates(...) permits only declared caller-owned managed writes; deep origins, return aliasing and conservative overlap rejection are checked through calls, generics and callbacks.",
+      "doc": "docs/effects.md#mutation-contracts"
+    },
     "per-function-body-reuse": {
       "kind": "tooling",
       "summary": "Ordinary checked bodies reuse per function with stable declaration identities and dependency digests, so an unrelated generic, alias, constant or callback no longer disables reuse.",

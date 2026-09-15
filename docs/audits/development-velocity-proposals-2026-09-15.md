@@ -78,7 +78,7 @@ The absence of an `async` spelling is not evidence that the proposed single-mode
 
 This program was compiled and executed natively. It exited successfully because the caller's list was changed:
 
-```mylang
+```mylang notest
 # doc: expect 0
 def overwrite(values: list[int]) -> None effects():
     values[0] = 42
