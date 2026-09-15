@@ -397,6 +397,11 @@
       "summary": "Native traps carry bounded structured index/length and operand detail rendered identically in text and JSON, transported from the child as one versioned stderr record.",
       "doc": "docs/io.md#runtime-diagnostics"
     },
+    "required-project-import-policy": {
+      "kind": "tooling",
+      "summary": "A discovered entry-anchored mylang.json makes its import_policy required for ordinary check, build, run, project and native-test commands before any cached success, with config and policy identity in receipts.",
+      "doc": "docs/tooling/import-policy.md#enforcement"
+    },
     "actual-work-report": {
       "kind": "tooling",
       "summary": "Versioned work-report-v1 separates unchanged fingerprints from actual result reuse and reports per-stage performed, reused and skipped work with bypass reasons and session deltas.",

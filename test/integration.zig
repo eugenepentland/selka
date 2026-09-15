@@ -3104,8 +3104,9 @@ fn writeProjectFile(dir: *std.testing.TmpDir, path: []const u8, data: []const u8
 const policy_allow = "{\"version\":1,\"default_action\":\"allow\",\"rules\":[]}";
 const policy_deny = "{\"version\":1,\"default_action\":\"deny\",\"rules\":[]}";
 const policy_project_main = "module main\nimport helper\ndef main() -> int:\n    return helper.value()\n";
-const policy_project_helper = "module helper\nexport value\ndef value() -> int:\n    return 7\n";
+const policy_project_helper = "module helper\nexport value\ndef value() -> int effects():\n    return 7\n";
 
+// spec-case: REQUIRED-PROJECT-IMPORT-POLICY-1
 test "loadConfiguredPolicy enforces mylang.json across ordinary project commands cold warm and after policy-only edits" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
@@ -3188,6 +3189,7 @@ test "loadConfiguredPolicy enforces mylang.json across ordinary project commands
     try testing.expect(std.mem.indexOf(u8, stricter.stderr, "main -> helper: deny") != null);
 }
 
+// spec-case: REQUIRED-PROJECT-IMPORT-POLICY-1
 test "loadConfiguredPolicy policy discovery anchors to the entry file instead of the shell working directory" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
@@ -3218,11 +3220,12 @@ test "loadConfiguredPolicy policy discovery anchors to the entry file instead of
     try testing.expect(std.mem.indexOf(u8, result.stderr, "main -> helper: deny") != null);
 }
 
+// spec-case: REQUIRED-PROJECT-IMPORT-POLICY-1
 test "configured policy never disables independent import-cycle rejection" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try writeProjectFile(&temp, "main.my", "module main\nimport helper\ndef main() -> int:\n    return helper.value()\n");
-    try writeProjectFile(&temp, "helper.my", "module helper\nimport main\nexport value\ndef value() -> int:\n    return 0\n");
+    try writeProjectFile(&temp, "helper.my", "module helper\nimport main\nexport value\ndef value() -> int effects():\n    return 0\n");
     try writeProjectFile(&temp, "mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
     const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
     defer testing.allocator.free(entry);
@@ -3236,6 +3239,7 @@ test "configured policy never disables independent import-cycle rejection" {
     }
 }
 
+// spec-case: REQUIRED-PROJECT-IMPORT-POLICY-1
 test "loadConfiguredPolicy policy reports missing and malformed configuration as host status 2" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
@@ -3261,6 +3265,7 @@ test "loadConfiguredPolicy policy reports missing and malformed configuration as
     }
 }
 
+// spec-case: REQUIRED-PROJECT-IMPORT-POLICY-1
 test "loadConfiguredPolicy policy statuses parseDocument HostConfiguration and PolicyViolation" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
@@ -3285,6 +3290,7 @@ test "loadConfiguredPolicy policy statuses parseDocument HostConfiguration and P
     try testing.expect(std.mem.indexOf(u8, malformed.stderr, "E_PROJECT_CONFIG") != null);
 }
 
+// spec-case: REQUIRED-PROJECT-IMPORT-POLICY-1
 test "loadConfiguredPolicy policy applies to native test preparation ProjectConfigurationFailed and ProjectPolicyRejected" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
@@ -3298,10 +3304,10 @@ test "loadConfiguredPolicy policy applies to native test preparation ProjectConf
         \\    return 0
         \\
         \\
-        \\def test_policy() -> bool:
+        \\def test_policy() -> bool effects():
         \\    return helper.value() == 7
     );
-    try writeProjectFile(&temp, "helper.my", "module helper\nexport value\ndef value() -> int:\n    return 7\n");
+    try writeProjectFile(&temp, "helper.my", "module helper\nexport value\ndef value() -> int effects():\n    return 7\n");
     try writeProjectFile(&temp, "mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
     try writeProjectFile(&temp, "policy.json", policy_allow);
     const entry = try temp.dir.realPathFileAlloc(testing.io, "tests.my", testing.allocator);
@@ -3334,6 +3340,7 @@ test "loadConfiguredPolicy policy applies to native test preparation ProjectConf
     try testing.expect(std.mem.indexOf(u8, malformed.stderr, "E_PROJECT_CONFIG") != null);
 }
 
+// spec-case: REQUIRED-PROJECT-IMPORT-POLICY-1
 test "validateUnitConfiguredPolicy checks required configuration for single-unit commands" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
@@ -3364,6 +3371,7 @@ test "validateUnitConfiguredPolicy checks required configuration for single-unit
     try testing.expect(std.mem.indexOf(u8, malformed.stderr, "E_PROJECT_CONFIG") != null);
 }
 
+// spec-case: REQUIRED-PROJECT-IMPORT-POLICY-1
 test "loadConfiguredPolicy policy discovery above the native test entry enforces the ancestor config" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
@@ -3377,10 +3385,10 @@ test "loadConfiguredPolicy policy discovery above the native test entry enforces
         \\    return 0
         \\
         \\
-        \\def test_policy() -> bool:
+        \\def test_policy() -> bool effects():
         \\    return helper.value() == 7
     );
-    try writeProjectFile(&temp, "nested/helper.my", "module helper\nexport value\ndef value() -> int:\n    return 7\n");
+    try writeProjectFile(&temp, "nested/helper.my", "module helper\nexport value\ndef value() -> int effects():\n    return 7\n");
     try writeProjectFile(&temp, "mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
     try writeProjectFile(&temp, "policy.json", policy_deny);
     const entry = try temp.dir.realPathFileAlloc(testing.io, "nested/tests.my", testing.allocator);
@@ -3399,6 +3407,7 @@ test "loadConfiguredPolicy policy discovery above the native test entry enforces
     try testing.expect(std.mem.indexOf(u8, denied.stderr, "tests -> helper: deny") != null);
 }
 
+// spec-case: REQUIRED-PROJECT-IMPORT-POLICY-1
 test "loadConfiguredPolicy policy identity participates in project-dependencies receipts" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();

@@ -150,6 +150,7 @@ fn loadTmp(dir: *std.testing.TmpDir, path: []const u8, failure: *project_config.
     return project_config.load(t.allocator, t.io, absolute, failure);
 }
 
+// spec: REQUIRED-PROJECT-IMPORT-POLICY-1
 test "project config discovery walks up from the entry and resolves policy beside the winning config" {
     var temp = t.tmpDir(.{});
     defer temp.cleanup();
@@ -191,6 +192,7 @@ test "project config discovery walks up from the entry and resolves policy besid
     try t.expectEqual(@as(usize, 64), receipt.policy_sha256.?.len);
 }
 
+// spec-case: REQUIRED-PROJECT-IMPORT-POLICY-1
 test "project config rejects unknown duplicate malformed and unsupported shapes" {
     var temp = t.tmpDir(.{});
     defer temp.cleanup();
@@ -217,6 +219,7 @@ test "project config rejects unknown duplicate malformed and unsupported shapes"
     }
 }
 
+// spec-case: REQUIRED-PROJECT-IMPORT-POLICY-1
 test "project config reports missing oversized and unreadable files" {
     var temp = t.tmpDir(.{});
     defer temp.cleanup();
