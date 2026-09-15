@@ -139,8 +139,13 @@ fn decode(reader: *Reader, comptime T: type) DecodeError!T {
         .void => {},
         .@"enum" => |enumerated| {
             const Tag = enumerated.tag_type;
-            const raw = try decode(reader, Tag);
-            return std.enums.fromInt(T, raw) orelse error.InvalidEncoding;
+            // Read the tag in its full storage byte width before narrowing, so a
+            // byte whose high bits are set is malformed rather than silently
+            // truncated to a valid case by a sub-byte tag type.
+            const Storage = @Int(.unsigned, @sizeOf(Tag) * 8);
+            const raw = try reader.integer(Storage);
+            const narrowed = std.math.cast(Tag, raw) orelse return error.InvalidEncoding;
+            return std.enums.fromInt(T, narrowed) orelse error.InvalidEncoding;
         },
         .optional => |optional| {
             const present = (try reader.take(1))[0];

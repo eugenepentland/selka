@@ -621,6 +621,11 @@ test "specialization key follows the concrete provider shape and target contract
 }
 
 test "materialize, dupModule, dupDeclaration, dupNominal, dupSpecialization and dupFragment release partial copies" {
+    // The describe path reaches maps whose probe order and therefore allocation
+    // count vary with process addresses in optimized builds, so the std failure
+    // injector cannot land its fail_index deterministically there. The cleanup
+    // guarantee is swept exhaustively in Debug, where the count is stable.
+    if (@import("builtin").mode != .debug) return error.SkipZigTest;
     try t.checkAllAllocationFailures(t.allocator, allocationScenario, .{});
 }
 
