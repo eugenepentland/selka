@@ -259,7 +259,13 @@ const Checker = struct {
         }
         if (!self.active.contains(self.src.text(span))) {
             const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.program, .names = self.module_names, .sink = self.sink, .catalog = self.catalog };
-            if (try constants.lookup(span)) |index| return .{ .concrete = (try constants.evaluate(index)).typeOf() };
+            if (try constants.lookup(span)) |index| {
+                if (try constants.literalType(index)) |ty_value| {
+                    self.seedEffect(.managed_allocation);
+                    return .{ .concrete = ty_value };
+                }
+                return .{ .concrete = (try constants.evaluate(index)).typeOf() };
+            }
         }
         const binding = try self.local(span);
         if ((try self.transfers(binding.ty))) {

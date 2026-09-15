@@ -16,7 +16,7 @@ intend to use; historical counts are not current verification receipts.
 
 | Area | Supported surface | Executable example / restriction |
 | --- | --- | --- |
-| Values | `int`, binary64 `float`, booleans, managed Unicode strings/dictionaries/lists, byte literals, value records, checked Result/Option, domains/arrays, scalar constants and transparent aliases | [constants](module-constants.md), [aliases](type-aliases.md); [bounded scalar source evaluation](source-evaluation.md) |
+| Values | `int`, binary64 `float`, booleans, managed Unicode strings/dictionaries/lists, byte literals, value records, checked Result/Option, domains/arrays, scalar and literal `str`/`bytes` constants and transparent aliases | [constants](module-constants.md), [aliases](type-aliases.md); [bounded scalar source evaluation](source-evaluation.md) |
 | Control flow | Indented if/elif/else, while, foreach/enumerate/range, break/continue and match/case | [range iteration](range-iteration.md), [matching a variant](match-expressions.md); conservative outer ownership on loop exits |
 | Generics | Functions and nominal records/unions/results/enums; structural field/operation contracts and const length parameters | [structural contracts](../examples/structural-constraints.my); [inferred call type arguments](generic-inference.md) |
 | Managed allocation | Shared growing lists and dictionaries, immutable strings, nonmoving tracing GC and cycle reclamation | [Managed memory](managed-memory.md); managed graph host/native boundaries remain excluded |
@@ -51,6 +51,8 @@ Host callbacks are trusted implementations of documented contracts. These limits
 part of the current model, not guarantees supplied by a future thread system.
 
 `float` provides decimal literals and ordinary numeric operators over IEEE binary64; the standard `math` module adds classification, rounding, roots and integer helpers, and the raw `f64_*` intrinsics over `u64` representations remain available. See [floating-point.md](floating-point.md).
+
+`str` and `bytes` constants require matching literals and their reads contribute `managed_allocation`; see [module-constants.md](module-constants.md#string-and-byte-literal-constants).
 
 Scalar constants may call bounded nongeneric source functions with scalar locals and control flow; see [source-evaluation.md](source-evaluation.md).
 
@@ -93,7 +95,7 @@ Language surface:
 - [Managed application collections](managed-memory.md), [managed arenas](arenas.md)
 - [Generic functions and types](generics.md), [generic call inference](generic-inference.md), [constant length parameters](const-length-generics.md)
 - [Explicit integer operations](integer-operations.md), [binary64 floating point](floating-point.md)
-- [Modules, imports and exports](modules.md), [immutable scalar constants](module-constants.md), [transparent type aliases](type-aliases.md)
+- [Modules, imports and exports](modules.md), [immutable constants](module-constants.md), [transparent type aliases](type-aliases.md)
 - [Capabilities and effects](effects.md), [printing, files and command-line authority](io.md)
 - [Integer range iteration](range-iteration.md), [structured loop exits](structured-loop-exits.md), [value-producing matches](match-expressions.md)
 - [Standard library](standard-library.md), [time and randomness](standard-time-random.md)

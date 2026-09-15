@@ -152,7 +152,8 @@ const Checker = struct {
         self.current_lambda = null;
         const function = self.syntaxFunction(@fromBackingInt(i));
         const constant_context: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = self.sink, .catalog = self.catalog };
-        const constant = if (function.policy.constant) try constant_context.evaluate(@backingInt(self.instance_keys.items[i].declaration)) else null;
+        const declaration = @backingInt(self.instance_keys.items[i].declaration);
+        const constant = if (function.policy.constant and try constant_context.literalType(declaration) == null) try constant_context.evaluate(declaration) else null;
         for (self.resolved_nodes.items) |node| self.resolved[node] = null;
         self.resolved_nodes.clearRetainingCapacity();
         self.expected_types.clearRetainingCapacity();
@@ -184,7 +185,8 @@ const Checker = struct {
             @memset(self.conversion_fields.?, false);
         }
         // Type-check even unevaluated short-circuit operands before replacing the
-        // immutable initializer with its checked literal value.
+        // scalar initializer with its checked literal value. Managed constants keep
+        // their ordinary checked literal node and its allocation effect.
         var body = try self.statement(function.body);
         if (constant) |value| {
             const node_id: typed.NodeId = @fromBackingInt(self.nodes.items.len);
@@ -2026,8 +2028,7 @@ const Checker = struct {
         if (!self.active.contains(self.src.text(name))) {
             const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = self.sink, .catalog = self.catalog };
             if (try constants.lookup(name)) |index| {
-                const value = try constants.evaluate(index);
-                out.ty = value.typeOf();
+                out.ty = try constants.literalType(index) orelse (try constants.evaluate(index)).typeOf();
                 out.data = .{ .call = .{ .function = self.ordinary_ids[index] orelse return error.InternalError, .arguments = &.{} } };
                 return;
             }

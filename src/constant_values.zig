@@ -1,4 +1,4 @@
-//! Bounded scalar constant evaluation with checked arithmetic and acyclic dependencies.
+//! Literal-only managed constants and bounded scalar evaluation with checked dependencies.
 const call_arguments = @import("call_arguments.zig");
 const std = @import("std");
 const ast = @import("ast.zig");
@@ -16,7 +16,7 @@ const eName = "E_CONSTANT_NAME";
 const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
 const Assignment = @FieldType(@FieldType(ast.Statement, "data"), "assignment");
 const Range = @FieldType(@FieldType(ast.Statement, "data"), "for_range");
-/// Source context for immutable scalar declarations; no guest authority is available.
+/// Source context for immutable declarations; no guest authority is available.
 pub const Context = struct {
     src: source.Source,
     program: ast.Program,
@@ -45,6 +45,23 @@ pub const Context = struct {
             if (std.mem.eql(u8, identity, target)) return index;
         }
         return null;
+    }
+    /// Validate a str/bytes literal getter, leaving scalar declarations to evaluation.
+    pub fn literalType(self: Context, index: usize) Error!?typed.Type {
+        const function = self.program.functions[index];
+        const ty = try self.resolveType(function.signature.return_type);
+        const catalog = self.catalog orelse return null;
+        if (!ty.isAggregate()) return null;
+        const kind = catalog.records[ty.recordIndex()].collection.kind;
+        if (kind != .string and kind != .bytes) return null;
+        const body = self.program.statements.items[@backingInt(function.body)].data.block[0];
+        const initializer = self.program.statements.items[@backingInt(body)].data.ret;
+        const node = self.program.nodes.items[@backingInt(initializer)];
+        if (node.data != .text and node.data != .bytes)
+            return self.sink.fail(eExpression, node.span, "str and bytes constants require a literal initializer; calls, operators, casts and dependencies are excluded");
+        if ((kind == .string) != (node.data == .text))
+            return self.sink.fail("E_TYPE", node.span, "constant literal type differs from its declared str or bytes type");
+        return ty;
     }
     /// Evaluate one constant including forward references within a bounded dependency graph.
     pub fn evaluate(self: Context, index: usize) Error!typed.Value {

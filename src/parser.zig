@@ -295,7 +295,10 @@ pub const Parser = struct {
                 const statements = try self.arena.allocator().alloc(ast.StatementId, 1);
                 statements[0] = ret;
                 const body = try self.addStatement(.{ .span = .join(name, end), .data = .{ .block = statements } });
-                try functions.append(self.arena.allocator(), .{ .policy = .{ .constant = true, .effect_bound = .{ .allowed = 0, .span = name } }, .signature = .{ .parameters = &.{}, .return_type = ty }, .name = name, .body = body });
+                const literal = self.syntax.nodes.items[@backingInt(value)].data;
+                // Managed literal getters allocate on read; scalar getters remain pure.
+                const allowed = if (literal == .text or literal == .bytes) effects.bit(.managed_allocation) else 0;
+                try functions.append(self.arena.allocator(), .{ .policy = .{ .constant = true, .effect_bound = .{ .allowed = allowed, .span = name } }, .signature = .{ .parameters = &.{}, .return_type = ty }, .name = name, .body = body });
                 continue;
             }
             if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "resource")) {

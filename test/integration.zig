@@ -16,6 +16,64 @@ const host_program =
     \\def main() -> i64:
     \\    return measure(6)
 ;
+
+// spec-case: CONSTANT-2
+test "CLI managed constants check and reject expressions" {
+    try invoke("check", "const S: str = \"hé🙂\"\nconst B: bytes = b\"\\x00\\xff\"\ndef main() -> int:\n    return len(S) + len(B)\n", 0, "", "");
+    try invoke("check", "const S: str = \"a\" + \"b\"\ndef main() -> int:\n    return 0\n", 1, "", "E_CONSTANT_EXPRESSION");
+    try invoke("check", "const B: bytes = OTHER\nconst OTHER: bytes = b\"x\"\ndef main() -> int:\n    return 0\n", 1, "", "E_CONSTANT_EXPRESSION");
+}
+
+fn expectConstantProcess(argv: []const []const u8, expected: []const u8) !void {
+    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = argv });
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqualStrings("", result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    try testing.expectEqualStrings(expected, result.stdout);
+}
+
+fn managedConstantModes(temporary: *testing.TmpDir, data: []const u8, expected: []const u8) !void {
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "constants.my", .data = data });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const root = std.fs.path.dirname(entry).?;
+    const output = try std.fs.path.join(testing.allocator, &.{ root, "program" });
+    defer testing.allocator.free(output);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
+    defer testing.allocator.free(cache);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
+    defer testing.allocator.free(cache_argument);
+    try expectConstantProcess(&.{ compiler_path, "check-project", entry, cache_argument }, "");
+    try expectConstantProcess(&.{ compiler_path, "run", entry, cache_argument, tools[0], tools[1] }, expected);
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "--run", "--cache-dir", cache, tools[0], tools[1] }, expected);
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "--project", "-o", output, "--cache-dir", cache, tools[0], tools[1] }, "");
+    try expectConstantProcess(&.{output}, expected);
+    try expectConstantProcess(&.{ output, "--gc-stress" }, expected);
+}
+
+// spec-case: CONSTANT-2
+test "CLI managed constants import run build installed and invalidate warm caches" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
+        \\module main
+        \\import constants
+        \\def read[T]() -> str effects(managed_allocation):
+        \\    return constants.TEXT
+        \\def main() -> int:
+        \\    print(read[int]())
+        \\    print(len(constants.DATA))
+        \\    print(constants.DATA[1])
+        \\    return 0
+    });
+    const original = "module constants\nexport TEXT\nexport DATA\nconst TEXT: str = \"hé🙂\"\nconst DATA: bytes = b\"\\x00\\xff\"\n";
+    try managedConstantModes(&temporary, original, "hé🙂\n2\n255\n");
+    try managedConstantModes(&temporary, original, "hé🙂\n2\n255\n");
+    // Same byte lengths, new contents: unchanged callers must observe the new IL.
+    try managedConstantModes(&temporary, "module constants\nexport TEXT\nexport DATA\nconst TEXT: str = \"hà🙃\"\nconst DATA: bytes = b\"\\x00\\xfe\"\n", "hà🙃\n2\n254\n");
+}
+
 test "CLI checks host declarations and refuses to run one with no registration" {
     try invoke("check", host_program, 0, "", "");
     // Nothing registers a host implementation for a plain `mylang run`, so the

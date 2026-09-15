@@ -342,6 +342,11 @@
       "summary": "`const NAME: T = expression` folds an immutable scalar at check time.",
       "doc": "docs/module-constants.md#immutable-scalar-constants"
     },
+    "literal-module-constants": {
+      "kind": "language",
+      "summary": "String and byte constants require matching literals and allocate on read.",
+      "doc": "docs/module-constants.md#string-and-byte-literal-constants"
+    },
     "bounded-source-constant-functions": {
       "kind": "language",
       "summary": "A constant initializer may call bounded nongeneric scalar source functions.",
@@ -537,7 +542,7 @@
     "container_elements": "managed list/dict elements: copyable values without must-handle obligations, owned resources, or capability grants",
     "noalloc": "managed-backing-operations-only",
     "type_aliases": "non-parameterized",
-    "constants": "bounded-scalar-expressions-and-nongeneric-source-functions",
+    "constants": "bounded-scalar-expressions-and-nongeneric-source-functions-plus-str-bytes-literals",
     "iteration": "range(end/start,end), list/str/dict foreach and enumerate; fixed bounds and structural mutation checks",
     "native_runtime": "QBE only; host effects require explicit ABI registration",
     "workers": "no host worker facility and no guest spawn syntax; parallelism is one guest process per task",

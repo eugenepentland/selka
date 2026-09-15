@@ -138,6 +138,19 @@ test "semantic cache falls back for declaration type constant generic and alias 
     try t.expectEqual(@as(usize, 0), cache.statistics.reused);
     try t.expect(cache.statistics.bypassed >= 4);
 }
+// spec-case: SEMANTIC-CACHE-2
+// spec-case: CONSTANT-2
+test "semantic cache bypasses managed constants across literal edits" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const main = "def main() -> int:\n    return len(S) + B[0]\n";
+    try compare(t.allocator, &cache, "const S: str = \"a\"\nconst B: bytes = b\"A\"\n" ++ main, 66);
+    try compare(t.allocator, &cache, "const S: str = \"é🙂\"\nconst B: bytes = b\"B\"\n" ++ main, 68);
+    try compare(t.allocator, &cache, "const S: str = \"a\" + \"b\"\nconst B: bytes = b\"B\"\n" ++ main, null);
+    try t.expectEqual(@as(usize, 0), cache.statistics.reused);
+    try t.expectEqual(@as(usize, 0), cache.statistics.stored);
+    try t.expect(cache.statistics.bypassed >= 3);
+}
 // spec: SEMANTIC-CACHE-3
 test "semantic cache InvalidRelocation never accepts foreign source or expression identities" {
     const relocation = @import("semantic_copy.zig");
