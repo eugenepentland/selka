@@ -21,17 +21,17 @@ record Split:
 
 
 # The single path separator these operations understand.
-def separator() -> str:
+def separator() -> str effects(managed_allocation):
     return "/"
 
 
 # Whether a path starts at the root rather than at the working directory.
-def is_absolute(value: str) -> bool:
+def is_absolute(value: str) -> bool effects(managed_allocation):
     return strings.starts_with(value, separator())
 
 
 # Two path pieces joined; an absolute right side replaces the left one.
-def join(left: str, right: str) -> str:
+def join(left: str, right: str) -> str effects(managed_allocation):
     if len(right) == 0:
         return left
     if len(left) == 0 or is_absolute(right):
@@ -42,7 +42,7 @@ def join(left: str, right: str) -> str:
 
 
 # Every piece joined from left to right under the same rules as join.
-def join_all(parts: list[str]) -> str:
+def join_all(parts: list[str]) -> str effects(managed_allocation):
     out = ""
     for part in parts:
         out = join(out, part)
@@ -50,7 +50,7 @@ def join_all(parts: list[str]) -> str:
 
 
 # The final component of a path; a trailing separator yields the empty text.
-def basename(value: str) -> str:
+def basename(value: str) -> str effects(managed_allocation):
     index = len(value)
     while index > 0 and value[index - 1] != separator():
         index -= 1
@@ -58,7 +58,7 @@ def basename(value: str) -> str:
 
 
 # Everything before the final component, without its trailing separator.
-def dirname(value: str) -> str:
+def dirname(value: str) -> str effects(managed_allocation):
     index = len(value)
     while index > 0 and value[index - 1] != separator():
         index -= 1
@@ -68,7 +68,7 @@ def dirname(value: str) -> str:
 
 
 # A path split at the final dot of its last component.
-def splitext(value: str) -> Split:
+def splitext(value: str) -> Split effects(managed_allocation):
     name = basename(value)
     cut = len(name)
     while cut > 0 and name[cut - 1] != ".":
@@ -80,17 +80,17 @@ def splitext(value: str) -> Split:
 
 
 # The final component without its suffix.
-def stem(value: str) -> str:
+def stem(value: str) -> str effects(managed_allocation):
     return basename(splitext(value).root)
 
 
 # The final suffix of a path, including its leading dot, or the empty text.
-def extension(value: str) -> str:
+def extension(value: str) -> str effects(managed_allocation):
     return splitext(value).extension
 
 
 # Nonempty components of a path, with separators and single dots removed.
-def components(value: str) -> list[str]:
+def components(value: str) -> list[str] effects(managed_allocation):
     out: list[str] = []
     for piece in value.split(separator()):
         if len(piece) > 0 and piece != ".":
@@ -99,7 +99,7 @@ def components(value: str) -> list[str]:
 
 
 # A path with duplicate separators, single dots and resolvable parents removed.
-def normalize(value: str) -> str:
+def normalize(value: str) -> str effects(managed_allocation):
     if len(value) == 0:
         return "."
     absolute = is_absolute(value)

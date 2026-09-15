@@ -256,7 +256,7 @@ pub const probes = [_]Probe{
             \\module main
             \\import contracts
             \\export f
-            \\def f[T: contracts.C](x: T) -> T:
+            \\def f[T: contracts.C](x: T) -> T effects():
             \\    return x
             \\def main() -> int:
             \\    return 0
@@ -282,7 +282,7 @@ pub const probes = [_]Probe{
             \\module main
             \\import contracts
             \\export f
-            \\def f[T: contracts.C](x: T) -> T:
+            \\def f[T: contracts.C](x: T) -> T effects():
             \\    return x
             \\def main() -> int:
             \\    return 0

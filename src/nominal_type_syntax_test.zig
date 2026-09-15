@@ -234,7 +234,7 @@ const public_module =
     \\    value: m.Slot[[2]T]
     \\
     \\
-    \\def echo[T](x: Box[T]) -> Box[T]:
+    \\def echo[T](x: Box[T]) -> Box[T] effects():
     \\    return x
     \\
     \\

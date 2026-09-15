@@ -143,7 +143,14 @@ const Builder = struct {
         const slot = self.declarations.get(function.declaration.start).?;
         if (function.type_arguments.len == 0) self.symbols.items[slot].details.type_name = typed.typeName(function.signature.return_type, program.records);
         var effects: std.ArrayList([]const u8) = .empty;
-        var merged = function.policy.effects;
+        // E2: navigation reports the declared public ceiling for exported
+        // functions. Private helpers keep their inferred summary because they
+        // have no published contract to fingerprint.
+        const navigation_mask = if (self.symbols.items[slot].exported)
+            (if (function.policy.effect_bound) |bound| bound.allowed else function.policy.effects)
+        else
+            function.policy.effects;
+        var merged = navigation_mask;
         for (self.symbols.items[slot].details.effects) |name| {
             const prior = std.meta.stringToEnum(effect_set.Effect, name) orelse return error.InternalError;
             merged |= effect_set.bit(prior);

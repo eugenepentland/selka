@@ -38,11 +38,11 @@ const api =
     \\    return input.value + 1
     \\
     \\
-    \\def identity[T](value: T) -> T:
+    \\def identity[T](value: T) -> T effects():
     \\    return value
     \\
     \\
-    \\def extra() -> i64:
+    \\def extra() -> i64 effects():
     \\    return 1
     \\
     \\
@@ -54,10 +54,10 @@ const api =
     \\    private def raw(x: i64) -> Distance:
     \\        return wrap[Distance](x)
     \\
-    \\    def make(x: i64) -> Distance:
+    \\    def make(x: i64) -> Distance effects():
     \\        return Distance.raw(x)
     \\
-    \\    def number(x: Distance) -> i64:
+    \\    def number(x: Distance) -> i64 effects():
     \\        return unwrap(x)
 ;
 

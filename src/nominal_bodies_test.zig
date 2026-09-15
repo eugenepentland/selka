@@ -160,11 +160,11 @@ const module_source =
     \\    value: T
     \\
     \\
-    \\def pack[T](x: T) -> Box[T]:
+    \\def pack[T](x: T) -> Box[T] effects():
     \\    return Box[T](value=x)
     \\
     \\
-    \\def extract[T](box: Box[T]) -> T:
+    \\def extract[T](box: Box[T]) -> T effects():
     \\    return box.value
 ;
 const Modules = struct {

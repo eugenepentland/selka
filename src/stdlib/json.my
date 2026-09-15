@@ -41,47 +41,47 @@ record Scanner:
 
 
 # Deepest container nesting that loads accepts.
-def max_depth() -> int:
+def max_depth() -> int effects():
     return 64
 
 
 # The JSON null value.
-def null_value() -> Json:
+def null_value() -> Json effects():
     return Json.null
 
 
 # A JSON true or false value.
-def boolean(value: bool) -> Json:
+def boolean(value: bool) -> Json effects():
     return Json.boolean(value)
 
 
 # A JSON number that is exactly a 64-bit signed integer.
-def integer(value: int) -> Json:
+def integer(value: int) -> Json effects():
     return Json.integer(value)
 
 
 # A JSON number carried as binary64.
-def number(value: float) -> Json:
+def number(value: float) -> Json effects():
     return Json.number(value)
 
 
 # A JSON string.
-def text(value: str) -> Json:
+def text(value: str) -> Json effects():
     return Json.text(value)
 
 
 # A JSON array of values.
-def array(items: list[Json]) -> Json:
+def array(items: list[Json]) -> Json effects():
     return Json.array(items)
 
 
 # A JSON object; iteration and rendering follow insertion order.
-def object(fields: dict[str, Json]) -> Json:
+def object(fields: dict[str, Json]) -> Json effects():
     return Json.object(fields)
 
 
 # The RFC 8259 name of a value's kind.
-def type_name(value: Json) -> str:
+def type_name(value: Json) -> str effects(managed_allocation):
     match value:
         case Json.null:
             return "null"
@@ -100,7 +100,7 @@ def type_name(value: Json) -> str:
 
 
 # Whether a value is JSON null.
-def is_null(value: Json) -> bool:
+def is_null(value: Json) -> bool effects():
     match value:
         case Json.null:
             return True
@@ -119,7 +119,7 @@ def is_null(value: Json) -> bool:
 
 
 # The boolean carried by a value, if it is one.
-def as_bool(value: Json) -> Option[bool]:
+def as_bool(value: Json) -> Option[bool] effects():
     match value:
         case Json.boolean(flag):
             return Some(flag)
@@ -138,7 +138,7 @@ def as_bool(value: Json) -> Option[bool]:
 
 
 # The exact integer carried by a value, if it has one.
-def as_int(value: Json) -> Option[int]:
+def as_int(value: Json) -> Option[int] effects():
     match value:
         case Json.integer(count):
             return Some(count)
@@ -157,7 +157,7 @@ def as_int(value: Json) -> Option[int]:
 
 
 # The number carried by a value, widening an exact integer to binary64.
-def as_float(value: Json) -> Option[float]:
+def as_float(value: Json) -> Option[float] effects():
     match value:
         case Json.number(amount):
             return Some(amount)
@@ -176,7 +176,7 @@ def as_float(value: Json) -> Option[float]:
 
 
 # The string carried by a value, if it is one.
-def as_str(value: Json) -> Option[str]:
+def as_str(value: Json) -> Option[str] effects():
     match value:
         case Json.text(body):
             return Some(body)
@@ -195,7 +195,7 @@ def as_str(value: Json) -> Option[str]:
 
 
 # The elements of an array value, if it is one.
-def as_list(value: Json) -> Option[list[Json]]:
+def as_list(value: Json) -> Option[list[Json]] effects():
     match value:
         case Json.array(items):
             return Some(items)
@@ -214,7 +214,7 @@ def as_list(value: Json) -> Option[list[Json]]:
 
 
 # The members of an object value, if it is one.
-def as_dict(value: Json) -> Option[dict[str, Json]]:
+def as_dict(value: Json) -> Option[dict[str, Json]] effects():
     match value:
         case Json.object(fields):
             return Some(fields)
@@ -233,7 +233,7 @@ def as_dict(value: Json) -> Option[dict[str, Json]]:
 
 
 # The member of an object under a key, if both the object and the key exist.
-def get(value: Json, key: str) -> Option[Json]:
+def get(value: Json, key: str) -> Option[Json] effects():
     match as_dict(value):
         case Some(fields):
             if key not in fields:
@@ -244,7 +244,7 @@ def get(value: Json, key: str) -> Option[Json]:
 
 
 # The element of an array at an index, if both the array and the index exist.
-def at(value: Json, index: int) -> Option[Json]:
+def at(value: Json, index: int) -> Option[Json] effects():
     match as_list(value):
         case Some(items):
             if index < 0 or index >= len(items):
@@ -600,7 +600,7 @@ def read_value(scanner: Scanner, depth: int) -> Result[Json, str]:
 
 
 # One complete RFC 8259 document, rejecting anything after the top-level value.
-def loads(source: str) -> Result[Json, str]:
+def loads(source: str) -> Result[Json, str] effects(managed_allocation):
     scanner = scanner_of(source.encode())
     value = read_value(scanner, 1)?
     skip_whitespace(scanner)
@@ -714,7 +714,7 @@ def write_object(pieces: list[str], fields: dict[str, Json]):
 
 
 # A value rendered as compact RFC 8259 text without added whitespace.
-def dumps(value: Json) -> str:
+def dumps(value: Json) -> str effects(managed_allocation):
     pieces: list[str] = []
     write_value(pieces, value)
     return "".join(pieces)

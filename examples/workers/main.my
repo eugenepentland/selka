@@ -8,7 +8,7 @@ record Stats:
     squares: int
 
 
-def analyze(values: [4]int) -> Stats:
+def analyze(values: [4]int) -> Stats effects():
     sum = 0
     squares = 0
     i = 0u64

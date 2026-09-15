@@ -14,10 +14,10 @@ result Parsed:
 
 
 domain Count: u16:
-    def parse(value: int) -> Parsed:
+    def parse(value: int) -> Parsed effects():
         if value < 0 or value > 99:
             return Err(InvalidQuantity.outside_range)
         return Ok(wrap[Count](u16(value)))
 
-    def number(value: Count) -> u16:
+    def number(value: Count) -> u16 effects():
         return unwrap(value)

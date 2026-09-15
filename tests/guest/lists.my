@@ -5,7 +5,7 @@ export test_membership_and_iteration
 export test_comprehension_and_loops
 
 
-def test_growth_and_indexing() -> bool:
+def test_growth_and_indexing() -> bool effects(managed_allocation):
     scores: list[int] = [10, 20, 30]
     scores.append(40)
     scores[1] = scores[1] + 5
@@ -16,7 +16,7 @@ def test_growth_and_indexing() -> bool:
     return len(scores) == 5 and scores[-1] == 50 and scores[0] == 10
 
 
-def test_slices() -> bool:
+def test_slices() -> bool effects(managed_allocation):
     readings = [3, 12, 7, 20]
     empty: list[int] = []
     window = readings[1:3]
@@ -28,7 +28,7 @@ def test_slices() -> bool:
     return len(empty) == 0 and readings[0:2][1] == 12
 
 
-def test_membership_and_iteration() -> bool:
+def test_membership_and_iteration() -> bool effects(managed_allocation):
     values = [4, 8, 15, 16, 23, 42]
     if 15 not in values or 99 in values:
         return False
@@ -45,7 +45,7 @@ def test_membership_and_iteration() -> bool:
     return count == 2
 
 
-def test_comprehension_and_loops() -> bool:
+def test_comprehension_and_loops() -> bool effects(managed_allocation):
     source = [1, 2, 3, 4, 5]
     kept = [value * 2 for value in source if value > 2]
     if len(kept) != 3 or kept[0] != 6 or kept[2] != 10:

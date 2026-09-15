@@ -4,16 +4,16 @@ export NetId
 
 
 domain ComponentId: u64:
-    def make(raw: u64) -> ComponentId:
+    def make(raw: u64) -> ComponentId effects():
         return wrap[ComponentId](raw)
 
-    def number(value: ComponentId) -> u64:
+    def number(value: ComponentId) -> u64 effects():
         return unwrap(value)
 
 
 domain NetId: u64:
-    def make(raw: u64) -> NetId:
+    def make(raw: u64) -> NetId effects():
         return wrap[NetId](raw)
 
-    def number(value: NetId) -> u64:
+    def number(value: NetId) -> u64 effects():
         return unwrap(value)

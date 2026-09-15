@@ -4,6 +4,8 @@ pub const ValidateError = error{
     InternalError,
     OutOfMemory,
 };
+/// Stable diagnostic code for an exported declaration without a declared ceiling.
+pub const effect_ceiling = "E_EFFECT_CEILING";
 
 const std = @import("std");
 const typed = @import("typed.zig");
@@ -71,8 +73,62 @@ const Graph = struct {
     }
 };
 
+/// Canonical source spelling of one inferred effect set, e.g. `effects(clock)`.
+fn effectsText(allocator: std.mem.Allocator, mask: sets.Mask) diagnostic.Error![]const u8 {
+    var list: std.ArrayList(u8) = .empty;
+    defer list.deinit(allocator);
+    var separator = false;
+    for (std.meta.tags(sets.Effect)) |effect| {
+        if (mask & sets.bit(effect) == 0) continue;
+        if (separator) list.appendSlice(allocator, ", ") catch return error.OutOfMemory;
+        list.appendSlice(allocator, @tagName(effect)) catch return error.OutOfMemory;
+        separator = true;
+    }
+    return std.fmt.allocPrint(allocator, "effects({s})", .{list.items}) catch return error.OutOfMemory;
+}
+
+/// Build the located diagnostic text for an exported body without a ceiling.
+/// The list is the inferred transitive effect set, described as a suggested
+/// upper bound so callers can copy a narrow contract rather than `effects(all)`.
+fn suggestedCeiling(allocator: std.mem.Allocator, mask: sets.Mask) diagnostic.Error![]const u8 {
+    const bound = try effectsText(allocator, mask);
+    return std.fmt.allocPrint(allocator, "exported function requires an explicit effect ceiling; the body's compiler-derived bound is {s}", .{bound}) catch return error.OutOfMemory;
+}
+
+/// Bundles the inferred graph with the program it indexes for violation reports.
+const BoundContext = struct { program: typed.Program, graph: *const Graph };
+
+/// Append one `E_EFFECT_BOUND` diagnostic together with the inferred bound and
+/// the originating witness. Callers collect every violation before failing so a
+/// single migration/diagnostic run lists all mismatched declarations.
+fn appendBoundViolation(allocator: std.mem.Allocator, ctx: BoundContext, index: usize, effect: sets.Effect, bound: sets.Bound, sink: *diagnostic.Sink) diagnostic.Error!void {
+    const program = ctx.program;
+    const graph = ctx.graph;
+    const function = program.functions[index];
+    var path: std.Io.Writer.Allocating = .init(allocator);
+    defer path.deinit();
+    path.writer.print("effect `{s}` exceeds declared bound: {s}", .{ @tagName(effect), function.name }) catch return error.OutOfMemory;
+    var cursor = index;
+    var steps: usize = 0;
+    while (graph.states[cursor].witnesses[@backingInt(effect)].?.via) |callee| {
+        path.writer.print(" -> {s}", .{program.functions[callee].name}) catch return error.OutOfMemory;
+        cursor = callee;
+        steps += 1;
+        std.debug.assert(steps < program.functions.len);
+    }
+    const inferred = try effectsText(allocator, graph.states[index].mask);
+    path.writer.print("; inferred bound is {s}", .{inferred}) catch return error.OutOfMemory;
+    const message = allocator.dupe(u8, path.written()) catch return error.OutOfMemory;
+    sink.items.append(allocator, .{
+        .code = "E_EFFECT_BOUND",
+        .span = bound.span,
+        .message = message,
+        .related = .{ .span = graph.states[cursor].witnesses[@backingInt(effect)].?.span, .message = "effect originates at this operation or owned type" },
+    }) catch return error.OutOfMemory;
+}
+
 /// Infer transitive effects and reject function bodies that exceed declared effect bounds.
-pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagnostic.Sink) diagnostic.Error!void {
+pub fn check(allocator: std.mem.Allocator, program: typed.Program, exported: []const bool, sink: *diagnostic.Sink) diagnostic.Error!void {
     var graph = try Graph.init(allocator, program.functions.len);
     defer graph.deinit();
     const cleanup_masks = cleanupMasks(allocator, program.records) catch |err| switch (err) {
@@ -145,35 +201,39 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
         // fallback cleanup effect, including on traps and propagated errors.
     }
     try graph.infer();
-    for (@constCast(program.functions), 0..) |*function, index| {
-        function.policy.effects = graph.states[index].mask;
+    // E2: every exported declaration must publish an explicit ceiling. The
+    // suggestion is derived from this body's inferred transitive effects (a
+    // bound, never an unconditional `effects(all)`), and remains distinct from
+    // the raw inferred mask stored below for diagnostics/cacheability.
+    var missing_ceiling = false;
+    for (program.functions, 0..) |function, index| {
+        if (index >= exported.len or !exported[index]) continue;
+        if (function.policy.effect_bound != null) continue;
+        const message = try suggestedCeiling(allocator, graph.states[index].mask);
+        sink.items.append(allocator, .{ .code = effect_ceiling, .span = function.declaration, .message = message }) catch return error.OutOfMemory;
+        missing_ceiling = true;
+    }
+    if (missing_ceiling) return error.SourceError;
+    for (@constCast(program.functions), 0..) |*function, index| function.policy.effects = graph.states[index].mask;
+    var violated = false;
+    for (program.functions, 0..) |function, index| {
         const bound = function.policy.effect_bound orelse continue;
         const forbidden = function.policy.effects & ~bound.allowed;
         if (forbidden == 0) continue;
         for (std.meta.tags(sets.Effect)) |effect| {
             if (forbidden & sets.bit(effect) == 0) continue;
-            var path: std.Io.Writer.Allocating = .init(allocator);
-            defer path.deinit();
-            path.writer.print("effect `{s}` exceeds declared bound: {s}", .{ @tagName(effect), function.name }) catch return error.OutOfMemory;
-            var cursor = index;
-            var steps: usize = 0;
-            while (graph.states[cursor].witnesses[@backingInt(effect)].?.via) |callee| {
-                path.writer.print(" -> {s}", .{program.functions[callee].name}) catch return error.OutOfMemory;
-                cursor = callee;
-                steps += 1;
-                std.debug.assert(steps < program.functions.len);
-            }
-            const message = try allocator.dupe(u8, path.written());
-            return sink.failRelated("E_EFFECT_BOUND", bound.span, message, .{ .span = graph.states[cursor].witnesses[@backingInt(effect)].?.span, .message = "effect originates at this operation or owned type" });
+            try appendBoundViolation(allocator, .{ .program = program, .graph = &graph }, index, effect, bound, sink);
+            violated = true;
         }
     }
+    if (violated) return error.SourceError;
 }
 
 /// Resolved declaration edge collected while checking symbolic template bodies.
 pub const AbstractCall = struct { caller: usize, callee: usize, span: Span };
 /// Check abstract cleanup/call effects before any generic specialization exists.
-pub fn checkAbstract(allocator: std.mem.Allocator, functions: []const @import("ast.zig").Function, masks: []const sets.Mask, calls: []const AbstractCall, sink: *diagnostic.Sink) diagnostic.Error!void {
-    if (functions.len != masks.len) return error.InternalError;
+pub fn checkAbstract(allocator: std.mem.Allocator, functions: []const @import("ast.zig").Function, masks: []const sets.Mask, calls: []const AbstractCall, exported: []const bool, sink: *diagnostic.Sink) diagnostic.Error!void {
+    if (functions.len != masks.len or functions.len != exported.len) return error.InternalError;
     var graph = try Graph.init(allocator, functions.len);
     defer graph.deinit();
     for (functions, masks, 0..) |function, mask, index| {
@@ -184,6 +244,15 @@ pub fn checkAbstract(allocator: std.mem.Allocator, functions: []const @import("a
     }
     for (calls) |edge| try graph.call(edge.caller, edge.callee, edge.span);
     try graph.infer();
+    var missing_ceiling = false;
+    for (functions, 0..) |function, index| {
+        if (!exported[index] or function.policy.effect_bound != null) continue;
+        const message = try suggestedCeiling(allocator, graph.states[index].mask);
+        sink.items.append(allocator, .{ .code = effect_ceiling, .span = function.name, .message = message }) catch return error.OutOfMemory;
+        missing_ceiling = true;
+    }
+    if (missing_ceiling) return error.SourceError;
+    var violated = false;
     for (functions, 0..) |function, index| {
         const bound = function.policy.effect_bound orelse continue;
         const forbidden = graph.states[index].mask & ~bound.allowed;
@@ -191,10 +260,18 @@ pub fn checkAbstract(allocator: std.mem.Allocator, functions: []const @import("a
             if (forbidden & sets.bit(effect) == 0) continue;
             var origin = index;
             while (graph.states[origin].witnesses[@backingInt(effect)].?.via) |callee| origin = callee;
-            const message = try std.fmt.allocPrint(sink.allocator, "effect `{s}` from an operation, owned cleanup or a reachable helper exceeds declared bound", .{@tagName(effect)});
-            return sink.failRelated("E_EFFECT_BOUND", bound.span, message, .{ .span = graph.states[origin].witnesses[@backingInt(effect)].?.span, .message = "effect originates in this function's operations or owned types" });
+            const inferred = try effectsText(sink.allocator, graph.states[index].mask);
+            const message = try std.fmt.allocPrint(sink.allocator, "effect `{s}` from an operation, owned cleanup or a reachable helper exceeds declared bound; inferred bound is {s}", .{ @tagName(effect), inferred });
+            sink.items.append(sink.allocator, .{
+                .code = "E_EFFECT_BOUND",
+                .span = bound.span,
+                .message = message,
+                .related = .{ .span = graph.states[origin].witnesses[@backingInt(effect)].?.span, .message = "effect originates in this function's operations or owned types" },
+            }) catch return error.OutOfMemory;
+            violated = true;
         }
     }
+    if (violated) return error.SourceError;
 }
 
 /// Independently recompute effects from emitted operations, including all call forms.

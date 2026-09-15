@@ -20,13 +20,13 @@ record Edge:
     b: int
 
 
-def rail(span: text.Span) -> bool:
+def rail(span: text.Span) -> bool effects(host, managed_allocation):
     if text.matches(span, b"GND"):
         return True
     return span.end - span.start >= 2 and io.byte(span.file, span.start) == 86u8 and io.byte(span.file, span.start + 1) == 95u8
 
 
-def find(nets: list[Net], span: text.Span) -> int:
+def find(nets: list[Net], span: text.Span) -> int effects(host):
     i = 0
     while i < len(nets):
         if text.equal(nets[i].span, span):
@@ -35,7 +35,7 @@ def find(nets: list[Net], span: text.Span) -> int:
     return - 1
 
 
-def build(parts: list[c.Part], pins: list[c.Pin]) -> list[Net]:
+def build(parts: list[c.Part], pins: list[c.Pin]) -> list[Net] effects(host, managed_allocation):
     nets: list[Net] = []
     edges: list[Edge] = []
     i = 0

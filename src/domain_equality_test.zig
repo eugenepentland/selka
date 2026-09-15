@@ -6,12 +6,12 @@ const native = @import("native_execute.zig");
 const typed = @import("typed.zig");
 const declarations =
     \\domain Id: u64:
-    \\    def make(n: u64) -> Id:
+    \\    def make(n: u64) -> Id effects():
     \\        return wrap[Id](n)
     \\
     \\
     \\domain Other: u64:
-    \\    def make(n: u64) -> Other:
+    \\    def make(n: u64) -> Other effects():
     \\        return wrap[Other](n)
     \\
     \\
@@ -101,7 +101,7 @@ const Modules = struct {
             \\export make
             \\
             \\
-            \\def make(n: u64) -> alias.Id:
+            \\def make(n: u64) -> alias.Id effects():
             \\    return alias.Id.make(n)
         );
         if (std.mem.eql(u8, path, "left.my")) return allocator.dupe(u8, "module left\nexport Id\n" ++ declarations);

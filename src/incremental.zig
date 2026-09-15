@@ -519,9 +519,12 @@ fn writeTypedFunction(writer: *std.Io.Writer, function: typed.Function, records:
         if (value) |length| try writerPrint(writer, "{d}", .{length}) else try writerWrite(writer, "-");
         try writerWrite(writer, "\x00");
     }
-    try writerWrite(writer, "\neffects=");
-    try writeEffectMask(writer, function.policy.effects);
-    try writerWrite(writer, "\nbound=");
+    // E2: the public interface fingerprint carries only the declared ceiling.
+    // Inferred implementation effects stay in the checked program for
+    // diagnostics and in `body_sha256` for runtime-test cacheability, so an
+    // implementation edit that stays inside the published bound cannot change
+    // the API fingerprint or invalidate callers' type checking.
+    try writerWrite(writer, "\npublic-ceiling=");
     if (function.policy.effect_bound) |bound| try writeEffectMask(writer, bound.allowed) else try writerWrite(writer, "unbounded");
 }
 

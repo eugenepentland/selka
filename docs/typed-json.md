@@ -36,10 +36,10 @@ record Sample:
     sequence: u64
     status: Status
 
-def sequence_of(sample: Sample) -> u64:
+def sequence_of(sample: Sample) -> u64 effects():
     return sample.sequence
 
-def test_sequence(sample: Sample) -> u64:
+def test_sequence(sample: Sample) -> u64 effects():
     return sequence_of(sample)
 
 def main() -> int:

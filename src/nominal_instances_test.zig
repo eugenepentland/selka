@@ -183,7 +183,7 @@ const Modules = struct {
             \\    value: i64
             \\
             \\
-            \\def twice(x: Box[i64]) -> Box[i64]:
+            \\def twice(x: Box[i64]) -> Box[i64] effects():
             \\    y = x
             \\    y.value = x.value * 2
             \\    return y

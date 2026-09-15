@@ -3458,6 +3458,21 @@ fn entryParameterStart(parameters: []const ast.Parameter, checker: *Checker, sin
     return sink.fail("E_MAIN", parameters[0].ty, "entry parameters must be `args: list[str]` followed by capabilities");
 }
 
+/// E2: flag ordinary source functions whose name span is an exported interface
+/// symbol. Concrete generic specializations are implementation details (their
+/// template is checked abstractly) and synthesized entry/lambda bodies have no
+/// module declaration.
+fn exportedFunctions(allocator: std.mem.Allocator, module_names: ?*Names, functions: []const typed.Function) Error![]bool {
+    const exported = try allocator.alloc(bool, functions.len);
+    for (functions, 0..) |function, index| {
+        exported[index] = function.type_arguments.len == 0 and
+            !std.mem.startsWith(u8, function.name, "lambda@") and
+            !std.mem.eql(u8, function.name, entry_adapter.wrapper_name) and
+            (if (module_names) |names| names.index.functionExported(names.src, function.declaration) else false);
+    }
+    return exported;
+}
+
 /// Reuse supported checked bodies, then rerun all cross-function validation passes.
 pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names, cache: ?*@import("semantic_cache.zig").Cache) Error!typed.Program {
     defer normalizeDiagnostics(sink);
@@ -3569,7 +3584,8 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
         .records = checker.catalog.records,
     };
     try entry_adapter.adapt(allocator, &checked);
-    try @import("effects.zig").check(allocator, checked, sink);
+    const exported = try exportedFunctions(allocator, module_names, checked.functions);
+    try @import("effects.zig").check(allocator, checked, exported, sink);
     try @import("domain_codecs.zig").check(allocator, src, program.types.domains, checker.catalog, .{ .items = functions, .names = executable_names }, sink);
     try warnBindings(allocator, functions, sink);
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);

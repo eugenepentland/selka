@@ -162,7 +162,7 @@ fn provider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: u
         \\    items: [N]T
         \\
         \\
-        \\def make[T, const N: u64](items: [N]T) -> Chunk[T, N]:
+        \\def make[T, const N: u64](items: [N]T) -> Chunk[T, N] effects():
         \\    return Chunk[T, N](items=items)
     );
     return error.NotFound;

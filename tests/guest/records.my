@@ -57,7 +57,7 @@ def codes() -> [Status]int:
     return {Status.missing: 404, Status.ok: 200, Status.failed: 500}
 
 
-def test_value_records() -> bool:
+def test_value_records() -> bool effects():
     origin = Point(y=2, x=3)
     segment = Segment(start=origin, end=move(origin, 4), visible=True)
     if origin.x != 3 or origin.y != 2 or segment.end.x != 7:
@@ -67,7 +67,7 @@ def test_value_records() -> bool:
     return segment.start.x == 3 and copied.start.x == 99 and segment.visible
 
 
-def test_enums() -> bool:
+def test_enums() -> bool effects():
     if status_code(Status.ok) != 200 or status_code(Status.missing) != 404:
         return False
     status = Status.ok
@@ -80,12 +80,12 @@ def test_enums() -> bool:
             return False
 
 
-def test_unions() -> bool:
+def test_unions() -> bool effects(managed_allocation):
     shapes: list[Shape] = [Shape.point(Point(x=2, y=3)), Shape.radius(4), Shape.empty]
     return score(shapes[0]) == 5 and score(shapes[1]) == 16 and score(shapes[2]) == 0
 
 
-def test_arrays_and_tables() -> bool:
+def test_arrays_and_tables() -> bool effects():
     fixed: [3]int = [7, 8, 9]
     revised = replace(fixed, 1, 11)
     table = codes()

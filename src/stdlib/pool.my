@@ -35,7 +35,7 @@ def next_generation(current: int) -> int:
 
 
 # A pool holding the given values, in order, with one live handle each.
-def create[T: copy + storable](values: list[T]) -> Pool[T]:
+def create[T: copy + storable](values: list[T]) -> Pool[T] effects(managed_allocation):
     slots: list[T] = []
     generations: list[int] = []
     live: list[bool] = []
@@ -50,7 +50,7 @@ def create[T: copy + storable](values: list[T]) -> Pool[T]:
 
 
 # Whether a handle still names a live slot of this pool.
-def occupied[T: copy + storable](store: Pool[T], handle: Handle[T]) -> bool:
+def occupied[T: copy + storable](store: Pool[T], handle: Handle[T]) -> bool effects():
     if handle.index < 0 or handle.index >= len(store.slots):
         return False
     if not store.live[handle.index]:
@@ -59,7 +59,7 @@ def occupied[T: copy + storable](store: Pool[T], handle: Handle[T]) -> bool:
 
 
 # Add a value and return the handle that names it.
-def insert[T: copy + storable](store: Pool[T], value: T) -> Handle[T]:
+def insert[T: copy + storable](store: Pool[T], value: T) -> Handle[T] effects(managed_allocation):
     store.counters[1] = store.counters[1] + 1
     top = store.counters[0]
     if top > 0:
@@ -75,14 +75,14 @@ def insert[T: copy + storable](store: Pool[T], value: T) -> Handle[T]:
 
 
 # The value a handle names, or nothing for a stale or foreign handle.
-def get[T: copy + storable](store: Pool[T], handle: Handle[T]) -> Option[T]:
+def get[T: copy + storable](store: Pool[T], handle: Handle[T]) -> Option[T] effects():
     if not occupied(store, handle):
         return None
     return Some(store.slots[handle.index])
 
 
 # Replace the value a handle names, reporting whether the handle was live.
-def set[T: copy + storable](store: Pool[T], handle: Handle[T], value: T) -> bool:
+def set[T: copy + storable](store: Pool[T], handle: Handle[T], value: T) -> bool effects():
     if not occupied(store, handle):
         return False
     store.slots[handle.index] = value
@@ -90,7 +90,7 @@ def set[T: copy + storable](store: Pool[T], handle: Handle[T], value: T) -> bool
 
 
 # Release the slot a handle names, reporting whether the handle was live.
-def remove[T: copy + storable](store: Pool[T], handle: Handle[T]) -> bool:
+def remove[T: copy + storable](store: Pool[T], handle: Handle[T]) -> bool effects(managed_allocation):
     if not occupied(store, handle):
         return False
     slot = handle.index
@@ -107,17 +107,17 @@ def remove[T: copy + storable](store: Pool[T], handle: Handle[T]) -> bool:
 
 
 # How many slots are live.
-def count[T: copy + storable](store: Pool[T]) -> int:
+def count[T: copy + storable](store: Pool[T]) -> int effects():
     return store.counters[1]
 
 
 # How many slots have ever been allocated, including released ones.
-def capacity[T: copy + storable](store: Pool[T]) -> int:
+def capacity[T: copy + storable](store: Pool[T]) -> int effects():
     return len(store.slots)
 
 
 # Every live handle, in slot order.
-def handles[T: copy + storable](store: Pool[T]) -> list[Handle[T]]:
+def handles[T: copy + storable](store: Pool[T]) -> list[Handle[T]] effects(managed_allocation):
     out: list[Handle[T]] = []
     for index, alive in enumerate(store.live):
         if alive:

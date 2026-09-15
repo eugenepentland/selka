@@ -223,7 +223,7 @@ def routes(segments: list[r.Segment], connections: list[p.Port]):
     return
 
 
-def render(drawing: schematic.Schematic):
+def render(drawing: schematic.Schematic) effects(host, managed_allocation):
     nodes = drawing.nodes
     parts = drawing.parts
     pins = drawing.pins

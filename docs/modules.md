@@ -81,10 +81,10 @@ export metres
 record Distance:
     value: int
 
-def make(value: int) -> Distance:
+def make(value: int) -> Distance effects():
     return Distance(value=value)
 
-def metres(distance: Distance) -> int:
+def metres(distance: Distance) -> int effects():
     return distance.value
 ```
 
@@ -119,7 +119,7 @@ export total
 record Price:
     cents: int
 
-def total(first: Price, second: Price) -> Price:
+def total(first: Price, second: Price) -> Price effects():
     return Price(cents=first.cents + second.cents)
 ```
 
@@ -150,13 +150,13 @@ caused it. An `export` inside a function or type body rejects.
 # doc: file totals.my
 module totals
 
-def base() -> int:
+def base() -> int effects():
     return 40
 
 export base
 export bonus
 
-def bonus() -> int:
+def bonus() -> int effects():
     return 2
 ```
 

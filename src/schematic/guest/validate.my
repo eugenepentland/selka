@@ -79,7 +79,7 @@ def fail(code: int, span: text.Span) -> int:
     return code
 
 
-def source(nodes: list[s.Node]) -> int:
+def source(nodes: list[s.Node]) -> int effects(host, managed_allocation):
     i = 1
     modules = 0
     blocks = 0
@@ -113,7 +113,7 @@ def source(nodes: list[s.Node]) -> int:
     return 0
 
 
-def pinoutCheck(nodes: list[s.Node]) -> int:
+def pinoutCheck(nodes: list[s.Node]) -> int effects(host, managed_allocation):
     if not pinoutForm(nodes, 1) or s.at(nodes, 1).next != len(nodes) or s.at(nodes, 3).kind != s.Kind.string:
         return fail(18, s.at(nodes, 1).span)
     count = 0
@@ -163,7 +163,7 @@ def fields(nodes: list[s.Node], item: c.Part) -> int:
     return 0
 
 
-def model(nodes: list[s.Node], parts: list[c.Part], pins: list[c.Pin], pinout: list[s.Node]) -> int:
+def model(nodes: list[s.Node], parts: list[c.Part], pins: list[c.Pin], pinout: list[s.Node]) -> int effects(host, managed_allocation):
     schema = pinoutCheck(pinout)
     if schema != 0:
         return schema

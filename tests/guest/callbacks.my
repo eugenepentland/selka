@@ -27,14 +27,14 @@ def scale(value: int) -> int noalloc:
     return add(value, value) * 3
 
 
-def test_callbacks() -> bool:
+def test_callbacks() -> bool effects():
     callback = identity(build)
     if apply(callback, 7) != 14:
         return False
     return double_apply(callback, 3) == 12
 
 
-def test_effect_ceilings() -> bool:
+def test_effect_ceilings() -> bool effects():
     if scale(7) != 42:
         return False
     return add(20, 22) == 42

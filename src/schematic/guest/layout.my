@@ -22,7 +22,7 @@ record Row:
     y: int
 
 
-def rail(span: text.Span) -> bool:
+def rail(span: text.Span) -> bool effects(host, managed_allocation):
     return g.rail(span)
 
 
@@ -107,7 +107,7 @@ def collectRows(parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> li
     return out
 
 
-def height(points: list[Point]) -> int:
+def height(points: list[Point]) -> int effects():
     bottom = 160
     i = 0
     while i < len(points):
@@ -370,7 +370,7 @@ def endpoint(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row]
     )
 
 
-def build(parts: list[c.Part], pins: list[c.Pin]) -> list[Point]:
+def build(parts: list[c.Part], pins: list[c.Pin]) -> list[Point] effects(host, managed_allocation):
     nets = g.build(parts, pins)
     out: list[Point] = []
     ordered = collectRows(parts, pins, nets)

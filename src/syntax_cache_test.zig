@@ -33,7 +33,7 @@ const initial =
     \\    n: i64
     \\
     \\
-    \\def value() -> i64:
+    \\def value() -> i64 effects():
     \\    x = Pair(n=7)
     \\    return x.n
 ;
@@ -46,7 +46,7 @@ const changed =
     \\    n: i64
     \\
     \\
-    \\def value() -> i64:
+    \\def value() -> i64 effects():
     \\    x = Pair(n=9)
     \\    return x.n
 ;
@@ -113,7 +113,7 @@ test "cached syntax never suppresses fresh interface or semantic errors" {
         \\export value
         \\
         \\
-        \\def value() -> bool:
+        \\def value() -> bool effects():
         \\    return True
     ;
     try t.expectError(error.SourceError, execute(t.allocator, &files, &cache, false));
@@ -156,7 +156,7 @@ test "cached quoted byte arrays survive source relocation and cache eviction" {
         \\export value
         \\
         \\
-        \\def value() -> i64:
+        \\def value() -> i64 effects(managed_allocation):
         \\    s = b"a\x00b"
         \\    return i64(s[2])
     };

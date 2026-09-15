@@ -216,7 +216,7 @@ fn schemaScenario(allocator: std.mem.Allocator) !void {
         \\        return wrap[Identity](x)
         \\
         \\
-        \\def select(x: Choice) -> Choice:
+        \\def select(x: Choice) -> Choice effects():
         \\    return x
         \\
         \\
@@ -317,7 +317,7 @@ test "project discovery respects newline imports exports and multiline declarati
         \\export main
         \\
         \\
-        \\def main() -> i64:
+        \\def main() -> i64 effects():
         \\    return h.value()
         },
         .{ .path = "helper.my", .bytes =
@@ -331,7 +331,7 @@ test "project discovery respects newline imports exports and multiline declarati
         \\const ANSWER: Number = 42
         \\
         \\
-        \\def value() -> Number:
+        \\def value() -> Number effects():
         \\    return ANSWER
         \\
         \\

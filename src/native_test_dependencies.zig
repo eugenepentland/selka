@@ -241,3 +241,26 @@ test "metadata rejects InvalidType for a forged function target" {
     defer catalog.deinit();
     try std.testing.expectError(error.InvalidType, describe(a, .{ .functions = &functions }, 0, "bad IL", &catalog, &.{}));
 }
+
+test "an exported declared ceiling does not suppress body-change invalidation" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const bound: effects.Bound = .{ .allowed = effects.bit(.managed_allocation), .span = .{ .start = 0, .end = 0 } };
+    const first_il = "push_integer 1\nret\n";
+    const second_il = "acquire_buffer list[i64]\npush_integer 1\nbuffer_operation append\nret\n";
+    const functions = [_]bytecode.Function{.{
+        .id = @fromBackingInt(0),
+        .name = "test_value",
+        .policy = .{ .effect_bound = bound, .effects = bound.allowed },
+        .scope = .{ .instructions = &.{} },
+    }};
+    var catalog = try layouts.Catalog.initRecords(a, &.{});
+    defer catalog.deinit();
+    const first = try describe(a, .{ .functions = &functions }, 0, first_il, &catalog, &.{});
+    try std.testing.expect(first.cacheable);
+    const same = try describe(a, .{ .functions = &functions }, 0, first_il, &catalog, &.{});
+    try std.testing.expectEqualStrings(first.implementation_hash, same.implementation_hash);
+    const changed = try describe(a, .{ .functions = &functions }, 0, second_il, &catalog, &.{});
+    try std.testing.expect(!std.mem.eql(u8, first.implementation_hash, changed.implementation_hash));
+}

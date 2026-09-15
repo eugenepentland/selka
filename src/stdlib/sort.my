@@ -21,7 +21,7 @@ def octets(text: str) -> bytes:
 
 
 # Three-way comparison of two texts in Unicode code point order.
-def compare_strs(a: str, b: str) -> int:
+def compare_strs(a: str, b: str) -> int effects(managed_allocation):
     if a == b:
         return 0
     left = octets(a)
@@ -60,7 +60,7 @@ def merge_ints(left: list[int], right: list[int]) -> list[int]:
 
 
 # A new ascending list of integers; the input list is not modified.
-def sort_ints(values: list[int]) -> list[int]:
+def sort_ints(values: list[int]) -> list[int] effects(managed_allocation):
     if len(values) <= 1:
         return values[:]
     middle = len(values) // 2
@@ -89,7 +89,7 @@ def merge_floats(left: list[float], right: list[float]) -> list[float]:
 
 
 # A new ascending list of floats; the input list is not modified.
-def sort_floats(values: list[float]) -> list[float]:
+def sort_floats(values: list[float]) -> list[float] effects(managed_allocation):
     if len(values) <= 1:
         return values[:]
     middle = len(values) // 2
@@ -118,7 +118,7 @@ def merge_strs(left: list[str], right: list[str]) -> list[str]:
 
 
 # A new list of texts in Unicode code point order; the input is not modified.
-def sort_strs(values: list[str]) -> list[str]:
+def sort_strs(values: list[str]) -> list[str] effects(managed_allocation):
     if len(values) <= 1:
         return values[:]
     middle = len(values) // 2
@@ -147,7 +147,7 @@ def merge_by_key[T: copy + storable](left: list[T], right: list[T], key: def(T) 
 
 
 # A new list ordered by an integer key function; the ordering is stable.
-def sort_by_key[T: copy + storable](values: list[T], key: def(T) -> int effects()) -> list[T]:
+def sort_by_key[T: copy + storable](values: list[T], key: def(T) -> int effects()) -> list[T] effects(managed_allocation):
     if len(values) <= 1:
         return values[:]
     middle = len(values) // 2
@@ -157,7 +157,7 @@ def sort_by_key[T: copy + storable](values: list[T], key: def(T) -> int effects(
 
 
 # Whether a list of integers is already in ascending order.
-def is_sorted_ints(values: list[int]) -> bool:
+def is_sorted_ints(values: list[int]) -> bool effects():
     index = 1
     while index < len(values):
         if values[index] < values[index - 1]:
@@ -167,7 +167,7 @@ def is_sorted_ints(values: list[int]) -> bool:
 
 
 # Position of a target in an ascending list of integers, if it is present.
-def binary_search(values: list[int], target: int) -> Option[int]:
+def binary_search(values: list[int], target: int) -> Option[int] effects():
     low = 0
     high = len(values) - 1
     while low <= high:
@@ -182,7 +182,7 @@ def binary_search(values: list[int], target: int) -> Option[int]:
 
 
 # Smallest value of a list of integers, if the list has one.
-def min_int(values: list[int]) -> Option[int]:
+def min_int(values: list[int]) -> Option[int] effects():
     if len(values) == 0:
         return None
     best = values[0]
@@ -193,7 +193,7 @@ def min_int(values: list[int]) -> Option[int]:
 
 
 # Largest value of a list of integers, if the list has one.
-def max_int(values: list[int]) -> Option[int]:
+def max_int(values: list[int]) -> Option[int] effects():
     if len(values) == 0:
         return None
     best = values[0]
@@ -204,7 +204,7 @@ def max_int(values: list[int]) -> Option[int]:
 
 
 # Smallest text of a list in code point order, if the list has one.
-def min_str(values: list[str]) -> Option[str]:
+def min_str(values: list[str]) -> Option[str] effects(managed_allocation):
     if len(values) == 0:
         return None
     best = values[0]
@@ -215,7 +215,7 @@ def min_str(values: list[str]) -> Option[str]:
 
 
 # Integers with later duplicates removed, keeping first-occurrence order.
-def unique_ints(values: list[int]) -> list[int]:
+def unique_ints(values: list[int]) -> list[int] effects(managed_allocation):
     seen: dict[int, bool] = {}
     out: list[int] = []
     for value in values:
@@ -226,7 +226,7 @@ def unique_ints(values: list[int]) -> list[int]:
 
 
 # Texts with later duplicates removed, keeping first-occurrence order.
-def unique_strs(values: list[str]) -> list[str]:
+def unique_strs(values: list[str]) -> list[str] effects(managed_allocation):
     seen: dict[str, bool] = {}
     out: list[str] = []
     for value in values:

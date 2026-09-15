@@ -1629,5 +1629,12 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
         };
     }
     if (failed) return error.SourceError;
-    try effects.checkAbstract(allocator, program.functions, effect_masks, effect_calls.items, sink);
+    // E2: generic templates are checked abstractly, so their missing exported
+    // ceilings are reported here from the abstract inferred mask.
+    const exported = try allocator.alloc(bool, program.functions.len);
+    defer allocator.free(exported);
+    for (program.functions, 0..) |function, index| {
+        exported[index] = if (module_names) |names| names.index.functionExported(names.src, function.name) else false;
+    }
+    try effects.checkAbstract(allocator, program.functions, effect_masks, effect_calls.items, exported, sink);
 }

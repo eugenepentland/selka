@@ -15,5 +15,5 @@ def line_count(source: str) -> int:
         count -= 1
     return count
 
-def render(source: str) -> str:
+def render(source: str) -> str effects(managed_allocation):
     return "{\"lines\":" + str(line_count(source)) + ",\"characters\":" + str(len(source)) + "}"

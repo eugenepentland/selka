@@ -9,5 +9,5 @@ def main() -> int:
     return 0
 
 
-def test_checkout() -> bool:
+def test_checkout() -> bool effects():
     return checkout.total(fakes.FixedPrices.make(1750), 2000) == 2250
