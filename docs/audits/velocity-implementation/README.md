@@ -48,16 +48,16 @@ Branches are cut from the baseline SHA. Worktrees live under
 | C0 | `codex/velocity-c0` | `velocity-c0` | `9ce142e` | W0 | **done** — work-report-v1; merged in `3d505be` |
 | E1 | `codex/velocity-e1` | `velocity-e1` | `9ce142e` | W0 | **done** — directional callable assignability; merged in `55aee27` |
 | E2 | `codex/velocity-e2` | `velocity-e2` | `161c4e4` | E1 | **done** — exported ceilings; merged in `2c0e270` |
-| M1 | `codex/velocity-m1` | `velocity-m1` | `14f6f0c` | W0 + E2 | **in progress** |
-| M2 | `codex/velocity-m2` | `velocity-m2` | M1+E1 integrated | M1, E1 | blocked |
+| M1 | `codex/velocity-m1` | `velocity-m1` | `14f6f0c` | W0 + E2 | **done** — mutation classification/metadata; merged in `44a0bfe` |
+| M2 | `codex/velocity-m2` | `velocity-m2` | `44a0bfe` | M1, E1 | **in progress** |
 | M3 | `codex/velocity-m3` | `velocity-m3` | M2+E2 integrated | M2, E2 | blocked |
-| C1 | `codex/velocity-c1` | `velocity-c1` | C0+E2+M1 integrated | C0, E2, M1 | blocked |
+| C1 | `codex/velocity-c1` | `velocity-c1` | `44a0bfe` | C0, E2, M1 | **in progress** |
 | C2 | `codex/velocity-c2` | `velocity-c2` | C1+M2 integrated | C1, M2 | blocked |
 | C3 | `codex/velocity-c3` | `velocity-c3` | C2 integrated | C2 | blocked |
 | C4 | `codex/velocity-c4` | `velocity-c4` | C3+P1 integrated | C3, P1 | blocked |
 | P1 | `codex/velocity-p1` | `velocity-p1` | M3+E2 integrated | E2, M3 | blocked |
 | A1 | `codex/velocity-a1` | `velocity-a1` | `161c4e4` | W0 | **done** — required project policy; merged in `1f3a...` (`88e7fb6`) |
-| S1 | `codex/velocity-s1` | `velocity-s1` | C0 integrated | C0 (+ final core) | blocked |
+| S1 | `codex/velocity-s1` | `velocity-s1` | `5988575` | C0 (+ final core) | **in progress** (baseline harness) |
 | D2 | `codex/velocity-d2` | `velocity-d2` | final core | each feature | blocked |
 
 ## Shared-file ownership by wave
@@ -89,3 +89,5 @@ Never share a mutable checkout, installed binary or `zig-out`/`.zig-cache`.
 | 2026-09-15 | `6572623` | baseline fix | narrow enum tag decode + Debug-only alloc sweep; `test-units -Doptimize=ReleaseFast` 960 passed / 0 failed / 1 skipped |
 | 2026-09-15 | `2c0e270` | E2 | explicit exported ceilings + repository migration; focused interface/export/generic/navigation green |
 | 2026-09-15 | `88e7fb6` / `5988575` | A1 | required project import policy; 20 policy units / 9 policy CLI tests green |
+| 2026-09-15 | `44a0bfe` | M1 | mutation effect + `mutates` grammar + write/origin metadata; 23 M1 regressions green |
+| 2026-09-15 | (note) | build cache | a warm `.zig-cache` can keep a stale generated `qbe_build_assets` module after large `src/` edits; cold `zig build test-units` passes 969/969. Final gate must be cold. |
