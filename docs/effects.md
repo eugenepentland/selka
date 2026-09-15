@@ -151,6 +151,179 @@ def main() -> int:
     return 0
 ```
 
+### Sharing, aliases and snapshots
+
+Mutation follows the managed object, not the variable spelling. Two names bound
+to the same list name one writable object, and a `mutates(...)` clause names the
+parameter position rather than the caller's variable:
+
+```mylang
+# doc: expect 5
+def set_first(values: list[int], replacement: int) -> None effects(mutation) mutates(values):
+    values[0] = replacement
+
+
+def main() -> int effects(managed_allocation, output):
+    shared = [1, 2]
+    alias = shared
+    set_first(alias, 5)
+    print(shared[0])
+    return 0
+```
+
+A shallow `.copy()` severs only the copied outer container. Appending to the copy
+does not change the original's length, but a managed descendant reached through
+the copy is still the same object:
+
+```mylang
+# doc: expect 1
+# doc: expect 9
+def main() -> int effects(managed_allocation, output):
+    original = [[1]]
+    copy = original.copy()
+    copy.append([2])
+    copy[0][0] = 9
+    print(len(original))
+    print(original[0][0])
+    return 0
+```
+
+If one argument is writable and another is promised read-only, the compiler must
+prove the two input graphs disjoint. Unknown overlap is treated as overlap, so
+two parameters of the same managed type reject even when a caller passes
+unrelated values:
+
+```mylang
+# doc: expect-error E_MUTATION_OVERLAP
+def touch(x: list[int], y: list[int]) -> None effects(mutation) mutates(x):
+    x[0] = 1
+    _ = y[0]
+
+
+def use(a: list[int], b: list[int]) -> None effects(mutation) mutates(a):
+    touch(a, b)
+
+
+def main() -> int:
+    a = [1]
+    b = [2]
+    use(a, b)
+    return 0
+```
+
+Two writable aliases are permitted, and ordinary sequential ordering applies:
+
+```mylang
+# doc: expect 0
+def pair(first: list[int], second: list[int]) -> None effects(mutation) mutates(first, second):
+    first[0] = 1
+    second[1] = 2
+
+
+def use(values: list[int]) -> None effects(mutation) mutates(values):
+    pair(values, values)
+
+
+def main() -> int:
+    values = [0, 0]
+    use(values)
+    return values[0] + values[1] - 3
+```
+
+The other repair is to build an independent snapshot where the writable and
+read-only arguments meet. The snapshot allocation is visible as its own effect:
+
+```mylang
+# doc: expect 0
+def touch(x: list[int], y: list[int]) -> None effects(mutation) mutates(x):
+    x[0] = 1
+    _ = y[0]
+
+
+def use(a: list[int], b: list[int]) -> None effects(mutation, managed_allocation) mutates(a):
+    snapshot = b.copy()
+    touch(a, snapshot)
+
+
+def main() -> int:
+    a = [1]
+    b = [2]
+    use(a, b)
+    return 0
+```
+
+### Return aliases
+
+Returning a parameter, or wrapping it in a fresh container, does not make it
+fresh. A function that returns an input publishes that alias unless its body
+proves otherwise, so a caller that writes through the result still needs the
+input's permission:
+
+```mylang
+# doc: expect-error E_MUTATION_PERMISSION
+def identity(values: list[int]) -> list[int] effects():
+    return values
+
+
+def overwrite(values: list[int]) -> None effects():
+    picked = identity(values)
+    picked[0] = 0
+
+
+def main() -> int:
+    values = [1]
+    overwrite(values)
+    return 0
+```
+
+Declaring the write on the original parameter accepts the same program:
+
+```mylang
+# doc: expect 0
+def identity(values: list[int]) -> list[int] effects():
+    return values
+
+
+def overwrite(values: list[int]) -> None effects(mutation) mutates(values):
+    picked = identity(values)
+    picked[0] = 0
+
+
+def main() -> int:
+    values = [1]
+    overwrite(values)
+    return 0
+```
+
+Private helpers derive a precision return-origin bound from their bodies;
+exported declarations that publish no bound default to `unknown`, never `fresh`.
+
+### Fresh local mutation
+
+Definitely-fresh storage may be built, filled and mutated locally without a
+`mutation` effect; the existing `managed_allocation` effect still applies. A
+caller can also write a result the compiler proved fresh even though the same
+function borrowed its input:
+
+```mylang
+# doc: expect 1
+# doc: expect 9
+def doubled(values: list[int]) -> list[int] effects(managed_allocation):
+    out: list[int] = []
+    for value in values:
+        out.append(value * 2)
+    return out
+
+
+def main() -> int effects(managed_allocation, output):
+    values = [1, 2]
+    extra = doubled(values)
+    extra[0] = 9
+    print(values[0])
+    print(extra[0])
+    return 0
+```
+
 ## Related pages
 
 - [Printing, files and command-line authority](io.md) — the capability values and the grants that provision them

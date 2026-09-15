@@ -23,7 +23,7 @@ def inspect(board: m.Board, item: m.Feature, position: u64, previous: m.Report) 
     if not bounds.inside(board.outline, rect):
         report = add(report, position, m.ViolationKind.outside_board, m.RegionIndex.board)
     i = 0u64
-    while i < len(board.regions):
+    while i < u64(len(board.regions)):
         match board.regions[i]:
             case m.Slot[m.Region].none:
                 pass
@@ -44,7 +44,7 @@ def validate(board: m.Board) -> m.Validation effects(host):
     empty: m.Slot[m.Violation] = m.Slot.none
     report = m.Report(violations=0u64, first=empty)
     i = 0u64
-    while i < len(board.features):
+    while i < u64(len(board.features)):
         match board.features[i]:
             case m.Slot[m.Feature].none:
                 pass

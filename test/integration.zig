@@ -3440,3 +3440,56 @@ test "loadConfiguredPolicy policy identity participates in project-dependencies 
     try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, second.term);
     try testing.expect(std.mem.indexOf(u8, second.stderr, "main -> helper: deny") != null);
 }
+
+// spec-case: MUTATION-ENFORCE-1
+test "CLI migrated corpus projects carry the checked mutation contract" {
+    // The corpus pieces M3 repaired: domain methods exposed through an exported
+    // type, a generated input accessor, guest tests that allocate, and the
+    // schematic/board applications. Every one needs an explicit, narrow ceiling.
+    for ([_][]const u8{
+        "examples/modules/main.my",
+        "examples/input-values/main.my",
+        "tests/guest/generics.my",
+        "src/schematic/guest/main.my",
+        "src/board_trial/guest/main.my",
+    }) |entry| {
+        const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-project", entry } });
+        defer testing.allocator.free(outcome.stdout);
+        defer testing.allocator.free(outcome.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    }
+}
+
+// spec-case: MUTATION-ENFORCE-1
+test "CLI nested record alias rejects under effects and runs with a mutation footprint" {
+    const rejected =
+        \\record Box:
+        \\    values: list[int]
+        \\
+        \\
+        \\def overwrite(box: Box) -> None effects():
+        \\    box.values[0] = 7
+        \\
+        \\
+        \\def main() -> int:
+        \\    box = Box(values=[1])
+        \\    overwrite(box)
+        \\    return box.values[0]
+    ;
+    try invoke("check", rejected, 1, "", "E_MUTATION_PERMISSION");
+    const permitted =
+        \\record Box:
+        \\    values: list[int]
+        \\
+        \\
+        \\def overwrite(box: Box) -> None effects(mutation) mutates(box):
+        \\    box.values[0] = 7
+        \\
+        \\
+        \\def main() -> int:
+        \\    box = Box(values=[1])
+        \\    overwrite(box)
+        \\    return box.values[0]
+    ;
+    try invoke("run", permitted, 0, "7\n", "");
+}

@@ -170,8 +170,8 @@ referenced constant, a scope/visibility lookup or a negative lookup that later
 resolves invalidates only the bodies that depend on it, while an unrelated
 generic, constant, alias or callback no longer disables reuse. Region, effect,
 mutation and codec passes rerun completely after every body edit — so reusing a caller never
-reuses a callee's effect verdict, and a callee that gains an effect still rejects
-an unchanged effect-bounded caller. The `functions` counters report bodies
+reuses a callee's effect or mutation verdict, and a callee that gains an effect
+or an input-mutation footprint still rejects an unchanged bounded caller. The `functions` counters report bodies
 actually reused and actually checked. In this single-module session `perimeter`
 is rewritten between the two requests and the other two bodies are reused.
 

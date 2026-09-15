@@ -30,6 +30,6 @@ def applies(item: m.Feature, region: m.Region) -> bool effects():
         case m.Feature.component(value):
             return region.blocks.component and side(region.face, value.face)
         case m.Feature.track(value):
-            return region.blocks.track and layer(region.face, value.layer) and not inventory.has[ids.NetId](region.allow_nets, value.net, len(region.allow_nets))
+            return region.blocks.track and layer(region.face, value.layer) and not inventory.has[ids.NetId](region.allow_nets, value.net, u64(len(region.allow_nets)))
         case m.Feature.via(value):
-            return region.blocks.via and not inventory.has[ids.NetId](region.allow_nets, value.net, len(region.allow_nets))
+            return region.blocks.via and not inventory.has[ids.NetId](region.allow_nets, value.net, u64(len(region.allow_nets)))

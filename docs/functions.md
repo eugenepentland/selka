@@ -209,3 +209,31 @@ def main() -> int:
 `sum_announced` carries `effects(output)` because calling `report` can print. Had
 it been written `noio`, or with an empty `effects()`, the declaration would be
 rejected before the program ran.
+
+## Mutating callbacks
+
+A callable signature can also carry an input footprint. `mutates(values)` names
+the callable's own binder, and a call through the value substitutes the actual
+argument origin, so the caller still needs permission for the mutation:
+
+```mylang
+# doc: expect 7
+def apply(values: list[int], f: def(values: list[int]) -> None effects(mutation) mutates(values)) -> None effects(mutation) mutates(values):
+    f(values)
+
+
+def set_first(values: list[int]) -> None effects(mutation) mutates(values):
+    values[0] = 7
+
+
+def main() -> int effects(managed_allocation, output):
+    values = [1]
+    apply(values, set_first)
+    print(values[0])
+    return 0
+```
+
+The binder name is only a label: it does not become a keyword argument and it is
+excluded from callable identity. An implementation may write fewer inputs than the
+destination footprint permits, and a call through a stored or returned callback
+uses the destination's footprint just as it uses the destination's effect ceiling.
