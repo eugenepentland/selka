@@ -55,7 +55,7 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [TOOL-1] Groups exact duplicate bodies after binding renaming while preserving resolved binding identity.
 - [TOOL-2] Reports literal differences once per exact-group representative when discovering near duplicates.
 - [TOOL-3] Reports incomplete near-duplicate discovery when work budgets are exhausted and rejects invalid budgets.
-- [TOOL-5] `fmt` permits semantically incomplete drafts but rejects syntactically invalid input, and returns an accepted program byte for byte, because its indentation already is its canonical layout.
+- [TOOL-5] `fmt` prints the one canonical layout to stdout, permits semantically incomplete drafts but rejects syntactically invalid input, and `--check` is nonzero when the input bytes differ from canonical output. The fixed layout uses four-space suites; one space around binary/assignment operators and after commas and annotation colons; no padding inside ordinary delimiters; no trailing whitespace; one final newline for nonempty source; two blank lines between top-level declarations and one after the header directive group. Comment attachment, literal values, directive order and expression evaluation order are preserved, and there is no configurable wrapping.
 - [TOOL-6] Includes calls in untaken paths and cycles when calculating static function reachability.
 ## Evaluation and wire boundaries
 
