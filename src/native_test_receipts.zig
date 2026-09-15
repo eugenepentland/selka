@@ -106,3 +106,30 @@ test "positive receipts reject corruption mismatched expectations and failures" 
     try write(context, directory, failed);
     try std.testing.expect(!hit(context, filename, "abc", result.name, result.expected, .{}));
 }
+
+// spec-case: NATIVE-TEST-3
+test "receipt identity binds the contract provider and source a pass was verified against" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(context.io, ".", context.allocator);
+    const identity: Identity = .{ .contract = "contract-a", .provider = "provider-a", .source = "source-a" };
+    const result: Result = .{
+        .name = "test_ok",
+        .status = "passed",
+        .actual = .{ .bool = true },
+        .expected = .{ .bool = true },
+        .key = "identity-key",
+        .cacheable = true,
+        .context = .{ .identity = identity },
+    };
+    const filename = try path(context, directory, result.key);
+    try write(context, directory, result);
+    try std.testing.expect(hit(context, filename, result.key, result.name, result.expected, identity));
+    try std.testing.expect(!hit(context, filename, result.key, result.name, result.expected, .{ .contract = "contract-b", .provider = identity.provider, .source = identity.source }));
+    try std.testing.expect(!hit(context, filename, result.key, result.name, result.expected, .{ .contract = identity.contract, .provider = "provider-b", .source = identity.source }));
+    try std.testing.expect(!hit(context, filename, result.key, result.name, result.expected, .{ .contract = identity.contract, .provider = identity.provider, .source = "source-b" }));
+}
