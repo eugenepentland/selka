@@ -137,3 +137,49 @@ top-level declarations and one after the header directive group. Comments,
 literal values, directive order and expression evaluation order are preserved.
 Long-line wrapping, if added, is one fixed policy with no settings. These bytes
 are the `--check` oracle.
+
+## 9. Required import policy in ordinary projects (A1)
+
+- Configuration filename is `mylang.json`. Discovery starts at the entry source
+  file's directory (the entry project root) and walks up toward the filesystem
+  root; the first `mylang.json` found wins. Shell working directory never
+  participates. A path discovered from the entry directory upward is still
+  anchored to the entry, not to cwd.
+- Minimal versioned shape, strict JSON (unknown fields, duplicate keys and
+  unsupported versions reject):
+
+```json
+{"version": 1, "import_policy": "policy.json"}
+```
+
+- `import_policy` is optional. When present it is a nonempty relative or absolute
+  path resolved against the directory containing `mylang.json`; the file must
+  exist and parse under the existing `import_policy.Policy` rules. A missing or
+  malformed config/policy is a configuration failure (host status 2), never a
+  silent skip.
+- Once discovered, every ordinary command (`check`, `check-project`, `build`,
+  `run`, `run-project`, project variants and native test preparation) enforces the
+  policy through one shared frontend step, including unused direct imports, before
+  any cached success is returned. Policy and config identity participate in
+  verification receipts and caches: a stricter policy invalidates an earlier pass.
+  Import-cycle checking stays independent and cannot be disabled.
+- Projects with no `mylang.json` keep today's behavior. `check-policy
+  --policy=path` remains for explicit inspection. There is no inline suppression
+  and no ordinary-command bypass flag.
+
+## 10. Exported effect API fingerprints (E2)
+
+- An exported function requires an explicit declared effect ceiling. The declared
+  ceiling (effect mask, plus the normalized mutation footprint and return-origin
+  bound once M1/M2 land) is part of the public API fingerprint and invalidates
+  consumers when it changes.
+- The inferred implementation effect set is a diagnostic and test-cacheability
+  fact only. A body edit that stays within the same declared ceiling must not
+  change the public API fingerprint or invalidate callers' type checking.
+- Non-exported helpers keep inference. A non-exported `main` keeps its current
+  entry behavior. Exported tests follow the same rule as other exports.
+- A missing-ceiling diagnostic is reported at the declaration; an optional
+  compiler-suggested bound must be derived from the body and described as a bound,
+  never emitted as an unconditional `effects(all)`.
+- Parameter defaults, keyword parameter names, nominal type identities and generic
+  requirements remain part of the public contract.
