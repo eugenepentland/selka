@@ -165,6 +165,21 @@ pub const Index = struct {
         const symbol = self.units[id.module].symbols.items[id.symbol];
         if (!symbol.exported) return self.project.fail("E_PRIVATE_INTERFACE", "exported interface exposes an unexported type", .{ .module = module, .span = span }, .{ .module = id.module, .span = symbol.span });
     }
+    /// Whether a merged-source function-name span names an exported function.
+    ///
+    /// E2 uses this after body checking to require an explicit effect ceiling on
+    /// every exported declaration, including exported generic templates and
+    /// public domain operations exposed through an exported type. Non-exported
+    /// helpers (and a non-exported `main`) stay inferred.
+    pub fn functionExported(self: *Index, src: source.Source, span: source.Span) bool {
+        const original = src.originalSpan(span) catch return false;
+        if (original.input >= self.units.len) return false;
+        for (self.units[original.input].symbols.items) |symbol| {
+            if (symbol.kind != .function) continue;
+            if (symbol.span.start == original.span.start and symbol.span.end == original.span.end) return symbol.exported;
+        }
+        return false;
+    }
     fn applicationType(self: *Index, module: usize, application: ast.TypeApplication, parameters: []const ast.TypeParameter) diagnostic.Error!void {
         const src = self.project.modules.items[module].src;
         for (parameters) |parameter| if (std.mem.eql(u8, src.text(parameter.name), src.text(application.name))) return self.project.fail(

@@ -3,7 +3,7 @@ export FixedPrices
 
 
 domain FixedPrices: int:
-    def make(amount: int) -> FixedPrices:
+    def make(amount: int) -> FixedPrices effects():
         return wrap[FixedPrices](amount)
 
     def price(policy: FixedPrices, subtotal: int) -> int effects():

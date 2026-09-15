@@ -18,7 +18,7 @@ record Span:
     end: int
 
 
-def empty() -> Span:
+def empty() -> Span effects():
     return Span(
         file=0,
         start=0,
@@ -26,7 +26,7 @@ def empty() -> Span:
     )
 
 
-def equal(a: Span, b: Span) -> bool:
+def equal(a: Span, b: Span) -> bool effects(host):
     if a.end - a.start != b.end - b.start:
         return False
     i = 0
@@ -37,7 +37,7 @@ def equal(a: Span, b: Span) -> bool:
     return True
 
 
-def matches(a: Span, b: bytes) -> bool:
+def matches(a: Span, b: bytes) -> bool effects(host):
     if a.end - a.start != len(b):
         return False
     i = 0
@@ -48,7 +48,7 @@ def matches(a: Span, b: bytes) -> bool:
     return True
 
 
-def number(a: Span) -> int:
+def number(a: Span) -> int effects(host):
     value = 0
     i = a.start
     if i == a.end:
@@ -64,7 +64,7 @@ def number(a: Span) -> int:
     return value
 
 
-def write(text: bytes):
+def write(text: bytes) effects(host):
     i = 0
     while i < len(text):
         _ = io.put(u8(text[i]))
@@ -72,7 +72,7 @@ def write(text: bytes):
     return
 
 
-def escaped(a: Span):
+def escaped(a: Span) effects(host, managed_allocation):
     i = a.start
     while i < a.end:
         c = io.byte(a.file, i)
@@ -105,7 +105,7 @@ def escaped(a: Span):
     return
 
 
-def decimal(value: int):
+def decimal(value: int) effects(host):
     if value < 0:
         _ = io.put(45u8)
         if value <= - 10:
@@ -118,7 +118,7 @@ def decimal(value: int):
     return
 
 
-def identifier(a: Span) -> bool:
+def identifier(a: Span) -> bool effects(host):
     if a.start == a.end or a.end - a.start > 64:
         return False
     i = a.start
@@ -136,7 +136,7 @@ def lower(ch: u8) -> u8:
     return ch
 
 
-def folded(a: Span, b: Span) -> bool:
+def folded(a: Span, b: Span) -> bool effects(host):
     if a.end - a.start != b.end - b.start:
         return False
     i = 0

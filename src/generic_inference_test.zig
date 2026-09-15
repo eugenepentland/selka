@@ -118,7 +118,7 @@ const Modules = struct {
             \\export first
             \\
             \\
-            \\def first[T, const N: u64](x: [N]T) -> T:
+            \\def first[T, const N: u64](x: [N]T) -> T effects():
             \\    return x[0]
         );
         return error.NotFound;

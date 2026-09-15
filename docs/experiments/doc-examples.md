@@ -72,7 +72,7 @@ Grouped blocks become one project checked or run through `run-project`:
 module helper
 export answer
 
-def answer() -> int:
+def answer() -> int effects():
     return 42
 ```
 

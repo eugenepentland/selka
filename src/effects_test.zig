@@ -143,3 +143,38 @@ test "effect rendering propagates a full writer failure" {
     var writer: std.Io.Writer = .fixed(&storage);
     try t.expectError(error.WriteFailed, sets.write(&writer, sets.bit(.managed_allocation)));
 }
+
+test "declared ceilings reject hidden effects through generic and callback calls" {
+    // A generic body that hides an allocating call behind an empty ceiling rejects
+    // once it is instantiated, exactly like an ordinary direct call.
+    try reject(
+        \\def allocate() -> i64:
+        \\    items: list[i64] = []
+        \\    return len(items)
+        \\
+        \\
+        \\def wrapper[T](x: T) -> i64 effects():
+        \\    _ = x
+        \\    return allocate()
+        \\
+        \\
+        \\def main() -> i64 noalloc:
+        \\    return wrapper[i64](1)
+    , "E_EFFECT_BOUND", "exceeds declared bound");
+
+    // Invoking a callback uses the destination contract's ceiling, so a caller
+    // that promises less than the callback's declared effects rejects.
+    try reject(
+        \\def tick(x: i64) -> i64 effects(clock):
+        \\    _ = x
+        \\    return 0
+        \\
+        \\
+        \\def call(f: def(i64) -> i64 effects(clock)) -> i64 effects():
+        \\    return f(1)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return call(tick)
+    , "E_EFFECT_BOUND", "exceeds declared bound");
+}

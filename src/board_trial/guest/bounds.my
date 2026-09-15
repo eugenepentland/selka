@@ -16,11 +16,11 @@ def axis(origin: units.Micrometres, extent: units.Micrometres) -> bool:
     return x + width <= 1000000000
 
 
-def valid(rect: m.Rect) -> bool:
+def valid(rect: m.Rect) -> bool effects():
     return axis(rect.x, rect.width) and axis(rect.y, rect.height)
 
 
-def inside(outer: m.Rect, inner: m.Rect) -> bool:
+def inside(outer: m.Rect, inner: m.Rect) -> bool effects():
     x = units.Micrometres.number(inner.x)
     y = units.Micrometres.number(inner.y)
     left = units.Micrometres.number(outer.x)
@@ -28,7 +28,7 @@ def inside(outer: m.Rect, inner: m.Rect) -> bool:
     return x >= left and y >= bottom and x + units.Micrometres.number(inner.width) <= left + units.Micrometres.number(outer.width) and y + units.Micrometres.number(inner.height) <= bottom + units.Micrometres.number(outer.height)
 
 
-def rectangle(item: m.Feature) -> m.Rect:
+def rectangle(item: m.Feature) -> m.Rect effects():
     match item:
         case m.Feature.component(value):
             return value.rect

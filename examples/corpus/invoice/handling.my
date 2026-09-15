@@ -3,7 +3,7 @@ export fee
 
 
 # A similar structure is not permission to erase different fee amounts.
-def fee(items: int) -> int:
+def fee(items: int) -> int effects():
     cents = 100
     if items > 10:
         cents += 150

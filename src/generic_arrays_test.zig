@@ -17,11 +17,11 @@ const factories =
     \\
 ;
 const helpers =
-    \\def pair[T](a: T, b: T) -> [2]T:
+    \\def pair[T](a: T, b: T) -> [2]T effects():
     \\    return [a, b]
     \\
     \\
-    \\def contains[T: equality](a: [2]T, n: T) -> bool:
+    \\def contains[T: equality](a: [2]T, n: T) -> bool effects():
     \\    i = 0
     \\    while i < len(a):
     \\        if a[i] == n:
@@ -188,7 +188,7 @@ const Modules = struct {
             \\
             \\
             \\domain Id: i64:
-            \\    def make(n: i64) -> Id:
+            \\    def make(n: i64) -> Id effects():
             \\        return wrap[Id](n)
         );
         return error.NotFound;

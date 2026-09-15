@@ -149,8 +149,13 @@ pub fn render(allocator: std.mem.Allocator, index: *interfaces.Index, program: t
             .mode = .value,
         };
         var names: std.ArrayList([]const u8) = .empty;
+        // E2: the public schema publishes the declared ceiling, not the inferred
+        // implementation mask. Body edits inside the ceiling therefore keep the
+        // schema stable; inferred effects remain available for diagnostics and
+        // runtime-test cacheability.
+        const public_ceiling = if (function.policy.effect_bound) |bound| bound.allowed else function.policy.effects;
         inline for (std.meta.tags(effects.Effect)) |effect| {
-            if (function.policy.effects & effects.bit(effect) != 0) try names.append(scratch, @tagName(effect));
+            if (public_ceiling & effects.bit(effect) != 0) try names.append(scratch, @tagName(effect));
         }
         output.* = .{
             .name = function.name,

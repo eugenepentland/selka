@@ -59,7 +59,7 @@ fn publicUnit(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _:
         \\export finish
         \\
         \\
-        \\def finish():
+        \\def finish() effects():
         \\    pass
         \\
         \\

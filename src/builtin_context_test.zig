@@ -66,7 +66,7 @@ const Modules = struct {
             \\export answer
             \\
             \\
-            \\def answer(values: list[i64]) -> Result[i64, i64]:
+            \\def answer(values: list[i64]) -> Result[i64, i64] effects():
             \\    return Ok(values[0])
         );
         return error.NotFound;
@@ -105,7 +105,7 @@ const ShadowModules = struct {
             \\    value: T
             \\
             \\
-            \\def answer() -> i64:
+            \\def answer() -> i64 effects():
             \\    value = Bucket[i64](value=21)
             \\    return value.value
         );

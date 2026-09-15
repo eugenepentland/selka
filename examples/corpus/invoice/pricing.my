@@ -46,7 +46,7 @@ conversion def receipt(totals: Totals) -> Receipt:
     return Receipt(gross=money.Cents.number(totals.gross), discount=money.Cents.number(totals.discount), tax=money.Cents.number(totals.tax), delivery=money.Cents.number(totals.delivery), packaging=money.Cents.number(totals.packaging), handling=money.Cents.number(totals.handling), total=money.Cents.number(totals.total), items=totals.items)
 
 
-def calculate(books: int, cables: int, adapters: int) -> Invoice:
+def calculate(books: int, cables: int, adapters: int) -> Invoice effects():
     lines: [3]Line = [Line(product=catalog.Product.book, count=quantity.Count.parse(books)?), Line(product=catalog.Product.cable, count=quantity.Count.parse(cables)?), Line(product=catalog.Product.adapter, count=quantity.Count.parse(adapters)?)]
     gross = money.Cents.make(0u64)
     items = 0u16

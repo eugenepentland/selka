@@ -31,42 +31,42 @@ def max_finite() -> float:
 
 
 # Ratio of a circle's circumference to its diameter, rounded to binary64.
-def pi() -> float:
+def pi() -> float effects():
     return 3.141592653589793
 
 
 # Base of the natural logarithm, rounded to binary64.
-def e() -> float:
+def e() -> float effects():
     return 2.718281828459045
 
 
 # The canonical quiet not-a-number.
-def nan() -> float:
+def nan() -> float effects():
     return 0.0 / 0.0
 
 
 # Positive infinity.
-def infinity() -> float:
+def infinity() -> float effects():
     return 1.0 / 0.0
 
 
 # Whether a value is not-a-number, which is the only value unequal to itself.
-def is_nan(value: float) -> bool:
+def is_nan(value: float) -> bool effects():
     return value != value
 
 
 # Whether a value is one of the two infinities.
-def is_inf(value: float) -> bool:
+def is_inf(value: float) -> bool effects():
     return value > max_finite() or value < 0.0 - max_finite()
 
 
 # Whether a value is neither infinite nor not-a-number.
-def is_finite(value: float) -> bool:
+def is_finite(value: float) -> bool effects():
     return not is_nan(value) and not is_inf(value)
 
 
 # Magnitude of a floating value, mapping both zeros to positive zero.
-def fabs(value: float) -> float:
+def fabs(value: float) -> float effects():
     if value == 0.0:
         return 0.0
     if value < 0.0:
@@ -75,7 +75,7 @@ def fabs(value: float) -> float:
 
 
 # Sign of a floating value as -1, 0 or 1; not-a-number reports 0.
-def sign(value: float) -> int:
+def sign(value: float) -> int effects():
     if value > 0.0:
         return 1
     if value < 0.0:
@@ -84,7 +84,7 @@ def sign(value: float) -> int:
 
 
 # Integral part of a value, rounding toward zero.
-def trunc(value: float) -> float:
+def trunc(value: float) -> float effects():
     if is_nan(value) or is_inf(value):
         return value
     if value >= 9223372036854775808.0 or value < 0.0 - 9223372036854775808.0:
@@ -93,7 +93,7 @@ def trunc(value: float) -> float:
 
 
 # Largest integral value that is not greater than the argument.
-def floor(value: float) -> float:
+def floor(value: float) -> float effects():
     whole = trunc(value)
     if whole > value:
         return whole - 1.0
@@ -101,7 +101,7 @@ def floor(value: float) -> float:
 
 
 # Smallest integral value that is not less than the argument.
-def ceil(value: float) -> float:
+def ceil(value: float) -> float effects():
     whole = trunc(value)
     if whole < value:
         return whole + 1.0
@@ -109,7 +109,7 @@ def ceil(value: float) -> float:
 
 
 # Nearest integral value, with halves rounded away from zero.
-def round(value: float) -> float:
+def round(value: float) -> float effects():
     if is_nan(value) or is_inf(value):
         return value
     whole = trunc(value)
@@ -124,7 +124,7 @@ def round(value: float) -> float:
 # Square root, correctly rounded by the binary64 intrinsic. This module
 # declares `sqrt`, which shadows the prelude helper, so it reaches the
 # compiler-internal intrinsic spelling directly.
-def sqrt(value: float) -> float:
+def sqrt(value: float) -> float effects():
     if is_nan(value) or value == 0.0:
         return value
     if value < 0.0:
@@ -157,7 +157,7 @@ def saturated(exponent: int) -> int:
 
 
 # Base raised to an integer exponent; magnitudes above 4096 saturate by parity.
-def pow(base: float, exponent: int) -> float:
+def pow(base: float, exponent: int) -> float effects():
     if exponent == 0:
         return 1.0
     magnitude = positive_power(base, saturated(exponent))
@@ -167,7 +167,7 @@ def pow(base: float, exponent: int) -> float:
 
 
 # Smaller of two floating values; a not-a-number operand propagates.
-def fmin(a: float, b: float) -> float:
+def fmin(a: float, b: float) -> float effects():
     if is_nan(a) or is_nan(b):
         return nan()
     if a <= b:
@@ -176,7 +176,7 @@ def fmin(a: float, b: float) -> float:
 
 
 # Larger of two floating values; a not-a-number operand propagates.
-def fmax(a: float, b: float) -> float:
+def fmax(a: float, b: float) -> float effects():
     if is_nan(a) or is_nan(b):
         return nan()
     if a >= b:
@@ -210,7 +210,7 @@ def clamp[T: integer](value: T, low: T, high: T) -> T noalloc:
 
 
 # Magnitude of an integer; the most negative value has no positive counterpart.
-def abs(value: int) -> Result[int, str]:
+def abs(value: int) -> Result[int, str] effects(managed_allocation):
     if value == 0 - 9223372036854775807 - 1:
         return Err("absolute value of -9223372036854775808 is not representable")
     if value < 0:
@@ -219,7 +219,7 @@ def abs(value: int) -> Result[int, str]:
 
 
 # Greatest common divisor, reported as a nonnegative integer.
-def gcd(a: int, b: int) -> Result[int, str]:
+def gcd(a: int, b: int) -> Result[int, str] effects(managed_allocation):
     left = a
     right = b
     while right != 0:
@@ -230,7 +230,7 @@ def gcd(a: int, b: int) -> Result[int, str]:
 
 
 # Least common multiple of two integers, reported as a nonnegative integer.
-def lcm(a: int, b: int) -> Result[int, str]:
+def lcm(a: int, b: int) -> Result[int, str] effects(managed_allocation):
     if a == 0 or b == 0:
         return Ok(0)
     left = abs(a)?
@@ -243,7 +243,7 @@ def lcm(a: int, b: int) -> Result[int, str]:
 
 
 # Integer square root: the largest whole number whose square is not larger.
-def isqrt(value: int) -> Result[int, str]:
+def isqrt(value: int) -> Result[int, str] effects(managed_allocation):
     if value < 0:
         return Err("integer square root of a negative value is undefined")
     if value < 2:

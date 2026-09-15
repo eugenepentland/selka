@@ -23,12 +23,12 @@ const source =
     \\    private def raw(x: i64) -> Positive:
     \\        return wrap[Positive](x)
     \\
-    \\    def from_wire(x: Wire) -> Decoded:
+    \\    def from_wire(x: Wire) -> Decoded effects():
     \\        if x.n <= 0:
     \\            return Err(-1)
     \\        return Ok(Positive.raw(x.n))
     \\
-    \\    def to_wire(x: Positive) -> Wire:
+    \\    def to_wire(x: Positive) -> Wire effects():
     \\        return Wire(n=unwrap(x))
     \\
     \\

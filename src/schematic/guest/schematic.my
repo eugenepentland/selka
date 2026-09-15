@@ -15,7 +15,7 @@ record Schematic:
     connections: list[ports.Port]
 
 
-def build(nodes: list[sexpr.Node], pinout: list[sexpr.Node], interface: list[sexpr.Node]) -> Result[Schematic, int]:
+def build(nodes: list[sexpr.Node], pinout: list[sexpr.Node], interface: list[sexpr.Node]) -> Result[Schematic, int] effects(host, managed_allocation):
     source_error = validate.source(nodes)
     if source_error != 0:
         return Err(source_error)

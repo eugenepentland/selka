@@ -21,11 +21,11 @@ const Modules = struct {
             \\export answer
             \\export maybe
             \\export items
-            \\def answer() -> Result[int, int]:
+            \\def answer() -> Result[int, int] effects():
             \\    return Ok(42)
-            \\def maybe() -> Option[int]:
+            \\def maybe() -> Option[int] effects():
             \\    return Some(1)
-            \\def items() -> list[int]:
+            \\def items() -> list[int] effects(managed_allocation):
             \\    return [1, 2]
         );
         if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
@@ -207,7 +207,7 @@ const PythonModules = struct {
             \\    group
             \\
             \\
-            \\def answer(values: list[int], key: str, number: float) -> Result[dict[str, int], int]:
+            \\def answer(values: list[int], key: str, number: float) -> Result[dict[str, int], int] effects(managed_allocation):
             \\    if number != 1.5:
             \\        return Err(2)
             \\    return Ok({key: values[0]})

@@ -49,7 +49,7 @@ test "semantic project body reuse relocates module spans and invalidates changed
         \\export value
         \\
         \\
-        \\def value() -> i64:
+        \\def value() -> i64 effects():
         \\    return 41
         },
         .{ .path = "other.my", .bytes =
@@ -57,7 +57,7 @@ test "semantic project body reuse relocates module spans and invalidates changed
         \\export value
         \\
         \\
-        \\def value() -> i64:
+        \\def value() -> i64 effects():
         \\    return 43
         },
     };
@@ -70,7 +70,7 @@ test "semantic project body reuse relocates module spans and invalidates changed
         \\export value
         \\
         \\
-        \\def value() -> i64:
+        \\def value() -> i64 effects():
         \\    return 42
     ;
     try agree(&files, &cache);
@@ -80,7 +80,7 @@ test "semantic project body reuse relocates module spans and invalidates changed
         \\export value
         \\
         \\
-        \\def value() -> bool:
+        \\def value() -> bool effects():
         \\    return True
     ;
     try agree(&files, &cache);

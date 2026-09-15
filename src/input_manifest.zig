@@ -91,7 +91,7 @@ pub const Manifest = struct {
             // The canonical layout has one blank line after the header directive
             // group and two between top-level declarations.
             if (index == 0) try writer.print("\n", .{}) else try writer.print("\n\n", .{});
-            try writer.print("def {s}() -> {s}:\n    return {s}{s}\n", .{ entry.name, entry.type, value, suffix });
+            try writer.print("def {s}() -> {s} effects():\n    return {s}{s}\n", .{ entry.name, entry.type, value, suffix });
         }
         return output.toOwnedSlice();
     }

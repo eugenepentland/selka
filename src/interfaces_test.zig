@@ -10,6 +10,7 @@ const ast = @import("ast.zig");
 const interfaces = @import("interfaces.zig");
 const module_names = @import("module_names.zig");
 const project_syntax = @import("project_syntax.zig");
+const diagnostic_module = @import("diagnostic.zig");
 const native = @import("native_execute.zig");
 const File = struct { path: []const u8, bytes: []const u8 };
 const Files = struct {
@@ -35,7 +36,7 @@ const units =
     \\    private def raw(x: i64) -> Distance:
     \\        return wrap[Distance](x)
     \\
-    \\    def make(x: i64) -> Distance:
+    \\    def make(x: i64) -> Distance effects():
     \\        return Distance.raw(x)
     \\
     \\
@@ -53,7 +54,7 @@ const entry =
     \\    distance: units.Distance
     \\
     \\
-    \\def echo(x: [2]units.Distance) -> [2]units.Distance:
+    \\def echo(x: [2]units.Distance) -> [2]units.Distance effects():
     \\    return x
     \\
     \\
@@ -237,7 +238,7 @@ test "module grammar parses qualified variant match constructors and free calls"
         \\    a
         \\
         \\
-        \\def helper() -> i64:
+        \\def helper() -> i64 effects():
         \\    return 1
         },
     } };
@@ -300,10 +301,10 @@ fn checkedScenario(allocator: std.mem.Allocator) !void {
         \\    private def raw(x: i64) -> Distance:
         \\        return wrap[Distance](x)
         \\
-        \\    def make(x: i64) -> Distance:
+        \\    def make(x: i64) -> Distance effects():
         \\        return Distance.raw(x)
         \\
-        \\    def number(x: Distance) -> i64:
+        \\    def number(x: Distance) -> i64 effects():
         \\        return unwrap(x)
         },
     } };
@@ -362,11 +363,11 @@ test "shared record types cross module boundaries and hidden names do not shadow
         \\    return 99
         \\
         \\
-        \\def make(n: i64) -> X:
+        \\def make(n: i64) -> X effects():
         \\    return X(number=n)
         \\
         \\
-        \\def value(x: X) -> i64:
+        \\def value(x: X) -> i64 effects():
         \\    return x.number
         \\
         \\
@@ -474,7 +475,7 @@ fn discoveryScenario(allocator: std.mem.Allocator) !void {
         \\    n: i64
         \\
         \\
-        \\def number(x: Box) -> i64:
+        \\def number(x: Box) -> i64 effects():
         \\    return x.n
         },
     } };
@@ -517,11 +518,11 @@ fn qualityScenario(allocator: std.mem.Allocator) !void {
         \\export D
         \\
         \\
-        \\def used() -> i64:
+        \\def used() -> i64 effects():
         \\    return 7
         \\
         \\
-        \\def unused() -> i64:
+        \\def unused() -> i64 effects():
         \\    return helper()
         \\
         \\
@@ -545,7 +546,7 @@ fn qualityScenario(allocator: std.mem.Allocator) !void {
         \\    private def raw(x: i64) -> D:
         \\        return wrap[D](x)
         \\
-        \\    def make(x: i64) -> D:
+        \\    def make(x: i64) -> D effects():
         \\        return D.raw(x)
         },
     } };
@@ -600,7 +601,7 @@ fn nativeModuleScenario(allocator: std.mem.Allocator) !void {
         \\export twice
         \\
         \\
-        \\def twice(x: i64) -> i64:
+        \\def twice(x: i64) -> i64 effects():
         \\    return x * 2
         },
     } };
@@ -730,7 +731,7 @@ test "generic syntax module interfaces retain scoped type names without hiding p
         \\export echo
         \\
         \\
-        \\def echo[T: copy](x: [2]T) -> [2]T:
+        \\def echo[T: copy](x: [2]T) -> [2]T effects():
         \\    return x
         \\
         \\
@@ -803,7 +804,7 @@ fn namedConstraintIndexScenario(allocator: std.mem.Allocator) !void {
     try t.expect(std.mem.indexOf(u8, rendered, "export constraint Prices") != null);
     const merged = try project_syntax.build(&index);
     try t.expectEqual(@as(usize, 1), merged.syntax.types.constraints.len);
-    var sink: @import("diagnostic.zig").Sink = .{ .allocator = allocator };
+    var sink: diagnostic_module.Sink = .{ .allocator = allocator };
     defer sink.deinit();
     var names: module_names.Names = .{ .index = &index, .src = merged.src };
     const resolved = try names.constraintIdentity(.{ .alias = null, .name = merged.syntax.types.constraints[0].name }, &sink);
@@ -997,7 +998,7 @@ test "named constraints constraintIdentity reports unmapped sources as internal 
     defer project.deinit();
     try project.load(files.provider(), "main", .{});
     var index = try interfaces.build(&project);
-    var sink: @import("diagnostic.zig").Sink = .{ .allocator = t.allocator };
+    var sink: diagnostic_module.Sink = .{ .allocator = t.allocator };
     defer sink.deinit();
     var names: module_names.Names = .{ .index = &index, .src = project.modules.items[0].src };
     const bound: ast.BoundReference = .{ .alias = null, .name = project.modules.items[0].header.declaration };
@@ -1061,11 +1062,11 @@ test "named constraints accept an imported exported bound when the defining modu
         \\export g
         \\
         \\
-        \\def f[T: contracts.C](x: T) -> T:
+        \\def f[T: contracts.C](x: T) -> T effects():
         \\    return x
         \\
         \\
-        \\def g[T: contracts.C](x: T) -> T:
+        \\def g[T: contracts.C](x: T) -> T effects():
         \\    return x
         \\
         \\
@@ -1100,7 +1101,7 @@ test "named constraints accept an imported exported bound when the defining modu
         \\export f
         \\
         \\
-        \\def f[T: contracts.C](x: T) -> T:
+        \\def f[T: contracts.C](x: T) -> T effects():
         \\    return x
         \\
         \\
@@ -1278,7 +1279,7 @@ test "generic calls preserve imported declaration identity and private boundarie
         \\export identity
         \\
         \\
-        \\def identity[U](x: U) -> U:
+        \\def identity[U](x: U) -> U effects():
         \\    return x
     ;
     try acceptChecked(main, dependency);
@@ -1304,7 +1305,7 @@ test "generic calls preserve imported declaration identity and private boundarie
         \\    private def hidden[T](x: T) -> T:
         \\        return x
         \\
-        \\    def make[U](x: U) -> U:
+        \\    def make[U](x: U) -> U effects():
         \\        return D.hidden[U](x)
     ;
     try acceptChecked(domain_main, domain_dependency);
@@ -1320,7 +1321,7 @@ test "generic calls preserve imported declaration identity and private boundarie
         \\export identity
         \\
         \\
-        \\def identity[U: integer](x: U) -> U:
+        \\def identity[U: integer](x: U) -> U effects():
         \\    return x
     , "E_GENERIC_ARGUMENT");
 }
@@ -1344,7 +1345,7 @@ fn genericCallsScenario(allocator: std.mem.Allocator) !void {
         \\export identity
         \\
         \\
-        \\def identity[U](x: U) -> U:
+        \\def identity[U](x: U) -> U effects():
         \\    _ = helper(1)
         \\    return x
         \\
@@ -1359,7 +1360,7 @@ fn genericCallsScenario(allocator: std.mem.Allocator) !void {
     var index = try interfaces.build(&project);
     const merged = try project_syntax.build(&index);
     var names: @import("module_names.zig").Names = .{ .index = &index, .src = merged.src };
-    var sink: @import("diagnostic.zig").Sink = .{ .allocator = project.arena.allocator() };
+    var sink: diagnostic_module.Sink = .{ .allocator = project.arena.allocator() };
     try @import("generic_bodies.zig").checkWithNames(allocator, merged.src, merged.syntax, &sink, &names);
     try t.expectEqual(@as(usize, 0), sink.items.items.len);
 }
@@ -1388,7 +1389,7 @@ test "generic calls requirement diagnostics link caller and imported declaration
         \\export identity
         \\
         \\
-        \\def identity[U: integer](x: U) -> U:
+        \\def identity[U: integer](x: U) -> U effects():
         \\    return x
         },
     } };
@@ -1451,25 +1452,25 @@ fn genericExecutionScenario(allocator: std.mem.Allocator) !void {
         \\    value: i64
         \\
         \\
-        \\def view[T](v: [1]T) -> [1]T:
+        \\def view[T](v: [1]T) -> [1]T effects():
         \\    return v
         \\
         \\
-        \\def head[T](v: [1]T) -> T:
+        \\def head[T](v: [1]T) -> T effects():
         \\    seen = view[T](v)
         \\    return seen[0]
         \\
         \\
-        \\def set[T](x: T, y: T) -> T:
+        \\def set[T](x: T, y: T) -> T effects():
         \\    _ = x
         \\    return y
         \\
         \\
-        \\def id[T](x: T) -> T:
+        \\def id[T](x: T) -> T effects():
         \\    return x
         \\
         \\
-        \\def run() -> i64:
+        \\def run() -> i64 effects():
         \\    if id[bool](True):
         \\        return id[i64](5)
         \\    return 0
@@ -1516,7 +1517,7 @@ test "exports after declarations retain interface validation and scope boundarie
         \\module units
         \\
         \\
-        \\def value() -> i64:
+        \\def value() -> i64 effects():
         \\    return 42
         \\
         \\
@@ -1597,7 +1598,7 @@ fn scatteredExports(allocator: std.mem.Allocator) !void {
         \\export value
         \\
         \\
-        \\def value() -> i64:
+        \\def value() -> i64 effects():
         \\    export = 42
         \\    return export
         \\
@@ -1614,7 +1615,7 @@ fn scatteredExports(allocator: std.mem.Allocator) !void {
         \\export answer
         \\
         \\
-        \\def main() -> i64:
+        \\def main() -> i64 effects():
         \\    return value() - answer
         \\
         \\
@@ -1722,7 +1723,7 @@ test "cross module bodies enforce private functions private types nominal identi
         \\    pass
         \\
         \\
-        \\def take(x: X) -> i64:
+        \\def take(x: X) -> i64 effects():
         \\    return 0
     , "E_TYPE");
     try rejectChecked(
@@ -1795,7 +1796,7 @@ test "generic calls concrete helpers retain imported identity and private domain
         \\export helper
         \\
         \\
-        \\def helper(x: i64) -> i64:
+        \\def helper(x: i64) -> i64 effects():
         \\    return leaf(x)
         \\
         \\
@@ -1828,7 +1829,7 @@ test "generic calls concrete helpers retain imported identity and private domain
         \\
         \\
         \\domain D: i64:
-        \\    def helper(x: i64) -> i64:
+        \\    def helper(x: i64) -> i64 effects():
         \\        return D.leaf(x)
         \\
         \\    private def leaf(x: i64) -> i64:
@@ -1897,7 +1898,7 @@ test "cross module effect and recoverable result obligations are enforced" {
         \\export allocate
         \\
         \\
-        \\def allocate() -> i64:
+        \\def allocate() -> i64 effects(managed_allocation):
         \\    values: list[i64] = []
         \\    values.append(1)
         \\    return values[0u64]
@@ -1921,7 +1922,147 @@ test "cross module effect and recoverable result obligations are enforced" {
         \\    err: i64
         \\
         \\
-        \\def fallible() -> R:
+        \\def fallible() -> R effects():
         \\    return Ok(7)
     , "E_RESULT_UNHANDLED");
+}
+
+/// Build, interface-check, and fully check one single-module entry project.
+/// The caller owns `project`/`index`/`compilation` order; this helper returns the
+/// first diagnostic with `code` after a rejected check, or null after success.
+fn projectDiagnostic(index: *interfaces.Index, code: []const u8) !?diagnostic_module.Diagnostic {
+    var compilation = try project_compile_module.Compilation.init(index);
+    compilation.check() catch |err| {
+        if (err != error.SourceError) return err;
+        for (compilation.diagnostics.items.items) |item| {
+            if (std.mem.eql(u8, item.code, code)) return item;
+        }
+        return null;
+    };
+    return null;
+}
+
+test "exported ceilings are required while private helpers keep inference and suggestions are body-derived" {
+    const accepted =
+        \\module main
+        \\export value
+        \\
+        \\
+        \\def helper(x: i64) -> i64:
+        \\    return x + 1
+        \\
+        \\
+        \\def value(x: i64) -> i64 effects():
+        \\    return helper(x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return value(41)
+    ;
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = accepted }} };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try project_compile_module.Compilation.init(&index);
+    try compilation.check();
+
+    const missing_pure =
+        \\module main
+        \\export value
+        \\
+        \\
+        \\def value(x: i64) -> i64:
+        \\    return x + 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return value(41)
+    ;
+    var files_missing: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = missing_pure }} };
+    var project_missing = graph.Project.init(t.allocator);
+    defer project_missing.deinit();
+    try project_missing.load(files_missing.provider(), "main", .{});
+    var index_missing = try interfaces.build(&project_missing);
+    var compilation_missing = try project_compile_module.Compilation.init(&index_missing);
+    try t.expectError(error.SourceError, compilation_missing.check());
+    const pure = (try projectDiagnostic(&index_missing, "E_EFFECT_CEILING")).?;
+    try t.expect(std.mem.indexOf(u8, pure.message, "effects()") != null);
+    const rendered = try pure.render(t.allocator, compilation_missing.src);
+    defer t.allocator.free(rendered);
+    try t.expect(std.mem.indexOf(u8, rendered, "main.my:") != null);
+    try t.expect(std.mem.indexOf(u8, rendered, "value") != null);
+
+    const missing_allocating =
+        \\module main
+        \\export value
+        \\
+        \\
+        \\def value() -> i64:
+        \\    items: list[i64] = []
+        \\    items.append(7)
+        \\    return items[0]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return value()
+    ;
+    var files_alloc: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = missing_allocating }} };
+    var project_alloc = graph.Project.init(t.allocator);
+    defer project_alloc.deinit();
+    try project_alloc.load(files_alloc.provider(), "main", .{});
+    var index_alloc = try interfaces.build(&project_alloc);
+    var compilation_alloc = try project_compile_module.Compilation.init(&index_alloc);
+    try t.expectError(error.SourceError, compilation_alloc.check());
+    const allocating = (try projectDiagnostic(&index_alloc, "E_EFFECT_CEILING")).?;
+    try t.expect(std.mem.indexOf(u8, allocating.message, "effects(managed_allocation)") != null);
+    try t.expect(std.mem.indexOf(u8, allocating.message, "effects(all)") == null);
+
+    // An exported generic function is a public declaration too.
+    const generic =
+        \\module main
+        \\export identity
+        \\
+        \\
+        \\def identity[T](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return identity[i64](41)
+    ;
+    var files_generic: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = generic }} };
+    var project_generic = graph.Project.init(t.allocator);
+    defer project_generic.deinit();
+    try project_generic.load(files_generic.provider(), "main", .{});
+    var index_generic = try interfaces.build(&project_generic);
+    var compilation_generic = try project_compile_module.Compilation.init(&index_generic);
+    try t.expectError(error.SourceError, compilation_generic.check());
+    try t.expect((try projectDiagnostic(&index_generic, "E_EFFECT_CEILING")) != null);
+
+    // A public domain operation exposed through an exported type follows the rule.
+    const domain =
+        \\module main
+        \\export Distance
+        \\
+        \\
+        \\domain Distance: i64:
+        \\    private def raw(x: i64) -> Distance:
+        \\        return wrap[Distance](x)
+        \\
+        \\    def make(x: i64) -> Distance:
+        \\        return Distance.raw(x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ;
+    var files_domain: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = domain }} };
+    var project_domain = graph.Project.init(t.allocator);
+    defer project_domain.deinit();
+    try project_domain.load(files_domain.provider(), "main", .{});
+    var index_domain = try interfaces.build(&project_domain);
+    var compilation_domain = try project_compile_module.Compilation.init(&index_domain);
+    try t.expectError(error.SourceError, compilation_domain.check());
+    try t.expect((try projectDiagnostic(&index_domain, "E_EFFECT_CEILING")) != null);
 }

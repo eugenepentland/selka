@@ -31,7 +31,7 @@ fn largeProject(allocator: std.mem.Allocator) ![]File {
     for (entries[1..], imports, calls, 0..) |*entry, *import_, *call, i| {
         entry.* = .{
             .path = try std.fmt.allocPrint(allocator, "m{d}.my", .{i}),
-            .bytes = try std.fmt.allocPrint(allocator, "module m{d}\nexport value\n\n\ndef value() -> i64:\n    return 1\n", .{i}),
+            .bytes = try std.fmt.allocPrint(allocator, "module m{d}\nexport value\n\n\ndef value() -> i64 effects():\n    return 1\n", .{i}),
         };
         import_.* = try std.fmt.allocPrint(allocator, "import m{d}\n", .{i});
         call.* = try std.fmt.allocPrint(allocator, "m{d}.value()", .{i});
@@ -58,14 +58,14 @@ test "default syntax retention survives 97 modules and matches fresh execution a
         \\export value
         \\
         \\
-        \\def value() -> i64:
+        \\def value() -> i64 effects():
         \\    return 1
         ,
         \\module m0
         \\export value
         \\
         \\
-        \\def value() -> i64:
+        \\def value() -> i64 effects():
         \\    return 2
         ,
         \\module m0
@@ -79,7 +79,7 @@ test "default syntax retention survives 97 modules and matches fresh execution a
         \\export value
         \\
         \\
-        \\def value() -> i64:
+        \\def value() -> i64 effects():
         \\    return 1
         ,
     };

@@ -32,7 +32,7 @@ const entry =
     \\export run
     \\
     \\
-    \\def run(x: i64) -> i64:
+    \\def run(x: i64) -> i64 effects():
     \\    return x
     \\
     \\
@@ -133,15 +133,15 @@ test "public generic schemas retain structural field operation and codec constra
         \\export coded
         \\
         \\
-        \\def field[T: copy + field(value: i64)](x: T) -> i64:
+        \\def field[T: copy + field(value: i64)](x: T) -> i64 effects():
         \\    return x.value
         \\
         \\
-        \\def action[T: copy + op(score(value: T) -> i64 effects())](x: T) -> i64:
+        \\def action[T: copy + op(score(value: T) -> i64 effects())](x: T) -> i64 effects():
         \\    return T.score(x)
         \\
         \\
-        \\def coded[T: copy + codec](x: T) -> T:
+        \\def coded[T: copy + codec](x: T) -> T effects():
         \\    return x
     );
     defer t.allocator.free(bytes);
@@ -198,7 +198,7 @@ const named_library =
     \\    return P.price(policy, subtotal)
     \\
     \\
-    \\def value_of[T: contracts.HasValue](item: T) -> i64:
+    \\def value_of[T: contracts.HasValue](item: T) -> i64 effects():
     \\    return item.value
 ;
 const named_entry =
@@ -207,7 +207,7 @@ const named_entry =
     \\export run
     \\
     \\
-    \\def run(x: i64) -> i64:
+    \\def run(x: i64) -> i64 effects():
     \\    return x
     \\
     \\
@@ -329,11 +329,11 @@ test "public generic schema retains default copy for functions and nominal templ
         \\export coded
         \\record Box[T]:
         \\    value: T
-        \\def identity[T](value: T) -> T:
+        \\def identity[T](value: T) -> T effects():
         \\    return value
-        \\def stored[T: storable]() -> int:
+        \\def stored[T: storable]() -> int effects():
         \\    return 0
-        \\def coded[T: codec]() -> int:
+        \\def coded[T: codec]() -> int effects():
         \\    return 0
     );
     defer t.allocator.free(bytes);
@@ -380,7 +380,7 @@ fn subjectSchemaScenario(allocator: std.mem.Allocator) !void {
         \\module lib
         \\import contracts
         \\export use
-        \\def use[P: contracts.Mixed](p: P) -> int:
+        \\def use[P: contracts.Mixed](p: P) -> int effects():
         \\    return 0
         ,
     };

@@ -101,7 +101,7 @@ const base_main =
     \\    return n + 1
     \\
     \\
-    \\def api(n: i64) -> i64:
+    \\def api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
@@ -119,7 +119,7 @@ const whitespace_outside =
     \\
     \\
     \\
-    \\def api(n: i64) -> i64:
+    \\def api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
@@ -136,7 +136,7 @@ const whitespace_inside =
     \\    return  n + 1
     \\
     \\
-    \\def api(n: i64) -> i64:
+    \\def api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
@@ -154,7 +154,7 @@ const comment_outside =
     \\
     \\
     \\# a comment between declarations
-    \\def api(n: i64) -> i64:
+    \\def api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
@@ -172,7 +172,7 @@ const comment_inside =
     \\    return n + 1
     \\
     \\
-    \\def api(n: i64) -> i64:
+    \\def api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
@@ -189,7 +189,7 @@ const private_body =
     \\    return n + 2
     \\
     \\
-    \\def api(n: i64) -> i64:
+    \\def api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
@@ -223,7 +223,7 @@ const exported_signature =
     \\    return n + 1
     \\
     \\
-    \\def api(n: i64, scale: i64) -> i64:
+    \\def api(n: i64, scale: i64) -> i64 effects():
     \\    return helper(n) * scale
     \\
     \\
@@ -259,7 +259,7 @@ const constant_base =
     \\    return n + STEP
     \\
     \\
-    \\def api(n: i64) -> i64:
+    \\def api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
@@ -278,7 +278,7 @@ const constant_edited =
     \\    return n + STEP
     \\
     \\
-    \\def api(n: i64) -> i64:
+    \\def api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
@@ -300,7 +300,7 @@ const record_base =
     \\    return p.x + 1
     \\
     \\
-    \\def api(n: i64) -> i64:
+    \\def api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
@@ -323,7 +323,7 @@ const record_edited =
     \\    return p.x + p.y
     \\
     \\
-    \\def api(n: i64) -> i64:
+    \\def api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
@@ -350,7 +350,7 @@ const union_base =
     \\            return 2
     \\
     \\
-    \\def api(c: Choice) -> i64:
+    \\def api(c: Choice) -> i64 effects():
     \\    return helper(c)
     \\
     \\
@@ -380,7 +380,7 @@ const union_edited =
     \\            return 3
     \\
     \\
-    \\def api(c: Choice) -> i64:
+    \\def api(c: Choice) -> i64 effects():
     \\    return helper(c)
     \\
     \\
@@ -393,7 +393,7 @@ const import_base_data =
     \\export value
     \\
     \\
-    \\def value() -> i64:
+    \\def value() -> i64 effects():
     \\    return 42
 ;
 
@@ -411,7 +411,7 @@ const import_extra =
     \\export one
     \\
     \\
-    \\def one() -> i64:
+    \\def one() -> i64 effects():
     \\    return 1
 ;
 
@@ -434,7 +434,7 @@ const generic_base =
     \\    return n
     \\
     \\
-    \\def api(n: i64) -> i64:
+    \\def api(n: i64) -> i64 effects():
     \\    return id[i64](n)
     \\
     \\
@@ -452,7 +452,7 @@ const generic_edited =
     \\    return value
     \\
     \\
-    \\def api(n: i64) -> i64:
+    \\def api(n: i64) -> i64 effects():
     \\    return id[i64](n)
     \\
     \\
@@ -469,7 +469,7 @@ const specialization_base =
     \\    return N
     \\
     \\
-    \\def api() -> i64:
+    \\def api() -> i64 effects():
     \\    return i64(size[2]())
     \\
     \\
@@ -486,7 +486,7 @@ const specialization_edited =
     \\    return N
     \\
     \\
-    \\def api() -> i64:
+    \\def api() -> i64 effects():
     \\    return i64(size[3]())
     \\
     \\

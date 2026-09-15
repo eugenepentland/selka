@@ -366,7 +366,7 @@ test "build --run detects module projects and installed binaries receive the sam
         \\
         \\export render
         \\
-        \\def render(args: list[str]) -> str:
+        \\def render(args: list[str]) -> str effects(managed_allocation):
         \\    out = ""
         \\    for value in args:
         \\        out = out + "[" + value + "]"
@@ -1056,7 +1056,7 @@ test "CLI module interfaces parse bodies and check exported signature visibility
         \\
         \\
         \\domain Distance: i64:
-        \\    def make(x: i64) -> Distance:
+        \\    def make(x: i64) -> Distance effects():
         \\        return wrap[Distance](x)
     });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
@@ -1150,7 +1150,7 @@ test "CLI checks and runs module programs with private boundaries and cross-file
         \\export value
         \\
         \\
-        \\def value() -> i64:
+        \\def value() -> i64 effects():
         \\    return 42
     });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
@@ -1176,7 +1176,7 @@ test "CLI checks and runs module programs with private boundaries and cross-file
         \\export value
         \\
         \\
-        \\def value() -> i64:
+        \\def value() -> i64 effects():
         \\    return divtrunc(1, 0)
     });
     const trap = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run-project", path, "--print-result" } ++ tools) });
@@ -1227,7 +1227,7 @@ test "CLI checkProjectPolicy distinguishes language failures policy failures and
         \\export value
         \\
         \\
-        \\def value() -> i64:
+        \\def value() -> i64 effects():
         \\    return 7
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "rules file.json", .data = "{\"version\":1,\"default_action\":\"deny\",\"rules\":[]}" });
@@ -1373,7 +1373,7 @@ test "CLI module quality reports preserve export roots and advisory thresholds" 
         \\export entry
         \\
         \\
-        \\def entry() -> i64:
+        \\def entry() -> i64 effects():
         \\    return hidden()
         \\
         \\
@@ -1495,7 +1495,7 @@ test "CLI schema inputs load fresh generated modules and reject malformed manife
         \\export read
         \\
         \\
-        \\def read() -> i64:
+        \\def read() -> i64 effects():
         \\    return config.value()
         \\
         \\
@@ -2646,7 +2646,7 @@ test "CLI project checks reuse syntax and verdicts and invalidate only changed m
         \\
         \\export answer
         \\
-        \\def answer() -> i64:
+        \\def answer() -> i64 effects():
         \\    return 7
     });
     const entry = try temp.dir.realPathFileAlloc(testing.io, "app/main.my", testing.allocator);
@@ -2675,7 +2675,7 @@ test "CLI project checks reuse syntax and verdicts and invalidate only changed m
         \\
         \\export answer
         \\
-        \\def answer() -> i64:
+        \\def answer() -> i64 effects():
         \\    return 8
     });
     const edited = try projectCacheCheck(entry, cache_argument, 0);
@@ -2703,7 +2703,7 @@ test "CLI project checks reuse syntax and verdicts and invalidate only changed m
         \\
         \\export answer
         \\
-        \\def answer() -> i64:
+        \\def answer() -> i64 effects():
         \\    return 8
     });
 
@@ -2735,7 +2735,7 @@ test "CLI invalidation reports actual query work and marks unexecuted stages ski
         \\module helper
         \\export answer
         \\
-        \\def answer() -> i64:
+        \\def answer() -> i64 effects():
         \\    return 40
     });
     const entry = try temp.dir.realPathFileAlloc(testing.io, "app/main.my", testing.allocator);
@@ -2760,7 +2760,7 @@ test "CLI invalidation reports actual query work and marks unexecuted stages ski
         \\module helper
         \\export answer
         \\
-        \\def answer() -> i64:
+        \\def answer() -> i64 effects():
         \\    return 41
     });
     var check_args: std.ArrayList([]const u8) = .empty;
@@ -2794,7 +2794,7 @@ test "CLI invalidation reports actual query work and marks unexecuted stages ski
         \\module helper
         \\export answer
         \\
-        \\def answer() -> i64:
+        \\def answer() -> i64 effects():
         \\    return 42
     });
     const run_entry = try temp.dir.realPathFileAlloc(testing.io, "runapp/main.my", testing.allocator);
@@ -2815,7 +2815,7 @@ test "CLI invalidation reports actual query work and marks unexecuted stages ski
         \\module helper
         \\export answer
         \\
-        \\def answer() -> i64:
+        \\def answer() -> i64 effects():
         \\    return 43
     });
     const second = try std.process.run(testing.allocator, testing.io, .{ .argv = run_args.items });
@@ -2972,7 +2972,7 @@ const named_constraint_fakes =
     \\
     \\
     \\domain FixedPrices: int:
-    \\    def make(amount: int) -> FixedPrices:
+    \\    def make(amount: int) -> FixedPrices effects():
     \\        return wrap[FixedPrices](amount)
     \\
     \\    def price(policy: FixedPrices, subtotal: int) -> int effects():
@@ -2991,7 +2991,7 @@ const named_constraint_fake_tests =
     \\    return 0
     \\
     \\
-    \\def test_checkout() -> bool:
+    \\def test_checkout() -> bool effects():
     \\    return checkout.total(fakes.FixedPrices.make(1750), 2000) == 2250
 ;
 const named_constraint_production_invalid =
@@ -3001,7 +3001,7 @@ const named_constraint_production_invalid =
     \\
     \\
     \\domain DiscountPrices: int:
-    \\    def make(discount: int) -> DiscountPrices:
+    \\    def make(discount: int) -> DiscountPrices effects():
     \\        return wrap[DiscountPrices](discount)
     \\
     \\    def price(policy: DiscountPrices, subtotal: int) -> int effects():

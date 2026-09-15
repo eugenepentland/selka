@@ -30,14 +30,14 @@ def to_word(value: int) -> u64:
 
 
 # A reproducible generator for a raw 64-bit state word.
-def from_word(word: u64) -> Random:
+def from_word(word: u64) -> Random effects(managed_allocation):
     cells: list[u64] = []
     cells.append(word)
     return Random(state=cells)
 
 
 # A reproducible generator for a signed seed; equal seeds give equal streams.
-def seeded(seed: int) -> Random:
+def seeded(seed: int) -> Random effects(managed_allocation):
     return from_word(to_word(seed))
 
 
@@ -55,7 +55,7 @@ def from_entropy(capability: Entropy) -> Result[Random, str] effects(random, man
 
 
 # The next SplitMix64 word, advancing the shared state exactly once.
-def next_word(generator: Random) -> u64:
+def next_word(generator: Random) -> u64 effects():
     state = wrapping_add(generator.state[0], 11400714819323198485u64)
     generator.state[0] = state
     word = wrapping_mul(bit_xor(state, shift_right(state, 30u64)), 13787848793156543929u64)
@@ -64,7 +64,7 @@ def next_word(generator: Random) -> u64:
 
 
 # A float uniformly drawn from the 2^53 multiples of 2^-53 in [0, 1).
-def random(generator: Random) -> float:
+def random(generator: Random) -> float effects():
     drawn = shift_right(next_word(generator), 11u64)
     return float(i64(drawn)) / 9007199254740992.0
 
@@ -95,7 +95,7 @@ def offset(low: int, value: u64) -> int:
 
 
 # A uniform integer in an inclusive range, covering the full signed width.
-def randint(generator: Random, low: int, high: int) -> Result[int, str]:
+def randint(generator: Random, low: int, high: int) -> Result[int, str] effects(managed_allocation):
     if low > high:
         return Err("randint needs low <= high")
     width = span(low, high)
@@ -105,7 +105,7 @@ def randint(generator: Random, low: int, high: int) -> Result[int, str]:
 
 
 # A uniformly chosen element, or nothing when the list is empty.
-def choice[T: copy + storable](generator: Random, items: list[T]) -> Option[T]:
+def choice[T: copy + storable](generator: Random, items: list[T]) -> Option[T] effects(managed_allocation):
     if len(items) == 0:
         return None
     match randint(generator, 0, len(items) - 1):
@@ -116,7 +116,7 @@ def choice[T: copy + storable](generator: Random, items: list[T]) -> Option[T]:
 
 
 # A list permuted in place by an unbiased Fisher-Yates pass.
-def shuffle[T: copy + storable](generator: Random, items: list[T]):
+def shuffle[T: copy + storable](generator: Random, items: list[T]) effects(managed_allocation):
     index = len(items) - 1
     while index > 0:
         match randint(generator, 0, index):

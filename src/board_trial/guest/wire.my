@@ -31,7 +31,7 @@ const FEATURES: i64 = 396
 const REQUEST: i64 = 740
 
 
-def unsigned(position: i64) -> u64:
+def unsigned(position: i64) -> u64 effects(host):
     value = 0u64
     shift = 0u64
     i = 0i64
@@ -42,7 +42,7 @@ def unsigned(position: i64) -> u64:
     return value
 
 
-def signed(position: i64) -> i64:
+def signed(position: i64) -> i64 effects(host):
     value = i64(io.byte(position + 7))
     if value >= 128:
         value = value - 256
@@ -53,15 +53,15 @@ def signed(position: i64) -> i64:
     return value
 
 
-def code(position: i64) -> u8:
+def code(position: i64) -> u8 effects(host):
     return io.byte(position)
 
 
-def flag(position: i64) -> bool:
+def flag(position: i64) -> bool effects(host):
     return io.byte(position) != 0u8
 
 
-def emitUnsigned(value: u64) -> i64:
+def emitUnsigned(value: u64) -> i64 effects(host):
     shift = 0u64
     i = 0i64
     while i < 8:

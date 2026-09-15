@@ -52,7 +52,7 @@ def groupForm(nodes: list[s.Node], index: int) -> bool:
     return s.form(nodes, index, b"group")
 
 
-def body(nodes: list[s.Node]) -> int:
+def body(nodes: list[s.Node]) -> int effects(host, managed_allocation):
     i = 1
     while i < len(nodes):
         if blockForm(nodes, i):
@@ -64,7 +64,7 @@ def body(nodes: list[s.Node]) -> int:
     return - 1
 
 
-def title(nodes: list[s.Node]) -> text.Span:
+def title(nodes: list[s.Node]) -> text.Span effects(host, managed_allocation):
     b = body(nodes)
     if b < 0:
         return text.empty()
@@ -83,7 +83,7 @@ def kind(family: text.Span) -> int:
     return 0
 
 
-def collectParts(nodes: list[s.Node]) -> Result[list[Part], int]:
+def collectParts(nodes: list[s.Node]) -> Result[list[Part], int] effects(host, managed_allocation):
     out: list[Part] = []
     b = body(nodes)
     if b < 0:
@@ -125,7 +125,7 @@ def collectParts(nodes: list[s.Node]) -> Result[list[Part], int]:
     return Ok(out)
 
 
-def label(pinout: list[s.Node], number: int) -> text.Span:
+def label(pinout: list[s.Node], number: int) -> text.Span effects(host, managed_allocation):
     i = 1
     while i < len(pinout):
         if pinForm(pinout, i) and text.number(s.at(pinout, i + 2).span) == number:
@@ -134,7 +134,7 @@ def label(pinout: list[s.Node], number: int) -> text.Span:
     return text.empty()
 
 
-def collectPins(nodes: list[s.Node], parts: list[Part], pinout: list[s.Node]) -> Result[list[Pin], int]:
+def collectPins(nodes: list[s.Node], parts: list[Part], pinout: list[s.Node]) -> Result[list[Pin], int] effects(host, managed_allocation):
     out: list[Pin] = []
     part = 0
     while part < len(parts):
@@ -185,7 +185,7 @@ def collectPins(nodes: list[s.Node], parts: list[Part], pinout: list[s.Node]) ->
     return Ok(out)
 
 
-def group(nodes: list[s.Node], reference: text.Span) -> text.Span:
+def group(nodes: list[s.Node], reference: text.Span) -> text.Span effects(host, managed_allocation):
     i = 1
     while i < len(nodes):
         if groupForm(nodes, i):
@@ -199,7 +199,7 @@ def group(nodes: list[s.Node], reference: text.Span) -> text.Span:
 # Netlisp per-pad supply branches fold only when the named host pad and trunk exist.
 
 
-def displayNet(net: text.Span, parts: list[Part], pins: list[Pin]) -> text.Span:
+def displayNet(net: text.Span, parts: list[Part], pins: list[Pin]) -> text.Span effects(host):
     last = - 1
     previous = - 1
     i = net.start

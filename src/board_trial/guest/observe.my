@@ -84,7 +84,7 @@ def failure(value: m.Failure) -> i64:
             return io.put(unavailable(cause))
 
 
-def publish(outcome: m.Validation) -> i64:
+def publish(outcome: m.Validation) -> i64 effects(host):
     match outcome:
         case m.Validation.ok(value):
             return report(value)

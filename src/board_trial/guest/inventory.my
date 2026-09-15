@@ -6,7 +6,7 @@ export checkComponents
 export checkNets
 
 
-def has[T: equality](slots: [4]m.Slot[T], needle: T, end: u64) -> bool:
+def has[T: equality](slots: [4]m.Slot[T], needle: T, end: u64) -> bool effects():
     i = 0u64
     while i < end:
         match slots[i]:
@@ -19,7 +19,7 @@ def has[T: equality](slots: [4]m.Slot[T], needle: T, end: u64) -> bool:
     return False
 
 
-def checkComponents(slots: [4]m.Slot[ids.ComponentId]) -> m.Preflight:
+def checkComponents(slots: [4]m.Slot[ids.ComponentId]) -> m.Preflight effects():
     i = 0u64
     while i < len(slots):
         match slots[i]:
@@ -34,7 +34,7 @@ def checkComponents(slots: [4]m.Slot[ids.ComponentId]) -> m.Preflight:
     return Ok(True)
 
 
-def checkNets(slots: [4]m.Slot[ids.NetId]) -> m.Preflight:
+def checkNets(slots: [4]m.Slot[ids.NetId]) -> m.Preflight effects():
     i = 0u64
     while i < len(slots):
         match slots[i]:

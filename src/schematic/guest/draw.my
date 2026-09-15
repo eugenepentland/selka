@@ -8,7 +8,7 @@ export label
 export symbol
 
 
-def rect(x: int, y: int, w: int, h: int):
+def rect(x: int, y: int, w: int, h: int) effects(host, managed_allocation):
     text.write(b"<rect class=\"chip\" x=\"")
     text.decimal(x)
     text.write(b"\" y=\"")
@@ -21,7 +21,7 @@ def rect(x: int, y: int, w: int, h: int):
     return
 
 
-def line(x1: int, y1: int, x2: int, y2: int):
+def line(x1: int, y1: int, x2: int, y2: int) effects(host, managed_allocation):
     text.write(b"<line x1=\"")
     text.decimal(x1)
     text.write(b"\" y1=\"")
@@ -34,7 +34,7 @@ def line(x1: int, y1: int, x2: int, y2: int):
     return
 
 
-def labelStart(x: int, y: int, anchor: int):
+def labelStart(x: int, y: int, anchor: int) effects(host, managed_allocation):
     text.write(b"<text x=\"")
     text.decimal(x)
     text.write(b"\" y=\"")
@@ -50,18 +50,18 @@ def labelStart(x: int, y: int, anchor: int):
     return
 
 
-def labelEnd():
+def labelEnd() effects(host, managed_allocation):
     text.write(b"</text>")
     return
 
 
-def label(x: int, y: int, anchor: int, value: text.Span):
+def label(x: int, y: int, anchor: int, value: text.Span) effects(host, managed_allocation):
     labelStart(x, y, anchor)
     text.escaped(value)
     return labelEnd()
 
 
-def symbol(kind: int):
+def symbol(kind: int) effects(host, managed_allocation):
     text.write(b"<g class=\"symbol\">")
     line(- 20, 0, - 12, 0)
     line(12, 0, 20, 0)

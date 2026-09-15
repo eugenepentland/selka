@@ -4,7 +4,7 @@ export test_aliases_and_values
 export test_membership_and_get
 
 
-def test_insertion_order() -> bool:
+def test_insertion_order() -> bool effects(managed_allocation):
     counts: dict[str, int] = {}
     counts["pear"] = 2
     counts["apple"] = 3
@@ -19,7 +19,7 @@ def test_insertion_order() -> bool:
     return len(counts) == 2
 
 
-def test_aliases_and_values() -> bool:
+def test_aliases_and_values() -> bool effects(managed_allocation):
     counts: dict[str, int] = {}
     counts["pear"] = 2
     counts["apple"] = 3
@@ -35,7 +35,7 @@ def test_aliases_and_values() -> bool:
     return len(counts.keys()) == 3
 
 
-def test_membership_and_get() -> bool:
+def test_membership_and_get() -> bool effects(managed_allocation):
     counts: dict[str, int] = {"pear": 2, "apple": 3}
     if "pear" not in counts or "plum" in counts:
         return False

@@ -25,7 +25,7 @@ def layer(region: m.RegionFace, value: m.Layer) -> bool:
             return value == m.Layer.back
 
 
-def applies(item: m.Feature, region: m.Region) -> bool:
+def applies(item: m.Feature, region: m.Region) -> bool effects():
     match item:
         case m.Feature.component(value):
             return region.blocks.component and side(region.face, value.face)

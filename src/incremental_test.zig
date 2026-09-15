@@ -53,7 +53,7 @@ test "module and declaration identities ignore body edits and interface fingerpr
         \\export value
         \\
         \\
-        \\def value() -> i64:
+        \\def value() -> i64 effects():
         \\    return 41
         },
     };
@@ -68,7 +68,7 @@ test "module and declaration identities ignore body edits and interface fingerpr
         \\export value
         \\
         \\
-        \\def value() -> i64:
+        \\def value() -> i64 effects():
         \\    # a comment in the body
         \\    return 41
     ;
@@ -83,7 +83,7 @@ test "module and declaration identities ignore body edits and interface fingerpr
         \\export value
         \\
         \\
-        \\def value(step: i64) -> i64:
+        \\def value(step: i64) -> i64 effects():
         \\    return 41 + step
     ;
     const third = try describe(&entries, t.allocator);
@@ -278,6 +278,54 @@ test "effect-bound edits change the function interface hash" {
     defer incremental.deinit(second, t.allocator);
     try t.expectEqualStrings(identity, declaration(second, "main", "touch").identity);
     try t.expect(!std.mem.eql(u8, interface, declaration(second, "main", "touch").interface_sha256.?));
+}
+
+test "an exported body edit inside its declared ceiling preserves the API fingerprint and still changes the body hash" {
+    const output_body =
+        \\module main
+        \\export emit
+        \\
+        \\
+        \\def emit() -> i64 effects(output, managed_allocation):
+        \\    print("x")
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return emit()
+    ;
+    const allocation_body =
+        \\module main
+        \\export emit
+        \\
+        \\
+        \\def emit() -> i64 effects(output, managed_allocation):
+        \\    items: list[i64] = []
+        \\    items.append(1)
+        \\    return items[0]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return emit()
+    ;
+    var entries = [_]File{.{ .path = "main.my", .bytes = output_body }};
+    const first = try describe(&entries, t.allocator);
+    defer incremental.deinit(first, t.allocator);
+    const first_interface = try t.allocator.dupe(u8, declaration(first, "main", "emit").interface_sha256.?);
+    defer t.allocator.free(first_interface);
+    const first_body = try t.allocator.dupe(u8, declaration(first, "main", "emit").body_sha256.?);
+    defer t.allocator.free(first_body);
+
+    entries[0].bytes = allocation_body;
+    const second = try describe(&entries, t.allocator);
+    defer incremental.deinit(second, t.allocator);
+    // Declared ceilings are the published contract: two bodies inside the same
+    // bound keep the same API fingerprint (and every consumer's type check).
+    try t.expectEqualStrings(first_interface, declaration(second, "main", "emit").interface_sha256.?);
+    try t.expectEqualStrings(first.project_interface_sha256, second.project_interface_sha256);
+    // The implementation still changed, so body cacheability and runtime-test
+    // receipts keyed on the body must invalidate.
+    try t.expect(!std.mem.eql(u8, first_body, declaration(second, "main", "emit").body_sha256.?));
 }
 
 test "record field and union case edits change the nominal interface hash" {
@@ -497,7 +545,7 @@ test "project interface follows exported constants and effect ceilings but not c
         \\export id
         \\
         \\
-        \\def id[T](n: T) -> T:
+        \\def id[T](n: T) -> T effects():
         \\    return n
         \\
         \\
@@ -510,7 +558,7 @@ test "project interface follows exported constants and effect ceilings but not c
         \\export id
         \\
         \\
-        \\def id[T](n: T) -> T:
+        \\def id[T](n: T) -> T effects():
         \\    return n
         \\
         \\
@@ -533,7 +581,7 @@ test "default argument values change the declaration interface" {
         \\export value
         \\
         \\
-        \\def value(n: i64 = 41) -> i64:
+        \\def value(n: i64 = 41) -> i64 effects():
         \\    return n
         \\
         \\
@@ -545,7 +593,7 @@ test "default argument values change the declaration interface" {
         \\export value
         \\
         \\
-        \\def value(n: i64 = 42) -> i64:
+        \\def value(n: i64 = 42) -> i64 effects():
         \\    return n
         \\
         \\
@@ -564,6 +612,78 @@ test "default argument values change the declaration interface" {
     try t.expect(!std.mem.eql(u8, d0.project_interface_sha256, d1.project_interface_sha256));
 }
 
+test "keyword parameter names and generic requirements stay in the public contract" {
+    const named_step =
+        \\module main
+        \\export value
+        \\
+        \\
+        \\def value(step: i64 = 1) -> i64 effects():
+        \\    return step
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return value()
+    ;
+    const named_n =
+        \\module main
+        \\export value
+        \\
+        \\
+        \\def value(n: i64 = 1) -> i64 effects():
+        \\    return n
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return value()
+    ;
+    var entries = [_]File{.{ .path = "main.my", .bytes = named_step }};
+    const named_first = try describe(&entries, t.allocator);
+    defer incremental.deinit(named_first, t.allocator);
+    const named_interface = try t.allocator.dupe(u8, declaration(named_first, "main", "value").interface_sha256.?);
+    defer t.allocator.free(named_interface);
+    entries[0].bytes = named_n;
+    const named_second = try describe(&entries, t.allocator);
+    defer incremental.deinit(named_second, t.allocator);
+    try t.expect(!std.mem.eql(u8, named_interface, declaration(named_second, "main", "value").interface_sha256.?));
+    try t.expect(!std.mem.eql(u8, named_first.project_interface_sha256, named_second.project_interface_sha256));
+
+    const unconstrained =
+        \\module main
+        \\export identity
+        \\
+        \\
+        \\def identity[T](x: T) -> T effects():
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return identity[i64](1)
+    ;
+    const constrained =
+        \\module main
+        \\export identity
+        \\
+        \\
+        \\def identity[T: copy](x: T) -> T effects():
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return identity[i64](1)
+    ;
+    var generic_entries = [_]File{.{ .path = "main.my", .bytes = unconstrained }};
+    const generic_first = try describe(&generic_entries, t.allocator);
+    defer incremental.deinit(generic_first, t.allocator);
+    const generic_interface = try t.allocator.dupe(u8, declaration(generic_first, "main", "identity").interface_sha256.?);
+    defer t.allocator.free(generic_interface);
+    generic_entries[0].bytes = constrained;
+    const generic_second = try describe(&generic_entries, t.allocator);
+    defer incremental.deinit(generic_second, t.allocator);
+    try t.expect(!std.mem.eql(u8, generic_interface, declaration(generic_second, "main", "identity").interface_sha256.?));
+    try t.expect(!std.mem.eql(u8, generic_first.project_interface_sha256, generic_second.project_interface_sha256));
+}
+
 // spec: INCREMENTAL-SPEC-1
 // spec-case: INCREMENTAL-SPEC-1
 test "specialization key follows the concrete provider shape and target contract" {
@@ -578,7 +698,7 @@ test "specialization key follows the concrete provider shape and target contract
         \\    value: i64
         \\
         \\
-        \\def value_of[T: HasValue](item: T) -> i64:
+        \\def value_of[T: HasValue](item: T) -> i64 effects():
         \\    return item.value
         \\
         \\
@@ -597,7 +717,7 @@ test "specialization key follows the concrete provider shape and target contract
         \\    value: i64
         \\
         \\
-        \\def value_of[T: HasValue](item: T) -> i64:
+        \\def value_of[T: HasValue](item: T) -> i64 effects():
         \\    return item.value
         \\
         \\

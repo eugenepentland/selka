@@ -29,6 +29,6 @@ result Decoded:
     err: Error
 
 
-def error_code(error: Error) -> int:
+def error_code(error: Error) -> int effects():
     codes: [Error]int = {Error.frame_length: -1, Error.version: -2, Error.kind: -3, Error.payload_length: -4, Error.checksum: -5}
     return codes[error]
