@@ -52,8 +52,8 @@ Branches are cut from the baseline SHA. Worktrees live under
 | M2 | `codex/velocity-m2` | `velocity-m2` | `44a0bfe` | M1, E1 | **done** — origin/alias/call enforcement; merged in `8d5b84b` |
 | M3 | `codex/velocity-m3` | `velocity-m3` | `8d5b84b` | M2, E2 | **done** — corpus repair, navigation exposure, runnable docs; merged in `75bb69a` |
 | C1 | `codex/velocity-c1` | `velocity-c1` | `44a0bfe` | C0, E2, M1 | **done** — per-function deps/remap; merged in `b8a512a` |
-| C1R | `codex/velocity-c1r` | `velocity-c1r` | `d150335` | C1 | **in progress** — close module-identity/resolved-dependency/eligibility/contract-binding gaps |
-| C2 | `codex/velocity-c2` | `velocity-c2` | C1R integrated | C1, C1R, M2 | **blocked on C1R** — persist checked bodies across processes |
+| C1R | `codex/velocity-c1r` | `velocity-c1r` | `d150335` | C1 | **done** — module/dependency/eligibility/contract-binding gaps; merged in `86ffbb7c` |
+| C2 | `codex/velocity-c2` | `velocity-c2` | `86ffbb7c` | C1, C1R, M2 | **in progress** — persist checked bodies across processes |
 | C3 | `codex/velocity-c3` | `velocity-c3` | C2 integrated | C2 | **not started** |
 | C4 | `codex/velocity-c4` | `velocity-c4` | C3+P1 integrated | C3 | **not started** |
 | P1 | `codex/velocity-p1` | `velocity-p1` | `d150335` | E2, M3 | **done** — declaration-first provider contract checking; merged in `354c0e8` |
@@ -99,4 +99,6 @@ Never share a mutable checkout, installed binary or `zig-out`/`.zig-cache`.
 | 2026-09-15 | `26e8121` | follow-up | formatter `mutates(...)` spacing + standalone runner trailing-option tolerance; final gate Debug 1128/1128, ReleaseFast 1127/1128 (1 skipped), Guardian 88/88 |
 | 2026-09-15 | `d150335` | C1R/P1 start | C1 gap closure and checked-provider substitution launched from the integrated tree |
 | 2026-09-15 | `354c0e8` | P1 | declaration/interface gate + selected-provider contract validation + receipt identities; 4 CLI regressions and 101 native units green |
+| 2026-09-15 | `86ffbb7c` | C1R | module-qualified keys, resolved-declaration deps, contract-bound reuse; plus a check-session bypass-slice fix |
+| 2026-09-15 | `86ffbb7c` | C2 start | persistence package launched |
 | 2026-09-15 | (note) | build cache | a warm `.zig-cache` can keep a stale generated `qbe_build_assets` module after large `src/` edits; cold `zig build test-units` passes 969/969. Final gate must be cold. |
