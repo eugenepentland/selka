@@ -138,7 +138,7 @@ The default module count is also a concrete ceiling, not merely a missing benchm
 
 Both `fmt` and `fmt --check` accepted:
 
-```text
+```text notest
 def main() -> int:
     value=  40+2
     return value

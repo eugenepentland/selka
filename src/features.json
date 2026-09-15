@@ -397,6 +397,11 @@
       "summary": "Native traps carry bounded structured index/length and operand detail rendered identically in text and JSON, transported from the child as one versioned stderr record.",
       "doc": "docs/io.md#runtime-diagnostics"
     },
+    "actual-work-report": {
+      "kind": "tooling",
+      "summary": "Versioned work-report-v1 separates unchanged fingerprints from actual result reuse and reports per-stage performed, reused and skipped work with bypass reasons and session deltas.",
+      "doc": "docs/tooling/work-report.md#compiler-work-and-reuse-report"
+    },
     "native-instruction-and-frame-budgets": {
       "kind": "tooling",
       "summary": "`--max-steps=N` and `--max-frames=N` raise the per-process instruction and call-depth budgets, and each trap names the flag that raises it.",

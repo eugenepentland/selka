@@ -385,7 +385,7 @@ fn workNumber(object: std.json.Value, name: []const u8, field: []const u8) usize
     return @intCast(stage.get(field).?.integer);
 }
 
-// spec-case: INVALIDATION-EXECUTION-1
+// spec: WORK-REPORT-1
 test "work report separates fingerprint equality from reuse and marks skipped stages" {
     var work: invalidation.Work = .{ .command = "check-project", .fingerprint_unchanged = true };
     work.set(.parsed_modules, 2, 0);
@@ -417,7 +417,7 @@ test "work report separates fingerprint equality from reuse and marks skipped st
     try t.expectEqual(@as(i64, 1), bypass.get("count").?.integer);
 }
 
-// spec-case: INVALIDATION-EXECUTION-1
+// spec-case: WORK-REPORT-1
 test "work report counts observed reuse as a hit rather than as fresh work" {
     var work: invalidation.Work = .{ .command = "run-project" };
     work.set(.parsed_modules, 0, 3);
@@ -443,7 +443,7 @@ test "work report counts observed reuse as a hit rather than as fresh work" {
     try t.expectEqual(@as(usize, 4), @as(usize, @intCast(session.get("checked_bodies").?.object.get("reused").?.integer)));
 }
 
-// spec-case: INVALIDATION-EXECUTION-1
+// spec-case: WORK-REPORT-1
 test "work report session totals are the sum of request deltas" {
     var first: invalidation.Work = .{ .command = "check-project" };
     first.set(.parsed_modules, 3, 0);

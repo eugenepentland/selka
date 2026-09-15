@@ -108,6 +108,11 @@ hit/miss count for each of the nine stages. When `--explain-invalidation` is als
 given, the counts come from the receipt comparison; otherwise they are derived
 from the live syntax and verdict cache counters.
 
+`--report` and `--timings=json` also print a `work-report-v1` line that
+distinguishes an unchanged fingerprint from actual result reuse and counts what
+each stage performed, reused or skipped. See
+[Compiler work and reuse report](../tooling/work-report.md#compiler-work-and-reuse-report).
+
 ```console
 $ mylang check-project app/main.my --explain-invalidation --report --cache-dir=.mylang-cache/demo
 {"version":"invalidation-report-v1","hits":9,"misses":0,"queries":[{"stage":"load_source","status":"hit","key":"c354..."}, ...]}

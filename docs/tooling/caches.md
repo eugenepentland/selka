@@ -15,6 +15,9 @@ reused. The design records are
 [persistent CLI checking sessions](../experiments/check-session.md) and
 [larger-project incremental checking](../experiments/large-project-checking.md).
 
+Actual work and reuse are reported separately from cache fingerprints; see
+[Compiler work and reuse report](work-report.md#compiler-work-and-reuse-report).
+
 ## Persistent frontend cache
 
 Ordinary one-shot `mylang check`, `mylang run`, `mylang build` and `mylang test`
