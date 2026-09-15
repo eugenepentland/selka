@@ -33,7 +33,16 @@ effect set, capability/restriction flags, exported record fields or union
 variants, and public layout flags. It excludes function bodies, comments,
 formatting, diagnostic spans, private declarations and local names. A body edit
 with an unchanged interface does not change the interface hash; a signature,
-effect, constant, record or union change does.
+effect, constant, record or union change does. Parameter defaults participate in
+the callable interface, because an unchanged call site can behave differently
+after a default changes.
+
+The project interface fingerprint (`project_interface_sha256`) is composed from
+the sorted `interface_identity`/`interface_sha256` pairs of exported interface
+items only. It is a dedicated semantic encoding, not a hash of the whole public
+schema: exported constants, declared effect ceilings, parameter defaults and
+exported type shapes participate, while comments, formatting, source paths,
+source hashes, spans and private declarations are excluded.
 
 ```console
 $ mylang project-dependencies app/main.my | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["incremental"]["version"]); print(d["incremental"]["project_interface_sha256"])'
@@ -53,8 +62,9 @@ still rejects an unchanged effect-bounded caller.
 ## Query stages
 
 The incremental model names nine explicit stages. Each records its input
-fingerprints and dependency identities, and each can be reported as a hit or a
-miss with the first changed dependency.
+fingerprints and dependency identities. A stage a command did not run is
+reported `skipped`, never as a hit; a report therefore distinguishes actual
+reuse from work that never happened.
 
 1. `load_source` — every module name, path and source hash, plus the compiler
    identity, target and toolchain.
@@ -63,9 +73,15 @@ miss with the first changed dependency.
 4. `resolve_interface` — the project exported-interface fingerprint.
 5. `check_body` — per-declaration body fingerprints.
 6. `instantiate_specialization` — generic specialization keys.
-7. `lower_function` — checked function identities.
+7. `lower_function` — checked declaration identity, interface hash and body
+   hash; lowering consumes the checked body.
 8. `emit_fragment` — emitted function/data fragment fingerprints.
-9. `link` — compiler, toolchain, target and runtime ABI identity.
+9. `link` — compiler, toolchain, target, runtime ABI identity and the emitted
+   fragment inputs.
+
+A command that lowers (such as `run` or `emit-project-qbe`) builds its receipt
+after lowering, so the fragment table holds real inputs. A check-only command
+reports lowering, emission and linking as `skipped`.
 
 ## Cache-key contract
 
@@ -85,6 +101,12 @@ the same six dimensions:
 contract fingerprint = SHA256(compiler_identity, bootstrap-v1, target, runtime-abi-v0-unfrozen, effects-v1, flags)
 ```
 
+A generic specialization key mixes the template identity, the canonical
+concrete arguments, the concrete provider type shape (record fields, variants and
+layout flags), the target ABI and the compiler build identity. A provider-shape
+edit changes the key even when the template is unchanged; the target and compiler
+inputs are the real receipt values, not placeholders.
+
 The fingerprint is folded into the persistent syntax key, the whole-program
 verdict key, the checked-function-body digest, the generic-specialization key and
 the native object identity. Changing any dimension invalidates those entries even
@@ -96,22 +118,46 @@ future runtime ABI or flag change cannot silently reuse an older entry.
 
 `--explain-invalidation` compares the current checked project against the previous
 `project-dependencies-v1` receipt and prints exactly one `invalidation-report-v1`
-JSON line on stderr. A missing baseline is reported as nine misses with
-`first_changed` `"no-baseline"`; a corrupt baseline is reported as nine misses
-with `"corrupt-baseline"` rather than failing the command. The baseline lives at
+JSON line on stderr. A missing baseline makes every executed stage miss with
+`first_changed` `"no-baseline"`; a baseline is compared only after its version,
+implementation identity, inputs array and incremental module table validate, and
+a structurally invalid baseline (for example `{}`) makes every executed stage
+miss with `"corrupt-baseline"` instead of comparing missing fields into hits.
+Skipped stages stay skipped and are not counted as hits or misses. A rejected
+check still emits a best-effort report from a partial receipt, but it never
+publishes a successful verdict. The baseline lives at
 `<cache-dir>/invalidation/<entry>.json` and is deliberately **not** partitioned
 by compiler identity, so a compiler change can be explained. `--no-cache` reads
 and writes no baseline.
 
-`--report` adds a `stages` object to the existing `frontend-cache-v1` line with a
-hit/miss count for each of the nine stages. When `--explain-invalidation` is also
-given, the counts come from the receipt comparison; otherwise they are derived
-from the live syntax and verdict cache counters.
+`--report` adds a `stages` object to the existing `frontend-cache-v1` line with
+`hits`, `misses` and `skipped` counts for each of the nine stages. When
+`--explain-invalidation` is also given, the counts come from the receipt
+comparison; otherwise stages the command did not run are `skipped` and stages it
+ran fresh are misses.
 
 ```console
 $ mylang check-project app/main.my --explain-invalidation --report --cache-dir=.mylang-cache/demo
-{"version":"invalidation-report-v1","hits":9,"misses":0,"queries":[{"stage":"load_source","status":"hit","key":"c354..."}, ...]}
-{"version":"frontend-cache-v1","syntax_hits":0,"syntax_misses":0,...,"stages":{"load_source":{"hits":1,"misses":0}, ...}}
+{"version":"invalidation-report-v1","hits":6,"misses":1,"skipped":2,"queries":[{"stage":"load_source","status":"hit","key":"c354..."},{"stage":"lower_function","status":"skipped","key":"lower_function"}, ...]}
+{"version":"frontend-cache-v1","syntax_hits":1,"syntax_misses":0,...,"stages":{"load_source":{"hits":1,"misses":0,"skipped":0},"lower_function":{"hits":0,"misses":0,"skipped":1}, ...}}
+```
+
+## Declaration-backed body reuse
+
+Ordinary checked-body reuse is gated by declaration identity and interface
+dependencies, not by hashing the whole project's source. Each ordinary
+declaration carries a stable `declarationIdentity` and a semantic interface
+digest; the cache publishes the ordered table of those keys together with the
+resolved type-catalog digest. A second check may reuse bodies only when the
+ordered declaration identities and interface digests and the catalog are
+unchanged. Per body, reuse additionally requires the declaration's own full
+source text (header plus body) to be byte-identical, so span relocation is exact.
+An interface change to any declaration remains conservative: every body is
+rechecked, because an unchanged caller may depend on the changed contract.
+
+```text
+gate = ordered declarationIdentity + interface digest + resolved type catalog
+reuse one body = gate unchanged AND that declaration's full text byte-identical
 ```
 
 ## Correctness: clean versus warm

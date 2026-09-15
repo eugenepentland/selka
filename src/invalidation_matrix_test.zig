@@ -563,9 +563,9 @@ fn runMatrix() !void {
     };
 
     const cases = [_]Case{
-        .{ .name = "whitespace outside", .base = &base, .edited = &ws_out, .accepted = true, .reused = 0, .checked = 3 },
+        .{ .name = "whitespace outside", .base = &base, .edited = &ws_out, .accepted = true, .reused = 3, .checked = 0 },
         .{ .name = "whitespace inside", .base = &base, .edited = &ws_in, .accepted = true, .reused = 2, .checked = 1 },
-        .{ .name = "comment outside", .base = &base, .edited = &comment_out, .accepted = true, .reused = 0, .checked = 3 },
+        .{ .name = "comment outside", .base = &base, .edited = &comment_out, .accepted = true, .reused = 3, .checked = 0 },
         .{ .name = "comment inside", .base = &base, .edited = &comment_in, .accepted = true, .reused = 2, .checked = 1 },
         .{ .name = "private body", .base = &base, .edited = &private_body_file, .accepted = true, .reused = 2, .checked = 1 },
         .{ .name = "exported signature", .base = &base, .edited = &signature, .accepted = true, .reused = 0, .checked = 3 },
@@ -584,6 +584,18 @@ fn runMatrix() !void {
 // spec: INVALIDATION-MATRIX-1
 test "invalidation matrix clean and warm results agree with exact reuse deltas" {
     try runMatrix();
+}
+
+// spec: INVALIDATION-REUSE-1
+test "whitespace and comment edits outside declarations reuse every body" {
+    const base = single(base_main);
+    const ws_out = single(whitespace_outside);
+    const comment_out = single(comment_outside);
+    const cases = [_]Case{
+        .{ .name = "whitespace outside", .base = &base, .edited = &ws_out, .accepted = true, .reused = 3, .checked = 0 },
+        .{ .name = "comment outside", .base = &base, .edited = &comment_out, .accepted = true, .reused = 3, .checked = 0 },
+    };
+    for (cases) |case| try expectCase(t.allocator, case);
 }
 
 const single_source =

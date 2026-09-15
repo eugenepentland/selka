@@ -158,17 +158,26 @@ $ printf 'check\ncheck\nclear\ncheck\nquit\n' | mylang check-session examples/mo
 ## Function body cache
 
 When the verdict cache misses because a module changed, the checked bodies of
-functions that did not change can still be reused. Reuse is conservative and
-independently owned: a snapshot carries its own spans, nodes, statements and
-locals, relocated into the current source, and any relocation that cannot be
-validated falls back to checking fresh rather than trusting a stale reference.
-A changed declaration, type or import identity invalidates body reuse, generic,
-constant and alias configurations always check fresh, and the region, effect and
-codec passes rerun completely after every body edit — so reusing a caller never
-reuses a callee's effect verdict, and a callee that gains an effect still rejects
-an unchanged effect-bounded caller. The `functions` counters report bodies
-actually reused and actually checked. In this single-module session `perimeter`
-is rewritten between the two requests and the other two bodies are reused.
+functions that did not change can still be reused. The reuse gate is
+**declaration-identity backed**: each ordinary declaration contributes a stable
+`declarationIdentity` and a semantic interface digest, and the cache publishes
+that ordered table together with the resolved type-catalog digest. A second check
+reuses only when the ordered identities/interfaces and catalog are unchanged; a
+body is reused only when its own full declaration text (header plus body) is
+byte-identical, so relocation is exact and position-independent. An interface
+change to any declaration stays conservative and rechecks every body, because an
+unchanged caller may depend on the changed contract. Whitespace or comments
+outside declarations leave every declaration text unchanged and therefore reuse
+every body. Reuse is independently owned: a snapshot carries its own spans,
+nodes, statements and locals, relocated into the current source, and any
+relocation that cannot be validated falls back to checking fresh rather than
+trusting a stale reference. Generic, constant and alias configurations still
+check fresh, and the region, effect and codec passes rerun completely after every
+body edit — so reusing a caller never reuses a callee's effect verdict, and a
+callee that gains an effect still rejects an unchanged effect-bounded caller. The
+`functions` counters report bodies actually reused and actually checked. In this
+single-module session `perimeter` is rewritten between the two requests and the
+other two bodies are reused.
 
 ```console
 $ mylang check-session app/main.my
