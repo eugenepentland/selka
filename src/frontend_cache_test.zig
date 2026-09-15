@@ -4,6 +4,7 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const ast = @import("ast.zig");
 const source = @import("source.zig");
+const cache_key = @import("cache_key.zig");
 const Cache = language.frontend_cache.Cache;
 
 const Files = struct {
@@ -300,4 +301,54 @@ test "frontend cache retains named constraints across a syntax round trip" {
     try t.expectEqualStrings("P", src.text(hit.types.constraints[0].subject.name));
     try t.expectEqual(@as(usize, 1), hit.types.constraints[0].subject.requirements.len);
     try t.expectEqualStrings("copy", src.text(hit.types.constraints[0].subject.requirements[0]));
+}
+
+test "frontend cache contract dimensions invalidate syntax and verdict keys for identical sources" {
+    var temp = t.tmpDir(.{});
+    defer temp.cleanup();
+    const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    var caller = std.heap.ArenaAllocator.init(t.allocator);
+    defer caller.deinit();
+    var files: Files = .{};
+    var project = language.project.Project.init(t.allocator);
+    defer project.deinit();
+    try load(&project, &files);
+    const index = try language.interfaces.buildWithCache(&project, null, null);
+    const module = project.modules.items[0];
+
+    var cache = Cache.initWithContract(t.allocator, t.io, root, "test-identity", cache_key.Contract.default);
+    try cache.rememberSyntax(module.src, module.header.body_start, index.units[0].syntax);
+    try cache.rememberVerdict(&project, .text, "warning\n");
+    try t.expect((try cache.lookupSyntax(caller.allocator(), module.src, module.header.body_start)) != null);
+    const warnings = (try cache.lookupVerdict(t.allocator, &project, .text)).?;
+    defer t.allocator.free(warnings);
+    try t.expectEqualStrings("warning\n", warnings);
+
+    const base = cache_key.Contract.default;
+    var variants: [6]cache_key.Contract = .{ base, base, base, base, base, base };
+    variants[0].bootstrap_language = "bootstrap-v2";
+    variants[1].target = "wasm32";
+    variants[2].runtime_abi = "runtime-abi-v1";
+    variants[3].effects = "effects-v2";
+    variants[4].flags = "--release";
+    variants[5].compiler_identity = "sha256:deadbeef";
+    const unchanged_key = cache.syntaxKey(module.src, module.header.body_start);
+    for (variants) |variant| {
+        var changed = Cache.initWithContract(t.allocator, t.io, root, "test-identity", variant);
+        defer changed.deinit();
+        try t.expect(try changed.lookupSyntax(caller.allocator(), module.src, module.header.body_start) == null);
+        try t.expect(try changed.lookupVerdict(t.allocator, &project, .text) == null);
+        const changed_key = changed.syntaxKey(module.src, module.header.body_start);
+        try t.expect(!std.mem.eql(u8, &unchanged_key, &changed_key));
+        try t.expect(!cache_key.Contract.eql(cache_key.Contract.default, variant));
+    }
+
+    // An identical contract in a fresh cache instance is still a hit.
+    var same = Cache.initWithContract(t.allocator, t.io, root, "test-identity", cache_key.Contract.default);
+    defer same.deinit();
+    try t.expect((try same.lookupSyntax(caller.allocator(), module.src, module.header.body_start)) != null);
+    const same_warnings = (try same.lookupVerdict(t.allocator, &project, .text)).?;
+    defer t.allocator.free(same_warnings);
+    try t.expectEqualStrings("warning\n", same_warnings);
 }

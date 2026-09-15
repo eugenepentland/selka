@@ -4,10 +4,17 @@ const ast = @import("ast.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
 const Hash = std.crypto.hash.sha2.Sha256;
+/// Domain for checked ordinary-function dependency digests.
+pub const functions_domain = "semantic-functions-v3";
+/// Domain for the generic-specialization key primitive.
+pub const specialization_domain = "semantic-specialization-v1";
 /// Current function body spans and a dependency key; unsupported query surfaces stay fresh.
-pub const Prepared = struct { digest: [32]u8, bodies: []source.Span, enabled: bool };
+/// `contract_sha256` retains the build-contract dimension that participated in `digest`.
+pub const Prepared = struct { digest: [32]u8, bodies: []source.Span, enabled: bool, contract_sha256: [32]u8 };
 /// Ignore body contents while preserving source outside bodies and resolved type identities.
-pub fn prepare(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, records: []const typed.Record) error{ OutOfMemory, InternalError }!Prepared {
+/// `contract` is the Wave-3 contract fingerprint; the empty string is the conservative
+/// default for callers that have not yet resolved a full contract.
+pub fn prepare(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, records: []const typed.Record, contract: []const u8) error{ OutOfMemory, InternalError }!Prepared {
     const bodies = try allocator.alloc(source.Span, program.functions.len);
     var enabled = !@import("nominal_type_syntax.zig").present(program);
     if (enabled and try functionValues(allocator, src, program)) enabled = false;
@@ -18,8 +25,11 @@ pub fn prepare(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     for (program.types.domains) |domain| if (domain.type_parameters.len != 0) {
         enabled = false;
     };
+    var contract_sha256: [32]u8 = undefined;
+    Hash.hash(contract, &contract_sha256, .{});
     var hash = Hash.init(.{});
-    hash.update("semantic-functions-v2");
+    hash.update(functions_domain);
+    hash.update(&contract_sha256);
     fingerprint(&hash, []const u8, src.path);
     for (src.origins) |origin| fingerprint(&hash, []const u8, origin.original.path);
     const ordered = try allocator.dupe(source.Span, bodies);
@@ -34,8 +44,46 @@ pub fn prepare(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     fingerprint(&hash, []const u8, src.bytes[cursor..]);
     // Catalog order matters: checked bodies retain nominal type identities.
     fingerprint(&hash, []const typed.Record, records);
-    return .{ .digest = hash.finalResult(), .bodies = bodies, .enabled = enabled };
+    return .{ .digest = hash.finalResult(), .bodies = bodies, .enabled = enabled, .contract_sha256 = contract_sha256 };
 }
+
+/// Canonical key for one generic specialization. This is a primitive for a future
+/// reuse engine; `prepare` deliberately keeps generic templates and nominal
+/// syntax on the fresh path, so this key is never used to claim current reuse.
+/// It mixes every Wave-3 specialization dimension: template identity/fingerprint,
+/// canonical concrete arguments (order-sensitive), observed provider/constraint
+/// shape, target/runtime ABI and compiler identity.
+pub fn specializationKey(
+    allocator: std.mem.Allocator,
+    template_identity: []const u8,
+    arguments: []const []const u8,
+    provider: []const u8,
+    target_abi: []const u8,
+    compiler_identity: []const u8,
+) error{OutOfMemory}![]const u8 {
+    var hash = Hash.init(.{});
+    hash.update(specialization_domain);
+    frame(&hash, template_identity);
+    frame(&hash, provider);
+    frame(&hash, target_abi);
+    frame(&hash, compiler_identity);
+    var count: [8]u8 = undefined;
+    std.mem.writeInt(u64, &count, arguments.len, .little);
+    hash.update(&count);
+    for (arguments) |argument| frame(&hash, argument);
+    var digest: [32]u8 = undefined;
+    hash.final(&digest);
+    return std.fmt.allocPrint(allocator, "{s}", .{std.fmt.bytesToHex(digest, .lower)}) catch error.OutOfMemory;
+}
+
+/// Length-prefix a field so adjacent values cannot alias across boundaries.
+fn frame(hash: *Hash, bytes: []const u8) void {
+    var length: [8]u8 = undefined;
+    std.mem.writeInt(u64, &length, bytes.len, .little);
+    hash.update(&length);
+    hash.update(bytes);
+}
+
 fn functionValues(allocator: std.mem.Allocator, src: source.Source, program: ast.Program) std.mem.Allocator.Error!bool {
     var names: std.StringHashMapUnmanaged(void) = .empty;
     defer names.deinit(allocator);

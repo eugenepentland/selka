@@ -15,9 +15,17 @@ pub const Cache = struct {
     statistics: Statistics = .{},
     entries: []owned.Entry = &.{},
     digest: ?[32]u8 = null,
+    /// Wave-3 contract fingerprint mixed into every prepared dependency digest.
+    /// Empty preserves the historical behavior for callers that have not resolved
+    /// a contract; a changed fingerprint forces a fresh check with no body reuse.
+    contract: []const u8 = "",
     /// Zero retention bytes disables reuse without changing checking behavior.
     pub fn init(allocator: std.mem.Allocator, max_bytes: usize) Cache {
         return .{ .allocator = allocator, .max_bytes = max_bytes };
+    }
+    /// Create a cache bound to an explicit Wave-3 contract fingerprint.
+    pub fn initWithContract(allocator: std.mem.Allocator, max_bytes: usize, contract: []const u8) Cache {
+        return .{ .allocator = allocator, .max_bytes = max_bytes, .contract = contract };
     }
     /// Release every retained tree and source generation.
     pub fn deinit(self: *Cache) void {
@@ -33,7 +41,7 @@ pub const Cache = struct {
     }
     /// Begin after fresh declaration/type collection, before checking any body.
     pub fn begin(self: *Cache, allocator: std.mem.Allocator, src: source.Source, syntax: ast.Program, records: []const typed.Record) error{ OutOfMemory, InternalError }!Session {
-        const prepared = try key.prepare(allocator, src, syntax, records);
+        const prepared = try key.prepare(allocator, src, syntax, records, self.contract);
         var reusable = false;
         if (prepared.enabled and self.max_bytes != 0) {
             if (self.digest) |digest| reusable = std.mem.eql(u8, &digest, &prepared.digest) and self.entries.len == prepared.bodies.len;
