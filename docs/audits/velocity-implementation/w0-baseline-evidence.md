@@ -51,6 +51,8 @@ All commands were run from the worktree with the pinned Zig; raw logs were captu
 
 ReleaseFast was run (yes). The Debug `test` and `test-docs` failures share one cause: a historical audit document (not editable under this task) has one mis-tagged fenced block. The two ReleaseFast unit failures are separate and reproducible.
 
+The evidence commit hook additionally ran a **whole-tree** Guardian gate on this documentation change: `run-all: whole-tree run`, 88/88 checks passed, with report-only 4 file-size, 12 function-length and 2937 line-length findings. The `zig build` runs listed above remained diff-scoped.
+
 ## 4. Probe methodology
 
 All 42 probes were read from the frozen `development-velocity-proposals-2026-09-15-probes.json`. Fixture sources were written exactly as recorded (the historical fixture tree at `/tmp/mylang-proposals-audit-7usu4hu1/` survives, which let us recover the exact `policy/policy.json` bytes and confirm single-state fixtures). Binary paths were re-pointed at `zig-out/bin/mylang` and fixture/cache paths at a fresh run root. Stateful sequences (selective tests, one-shot, session) were replayed in the recorded order. Output paths are normalized before comparison; native-test receipt keys change with compiler identity and are compared field-by-field excluding `key`.
@@ -131,7 +133,7 @@ Disposition: **verified** = behavior matches the record and is not a gap this pl
 
 - The historical audit compiler binary (`c54d594e...`) was not re-run; all comparisons use the freshly built baseline compiler. Receipt keys and `retained_bytes` therefore differ while counters and statuses match.
 - No large-project scale, latency or memory benchmark was run; no claim is made about speedups.
-- Guardian ran diff-scoped (88 checks) during `zig build`; a whole-tree Guardian run was not performed.
+- The Guardian runs inside `zig build` were diff-scoped (88 checks). The commit hook for this evidence change ran a whole-tree Guardian gate (88/88 passed); see section 3.
 - `vendor/qbe` is vendored source without its own git metadata, so an upstream QBE commit cannot be reported; `.qbeversion` and content/binary hashes are the identity.
 - Raw gate logs and the reconstructed fixture tree live under `/tmp/w0-evidence/` and are not committed; the commands and counts are reproduced in this document and the JSON.
 

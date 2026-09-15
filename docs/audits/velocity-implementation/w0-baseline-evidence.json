@@ -1175,6 +1175,15 @@
       ]
     }
   ],
+  "guardian_commit_hook": {
+    "scope": "whole-tree",
+    "checks_passed": 88,
+    "report_only": {
+      "file_size": 4,
+      "function_length": 12,
+      "line_length": 2937
+    }
+  },
   "other_findings": [
     "Doc example gate fails on historical audit file docs/audits/development-velocity-proposals-2026-09-15.md:141 (fenced block tagged `text` looks like guest source) in Debug and ReleaseFast.",
     "ReleaseFast has two deterministic unit-test failures not present in Debug: persist_codec truncated/malformed bytes, and incremental_test partial-copy release (expected 41, found 1).",
@@ -1194,7 +1203,7 @@
   "limitations": [
     "Historical compiler binary c54d594e... was not re-run.",
     "No large-project scale/latency/memory benchmark.",
-    "Guardian was diff-scoped (88 checks), not whole-tree.",
+    "Guardian runs inside zig build were diff-scoped (88 checks); the evidence commit hook ran a whole-tree Guardian gate (88/88 passed).",
     "vendor/qbe has no independent git metadata; identity is .qbeversion plus content/binary hashes.",
     "Raw gate logs and fixture run tree are under /tmp/w0-evidence and are not committed."
   ],
