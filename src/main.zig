@@ -14,7 +14,7 @@ const Reporting = struct {
     print_result: bool = false,
     timings: bool = false,
     timings_json: bool = false,
-    /// `--report` asks one-shot commands for a frontend-cache reuse receipt.
+    /// `--report` asks one-shot commands for an actual-work/reuse receipt.
     report: bool = false,
     /// `--explain-invalidation` asks for a stage-by-stage baseline comparison.
     explain_invalidation: bool = false,
@@ -60,7 +60,7 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "  list-declarations: parse-only declarations-v1 JSON with byte ranges\n" ++
     "  index-project: JSON symbols, references and pinned source snapshot\n  project-dependencies: checked module graph and hashes; --inputs supported\n" ++
     "  one-shot commands: --timings=json (phase-timings-v1 JSON Lines on stderr)\n" ++
-    "    --report prints a frontend-cache-v1 reuse receipt on stderr; --timings=json also adds one; --cache-dir=DIR selects its root; --no-cache disables reuse\n" ++
+    "    --report prints work-report-v1 actual work/reuse plus a frontend-cache-v1 comparison receipt on stderr; --timings=json also adds them; --cache-dir=DIR selects their root; --no-cache disables reuse\n" ++
     "    --explain-invalidation prints an invalidation-report-v1 comparison on stderr for project-dependencies, check-project, run-project and module-syntax run; --no-cache explains against no baseline\n" ++
     "  all commands: --diagnostics=text|json (stderr JSON Lines; stdout unchanged)\n" ++
     "  check-session: persistent check/clear/quit lines on stdin; JSON status on stdout; --inputs supported\n";
@@ -97,7 +97,28 @@ const RunObservation = struct {
     /// reported as reuse.
     executed: [std.meta.tags(invalidation.Stage).len]bool = @splat(true),
     has_invalidation: bool = false,
+    /// Actual executions and true reuse observed at the work sites. The
+    /// comparison result (`fingerprint_unchanged`) travels on `work` so the
+    /// rendered report keeps the two facts distinct.
+    work: invalidation.Work = .{},
 };
+
+/// Record `performed` fresh executions and `reused` actual cache hits for one
+/// work stage. `executed` becomes true so a stage the command reached but did
+/// no per-item work for still reports `miss` rather than `skipped`.
+fn recordWork(init: Context, which: invalidation.WorkStage, performed: usize, reused: usize) void {
+    if (init.observation) |observation| observation.work.note(which, performed, reused);
+}
+
+/// Record a whole-command stage whose count is replaced rather than accumulated.
+fn setWork(init: Context, which: invalidation.WorkStage, performed: usize, reused: usize) void {
+    if (init.observation) |observation| observation.work.set(which, performed, reused);
+}
+
+/// Record a disabled optimization and its reason on the current observation.
+fn recordBypass(init: Context, reason: []const u8, count: usize) void {
+    if (init.observation) |observation| observation.work.addBypass(reason, count);
+}
 
 /// Stages a command actually runs. Lowering/emission/linking only happen for
 /// commands that produce or execute a native artifact.
@@ -176,22 +197,41 @@ fn run(init: Context, parsed: Parsed) !u8 {
     if (parsed.command == .@"check-session") return checkSession(init, parsed);
     var frontend_cache = openFrontendCache(init, parsed);
     var observation: RunObservation = .{ .executed = executedStages(parsed.command) };
+    observation.work.command = @tagName(parsed.command);
     var command_init = init;
     command_init.observation = &observation;
     var with_frontend = parsed;
     with_frontend.frontend = if (frontend_cache) |*cache| cache else null;
     const status = runCommand(command_init, with_frontend) catch |err| {
-        if (frontend_cache) |*cache| {
-            reportFrontendCounters(init, cache, parsed.reporting, observation) catch return err;
-            cache.deinit();
+        best_effort: {
+            reportMeasured(init, parsed, if (frontend_cache) |*cache| cache else null, &observation) catch break :best_effort;
         }
+        if (frontend_cache) |*cache| cache.deinit();
         return err;
     };
-    if (frontend_cache) |*cache| {
-        try reportFrontendCounters(init, cache, parsed.reporting, observation);
-        cache.deinit();
-    }
+    try reportMeasured(init, parsed, if (frontend_cache) |*cache| cache else null, &observation);
+    if (frontend_cache) |*cache| cache.deinit();
     return status;
+}
+
+/// Emit every requested machine-readable receipt after a command finishes.
+/// `frontend-cache-v1` is only emitted when a persistent cache was opened (its
+/// historical `--no-cache` behavior); `work-report-v1` is always emitted when
+/// reporting was requested, including `--no-cache`, because it records work
+/// actually performed rather than cache comparisons.
+fn reportMeasured(init: Context, parsed: Parsed, cache: ?*language.frontend_cache.Cache, observation: *RunObservation) !void {
+    if (!parsed.reporting.measured()) return;
+    if (parsed.no_cache) observation.work.addBypass("cache-disabled", 1);
+    if (cache) |opened| {
+        if (opened.statistics.damaged != 0) observation.work.addBypass("damaged-entry", opened.statistics.damaged);
+        if (opened.statistics.bypassed != 0) observation.work.addBypass("frontend-store-bypassed", opened.statistics.bypassed);
+        try reportFrontendCounters(init, opened, parsed.reporting, observation.*);
+    }
+    const rendered = try invalidation.renderWork(init.gpa, observation.work);
+    defer init.gpa.free(rendered);
+    const line = try std.fmt.allocPrint(init.gpa, "{s}\n", .{rendered});
+    defer init.gpa.free(line);
+    try std.Io.File.stderr().writeStreamingAll(init.io, line);
 }
 /// Dispatch one command with `parsed.frontend` already resolved.
 fn runCommand(init: Context, parsed: Parsed) !u8 {
@@ -250,6 +290,8 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         };
         init.timings.end();
         defer allocator.free(formatted);
+        // Formatting lexes and parses the unit even when no cache is open.
+        setWork(init, .parsed_modules, 1, 0);
         if (parsed.format_check) {
             if (std.mem.eql(u8, formatted, bytes)) return 0;
             try init.text("formatting differs\n");
@@ -269,17 +311,38 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         };
         init.timings.end();
         defer allocator.free(listing);
+        // Declaration listing parses the unit before rendering.
+        setWork(init, .parsed_modules, 1, 0);
         try std.Io.File.stdout().writeStreamingAll(init.io, listing);
         return 0;
     }
     const check_start = if (parsed.reporting.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
-    compilation.checkWithFrontend(parsed.frontend) catch |err| switch (err) {
+    // Parse through the persistent syntax cache, then check through a
+    // zero-retention semantic cache so the real `checkFunction` execution-site
+    // count is observed. No checked body is reused for one-shot commands.
+    const disk_before: usize = if (parsed.frontend) |opened| opened.statistics.syntax.hits else 0;
+    var counting = language.semantic_cache.Cache.init(allocator, 0);
+    defer counting.deinit();
+    compilation.parseCached(parsed.frontend) catch |err| switch (err) {
         error.SourceError => {
             try report(init, &compilation);
             return 1;
         },
         else => return err,
     };
+    const syntax_reused = (if (parsed.frontend) |opened| opened.statistics.syntax.hits else 0) - disk_before;
+    setWork(init, .parsed_modules, 1 - @min(syntax_reused, 1), @min(syntax_reused, 1));
+    compilation.checkWithCache(&counting) catch |err| switch (err) {
+        error.SourceError => {
+            recordCheckWork(init, &counting, null, compilation.program);
+            recordSemanticBypass(init, &counting, null);
+            try report(init, &compilation);
+            return 1;
+        },
+        else => return err,
+    };
+    recordCheckWork(init, &counting, null, compilation.program);
+    recordSemanticBypass(init, &counting, null);
     init.timings.counts.ast_nodes = compilation.syntax.?.nodes.items.len + compilation.syntax.?.statements.items.len;
     init.timings.counts.typed_nodes = compilation.program.?.nodes.len + compilation.program.?.statements.len;
     init.timings.end();
@@ -354,6 +417,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .@"dump-bytecode" => {
             init.timings.begin("bytecode_dump_inclusive", true);
             const text = try compilation.dump(allocator);
+            if (compilation.code) |code| recordLoweredCount(init, code.functions.len);
             init.timings.end();
             defer allocator.free(text);
             try std.Io.File.stdout().writeStreamingAll(init.io, text);
@@ -386,6 +450,7 @@ fn executeRun(init: Context, compilation: *language.Compilation, parsed: Parsed)
         },
         else => return err,
     };
+    if (compilation.code) |code| recordLoweredCount(init, code.functions.len);
     if (grants.ungranted(compilation.code.?, parsed.grants)) |flag| return reportUngranted(init, flag);
     const manifest = emitMeasuredNative(init, compilation) catch |err| switch (err) {
         error.SourceError => {
@@ -402,6 +467,10 @@ fn executeRun(init: Context, compilation: *language.Compilation, parsed: Parsed)
 fn runNative(init: Context, parsed: Parsed, manifest: []const u8) !u8 {
     init.timings.begin("native_execution", false);
     const start = std.Io.Timestamp.now(init.io, .awake);
+    // `native_run` publishes or reuses the executable and executes it. The
+    // conservative count here never claims link reuse: object-level reuse inside
+    // the native build is D1's receipt, not this report's measurement.
+    setWork(init, .links, 1, 0);
     var settings = parsed.native;
     settings.arguments = parsed.runtime;
     settings.max_memory = parsed.max_memory;
@@ -766,8 +835,25 @@ const ModuleFiles = struct {
     }
 };
 fn listModules(init: Context, parsed: Parsed) !u8 {
-    return listModulesWithCache(init, parsed, null, null, null);
+    // A one-shot command has no persistent checked-body cache (C2 is not
+    // implemented yet), but `sema` only counts checked bodies through a cache.
+    // A zero-retention cache performs no reuse and records the real count at the
+    // `checkFunction` execution site. It is replaced here, never derived from a
+    // fingerprint comparison.
+    var functions = language.semantic_cache.Cache.init(init.gpa, 0);
+    defer functions.deinit();
+    const status = try listModulesWithCache(init, parsed, null, null, &functions);
+    recordSemanticBypass(init, &functions, null);
+    return status;
 }
+
+/// Report a semantic cache that could not be consulted for this invocation.
+fn recordSemanticBypass(init: Context, functions: *const language.semantic_cache.Cache, before: ?language.semantic_cache.Statistics) void {
+    const prior = before orelse language.semantic_cache.Statistics{};
+    const delta = functions.statistics.bypassed - prior.bypassed;
+    if (delta != 0) recordBypass(init, "semantic-reuse-unavailable", delta);
+}
+
 fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_cache.Cache, verdict: ?*language.check_cache.Cache, functions: ?*language.semantic_cache.Cache) !u8 {
     const frontend = parsed.frontend;
     const frontend_start = if (parsed.reporting.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
@@ -787,20 +873,17 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     init.timings.counts.source_bytes = project.counts.bytes;
     init.timings.end();
     if (try surfaceProject(init, &project, parsed)) |status| return status;
-    if (try replayCheck(init, parsed.command, &project, verdict)) return 0;
-    // A requested explanation must compare receipts, so do not replay a stored
-    // verdict before the checked compilation produces one.
-    if (!parsed.reporting.explain_invalidation) {
-        if (try replayFrontendVerdict(init, parsed.command, &project, frontend)) return 0;
-    }
+    if (try replayStoredVerdict(init, parsed, &project, verdict, frontend)) return 0;
     const output = if (parsed.command != .@"list-modules") result: {
         init.timings.begin(frontend_label, false);
         var index = (try buildIndex(init, &project, cache, frontend)) orelse return partialNavigation(init, &project, parsed.command);
         if (parsed.command == .@"list-interfaces") break :result try index.render(init.gpa);
         var compilation = try language.project_compile.Compilation.init(&index);
-        if (parsed.command == .@"index-project") break :result try renderNavigation(init, &compilation);
+        if (parsed.command == .@"index-project") break :result try renderNavigation(init, &compilation, functions);
+        const semantic_before = if (functions) |f| f.statistics else null;
         compilation.checkWithCache(functions) catch |err| switch (err) {
             error.SourceError => {
+                recordCheckWork(init, functions, semantic_before, compilation.program);
                 try reportProject(init, &compilation);
                 if (parsed.reporting.explain_invalidation) {
                     try reportFailedInvalidation(init, parsed, &compilation, files.inputs);
@@ -809,6 +892,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
             },
             else => return err,
         };
+        recordCheckWork(init, functions, semantic_before, compilation.program);
         init.timings.counts.ast_nodes = compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len;
         init.timings.counts.typed_nodes = compilation.program.?.nodes.len + compilation.program.?.statements.len;
         init.timings.end();
@@ -853,12 +937,36 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         if (parsed.command == .@"check-policy") return checkProjectPolicy(init, parsed, &project);
         init.timings.begin(lowering_phase, false);
         try compilation.emit();
+        if (compilation.code) |code| recordLoweredCount(init, code.functions.len);
         init.timings.end();
         return runProjectProgram(init, &compilation, parsed);
     } else try project.render(init.gpa);
     defer init.gpa.free(output);
     try std.Io.File.stdout().writeStreamingAll(init.io, output);
     return 0;
+}
+
+/// Record the `checkFunction` execution-site counters for one check, plus the
+/// concrete specializations the fresh check instantiated.
+fn recordCheckWork(init: Context, functions: ?*language.semantic_cache.Cache, before: ?language.semantic_cache.Statistics, program: anytype) void {
+    if (functions) |f| {
+        const prior = before orelse language.semantic_cache.Statistics{};
+        recordWork(init, .checked_bodies, f.statistics.checked - prior.checked, f.statistics.reused - prior.reused);
+    }
+    if (program) |checked| {
+        var specializations: usize = 0;
+        for (checked.functions) |function| {
+            if (function.type_arguments.len != 0) specializations += 1;
+        }
+        setWork(init, .instantiated_specializations, specializations, 0);
+    }
+}
+
+/// Record lowered functions from the retained bytecode program. Lowering is a
+/// whole-program step that runs at most once, so the count replaces earlier
+/// values rather than accumulating.
+fn recordLoweredCount(init: Context, functions: usize) void {
+    setWork(init, .lowered_functions, functions, 0);
 }
 
 /// A refused final flush cannot be reported once the guest program has ended.
@@ -905,11 +1013,13 @@ fn partialNavigation(init: Context, project: *language.project.Project, command:
     return 0;
 }
 
-fn renderNavigation(init: Context, compilation: *language.project_compile.Compilation) ![]u8 {
-    compilation.check() catch |err| switch (err) {
+fn renderNavigation(init: Context, compilation: *language.project_compile.Compilation, functions: ?*language.semantic_cache.Cache) ![]u8 {
+    const semantic_before = if (functions) |f| f.statistics else null;
+    compilation.checkWithCache(functions) catch |err| switch (err) {
         error.SourceError => {},
         else => return err,
     };
+    recordCheckWork(init, functions, semantic_before, compilation.program);
     init.timings.counts.ast_nodes = compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len;
     if (compilation.program) |program| init.timings.counts.typed_nodes = program.nodes.len + program.statements.len;
     init.timings.end();
@@ -932,8 +1042,11 @@ fn loadModules(init: Context, project: *language.project.Project, files: *Module
 }
 
 fn buildIndex(init: Context, project: *language.project.Project, cache: ?*language.syntax_cache.Cache, frontend: ?*language.frontend_cache.Cache) !?language.interfaces.Index {
-    return language.interfaces.buildWithCache(project, cache, frontend) catch |err| switch (err) {
+    const syntax_before: usize = if (cache) |opened| opened.statistics.hits else 0;
+    const disk_before: usize = if (frontend) |opened| opened.statistics.syntax.hits else 0;
+    const index = language.interfaces.buildWithCache(project, cache, frontend) catch |err| switch (err) {
         error.SourceError => {
+            recordParsedModules(init, project, cache, frontend, syntax_before, disk_before);
             const message = try diagnostic_output.renderProject(init.gpa, project, init.diagnostics);
             defer init.gpa.free(message);
             try std.Io.File.stderr().writeStreamingAll(init.io, message);
@@ -941,6 +1054,28 @@ fn buildIndex(init: Context, project: *language.project.Project, cache: ?*langua
         },
         else => return err,
     };
+    recordParsedModules(init, project, cache, frontend, syntax_before, disk_before);
+    return index;
+}
+
+/// Record module bodies actually lexed/parsed versus returned by an in-process
+/// or persistent syntax lookup. The hit deltas come from the lookup execution
+/// sites themselves, never from comparing source digests after parsing.
+fn recordParsedModules(
+    init: Context,
+    project: *const language.project.Project,
+    cache: ?*language.syntax_cache.Cache,
+    frontend: ?*language.frontend_cache.Cache,
+    syntax_before: usize,
+    disk_before: usize,
+) void {
+    if (init.observation == null) return;
+    var reused: usize = 0;
+    if (cache) |opened| reused += opened.statistics.hits - syntax_before;
+    if (frontend) |opened| reused += opened.statistics.syntax.hits - disk_before;
+    const total = project.modules.items.len;
+    const performed = if (reused > total) 0 else total - reused;
+    recordWork(init, .parsed_modules, performed, @min(reused, total));
 }
 
 fn rememberCheck(verdict: ?*language.check_cache.Cache, project: *const language.project.Project, compilation: *const language.project_compile.Compilation) !u8 {
@@ -948,11 +1083,31 @@ fn rememberCheck(verdict: ?*language.check_cache.Cache, project: *const language
     return 0;
 }
 
+/// Replay an in-process or persistent stored verdict before any semantic work.
+/// A requested explanation must compare receipts, so it never replays a stored
+/// verdict before the checked compilation produces one.
+fn replayStoredVerdict(
+    init: Context,
+    parsed: Parsed,
+    project: *const language.project.Project,
+    verdict: ?*language.check_cache.Cache,
+    frontend: ?*language.frontend_cache.Cache,
+) !bool {
+    if (try replayCheck(init, parsed.command, project, verdict)) return true;
+    if (parsed.reporting.explain_invalidation) return false;
+    return replayFrontendVerdict(init, parsed.command, project, frontend);
+}
+
 fn replayCheck(init: Context, command: Command, project: *const language.project.Project, verdict: ?*language.check_cache.Cache) !bool {
     if (command != .@"check-project") return false;
     const cache = verdict orelse return false;
     const warnings = cache.lookup(project) orelse return false;
     try std.Io.File.stderr().writeStreamingAll(init.io, warnings);
+    if (init.observation) |observation| {
+        observation.executed = @splat(false);
+        observation.executed[@backingInt(invalidation.Stage.load_source)] = true;
+        observation.work.reused_results += 1;
+    }
     return true;
 }
 
@@ -970,6 +1125,9 @@ fn replayFrontendVerdict(init: Context, command: Command, project: *const langua
         // stored verdict, so none of them may be reported as fresh work.
         observation.executed = @splat(false);
         observation.executed[@backingInt(invalidation.Stage.load_source)] = true;
+        observation.work.reused_results += 1;
+        // No module body was parsed and no body was checked.
+        for (std.meta.tags(invalidation.WorkStage)) |stage| observation.work.skip(stage);
     }
     return true;
 }
@@ -1052,6 +1210,7 @@ fn formatProject(init: Context, project: *language.project.Project) !u8 {
             else => return err,
         };
         defer init.gpa.free(formatted);
+        recordWork(init, .parsed_modules, 1, 0);
         if (!std.mem.eql(u8, formatted, src.bytes)) try changed.append(init.gpa, src.path);
     }
     for (changed.items) |path_name| {
@@ -1177,6 +1336,7 @@ fn lowerForReceipt(init: Context, compilation: *language.project_compile.Compila
         error.SourceError => return false,
         else => return err,
     };
+    if (compilation.code) |code| recordLoweredCount(init, code.functions.len);
     return true;
 }
 
@@ -1288,14 +1448,24 @@ fn reportInvalidation(init: Context, parsed: Parsed, current: []const u8, execut
         observation.has_invalidation = true;
         observation.executed = executed;
         observation.stages = @splat(.{});
+        var compared = false;
+        var unchanged = true;
         for (explanation.queries) |query| {
             const index = @backingInt(query.stage);
+            if (index < executed.len and executed[index]) {
+                compared = true;
+                if (query.status != .hit) unchanged = false;
+            }
             switch (query.status) {
                 .hit => observation.stages[index].hits += 1,
                 .miss => observation.stages[index].misses += 1,
                 .skipped => observation.stages[index].skipped += 1,
             }
         }
+        // Only an executed stage can make fingerprints "equal"; a skipped stage
+        // says nothing about the input digest. Null keeps "not compared"
+        // distinct from "compared and changed".
+        observation.work.fingerprint_unchanged = if (compared) unchanged else null;
     }
 
     const rendered = try invalidation.render(init.gpa, explanation);
@@ -1372,7 +1542,16 @@ fn validEntryBasename(basename: []const u8) bool {
     return std.mem.indexOfScalar(u8, name, '.') == null;
 }
 
-const SessionCache = struct { syntax: language.syntax_cache.Cache, semantic: language.check_cache.Cache, functions: language.semantic_cache.Cache };
+const SessionCache = struct {
+    syntax: language.syntax_cache.Cache,
+    semantic: language.check_cache.Cache,
+    functions: language.semantic_cache.Cache,
+    /// Cumulative actual reuse and specialization counts observed across the
+    /// session; `parsed_modules` and `checked_bodies` come from the caches'
+    /// own cumulative observations.
+    verdict_reuses: usize = 0,
+    specializations: usize = 0,
+};
 fn checkSession(init: Context, parsed: Parsed) !u8 {
     if (!validEntryBasename(std.fs.path.basename(parsed.path))) {
         try init.text("check-session: entry must be an identifier.my file\n");
@@ -1392,30 +1571,30 @@ fn checkSession(init: Context, parsed: Parsed) !u8 {
     while (true) {
         const line = input.interface.takeDelimiter('\n') catch |err| switch (err) {
             error.StreamTooLong => {
-                try sessionReply(init, "invalid", 2, "RequestTooLong", cache.syntax.statistics, &cache);
+                try sessionReply(init, .{ .action = "invalid", .status = 2, .failure = "RequestTooLong" }, cache.syntax.statistics, &cache, .{});
                 return 2;
             },
             else => return err,
         } orelse return 0;
         if (line.len > 128) {
-            try sessionReply(init, "invalid", 2, "RequestTooLong", cache.syntax.statistics, &cache);
+            try sessionReply(init, .{ .action = "invalid", .status = 2, .failure = "RequestTooLong" }, cache.syntax.statistics, &cache, .{});
             return 2;
         }
         const action = std.mem.trim(u8, line, " \t\r");
         const before = cache.syntax.statistics;
         if (std.mem.eql(u8, action, "quit")) {
-            try sessionReply(init, "quit", 0, null, before, &cache);
+            try sessionReply(init, .{ .action = "quit", .status = 0 }, before, &cache, .{});
             return 0;
         }
         if (std.mem.eql(u8, action, "clear")) {
             cache.syntax.clear();
             cache.semantic.clear();
             cache.functions.clear();
-            try sessionReply(init, "clear", 0, null, before, &cache);
+            try sessionReply(init, .{ .action = "clear", .status = 0 }, before, &cache, .{});
         } else if (std.mem.eql(u8, action, "check")) {
             try sessionCheck(init, parsed, &cache);
         } else {
-            try sessionReply(init, "invalid", 2, "UnknownSessionCommand", before, &cache);
+            try sessionReply(init, .{ .action = "invalid", .status = 2, .failure = "UnknownSessionCommand" }, before, &cache, .{});
         }
     }
 }
@@ -1426,23 +1605,79 @@ fn sessionCheck(init: Context, parsed: Parsed, cache: *SessionCache) !void {
     request_init.arena = &arena;
     var request = parsed;
     request.command = .@"check-project";
+    var observation: RunObservation = .{ .executed = executedStages(request.command) };
+    observation.work.command = @tagName(request.command);
+    request_init.observation = &observation;
     const before = cache.syntax.statistics;
     const status = listModulesWithCache(request_init, request, &cache.syntax, &cache.semantic, &cache.functions) catch |err| {
-        try sessionReply(init, "check", 2, @errorName(err), before, cache);
+        cache.verdict_reuses += observation.work.reused_results;
+        cache.specializations += observation.work.stages[@backingInt(invalidation.WorkStage.instantiated_specializations)].performed;
+        try sessionReply(init, .{ .action = "check", .status = 2, .failure = @errorName(err) }, before, cache, observation.work);
         return;
     };
-    try sessionReply(init, "check", status, null, before, cache);
+    cache.verdict_reuses += observation.work.reused_results;
+    cache.specializations += observation.work.stages[@backingInt(invalidation.WorkStage.instantiated_specializations)].performed;
+    try sessionReply(init, .{ .action = "check", .status = status }, before, cache, observation.work);
 }
-fn sessionReply(init: Context, action: []const u8, status: u8, failure: ?[]const u8, before: language.syntax_cache.Statistics, cache: *const SessionCache) !void {
+
+/// Cumulative session work counters. `parsed_modules` and `checked_bodies` are
+/// the caches' own cumulative execution-site observations; the rest are
+/// accumulated here from each request.
+fn sessionStages(cache: *const SessionCache) [invalidation.work_stage_count]invalidation.StageCount {
+    var stages: [invalidation.work_stage_count]invalidation.StageCount = @splat(.{});
+    stages[@backingInt(invalidation.WorkStage.parsed_modules)] = .{
+        .executed = true,
+        .performed = cache.syntax.statistics.misses,
+        .reused = cache.syntax.statistics.hits,
+    };
+    stages[@backingInt(invalidation.WorkStage.checked_bodies)] = .{
+        .executed = true,
+        .performed = cache.functions.statistics.checked,
+        .reused = cache.functions.statistics.reused,
+    };
+    stages[@backingInt(invalidation.WorkStage.instantiated_specializations)] = .{
+        .executed = cache.specializations != 0,
+        .performed = cache.specializations,
+    };
+    return stages;
+}
+
+/// One check-session reply's action, exit status and optional failure name.
+const SessionReply = struct { action: []const u8, status: u8, failure: ?[]const u8 = null };
+
+fn sessionReply(
+    init: Context,
+    reply: SessionReply,
+    before: language.syntax_cache.Statistics,
+    cache: *const SessionCache,
+    request_work: invalidation.Work,
+) !void {
+    var work = request_work;
+    work.session = sessionStages(cache);
+    work.session_reused_results = cache.verdict_reuses;
+    const summary = invalidation.summarize(work);
     const text = try std.json.Stringify.valueAlloc(init.gpa, .{
         .version = "check-session-v1",
-        .action = action,
-        .status = status,
-        .failure = failure,
+        .action = reply.action,
+        .status = reply.status,
+        .failure = reply.failure,
         .reuse = .{ .hits = cache.syntax.statistics.hits - before.hits, .misses = cache.syntax.statistics.misses - before.misses },
         .cache = cache.syntax.statistics,
         .semantic = cache.semantic.statistics,
         .functions = cache.functions.statistics,
+        // work-report-v1 request deltas and cumulative session counters. The
+        // request values reconcile with `cache`/`functions` deltas by
+        // construction: both are read from the same execution-site counters.
+        .work = .{
+            .version = "work-report-v1",
+            .fingerprint_unchanged = summary.fingerprint_unchanged,
+            .reused = summary.reused,
+            .request = summary.request,
+            .session = summary.session,
+            .reused_results = summary.request_reused_results,
+            .session_reused_results = summary.session_reused_results,
+            .bypassed = summary.bypassed,
+        },
     }, .{});
     defer init.gpa.free(text);
     try std.Io.File.stdout().writeStreamingAll(init.io, text);
@@ -1468,8 +1703,12 @@ fn featureReport(init: std.process.Init) !void {
 fn emitMeasuredNative(init: Context, compilation: anytype) ![]u8 {
     init.timings.begin(lowering_phase, false);
     try compilation.emit();
+    if (compilation.code) |code| recordLoweredCount(init, code.functions.len);
     init.timings.begin("native_emission", false);
     const generated = try compilation.emitQbe(init.gpa);
+    // `qbe-units-v1` emits one independently linkable fragment per lowered
+    // function, so the fragment count is observed at the emission site.
+    if (compilation.code) |code| setWork(init, .emitted_fragments, code.functions.len, 0);
     init.timings.end();
     return generated;
 }

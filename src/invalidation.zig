@@ -155,6 +155,211 @@ pub fn render(allocator: std.mem.Allocator, explanation: Explanation) Error![]u8
     }, .{ .emit_null_optional_fields = false });
 }
 
+// ---------------------------------------------------------------------------
+// work-report-v1: actual observed work, independent of fingerprint comparison.
+//
+// The nine `Stage` queries above compare a baseline receipt with the current
+// receipt. Their `hit` status only means "the compared input digest is equal";
+// it does not establish that the command reused anything. The seven work stages
+// below are counted where the command actually executes or actually reuses
+// something, so they can separate a forced fresh check with equal fingerprints
+// (`fingerprint_unchanged == true`, `checked_bodies.performed > 0`) from a
+// command answered by a real cache hit (`reused > 0`).
+// ---------------------------------------------------------------------------
+
+/// Actual-work stages. These are independent of the nine fingerprint comparison
+/// stages: a command can skip one entirely, or perform one even when the
+/// corresponding fingerprint is unchanged.
+pub const WorkStage = enum {
+    parsed_modules,
+    checked_bodies,
+    instantiated_specializations,
+    lowered_functions,
+    emitted_fragments,
+    links,
+    executed_tests,
+};
+
+pub const work_stage_count = std.meta.tags(WorkStage).len;
+
+/// One work stage's observed executions and true reuse. `executed == false`
+/// renders as `skipped` and is never counted as reuse.
+pub const StageCount = struct {
+    performed: usize = 0,
+    reused: usize = 0,
+    executed: bool = false,
+};
+
+/// A disabled or refused optimization and why. `reason` is a static tag; the
+/// value is copied into the report, never derived from a digest comparison.
+pub const Bypass = struct { reason: []const u8 = "", count: usize = 0 };
+
+/// Observation of actual work for one invocation plus optional cumulative
+/// process counters. `fingerprint_unchanged` is the comparison result and is
+/// deliberately distinct from `reused`, which only becomes true when a lookup
+/// actually returned a stored result.
+pub const Work = struct {
+    command: []const u8 = "",
+    /// Null when this invocation ran no baseline comparison.
+    fingerprint_unchanged: ?bool = null,
+    /// Actual reuse observations not tied to one stage (for example a replayed
+    /// whole-project verdict). Never inferred from equal fingerprints.
+    reused_results: usize = 0,
+    stages: [work_stage_count]StageCount = @splat(.{}),
+    /// Cumulative process counters. Null means this is a one-shot invocation and
+    /// the request counters are already the whole-process totals.
+    session: ?[work_stage_count]StageCount = null,
+    session_reused_results: usize = 0,
+    bypassed: BypassSet = .{},
+
+    /// Borrow the mutable counter for one stage.
+    pub fn stage(self: *Work, which: WorkStage) *StageCount {
+        return &self.stages[@backingInt(which)];
+    }
+    /// Count executions/reuse for one stage without replacing earlier counts.
+    pub fn note(self: *Work, which: WorkStage, performed: usize, reuse_count: usize) void {
+        const count = self.stage(which);
+        count.executed = true;
+        count.performed += performed;
+        count.reused += reuse_count;
+    }
+    /// Record a whole-stage result (lowering, emission and linking run at most
+    /// once per command, so their counts are replaced rather than accumulated).
+    pub fn set(self: *Work, which: WorkStage, performed: usize, reuse_count: usize) void {
+        const count = self.stage(which);
+        count.executed = true;
+        count.performed = performed;
+        count.reused = reuse_count;
+    }
+    /// Mark a stage as not reached by this command.
+    pub fn skip(self: *Work, which: WorkStage) void {
+        self.stages[@backingInt(which)] = .{};
+    }
+    /// Record a bypass with its reason, ignoring zero counts and overflow.
+    pub fn addBypass(self: *Work, reason: []const u8, count: usize) void {
+        self.bypassed.add(reason, count);
+    }
+    /// Whether any actual reuse was observed. `fingerprint_unchanged` must not
+    /// influence this result.
+    pub fn reused(self: Work) bool {
+        for (self.stages) |count| if (count.reused != 0) return true;
+        return self.reused_results != 0;
+    }
+    /// Work-stage status: skipped when the command never reached it, hit only
+    /// when reuse happened and no fresh work did, miss otherwise.
+    pub fn status(self: Work, which: WorkStage) Status {
+        const count = self.stages[@backingInt(which)];
+        if (!count.executed) return .skipped;
+        if (count.performed == 0 and count.reused != 0) return .hit;
+        return .miss;
+    }
+};
+
+/// A bounded, reason-tagged bypass list carried inline by `Work`.
+pub const BypassSet = struct {
+    items: [8]Bypass = @splat(.{}),
+    len: usize = 0,
+
+    /// Append one bypass reason; zero counts and overflow are ignored.
+    pub fn add(self: *BypassSet, reason: []const u8, count: usize) void {
+        if (count == 0 or self.len == self.items.len) return;
+        self.items[self.len] = .{ .reason = reason, .count = count };
+        self.len += 1;
+    }
+    /// Borrow the populated prefix of the list.
+    pub fn slice(self: *const BypassSet) []const Bypass {
+        return self.items[0..self.len];
+    }
+};
+
+const StageView = struct { status: []const u8, performed: usize, reused: usize };
+/// Public performed/reused counters for one work stage.
+pub const CountView = struct { performed: usize = 0, reused: usize = 0 };
+/// Public per-stage counters for one request or one cumulative session.
+pub const SessionView = struct {
+    parsed_modules: CountView = .{},
+    checked_bodies: CountView = .{},
+    instantiated_specializations: CountView = .{},
+    lowered_functions: CountView = .{},
+    emitted_fragments: CountView = .{},
+    links: CountView = .{},
+    executed_tests: CountView = .{},
+};
+
+/// Compact request/session view of a work observation, used by the
+/// `check-session` protocol. `request` is this invocation's deltas; `session` is
+/// the cumulative process totals (from `Work.session` when present).
+pub const Summary = struct {
+    fingerprint_unchanged: ?bool = null,
+    reused: bool = false,
+    request: SessionView,
+    session: SessionView,
+    request_reused_results: usize = 0,
+    session_reused_results: usize = 0,
+    bypassed: []const Bypass = &.{},
+};
+
+/// Summarize a work observation into request deltas and session totals.
+pub fn summarize(work: Work) Summary {
+    const cumulative = work.session orelse work.stages;
+    return .{
+        .fingerprint_unchanged = work.fingerprint_unchanged,
+        .reused = work.reused(),
+        .request = sessionView(work.stages),
+        .session = sessionView(cumulative),
+        .request_reused_results = work.reused_results,
+        .session_reused_results = if (work.session == null) work.reused_results else work.session_reused_results,
+        .bypassed = work.bypassed.slice(),
+    };
+}
+
+fn stageView(work: Work, which: WorkStage) StageView {
+    const count = work.stages[@backingInt(which)];
+    return .{ .status = @tagName(work.status(which)), .performed = count.performed, .reused = count.reused };
+}
+
+fn countView(stages: [work_stage_count]StageCount, which: WorkStage) CountView {
+    const count = stages[@backingInt(which)];
+    return .{ .performed = count.performed, .reused = count.reused };
+}
+
+fn sessionView(stages: [work_stage_count]StageCount) SessionView {
+    return .{
+        .parsed_modules = countView(stages, .parsed_modules),
+        .checked_bodies = countView(stages, .checked_bodies),
+        .instantiated_specializations = countView(stages, .instantiated_specializations),
+        .lowered_functions = countView(stages, .lowered_functions),
+        .emitted_fragments = countView(stages, .emitted_fragments),
+        .links = countView(stages, .links),
+        .executed_tests = countView(stages, .executed_tests),
+    };
+}
+
+/// Render one `work-report-v1` JSON object (no trailing newline). Top-level
+/// stage objects describe this invocation; `session` carries the cumulative
+/// process totals (identical to the request for a one-shot process).
+pub fn renderWork(allocator: std.mem.Allocator, work: Work) Error![]u8 {
+    const cumulative = work.session orelse work.stages;
+    const session_reused = if (work.session == null) work.reused_results else work.session_reused_results;
+    return std.json.Stringify.valueAlloc(allocator, .{
+        .version = "work-report-v1",
+        .command = work.command,
+        .fingerprint_unchanged = work.fingerprint_unchanged,
+        .reused = work.reused(),
+        .parsed_modules = stageView(work, .parsed_modules),
+        .checked_bodies = stageView(work, .checked_bodies),
+        .instantiated_specializations = stageView(work, .instantiated_specializations),
+        .lowered_functions = stageView(work, .lowered_functions),
+        .emitted_fragments = stageView(work, .emitted_fragments),
+        .links = stageView(work, .links),
+        .executed_tests = stageView(work, .executed_tests),
+        .reused_results = work.reused_results,
+        .session_reused_results = session_reused,
+        .bypassed = work.bypassed.slice(),
+        .session = sessionView(cumulative),
+    }, .{ .emit_null_optional_fields = false });
+}
+
 fn allMiss(allocator: std.mem.Allocator, reason: []const u8, executed: []const bool) Error!Explanation {
     const stages = std.meta.tags(Stage);
     const queries = try allocator.alloc(Query, stages.len);

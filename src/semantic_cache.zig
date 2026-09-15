@@ -6,7 +6,11 @@ const source = @import("source.zig");
 const key = @import("semantic_key.zig");
 const copy = @import("semantic_copy.zig");
 const owned = @import("semantic_entry.zig");
-/// Observations count actual checked or copied bodies, including changed-source requests.
+/// Observations count actual checked or copied bodies, including changed-source
+/// requests. `checked` increments at the `checkFunction` execution site and
+/// `reused` increments only when a stored body is actually copied. The
+/// `work-report-v1` receipt reads these counters rather than inferring reuse from
+/// equal digests.
 pub const Statistics = struct { reused: usize = 0, checked: usize = 0, stored: usize = 0, bypassed: usize = 0, retained_bytes: usize = 0 };
 /// Caller-serialized cache; returned typed trees never borrow retained storage.
 pub const Cache = struct {
