@@ -1,6 +1,9 @@
 //! Conservative semantic dependencies: unchanged declarations, catalogs and module identities.
 const std = @import("std");
 const ast = @import("ast.zig");
+const diagnostic = @import("diagnostic.zig");
+const identity = @import("identity.zig");
+const lexer = @import("lexer.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
 const Hash = std.crypto.hash.sha2.Sha256;
@@ -8,43 +11,162 @@ const Hash = std.crypto.hash.sha2.Sha256;
 pub const functions_domain = "semantic-functions-v3";
 /// Domain for the generic-specialization key primitive.
 pub const specialization_domain = "semantic-specialization-v1";
-/// Current function body spans and a dependency key; unsupported query surfaces stay fresh.
-/// `contract_sha256` retains the build-contract dimension that participated in `digest`.
-pub const Prepared = struct { digest: [32]u8, bodies: []source.Span, enabled: bool, contract_sha256: [32]u8 };
-/// Ignore body contents while preserving source outside bodies and resolved type identities.
-/// `contract` is the Wave-3 contract fingerprint; the empty string is the conservative
-/// default for callers that have not yet resolved a full contract.
-pub fn prepare(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, records: []const typed.Record, contract: []const u8) error{ OutOfMemory, InternalError }!Prepared {
+/// Stable declaration identity plus the declaration's semantic interface digest.
+/// The strings are owned by the allocator passed to `prepare`.
+pub const DeclarationKey = struct { identity: []const u8, interface_sha256: ?[]const u8 };
+/// Current function body spans, full declaration spans and dependency keys.
+/// `contract_sha256` retains the build-contract dimension that participates in
+/// `digest`; `catalog_digest` isolates the resolved type catalog.
+pub const Prepared = struct {
+    digest: [32]u8,
+    bodies: []source.Span,
+    declarations: []source.Span,
+    keys: []const ?DeclarationKey,
+    enabled: bool,
+    contract_sha256: [32]u8,
+    catalog_digest: [32]u8,
+};
+/// Compute body/declaration spans and the ordered declaration-interface gate.
+/// `keys` is indexed by AST function and must be the same length as
+/// `program.functions`; a length mismatch disables reuse rather than guessing.
+/// `contract` is the Wave-3 contract fingerprint; the empty string is the
+/// conservative default for callers that have not yet resolved a full contract.
+pub fn prepare(
+    allocator: std.mem.Allocator,
+    src: source.Source,
+    program: ast.Program,
+    records: []const typed.Record,
+    contract: []const u8,
+    keys: []const ?DeclarationKey,
+) error{ OutOfMemory, InternalError }!Prepared {
     const bodies = try allocator.alloc(source.Span, program.functions.len);
+    errdefer allocator.free(bodies);
+    const declarations = try allocator.alloc(source.Span, program.functions.len);
+    errdefer allocator.free(declarations);
+    const owned_keys = try allocator.alloc(?DeclarationKey, program.functions.len);
+    for (owned_keys) |*slot| slot.* = null;
+    errdefer freeKeys(allocator, owned_keys);
+
     var enabled = !@import("nominal_type_syntax.zig").present(program);
     if (enabled and try functionValues(allocator, src, program)) enabled = false;
-    for (program.functions, bodies) |function, *body| {
+    const keys_match = keys.len == program.functions.len;
+    if (!keys_match) enabled = false;
+    for (program.functions, bodies, declarations, 0..) |function, *body, *declaration, i| {
         body.* = program.statements.items[@backingInt(function.body)].span;
+        declaration.* = .{ .start = declarationStart(function), .end = body.end };
+        if (declaration.start > declaration.end or declaration.end > src.bytes.len) return error.InternalError;
         if (function.signature.type_parameters.len != 0 or function.policy.constant) enabled = false;
+        if (!keys_match) continue;
+        const supplied = keys[i] orelse {
+            enabled = false;
+            continue;
+        };
+        const copied_identity = try allocator.dupe(u8, supplied.identity);
+        const copied_interface = if (supplied.interface_sha256) |interface| allocator.dupe(u8, interface) catch |err| {
+            allocator.free(copied_identity);
+            return err;
+        } else null;
+        owned_keys[i] = .{ .identity = copied_identity, .interface_sha256 = copied_interface };
+        // A missing interface cannot conservatively distinguish header edits.
+        if (copied_interface == null) enabled = false;
     }
     for (program.types.domains) |domain| if (domain.type_parameters.len != 0) {
         enabled = false;
     };
+
+    var catalog_hash = Hash.init(.{});
+    fingerprint(&catalog_hash, []const typed.Record, records);
+    var catalog_digest: [32]u8 = undefined;
+    catalog_hash.final(&catalog_digest);
+
     var contract_sha256: [32]u8 = undefined;
     Hash.hash(contract, &contract_sha256, .{});
     var hash = Hash.init(.{});
     hash.update(functions_domain);
     hash.update(&contract_sha256);
-    fingerprint(&hash, []const u8, src.path);
-    for (src.origins) |origin| fingerprint(&hash, []const u8, origin.original.path);
-    const ordered = try allocator.dupe(source.Span, bodies);
-    defer allocator.free(ordered);
-    std.mem.sort(source.Span, ordered, {}, less);
-    var cursor: usize = 0;
-    for (ordered) |body| {
-        if (body.start < cursor or body.end < body.start or body.end > src.bytes.len) return error.InternalError;
-        fingerprint(&hash, []const u8, src.bytes[cursor..body.start]);
-        cursor = body.end;
+    // The digest is dependency-backed: ordered declaration identities/interfaces
+    // plus the resolved type catalog. It adds the contract dimension to the
+    // per-slot gate and never reintroduces bytes outside declarations.
+    fingerprint(&hash, []const ?DeclarationKey, owned_keys);
+    hash.update(&catalog_digest);
+    return .{
+        .digest = hash.finalResult(),
+        .bodies = bodies,
+        .declarations = declarations,
+        .keys = owned_keys,
+        .enabled = enabled,
+        .contract_sha256 = contract_sha256,
+        .catalog_digest = catalog_digest,
+    };
+}
+
+fn freeKeys(allocator: std.mem.Allocator, keys: []?DeclarationKey) void {
+    for (keys) |slot| if (slot) |owned| {
+        allocator.free(owned.identity);
+        if (owned.interface_sha256) |interface| allocator.free(interface);
+    };
+    allocator.free(keys);
+}
+
+/// The deterministic first byte of a declaration. `def` precedes the name, but
+/// host/extern policy tokens may precede `def`; include them so their checked
+/// metadata spans fall inside the declaration relocation segment.
+fn declarationStart(function: ast.Function) usize {
+    if (function.policy.host) |host| return @min(host.start, function.name.start);
+    return function.name.start;
+}
+
+/// Normalize a declaration header (signature, defaults and effect bound) into
+/// canonical NUL-separated token spellings and hash it. Bodies and comments are
+/// excluded; the returned lowercase hex string is allocator-owned.
+pub fn declarationInterfaceDigest(
+    allocator: std.mem.Allocator,
+    src: source.Source,
+    syntax: ast.Program,
+    function: ast.Function,
+) error{ OutOfMemory, InternalError }!?[]const u8 {
+    const body = syntax.statements.items[@backingInt(function.body)].span;
+    var end = body.start;
+    for (function.signature.parameters) |parameter| if (parameter.default_value) |value| {
+        const default_span = syntax.nodes.items[@backingInt(value)].span;
+        if (default_span.end > end) end = default_span.end;
+    };
+    const start = declarationStart(function);
+    if (start > end or end > src.bytes.len or body.end > src.bytes.len) return null;
+    const normalized = normalizeSpan(allocator, src, .{ .start = start, .end = end }) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.InternalError => return null,
+    };
+    defer allocator.free(normalized);
+    const digest = identity.digestFields("mylang-declaration-header-v1", &.{normalized});
+    const hex = std.fmt.bytesToHex(digest, .lower);
+    return allocator.dupe(u8, &hex) catch error.OutOfMemory;
+}
+
+// twin-drift-ok: the semantic cache cannot import incremental.zig (it pulls in
+// project checking), so both modules intentionally share this lexRange token-join
+// contract; the cache variant owns and frees its token slice.
+/// Tokenize a source range and join token spellings with NUL separators. This
+/// removes comments/formatting while preserving identifiers, literals and names.
+fn normalizeSpan(allocator: std.mem.Allocator, src: source.Source, span: source.Span) error{ OutOfMemory, InternalError }![]const u8 {
+    if (span.start > span.end or span.end > src.bytes.len) return error.InternalError;
+    var sink: diagnostic.Sink = .{ .allocator = allocator };
+    const tokens = lexer.lexRange(allocator, src.bytes, span, &sink) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return error.InternalError,
+    };
+    defer allocator.free(tokens);
+    var out: std.Io.Writer.Allocating = .init(allocator);
+    defer out.deinit();
+    var first = true;
+    for (tokens) |token| {
+        if (token.tag == .eof) continue;
+        if (!first) out.writer.writeAll("\x00") catch return error.OutOfMemory;
+        first = false;
+        if (token.span.start > token.span.end or token.span.end > src.bytes.len) return error.InternalError;
+        out.writer.writeAll(src.bytes[token.span.start..token.span.end]) catch return error.OutOfMemory;
     }
-    fingerprint(&hash, []const u8, src.bytes[cursor..]);
-    // Catalog order matters: checked bodies retain nominal type identities.
-    fingerprint(&hash, []const typed.Record, records);
-    return .{ .digest = hash.finalResult(), .bodies = bodies, .enabled = enabled, .contract_sha256 = contract_sha256 };
+    return out.toOwnedSlice() catch return error.OutOfMemory;
 }
 
 /// Canonical key for one generic specialization. This is a primitive for a future
@@ -97,9 +219,6 @@ fn functionValues(allocator: std.mem.Allocator, src: source.Source, program: ast
         if (names.contains(bare)) return true;
     };
     return false;
-}
-fn less(_: void, a: source.Span, b: source.Span) bool {
-    return a.start < b.start;
 }
 fn fingerprint(hash: *Hash, comptime T: type, value: T) void {
     if (T == source.Span) return;

@@ -74,6 +74,8 @@ const typed = @import("typed.zig");
 const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
 const records = @import("records.zig");
+const identity = @import("identity.zig");
+const semantic_key = @import("semantic_key.zig");
 const Error = diagnostic.Error;
 const instances = @import("generic_instances.zig");
 const Names = @import("module_names.zig").Names;
@@ -3454,11 +3456,91 @@ fn entryParameterStart(parameters: []const ast.Parameter, checker: *Checker, sin
     return sink.fail("E_MAIN", parameters[0].ty, "entry parameters must be `args: list[str]` followed by capabilities");
 }
 
+/// Project declarations also expose module visibility; fold it into the
+/// semantic interface so export/private changes invalidate callers.
+fn functionInterfaceDigest(
+    allocator: std.mem.Allocator,
+    src: source.Source,
+    program: ast.Program,
+    function: ast.Function,
+    module_names: ?*Names,
+) Error!?[]const u8 {
+    const normalized = semantic_key.declarationInterfaceDigest(allocator, src, program, function) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.InternalError => return null,
+    };
+    const region = normalized orelse return null;
+    const policy = if (function.policy.conversion) "conversion" else if (function.policy.restricted) "restricted" else "ordinary";
+    if (module_names == null) {
+        const digest = identity.digestFields("mylang-function-interface-v1", &.{ region, "", policy });
+        return allocator.dupe(u8, &std.fmt.bytesToHex(digest, .lower)) catch error.OutOfMemory;
+    }
+    const visibility = functionVisibility(module_names.?, src, function) orelse return null;
+    const digest = identity.digestFields("mylang-function-interface-v1", &.{ region, visibility, policy });
+    return allocator.dupe(u8, &std.fmt.bytesToHex(digest, .lower)) catch error.OutOfMemory;
+}
+
+fn functionVisibility(names: *Names, src: source.Source, function: ast.Function) ?[]const u8 {
+    const original = src.originalSpan(function.name) catch return null;
+    if (original.input >= names.index.units.len) return null;
+    for (names.index.units[original.input].symbols.items) |symbol| {
+        if (symbol.kind != .function or symbol.span.start != original.span.start or symbol.span.end != original.span.end) continue;
+        if (symbol.exported) return "exported";
+        if (symbol.restricted) return "restricted";
+        return "private";
+    }
+    return null;
+}
+
+/// Stable declaration identity plus semantic interface digest for one AST function.
+fn declarationKeyFor(
+    allocator: std.mem.Allocator,
+    src: source.Source,
+    program: ast.Program,
+    function: ast.Function,
+    module_names: ?*Names,
+) Error!?semantic_key.DeclarationKey {
+    const owner = if (function.policy.owner) |span| src.text(span) else null;
+    var module_name: []const u8 = "main";
+    var local_name: []const u8 = src.text(function.name);
+    if (module_names) |names| {
+        const qualified = names.declaration(function.name) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => return null,
+        };
+        const separator = std.mem.lastIndexOf(u8, qualified, "::") orelse return null;
+        module_name = qualified[0..separator];
+        local_name = qualified[separator + 2 ..];
+    }
+    const declaration_identity = try identity.declarationIdentity(allocator, module_name, "function", owner, local_name);
+    const interface_sha256 = try functionInterfaceDigest(allocator, src, program, function, module_names);
+    return .{ .identity = declaration_identity, .interface_sha256 = interface_sha256 };
+}
+
+/// Build one ordered declaration key per AST function. A null entry keeps the
+/// global reuse gate conservative for that compilation.
+fn buildDeclarationKeys(
+    allocator: std.mem.Allocator,
+    src: source.Source,
+    program: ast.Program,
+    module_names: ?*Names,
+) Error![]?semantic_key.DeclarationKey {
+    const keys = try allocator.alloc(?semantic_key.DeclarationKey, program.functions.len);
+    for (program.functions, keys) |function, *slot| {
+        slot.* = try declarationKeyFor(allocator, src, program, function, module_names);
+    }
+    return keys;
+}
+
 /// Reuse supported checked bodies, then rerun all cross-function validation passes.
 pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names, cache: ?*@import("semantic_cache.zig").Cache) Error!typed.Program {
     defer normalizeDiagnostics(sink);
     const catalog = try records.collectWithNames(allocator, src, program, sink, module_names);
-    var session = if (cache) |c| try c.begin(allocator, src, program, catalog.records) else null;
+    const declaration_keys: []const ?semantic_key.DeclarationKey = if (cache != null)
+        try buildDeclarationKeys(allocator, src, program, module_names)
+    else
+        &.{};
+    var session = if (cache) |c| try c.begin(allocator, src, program, catalog.records, declaration_keys) else null;
     var failed = false;
     checkGenericContracts(src, program, sink, catalog) catch |err| switch (err) {
         error.SourceError => failed = true,

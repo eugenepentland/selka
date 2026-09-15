@@ -344,3 +344,97 @@ test "semantic cache contract fingerprint forces a fresh check and identical con
     try t.expectEqual(@as(usize, 6), cache.statistics.reused);
     try t.expectEqual(after_base_checked + 6, cache.statistics.checked);
 }
+
+// spec-case: SEMANTIC-CACHE-1
+test "semantic cache body edits reuse unchanged declarations but interface edits stay conservative" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const defaulted =
+        \\def helper(n: i64 = 1) -> i64:
+        \\    return n + 1
+        \\
+        \\
+        \\
+    ;
+    try compare(t.allocator, &cache, defaulted ++ suffix, 42);
+    try t.expectEqual(@as(usize, 3), cache.statistics.checked);
+
+    const body_only =
+        \\def helper(n: i64 = 1) -> i64:
+        \\    return n + 2
+        \\
+        \\
+        \\
+    ;
+    const reused_before_body = cache.statistics.reused;
+    const checked_before_body = cache.statistics.checked;
+    try compare(t.allocator, &cache, body_only ++ suffix, 43);
+    try t.expectEqual(reused_before_body + 2, cache.statistics.reused);
+    try t.expectEqual(checked_before_body + 1, cache.statistics.checked);
+
+    // Changing only a parameter default value changes the declaration interface,
+    // so every body is rechecked even though the helper body text is unchanged.
+    const interface_edit =
+        \\def helper(n: i64 = 2) -> i64:
+        \\    return n + 1
+        \\
+        \\
+        \\
+    ;
+    const reused_before_interface = cache.statistics.reused;
+    const checked_before_interface = cache.statistics.checked;
+    try compare(t.allocator, &cache, interface_edit ++ suffix, 42);
+    try t.expectEqual(reused_before_interface, cache.statistics.reused);
+    try t.expectEqual(checked_before_interface + 3, cache.statistics.checked);
+}
+
+// spec-case: SEMANTIC-CACHE-1
+test "semantic cache comment and whitespace edits outside declarations reuse every body" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, prefix ++ suffix, 42);
+    const reused_before = cache.statistics.reused;
+    const checked_before = cache.statistics.checked;
+    // A leading comment, a leading blank line, and an extra blank line between
+    // declarations all sit outside every full declaration span.
+    const outside_only = "\n# leading comment\n" ++ prefix ++ "\n" ++ suffix;
+    try compare(t.allocator, &cache, outside_only, 42);
+    try t.expectEqual(reused_before + 3, cache.statistics.reused);
+    try t.expectEqual(checked_before, cache.statistics.checked);
+}
+
+// spec-case: SEMANTIC-CACHE-1
+test "semantic cache retained declaration identity is load-bearing" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, prefix ++ suffix, 42);
+    try t.expect(cache.entries.len == 3);
+    // The global gate still matches prepared keys; only the retained entry's
+    // identity is corrupted, so the per-slot lookup must reject that body.
+    cache.entries[0].identity = "corrupted-declaration-identity";
+    const reused_before = cache.statistics.reused;
+    const checked_before = cache.statistics.checked;
+    try compare(t.allocator, &cache, prefix ++ suffix, 42);
+    try t.expectEqual(reused_before + 2, cache.statistics.reused);
+    try t.expectEqual(checked_before + 1, cache.statistics.checked);
+}
+
+// spec-case: SEMANTIC-CACHE-1
+test "semantic cache catalog digest is a global identity-backed gate" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, prefix ++ suffix, 42);
+    var corrupted = cache.catalog_digest.?;
+    corrupted[0] ^= 0xff;
+    cache.catalog_digest = corrupted;
+    const reused_before = cache.statistics.reused;
+    const checked_before = cache.statistics.checked;
+    try compare(t.allocator, &cache, prefix ++ suffix, 42);
+    try t.expectEqual(reused_before, cache.statistics.reused);
+    try t.expectEqual(checked_before + 3, cache.statistics.checked);
+    // The successful publication restored the catalog digest, so the same
+    // source can reuse all three bodies again.
+    try compare(t.allocator, &cache, prefix ++ suffix, 42);
+    try t.expectEqual(reused_before + 3, cache.statistics.reused);
+    try t.expectEqual(checked_before + 3, cache.statistics.checked);
+}
