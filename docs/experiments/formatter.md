@@ -1,32 +1,40 @@
 # T: canonical source formatter
 
 Status: implemented as `fmt`, with `fmt --check` for verification. The formatter
-parses syntax and returns the accepted program unchanged. It does not type-check,
-lower, execute, reorder declarations, simplify expressions, or modify files itself.
+parses syntax and reprints the program under one fixed layout. It does not
+type-check, lower, execute, reorder declarations, simplify expressions, or modify
+files itself.
 
 ```sh
 zig build run -- fmt examples/records.my
 zig build run -- fmt examples/records.my --check
 ```
 
-Normal mode writes the source to stdout and exits 0. Check mode emits no source and
-exits 0 for every input the parser accepts, because an accepted program already is
-its own canonical text. Syntax errors exit 1 with source diagnostics; usage and host
-failures exit 2. The check option is fmt-only and accepted once. Input files retain
-their original bytes.
+Normal mode writes canonical source to stdout and exits 0. Check mode emits no
+source and exits 0 only when the input already is canonical; otherwise it reports
+`formatting differs` and exits 1. Syntax errors exit 1 with source diagnostics;
+usage and host failures exit 2. The check option is fmt-only and accepted once.
+Input files retain their original bytes.
 
 ## Format contract
 
-Indentation is syntax on this surface. A suite opens at the `:` that ends its line
-and closes at the dedent that leaves it, so the layout of a program the parser
-accepts already is that program's canonical form: four spaces per level, LF line
-endings, comments in their own gaps, blank lines where the author put them.
-Reprinting from tokens could only move bytes that carry meaning, so `fmt` returns
-what it read and `fmt --check` succeeds on everything that parses.
+The canonical layout is fixed:
 
-This is a narrower contract than a brace language's formatter, and deliberately so.
-There is no competing style to settle, no width-based reflow, and no configuration.
-Long lines remain visible to the separate advisory quality report.
+- four spaces per suite level and LF line endings;
+- one space around binary and assignment operators;
+- one space after commas and annotation colons;
+- no padding inside ordinary delimiters;
+- no trailing whitespace;
+- exactly one final newline for a nonempty program;
+- two blank lines between top-level declarations and one blank line after the
+  module header directive group.
+
+Blank lines inside a suite are removed; only the top-level separators above are
+emitted. Comments and literal bytes are preserved; only whitespace between tokens is
+rewritten. Declaration, directive and evaluation order never change. Token
+spelling is retained, so an accepted compatibility spelling such as `class` stays
+`class` until the source changes. Long lines are not wrapped and there is no
+configuration.
 
 ## Syntax versus semantic work
 
@@ -36,23 +44,20 @@ satisfied ownership/effect rules; this allows formatting code while it is being
 written. Invalid syntax still rejects formatting, rather than guessing a repair.
 A formatted file can still fail semantic checking for its original reason.
 
-`fmt-module` applies the same rule to a module file, parsing the header, imports
+`fmt-module` applies the same layout to a module file, parsing the header, imports
 and exports without loading the imported modules, so an unresolved draft still
 formats.
 
 ## Acceptance evidence
 
-`src/formatter_test.zig` covers the byte-for-byte round trip with inline,
-standalone and trailing comments, idempotence, empty and comment-only inputs,
-syntax-only formatting, syntax failures, execution of a formatted program, module
-headers with unresolved drafts, and every allocation failure through parsing and
-formatting. Allocating-writer failures are consistently reported as OutOfMemory,
-with request and output storage released.
+`src/formatter_test.zig` covers noncanonical-to-canonical fixtures,
+operator/assignment spacing, comment and literal preservation, unary operators,
+nested blocks, generics and named constraints, top-level and header spacing,
+idempotence, empty/whitespace-only/comment-only inputs, syntax-only formatting,
+syntax failures, native execution preservation, module drafts, and every
+allocation failure through parsing and formatting. Allocating-writer failures are
+consistently reported as OutOfMemory, with request and output storage released.
 
-CLI tests verify stdout and check behavior, unchanged-file check success,
-duplicate and wrong-command options, and syntax diagnostics. Every semantically
-valid language CLI fixture is formatted, checked again, and verified idempotent.
-
-[The project-verification driver](verification-driver.md) is implemented. Formatter
-checks can participate in that driver without becoming source type-validity rules
-or runtime coverage.
+CLI tests verify stdout and check behavior, canonical check success, nonzero
+check on noncanonical input, duplicate and wrong-command options, and syntax
+diagnostics.

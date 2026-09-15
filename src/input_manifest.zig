@@ -83,12 +83,15 @@ pub const Manifest = struct {
         const writer = &output.writer;
         try writer.print("# generated input manifest v1 sha256={s}\nmodule {s}\n", .{ std.fmt.bytesToHex(self.digest, .lower), self.parsed.value.module });
         for (self.parsed.value.values) |entry| try writer.print("export {s}\n", .{entry.name});
-        for (self.parsed.value.values) |entry| {
+        for (self.parsed.value.values, 0..) |entry, index| {
             const boolean = std.mem.eql(u8, entry.type, "bool");
             const suffix = if (boolean or std.mem.eql(u8, entry.type, "i64")) "" else entry.type;
             // A manifest spells a boolean the way JSON does; the source spells it the way the guest does.
             const value = if (!boolean) entry.value else if (std.mem.eql(u8, entry.value, "true")) "True" else "False";
-            try writer.print("\n\ndef {s}() -> {s}:\n    return {s}{s}\n", .{ entry.name, entry.type, value, suffix });
+            // The canonical layout has one blank line after the header directive
+            // group and two between top-level declarations.
+            if (index == 0) try writer.print("\n", .{}) else try writer.print("\n\n", .{});
+            try writer.print("def {s}() -> {s}:\n    return {s}{s}\n", .{ entry.name, entry.type, value, suffix });
         }
         return output.toOwnedSlice();
     }

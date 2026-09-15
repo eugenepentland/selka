@@ -1,7 +1,7 @@
 # Canonical module formatting
 
-The existing token-preserving formatter now accepts module headers and qualified
-names through a syntax-only module parser:
+The formatter accepts module headers and qualified names through a syntax-only
+module parser:
 
 ```sh
 zig build run -- fmt-module examples/modules/main.my
@@ -10,28 +10,33 @@ zig build run -- fmt-project examples/modules/main.my --check
 ```
 
 `fmt-module` formats exactly the named file to stdout. `--check` compares canonical
-bytes and reports a difference without writing. It parses module/import
-header order, exports anywhere among top-level declarations, and the full body, but does not load imports, match the file path to
-its declaration, validate export targets, reject duplicate import aliases, or check
-types, ownership, effects, and name resolution. This permits unfinished source to be
-formatted. Malformed headers or bodies still reject. Original `fmt` behavior for
-single-file programs is unchanged.
+bytes and reports a difference without writing. It parses module/import header
+order, exports anywhere among top-level declarations, and the full body, but does
+not load imports, match the file path to its declaration, validate export targets,
+reject duplicate import aliases, or check types, ownership, effects and name
+resolution. This permits unfinished source to be formatted. Malformed headers or
+bodies still reject.
 
-`fmt-project --check` loads the entry's reachable import graph, then parses/formats
-each module independently. The loader's declaration/path, alias/export duplication,
-cycle, and source/graph limits apply because it must identify the graph. Body semantic
-checking is not performed. The check requires `--check`: there is no ambiguous
-multi-file stdout format or automatic source overwrite. Changed file paths are
-reported in dependency-first order after every body has parsed successfully. A
-malformed body reports its syntax error instead of a partial formatting-difference
-list. Files outside the reachable graph are not checked.
+`fmt-project --check` loads the entry's reachable import graph, then parses and
+formats each module independently. The loader's declaration/path, alias/export
+duplication, cycle and source/graph limits apply because it must identify the
+graph. Body semantic checking is not performed. The check requires `--check`:
+there is no ambiguous multi-file stdout format or automatic source overwrite.
+Changed file paths are reported in dependency-first order after every body has
+parsed successfully. A malformed body reports its syntax error instead of a
+partial formatting-difference list. Files outside the reachable graph are not
+checked.
 
-Module headers and top-level exports preserve directive order and placement. Dotted module names and `alias::Type` or
-`alias::function` qualifications have canonical tight separators; ordinary type
-annotations retain the space after their colon. Line comments remain in the same
-token gap even when placed around/between qualifier colons. Existing indentation,
-LF newline, comment preservation, and token spelling rules remain. Formatting does
-not rename symbols, reorder imports/exports, load dependency policy, or merge code.
+Module headers and top-level exports preserve directive order and placement.
+Dotted module names and qualified `alias.Type` or `alias.function` names have
+canonical tight separators; ordinary type annotations retain the space after their
+colon. The same fixed rules as single-file formatting apply: four-space suites,
+one space around operators, one space after commas and annotation colons, no
+padding inside delimiters, no trailing whitespace, one final newline, two blank
+lines between top-level declarations, and one blank line after the header
+directive group. Blank lines inside a suite are removed. Line comments remain in the same token gap even when placed
+around qualified names. Formatting does not rename symbols, reorder
+imports/exports, load dependency policy, or merge code.
 
 The implementation uses the same formatter engine for both grammars. Module parsing
 for formatting is separate from the single-file Compilation syntax cache, so a
@@ -44,13 +49,9 @@ Project success says nothing about semantic validity. To apply a change, capture
 `fmt-module` stdout and replace the intended file explicitly; use project checking
 and execution for semantic validation afterward.
 
-Acceptance covers complete token-tag/spelling preservation, per-gap comment identity,
-CRLF conversion, qualified arrays/types/calls, header ordering, malformed input,
-semantically unresolved drafts, parser-cache isolation, every host allocation failure,
-actual CLI stdout/check behavior, and multi-file graph checks. Both existing module
-example graphs were formatted, pass the graph check, and still execute to 12 and 46.
-
-[Scalar project native parity](../legacy/experiments/module-native.md) is implemented. Module graph scaling and an initial [ordinary corpus review](../../examples/corpus/README.md)
-are also implemented. Generics,
-compile-time/schema/incremental work, and wider native operations remain pending.
-Future syntax must extend the same formatter and preservation tests when introduced.
+Acceptance covers canonical bytes, per-gap comment identity, CRLF conversion,
+qualified arrays/types/calls, header ordering, malformed input, semantically
+unresolved drafts, parser-cache isolation, every host allocation failure, actual
+CLI stdout/check behavior, multi-file graph checks, and native execution
+preservation. The committed module examples still execute after a formatting pass;
+the repository corpus is reformatted only in the dedicated integration commit.

@@ -3,7 +3,6 @@ module config.values
 export batch_size
 export enabled
 
-
 def batch_size() -> u16:
     return 64u16
 

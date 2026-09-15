@@ -14,8 +14,10 @@ const program =
     \\    x: int
     \\    y: int
     \\
+    \\
     \\def noop():
     \\    pass
+    \\
     \\
     \\def main() -> int:
     \\    noop()
@@ -29,6 +31,7 @@ const program =
     \\        return p.x + p.y
     \\    else:
     \\        return total
+    \\
 ;
 
 fn scenario(allocator: std.mem.Allocator) !void {
@@ -368,7 +371,7 @@ test "Python generic value records use square construction and default copy cons
 
 // spec-case: PYTHON-1
 test "Python declaration listings and formatting retain comment and original name positions" {
-    const text = "# documentation\ndef first() -> int:\n    return 40\n\ndef main() -> int:\n    return first() + 2\n";
+    const text = "# documentation\ndef first() -> int:\n    return 40\n\n\ndef main() -> int:\n    return first() + 2\n";
     var c = try language.Compilation.init(t.allocator, "listing.my", text);
     defer c.deinit();
     const listing = try c.listDeclarations(t.allocator);

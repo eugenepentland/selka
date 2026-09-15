@@ -323,8 +323,8 @@ In particular:
   have no step. Changing a list's length during iteration traps.
 - GC roots and collection transport across host/JSON boundaries are not
   implemented.
-- Formatting validates source and returns it unchanged: indentation already is
-  the canonical layout, so `fmt --check` accepts everything that parses.
+- Formatting validates source and rewrites it into the one canonical layout;
+  `fmt --check` is nonzero when the input bytes differ from that layout.
 
 ## Prelude builtins
 
