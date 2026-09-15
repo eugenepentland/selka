@@ -56,7 +56,7 @@ commit rather than against a moving set of worktrees.
 | W2 one spelling / stale rejection | **Landed.** `E_REMOVED_SPELLING` for `.len()`, `push`, `d.contains`, `List`, the `*_cap` names, the fifteen `f64_*` spellings, `codec_encode`/`codec_decode`, `&` and `=>`, with canonical replacements. Repository fixtures/examples migrated. | `wave1/frontend`, `wave1/fixup` |
 | W3 everyday collections | **Minimum met and proved.** The prototype needed and used list construction/append/index-write/iteration, dict literal/membership, string index/slice/classification/`""`.join, `int(text)` parsing, `range`, `Some`/`None`. List concat/repeat and `dict.remove` are not in the measured minimum (`pop` covers removal); they are not implemented. | `wave1/prototype` |
 | W4 prelude builtins | **Measured.** `sum`/`min`/`max`/`sorted`/`abs`/`round`/`any`/`all`/`zip`/`reversed` already exist and satisfy the idiom probes, but the lexer/parser workload needed only `len`, `int`, `print`, `range`, `Some`, `None`. No speculative operation was added in Wave 1; removing the landed set would fail the probes, so it is left for a policy decision. | `wave1/prototype`, landed earlier |
-| W5 program edge | **W5a lambda landed.** Expression-bodied, contextually typed, non-capturing lambdas over the existing callback value, including `sorted(xs, key=...)`. W5b (`main -> Result`), W5c (`const` bytes/str) and W5d (`?` on `Option`) are Wave 2 boundary work and remain probes. | `wave1/lambda` |
+| W5 program edge | **W5a lambda landed.** Expression-bodied, contextually typed, non-capturing lambdas over the existing callback value, including `sorted(xs, key=...)`. W5b (`main -> Result`), W5c (`const` bytes/str) and W5d (`?` on `Option`) landed with Wave 2. | `wave1/lambda` |
 | W7 docs and examples | **Landed.** Guide/reference/performance pages reconciled, examples migrated to the canonical surface, legacy history moved out of the reader's path. | `wave1/docs`, `wave1/fixup` |
 | W8 idiom harness | **Landed and honest.** The driver no longer treats `main`'s integer result as a false regression; classifier self-test added; `test-idioms` back in `zig build test`. | `wave1/docs` |
 | W9 one `run` command | **Verified.** `mylang run <file.my>` auto-detects `module`/`import`/`export`; `run-project` remains the explicit alias. One recorded W9 gap remains: restricted-capability stderr differs between `run` and native execution. `build --run` module auto-detection landed with Wave 2 item 1. | `wave1/docs`, Wave 2 item 1 |
@@ -83,11 +83,10 @@ commit rather than against a moving set of worktrees.
    replacement diagnostic and final removal are still pending.
 3. **W4 prelude decision resolved.** The public prelude stays as landed. The
    compiler is not required to use every public helper.
-4. **Wave 2 boundary work remains.** `Cell[T]` and constant `str`/`bytes` are
-the remaining items. Item 1 landed argv, the `--` delimiter, and `build --run`
-module detection; `eprint`, explicit environment access, restricted-capability
-stderr parity, `main -> Result[int, str]`, and `?` over `Option` have since
-landed as well.
+4. **Wave 2 boundary work is complete.** `Cell[T]`, constant `str`/`bytes`,
+`main -> Result[int, str]`, `eprint`, explicit environment access, argv, the `--`
+delimiter, `build --run` module detection, restricted-capability stderr parity,
+and `?` over `Option` have all landed in the current compiler.
 5. **Not Wave 1 and still open:** list concat/repeat, the expressions group
    (conditional expression, chained comparisons, tuples, `is None`, `Option`
    equality), and incremental identity/invalidation (Wave 3).

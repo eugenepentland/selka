@@ -135,7 +135,7 @@ reads selected environment values explicitly, writes normal machine output to
 stdout and diagnostics through the canonical stderr operation, and returns
 `int` or `Result[int, str]`. The `list[str]` argument, `--` launch boundary,
 `eprint`, explicit environment access, and checked exit results are implemented;
-`Cell[T]` and constant `str`/`bytes` remain Wave 2 work.
+`Cell[T]` and constant `str`/`bytes` are implemented as Wave 2 boundary work.
 
 ## Runtime boundary
 
