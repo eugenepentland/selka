@@ -41,13 +41,13 @@ Branches are cut from the baseline SHA. Worktrees live under
 
 | Package | Owner branch | Worktree | Base SHA | Depends on | Status |
 | --- | --- | --- | --- | --- | --- |
-| W0 | `codex/velocity-integration` | main checkout | `9ce142e` | — | **in progress** (baseline + contracts done; evidence pending) |
-| W0Q | `codex/velocity-w0-verify` | `velocity-w0-verify` | `9ce142e` | W0 | queued |
-| F1 | `codex/velocity-f1` | `velocity-f1` | `9ce142e` | W0 | queued |
-| D1 | `codex/velocity-d1` | `velocity-d1` | `9ce142e` | W0 | queued |
-| C0 | `codex/velocity-c0` | `velocity-c0` | `9ce142e` | W0 | queued |
-| E1 | `codex/velocity-e1` | `velocity-e1` | `9ce142e` | W0 | queued (after wave-1 slot) |
-| E2 | `codex/velocity-e2` | `velocity-e2` | E1 integrated | E1 | blocked |
+| W0 | `codex/velocity-integration` | main checkout | `9ce142e` | — | **done** — baseline, contracts, evidence; integrated |
+| W0Q | `codex/velocity-w0-verify` | `velocity-w0-verify` | `9ce142e` | W0 | **done** — 42 probes re-run, gates recorded, merged in `1c79941` |
+| F1 | `codex/velocity-f1` | `velocity-f1` | `9ce142e` | W0 | **done** — canonical formatter; merged in `0594e61` |
+| D1 | `codex/velocity-d1` | `velocity-d1` | `9ce142e` | W0 | **done** — structured trap detail; merged in `5591945` |
+| C0 | `codex/velocity-c0` | `velocity-c0` | `9ce142e` | W0 | **done** — work-report-v1; merged in `3d505be` |
+| E1 | `codex/velocity-e1` | `velocity-e1` | `9ce142e` | W0 | **done** — directional callable assignability; merged in `55aee27` |
+| E2 | `codex/velocity-e2` | `velocity-e2` | `161c4e4` | E1 | **in progress** |
 | M1 | `codex/velocity-m1` | `velocity-m1` | W0 + serialized effects | W0 | blocked on effects ownership |
 | M2 | `codex/velocity-m2` | `velocity-m2` | M1+E1 integrated | M1, E1 | blocked |
 | M3 | `codex/velocity-m3` | `velocity-m3` | M2+E2 integrated | M2, E2 | blocked |
@@ -56,7 +56,7 @@ Branches are cut from the baseline SHA. Worktrees live under
 | C3 | `codex/velocity-c3` | `velocity-c3` | C2 integrated | C2 | blocked |
 | C4 | `codex/velocity-c4` | `velocity-c4` | C3+P1 integrated | C3, P1 | blocked |
 | P1 | `codex/velocity-p1` | `velocity-p1` | M3+E2 integrated | E2, M3 | blocked |
-| A1 | `codex/velocity-a1` | `velocity-a1` | `9ce142e` | W0 | queued |
+| A1 | `codex/velocity-a1` | `velocity-a1` | `161c4e4` | W0 | **in progress** |
 | S1 | `codex/velocity-s1` | `velocity-s1` | C0 integrated | C0 (+ final core) | blocked |
 | D2 | `codex/velocity-d2` | `velocity-d2` | final core | each feature | blocked |
 
@@ -80,3 +80,9 @@ Never share a mutable checkout, installed binary or `zig-out`/`.zig-cache`.
 | Date | Integration SHA | Packages merged | Notes |
 | --- | --- | --- | --- |
 | 2026-09-15 | `9ce142e` | baseline | W0 baseline commit; focused constraint tests 64/64 |
+| 2026-09-15 | `1c79941` | W0Q | baseline evidence, 42-probe comparison, gate record, incremental-status reconciliation |
+| 2026-09-15 | `55aee27` | E1 | directional callable assignability; 949 unit / 80 CLI tests on the package tree |
+| 2026-09-15 | `5591945` | D1 | structured native trap detail; test-qbe 106/106 on the integration tree |
+| 2026-09-15 | `0594e61` | F1 | canonical formatter; format 49/49 units, 3/3 CLI, docs gate unblocked |
+| 2026-09-15 | `3d505be` | C0 | work-report-v1; 29 invalidation / 54 cache tests |
+| 2026-09-15 | `20a8938` | D1 follow-up | runtime-abi-v1 freeze; cache/invalidation/qbe_build focused suites green |
