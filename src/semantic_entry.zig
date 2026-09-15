@@ -3,6 +3,24 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
 const copy = @import("semantic_copy.zig");
+
+/// One stable function identity exchanged for a fresh catalog ordinal at lookup time.
+pub const FunctionRef = struct { id: typed.FunctionId, key: []const u8 };
+/// One stable nominal-type identity exchanged for a fresh catalog ordinal.
+pub const RecordRef = struct { index: usize, key: []const u8 };
+/// Relocatable declaration facts retained for one checked function.
+pub const Identity = struct { key: []const u8, context: [32]u8, body: source.Span, region: source.Span };
+/// Declaration dependencies and catalog cardinalities of one retained snapshot.
+pub const Metadata = struct {
+    identity: Identity,
+    old_function_count: usize,
+    old_record_count: usize,
+    function_refs: []const FunctionRef,
+    record_refs: []const RecordRef,
+};
+/// Inputs for `Entry.create`; bundles the changing snapshot facts.
+pub const Spec = struct { identity: Identity, function_refs: []const FunctionRef, record_refs: []const RecordRef };
+
 /// Reference counts are coordinator-owned; no cache mutation is concurrent.
 pub const Generation = struct {
     allocator: std.mem.Allocator,
@@ -30,7 +48,8 @@ pub const Generation = struct {
         }
     }
 };
-/// One local checked tree owns its metadata and one source-generation reference.
+/// One local checked tree owns its metadata, stable dependency identities and
+/// one source-generation reference.
 pub const Entry = struct {
     arena: std.heap.ArenaAllocator,
     function: typed.Function,
@@ -38,16 +57,42 @@ pub const Entry = struct {
     statements: []const typed.Statement,
     range: copy.Range,
     generation: *Generation,
+    meta: Metadata,
     /// Clone only one changed function; unchanged cache entries transfer ownership directly.
-    pub fn create(allocator: std.mem.Allocator, generation: *Generation, program: typed.Program, index: usize, range: copy.Range) error{ OutOfMemory, InternalError }!Entry {
+    pub fn create(allocator: std.mem.Allocator, generation: *Generation, program: typed.Program, index: usize, range: copy.Range, spec: Spec) error{ OutOfMemory, InternalError }!Entry {
         var arena = std.heap.ArenaAllocator.init(allocator);
         errdefer arena.deinit();
+        const arena_allocator = arena.allocator();
         const mapper: @import("ast_copy.zig").Mapper = .{};
-        const saved_function = mapper.value(arena.allocator(), typed.Function, program.functions[index]) catch |err| return classify(err);
-        const nodes = mapper.value(arena.allocator(), []const typed.Node, program.nodes[range.nodes.start..range.nodes.end]) catch |err| return classify(err);
-        const statements = mapper.value(arena.allocator(), []const typed.Statement, program.statements[range.statements.start..range.statements.end]) catch |err| return classify(err);
+        const saved_function = mapper.value(arena_allocator, typed.Function, program.functions[index]) catch |err| return classify(err);
+        const nodes = mapper.value(arena_allocator, []const typed.Node, program.nodes[range.nodes.start..range.nodes.end]) catch |err| return classify(err);
+        const statements = mapper.value(arena_allocator, []const typed.Statement, program.statements[range.statements.start..range.statements.end]) catch |err| return classify(err);
+        const function_refs = try arena_allocator.alloc(FunctionRef, spec.function_refs.len);
+        for (spec.function_refs, function_refs) |ref, *out| out.* = .{ .id = ref.id, .key = try arena_allocator.dupe(u8, ref.key) };
+        const record_refs = try arena_allocator.alloc(RecordRef, spec.record_refs.len);
+        for (spec.record_refs, record_refs) |ref, *out| out.* = .{ .index = ref.index, .key = try arena_allocator.dupe(u8, ref.key) };
+        const identity = Identity{
+            .key = try arena_allocator.dupe(u8, spec.identity.key),
+            .context = spec.identity.context,
+            .body = spec.identity.body,
+            .region = spec.identity.region,
+        };
         generation.references += 1;
-        return .{ .arena = arena, .function = saved_function, .nodes = nodes, .statements = statements, .range = range, .generation = generation };
+        return .{
+            .arena = arena,
+            .function = saved_function,
+            .nodes = nodes,
+            .statements = statements,
+            .range = range,
+            .generation = generation,
+            .meta = .{
+                .identity = identity,
+                .old_function_count = program.functions.len,
+                .old_record_count = program.records.len,
+                .function_refs = function_refs,
+                .record_refs = record_refs,
+            },
+        };
     }
     /// Release this function tree without invalidating other generation users.
     pub fn deinit(self: *Entry) void {

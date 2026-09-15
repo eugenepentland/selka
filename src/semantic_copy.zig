@@ -1,4 +1,5 @@
-//! Relocate owned checked function trees into a fresh compilation's source and ID space.
+//! Relocate owned checked function trees into a fresh compilation's source,
+//! declaration and catalog identity space.
 const std = @import("std");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
@@ -8,11 +9,79 @@ pub const Segment = struct { before: source.Span, after: usize };
 pub const Range = struct { nodes: source.Span, statements: source.Span };
 /// Validation failures indicate a cache miss, never a trusted unchecked identity.
 pub const Error = error{ OutOfMemory, InternalError, InvalidRelocation };
-/// Copy owned metadata, then relocate spans and local typed-table identities.
+
+/// Declaration references found in one checked function tree. Old numeric ids
+/// are exchanged for stable identities by the caller; the map only accumulates
+/// the ordinal positions that need remapping.
+pub const RefSet = struct {
+    allocator: std.mem.Allocator,
+    functions: std.AutoHashMapUnmanaged(usize, void) = .empty,
+    records: std.AutoHashMapUnmanaged(usize, void) = .empty,
+    /// True when the tree stores or invokes a callable value, whose inferred
+    /// contract is not yet a stable dependency fact for C1.
+    callbacks: bool = false,
+
+    /// Initialize an accumulator tied to one allocator.
+    pub fn init(allocator: std.mem.Allocator) RefSet {
+        return .{ .allocator = allocator };
+    }
+    /// Release accumulator storage. The caller retains every referenced key.
+    pub fn deinit(self: *RefSet) void {
+        self.functions.deinit(self.allocator);
+        self.records.deinit(self.allocator);
+    }
+    /// Record one declaration reference, recursing through owned value shapes.
+    pub fn collect(self: *RefSet, comptime T: type, value: T) error{OutOfMemory}!void {
+        if (T == typed.FunctionId) {
+            try self.functions.put(self.allocator, @backingInt(value), {});
+            return;
+        }
+        if (T == typed.Type) {
+            if (value.isAggregate()) try self.records.put(self.allocator, value.recordIndex(), {});
+            return;
+        }
+        switch (@typeInfo(T)) {
+            .@"struct" => inline for (@typeInfo(T).@"struct".field_names, @typeInfo(T).@"struct".field_types) |field_name, Field| {
+                try self.collect(Field, @field(value, field_name));
+            },
+            .@"union" => inline for (@typeInfo(T).@"union".field_names, @typeInfo(T).@"union".field_types) |field_name, Field| {
+                if (std.meta.activeTag(value) == @field(std.meta.Tag(T), field_name)) try self.collect(Field, @field(value, field_name));
+            },
+            .optional => |optional| if (value) |present| try self.collect(optional.child, present),
+            .pointer => |pointer| {
+                if (pointer.size != .slice or pointer.child == u8) return;
+                for (value) |item| try self.collect(pointer.child, item);
+            },
+            .array => |array| for (value) |item| try self.collect(array.child, item),
+            else => {},
+        }
+    }
+};
+
+/// Collect every function/type reference from one checked function, its node
+/// range and its statement range. The copy mapper visits exactly the same value
+/// shape, so a reference that is absent from the set is a relocation miss.
+pub fn collectRefs(allocator: std.mem.Allocator, function: typed.Function, nodes: []const typed.Node, statements: []const typed.Statement, refs: *RefSet) error{ OutOfMemory, InternalError }!void {
+    refs.allocator = allocator;
+    refs.collect(typed.Function, function) catch return error.OutOfMemory;
+    refs.collect([]const typed.Node, nodes) catch return error.OutOfMemory;
+    refs.collect([]const typed.Statement, statements) catch return error.OutOfMemory;
+    for (nodes) |node| switch (node.data) {
+        .function_value, .invoke => refs.callbacks = true,
+        else => {},
+    };
+}
+
+/// Copy owned metadata, then relocate spans, local table identities and
+/// declaration/catalog references into the fresh compilation.
 pub const Mapper = struct {
     segments: []const Segment,
     before: Range,
     after: Range,
+    /// Old FunctionId ordinal -> remapped identity, or null when ambiguous.
+    functions: []const ?typed.FunctionId = &.{},
+    /// Old record ordinal -> remapped aggregate type, or null when ambiguous.
+    records: []const ?typed.Type = &.{},
     /// Return an independently owned function subtree without borrowing cached storage.
     pub fn copy(self: Mapper, allocator: std.mem.Allocator, comptime T: type, input: T) Error!T {
         const clone: @import("ast_copy.zig").Mapper = .{};
@@ -42,6 +111,19 @@ pub const Mapper = struct {
             value.* = @fromBackingInt(after.start + id - before.start);
             return;
         }
+        if (T == typed.FunctionId) {
+            const id = @backingInt(value.*);
+            if (id >= self.functions.len) return error.InvalidRelocation;
+            value.* = self.functions[id] orelse return error.InvalidRelocation;
+            return;
+        }
+        if (T == typed.Type) {
+            if (!value.isAggregate()) return;
+            const index = value.recordIndex();
+            if (index >= self.records.len) return error.InvalidRelocation;
+            value.* = self.records[index] orelse return error.InvalidRelocation;
+            return;
+        }
         switch (@typeInfo(T)) {
             .@"struct" => inline for (@typeInfo(T).@"struct".field_names, @typeInfo(T).@"struct".field_types) |name, Field| try self.relocate(Field, &@field(value.*, name)),
             .@"union" => inline for (@typeInfo(T).@"union".field_names, @typeInfo(T).@"union".field_types) |name, Field| {
@@ -58,7 +140,10 @@ pub const Mapper = struct {
         }
     }
 };
+
 /// Map every unchanged source interval, including relocated headers and imported files.
+/// Retained for callers that relocate whole-program syntax snapshots; per-function
+/// reuse uses a single declaration-region segment instead.
 pub fn segments(allocator: std.mem.Allocator, before: []const u8, old: []const source.Span, after: []const u8, current: []const source.Span) error{ OutOfMemory, InternalError }![]const Segment {
     if (old.len != current.len) return error.InternalError;
     const order = try allocator.alloc(usize, old.len);
