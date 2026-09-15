@@ -85,6 +85,8 @@ identity, and a damaged frontend entry that recomputes a clean result.
 - `zig build test-units` — 918 passed, 0 failed.
 - `zig build test-cli` — 78 passed, 0 failed.
 - `zig build test-doc-coverage` — 0 failures.
+- `zig build test-qbe` — every sub-suite passed (native tests, qbe build, golden
+  parity: 23 + 43 + 37 + 1 tests).
 - `scripts/profile_development.py` on `selfhost/prototype/bench.my` — cold
   median/p95 20.4/23.2 ms, warm verdict 2.4/2.6 ms, edited check 7.6/8.6 ms
   (7 samples).
