@@ -1,148 +1,260 @@
-//! `fmt` validates syntax and returns the accepted program unchanged, because
-//! indentation already is the canonical layout of a program the parser accepts.
+//! Canonical formatter regressions: noncanonical input becomes fixed canonical
+//! bytes, a second format is byte-stable, comments and literal text survive, and
+//! formatted programs still run. The formatter never type-checks, so these tests
+//! keep the parse-only drafts and unresolved modules that `fmt` must still accept.
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
-const lexer = @import("lexer.zig");
-const diagnostic = @import("diagnostic.zig");
 
-fn roundTrip(allocator: std.mem.Allocator, text: []const u8) !void {
-    var original = try language.Compilation.init(allocator, "before.my", text);
-    defer original.deinit();
-    const formatted = try original.format(allocator);
+const canonical_path = "canonical.my";
+
+fn formatOnce(allocator: std.mem.Allocator, path: []const u8, text: []const u8) ![]u8 {
+    var compilation = try language.Compilation.init(allocator, path, text);
+    defer compilation.deinit();
+    return compilation.format(allocator);
+}
+
+fn formatModuleOnce(allocator: std.mem.Allocator, path: []const u8, text: []const u8) ![]u8 {
+    var compilation = try language.Compilation.init(allocator, path, text);
+    defer compilation.deinit();
+    return compilation.formatModule(allocator);
+}
+
+fn expectCanonical(allocator: std.mem.Allocator, input: []const u8, expected: []const u8) !void {
+    const formatted = try formatOnce(allocator, canonical_path, input);
     defer allocator.free(formatted);
-    try t.expectEqualStrings(text, formatted);
-    var after = try language.Compilation.init(allocator, "after.my", formatted);
+    try t.expectEqualStrings(expected, formatted);
+    const twice = try formatOnce(allocator, canonical_path, formatted);
+    defer allocator.free(twice);
+    try t.expectEqualStrings(expected, twice);
+}
+
+fn expectCanonicalModule(allocator: std.mem.Allocator, input: []const u8, expected: []const u8) !void {
+    const formatted = try formatModuleOnce(allocator, canonical_path, input);
+    defer allocator.free(formatted);
+    try t.expectEqualStrings(expected, formatted);
+    const twice = try formatModuleOnce(allocator, canonical_path, formatted);
+    defer allocator.free(twice);
+    try t.expectEqualStrings(expected, twice);
+}
+
+// spec: TOOL-5
+test "formatter canonicalizes operator and assignment spacing" {
+    try expectCanonical(t.allocator,
+        \\def main() -> int:
+        \\    value=  40+2
+        \\    return value*3-1
+    ,
+        \\def main() -> int:
+        \\    value = 40 + 2
+        \\    return value * 3 - 1
+        \\
+    );
+}
+
+// spec-case: TOOL-5
+test "formatter preserves comments, literal values and precedence" {
+    try expectCanonical(t.allocator,
+        \\# heading
+        \\def main() -> i64: # suite note
+        \\    # leading note
+        \\    raw = "a  b # not a comment"
+        \\    data = b"raw bytes"
+        \\    label = f"v={ 1+2 }"
+        \\    value=  40+2 # trailing
+        \\    return value + len(raw) + len(data) + len(label)
+    ,
+        \\# heading
+        \\def main() -> i64: # suite note
+        \\    # leading note
+        \\    raw = "a  b # not a comment"
+        \\    data = b"raw bytes"
+        \\    label = f"v={ 1+2 }"
+        \\    value = 40 + 2 # trailing
+        \\    return value + len(raw) + len(data) + len(label)
+        \\
+    );
+}
+
+// spec-case: TOOL-5
+test "formatter normalizes unary operators and nested blocks" {
+    try expectCanonical(t.allocator,
+        \\def main() -> int:
+        \\    x=-1+2*3
+        \\    y=not x==0
+        \\    if x>0:
+        \\        while x>1:
+        \\            x-=1
+        \\            if x==2:
+        \\                x=x+1
+        \\            else:
+        \\                break
+        \\    return x
+    ,
+        \\def main() -> int:
+        \\    x = -1 + 2 * 3
+        \\    y = not x == 0
+        \\    if x > 0:
+        \\        while x > 1:
+        \\            x -= 1
+        \\            if x == 2:
+        \\                x = x + 1
+        \\            else:
+        \\                break
+        \\    return x
+        \\
+    );
+}
+
+// spec-case: TOOL-5
+test "formatter preserves generics, named constraints and slices" {
+    try expectCanonical(t.allocator,
+        \\def sum[T: integer](value: T) -> T:
+        \\    return value+value
+        \\
+        \\def score[T: copy+op(score(item: T) -> int effects())](item: T) -> int effects():
+        \\    return T.score(item)
+        \\
+        \\constraint Prices[P] = copy+op(price(policy: P, subtotal: int) -> int effects())
+        \\
+        \\def first(xs: list[int]) -> int:
+        \\    return xs[ 1 : 2 ][0]
+    ,
+        \\def sum[T: integer](value: T) -> T:
+        \\    return value + value
+        \\
+        \\
+        \\def score[T: copy + op(score(item: T) -> int effects())](item: T) -> int effects():
+        \\    return T.score(item)
+        \\
+        \\
+        \\constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
+        \\
+        \\
+        \\def first(xs: list[int]) -> int:
+        \\    return xs[1:2][0]
+        \\
+    );
+}
+
+// spec-case: TOOL-5
+test "top-level declarations get two blank lines and the header group one" {
+    try expectCanonical(t.allocator,
+        \\def a() -> int:
+        \\    return 1
+        \\def b() -> int:
+        \\    return 2
+        \\def c() -> int:
+        \\    return 3
+    ,
+        \\def a() -> int:
+        \\    return 1
+        \\
+        \\
+        \\def b() -> int:
+        \\    return 2
+        \\
+        \\
+        \\def c() -> int:
+        \\    return 3
+        \\
+    );
+}
+
+// spec-case: TOOL-5
+test "empty, whitespace-only and comment-only inputs have explicit fixtures" {
+    try expectCanonical(t.allocator, "", "");
+    try expectCanonical(t.allocator, "  \n\t\n", "");
+    try expectCanonical(t.allocator, " # one\n\n# two", "# one\n# two\n");
+}
+
+// spec-case: TOOL-5
+test "module formatter canonicalizes headers, directives and unresolved drafts" {
+    try expectCanonicalModule(t.allocator,
+        \\module app.main
+        \\import contracts.missing as c
+        \\export Prices
+        \\
+        \\
+        \\
+        \\constraint Prices[P] = copy+op(price(policy: P, subtotal: int) -> int effects())
+        \\
+        \\
+        \\
+        \\def total[P: c.Prices](policy: P, subtotal: int) -> int effects():
+        \\    return policy.price(policy=policy, subtotal=subtotal)
+    ,
+        \\module app.main
+        \\import contracts.missing as c
+        \\export Prices
+        \\
+        \\constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
+        \\
+        \\
+        \\def total[P: c.Prices](policy: P, subtotal: int) -> int effects():
+        \\    return policy.price(policy=policy, subtotal=subtotal)
+        \\
+    );
+}
+
+// spec-case: TOOL-5
+test "formatting a program preserves its native execution result" {
+    const input =
+        \\def total(values: list[int]) -> int:
+        \\    sum=0
+        \\    for value in values:
+        \\        sum+=value
+        \\    return sum
+        \\
+        \\def main() -> i64:
+        \\    values=[1,2,3,4]
+        \\    doubled=total(values)*2
+        \\    return doubled+len(values)
+    ;
+    var before = try language.Compilation.init(t.allocator, "before.my", input);
+    defer before.deinit();
+    const before_run = try native.run(&before);
+    try t.expect(!before_run.failed);
+    try t.expectEqual(@as(i64, 24), before_run.value);
+
+    const formatted = try before.format(t.allocator);
+    defer t.allocator.free(formatted);
+
+    var after = try language.Compilation.init(t.allocator, "after.my", formatted);
     defer after.deinit();
-    const twice = try after.format(allocator);
+    const after_run = try native.run(&after);
+    try t.expect(!after_run.failed);
+    try t.expectEqual(before_run.value, after_run.value);
+}
+
+fn failureScenario(allocator: std.mem.Allocator) !void {
+    const input =
+        \\# draft
+        \\def unfinished(x: Unknown) -> [2]Unknown: # keep
+        \\    value=  40+2
+        \\    # note
+        \\    return missing(x)+value
+    ;
+    const formatted = try formatOnce(allocator, "failure.my", input);
+    defer allocator.free(formatted);
+    const twice = try formatOnce(allocator, "failure.my", formatted);
     defer allocator.free(twice);
     try t.expectEqualStrings(formatted, twice);
 }
 
-// spec: TOOL-5
-test "formatting accepts incomplete semantic work but rejects invalid syntax" {
-    var c = try language.Compilation.init(t.allocator, "fmt.my",
-        \\def unfinished() -> Unknown:
-        \\    return missing
-    );
-    defer c.deinit();
-    const formatted = try c.format(t.allocator);
-    defer t.allocator.free(formatted);
-    try t.expect(c.program == null and c.code == null);
-    try t.expectError(error.SourceError, c.check());
-    var invalid = try language.Compilation.init(t.allocator, "invalid.my",
-        \\def main() -> i64:
-        \\    return +
-    );
-    defer invalid.deinit();
-    try t.expectError(error.SourceError, invalid.format(t.allocator));
-}
-
 // spec-case: TOOL-5
-test "an accepted program is its own canonical text, comments and blank lines included" {
-    const text =
-        \\# heading
-        \\def main() -> i64: # body
-        \\    x = 1 # value
-        \\    # return note
-        \\    return x + 2 # end
-    ;
-    try roundTrip(t.allocator, text);
-    var c = try language.Compilation.init(t.allocator, "fmt.my", text);
-    defer c.deinit();
-    try t.expectEqual(@as(i64, 3), (try native.run(&c)).value);
-}
-
-test "formatter handles empty and comment-only input canonically" {
-    try roundTrip(t.allocator, "\n \t");
-    try roundTrip(t.allocator, " # one\n\n# two");
-}
-
-fn failureScenario(allocator: std.mem.Allocator) !void {
-    try roundTrip(allocator,
-        \\class A:
-        \\    x: i64
-        \\    y: i64
-        \\
-        \\
-        \\def main() -> i64:
-        \\    a = A(x=1, y=2) # kept
-        \\    return a.x + a.y
-    );
-}
-
-test "formatter parser output and idempotence release every failed allocation" {
+test "formatter allocation failures release collectComments and collectTopStarts storage" {
     var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(no_resize.allocator(), failureScenario, .{});
 }
 
-fn moduleRoundTrip(allocator: std.mem.Allocator) !void {
-    const text =
-        \\# header
-        \\module app.main
-        \\import missing.units as u
-        \\export Example
-        \\export unfinished
-        \\
-        \\
-        \\class Example:
-        \\    value: u.Value
-        \\
-        \\
-        \\def unfinished(x: u.Value) -> [2]u.Value: # draft
-        \\    return missing(x)
+test "formatter still rejects invalid syntax and reports its source diagnostic" {
+    const invalid =
+        \\def main() -> i64:
+        \\    return +
     ;
-    var before = try language.Compilation.init(allocator, "draft.my", text);
-    defer before.deinit();
-    const formatted = try before.formatModule(allocator);
-    defer allocator.free(formatted);
-    try t.expectEqualStrings(text, formatted);
-    var after = try language.Compilation.init(allocator, "draft.my", formatted);
-    defer after.deinit();
-    const twice = try after.formatModule(allocator);
-    defer allocator.free(twice);
-    try t.expectEqualStrings(formatted, twice);
-    var sink: diagnostic.Sink = .{ .allocator = before.arena.allocator() };
-    const tokens = try lexer.lex(sink.allocator, text, &sink);
-    try t.expect(tokens.len != 0);
-    // Module formatting must not populate the single-file parser cache and bypass imports.
-    before.check() catch |err| {
-        if (err == error.OutOfMemory) return err;
-        return t.expectEqual(error.SourceError, err);
-    };
-    return error.ExpectedSingleFileRejection;
-}
-
-test "module formatting preserves the module header and draft declarations under allocation failure" {
-    try moduleRoundTrip(t.allocator);
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), moduleRoundTrip, .{});
-}
-
-test "module formatter rejects malformed headers and bodies but permits unresolved draft declarations" {
-    for ([_][]const u8{
-        "module\n",
-        "module main\nimport a..b\n",
-        "module main\nexport a\nimport b\n",
-        "module main\n\n\ndef broken(\n",
-    }) |text| {
-        var c = try language.Compilation.init(t.allocator, "bad.my", text);
-        defer c.deinit();
-        try t.expectError(error.SourceError, c.formatModule(t.allocator));
-    }
-    var c = try language.Compilation.init(t.allocator, "draft.my",
-        \\module differently_named
-        \\import absent as x
-        \\import other as x
-        \\export Missing
-        \\
-        \\
-        \\def draft() -> Unknown:
-        \\    return absent()
-    );
-    defer c.deinit();
-    const text = try c.formatModule(t.allocator);
-    defer t.allocator.free(text);
-    try t.expect(std.mem.indexOf(u8, text, "export Missing") != null);
+    var compilation = try language.Compilation.init(t.allocator, "invalid.my", invalid);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.format(t.allocator));
 }

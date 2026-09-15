@@ -947,11 +947,12 @@ test "CLI static quality report uses advisory thresholds and rejects invalid opt
     , 1, "", "error[E_TYPE]");
 }
 test "CLI formatter supports stdout check mode and syntax-only formatting" {
-    // Indentation carries the block structure, so `fmt` prints an accepted program byte for
-    // byte and `--check` succeeds on anything that parses.
+    // `fmt` writes canonical bytes to stdout; `--check` is nonzero when the
+    // input differs from that canonical form.
     const canonical =
         \\def main() -> i64:
         \\    return 7
+        \\
     ;
     try invoke("fmt", canonical, 0, canonical, "");
     try invokeOptions("fmt", canonical, &.{"--check"}, 0, "", "");
@@ -959,14 +960,15 @@ test "CLI formatter supports stdout check mode and syntax-only formatting" {
         \\def  main( ) ->  i64 :
         \\        return   7
     ;
-    try invoke("fmt", spaced, 0, spaced, "");
-    try invokeOptions("fmt", spaced, &.{"--check"}, 0, "", "");
+    try invoke("fmt", spaced, 0, canonical, "");
+    try invokeOptions("fmt", spaced, &.{"--check"}, 1, "", "formatting differs");
     try invoke("fmt",
         \\def main() -> i64:
         \\    return False
     , 0,
         \\def main() -> i64:
         \\    return False
+        \\
     , "");
     try invoke("fmt",
         \\def main() -> i64:
@@ -1408,17 +1410,17 @@ test "CLI module quality reports preserve export roots and advisory thresholds" 
         \\    return 0
     , &.{"--approximate"}, 2, "", "usage:");
 }
-test "CLI module formatting is syntax only and returns every module in the graph unchanged" {
-    // Indentation is the block structure, so a parsed module's canonical text is its own
-    // bytes: `fmt-module` echoes it and `--check` passes anything the parser accepts.
+test "CLI module formatting is syntax only and canonical for every reachable module" {
+    // The header directive group is followed by one blank line and top-level
+    // declarations by two, so the fixtures below are already canonical.
     const draft =
         \\module input
         \\import absent as a
         \\export Missing
         \\
-        \\
         \\def f(x: a.T) -> a.T:
         \\    return x
+        \\
     ;
     try invoke("fmt-module", draft, 0, draft, "");
     try invokeOptions("fmt-module", draft, &.{"--check"}, 0, "", "");
@@ -1430,16 +1432,16 @@ test "CLI module formatting is syntax only and returns every module in the graph
         \\module input
         \\import child
         \\
-        \\
         \\def main() -> i64:
         \\    return unknown()
+        \\
     ;
     const child_module =
         \\module child
         \\
-        \\
         \\def f() -> Missing:
         \\    return unknown()
+        \\
     ;
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
@@ -1585,6 +1587,7 @@ test "CLI formats nominal templates and runs programs with unused declarations" 
         \\
         \\def main() -> i64:
         \\    return 0
+        \\
     , "");
     try invokeOptions("run", source, &.{"--diagnostics=json"}, 0, "0\n", "");
 }

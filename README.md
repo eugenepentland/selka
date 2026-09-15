@@ -333,8 +333,10 @@ and structural metrics with configurable review thresholds. Runtime coverage is
 explicitly unmeasured.
 
 [Canonical formatting](docs/experiments/formatter.md) is available with `fmt`
-(stdout) and `fmt --check`. It preserves token spellings and comments, and accepts
-syntactically valid code without requiring completed type checking.
+(stdout) and `fmt --check`, which is nonzero when the input differs from the
+canonical layout. Formatting preserves token spellings, literal values and
+comments, and accepts syntactically valid code without requiring completed type
+checking.
 
 [Project verification](docs/experiments/verification-driver.md) uses
 `python3 scripts/verify.py verify.json`. Filters select explicit steps and their
