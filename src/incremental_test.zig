@@ -84,3 +84,358 @@ test "module and declaration identities ignore body edits and interface fingerpr
     defer incremental.deinit(third, t.allocator);
     try t.expect(!std.mem.eql(u8, first_interface, third.project_interface_sha256));
 }
+
+fn moduleIdentityOf(report: incremental.Report, name: []const u8) []const u8 {
+    for (report.modules) |unit| if (std.mem.eql(u8, unit.name, name)) return unit.identity;
+    unreachable;
+}
+
+fn nominal(report: incremental.Report, name: []const u8) incremental.Nominal {
+    for (report.types) |item| if (std.mem.eql(u8, item.name, name)) return item;
+    unreachable;
+}
+
+test "whitespace and comment edits preserve module, declaration, interface and body identities" {
+    var entries = [_]File{
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\
+        \\
+        \\def value() -> i64:
+        \\    return 41
+        \\
+        \\
+        \\def helper() -> i64:
+        \\    return value()
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return helper()
+        },
+    };
+    const first = try describe(&entries, t.allocator);
+    defer incremental.deinit(first, t.allocator);
+    const first_module = try t.allocator.dupe(u8, moduleIdentityOf(first, "main"));
+    defer t.allocator.free(first_module);
+    const first_value = declaration(first, "main", "value");
+    const first_helper = declaration(first, "main", "helper");
+    const first_value_identity = try t.allocator.dupe(u8, first_value.identity);
+    defer t.allocator.free(first_value_identity);
+    const first_value_interface = try t.allocator.dupe(u8, first_value.interface_sha256.?);
+    defer t.allocator.free(first_value_interface);
+    const first_value_body = try t.allocator.dupe(u8, first_value.body_sha256.?);
+    defer t.allocator.free(first_value_body);
+    const first_helper_identity = try t.allocator.dupe(u8, first_helper.identity);
+    defer t.allocator.free(first_helper_identity);
+    const first_helper_body = try t.allocator.dupe(u8, first_helper.body_sha256.?);
+    defer t.allocator.free(first_helper_body);
+
+    entries[0].bytes =
+        \\module main
+        \\# a comment before the declarations
+        \\
+        \\
+        \\def value() -> i64:
+        \\    return 41
+        \\
+        \\
+        \\# a comment between declarations
+        \\def helper() -> i64:
+        \\    return value()
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return helper()
+    ;
+    const second = try describe(&entries, t.allocator);
+    defer incremental.deinit(second, t.allocator);
+    try t.expectEqualStrings(first_module, moduleIdentityOf(second, "main"));
+    try t.expectEqualStrings(first_value_identity, declaration(second, "main", "value").identity);
+    try t.expectEqualStrings(first_value_interface, declaration(second, "main", "value").interface_sha256.?);
+    try t.expectEqualStrings(first_value_body, declaration(second, "main", "value").body_sha256.?);
+    try t.expectEqualStrings(first_helper_identity, declaration(second, "main", "helper").identity);
+    try t.expectEqualStrings(first_helper_body, declaration(second, "main", "helper").body_sha256.?);
+
+    entries[0].bytes =
+        \\module main
+        \\
+        \\
+        \\def value() -> i64:
+        \\    # a comment inside the body
+        \\    return 41
+        \\
+        \\
+        \\def helper() -> i64:
+        \\    return value()
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return helper()
+    ;
+    const third = try describe(&entries, t.allocator);
+    defer incremental.deinit(third, t.allocator);
+    try t.expectEqualStrings(first_value_identity, declaration(third, "main", "value").identity);
+    try t.expectEqualStrings(first_value_interface, declaration(third, "main", "value").interface_sha256.?);
+    try t.expect(!std.mem.eql(u8, first_value_body, declaration(third, "main", "value").body_sha256.?));
+    try t.expectEqualStrings(first_helper_identity, declaration(third, "main", "helper").identity);
+    try t.expectEqualStrings(first_helper_body, declaration(third, "main", "helper").body_sha256.?);
+}
+
+test "private body edits preserve identities while signature edits change the interface hash" {
+    var entries = [_]File{
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\
+        \\
+        \\def helper(x: i64) -> i64:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return helper(1)
+        },
+    };
+    const first = try describe(&entries, t.allocator);
+    defer incremental.deinit(first, t.allocator);
+    const first_helper = declaration(first, "main", "helper");
+    const identity = try t.allocator.dupe(u8, first_helper.identity);
+    defer t.allocator.free(identity);
+    const interface = try t.allocator.dupe(u8, first_helper.interface_sha256.?);
+    defer t.allocator.free(interface);
+
+    entries[0].bytes =
+        \\module main
+        \\
+        \\
+        \\def helper(x: i64) -> i64:
+        \\    return x + 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return helper(1)
+    ;
+    const second = try describe(&entries, t.allocator);
+    defer incremental.deinit(second, t.allocator);
+    try t.expectEqualStrings(identity, declaration(second, "main", "helper").identity);
+    try t.expectEqualStrings(interface, declaration(second, "main", "helper").interface_sha256.?);
+
+    entries[0].bytes =
+        \\module main
+        \\
+        \\
+        \\def helper(x: i64, y: i64) -> i64:
+        \\    return x + y
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return helper(1, 2)
+    ;
+    const third = try describe(&entries, t.allocator);
+    defer incremental.deinit(third, t.allocator);
+    try t.expectEqualStrings(identity, declaration(third, "main", "helper").identity);
+    try t.expect(!std.mem.eql(u8, interface, declaration(third, "main", "helper").interface_sha256.?));
+}
+
+test "effect-bound edits change the function interface hash" {
+    var entries = [_]File{
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\
+        \\
+        \\def touch() -> i64 effects(clock):
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return touch()
+        },
+    };
+    const first = try describe(&entries, t.allocator);
+    defer incremental.deinit(first, t.allocator);
+    const identity = try t.allocator.dupe(u8, declaration(first, "main", "touch").identity);
+    defer t.allocator.free(identity);
+    const interface = try t.allocator.dupe(u8, declaration(first, "main", "touch").interface_sha256.?);
+    defer t.allocator.free(interface);
+
+    entries[0].bytes =
+        \\module main
+        \\
+        \\
+        \\def touch() -> i64 effects(random):
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return touch()
+    ;
+    const second = try describe(&entries, t.allocator);
+    defer incremental.deinit(second, t.allocator);
+    try t.expectEqualStrings(identity, declaration(second, "main", "touch").identity);
+    try t.expect(!std.mem.eql(u8, interface, declaration(second, "main", "touch").interface_sha256.?));
+}
+
+test "record field and union case edits change the nominal interface hash" {
+    var entries = [_]File{
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\
+        \\
+        \\class Point:
+        \\    x: i64
+        \\
+        \\
+        \\union Event:
+        \\    count: i64,
+        \\    flag: bool
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        },
+    };
+    const first = try describe(&entries, t.allocator);
+    defer incremental.deinit(first, t.allocator);
+    const point_identity = try t.allocator.dupe(u8, nominal(first, "main::Point").identity);
+    defer t.allocator.free(point_identity);
+    const point_interface = try t.allocator.dupe(u8, nominal(first, "main::Point").interface_sha256.?);
+    defer t.allocator.free(point_interface);
+    const event_identity = try t.allocator.dupe(u8, nominal(first, "main::Event").identity);
+    defer t.allocator.free(event_identity);
+    const event_interface = try t.allocator.dupe(u8, nominal(first, "main::Event").interface_sha256.?);
+    defer t.allocator.free(event_interface);
+
+    entries[0].bytes =
+        \\module main
+        \\
+        \\
+        \\class Point:
+        \\    x: i64
+        \\    y: i64
+        \\
+        \\
+        \\union Event:
+        \\    count: i64,
+        \\    flag: bool
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ;
+    const second = try describe(&entries, t.allocator);
+    defer incremental.deinit(second, t.allocator);
+    try t.expectEqualStrings(point_identity, nominal(second, "main::Point").identity);
+    try t.expect(!std.mem.eql(u8, point_interface, nominal(second, "main::Point").interface_sha256.?));
+
+    entries[0].bytes =
+        \\module main
+        \\
+        \\
+        \\class Point:
+        \\    x: i64
+        \\
+        \\
+        \\union Event:
+        \\    count: i64,
+        \\    flag: bool,
+        \\    empty
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ;
+    const third = try describe(&entries, t.allocator);
+    defer incremental.deinit(third, t.allocator);
+    try t.expectEqualStrings(event_identity, nominal(third, "main::Event").identity);
+    try t.expect(!std.mem.eql(u8, event_interface, nominal(third, "main::Event").interface_sha256.?));
+}
+
+test "inserting a declaration or comment does not change a later declaration identity" {
+    var entries = [_]File{
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\
+        \\
+        \\def later() -> i64:
+        \\    return 7
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return later()
+        },
+    };
+    const first = try describe(&entries, t.allocator);
+    defer incremental.deinit(first, t.allocator);
+    const identity = try t.allocator.dupe(u8, declaration(first, "main", "later").identity);
+    defer t.allocator.free(identity);
+    const interface = try t.allocator.dupe(u8, declaration(first, "main", "later").interface_sha256.?);
+    defer t.allocator.free(interface);
+
+    entries[0].bytes =
+        \\module main
+        \\# inserted comment
+        \\
+        \\
+        \\def inserted() -> i64:
+        \\    return 1
+        \\
+        \\
+        \\def later() -> i64:
+        \\    return 7
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return later()
+    ;
+    const second = try describe(&entries, t.allocator);
+    defer incremental.deinit(second, t.allocator);
+    try t.expectEqualStrings(identity, declaration(second, "main", "later").identity);
+    try t.expectEqualStrings(interface, declaration(second, "main", "later").interface_sha256.?);
+}
+
+test "specializationIdentity includes arguments, provider, target ABI and compiler identity" {
+    const base = try incremental.specializationIdentity(t.allocator, "template", "args", "provider", "target", "compiler");
+    defer t.allocator.free(base);
+    const same = try incremental.specializationIdentity(t.allocator, "template", "args", "provider", "target", "compiler");
+    defer t.allocator.free(same);
+    try t.expectEqualStrings(base, same);
+    for ([_][6][]const u8{
+        .{ "template2", "args", "provider", "target", "compiler", "" },
+        .{ "template", "args2", "provider", "target", "compiler", "" },
+        .{ "template", "args", "provider2", "target", "compiler", "" },
+        .{ "template", "args", "provider", "target2", "compiler", "" },
+        .{ "template", "args", "provider", "target", "compiler2", "" },
+    }) |variant| {
+        const changed = try incremental.specializationIdentity(t.allocator, variant[0], variant[1], variant[2], variant[3], variant[4]);
+        defer t.allocator.free(changed);
+        try t.expect(!std.mem.eql(u8, base, changed));
+    }
+}
+
+test "typeIdentity distinguishes a nominal type from a generic template of the same name" {
+    const nominal_identity = try incremental.typeIdentity(t.allocator, "main", "record", "Box");
+    defer t.allocator.free(nominal_identity);
+    const template_identity = try incremental.typeIdentity(t.allocator, "main", "record-template", "Box");
+    defer t.allocator.free(template_identity);
+    try t.expect(!std.mem.eql(u8, nominal_identity, template_identity));
+    const stable = try incremental.typeIdentity(t.allocator, "main", "record", "Box");
+    defer t.allocator.free(stable);
+    try t.expectEqualStrings(nominal_identity, stable);
+}
+
+test "materialize, dupModule, dupDeclaration, dupNominal, dupSpecialization and dupFragment release partial copies" {
+    try t.checkAllAllocationFailures(t.allocator, allocationScenario, .{});
+}
+
+fn allocationScenario(allocator: std.mem.Allocator) !void {
+    var entries = [_]File{
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        },
+    };
+    const report = try describe(&entries, allocator);
+    incremental.deinit(report, allocator);
+}
