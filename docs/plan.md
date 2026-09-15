@@ -1,5 +1,12 @@
 # Language design and implementation plan
 
+The proposed [development velocity implementation plan](audits/development-velocity-implementation-plan-2026-09-15.md)
+turns the 15 September comparison audit into agent-sized work packages for mutation
+contracts, public effects, formatting, diagnostics, incremental compilation and
+testing, and architecture policy. Its [agent handoff](audits/development-velocity-agent-handoff-2026-09-15.md)
+provides assignment prompts and sequencing. These are proposed changes; current
+language semantics remain as documented until each package is implemented.
+
 > Removed on 2026-09-13: the explicit storage tier (buffers, pools, legacy `list`
 > declarations, the `allocator` capability, references and slices, lexical borrows and
 > legacy arena scopes), the C backend, and the brace dialect this plan is written in —

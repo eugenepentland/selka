@@ -216,20 +216,26 @@ const named_entry =
 ;
 const NamedFiles = struct {
     contracts: []const u8,
+    library: []const u8 = named_library,
+    types: []const u8 = "module types\n",
     fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
         const self: *NamedFiles = @ptrCast(@alignCast(context.?));
         return language.embedded_project.read(allocator, &.{
             File{ .path = "main.my", .bytes = named_entry },
-            File{ .path = "lib.my", .bytes = named_library },
+            File{ .path = "lib.my", .bytes = self.library },
             File{ .path = "contracts.my", .bytes = self.contracts },
+            File{ .path = "types.my", .bytes = self.types },
         }, path, limit);
     }
 };
 fn inspectNamed(allocator: std.mem.Allocator, contracts_source: []const u8) ![]u8 {
     var files: NamedFiles = .{ .contracts = contracts_source };
+    return inspectNamedFiles(allocator, &files);
+}
+fn inspectNamedFiles(allocator: std.mem.Allocator, files: *NamedFiles) ![]u8 {
     var project = language.project.Project.init(allocator);
     defer project.deinit();
-    try project.load(.{ .context = &files, .read = NamedFiles.read }, "main", .{});
+    try project.load(.{ .context = files, .read = NamedFiles.read }, "main", .{});
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
     return language.schema_report.render(allocator, &compilation, .{
@@ -242,7 +248,7 @@ fn inspectNamed(allocator: std.mem.Allocator, contracts_source: []const u8) ![]u
     });
 }
 // spec-case: GENERIC-API-1
-test "public schema publishes exported constraints and replaceIdentifier expands named bounds without leaking private ones" {
+test "public schema publishes exported constraints and expands named bounds without leaking private ones" {
     const bytes = try inspectNamed(t.allocator, named_contracts);
     defer t.allocator.free(bytes);
     const parsed = try std.json.parseFromSlice(std.json.Value, t.allocator, bytes, .{});
@@ -302,4 +308,96 @@ test "public schema publishes exported constraints and replaceIdentifier expands
     try t.expectEqualStrings("value", value_named.get("expanded").?.object.get("field_requirements").?.array.items[0].object.get("name").?.string);
 
     for (templates) |template| try t.expect(!std.mem.eql(u8, template.object.get("name").?.string, "contracts::Hidden"));
+}
+
+fn templateParameter(parsed: std.json.Value, name: []const u8) !std.json.ObjectMap {
+    const templates = parsed.object.get("schema").?.object.get("generic_templates").?.array.items;
+    for (templates) |template| {
+        if (std.mem.eql(u8, template.object.get("name").?.string, name))
+            return template.object.get("contract").?.object.get("type_parameters").?.array.items[0].object;
+    }
+    return error.TestUnexpectedResult;
+}
+
+// spec: GENERIC-API-DEFAULT-COPY-1
+test "public generic schema retains default copy for functions and nominal templates" {
+    const bytes = try inspect(t.allocator,
+        \\module lib
+        \\export Box
+        \\export identity
+        \\export stored
+        \\export coded
+        \\record Box[T]:
+        \\    value: T
+        \\def identity[T](value: T) -> T:
+        \\    return value
+        \\def stored[T: storable]() -> int:
+        \\    return 0
+        \\def coded[T: codec]() -> int:
+        \\    return 0
+    );
+    defer t.allocator.free(bytes);
+    const parsed = try std.json.parseFromSlice(std.json.Value, t.allocator, bytes, .{});
+    defer parsed.deinit();
+    const identity = (try templateParameter(parsed.value, "lib::identity")).get("requirements").?.array.items;
+    const box = (try templateParameter(parsed.value, "lib::Box")).get("requirements").?.array.items;
+    const stored = (try templateParameter(parsed.value, "lib::stored")).get("requirements").?.array.items;
+    const coded = (try templateParameter(parsed.value, "lib::coded")).get("requirements").?.array.items;
+    try t.expectEqual(@as(usize, 1), identity.len);
+    try t.expectEqualStrings("copy", identity[0].string);
+    try t.expectEqual(@as(usize, 1), box.len);
+    try t.expectEqualStrings("copy", box[0].string);
+    try t.expectEqual(@as(usize, 1), stored.len);
+    try t.expectEqualStrings("storable", stored[0].string);
+    try t.expectEqual(@as(usize, 1), coded.len);
+    try t.expectEqualStrings("codec", coded[0].string);
+}
+
+fn expectSubjectTypes(expanded: std.json.ObjectMap) !void {
+    const operation = expanded.get("operation_requirements").?.array.items[0].object;
+    const inputs = operation.get("parameters").?.array.items;
+    try t.expectEqualStrings("P", inputs[0].object.get("type").?.string);
+    try t.expectEqualStrings("types.T", inputs[1].object.get("type").?.string);
+    try t.expectEqualStrings("list[def(P, types.T) -> [2]P effects()]", inputs[2].object.get("type").?.string);
+    try t.expectEqualStrings("def(P) -> types.T effects()", operation.get("result").?.string);
+}
+
+fn subjectSchemaScenario(allocator: std.mem.Allocator) !void {
+    var files: NamedFiles = .{
+        .types =
+        \\module types
+        \\export T
+        \\record T:
+        \\    value: int
+        ,
+        .contracts =
+        \\module contracts
+        \\import types
+        \\export Mixed
+        \\constraint Mixed[T] = copy + op(use(subject: T, concrete: types.T, nested: list[def(T, types.T) -> [2]T effects()]) -> def(T) -> types.T effects() effects())
+        ,
+        .library =
+        \\module lib
+        \\import contracts
+        \\export use
+        \\def use[P: contracts.Mixed](p: P) -> int:
+        \\    return 0
+        ,
+    };
+    const bytes = try inspectNamedFiles(allocator, &files);
+    defer allocator.free(bytes);
+    const parsed = try std.json.parseFromSlice(std.json.Value, allocator, bytes, .{});
+    defer parsed.deinit();
+    const parameter = try templateParameter(parsed.value, "lib::use");
+    try expectSubjectTypes(parameter);
+    const named = parameter.get("named_requirements").?.array.items[0].object;
+    try t.expectEqualStrings("contracts", named.get("module").?.string);
+    try expectSubjectTypes(named.get("expanded").?.object);
+}
+
+// spec: GENERIC-API-SUBJECT-1
+test "public generic schema typeText writeType and typeChildren preserve subjects and release allocation failures" {
+    try subjectSchemaScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), subjectSchemaScenario, .{});
 }

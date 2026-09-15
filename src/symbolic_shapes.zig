@@ -88,6 +88,15 @@ pub const Context = struct {
             .subject => |index| return .{ .parameter = index },
             .foreign, .local => {},
         }
+        if (self.catalog.templates.store) |store| if (store.index.syntax.callbacks.get(span.start)) |callback| {
+            // Concrete signatures retain the same identity as their type aliases.
+            if (self.catalog.arrays.resolved.get(span.start)) |ty| return .{ .concrete = ty };
+            const parameters = try self.arena.allocator().alloc(Value, callback.parameters.len);
+            for (callback.parameters, parameters) |input, *out| out.* = try self.sourceType(input, depth + 1, aliases);
+            const signature = try self.arena.allocator().create(symbolic.Callback);
+            signature.* = .{ .parameters = parameters, .result = try self.sourceType(callback.return_type, depth + 1, aliases), .effects = callback.effect_bound.allowed };
+            return .{ .callback = signature };
+        };
         if (self.catalog.templates.applications.get(span.start)) |template| {
             var arguments: [16]Value = undefined;
             const required = self.catalog.templates.store.?.index.declarations.items[template.declaration].parameters;

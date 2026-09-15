@@ -1,0 +1,267 @@
+{
+  "scope": "19 probes rerun against one pinned copy of the installed compiler; no compiler rebuild or Guardian execution by the audit",
+  "git_head": "e366fd54fa49b656db798422c53ac09d9f662222",
+  "compiler_binary_sha256": "71be8cd380efe278ac2647dc7402d04ea8129fa60a623035e5e7e8398c6f55c2",
+  "compiler_features": {
+    "version": "language-features-v1",
+    "compiler_sha256": "620e2427bd6a95dd974a075d651c4d2964a1731222704325254de6547b7bff2a",
+    "zig_version": "0.17.0-dev.1683+5ceec001b"
+  },
+  "probes": [
+    {
+      "name": "callback_injection",
+      "source": "def fake_lookup(key: int) -> int effects():\n    return key + 40\n\ndef total(lookup: def(int) -> int effects(), key: int) -> int:\n    return lookup(key)\n\ndef main() -> int:\n    assert total(fake_lookup, 2) == 42\n    return 0\n",
+      "args": [
+        "run",
+        "/tmp/mylang-audit-2026-09-15/callback_injection.my",
+        "--no-cache"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "callback_effect_subset",
+      "source": "def fake_lookup(key: int) -> int effects():\n    return key + 40\n\ndef total(lookup: def(int) -> int effects(output), key: int) -> int:\n    return lookup(key)\n\ndef main() -> int:\n    return total(fake_lookup, 2)\n",
+      "args": [
+        "check",
+        "/tmp/mylang-audit-2026-09-15/callback_effect_subset.my",
+        "--no-cache"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/tmp/mylang-audit-2026-09-15/callback_effect_subset.my:8:18: error[E_TYPE]: expected def@128:i64,i64, found def(i64)->i64 effects(0)\n      return total(fake_lookup, 2)\n                   ^\n"
+    },
+    {
+      "name": "callback_effect_explicit_ceiling",
+      "source": "def fake_lookup(key: int) -> int effects(output):\n    return key + 40\n\ndef total(lookup: def(int) -> int effects(output), key: int) -> int:\n    return lookup(key)\n\ndef main() -> int:\n    assert total(fake_lookup, 2) == 42\n    return 0\n",
+      "args": [
+        "run",
+        "/tmp/mylang-audit-2026-09-15/callback_effect_explicit_ceiling.my",
+        "--no-cache"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "callback_record_member_call",
+      "source": "record Store:\n    get: def(int) -> int effects()\n\ndef fake_get(key: int) -> int effects():\n    return key + 40\n\ndef total(store: Store, key: int) -> int:\n    return store.get(key)\n\ndef main() -> int:\n    assert total(Store(get=fake_get), 2) == 42\n    return 0\n",
+      "args": [
+        "run",
+        "/tmp/mylang-audit-2026-09-15/callback_record_member_call.my",
+        "--no-cache"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/tmp/mylang-audit-2026-09-15/callback_record_member_call.my:8:12: error[E_UNKNOWN_TYPE]: type is not declared\n      return store.get(key)\n             ^\n"
+    },
+    {
+      "name": "generic_state_and_callback",
+      "source": "record Store[S]:\n    state: S\n    get: def(S, int) -> int effects()\n\ndef fake_get(state: int, key: int) -> int effects():\n    return state + key\n\ndef total[S](store: Store[S], key: int) -> int:\n    get = store.get\n    return get(store.state, key)\n\ndef main() -> int:\n    store = Store[int](state=40, get=fake_get)\n    assert total(store, 2) == 42\n    return 0\n",
+      "args": [
+        "run",
+        "/tmp/mylang-audit-2026-09-15/generic_state_and_callback.my",
+        "--no-cache"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "record_method",
+      "source": "record Store:\n    value: int\n    def get(store: Store, key: int) -> int:\n        return store.value + key\n\ndef main() -> int:\n    return 0\n",
+      "args": [
+        "check",
+        "/tmp/mylang-audit-2026-09-15/record_method.my",
+        "--no-cache"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/tmp/mylang-audit-2026-09-15/record_method.my:3:5: error[E_SYNTAX]: unexpected token; expected a name\n      def get(store: Store, key: int) -> int:\n      ^\n"
+    },
+    {
+      "name": "dict_items",
+      "source": "def main() -> int:\n    data = {10: 100, 20: 200}\n    for key, value in data.items():\n        print(key, value)\n    return 0\n",
+      "args": [
+        "run",
+        "/tmp/mylang-audit-2026-09-15/dict_items.my",
+        "--no-cache"
+      ],
+      "exit_code": 0,
+      "stdout": "0 100\n1 200\n",
+      "stderr": ""
+    },
+    {
+      "name": "round_ties",
+      "source": "def main() -> int:\n    print(round(2.5), round(-2.5))\n    return 0\n",
+      "args": [
+        "run",
+        "/tmp/mylang-audit-2026-09-15/round_ties.my",
+        "--no-cache"
+      ],
+      "exit_code": 0,
+      "stdout": "3.0 -3.0\n",
+      "stderr": ""
+    },
+    {
+      "name": "formatting",
+      "source": "def main( ) -> int:\n    return  1+2\n",
+      "args": [
+        "fmt",
+        "/tmp/mylang-audit-2026-09-15/formatting.my"
+      ],
+      "exit_code": 0,
+      "stdout": "def main( ) -> int:\n    return  1+2\n",
+      "stderr": ""
+    },
+    {
+      "name": "record_equality",
+      "source": "record Point:\n    x: int\n\ndef main() -> int:\n    assert Point(x=1) == Point(x=1)\n    return 0\n",
+      "args": [
+        "check",
+        "/tmp/mylang-audit-2026-09-15/record_equality.my",
+        "--no-cache"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/tmp/mylang-audit-2026-09-15/record_equality.my:5:23: error[E_TYPE]: aggregate equality is not defined; compare the relevant elements explicitly\n      assert Point(x=1) == Point(x=1)\n                        ^\n"
+    },
+    {
+      "name": "str_constant",
+      "source": "const NAME: str = \"example\"\n\ndef main() -> int:\n    return len(NAME)\n",
+      "args": [
+        "check",
+        "/tmp/mylang-audit-2026-09-15/str_constant.my",
+        "--no-cache"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/tmp/mylang-audit-2026-09-15/str_constant.my:1:19: error[E_CONSTANT_EXPRESSION]: constant evaluation permits scalar expressions and source functions; allocation and external effects are excluded\n  const NAME: str = \"example\"\n                    ^\n"
+    },
+    {
+      "name": "option_propagation",
+      "source": "def parsed() -> Option[int]:\n    value = int(\"42\")?\n    return Some(value)\n\ndef main() -> int:\n    match parsed():\n        case Some(value):\n            assert value == 42\n            return 0\n        case None:\n            return 1\n",
+      "args": [
+        "run",
+        "/tmp/mylang-audit-2026-09-15/option_propagation.my",
+        "--no-cache"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "result_main",
+      "source": "def main() -> Result[int, str]:\n    return Err(\"expected audit error\")\n",
+      "args": [
+        "run",
+        "/tmp/mylang-audit-2026-09-15/result_main.my",
+        "--no-cache"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "expected audit error\n"
+    },
+    {
+      "name": "conditional_expression",
+      "source": "def main() -> int:\n    value = 42 if True else 0\n    return value\n",
+      "args": [
+        "check",
+        "/tmp/mylang-audit-2026-09-15/conditional_expression.my",
+        "--no-cache"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/tmp/mylang-audit-2026-09-15/conditional_expression.my:2:16: error[E_SYNTAX]: unexpected token; expected a newline\n      value = 42 if True else 0\n                 ^\n"
+    },
+    {
+      "name": "option_is_none",
+      "source": "def main() -> int:\n    value: Option[int] = None\n    if value is None:\n        return 0\n    return 1\n",
+      "args": [
+        "check",
+        "/tmp/mylang-audit-2026-09-15/option_is_none.my",
+        "--no-cache"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "/tmp/mylang-audit-2026-09-15/option_is_none.my:3:14: error[E_SYNTAX]: unexpected token; expected an indented block\n      if value is None:\n               ^\n"
+    },
+    {
+      "name": "noio_host",
+      "source": "extern def abs(value: i32) -> i32 effects(host)\n\ndef external(value: i32) -> i32 noio:\n    return abs(value)\n\ndef main() -> int:\n    return 0\n",
+      "args": [
+        "check",
+        "/tmp/mylang-audit-2026-09-15/noio_host.my",
+        "--no-cache"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "provider_replacement_complete",
+      "source_files": {
+        "main.my": "module main\nimport service\nexport test_service\n\ndef test_service() -> bool:\n    return service.get() == 42\n\ndef main() -> int:\n    return 0\n",
+        "service.my": "module service\nexport get\n\ndef get() -> int effects():\n    return 1\n"
+      },
+      "cases": {
+        "main::test_service": {
+          "providers": {
+            "service.my": "module service\nexport get\n\ndef get() -> int effects():\n    return 42\n"
+          }
+        }
+      },
+      "args": [
+        "test",
+        "/tmp/mylang-audit-2026-09-15/provider_project/main.my",
+        "--cases",
+        "/tmp/mylang-audit-2026-09-15/provider_project/cases.json",
+        "--json",
+        "--force"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"main::test_service\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"ccdbc7870110fa97c02e270623c0fbecd291d893f3d72545668389760ee82529\",\"dependencies\":[\"myl_f_07646429e47944c4e187d14b9da5b3e42f2ef7423b520bd587948e6c0237a19e\",\"myl_f_1f8cf9b315afceaa68cb4ba7ec635ae3540351ec6ddd9f1691595e4dfd23c5db\"],\"cacheable\":true,\"reasons\":[],\"steps\":6}],\"passed\":1,\"failed\":0,\"skipped\":0,\"cached\":0,\"executed\":1}\n",
+      "stderr": ""
+    },
+    {
+      "name": "provider_replacement_hole",
+      "source_files": {
+        "main.my": "module main\nimport service\nexport test_service\n\ndef test_service() -> bool:\n    return service.get() == 42\n\ndef main() -> int:\n    return 0\n",
+        "service.my": "module service\nexport get\n\ndef get() -> int effects():\n    return todo[int]()\n"
+      },
+      "cases": {
+        "main::test_service": {
+          "providers": {
+            "service.my": "module service\nexport get\n\ndef get() -> int effects():\n    return 42\n"
+          }
+        }
+      },
+      "args": [
+        "test",
+        "/tmp/mylang-audit-2026-09-15/provider_project/main.my",
+        "--cases",
+        "/tmp/mylang-audit-2026-09-15/provider_project/cases.json",
+        "--json",
+        "--force"
+      ],
+      "exit_code": 2,
+      "stdout": "",
+      "stderr": "service.my:5:12: error[E_TYPED_HOLE]: unresolved implementation obligation; fill this hole before checking or execution\n      return todo[int]()\n             ^\n  note: service.my:5:17: required result type declared here\nmylang: host failure: NativeToolFailed\n"
+    },
+    {
+      "name": "two_providers",
+      "source": "record Store[S]:\n    state: S\n    get: def(S, int) -> int effects()\n\ndef dictionary_get(state: dict[int, int], key: int) -> int effects():\n    return state.get(key, 0)\n\ndef fixed_get(state: int, key: int) -> int effects():\n    return state + key\n\ndef total[S](store: Store[S], key: int) -> int:\n    get = store.get\n    return get(store.state, key)\n\ndef main() -> int:\n    fake = Store[int](state=40, get=fixed_get)\n    table = Store[dict[int, int]](state={2: 42}, get=dictionary_get)\n    assert total(fake, 2) == 42\n    assert total(table, 2) == 42\n    table.state[2] = 41\n    assert total(table, 2) == 41\n    return 0\n",
+      "args": [
+        "run",
+        "/tmp/mylang-audit-2026-09-15/two_providers.my",
+        "--no-cache"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "audit_date": "2026-09-15",
+  "compiler_path": "/tmp/mylang-audit-2026-09-15/pinned/bin/mylang"
+}

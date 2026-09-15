@@ -124,3 +124,47 @@ test "standalone named constraints namespace accepts unused and multi-constraint
         \\    return 0
     );
 }
+
+// spec: NAMED-CONSTRAINT-SUBJECT-1
+test "standalone named constraints reject subject shadowing before use" {
+    try reject(
+        \\record Item:
+        \\    value: int
+        \\constraint C[Item] = copy
+        \\def main() -> int:
+        \\    return 0
+    , "E_SHADOWING");
+    try reject(
+        \\constraint C[Item] = copy
+        \\record Item:
+        \\    value: int
+        \\def use[T: C](item: T) -> T:
+        \\    return item
+        \\def main() -> int:
+        \\    return 0
+    , "E_SHADOWING");
+    try reject(
+        \\constraint C[helper] = copy
+        \\def helper() -> int:
+        \\    return 1
+        \\def main() -> int:
+        \\    return 0
+    , "E_SHADOWING");
+    try reject(
+        \\type Item = int
+        \\constraint C[Item] = copy
+    , "E_SHADOWING");
+    try reject(
+        \\constraint C[T] = copy
+        \\constraint Other[C] = copy
+    , "E_SHADOWING");
+    try reject(
+        \\constraint C[int] = copy
+    , "E_GENERIC_PARAMETER");
+    try accept(
+        \\constraint First[T] = copy
+        \\constraint Second[T] = equality
+        \\def main() -> int:
+        \\    return 0
+    );
+}

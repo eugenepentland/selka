@@ -1,0 +1,418 @@
+{
+  "metadata": {
+    "binary_sha256": "bbc56855c7ba6953c828c7fcd741189b5f04dc36aa39343610e76a1a919c168c",
+    "compiler_identity": "c54d594e5ad606891c187bfaade3a9bd86270e4c62cc367361b1b74cf2d76dbf"
+  },
+  "main": "module main\nimport helper\nexport test_touched\nexport test_unrelated\ndef test_touched() -> bool:\n    return helper.answer() > 0\ndef test_unrelated() -> bool:\n    return 6 * 7 == 42\ndef main() -> int:\n    return 0\n",
+  "helper": "module helper\nexport answer\ndef answer() -> int effects():\n    return 7\ndef unused() -> int:\n    return 9\n",
+  "results": [
+    {
+      "label": "check-cold",
+      "command": [
+        "/tmp/mylang-incremental-status-n0jadn_t/bin/mylang",
+        "check-project",
+        "/tmp/mylang-incremental-status-n0jadn_t/app/main.my",
+        "--report",
+        "--cache-dir=/tmp/mylang-incremental-status-n0jadn_t/frontend-cache"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":2,\"syntax_stored\":2,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":1452,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":2,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n"
+    },
+    {
+      "label": "check-warm",
+      "command": [
+        "/tmp/mylang-incremental-status-n0jadn_t/bin/mylang",
+        "check-project",
+        "/tmp/mylang-incremental-status-n0jadn_t/app/main.my",
+        "--report",
+        "--cache-dir=/tmp/mylang-incremental-status-n0jadn_t/frontend-cache"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":0,\"syntax_stored\":0,\"verdict_hits\":1,\"verdict_misses\":0,\"verdict_stored\":0,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":0,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"collect_declarations\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"resolve_interface\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"check_body\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"instantiate_specialization\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n"
+    },
+    {
+      "label": "check-body-edit",
+      "command": [
+        "/tmp/mylang-incremental-status-n0jadn_t/bin/mylang",
+        "check-project",
+        "/tmp/mylang-incremental-status-n0jadn_t/app/main.my",
+        "--report",
+        "--cache-dir=/tmp/mylang-incremental-status-n0jadn_t/frontend-cache"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":1,\"syntax_misses\":1,\"syntax_stored\":1,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":1998,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":1,\"misses\":1,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n"
+    },
+    {
+      "label": "check-invalid-edit",
+      "command": [
+        "/tmp/mylang-incremental-status-n0jadn_t/bin/mylang",
+        "check-project",
+        "/tmp/mylang-incremental-status-n0jadn_t/app/main.my",
+        "--report",
+        "--cache-dir=/tmp/mylang-incremental-status-n0jadn_t/frontend-cache"
+      ],
+      "exit": 1,
+      "stdout": "",
+      "stderr": "helper.my:4:5: error[E_TYPE]: expected i64, found bool\n      return True\n      ^\n{\"version\":\"frontend-cache-v1\",\"syntax_hits\":1,\"syntax_misses\":1,\"syntax_stored\":1,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":0,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":2469,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":1,\"misses\":1,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n"
+    },
+    {
+      "label": "test-cold",
+      "command": [
+        "/tmp/mylang-incremental-status-n0jadn_t/bin/mylang",
+        "test",
+        "/tmp/mylang-incremental-status-n0jadn_t/app/main.my",
+        "--json",
+        "--cache-dir",
+        "/tmp/mylang-incremental-status-n0jadn_t/test-cache"
+      ],
+      "exit": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"main::test_touched\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"d9cd65fd0e2e12c06cfeed8116af97acb640fae003c00d1120b2fb3ad5e00c28\",\"dependencies\":[\"myl_f_64ae2016011d4959e274e257bca4a1de16b81fc0d21fe480f6d9485b73ea8d3f\",\"myl_f_d88af6b2a1ef622d31f0aa8eca6e346cdae0961e1b84627105cacdc64fa1bead\"],\"cacheable\":true,\"reasons\":[],\"steps\":6},{\"name\":\"main::test_unrelated\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"48846899db2425415f5ccf88db803c5af1c77c007091e993b4483cd2b10e07e0\",\"dependencies\":[\"myl_f_4be4007e7927fdbee6b9cacf32f66f4606f9d04da15b97d84f6eb6945f5bc351\"],\"cacheable\":true,\"reasons\":[],\"steps\":6}],\"passed\":2,\"failed\":0,\"skipped\":0,\"cached\":0,\"executed\":2}\n",
+      "stderr": ""
+    },
+    {
+      "label": "test-warm",
+      "command": [
+        "/tmp/mylang-incremental-status-n0jadn_t/bin/mylang",
+        "test",
+        "/tmp/mylang-incremental-status-n0jadn_t/app/main.my",
+        "--json",
+        "--cache-dir",
+        "/tmp/mylang-incremental-status-n0jadn_t/test-cache"
+      ],
+      "exit": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"main::test_touched\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"d9cd65fd0e2e12c06cfeed8116af97acb640fae003c00d1120b2fb3ad5e00c28\",\"dependencies\":[\"myl_f_64ae2016011d4959e274e257bca4a1de16b81fc0d21fe480f6d9485b73ea8d3f\",\"myl_f_d88af6b2a1ef622d31f0aa8eca6e346cdae0961e1b84627105cacdc64fa1bead\"],\"cacheable\":true,\"reasons\":[],\"steps\":0},{\"name\":\"main::test_unrelated\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"48846899db2425415f5ccf88db803c5af1c77c007091e993b4483cd2b10e07e0\",\"dependencies\":[\"myl_f_4be4007e7927fdbee6b9cacf32f66f4606f9d04da15b97d84f6eb6945f5bc351\"],\"cacheable\":true,\"reasons\":[],\"steps\":0}],\"passed\":0,\"failed\":0,\"skipped\":0,\"cached\":2,\"executed\":0}\n",
+      "stderr": ""
+    },
+    {
+      "label": "test-helper-edit",
+      "command": [
+        "/tmp/mylang-incremental-status-n0jadn_t/bin/mylang",
+        "test",
+        "/tmp/mylang-incremental-status-n0jadn_t/app/main.my",
+        "--json",
+        "--cache-dir",
+        "/tmp/mylang-incremental-status-n0jadn_t/test-cache"
+      ],
+      "exit": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"main::test_touched\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"6d09973b290c741f220abdb07e9c7528ee0220f84cc6b02b3b37df878d96f08b\",\"dependencies\":[\"myl_f_64ae2016011d4959e274e257bca4a1de16b81fc0d21fe480f6d9485b73ea8d3f\",\"myl_f_d88af6b2a1ef622d31f0aa8eca6e346cdae0961e1b84627105cacdc64fa1bead\"],\"cacheable\":true,\"reasons\":[],\"steps\":6},{\"name\":\"main::test_unrelated\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"48846899db2425415f5ccf88db803c5af1c77c007091e993b4483cd2b10e07e0\",\"dependencies\":[\"myl_f_4be4007e7927fdbee6b9cacf32f66f4606f9d04da15b97d84f6eb6945f5bc351\"],\"cacheable\":true,\"reasons\":[],\"steps\":0}],\"passed\":1,\"failed\":0,\"skipped\":0,\"cached\":1,\"executed\":1}\n",
+      "stderr": ""
+    },
+    {
+      "label": "test-unused-edit",
+      "command": [
+        "/tmp/mylang-incremental-status-n0jadn_t/bin/mylang",
+        "test",
+        "/tmp/mylang-incremental-status-n0jadn_t/app/main.my",
+        "--json",
+        "--cache-dir",
+        "/tmp/mylang-incremental-status-n0jadn_t/test-cache"
+      ],
+      "exit": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"main::test_touched\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"6d09973b290c741f220abdb07e9c7528ee0220f84cc6b02b3b37df878d96f08b\",\"dependencies\":[\"myl_f_64ae2016011d4959e274e257bca4a1de16b81fc0d21fe480f6d9485b73ea8d3f\",\"myl_f_d88af6b2a1ef622d31f0aa8eca6e346cdae0961e1b84627105cacdc64fa1bead\"],\"cacheable\":true,\"reasons\":[],\"steps\":0},{\"name\":\"main::test_unrelated\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"48846899db2425415f5ccf88db803c5af1c77c007091e993b4483cd2b10e07e0\",\"dependencies\":[\"myl_f_4be4007e7927fdbee6b9cacf32f66f4606f9d04da15b97d84f6eb6945f5bc351\"],\"cacheable\":true,\"reasons\":[],\"steps\":0}],\"passed\":0,\"failed\":0,\"skipped\":0,\"cached\":2,\"executed\":0}\n",
+      "stderr": ""
+    },
+    {
+      "label": "test-force",
+      "command": [
+        "/tmp/mylang-incremental-status-n0jadn_t/bin/mylang",
+        "test",
+        "/tmp/mylang-incremental-status-n0jadn_t/app/main.my",
+        "--json",
+        "--cache-dir",
+        "/tmp/mylang-incremental-status-n0jadn_t/test-cache",
+        "--force"
+      ],
+      "exit": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"main::test_touched\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"6d09973b290c741f220abdb07e9c7528ee0220f84cc6b02b3b37df878d96f08b\",\"dependencies\":[\"myl_f_64ae2016011d4959e274e257bca4a1de16b81fc0d21fe480f6d9485b73ea8d3f\",\"myl_f_d88af6b2a1ef622d31f0aa8eca6e346cdae0961e1b84627105cacdc64fa1bead\"],\"cacheable\":true,\"reasons\":[],\"steps\":6},{\"name\":\"main::test_unrelated\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"48846899db2425415f5ccf88db803c5af1c77c007091e993b4483cd2b10e07e0\",\"dependencies\":[\"myl_f_4be4007e7927fdbee6b9cacf32f66f4606f9d04da15b97d84f6eb6945f5bc351\"],\"cacheable\":true,\"reasons\":[],\"steps\":6}],\"passed\":2,\"failed\":0,\"skipped\":0,\"cached\":0,\"executed\":2}\n",
+      "stderr": ""
+    },
+    {
+      "label": "test-invalid-edit",
+      "command": [
+        "/tmp/mylang-incremental-status-n0jadn_t/bin/mylang",
+        "test",
+        "/tmp/mylang-incremental-status-n0jadn_t/app/main.my",
+        "--json",
+        "--cache-dir",
+        "/tmp/mylang-incremental-status-n0jadn_t/test-cache"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "helper.my:4:5: error[E_TYPE]: expected i64, found bool\n      return True\n      ^\nmylang: host failure: NativeToolFailed\n"
+    },
+    {
+      "label": "session-cold",
+      "reply": {
+        "version": "check-session-v1",
+        "action": "check",
+        "status": 0,
+        "failure": null,
+        "reuse": {
+          "hits": 0,
+          "misses": 2
+        },
+        "cache": {
+          "hits": 0,
+          "misses": 2,
+          "stored": 2,
+          "evicted": 0,
+          "bypassed": 0,
+          "retained_bytes": 7920
+        },
+        "semantic": {
+          "hits": 0,
+          "misses": 1,
+          "stored": 1,
+          "bypassed": 0,
+          "retained_bytes": 1602
+        },
+        "functions": {
+          "reused": 0,
+          "checked": 5,
+          "stored": 1,
+          "bypassed": 0,
+          "retained_bytes": 6150
+        }
+      }
+    },
+    {
+      "label": "session-body-edit",
+      "reply": {
+        "version": "check-session-v1",
+        "action": "check",
+        "status": 0,
+        "failure": null,
+        "reuse": {
+          "hits": 1,
+          "misses": 1
+        },
+        "cache": {
+          "hits": 1,
+          "misses": 3,
+          "stored": 3,
+          "evicted": 0,
+          "bypassed": 0,
+          "retained_bytes": 9592
+        },
+        "semantic": {
+          "hits": 0,
+          "misses": 2,
+          "stored": 2,
+          "bypassed": 0,
+          "retained_bytes": 774
+        },
+        "functions": {
+          "reused": 4,
+          "checked": 6,
+          "stored": 2,
+          "bypassed": 0,
+          "retained_bytes": 6764
+        }
+      }
+    },
+    {
+      "label": "session-named-generic-cold",
+      "reply": {
+        "version": "check-session-v1",
+        "action": "check",
+        "status": 0,
+        "failure": null,
+        "reuse": {
+          "hits": 1,
+          "misses": 1
+        },
+        "cache": {
+          "hits": 2,
+          "misses": 4,
+          "stored": 4,
+          "evicted": 0,
+          "bypassed": 0,
+          "retained_bytes": 16500
+        },
+        "semantic": {
+          "hits": 0,
+          "misses": 3,
+          "stored": 3,
+          "bypassed": 0,
+          "retained_bytes": 910
+        },
+        "functions": {
+          "reused": 4,
+          "checked": 11,
+          "stored": 2,
+          "bypassed": 1,
+          "retained_bytes": 6764
+        }
+      }
+    },
+    {
+      "label": "session-named-generic-edit",
+      "reply": {
+        "version": "check-session-v1",
+        "action": "check",
+        "status": 0,
+        "failure": null,
+        "reuse": {
+          "hits": 1,
+          "misses": 1
+        },
+        "cache": {
+          "hits": 3,
+          "misses": 5,
+          "stored": 5,
+          "evicted": 0,
+          "bypassed": 0,
+          "retained_bytes": 20720
+        },
+        "semantic": {
+          "hits": 0,
+          "misses": 4,
+          "stored": 4,
+          "bypassed": 0,
+          "retained_bytes": 910
+        },
+        "functions": {
+          "reused": 4,
+          "checked": 16,
+          "stored": 2,
+          "bypassed": 2,
+          "retained_bytes": 6764
+        }
+      }
+    },
+    {
+      "label": "explain-cold",
+      "command": [
+        "/tmp/mylang-incremental-status-n0jadn_t/bin/mylang",
+        "check-project",
+        "/tmp/mylang-incremental-status-n0jadn_t/app/main.my",
+        "--explain-invalidation",
+        "--report",
+        "--cache-dir=/tmp/mylang-incremental-status-n0jadn_t/explain-cache"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "{\"version\":\"invalidation-report-v1\",\"hits\":0,\"misses\":6,\"skipped\":3,\"queries\":[{\"stage\":\"load_source\",\"status\":\"miss\",\"key\":\"load_source\",\"first_changed\":\"no-baseline\"},{\"stage\":\"lex_parse\",\"status\":\"miss\",\"key\":\"lex_parse\",\"first_changed\":\"no-baseline\"},{\"stage\":\"collect_declarations\",\"status\":\"miss\",\"key\":\"collect_declarations\",\"first_changed\":\"no-baseline\"},{\"stage\":\"resolve_interface\",\"status\":\"miss\",\"key\":\"resolve_interface\",\"first_changed\":\"no-baseline\"},{\"stage\":\"check_body\",\"status\":\"miss\",\"key\":\"check_body\",\"first_changed\":\"no-baseline\"},{\"stage\":\"instantiate_specialization\",\"status\":\"miss\",\"key\":\"instantiate_specialization\",\"first_changed\":\"no-baseline\"},{\"stage\":\"lower_function\",\"status\":\"skipped\",\"key\":\"lower_function\"},{\"stage\":\"emit_fragment\",\"status\":\"skipped\",\"key\":\"emit_fragment\"},{\"stage\":\"link\",\"status\":\"skipped\",\"key\":\"link\"}]}\n{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":2,\"syntax_stored\":2,\"verdict_hits\":0,\"verdict_misses\":0,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":1452,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n"
+    },
+    {
+      "label": "explain-warm",
+      "command": [
+        "/tmp/mylang-incremental-status-n0jadn_t/bin/mylang",
+        "check-project",
+        "/tmp/mylang-incremental-status-n0jadn_t/app/main.my",
+        "--explain-invalidation",
+        "--report",
+        "--cache-dir=/tmp/mylang-incremental-status-n0jadn_t/explain-cache"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "{\"version\":\"invalidation-report-v1\",\"hits\":6,\"misses\":0,\"skipped\":3,\"queries\":[{\"stage\":\"load_source\",\"status\":\"hit\",\"key\":\"0ee82d51ff106b27ed35dbcf6b92addc2cdd2ac0f0b765039c78c65476b18445\"},{\"stage\":\"lex_parse\",\"status\":\"hit\",\"key\":\"957f0e89d16911868809613903b4c3f702ca0b2438ba006db941036c7680bfda\"},{\"stage\":\"collect_declarations\",\"status\":\"hit\",\"key\":\"820817facee3f198fa978cc7234a25d2a8e3ccfa706b1dfd00dc702580545fba\"},{\"stage\":\"resolve_interface\",\"status\":\"hit\",\"key\":\"45e9ea1b0b3cbb707f4fb3a137b65e827a67e47a2c6a2655cd204fa71277318a\"},{\"stage\":\"check_body\",\"status\":\"hit\",\"key\":\"8da41ce703888be28b663c33d95018d01a6dc6d37624b754f68745c57c8e63be\"},{\"stage\":\"instantiate_specialization\",\"status\":\"hit\",\"key\":\"\"},{\"stage\":\"lower_function\",\"status\":\"skipped\",\"key\":\"lower_function\"},{\"stage\":\"emit_fragment\",\"status\":\"skipped\",\"key\":\"emit_fragment\"},{\"stage\":\"link\",\"status\":\"skipped\",\"key\":\"link\"}]}\n{\"version\":\"frontend-cache-v1\",\"syntax_hits\":2,\"syntax_misses\":0,\"syntax_stored\":0,\"verdict_hits\":0,\"verdict_misses\":0,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":1452,\"stages\":{\"load_source\":{\"hits\":1,\"misses\":0,\"skipped\":0},\"lex_parse\":{\"hits\":1,\"misses\":0,\"skipped\":0},\"collect_declarations\":{\"hits\":1,\"misses\":0,\"skipped\":0},\"resolve_interface\":{\"hits\":1,\"misses\":0,\"skipped\":0},\"check_body\":{\"hits\":1,\"misses\":0,\"skipped\":0},\"instantiate_specialization\":{\"hits\":1,\"misses\":0,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n"
+    }
+  ],
+  "compiler_change": [
+    {
+      "label": "old-cold",
+      "exit": 0,
+      "counters": {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 3,
+        "syntax_stored": 3,
+        "verdict_hits": 0,
+        "verdict_misses": 1,
+        "verdict_stored": 1,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 1921
+      },
+      "stderr": "main.my:6:30: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def accept[T: a.Has + b.Has](row: T) -> int:\n                               ^\n{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":3,\"syntax_stored\":3,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":1921}\n"
+    },
+    {
+      "label": "old-warm",
+      "exit": 0,
+      "counters": {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 1,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0
+      },
+      "stderr": "main.my:6:30: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def accept[T: a.Has + b.Has](row: T) -> int:\n                               ^\n{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":0,\"syntax_stored\":0,\"verdict_hits\":1,\"verdict_misses\":0,\"verdict_stored\":0,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":0}\n"
+    },
+    {
+      "label": "new-same-cache",
+      "exit": 1,
+      "counters": {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 3,
+        "syntax_stored": 3,
+        "verdict_hits": 0,
+        "verdict_misses": 1,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 1642,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 3,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      "stderr": "b.my:6:34: error[E_GENERIC_ARGUMENT]: type lacks a required field with the declared type\n  constraint Has[T] = copy + field(value: ID)\n                                   ^\nb.my:6:34: error[E_GENERIC_REQUIREMENT]: conflicting structural field requirement\n  constraint Has[T] = copy + field(value: ID)\n                                   ^\n  note: a.my:6:34: previous requirement is here\n{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":3,\"syntax_stored\":3,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":0,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":1642,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":3,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n"
+    }
+  ]
+}

@@ -1,0 +1,437 @@
+{
+  "reviewed_commit": "da3aabfdc8df0dff364fd29828f1e72f7d9e6596",
+  "current_checkout_commit": "3c0b41f010cc45f9c7b32b51dbb8407531c86e54",
+  "reproduction": "Write each entry in target.results.files to a fresh directory. From that directory, invoke target.binary with the listed argv. A compiler build containing the fix is expected to change the affected results.",
+  "environment": {
+    "MYLANG_HOST_MEMORY_LIMIT": "1G",
+    "MYLANG_MEMORY_LIMIT": "128M",
+    "core_dump_limit": 0
+  },
+  "target": {
+    "binary": "/home/epentland/ai/canopy/mylang-worktrees/named-constraints-20260915/zig-out/bin/mylang",
+    "sha256": "942c809e8290e221b755db5240ac8d6c430168b0768339d153199f290486fb83",
+    "results": [
+      {
+        "name": "nominal_distinct_coalesce",
+        "command": "check-project",
+        "exit": 0,
+        "stdout": "",
+        "stderr": "main.my:6:30: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def accept[T: a.Has + b.Has](row: T) -> int:\n                               ^\n",
+        "files": {
+          "a.my": "module a\nexport ID\nexport Has\nrecord ID:\n    value: int\nconstraint Has[T] = copy + field(value: ID)\n",
+          "b.my": "module b\nexport ID\nexport Has\nrecord ID:\n    value: int\nconstraint Has[T] = copy + field(value: ID)\n",
+          "main.my": "module main\nimport a\nimport b\nrecord Row:\n    value: a.ID\ndef accept[T: a.Has + b.Has](row: T) -> int:\n    return 0\ndef main() -> int:\n    return accept(Row(value=a.ID(value=7)))\n"
+        },
+        "argv": [
+          "check-project",
+          "main.my",
+          "--no-cache"
+        ],
+        "source_directory": "/tmp/named-constraints-review-r6ah5pxl/nominal_distinct_coalesce"
+      },
+      {
+        "name": "nominal_distinct_reverse",
+        "command": "check-project",
+        "exit": 1,
+        "stdout": "",
+        "stderr": "b.my:6:34: error[E_GENERIC_ARGUMENT]: type lacks a required field with the declared type\n  constraint Has[T] = copy + field(value: ID)\n                                   ^\n",
+        "files": {
+          "a.my": "module a\nexport ID\nexport Has\nrecord ID:\n    value: int\nconstraint Has[T] = copy + field(value: ID)\n",
+          "b.my": "module b\nexport ID\nexport Has\nrecord ID:\n    value: int\nconstraint Has[T] = copy + field(value: ID)\n",
+          "main.my": "module main\nimport a\nimport b\nrecord Row:\n    value: a.ID\ndef accept[T: b.Has + a.Has](row: T) -> int:\n    return 0\ndef main() -> int:\n    return accept(Row(value=a.ID(value=7)))\n"
+        },
+        "argv": [
+          "check-project",
+          "main.my",
+          "--no-cache"
+        ],
+        "source_directory": "/tmp/named-constraints-review-r6ah5pxl/nominal_distinct_reverse"
+      },
+      {
+        "name": "capture_imported_nominal",
+        "command": "check-project",
+        "exit": 0,
+        "stdout": "",
+        "stderr": "main.my:6:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n      def use(s: Provider, token: int) -> int effects():\n              ^\n",
+        "files": {
+          "contracts.my": "module contracts\nexport Token\nexport Use\nrecord Token:\n    value: int\nconstraint Use[S] = copy + op(use(s: S, token: Token) -> int effects())\n",
+          "main.my": "module main\nimport contracts\ndomain Provider: int:\n    def make() -> Provider:\n        return wrap[Provider](0)\n    def use(s: Provider, token: int) -> int effects():\n        return token\ndef call[Token, P: contracts.Use](p: P, token: Token) -> int effects():\n    return P.use(p, token)\ndef main() -> int:\n    return call(Provider.make(), 0)\n"
+        },
+        "argv": [
+          "check-project",
+          "main.my",
+          "--no-cache"
+        ],
+        "source_directory": "/tmp/named-constraints-review-r6ah5pxl/capture_imported_nominal"
+      },
+      {
+        "name": "capture_control_renamed",
+        "command": "check-project",
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.my:9:21: error[E_GENERIC_TYPE]: types differ; distinct type parameters remain distinct even with identical requirements\n      return P.use(p, token)\n                      ^\ncontracts.my:6:41: error[E_GENERIC_ARGUMENT]: operation parameter type differs from contract\n  constraint Use[S] = copy + op(use(s: S, token: Token) -> int effects())\n                                          ^\n",
+        "files": {
+          "contracts.my": "module contracts\nexport Token\nexport Use\nrecord Token:\n    value: int\nconstraint Use[S] = copy + op(use(s: S, token: Token) -> int effects())\n",
+          "main.my": "module main\nimport contracts\ndomain Provider: int:\n    def make() -> Provider:\n        return wrap[Provider](0)\n    def use(s: Provider, token: int) -> int effects():\n        return token\ndef call[U, P: contracts.Use](p: P, token: U) -> int effects():\n    return P.use(p, token)\ndef main() -> int:\n    return call(Provider.make(), 0)\n"
+        },
+        "argv": [
+          "check-project",
+          "main.my",
+          "--no-cache"
+        ],
+        "source_directory": "/tmp/named-constraints-review-r6ah5pxl/capture_control_renamed"
+      },
+      {
+        "name": "inline_subject_overlap",
+        "command": "check",
+        "exit": 1,
+        "stdout": "",
+        "stderr": "/tmp/named-constraints-review-r6ah5pxl/inline_subject_overlap/main.my:1:30: error[E_GENERIC_REQUIREMENT]: conflicting structural operation requirement\n  constraint Id[P] = copy + op(identity(x: P) -> P effects())\n                               ^\n  note: /tmp/named-constraints-review-r6ah5pxl/inline_subject_overlap/main.my:2:24: previous requirement is here\n",
+        "files": {
+          "main.my": "constraint Id[P] = copy + op(identity(x: P) -> P effects())\ndef forward[T: Id + op(identity(x: T) -> T effects())](x: T) -> T effects():\n    return T.identity(x)\ndef main() -> int:\n    return 0\n"
+        },
+        "argv": [
+          "check",
+          "main.my",
+          "--no-cache"
+        ],
+        "source_directory": "/tmp/named-constraints-review-r6ah5pxl/inline_subject_overlap"
+      },
+      {
+        "name": "composite_subject_overlap",
+        "command": "check",
+        "exit": 1,
+        "stdout": "",
+        "stderr": "/tmp/named-constraints-review-r6ah5pxl/composite_subject_overlap/main.my:2:29: error[E_GENERIC_REQUIREMENT]: conflicting structural operation requirement\n  constraint B[Q] = copy + op(identity(x: list[Q]) -> int effects())\n                              ^\n  note: /tmp/named-constraints-review-r6ah5pxl/composite_subject_overlap/main.my:1:29: previous requirement is here\n",
+        "files": {
+          "main.my": "constraint A[P] = copy + op(identity(x: list[P]) -> int effects())\nconstraint B[Q] = copy + op(identity(x: list[Q]) -> int effects())\ndef use[T: A + B](x: T) -> int:\n    return 0\ndef main() -> int:\n    return 0\n"
+        },
+        "argv": [
+          "check",
+          "main.my",
+          "--no-cache"
+        ],
+        "source_directory": "/tmp/named-constraints-review-r6ah5pxl/composite_subject_overlap"
+      },
+      {
+        "name": "implied_copy_single",
+        "command": "check",
+        "exit": 0,
+        "stdout": "",
+        "stderr": "",
+        "files": {
+          "main.my": "def value[T: equality + field(value: int)](x: T) -> int:\n    return x.value\ndef main() -> int:\n    return 0\n"
+        },
+        "argv": [
+          "check",
+          "main.my",
+          "--no-cache"
+        ],
+        "source_directory": "/tmp/named-constraints-review-r6ah5pxl/implied_copy_single"
+      },
+      {
+        "name": "implied_copy_module",
+        "command": "check-project",
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.my:2:11: error[E_GENERIC_REQUIREMENT]: structural field contracts require copy to exclude hidden ownership and result obligations\n  def value[T: equality + field(value: int)](x: T) -> int:\n            ^\n",
+        "files": {
+          "main.my": "module main\ndef value[T: equality + field(value: int)](x: T) -> int:\n    return x.value\ndef main() -> int:\n    return 0\n"
+        },
+        "argv": [
+          "check-project",
+          "main.my",
+          "--no-cache"
+        ],
+        "source_directory": "/tmp/named-constraints-review-r6ah5pxl/implied_copy_module"
+      },
+      {
+        "name": "named_copy_plus_field",
+        "command": "check-project",
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.my:3:11: error[E_GENERIC_REQUIREMENT]: structural field contracts require copy to exclude hidden ownership and result obligations\n  def value[T: C + field(value: int)](x: T) -> int:\n            ^\n",
+        "files": {
+          "main.my": "module main\nconstraint C[T] = copy\ndef value[T: C + field(value: int)](x: T) -> int:\n    return x.value\ndef main() -> int:\n    return 0\n"
+        },
+        "argv": [
+          "check-project",
+          "main.my",
+          "--no-cache"
+        ],
+        "source_directory": "/tmp/named-constraints-review-r6ah5pxl/named_copy_plus_field"
+      },
+      {
+        "name": "export_wrong_module_index",
+        "command": "check-project",
+        "exit": -6,
+        "stdout": "",
+        "stderr": "thread 2926401 panic: index out of bounds: index 3, len 2\n/home/epentland/ai/canopy/mylang-worktrees/named-constraints-20260915/src/interfaces.zig:320:50: 0x1a6ec6f in checkSignatures (compiler.zig)\n                const symbol = unit.symbols.items[bound.identity.symbol];\n                                                 ^\n/home/epentland/ai/canopy/mylang-worktrees/named-constraints-20260915/src/interfaces.zig:397:34: 0x1a6bf5a in buildWithCache (compiler.zig)\n        try index.checkSignatures(module);\n                                 ^\n/home/epentland/ai/canopy/mylang-worktrees/named-constraints-20260915/src/main.zig:865:46: 0x12cdad8 in buildIndex (main.zig)\n    return language.interfaces.buildWithCache(project, cache, frontend) catch |err| switch (err) {\n                                             ^\n/home/epentland/ai/canopy/mylang-worktrees/named-constraints-20260915/src/main.zig:750:36: 0x12d4193 in listModulesWithCache (main.zig)\n        var index = (try buildIndex(init, &project, cache, frontend)) orelse return partialNavigation(init, &project, parsed.command);\n                                   ^\n/home/epentland/ai/canopy/mylang-worktrees/named-constraints-20260915/src/main.zig:725:32: 0x12d65a9 in listModules (main.zig)\n    return listModulesWithCache(init, parsed, null, null, null);\n                               ^\n/home/epentland/ai/canopy/mylang-worktrees/named-constraints-20260915/src/main.zig:182:30: 0x12d7247 in runCommand (main.zig)\n        => return listModules(init, parsed),\n                             ^\n/home/epentland/ai/canopy/mylang-worktrees/named-constraints-20260915/src/main.zig:152:30: 0x12de8bd in run (main.zig)\n    const status = runCommand(init, with_frontend) catch |err| {\n                             ^\n/home/epentland/ai/canopy/mylang-worktrees/named-constraints-20260915/src/main.zig:138:23: 0x12e0113 in dispatch (main.zig)\n    const status = run(init, parsed) catch |err| status: {\n                      ^\n/home/epentland/ai/canopy/mylang-worktrees/named-constraints-20260915/src/main.zig:73:28: 0x12e0c88 in main (main.zig)\n    const status = dispatch(init) catch |err| status: {\n                           ^\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:791:30: 0x12bdb5d in callMain (std.zig)\n    return wrapMain(root.main(.{\n                             ^\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x12bd1e1 in _start (std.zig)\n    asm volatile (switch (native_arch) {\n    ^\n",
+        "files": {
+          "contracts.my": "module contracts\nexport C\nrecord One:\n    a: int\nrecord Two:\n    a: int\nrecord Three:\n    a: int\nconstraint C[T] = copy\n",
+          "main.my": "module main\nimport contracts\nexport f\ndef f[T: contracts.C](x: T) -> T:\n    return x\ndef main() -> int:\n    return 0\n"
+        },
+        "argv": [
+          "check-project",
+          "main.my",
+          "--no-cache"
+        ],
+        "source_directory": "/tmp/named-constraints-review-r6ah5pxl/export_wrong_module_index"
+      },
+      {
+        "name": "export_false_private",
+        "command": "check-project",
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.my:4:10: error[E_PRIVATE_INTERFACE]: exported generic function exposes an unexported constraint\n  def f[T: contracts.C](x: T) -> T:\n           ^\ncontracts.my:6:1: note: related module/import declaration\n",
+        "files": {
+          "contracts.my": "module contracts\nexport C\nrecord One:\n    a: int\nconstraint C[T] = copy\n",
+          "main.my": "module main\nimport contracts\nexport f\ndef f[T: contracts.C](x: T) -> T:\n    return x\ndef main() -> int:\n    return 0\n"
+        },
+        "argv": [
+          "check-project",
+          "main.my",
+          "--no-cache"
+        ],
+        "source_directory": "/tmp/named-constraints-review-r6ah5pxl/export_false_private"
+      },
+      {
+        "name": "single_duplicate",
+        "command": "check",
+        "exit": 0,
+        "stdout": "",
+        "stderr": "",
+        "files": {
+          "main.my": "constraint C[T] = copy\nconstraint C[T] = equality\ndef main() -> int:\n    return 0\n"
+        },
+        "argv": [
+          "check",
+          "main.my",
+          "--no-cache"
+        ],
+        "source_directory": "/tmp/named-constraints-review-r6ah5pxl/single_duplicate"
+      },
+      {
+        "name": "single_name_collision",
+        "command": "check",
+        "exit": 0,
+        "stdout": "",
+        "stderr": "",
+        "files": {
+          "main.my": "record C:\n    value: int\nconstraint C[T] = copy\ndef main() -> int:\n    return 0\n"
+        },
+        "argv": [
+          "check",
+          "main.my",
+          "--no-cache"
+        ],
+        "source_directory": "/tmp/named-constraints-review-r6ah5pxl/single_name_collision"
+      },
+      {
+        "name": "overlap_limit_single",
+        "command": "check",
+        "exit": 0,
+        "stdout": "",
+        "stderr": "",
+        "files": {
+          "main.my": "constraint A[T] = copy + field(f0: int) + field(f1: int) + field(f2: int) + field(f3: int) + field(f4: int) + field(f5: int) + field(f6: int) + field(f7: int)\nconstraint B[T] = copy + field(f0: int) + field(f1: int) + field(f2: int) + field(f3: int) + field(f4: int) + field(f5: int) + field(f6: int) + field(f7: int)\ndef f[T: A + B](x: T) -> int:\n    return 0\ndef main() -> int:\n    return 0\n"
+        },
+        "argv": [
+          "check",
+          "main.my",
+          "--no-cache"
+        ],
+        "source_directory": "/tmp/named-constraints-review-r6ah5pxl/overlap_limit_single"
+      },
+      {
+        "name": "overlap_limit_module",
+        "command": "check-project",
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.my:4:7: error[E_GENERIC_LIMIT]: at most 16 requirements are permitted\n  def f[T: A + B](x: T) -> int:\n        ^\n",
+        "files": {
+          "main.my": "module main\nconstraint A[T] = copy + field(f0: int) + field(f1: int) + field(f2: int) + field(f3: int) + field(f4: int) + field(f5: int) + field(f6: int) + field(f7: int)\nconstraint B[T] = copy + field(f0: int) + field(f1: int) + field(f2: int) + field(f3: int) + field(f4: int) + field(f5: int) + field(f6: int) + field(f7: int)\ndef f[T: A + B](x: T) -> int:\n    return 0\ndef main() -> int:\n    return 0\n"
+        },
+        "argv": [
+          "check-project",
+          "main.my",
+          "--no-cache"
+        ],
+        "source_directory": "/tmp/named-constraints-review-r6ah5pxl/overlap_limit_module"
+      },
+      {
+        "name": "unused_result_field",
+        "command": "check",
+        "exit": 0,
+        "stdout": "",
+        "stderr": "",
+        "files": {
+          "main.my": "constraint Bad[T] = copy + field(value: Result[int, int])\ndef main() -> int:\n    return 0\n"
+        },
+        "argv": [
+          "check",
+          "main.my",
+          "--no-cache"
+        ],
+        "source_directory": "/tmp/named-constraints-review-r6ah5pxl/unused_result_field"
+      },
+      {
+        "name": "used_result_field",
+        "command": "check",
+        "exit": 1,
+        "stdout": "",
+        "stderr": "/tmp/named-constraints-review-r6ah5pxl/used_result_field/main.my:1:41: error[E_GENERIC_REQUIREMENT]: structural fields require a copyable field type without result obligations\n  constraint Bad[T] = copy + field(value: Result[int, int])\n                                          ^\n",
+        "files": {
+          "main.my": "constraint Bad[T] = copy + field(value: Result[int, int])\ndef bad[T: Bad](x: T) -> int:\n    return 0\ndef main() -> int:\n    return 0\n"
+        },
+        "argv": [
+          "check",
+          "main.my",
+          "--no-cache"
+        ],
+        "source_directory": "/tmp/named-constraints-review-r6ah5pxl/used_result_field"
+      },
+      {
+        "name": "single_duplicate_used",
+        "command": "check",
+        "exit": 0,
+        "stdout": "",
+        "stderr": "",
+        "files": {
+          "main.my": "constraint C[T] = copy\nconstraint C[T] = integer\ndef identity[T: C](x: T) -> T:\n    return x\ndef main() -> int:\n    assert identity(True)\n    return 0\n"
+        },
+        "argv": [
+          "check",
+          "main.my",
+          "--no-cache"
+        ],
+        "source_directory": "/tmp/named-constraints-review-r6ah5pxl/single_duplicate_used"
+      }
+    ]
+  },
+  "native": [
+    {
+      "name": "fake_example",
+      "command": "test",
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/named-constraints-20260915/examples/named-constraints/fake_tests.my",
+      "exit": 0,
+      "stdout": "passed fake_tests::test_checkout\n1 passed, 0 cached, 0 failed, 0 skipped\n",
+      "stderr": ""
+    },
+    {
+      "name": "nominal_distinct_coalesce",
+      "command": "run",
+      "entry": "/tmp/named-constraints-review-r6ah5pxl/nominal_distinct_coalesce/main.my",
+      "exit": 0,
+      "stdout": "",
+      "stderr": "main.my:6:30: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def accept[T: a.Has + b.Has](row: T) -> int:\n                               ^\nmain.my:6:30: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def accept[T: a.Has + b.Has](row: T) -> int:\n                               ^\n"
+    },
+    {
+      "name": "capture_imported_nominal",
+      "command": "run",
+      "entry": "/tmp/named-constraints-review-r6ah5pxl/capture_imported_nominal/main.my",
+      "exit": 0,
+      "stdout": "",
+      "stderr": "main.my:6:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n      def use(s: Provider, token: int) -> int effects():\n              ^\nmain.my:6:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n      def use(s: Provider, token: int) -> int effects():\n              ^\n"
+    },
+    {
+      "name": "production_example",
+      "command": "run",
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/named-constraints-20260915/examples/named-constraints/main.my",
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "current": {
+    "binary": "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "sha256": "2ce82c9874e253bca9f0ee0ef2c3de05b88e6c0610a9191e79034d0cc2ad750f",
+    "results": [
+      {
+        "name": "nominal_distinct_coalesce",
+        "exit": 0,
+        "stdout": "",
+        "stderr": "main.my:6:30: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def accept[T: a.Has + b.Has](row: T) -> int:\n                               ^\n"
+      },
+      {
+        "name": "capture_imported_nominal",
+        "exit": 0,
+        "stdout": "",
+        "stderr": "main.my:6:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n      def use(s: Provider, token: int) -> int effects():\n              ^\n"
+      },
+      {
+        "name": "export_wrong_module_index",
+        "exit": -6,
+        "stdout": "",
+        "stderr": "thread 2929640 panic: index out of bounds: index 3, len 2\n/home/epentland/ai/canopy/mylang/src/interfaces.zig:320:50: 0x1a771bf in checkSignatures (compiler.zig)\n                const symbol = unit.symbols.items[bound.identity.symbol];\n                                                 ^\n/home/epentland/ai/canopy/mylang/src/interfaces.zig:397:34: 0x1a744aa in buildWithCache (compiler.zig)\n        try index.checkSignatures(module);\n                                 ^\n/home/epentland/ai/canopy/mylang/src/main.zig:865:46: 0x12cead8 in buildIndex (main.zig)\n    return language.interfaces.buildWithCache(project, cache, frontend) catch |err| switch (err) {\n                                             ^\n/home/epentland/ai/canopy/mylang/src/main.zig:750:36: 0x12d5193 in listModulesWithCache (main.zig)\n        var index = (try buildIndex(init, &project, cache, frontend)) orelse return partialNavigation(init, &project, parsed.command);\n                                   ^\n/home/epentland/ai/canopy/mylang/src/main.zig:725:32: 0x12d75a9 in listModules (main.zig)\n    return listModulesWithCache(init, parsed, null, null, null);\n                               ^\n/home/epentland/ai/canopy/mylang/src/main.zig:182:30: 0x12d8247 in runCommand (main.zig)\n        => return listModules(init, parsed),\n                             ^\n/home/epentland/ai/canopy/mylang/src/main.zig:152:30: 0x12df8bd in run (main.zig)\n    const status = runCommand(init, with_frontend) catch |err| {\n                             ^\n/home/epentland/ai/canopy/mylang/src/main.zig:138:23: 0x12e1113 in dispatch (main.zig)\n    const status = run(init, parsed) catch |err| status: {\n                      ^\n/home/epentland/ai/canopy/mylang/src/main.zig:73:28: 0x12e1c88 in main (main.zig)\n    const status = dispatch(init) catch |err| status: {\n                           ^\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:791:30: 0x12beb5d in callMain (std.zig)\n    return wrapMain(root.main(.{\n                             ^\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x12be1e1 in _start (std.zig)\n    asm volatile (switch (native_arch) {\n    ^\n"
+      },
+      {
+        "name": "implied_copy_module",
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.my:2:11: error[E_GENERIC_REQUIREMENT]: structural field contracts require copy to exclude hidden ownership and result obligations\n  def value[T: equality + field(value: int)](x: T) -> int:\n            ^\n"
+      },
+      {
+        "name": "overlap_limit_module",
+        "exit": 1,
+        "stdout": "",
+        "stderr": "main.my:4:7: error[E_GENERIC_LIMIT]: at most 16 requirements are permitted\n  def f[T: A + B](x: T) -> int:\n        ^\n"
+      }
+    ]
+  },
+  "schema_command": [
+    "schema-project",
+    "examples/named-constraints/main.my",
+    "--schema-report"
+  ],
+  "schema_generic_templates": [
+    {
+      "name": "checkout::total",
+      "module": "checkout",
+      "kind": "function",
+      "contract": {
+        "callable": false,
+        "requires_explicit_instantiation": true,
+        "type_resolution": "declaration-module-scope",
+        "type_parameters": [
+          {
+            "constant_length": false,
+            "name": "P",
+            "requirements": [],
+            "field_requirements": [],
+            "operation_requirements": []
+          }
+        ],
+        "signature": {
+          "parameters": [
+            {
+              "name": "policy",
+              "type": "P"
+            },
+            {
+              "name": "subtotal",
+              "type": "int"
+            }
+          ],
+          "result": "int",
+          "declared_effects": []
+        }
+      },
+      "shape": {},
+      "imports": [
+        {
+          "module": "contracts",
+          "alias": "contracts"
+        }
+      ],
+      "source": {
+        "path": "checkout.my",
+        "start": 52,
+        "end": 57,
+        "line": 6,
+        "column": 5,
+        "sha256": "5bc28757f34ba8119c7a7a550e4317975341cea869e1d7192659aa1f27914fdc"
+      }
+    }
+  ]
+}

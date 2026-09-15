@@ -1,0 +1,746 @@
+{
+  "date": "2026-09-15",
+  "git_head_start": "a9e29d4845ab2f8a700eeb238ed03023d2ac701e",
+  "git_status_start": " M SPEC.md\n M src/generic_api.zig\n M src/generic_api_test.zig\n M src/named_constraints_namespace_test.zig\n M src/nominal_sources.zig\n M src/structural_constraints_test.zig\n M src/symbolic_shapes.zig\n?? .claude/\n?? .zig-global/\n?? docs/audits/incremental-status-2026-09-15-probes.json\n?? docs/audits/incremental-status-2026-09-15.md\n?? docs/audits/interface-research-2026-09-15.md\n?? docs/audits/interfaces-and-agent-development-2026-09-15-probes.json\n?? docs/audits/interfaces-and-agent-development-2026-09-15.md\n?? docs/audits/named-constraints-rereview-2026-09-15-probes.json\n?? docs/audits/named-constraints-rereview-2026-09-15.md\n?? docs/audits/named-constraints-review-2026-09-15-probes.json\n?? docs/audits/named-constraints-review-2026-09-15.md\n?? env.my\n",
+  "pinned_compiler": "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+  "compiler_sha256": "bbc56855c7ba6953c828c7fcd741189b5f04dc36aa39343610e76a1a919c168c",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "base": "/tmp/mylang-proposals-audit-7usu4hu1",
+  "probes": [
+    {
+      "name": "features",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "--features"
+      ],
+      "returncode": 0,
+      "stdout": "{\"version\":\"language-features-v1\",\"compiler_sha256\":\"c54d594e5ad606891c187bfaade3a9bd86270e4c62cc367361b1b74cf2d76dbf\",\"zig_version\":\"0.17.0-dev.1683+5ceec001b\",\"features\":{\"language_version\":\"0.1.0\",\"primary_backend\":\"qbe\",\"implemented\":{\"direct-c-scalar-imports-qbe\":{\"kind\":\"tooling\",\"summary\":\"`extern def` declarations call fixed-arity C scalar functions directly from QBE native builds.\",\"doc\":\"docs/c-ffi.md#direct-c-imports\"},\"explicit-native-link-inputs\":{\"kind\":\"tooling\",\"summary\":\"`mylang build` and `mylang test` accept repeatable object, library and search-path link inputs.\",\"doc\":\"docs/c-ffi.md#linking-your-code\"},\"python-free-native-build-driver\":{\"kind\":\"tooling\",\"summary\":\"`mylang build` drives QBE, the assembler and the linker itself, with no Python installer in the loop.\",\"doc\":\"docs/tooling/native-build.md#mylang-build\"},\"python-free-native-guest-tests\":{\"kind\":\"tooling\",\"summary\":\"`mylang test` discovers exported `test_` functions and runs them as fresh native processes.\",\"doc\":\"docs/tooling/guest-tests.md#mylang-test\"},\"affected-native-test-result-reuse\":{\"kind\":\"tooling\",\"summary\":\"A native test run reuses receipts for cases whose sources and compiler identity did not change.\",\"doc\":\"docs/tooling/guest-tests.md#reusing-unaffected-results\"},\"parallel-guest-test-directories\":{\"kind\":\"tooling\",\"summary\":\"`mylang test` runs a whole directory of `.my` programs as parallel child commands sharing one cache, with one merged summary.\",\"doc\":\"docs/tooling/guest-tests.md#directory-runs\"},\"isolated-source-provider-test-fixtures\":{\"kind\":\"tooling\",\"summary\":\"A test case may replace dependency sources inside a private bounded snapshot that never edits the originals.\",\"doc\":\"docs/tooling/guest-tests.md#isolated-source-provider-fixtures\"},\"keyword-arguments-and-immutable-defaults\":{\"kind\":\"language\",\"summary\":\"Calls accept positional and keyword arguments with trailing immutable scalar defaults.\",\"doc\":\"docs/functions.md#keyword-arguments-and-defaults\"},\"positional-and-named-record-constructors\":{\"kind\":\"language\",\"summary\":\"A record is constructed by calling its type with positional or named fields.\",\"doc\":\"docs/records-and-unions.md#positional-and-named-constructors\"},\"collection-membership-and-value-equality\":{\"kind\":\"language\",\"summary\":\"`in`, `not in`, `==` and `!=` compare managed collection contents rather than identities.\",\"doc\":\"docs/managed-memory.md#membership-and-value-equality\"},\"managed-arenas\":{\"kind\":\"language\",\"summary\":\"`with arena() as name:` releases every managed object allocated during the block in one step.\",\"doc\":\"docs/arenas.md#managed-arenas\"},\"python-indented-syntax\":{\"kind\":\"language\",\"summary\":\"`def`, `class`, four-space indentation and `#` comments are the source syntax; there is no second spelling.\",\"doc\":\"docs/python-syntax.md#the-language\"},\"python-payload-variant-construction\":{\"kind\":\"language\",\"summary\":\"`Shape.radius(4)` builds a payload variant and `case Shape.radius(r)` takes it apart.\",\"doc\":\"docs/records-and-unions.md#payload-variant-construction\"},\"python-contextual-array-and-table-literals\":{\"kind\":\"language\",\"summary\":\"A list literal becomes a fixed `[N]T` array and a dict literal an enum-indexed `[Kind]T` table when the context demands one.\",\"doc\":\"docs/records-and-unions.md#fixed-arrays-and-enum-tables\"},\"python-call-type-arguments\":{\"kind\":\"language\",\"summary\":\"`identity[int](2)` supplies a generic call's type arguments explicitly in Python syntax.\",\"doc\":\"docs/functions.md#explicit-call-type-arguments\"},\"truncating-division-helpers\":{\"kind\":\"language\",\"summary\":\"`divtrunc` and `remtrunc` round toward zero where `//` and `%` round down.\",\"doc\":\"docs/integer-operations.md#truncating-division\"},\"assert-statements\":{\"kind\":\"language\",\"summary\":\"`assert condition` and `assert condition, \\\"message\\\"` trap `R_ASSERT` under every effect bound.\",\"doc\":\"docs/statements.md#assert-statements\"},\"python-string-methods\":{\"kind\":\"language\",\"summary\":\"`str` answers Python's strip, case, search, classification and padding methods with fresh strings.\",\"doc\":\"docs/text.md#string-methods\"},\"format-strings\":{\"kind\":\"language\",\"summary\":\"`f\\\"...\\\"` interpolates any value `print` can render, with `{{` and `}}` for literal braces.\",\"doc\":\"docs/text.md#format-strings\"},\"list-comprehensions\":{\"kind\":\"language\",\"summary\":\"`[expression for name in source if condition]` builds a managed list in one expression.\",\"doc\":\"docs/managed-memory.md#list-comprehensions\"},\"wildcard-match-arms\":{\"kind\":\"language\",\"summary\":\"A final `case _` covers every variant no earlier arm named.\",\"doc\":\"docs/match-expressions.md#wildcard-arms\"},\"prelude-float-operations\":{\"kind\":\"language\",\"summary\":\"Prelude helpers convert, compare and classify binary64 values without importing a module.\",\"doc\":\"docs/floating-point.md#prelude-float-helpers\"},\"python-prelude-builtins\":{\"kind\":\"language\",\"summary\":\"Bare Python `sum`, `min`, `max`, `sorted`, `abs`, `round`, `any`, `all`, `reversed`, `list` and `zip` work without an import.\",\"doc\":\"docs/python-syntax.md#prelude-builtins\"},\"string-to-number-parsing\":{\"kind\":\"language\",\"summary\":\"`int(text)` and `float(text)` answer `Option` rather than raising on text that is not a number.\",\"doc\":\"docs/text.md#parsing-numbers-from-text\"},\"python-assignments-and-value-records\":{\"kind\":\"language\",\"summary\":\"Assignment creates a mutable function-scoped local and records keep value semantics on copy.\",\"doc\":\"docs/statements.md#assignments-and-value-records\"},\"canonical-prelude-types\":{\"kind\":\"language\",\"summary\":\"`list`, `dict`, `str`, `bytes`, `float`, `Option` and `Result` have one identity in every module without source-text scanning.\",\"doc\":\"docs/results-and-options.md#canonical-prelude-types\"},\"inferred-list-literals-and-slices\":{\"kind\":\"language\",\"summary\":\"A list literal infers its element type and `values[a:b]` copies a clamped range into a fresh list.\",\"doc\":\"docs/managed-memory.md#inferred-literals-and-slices\"},\"collection-iteration\":{\"kind\":\"language\",\"summary\":\"`for` visits lists, strings, byte strings and dictionary keys, with `enumerate` for indexes.\",\"doc\":\"docs/managed-memory.md#iterating-collections\"},\"managed-unicode-strings\":{\"kind\":\"language\",\"summary\":\"`str` is an immutable garbage-collected sequence of Unicode scalar values.\",\"doc\":\"docs/text.md#managed-unicode-strings\"},\"managed-bytes\":{\"kind\":\"language\",\"summary\":\"`bytes` is an immutable garbage-collected byte string with Python indexing, slicing and search.\",\"doc\":\"docs/bytes.md#managed-byte-strings\"},\"managed-insertion-ordered-dictionaries\":{\"kind\":\"language\",\"summary\":\"`dict` keeps insertion order over `int` or `str` keys and copyable values and answers `items`, `pop`, `update`, `setdefault`, `get`, `keys`, `values`, `copy` and `clear`.\",\"doc\":\"docs/managed-memory.md#insertion-ordered-dictionaries\"},\"dictionary-methods\":{\"kind\":\"language\",\"summary\":\"`dict.pop(key[, fallback])` removes and returns a value, `update` merges another dictionary in insertion order, and `setdefault` returns or stores a fallback.\",\"doc\":\"docs/managed-memory.md#insertion-ordered-dictionaries\"},\"ordinary-binary64-float\":{\"kind\":\"language\",\"summary\":\"`float` is IEEE binary64 with ordinary literals, operators, comparisons and integer conversions.\",\"doc\":\"docs/floating-point.md#binary64-floating-point\"},\"contextual-option-constructors\":{\"kind\":\"language\",\"summary\":\"`Some(value)` and a bare `None` take their `Option[T]` type from the surrounding context.\",\"doc\":\"docs/results-and-options.md#option-constructors\"},\"unit-and-result-entry\":{\"kind\":\"language\",\"summary\":\"`main` may return `int`, `None` or `Result[int, int]` / `Result[None, int]`.\",\"doc\":\"docs/functions.md#entry-point-signatures\"},\"optional-semicolons\":{\"kind\":\"language\",\"summary\":\"A statement ends at a newline; semicolons remain valid for several statements on one line.\",\"doc\":\"docs/statements.md#statement-endings\"},\"dotted-module-qualification\":{\"kind\":\"language\",\"summary\":\"An imported module's exports are named `module.name`, including its types.\",\"doc\":\"docs/modules.md#dotted-qualification\"},\"builtin-list-and-result-types\":{\"kind\":\"language\",\"summary\":\"`list[T]` and `Result[T, E]` are prelude types that need no declaration or import.\",\"doc\":\"docs/results-and-options.md#builtin-list-and-result-types\"},\"contextual-empty-list-and-result-constructors\":{\"kind\":\"language\",\"summary\":\"An empty `[]`, `{}`, `Ok(...)` or `Err(...)` takes its type from the annotation, field or result it fills.\",\"doc\":\"docs/results-and-options.md#contextual-empty-constructors\"},\"list-methods-and-indexing\":{\"kind\":\"language\",\"summary\":\"Lists answer `append`, `extend`, `insert`, `pop`, `remove`, `index`, `reverse`, `sort`, `copy`, `clear`, `len`, indexing with negative positions and indexed in-place `+=`.\",\"doc\":\"docs/managed-memory.md#list-methods-and-indexing\"},\"postfix-error-propagation\":{\"kind\":\"language\",\"summary\":\"`expression?` returns a failed `Result` to the caller and unwraps a successful one.\",\"doc\":\"docs/results-and-options.md#postfix-error-propagation\"},\"fixed-width-integers\":{\"kind\":\"language\",\"summary\":\"`int` is checked signed 64-bit; `i8`-`i64` and `u8`-`u64` are available for binary formats.\",\"doc\":\"docs/integer-operations.md#fixed-width-integers\"},\"named-integer-bitwise-shifts\":{\"kind\":\"language\",\"summary\":\"`bit_and`, `bit_or`, `bit_xor`, `shift_left` and `shift_right` are named operations over one integer type.\",\"doc\":\"docs/integer-operations.md#bitwise-and-shift-helpers\"},\"wrapping-saturating-integers\":{\"kind\":\"language\",\"summary\":\"`wrapping_*` reduces modulo the declared width and `saturating_*` clamps to its bounds.\",\"doc\":\"docs/integer-operations.md#wrapping-and-saturating-arithmetic\"},\"booleans\":{\"kind\":\"language\",\"summary\":\"`True`, `False`, `and`, `or` and `not` are the only condition type; integers do not stand in.\",\"doc\":\"docs/statements.md#booleans-and-conditions\"},\"unit-procedures\":{\"kind\":\"language\",\"summary\":\"A procedure omits its return annotation or writes `-> None`, ends naturally or with bare `return`.\",\"doc\":\"docs/functions.md#unit-procedures\"},\"byte-literals\":{\"kind\":\"language\",\"summary\":\"`b\\\"...\\\"` and `b'...'` write byte strings with escapes and a decoded-size limit.\",\"doc\":\"docs/bytes.md#byte-literals\"},\"nominal-records\":{\"kind\":\"language\",\"summary\":\"`record` declares a nominal value record of annotated fields; `class` remains the compatibility spelling.\",\"doc\":\"docs/records-and-unions.md#records\"},\"tagged-unions\":{\"kind\":\"language\",\"summary\":\"`union` declares a tagged variant type whose cases are matched exhaustively.\",\"doc\":\"docs/records-and-unions.md#tagged-unions\"},\"checked-results\":{\"kind\":\"language\",\"summary\":\"`Result[T, E]` carries `Ok`/`Err` and must be handled before it is discarded.\",\"doc\":\"docs/results-and-options.md#checked-results\"},\"generic-functions\":{\"kind\":\"language\",\"summary\":\"`def name[T](...)` declares a template specialized per concrete argument type.\",\"doc\":\"docs/generics.md#generic-functions\"},\"generic-call-argument-inference\":{\"kind\":\"language\",\"summary\":\"A generic call omits its type arguments when the argument types determine every parameter.\",\"doc\":\"docs/generic-inference.md#generic-call-inference\"},\"const-length-generics\":{\"kind\":\"language\",\"summary\":\"A `const N: u64` parameter carries a bounded array length through generic signatures.\",\"doc\":\"docs/const-length-generics.md#constant-length-parameters\"},\"generic-nominals\":{\"kind\":\"language\",\"summary\":\"`class` and `union` declarations take type parameters and specialize by argument identity.\",\"doc\":\"docs/generics.md#generic-records-and-unions\"},\"structural-contracts\":{\"kind\":\"language\",\"summary\":\"A generic parameter may require named fields or operations instead of a nominal bound.\",\"doc\":\"docs/generics.md#structural-contracts\"},\"capability-effects\":{\"kind\":\"language\",\"summary\":\"A function's declared effect ceiling bounds everything it transitively calls.\",\"doc\":\"docs/effects.md#capability-effects\"},\"disk-modules\":{\"kind\":\"language\",\"summary\":\"A project is `module`/`import`/`export` declarations over files resolved from disk.\",\"doc\":\"docs/modules.md#disk-modules\"},\"typed-json\":{\"kind\":\"language\",\"summary\":\"Exported signatures over JSON-compatible types are checked, rendered by `schema-project`, and carried as `typed-json-v1` test arguments and expectations.\",\"doc\":\"docs/typed-json.md#typed-json-boundaries\"},\"scoped-directory-and-endpoint-providers\":{\"kind\":\"tooling\",\"summary\":\"The byte runner grants a guest a named directory or network endpoint instead of ambient authority.\",\"doc\":\"docs/tooling/byte-runner.md#scoped-directory-and-endpoint-providers\"},\"scoped-filesystem-metadata-and-listings\":{\"kind\":\"tooling\",\"summary\":\"Scoped directory providers answer bounded metadata and directory listings.\",\"doc\":\"docs/tooling/byte-runner.md#filesystem-metadata-and-listings\"},\"flexible-top-level-export-placement\":{\"kind\":\"language\",\"summary\":\"`export` may appear anywhere at the top level, before or after the declaration it names.\",\"doc\":\"docs/modules.md#export-placement\"},\"source-navigation\":{\"kind\":\"tooling\",\"summary\":\"`index-project` reports definitions, references and a pinned source snapshot as JSON.\",\"doc\":\"docs/tooling/navigation.md#source-navigation\"},\"syntax-cache\":{\"kind\":\"tooling\",\"summary\":\"Parsed syntax trees are reused across commands when the source bytes are unchanged.\",\"doc\":\"docs/tooling/caches.md#syntax-cache\"},\"exact-verdict-cache\":{\"kind\":\"tooling\",\"summary\":\"A whole-program checking verdict is reused when the compiler and the source snapshot both match.\",\"doc\":\"docs/tooling/caches.md#exact-verdict-cache\"},\"independent-function-diagnostics\":{\"kind\":\"language\",\"summary\":\"One `check` reports the first fault in each independently checked function instead of stopping at the first.\",\"doc\":\"docs/diagnostic-recovery.md#checking-independent-function-faults\"},\"copied-block-byte-io\":{\"kind\":\"tooling\",\"summary\":\"The byte host moves data in copied bounded blocks rather than shared buffers.\",\"doc\":\"docs/byte-io-bulk.md#bounded-byte-block-io\"},\"configurable-byte-io-budgets\":{\"kind\":\"tooling\",\"summary\":\"Input, output and execution budgets for the byte runner are set on its command line.\",\"doc\":\"docs/tooling/byte-runner.md#budgets\"},\"scalar-module-constants\":{\"kind\":\"language\",\"summary\":\"`const NAME: T = expression` folds an immutable scalar at check time.\",\"doc\":\"docs/module-constants.md#immutable-scalar-constants\"},\"literal-module-constants\":{\"kind\":\"language\",\"summary\":\"String and byte constants require matching literals and allocate on read.\",\"doc\":\"docs/module-constants.md#string-and-byte-literal-constants\"},\"bounded-source-constant-functions\":{\"kind\":\"language\",\"summary\":\"A constant initializer may call bounded nongeneric scalar source functions.\",\"doc\":\"docs/source-evaluation.md#bounded-source-evaluation-in-constants\"},\"structured-loop-exits\":{\"kind\":\"language\",\"summary\":\"`break` and `continue` leave or restart the nearest enclosing loop with checked cleanup.\",\"doc\":\"docs/structured-loop-exits.md#structured-loop-exits\"},\"integer-range-iteration\":{\"kind\":\"language\",\"summary\":\"`for index in range(start, end)` visits a half-open ascending integer range.\",\"doc\":\"docs/range-iteration.md#integer-range-iteration\"},\"transparent-type-aliases\":{\"kind\":\"language\",\"summary\":\"`type Name = Target` is another spelling for an existing type, not a new identity.\",\"doc\":\"docs/type-aliases.md#transparent-type-aliases\"},\"composite-structural-signatures\":{\"kind\":\"language\",\"summary\":\"One structural contract may require several fields and operations together.\",\"doc\":\"docs/generics.md#composite-structural-signatures\"},\"local-locked-packages\":{\"kind\":\"tooling\",\"summary\":\"Imports resolve through a locked local package root with pinned content hashes.\",\"doc\":\"docs/tooling/packages.md#local-locked-packages\"},\"nested-runtime-byte-budgets\":{\"kind\":\"tooling\",\"summary\":\"Runtime byte budgets nest, so an inner region can never exceed the region containing it.\",\"doc\":\"docs/tooling/runtime-budgets.md#nested-byte-budgets\"},\"guest-memory-ceilings\":{\"kind\":\"tooling\",\"summary\":\"Every process that runs guest code runs under a byte ceiling the heap traps on and the kernel backs with RLIMIT_AS.\",\"doc\":\"docs/tooling/runtime-budgets.md#guest-memory-ceilings\"},\"native-default-releasefast\":{\"kind\":\"tooling\",\"summary\":\"`mylang build` and `mylang run` build ReleaseFast unless `--mode Debug` selects an unoptimized binary, and `--report` states the mode.\",\"doc\":\"docs/performance.md#build-for-speed\"},\"native-instruction-and-frame-budgets\":{\"kind\":\"tooling\",\"summary\":\"`--max-steps=N` and `--max-frames=N` raise the per-process instruction and call-depth budgets, and each trap names the flag that raises it.\",\"doc\":\"docs/tooling/runtime-budgets.md#instruction-and-frame-budgets\"},\"memory-bounded-test-fanout\":{\"kind\":\"tooling\",\"summary\":\"A directory test run sizes its worker pool from free memory as well as cores, with --jobs and MYLANG_JOBS to override it.\",\"doc\":\"docs/tooling/runtime-budgets.md#fan-out-bounded-by-memory\"},\"typed-holes\":{\"kind\":\"language\",\"summary\":\"`todo[T]()` declares an unfinished implementation with a checked type and blocks publication.\",\"doc\":\"docs/typed-holes.md#typed-holes\"},\"named-executable-laws\":{\"kind\":\"tooling\",\"summary\":\"A named law is an executable property statement checked with the rest of the suite.\",\"doc\":\"docs/tooling/agent-tools.md#named-executable-laws\"},\"deterministic-test-provider-fixtures\":{\"kind\":\"tooling\",\"summary\":\"A guest test runs with no ambient authority, and a case may replace a dependency's source to make a reading deterministic.\",\"doc\":\"docs/tooling/guest-tests.md#deterministic-provider-fixtures\"},\"typed-noncapturing-function-values\":{\"kind\":\"language\",\"summary\":\"A function value has a declared signature and captures nothing.\",\"doc\":\"docs/functions.md#function-values\"},\"expression-bodied-lambdas\":{\"kind\":\"language\",\"summary\":\"A contextually typed `lambda` spells an expression-bodied noncapturing callback.\",\"doc\":\"docs/lambdas.md#expression-bodied-noncapturing-lambdas\"},\"bounded-guest-callbacks\":{\"kind\":\"language\",\"summary\":\"A callback parameter declares its signature and an exact effect ceiling.\",\"doc\":\"docs/functions.md#bounded-callbacks\"},\"changed-source-function-body-cache\":{\"kind\":\"tooling\",\"summary\":\"Unchanged function bodies reuse their checked results when other functions in the module change.\",\"doc\":\"docs/tooling/caches.md#function-body-cache\"},\"managed-lists\":{\"kind\":\"language\",\"summary\":\"`list[T]` is a growing garbage-collected sequence shared by assignment.\",\"doc\":\"docs/managed-memory.md#managed-lists\"},\"nonmoving-tracing-gc\":{\"kind\":\"language\",\"summary\":\"A single-threaded nonmoving tracing collector reclaims managed objects at allocation safepoints.\",\"doc\":\"docs/managed-memory.md#the-tracing-collector\"},\"managed-list-cycles\":{\"kind\":\"language\",\"summary\":\"Cyclic managed graphs are reclaimed; reference counting only protects temporary roots.\",\"doc\":\"docs/managed-memory.md#reclaiming-cycles\"},\"standard-math\":{\"kind\":\"language\",\"summary\":\"`math` provides classification, rounding, roots, powers and integer helpers over `float` and `int`.\",\"doc\":\"docs/standard-library.md#math\"},\"standard-strings\":{\"kind\":\"language\",\"summary\":\"`strings` provides classification, search, trimming, padding and number formatting over `str`.\",\"doc\":\"docs/standard-library.md#strings\"},\"standard-sort\":{\"kind\":\"language\",\"summary\":\"`sort` provides stable ordering, binary search, extrema and deduplication over managed lists.\",\"doc\":\"docs/standard-library.md#sort\"},\"standard-path\":{\"kind\":\"language\",\"summary\":\"`path` joins, splits and normalizes POSIX-style path text without touching the filesystem.\",\"doc\":\"docs/standard-library.md#path\"},\"standard-hex\":{\"kind\":\"language\",\"summary\":\"`hex` encodes and decodes hexadecimal text for byte strings in either letter case.\",\"doc\":\"docs/standard-library.md#hex\"},\"standard-base64\":{\"kind\":\"language\",\"summary\":\"`base64` encodes and decodes standard and URL-safe base64 text.\",\"doc\":\"docs/standard-library.md#base64\"},\"standard-json\":{\"kind\":\"language\",\"summary\":\"`json` parses and renders ordinary JSON documents as a bounded managed tree.\",\"doc\":\"docs/standard-library.md#json\"},\"standard-pool\":{\"kind\":\"language\",\"summary\":\"`pool` provides generation-checked handles into a reusable slot table.\",\"doc\":\"docs/standard-library.md#pool\"},\"standard-random\":{\"kind\":\"language\",\"summary\":\"`random` provides a deterministic SplitMix64 stream seeded explicitly or from an entropy capability.\",\"doc\":\"docs/standard-library.md#random\"},\"standard-time\":{\"kind\":\"language\",\"summary\":\"`time` provides durations, instants and Unix wall-clock readings behind a clock capability.\",\"doc\":\"docs/standard-library.md#time\"},\"doc-examples\":{\"kind\":\"tooling\",\"summary\":\"Every fenced documentation example is run, type-checked or explicitly skipped by the default gate.\",\"doc\":\"docs/tooling/documentation-gate.md#executable-examples\"},\"python-print-and-output-effect\":{\"kind\":\"language\",\"summary\":\"`print` renders values Python-style and contributes an `output` effect.\",\"doc\":\"docs/io.md#print\"},\"python-file-surface\":{\"kind\":\"language\",\"summary\":\"`with open(...)`, handle methods and whole-path helpers read and write inside granted directories.\",\"doc\":\"docs/io.md#files\"},\"command-line-capability-grants\":{\"kind\":\"tooling\",\"summary\":\"`mylang run` grants every capability by default; `--restrict` denies them and `--allow-*` narrows what it grants back.\",\"doc\":\"docs/io.md#capabilities\"},\"documented-feature-coverage\":{\"kind\":\"tooling\",\"summary\":\"`mylang doc-coverage` fails the build when an implemented feature or a standard export has no documented example.\",\"doc\":\"docs/tooling/documentation-gate.md#feature-and-export-coverage\"},\"named-constraints\":{\"kind\":\"language\",\"summary\":\"`constraint Name[Subject] = ...` names a reusable structural requirement shared by function type parameters.\",\"doc\":\"docs/generics.md#named-constraints\"},\"stable-incremental-identities\":{\"kind\":\"tooling\",\"summary\":\"Compiler identities for modules, declarations, bodies, types, specializations and emitted fragments are content-derived and stable across unrelated edits.\",\"doc\":\"docs/experiments/incremental-contract.md#stable-identities\"},\"invalidation-report\":{\"kind\":\"tooling\",\"summary\":\"`--explain-invalidation` reports per-stage hit/miss and the first changed dependency against a stored baseline; `--report` adds per-stage counts.\",\"doc\":\"docs/experiments/incremental-contract.md#invalidation-observability\"},\"incremental-cache-contract\":{\"kind\":\"tooling\",\"summary\":\"Incremental cache keys include compiler identity, bootstrap version, target, runtime ABI, effects/capabilities contract and flags.\",\"doc\":\"docs/experiments/incremental-contract.md#cache-key-contract\"},\"clean-warm-invalidation-matrix\":{\"kind\":\"tooling\",\"summary\":\"A clean-versus-warm invalidation matrix proves status, diagnostics, interface manifest, QBE and reuse counts agree.\",\"doc\":\"docs/experiments/incremental-contract.md#correctness-clean-versus-warm\"}},\"unsupported\":[\"stored-reference-fields\",\"guest-shared-memory-threads\",\"unrestricted-comptime\",\"capturing-closures\",\"python-dynamic-object-model\"],\"native_exclusions\":[],\"limits\":{\"generic_calls\":\"explicit arguments or complete inference from call inputs; ambiguous and unmaterialized phantom arguments require explicit specialization\",\"unit\":\"unit/None procedures; main accepts int, unit, or Result[int/unit,int]; copied host/JSON unit signatures remain excluded\",\"container_elements\":\"managed list/dict elements: copyable values without must-handle obligations, owned resources, or capability grants\",\"noalloc\":\"managed-backing-operations-only\",\"type_aliases\":\"non-parameterized\",\"constants\":\"bounded-scalar-expressions-and-nongeneric-source-functions-plus-str-bytes-literals\",\"iteration\":\"range(end/start,end), list/str/dict foreach and enumerate; fixed bounds and structural mutation checks\",\"native_runtime\":\"QBE only; host effects require explicit ABI registration\",\"workers\":\"no host worker facility and no guest spawn syntax; parallelism is one guest process per task\",\"floating_point\":\"float literals, ordinary operators, signed int conversions; IEEE binary64; standard sqrt is the correctly rounded binary64 operation, decimal parsing is accurate rather than correctly rounded; no transcendentals\",\"callbacks\":\"generic signatures, exact effect ceilings, explicit readonly context borrows, no captures or reference results\",\"semantic_reuse\":\"conservative function-body queries; generics constants aliases and inferred callback schemas check fresh\",\"text_data\":\"managed Unicode scalar strings and managed bytes; host byte I/O keeps its scalar ABI\",\"time_random\":\"Unix wall clock and explicit entropy capabilities; deterministic noncryptographic SplitMix64\",\"managed_lists\":\"copyable shared aliases; automatic growth; no owned/resource elements, borrowed interiors, untraced storage embedding, or host escape\",\"gc\":\"single-threaded nonmoving tracing; retained guest values root intermediates; collect-on-allocation stress option\",\"python\":\"static fixed-width types, function-scoped locals with E_UNBOUND definite assignment, value records; indentation is the only block syntax\",\"dictionaries\":\"managed insertion order; homogeneous int or str keys and copyable values\",\"native_tests\":\"fresh QBE processes; exported typed-call-compatible signatures; positive deterministic receipts only; frontend checks fresh; provider snapshots at most128sources/16MiB\",\"standard_library\":\"ten embedded Python-syntax modules over managed types: math, strings, sort, path, hex, base64, json, pool, random, time\"},\"removed\":{\"explicit-storage-tier\":{\"date\":\"2026-09-13\",\"note\":\"buffer/pool/list declarations, the allocator capability, references and slices, lexical borrows, legacy arena scopes and every standard module built on them. Managed collections and `with arena()` regions replace them.\"},\"c-backend\":{\"date\":\"2026-09-13\",\"note\":\"emit-c/emit-project-c, src/native.zig and the C-only runtime. QBE is the only native backend.\"},\"record-literals-without-new\":{\"date\":\"2026-09-13\",\"note\":\"merged into positional-and-named-record-constructors; the `new T { ... }` spelling it was named against left with the legacy brace syntax.\"},\"legacy-migration\":{\"date\":\"2026-09-13\",\"note\":\"mylang migrate/migrate-project, src/migrate*.zig and their drivers. Their input was the brace dialect, which no longer exists.\"},\"legacy-syntax\":{\"date\":\"2026-09-13\",\"note\":\"the brace dialect: fn/let/let mut/struct/new, `T { \u2026 }` record literals, `::` qualification, `::<T>` turbofish, `cast<T>(x)`, `//` comments, `{ }` scope blocks, match expressions, `true`/`false`/`unit`, `else if` and `a..b` ranges. Indentation, `def`/`class`, `T(f=v)`, `alias.name`, `f[T](x)`, `T(x)`, `#` comments, `match`/`case`, `True`/`False`/`None`, `elif` and `range(a, b)` are the surface.\"},\"value-producing-matches\":{\"date\":\"2026-09-13\",\"note\":\"`match e { P => v }` had only a brace spelling and no Python one; a `match` statement whose arms return covers the same programs.\"},\"bounded-scalar-source-evaluation\":{\"date\":\"2026-09-14\",\"note\":\"the eval-project command, its step/frame/eval-byte budgets and its eval-report-v1 / evaluation-request documents. It executed a parameter-free entry in the compiler's own process; `mylang run` builds the program natively and runs it instead.\"},\"bounded-vm-trace\":{\"date\":\"2026-09-14\",\"note\":\"vm_trace.Trace and the vm.Options.memory.trace hook. The ring of recent instructions it sampled was an interpreter artifact; a native guest reports a source-mapped call stack at its trap instead.\"},\"in-memory-host-replay\":{\"date\":\"2026-09-14\",\"note\":\"host_replay.Transcript and its recorded call comparison. It wrapped an interpreter provider registration, and a natively built guest calls its registered provider directly.\"},\"isolated-process-workers\":{\"date\":\"2026-09-14\",\"note\":\"scripts/workers.py and its typed-call-v1 job pool. Each job dispatched one guest call through invoke-project; nothing replaces it, and the language still has no spawn syntax.\"},\"memory-accounting-categories\":{\"date\":\"2026-09-14\",\"note\":\"mylang-io --memory-report, --max-runtime-bytes, --max-vm-bytes and --max-host-bytes, and the runtime-memory-v1 split of VM bytes into guest backing and bookkeeping. There is no VM allocator to split; guest-memory-ceilings bounds a guest process instead.\"}}}}\n",
+      "stderr": "",
+      "elapsed_ms": 15.771
+    },
+    {
+      "name": "unannotated_output",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/unannotated_output/main.my",
+        "--no-cache"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_ms": 14.395,
+      "sources": {
+        "main.my": "def surprise() -> int:\n    print(42)\n    return 0\ndef main() -> int:\n    return surprise()\n"
+      }
+    },
+    {
+      "name": "empty_effects_reject_output",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/empty_effects_reject_output/main.my",
+        "--no-cache"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "/tmp/mylang-proposals-audit-7usu4hu1/empty_effects_reject_output/main.my:1:23: error[E_EFFECT_BOUND]: effect `output` exceeds declared bound: surprise\n  def surprise() -> int effects():\n                        ^\n  note: /tmp/mylang-proposals-audit-7usu4hu1/empty_effects_reject_output/main.my:2:5: effect originates at this operation or owned type\n",
+      "elapsed_ms": 20.934,
+      "sources": {
+        "main.my": "def surprise() -> int effects():\n    print(42)\n    return 0\ndef main() -> int:\n    return surprise()\n"
+      }
+    },
+    {
+      "name": "empty_effects_mutate_argument",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "run",
+        "/tmp/mylang-proposals-audit-7usu4hu1/empty_effects_mutate_argument/main.my",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir=/tmp/mylang-proposals-audit-7usu4hu1/native-cache"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_ms": 204.31,
+      "sources": {
+        "main.my": "def overwrite(values: list[int]) -> None effects():\n    values[0] = 42\ndef main() -> int:\n    values = [1]\n    overwrite(values)\n    if values[0] != 42:\n        return 1\n    return 0\n"
+      }
+    },
+    {
+      "name": "empty_effects_reject_append",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/empty_effects_reject_append/main.my",
+        "--no-cache"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "/tmp/mylang-proposals-audit-7usu4hu1/empty_effects_reject_append/main.my:1:37: error[E_EFFECT_BOUND]: effect `managed_allocation` exceeds declared bound: grow\n  def grow(values: list[int]) -> None effects():\n                                      ^\n  note: /tmp/mylang-proposals-audit-7usu4hu1/empty_effects_reject_append/main.my:2:5: effect originates at this operation or owned type\n",
+      "elapsed_ms": 11.226,
+      "sources": {
+        "main.my": "def grow(values: list[int]) -> None effects():\n    values.append(42)\ndef main() -> int:\n    return 0\n"
+      }
+    },
+    {
+      "name": "record_nested_alias",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "run",
+        "/tmp/mylang-proposals-audit-7usu4hu1/record_nested_alias/main.my",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir=/tmp/mylang-proposals-audit-7usu4hu1/native-cache"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_ms": 156.616,
+      "sources": {
+        "main.my": "record Box:\n    values: list[int]\ndef change(box: Box) -> None effects():\n    alias = box.values\n    alias[0] = 42\ndef main() -> int:\n    box = Box(values=[1])\n    change(box)\n    if box.values[0] != 42:\n        return 1\n    return 0\n"
+      }
+    },
+    {
+      "name": "missing_parameter_type",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/missing_parameter_type/main.my",
+        "--no-cache"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "/tmp/mylang-proposals-audit-7usu4hu1/missing_parameter_type/main.my:1:19: error[E_SYNTAX]: unexpected token; expected :\n  def identity(value) -> int:\n                    ^\n",
+      "elapsed_ms": 17.328,
+      "sources": {
+        "main.my": "def identity(value) -> int:\n    return value\ndef main() -> int:\n    return 0\n"
+      }
+    },
+    {
+      "name": "omitted_return_is_unit",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/omitted_return_is_unit/main.my",
+        "--no-cache"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "/tmp/mylang-proposals-audit-7usu4hu1/omitted_return_is_unit/main.my:2:5: error[E_TYPE]: expected unit, found i64\n      return 42\n      ^\n",
+      "elapsed_ms": 14.954,
+      "sources": {
+        "main.my": "def value():\n    return 42\ndef main() -> int:\n    return 0\n"
+      }
+    },
+    {
+      "name": "int_float_conversion",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/int_float_conversion/main.my",
+        "--no-cache"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "/tmp/mylang-proposals-audit-7usu4hu1/int_float_conversion/main.my:5:14: error[E_TYPE]: expected float, found i64\n      _ = take(value)\n               ^\n",
+      "elapsed_ms": 19.731,
+      "sources": {
+        "main.my": "def take(value: float) -> float:\n    return value\ndef main() -> int:\n    value: int = 1\n    _ = take(value)\n    return 0\n"
+      }
+    },
+    {
+      "name": "option_direct_field",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/option_direct_field/main.my",
+        "--no-cache"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "/tmp/mylang-proposals-audit-7usu4hu1/option_direct_field/main.my:4:17: error[E_TYPE]: operation requires a record value\n      return user.id\n                  ^\n",
+      "elapsed_ms": 11.206,
+      "sources": {
+        "main.my": "record User:\n    id: int\ndef get_id(user: Option[User]) -> int:\n    return user.id\ndef main() -> int:\n    return 0\n"
+      }
+    },
+    {
+      "name": "unhandled_result",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/unhandled_result/main.my",
+        "--no-cache"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "/tmp/mylang-proposals-audit-7usu4hu1/unhandled_result/main.my:5:5: error[E_RESULT_UNHANDLED]: result-bearing value leaves scope without being handled, returned, transferred, or explicitly discarded\n      return 0\n      ^\n  note: /tmp/mylang-proposals-audit-7usu4hu1/unhandled_result/main.my:4:5: unhandled result-bearing binding\n",
+      "elapsed_ms": 14.426,
+      "sources": {
+        "main.my": "def work() -> Result[int, int]:\n    return Err(7)\ndef main() -> int:\n    pending = work()\n    return 0\n"
+      }
+    },
+    {
+      "name": "explicit_result_discard",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/explicit_result_discard/main.my",
+        "--no-cache"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_ms": 16.694,
+      "sources": {
+        "main.my": "def work() -> Result[int, int]:\n    return Err(7)\ndef main() -> int:\n    _ = work()\n    return 0\n"
+      }
+    },
+    {
+      "name": "exhaustive_union_base",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/exhaustive_union_base/main.my",
+        "--no-cache"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_ms": 20.91,
+      "sources": {
+        "main.my": "enum Status:\n    active,\n    closed\ndef classify(status: Status) -> int:\n    match status:\n        case Status.active:\n            return 1\n        case Status.closed:\n            return 0\ndef main() -> int:\n    return classify(Status.closed)\n"
+      }
+    },
+    {
+      "name": "exhaustive_union_added",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/exhaustive_union_added/main.my",
+        "--no-cache"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "/tmp/mylang-proposals-audit-7usu4hu1/exhaustive_union_added/main.my:6:5: error[E_INCOMPLETE_MATCH]: match does not handle variant `delinquent`; every variant requires an explicit arm\n      match status:\n      ^\n  note: /tmp/mylang-proposals-audit-7usu4hu1/exhaustive_union_added/main.my:4:5: unhandled variant declared here\n",
+      "elapsed_ms": 11.105,
+      "sources": {
+        "main.my": "enum Status:\n    active,\n    closed,\n    delinquent\ndef classify(status: Status) -> int:\n    match status:\n        case Status.active:\n            return 1\n        case Status.closed:\n            return 0\ndef main() -> int:\n    return classify(Status.closed)\n"
+      }
+    },
+    {
+      "name": "wildcard_union_added",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/wildcard_union_added/main.my",
+        "--no-cache"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_ms": 14.827,
+      "sources": {
+        "main.my": "enum Status:\n    active,\n    closed,\n    delinquent\ndef classify(status: Status) -> int:\n    match status:\n        case Status.active:\n            return 1\n        case _:\n            return 0\ndef main() -> int:\n    return classify(Status.closed)\n"
+      }
+    },
+    {
+      "name": "aliases_are_transparent",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/aliases_are_transparent/main.my",
+        "--no-cache"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_ms": 15.996,
+      "sources": {
+        "main.my": "type UserId = int\ntype OrderId = int\ndef take(value: UserId) -> int:\n    return value\ndef main() -> int:\n    order: OrderId = 42\n    return take(order)\n"
+      }
+    },
+    {
+      "name": "domains_are_distinct",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/domains_are_distinct/main.my",
+        "--no-cache"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "/tmp/mylang-proposals-audit-7usu4hu1/domains_are_distinct/main.my:11:17: error[E_TYPE]: expected UserId, found OrderId\n      return take(order)\n                  ^\n",
+      "elapsed_ms": 19.539,
+      "sources": {
+        "main.my": "domain UserId: int:\n    def make(value: int) -> UserId:\n        return wrap[UserId](value)\ndomain OrderId: int:\n    def make(value: int) -> OrderId:\n        return wrap[OrderId](value)\ndef take(value: UserId) -> int:\n    return 0\ndef main() -> int:\n    order = OrderId.make(42)\n    return take(order)\n"
+      }
+    },
+    {
+      "name": "callback_effect_subset",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/callback_effect_subset/main.my",
+        "--no-cache"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "/tmp/mylang-proposals-audit-7usu4hu1/callback_effect_subset/main.my:6:18: error[E_TYPE]: expected def@128:i64,i64, found def(i64)->i64 effects(0)\n      return apply(pure)\n                   ^\n",
+      "elapsed_ms": 19.114,
+      "sources": {
+        "main.my": "def pure(value: int) -> int effects():\n    return value\ndef apply(f: def(int) -> int effects(output)) -> int:\n    return f(42)\ndef main() -> int:\n    return apply(pure)\n"
+      }
+    },
+    {
+      "name": "formatter_whitespace",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "fmt",
+        "/tmp/mylang-proposals-audit-7usu4hu1/formatter_whitespace/main.my"
+      ],
+      "returncode": 0,
+      "stdout": "def main() -> int:\n    value=  40+2\n    return value\n",
+      "stderr": "",
+      "elapsed_ms": 19.624,
+      "sources": {
+        "main.my": "def main() -> int:\n    value=  40+2\n    return value\n"
+      }
+    },
+    {
+      "name": "formatter_check_whitespace",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "fmt",
+        "/tmp/mylang-proposals-audit-7usu4hu1/formatter_check_whitespace/main.my",
+        "--check"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_ms": 19.884,
+      "sources": {
+        "main.my": "def main() -> int:\n    value=  40+2\n    return value\n"
+      }
+    },
+    {
+      "name": "trap_metadata",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "run",
+        "/tmp/mylang-proposals-audit-7usu4hu1/trap_metadata/main.my",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir=/tmp/mylang-proposals-audit-7usu4hu1/native-cache"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "/tmp/mylang-proposals-audit-7usu4hu1/trap_metadata/main.my:2:12: error[R_LIST_BOUNDS]: native execution failed\n  in at at /tmp/mylang-proposals-audit-7usu4hu1/trap_metadata/main.my:2:12\n  in main at /tmp/mylang-proposals-audit-7usu4hu1/trap_metadata/main.my:4:12\n",
+      "elapsed_ms": 156.378,
+      "sources": {
+        "main.my": "def at(values: list[int], index: int) -> int effects():\n    return values[index]\ndef main() -> int:\n    return at([1], 14)\n"
+      }
+    },
+    {
+      "name": "ordinary_check_ignores_policy",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check-project",
+        "/tmp/mylang-proposals-audit-7usu4hu1/policy/main.my",
+        "--no-cache"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_ms": 14.348,
+      "sources": {
+        "main.my": "module main\nimport helper\ndef main() -> int:\n    return helper.value()\n",
+        "helper.my": "module helper\nimport main\nexport value\ndef value() -> int:\n    return 0\n"
+      }
+    },
+    {
+      "name": "explicit_policy_enforced",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check-policy",
+        "/tmp/mylang-proposals-audit-7usu4hu1/policy/main.my",
+        "--policy=/tmp/mylang-proposals-audit-7usu4hu1/policy/policy.json",
+        "--no-cache"
+      ],
+      "returncode": 3,
+      "stdout": "language: valid\nimport-direction-v1: failed; scope=reachable-import-graph; edges=1; denied=1; config-sha256=451b4a50b4e7f755a941444d793a93471f4733d2b7a4ad801ecb213b9d407adc\nPolicy is separate from language validity; first matching rule wins.\nmain.my:2:8: main -> helper: deny; rule=default\n",
+      "stderr": "",
+      "elapsed_ms": 22.73,
+      "sources": {
+        "main.my": "module main\nimport helper\ndef main() -> int:\n    return helper.value()\n",
+        "helper.my": "module helper\nimport main\nexport value\ndef value() -> int:\n    return 0\n"
+      }
+    },
+    {
+      "name": "cycle_rejected",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check-project",
+        "/tmp/mylang-proposals-audit-7usu4hu1/policy/main.my",
+        "--no-cache"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "helper.my:2:8: error[E_IMPORT_CYCLE]: main -> helper -> main\n  import main\n         ^\nmain.my:1:8: note: related module/import declaration\n",
+      "elapsed_ms": 17.445,
+      "sources": {
+        "main.my": "module main\nimport helper\ndef main() -> int:\n    return helper.value()\n",
+        "helper.my": "module helper\nimport main\nexport value\ndef value() -> int:\n    return 0\n"
+      }
+    },
+    {
+      "name": "default_257_module_limit",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check-project",
+        "/tmp/mylang-proposals-audit-7usu4hu1/module-limit/m0.my",
+        "--no-cache"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "m255.my:2:8: error[E_MODULE_LIMIT]: module count exceeds the project budget\n  import m256\n         ^\n",
+      "elapsed_ms": 22.063,
+      "sources": {
+        "generator": "257 files m0.my..m256.my; module mi imports m(i+1); entry defines main returning 0"
+      }
+    },
+    {
+      "name": "selective_tests_cold",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "test",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/main.my",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/cache"
+      ],
+      "returncode": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"main::test_a\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"1f6b2ffb7cae8d9c38bf83d51407ab67f7e2aa141ff6c45ceea62e2805c5b1d9\",\"dependencies\":[\"myl_f_3196d0a66f90d66f1ea4644d16de7f3b20ed79441a794afe43cf8ff0a6d83e7b\",\"myl_f_419f78f17256ee9374b581f84d7c7a7ad4fe302851dbaebe7210f5e6ebb53ec9\"],\"cacheable\":true,\"reasons\":[],\"steps\":8},{\"name\":\"main::test_b\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"17fd65829a6925e2bb263edcd5b3085faecebca559ba9a7901e594d4509cea7a\",\"dependencies\":[\"myl_f_6e35da2b9c1984c2fe849457457ac629bcab2fa50a4137652db35c91c21ab87b\",\"myl_f_c687f795d81de286502c2d3980c4266f5ae5042110ad94cedd1197aacd7008e8\"],\"cacheable\":true,\"reasons\":[],\"steps\":6}],\"passed\":2,\"failed\":0,\"skipped\":0,\"cached\":0,\"executed\":2}\n",
+      "stderr": "",
+      "elapsed_ms": 460.826,
+      "sources": {
+        "main.my": "module main\nexport test_a\nexport test_b\ndef first() -> int:\n    return 40 + 2\ndef second() -> int:\n    return 7\ndef unused() -> int:\n    return 0\ndef test_a() -> bool:\n    return first() == 42\ndef test_b() -> bool:\n    return second() == 7\ndef main() -> int:\n    return 0\n"
+      }
+    },
+    {
+      "name": "selective_tests_warm",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "test",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/main.my",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/cache"
+      ],
+      "returncode": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"main::test_a\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"1f6b2ffb7cae8d9c38bf83d51407ab67f7e2aa141ff6c45ceea62e2805c5b1d9\",\"dependencies\":[\"myl_f_3196d0a66f90d66f1ea4644d16de7f3b20ed79441a794afe43cf8ff0a6d83e7b\",\"myl_f_419f78f17256ee9374b581f84d7c7a7ad4fe302851dbaebe7210f5e6ebb53ec9\"],\"cacheable\":true,\"reasons\":[],\"steps\":0},{\"name\":\"main::test_b\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"17fd65829a6925e2bb263edcd5b3085faecebca559ba9a7901e594d4509cea7a\",\"dependencies\":[\"myl_f_6e35da2b9c1984c2fe849457457ac629bcab2fa50a4137652db35c91c21ab87b\",\"myl_f_c687f795d81de286502c2d3980c4266f5ae5042110ad94cedd1197aacd7008e8\"],\"cacheable\":true,\"reasons\":[],\"steps\":0}],\"passed\":0,\"failed\":0,\"skipped\":0,\"cached\":2,\"executed\":0}\n",
+      "stderr": "",
+      "elapsed_ms": 35.044
+    },
+    {
+      "name": "selective_tests_helper_edit",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "test",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/main.my",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/cache"
+      ],
+      "returncode": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"main::test_a\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"b33dad0a2b8f727a81fbc4e574b62942babd815d9135dc2db97278f230b73f3d\",\"dependencies\":[\"myl_f_3196d0a66f90d66f1ea4644d16de7f3b20ed79441a794afe43cf8ff0a6d83e7b\",\"myl_f_419f78f17256ee9374b581f84d7c7a7ad4fe302851dbaebe7210f5e6ebb53ec9\"],\"cacheable\":true,\"reasons\":[],\"steps\":8},{\"name\":\"main::test_b\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"17fd65829a6925e2bb263edcd5b3085faecebca559ba9a7901e594d4509cea7a\",\"dependencies\":[\"myl_f_6e35da2b9c1984c2fe849457457ac629bcab2fa50a4137652db35c91c21ab87b\",\"myl_f_c687f795d81de286502c2d3980c4266f5ae5042110ad94cedd1197aacd7008e8\"],\"cacheable\":true,\"reasons\":[],\"steps\":0}],\"passed\":1,\"failed\":0,\"skipped\":0,\"cached\":1,\"executed\":1}\n",
+      "stderr": "",
+      "elapsed_ms": 222.17,
+      "sources": {
+        "main.my": "module main\nexport test_a\nexport test_b\ndef first() -> int:\n    return 41 + 1\ndef second() -> int:\n    return 7\ndef unused() -> int:\n    return 0\ndef test_a() -> bool:\n    return first() == 42\ndef test_b() -> bool:\n    return second() == 7\ndef main() -> int:\n    return 0\n"
+      }
+    },
+    {
+      "name": "selective_tests_unused_edit",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "test",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/main.my",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/cache"
+      ],
+      "returncode": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"main::test_a\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"b33dad0a2b8f727a81fbc4e574b62942babd815d9135dc2db97278f230b73f3d\",\"dependencies\":[\"myl_f_3196d0a66f90d66f1ea4644d16de7f3b20ed79441a794afe43cf8ff0a6d83e7b\",\"myl_f_419f78f17256ee9374b581f84d7c7a7ad4fe302851dbaebe7210f5e6ebb53ec9\"],\"cacheable\":true,\"reasons\":[],\"steps\":0},{\"name\":\"main::test_b\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"17fd65829a6925e2bb263edcd5b3085faecebca559ba9a7901e594d4509cea7a\",\"dependencies\":[\"myl_f_6e35da2b9c1984c2fe849457457ac629bcab2fa50a4137652db35c91c21ab87b\",\"myl_f_c687f795d81de286502c2d3980c4266f5ae5042110ad94cedd1197aacd7008e8\"],\"cacheable\":true,\"reasons\":[],\"steps\":0}],\"passed\":0,\"failed\":0,\"skipped\":0,\"cached\":2,\"executed\":0}\n",
+      "stderr": "",
+      "elapsed_ms": 43.789,
+      "sources": {
+        "main.my": "module main\nexport test_a\nexport test_b\ndef first() -> int:\n    return 41 + 1\ndef second() -> int:\n    return 7\ndef unused() -> int:\n    return 1\ndef test_a() -> bool:\n    return first() == 42\ndef test_b() -> bool:\n    return second() == 7\ndef main() -> int:\n    return 0\n"
+      }
+    },
+    {
+      "name": "selective_tests_force",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "test",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/main.my",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/cache",
+        "--force"
+      ],
+      "returncode": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"main::test_a\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"b33dad0a2b8f727a81fbc4e574b62942babd815d9135dc2db97278f230b73f3d\",\"dependencies\":[\"myl_f_3196d0a66f90d66f1ea4644d16de7f3b20ed79441a794afe43cf8ff0a6d83e7b\",\"myl_f_419f78f17256ee9374b581f84d7c7a7ad4fe302851dbaebe7210f5e6ebb53ec9\"],\"cacheable\":true,\"reasons\":[],\"steps\":8},{\"name\":\"main::test_b\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"17fd65829a6925e2bb263edcd5b3085faecebca559ba9a7901e594d4509cea7a\",\"dependencies\":[\"myl_f_6e35da2b9c1984c2fe849457457ac629bcab2fa50a4137652db35c91c21ab87b\",\"myl_f_c687f795d81de286502c2d3980c4266f5ae5042110ad94cedd1197aacd7008e8\"],\"cacheable\":true,\"reasons\":[],\"steps\":6}],\"passed\":2,\"failed\":0,\"skipped\":0,\"cached\":0,\"executed\":2}\n",
+      "stderr": "",
+      "elapsed_ms": 222.504
+    },
+    {
+      "name": "selective_tests_invalid_edit",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "test",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/main.my",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/tmp/mylang-proposals-audit-7usu4hu1/tests/cache"
+      ],
+      "returncode": 2,
+      "stdout": "",
+      "stderr": "main.my:5:5: error[E_TYPE]: expected i64, found bool\n      return True\n      ^\nmylang: host failure: NativeToolFailed\n",
+      "elapsed_ms": 38.522,
+      "sources": {
+        "main.my": "module main\nexport test_a\nexport test_b\ndef first() -> int:\n    return True\ndef second() -> int:\n    return 7\ndef unused() -> int:\n    return 1\ndef test_a() -> bool:\n    return first() == 42\ndef test_b() -> bool:\n    return second() == 7\ndef main() -> int:\n    return 0\n"
+      }
+    },
+    {
+      "name": "session_ordinary",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check-session",
+        "/tmp/mylang-proposals-audit-7usu4hu1/session_ordinary/main.my"
+      ],
+      "returncode": 0,
+      "replies": [
+        {
+          "action": "check",
+          "source": "module main\ndef first() -> int:\n    return 1\ndef second() -> int:\n    return 7\ndef main() -> int:\n    return first() + second()\n",
+          "reply": "{\"version\":\"check-session-v1\",\"action\":\"check\",\"status\":0,\"failure\":null,\"reuse\":{\"hits\":0,\"misses\":1},\"cache\":{\"hits\":0,\"misses\":1,\"stored\":1,\"evicted\":0,\"bypassed\":0,\"retained_bytes\":2348},\"semantic\":{\"hits\":0,\"misses\":1,\"stored\":1,\"bypassed\":0,\"retained_bytes\":316},\"functions\":{\"reused\":0,\"checked\":3,\"stored\":1,\"bypassed\":0,\"retained_bytes\":3320}}"
+        },
+        {
+          "action": "edit",
+          "source": "module main\ndef first() -> int:\n    return 2\ndef second() -> int:\n    return 7\ndef main() -> int:\n    return first() + second()\n",
+          "reply": "{\"version\":\"check-session-v1\",\"action\":\"check\",\"status\":0,\"failure\":null,\"reuse\":{\"hits\":0,\"misses\":1},\"cache\":{\"hits\":0,\"misses\":2,\"stored\":2,\"evicted\":0,\"bypassed\":0,\"retained_bytes\":7548},\"semantic\":{\"hits\":0,\"misses\":2,\"stored\":2,\"bypassed\":0,\"retained_bytes\":316},\"functions\":{\"reused\":2,\"checked\":4,\"stored\":2,\"bypassed\":0,\"retained_bytes\":3640}}"
+        },
+        {
+          "action": "quit",
+          "source": "module main\ndef first() -> int:\n    return 2\ndef second() -> int:\n    return 7\ndef main() -> int:\n    return first() + second()\n",
+          "reply": "{\"version\":\"check-session-v1\",\"action\":\"quit\",\"status\":0,\"failure\":null,\"reuse\":{\"hits\":0,\"misses\":0},\"cache\":{\"hits\":0,\"misses\":2,\"stored\":2,\"evicted\":0,\"bypassed\":0,\"retained_bytes\":7548},\"semantic\":{\"hits\":0,\"misses\":2,\"stored\":2,\"bypassed\":0,\"retained_bytes\":316},\"functions\":{\"reused\":2,\"checked\":4,\"stored\":2,\"bypassed\":0,\"retained_bytes\":3640}}"
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "session_generic",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check-session",
+        "/tmp/mylang-proposals-audit-7usu4hu1/session_generic/main.my"
+      ],
+      "returncode": 0,
+      "replies": [
+        {
+          "action": "check",
+          "source": "module main\ndef first() -> int:\n    return 1\ndef second() -> int:\n    return 7\ndef main() -> int:\n    return first() + second()\ndef identity[T](value: T) -> T:\n    return value\n",
+          "reply": "{\"version\":\"check-session-v1\",\"action\":\"check\",\"status\":0,\"failure\":null,\"reuse\":{\"hits\":0,\"misses\":1},\"cache\":{\"hits\":0,\"misses\":1,\"stored\":1,\"evicted\":0,\"bypassed\":0,\"retained_bytes\":3056},\"semantic\":{\"hits\":0,\"misses\":1,\"stored\":1,\"bypassed\":0,\"retained_bytes\":414},\"functions\":{\"reused\":0,\"checked\":3,\"stored\":0,\"bypassed\":1,\"retained_bytes\":0}}"
+        },
+        {
+          "action": "edit",
+          "source": "module main\ndef first() -> int:\n    return 2\ndef second() -> int:\n    return 7\ndef main() -> int:\n    return first() + second()\ndef identity[T](value: T) -> T:\n    return value\n",
+          "reply": "{\"version\":\"check-session-v1\",\"action\":\"check\",\"status\":0,\"failure\":null,\"reuse\":{\"hits\":0,\"misses\":1},\"cache\":{\"hits\":0,\"misses\":2,\"stored\":2,\"evicted\":0,\"bypassed\":0,\"retained_bytes\":9460},\"semantic\":{\"hits\":0,\"misses\":2,\"stored\":2,\"bypassed\":0,\"retained_bytes\":414},\"functions\":{\"reused\":0,\"checked\":6,\"stored\":0,\"bypassed\":2,\"retained_bytes\":0}}"
+        },
+        {
+          "action": "quit",
+          "source": "module main\ndef first() -> int:\n    return 2\ndef second() -> int:\n    return 7\ndef main() -> int:\n    return first() + second()\ndef identity[T](value: T) -> T:\n    return value\n",
+          "reply": "{\"version\":\"check-session-v1\",\"action\":\"quit\",\"status\":0,\"failure\":null,\"reuse\":{\"hits\":0,\"misses\":0},\"cache\":{\"hits\":0,\"misses\":2,\"stored\":2,\"evicted\":0,\"bypassed\":0,\"retained_bytes\":9460},\"semantic\":{\"hits\":0,\"misses\":2,\"stored\":2,\"bypassed\":0,\"retained_bytes\":414},\"functions\":{\"reused\":0,\"checked\":6,\"stored\":0,\"bypassed\":2,\"retained_bytes\":0}}"
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "name": "extern_missing_required_host_annotation",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/noio-host/main.my",
+        "--no-cache"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "/tmp/mylang-proposals-audit-7usu4hu1/noio-host/main.my:1:1: error[E_HOST_EFFECTS]: host declarations require an explicit effects(host, ...) contract\n  extern def external(value: int) -> int\n  ^\n",
+      "elapsed_ms": 14.934,
+      "sources": {
+        "main.my": "extern def external(value: int) -> int\ndef call(value: int) -> int noio:\n    return external(value)\ndef main() -> int:\n    return 0\n"
+      }
+    },
+    {
+      "name": "custom_effect_name",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/custom-effect/main.my",
+        "--no-cache"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "/tmp/mylang-proposals-audit-7usu4hu1/custom-effect/main.my:1:29: error[E_UNKNOWN_EFFECT]: unknown effect; expected managed_allocation, filesystem, network, clock, random, environment, output, or host\n  def change() -> int effects(db):\n                              ^\n",
+      "elapsed_ms": 15.931,
+      "sources": {
+        "main.my": "def change() -> int effects(db):\n    return 0\ndef main() -> int:\n    return change()\n"
+      }
+    },
+    {
+      "name": "named_constraint_production",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "run",
+        "/tmp/mylang-proposals-audit-7usu4hu1/named/main.my",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir=/tmp/mylang-proposals-audit-7usu4hu1/native-cache"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_ms": 235.886,
+      "sources": {
+        "contracts.my": "module contracts\nexport Prices\n\n\nconstraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())\n",
+        "production.my": "module production\nimport contracts\nexport DiscountPrices\n\n\ndomain DiscountPrices: int:\n    def make(discount: int) -> DiscountPrices:\n        return wrap[DiscountPrices](discount)\n\n    def price(policy: DiscountPrices, subtotal: int) -> int effects():\n        return subtotal - unwrap(policy)\n",
+        "fakes.my": "module fakes\nexport FixedPrices\n\n\ndomain FixedPrices: int:\n    def make(amount: int) -> FixedPrices:\n        return wrap[FixedPrices](amount)\n\n    def price(policy: FixedPrices, subtotal: int) -> int effects():\n        _ = subtotal\n        return unwrap(policy)\n",
+        "fake_tests.my": "module fake_tests\nimport checkout\nimport fakes\nexport test_checkout\n\n\ndef main() -> int:\n    assert test_checkout()\n    return 0\n\n\ndef test_checkout() -> bool:\n    return checkout.total(fakes.FixedPrices.make(1750), 2000) == 2250\n",
+        "main.my": "module main\nimport checkout\nimport production\n\n\ndef main() -> int:\n    real = production.DiscountPrices.make(250)\n    assert checkout.total(real, 2000) == 2250\n    return 0\n",
+        "checkout.my": "module checkout\nimport contracts\nexport total\n\n\ndef total[P: contracts.Prices](policy: P, subtotal: int) -> int effects():\n    return P.price(policy, subtotal) + 500\n"
+      }
+    },
+    {
+      "name": "named_constraint_fake_test",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "test",
+        "/tmp/mylang-proposals-audit-7usu4hu1/named/fake_tests.my",
+        "--json",
+        "--force",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/tmp/mylang-proposals-audit-7usu4hu1/named-cache"
+      ],
+      "returncode": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"fake_tests::test_checkout\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"4842e40dc2bb42b030b0f8bb96b78236bd8c70723501be4f0026a0fcd06c3846\",\"dependencies\":[\"myl_f_200c174e326023d804323afa993d9603b6f498d3345c25193193514f35c52acf\",\"myl_f_64baca86ebd9eb0c781a96859d67d71354a399690eefe335230654786c283965\",\"myl_f_a90916d0aba78375662b22cbd35fdb0c11b3b654c6e6f91558cdb98d573ee76a\",\"myl_f_bbddbe16e29edc808f7a9cbf05e8f94c7167768af5412f7f448d25a3ac883fa5\"],\"cacheable\":true,\"reasons\":[],\"steps\":21}],\"passed\":1,\"failed\":0,\"skipped\":0,\"cached\":0,\"executed\":1}\n",
+      "stderr": "",
+      "elapsed_ms": 429.058
+    },
+    {
+      "name": "one_shot_cold",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check-project",
+        "/tmp/mylang-proposals-audit-7usu4hu1/oneshot/main.my",
+        "--report",
+        "--cache-dir=/tmp/mylang-proposals-audit-7usu4hu1/oneshot/cache"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":1,\"syntax_stored\":1,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":561,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n",
+      "elapsed_ms": 12.475,
+      "sources": {
+        "main.my": "module main\ndef first() -> int:\n    return 1\ndef main() -> int:\n    return first()\n"
+      }
+    },
+    {
+      "name": "one_shot_warm",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check-project",
+        "/tmp/mylang-proposals-audit-7usu4hu1/oneshot/main.my",
+        "--report",
+        "--cache-dir=/tmp/mylang-proposals-audit-7usu4hu1/oneshot/cache"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":0,\"syntax_stored\":0,\"verdict_hits\":1,\"verdict_misses\":0,\"verdict_stored\":0,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":0,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"collect_declarations\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"resolve_interface\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"check_body\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"instantiate_specialization\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n",
+      "elapsed_ms": 10.702
+    },
+    {
+      "name": "one_shot_edit",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check-project",
+        "/tmp/mylang-proposals-audit-7usu4hu1/oneshot/main.my",
+        "--report",
+        "--cache-dir=/tmp/mylang-proposals-audit-7usu4hu1/oneshot/cache"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":1,\"syntax_stored\":1,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":1122,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n",
+      "elapsed_ms": 20.122,
+      "sources": {
+        "main.my": "module main\ndef first() -> int:\n    return 2\ndef main() -> int:\n    return first()\n"
+      }
+    },
+    {
+      "name": "one_shot_invalid",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check-project",
+        "/tmp/mylang-proposals-audit-7usu4hu1/oneshot/main.my",
+        "--report",
+        "--cache-dir=/tmp/mylang-proposals-audit-7usu4hu1/oneshot/cache"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "main.my:3:5: error[E_TYPE]: expected i64, found bool\n      return True\n      ^\n{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":1,\"syntax_stored\":1,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":0,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":1608,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n",
+      "elapsed_ms": 17.959,
+      "sources": {
+        "main.my": "module main\ndef first() -> int:\n    return True\ndef main() -> int:\n    return first()\n"
+      }
+    },
+    {
+      "name": "noio_allows_host",
+      "command": [
+        "/tmp/mylang-proposals-audit-7usu4hu1/bin/mylang",
+        "check",
+        "/tmp/mylang-proposals-audit-7usu4hu1/noio-host/main.my",
+        "--no-cache"
+      ],
+      "sources": {
+        "main.my": "extern def external(value: int) -> int effects(host)\ndef call(value: int) -> int noio:\n    return external(value)\ndef main() -> int:\n    return 0\n"
+      },
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_ms": 19.023
+    }
+  ],
+  "git_head_end": "a9e29d4845ab2f8a700eeb238ed03023d2ac701e",
+  "source_fingerprints": {
+    "src/effect_set.zig": "1220df93e103e7cc81366a037d020cc0ed5318535e4c1f93b68258e592570ad5",
+    "src/formatter.zig": "fadd1b1897c2d75607bf7967145c120269f50ce4db64a854459710d1cfc83a1b",
+    "src/callables.zig": "4a21bd688c34ae685ef517787cf188c19952cd81685cc76c58fadef9b881658f",
+    "src/semantic_key.zig": "84ef44e8973a791876c804b2d3fdf0102e6c30c5818d0fc46bb290347cd6cc21",
+    "src/main.zig": "b82e5f2ce718a935b1a5db16c4e275fead2848fa3802af44846949ae346463dd",
+    "src/project.zig": "0dbb8c2a92397e739c85971067717232ccb278633133e0c4237bc425799ed4ba",
+    "src/native_test_command.zig": "7ec964a1c568a5d7e22bace16eb11a3a66c781525254f81d16d191a56cbb7e69",
+    "src/features.json": "d28b407d3ae9b9ebc14de1c5a831452c38ffddd16253df006c6a3ae5a7e7a237",
+    "src/structural_constraints.zig": "c772cd1eacd9f0cc2b6b56065df0bcbc28ea18fa6c56b46c0803d4646c112390"
+  }
+}

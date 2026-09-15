@@ -85,6 +85,7 @@ const Signature = struct {
     declared_effects: ?[]const []const u8 = null,
 };
 const Shape = struct { fields: ?[]const Value = null, cases: ?[]const Case = null };
+const Subject = struct { aliases: []const generic_requirements.SubjectAlias, name: []const u8 };
 
 const Context = struct {
     allocator: std.mem.Allocator,
@@ -127,6 +128,7 @@ const Context = struct {
             const parameter_name = self.src.text(parameter.name);
             const aliases = generic_requirements.subjectAliases(requirement);
             var explicit: std.ArrayList([]const u8) = .empty;
+            if (parameter.default_copy) try appendUnique(self.allocator, &explicit, "copy");
             for (parameter.requirements) |span| try appendUnique(self.allocator, &explicit, self.src.text(span));
             var named: std.ArrayList(NamedRequirement) = .empty;
             for (parameter.named_requirements) |reference| {
@@ -162,19 +164,46 @@ const Context = struct {
         }
         return out;
     }
-    /// Substitute a named bound's subject binder with the consuming parameter
-    /// spelling. Only whole identifier tokens inside the bound's declaration scope
-    /// are replaced, so unrelated same-spelled names in the consumer cannot capture
-    /// the contract's subject.
+    /// Render parsed type expressions with only subject leaves substituted;
+    /// qualified concrete names, array lengths and effect syntax stay intact.
     fn typeText(self: Context, span: source.Span, aliases: []const generic_requirements.SubjectAlias, parameter_name: []const u8) Error![]const u8 {
-        const text = self.src.text(span);
-        for (aliases) |alias| {
-            if (alias.scope.start > span.start or alias.scope.end < span.end) continue;
-            const subject = self.src.text(alias.name);
-            if (std.mem.eql(u8, subject, parameter_name)) return text;
-            if (try replaceIdentifier(self.allocator, text, subject, parameter_name)) |substituted| return substituted;
+        if (aliases.len == 0) return self.src.text(span);
+        var output: std.Io.Writer.Allocating = .init(self.allocator);
+        errdefer output.deinit();
+        try self.writeType(&output.writer, span, .{ .aliases = aliases, .name = parameter_name }, 0);
+        return output.toOwnedSlice();
+    }
+    fn writeType(self: Context, writer: *std.Io.Writer, span: source.Span, subject: Subject, depth: usize) Error!void {
+        if (depth == 256) return error.InternalError; // Checked type syntax is depth-bounded.
+        if (generic_requirements.matchScope(subject.aliases, self.src, span) == .subject) {
+            writer.writeAll(subject.name) catch return error.OutOfMemory;
+            return;
         }
-        return text;
+        var at = span.start;
+        for (try self.typeChildren(span)) |child| {
+            writer.writeAll(self.src.text(.{ .start = at, .end = child.start })) catch return error.OutOfMemory;
+            try self.writeType(writer, child, subject, depth + 1);
+            at = child.end;
+        }
+        writer.writeAll(self.src.text(.{ .start = at, .end = span.end })) catch return error.OutOfMemory;
+    }
+    fn typeChildren(self: Context, span: source.Span) Error![]const source.Span {
+        const expressions = self.program.types.expressions;
+        for (expressions.applications) |application| {
+            if (std.meta.eql(application.span, span)) return application.arguments;
+        }
+        for (expressions.callbacks) |callback| {
+            if (!std.meta.eql(callback.span, span)) continue;
+            const children = try self.allocator.alloc(source.Span, callback.parameters.len + 1);
+            @memcpy(children[0..callback.parameters.len], callback.parameters);
+            children[callback.parameters.len] = callback.return_type;
+            return children;
+        }
+        for (expressions.arrays) |array| {
+            if (!std.meta.eql(array.span, span)) continue;
+            return self.allocator.dupe(source.Span, if (array.index == .enum_type) &.{ array.index.enum_type, array.element } else &.{array.element});
+        }
+        return &.{};
     }
     fn values(self: Context, parameters_: []const ast.Parameter, aliases: []const generic_requirements.SubjectAlias, parameter_name: []const u8) Error![]const Value {
         const out = try self.allocator.alloc(Value, parameters_.len);
@@ -265,51 +294,6 @@ fn explicitBuiltins(self: Context, subject: *const ast.TypeParameter) Error![]co
 fn appendUnique(allocator: std.mem.Allocator, list: *std.ArrayList([]const u8), name: []const u8) !void {
     for (list.items) |existing| if (std.mem.eql(u8, existing, name)) return;
     try list.append(allocator, name);
-}
-fn isIdentStart(byte: u8) bool {
-    return std.ascii.isAlphabetic(byte) or byte == '_';
-}
-fn isIdentContinue(byte: u8) bool {
-    return std.ascii.isAlphanumeric(byte) or byte == '_';
-}
-/// Replace whole identifier tokens equal to `needle`, returning null when absent.
-fn replaceIdentifier(allocator: std.mem.Allocator, text: []const u8, needle: []const u8, replacement: []const u8) Error!?[]const u8 {
-    var found = false;
-    var at: usize = 0;
-    while (at < text.len) {
-        if (!isIdentStart(text[at])) {
-            at += 1;
-            continue;
-        }
-        const start = at;
-        at += 1;
-        while (at < text.len and isIdentContinue(text[at])) at += 1;
-        if (std.mem.eql(u8, text[start..at], needle)) {
-            found = true;
-            break;
-        }
-    }
-    if (!found) return null;
-    var out: std.ArrayList(u8) = .empty;
-    errdefer out.deinit(allocator);
-    at = 0;
-    while (at < text.len) {
-        if (isIdentStart(text[at])) {
-            const start = at;
-            at += 1;
-            while (at < text.len and isIdentContinue(text[at])) at += 1;
-            if (std.mem.eql(u8, text[start..at], needle)) {
-                try out.appendSlice(allocator, replacement);
-                continue;
-            }
-            try out.appendSlice(allocator, text[start..at]);
-            continue;
-        }
-        try out.append(allocator, text[at]);
-        at += 1;
-    }
-    const owned = try out.toOwnedSlice(allocator);
-    return owned;
 }
 fn less(_: void, a: Template, b: Template) bool {
     return std.mem.lessThan(u8, a.name, b.name);

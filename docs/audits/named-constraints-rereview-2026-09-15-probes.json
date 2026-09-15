@@ -1,0 +1,637 @@
+{
+  "reviewed_head": "89198ff73505023a13ca851ef7f990c993cced3f",
+  "compilers": {
+    "new": {
+      "binary": "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+      "binary_sha256": "e795a8a60233e93052300030225d9525e8fc25125799a4b46b61217222a2cc30",
+      "compiler_identity": "c54d594e5ad606891c187bfaade3a9bd86270e4c62cc367361b1b74cf2d76dbf",
+      "source_commit": "89198ff73505023a13ca851ef7f990c993cced3f"
+    },
+    "old": {
+      "binary": "/tmp/named-constraints-rereview-8bh1jzus/pinned-old/bin/mylang",
+      "binary_sha256": "942c809e8290e221b755db5240ac8d6c430168b0768339d153199f290486fb83",
+      "compiler_identity": "613ae5100a14fef985077d4da4e3234d00d3b1d9f5a6825274da0607ffd9d0bc",
+      "source_commit": "da3aabfdc8df0dff364fd29828f1e72f7d9e6596"
+    }
+  },
+  "results": [
+    {
+      "name": "nominal_distinct_coalesce",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check-project",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-nominal_distinct_coalesce/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "a.my": "module a\nexport ID\nexport Has\nrecord ID:\n    value: int\nconstraint Has[T] = copy + field(value: ID)\n",
+        "b.my": "module b\nexport ID\nexport Has\nrecord ID:\n    value: int\nconstraint Has[T] = copy + field(value: ID)\n",
+        "main.my": "module main\nimport a\nimport b\nrecord Row:\n    value: a.ID\ndef accept[T: a.Has + b.Has](row: T) -> int:\n    return 0\ndef main() -> int:\n    return accept(Row(value=a.ID(value=7)))\n"
+      },
+      "exit": 1,
+      "stdout": "",
+      "stderr": "b.my:6:34: error[E_GENERIC_ARGUMENT]: type lacks a required field with the declared type\n  constraint Has[T] = copy + field(value: ID)\n                                   ^\nb.my:6:34: error[E_GENERIC_REQUIREMENT]: conflicting structural field requirement\n  constraint Has[T] = copy + field(value: ID)\n                                   ^\n  note: a.my:6:34: previous requirement is here\n",
+      "expected_success": false
+    },
+    {
+      "name": "nominal_distinct_reverse",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check-project",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-nominal_distinct_reverse/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "a.my": "module a\nexport ID\nexport Has\nrecord ID:\n    value: int\nconstraint Has[T] = copy + field(value: ID)\n",
+        "b.my": "module b\nexport ID\nexport Has\nrecord ID:\n    value: int\nconstraint Has[T] = copy + field(value: ID)\n",
+        "main.my": "module main\nimport a\nimport b\nrecord Row:\n    value: a.ID\ndef accept[T: b.Has + a.Has](row: T) -> int:\n    return 0\ndef main() -> int:\n    return accept(Row(value=a.ID(value=7)))\n"
+      },
+      "exit": 1,
+      "stdout": "",
+      "stderr": "a.my:6:34: error[E_GENERIC_REQUIREMENT]: conflicting structural field requirement\n  constraint Has[T] = copy + field(value: ID)\n                                   ^\n  note: b.my:6:34: previous requirement is here\nb.my:6:34: error[E_GENERIC_ARGUMENT]: type lacks a required field with the declared type\n  constraint Has[T] = copy + field(value: ID)\n                                   ^\n",
+      "expected_success": false
+    },
+    {
+      "name": "capture_imported_nominal",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check-project",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-capture_imported_nominal/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "contracts.my": "module contracts\nexport Token\nexport Use\nrecord Token:\n    value: int\nconstraint Use[S] = copy + op(use(s: S, token: Token) -> int effects())\n",
+        "main.my": "module main\nimport contracts\ndomain Provider: int:\n    def make() -> Provider:\n        return wrap[Provider](0)\n    def use(s: Provider, token: int) -> int effects():\n        return token\ndef call[Token, P: contracts.Use](p: P, token: Token) -> int effects():\n    return P.use(p, token)\ndef main() -> int:\n    return call(Provider.make(), 0)\n"
+      },
+      "exit": 1,
+      "stdout": "",
+      "stderr": "main.my:9:21: error[E_GENERIC_TYPE]: types differ; distinct type parameters remain distinct even with identical requirements\n      return P.use(p, token)\n                      ^\ncontracts.my:6:41: error[E_GENERIC_ARGUMENT]: operation parameter type differs from contract\n  constraint Use[S] = copy + op(use(s: S, token: Token) -> int effects())\n                                          ^\n",
+      "expected_success": false
+    },
+    {
+      "name": "capture_control_renamed",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check-project",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-capture_control_renamed/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "contracts.my": "module contracts\nexport Token\nexport Use\nrecord Token:\n    value: int\nconstraint Use[S] = copy + op(use(s: S, token: Token) -> int effects())\n",
+        "main.my": "module main\nimport contracts\ndomain Provider: int:\n    def make() -> Provider:\n        return wrap[Provider](0)\n    def use(s: Provider, token: int) -> int effects():\n        return token\ndef call[U, P: contracts.Use](p: P, token: U) -> int effects():\n    return P.use(p, token)\ndef main() -> int:\n    return call(Provider.make(), 0)\n"
+      },
+      "exit": 1,
+      "stdout": "",
+      "stderr": "main.my:9:21: error[E_GENERIC_TYPE]: types differ; distinct type parameters remain distinct even with identical requirements\n      return P.use(p, token)\n                      ^\ncontracts.my:6:41: error[E_GENERIC_ARGUMENT]: operation parameter type differs from contract\n  constraint Use[S] = copy + op(use(s: S, token: Token) -> int effects())\n                                          ^\n",
+      "expected_success": false
+    },
+    {
+      "name": "inline_subject_overlap",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-inline_subject_overlap/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "constraint Id[P] = copy + op(identity(x: P) -> P effects())\ndef forward[T: Id + op(identity(x: T) -> T effects())](x: T) -> T effects():\n    return T.identity(x)\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 0,
+      "stdout": "",
+      "stderr": "",
+      "expected_success": true
+    },
+    {
+      "name": "composite_subject_overlap",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-composite_subject_overlap/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "constraint A[P] = copy + op(identity(x: list[P]) -> int effects())\nconstraint B[Q] = copy + op(identity(x: list[Q]) -> int effects())\ndef use[T: A + B](x: T) -> int:\n    return 0\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 0,
+      "stdout": "",
+      "stderr": "",
+      "expected_success": true
+    },
+    {
+      "name": "implied_copy_single",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-implied_copy_single/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "def value[T: equality + field(value: int)](x: T) -> int:\n    return x.value\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 0,
+      "stdout": "",
+      "stderr": "",
+      "expected_success": true
+    },
+    {
+      "name": "implied_copy_module",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check-project",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-implied_copy_module/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "module main\ndef value[T: equality + field(value: int)](x: T) -> int:\n    return x.value\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 0,
+      "stdout": "",
+      "stderr": "",
+      "expected_success": true
+    },
+    {
+      "name": "named_copy_plus_field",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check-project",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-named_copy_plus_field/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "module main\nconstraint C[T] = copy\ndef value[T: C + field(value: int)](x: T) -> int:\n    return x.value\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 0,
+      "stdout": "",
+      "stderr": "",
+      "expected_success": true
+    },
+    {
+      "name": "export_wrong_module_index",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check-project",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-export_wrong_module_index/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "contracts.my": "module contracts\nexport C\nrecord One:\n    a: int\nrecord Two:\n    a: int\nrecord Three:\n    a: int\nconstraint C[T] = copy\n",
+        "main.my": "module main\nimport contracts\nexport f\ndef f[T: contracts.C](x: T) -> T:\n    return x\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 0,
+      "stdout": "",
+      "stderr": "",
+      "expected_success": true
+    },
+    {
+      "name": "export_false_private",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check-project",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-export_false_private/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "contracts.my": "module contracts\nexport C\nrecord One:\n    a: int\nconstraint C[T] = copy\n",
+        "main.my": "module main\nimport contracts\nexport f\ndef f[T: contracts.C](x: T) -> T:\n    return x\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 0,
+      "stdout": "",
+      "stderr": "",
+      "expected_success": true
+    },
+    {
+      "name": "single_duplicate",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-single_duplicate/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "constraint C[T] = copy\nconstraint C[T] = equality\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 1,
+      "stdout": "",
+      "stderr": "/tmp/named-constraints-rereview-8bh1jzus/final-single_duplicate/main.my:2:12: error[E_DUPLICATE_SYMBOL]: module declaration name is already bound\n  constraint C[T] = equality\n             ^\n  note: /tmp/named-constraints-rereview-8bh1jzus/final-single_duplicate/main.my:1:12: declaration is here\n",
+      "expected_success": false
+    },
+    {
+      "name": "single_name_collision",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-single_name_collision/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "record C:\n    value: int\nconstraint C[T] = copy\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 1,
+      "stdout": "",
+      "stderr": "/tmp/named-constraints-rereview-8bh1jzus/final-single_name_collision/main.my:3:12: error[E_DUPLICATE_SYMBOL]: module declaration name is already bound\n  constraint C[T] = copy\n             ^\n  note: /tmp/named-constraints-rereview-8bh1jzus/final-single_name_collision/main.my:1:8: declaration is here\n",
+      "expected_success": false
+    },
+    {
+      "name": "overlap_limit_single",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-overlap_limit_single/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "constraint A[T] = copy + field(f0: int) + field(f1: int) + field(f2: int) + field(f3: int) + field(f4: int) + field(f5: int) + field(f6: int) + field(f7: int)\nconstraint B[T] = copy + field(f0: int) + field(f1: int) + field(f2: int) + field(f3: int) + field(f4: int) + field(f5: int) + field(f6: int) + field(f7: int)\ndef f[T: A + B](x: T) -> int:\n    return 0\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 0,
+      "stdout": "",
+      "stderr": "",
+      "expected_success": true
+    },
+    {
+      "name": "overlap_limit_module",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check-project",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-overlap_limit_module/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "module main\nconstraint A[T] = copy + field(f0: int) + field(f1: int) + field(f2: int) + field(f3: int) + field(f4: int) + field(f5: int) + field(f6: int) + field(f7: int)\nconstraint B[T] = copy + field(f0: int) + field(f1: int) + field(f2: int) + field(f3: int) + field(f4: int) + field(f5: int) + field(f6: int) + field(f7: int)\ndef f[T: A + B](x: T) -> int:\n    return 0\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 0,
+      "stdout": "",
+      "stderr": "",
+      "expected_success": true
+    },
+    {
+      "name": "unused_result_field",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-unused_result_field/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "constraint Bad[T] = copy + field(value: Result[int, int])\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 1,
+      "stdout": "",
+      "stderr": "/tmp/named-constraints-rereview-8bh1jzus/final-unused_result_field/main.my:1:41: error[E_GENERIC_REQUIREMENT]: structural fields require a copyable field type without result obligations\n  constraint Bad[T] = copy + field(value: Result[int, int])\n                                          ^\n",
+      "expected_success": false
+    },
+    {
+      "name": "used_result_field",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-used_result_field/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "constraint Bad[T] = copy + field(value: Result[int, int])\ndef bad[T: Bad](x: T) -> int:\n    return 0\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 1,
+      "stdout": "",
+      "stderr": "/tmp/named-constraints-rereview-8bh1jzus/final-used_result_field/main.my:1:41: error[E_GENERIC_REQUIREMENT]: structural fields require a copyable field type without result obligations\n  constraint Bad[T] = copy + field(value: Result[int, int])\n                                          ^\n",
+      "expected_success": false
+    },
+    {
+      "name": "single_duplicate_used",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-single_duplicate_used/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "constraint C[T] = copy\nconstraint C[T] = integer\ndef identity[T: C](x: T) -> T:\n    return x\ndef main() -> int:\n    assert identity(True)\n    return 0\n"
+      },
+      "exit": 1,
+      "stdout": "",
+      "stderr": "/tmp/named-constraints-rereview-8bh1jzus/final-single_duplicate_used/main.my:2:12: error[E_DUPLICATE_SYMBOL]: module declaration name is already bound\n  constraint C[T] = integer\n             ^\n  note: /tmp/named-constraints-rereview-8bh1jzus/final-single_duplicate_used/main.my:1:12: declaration is here\n",
+      "expected_success": false
+    },
+    {
+      "name": "callback_inline",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-callback_inline/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "def use[P: copy + op(run(p: P, fn: def(P) -> int effects()) -> int effects())](p: P) -> int:\n    return 0\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 1,
+      "stdout": "",
+      "stderr": "/tmp/named-constraints-rereview-8bh1jzus/final-callback_inline/main.my:1:36: error[E_UNKNOWN_TYPE]: type is not declared\n  def use[P: copy + op(run(p: P, fn: def(P) -> int effects()) -> int effects())](p: P) -> int:\n                                     ^\n"
+    },
+    {
+      "name": "callback_named",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-callback_named/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "constraint Run[P] = copy + op(run(p: P, fn: def(P) -> int effects()) -> int effects())\ndef use[U: Run](p: U) -> int:\n    return 0\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 1,
+      "stdout": "",
+      "stderr": "/tmp/named-constraints-rereview-8bh1jzus/final-callback_named/main.my:1:45: error[E_UNKNOWN_TYPE]: type is not declared\n  constraint Run[P] = copy + op(run(p: P, fn: def(P) -> int effects()) -> int effects())\n                                              ^\n"
+    },
+    {
+      "name": "constant_alias_overlap",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-constant_alias_overlap/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "type Numbers = list[int]\nconstraint A[P] = copy + op(run(p: P, xs: Numbers) -> int effects())\nconstraint B[P] = copy + op(run(p: P, xs: list[int]) -> int effects())\ndef use[P: A + B](p: P) -> int:\n    return 0\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "subject_shadow_unused",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-subject_shadow_unused/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "record Item:\n    value: int\nconstraint C[Item] = copy\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "schema_default_copy",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "schema-project",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-schema_default_copy/main.my",
+        "--schema-report",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "module main\nexport identity\ndef identity[T](x: T) -> T:\n    return x\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 0,
+      "stdout": "{\"version\":\"schema-report-v1\",\"source_sha256\":\"35705cf82f3e86bc8855568791ad9b527a6da07fc7e62d7612470177857b8b9c\",\"source\":{\"version\":\"schema-source-v1\",\"entry\":\"main\",\"implementation\":{\"compiler_sha256\":\"c54d594e5ad606891c187bfaade3a9bd86270e4c62cc367361b1b74cf2d76dbf\",\"zig_version\":\"0.17.0-dev.1683+5ceec001b\",\"architecture\":\"x86_64\",\"os\":\"linux\",\"abi\":\"gnu\",\"optimize\":\"debug\"},\"sources\":[{\"module\":\"main\",\"path\":\"main.my\",\"sha256\":\"02cdbf98d016847fa24981e8cfa28d86e7cee58841ec8db22c84a403427f1339\",\"bytes\":101,\"imports\":[]}]},\"schema_sha256\":\"ee07b26e91252d5856a79ab8a55fe09a0ba16915438e24e7b60ffe1a88cb93e5\",\"schema\":{\"version\":\"language-schema-v1\",\"scope\":\"reachable-module-exports\",\"representation\":\"language-contracts-no-wire-format-or-abi\",\"entry\":\"main\",\"exports\":[],\"functions\":[],\"types\":[],\"generic_templates_version\":\"generic-templates-v2\",\"generic_templates\":[{\"name\":\"main::identity\",\"module\":\"main\",\"kind\":\"function\",\"contract\":{\"callable\":false,\"requires_explicit_instantiation\":true,\"type_resolution\":\"declaration-module-scope\",\"type_parameters\":[{\"constant_length\":false,\"name\":\"T\",\"requirements\":[],\"field_requirements\":[],\"operation_requirements\":[],\"named_requirements\":[]}],\"signature\":{\"parameters\":[{\"name\":\"x\",\"type\":\"T\"}],\"result\":\"T\"}},\"shape\":{},\"imports\":[],\"source\":{\"path\":\"main.my\",\"start\":32,\"end\":40,\"line\":3,\"column\":5,\"sha256\":\"02cdbf98d016847fa24981e8cfa28d86e7cee58841ec8db22c84a403427f1339\"}}]}}",
+      "stderr": ""
+    },
+    {
+      "name": "schema_qualified_subject",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "schema-project",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-schema_qualified_subject/main.my",
+        "--schema-report",
+        "--no-cache"
+      ],
+      "files": {
+        "types.my": "module types\nexport T\nrecord T:\n    value: int\n",
+        "contracts.my": "module contracts\nimport types\nexport C\nconstraint C[T] = copy + op(use(subject: T, value: types.T) -> int effects())\n",
+        "main.my": "module main\nimport contracts\nexport use\ndef use[P: contracts.C](p: P) -> int:\n    return 0\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 0,
+      "stdout": "{\"version\":\"schema-report-v1\",\"source_sha256\":\"5ca276143f00f6821d23bf505d4e7fa88ec6dd1234ec32de4d0224277e71ae8d\",\"source\":{\"version\":\"schema-source-v1\",\"entry\":\"main\",\"implementation\":{\"compiler_sha256\":\"c54d594e5ad606891c187bfaade3a9bd86270e4c62cc367361b1b74cf2d76dbf\",\"zig_version\":\"0.17.0-dev.1683+5ceec001b\",\"architecture\":\"x86_64\",\"os\":\"linux\",\"abi\":\"gnu\",\"optimize\":\"debug\"},\"sources\":[{\"module\":\"types\",\"path\":\"types.my\",\"sha256\":\"40acf314c492dd883234f77e4fe72280d44e4adb7ccaf736b71969aa027f34ba\",\"bytes\":47,\"imports\":[]},{\"module\":\"contracts\",\"path\":\"contracts.my\",\"sha256\":\"34f03f5355573cae5cd9ebda91e15c27ba6e332ad9376f90d2efb439ab757c9f\",\"bytes\":117,\"imports\":[{\"module\":\"types\",\"alias\":\"types\"}]},{\"module\":\"main\",\"path\":\"main.my\",\"sha256\":\"3ef8559b2a591b91622dde55bdf1f9f81a9f223f9c0803d5529a633d03356de2\",\"bytes\":123,\"imports\":[{\"module\":\"contracts\",\"alias\":\"contracts\"}]}]},\"schema_sha256\":\"eda6ec4c2107a1900fd6e6001af2327fa516a45ef2617ec3bf8a80caf8b340fd\",\"schema\":{\"version\":\"language-schema-v1\",\"scope\":\"reachable-module-exports\",\"representation\":\"language-contracts-no-wire-format-or-abi\",\"entry\":\"main\",\"exports\":[\"types::T\"],\"functions\":[],\"types\":[{\"name\":\"i64\",\"kind\":\"integer\",\"move_only\":false,\"requires_handling\":false,\"opaque\":false,\"bits\":64,\"signed\":true,\"minimum\":\"-9223372036854775808\",\"maximum\":\"9223372036854775807\"},{\"name\":\"types::T\",\"kind\":\"record\",\"move_only\":false,\"requires_handling\":false,\"opaque\":false,\"fields\":[{\"name\":\"value\",\"type\":\"i64\"}]}],\"generic_templates_version\":\"generic-templates-v2\",\"generic_templates\":[{\"name\":\"contracts::C\",\"module\":\"contracts\",\"kind\":\"constraint\",\"contract\":{\"callable\":false,\"requires_explicit_instantiation\":true,\"type_resolution\":\"declaration-module-scope\",\"type_parameters\":[],\"signature\":{},\"constraint\":{\"subject\":\"T\",\"expanded\":{\"requirements\":[\"copy\"],\"field_requirements\":[],\"operation_requirements\":[{\"name\":\"use\",\"parameters\":[{\"name\":\"subject\",\"type\":\"T\"},{\"name\":\"value\",\"type\":\"types.T\"}],\"result\":\"int\",\"declared_effects\":[]}]}}},\"shape\":{},\"imports\":[{\"module\":\"types\",\"alias\":\"types\"}],\"source\":{\"path\":\"contracts.my\",\"start\":50,\"end\":51,\"line\":4,\"column\":12,\"sha256\":\"34f03f5355573cae5cd9ebda91e15c27ba6e332ad9376f90d2efb439ab757c9f\"}},{\"name\":\"main::use\",\"module\":\"main\",\"kind\":\"function\",\"contract\":{\"callable\":false,\"requires_explicit_instantiation\":true,\"type_resolution\":\"declaration-module-scope\",\"type_parameters\":[{\"constant_length\":false,\"name\":\"P\",\"requirements\":[\"copy\"],\"field_requirements\":[],\"operation_requirements\":[{\"name\":\"use\",\"parameters\":[{\"name\":\"subject\",\"type\":\"P\"},{\"name\":\"value\",\"type\":\"types.P\"}],\"result\":\"int\",\"declared_effects\":[]}],\"named_requirements\":[{\"name\":\"contracts.C\",\"module\":\"contracts\",\"expanded\":{\"requirements\":[\"copy\"],\"field_requirements\":[],\"operation_requirements\":[{\"name\":\"use\",\"parameters\":[{\"name\":\"subject\",\"type\":\"P\"},{\"name\":\"value\",\"type\":\"types.P\"}],\"result\":\"int\",\"declared_effects\":[]}]}}]}],\"signature\":{\"parameters\":[{\"name\":\"p\",\"type\":\"P\"}],\"result\":\"int\"}},\"shape\":{},\"imports\":[{\"module\":\"contracts\",\"alias\":\"contracts\"}],\"source\":{\"path\":\"main.my\",\"start\":44,\"end\":47,\"line\":4,\"column\":5,\"sha256\":\"3ef8559b2a591b91622dde55bdf1f9f81a9f223f9c0803d5529a633d03356de2\"}}]}}",
+      "stderr": ""
+    },
+    {
+      "name": "schema_foreign_scope",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "schema-project",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-schema_foreign_scope/main.my",
+        "--schema-report",
+        "--no-cache"
+      ],
+      "files": {
+        "contracts.my": "module contracts\nexport ID\nexport C\nrecord ID:\n    value: int\nconstraint C[T] = copy + op(use(subject: T, value: ID) -> int effects())\n",
+        "main.my": "module main\nimport contracts\nexport use\ndef use[P: contracts.C](p: P) -> int:\n    return 0\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 0,
+      "stdout": "{\"version\":\"schema-report-v1\",\"source_sha256\":\"a74027483593a50d5332b3c0f6bb929ca9d3f4c9c5d0aa7d1e010332bbfc08b6\",\"source\":{\"version\":\"schema-source-v1\",\"entry\":\"main\",\"implementation\":{\"compiler_sha256\":\"c54d594e5ad606891c187bfaade3a9bd86270e4c62cc367361b1b74cf2d76dbf\",\"zig_version\":\"0.17.0-dev.1683+5ceec001b\",\"architecture\":\"x86_64\",\"os\":\"linux\",\"abi\":\"gnu\",\"optimize\":\"debug\"},\"sources\":[{\"module\":\"contracts\",\"path\":\"contracts.my\",\"sha256\":\"efd8e98f267c93b531f6dd7dde102bb9b12732828a913de0c0b155660125bbe1\",\"bytes\":135,\"imports\":[]},{\"module\":\"main\",\"path\":\"main.my\",\"sha256\":\"3ef8559b2a591b91622dde55bdf1f9f81a9f223f9c0803d5529a633d03356de2\",\"bytes\":123,\"imports\":[{\"module\":\"contracts\",\"alias\":\"contracts\"}]}]},\"schema_sha256\":\"60a27150ca2d52f857de27219b404231ae7d5d62519ffe2f0659df9c32986338\",\"schema\":{\"version\":\"language-schema-v1\",\"scope\":\"reachable-module-exports\",\"representation\":\"language-contracts-no-wire-format-or-abi\",\"entry\":\"main\",\"exports\":[\"contracts::ID\"],\"functions\":[],\"types\":[{\"name\":\"contracts::ID\",\"kind\":\"record\",\"move_only\":false,\"requires_handling\":false,\"opaque\":false,\"fields\":[{\"name\":\"value\",\"type\":\"i64\"}]},{\"name\":\"i64\",\"kind\":\"integer\",\"move_only\":false,\"requires_handling\":false,\"opaque\":false,\"bits\":64,\"signed\":true,\"minimum\":\"-9223372036854775808\",\"maximum\":\"9223372036854775807\"}],\"generic_templates_version\":\"generic-templates-v2\",\"generic_templates\":[{\"name\":\"contracts::C\",\"module\":\"contracts\",\"kind\":\"constraint\",\"contract\":{\"callable\":false,\"requires_explicit_instantiation\":true,\"type_resolution\":\"declaration-module-scope\",\"type_parameters\":[],\"signature\":{},\"constraint\":{\"subject\":\"T\",\"expanded\":{\"requirements\":[\"copy\"],\"field_requirements\":[],\"operation_requirements\":[{\"name\":\"use\",\"parameters\":[{\"name\":\"subject\",\"type\":\"T\"},{\"name\":\"value\",\"type\":\"ID\"}],\"result\":\"int\",\"declared_effects\":[]}]}}},\"shape\":{},\"imports\":[],\"source\":{\"path\":\"contracts.my\",\"start\":73,\"end\":74,\"line\":6,\"column\":12,\"sha256\":\"efd8e98f267c93b531f6dd7dde102bb9b12732828a913de0c0b155660125bbe1\"}},{\"name\":\"main::use\",\"module\":\"main\",\"kind\":\"function\",\"contract\":{\"callable\":false,\"requires_explicit_instantiation\":true,\"type_resolution\":\"declaration-module-scope\",\"type_parameters\":[{\"constant_length\":false,\"name\":\"P\",\"requirements\":[\"copy\"],\"field_requirements\":[],\"operation_requirements\":[{\"name\":\"use\",\"parameters\":[{\"name\":\"subject\",\"type\":\"P\"},{\"name\":\"value\",\"type\":\"ID\"}],\"result\":\"int\",\"declared_effects\":[]}],\"named_requirements\":[{\"name\":\"contracts.C\",\"module\":\"contracts\",\"expanded\":{\"requirements\":[\"copy\"],\"field_requirements\":[],\"operation_requirements\":[{\"name\":\"use\",\"parameters\":[{\"name\":\"subject\",\"type\":\"P\"},{\"name\":\"value\",\"type\":\"ID\"}],\"result\":\"int\",\"declared_effects\":[]}]}}]}],\"signature\":{\"parameters\":[{\"name\":\"p\",\"type\":\"P\"}],\"result\":\"int\"}},\"shape\":{},\"imports\":[{\"module\":\"contracts\",\"alias\":\"contracts\"}],\"source\":{\"path\":\"main.my\",\"start\":44,\"end\":47,\"line\":4,\"column\":5,\"sha256\":\"3ef8559b2a591b91622dde55bdf1f9f81a9f223f9c0803d5529a633d03356de2\"}}]}}",
+      "stderr": ""
+    },
+    {
+      "name": "subject_shadow_module",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check-project",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-subject_shadow_module/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "module main\nrecord Item:\n    value: int\nconstraint C[Item] = copy\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 1,
+      "stdout": "",
+      "stderr": "main.my:4:14: error[E_SHADOWING]: type parameter shadows a module declaration\n  constraint C[Item] = copy\n               ^\nmain.my:2:8: note: related module/import declaration\n"
+    },
+    {
+      "name": "callback_native",
+      "compiler": "old",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-old/bin/mylang",
+        "run",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-callback_native/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "domain Worker: int:\n    def make() -> Worker:\n        return wrap[Worker](42)\n    def apply(worker: Worker, callback: def(Worker) -> int effects()) -> int effects():\n        return callback(worker)\n    def read(worker: Worker) -> int effects():\n        return unwrap(worker)\ndef get[P: copy + op(apply(worker: P, callback: def(P) -> int effects()) -> int effects())](worker: P, callback: def(P) -> int effects()) -> int effects():\n    return P.apply(worker, callback)\ndef read_worker(worker: Worker) -> int effects():\n    return Worker.read(worker)\ndef main() -> int:\n    assert get(Worker.make(), read_worker) == 42\n    return 0\n"
+      },
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "callback_native",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "run",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-callback_native/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "domain Worker: int:\n    def make() -> Worker:\n        return wrap[Worker](42)\n    def apply(worker: Worker, callback: def(Worker) -> int effects()) -> int effects():\n        return callback(worker)\n    def read(worker: Worker) -> int effects():\n        return unwrap(worker)\ndef get[P: copy + op(apply(worker: P, callback: def(P) -> int effects()) -> int effects())](worker: P, callback: def(P) -> int effects()) -> int effects():\n    return P.apply(worker, callback)\ndef read_worker(worker: Worker) -> int effects():\n    return Worker.read(worker)\ndef main() -> int:\n    assert get(Worker.make(), read_worker) == 42\n    return 0\n"
+      },
+      "exit": 1,
+      "stdout": "",
+      "stderr": "/tmp/named-constraints-rereview-8bh1jzus/final-callback_native/main.my:8:49: error[E_UNKNOWN_TYPE]: type is not declared\n  def get[P: copy + op(apply(worker: P, callback: def(P) -> int effects()) -> int effects())](worker: P, callback: def(P) -> int effects()) -> int effects():\n                                                  ^\n"
+    },
+    {
+      "name": "callback_inline",
+      "compiler": "old",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-old/bin/mylang",
+        "check",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-callback_inline/main.my",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "def use[P: copy + op(run(p: P, fn: def(P) -> int effects()) -> int effects())](p: P) -> int:\n    return 0\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "schema_default_copy",
+      "compiler": "old",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-old/bin/mylang",
+        "schema-project",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-schema_default_copy/main.my",
+        "--schema-report",
+        "--no-cache"
+      ],
+      "files": {
+        "main.my": "module main\nexport identity\ndef identity[T](x: T) -> T:\n    return x\ndef main() -> int:\n    return 0\n"
+      },
+      "exit": 0,
+      "stdout": "{\"version\":\"schema-report-v1\",\"source_sha256\":\"2263e7d6ecc790c1ad06243a7be7406b123fea088c4753832db3c246d67ad3c4\",\"source\":{\"version\":\"schema-source-v1\",\"entry\":\"main\",\"implementation\":{\"compiler_sha256\":\"613ae5100a14fef985077d4da4e3234d00d3b1d9f5a6825274da0607ffd9d0bc\",\"zig_version\":\"0.17.0-dev.1683+5ceec001b\",\"architecture\":\"x86_64\",\"os\":\"linux\",\"abi\":\"gnu\",\"optimize\":\"debug\"},\"sources\":[{\"module\":\"main\",\"path\":\"main.my\",\"sha256\":\"02cdbf98d016847fa24981e8cfa28d86e7cee58841ec8db22c84a403427f1339\",\"bytes\":101,\"imports\":[]}]},\"schema_sha256\":\"3a7f23dfdc5c6f7f16d2557db01101654d09731d8ed15ad11a52c731896afa2b\",\"schema\":{\"version\":\"language-schema-v1\",\"scope\":\"reachable-module-exports\",\"representation\":\"language-contracts-no-wire-format-or-abi\",\"entry\":\"main\",\"exports\":[],\"functions\":[],\"types\":[],\"generic_templates_version\":\"generic-templates-v1\",\"generic_templates\":[{\"name\":\"main::identity\",\"module\":\"main\",\"kind\":\"function\",\"contract\":{\"callable\":false,\"requires_explicit_instantiation\":true,\"type_resolution\":\"declaration-module-scope\",\"type_parameters\":[{\"constant_length\":false,\"name\":\"T\",\"requirements\":[\"copy\"],\"field_requirements\":[],\"operation_requirements\":[]}],\"signature\":{\"parameters\":[{\"name\":\"x\",\"type\":\"T\"}],\"result\":\"T\"}},\"shape\":{},\"imports\":[],\"source\":{\"path\":\"main.my\",\"start\":32,\"end\":40,\"line\":3,\"column\":5,\"sha256\":\"02cdbf98d016847fa24981e8cfa28d86e7cee58841ec8db22c84a403427f1339\"}}]}}",
+      "stderr": ""
+    },
+    {
+      "name": "acceptance_main.my",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang/examples/named-constraints/main.my",
+        "--no-cache"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "acceptance_fake_tests.my",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang/examples/named-constraints/fake_tests.my",
+        "--filter",
+        "test_checkout",
+        "--force",
+        "--cache-dir",
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-test-cache"
+      ],
+      "exit": 0,
+      "stdout": "passed fake_tests::test_checkout\n1 passed, 0 cached, 0 failed, 0 skipped\n",
+      "stderr": ""
+    }
+  ],
+  "cache_results": [
+    {
+      "name": "old-cold",
+      "compiler": "old",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-old/bin/mylang",
+        "check-project",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-nominal_distinct_coalesce/main.my",
+        "--report"
+      ],
+      "environment": {
+        "MYLANG_FRONTEND_CACHE": "/tmp/named-constraints-rereview-8bh1jzus/pinned-compiler-change-cache"
+      },
+      "exit": 0,
+      "stdout": "",
+      "stderr": "main.my:6:30: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def accept[T: a.Has + b.Has](row: T) -> int:\n                               ^\n{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":3,\"syntax_stored\":3,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":1921}\n"
+    },
+    {
+      "name": "old-warm",
+      "compiler": "old",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-old/bin/mylang",
+        "check-project",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-nominal_distinct_coalesce/main.my",
+        "--report"
+      ],
+      "environment": {
+        "MYLANG_FRONTEND_CACHE": "/tmp/named-constraints-rereview-8bh1jzus/pinned-compiler-change-cache"
+      },
+      "exit": 0,
+      "stdout": "",
+      "stderr": "main.my:6:30: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def accept[T: a.Has + b.Has](row: T) -> int:\n                               ^\n{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":0,\"syntax_stored\":0,\"verdict_hits\":1,\"verdict_misses\":0,\"verdict_stored\":0,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":0}\n"
+    },
+    {
+      "name": "new-cached",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check-project",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-nominal_distinct_coalesce/main.my",
+        "--report"
+      ],
+      "environment": {
+        "MYLANG_FRONTEND_CACHE": "/tmp/named-constraints-rereview-8bh1jzus/pinned-compiler-change-cache"
+      },
+      "exit": 1,
+      "stdout": "",
+      "stderr": "b.my:6:34: error[E_GENERIC_ARGUMENT]: type lacks a required field with the declared type\n  constraint Has[T] = copy + field(value: ID)\n                                   ^\nb.my:6:34: error[E_GENERIC_REQUIREMENT]: conflicting structural field requirement\n  constraint Has[T] = copy + field(value: ID)\n                                   ^\n  note: a.my:6:34: previous requirement is here\n{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":3,\"syntax_stored\":3,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":0,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":1642,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":0},\"lex_parse\":{\"hits\":0,\"misses\":3},\"collect_declarations\":{\"hits\":0,\"misses\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1},\"check_body\":{\"hits\":0,\"misses\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":0},\"lower_function\":{\"hits\":0,\"misses\":0},\"emit_fragment\":{\"hits\":0,\"misses\":0},\"link\":{\"hits\":0,\"misses\":0}}}\n"
+    },
+    {
+      "name": "new-fresh",
+      "compiler": "new",
+      "command": [
+        "/tmp/named-constraints-rereview-8bh1jzus/pinned-new/bin/mylang",
+        "check-project",
+        "/tmp/named-constraints-rereview-8bh1jzus/final-nominal_distinct_coalesce/main.my",
+        "--report",
+        "--no-cache"
+      ],
+      "environment": {
+        "MYLANG_FRONTEND_CACHE": "/tmp/named-constraints-rereview-8bh1jzus/pinned-compiler-change-cache"
+      },
+      "exit": 1,
+      "stdout": "",
+      "stderr": "b.my:6:34: error[E_GENERIC_ARGUMENT]: type lacks a required field with the declared type\n  constraint Has[T] = copy + field(value: ID)\n                                   ^\nb.my:6:34: error[E_GENERIC_REQUIREMENT]: conflicting structural field requirement\n  constraint Has[T] = copy + field(value: ID)\n                                   ^\n  note: a.my:6:34: previous requirement is here\n"
+    }
+  ],
+  "review_date": "2026-09-15",
+  "notes": [
+    "Review only; no compiler source changes.",
+    "Each probe containing files can be recreated by writing its file map into an empty directory and invoking the recorded command with a current compiler and that directory/main.my.",
+    "Absolute executable and fixture paths identify the actual review run; replace these paths when replaying elsewhere.",
+    "Original probes include expected_success after the fixes; additional probes record observed behavior and are explained in the companion Markdown report.",
+    "The full unit, CLI, documentation, formatting, and Guardian gates were not rerun during this review."
+  ]
+}

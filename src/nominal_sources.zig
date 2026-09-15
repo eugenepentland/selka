@@ -93,6 +93,10 @@ fn checkStandaloneConstraintNamespace(allocator: std.mem.Allocator, src: source.
     try addStandaloneAliases(allocator, src, program, &names, sink);
     try addStandaloneConstraints(allocator, src, program, &names, sink);
     try addStandaloneFunctions(allocator, src, program, &names, sink);
+    for (program.types.constraints) |constraint| {
+        const subject = constraint.subject.name;
+        if (names.get(src.text(subject))) |declaration| return sink.failRelated(diagnostic.shadowing, subject, "type parameter shadows a top-level declaration", .{ .span = declaration.span, .message = "declaration is here" });
+    }
 }
 /// Resolve every concrete application/array before body checking, deferring only declared variables.
 pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, index: *templates.Index, graph: *layouts.Graph, sink: *diagnostic.Sink) diagnostic.Error!Sources {

@@ -645,3 +645,64 @@ test "named constraints normalizeOne and canonicalOperation coalesce valid decla
         \\    return f[Box](Box(value=3))
     , 3);
 }
+
+// spec: NAMED-CONSTRAINT-CALLBACK-1
+test "named constraints normalize callbacks and forward to inline operations natively" {
+    try run(
+        \\constraint Run[P] = copy + op(apply(worker: P, callback: def(P) -> int effects()) -> int effects())
+        \\domain Worker: int:
+        \\    def make() -> Worker:
+        \\        return wrap[Worker](42)
+        \\    def apply(worker: Worker, callback: def(Worker) -> int effects()) -> int effects():
+        \\        return callback(worker)
+        \\    def read(worker: Worker) -> int effects():
+        \\        return unwrap(worker)
+        \\def get[P: copy + op(apply(worker: P, callback: def(P) -> int effects()) -> int effects())](worker: P, callback: def(P) -> int effects()) -> int effects():
+        \\    return P.apply(worker, callback)
+        \\def forward[Q: Run](worker: Q, callback: def(Q) -> int effects()) -> int effects():
+        \\    return get(worker, callback)
+        \\def read_worker(worker: Worker) -> int effects():
+        \\    return Worker.read(worker)
+        \\def main() -> int:
+        \\    return forward(Worker.make(), read_worker)
+    , 42);
+}
+
+// spec-case: NAMED-CONSTRAINT-CALLBACK-1
+test "named constraints coalesce nested callbacks results and concrete callback aliases" {
+    try run(
+        \\type Reader = def(int) -> int effects()
+        \\constraint A[P] = copy + op(make(p: P, callback: def([2]P) -> list[P] effects()) -> def(P) -> P effects(output) effects())
+        \\constraint B[Q] = copy + op(make(p: Q, callback: def([2]Q) -> list[Q] effects()) -> def(Q) -> Q effects(output) effects())
+        \\constraint C[T] = copy + op(read(p: T, reader: Reader) -> int effects())
+        \\constraint D[T] = copy + op(read(p: T, reader: def(int) -> int effects()) -> int effects())
+        \\def unused[T: A + B + op(make(p: T, callback: def([2]T) -> list[T] effects()) -> def(T) -> T effects(output) effects())](p: T) -> int:
+        \\    return 0
+        \\def concrete[T: C + D](p: T) -> int:
+        \\    return 0
+        \\def main() -> int:
+        \\    return 0
+    , 0);
+}
+
+// spec-case: NAMED-CONSTRAINT-CALLBACK-1
+test "named constraints reject conflicting callback parameters results and effects" {
+    try reject(
+        \\constraint A[P] = copy + op(run(p: P, fn: def(P) -> int effects()) -> int effects())
+        \\constraint B[Q] = copy + op(run(p: Q, fn: def(int) -> int effects()) -> int effects())
+        \\def use[T: A + B](p: T) -> int:
+        \\    return 0
+    , "E_GENERIC_REQUIREMENT");
+    try reject(
+        \\constraint A[P] = copy + op(run(p: P) -> def(P) -> P effects() effects())
+        \\constraint B[Q] = copy + op(run(p: Q) -> def(Q) -> int effects() effects())
+        \\def use[T: A + B](p: T) -> int:
+        \\    return 0
+    , "E_GENERIC_REQUIREMENT");
+    try reject(
+        \\constraint A[P] = copy + op(run(p: P, fn: def(P) -> int effects()) -> int effects())
+        \\constraint B[Q] = copy + op(run(p: Q, fn: def(Q) -> int effects(output)) -> int effects())
+        \\def use[T: A + B](p: T) -> int:
+        \\    return 0
+    , "E_GENERIC_REQUIREMENT");
+}
