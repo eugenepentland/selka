@@ -28,13 +28,15 @@ pub const default_max_bytes: usize = 128 * 1024 * 1024;
 /// Default per-project cache directory for one-shot commands.
 pub const default_directory = ".mylang-cache/frontend";
 
-/// Parsed-syntax observations, including entries rejected as damaged.
+/// Parsed-syntax observations from the lookup execution site: a `hit` actually
+/// returned stored syntax, a `miss` fell through to a real lex/parse.
 pub const SyntaxCounters = struct {
     hits: usize = 0,
     misses: usize = 0,
     stored: usize = 0,
 };
-/// Successful whole-program verdict observations.
+/// Successful whole-program verdict observations from the lookup site: a `hit`
+/// actually replayed stored warnings.
 pub const VerdictCounters = struct {
     hits: usize = 0,
     misses: usize = 0,

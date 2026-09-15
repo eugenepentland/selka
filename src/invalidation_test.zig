@@ -379,3 +379,99 @@ test "invalidation render emits all stages in order with the version" {
         try t.expectEqualStrings(@tagName(expected[index]), query.object.get("stage").?.string);
     }
 }
+
+fn workNumber(object: std.json.Value, name: []const u8, field: []const u8) usize {
+    const stage = object.object.get(name).?.object;
+    return @intCast(stage.get(field).?.integer);
+}
+
+// spec-case: INVALIDATION-EXECUTION-1
+test "work report separates fingerprint equality from reuse and marks skipped stages" {
+    var work: invalidation.Work = .{ .command = "check-project", .fingerprint_unchanged = true };
+    work.set(.parsed_modules, 2, 0);
+    work.set(.checked_bodies, 5, 0);
+    work.addBypass("cache-disabled", 1);
+    work.session = work.stages;
+
+    const rendered = try invalidation.renderWork(t.allocator, work);
+    defer t.allocator.free(rendered);
+    var parsed = try std.json.parseFromSlice(std.json.Value, t.allocator, rendered, .{});
+    defer parsed.deinit();
+    const root = parsed.value;
+    try t.expectEqualStrings("work-report-v1", root.object.get("version").?.string);
+    try t.expect(root.object.get("fingerprint_unchanged").?.bool);
+    try t.expect(!root.object.get("reused").?.bool);
+    try t.expectEqual(@as(usize, 2), workNumber(root, "parsed_modules", "performed"));
+    try t.expectEqualStrings("miss", root.object.get("parsed_modules").?.object.get("status").?.string);
+    try t.expectEqual(@as(usize, 5), workNumber(root, "checked_bodies", "performed"));
+    try t.expectEqualStrings("miss", root.object.get("checked_bodies").?.object.get("status").?.string);
+    for ([_][]const u8{ "lowered_functions", "emitted_fragments", "links", "executed_tests" }) |name| {
+        try t.expectEqualStrings("skipped", root.object.get(name).?.object.get("status").?.string);
+        try t.expectEqual(@as(usize, 0), workNumber(root, name, "performed"));
+        try t.expectEqual(@as(usize, 0), workNumber(root, name, "reused"));
+    }
+    const session = root.object.get("session").?.object;
+    try t.expectEqual(@as(usize, 2), @as(usize, @intCast(session.get("parsed_modules").?.object.get("performed").?.integer)));
+    const bypass = root.object.get("bypassed").?.array.items[0].object;
+    try t.expectEqualStrings("cache-disabled", bypass.get("reason").?.string);
+    try t.expectEqual(@as(i64, 1), bypass.get("count").?.integer);
+}
+
+// spec-case: INVALIDATION-EXECUTION-1
+test "work report counts observed reuse as a hit rather than as fresh work" {
+    var work: invalidation.Work = .{ .command = "run-project" };
+    work.set(.parsed_modules, 0, 3);
+    work.set(.checked_bodies, 0, 4);
+    work.set(.lowered_functions, 4, 0);
+    work.set(.emitted_fragments, 4, 0);
+    work.set(.links, 1, 0);
+
+    const rendered = try invalidation.renderWork(t.allocator, work);
+    defer t.allocator.free(rendered);
+    var parsed = try std.json.parseFromSlice(std.json.Value, t.allocator, rendered, .{});
+    defer parsed.deinit();
+    const root = parsed.value;
+    try t.expect(root.object.get("reused").?.bool);
+    try t.expectEqualStrings("hit", root.object.get("parsed_modules").?.object.get("status").?.string);
+    try t.expectEqualStrings("hit", root.object.get("checked_bodies").?.object.get("status").?.string);
+    try t.expectEqualStrings("miss", root.object.get("lowered_functions").?.object.get("status").?.string);
+    try t.expectEqual(@as(usize, 4), workNumber(root, "lowered_functions", "performed"));
+    try t.expectEqual(@as(usize, 1), workNumber(root, "links", "performed"));
+    // A one-shot process reports the same counters as its session totals.
+    const session = root.object.get("session").?.object;
+    try t.expectEqual(@as(usize, 3), @as(usize, @intCast(session.get("parsed_modules").?.object.get("reused").?.integer)));
+    try t.expectEqual(@as(usize, 4), @as(usize, @intCast(session.get("checked_bodies").?.object.get("reused").?.integer)));
+}
+
+// spec-case: INVALIDATION-EXECUTION-1
+test "work report session totals are the sum of request deltas" {
+    var first: invalidation.Work = .{ .command = "check-project" };
+    first.set(.parsed_modules, 3, 0);
+    first.set(.checked_bodies, 5, 0);
+    const first_summary = invalidation.summarize(first);
+    try t.expectEqual(@as(usize, 3), first_summary.request.parsed_modules.performed);
+    try t.expectEqual(@as(usize, 3), first_summary.session.parsed_modules.performed);
+
+    var second: invalidation.Work = .{ .command = "check-project" };
+    second.set(.parsed_modules, 1, 2);
+    second.set(.checked_bodies, 0, 5);
+    second.session = .{
+        .{ .performed = 4, .reused = 2, .executed = true },
+        .{ .performed = 5, .reused = 5, .executed = true },
+        .{},
+        .{},
+        .{},
+        .{},
+        .{},
+    };
+    const second_summary = invalidation.summarize(second);
+    try t.expectEqual(@as(usize, 1), second_summary.request.parsed_modules.performed);
+    try t.expectEqual(@as(usize, 2), second_summary.request.parsed_modules.reused);
+    try t.expectEqual(@as(usize, 4), second_summary.session.parsed_modules.performed);
+    try t.expectEqual(@as(usize, 5), second_summary.session.checked_bodies.reused);
+    // The request is exactly the cumulative-session delta for the same stage.
+    try t.expectEqual(
+        second_summary.session.parsed_modules.performed - first_summary.session.parsed_modules.performed,
+        second_summary.request.parsed_modules.performed,
+    );
+}
