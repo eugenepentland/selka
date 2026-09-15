@@ -3,6 +3,67 @@ const std = @import("std");
 const fs = @import("qbe_build_io.zig");
 /// Cache and native tool failures.
 pub const Error = fs.Error || error{EmptyNativeObject};
+/// Wave-3 contract mirrored for the native-build module.
+///
+/// The canonical `cache_key.Contract` lives in the `mylang` module. A Zig file
+/// may not belong to two modules, and the native-build module deliberately does
+/// not import `mylang`, so this shadow keeps the object cache's key dimensions
+/// without crossing that boundary. `fingerprintHex` is byte-for-byte the
+/// same domain-separated encoding as `cache_key.Contract`; the invalidation
+/// matrix cross-checks the two defaults so they cannot drift silently.
+pub const Contract = struct {
+    bootstrap_language: []const u8,
+    target: []const u8,
+    runtime_abi: []const u8,
+    effects: []const u8,
+    flags: []const u8,
+    compiler_identity: []const u8,
+
+    /// Conservative default matching `cache_key.Contract.default`.
+    pub const default: Contract = .{
+        .bootstrap_language = "bootstrap-v1",
+        .target = "native",
+        .runtime_abi = "runtime-abi-v0-unfrozen",
+        .effects = "effects-v1",
+        .flags = "",
+        .compiler_identity = "",
+    };
+
+    /// Allocate the lowercase hex SHA-256 of the canonical contract encoding.
+    pub fn fingerprint(self: Contract, allocator: std.mem.Allocator) error{OutOfMemory}![]const u8 {
+        var hex: [64]u8 = undefined;
+        self.fingerprintHex(&hex);
+        return allocator.dupe(u8, &hex) catch error.OutOfMemory;
+    }
+
+    /// Allocation-free hex fingerprint; identical encoding to the canonical cache key.
+    // twin-drift-ok: the native-build module cannot import the `mylang` module's
+    // cache_key.zig (a file may belong to only one Zig module), so this shadow
+    // deliberately duplicates the encoding; the invalidation matrix cross-checks
+    // both defaults so they cannot silently diverge.
+    pub fn fingerprintHex(self: Contract, out: *[64]u8) void {
+        var hash = std.crypto.hash.sha2.Sha256.init(.{});
+        hash.update("mylang-cache-contract-v1");
+        frame(&hash, self.bootstrap_language);
+        frame(&hash, self.target);
+        frame(&hash, self.runtime_abi);
+        frame(&hash, self.effects);
+        frame(&hash, self.flags);
+        frame(&hash, self.compiler_identity);
+        var digest: [32]u8 = undefined;
+        hash.final(&digest);
+        const hex = std.fmt.bytesToHex(digest, .lower);
+        @memcpy(out, &hex);
+    }
+};
+
+fn frame(hash: *std.crypto.hash.sha2.Sha256, bytes: []const u8) void {
+    var length: [8]u8 = undefined;
+    std.mem.writeInt(u64, &length, bytes.len, .little);
+    hash.update(&length);
+    hash.update(bytes);
+}
+
 /// Native compilation tools and invocation-local runtime source directory.
 pub const Cache = struct {
     context: fs.Context,
@@ -13,6 +74,10 @@ pub const Cache = struct {
     zig: []const u8,
     qbe: []const u8,
     mode: []const u8,
+    /// Full Wave-3 contract; its fingerprint is part of every object key so a
+    /// bootstrap-language, target, runtime-ABI, effects, flags or compiler change
+    /// can never reuse an incompatible native object.
+    contract: Contract = .default,
     /// Cache hits are accepted only when their independent checksum matches.
     pub fn object(self: Cache, kind: []const u8, input: []const u8, flavor: Flavor) Error!Object {
         const key = try self.identity(kind, input);
@@ -71,7 +136,8 @@ pub const Cache = struct {
         return argv.items;
     }
     fn identity(self: Cache, kind: []const u8, input: []const u8) Error![]const u8 {
-        const encoded = try std.json.Stringify.valueAlloc(self.context.allocator, .{ self.environment, kind, input }, .{});
+        const contract = try self.contract.fingerprint(self.context.allocator);
+        const encoded = try std.json.Stringify.valueAlloc(self.context.allocator, .{ self.environment, contract, kind, input }, .{});
         return fs.hash(self.context.allocator, encoded);
     }
     fn entry(self: Cache, key: []const u8, extension: []const u8) Error![]const u8 {
@@ -160,4 +226,22 @@ test "the runtime units merge in one build-obj invocation naming every source" {
     try std.testing.expect(std.mem.indexOf(u8, joined, "/assets/native_heap.c") != null);
     try std.testing.expect(std.mem.indexOf(u8, joined, "-O2") != null);
     try std.testing.expectEqualStrings("-femit-bin=/tmp/out.o", argv[argv.len - 1]);
+}
+
+test "qbe object cache identity folds the wave 3 contract dimensions" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const cache: Cache = .{ .context = context, .directory = "objects", .temporary = "work", .assets = "/assets", .environment = "env", .zig = "/zig", .qbe = "/qbe", .mode = "ReleaseFast" };
+    const base = try cache.identity("qbe", "unit");
+    defer context.allocator.free(base);
+    const repeat = try cache.identity("qbe", "unit");
+    defer context.allocator.free(repeat);
+    try std.testing.expectEqualStrings(base, repeat);
+    var changed = cache;
+    changed.contract.runtime_abi = "runtime-abi-v1";
+    const other = try changed.identity("qbe", "unit");
+    defer context.allocator.free(other);
+    try std.testing.expect(!std.mem.eql(u8, base, other));
 }

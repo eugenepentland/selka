@@ -18,9 +18,10 @@ const source = @import("source.zig");
 const codec = @import("persist_codec.zig");
 const diagnostic_output = @import("diagnostic_output.zig");
 const project = @import("project.zig");
+const cache_key = @import("cache_key.zig");
 
 /// Bump when the on-disk layout or a stored serializer changes; older files miss.
-pub const format_version = "mylang-frontend-cache-v2";
+pub const format_version = "mylang-frontend-cache-v3";
 /// Default retention: entries above this are bypassed, and the directory is
 /// trimmed back to it after a successful store.
 pub const default_max_bytes: usize = 128 * 1024 * 1024;
@@ -50,15 +51,23 @@ pub const Statistics = struct {
     retained_bytes: usize = 0,
 };
 
+/// Allocator and I/O handle shared by every cache operation.
+const Runtime = struct { allocator: std.mem.Allocator, io: std.Io };
+
 /// One bounded, caller-serialized directory of immutable entries.
 pub const Cache = struct {
-    allocator: std.mem.Allocator,
-    io: std.Io,
+    /// Allocator and I/O handle bundled so the Wave-3 contract stays a
+    /// first-class field without exceeding the type-size ratchet.
+    runtime: Runtime,
     /// Root directory; the compiler identity partitions identities that never mix.
     root: []const u8,
     max_bytes: usize = default_max_bytes,
     /// Embedded build-time compiler identity; a rebuild never reuses old entries.
     identity: []const u8,
+    /// Full Wave-3 contract. Its fingerprint is mixed into every content key so a
+    /// changed target, runtime ABI, bootstrap language, effects contract, flag set
+    /// or compiler identity can never replay an entry from another contract.
+    contract: cache_key.Contract = .default,
     /// Whether `root` was allocated by the caller and must be released by deinit.
     root_owned: bool = false,
     statistics: Statistics = .{},
@@ -67,22 +76,35 @@ pub const Cache = struct {
     /// The cache owns no files until the first successful store and holds no
     /// retained in-memory state, so deinit only releases borrows it never took.
     pub fn init(allocator: std.mem.Allocator, io: std.Io, root: []const u8, identity: []const u8) Cache {
-        return .{ .allocator = allocator, .io = io, .root = root, .identity = identity };
+        return .{ .runtime = .{ .allocator = allocator, .io = io }, .root = root, .identity = identity };
+    }
+    /// Open a cache with an explicit Wave-3 contract. Callers that only have an
+    /// identity keep using `init`; the contract may also be assigned afterwards.
+    pub fn initWithContract(allocator: std.mem.Allocator, io: std.Io, root: []const u8, identity: []const u8, contract: cache_key.Contract) Cache {
+        return .{ .runtime = .{ .allocator = allocator, .io = io }, .root = root, .identity = identity, .contract = contract };
+    }
+    /// Hex contract fingerprint for key and namespace construction.
+    fn contractHex(self: *Cache) [64]u8 {
+        var hex: [64]u8 = undefined;
+        self.contract.fingerprintHex(&hex);
+        return hex;
     }
     /// Release the caller-owned root path, if any; entries stay on disk.
     pub fn deinit(self: *Cache) void {
-        if (self.root_owned) self.allocator.free(self.root);
+        if (self.root_owned) self.runtime.allocator.free(self.root);
     }
 
     /// The directory holding entries for this compiler identity.
     fn namespace(self: *Cache) ![]const u8 {
         const tag = std.fmt.bytesToHex(self.identityHash(), .lower);
-        return std.fs.path.join(self.allocator, &.{ self.root, &tag });
+        return std.fs.path.join(self.runtime.allocator, &.{ self.root, &tag });
     }
     fn identityHash(self: *Cache) [32]u8 {
         var hash = std.crypto.hash.sha2.Sha256.init(.{});
-        hash.update("frontend-cache-identity-v2");
-        hash.update(self.identity);
+        hash.update("frontend-cache-identity-v3");
+        frame(&hash, self.identity);
+        const contract = self.contractHex();
+        hash.update(&contract);
         var out: [32]u8 = undefined;
         hash.final(&out);
         return out;
@@ -104,7 +126,7 @@ pub const Cache = struct {
                 return null;
             },
         };
-        defer self.allocator.free(payload);
+        defer self.runtime.allocator.free(payload);
         const program = decodeSyntax(allocator, payload) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => {
@@ -120,7 +142,7 @@ pub const Cache = struct {
     /// Retain parsed syntax under its exact path/bytes/body-start key.
     pub fn rememberSyntax(self: *Cache, src: source.Source, body_start: usize, syntax: ast.Program) error{OutOfMemory}!void {
         const key = syntaxKey(self, src, body_start);
-        var writer = codec.Writer.init(self.allocator);
+        var writer = codec.Writer.init(self.runtime.allocator);
         defer writer.deinit();
         // The two growable `Program` lists are stored as exact-length owned
         // slices, never as `ArrayList` values: a restored list must not claim
@@ -165,7 +187,7 @@ pub const Cache = struct {
                 return null;
             },
         };
-        defer self.allocator.free(payload);
+        defer self.runtime.allocator.free(payload);
         const warnings = decodeWarnings(allocator, payload) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => {
@@ -183,7 +205,7 @@ pub const Cache = struct {
     pub fn rememberVerdict(self: *Cache, loaded: *const project.Project, format: diagnostic_output.Format, warnings: []const u8) error{OutOfMemory}!void {
         if (!loaded.progress.complete or loaded.problem != null) return;
         const key = verdictKeyFor(self, loaded, format);
-        var writer = codec.Writer.init(self.allocator);
+        var writer = codec.Writer.init(self.runtime.allocator);
         defer writer.deinit();
         writer.integer(@as(u64, warnings.len)) catch |err| return err;
         writer.raw(warnings) catch |err| return err;
@@ -203,6 +225,8 @@ pub const Cache = struct {
         hash.update(format_version);
         hash.update("syntax");
         frame(&hash, self.identity);
+        const contract = self.contractHex();
+        hash.update(&contract);
         frame(&hash, src.path);
         frame(&hash, src.bytes);
         hash.update(std.mem.asBytes(&body_start));
@@ -216,6 +240,8 @@ pub const Cache = struct {
         hash.update(format_version);
         hash.update("verdict");
         frame(&hash, self.identity);
+        const contract = self.contractHex();
+        hash.update(&contract);
         hash.update(&digest);
         hash.update(&.{@backingInt(format)});
         var out: [32]u8 = undefined;
@@ -231,8 +257,8 @@ pub const Cache = struct {
     /// Absolute path of the entry stored under `key`; the caller frees it.
     pub fn entryPath(self: *Cache, key: [32]u8) error{OutOfMemory}![]const u8 {
         const directory = try self.namespace();
-        defer self.allocator.free(directory);
-        return std.fmt.allocPrint(self.allocator, "{s}/{s}", .{ directory, std.fmt.bytesToHex(key, .lower) }) catch error.OutOfMemory;
+        defer self.runtime.allocator.free(directory);
+        return std.fmt.allocPrint(self.runtime.allocator, "{s}/{s}", .{ directory, std.fmt.bytesToHex(key, .lower) }) catch error.OutOfMemory;
     }
 
     /// Read `key`, rejecting anything whose stored key or payload checksum
@@ -241,18 +267,18 @@ pub const Cache = struct {
         const directory = self.namespace() catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
         };
-        defer self.allocator.free(directory);
+        defer self.runtime.allocator.free(directory);
         var path_buffer: [std.fs.max_path_bytes]u8 = undefined;
         const path = std.fmt.bufPrint(&path_buffer, "{s}/{s}", .{ directory, &std.fmt.bytesToHex(key, .lower) }) catch return error.ReadFailed;
-        const bytes = std.Io.Dir.cwd().readFileAlloc(self.io, path, self.allocator, .limited(self.max_bytes)) catch |err| switch (err) {
+        const bytes = std.Io.Dir.cwd().readFileAlloc(self.runtime.io, path, self.runtime.allocator, .limited(self.max_bytes)) catch |err| switch (err) {
             error.FileNotFound => return error.NotFound,
             error.StreamTooLong => return error.Damaged,
             error.OutOfMemory => return error.OutOfMemory,
             else => return error.ReadFailed,
         };
-        defer self.allocator.free(bytes);
+        defer self.runtime.allocator.free(bytes);
         if (bytes.len < headerSize) return error.Damaged;
-        var reader = codec.Reader.init(self.allocator, bytes);
+        var reader = codec.Reader.init(self.runtime.allocator, bytes);
         const magic = reader.integer(u32) catch return error.Damaged;
         if (magic != entry_magic) return error.Damaged;
         const stored_key = reader.integer([32]u8) catch return error.Damaged;
@@ -262,7 +288,7 @@ pub const Cache = struct {
         const checksum = reader.integer(u64) catch return error.Damaged;
         if (!reader.done()) return error.Damaged;
         if (std.hash.XxHash3.hash(0, payload) != checksum) return error.Damaged;
-        return self.allocator.dupe(u8, payload) catch return error.OutOfMemory;
+        return self.runtime.allocator.dupe(u8, payload) catch return error.OutOfMemory;
     }
 
     /// Stage `payload` under `key`; returns false when the entry is too large to
@@ -273,20 +299,20 @@ pub const Cache = struct {
         const directory = self.namespace() catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
         };
-        defer self.allocator.free(directory);
-        std.Io.Dir.cwd().createDirPath(self.io, directory) catch return error.WriteFailed;
+        defer self.runtime.allocator.free(directory);
+        std.Io.Dir.cwd().createDirPath(self.runtime.io, directory) catch return error.WriteFailed;
         var path_buffer: [std.fs.max_path_bytes]u8 = undefined;
         const path = std.fmt.bufPrint(&path_buffer, "{s}/{s}", .{ directory, &std.fmt.bytesToHex(key, .lower) }) catch return error.WriteFailed;
         var staging_buffer: [std.fs.max_path_bytes]u8 = undefined;
         var nonce: [8]u8 = undefined;
-        std.Io.random(self.io, &nonce);
+        std.Io.random(self.runtime.io, &nonce);
         const staging = std.fmt.bufPrint(&staging_buffer, "{s}.{s}.tmp", .{ path, std.fmt.bytesToHex(nonce, .lower) }) catch return error.WriteFailed;
-        var writer = codec.Writer.init(self.allocator);
+        var writer = codec.Writer.init(self.runtime.allocator);
         defer writer.deinit();
         encodeHeader(&writer, key, payload) catch return error.WriteFailed;
-        std.Io.Dir.cwd().writeFile(self.io, .{ .sub_path = staging, .data = writer.bytes.items }) catch return error.WriteFailed;
-        std.Io.Dir.rename(.cwd(), staging, .cwd(), path, self.io) catch {
-            std.Io.Dir.cwd().deleteFile(self.io, staging) catch |err| switch (err) {
+        std.Io.Dir.cwd().writeFile(self.runtime.io, .{ .sub_path = staging, .data = writer.bytes.items }) catch return error.WriteFailed;
+        std.Io.Dir.rename(.cwd(), staging, .cwd(), path, self.runtime.io) catch {
+            std.Io.Dir.cwd().deleteFile(self.runtime.io, staging) catch |err| switch (err) {
                 error.FileNotFound => {},
                 else => {},
             };
@@ -303,22 +329,22 @@ pub const Cache = struct {
         const directory = self.namespace() catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
         };
-        defer self.allocator.free(directory);
-        var dir = std.Io.Dir.cwd().openDir(self.io, directory, .{ .iterate = true }) catch return;
-        defer dir.close(self.io);
+        defer self.runtime.allocator.free(directory);
+        var dir = std.Io.Dir.cwd().openDir(self.runtime.io, directory, .{ .iterate = true }) catch return;
+        defer dir.close(self.runtime.io);
         var total: usize = 0;
         var entries: std.ArrayList(Entry) = .empty;
         defer {
-            for (entries.items) |entry| self.allocator.free(entry.name);
-            entries.deinit(self.allocator);
+            for (entries.items) |entry| self.runtime.allocator.free(entry.name);
+            entries.deinit(self.runtime.allocator);
         }
         var iterator = dir.iterate();
-        while (iterator.next(self.io) catch return error.WriteFailed) |item| {
+        while (iterator.next(self.runtime.io) catch return error.WriteFailed) |item| {
             if (item.kind != .file or std.mem.endsWith(u8, item.name, ".tmp")) continue;
-            const stat = dir.statFile(self.io, item.name, .{}) catch continue;
-            const owned = self.allocator.dupe(u8, item.name) catch return error.OutOfMemory;
-            entries.append(self.allocator, .{ .name = owned, .size = @intCast(stat.size), .mtime = stat.mtime.nanoseconds }) catch {
-                self.allocator.free(owned);
+            const stat = dir.statFile(self.runtime.io, item.name, .{}) catch continue;
+            const owned = self.runtime.allocator.dupe(u8, item.name) catch return error.OutOfMemory;
+            entries.append(self.runtime.allocator, .{ .name = owned, .size = @intCast(stat.size), .mtime = stat.mtime.nanoseconds }) catch {
+                self.runtime.allocator.free(owned);
                 return error.OutOfMemory;
             };
             total += @intCast(stat.size);
@@ -328,7 +354,7 @@ pub const Cache = struct {
         std.mem.sort(Entry, entries.items, {}, oldestFirst);
         for (entries.items) |entry| {
             if (total <= self.max_bytes) break;
-            dir.deleteFile(self.io, entry.name) catch continue;
+            dir.deleteFile(self.runtime.io, entry.name) catch continue;
             total -= entry.size;
             self.statistics.evicted += 1;
         }

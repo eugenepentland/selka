@@ -4,7 +4,7 @@
 10 src/native_test_receipts.zig|Result
 10 src/native_test_session.zig|Session
 11 src/native_types.zig|Layout
-8 src/qbe_build_cache.zig|Cache
+9 src/qbe_build_cache.zig|Cache
 15 src/qbe_build_options.zig|Options
 8 src/qbe_codecs.zig|Codec
 9 src/qbe_host.zig|Type

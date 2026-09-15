@@ -3,6 +3,8 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
+const semantic_key = @import("semantic_key.zig");
+const cache_key = @import("cache_key.zig");
 const Cache = language.semantic_cache.Cache;
 const prefix =
     \\def helper(n: i64) -> i64:
@@ -284,4 +286,58 @@ test "semantic cache rechecks transitive effects when only a callee body changes
     try t.expectEqualStrings("E_EFFECT_BOUND", second.diagnostics.items[0].code);
     try t.expectEqual(@as(usize, 2), cache.statistics.reused);
     try t.expect(cache.statistics.stored > 0);
+}
+
+test "specialization key mixes template arguments provider abi and compiler" {
+    const first = try semantic_key.specializationKey(t.allocator, "mod::id", &.{ "i64", "bool" }, "provider-v1", "runtime-abi-v0-unfrozen", "compiler-a");
+    defer t.allocator.free(first);
+    const same = try semantic_key.specializationKey(t.allocator, "mod::id", &.{ "i64", "bool" }, "provider-v1", "runtime-abi-v0-unfrozen", "compiler-a");
+    defer t.allocator.free(same);
+    try t.expectEqualStrings(first, same);
+    try t.expectEqual(@as(usize, 64), first.len);
+
+    const template = try semantic_key.specializationKey(t.allocator, "mod::other", &.{ "i64", "bool" }, "provider-v1", "runtime-abi-v0-unfrozen", "compiler-a");
+    defer t.allocator.free(template);
+    const reordered = try semantic_key.specializationKey(t.allocator, "mod::id", &.{ "bool", "i64" }, "provider-v1", "runtime-abi-v0-unfrozen", "compiler-a");
+    defer t.allocator.free(reordered);
+    const provider = try semantic_key.specializationKey(t.allocator, "mod::id", &.{ "i64", "bool" }, "provider-v2", "runtime-abi-v0-unfrozen", "compiler-a");
+    defer t.allocator.free(provider);
+    const abi = try semantic_key.specializationKey(t.allocator, "mod::id", &.{ "i64", "bool" }, "provider-v1", "runtime-abi-v1", "compiler-a");
+    defer t.allocator.free(abi);
+    const compiler = try semantic_key.specializationKey(t.allocator, "mod::id", &.{ "i64", "bool" }, "provider-v1", "runtime-abi-v0-unfrozen", "compiler-b");
+    defer t.allocator.free(compiler);
+    for ([_][]const u8{ template, reordered, provider, abi, compiler }) |changed|
+        try t.expect(!std.mem.eql(u8, first, changed));
+}
+
+test "semantic cache contract fingerprint forces a fresh check and identical contract reuses" {
+    const contract_a = try cache_key.Contract.default.fingerprint(t.allocator);
+    defer t.allocator.free(contract_a);
+    var runtime = cache_key.Contract.default;
+    runtime.runtime_abi = "runtime-abi-v1";
+    const contract_b = try runtime.fingerprint(t.allocator);
+    defer t.allocator.free(contract_b);
+    var cache = Cache.initWithContract(t.allocator, 4 * 1024 * 1024, contract_a);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, prefix ++ suffix, 42);
+    const after_base_checked = cache.statistics.checked;
+    try compare(t.allocator, &cache, prefix ++ suffix, 42);
+    try t.expectEqual(@as(usize, 3), cache.statistics.reused);
+    try t.expectEqual(after_base_checked, cache.statistics.checked);
+
+    // Same source, same cache, different runtime ABI contract: no body may be reused.
+    cache.contract = contract_b;
+    try compare(t.allocator, &cache, prefix ++ suffix, 42);
+    try t.expectEqual(@as(usize, 3), cache.statistics.reused);
+    try t.expectEqual(after_base_checked + 3, cache.statistics.checked);
+
+    // Returning to the original contract is a miss until its bodies are published,
+    // then the identical contract reuses them again.
+    cache.contract = contract_a;
+    try compare(t.allocator, &cache, prefix ++ suffix, 42);
+    try t.expectEqual(@as(usize, 3), cache.statistics.reused);
+    try t.expectEqual(after_base_checked + 6, cache.statistics.checked);
+    try compare(t.allocator, &cache, prefix ++ suffix, 42);
+    try t.expectEqual(@as(usize, 6), cache.statistics.reused);
+    try t.expectEqual(after_base_checked + 6, cache.statistics.checked);
 }
