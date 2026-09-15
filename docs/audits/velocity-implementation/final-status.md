@@ -1,8 +1,8 @@
 # Development velocity: implementation status
 
-Status: **core packages integrated on `75bb69a`; release checklist partially met.**
+Status: **core packages integrated on `26e8121`; release checklist partially met.**
 Baseline: `9ce142e98cb22e684622ed1d5678071d6944206e` (post named-constraint fixes).
-Integration HEAD: `75bb69ace350681623f7f80f320b5fb583e69581`.
+Integration HEAD: `26e81212dd40ce26c6b4b868ff7acef1940f2c32`.
 Plan: [development-velocity-implementation-plan-2026-09-15.md](../development-velocity-implementation-plan-2026-09-15.md).
 Ledger and frozen contracts: [README.md](README.md), [contracts.md](contracts.md).
 
@@ -23,6 +23,7 @@ Ledger and frozen contracts: [README.md](README.md), [contracts.md](contracts.md
 | A1 | required entry-anchored `mylang.json` import policy in ordinary commands and caches | `5988575` |
 | S1 | repaired workload harness; 10k/100k/maintained cold/warm/edit samples | `21d104e` |
 | M3 | corpus repair/activation, navigation exposure, runnable mutation docs | `75bb69a` |
+| Follow-up | F1 keeps the space before `mutates(...)`; board-trial/schematic standalone runners accept the driver's trailing `--cache-dir` | `26e8121` |
 
 Not started from the plan: **C2** (persistent checked bodies across processes),
 **C3** (generic/specialization reuse), **C4** (cached test preparation and lazy
@@ -32,12 +33,12 @@ lowering), **P1** (selected test providers against checked contracts), **D2**
 
 ## Final gate evidence
 
-Cold builds in fresh worktrees followed by full gates on `75bb69a`:
+Cold builds in fresh worktrees followed by full gates on `26e8121`:
 
 | Gate | Result |
 | --- | --- |
-| `zig build test --summary all` (Debug) | **39/39 steps succeeded; 1110/1110 tests passed; exit 0** |
-| `zig build test -Doptimize=ReleaseFast --summary all` | **39/39 steps succeeded; 1109/1110 passed, 1 skipped (Debug-only allocation sweep); exit 0** |
+| `zig build test --summary all` (Debug) | **39/39 steps succeeded; 1128/1128 tests passed; exit 0** |
+| `zig build test -Doptimize=ReleaseFast --summary all` | **39/39 steps succeeded; 1127/1128 passed, 1 skipped (Debug-only allocation sweep); exit 0** |
 | Guardian whole-tree commit gate | 88/88 checks passed |
 | `zig build fmt-check`, `test-doc-coverage`, `test-docs`, `test-qbe`, `test-native-tests` | covered by the `test` graph and independently green |
 

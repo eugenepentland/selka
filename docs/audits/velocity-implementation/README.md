@@ -95,4 +95,5 @@ Never share a mutable checkout, installed binary or `zig-out`/`.zig-cache`.
 | 2026-09-15 | `21d104e` | S1 | repaired workload harness + 10k/100k/maintained evidence; objectives not met |
 | 2026-09-15 | `75bb69a` | M3 | corpus activation, navigation exposure, runnable mutation docs |
 | 2026-09-15 | `75bb69a` | final gate | cold build + Debug 1110/1110 (39/39 steps); ReleaseFast 1109/1110, 1 skipped (39/39 steps); Guardian 88/88 |
+| 2026-09-15 | `26e8121` | follow-up | formatter `mutates(...)` spacing + standalone runner trailing-option tolerance; final gate Debug 1128/1128, ReleaseFast 1127/1128 (1 skipped), Guardian 88/88 |
 | 2026-09-15 | (note) | build cache | a warm `.zig-cache` can keep a stale generated `qbe_build_assets` module after large `src/` edits; cold `zig build test-units` passes 969/969. Final gate must be cold. |
