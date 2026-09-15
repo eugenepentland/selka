@@ -8,6 +8,7 @@ const cache_directory_prefix = "--cache-dir=";
 const frontend_label = "frontend";
 const std = @import("std");
 const language = @import("mylang");
+const invalidation = @import("invalidation.zig");
 const diagnostic_output = language.diagnostic_output;
 const Reporting = struct {
     print_result: bool = false,
@@ -15,6 +16,8 @@ const Reporting = struct {
     timings_json: bool = false,
     /// `--report` asks one-shot commands for a frontend-cache reuse receipt.
     report: bool = false,
+    /// `--explain-invalidation` asks for a stage-by-stage baseline comparison.
+    explain_invalidation: bool = false,
     diagnostics: ?diagnostic_output.Format = null,
     /// Whether any timing/reporting sink asked for a machine-readable receipt.
     fn measured(self: Reporting) bool {
@@ -58,6 +61,7 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "  index-project: JSON symbols, references and pinned source snapshot\n  project-dependencies: checked module graph and hashes; --inputs supported\n" ++
     "  one-shot commands: --timings=json (phase-timings-v1 JSON Lines on stderr)\n" ++
     "    --report prints a frontend-cache-v1 reuse receipt on stderr; --timings=json also adds one; --cache-dir=DIR selects its root; --no-cache disables reuse\n" ++
+    "    --explain-invalidation prints an invalidation-report-v1 comparison on stderr for project-dependencies, check-project, run-project and module-syntax run; --no-cache explains against no baseline\n" ++
     "  all commands: --diagnostics=text|json (stderr JSON Lines; stdout unchanged)\n" ++
     "  check-session: persistent check/clear/quit lines on stdin; JSON status on stdout; --inputs supported\n";
 
@@ -85,6 +89,12 @@ const native_run = @import("native_run.zig");
 const native_options = @import("qbe_build_options.zig");
 /// Execution budgets a run or an evaluation may narrow from the command line.
 const Budgets = struct { max_steps: u64 = 10_000_000, max_frames: u64 = 1024 };
+/// Per-stage hit/miss observations collected when an invalidation explanation ran.
+const StageTally = struct { hits: usize = 0, misses: usize = 0 };
+const RunObservation = struct {
+    stages: [std.meta.tags(invalidation.Stage).len]StageTally = @splat(.{}),
+    has_invalidation: bool = false,
+};
 const Context = struct {
     gpa: std.mem.Allocator,
     arena: *std.heap.ArenaAllocator,
@@ -92,6 +102,9 @@ const Context = struct {
     environ: *const std.process.Environ.Map,
     diagnostics: diagnostic_output.Format,
     timings: *language.timings.Profile,
+    /// Populated by a command that produced an invalidation explanation so the
+    /// frontend-cache receipt can report the same per-stage counts.
+    observation: ?*RunObservation = null,
     fn text(self: Context, bytes: []const u8) !void {
         if (self.diagnostics == .text) return std.Io.File.stderr().writeStreamingAll(self.io, bytes);
         const rendered = try diagnostic_output.message(self.gpa, bytes, self.diagnostics);
@@ -147,17 +160,20 @@ fn dispatch(process: std.process.Init) !u8 {
 fn run(init: Context, parsed: Parsed) !u8 {
     if (parsed.command == .@"check-session") return checkSession(init, parsed);
     var frontend_cache = openFrontendCache(init, parsed);
+    var observation: RunObservation = .{};
+    var command_init = init;
+    command_init.observation = &observation;
     var with_frontend = parsed;
     with_frontend.frontend = if (frontend_cache) |*cache| cache else null;
-    const status = runCommand(init, with_frontend) catch |err| {
+    const status = runCommand(command_init, with_frontend) catch |err| {
         if (frontend_cache) |*cache| {
-            reportFrontendCounters(init, cache, parsed.reporting) catch return err;
+            reportFrontendCounters(init, cache, parsed.reporting, observation) catch return err;
             cache.deinit();
         }
         return err;
     };
     if (frontend_cache) |*cache| {
-        try reportFrontendCounters(init, cache, parsed.reporting);
+        try reportFrontendCounters(init, cache, parsed.reporting, observation);
         cache.deinit();
     }
     return status;
@@ -193,6 +209,10 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
     // `run-project` does. A plain single-file program skips this and keeps the
     // original one-unit path byte-for-byte.
     if (parsed.command == .run and module_syntax.usesModuleSyntax(bytes)) return listModules(init, parsed);
+    if (parsed.command == .run and parsed.reporting.explain_invalidation) {
+        try std.Io.File.stderr().writeStreamingAll(init.io, usage);
+        return 2;
+    }
     if (parsed.command == .@"input-module") {
         var manifest = (try parseInputManifest(init, parsed.path, bytes)) orelse return 2;
         defer manifest.deinit();
@@ -475,6 +495,15 @@ fn parseArgs(allocator: std.mem.Allocator, args: []const []const u8) ArgError!Pa
             parser.reporting.report = true;
             continue;
         }
+        if (std.mem.eql(u8, arg, "--explain-invalidation")) {
+            if (parser.reporting.explain_invalidation) return error.Usage;
+            switch (command) {
+                .@"project-dependencies", .@"check-project", .@"run-project", .run => {},
+                else => return error.Usage,
+            }
+            parser.reporting.explain_invalidation = true;
+            continue;
+        }
         if (try parser.cacheDirectoryOption(arg)) continue;
         if (try parser.surfaceOption(arg)) continue;
         if (try parser.qualityOption(arg)) continue;
@@ -744,7 +773,11 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     init.timings.end();
     if (try surfaceProject(init, &project, parsed)) |status| return status;
     if (try replayCheck(init, parsed.command, &project, verdict)) return 0;
-    if (try replayFrontendVerdict(init, parsed.command, &project, frontend)) return 0;
+    // A requested explanation must compare receipts, so do not replay a stored
+    // verdict before the checked compilation produces one.
+    if (!parsed.reporting.explain_invalidation) {
+        if (try replayFrontendVerdict(init, parsed.command, &project, frontend)) return 0;
+    }
     const output = if (parsed.command != .@"list-modules") result: {
         init.timings.begin(frontend_label, false);
         var index = (try buildIndex(init, &project, cache, frontend)) orelse return partialNavigation(init, &project, parsed.command);
@@ -761,9 +794,17 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         init.timings.counts.ast_nodes = compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len;
         init.timings.counts.typed_nodes = compilation.program.?.nodes.len + compilation.program.?.statements.len;
         init.timings.end();
+        // One receipt serves both the invalidation comparison and, for
+        // `project-dependencies`, the normal stdout payload.
+        var dependency_receipt: ?[]u8 = null;
+        defer if (dependency_receipt) |bytes| init.gpa.free(bytes);
+        if (parsed.command == .@"project-dependencies" or parsed.reporting.explain_invalidation) {
+            dependency_receipt = try dependencyReport(init, &compilation, files.inputs);
+        }
+        if (parsed.reporting.explain_invalidation) try reportInvalidation(init, parsed, dependency_receipt.?);
         if (parsed.command == .@"emit-project-qbe") break :result (try emitProjectNative(init, &compilation)) orelse return 1;
         try reportProject(init, &compilation);
-        if (parsed.command == .@"project-dependencies") break :result try dependencyReport(init, &compilation, files.inputs);
+        if (parsed.command == .@"project-dependencies") break :result try init.gpa.dupe(u8, dependency_receipt.?);
         if (parsed.command == .@"check-project") {
             try rememberFrontendVerdict(init, parsed.command, &project, &compilation, frontend);
             return rememberCheck(verdict, &project, &compilation);
@@ -1119,13 +1160,97 @@ fn openFrontendCache(init: Context, parsed: Parsed) ?language.frontend_cache.Cac
     return cache;
 }
 
+/// Resolve the baseline file for invalidation observations.  The path is
+/// deliberately independent of the compiler-identity partition so a rebuilt
+/// compiler still explains against the previous build's receipt.
+fn invalidationBaselinePath(init: Context, parsed: Parsed) ![]const u8 {
+    const base = parsed.cache_dir orelse language.frontend_cache.default_directory;
+    const basename = std.fs.path.basename(parsed.path);
+    const stem = if (std.mem.endsWith(u8, basename, ".my")) basename[0 .. basename.len - 3] else basename;
+    const file_name = try init.gpa.alloc(u8, stem.len + ".json".len);
+    defer init.gpa.free(file_name);
+    for (stem, 0..) |character, index| {
+        file_name[index] = if (std.ascii.isAlphanumeric(character) or character == '_' or character == '-') character else '_';
+    }
+    @memcpy(file_name[stem.len..], ".json");
+    return std.fs.path.join(init.gpa, &.{ base, "invalidation", file_name });
+}
+
+/// Read a baseline receipt; a missing or unreadable file is simply no baseline.
+fn readInvalidationBaseline(init: Context, path: []const u8) !?[]u8 {
+    return std.Io.Dir.cwd().readFileAlloc(init.io, path, init.gpa, .limited(64 * 1024 * 1024)) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => null,
+    };
+}
+
+/// Atomically replace the baseline receipt.  Every failure is swallowed: a
+/// read-only or full cache directory must never fail the command.
+fn writeInvalidationBaseline(init: Context, path: []const u8, current: []const u8) void {
+    const directory = std.fs.path.dirname(path) orelse return;
+    std.Io.Dir.cwd().createDirPath(init.io, directory) catch return;
+    var nonce: [8]u8 = undefined;
+    std.Io.random(init.io, &nonce);
+    var staging_buffer: [std.fs.max_path_bytes + 32]u8 = undefined;
+    const staging = std.fmt.bufPrint(&staging_buffer, "{s}.{s}.tmp", .{ path, std.fmt.bytesToHex(nonce, .lower) }) catch return;
+    std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = staging, .data = current }) catch return;
+    std.Io.Dir.rename(.cwd(), staging, .cwd(), path, init.io) catch {
+        std.Io.Dir.cwd().deleteFile(init.io, staging) catch |err| switch (err) {
+            error.FileNotFound => {},
+            else => {},
+        };
+        return;
+    };
+}
+
+/// Emit one `invalidation-report-v1` line and, when caching is enabled, advance
+/// the baseline so the next run explains against this receipt.
+fn reportInvalidation(init: Context, parsed: Parsed, current: []const u8) !void {
+    const path = try invalidationBaselinePath(init, parsed);
+    defer init.gpa.free(path);
+
+    var previous: ?[]u8 = null;
+    if (!parsed.no_cache) previous = try readInvalidationBaseline(init, path);
+    defer if (previous) |bytes| init.gpa.free(bytes);
+
+    var explanation = try invalidation.explain(init.gpa, previous, current);
+    defer explanation.deinit(init.gpa);
+
+    if (init.observation) |observation| {
+        observation.has_invalidation = true;
+        observation.stages = @splat(.{});
+        for (explanation.queries) |query| {
+            const index = @backingInt(query.stage);
+            switch (query.status) {
+                .hit => observation.stages[index].hits += 1,
+                .miss => observation.stages[index].misses += 1,
+            }
+        }
+    }
+
+    const rendered = try invalidation.render(init.gpa, explanation);
+    defer init.gpa.free(rendered);
+    const line = try std.fmt.allocPrint(init.gpa, "{s}\n", .{rendered});
+    defer init.gpa.free(line);
+    try std.Io.File.stderr().writeStreamingAll(init.io, line);
+
+    if (!parsed.no_cache) writeInvalidationBaseline(init, path, current);
+}
+
 /// Report persistent frontend reuse when the caller asked for `--report` or
 /// `--timings=json`. Both emit one machine-readable `frontend-cache-v1` JSON line
 /// on stderr; plain `--timings` is left untouched because its text protocol is
 /// `timings: native_ns=<integer>`.
-fn reportFrontendCounters(init: Context, cache: *const language.frontend_cache.Cache, reporting: Reporting) !void {
+fn reportFrontendCounters(init: Context, cache: *const language.frontend_cache.Cache, reporting: Reporting, observation: RunObservation) !void {
     if (!reporting.measured()) return;
     const stats = cache.statistics;
+    var stages: [std.meta.tags(invalidation.Stage).len]StageTally = @splat(.{});
+    if (observation.has_invalidation) {
+        stages = observation.stages;
+    } else {
+        stages[@backingInt(invalidation.Stage.lex_parse)] = .{ .hits = stats.syntax.hits, .misses = stats.syntax.misses };
+        stages[@backingInt(invalidation.Stage.resolve_interface)] = .{ .hits = stats.verdict.hits, .misses = stats.verdict.misses };
+    }
     const json = try std.json.Stringify.valueAlloc(init.gpa, .{
         .version = "frontend-cache-v1",
         .syntax_hits = stats.syntax.hits,
@@ -1138,6 +1263,17 @@ fn reportFrontendCounters(init: Context, cache: *const language.frontend_cache.C
         .bypassed = stats.bypassed,
         .evicted = stats.evicted,
         .retained_bytes = stats.retained_bytes,
+        .stages = .{
+            .load_source = stages[@backingInt(invalidation.Stage.load_source)],
+            .lex_parse = stages[@backingInt(invalidation.Stage.lex_parse)],
+            .collect_declarations = stages[@backingInt(invalidation.Stage.collect_declarations)],
+            .resolve_interface = stages[@backingInt(invalidation.Stage.resolve_interface)],
+            .check_body = stages[@backingInt(invalidation.Stage.check_body)],
+            .instantiate_specialization = stages[@backingInt(invalidation.Stage.instantiate_specialization)],
+            .lower_function = stages[@backingInt(invalidation.Stage.lower_function)],
+            .emit_fragment = stages[@backingInt(invalidation.Stage.emit_fragment)],
+            .link = stages[@backingInt(invalidation.Stage.link)],
+        },
     }, .{});
     defer init.gpa.free(json);
     const line = try std.fmt.allocPrint(init.gpa, "{s}\n", .{json});
