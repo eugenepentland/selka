@@ -10,6 +10,27 @@ const parser = @import("parser.zig");
 const typed = @import("typed.zig");
 const generic_requirements = @import("generic_requirements.zig");
 const structural_declarations = @import("structural_declarations.zig");
+const effect_set = @import("effect_set.zig");
+const prelude = @import("prelude.zig");
+/// One exported declaration's canonical declared contract for provider validation.
+/// Exact fields (`signature`, `generics`, `shape`) compare for equality; the
+/// permission field (`permissions`) uses the frozen directional subset relation
+/// so a replacement may be narrower but never stronger.
+pub const ContractDeclaration = struct {
+    name: []const u8,
+    kind: []const u8,
+    signature: []const u8 = "",
+    generics: []const u8 = "",
+    /// `effects=<names>;mutates=<positions>;origin=<tag>`; empty for non-callables.
+    permissions: []const u8 = "",
+    shape: []const u8 = "",
+};
+/// One module's exported declared-contract table.
+pub const ContractModule = struct { name: []const u8, declarations: []const ContractDeclaration };
+/// Versioned declaration-level contract manifest; bodies are not checked.
+pub const ContractManifest = struct { version: []const u8 = "interface-contracts-v1", modules: []const ContractModule };
+/// Allocation, rejected declarations and an incomplete project all prevent a manifest.
+pub const ContractError = diagnostic.Error || error{IncompleteProject};
 /// Distinguish type declarations from callable declarations during name resolution.
 pub const Kind = enum { type, function, constraint };
 /// Identify a declaration by its module and local symbol index.
@@ -138,7 +159,7 @@ pub const Index = struct {
         }
         const src = self.project.modules.items[module].src;
         if (typed.Type.fromName(src.text(span)) != null) return;
-        if (!self.units[module].names.contains(src.text(span)) and @import("prelude.zig").scalar(src.text(span))) return;
+        if (!self.units[module].names.contains(src.text(span)) and prelude.scalar(src.text(span))) return;
         for (syntax.types.expressions.applications) |application| {
             if (application.span.start == span.start and application.span.end == span.end) return self.applicationType(module, application, &.{});
         }
@@ -190,7 +211,7 @@ pub const Index = struct {
         );
         const name = src.text(application.name);
         if (!self.units[module].names.contains(name)) {
-            const arity = @import("prelude.zig").arity(name);
+            const arity = prelude.arity(name);
             if (arity) |count| {
                 if (application.arguments.len != count) return self.project.fail(eGenericArity, "builtin type argument count does not match", .{ .module = module, .span = application.span }, null);
                 for (application.arguments) |argument| try self.genericSignatureType(module, argument, parameters);
@@ -372,7 +393,397 @@ pub const Index = struct {
         }
         return output.toOwnedSlice();
     }
+    /// Render exported declarations as a canonical declared-contract manifest.
+    /// Bodies are never checked; exported signatures and explicit public
+    /// ceilings are, so a provider can be validated before production bodies run.
+    pub fn renderContracts(self: *Index, allocator: std.mem.Allocator) ContractError![]u8 {
+        if (self.project.problem != null) return error.IncompleteProject;
+        // Intermediate tables live in the project arena; only the final JSON text
+        // is owned by the caller. This keeps a one-shot listing leak-free.
+        const scratch = self.project.arena.allocator();
+        var modules: std.ArrayList(ContractModule) = .empty;
+        for (self.project.order.items) |module| {
+            var declarations: std.ArrayList(ContractDeclaration) = .empty;
+            for (self.units[module].symbols.items) |symbol| {
+                if (!symbol.exported) continue;
+                try declarations.append(scratch, try self.contractDeclaration(module, symbol));
+            }
+            std.mem.sort(ContractDeclaration, declarations.items, {}, declarationLess);
+            try modules.append(scratch, .{
+                .name = self.project.modules.items[module].name,
+                .declarations = try declarations.toOwnedSlice(scratch),
+            });
+        }
+        std.mem.sort(ContractModule, modules.items, {}, moduleLess);
+        return std.json.Stringify.valueAlloc(allocator, ContractManifest{ .modules = try modules.toOwnedSlice(scratch) }, .{});
+    }
+    fn contractDeclaration(self: *Index, module: usize, symbol: Symbol) ContractError!ContractDeclaration {
+        return switch (symbol.kind) {
+            .function => self.contractFunction(module, symbol),
+            .type => self.contractType(module, symbol),
+            .constraint => self.contractConstraint(module, symbol),
+        };
+    }
+    fn findFunction(self: *Index, unit: Unit, span: source.Span) ?ast.Function {
+        _ = self;
+        for (unit.syntax.functions) |function| {
+            if (function.name.start == span.start and function.name.end == span.end) return function;
+        }
+        return null;
+    }
+    fn contractFunction(self: *Index, module: usize, symbol: Symbol) ContractError!ContractDeclaration {
+        const function = self.findFunction(self.units[module], symbol.span) orelse return error.InternalError;
+        // E2 published ceilings are part of the declaration, so the provider path
+        // rejects a missing exported ceiling before any body is checked. The
+        // body-derived suggestion is unavailable here and is intentionally omitted.
+        const bound = function.policy.effect_bound orelse return self.project.fail(
+            "E_EFFECT_CEILING",
+            "exported function requires an explicit effect ceiling",
+            .{ .module = module, .span = function.name },
+            null,
+        );
+        var out: ContractDeclaration = .{ .name = symbol.name, .kind = "function" };
+        out.generics = try self.contractGenericsText(module, function.signature.type_parameters);
+        out.signature = try self.contractSignatureText(module, function.signature);
+        out.permissions = try permissionsText(self.project.arena.allocator(), bound.allowed, function.signature.mutates, "unknown");
+        return out;
+    }
+    fn contractSignatureText(self: *Index, module: usize, signature: ast.FunctionSignature) ContractError![]const u8 {
+        const allocator = self.project.arena.allocator();
+        const src = self.project.modules.items[module].src;
+        var out: std.ArrayList(u8) = .empty;
+        try out.appendSlice(allocator, "def(");
+        for (signature.parameters, 0..) |parameter, index| {
+            if (index != 0) try out.appendSlice(allocator, ",");
+            try out.appendSlice(allocator, src.text(parameter.name));
+            try out.appendSlice(allocator, ":");
+            try out.appendSlice(allocator, try self.contractTypeText(module, parameter.ty, signature.type_parameters));
+            if (parameter.default_value) |value| {
+                const span = self.units[module].syntax.nodes.items[@backingInt(value)].span;
+                try out.appendSlice(allocator, "=");
+                try out.appendSlice(allocator, std.mem.trim(u8, src.text(span), " \t\r\n"));
+            }
+        }
+        try out.appendSlice(allocator, ")->");
+        try out.appendSlice(allocator, try self.contractTypeText(module, signature.return_type, signature.type_parameters));
+        return out.toOwnedSlice(allocator);
+    }
+    fn contractGenericsText(self: *Index, module: usize, parameters: []const ast.TypeParameter) ContractError![]const u8 {
+        if (parameters.len == 0) return "";
+        const allocator = self.project.arena.allocator();
+        var out: std.ArrayList(u8) = .empty;
+        try out.appendSlice(allocator, "[");
+        for (parameters, 0..) |parameter, index| {
+            if (index != 0) try out.appendSlice(allocator, ",");
+            try out.appendSlice(allocator, try std.fmt.allocPrint(allocator, "${d}:", .{index}));
+            var tokens: std.ArrayList([]const u8) = .empty;
+            defer tokens.deinit(allocator);
+            if (parameter.default_copy or hasBuiltinRequirement(self.project.modules.items[module].src, parameter, "copy")) {
+                try appendUniqueToken(allocator, &tokens, "copy");
+            }
+            if (parameter.constant_length) try appendUniqueToken(allocator, &tokens, "length");
+            for (parameter.requirements) |span| {
+                const name = self.project.modules.items[module].src.text(span);
+                if (std.mem.eql(u8, name, "copy")) continue;
+                try appendUniqueToken(allocator, &tokens, name);
+            }
+            for (parameter.named_requirements) |reference| {
+                var sink: diagnostic.Sink = .{ .allocator = allocator };
+                const resolution = try self.constraintDeclaration(module, reference, &sink);
+                try appendUniqueToken(allocator, &tokens, try std.fmt.allocPrint(allocator, "{s}::{s}", .{
+                    self.project.modules.items[resolution.identity.module].name,
+                    self.units[resolution.identity.module].symbols.items[resolution.identity.symbol].name,
+                }));
+            }
+            for (parameter.field_requirements) |field| {
+                try appendUniqueToken(allocator, &tokens, try std.fmt.allocPrint(allocator, "field({s}:{s})", .{
+                    self.project.modules.items[module].src.text(field.name),
+                    try self.contractTypeText(module, field.ty, parameters),
+                }));
+            }
+            for (parameter.operation_requirements) |operation| {
+                try appendUniqueToken(allocator, &tokens, try self.contractOperationText(module, operation, parameters));
+            }
+            std.mem.sort([]const u8, tokens.items, {}, tokenLess);
+            for (tokens.items, 0..) |token, token_index| {
+                if (token_index != 0) try out.appendSlice(allocator, "+");
+                try out.appendSlice(allocator, token);
+            }
+        }
+        try out.appendSlice(allocator, "]");
+        return out.toOwnedSlice(allocator);
+    }
+    fn contractOperationText(self: *Index, module: usize, operation: ast.Operation, parameters: []const ast.TypeParameter) ContractError![]const u8 {
+        const allocator = self.project.arena.allocator();
+        var out: std.ArrayList(u8) = .empty;
+        try out.appendSlice(allocator, "op(");
+        try out.appendSlice(allocator, self.project.modules.items[module].src.text(operation.name));
+        try out.appendSlice(allocator, "(");
+        for (operation.parameters, 0..) |parameter, index| {
+            if (index != 0) try out.appendSlice(allocator, ",");
+            try out.appendSlice(allocator, self.project.modules.items[module].src.text(parameter.name));
+            try out.appendSlice(allocator, ":");
+            try out.appendSlice(allocator, try self.contractTypeText(module, parameter.ty, parameters));
+        }
+        try out.appendSlice(allocator, ")->");
+        try out.appendSlice(allocator, try self.contractTypeText(module, operation.return_type, parameters));
+        try out.appendSlice(allocator, " effects(");
+        try appendEffectNames(&out, allocator, operation.effect_bound.allowed);
+        try out.appendSlice(allocator, "))");
+        return out.toOwnedSlice(allocator);
+    }
+    fn contractType(self: *Index, module: usize, symbol: Symbol) ContractError!ContractDeclaration {
+        const unit = self.units[module];
+        for (unit.syntax.types.records) |record| {
+            if (record.name.start != symbol.span.start) continue;
+            var out: ContractDeclaration = .{ .name = symbol.name, .kind = "record" };
+            out.generics = try self.contractGenericsText(module, record.type_parameters);
+            out.shape = try self.contractFieldsText(module, record.fields, record.type_parameters);
+            return out;
+        }
+        for (unit.syntax.types.variants) |variant| {
+            if (variant.name.start != symbol.span.start) continue;
+            var out: ContractDeclaration = .{ .name = symbol.name, .kind = if (variant.fallible) "result" else if (variant.is_union) "union" else "enum" };
+            out.generics = try self.contractGenericsText(module, variant.type_parameters);
+            var shape: std.ArrayList(u8) = .empty;
+            const allocator = self.project.arena.allocator();
+            try shape.appendSlice(allocator, "cases{");
+            for (variant.cases, 0..) |case, index| {
+                if (index != 0) try shape.appendSlice(allocator, ",");
+                try shape.appendSlice(allocator, self.project.modules.items[module].src.text(case.name));
+                if (case.payload) |payload| {
+                    try shape.appendSlice(allocator, ":");
+                    try shape.appendSlice(allocator, try self.contractTypeText(module, payload, variant.type_parameters));
+                }
+            }
+            try shape.appendSlice(allocator, "}");
+            out.shape = try shape.toOwnedSlice(allocator);
+            return out;
+        }
+        for (unit.syntax.types.domains) |domain| {
+            if (domain.name.start != symbol.span.start) continue;
+            var out: ContractDeclaration = .{ .name = symbol.name, .kind = if (domain.managed) "resource" else "domain" };
+            out.generics = try self.contractGenericsText(module, domain.type_parameters);
+            out.shape = try std.fmt.allocPrint(self.project.arena.allocator(), "backing:{s}", .{try self.contractTypeText(module, domain.backing, domain.type_parameters)});
+            return out;
+        }
+        for (unit.syntax.types.resources) |resource| {
+            if (resource.name.start != symbol.span.start) continue;
+            var out: ContractDeclaration = .{ .name = symbol.name, .kind = "resource" };
+            out.generics = try self.contractGenericsText(module, resource.type_parameters);
+            out.shape = try std.fmt.allocPrint(self.project.arena.allocator(), "backing:{s}", .{try self.contractTypeText(module, resource.backing, resource.type_parameters)});
+            return out;
+        }
+        for (unit.syntax.types.expressions.aliases) |alias| {
+            if (alias.name.start != symbol.span.start) continue;
+            var out: ContractDeclaration = .{ .name = symbol.name, .kind = "alias" };
+            out.shape = try std.fmt.allocPrint(self.project.arena.allocator(), "target:{s}", .{try self.contractTypeText(module, alias.target, &.{})});
+            return out;
+        }
+        return error.InternalError;
+    }
+    fn contractFieldsText(self: *Index, module: usize, fields: []const ast.Parameter, parameters: []const ast.TypeParameter) ContractError![]const u8 {
+        const allocator = self.project.arena.allocator();
+        var out: std.ArrayList(u8) = .empty;
+        try out.appendSlice(allocator, "fields{");
+        for (fields, 0..) |field, index| {
+            if (index != 0) try out.appendSlice(allocator, ",");
+            try out.appendSlice(allocator, self.project.modules.items[module].src.text(field.name));
+            try out.appendSlice(allocator, ":");
+            try out.appendSlice(allocator, try self.contractTypeText(module, field.ty, parameters));
+        }
+        try out.appendSlice(allocator, "}");
+        return out.toOwnedSlice(allocator);
+    }
+    fn contractConstraint(self: *Index, module: usize, symbol: Symbol) ContractError!ContractDeclaration {
+        const unit = self.units[module];
+        for (unit.syntax.types.constraints) |constraint| {
+            if (constraint.name.start != symbol.span.start) continue;
+            var out: ContractDeclaration = .{ .name = symbol.name, .kind = "constraint" };
+            const allocator = self.project.arena.allocator();
+            var shape: std.ArrayList(u8) = .empty;
+            try shape.appendSlice(allocator, "subject($0:");
+            var tokens: std.ArrayList([]const u8) = .empty;
+            defer tokens.deinit(allocator);
+            const subject = constraint.subject;
+            if (subject.default_copy or hasBuiltinRequirement(self.project.modules.items[module].src, subject, "copy")) try appendUniqueToken(allocator, &tokens, "copy");
+            for (subject.requirements) |span| {
+                const name = self.project.modules.items[module].src.text(span);
+                if (std.mem.eql(u8, name, "copy")) continue;
+                try appendUniqueToken(allocator, &tokens, name);
+            }
+            for (subject.field_requirements) |field| {
+                try appendUniqueToken(allocator, &tokens, try std.fmt.allocPrint(allocator, "field({s}:{s})", .{
+                    self.project.modules.items[module].src.text(field.name),
+                    try self.contractTypeText(module, field.ty, &.{subject}),
+                }));
+            }
+            for (subject.operation_requirements) |operation| {
+                try appendUniqueToken(allocator, &tokens, try self.contractOperationText(module, operation, &.{subject}));
+            }
+            std.mem.sort([]const u8, tokens.items, {}, tokenLess);
+            for (tokens.items, 0..) |token, index| {
+                if (index != 0) try shape.appendSlice(allocator, "+");
+                try shape.appendSlice(allocator, token);
+            }
+            try shape.appendSlice(allocator, ")");
+            out.shape = try shape.toOwnedSlice(allocator);
+            return out;
+        }
+        return error.InternalError;
+    }
+    fn contractTypeText(self: *Index, module: usize, span: source.Span, parameters: []const ast.TypeParameter) ContractError![]const u8 {
+        const allocator = self.project.arena.allocator();
+        const src = self.project.modules.items[module].src;
+        const text = src.text(span);
+        for (parameters, 0..) |parameter, index| {
+            if (std.mem.eql(u8, src.text(parameter.name), text)) return std.fmt.allocPrint(allocator, "${d}", .{index});
+        }
+        for (self.units[module].syntax.types.expressions.callbacks) |callback| {
+            if (callback.span.start != span.start or callback.span.end != span.end) continue;
+            var out: std.ArrayList(u8) = .empty;
+            try out.appendSlice(allocator, "def(");
+            for (callback.parameters, 0..) |parameter, index| {
+                if (index != 0) try out.appendSlice(allocator, ",");
+                try out.appendSlice(allocator, try self.contractTypeText(module, parameter, parameters));
+            }
+            try out.appendSlice(allocator, ")->");
+            try out.appendSlice(allocator, try self.contractTypeText(module, callback.return_type, parameters));
+            try out.appendSlice(allocator, " effects(");
+            try appendEffectNames(&out, allocator, callback.effect_bound.allowed);
+            try out.appendSlice(allocator, ")");
+            if (callback.mutates.len != 0) {
+                try out.appendSlice(allocator, " mutates(");
+                for (callback.mutates, 0..) |position, index| {
+                    if (index != 0) try out.appendSlice(allocator, ",");
+                    try out.appendSlice(allocator, try std.fmt.allocPrint(allocator, "{d}", .{position}));
+                }
+                try out.appendSlice(allocator, ")");
+            }
+            return out.toOwnedSlice(allocator);
+        }
+        for (self.units[module].syntax.types.expressions.arrays) |array| {
+            if (array.span.start != span.start or array.span.end != span.end) continue;
+            var out: std.ArrayList(u8) = .empty;
+            try out.appendSlice(allocator, "[");
+            switch (array.index) {
+                .length => |length| try out.appendSlice(allocator, src.text(length)),
+                .enum_type => |enum_type| try out.appendSlice(allocator, try self.contractTypeText(module, enum_type, parameters)),
+            }
+            try out.appendSlice(allocator, "]");
+            try out.appendSlice(allocator, try self.contractTypeText(module, array.element, parameters));
+            return out.toOwnedSlice(allocator);
+        }
+        if (typed.Type.fromName(text) != null) return allocator.dupe(u8, text);
+        if (!self.units[module].names.contains(text) and prelude.scalar(text)) return allocator.dupe(u8, text);
+        for (self.units[module].syntax.types.expressions.applications) |application| {
+            if (application.span.start == span.start and application.span.end == span.end) return self.contractApplicationText(module, application, parameters);
+        }
+        const id = try self.typeIdentity(module, span);
+        try self.requirePublicType(module, span, id);
+        if (self.declaredTypeParameters(id).len != 0) return self.project.fail(
+            eGenericArity,
+            "nominal type template requires explicit type arguments",
+            .{ .module = module, .span = span },
+            .{ .module = id.module, .span = self.units[id.module].symbols.items[id.symbol].span },
+        );
+        return std.fmt.allocPrint(allocator, "{s}::{s}", .{
+            self.project.modules.items[id.module].name,
+            self.units[id.module].symbols.items[id.symbol].name,
+        });
+    }
+    fn contractApplicationText(self: *Index, module: usize, application: ast.TypeApplication, parameters: []const ast.TypeParameter) ContractError![]const u8 {
+        const allocator = self.project.arena.allocator();
+        const src = self.project.modules.items[module].src;
+        for (parameters) |parameter| if (std.mem.eql(u8, src.text(parameter.name), src.text(application.name))) return self.project.fail(
+            "E_TYPE_APPLICATION",
+            "type parameters cannot be used as type constructors",
+            .{ .module = module, .span = application.name },
+            null,
+        );
+        var out: std.ArrayList(u8) = .empty;
+        const name = src.text(application.name);
+        if (!self.units[module].names.contains(name)) {
+            if (prelude.arity(name)) |arity| {
+                if (application.arguments.len != arity) return self.project.fail(eGenericArity, "builtin type argument count does not match", .{ .module = module, .span = application.span }, null);
+                try out.appendSlice(allocator, name);
+                try self.appendTypeArguments(&out, module, application, parameters);
+                return out.toOwnedSlice(allocator);
+            }
+        }
+        const id = try self.typeIdentity(module, application.name);
+        try self.requirePublicType(module, application.name, id);
+        if (self.declaredTypeParameters(id).len != application.arguments.len) return self.project.fail(
+            eGenericArity,
+            "type application argument count does not match its declaration",
+            .{ .module = module, .span = application.span },
+            .{ .module = id.module, .span = self.units[id.module].symbols.items[id.symbol].span },
+        );
+        try out.appendSlice(allocator, self.project.modules.items[id.module].name);
+        try out.appendSlice(allocator, "::");
+        try out.appendSlice(allocator, self.units[id.module].symbols.items[id.symbol].name);
+        try self.appendTypeArguments(&out, module, application, parameters);
+        return out.toOwnedSlice(allocator);
+    }
+    fn appendTypeArguments(self: *Index, out: *std.ArrayList(u8), module: usize, application: ast.TypeApplication, parameters: []const ast.TypeParameter) ContractError!void {
+        const allocator = self.project.arena.allocator();
+        try out.appendSlice(allocator, "[");
+        for (application.arguments, 0..) |argument, index| {
+            if (index != 0) try out.appendSlice(allocator, ",");
+            try out.appendSlice(allocator, try self.contractTypeText(module, argument, parameters));
+        }
+        try out.appendSlice(allocator, "]");
+    }
 };
+fn declarationLess(_: void, a: ContractDeclaration, b: ContractDeclaration) bool {
+    return std.mem.lessThan(u8, a.name, b.name);
+}
+fn moduleLess(_: void, a: ContractModule, b: ContractModule) bool {
+    return std.mem.lessThan(u8, a.name, b.name);
+}
+fn tokenLess(_: void, a: []const u8, b: []const u8) bool {
+    return std.mem.lessThan(u8, a, b);
+}
+fn appendUniqueToken(allocator: std.mem.Allocator, list: *std.ArrayList([]const u8), token: []const u8) !void {
+    for (list.items) |existing| if (std.mem.eql(u8, existing, token)) return;
+    try list.append(allocator, token);
+}
+fn hasBuiltinRequirement(src: source.Source, parameter: ast.TypeParameter, name: []const u8) bool {
+    for (parameter.requirements) |span| if (std.mem.eql(u8, src.text(span), name)) return true;
+    return false;
+}
+/// Canonical declared permission encoding for one exported callable:
+/// `effects=<comma names>;mutates=<position list>;origin=<tag>`.
+fn permissionsText(allocator: std.mem.Allocator, mask: effect_set.Mask, mutates: []const u16, origin: []const u8) ![]const u8 {
+    var out: std.ArrayList(u8) = .empty;
+    try out.appendSlice(allocator, "effects=");
+    var separator = false;
+    inline for (std.meta.tags(effect_set.Effect)) |effect| {
+        if (mask & effect_set.bit(effect) != 0) {
+            if (separator) try out.appendSlice(allocator, ",");
+            try out.appendSlice(allocator, @tagName(effect));
+            separator = true;
+        }
+    }
+    try out.appendSlice(allocator, ";mutates=");
+    for (mutates, 0..) |position, index| {
+        if (index != 0) try out.appendSlice(allocator, ",");
+        try out.appendSlice(allocator, try std.fmt.allocPrint(allocator, "{d}", .{position}));
+    }
+    try out.appendSlice(allocator, ";origin=");
+    try out.appendSlice(allocator, origin);
+    return out.toOwnedSlice(allocator);
+}
+fn appendEffectNames(out: *std.ArrayList(u8), allocator: std.mem.Allocator, mask: effect_set.Mask) !void {
+    var separator = false;
+    inline for (std.meta.tags(effect_set.Effect)) |effect| {
+        if (mask & effect_set.bit(effect) != 0) {
+            if (separator) try out.appendSlice(allocator, ",");
+            try out.appendSlice(allocator, @tagName(effect));
+            separator = true;
+        }
+    }
+}
 fn boundSpan(reference: ast.BoundReference) source.Span {
     return if (reference.alias) |alias| source.Span.join(alias, reference.name) else reference.name;
 }

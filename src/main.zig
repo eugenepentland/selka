@@ -535,6 +535,8 @@ const Parsed = struct {
     policy: ?[]const u8,
     format_check: bool,
     write: bool,
+    /// `list-interfaces --contracts` emits declaration-level provider contracts.
+    contracts: bool,
     quality: language.quality.Options,
     command: Command,
     path: []const u8,
@@ -611,6 +613,7 @@ fn parseArgs(allocator: std.mem.Allocator, args: []const []const u8) ArgError!Pa
 const ArgumentParser = struct {
     command: Command,
     schema_report: bool = false,
+    contracts: bool = false,
     inputs: [16][]const u8 = @splat(""),
     input_count: usize = 0,
     quality: language.quality.Options = .{},
@@ -647,6 +650,11 @@ const ArgumentParser = struct {
     }
 
     fn surfaceOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (std.mem.eql(u8, arg, "--contracts")) {
+            if (self.command != .@"list-interfaces" or self.contracts) return error.Usage;
+            self.contracts = true;
+            return true;
+        }
         if (std.mem.eql(u8, arg, "--schema-report")) {
             if (self.command != .@"schema-project" or self.schema_report) return error.Usage;
             self.schema_report = true;
@@ -797,6 +805,7 @@ const ArgumentParser = struct {
             .policy = self.policy,
             .format_check = self.format_check,
             .write = self.write,
+            .contracts = self.contracts,
             .quality = self.quality,
             .command = self.command,
             .path = self.path orelse return error.Usage,
@@ -1026,10 +1035,13 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     const policy_receipt = try configuredPolicyReceipt(init.arena.allocator(), &configured);
     if (try surfaceProject(init, &project, parsed)) |status| return status;
     if (try replayStoredVerdict(init, parsed, &project, verdict, frontend)) return 0;
+    // `list-interfaces` is the declaration/interface gate: it parses every module
+    // and checks exported signatures without checking bodies. `--contracts`
+    // publishes those declared contracts for provider validation.
+    if (parsed.command == .@"list-interfaces") return listInterfaces(init, &project, parsed, cache, frontend);
     const output = if (parsed.command != .@"list-modules") result: {
         init.timings.begin(frontend_label, false);
         var index = (try buildIndex(init, &project, cache, frontend)) orelse return partialNavigation(init, &project, parsed.command);
-        if (parsed.command == .@"list-interfaces") break :result try index.render(init.gpa);
         var compilation = try language.project_compile.Compilation.init(&index);
         if (parsed.command == .@"index-project") break :result try renderNavigation(init, &compilation, functions);
         const semantic_before = if (functions) |f| f.statistics else null;
@@ -1191,6 +1203,32 @@ fn loadModules(init: Context, project: *language.project.Project, files: *Module
     };
     if (!try checkImportedInputs(init, files.inputs, project)) return 2;
     return null;
+}
+
+fn listInterfaces(init: Context, project: *language.project.Project, parsed: Parsed, cache: ?*language.syntax_cache.Cache, frontend: ?*language.frontend_cache.Cache) !u8 {
+    init.timings.begin(frontend_label, false);
+    var index = (try buildIndex(init, project, cache, frontend)) orelse return partialNavigation(init, project, parsed.command);
+    if (parsed.contracts) {
+        const contracts = index.renderContracts(init.gpa) catch |err| switch (err) {
+            error.SourceError, error.IncompleteProject => {
+                const message = try diagnostic_output.renderProject(init.gpa, project, init.diagnostics);
+                defer init.gpa.free(message);
+                try std.Io.File.stderr().writeStreamingAll(init.io, message);
+                init.timings.end();
+                return 1;
+            },
+            else => return err,
+        };
+        defer init.gpa.free(contracts);
+        init.timings.end();
+        try std.Io.File.stdout().writeStreamingAll(init.io, contracts);
+        return 0;
+    }
+    const text = try index.render(init.gpa);
+    defer init.gpa.free(text);
+    init.timings.end();
+    try std.Io.File.stdout().writeStreamingAll(init.io, text);
+    return 0;
 }
 
 fn buildIndex(init: Context, project: *language.project.Project, cache: ?*language.syntax_cache.Cache, frontend: ?*language.frontend_cache.Cache) !?language.interfaces.Index {

@@ -3493,3 +3493,268 @@ test "CLI nested record alias rejects under effects and runs with a mutation foo
     ;
     try invoke("run", permitted, 0, "7\n", "");
 }
+
+// --- P1: selected test providers validated against declared contracts ---
+
+const p1_production_unfinished =
+    \\module production
+    \\export Stub
+    \\
+    \\
+    \\domain Stub: int:
+    \\    def make(discount: int) -> Stub effects():
+    \\        return wrap[Stub](discount)
+    \\
+    \\    def price(policy: Stub, subtotal: int) -> int effects(mutation) mutates(policy):
+    \\        return todo[int]()
+;
+const p1_production_missing_ceiling =
+    \\module production
+    \\export Stub
+    \\
+    \\
+    \\domain Stub: int:
+    \\    def make(discount: int) -> Stub effects():
+    \\        return wrap[Stub](discount)
+    \\
+    \\    def price(policy: Stub, subtotal: int) -> int:
+    \\        return subtotal
+;
+const p1_main =
+    \\module main
+    \\import production
+    \\export test_checkout
+    \\
+    \\
+    \\def main() -> int:
+    \\    return 0
+    \\
+    \\
+    \\def test_checkout() -> bool effects():
+    \\    policy = production.Stub.make(250)
+    \\    return production.Stub.price(policy, 2000) == 1750
+;
+fn p1Fake(perm: []const u8, body: []const u8) ![]const u8 {
+    return std.fmt.allocPrint(
+        testing.allocator,
+        "module production\nexport Stub\n\n\ndomain Stub: int:\n" ++
+            "    def make(discount: int) -> Stub effects():\n        return wrap[Stub](discount)\n\n" ++
+            "    def price(policy: Stub, subtotal: int) -> int {s}:\n        {s}\n        return subtotal - unwrap(policy)\n",
+        .{ perm, body },
+    );
+}
+fn p1WriteCases(dir: *std.testing.TmpDir, name: []const u8, key: []const u8, source: []const u8) !void {
+    const a = testing.allocator;
+    var providers: std.json.ObjectMap = .empty;
+    defer providers.deinit(a);
+    try providers.put(a, key, .{ .string = source });
+    var settings: std.json.ObjectMap = .empty;
+    defer settings.deinit(a);
+    try settings.put(a, "providers", .{ .object = providers });
+    var root: std.json.ObjectMap = .empty;
+    defer root.deinit(a);
+    try root.put(a, "main::test_checkout", .{ .object = settings });
+    const bytes = try std.json.Stringify.valueAlloc(a, std.json.Value{ .object = root }, .{});
+    defer a.free(bytes);
+    try dir.dir.writeFile(testing.io, .{ .sub_path = name, .data = bytes });
+}
+fn p1Invoke(entry: []const u8, cases_path: ?[]const u8, cache: []const u8) !std.process.RunResult {
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    const cache_arg = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
+    defer testing.allocator.free(cache_arg);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "test", entry, "--filter", "test_checkout", "--json", cache_arg });
+    if (cases_path) |path| try args.appendSlice(testing.allocator, &.{ "--cases", path });
+    try args.appendSlice(testing.allocator, &tools);
+    return runCompiler(testing.allocator, args.items);
+}
+
+// spec-case: NATIVE-TEST-3
+test "P1 selects a validated fake while the unfinished production body is never checked" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try writeProjectFile(&temp, "main.my", p1_main);
+    try writeProjectFile(&temp, "production.my", p1_production_unfinished);
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const root = std.fs.path.dirname(entry).?;
+    const cases_path = try std.fs.path.join(testing.allocator, &.{ root, "cases.json" });
+    defer testing.allocator.free(cases_path);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
+    defer testing.allocator.free(cache);
+
+    const fake = try p1Fake("effects(mutation) mutates(policy)", "_ = subtotal");
+    defer testing.allocator.free(fake);
+    try p1WriteCases(&temp, "cases.json", "production.my", fake);
+
+    // Same consumer test passes against the fake while production returns todo[T]().
+    const first = try p1Invoke(entry, cases_path, cache);
+    defer testing.allocator.free(first.stdout);
+    defer testing.allocator.free(first.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term);
+    try testing.expect(std.mem.indexOf(u8, first.stdout, "\"passed\":1") != null);
+    try testing.expect(std.mem.indexOf(u8, first.stdout, "\"contract\":") != null);
+    try testing.expect(std.mem.indexOf(u8, first.stdout, "\"provider\":") != null);
+    try testing.expect(std.mem.indexOf(u8, first.stdout, "\"source\":") != null);
+
+    // The verified receipt is reused while nothing changed.
+    const warm = try p1Invoke(entry, cases_path, cache);
+    defer testing.allocator.free(warm.stdout);
+    defer testing.allocator.free(warm.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, warm.term);
+    try testing.expect(std.mem.indexOf(u8, warm.stdout, "\"cached\":1") != null);
+
+    // Changing the fake value changes its identity and forces a fresh execution.
+    const changed = try p1Fake("effects(mutation) mutates(policy)", "_ = subtotal");
+    defer testing.allocator.free(changed);
+    const mutated = try std.mem.replaceOwned(u8, testing.allocator, changed, "return subtotal - unwrap(policy)", "return subtotal - unwrap(policy) + 1");
+    defer testing.allocator.free(mutated);
+    try p1WriteCases(&temp, "cases.json", "production.my", mutated);
+    const edited = try p1Invoke(entry, cases_path, cache);
+    defer testing.allocator.free(edited.stdout);
+    defer testing.allocator.free(edited.stderr);
+    try testing.expect(std.mem.indexOf(u8, edited.stdout, "\"cached\":0") != null);
+    try testing.expect(std.mem.indexOf(u8, edited.stdout, "\"executed\":1") != null);
+    try testing.expect(std.mem.indexOf(u8, edited.stdout, "\"failed\":1") != null);
+
+    // A full production check still rejects the unfinished body.
+    const full = try p1Invoke(entry, null, cache);
+    defer testing.allocator.free(full.stdout);
+    defer testing.allocator.free(full.stderr);
+    try testing.expect(full.term != .exited or full.term.exited != 0);
+    try testing.expect(std.mem.indexOf(u8, full.stderr, "E_TYPED_HOLE") != null);
+}
+
+// spec-case: NATIVE-TEST-3
+test "P1 rejects stronger or malformed replacements and a bad production interface" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try writeProjectFile(&temp, "main.my", p1_main);
+    try writeProjectFile(&temp, "production.my", p1_production_unfinished);
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const root = std.fs.path.dirname(entry).?;
+    const cases_path = try std.fs.path.join(testing.allocator, &.{ root, "cases.json" });
+    defer testing.allocator.free(cases_path);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
+    defer testing.allocator.free(cache);
+
+    // A narrower mutation footprint is accepted.
+    const narrow = try p1Fake("effects(mutation)", "_ = subtotal");
+    defer testing.allocator.free(narrow);
+    try p1WriteCases(&temp, "cases.json", "production.my", narrow);
+    const accepted = try p1Invoke(entry, cases_path, cache);
+    defer testing.allocator.free(accepted.stdout);
+    defer testing.allocator.free(accepted.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, accepted.term);
+
+    // A stronger mutation footprint rejects.
+    const wide = try p1Fake("effects(mutation) mutates(policy, subtotal)", "_ = subtotal");
+    defer testing.allocator.free(wide);
+    try p1WriteCases(&temp, "cases.json", "production.my", wide);
+    const rejected = try p1Invoke(entry, cases_path, cache);
+    defer testing.allocator.free(rejected.stdout);
+    defer testing.allocator.free(rejected.stderr);
+    try testing.expect(rejected.term != .exited or rejected.term.exited != 0);
+    try testing.expect(std.mem.indexOf(u8, rejected.stderr, "IncompatibleProvider") != null);
+
+    // An unknown replacement path rejects without touching a production body.
+    try p1WriteCases(&temp, "cases.json", "nope.my", narrow);
+    const unknown = try p1Invoke(entry, cases_path, cache);
+    defer testing.allocator.free(unknown.stdout);
+    defer testing.allocator.free(unknown.stderr);
+    try testing.expect(unknown.term != .exited or unknown.term.exited != 0);
+    try testing.expect(std.mem.indexOf(u8, unknown.stderr, "InvalidTestProviders") != null);
+
+    // A production interface error rejects before any provider is selected.
+    try writeProjectFile(&temp, "production.my", p1_production_missing_ceiling);
+    try p1WriteCases(&temp, "cases.json", "production.my", narrow);
+    const interface_error = try p1Invoke(entry, cases_path, cache);
+    defer testing.allocator.free(interface_error.stdout);
+    defer testing.allocator.free(interface_error.stderr);
+    try testing.expect(interface_error.term != .exited or interface_error.term.exited != 0);
+    try testing.expect(std.mem.indexOf(u8, interface_error.stderr, "E_EFFECT_CEILING") != null);
+}
+
+// spec-case: NATIVE-TEST-3
+test "P1 rejects every incompatible replacement dimension" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try writeProjectFile(&temp, "main.my", p1_main);
+    try writeProjectFile(&temp, "production.my", p1_production_unfinished);
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const root = std.fs.path.dirname(entry).?;
+    const cases_path = try std.fs.path.join(testing.allocator, &.{ root, "cases.json" });
+    defer testing.allocator.free(cases_path);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
+    defer testing.allocator.free(cache);
+
+    const base = try p1Fake("effects(mutation) mutates(policy)", "_ = subtotal");
+    defer testing.allocator.free(base);
+    const variants = [_]struct { label: []const u8, from: []const u8, to: []const u8 }{
+        .{ .label = "parameter type", .from = "subtotal: int) -> int", .to = "subtotal: bool) -> int" },
+        .{ .label = "parameter default", .from = "subtotal: int) -> int", .to = "subtotal: int = 0) -> int" },
+        .{ .label = "nominal identity", .from = "Stub", .to = "Other" },
+        .{ .label = "generic requirement", .from = "def price(policy:", .to = "def price[T: copy](policy:" },
+        .{ .label = "effects too wide", .from = "effects(mutation) mutates(policy)", .to = "effects(mutation, output) mutates(policy)" },
+    };
+    for (variants) |variant| {
+        const changed = try std.mem.replaceOwned(u8, testing.allocator, base, variant.from, variant.to);
+        defer testing.allocator.free(changed);
+        try p1WriteCases(&temp, "cases.json", "production.my", changed);
+        const result = try p1Invoke(entry, cases_path, cache);
+        defer testing.allocator.free(result.stdout);
+        defer testing.allocator.free(result.stderr);
+        testing.expect(result.term != .exited or result.term.exited != 0) catch |err| {
+            std.debug.print("variant {s} was accepted\n", .{variant.label});
+            return err;
+        };
+        testing.expect(std.mem.indexOf(u8, result.stderr, "IncompatibleProvider") != null) catch |err| {
+            std.debug.print("variant {s} failed without IncompatibleProvider: {s}\n", .{ variant.label, result.stderr });
+            return err;
+        };
+    }
+}
+
+// spec-case: NATIVE-TEST-3
+test "P1 ignores an unselected production body type error while its declarations stay valid" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const production_body_error =
+        \\module production
+        \\export Stub
+        \\
+        \\
+        \\domain Stub: int:
+        \\    def make(discount: int) -> Stub effects():
+        \\        return wrap[Stub](discount)
+        \\
+        \\    def price(policy: Stub, subtotal: int) -> int effects(mutation) mutates(policy):
+        \\        return True
+    ;
+    try writeProjectFile(&temp, "main.my", p1_main);
+    try writeProjectFile(&temp, "production.my", production_body_error);
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const root = std.fs.path.dirname(entry).?;
+    const cases_path = try std.fs.path.join(testing.allocator, &.{ root, "cases.json" });
+    defer testing.allocator.free(cases_path);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
+    defer testing.allocator.free(cache);
+
+    const fake = try p1Fake("effects(mutation) mutates(policy)", "_ = subtotal");
+    defer testing.allocator.free(fake);
+    try p1WriteCases(&temp, "cases.json", "production.my", fake);
+    const selected = try p1Invoke(entry, cases_path, cache);
+    defer testing.allocator.free(selected.stdout);
+    defer testing.allocator.free(selected.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, selected.term);
+    try testing.expect(std.mem.indexOf(u8, selected.stdout, "\"passed\":1") != null);
+
+    const full = try p1Invoke(entry, null, cache);
+    defer testing.allocator.free(full.stdout);
+    defer testing.allocator.free(full.stderr);
+    try testing.expect(full.term != .exited or full.term.exited != 0);
+    try testing.expect(std.mem.indexOf(u8, full.stderr, "E_TYPE") != null);
+}
