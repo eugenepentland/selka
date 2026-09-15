@@ -390,6 +390,84 @@ test "build --run detects module projects and installed binaries receive the sam
     try testing.expect(std.mem.indexOf(u8, installed_invalid.stderr, "not valid UTF-8") != null);
 }
 
+fn spawnWithEnv(argv: []const []const u8, env_map: *const std.process.Environ.Map) !std.process.RunResult {
+    return std.process.run(testing.allocator, testing.io, .{ .argv = argv, .environ_map = env_map });
+}
+
+// spec: BOUNDARY-CLI-1
+test "boundary acceptance CLI runs through run build --run and installed paths" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "sample.my", .data = "a\nb\n" });
+    const input = try temp.dir.realPathFileAlloc(testing.io, "sample.my", testing.allocator);
+    defer testing.allocator.free(input);
+    const home = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(home);
+    const output = try std.fs.path.join(testing.allocator, &.{ home, "boundary-cli" });
+    defer testing.allocator.free(output);
+    const cache = try std.fs.path.join(testing.allocator, &.{ home, "cache" });
+    defer testing.allocator.free(cache);
+    const cache_arg = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
+    defer testing.allocator.free(cache_arg);
+    const entry = "examples/boundary-cli/main.my";
+    const expected = "{\"lines\":2,\"characters\":4}\n";
+    const trace = try std.fmt.allocPrint(testing.allocator, "reading {s}\n", .{input});
+    defer testing.allocator.free(trace);
+
+    var plain_env: std.process.Environ.Map = .init(testing.allocator);
+    defer plain_env.deinit();
+    try plain_env.put("HOME", home);
+    var trace_env: std.process.Environ.Map = .init(testing.allocator);
+    defer trace_env.deinit();
+    try trace_env.put("HOME", home);
+    try trace_env.put("MYLANG_ACCEPT_MODE", "1");
+
+    var run_argv: std.ArrayList([]const u8) = .empty;
+    defer run_argv.deinit(testing.allocator);
+    try run_argv.appendSlice(testing.allocator, &.{ compiler_path, "run", entry, cache_arg });
+    try run_argv.appendSlice(testing.allocator, &tools);
+    try run_argv.appendSlice(testing.allocator, &.{ "--", input });
+    const cold = try spawnWithEnv(run_argv.items, &plain_env);
+    defer testing.allocator.free(cold.stdout);
+    defer testing.allocator.free(cold.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cold.term);
+    try testing.expectEqualStrings(expected, cold.stdout);
+    try testing.expectEqualStrings("", cold.stderr);
+    const warm = try spawnWithEnv(run_argv.items, &trace_env);
+    defer testing.allocator.free(warm.stdout);
+    defer testing.allocator.free(warm.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, warm.term);
+    try testing.expectEqualStrings(expected, warm.stdout);
+    try testing.expectEqualStrings(trace, warm.stderr);
+
+    var build_argv: std.ArrayList([]const u8) = .empty;
+    defer build_argv.deinit(testing.allocator);
+    try build_argv.appendSlice(testing.allocator, &.{ compiler_path, "build", entry, "--run", cache_arg });
+    try build_argv.appendSlice(testing.allocator, &tools);
+    try build_argv.appendSlice(testing.allocator, &.{ "--", input });
+    const built = try spawnWithEnv(build_argv.items, &trace_env);
+    defer testing.allocator.free(built.stdout);
+    defer testing.allocator.free(built.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, built.term);
+    try testing.expectEqualStrings(expected, built.stdout);
+    try testing.expectEqualStrings(trace, built.stderr);
+
+    var link_argv: std.ArrayList([]const u8) = .empty;
+    defer link_argv.deinit(testing.allocator);
+    try link_argv.appendSlice(testing.allocator, &.{ compiler_path, "build", entry, "--project", "-o", output });
+    try link_argv.appendSlice(testing.allocator, &tools);
+    const link = try spawnWithEnv(link_argv.items, &plain_env);
+    defer testing.allocator.free(link.stdout);
+    defer testing.allocator.free(link.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, link.term);
+    const installed = try spawnWithEnv(&.{ output, "--", input }, &trace_env);
+    defer testing.allocator.free(installed.stdout);
+    defer testing.allocator.free(installed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, installed.term);
+    try testing.expectEqualStrings(expected, installed.stdout);
+    try testing.expectEqualStrings(trace, installed.stderr);
+}
+
 test "CLI run and check success" {
     try invoke("run", @embedFile("fixtures/arithmetic.my"), 0, "7\n", "");
     try invoke("check", @embedFile("fixtures/arithmetic.my"), 0, "", "");

@@ -1,0 +1,19 @@
+module summary
+
+export render
+
+def line_count(source: str) -> int:
+    if len(source) == 0:
+        return 0
+
+    count = 1
+    for character in source:
+        if character == "\n":
+            count += 1
+
+    if source.endswith("\n"):
+        count -= 1
+    return count
+
+def render(source: str) -> str:
+    return "{\"lines\":" + str(line_count(source)) + ",\"characters\":" + str(len(source)) + "}"

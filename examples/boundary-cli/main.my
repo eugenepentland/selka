@@ -1,0 +1,27 @@
+module main
+import summary
+
+class Entry:
+    bytes: [16]u8
+    length: u64
+    present: bool
+
+result Lookup:
+    ok: Entry,
+    err: int
+
+def trace_requested(env: Environment) -> bool:
+    match environment_get[Lookup](env, [77u8, 89u8, 76u8, 65u8, 78u8, 71u8, 95u8, 65u8, 67u8, 67u8, 69u8, 80u8, 84u8, 95u8, 77u8, 79u8, 68u8, 69u8]):
+        case Lookup.ok(entry):
+            return entry.present
+        case Lookup.err(code):
+            return code < 0
+
+def main(args: list[str], fs: Filesystem, env: Environment) -> Result[int, str]:
+    if len(args) != 1:
+        return Err("usage: boundary-cli <source.my>")
+    if trace_requested(env):
+        eprint("reading", args[0])
+    source = read_text(fs, args[0])?
+    print(summary.render(source))
+    return Ok(0)
