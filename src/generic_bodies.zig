@@ -661,12 +661,27 @@ const Checker = struct {
         const keyword = if (invocation.argument_names.len == 0) null else invocation.argument_names[0];
         if (keyword == null or !std.mem.eql(u8, self.src.text(keyword.?), "value"))
             return self.sink.fail("E_UNKNOWN_FIELD", invocation.name, "construct Cell with value=initial");
-        const value = try self.expression(invocation.arguments[0]);
+        var expected_element: ?Symbolic = null;
+        var result: ?Symbolic = null;
+        if (self.expected_types.get(span)) |expected| {
+            if (self.shapes().isCell(expected)) {
+                const schema = try self.shapes().schema(expected, span);
+                if (schema.kind != .record) return error.InternalError;
+                for (schema.fields) |field| {
+                    if (!std.mem.eql(u8, field.name, "value")) continue;
+                    expected_element = field.ty orelse return error.InternalError;
+                    result = expected;
+                    break;
+                }
+                if (result == null) return error.InternalError;
+            }
+        }
+        const value = if (expected_element) |element| try self.expressionExpected(invocation.arguments[0], element) else try self.expression(invocation.arguments[0]);
+        if (expected_element) |element| try self.same(value, element, span);
         if (try self.requiresHandling(value)) return self.sink.fail("E_CELL_ELEMENT", span, "Cell contents must be copyable, storable values without Result, Option, resources, capabilities, or result obligations");
         try self.supports(value, .storable, span);
         self.seedEffect(.managed_allocation);
-        const cell = try self.shapes().nominal(declaration, &.{value});
-        return cell;
+        return result orelse try self.shapes().nominal(declaration, &.{value});
     }
     fn numericLiteral(self: *Checker, span: source.Span, minimum: bool) Error!Symbolic {
         const expected = self.expected_types.get(span);

@@ -132,6 +132,26 @@ test "generic Cell construction is recognized and tracks allocation effects" {
         \\def main() -> int:
         \\    return 0
     , "E_EFFECT_BOUND");
+    try run(
+        \\def make[T]() -> Cell[list[T]]:
+        \\    return Cell(value=[])
+        \\
+        \\
+        \\def main() -> int:
+        \\    return len(make[i64]().value)
+    , 0);
+    try run(
+        \\def zero[T](unused: T) -> Cell[float]:
+        \\    _ = unused
+        \\    return Cell(value=0)
+        \\
+        \\
+        \\def main() -> int:
+        \\    cell = zero(1)
+        \\    if cell.value == 0.0:
+        \\        return 0
+        \\    return 1
+    , 0);
 }
 
 // spec: CELL-EQUALITY-1
@@ -159,4 +179,37 @@ test "Cell equality is rejected for membership search and nested containers" {
         \\        return 1
         \\    return 0
     , "E_CELL_EQUALITY");
+    try reject(
+        \\def main() -> int:
+        \\    return [Cell(value=1)].index(Cell(value=1))
+    , "E_CELL_EQUALITY");
+    try reject(
+        \\def main() -> int:
+        \\    [Cell(value=1)].remove(Cell(value=1))
+        \\    return 0
+    , "E_CELL_EQUALITY");
+    try reject(
+        \\record Holder:
+        \\    cells: list[Cell[int]]
+        \\
+        \\
+        \\def main() -> int:
+        \\    holder = Holder(cells=[Cell(value=1)])
+        \\    return holder.cells.index(Cell(value=1))
+    , "E_CELL_EQUALITY");
+    try reject(
+        \\def make() -> list[Cell[int]]:
+        \\    return [Cell(value=1)]
+        \\
+        \\
+        \\def main() -> int:
+        \\    return make().remove(Cell(value=1))
+    , "E_CELL_EQUALITY");
+    try run(
+        \\def main() -> int:
+        \\    values = {"answer": Cell(value=42)}
+        \\    if "answer" in values:
+        \\        return values["answer"].value
+        \\    return 0
+    , 42);
 }

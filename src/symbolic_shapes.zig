@@ -109,6 +109,15 @@ pub const Context = struct {
         if (shape.shape.variants) |variants| return if (variants.fallible) .result else if (variants.is_union) .variants else .enumeration;
         return if (shape.isRecord()) .record else null;
     }
+    /// Identify the builtin managed Cell nominal in concrete and generic source types.
+    pub fn isCell(self: Context, value: Value) bool {
+        if (value == .nominal) {
+            const declaration = self.catalog.templates.store.?.index.declarations.items[value.nominal.declaration];
+            const builtin = declaration.builtin_name orelse return false;
+            return std.mem.eql(u8, builtin, "Cell");
+        }
+        return value == .concrete and value.concrete.isAggregate() and self.catalog.records[value.concrete.recordIndex()].isCell();
+    }
     /// Identify copyable managed list identities in concrete and generic source types.
     pub fn managed(self: Context, value: Value) bool {
         if (value == .nominal) return self.catalog.templates.store.?.index.declarations.items[value.nominal.declaration].managed;

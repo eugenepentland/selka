@@ -1014,6 +1014,10 @@ const Checker = struct {
         if (self.catalog.records[ty_value.recordIndex()].collection.kind != .list) return self.sink.fail(eListType, span, needs_list);
         return self.catalog.records[ty_value.recordIndex()].shape.buffer orelse return self.sink.fail(eListType, span, needs_list);
     }
+    /// Whether equality-based collection operations would compare a Cell-bearing type.
+    fn requiresCellEquality(self: *Checker, ty_value: typed.Type) bool {
+        return ty_value.isAggregate() and self.catalog.records[ty_value.recordIndex()].collection.contains_cell;
+    }
     fn checkFieldAssignment(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
         const assignment = node.data.field_assignment;
         const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
@@ -1363,7 +1367,7 @@ const Checker = struct {
         };
         if (!supported) return self.sink.fail(eCollectionMethod, node.span, unsupported_list);
         const element = try self.listElement(self.nodes.items[@backingInt(base)].ty, node.span);
-        if (kind == .contains and element.isAggregate() and self.catalog.records[element.recordIndex()].collection.contains_cell)
+        if (kind == .contains and self.requiresCellEquality(element))
             return self.sink.fail(eCellEquality, node.span, "list membership over Cell-bearing values requires equality, which Cell does not define");
         if (inputs.len != kind.arity()) return self.sink.fail("E_ARITY", node.span, method_arity);
         const arguments = try self.allocator.alloc(typed.NodeId, inputs.len);
@@ -1386,6 +1390,8 @@ const Checker = struct {
         const temporaries = call.temporaries;
         const owner_type = self.nodes.items[@backingInt(base)].ty;
         const element = try self.listElement(owner_type, node.span);
+        if ((kind == .remove or kind == .index_of) and self.requiresCellEquality(element))
+            return self.sink.fail(eCellEquality, node.span, "list search over Cell-bearing values requires equality, which Cell does not define");
         if (inputs.len != kind.arity()) return self.sink.fail("E_ARITY", node.span, method_arity);
         if (kind == .sort and !(element.isInteger() or numeric_surface.isFloat(element, self.catalog.records))) {
             return self.sink.fail(eCollectionMethod, node.span, "sort requires an integer or float element type");
@@ -1883,7 +1889,7 @@ const Checker = struct {
             try self.checkTextDictionary(operation, owner, out);
             return;
         }
-        if (operation.kind == .contains and element.isAggregate() and self.catalog.records[element.recordIndex()].collection.contains_cell)
+        if (operation.kind == .contains and self.requiresCellEquality(element))
             return self.sink.fail(eCellEquality, operation.owner, "list membership over Cell-bearing values requires equality, which Cell does not define");
         switch (operation.kind) {
             .append, .read, .write, .length, .capacity, .contains, .iteration_check => {},
@@ -1916,7 +1922,7 @@ const Checker = struct {
         const element = self.catalog.records[owner_type.recordIndex()].shape.buffer.?;
         var kind = operation.kind;
         if (kind == .pop) kind = if (operation.arguments.len == 1) .pop_at else .pop;
-        if ((kind == .remove or kind == .index_of) and element.isAggregate() and self.catalog.records[element.recordIndex()].collection.contains_cell)
+        if ((kind == .remove or kind == .index_of) and self.requiresCellEquality(element))
             return self.sink.fail(eCellEquality, operation.owner, "list search over Cell-bearing values requires equality, which Cell does not define");
         if (operation.arguments.len != kind.arity()) return self.sink.fail("E_ARITY", operation.owner, method_arity);
         if (kind == .sort and !(element.isInteger() or numeric_surface.isFloat(element, self.catalog.records))) {
@@ -2303,7 +2309,7 @@ const Checker = struct {
         const lt = self.nodes.items[@backingInt(left)].ty;
         const rt = self.nodes.items[@backingInt(right)].ty;
         try self.require(rt, lt, b.op_span);
-        if ((b.op == .eq or b.op == .ne) and lt.isAggregate() and self.catalog.records[lt.recordIndex()].collection.contains_cell)
+        if ((b.op == .eq or b.op == .ne) and self.requiresCellEquality(lt))
             return self.sink.fail(eCellEquality, b.op_span, "Cell equality is not defined, including inside collections");
         if (numeric_surface.isFloat(lt, self.catalog.records)) {
             out.* = try self.checkFloatBinary(out.span, b.op, left, right);
@@ -2354,7 +2360,14 @@ const Checker = struct {
         const container_type = self.nodes.items[@backingInt(container)].ty;
         if (!container_type.isAggregate() or !self.catalog.records[container_type.recordIndex()].isCollection()) return self.sink.fail("E_MEMBERSHIP", node.span, "membership requires a list, dictionary, or str");
         const schema = self.catalog.records[container_type.recordIndex()];
-        if (schema.collection.contains_cell) return self.sink.fail(eCellEquality, node.span, "membership over a value containing Cell requires equality, which Cell does not define");
+        const compared = switch (schema.collection.kind) {
+            .list => schema.shape.buffer.?,
+            .dictionary => schema.collection.key.?,
+            .string => container_type,
+            .bytes => null,
+        };
+        if (compared) |key_or_element| if (self.requiresCellEquality(key_or_element))
+            return self.sink.fail(eCellEquality, node.span, "membership over Cell-bearing values requires equality, which Cell does not define");
         var member = needle;
         const expected = switch (schema.collection.kind) {
             .list => schema.shape.buffer.?,
