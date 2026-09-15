@@ -2,10 +2,11 @@
 const std = @import("std");
 const receipt = @import("source_receipt.zig");
 const project_compile = @import("project_compile.zig");
+const incremental = @import("incremental.zig");
 /// Exact manifest bytes consumed during input generation, rather than a later disk read.
 pub const Manifest = struct { module: []const u8, path: []const u8, sha256: []const u8 };
 /// Checking errors and receipt allocation failures remain distinct.
-pub const RenderError = project_compile.CheckError || receipt.InputsError;
+pub const RenderError = project_compile.CheckError || receipt.InputsError || incremental.Error;
 /// Allocate lowercase SHA-256 for the supplied raw bytes.
 pub fn hashBytes(allocator: std.mem.Allocator, bytes: []const u8) std.mem.Allocator.Error![]const u8 {
     var digest: [32]u8 = undefined;
@@ -19,6 +20,7 @@ pub fn render(allocator: std.mem.Allocator, compilation: *project_compile.Compil
     defer arena.deinit();
     const scratch = arena.allocator();
     const graph = compilation.index.project;
+    const identities = try incremental.describe(scratch, compilation);
     return std.json.Stringify.valueAlloc(allocator, .{
         .version = "project-dependencies-v1",
         .complete = true,
@@ -26,5 +28,6 @@ pub fn render(allocator: std.mem.Allocator, compilation: *project_compile.Compil
         .implementation = try receipt.implementation(scratch, identity),
         .inputs = try receipt.inputs(scratch, graph),
         .manifests = manifests,
+        .incremental = identities,
     }, .{});
 }
