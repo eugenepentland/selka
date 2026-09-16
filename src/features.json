@@ -407,9 +407,9 @@
       "summary": "Concrete specialization keys are canonical over template identity, ordered positional descriptors, provider contracts, constraints, declared contracts and build context; unvalidated specializations are conservatively rechecked.",
       "doc": "docs/tooling/work-report.md#compiler-work-and-reuse-report"
     },
-    "semantic-retention-budget": {
+    "shared-semantic-retention-budget": {
       "kind": "tooling",
-      "summary": "Ordinary bodies, symbolic templates and concrete specializations share one bounded in-memory retention budget with deterministic eviction, accurate retained-byte reporting, oversized bypass, and clear/deinit that releases every generic index.",
+      "summary": "Ordinary checked bodies, symbolic templates and concrete specializations share one reuse.max_bytes in-memory budget with account for rows, arenas, keys and index capacity; eviction converges to the bound, oversized entries bypass, a zero budget disables reuse, and retained bytes plus a per-kind breakdown are reported.",
       "doc": "docs/tooling/caches.md#persistent-checked-body-store"
     },
     "persistent-checked-bodies": {
@@ -628,7 +628,7 @@
     "workers": "no host worker facility and no guest spawn syntax; parallelism is one guest process per task",
     "floating_point": "float literals, ordinary operators, signed int conversions; IEEE binary64; standard sqrt is the correctly rounded binary64 operation, decimal parsing is accurate rather than correctly rounded; no transcendentals",
     "callbacks": "generic signatures, exact effect ceilings, explicit readonly context borrows, no captures or reference results",
-    "semantic_reuse": "ordinary checked bodies and concrete specializations replay across processes; symbolic templates keep abstract checking; unresolved nested or interned-identity references stay conservative",
+    "semantic_reuse": "ordinary checked bodies and concrete specializations replay across processes; symbolic templates keep abstract checking; unresolved nested or interned-identity references stay conservative; in-memory retention is bounded by one shared reuse.max_bytes budget and a zero budget disables reuse",
     "text_data": "managed Unicode scalar strings and managed bytes; host byte I/O keeps its scalar ABI",
     "time_random": "Unix wall clock and explicit entropy capabilities; deterministic noncryptographic SplitMix64",
     "managed_lists": "copyable shared aliases; automatic growth; no owned/resource elements, borrowed interiors, untraced storage embedding, or host escape",

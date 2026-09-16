@@ -1273,7 +1273,11 @@ test "clear releases ordinary symbolic and specialization entries and keeps retu
     const symbolic_checked = cache.reuse.symbolic.statistics.checked;
     const specialization_checked = cache.reuse.specializations.statistics.checked;
 
+    // Eviction history is cumulative work, not retained storage, so clear
+    // zeroes the byte fields without erasing the tally.
+    cache.statistics.retention.evicted = 5;
     cache.clear();
+    try t.expectEqual(@as(usize, 5), cache.statistics.retention.evicted);
     try t.expectEqual(@as(usize, 0), cache.entries.len);
     try t.expectEqual(@as(usize, 0), cache.index.count());
     try t.expectEqual(@as(usize, 0), cache.reuse.symbolic.entries.items.len);

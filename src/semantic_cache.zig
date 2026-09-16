@@ -194,7 +194,10 @@ pub const Cache = struct {
         self.reuse.symbolic.clear();
         self.reuse.specializations.clear();
         self.statistics.retained_bytes = 0;
-        self.statistics.retention = .{};
+        self.statistics.retention.ordinary_bytes = 0;
+        self.statistics.retention.symbolic_bytes = 0;
+        self.statistics.retention.specialization_bytes = 0;
+        // `retention.evicted` stays cumulative: clear is not a budget eviction.
     }
     /// Recompute the reported retained bytes from the three owned tables.
     pub fn recountRetention(self: *Cache) void {
