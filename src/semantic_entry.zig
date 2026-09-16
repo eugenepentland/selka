@@ -1,4 +1,4 @@
-//! Independently owned function snapshots share immutable source generations.
+//! Independently owned function snapshots, each owning its own source slices.
 const std = @import("std");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
@@ -35,55 +35,30 @@ pub const Metadata = struct {
 /// Inputs for `Entry.create`; bundles the changing snapshot facts.
 pub const Spec = struct { identity: Identity, function_refs: []const FunctionRef, record_refs: []const RecordRef };
 
-/// Source bytes and the optional shared immutable generation backing them.
+/// Source bytes owned by one entry: its original length plus the body and
+/// declaration-region slices used to prove the entry still matches fresh source.
+/// Each entry copies only the two slices it needs, so retention accounting is a
+/// plain per-entry sum and releasing one entry never invalidates another.
 pub const SourceRef = struct {
-    generation: ?*Generation = null,
     old_len: usize = 0,
     body_bytes: []const u8 = &.{},
     region_bytes: []const u8 = &.{},
 };
-/// Reference counts are coordinator-owned; no cache mutation is concurrent.
-pub const Generation = struct {
-    allocator: std.mem.Allocator,
-    arena: std.heap.ArenaAllocator,
-    bytes: []const u8,
-    bodies: []const source.Span,
-    references: usize = 1,
-    /// The returned generation starts with one temporary construction reference.
-    pub fn create(allocator: std.mem.Allocator, bytes: []const u8, bodies: []const source.Span) std.mem.Allocator.Error!*Generation {
-        const generation = try allocator.create(Generation);
-        errdefer allocator.destroy(generation);
-        var arena = std.heap.ArenaAllocator.init(allocator);
-        errdefer arena.deinit();
-        generation.* = .{ .allocator = allocator, .arena = undefined, .bytes = try arena.allocator().dupe(u8, bytes), .bodies = try arena.allocator().dupe(source.Span, bodies) };
-        generation.arena = arena;
-        return generation;
-    }
-    /// Drop one entry or construction reference and release the last source snapshot.
-    pub fn deinit(self: *Generation) void {
-        self.references -= 1;
-        if (self.references == 0) {
-            const allocator = self.allocator;
-            self.arena.deinit();
-            allocator.destroy(self);
-        }
-    }
-};
 /// One local checked tree owns its metadata, stable dependency identities and
-/// one source-generation reference.
+/// the two source slices that validate it.
 pub const Entry = struct {
     arena: std.heap.ArenaAllocator,
     function: typed.Function,
     nodes: []const typed.Node,
     statements: []const typed.Statement,
     range: copy.Range,
-    /// In-process entries borrow the immutable generation bytes; decoded entries
-    /// own these slices through `arena`. Validation compares these bytes directly,
-    /// so a persisted body never depends on a reconstructed whole-source buffer.
+    /// In-process and decoded entries both own these slices through `arena`, so
+    /// validation never depends on a reconstructed whole-source buffer and no
+    /// entry keeps a sibling alive.
     source: SourceRef = .{},
     meta: Metadata,
     /// Clone only one changed function; unchanged cache entries transfer ownership directly.
-    pub fn create(allocator: std.mem.Allocator, generation: *Generation, program: typed.Program, index: usize, range: copy.Range, spec: Spec) error{ OutOfMemory, InternalError }!Entry {
+    pub fn create(allocator: std.mem.Allocator, bytes: []const u8, program: typed.Program, index: usize, range: copy.Range, spec: Spec) error{ OutOfMemory, InternalError }!Entry {
         var arena = std.heap.ArenaAllocator.init(allocator);
         errdefer arena.deinit();
         const arena_allocator = arena.allocator();
@@ -103,9 +78,10 @@ pub const Entry = struct {
             .region = spec.identity.region,
             .checked_contract = spec.identity.checked_contract,
         };
-        if (identity.body.start > identity.body.end or identity.body.end > generation.bytes.len) return error.InternalError;
-        if (identity.region.start > identity.region.end or identity.region.end > generation.bytes.len) return error.InternalError;
-        generation.references += 1;
+        if (identity.body.start > identity.body.end or identity.body.end > bytes.len) return error.InternalError;
+        if (identity.region.start > identity.region.end or identity.region.end > bytes.len) return error.InternalError;
+        const body_bytes = try arena_allocator.dupe(u8, bytes[identity.body.start..identity.body.end]);
+        const region_bytes = try arena_allocator.dupe(u8, bytes[identity.region.start..identity.region.end]);
         return .{
             .arena = arena,
             .function = saved_function,
@@ -113,10 +89,9 @@ pub const Entry = struct {
             .statements = statements,
             .range = range,
             .source = .{
-                .generation = generation,
-                .old_len = generation.bytes.len,
-                .body_bytes = generation.bytes[identity.body.start..identity.body.end],
-                .region_bytes = generation.bytes[identity.region.start..identity.region.end],
+                .old_len = bytes.len,
+                .body_bytes = body_bytes,
+                .region_bytes = region_bytes,
             },
             .meta = .{
                 .identity = identity,
@@ -128,10 +103,9 @@ pub const Entry = struct {
             },
         };
     }
-    /// Release this function tree without invalidating other generation users.
+    /// Release this function tree and its copied source slices.
     pub fn deinit(self: *Entry) void {
         self.arena.deinit();
-        if (self.source.generation) |generation| generation.deinit();
     }
 };
 fn classify(err: anyerror) error{ OutOfMemory, InternalError } {
@@ -164,21 +138,55 @@ fn noteWarnings(allocator: std.mem.Allocator, function: typed.Function) error{Ou
     }
     return notes;
 }
-/// Count each source generation once, plus every independently owned tree arena.
+/// Count the entry array plus every independently owned tree arena. Source
+/// slices live in the same arena as their tree, so this is a plain sum and the
+/// retained total is independent of sibling entries.
 pub fn retained(entries: []const Entry) usize {
     var bytes: usize = entries.len * @sizeOf(Entry);
-    for (entries, 0..) |entry, i| {
-        bytes += entry.arena.queryCapacity();
-        const generation = entry.source.generation orelse continue;
-        var first = true;
-        for (entries[0..i]) |previous| if (previous.source.generation == generation) {
-            first = false;
-            break;
-        };
-        if (first) bytes += generation.arena.queryCapacity() + @sizeOf(Generation);
-    }
+    for (entries) |entry| bytes += entry.arena.queryCapacity();
     return bytes;
 }
+
+/// Owned bytes of one ordinary entry: its row plus the arena that owns the
+/// copied tree, metadata, dependency keys and the two source slices.
+pub fn entryCost(entry: Entry) usize {
+    return @sizeOf(Entry) + entry.arena.queryCapacity();
+}
+/// Owned bytes of one symbolic entry arena (the row is counted by the table).
+pub fn symbolicArenaBytes(entry: SymbolicEntry) usize {
+    return entry.arena.queryCapacity();
+}
+/// Owned bytes of one specialization entry arena (the row is counted by the table).
+pub fn specializationArenaBytes(entry: SpecializationEntry) usize {
+    return entry.arena.queryCapacity();
+}
+/// Bytes one `StringHashMapUnmanaged([]const u8, usize)` slot occupies: the key
+/// slice, the value and the one-byte metadata fingerprint. This mirrors the
+/// standard library's slot arrays, so retained index bytes are a real count of
+/// owned capacity rather than a per-entry guess.
+pub fn hashIndexBytes(capacity: usize) usize {
+    return capacity * (@sizeOf([]const u8) + @sizeOf(usize) + 1);
+}
+/// Slot capacity `std.StringHashMapUnmanaged` allocates for `count` entries,
+/// matching its 80% load factor and power-of-two growth.
+pub fn indexCapacityFor(count: usize) usize {
+    if (count == 0) return 0;
+    var capacity: u32 = @intCast((@as(u64, count) * 100) / 80 + 1);
+    capacity = std.math.ceilPowerOfTwo(u32, capacity) catch std.math.maxInt(u32);
+    return capacity;
+}
+/// Index bytes the standard hash map would own for `count` entries.
+pub fn indexBytesFor(count: usize) usize {
+    return hashIndexBytes(indexCapacityFor(count));
+}
+
+/// Callback binding a generic entry table to its owning cache's combined
+/// retention policy. The entry modules do not import the cache module; the
+/// cache installs this hook when it opens a session.
+pub const RetentionHook = struct {
+    owner: ?*anyopaque = null,
+    reconcile: *const fn (?*anyopaque) void,
+};
 
 /// C3 symbolic-template entry kind. A symbolic entry shares the C2 durable
 /// store but lives under its own stable-key namespace and payload version so it
@@ -263,6 +271,9 @@ pub const StoredSymbolic = struct {
 pub const SymbolicEntry = struct {
     arena: std.heap.ArenaAllocator,
     payload: StoredSymbolic,
+    /// Insertion order for the shared retention budget. Runtime-only; never
+    /// part of the durable payload.
+    sequence: u64 = 0,
 
     pub fn deinit(self: *SymbolicEntry) void {
         self.arena.deinit();
@@ -379,6 +390,9 @@ pub const StoredSpecialization = struct {
 pub const SpecializationEntry = struct {
     arena: std.heap.ArenaAllocator,
     payload: StoredSpecialization,
+    /// Insertion order for the shared retention budget. Runtime-only; never
+    /// part of the durable payload.
+    sequence: u64 = 0,
 
     pub fn deinit(self: *SpecializationEntry) void {
         self.arena.deinit();

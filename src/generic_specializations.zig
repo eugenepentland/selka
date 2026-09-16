@@ -116,6 +116,70 @@ pub const Table = struct {
         self.entries = .empty;
         self.index = .empty;
     }
+    /// Owned bytes of this table: entry rows, entry arenas (which own the
+    /// copied checked tree, reference keys, fingerprints and source slices) and
+    /// the stable-key hash index capacity.
+    pub fn retainedBytes(self: *const Table) usize {
+        var bytes: usize = self.entries.capacity * @sizeOf(owned.SpecializationEntry);
+        for (self.entries.items) |entry| bytes += owned.specializationArenaBytes(entry);
+        bytes += owned.hashIndexBytes(self.index.capacity());
+        return bytes;
+    }
+    /// Insertion order of the oldest retained entry, or null when empty.
+    pub fn oldestSequence(self: *const Table) ?u64 {
+        if (self.entries.items.len == 0) return null;
+        var oldest = self.entries.items[0].sequence;
+        for (self.entries.items[1..]) |entry| {
+            if (entry.sequence < oldest) oldest = entry.sequence;
+        }
+        return oldest;
+    }
+    // twin-drift-ok: deliberately mirrors the sibling table's eviction policy;
+    // only the owned entry type and its cost helper differ.
+    /// Release the oldest retained entry and return the bytes it owned, or null
+    /// when the table is empty. Emptying the table also releases its row buffer
+    /// and index, so shared-budget accounting always converges.
+    pub fn evictOldest(self: *Table) ?usize {
+        const allocator = self.allocator orelse return null;
+        if (self.entries.items.len == 0) return null;
+        var victim: usize = 0;
+        for (self.entries.items[1..], 1..) |entry, i| {
+            if (entry.sequence < self.entries.items[victim].sequence) victim = i;
+        }
+        var removed = self.entries.swapRemove(victim);
+        _ = self.index.fetchRemove(removed.payload.identity.key);
+        const cost = @sizeOf(owned.SpecializationEntry) + owned.specializationArenaBytes(removed);
+        removed.deinit();
+        if (self.entries.items.len == 0) {
+            self.entries.deinit(allocator);
+            self.entries = .empty;
+            self.index.deinit(allocator);
+            self.index = .empty;
+        } else {
+            if (victim < self.entries.items.len) {
+                const moved = self.entries.items[victim].payload.identity.key;
+                self.index.putAssumeCapacity(moved, victim);
+            }
+            self.compact(allocator);
+        }
+        return cost;
+    }
+    // twin-drift-ok: deliberately mirrors the sibling table's compaction;
+    // the row type and key slice are identical, so no shared helper is needed.
+    /// Rebuild the index and row buffer at the live count's capacity. Without
+    /// this, a once-large table keeps its peak index/row capacity forever and a
+    /// tight budget would evict every entry before the accounting converged.
+    /// A failed reindex leaves the previous consistent index in place.
+    fn compact(self: *Table, allocator: std.mem.Allocator) void {
+        const count = self.entries.items.len;
+        const size = std.math.cast(u32, count) orelse return;
+        var new_index: std.StringHashMapUnmanaged(usize) = .empty;
+        new_index.ensureTotalCapacity(allocator, size) catch return;
+        for (self.entries.items, 0..) |entry, i| new_index.putAssumeCapacity(entry.payload.identity.key, i);
+        self.index.deinit(allocator);
+        self.index = new_index;
+        self.entries.shrinkAndFree(allocator, count);
+    }
     fn reserve(self: *Table, count: usize) error{OutOfMemory}!void {
         const allocator = self.allocator orelse return error.OutOfMemory;
         const index_size = std.math.cast(u32, count) orelse return error.OutOfMemory;
@@ -125,16 +189,18 @@ pub const Table = struct {
     /// Insert one entry, replacing any superseded entry under the same stable
     /// key. Deiniting the old arena and reusing its slot keeps `clear` free of
     /// double frees.
-    fn rememberAssumeCapacity(self: *Table, entry: owned.SpecializationEntry) void {
-        if (self.index.fetchRemove(entry.payload.identity.key)) |removed| {
+    fn rememberAssumeCapacity(self: *Table, entry: owned.SpecializationEntry, sequence: u64) void {
+        var incoming = entry;
+        incoming.sequence = sequence;
+        if (self.index.fetchRemove(incoming.payload.identity.key)) |removed| {
             self.entries.items[removed.value].deinit();
-            self.entries.items[removed.value] = entry;
-            self.index.putAssumeCapacity(entry.payload.identity.key, removed.value);
+            self.entries.items[removed.value] = incoming;
+            self.index.putAssumeCapacity(incoming.payload.identity.key, removed.value);
             return;
         }
         const id = self.entries.items.len;
-        self.entries.appendAssumeCapacity(entry);
-        self.index.putAssumeCapacity(entry.payload.identity.key, id);
+        self.entries.appendAssumeCapacity(incoming);
+        self.index.putAssumeCapacity(incoming.payload.identity.key, id);
     }
 };
 
@@ -146,6 +212,11 @@ pub const Backend = struct {
     /// Build-context dimension of the canonical key (compiler/target/runtime
     /// ABI/flags fingerprint). Empty is a real, distinct value.
     build: []const u8,
+    /// Shared-budget reconciliation hook installed by the owning cache. Called
+    /// after any promotion so generic entries converge on the combined bound.
+    retention: ?owned.RetentionHook = null,
+    /// Owning cache's shared insertion clock, or null in direct unit tests.
+    sequence: ?*u64 = null,
 };
 
 /// One request's view over the in-memory and durable specialization stores.
@@ -165,6 +236,22 @@ pub const Session = struct {
     pub fn deinit(self: *Session) void {
         for (self.fresh.items) |*entry| entry.deinit();
         self.fresh.deinit(self.allocator);
+        self.reconcileRetention();
+    }
+
+    /// Ask the owning cache to converge the combined retention budget. A
+    /// durable-hit promotion happens in `open`, but eviction is deferred to this
+    /// request boundary so a copied tree can never borrow a released entry.
+    fn reconcileRetention(self: *Session) void {
+        if (self.backend.retention) |hook| hook.reconcile(hook.owner);
+    }
+
+    /// Next shared insertion order for a promoted entry. Ties (a null clock in
+    /// direct unit tests) still evict in array/insertion order.
+    fn nextSequence(self: *Session) u64 {
+        const sequence = self.backend.sequence orelse return 0;
+        sequence.* +%= 1;
+        return sequence.*;
     }
 
     /// Durable store key for one canonical fingerprint.
@@ -194,7 +281,7 @@ pub const Session = struct {
                 return null;
             };
             try self.backend.memory.reserve(1);
-            self.backend.memory.rememberAssumeCapacity(decoded);
+            self.backend.memory.rememberAssumeCapacity(decoded, self.nextSequence());
             break :blk self.backend.memory.entries.items.len - 1;
         };
         return &self.backend.memory.entries.items[id];
@@ -232,9 +319,10 @@ pub const Session = struct {
             try persistent.endBatch();
         }
         try self.backend.memory.reserve(self.fresh.items.len);
-        for (self.fresh.items) |entry| self.backend.memory.rememberAssumeCapacity(entry);
+        for (self.fresh.items) |entry| self.backend.memory.rememberAssumeCapacity(entry, self.nextSequence());
         self.backend.memory.statistics.stored += self.fresh.items.len;
         self.fresh.clearRetainingCapacity();
+        self.reconcileRetention();
     }
 };
 
