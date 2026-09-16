@@ -183,3 +183,8 @@ are the `--check` oracle.
   never emitted as an unconditional `effects(all)`.
 - Parameter defaults, keyword parameter names, nominal type identities and generic
   requirements remain part of the public contract.
+- Test declaration manifests are versioned `interface-contracts-v2` and carry canonical
+  declaration-level type descriptors: builtin aliases normalize, transparent aliases
+  expand recursively through arrays/callbacks/nominal applications, and nominal
+  identities stay qualified. Test discovery and provider comparison consume those
+  descriptors; a manifest from another version is rejected, never compared as text.

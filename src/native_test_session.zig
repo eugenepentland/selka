@@ -50,7 +50,7 @@ pub const Session = struct {
     }
     /// Declaration/interface check: parse every reachable module and validate
     /// exported signatures, visibility and explicit ceilings without checking any
-    /// body. The returned manifest is `interface-contracts-v1`.
+    /// body. The returned manifest is `interface-contracts-v2` with canonical type descriptors.
     pub fn interfaceCheck(self: Session, source: []const u8) Error!std.json.Value {
         const output = try self.context.capture(&.{ self.compiler, "list-interfaces", "--contracts", source });
         const code = fs.exitCode(output.term);

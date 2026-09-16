@@ -108,6 +108,12 @@ already have; source snapshots reject symbolic links and are bounded to 16 MiB,
 with at most 128 files for a provider snapshot. Invalid fixture source or a
 changed public contract is a setup failure, and the fixture settings are part of
 the receipt identity, so changing an injected value re-executes the case.
+Cases that select the same provider graph share one declaration validation,
+checked project and prepared native library within an invocation, while each
+case still executes in its own isolated request directory and process. Receipt
+acceptance uses the selected test's dependency closure plus the contract and
+provider identities; an unrelated source edit does not invalidate an unaffected
+case.
 
 ```console
 $ mylang test app/main.my

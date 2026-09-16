@@ -231,7 +231,7 @@ test "one prepared project graph is shared per selected provider identity" {
     try text.appendSlice(context.allocator, "#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"");
     try text.appendSlice(context.allocator, log);
     try text.appendSlice(context.allocator, "\"\ncase \"$1\" in\n  list-interfaces) printf '%s\\n' '");
-    const contracts_json = "{\"modules\":[{\"name\":\"production\",\"declarations\":[{\"name\":\"value\",\"kind\":\"function\",\"generics\":\"\",\"signature\":\"def() -> int effects()\"," ++
+    const contracts_json = "{\"version\":\"interface-contracts-v2\",\"modules\":[{\"name\":\"production\",\"declarations\":[{\"name\":\"value\",\"kind\":\"function\",\"generics\":\"\",\"signature\":\"def() -> i64 effects()\"," ++
         "\"permissions\":\"effects=;mutates=;origin=unknown\"}]}]}";
     try text.appendSlice(context.allocator, contracts_json);
     try text.appendSlice(context.allocator, "' ;;\n  emit-project-qbe) printf '%s\\n' '{\"schema\":\"{\\\"functions\\\":[],\\\"types\\\":[]}\"}' ;;\nesac\n");
