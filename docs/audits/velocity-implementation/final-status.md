@@ -1,8 +1,8 @@
 # Development velocity: implementation status
 
-Status: **core packages integrated on `26e8121`; release checklist partially met.**
+Status: **core packages integrated on `88691e7b`; release checklist partially met.**
 Baseline: `9ce142e98cb22e684622ed1d5678071d6944206e` (post named-constraint fixes).
-Integration HEAD: `26e81212dd40ce26c6b4b868ff7acef1940f2c32`.
+Integration HEAD: `88691e7b3c5d6dea0a05e82ffadb375bd865981f`.
 Plan: [development-velocity-implementation-plan-2026-09-15.md](../development-velocity-implementation-plan-2026-09-15.md).
 Ledger and frozen contracts: [README.md](README.md), [contracts.md](contracts.md).
 
@@ -23,22 +23,24 @@ Ledger and frozen contracts: [README.md](README.md), [contracts.md](contracts.md
 | A1 | required entry-anchored `mylang.json` import policy in ordinary commands and caches | `5988575` |
 | S1 | repaired workload harness; 10k/100k/maintained cold/warm/edit samples | `21d104e` |
 | M3 | corpus repair/activation, navigation exposure, runnable mutation docs | `75bb69a` |
+| C1R | module-qualified stable keys, resolved-declaration dependencies, callback/function-value eligibility, contract-bound reuse context; check-session bypass lifetime fix | `86ffbb7c` |
+| C2 | durable `semantic-cache-v1` checked bodies: atomic publication, validated remap-or-miss decoding, contract isolation, eviction, `--no-cache` correctness | `88691e7b` |
+| P1 | declaration-first provider selection: replacements validated against every public contract, receipt contract/provider/source identities | `354c0e8` |
 | Follow-up | F1 keeps the space before `mutates(...)`; board-trial/schematic standalone runners accept the driver's trailing `--cache-dir` | `26e8121` |
 
-Not started from the plan: **C2** (persistent checked bodies across processes),
-**C3** (generic/specialization reuse), **C4** (cached test preparation and lazy
-lowering), **P1** (selected test providers against checked contracts), **D2**
-(final documentation/feature reconciliation). The productivity trial is unrun.
-`S1`'s performance objectives were measured and not met.
+Still not started from the plan: **C3** (generic/specialization reuse), **C4**
+(cached test preparation and lazy lowering) and **D2** (final documentation/feature
+reconciliation). The productivity trial is unrun. `S1`'s performance objectives
+were measured and not met.
 
 ## Final gate evidence
 
-Cold builds in fresh worktrees followed by full gates on `26e8121`:
+Cold builds in fresh worktrees followed by full gates on `88691e7b`:
 
 | Gate | Result |
 | --- | --- |
-| `zig build test --summary all` (Debug) | **39/39 steps succeeded; 1128/1128 tests passed; exit 0** |
-| `zig build test -Doptimize=ReleaseFast --summary all` | **39/39 steps succeeded; 1127/1128 passed, 1 skipped (Debug-only allocation sweep); exit 0** |
+| `zig build test --summary all` (Debug) | **39/39 steps succeeded; 1153/1153 tests passed; exit 0** |
+| `zig build test -Doptimize=ReleaseFast --summary all` | **39/39 steps succeeded; 1152/1153 passed, 1 skipped (Debug-only allocation sweep); exit 0** |
 | Guardian whole-tree commit gate | 88/88 checks passed |
 | `zig build fmt-check`, `test-doc-coverage`, `test-docs`, `test-qbe`, `test-native-tests` | covered by the `test` graph and independently green |
 
@@ -53,10 +55,10 @@ Pinned toolchain: Zig `0.17.0-dev.1683+5ceec001b`; QBE built from `vendor/qbe`
 | Exported ceilings explicit; effect/mutation subset substitution works | **Met** | `E_EFFECT_CEILING` at declarations with body-derived bounds; E1/E2 relation plus M1/M2 footprint subset. |
 | Formatter changes noncanonical source, preserves semantics, idempotent | **Met** | F1 fixtures and native execution-preservation tests. |
 | Bounds traps show index/length in native text and JSON with stacks | **Met** | D1 text/JSON trap detail; Debug and ReleaseFast; `run` and native tests. |
-| Unrelated ordinary bodies reuse with generics present and across processes | **Partial** | C1 measures `checked=3/reused=0` then `performed=1/reused=2` in a session with an unused generic. Cross-process persistence is C2 and is not implemented. |
+| Unrelated ordinary bodies reuse with generics present and across processes | **Met for ordinary bodies** | C1R measures a session edit as `performed=1/reused=2`; C2 measures a genuinely new process as `performed=1/reused=2` and an unchanged rerun as `performed=0/reused=3`. Generic specializations still wait for C3. |
 | Symbolic templates and concrete specializations have measured selective reuse | **Not met** | C3 not implemented. |
-| Warm/cold/no-cache status, diagnostic, interface and native results agree | **Partial** | C1 invalidation matrix and C0 counters agree for the in-process/one-shot scope; C2/C3 persistence and C4 test reuse are missing. |
-| A fake can replace an unfinished production body against a checked contract | **Not met** | P1 not implemented. |
+| Warm/cold/no-cache status, diagnostic, interface and native results agree | **Met for the ordinary-body scope** | C2 tests cold/warm/`--no-cache`, warning relocation, damaged/oversized/foreign entries, contract isolation, concurrency and eviction against fresh checks; C3 specialization and C4 test-result reuse remain. |
+| A fake can replace an unfinished production body against a checked contract | **Met** | P1 checks declarations/interfaces first, fully checks only the selected provider graph, validates every replaced public contract with the directional relation, and binds contract/provider/source identities into receipts. |
 | Configured architecture policy cannot be skipped by ordinary commands or caches | **Met** | A1 config discovery/enforcement cold and warm, statuses 2/3, cwd-independent, receipts include policy identity. |
 | Selective tests retain correctness and skip unnecessary compilation work | **Partial** | Existing deterministic test receipts preserved and measured; C4's lazy lowering/emission and shared test preparation are not implemented. |
 | Representative scale limits, latency and memory measured honestly | **Met as measurement; objectives not met** | S1: 100k check p95 2.9–4.9 s vs <500 ms target; forced-test measurement blocked; 500k provisional only; productivity trial unrun. |

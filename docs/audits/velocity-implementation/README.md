@@ -53,10 +53,10 @@ Branches are cut from the baseline SHA. Worktrees live under
 | M3 | `codex/velocity-m3` | `velocity-m3` | `8d5b84b` | M2, E2 | **done** — corpus repair, navigation exposure, runnable docs; merged in `75bb69a` |
 | C1 | `codex/velocity-c1` | `velocity-c1` | `44a0bfe` | C0, E2, M1 | **done** — per-function deps/remap; merged in `b8a512a` |
 | C1R | `codex/velocity-c1r` | `velocity-c1r` | `d150335` | C1 | **done** — module/dependency/eligibility/contract-binding gaps; merged in `86ffbb7c` |
-| C2 | `codex/velocity-c2` | `velocity-c2` | `86ffbb7c` | C1, C1R, M2 | **in progress** — persist checked bodies across processes |
-| C3 | `codex/velocity-c3` | `velocity-c3` | C2 integrated | C2 | **not started** |
-| C4 | `codex/velocity-c4` | `velocity-c4` | C3+P1 integrated | C3 | **not started** |
-| P1 | `codex/velocity-p1` | `velocity-p1` | `d150335` | E2, M3 | **done** — declaration-first provider contract checking; merged in `354c0e8` |
+| C2 | `codex/velocity-c2` | `velocity-c2` | `86ffbb7c` | C1, C1R, M2 | **done** — durable validated checked bodies; merged in `88691e7b` |
+| C3 | `codex/velocity-c3` | `velocity-c3` | `88691e7b` | C2 | **not started** — specialization/template reuse |
+| C4 | `codex/velocity-c4` | `velocity-c4` | C3 integrated | C3 | **not started** |
+| P1 | `codex/velocity-p1` | `velocity-p1` | `d150335` | E2, M3 | **done** — checked provider substitution; merged in `354c0e8` |
 | A1 | `codex/velocity-a1` | `velocity-a1` | `161c4e4` | W0 | **done** — required project policy; merged in `1f3a...` (`88e7fb6`) |
 | S1 | `codex/velocity-s1` | `velocity-s1` | `5988575` | C0 (+ final core) | **done (partial evidence)** — harness repaired, 10k/100k samples; objectives not met; merged in `21d104e` |
 | D2 | `codex/velocity-d2` | `velocity-d2` | final core | each feature | **not started** |
@@ -101,4 +101,5 @@ Never share a mutable checkout, installed binary or `zig-out`/`.zig-cache`.
 | 2026-09-15 | `354c0e8` | P1 | declaration/interface gate + selected-provider contract validation + receipt identities; 4 CLI regressions and 101 native units green |
 | 2026-09-15 | `86ffbb7c` | C1R | module-qualified keys, resolved-declaration deps, contract-bound reuse; plus a check-session bypass-slice fix |
 | 2026-09-15 | `86ffbb7c` | C2 start | persistence package launched |
+| 2026-09-15 | `88691e7b` | C1R/P1/C2 checkpoint | pre-C2 gates 1147/1147 Debug and 1146/1147 ReleaseFast; post-C2 gates 1153/1153 Debug and 1152/1153 ReleaseFast (1 skipped) |
 | 2026-09-15 | (note) | build cache | a warm `.zig-cache` can keep a stale generated `qbe_build_assets` module after large `src/` edits; cold `zig build test-units` passes 969/969. Final gate must be cold. |
