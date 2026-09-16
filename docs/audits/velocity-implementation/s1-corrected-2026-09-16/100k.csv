@@ -1,0 +1,256 @@
+workload,family,target_lines,state,sample,wall_ms,peak_rss_kb,exit,timed_out,parsed_performed,parsed_reused,checked_performed,checked_reused,specializations_performed,lowered_performed,emitted_performed,links_performed,tests_performed,tests_cached,tests_executed,reused_results,bypassed
+ordinary-100k,ordinary,100000,cold,0,3674.098,544620,0,False,66,0,33475,0,0,0,0,0,0,,,,[]
+ordinary-100k,ordinary,100000,cold,1,3668.438,544560,0,False,66,0,33475,0,0,0,0,0,0,,,,[]
+ordinary-100k,ordinary,100000,cold,2,3647.599,544532,0,False,66,0,33475,0,0,0,0,0,0,,,,[]
+ordinary-100k,ordinary,100000,cold,3,3632.272,544620,0,False,66,0,33475,0,0,0,0,0,0,,,,[]
+ordinary-100k,ordinary,100000,cold,4,3679.668,544600,0,False,66,0,33475,0,0,0,0,0,0,,,,[]
+ordinary-100k,ordinary,100000,cold,5,3641.515,544468,0,False,66,0,33475,0,0,0,0,0,0,,,,[]
+ordinary-100k,ordinary,100000,cold,6,3595.588,544484,0,False,66,0,33475,0,0,0,0,0,0,,,,[]
+ordinary-100k,ordinary,100000,cold,7,3617.011,544544,0,False,66,0,33475,0,0,0,0,0,0,,,,[]
+ordinary-100k,ordinary,100000,cold,8,3621.323,544616,0,False,66,0,33475,0,0,0,0,0,0,,,,[]
+ordinary-100k,ordinary,100000,cold,9,3656.571,544616,0,False,66,0,33475,0,0,0,0,0,0,,,,[]
+ordinary-100k,ordinary,100000,unchanged,0,171.041,40128,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-100k,ordinary,100000,unchanged,1,176.007,40128,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-100k,ordinary,100000,unchanged,2,184.028,40128,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-100k,ordinary,100000,unchanged,3,148.702,40128,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-100k,ordinary,100000,unchanged,4,148.624,40128,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-100k,ordinary,100000,unchanged,5,171.098,40128,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-100k,ordinary,100000,unchanged,6,163.102,40128,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-100k,ordinary,100000,unchanged,7,170.956,40128,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-100k,ordinary,100000,unchanged,8,151.405,40128,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-100k,ordinary,100000,unchanged,9,158.221,40128,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-100k,ordinary,100000,no_cache,0,2002.397,524008,0,False,66,0,33475,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,no_cache,1,1653.047,523896,0,False,66,0,33475,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,no_cache,2,1279.886,524000,0,False,66,0,33475,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,no_cache,3,1272.607,523932,0,False,66,0,33475,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,no_cache,4,1257.391,523844,0,False,66,0,33475,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,no_cache,5,1260.815,524056,0,False,66,0,33475,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,no_cache,6,1222.565,523964,0,False,66,0,33475,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,no_cache,7,1068.501,523824,0,False,66,0,33475,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,no_cache,8,1049.028,524000,0,False,66,0,33475,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,no_cache,9,1046.918,523892,0,False,66,0,33475,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,implementation_edit,0,1055.621,450584,0,False,1,65,24655,8820,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-length-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,implementation_edit,1,1008.856,450380,0,False,1,65,24655,8820,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,implementation_edit,2,1015.508,450480,0,False,1,65,24655,8820,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,implementation_edit,3,1011.271,450596,0,False,1,65,24655,8820,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,implementation_edit,4,1010.831,450692,0,False,1,65,24655,8820,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,implementation_edit,5,998.312,450652,0,False,1,65,24655,8820,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,implementation_edit,6,1006.141,450432,0,False,1,65,24655,8820,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,implementation_edit,7,1865.589,450688,0,False,1,65,24655,8820,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,implementation_edit,8,3006.489,450652,0,False,1,65,24655,8820,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,implementation_edit,9,2988.735,450748,0,False,1,65,24655,8820,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,implementation_edit,10,3086.951,450608,0,False,1,65,24655,8820,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,implementation_edit,11,3075.430,450684,0,False,1,65,24655,8820,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,implementation_edit,12,1519.450,450744,0,False,1,65,24655,8820,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,implementation_edit,13,2234.859,450544,0,False,1,65,24655,8820,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,implementation_edit,14,3075.654,450748,0,False,1,65,24655,8820,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,implementation_edit,15,1508.588,450744,0,False,1,65,24655,8820,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,implementation_edit,16,1495.280,450748,0,False,1,65,24655,8820,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,implementation_edit,17,1503.168,450744,0,False,1,65,24655,8820,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,implementation_edit,18,1518.386,450748,0,False,1,65,24655,8820,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,implementation_edit,19,1487.916,450744,0,False,1,65,24655,8820,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,constant_edit,0,3107.956,450588,0,False,2,64,24637,8838,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24636}, {""reason"": ""declaration-region-length-changed"", ""count"": 1}]"
+ordinary-100k,ordinary,100000,constant_edit,1,3113.329,441928,0,False,1,65,24636,8839,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24636}]"
+ordinary-100k,ordinary,100000,constant_edit,2,3125.391,441956,0,False,1,65,24636,8839,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24636}]"
+ordinary-100k,ordinary,100000,constant_edit,3,3148.324,441916,0,False,1,65,24636,8839,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24636}]"
+ordinary-100k,ordinary,100000,constant_edit,4,1498.021,441936,0,False,1,65,24636,8839,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24636}]"
+ordinary-100k,ordinary,100000,constant_edit,5,2387.266,441824,0,False,1,65,24636,8839,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24636}]"
+ordinary-100k,ordinary,100000,constant_edit,6,3081.861,441588,0,False,1,65,24636,8839,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24636}]"
+ordinary-100k,ordinary,100000,constant_edit,7,1467.514,441936,0,False,1,65,24636,8839,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24636}]"
+ordinary-100k,ordinary,100000,constant_edit,8,1510.368,441936,0,False,1,65,24636,8839,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24636}]"
+ordinary-100k,ordinary,100000,constant_edit,9,2372.047,441872,0,False,1,65,24636,8839,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24636}]"
+ordinary-100k,ordinary,100000,constant_edit,10,3124.240,441904,0,False,1,65,24636,8839,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24636}]"
+ordinary-100k,ordinary,100000,constant_edit,11,3156.118,441940,0,False,1,65,24636,8839,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24636}]"
+ordinary-100k,ordinary,100000,constant_edit,12,3131.378,441940,0,False,1,65,24636,8839,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24636}]"
+ordinary-100k,ordinary,100000,constant_edit,13,3155.622,441936,0,False,1,65,24636,8839,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24636}]"
+ordinary-100k,ordinary,100000,constant_edit,14,3135.330,441844,0,False,1,65,24636,8839,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24636}]"
+ordinary-100k,ordinary,100000,constant_edit,15,1523.863,441944,0,False,1,65,24636,8839,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24636}]"
+ordinary-100k,ordinary,100000,constant_edit,16,3122.703,441656,0,False,1,65,24636,8839,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24636}]"
+ordinary-100k,ordinary,100000,constant_edit,17,1503.446,441940,0,False,1,65,24636,8839,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24636}]"
+ordinary-100k,ordinary,100000,constant_edit,18,1525.446,441944,0,False,1,65,24636,8839,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24636}]"
+ordinary-100k,ordinary,100000,constant_edit,19,2387.149,441716,0,False,1,65,24636,8839,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24636}]"
+ordinary-100k,ordinary,100000,signature_edit,0,1520.947,449196,0,False,2,64,24636,8839,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24636}]"
+ordinary-100k,ordinary,100000,signature_edit,1,1514.842,450820,0,False,1,65,24635,8840,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24635}]"
+ordinary-100k,ordinary,100000,signature_edit,2,3200.599,450884,0,False,1,65,24635,8840,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24635}]"
+ordinary-100k,ordinary,100000,signature_edit,3,3155.203,451088,0,False,1,65,24635,8840,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24635}]"
+ordinary-100k,ordinary,100000,signature_edit,4,3156.031,451084,0,False,1,65,24635,8840,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24635}]"
+ordinary-100k,ordinary,100000,signature_edit,5,3161.164,451092,0,False,1,65,24635,8840,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24635}]"
+ordinary-100k,ordinary,100000,signature_edit,6,3139.370,451172,0,False,1,65,24635,8840,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24635}]"
+ordinary-100k,ordinary,100000,signature_edit,7,1554.785,451100,0,False,1,65,24635,8840,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24635}]"
+ordinary-100k,ordinary,100000,signature_edit,8,3110.924,451084,0,False,1,65,24635,8840,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24635}]"
+ordinary-100k,ordinary,100000,signature_edit,9,3158.014,451080,0,False,1,65,24635,8840,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24635}]"
+ordinary-100k,ordinary,100000,signature_edit,10,3170.287,451020,0,False,1,65,24635,8840,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24635}]"
+ordinary-100k,ordinary,100000,signature_edit,11,3128.076,451152,0,False,1,65,24635,8840,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24635}]"
+ordinary-100k,ordinary,100000,signature_edit,12,3152.848,451032,0,False,1,65,24635,8840,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24635}]"
+ordinary-100k,ordinary,100000,signature_edit,13,3136.708,451172,0,False,1,65,24635,8840,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24635}]"
+ordinary-100k,ordinary,100000,signature_edit,14,3125.165,451160,0,False,1,65,24635,8840,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24635}]"
+ordinary-100k,ordinary,100000,signature_edit,15,3126.335,451148,0,False,1,65,24635,8840,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24635}]"
+ordinary-100k,ordinary,100000,signature_edit,16,3141.370,451120,0,False,1,65,24635,8840,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24635}]"
+ordinary-100k,ordinary,100000,signature_edit,17,2450.424,451072,0,False,1,65,24635,8840,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24635}]"
+ordinary-100k,ordinary,100000,signature_edit,18,3015.726,450864,0,False,1,65,24635,8840,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24635}]"
+ordinary-100k,ordinary,100000,signature_edit,19,1513.366,451172,0,False,1,65,24635,8840,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24635}]"
+ordinary-100k,ordinary,100000,session_implementation_edit,0,1935.260,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_implementation_edit,1,1949.857,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_implementation_edit,2,1952.484,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_implementation_edit,3,1972.666,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_implementation_edit,4,1960.540,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_implementation_edit,5,1940.569,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_implementation_edit,6,1918.493,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_implementation_edit,7,1956.062,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_implementation_edit,8,1964.772,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_implementation_edit,9,1980.990,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_implementation_edit,10,1985.725,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_implementation_edit,11,1980.288,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_implementation_edit,12,1947.157,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_implementation_edit,13,1988.670,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_implementation_edit,14,1767.439,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_implementation_edit,15,1928.132,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_implementation_edit,16,1934.055,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_implementation_edit,17,1971.501,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_implementation_edit,18,1945.621,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_implementation_edit,19,1959.177,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_constant_edit,0,1521.506,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_constant_edit,1,1497.264,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_constant_edit,2,1517.517,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_constant_edit,3,1685.573,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_constant_edit,4,1935.696,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_constant_edit,5,1944.114,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_constant_edit,6,1947.683,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_constant_edit,7,1960.252,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_constant_edit,8,1973.086,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_constant_edit,9,1954.260,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_constant_edit,10,1936.429,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_constant_edit,11,1947.577,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_constant_edit,12,1963.877,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_constant_edit,13,1991.164,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_constant_edit,14,1969.218,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_constant_edit,15,1970.347,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_constant_edit,16,1978.245,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_constant_edit,17,1980.315,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_constant_edit,18,1970.632,,,,,,,,,,,,,,,,
+ordinary-100k,ordinary,100000,session_constant_edit,19,1995.760,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,cold,0,1961.996,551816,0,False,68,0,32708,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-100k,managed,100000,cold,1,3730.861,551448,0,False,68,0,32708,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-100k,managed,100000,cold,2,3766.735,551596,0,False,68,0,32708,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-100k,managed,100000,cold,3,2016.248,551812,0,False,68,0,32708,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-100k,managed,100000,cold,4,3827.023,551696,0,False,68,0,32708,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-100k,managed,100000,cold,5,3808.187,551696,0,False,68,0,32708,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-100k,managed,100000,cold,6,3821.150,551684,0,False,68,0,32708,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-100k,managed,100000,cold,7,3826.496,551692,0,False,68,0,32708,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-100k,managed,100000,cold,8,3789.003,551812,0,False,68,0,32708,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-100k,managed,100000,cold,9,3809.340,551816,0,False,68,0,32708,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-100k,managed,100000,unchanged,0,166.497,39808,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-100k,managed,100000,unchanged,1,157.122,39808,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-100k,managed,100000,unchanged,2,147.359,39808,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-100k,managed,100000,unchanged,3,151.989,39808,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-100k,managed,100000,unchanged,4,152.873,39808,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-100k,managed,100000,unchanged,5,164.907,39808,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-100k,managed,100000,unchanged,6,190.646,39808,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-100k,managed,100000,unchanged,7,152.273,39648,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-100k,managed,100000,unchanged,8,169.881,39648,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-100k,managed,100000,unchanged,9,166.242,39648,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-100k,managed,100000,no_cache,0,2074.675,531456,0,False,68,0,32708,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-100k,managed,100000,no_cache,1,2126.165,531416,0,False,68,0,32708,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-100k,managed,100000,no_cache,2,2076.596,531696,0,False,68,0,32708,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-100k,managed,100000,no_cache,3,2082.081,531472,0,False,68,0,32708,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-100k,managed,100000,no_cache,4,1606.492,531696,0,False,68,0,32708,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-100k,managed,100000,no_cache,5,2056.531,531624,0,False,68,0,32708,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-100k,managed,100000,no_cache,6,2039.974,531360,0,False,68,0,32708,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-100k,managed,100000,no_cache,7,1728.845,531284,0,False,68,0,32708,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-100k,managed,100000,no_cache,8,1357.983,531260,0,False,68,0,32708,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-100k,managed,100000,no_cache,9,1310.981,531404,0,False,68,0,32708,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-100k,managed,100000,implementation_edit,0,1216.847,519204,0,False,1,67,24137,8571,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""declaration-region-length-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,implementation_edit,1,1165.029,519292,0,False,1,67,24137,8571,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,implementation_edit,2,1138.373,519232,0,False,1,67,24137,8571,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,implementation_edit,3,1147.432,519208,0,False,1,67,24137,8571,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,implementation_edit,4,1142.472,519236,0,False,1,67,24137,8571,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,implementation_edit,5,1131.622,519260,0,False,1,67,24137,8571,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,implementation_edit,6,1130.901,519308,0,False,1,67,24137,8571,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,implementation_edit,7,1130.894,519124,0,False,1,67,24137,8571,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,implementation_edit,8,1127.827,519304,0,False,1,67,24137,8571,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,implementation_edit,9,1126.063,519240,0,False,1,67,24137,8571,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,implementation_edit,10,1120.270,519292,0,False,1,67,24137,8571,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,implementation_edit,11,1117.634,519152,0,False,1,67,24137,8571,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,implementation_edit,12,1118.261,519156,0,False,1,67,24137,8571,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,implementation_edit,13,1114.462,519176,0,False,1,67,24137,8571,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,implementation_edit,14,1126.206,519256,0,False,1,67,24137,8571,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,implementation_edit,15,1107.322,519384,0,False,1,67,24137,8571,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,implementation_edit,16,1103.152,519152,0,False,1,67,24137,8571,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,implementation_edit,17,1103.985,519156,0,False,1,67,24137,8571,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,implementation_edit,18,1189.795,519236,0,False,1,67,24137,8571,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,implementation_edit,19,1106.022,519236,0,False,1,67,24137,8571,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,constant_edit,0,1116.979,516404,0,False,2,66,24089,8619,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24007}, {""reason"": ""declaration-region-length-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,constant_edit,1,1119.242,515560,0,False,1,67,24088,8620,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24007}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,constant_edit,2,1119.881,515628,0,False,1,67,24088,8620,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24007}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,constant_edit,3,1123.430,515644,0,False,1,67,24088,8620,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24007}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,constant_edit,4,1120.989,515560,0,False,1,67,24088,8620,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24007}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,constant_edit,5,1113.462,515696,0,False,1,67,24088,8620,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24007}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,constant_edit,6,1120.527,515780,0,False,1,67,24088,8620,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24007}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,constant_edit,7,1118.769,515748,0,False,1,67,24088,8620,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24007}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,constant_edit,8,1123.448,515692,0,False,1,67,24088,8620,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24007}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,constant_edit,9,1124.129,515676,0,False,1,67,24088,8620,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24007}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,constant_edit,10,1117.253,515524,0,False,1,67,24088,8620,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24007}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,constant_edit,11,1121.437,515568,0,False,1,67,24088,8620,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24007}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,constant_edit,12,1122.183,515624,0,False,1,67,24088,8620,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24007}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,constant_edit,13,1118.515,515620,0,False,1,67,24088,8620,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24007}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,constant_edit,14,1123.523,515656,0,False,1,67,24088,8620,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24007}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,constant_edit,15,1119.995,515608,0,False,1,67,24088,8620,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24007}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,constant_edit,16,1123.397,515676,0,False,1,67,24088,8620,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24007}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,constant_edit,17,1117.560,515688,0,False,1,67,24088,8620,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24007}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,constant_edit,18,1124.954,515700,0,False,1,67,24088,8620,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24007}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,constant_edit,19,1137.034,515588,0,False,1,67,24088,8620,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24007}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,union_edit,0,1143.843,512624,0,False,2,66,23678,8529,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 23597}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,union_edit,1,1161.237,514716,0,False,1,67,23659,8548,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 23578}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,union_edit,2,1147.219,514848,0,False,1,67,23652,8555,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 23571}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,union_edit,3,1151.052,514792,0,False,1,67,23645,8562,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 23564}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,union_edit,4,1107.420,514812,0,False,1,67,23639,8568,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 23558}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,provider_edit,0,1148.789,519416,0,False,2,66,24139,8567,126,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 126}, {""reason"": ""no-retained-body"", ""count"": 24059}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,provider_edit,1,1131.706,514740,0,False,1,67,24135,8571,126,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 126}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,provider_edit,2,1116.177,514464,0,False,1,67,24135,8571,126,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 126}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,provider_edit,3,1126.628,514792,0,False,1,67,24135,8571,126,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 126}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,provider_edit,4,1115.289,514728,0,False,1,67,24135,8571,126,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 126}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,effect_edit,0,1117.822,511852,0,False,2,66,24137,8571,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,effect_edit,1,1120.035,483304,0,False,2,66,24134,8574,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24053}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 1}]"
+managed-100k,managed,100000,effect_edit,2,1122.794,512996,0,False,2,66,24136,8572,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,effect_edit,3,1140.833,513032,0,False,2,66,24136,8572,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,effect_edit,4,1118.070,512872,0,False,2,66,24136,8572,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 24055}, {""reason"": ""relocation-failed"", ""count"": 17}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-100k,managed,100000,session_implementation_edit,0,1108.788,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_implementation_edit,1,1112.784,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_implementation_edit,2,1128.259,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_implementation_edit,3,1131.577,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_implementation_edit,4,1123.362,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_implementation_edit,5,1117.743,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_implementation_edit,6,1138.923,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_implementation_edit,7,1119.593,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_implementation_edit,8,1129.494,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_implementation_edit,9,1135.323,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_implementation_edit,10,1138.334,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_implementation_edit,11,1137.611,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_implementation_edit,12,1118.746,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_implementation_edit,13,1115.225,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_implementation_edit,14,1105.802,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_implementation_edit,15,1102.722,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_implementation_edit,16,1104.866,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_implementation_edit,17,1105.486,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_implementation_edit,18,1109.900,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_implementation_edit,19,1105.812,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_constant_edit,0,1112.745,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_constant_edit,1,1117.506,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_constant_edit,2,1113.804,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_constant_edit,3,1106.652,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_constant_edit,4,1106.628,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_constant_edit,5,1104.409,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_constant_edit,6,1120.679,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_constant_edit,7,1113.356,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_constant_edit,8,1134.590,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_constant_edit,9,1138.416,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_constant_edit,10,1134.988,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_constant_edit,11,1116.214,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_constant_edit,12,1107.657,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_constant_edit,13,1104.025,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_constant_edit,14,1104.797,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_constant_edit,15,1104.715,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_constant_edit,16,1109.679,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_constant_edit,17,1117.462,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_constant_edit,18,1109.345,,,,,,,,,,,,,,,,
+managed-100k,managed,100000,session_constant_edit,19,1115.889,,,,,,,,,,,,,,,,

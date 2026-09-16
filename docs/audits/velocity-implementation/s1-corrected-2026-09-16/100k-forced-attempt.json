@@ -1,0 +1,636 @@
+{
+  "version": "large-project-profile-v2",
+  "smoke_validation": {
+    "ordinary": {
+      "exit": 0,
+      "wall_ms": 3.3893939980771393,
+      "peak_rss_kb": 16012,
+      "work_report": {
+        "version": "work-report-v1",
+        "command": "check-project",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 10,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 51,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [
+          {
+            "reason": "semantic-reuse-unavailable",
+            "count": 1
+          },
+          {
+            "reason": "cache-disabled",
+            "count": 1
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 10,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 51,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      "diagnostic": "",
+      "accepted": true,
+      "run": {
+        "exit": 149,
+        "wall_ms": 6.427817017538473,
+        "peak_rss_kb": 16020,
+        "stdout": "149",
+        "stderr": "",
+        "accepted": true,
+        "acceptance": "stdout is a decimal guest result and stderr carries no diagnostic; exit is the truncated guest return value"
+      }
+    },
+    "managed": {
+      "exit": 0,
+      "wall_ms": 3.9730330172460526,
+      "peak_rss_kb": 16036,
+      "work_report": {
+        "version": "work-report-v1",
+        "command": "check-project",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 7,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 46,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 6,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "miss",
+          "performed": 6,
+          "reused": 0
+        },
+        "bypassed": [
+          {
+            "reason": "semantic-reuse-unavailable",
+            "count": 1
+          },
+          {
+            "reason": "cache-disabled",
+            "count": 1
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 7,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 46,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 6,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      "diagnostic": "",
+      "accepted": true,
+      "run": {
+        "exit": 115,
+        "wall_ms": 7.555172021966428,
+        "peak_rss_kb": 16040,
+        "stdout": "6003",
+        "stderr": "",
+        "accepted": true,
+        "acceptance": "stdout is a decimal guest result and stderr carries no diagnostic; exit is the truncated guest return value"
+      }
+    },
+    "maintained": {
+      "exit": 0,
+      "wall_ms": 26.253471995005384,
+      "peak_rss_kb": 19552,
+      "work_report": {
+        "version": "work-report-v1",
+        "command": "check-project",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 14,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 114,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [
+          {
+            "reason": "semantic-reuse-unavailable",
+            "count": 1
+          },
+          {
+            "reason": "cache-disabled",
+            "count": 1
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 14,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 114,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      "diagnostic": "",
+      "accepted": true
+    }
+  },
+  "generated_at_unix": 1789567035.8955505,
+  "generator_sha256": "9cb579c34039a923110ee3aa2abbf2b3d4f4e01a9590e08b249c2683c23caec6",
+  "compiler": {
+    "path": "/tmp/mylang-s1-corrected/zig-out/bin/mylang",
+    "sha256": "58a39d625369491cc696f9585d002aac4d6e9265afb2d5458b425d92cc61f57f",
+    "features_compiler_sha256": "2ab93be8437d1bf00580f136c0e0a155acfa2621c33ebc7f2ece7f03ee1635aa",
+    "zig_version": "0.17.0-dev.1683+5ceec001b"
+  },
+  "method": {
+    "wall_time": "process-start-to-exit, including dynamic linking, source load and command work",
+    "memory": "child ru_maxrss from wait4, per sample",
+    "percentile": "nearest-rank; sorted ascending; index ceil(0.95*n)-1",
+    "samples_per_state": 2,
+    "forced_test_samples": 1,
+    "warmup": "one warm check before sampling for unchanged/edit states",
+    "edit_independence": "each sample writes a deterministic edit token unique to that sample",
+    "validation": "check-project --no-cache --report must exit 0 before any timing; run-project for <=20k-line workloads"
+  },
+  "limits": [
+    {
+      "subsystem": "checking/build loader",
+      "source": "src/project.zig",
+      "budgets": {
+        "max_modules": 256,
+        "max_imports": 4096,
+        "max_file_bytes": 4194304,
+        "max_total_bytes": 16777216,
+        "max_file_bytes_human": "4 MiB",
+        "max_total_bytes_human": "16 MiB"
+      },
+      "all_patterns_present": true,
+      "missing_patterns": []
+    },
+    {
+      "subsystem": "project configuration",
+      "source": "src/project_config.zig",
+      "budgets": {
+        "max_config_bytes": 1048576,
+        "max_config_bytes_human": "1 MiB"
+      },
+      "all_patterns_present": true,
+      "missing_patterns": []
+    },
+    {
+      "subsystem": "navigation index",
+      "source": "src/navigation.zig",
+      "budgets": {
+        "max_symbols": 50000,
+        "max_references": 250000
+      },
+      "all_patterns_present": true,
+      "missing_patterns": []
+    },
+    {
+      "subsystem": "native test snapshot/provider materialization",
+      "source": "src/native_test_snapshot.zig",
+      "budgets": {
+        "max_bytes": 16777216,
+        "max_entries": 50000,
+        "max_bytes_human": "16 MiB"
+      },
+      "all_patterns_present": true,
+      "missing_patterns": []
+    },
+    {
+      "subsystem": "python navigation source inventory",
+      "source": "scripts/navigate.py",
+      "budgets": {
+        "max_bytes": 16777216,
+        "max_entries": 50000,
+        "max_bytes_human": "16 MiB"
+      },
+      "all_patterns_present": true,
+      "missing_patterns": []
+    },
+    {
+      "subsystem": "package materialization",
+      "source": "scripts/packages.py",
+      "budgets": {
+        "max_bytes": 16777216,
+        "max_bytes_human": "16 MiB"
+      },
+      "all_patterns_present": true,
+      "missing_patterns": []
+    },
+    {
+      "subsystem": "agent store materialization",
+      "source": "scripts/store.py",
+      "budgets": {
+        "max_file_bytes": 8388608,
+        "max_total_bytes": 67108864,
+        "max_file_bytes_human": "8 MiB",
+        "max_total_bytes_human": "64 MiB"
+      },
+      "all_patterns_present": true,
+      "missing_patterns": []
+    }
+  ],
+  "limit_findings": [
+    {
+      "finding": "module/import counts are bounded only by the loader",
+      "detail": "src/project.zig rejects module 257 with E_MODULE_LIMIT and import 4097 with E_IMPORT_LIMIT, but src/native_test_snapshot.zig, scripts/navigate.py and scripts/packages.py enforce only byte/entry budgets. A 257-module project can therefore be snapshotted or materialized and then fail ordinary checking.",
+      "sources": [
+        "src/project.zig",
+        "src/native_test_snapshot.zig",
+        "scripts/navigate.py",
+        "scripts/packages.py"
+      ],
+      "action": "reported, not changed: a consistent fix must add the shared module/import budget to the snapshot, inventory and package paths, not only to project.zig."
+    },
+    {
+      "finding": "store byte budgets are larger than the compiler budgets",
+      "detail": "scripts/store.py allows 8 MiB per file and 64 MiB total; the loader allows 4 MiB per file and 16 MiB total. The store accepts projects the compiler later rejects with E_PROJECT_BYTES.",
+      "sources": [
+        "scripts/store.py",
+        "src/project.zig"
+      ],
+      "action": "reported, not changed: lowering the store without measuring existing store users would be a behavior change outside the S1 measurement package."
+    },
+    {
+      "finding": "navigation has its own symbol/reference budgets",
+      "detail": "src/navigation.zig caps navigation at 50000 symbols and 250000 references. The measured 100k-line ordinary workload checks in a few seconds but index-project reports host failure NavigationLimit; navigation limits are not part of the loader/snapshot/package budget set.",
+      "sources": [
+        "src/navigation.zig"
+      ],
+      "action": "reported; the measured NavigationLimit is preserved in workload metrics and is an unsupported workload for navigation, never a timing sample."
+    },
+    {
+      "finding": "configuration budget is a separate 1 MiB ceiling",
+      "detail": "src/project_config.zig caps mylang.json and a relative import policy at 1 MiB independently of the source budget.",
+      "sources": [
+        "src/project_config.zig"
+      ],
+      "action": "documented in the shared limits table; no measurement justifies changing it."
+    }
+  ],
+  "workloads": [
+    {
+      "family": "ordinary",
+      "label": "ordinary-100k",
+      "target_lines": 100000,
+      "generated": {
+        "modules": 64,
+        "functions_per_module": 520,
+        "lines": 100943,
+        "bytes": 1969413
+      },
+      "entry": "/tmp/mylang-s1-corrected-work/100k-forced/sources/ordinary-100k/main.my",
+      "validation": {
+        "exit": 0,
+        "wall_ms": 949.5643640111666,
+        "peak_rss_kb": 523848,
+        "work_report": {
+          "version": "work-report-v1",
+          "command": "check-project",
+          "reused": false,
+          "parsed_modules": {
+            "status": "miss",
+            "performed": 66,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "status": "miss",
+            "performed": 33475,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "status": "miss",
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "status": "skipped",
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "status": "skipped",
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "status": "skipped",
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "status": "skipped",
+            "performed": 0,
+            "reused": 0
+          },
+          "reused_results": 0,
+          "session_reused_results": 0,
+          "symbolic_templates": {
+            "status": "skipped",
+            "performed": 0,
+            "reused": 0
+          },
+          "specialization_bodies": {
+            "status": "skipped",
+            "performed": 0,
+            "reused": 0
+          },
+          "bypassed": [
+            {
+              "reason": "semantic-reuse-unavailable",
+              "count": 1
+            },
+            {
+              "reason": "cache-disabled",
+              "count": 1
+            }
+          ],
+          "session": {
+            "parsed_modules": {
+              "performed": 66,
+              "reused": 0
+            },
+            "checked_bodies": {
+              "performed": 33475,
+              "reused": 0
+            },
+            "instantiated_specializations": {
+              "performed": 0,
+              "reused": 0
+            },
+            "lowered_functions": {
+              "performed": 0,
+              "reused": 0
+            },
+            "emitted_fragments": {
+              "performed": 0,
+              "reused": 0
+            },
+            "links": {
+              "performed": 0,
+              "reused": 0
+            },
+            "executed_tests": {
+              "performed": 0,
+              "reused": 0
+            }
+          }
+        },
+        "diagnostic": "",
+        "accepted": true
+      },
+      "status": "measured",
+      "metrics": {
+        "lines": 100943,
+        "bytes": 1969413,
+        "my_files": 66,
+        "module_report": {
+          "status": "ok",
+          "modules": 66,
+          "imports": 192,
+          "module_depth": 66,
+          "list_modules_ms": 90.1782980072312,
+          "list_modules_peak_rss_kb": 40128
+        },
+        "functions_checked": 33475,
+        "checked_bodies": 33475,
+        "specializations": 0
+      },
+      "states": {
+        "forced_tests": {
+          "state": "forced_tests",
+          "cold_build": {
+            "wall_ms": 150041.69302401715,
+            "peak_rss_kb": 914216,
+            "exit": -9,
+            "timed_out": true,
+            "passed": null,
+            "failed": null,
+            "cached": null,
+            "executed": null,
+            "selected": null,
+            "diagnostic": "",
+            "role": "cold_build"
+          },
+          "summary": {
+            "samples": [],
+            "count": 0,
+            "median_ms": null,
+            "p95_ms": null,
+            "min_ms": null,
+            "max_ms": null
+          },
+          "peak_rss_kb_max": 925044,
+          "memory_note": "direct-child ru_maxrss only; host build children are not included",
+          "samples": [
+            {
+              "wall_ms": 150041.33496500435,
+              "peak_rss_kb": 925044,
+              "exit": -9,
+              "timed_out": true,
+              "passed": null,
+              "failed": null,
+              "cached": null,
+              "executed": null,
+              "selected": null,
+              "diagnostic": ""
+            }
+          ],
+          "status": "measured"
+        }
+      },
+      "objectives": {
+        "target_lines": 100000,
+        "forced_tests": {
+          "p95_ms": null,
+          "under_1000ms": null
+        }
+      }
+    }
+  ]
+}

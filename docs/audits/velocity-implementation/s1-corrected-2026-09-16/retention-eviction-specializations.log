@@ -1,0 +1,16 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source d2ec9a489e00)
+guardian: diff-scoped vs a9e29d4845ab2f8a700eeb238ed03023d2ac701e: 100/348 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 5 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 10 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 2118 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs a9e29d4845ab2f8a700eeb238ed03023d2ac701e, 100 file(s) in scope
+test-units
++- run test w
+guardian/test: 11 test(s) selected
+retention: budget=5766 retained=2946 spec_bytes=2154 evictions=39 oldest_fresh_checks=+1
+guardian/test: test wall 0.29s; slowest over 50ms:
+guardian/test:   0.29s  semantic_cache_test.test.shared retention budget bounds distinct specializations and eviction forces fresh checks
+guardian/test: PASS — 11 passed
+guardian/test: RESULT {"passed":11,"failed":0,"skipped":0}
+failed command: MYLANG_QBE=/tmp/mylang-s1-corrected/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/d630c0c6c85662bde692d8a3f2ca8fac/test --cache-dir=./.zig-cache --seed=0x3aecf064 --listen=-
+

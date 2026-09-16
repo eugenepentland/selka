@@ -1,0 +1,159 @@
+{
+  "compiler": "/tmp/mylang-s1-corrected/zig-out/bin/mylang",
+  "entry": "/tmp/mylang-s1-corrected-work/100k-ord-low/sources/ordinary-100k/main.my",
+  "results": [
+    {
+      "request": 0,
+      "wall_ms": 966.9941019965336,
+      "status": 0,
+      "reused_results": false,
+      "checked": 33475,
+      "reused": 0,
+      "stored": 1,
+      "bypassed": 0,
+      "retained_bytes": 16776636,
+      "retention": {
+        "ordinary_bytes": 16776636,
+        "symbolic_bytes": 0,
+        "specialization_bytes": 0,
+        "evicted": 0
+      },
+      "specializations_checked": {
+        "performed": 33475,
+        "reused": 0
+      },
+      "work_request": {
+        "parsed_modules": {
+          "performed": 66,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "performed": 33475,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "performed": 0,
+          "reused": 0
+        }
+      }
+    },
+    {
+      "request": 1,
+      "wall_ms": 88.52972000022419,
+      "status": 0,
+      "reused_results": true,
+      "checked": 33475,
+      "reused": 0,
+      "stored": 1,
+      "bypassed": 0,
+      "retained_bytes": 16776636,
+      "retention": {
+        "ordinary_bytes": 16776636,
+        "symbolic_bytes": 0,
+        "specialization_bytes": 0,
+        "evicted": 0
+      },
+      "specializations_checked": {
+        "performed": 0,
+        "reused": 0
+      },
+      "work_request": {
+        "parsed_modules": {
+          "performed": 0,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "performed": 0,
+          "reused": 0
+        }
+      }
+    },
+    {
+      "request": 2,
+      "wall_ms": 88.76476899604313,
+      "status": 0,
+      "reused_results": true,
+      "checked": 33475,
+      "reused": 0,
+      "stored": 1,
+      "bypassed": 0,
+      "retained_bytes": 16776636,
+      "retention": {
+        "ordinary_bytes": 16776636,
+        "symbolic_bytes": 0,
+        "specialization_bytes": 0,
+        "evicted": 0
+      },
+      "specializations_checked": {
+        "performed": 0,
+        "reused": 0
+      },
+      "work_request": {
+        "parsed_modules": {
+          "performed": 0,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "performed": 0,
+          "reused": 0
+        }
+      }
+    }
+  ]
+}

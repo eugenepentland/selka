@@ -1,0 +1,322 @@
+workload,family,target_lines,state,sample,wall_ms,peak_rss_kb,exit,timed_out,parsed_performed,parsed_reused,checked_performed,checked_reused,specializations_performed,lowered_performed,emitted_performed,links_performed,tests_performed,tests_cached,tests_executed,reused_results,bypassed
+ordinary-10k,ordinary,10000,cold,0,460.423,62112,0,False,66,0,3139,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,cold,1,411.804,61976,0,False,66,0,3139,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,cold,2,197.540,62112,0,False,66,0,3139,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,cold,3,240.352,62112,0,False,66,0,3139,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,cold,4,235.343,62112,0,False,66,0,3139,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,cold,5,157.485,62112,0,False,66,0,3139,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,cold,6,463.121,62112,0,False,66,0,3139,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,cold,7,451.215,62112,0,False,66,0,3139,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,cold,8,401.810,61952,0,False,66,0,3139,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,cold,9,466.585,61952,0,False,66,0,3139,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,cold,10,408.203,61952,0,False,66,0,3139,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,cold,11,203.270,62112,0,False,66,0,3139,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,cold,12,459.519,61980,0,False,66,0,3139,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,cold,13,463.993,62112,0,False,66,0,3139,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,cold,14,403.014,61972,0,False,66,0,3139,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,cold,15,480.840,62112,0,False,66,0,3139,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,cold,16,478.843,62112,0,False,66,0,3139,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,cold,17,340.131,62112,0,False,66,0,3139,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,cold,18,472.668,62112,0,False,66,0,3139,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,cold,19,358.622,62112,0,False,66,0,3139,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,0,21.759,39656,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,1,21.108,39656,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,2,24.483,39656,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,3,19.832,39656,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,4,18.031,39656,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,5,20.284,39660,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,6,27.146,39660,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,7,20.460,39660,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,8,18.366,39660,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,9,21.522,39660,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,10,20.294,39660,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,11,20.306,39660,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,12,22.033,39660,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,13,20.299,39660,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,14,19.757,39660,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,15,19.451,39660,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,16,18.815,39660,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,17,19.217,39660,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,18,19.575,39660,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,unchanged,19,20.449,39660,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+ordinary-10k,ordinary,10000,no_cache,0,101.695,52192,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,1,104.360,52032,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,2,106.703,52192,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,3,106.511,52192,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,4,104.188,52192,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,5,99.646,52192,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,6,99.602,52192,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,7,104.615,52192,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,8,100.314,52192,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,9,104.431,52032,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,10,103.616,52192,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,11,116.624,52192,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,12,108.056,52032,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,13,94.758,52192,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,14,104.245,52192,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,15,100.665,52192,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,16,113.119,52192,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,17,101.869,52192,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,18,96.776,52192,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,no_cache,19,93.617,52192,0,False,66,0,3139,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,0,99.449,52704,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""declaration-region-length-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,1,96.403,52704,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,2,116.561,52704,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,3,124.516,52704,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,4,307.075,52704,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,5,115.669,52704,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,6,101.245,52704,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,7,98.789,52704,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,8,100.054,52704,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,9,120.323,52704,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,10,100.874,52704,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,11,142.388,52512,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,12,131.778,52704,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,13,122.895,52704,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,14,378.980,52704,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,15,376.995,52704,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,16,109.919,52704,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,17,97.847,52704,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,18,108.521,52704,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,implementation_edit,19,321.742,52704,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,0,372.801,51424,0,False,2,64,67,3072,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 66}, {""reason"": ""declaration-region-length-changed"", ""count"": 1}]"
+ordinary-10k,ordinary,10000,constant_edit,1,133.442,51104,0,False,1,65,66,3073,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 66}]"
+ordinary-10k,ordinary,10000,constant_edit,2,384.643,51104,0,False,1,65,66,3073,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 66}]"
+ordinary-10k,ordinary,10000,constant_edit,3,382.105,51104,0,False,1,65,66,3073,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 66}]"
+ordinary-10k,ordinary,10000,constant_edit,4,367.673,51104,0,False,1,65,66,3073,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 66}]"
+ordinary-10k,ordinary,10000,constant_edit,5,301.332,50752,0,False,1,65,66,3073,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 66}]"
+ordinary-10k,ordinary,10000,constant_edit,6,116.261,51104,0,False,1,65,66,3073,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 66}]"
+ordinary-10k,ordinary,10000,constant_edit,7,120.562,51104,0,False,1,65,66,3073,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 66}]"
+ordinary-10k,ordinary,10000,constant_edit,8,258.148,50912,0,False,1,65,66,3073,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 66}]"
+ordinary-10k,ordinary,10000,constant_edit,9,132.643,51104,0,False,1,65,66,3073,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 66}]"
+ordinary-10k,ordinary,10000,constant_edit,10,307.136,50752,0,False,1,65,66,3073,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 66}]"
+ordinary-10k,ordinary,10000,constant_edit,11,139.498,51104,0,False,1,65,66,3073,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 66}]"
+ordinary-10k,ordinary,10000,constant_edit,12,117.253,51104,0,False,1,65,66,3073,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 66}]"
+ordinary-10k,ordinary,10000,constant_edit,13,128.413,51104,0,False,1,65,66,3073,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 66}]"
+ordinary-10k,ordinary,10000,constant_edit,14,315.980,50752,0,False,1,65,66,3073,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 66}]"
+ordinary-10k,ordinary,10000,constant_edit,15,378.255,51104,0,False,1,65,66,3073,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 66}]"
+ordinary-10k,ordinary,10000,constant_edit,16,383.171,51104,0,False,1,65,66,3073,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 66}]"
+ordinary-10k,ordinary,10000,constant_edit,17,364.891,51104,0,False,1,65,66,3073,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 66}]"
+ordinary-10k,ordinary,10000,constant_edit,18,137.369,50944,0,False,1,65,66,3073,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 66}]"
+ordinary-10k,ordinary,10000,constant_edit,19,108.675,51104,0,False,1,65,66,3073,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 66}]"
+ordinary-10k,ordinary,10000,signature_edit,0,383.127,52384,0,False,2,64,67,3072,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 67}]"
+ordinary-10k,ordinary,10000,signature_edit,1,122.988,53184,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 2}]"
+ordinary-10k,ordinary,10000,signature_edit,2,391.921,53184,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 2}]"
+ordinary-10k,ordinary,10000,signature_edit,3,368.531,53184,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 2}]"
+ordinary-10k,ordinary,10000,signature_edit,4,368.475,53184,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 2}]"
+ordinary-10k,ordinary,10000,signature_edit,5,366.923,53024,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 2}]"
+ordinary-10k,ordinary,10000,signature_edit,6,372.168,53184,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 2}]"
+ordinary-10k,ordinary,10000,signature_edit,7,123.675,53184,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 2}]"
+ordinary-10k,ordinary,10000,signature_edit,8,117.738,53184,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 2}]"
+ordinary-10k,ordinary,10000,signature_edit,9,305.909,52992,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 2}]"
+ordinary-10k,ordinary,10000,signature_edit,10,356.428,52992,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 2}]"
+ordinary-10k,ordinary,10000,signature_edit,11,116.825,53184,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 2}]"
+ordinary-10k,ordinary,10000,signature_edit,12,121.140,53184,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 2}]"
+ordinary-10k,ordinary,10000,signature_edit,13,369.324,53184,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 2}]"
+ordinary-10k,ordinary,10000,signature_edit,14,102.582,53184,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 2}]"
+ordinary-10k,ordinary,10000,signature_edit,15,96.389,53184,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 2}]"
+ordinary-10k,ordinary,10000,signature_edit,16,92.538,53184,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 2}]"
+ordinary-10k,ordinary,10000,signature_edit,17,97.097,53184,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 2}]"
+ordinary-10k,ordinary,10000,signature_edit,18,104.240,53184,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 2}]"
+ordinary-10k,ordinary,10000,signature_edit,19,102.367,53184,0,False,1,65,2,3137,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 2}]"
+ordinary-10k,ordinary,10000,session_implementation_edit,0,55.478,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,1,54.550,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,2,58.092,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,3,60.064,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,4,58.191,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,5,55.698,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,6,53.717,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,7,52.579,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,8,52.236,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,9,55.145,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,10,56.944,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,11,69.304,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,12,64.814,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,13,62.118,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,14,61.822,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,15,64.181,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,16,64.363,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,17,65.231,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,18,69.237,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_implementation_edit,19,67.751,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,0,67.322,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,1,67.993,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,2,69.152,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,3,66.451,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,4,67.907,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,5,64.127,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,6,66.842,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,7,64.055,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,8,64.654,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,9,64.655,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,10,65.178,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,11,64.632,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,12,66.168,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,13,64.683,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,14,64.992,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,15,68.308,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,16,63.889,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,17,63.788,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,18,64.561,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,session_constant_edit,19,65.105,,,,,,,,,,,,,,,,
+ordinary-10k,ordinary,10000,forced_tests,0,2855.630,112900,0,False,,,,,,,,,,0,1,,
+ordinary-10k,ordinary,10000,forced_tests,1,1143.757,112112,0,False,,,,,,,,,,0,1,,
+ordinary-10k,ordinary,10000,forced_tests,2,2661.944,112360,0,False,,,,,,,,,,0,1,,
+managed-10k,managed,10000,cold,0,481.806,64064,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-10k,managed,10000,cold,1,210.588,64224,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-10k,managed,10000,cold,2,203.052,64224,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-10k,managed,10000,cold,3,415.159,64064,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-10k,managed,10000,cold,4,480.598,64224,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-10k,managed,10000,cold,5,496.489,64032,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-10k,managed,10000,cold,6,436.531,64044,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-10k,managed,10000,cold,7,209.992,64224,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-10k,managed,10000,cold,8,195.706,64224,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-10k,managed,10000,cold,9,194.149,64224,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-10k,managed,10000,cold,10,396.146,64064,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-10k,managed,10000,cold,11,480.077,64224,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-10k,managed,10000,cold,12,465.808,64032,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-10k,managed,10000,cold,13,487.373,64224,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-10k,managed,10000,cold,14,433.842,64032,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-10k,managed,10000,cold,15,244.430,64224,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-10k,managed,10000,cold,16,418.515,64224,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-10k,managed,10000,cold,17,193.030,64224,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-10k,managed,10000,cold,18,179.445,64224,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-10k,managed,10000,cold,19,205.678,64224,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 2}]"
+managed-10k,managed,10000,unchanged,0,21.168,46472,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,1,22.220,46472,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,2,20.699,46472,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,3,24.519,46472,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,4,20.634,46472,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,5,23.992,46472,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,6,22.339,46472,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,7,24.357,46472,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,8,22.219,46472,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,9,24.324,46472,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,10,21.324,46472,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,11,25.656,46472,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,12,21.274,46472,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,13,20.955,46472,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,14,20.186,46472,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,15,20.865,46472,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,16,21.312,46472,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,17,23.025,46472,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,18,22.271,46472,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,unchanged,19,23.071,46472,0,False,0,0,0,0,0,0,0,0,0,,,,[]
+managed-10k,managed,10000,no_cache,0,151.501,53824,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,1,148.929,53824,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,2,142.827,53824,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,3,171.020,53824,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,4,147.983,53632,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,5,134.722,53824,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,6,147.309,53632,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,7,138.603,53632,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,8,143.741,53664,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,9,160.092,53824,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,10,140.043,53824,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,11,143.340,53472,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,12,146.056,53472,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,13,151.518,53472,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,14,143.428,53472,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,15,148.725,53664,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,16,144.329,53472,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,17,144.435,53472,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,18,146.609,53824,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,no_cache,19,144.872,53824,0,False,68,0,2756,0,128,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}, {""reason"": ""cache-disabled"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,0,362.625,59584,0,False,1,67,130,2626,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""declaration-region-length-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,1,381.201,59744,0,False,1,67,130,2626,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,2,344.280,59744,0,False,1,67,130,2626,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,3,410.315,59584,0,False,1,67,130,2626,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,4,424.343,59744,0,False,1,67,130,2626,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,5,414.559,59744,0,False,1,67,130,2626,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,6,158.472,59744,0,False,1,67,130,2626,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,7,285.935,59744,0,False,1,67,130,2626,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,8,365.976,59744,0,False,1,67,130,2626,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,9,190.332,59744,0,False,1,67,130,2626,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,10,408.723,59744,0,False,1,67,130,2626,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,11,408.444,59744,0,False,1,67,130,2626,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,12,362.571,59584,0,False,1,67,130,2626,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,13,152.876,59744,0,False,1,67,130,2626,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,14,398.814,59584,0,False,1,67,130,2626,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,15,149.480,59744,0,False,1,67,130,2626,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,16,143.714,59744,0,False,1,67,130,2626,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,17,134.612,59744,0,False,1,67,130,2626,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,18,143.861,59744,0,False,1,67,130,2626,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,implementation_edit,19,134.706,59744,0,False,1,67,130,2626,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,0,421.243,60384,0,False,2,66,195,2561,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 66}, {""reason"": ""declaration-region-length-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,1,428.743,60224,0,False,1,67,194,2562,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 66}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,2,431.124,60224,0,False,1,67,194,2562,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 66}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,3,363.722,60064,0,False,1,67,194,2562,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 66}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,4,173.065,60224,0,False,1,67,194,2562,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 66}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,5,144.562,60224,0,False,1,67,194,2562,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 66}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,6,382.425,60224,0,False,1,67,194,2562,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 66}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,7,205.037,60064,0,False,1,67,194,2562,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 66}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,8,144.016,60224,0,False,1,67,194,2562,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 66}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,9,255.266,60064,0,False,1,67,194,2562,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 66}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,10,422.593,60224,0,False,1,67,194,2562,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 66}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,11,369.556,60064,0,False,1,67,194,2562,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 66}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,12,373.516,60064,0,False,1,67,194,2562,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 66}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,13,362.054,60064,0,False,1,67,194,2562,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 66}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,14,422.593,60224,0,False,1,67,194,2562,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 66}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,15,209.426,60064,0,False,1,67,194,2562,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 66}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,16,407.652,60064,0,False,1,67,194,2562,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 66}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,17,427.266,60224,0,False,1,67,194,2562,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 66}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,18,336.573,60040,0,False,1,67,194,2562,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 66}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,constant_edit,19,422.667,60224,0,False,1,67,194,2562,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 66}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,union_edit,0,158.249,60544,0,False,2,66,195,2528,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 68}, {""reason"": ""relocation-failed"", ""count"": 63}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,union_edit,1,148.907,60544,0,False,1,67,130,2593,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 3}, {""reason"": ""relocation-failed"", ""count"": 63}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,union_edit,2,131.364,60544,0,False,1,67,130,2593,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 3}, {""reason"": ""relocation-failed"", ""count"": 63}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,union_edit,3,134.557,60544,0,False,1,67,130,2593,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 3}, {""reason"": ""relocation-failed"", ""count"": 63}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,union_edit,4,144.642,60544,0,False,1,67,130,2593,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 3}, {""reason"": ""relocation-failed"", ""count"": 63}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,provider_edit,0,408.472,60224,0,False,2,66,162,2592,126,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 126}, {""reason"": ""no-retained-body"", ""count"": 36}, {""reason"": ""relocation-failed"", ""count"": 63}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,provider_edit,1,367.942,60704,0,False,1,67,128,2626,126,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 126}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,provider_edit,2,386.464,60704,0,False,1,67,128,2626,126,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 126}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,provider_edit,3,416.525,60544,0,False,1,67,128,2626,126,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 126}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,provider_edit,4,183.522,60544,0,False,1,67,128,2626,126,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 126}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,effect_edit,0,292.838,59584,0,False,2,66,130,2626,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,effect_edit,1,352.317,57024,0,False,2,66,131,2625,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 3}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}, {""reason"": ""symbolic-no-retained-template"", ""count"": 1}]"
+managed-10k,managed,10000,effect_edit,2,371.349,59744,0,False,2,66,129,2627,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,effect_edit,3,190.377,59744,0,False,2,66,129,2627,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,effect_edit,4,363.207,59744,0,False,2,66,129,2627,128,0,0,0,0,,,,"[{""reason"": ""not-ordinary-body"", ""count"": 128}, {""reason"": ""no-retained-body"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 64}, {""reason"": ""generic-specialization"", ""count"": 1}]"
+managed-10k,managed,10000,session_implementation_edit,0,102.949,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,1,103.314,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,2,102.667,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,3,102.731,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,4,101.700,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,5,102.199,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,6,107.162,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,7,104.417,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,8,103.991,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,9,101.545,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,10,103.099,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,11,105.271,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,12,107.402,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,13,108.496,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,14,104.631,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,15,106.018,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,16,106.588,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,17,106.812,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,18,105.416,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_implementation_edit,19,105.333,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,0,111.739,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,1,109.224,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,2,103.620,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,3,104.227,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,4,102.133,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,5,106.971,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,6,111.996,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,7,106.142,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,8,101.400,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,9,100.586,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,10,105.208,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,11,104.606,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,12,106.277,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,13,105.377,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,14,106.155,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,15,105.453,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,16,101.687,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,17,105.824,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,18,105.125,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,session_constant_edit,19,105.499,,,,,,,,,,,,,,,,
+managed-10k,managed,10000,forced_tests,0,797.526,107088,0,False,,,,,,,,,,0,1,,
+managed-10k,managed,10000,forced_tests,1,791.187,107396,0,False,,,,,,,,,,0,1,,
+managed-10k,managed,10000,forced_tests,2,790.671,107420,0,False,,,,,,,,,,0,1,,

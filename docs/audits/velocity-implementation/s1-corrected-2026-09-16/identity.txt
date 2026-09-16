@@ -1,0 +1,41 @@
+=== S1 corrected measurement identity ===
+timestamp_utc_start: 2026-09-16T13:17:53Z
+hostname: linuxserver
+commit: 3f76446c9e4134d7fea0c67045dee4a28fb24507
+commit_subject: velocity: account exact semantic cache backing allocations
+branch_of_main_checkout: codex/velocity-integration (main HEAD 3f76446c)
+worktree: /tmp/mylang-s1-corrected
+compiler_path: /tmp/mylang-s1-corrected/zig-out/bin/mylang
+compiler_sha256: 58a39d625369491cc696f9585d002aac4d6e9265afb2d5458b425d92cc61f57f
+qbe_path: /tmp/mylang-s1-corrected/zig-out/bin/qbe
+qbe_sha256: 9f1a32c1f2c4548595b61089a172dd0c6cfd5cbbb29677984db7442387204117
+qbe_vendored_version: 1.3
+zig_path: /home/epentland/.local/bin/zig
+zig_version: 0.17.0-dev.1683+5ceec001b
+compiler_features_sha256: 2ab93be8437d1bf00580f136c0e0a155acfa2621c33ebc7f2ece7f03ee1635aa
+harness_sha256: 9cb579c34039a923110ee3aa2abbf2b3d4f4e01a9590e08b249c2683c23caec6
+--- machine ---
+os: Linux 7.0.0-31-generic x86_64 GNU/Linux
+cpu: model name	: 12th Gen Intel(R) Core(TM) i7-12700H
+cpu_threads: 20
+mem:                total        used        free      shared  buff/cache   available
+mem: Mem:            30Gi       4.2Gi       5.8Gi       446Mi        21Gi        26Gi
+mem: Swap:          8.0Gi       5.8Gi       2.2Gi
+--- load at start ---
+loadavg: 2.00 5.65 7.58 3/991 1520317
+--- concurrent user processes (>1% cpu snapshot) ---
+    PID %CPU %MEM COMMAND
+1520289  100  0.1 mylang
+1875322 17.3  4.6 node
+1301091  3.5  0.0 netlisp
+   6327  1.3  0.5 2.1.270
+3019697  1.3  0.4 2.1.271
+   3596  1.2  0.1 cloudflared
+   6332  1.2  0.4 2.1.270
+   4700  0.7  0.6 codex
+   3789  0.5  0.0 uvicorn
+   3787  0.4  0.0 cloudflared
+1875323  0.3  0.1 node
+   1082  0.2  0.0 irq/188-iwlwifi:default_queue
+   1552  0.2  0.1 tailscaled
+   3788  0.2  0.0 wardd
