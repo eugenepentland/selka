@@ -100,9 +100,11 @@ pub const Statistics = struct {
     stored: usize = 0,
     bypassed: usize = 0,
     /// Total owned in-memory retention bytes across ordinary bodies, symbolic
-    /// templates and concrete specializations, including entry rows, arenas,
-    /// keys and hash-index capacity. This is the field `check-session` reports
-    /// as `functions.retained_bytes`.
+    /// templates and concrete specializations: entry rows, arena backing
+    /// allocations including per-chunk bookkeeping, keys, and the exact
+    /// hash-index backing allocation including the stdlib minimum/header/
+    /// alignment. This is the field `check-session` reports as
+    /// `functions.retained_bytes`.
     retained_bytes: usize = 0,
     /// Conservative per-reason miss counts for bodies that were not reused. These
     /// name an exact cause even when the body is checked fresh.
@@ -209,19 +211,21 @@ pub const Cache = struct {
         self.statistics.retention.specialization_bytes = specialization_bytes;
         self.statistics.retained_bytes = ordinary + symbolic_bytes + specialization_bytes;
     }
-    /// Owned bytes of the ordinary table: rows, arenas (metadata, dependency
-    /// keys and source slices) and the stable-key hash index capacity.
+    /// Owned bytes of the ordinary table: entry rows, entry arenas (metadata,
+    /// dependency keys and source slices) including their chunk bookkeeping, and
+    /// the exact stable-key hash-index backing allocation.
     fn ordinaryRetainedBytes(self: *const Cache) usize {
         var bytes: usize = self.entries.len * @sizeOf(owned.Entry);
-        for (self.entries) |entry| bytes += entry.arena.queryCapacity();
+        for (self.entries) |entry| bytes += owned.arenaOwnedBytes(entry.arena);
         bytes += owned.hashIndexBytes(self.index.capacity());
         return bytes;
     }
     /// Hold the combined ordinary + symbolic + specialization budget by
     /// releasing generic entries oldest-first. Ordinary bodies are already
-    /// bounded by `remember` against the generic total, so this only needs to
-    /// evict generic entries; it is also the universal convergence point called
-    /// after every generic promotion or durable-hit promotion.
+    /// bounded by `remember` against the generic total using the same exact
+    /// owned-byte model, so this only needs to evict generic entries; it is also
+    /// the universal convergence point called after every generic promotion or
+    /// durable-hit promotion.
     fn enforceGenericRetention(self: *Cache) void {
         if (self.reuse.max_bytes == 0) return;
         while (self.ordinaryRetainedBytes() + self.reuse.symbolic.retainedBytes() + self.reuse.specializations.retainedBytes() > self.reuse.max_bytes) {
@@ -280,9 +284,9 @@ pub const Cache = struct {
             const stable_key = prepared.keys[ast_index];
             if (index.contains(stable_key)) continue;
             const entry = (try persistent.lookup(self.allocator, stable_key, prepared.contexts[ast_index])) orelse continue;
-            // Durable entries are promoted into memory only while they fit the
-            // ordinary share of the shared budget; the rest stay on disk and are
-            // decoded on demand.
+            // Durable entries are promoted into memory only while their exact
+            // owned row, arena backing and index share fit the ordinary share of
+            // the shared budget; the rest stay on disk and are decoded on demand.
             const cost = owned.entryCost(entry);
             if (!fitsOrdinaryBudget(running, cost, loaded.items.len + 1, ordinary_budget)) {
                 var dropped = entry;
@@ -528,10 +532,10 @@ pub const Session = struct {
     ///
     /// The in-memory budget is shared with the symbolic and concrete
     /// specialization tables, so this request keeps the longest leading prefix
-    /// of stable ordinary bodies whose owned storage plus index overhead fits
-    /// the share of the budget the generic tables leave. A body that does not
-    /// fit is a fresh miss on its next request rather than a reason to disable
-    /// reuse for every body.
+    /// of stable ordinary bodies whose owned storage plus the exact
+    /// hash-index backing allocation fits the share of the budget the generic
+    /// tables leave. A body that does not fit is a fresh miss on its next
+    /// request rather than a reason to disable reuse for every body.
     pub fn remember(self: *Session, program: typed.Program) error{ OutOfMemory, InternalError }!void {
         const cache = self.cache;
         if (cache.reuse.max_bytes == 0) return;
@@ -679,9 +683,10 @@ fn reconcileRetention(owner: ?*anyopaque) void {
     cache.enforceGenericRetention();
 }
 
-/// Whether the next ordinary entry still fits `budget` once the body's own
-/// storage and the index capacity the standard hash map allocates for that
-/// entry count are both counted.
+/// Whether the next ordinary entry still fits `budget` once the body's actual
+/// owned storage (entry row plus arena backing including chunk bookkeeping) and
+/// the exact hash-index backing the standard map allocates for that entry count
+/// (including its minimum capacity, header and alignment) are both counted.
 fn fitsOrdinaryBudget(running: usize, cost: usize, count: usize, budget: usize) bool {
     return running + cost + owned.indexBytesFor(count) <= budget;
 }

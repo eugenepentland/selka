@@ -116,9 +116,10 @@ pub const Table = struct {
         self.entries = .empty;
         self.index = .empty;
     }
-    /// Owned bytes of this table: entry rows, entry arenas (which own the
-    /// copied checked tree, reference keys, fingerprints and source slices) and
-    /// the stable-key hash index capacity.
+    /// Owned bytes of this table: entry rows plus entry arenas (which own the
+    /// copied checked tree, reference keys, fingerprints and source slices)
+    /// including their per-chunk bookkeeping, plus the exact stable-key
+    /// hash-index backing allocation.
     pub fn retainedBytes(self: *const Table) usize {
         var bytes: usize = self.entries.capacity * @sizeOf(owned.SpecializationEntry);
         for (self.entries.items) |entry| bytes += owned.specializationArenaBytes(entry);

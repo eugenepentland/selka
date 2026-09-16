@@ -138,42 +138,80 @@ fn noteWarnings(allocator: std.mem.Allocator, function: typed.Function) error{Ou
     }
     return notes;
 }
-/// Count the entry array plus every independently owned tree arena. Source
-/// slices live in the same arena as their tree, so this is a plain sum and the
-/// retained total is independent of sibling entries.
+/// Count the entry rows plus every independently owned tree arena, including
+/// the per-chunk bookkeeping nodes the arena allocator keeps in front of each
+/// backing allocation. Source slices live in the same arena as their tree, so
+/// this is a plain sum and the retained total is independent of sibling
+/// entries.
 pub fn retained(entries: []const Entry) usize {
     var bytes: usize = entries.len * @sizeOf(Entry);
-    for (entries) |entry| bytes += entry.arena.queryCapacity();
+    for (entries) |entry| bytes += arenaOwnedBytes(entry.arena);
     return bytes;
 }
 
 /// Owned bytes of one ordinary entry: its row plus the arena that owns the
-/// copied tree, metadata, dependency keys and the two source slices.
+/// copied tree, metadata, dependency keys and the two source slices, including
+/// arena chunk bookkeeping.
 pub fn entryCost(entry: Entry) usize {
-    return @sizeOf(Entry) + entry.arena.queryCapacity();
+    return @sizeOf(Entry) + arenaOwnedBytes(entry.arena);
 }
-/// Owned bytes of one symbolic entry arena (the row is counted by the table).
+/// Owned bytes of one symbolic entry arena (the row is counted by the table),
+/// including arena chunk bookkeeping.
 pub fn symbolicArenaBytes(entry: SymbolicEntry) usize {
-    return entry.arena.queryCapacity();
+    return arenaOwnedBytes(entry.arena);
 }
-/// Owned bytes of one specialization entry arena (the row is counted by the table).
+/// Owned bytes of one specialization entry arena (the row is counted by the
+/// table), including arena chunk bookkeeping.
 pub fn specializationArenaBytes(entry: SpecializationEntry) usize {
-    return entry.arena.queryCapacity();
+    return arenaOwnedBytes(entry.arena);
 }
-/// Bytes one `StringHashMapUnmanaged([]const u8, usize)` slot occupies: the key
-/// slice, the value and the one-byte metadata fingerprint. This mirrors the
-/// standard library's slot arrays, so retained index bytes are a real count of
-/// owned capacity rather than a per-entry guess.
+/// Actual owned bytes of an arena: `queryCapacity()` plus the per-chunk
+/// `ArenaAllocator` node bookkeeping that `queryCapacity()` deliberately
+/// excludes. This mirrors the pinned allocator layout (`used_list` plus any
+/// retained `free_list` chunks) so the shared budget counts real backing
+/// allocations, and it returns 0 for an empty arena.
+pub fn arenaOwnedBytes(arena: std.heap.ArenaAllocator) usize {
+    var bytes = arena.queryCapacity();
+    const node_ptr = @TypeOf(arena.state.used_list);
+    for ([_]node_ptr{ arena.state.used_list, arena.state.free_list }) |first_node| {
+        var it = first_node;
+        while (it) |node| : (it = node.next) {
+            bytes += @sizeOf(@TypeOf(node.*));
+        }
+    }
+    return bytes;
+}
+/// Exact backing allocation one `std.StringHashMapUnmanaged(usize)` owns at
+/// `capacity` slots. The standard library keeps the map `Header`, the one-byte
+/// metadata array and the aligned key/value arrays in a single allocation, so
+/// this mirrors `HashMapUnmanaged.allocate` including alignment padding rather
+/// than estimating a bare slot sum. Capacity 0 owns no allocation.
 pub fn hashIndexBytes(capacity: usize) usize {
-    return capacity * (@sizeOf([]const u8) + @sizeOf(usize) + 1);
+    if (capacity == 0) return 0;
+    const Header = struct {
+        values: [*]usize,
+        keys: [*][]const u8,
+        capacity: u32,
+    };
+    const header_align = @alignOf(Header);
+    const key_align = if (@sizeOf([]const u8) == 0) 1 else @alignOf([]const u8);
+    const val_align = if (@sizeOf(usize) == 0) 1 else @alignOf(usize);
+    const max_align = @max(header_align, key_align, val_align);
+    const meta_size = @sizeOf(Header) + capacity * @sizeOf(u8);
+    const keys_start = std.mem.alignForward(usize, meta_size, key_align);
+    const keys_end = keys_start + capacity * @sizeOf([]const u8);
+    const vals_start = std.mem.alignForward(usize, keys_end, val_align);
+    const vals_end = vals_start + capacity * @sizeOf(usize);
+    return std.mem.alignForward(usize, vals_end, max_align);
 }
-/// Slot capacity `std.StringHashMapUnmanaged` allocates for `count` entries,
-/// matching its 80% load factor and power-of-two growth.
+/// Slot capacity `std.StringHashMapUnmanaged` allocates for `count` entries:
+/// the standard library's 80% load factor and power-of-two growth, floored at
+/// its minimum capacity of 8. An empty map owns no slots.
 pub fn indexCapacityFor(count: usize) usize {
     if (count == 0) return 0;
     var capacity: u32 = @intCast((@as(u64, count) * 100) / 80 + 1);
     capacity = std.math.ceilPowerOfTwo(u32, capacity) catch std.math.maxInt(u32);
-    return capacity;
+    return @max(@as(usize, capacity), 8);
 }
 /// Index bytes the standard hash map would own for `count` entries.
 pub fn indexBytesFor(count: usize) usize {

@@ -1191,6 +1191,174 @@ fn manyFunctionProgram(allocator: std.mem.Allocator, count: usize) ![]u8 {
     return out.toOwnedSlice(allocator);
 }
 
+// spec-case: SEMANTIC-CACHE-14
+test "semantic cache hash index model matches stdlib minimum and allocation" {
+    try t.expectEqual(@as(usize, 0), owned_entry.indexCapacityFor(0));
+    try t.expectEqual(@as(usize, 8), owned_entry.indexCapacityFor(1));
+    try t.expectEqual(@as(usize, 8), owned_entry.indexCapacityFor(6));
+    try t.expectEqual(@as(usize, 16), owned_entry.indexCapacityFor(7));
+    try t.expectEqual(@as(usize, 16), owned_entry.indexCapacityFor(8));
+    try t.expectEqual(@as(usize, 0), owned_entry.hashIndexBytes(0));
+    // Capacity eight owns the Header, its one-byte metadatas and two aligned
+    // slot arrays; the required 64-bit target total is 224 bytes.
+    try t.expectEqual(@as(usize, 224), owned_entry.hashIndexBytes(8));
+
+    // Drive a real stdlib map with these entry counts and compare the model
+    // with the FailingAllocator's actual requested backing allocation. Counts 1
+    // and 6 stay on the eight-slot minimum; 7 grows the map to sixteen slots; 8
+    // is the last count before the next growth step.
+    var key_storage: [16][24]u8 = undefined;
+    for ([_]usize{ 1, 6, 7, 8 }) |count| {
+        var failures = t.FailingAllocator.init(t.allocator, .{});
+        var map: std.StringHashMapUnmanaged(usize) = .empty;
+        for (0..count) |i| {
+            const key = try std.fmt.bufPrint(&key_storage[i], "stable-key-{d}", .{i});
+            try map.put(failures.allocator(), key, i);
+        }
+        const capacity = owned_entry.indexCapacityFor(count);
+        try t.expectEqual(capacity, map.capacity());
+        try t.expectEqual(owned_entry.hashIndexBytes(capacity), failures.allocated_bytes - failures.freed_bytes);
+        map.deinit(failures.allocator());
+    }
+}
+
+// spec-case: SEMANTIC-CACHE-14
+test "semantic cache arena accounting includes chunk bookkeeping" {
+    var failures = t.FailingAllocator.init(t.allocator, .{});
+    var arena = std.heap.ArenaAllocator.init(failures.allocator());
+    defer arena.deinit();
+    try t.expectEqual(@as(usize, 0), owned_entry.arenaOwnedBytes(arena));
+    _ = try arena.allocator().alloc(u8, 64);
+    const owned = owned_entry.arenaOwnedBytes(arena);
+    try t.expectEqual(failures.allocated_bytes - failures.freed_bytes, owned);
+    try t.expect(owned > arena.queryCapacity());
+}
+
+/// Retained cost of a leading ordinary prefix: entry rows, the exact arenas and
+/// the exact index backing the standard map allocates for that count.
+fn prefixRetainedCost(entries: []const owned_entry.Entry) usize {
+    var bytes: usize = 0;
+    for (entries) |entry| bytes += owned_entry.entryCost(entry);
+    bytes += owned_entry.indexBytesFor(entries.len);
+    return bytes;
+}
+
+/// Run one cache-only check so callers can attribute every cache-owned
+/// allocation without a fresh comparison compilation in the way.
+fn checkCachedOnly(allocator: std.mem.Allocator, cache: *Cache, bytes: []const u8) !void {
+    var compilation = try language.Compilation.init(allocator, "cached.my", bytes);
+    defer compilation.deinit();
+    try compilation.checkWithCache(cache);
+}
+
+const one_body_source = "def main() -> i64:\n    return 1\n";
+
+// spec-case: SEMANTIC-CACHE-14
+test "shared budget honors the ordinary one-entry hash minimum boundary" {
+    // Retain one ordinary snapshot and measure its real owned cost. The
+    // exact-at and evicting-below cases transfer or release that same entry, so
+    // they do not depend on a fresh arena's chunk growth; the separate fresh
+    // cache below checks the below-cost admission path.
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try checkCachedOnly(t.allocator, &cache, one_body_source);
+    try t.expectEqual(@as(usize, 1), cache.entries.len);
+    try t.expectEqual(@as(usize, 8), cache.index.capacity());
+    const exact = owned_entry.entryCost(cache.entries[0]) + owned_entry.indexBytesFor(1);
+
+    // A fresh cache one byte below the exact row+arena+minimum-index cost admits
+    // nothing, yet the check still succeeds and reports zero retained storage.
+    var below = Cache.init(t.allocator, exact - 1);
+    defer below.deinit();
+    try checkCachedOnly(t.allocator, &below, one_body_source);
+    try t.expectEqual(@as(usize, 0), below.entries.len);
+    try t.expectEqual(@as(usize, 0), below.statistics.retained_bytes);
+    try t.expectEqual(@as(usize, 0), below.index.count());
+
+    // At the exact cost the retained entry transfers with the eight-slot index
+    // and the reported bound holds.
+    cache.reuse.max_bytes = exact;
+    const reused_before = cache.statistics.reused;
+    const checked_before = cache.statistics.checked;
+    try checkCachedOnly(t.allocator, &cache, one_body_source);
+    try t.expectEqual(reused_before + 1, cache.statistics.reused);
+    try t.expectEqual(checked_before, cache.statistics.checked);
+    try t.expectEqual(@as(usize, 1), cache.entries.len);
+    try t.expectEqual(exact, cache.statistics.retained_bytes);
+    try t.expect(cache.statistics.retained_bytes <= cache.reuse.max_bytes);
+
+    // A warm rerun at the retained budget reuses the entry and still holds the
+    // bound.
+    try checkCachedOnly(t.allocator, &cache, one_body_source);
+    try t.expectEqual(reused_before + 2, cache.statistics.reused);
+    try t.expectEqual(@as(usize, 1), cache.entries.len);
+    try t.expect(cache.statistics.retained_bytes <= cache.reuse.max_bytes);
+
+    // One byte below the exact cost releases the previous snapshot instead of
+    // letting it outlive the bound.
+    cache.reuse.max_bytes = exact - 1;
+    try checkCachedOnly(t.allocator, &cache, one_body_source);
+    try t.expectEqual(@as(usize, 0), cache.entries.len);
+    try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);
+    try t.expect(cache.statistics.retained_bytes <= cache.reuse.max_bytes);
+}
+
+// spec-case: SEMANTIC-CACHE-14
+test "shared budget covers ordinary hash growth boundaries" {
+    const source = try manyFunctionProgram(t.allocator, 8);
+    defer t.allocator.free(source);
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, source, 36);
+    try t.expectEqual(@as(usize, 9), cache.entries.len);
+
+    // Shrink through the eighth, seventh and sixth prefixes. The seventh entry
+    // grows the fresh index from the eight-slot minimum to sixteen slots, and
+    // the sixth is the largest count that still holds the minimum, so both
+    // sides of the growth boundary are covered without rebuilding arenas.
+    for ([_]usize{ 8, 7, 6 }) |target| {
+        const budget = prefixRetainedCost(cache.entries[0..target]);
+        cache.reuse.max_bytes = budget;
+        try compare(t.allocator, &cache, source, 36);
+        try t.expectEqual(target, cache.entries.len);
+        try t.expect(cache.statistics.retained_bytes <= cache.reuse.max_bytes);
+        try t.expectEqual(budget, cache.statistics.retained_bytes);
+
+        // Replaying the surviving prefix is warm work and must stay bounded.
+        const reused_before = cache.statistics.reused;
+        try compare(t.allocator, &cache, source, 36);
+        try t.expect(cache.statistics.reused > reused_before);
+        try t.expect(cache.statistics.retained_bytes <= cache.reuse.max_bytes);
+        try t.expectEqual(target, cache.entries.len);
+    }
+}
+
+// spec-case: SEMANTIC-CACHE-14
+test "shared budget reported bytes equal cache-owned allocations" {
+    var failures = t.FailingAllocator.init(t.allocator, .{});
+    var cache = Cache.init(failures.allocator(), 4 * 1024 * 1024);
+    defer cache.deinit();
+    try checkCachedOnly(t.allocator, &cache, one_body_source);
+    try t.expectEqual(@as(usize, 1), cache.entries.len);
+    // The completed request released every temporary, so the tracker's net
+    // allocation is exactly the reported retained storage.
+    try t.expectEqual(failures.allocated_bytes - failures.freed_bytes, cache.statistics.retained_bytes);
+}
+
+// spec-case: SEMANTIC-CACHE-14
+test "shared budget reported bytes equal cache-owned allocations for mixed kinds" {
+    var failures = t.FailingAllocator.init(t.allocator, .{});
+    var cache = Cache.init(failures.allocator(), 4 * 1024 * 1024);
+    defer cache.deinit();
+    try checkCachedOnly(t.allocator, &cache, all_kinds_program);
+    try t.expect(cache.entries.len > 0);
+    try t.expect(cache.reuse.symbolic.entries.items.len > 0);
+    try t.expect(cache.reuse.specializations.entries.items.len > 0);
+    // Ordinary, symbolic and specialization tables all survive the request, and
+    // every session temporary has been released.
+    try t.expectEqual(failures.allocated_bytes - failures.freed_bytes, cache.statistics.retained_bytes);
+}
+
 // spec: SEMANTIC-CACHE-9
 // spec-case: SEMANTIC-CACHE-7
 test "semantic cache retains a bounded prefix of bodies when the snapshot exceeds its budget" {
@@ -1200,10 +1368,10 @@ test "semantic cache retains a bounded prefix of bodies when the snapshot exceed
     defer full.deinit();
     try compare(t.allocator, &full, source, 36);
     try t.expectEqual(@as(usize, 9), full.entries.len);
-    // Shrink the budget by exactly the last body's retained cost. Every cost is
-    // read from this same snapshot, so the leading eight bodies fit and the
-    // ninth cannot, independent of allocator chunk-size variation.
-    const last_cost = @sizeOf(owned_entry.Entry) + full.entries[8].arena.queryCapacity();
+    // Shrink the budget by exactly the last body's actually owned cost. Every
+    // cost is read from this same snapshot, so the leading eight bodies fit and
+    // the ninth cannot, independent of allocator chunk-size variation.
+    const last_cost = owned_entry.entryCost(full.entries[8]);
     full.reuse.max_bytes = full.statistics.retained_bytes - last_cost;
     const prefix_budget = full.reuse.max_bytes;
     try compare(t.allocator, &full, source, 36);
@@ -1335,7 +1503,7 @@ fn primeSpecializationStore(
     cache.context.persistent = &store;
     for (sources, 0..) |source, i| try compare(allocator, &cache, source, @intCast(200 + i));
     if (cache.reuse.specializations.entries.items.len == 0) return error.TestUnexpectedResult;
-    return (@sizeOf(owned_entry.SpecializationEntry) + cache.reuse.specializations.entries.items[0].arena.queryCapacity()) * 2;
+    return (@sizeOf(owned_entry.SpecializationEntry) + owned_entry.specializationArenaBytes(cache.reuse.specializations.entries.items[0])) * 2;
 }
 
 // spec: SEMANTIC-CACHE-14
@@ -1348,7 +1516,7 @@ test "shared retention budget bounds distinct specializations and eviction force
     defer t.allocator.free(probe_source);
     try compare(t.allocator, &probe, probe_source, 2);
     try t.expect(probe.reuse.specializations.entries.items.len >= 1);
-    const unit = @sizeOf(owned_entry.SpecializationEntry) + probe.reuse.specializations.entries.items[0].arena.queryCapacity();
+    const unit = @sizeOf(owned_entry.SpecializationEntry) + owned_entry.specializationArenaBytes(probe.reuse.specializations.entries.items[0]);
     const budget = unit * 3;
 
     var cache = Cache.init(t.allocator, budget);
