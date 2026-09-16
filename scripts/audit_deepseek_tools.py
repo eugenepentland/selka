@@ -449,6 +449,11 @@ def make_report(sessions, project, include_commands=False, exclusions=()):
     timeout_rows = [r for r in included if r['persistent_timeout']]
     notices = [notice for session in sessions for notice in session['notices']]
     jobs = background_jobs(rows, notices)
+    # `timeout_ms` is only meaningful with `wait: true`; without it the read
+    # returns immediately, so the model learns nothing and spends a turn.
+    timeout_without_wait = [r for r in rows if r['name'] == 'job_output'
+                            and r['args'].get('timeout_ms') is not None
+                            and r['args'].get('wait') is not True]
     manifest, agent_seconds, model_seconds = [], 0, 0
     for session in sessions:
         own = [r for r in session['calls'] if r['category'] not in EXCLUDED]
@@ -507,6 +512,8 @@ def make_report(sessions, project, include_commands=False, exclusions=()):
         'timeout_calls': [public_call(r, include_commands) for r in timeout_rows],
         'repeated_commands': repeated[:30], 'manifest': manifest,
         'background_jobs': jobs, 'background_job_summary': summarize_jobs(jobs),
+        'job_output_timeout_without_wait': len(timeout_without_wait),
+        'job_output_misuse_calls': [public_call(r, include_commands) for r in timeout_without_wait[:30]],
         'comparable_build_groups': comparable_build_groups(included),
         'limitations': [
             'Call/result wall time includes queueing, policy, process work and persistence; CPU time is unavailable.',
@@ -552,7 +559,9 @@ def markdown(report):
               f'- Unfinished calls: {sum(s["unfinished_calls"] for s in report["manifest"])}; '
               f'unmatched results: {sum(s["orphan_results"] for s in report["manifest"])}; '
               f'sessions with parse/decode issues: {sum(bool(s["issues"]) for s in report["manifest"])}.',
-              f'- Managed background jobs observed: {report["background_job_summary"]["jobs"]}; '
+              f'- job_output calls passing timeout_ms without wait: true (they return immediately): '
+               f'{report["job_output_timeout_without_wait"]}.',
+               f'- Managed background jobs observed: {report["background_job_summary"]["jobs"]}; '
               f'execution {report["background_job_summary"]["execution_seconds"] / 60:.1f} minutes, '
               f'start+collection blocking {report["background_job_summary"]["start_blocked_seconds"] + report["background_job_summary"]["collection_blocked_seconds"]:.1f} seconds, '
               f'completion-to-consumption {report["background_job_summary"]["completion_to_consumption_seconds"] / 60:.1f} minutes.',

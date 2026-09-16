@@ -171,6 +171,18 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(summary['execution_seconds'], 5.0)
         self.assertEqual(summary['collection_blocked_seconds'], 0.3)
 
+    def test_timeout_without_wait_is_reported_as_misuse(self):
+        events = [
+            header(),
+            call(1, 0, command='', name='job_output', call_id='m', job_id='bash-1', timeout_ms=30000),
+            result(2, 10, 'm', text='no new output'),
+            call(3, 20, command='', name='job_output', call_id='n', job_id='bash-1', wait=True, timeout_ms=30000),
+            result(4, 30, 'n', text='done'),
+        ]
+        report = audit.make_report([audit.parse_events(events, 'root')], Path('/project'))
+        self.assertEqual(report['job_output_timeout_without_wait'], 1)
+        self.assertEqual(report['job_output_misuse_calls'][0]['seq'], 1)
+
     def test_build_dimensions_extracts_the_comparability_key(self):
         self.assertEqual(
             audit.build_dimensions('zig build test-units -Dtest-filter=arena -Doptimize=ReleaseFast --cache-dir=/tmp/c'),
