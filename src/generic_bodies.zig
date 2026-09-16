@@ -31,6 +31,7 @@ const eUnsupported = "E_GENERIC_BODY_UNSUPPORTED";
 const Catalog = @import("records.zig").Catalog;
 const symbolic = @import("symbolic_types.zig");
 const provider_shapes = @import("symbolic_providers.zig");
+const generic_cache = @import("generic_cache.zig");
 const Symbolic = symbolic.Value;
 const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
 const FunctionMap = std.StringHashMapUnmanaged(usize);
@@ -1542,6 +1543,88 @@ fn supportsSet(value: Symbolic, required: requirements.Set, parameters: []const 
     }
     return true;
 }
+/// Direct abstract facts and worklists one replayed function writes into.
+const DirectMasks = struct { effects: []effect_set.Mask, mutations: []u16, writes: []bool };
+const ReplayState = struct {
+    allocator: std.mem.Allocator,
+    sink: *diagnostic.Sink,
+    masks: DirectMasks,
+    effect_calls: *std.ArrayList(effects.AbstractCall),
+    pending: *std.ArrayList(usize),
+    scheduled: []bool,
+};
+/// Apply one retained direct result and schedule its recorded callees. The
+/// replayed caller/scheduke order is the stored discovery order, so a warm pass
+/// visits dependencies in the same order as a cold pass.
+fn applyReplay(state: ReplayState, index: usize, replay: generic_cache.Replay) error{OutOfMemory}!void {
+    defer state.allocator.free(replay.notes);
+    defer state.allocator.free(replay.edges);
+    state.masks.effects[index] = replay.effect_mask;
+    state.masks.mutations[index] = replay.mutation_mask;
+    state.masks.writes[index] = replay.mutation_writes;
+    for (replay.notes) |note| try appendReplayedDiagnostic(state.sink, note);
+    for (replay.edges) |edge| {
+        try state.effect_calls.append(state.allocator, edge);
+        if (!state.scheduled[edge.callee]) {
+            state.scheduled[edge.callee] = true;
+            state.pending.appendAssumeCapacity(edge.callee);
+        }
+    }
+}
+
+/// Immutable inputs one template check resolves against.
+const TemplateCheck = struct {
+    allocator: std.mem.Allocator,
+    src: source.Source,
+    program: ast.Program,
+    sink: *diagnostic.Sink,
+    module_names: ?*Names,
+    catalog: Catalog,
+};
+/// One template's resolved declaration bounds and normalized requirements.
+const ResolvedTemplate = struct {
+    raw: []const requirements.Parameter,
+    parameters: []const requirements.Parameter,
+    fn deinit(self: ResolvedTemplate, allocator: std.mem.Allocator) void {
+        requirements.deinitResolved(allocator, self.raw);
+        requirements.deinitResolved(allocator, self.parameters);
+    }
+};
+/// Resolve one template's scoped constraints. A bound failure reports through
+/// the shared sink and returns null so the caller marks the whole pass failed.
+fn resolveTemplate(context: TemplateCheck, function: ast.Function) Error!?ResolvedTemplate {
+    const allocator = context.allocator;
+    var provider: constraint_lookup.Provider = .{ .program = context.program, .src = context.src, .names = context.module_names };
+    const raw = requirements.resolveBounds(allocator, context.src, function.signature.type_parameters, context.sink, provider.lookup()) catch |err| switch (err) {
+        error.SourceError => return null,
+        else => return err,
+    };
+    const parameters = @import("symbolic_shapes.zig").normalizeRequirements(allocator, context.catalog, context.src, raw, context.sink) catch |err| switch (err) {
+        error.SourceError => {
+            requirements.deinitResolved(allocator, raw);
+            return null;
+        },
+        else => {
+            requirements.deinitResolved(allocator, raw);
+            return err;
+        },
+    };
+    return .{ .raw = raw, .parameters = parameters };
+}
+/// Count a rejected abstract check without branching in the hot loop.
+fn noteSymbolicFailure(symbolic_session: ?*generic_cache.Session, index: usize) void {
+    if (symbolic_session) |reuse| reuse.noteFailed(index);
+}
+
+/// Run one fresh abstract body check; a source rejection is a `false` result.
+fn runFresh(checker: *Checker, function: ast.Function) Error!bool {
+    checker.checkFunction(function) catch |err| switch (err) {
+        error.SourceError => return false,
+        else => return err,
+    };
+    return true;
+}
+
 /// Validate supported template bodies symbolically; unsupported forms remain explicit errors.
 pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!void {
     return checkWithNames(allocator, src, program, sink, null);
@@ -1553,6 +1636,13 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
 }
 /// Check symbolic bodies against the same concrete type catalog used by specialization.
 pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, catalog: Catalog) Error!void {
+    return checkWithCatalogCached(allocator, src, program, sink, catalog, null);
+}
+/// Check symbolic bodies, reusing unchanged direct results from `symbolic`.
+/// The whole-graph `effects.checkAbstract` pass always runs from the combined
+/// fresh and replayed masks, so a changed callee body is re-derived even when a
+/// caller's own direct result is reusable.
+pub fn checkWithCatalogCached(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, catalog: Catalog, symbolic_session: ?*generic_cache.Session) Error!void {
     const module_names = catalog.module_names;
     var has_work = program.types.constraints.len != 0;
     for (program.functions) |function| if (function.signature.type_parameters.len != 0) {
@@ -1594,25 +1684,22 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
     var failed = false;
     var cursor: usize = 0;
     while (cursor < pending.items.len) : (cursor += 1) {
-        const function = program.functions[pending.items[cursor]];
+        const index = pending.items[cursor];
+        const function = program.functions[index];
         if (function.policy.host != null) continue;
-        var provider: constraint_lookup.Provider = .{ .program = program, .src = src, .names = module_names };
-        const raw = requirements.resolveBounds(allocator, src, function.signature.type_parameters, sink, provider.lookup()) catch |err| switch (err) {
-            error.SourceError => {
-                failed = true;
-                continue;
-            },
-            else => return err,
+        const resolved = try resolveTemplate(.{
+            .allocator = allocator,
+            .src = src,
+            .program = program,
+            .sink = sink,
+            .module_names = module_names,
+            .catalog = catalog,
+        }, function) orelse {
+            failed = true;
+            noteSymbolicFailure(symbolic_session, index);
+            continue;
         };
-        defer requirements.deinitResolved(allocator, raw);
-        const parameters = @import("symbolic_shapes.zig").normalizeRequirements(allocator, catalog, src, raw, sink) catch |err| switch (err) {
-            error.SourceError => {
-                failed = true;
-                continue;
-            },
-            else => return err,
-        };
-        defer requirements.deinitResolved(allocator, parameters);
+        defer resolved.deinit(allocator);
         var checker: Checker = .{
             .allocator = allocator,
             .field_arena = std.heap.ArenaAllocator.init(allocator),
@@ -1624,9 +1711,9 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
             .mutation_masks = mutation_masks,
             .mutation_write_masks = mutation_write_masks,
             .effect_calls = &effect_calls,
-            .function_index = pending.items[cursor],
+            .function_index = index,
             .sink = sink,
-            .parameters = parameters,
+            .parameters = resolved.parameters,
             .result = undefined,
             .module_names = module_names,
             .functions = &functions,
@@ -1638,10 +1725,43 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
         defer checker.locals.deinit(allocator);
         defer checker.active.deinit(allocator);
         defer checker.expected_types.deinit(allocator);
-        checker.checkFunction(function) catch |err| switch (err) {
-            error.SourceError => failed = true,
+        // Boundary validation is fresh work even on a retained hit: a malformed
+        // bound or structural requirement must reject exactly as a cold check.
+        checker.validateStructural() catch |err| switch (err) {
+            error.SourceError => {
+                failed = true;
+                noteSymbolicFailure(symbolic_session, index);
+                continue;
+            },
             else => return err,
         };
+        if (symbolic_session) |reuse| if (try reuse.lookup(allocator, index)) |replay| {
+            try applyReplay(.{
+                .allocator = allocator,
+                .sink = sink,
+                .masks = .{ .effects = effect_masks, .mutations = mutation_masks, .writes = mutation_write_masks },
+                .effect_calls = &effect_calls,
+                .pending = &pending,
+                .scheduled = scheduled,
+            }, index, replay);
+            continue;
+        };
+        const diag_start = sink.items.items.len;
+        const edge_start = effect_calls.items.len;
+        if (!try runFresh(&checker, function)) {
+            failed = true;
+            noteSymbolicFailure(symbolic_session, index);
+            continue;
+        }
+        if (symbolic_session) |reuse| {
+            _ = try reuse.record(index, .{
+                .effect_mask = effect_masks[index],
+                .mutation_mask = mutation_masks[index],
+                .mutation_writes = mutation_write_masks[index],
+                .notes = sink.items.items[diag_start..],
+                .edges = effect_calls.items[edge_start..],
+            });
+        }
     }
     for (program.types.constraints) |*constraint| {
         var provider: constraint_lookup.Provider = .{ .program = program, .src = src, .names = module_names };
@@ -1703,4 +1823,20 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
         mutable.signature.inferred_mutation_writes = function.signature.inferred_mutation_writes or mask != 0 or mutation_write_masks[index];
     }
     try effects.checkAbstract(allocator, program.functions, effect_masks, effect_calls.items, exported, sink);
+    // Publish only after the whole abstract graph passed. A rejected request
+    // keeps its fresh direct results private to this session and frees them at
+    // `deinit`; the durable store never inherits a pass that failed.
+    if (symbolic_session) |reuse| try reuse.publish();
+}
+
+/// Append one replayed diagnostic, copying its text into the sink's allocator
+/// so the collected diagnostic never borrows a retained cache arena.
+fn appendReplayedDiagnostic(sink: *diagnostic.Sink, note: diagnostic.Diagnostic) error{OutOfMemory}!void {
+    var copy = note;
+    copy.code = try sink.allocator.dupe(u8, note.code);
+    copy.message = try sink.allocator.dupe(u8, note.message);
+    if (note.related) |related| copy.related = .{ .span = related.span, .message = try sink.allocator.dupe(u8, related.message) };
+    if (note.provenance.origin) |related| copy.provenance.origin = .{ .span = related.span, .message = try sink.allocator.dupe(u8, related.message) };
+    if (note.provenance.requirement) |related| copy.provenance.requirement = .{ .span = related.span, .message = try sink.allocator.dupe(u8, related.message) };
+    try sink.items.append(sink.allocator, copy);
 }

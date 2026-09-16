@@ -21,8 +21,8 @@ const Hash = std.crypto.hash.sha2.Sha256;
 /// Domain for per-function dependency digests. Bump when the tracked dependency
 /// model changes so stale entries are never admitted.
 pub const functions_domain = "semantic-functions-v5";
-/// Domain for the generic-specialization key primitive.
-pub const specialization_domain = "semantic-specialization-v1";
+/// Domain for the canonical C3 specialization key engine.
+pub const specialization_domain = "semantic-specialization-v2";
 
 /// Per-function dependency facts for one fresh compilation.
 pub const Prepared = struct {
@@ -133,8 +133,47 @@ pub fn contractDigest(function: typed.Function) [32]u8 {
     return hash.finalResult();
 }
 
-/// Canonical key for one generic specialization. This is a primitive for a future
-/// reuse engine; `prepare` deliberately keeps generic templates on the fresh path.
+/// Canonical specialization key dimensions. Positional argument order is
+/// preserved; every field boundary is length-prefixed so two different
+/// dimension sequences can never collide.
+pub const SpecializationInputs = struct {
+    template_identity: []const u8,
+    /// Ordered positional descriptors, one per type parameter. A constant length
+    /// parameter is `L:<decimal>`; a type argument is `T:<canonical type>`.
+    arguments: []const []const u8,
+    /// Canonical resolved provider identity over the concrete nominal shapes.
+    provider: []const u8,
+    /// Template dependency/constraint digest (`semantic_key.Prepared.contexts`).
+    constraints: []const u8,
+    /// Declared/effect/mutation/return-origin contract digest.
+    contracts: []const u8,
+    /// Build context: the cache-key contract fingerprint (compiler, target,
+    /// runtime ABI, effects contract and flags).
+    build: []const u8,
+};
+
+/// Canonical key for one concrete specialization. Two semantically identical
+/// specializations share a key; a change to any keyed dimension misses. This is
+/// the engine behind `specializationKey`.
+pub fn specializationFingerprint(allocator: std.mem.Allocator, inputs: SpecializationInputs) error{OutOfMemory}![]const u8 {
+    var hash = Hash.init(.{});
+    frame(&hash, specialization_domain);
+    frame(&hash, inputs.template_identity);
+    var count: [8]u8 = undefined;
+    std.mem.writeInt(u64, &count, inputs.arguments.len, .little);
+    hash.update(&count);
+    for (inputs.arguments) |argument| frame(&hash, argument);
+    frame(&hash, inputs.provider);
+    frame(&hash, inputs.constraints);
+    frame(&hash, inputs.contracts);
+    frame(&hash, inputs.build);
+    return hexFingerprint(allocator, hash.finalResult());
+}
+
+/// Canonical key for one generic specialization. `prepare` still keeps generic
+/// templates and their concrete instances on the fresh path until the reuse
+/// engine can remap specialization references; this primitive exists so the key
+/// dimensions are canonical today.
 pub fn specializationKey(
     allocator: std.mem.Allocator,
     template_identity: []const u8,
@@ -143,19 +182,126 @@ pub fn specializationKey(
     target_abi: []const u8,
     compiler_identity: []const u8,
 ) error{OutOfMemory}![]const u8 {
+    const build = std.fmt.allocPrint(allocator, "{s}\x1f{s}", .{ target_abi, compiler_identity }) catch return error.OutOfMemory;
+    defer allocator.free(build);
+    return specializationFingerprint(allocator, .{
+        .template_identity = template_identity,
+        .arguments = arguments,
+        .provider = provider,
+        .constraints = "",
+        .contracts = "",
+        .build = build,
+    });
+}
+
+/// One positional descriptor for a concrete specialization argument. `length`
+/// is present for a constant length parameter.
+pub fn argumentDescriptor(allocator: std.mem.Allocator, ty: typed.Type, length: ?usize, records: []const typed.Record) error{OutOfMemory}![]const u8 {
+    if (length) |value| return std.fmt.allocPrint(allocator, "L:{d}", .{value});
+    return std.fmt.allocPrint(allocator, "T:{s}", .{typed.typeName(ty, records)});
+}
+
+/// Canonical resolved provider identity over the transitive nominal records
+/// reachable from the concrete arguments. Records are ordered by stable
+/// qualified name with length-prefixed boundaries, matching the frozen
+/// `contracts.providerIdentity` ordering discipline.
+pub fn providerIdentity(allocator: std.mem.Allocator, arguments: []const typed.Type, records: []const typed.Record) error{OutOfMemory}![]const u8 {
+    var seen: std.AutoHashMapUnmanaged(usize, void) = .empty;
+    defer seen.deinit(allocator);
+    var indices: std.ArrayList(usize) = .empty;
+    defer indices.deinit(allocator);
+    for (arguments) |argument| try collectProviderRecords(allocator, argument, records, &seen, &indices);
+    std.mem.sort(usize, indices.items, records, lessRecordName);
     var hash = Hash.init(.{});
-    hash.update(specialization_domain);
-    frame(&hash, template_identity);
-    frame(&hash, provider);
-    frame(&hash, target_abi);
-    frame(&hash, compiler_identity);
+    frame(&hash, "provider-v1");
     var count: [8]u8 = undefined;
-    std.mem.writeInt(u64, &count, arguments.len, .little);
+    std.mem.writeInt(u64, &count, indices.items.len, .little);
     hash.update(&count);
-    for (arguments) |argument| frame(&hash, argument);
-    var digest: [32]u8 = undefined;
-    hash.final(&digest);
+    for (indices.items) |index| mixRecord(&hash, records[index], records);
+    return hexFingerprint(allocator, hash.finalResult());
+}
+
+fn hexFingerprint(allocator: std.mem.Allocator, digest: [32]u8) error{OutOfMemory}![]const u8 {
     return std.fmt.allocPrint(allocator, "{s}", .{std.fmt.bytesToHex(digest, .lower)}) catch error.OutOfMemory;
+}
+
+fn lessRecordName(records: []const typed.Record, a: usize, b: usize) bool {
+    return std.mem.lessThan(u8, records[a].name, records[b].name);
+}
+
+fn collectProviderRecords(allocator: std.mem.Allocator, ty: typed.Type, records: []const typed.Record, seen: *std.AutoHashMapUnmanaged(usize, void), out: *std.ArrayList(usize)) error{OutOfMemory}!void {
+    if (!ty.isAggregate()) return;
+    const index = ty.recordIndex();
+    if (index >= records.len) return;
+    const entry = try seen.getOrPut(allocator, index);
+    if (entry.found_existing) return;
+    try out.append(allocator, index);
+    const record = records[index];
+    for (record.fields) |field| try collectProviderRecords(allocator, field.ty, records, seen, out);
+    if (record.shape.variants) |variants| for (variants.cases) |case| if (case.payload) |payload| try collectProviderRecords(allocator, payload, records, seen, out);
+    if (record.shape.array) |array| {
+        try collectProviderRecords(allocator, array.element, records, seen, out);
+        if (array.key) |key| try collectProviderRecords(allocator, key, records, seen, out);
+    }
+    if (record.shape.domain) |backing| try collectProviderRecords(allocator, backing, records, seen, out);
+    if (record.shape.buffer) |element| try collectProviderRecords(allocator, element, records, seen, out);
+    if (record.contract.callback) |callback| {
+        for (callback.parameters) |parameter| try collectProviderRecords(allocator, parameter, records, seen, out);
+        try collectProviderRecords(allocator, callback.return_type, records, seen, out);
+    }
+}
+
+fn mixRecord(hash: *Hash, record: typed.Record, records: []const typed.Record) void {
+    frame(hash, record.name);
+    frame(hash, if (record.managed) "managed" else "value");
+    frame(hash, if (record.contract.move_only) "move-only" else "copyable");
+    frame(hash, if (record.contract.requires_handling) "handling" else "plain");
+    frame(hash, if (record.contract.storable) "storable" else "transient");
+    frame(hash, if (record.contract.public_arguments) "public" else "private");
+    var count: [8]u8 = undefined;
+    std.mem.writeInt(u64, &count, record.fields.len, .little);
+    hash.update(&count);
+    for (record.fields) |field| {
+        frame(hash, field.name);
+        frame(hash, typed.typeName(field.ty, records));
+    }
+    if (record.shape.variants) |variants| {
+        frame(hash, if (variants.fallible) "result" else if (variants.is_union) "union" else "enum");
+        std.mem.writeInt(u64, &count, variants.cases.len, .little);
+        hash.update(&count);
+        for (variants.cases) |case| {
+            frame(hash, case.name);
+            frame(hash, if (case.payload) |payload| typed.typeName(payload, records) else "-");
+        }
+    }
+    if (record.shape.array) |array| {
+        frame(hash, "array");
+        frame(hash, typed.typeName(array.element, records));
+        std.mem.writeInt(u64, &count, array.length, .little);
+        hash.update(&count);
+        frame(hash, if (array.key) |key| typed.typeName(key, records) else "-");
+    }
+    if (record.shape.domain) |backing| {
+        frame(hash, "domain");
+        frame(hash, typed.typeName(backing, records));
+    }
+    if (record.shape.buffer) |element| {
+        frame(hash, "buffer");
+        frame(hash, typed.typeName(element, records));
+    }
+    if (record.shape.resource) |kind| {
+        frame(hash, "resource");
+        frame(hash, @tagName(kind));
+    }
+    if (record.contract.callback) |callback| {
+        frame(hash, "callback");
+        std.mem.writeInt(u64, &count, callback.parameters.len, .little);
+        hash.update(&count);
+        for (callback.parameters) |parameter| frame(hash, typed.typeName(parameter, records));
+        frame(hash, typed.typeName(callback.return_type, records));
+        std.mem.writeInt(u64, &count, callback.effects, .little);
+        hash.update(&count);
+    }
 }
 
 const DeclKind = enum(u4) { function = 0, record = 1, domain = 2, variant = 3, alias = 4, constraint = 5, resource = 6 };

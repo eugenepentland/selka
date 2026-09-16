@@ -76,6 +76,8 @@ const diagnostic = @import("diagnostic.zig");
 const records = @import("records.zig");
 const Error = diagnostic.Error;
 const instances = @import("generic_instances.zig");
+const semantic_cache = @import("semantic_cache.zig");
+const generic_cache = @import("generic_cache.zig");
 const Names = @import("module_names.zig").Names;
 const LoopScope = struct { id: usize, before: []const Pending, arenas: usize = 0, exited: bool = false };
 const ArenaScope = struct { name: []const u8, declaration: source.Span, watermark: typed.LocalId };
@@ -3457,8 +3459,21 @@ fn normalizeDiagnostics(sink: *diagnostic.Sink) void {
 pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!typed.Program {
     return checkWithNames(allocator, src, program, sink, null);
 }
-fn checkGenericContracts(src: source.Source, program: ast.Program, sink: *diagnostic.Sink, catalog: records.Catalog) Error!void {
-    try @import("generic_bodies.zig").checkWithCatalog(sink.allocator, src, program, sink, catalog);
+fn checkGenericContracts(src: source.Source, program: ast.Program, sink: *diagnostic.Sink, catalog: records.Catalog, symbolic: *?generic_cache.Session) Error!void {
+    const session: ?*generic_cache.Session = if (symbolic.*) |*reuse| reuse else null;
+    try @import("generic_bodies.zig").checkWithCatalogCached(sink.allocator, src, program, sink, catalog, session);
+}
+/// Open the C3 symbolic session when this request has both a semantic cache and
+/// a prepared ordinary session. Kept separate so `checkCached` stays readable.
+fn openSymbolicSession(cache: ?*semantic_cache.Cache, session: *?semantic_cache.Session, src: source.Source, project_mode: bool) Error!?generic_cache.Session {
+    const c = cache orelse return null;
+    const queries = session.* orelse return null;
+    const opened = try c.symbolicSession(src, &queries.prepared, if (project_mode) "project" else "unit");
+    return opened;
+}
+/// Release an optional symbolic session without branching in `checkCached`.
+fn deinitSymbolic(session: *?generic_cache.Session) void {
+    if (session.*) |*reuse| reuse.deinit();
 }
 /// Type-check linked module names and validate ownership, effects, and domain codecs.
 pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!typed.Program {
@@ -3489,12 +3504,14 @@ fn exportedFunctions(allocator: std.mem.Allocator, module_names: ?*Names, functi
 }
 
 /// Reuse supported checked bodies, then rerun all cross-function validation passes.
-pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names, cache: ?*@import("semantic_cache.zig").Cache) Error!typed.Program {
+pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names, cache: ?*semantic_cache.Cache) Error!typed.Program {
     defer normalizeDiagnostics(sink);
     const catalog = try records.collectWithNames(allocator, src, program, sink, module_names);
     var session = if (cache) |c| try c.begin(allocator, src, program, catalog.records) else null;
+    var symbolic = try openSymbolicSession(cache, &session, src, module_names != null);
+    defer deinitSymbolic(&symbolic);
     var failed = false;
-    checkGenericContracts(src, program, sink, catalog) catch |err| switch (err) {
+    checkGenericContracts(src, program, sink, catalog, &symbolic) catch |err| switch (err) {
         error.SourceError => failed = true,
         else => return err,
     };

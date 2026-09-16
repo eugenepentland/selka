@@ -10,6 +10,7 @@ const owned = @import("semantic_entry.zig");
 const interfaces = @import("interfaces.zig");
 const cache_key = @import("cache_key.zig");
 const semantic_store = @import("semantic_store.zig");
+const generic_cache = @import("generic_cache.zig");
 
 /// Re-exported so host wiring can bind the full contract without depending on
 /// the compiler module's internal file layout.
@@ -18,6 +19,8 @@ pub const Contract = cache_key.Contract;
 /// compiler module's exact type instead of importing a duplicate file instance.
 pub const Store = semantic_store.Store;
 pub const default_store_directory = semantic_store.default_directory;
+/// C3 symbolic-template reuse surface for host wiring and reports.
+pub const symbolic = generic_cache;
 /// Version of the M1/M2 mutation-contract encoding that semantic entries embed.
 /// A change invalidates every retained body just like a changed effect contract.
 pub const mutation_contract_version = "mutation-v1";
@@ -110,10 +113,19 @@ pub const Context = struct {
     persistent: ?*semantic_store.Store = null,
 };
 
+/// Retention budget and the symbolic-template table that shares it. Grouped
+/// so the cache keeps one bounded retention policy rather than a second switch.
+pub const Retention = struct {
+    max_bytes: usize = 0,
+    /// C3 symbolic-template results. It shares the same durable store and
+    /// retention budget, but lives under its own entry kind and stable-key
+    /// namespace so it can never collide with an ordinary checked body.
+    symbolic: generic_cache.Table = .{},
+};
+
 /// Caller-serialized cache; returned typed trees never borrow retained storage.
 pub const Cache = struct {
     allocator: std.mem.Allocator,
-    max_bytes: usize,
     statistics: Statistics = .{},
     entries: []owned.Entry = &.{},
     /// Stable declaration identity -> retained entry ordinal.
@@ -125,18 +137,22 @@ pub const Cache = struct {
     /// Lexical module/import identities for the current project compilation.
     /// Single-unit callers leave this null and resolve against their one module.
     resolution: ?*interfaces.Index = null,
+    /// Retention budget shared by ordinary checked bodies and C3 symbolic
+    /// templates.
+    reuse: Retention = .{},
 
     /// Zero retention bytes disables reuse without changing checking behavior.
     pub fn init(allocator: std.mem.Allocator, max_bytes: usize) Cache {
-        return .{ .allocator = allocator, .max_bytes = max_bytes };
+        return .{ .allocator = allocator, .reuse = .{ .max_bytes = max_bytes } };
     }
     /// Create a cache bound to an explicit Wave-3 contract fingerprint.
     pub fn initWithContract(allocator: std.mem.Allocator, max_bytes: usize, contract: []const u8) Cache {
-        return .{ .allocator = allocator, .max_bytes = max_bytes, .context = .{ .contract = contract } };
+        return .{ .allocator = allocator, .reuse = .{ .max_bytes = max_bytes }, .context = .{ .contract = contract } };
     }
     /// Release every retained tree and source generation.
     pub fn deinit(self: *Cache) void {
         self.clear();
+        self.reuse.symbolic.clear();
     }
     /// Evict retained bodies; already-returned compilations remain valid.
     pub fn clear(self: *Cache) void {
@@ -146,6 +162,17 @@ pub const Cache = struct {
         self.index.deinit(self.allocator);
         self.index = .empty;
         self.statistics.retained_bytes = 0;
+    }
+    /// Open one symbolic-template request over the prepared declaration facts.
+    /// `prepared` must outlive the returned session; `mode` distinguishes the
+    /// project name-resolution mode from the single-unit lexical mode.
+    pub fn symbolicSession(self: *Cache, src: source.Source, prepared: *const key.Prepared, mode: []const u8) error{OutOfMemory}!generic_cache.Session {
+        return generic_cache.Session.init(self.allocator, src, prepared, .{
+            .memory = &self.reuse.symbolic,
+            .persistent = self.context.persistent,
+            .enabled = self.reuse.max_bytes != 0,
+            .mode = mode,
+        });
     }
     /// Decode only entries whose stable key and dependency context are current.
     /// Any malformed file, missing identity or ambiguous remap is a miss; the
@@ -191,8 +218,8 @@ pub const Cache = struct {
         // Per-function eligibility: an unrelated generic, alias, constant or
         // callback no longer disables ordinary-body reuse. A zero-retention cache
         // still reports a bypass because reuse was never consulted.
-        const enabled = self.max_bytes != 0 and self.entries.len != 0;
-        if (self.max_bytes == 0) self.statistics.bypassed += 1;
+        const enabled = self.reuse.max_bytes != 0 and self.entries.len != 0;
+        if (self.reuse.max_bytes == 0) self.statistics.bypassed += 1;
         const count = prepared.ordinary_ast.len;
         const ranges = try allocator.alloc(copy.Range, count);
         @memset(ranges, .{ .nodes = .{ .start = 0, .end = 0 }, .statements = .{ .start = 0, .end = 0 } });
@@ -313,8 +340,8 @@ pub const Session = struct {
     /// Atomically retain changed bodies and transfer unchanged entries; OOM keeps the old cache.
     pub fn remember(self: *Session, program: typed.Program) error{ OutOfMemory, InternalError }!void {
         const cache = self.cache;
-        if (cache.max_bytes == 0) return;
-        if (self.src.bytes.len > cache.max_bytes) {
+        if (cache.reuse.max_bytes == 0) return;
+        if (self.src.bytes.len > cache.reuse.max_bytes) {
             cache.statistics.bypassed += 1;
             return;
         }
@@ -439,7 +466,7 @@ pub const Session = struct {
             try new_index.put(cache.allocator, entry.meta.identity.key, pending.items.len - 1);
         }
         const retained = owned.retained(pending.items);
-        if (retained > cache.max_bytes) {
+        if (retained > cache.reuse.max_bytes) {
             cache.statistics.bypassed += 1;
             return;
         }
