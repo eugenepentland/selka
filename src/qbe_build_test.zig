@@ -2,6 +2,7 @@
 const std = @import("std");
 const fs = @import("qbe_build_io.zig");
 const v = @import("qbe_build_value.zig");
+const bundled = @import("qbe_build_assets");
 
 test {
     _ = @import("qbe_build.zig");
@@ -262,4 +263,30 @@ test "a default build shares its runtime tree under XDG while an explicit cache-
     try buildOnly(context, .{ .tools = resolved, .source = "m.my", .output = "prog", .cwd = second, .environment = &child });
     try std.testing.expectEqual(@as(usize, 1), (try entries(context, shared_root)).len);
     try std.testing.expectEqualStrings("kept", try context.read(marker));
+}
+
+// `content_hash` is the build-time identity every materialized runtime tree and
+// installed runtime archive is named by. It must be the digest of exactly the
+// bytes `assets.zig` embeds: a warm `.zig-cache` once reused a configure phase
+// whose directory dependency only watched for added/removed/renamed names, so
+// an in-place runtime edit left the old `content_hash` beside freshly copied
+// `@embedFile` bytes and a later build could resolve an archive under the old
+// identity. Recompute the canonical manifest from the embedded bytes; the
+// encoding deliberately mirrors `manifest`/`digest` in `build_qbe_assets.zig`
+// (the build script cannot be imported here). Keep them in step.
+// spec-case: QBE-3
+test "bundled content hash digests exactly the embedded runtime bytes" {
+    var text: std.Io.Writer.Allocating = .init(std.testing.allocator);
+    defer text.deinit();
+    for (bundled.files) |asset| {
+        text.writer.print("{s}\x00{d}\x00{x}\n", .{
+            asset.path,
+            asset.bytes.len,
+            std.hash.Wyhash.hash(0, asset.bytes),
+        }) catch return error.OutOfMemory;
+    }
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.sha2.Sha256.hash(text.written(), &digest, .{});
+    const hex = std.fmt.bytesToHex(digest, .lower);
+    try std.testing.expectEqualStrings(bundled.content_hash, &hex);
 }
