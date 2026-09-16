@@ -4917,6 +4917,7 @@ fn c4Project(temp: *std.testing.TmpDir) !struct { entry: []const u8, root: []con
 }
 
 // spec-case: NATIVE-TEST-5
+// spec: NATIVE-TEST-6
 test "C4 unchanged deterministic rerun executes zero tests without lowering emission or linking" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();

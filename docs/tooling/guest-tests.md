@@ -66,6 +66,17 @@ cached prog040::test_scale40
 
 ## Reusing unaffected results
 
+A warm unchanged deterministic run still checks project validity through the shared
+query cache, but admits valid result receipts without lowering, emitting or linking
+any code, so it executes zero tests. Receipt reuse is bound to the selected
+dependency closure, contract and provider identities plus fixture, environment and
+budget identities; a helper edit executes only its dependent tests. A fully cached
+selection also needs the durable reduced preparation graph
+(`native-test-graph-v1`), keyed by compiler/tool stamps, mode, environment hash,
+source identity and canonical provider identity. `mylang test --report` emits a
+`work-report-v1` line whose `executed_tests.performed`/`reused` counts reconcile
+with the `native-tests-v1` `executed`/`cached` fields.
+
 A successful deterministic case leaves a receipt under `.mylang-cache/tests`, or
 under `--cache-dir DIR`. The receipt's identity covers the case settings, the
 call signature, the execution limits, the semantic dependency closure the test
