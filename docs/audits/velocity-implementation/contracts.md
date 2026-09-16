@@ -176,6 +176,15 @@ are the `--check` oracle.
 - The inferred implementation effect set is a diagnostic and test-cacheability
   fact only. A body edit that stays within the same declared ceiling must not
   change the public API fingerprint or invalidate callers' type checking.
+- The public API fingerprint covers the declared effect mask, the normalized
+  declared `mutates(...)` positions, and the exported return-origin bound. The
+  language currently has no syntax for a narrower declared return-origin, so that
+  bound hashes as explicit `unknown`; inferred private `mutates`/`return_origin`
+  stay out of the public fingerprint and remain body/diagnostic facts.
+- A change from `mutates(a)` to `mutates(b)` must change the function interface
+  hash and the project interface hash; `mutates(a, b)` normalizes to sorted,
+  duplicate-free positions and `mutates()` equals an omitted clause. Stable
+  declaration identity (module/kind/owner/name) is intentionally unchanged.
 - Non-exported helpers keep inference. A non-exported `main` keeps its current
   entry behavior. Exported tests follow the same rule as other exports.
 - A missing-ceiling diagnostic is reported at the declaration; an optional
