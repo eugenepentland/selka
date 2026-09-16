@@ -575,6 +575,11 @@ test "a function value with no matching declared callback misses with its exact 
     try t.expectEqual(before + 2, cache.statistics.reused);
 }
 
+// C3 specialization half: concrete specialization bodies are currently a
+// conservative miss. A caller that references one is rechecked fresh (which
+// re-instantiates the specialization), so no unvalidated specialization is ever
+// reused. The durable concrete entry kind, typed FunctionRef instantiation and
+// fresh instance remap are the reported remaining work.
 // spec-case: SEMANTIC-CACHE-7
 test "generic specialization references miss with their exact reason" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
@@ -962,4 +967,87 @@ test "unused malformed generics are still checked on cold and warm requests" {
     // ever inherited from a previous pass.
     try compare(t.allocator, &cache, malformed, null);
     try compare(t.allocator, &cache, malformed, null);
+}
+
+// spec-case: INCREMENTAL-KEYS-1
+test "specialization key engine canonicalizes arguments providers constraints and build context" {
+    const typed = @import("typed.zig");
+    const span = @import("source.zig").Span{ .start = 0, .end = 0 };
+    const aggregate: typed.Type = @fromBackingInt(typed.Type.record_base);
+    const base_records = [_]typed.Record{.{
+        .id = aggregate,
+        .name = "mod::Point",
+        .declaration = span,
+        .fields = &.{.{ .name = "x", .declaration = span, .ty = .i64 }},
+    }};
+    const changed_records = [_]typed.Record{.{
+        .id = aggregate,
+        .name = "mod::Point",
+        .declaration = span,
+        .fields = &.{.{ .name = "x", .declaration = span, .ty = .bool }},
+    }};
+
+    const first_arg = try semantic_key.argumentDescriptor(t.allocator, aggregate, null, &base_records);
+    defer t.allocator.free(first_arg);
+    const length_arg = try semantic_key.argumentDescriptor(t.allocator, .u64, 3, &base_records);
+    defer t.allocator.free(length_arg);
+    try t.expectEqualStrings("L:3", length_arg);
+    const provider = try semantic_key.providerIdentity(t.allocator, &.{aggregate}, &base_records);
+    defer t.allocator.free(provider);
+    const changed_provider = try semantic_key.providerIdentity(t.allocator, &.{aggregate}, &changed_records);
+    defer t.allocator.free(changed_provider);
+    try t.expect(!std.mem.eql(u8, provider, changed_provider));
+
+    const base = semantic_key.SpecializationInputs{
+        .template_identity = "fn\x1fmod\x1f\x1fidentity",
+        .arguments = &.{ first_arg, length_arg },
+        .provider = provider,
+        .constraints = "constraints-a",
+        .contracts = "contracts-a",
+        .build = "build-a",
+    };
+    const same = try semantic_key.specializationFingerprint(t.allocator, base);
+    defer t.allocator.free(same);
+    const again = try semantic_key.specializationFingerprint(t.allocator, base);
+    defer t.allocator.free(again);
+    try t.expectEqualStrings(same, again);
+    try t.expectEqual(@as(usize, 64), same.len);
+    const reordered = try semantic_key.specializationFingerprint(t.allocator, .{
+        .template_identity = base.template_identity,
+        .arguments = &.{ length_arg, first_arg },
+        .provider = base.provider,
+        .constraints = base.constraints,
+        .contracts = base.contracts,
+        .build = base.build,
+    });
+    defer t.allocator.free(reordered);
+    const constraint_change = try semantic_key.specializationFingerprint(t.allocator, .{
+        .template_identity = base.template_identity,
+        .arguments = base.arguments,
+        .provider = base.provider,
+        .constraints = "constraints-b",
+        .contracts = base.contracts,
+        .build = base.build,
+    });
+    defer t.allocator.free(constraint_change);
+    const contract_change = try semantic_key.specializationFingerprint(t.allocator, .{
+        .template_identity = base.template_identity,
+        .arguments = base.arguments,
+        .provider = base.provider,
+        .constraints = base.constraints,
+        .contracts = "contracts-b",
+        .build = base.build,
+    });
+    defer t.allocator.free(contract_change);
+    const build_change = try semantic_key.specializationFingerprint(t.allocator, .{
+        .template_identity = base.template_identity,
+        .arguments = base.arguments,
+        .provider = base.provider,
+        .constraints = base.constraints,
+        .contracts = base.contracts,
+        .build = "build-b",
+    });
+    defer t.allocator.free(build_change);
+    for ([_][]const u8{ reordered, constraint_change, contract_change, build_change }) |changed|
+        try t.expect(!std.mem.eql(u8, same, changed));
 }
