@@ -463,12 +463,34 @@ pub const Session = struct {
 /// entries are either durable from an earlier process or intentionally bypassed
 /// by the current in-memory budget, and re-serializing them would add work
 /// without extending reuse.
+///
+/// All fresh bodies of one request go through one `Store` publication batch:
+/// the store inventories the namespace once and then only converges on its
+/// byte/entry bounds by bounded-slack reconciliation, so populating N bodies
+/// costs O(N) filesystem inventory instead of O(N^2).
 fn persistFresh(cache: *Cache, fresh: []const bool) error{OutOfMemory}!void {
     const persistent = cache.context.persistent orelse return;
+    var any_fresh = false;
+    for (fresh) |is_fresh| {
+        if (is_fresh) {
+            any_fresh = true;
+            break;
+        }
+    }
+    // A warm request publishes nothing; opening a batch would add a namespace
+    // inventory to every read-only run without changing retention.
+    if (!any_fresh) return;
+    try persistent.beginBatch();
+    defer {
+        persistent.endBatch() catch |err| switch (err) {
+            error.OutOfMemory => {},
+        };
+    }
     for (cache.entries, 0..) |*entry, i| {
         if (i >= fresh.len or !fresh[i]) continue;
         _ = try persistent.put(entry);
     }
+    try persistent.endBatch();
 }
 
 const Reuse = struct {

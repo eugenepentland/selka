@@ -77,6 +77,11 @@ pub const Statistics = struct {
 pub const Retained = struct {
     bytes: usize = 0,
     entries: usize = 0,
+    /// Full namespace inventories observed by this store. A publication batch
+    /// performs at most one seeding inventory, one per bounded-slack
+    /// reconciliation and one final inventory, never one per published body.
+    /// Exposed so tests can assert the population path is not per-body.
+    inventories: usize = 0,
 };
 
 /// One contract-namespaced durable directory. `deinit` releases only borrowed
@@ -97,6 +102,27 @@ pub const Limits = struct {
     max_entries: usize = default_max_entries,
     max_entry_bytes: usize = max_entry_bytes,
 };
+/// Incremental accounting for one publication batch. The hot path adds each
+/// published body's on-disk size without touching the namespace; when those
+/// additions grow large enough to matter the batch seeds from one namespace
+/// inventory, and `endBatch` always reconciles once more. That keeps a fresh
+/// population linear in the number of bodies while still converging on the
+/// retention bounds.
+const Batch = struct {
+    bytes: usize,
+    entries: usize,
+    /// True once `bytes`/`entries` describe the whole namespace. A namespace
+    /// that did not exist at `beginBatch` is empty and starts seeded.
+    seeded: bool,
+};
+/// How far a batch's incremental accounting may exceed a bound before it
+/// reconciles with the on-disk namespace. The slack is proportional to the
+/// bound, so a namespace held at its limit still amortizes one O(namespace)
+/// inventory over O(bound / slack) publications, with a floor that keeps tiny
+/// test bounds batching instead of reconciling on every body.
+fn reconciliationSlack(limit: usize) usize {
+    return @max(limit / 16, 1024);
+}
 /// Durable store for one contract namespace. Public methods return misses for
 /// every malformed, foreign or unvalidated entry and never mutate compiler state.
 pub const Store = struct {
@@ -106,6 +132,8 @@ pub const Store = struct {
     context: Context,
     limits: Limits = .{},
     statistics: Statistics = .{},
+    /// Non-null while a caller is inside a publication batch. See `beginBatch`.
+    batch: ?Batch = null,
 
     /// Open a store rooted at `root` under one cache-key contract and mutation
     /// version. The caller keeps `root` and `mutation_contract` alive.
@@ -380,11 +408,129 @@ pub const Store = struct {
             return false;
         };
         self.statistics.stored += 1;
+        if (self.batch != null) {
+            // Inside a batch: only note the new file's size. The full namespace
+            // inventory happens when the accounting crosses a bound (bounded
+            // slack) or once at `endBatch`, whichever comes first.
+            try self.noteBatch(image.bytes.items.len);
+        } else {
+            self.trim() catch |err| switch (err) {
+                error.OutOfMemory => return error.OutOfMemory,
+                error.WriteFailed => self.statistics.bypassed += 1,
+            };
+        }
+        return true;
+    }
+
+    /// Begin a publication batch. A missing namespace is known empty, so a
+    /// fresh population starts with accurate accounting and never seeds; an
+    /// existing namespace starts unseeded and is inventoried lazily only once
+    /// the batch's own additions are large enough to matter. Nested
+    /// `beginBatch` calls are no-ops.
+    pub fn beginBatch(self: *Store) error{OutOfMemory}!void {
+        if (self.batch != null) return;
+        self.batch = .{ .bytes = 0, .entries = 0, .seeded = !try self.namespaceExists() };
+    }
+
+    /// Finish a publication batch with one final namespace inventory. The
+    /// inventory reconciles files added or removed by concurrent publishers and
+    /// converges the store on its byte and entry bounds. Safe with no active
+    /// batch; the accounting is discarded first so an allocation failure cannot
+    /// leave the store expecting a future reconciliation.
+    pub fn endBatch(self: *Store) error{OutOfMemory}!void {
+        if (self.batch == null) return;
+        self.batch = null;
         self.trim() catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             error.WriteFailed => self.statistics.bypassed += 1,
         };
+    }
+
+    /// Whether the contract namespace directory exists. This is a single
+    /// directory open, not an inventory: it never iterates or stats entries.
+    fn namespaceExists(self: *Store) error{OutOfMemory}!bool {
+        const directory = self.namespace() catch return error.OutOfMemory;
+        defer self.allocator.free(directory);
+        var dir = std.Io.Dir.cwd().openDir(self.io, directory, .{ .iterate = true }) catch return false;
+        dir.close(self.io);
         return true;
+    }
+
+    /// Count and sum the complete files currently in the contract namespace.
+    /// Used only to seed a batch's accounting, so the file names are not kept.
+    fn countNamespace(self: *Store, total: *usize, count: *usize) error{OutOfMemory}!void {
+        const directory = self.namespace() catch return error.OutOfMemory;
+        defer self.allocator.free(directory);
+        var dir = std.Io.Dir.cwd().openDir(self.io, directory, .{ .iterate = true }) catch return;
+        defer dir.close(self.io);
+        self.statistics.retained.inventories += 1;
+        var iterator = dir.iterate();
+        while (iterator.next(self.io) catch return) |item| {
+            if (item.kind != .file or std.mem.endsWith(u8, item.name, ".tmp")) continue;
+            const stat = dir.statFile(self.io, item.name, .{}) catch continue;
+            total.* += @intCast(stat.size);
+            count.* += 1;
+        }
+    }
+
+    /// Add one successfully published file to the batch accounting and
+    /// reconcile if the batch is large enough to seed or a bound has been
+    /// exceeded by the bounded slack.
+    fn noteBatch(self: *Store, size: usize) error{OutOfMemory}!void {
+        const batch = self.batch orelse return;
+        const updated: Batch = .{
+            .bytes = batch.bytes +| size,
+            .entries = batch.entries +| 1,
+            .seeded = batch.seeded,
+        };
+        self.batch = updated;
+        self.statistics.retained.bytes = updated.bytes;
+        self.statistics.retained.entries = updated.entries;
+        try self.reconcileBatch();
+    }
+
+    /// Seed a batch from one namespace inventory once its own additions are
+    /// large enough that a bound could be exceeded, then reconcile if the
+    /// accounting has crossed a bound by more than the slack. Eviction is
+    /// always chosen from a fresh inventory, so a concurrently republished
+    /// entry is seen with its fresh mtime and is not evicted from stale names.
+    fn reconcileBatch(self: *Store) error{OutOfMemory}!void {
+        var batch = self.batch orelse return;
+        if (!batch.seeded and self.batchNeedsSeed(batch)) {
+            var total: usize = 0;
+            var count: usize = 0;
+            try self.countNamespace(&total, &count);
+            // The inventory already includes this batch's published files, so
+            // it replaces the incremental totals rather than adding to them.
+            batch = .{ .bytes = total, .entries = count, .seeded = true };
+            self.batch = batch;
+        }
+        if (!self.batchOverBound(batch)) return;
+        self.trim() catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.WriteFailed => self.statistics.bypassed += 1,
+        };
+        self.batch = .{
+            .bytes = self.statistics.retained.bytes,
+            .entries = self.statistics.retained.entries,
+            .seeded = true,
+        };
+    }
+
+    /// Whether a still-unseeded batch has published enough to justify the one
+    /// namespace inventory that makes an existing population visible. Below
+    /// this the batch's own additions are within the slack, so `endBatch`'s
+    /// single inventory converges without an extra pass.
+    fn batchNeedsSeed(self: *Store, batch: Batch) bool {
+        if (batch.entries > reconciliationSlack(self.limits.max_entries)) return true;
+        if (batch.bytes > reconciliationSlack(self.limits.max_bytes)) return true;
+        return false;
+    }
+
+    fn batchOverBound(self: *Store, batch: Batch) bool {
+        if (batch.bytes > self.limits.max_bytes and batch.bytes - self.limits.max_bytes > reconciliationSlack(self.limits.max_bytes)) return true;
+        if (batch.entries > self.limits.max_entries and batch.entries - self.limits.max_entries > reconciliationSlack(self.limits.max_entries)) return true;
+        return false;
     }
 
     fn validOwned(self: *Store, entry: *const owned.Entry) bool {
@@ -424,6 +570,7 @@ pub const Store = struct {
         defer self.allocator.free(directory);
         var dir = std.Io.Dir.cwd().openDir(self.io, directory, .{ .iterate = true }) catch return;
         defer dir.close(self.io);
+        self.statistics.retained.inventories += 1;
         var entries: std.ArrayList(DiskEntry) = .empty;
         defer {
             for (entries.items) |entry| self.allocator.free(entry.name);

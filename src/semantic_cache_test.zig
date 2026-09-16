@@ -824,3 +824,45 @@ test "durable entry and byte bounds evict without changing acceptance" {
     try t.expectEqual(@as(usize, 3), byte_reuse.checked);
     try t.expectEqual(@as(usize, 0), byte_reuse.reused);
 }
+
+// Publishing one fresh namespace must inventory it a bounded number of times,
+// not once per body. This is the unit-level guard for the R4 corrective: the
+// syscall-level growth is measured by scripts/benchmark_semantic_population.py.
+test "durable publication batch inventories a fresh namespace once instead of per body" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    var source: std.ArrayList(u8) = .empty;
+    defer source.deinit(t.allocator);
+    try source.appendSlice(t.allocator, "def main() -> i64:\n    return 42\n\n");
+    var line_buffer: [64]u8 = undefined;
+    for (0..64) |i| {
+        const line = try std.fmt.bufPrint(&line_buffer, "def f{d}() -> i64:\n    return {d}\n\n", .{ i, i });
+        try source.appendSlice(t.allocator, line);
+    }
+    var store = language.semantic_cache.Store.init(t.allocator, t.io, root, cache_key.Contract.default, language.semantic_cache.mutation_contract_version);
+    defer store.deinit();
+    const fingerprint = try cache_key.Contract.default.fingerprint(t.allocator);
+    defer t.allocator.free(fingerprint);
+    var cache = Cache.initWithContract(t.allocator, 4 * 1024 * 1024, fingerprint);
+    defer cache.deinit();
+    cache.context.persistent = &store;
+    try compare(t.allocator, &cache, source.items, 42);
+    try t.expectEqual(@as(usize, 65), cache.statistics.checked);
+    try t.expect(store.statistics.stored != 0);
+    // A fresh namespace is known empty at batch open, so the batch performs
+    // exactly one inventory: the final `endBatch` one. The retired per-body
+    // trim performed one inventory per publication, 65 for this source.
+    try t.expectEqual(@as(usize, 1), store.statistics.retained.inventories);
+    // A warm re-read publishes nothing and must not inventory at all.
+    var warm_store = language.semantic_cache.Store.init(t.allocator, t.io, root, cache_key.Contract.default, language.semantic_cache.mutation_contract_version);
+    defer warm_store.deinit();
+    var warm_cache = Cache.initWithContract(t.allocator, 4 * 1024 * 1024, fingerprint);
+    defer warm_cache.deinit();
+    warm_cache.context.persistent = &warm_store;
+    try compare(t.allocator, &warm_cache, source.items, 42);
+    try t.expectEqual(@as(usize, 0), warm_cache.statistics.checked);
+    try t.expectEqual(@as(usize, 65), warm_cache.statistics.reused);
+    try t.expectEqual(@as(usize, 0), warm_store.statistics.retained.inventories);
+}
