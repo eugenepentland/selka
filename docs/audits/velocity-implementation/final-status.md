@@ -41,14 +41,20 @@ remain not met on the pre-correction tree.
 
 ## Final gate evidence
 
-Cold builds in fresh worktrees followed by full gates on `88691e7b`:
+Gates on the corrected tree (`216965ce`, fresh worktrees):
 
 | Gate | Result |
 | --- | --- |
-| `zig build test --summary all` (Debug) | **39/39 steps succeeded; 1153/1153 tests passed; exit 0** |
-| `zig build test -Doptimize=ReleaseFast --summary all` | **39/39 steps succeeded; 1152/1153 passed, 1 skipped (Debug-only allocation sweep); exit 0** |
+| `zig build test --summary all -j8` (Debug, cold fresh worktree) | **39/39 steps succeeded; 1167/1167 tests passed; exit 0** |
+| `zig build test -Doptimize=ReleaseFast --summary all -j1` (fresh worktree) | **39/39 steps succeeded; 1166/1167 passed, 1 skipped (Debug-only allocation sweep); exit 0** |
+| Debug warm rebuild from a pre-correction cache (`-j8`) | **39/39 steps succeeded; 1036/1036 uncached tests passed; exit 0** — demonstrates the WARM fix |
+| WARM end-to-end probe | in-place bundled-runtime edit refreshed `content_hash`, installed archive names and materialized runtime bytes without cleaning |
 | Guardian whole-tree commit gate | 88/88 checks passed |
 | `zig build fmt-check`, `test-doc-coverage`, `test-docs`, `test-qbe`, `test-native-tests` | covered by the `test` graph and independently green |
+
+ReleaseFast was run at `-j1` because the repository's fixed 2048 MiB `rss.compile`
+ceiling is transiently exceeded by concurrent ReleaseFast compiler/test compiles
+on this host; the failure is environmental and predates the correction pass.
 
 Pinned toolchain: Zig `0.17.0-dev.1683+5ceec001b`; QBE built from `vendor/qbe`
 (1.3). Baseline compiler identity `fff3e012…`.
