@@ -28,7 +28,7 @@ pub const ContractDeclaration = struct {
 /// One module's exported declared-contract table.
 pub const ContractModule = struct { name: []const u8, declarations: []const ContractDeclaration };
 /// Versioned declaration-level contract manifest; bodies are not checked.
-pub const ContractManifest = struct { version: []const u8 = "interface-contracts-v1", modules: []const ContractModule };
+pub const ContractManifest = struct { version: []const u8 = "interface-contracts-v2", modules: []const ContractModule };
 /// Allocation, rejected declarations and an incomplete project all prevent a manifest.
 pub const ContractError = diagnostic.Error || error{IncompleteProject};
 /// Distinguish type declarations from callable declarations during name resolution.
@@ -633,6 +633,15 @@ pub const Index = struct {
         return error.InternalError;
     }
     fn contractTypeText(self: *Index, module: usize, span: source.Span, parameters: []const ast.TypeParameter) ContractError![]const u8 {
+        var path: std.ArrayList(Identity) = .empty;
+        defer path.deinit(self.project.arena.allocator());
+        return self.contractTypeTextPath(module, span, parameters, &path);
+    }
+    /// Render one declaration-level type as a canonical descriptor. Builtin
+    /// aliases collapse to their checked spelling, transparent aliases expand to
+    /// their target recursively, and nominal identities stay qualified. The
+    /// `path` guard rejects alias cycles without checking any function body.
+    fn contractTypeTextPath(self: *Index, module: usize, span: source.Span, parameters: []const ast.TypeParameter, path: *std.ArrayList(Identity)) ContractError![]const u8 {
         const allocator = self.project.arena.allocator();
         const src = self.project.modules.items[module].src;
         const text = src.text(span);
@@ -645,10 +654,10 @@ pub const Index = struct {
             try out.appendSlice(allocator, "def(");
             for (callback.parameters, 0..) |parameter, index| {
                 if (index != 0) try out.appendSlice(allocator, ",");
-                try out.appendSlice(allocator, try self.contractTypeText(module, parameter, parameters));
+                try out.appendSlice(allocator, try self.contractTypeTextPath(module, parameter, parameters, path));
             }
             try out.appendSlice(allocator, ")->");
-            try out.appendSlice(allocator, try self.contractTypeText(module, callback.return_type, parameters));
+            try out.appendSlice(allocator, try self.contractTypeTextPath(module, callback.return_type, parameters, path));
             try out.appendSlice(allocator, " effects(");
             try appendEffectNames(&out, allocator, callback.effect_bound.allowed);
             try out.appendSlice(allocator, ")");
@@ -668,19 +677,35 @@ pub const Index = struct {
             try out.appendSlice(allocator, "[");
             switch (array.index) {
                 .length => |length| try out.appendSlice(allocator, src.text(length)),
-                .enum_type => |enum_type| try out.appendSlice(allocator, try self.contractTypeText(module, enum_type, parameters)),
+                .enum_type => |enum_type| try out.appendSlice(allocator, try self.contractTypeTextPath(module, enum_type, parameters, path)),
             }
             try out.appendSlice(allocator, "]");
-            try out.appendSlice(allocator, try self.contractTypeText(module, array.element, parameters));
+            try out.appendSlice(allocator, try self.contractTypeTextPath(module, array.element, parameters, path));
             return out.toOwnedSlice(allocator);
         }
-        if (typed.Type.fromName(text) != null) return allocator.dupe(u8, text);
-        if (!self.units[module].names.contains(text) and prelude.scalar(text)) return allocator.dupe(u8, text);
+        if (typed.Type.fromName(text)) |builtin| return allocator.dupe(u8, typed.typeName(builtin, &.{}));
+        if (!self.units[module].names.contains(text)) {
+            if (prelude.reservedType(text)) |reserved| return allocator.dupe(u8, typed.typeName(reserved, &.{}));
+            if (prelude.scalar(text)) return allocator.dupe(u8, text);
+        }
         for (self.units[module].syntax.types.expressions.applications) |application| {
-            if (application.span.start == span.start and application.span.end == span.end) return self.contractApplicationText(module, application, parameters);
+            if (application.span.start == span.start and application.span.end == span.end) return self.contractApplicationTextPath(module, application, parameters, path);
         }
         const id = try self.typeIdentity(module, span);
         try self.requirePublicType(module, span, id);
+        if (self.aliasDeclaration(id)) |alias| {
+            for (path.items) |seen| {
+                if (sameIdentity(seen, id)) return self.project.fail(
+                    "E_ALIAS_CYCLE",
+                    "type aliases must have acyclic dependencies",
+                    .{ .module = module, .span = span },
+                    null,
+                );
+            }
+            try path.append(allocator, id);
+            defer path.items.len -= 1;
+            return self.contractTypeTextPath(id.module, alias.target, &.{}, path);
+        }
         if (self.declaredTypeParameters(id).len != 0) return self.project.fail(
             eGenericArity,
             "nominal type template requires explicit type arguments",
@@ -692,7 +717,14 @@ pub const Index = struct {
             self.units[id.module].symbols.items[id.symbol].name,
         });
     }
-    fn contractApplicationText(self: *Index, module: usize, application: ast.TypeApplication, parameters: []const ast.TypeParameter) ContractError![]const u8 {
+    fn aliasDeclaration(self: *Index, id: Identity) ?ast.TypeAlias {
+        const symbol = self.units[id.module].symbols.items[id.symbol];
+        for (self.units[id.module].syntax.types.expressions.aliases) |alias| {
+            if (alias.name.start == symbol.span.start and alias.name.end == symbol.span.end) return alias;
+        }
+        return null;
+    }
+    fn contractApplicationTextPath(self: *Index, module: usize, application: ast.TypeApplication, parameters: []const ast.TypeParameter, path: *std.ArrayList(Identity)) ContractError![]const u8 {
         const allocator = self.project.arena.allocator();
         const src = self.project.modules.items[module].src;
         for (parameters) |parameter| if (std.mem.eql(u8, src.text(parameter.name), src.text(application.name))) return self.project.fail(
@@ -707,7 +739,7 @@ pub const Index = struct {
             if (prelude.arity(name)) |arity| {
                 if (application.arguments.len != arity) return self.project.fail(eGenericArity, "builtin type argument count does not match", .{ .module = module, .span = application.span }, null);
                 try out.appendSlice(allocator, name);
-                try self.appendTypeArguments(&out, module, application, parameters);
+                try self.appendTypeArgumentsPath(&out, module, application, parameters, path);
                 return out.toOwnedSlice(allocator);
             }
         }
@@ -722,19 +754,22 @@ pub const Index = struct {
         try out.appendSlice(allocator, self.project.modules.items[id.module].name);
         try out.appendSlice(allocator, "::");
         try out.appendSlice(allocator, self.units[id.module].symbols.items[id.symbol].name);
-        try self.appendTypeArguments(&out, module, application, parameters);
+        try self.appendTypeArgumentsPath(&out, module, application, parameters, path);
         return out.toOwnedSlice(allocator);
     }
-    fn appendTypeArguments(self: *Index, out: *std.ArrayList(u8), module: usize, application: ast.TypeApplication, parameters: []const ast.TypeParameter) ContractError!void {
+    fn appendTypeArgumentsPath(self: *Index, out: *std.ArrayList(u8), module: usize, application: ast.TypeApplication, parameters: []const ast.TypeParameter, path: *std.ArrayList(Identity)) ContractError!void {
         const allocator = self.project.arena.allocator();
         try out.appendSlice(allocator, "[");
         for (application.arguments, 0..) |argument, index| {
             if (index != 0) try out.appendSlice(allocator, ",");
-            try out.appendSlice(allocator, try self.contractTypeText(module, argument, parameters));
+            try out.appendSlice(allocator, try self.contractTypeTextPath(module, argument, parameters, path));
         }
         try out.appendSlice(allocator, "]");
     }
 };
+fn sameIdentity(a: Identity, b: Identity) bool {
+    return a.module == b.module and a.symbol == b.symbol;
+}
 fn declarationLess(_: void, a: ContractDeclaration, b: ContractDeclaration) bool {
     return std.mem.lessThan(u8, a.name, b.name);
 }

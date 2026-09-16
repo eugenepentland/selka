@@ -15,8 +15,8 @@ const v = @import("qbe_build_value.zig");
 /// Malformed manifests (never produced by this compiler), missing modules and
 /// stronger-or-different replacements are all explicit provider failures.
 pub const Error = error{ InvalidContracts, IncompatibleProvider, OutOfMemory };
-/// The wire version accepted by this validator.
-pub const version = "interface-contracts-v1";
+/// The canonical declaration-type descriptor wire version accepted by this validator.
+pub const version = "interface-contracts-v2";
 const effects_marker = "effects=";
 const mutates_marker = ";mutates=";
 const origin_marker = ";origin=";
@@ -30,6 +30,7 @@ const generics_key = "generics";
 const permissions_key = "permissions";
 const shape_key = "shape";
 const functions_key = "functions";
+const version_key = "version";
 
 /// Map each `providers` key (a relative `.my` path) to its dotted module name.
 pub fn moduleNames(allocator: std.mem.Allocator, providers: std.json.Value) Error![][]const u8 {
@@ -69,6 +70,7 @@ pub fn providerIdentity(allocator: std.mem.Allocator, providers: std.json.Value)
 /// exact and permission field participates, so an interface edit invalidates the
 /// receipt even when replacement bytes are unchanged.
 pub fn contractIdentity(allocator: std.mem.Allocator, contracts: std.json.Value, modules: []const []const u8) Error![]const u8 {
+    try checkVersion(contracts);
     var out: std.ArrayList(u8) = .empty;
     defer out.deinit(allocator);
     try out.appendSlice(allocator, version);
@@ -91,6 +93,7 @@ fn appendValue(out: *std.ArrayList(u8), allocator: std.mem.Allocator, value: std
 /// `parameters` carries the canonical declared signature string so a declared
 /// signature change invalidates a receipt even before any body is checked.
 pub fn testSchema(allocator: std.mem.Allocator, contracts: std.json.Value) Error!std.json.Value {
+    try checkVersion(contracts);
     var functions = std.json.Array.init(allocator);
     for (array(field(contracts, modules_key))) |module| {
         const module_name = text(field(module, name_key));
@@ -136,6 +139,8 @@ fn resultOf(signature: []const u8) []const u8 {
 /// production declaration must reappear with the same exact identity; its
 /// declared permissions may only narrow.
 pub fn validate(allocator: std.mem.Allocator, production: std.json.Value, replacement: std.json.Value, modules: []const []const u8) Error!void {
+    try checkVersion(production);
+    try checkVersion(replacement);
     _ = allocator;
     for (modules) |module_name| {
         const before_module = findModule(production, module_name) orelse return error.InvalidContracts;
@@ -211,6 +216,10 @@ fn originRank(tag: []const u8) ?u8 {
     return null;
 }
 
+fn checkVersion(contracts: std.json.Value) Error!void {
+    if (!std.mem.eql(u8, text(field(contracts, version_key)), version)) return error.InvalidContracts;
+}
+
 fn findModule(contracts: std.json.Value, name: []const u8) ?std.json.Value {
     for (array(field(contracts, modules_key))) |module| {
         if (std.mem.eql(u8, text(field(module, name_key)), name)) return module;
@@ -269,33 +278,33 @@ test "declared permission substitution is directional and malformed manifests re
 }
 
 const contract_fixture =
-    \\{"version":"interface-contracts-v1","modules":[{"name":"production","declarations":[
-    \\{"name":"helper","kind":"function","signature":"def(x:int)->int","generics":"","permissions":"effects=;mutates=;origin=unknown","shape":""},
-    \\{"name":"D","kind":"domain","generics":"","permissions":"","shape":"backing:int"}]}]}
+    \\{"version":"interface-contracts-v2","modules":[{"name":"production","declarations":[
+    \\{"name":"helper","kind":"function","signature":"def(x:i64)->i64","generics":"","permissions":"effects=;mutates=;origin=unknown","shape":""},
+    \\{"name":"D","kind":"domain","generics":"","permissions":"","shape":"backing:i64"}]}]}
 ;
 const contract_narrower =
-    \\{"version":"interface-contracts-v1","modules":[{"name":"production","declarations":[
-    \\{"name":"helper","kind":"function","signature":"def(x:int)->int","generics":"","permissions":"effects=;mutates=;origin=fresh","shape":""},
-    \\{"name":"D","kind":"domain","generics":"","permissions":"","shape":"backing:int"}]}]}
+    \\{"version":"interface-contracts-v2","modules":[{"name":"production","declarations":[
+    \\{"name":"helper","kind":"function","signature":"def(x:i64)->i64","generics":"","permissions":"effects=;mutates=;origin=fresh","shape":""},
+    \\{"name":"D","kind":"domain","generics":"","permissions":"","shape":"backing:i64"}]}]}
 ;
 const contract_wider =
-    \\{"version":"interface-contracts-v1","modules":[{"name":"production","declarations":[
-    \\{"name":"helper","kind":"function","signature":"def(x:int)->int","generics":"","permissions":"effects=output;mutates=;origin=unknown","shape":""},
-    \\{"name":"D","kind":"domain","generics":"","permissions":"","shape":"backing:int"}]}]}
+    \\{"version":"interface-contracts-v2","modules":[{"name":"production","declarations":[
+    \\{"name":"helper","kind":"function","signature":"def(x:i64)->i64","generics":"","permissions":"effects=output;mutates=;origin=unknown","shape":""},
+    \\{"name":"D","kind":"domain","generics":"","permissions":"","shape":"backing:i64"}]}]}
 ;
 const contract_changed_signature =
-    \\{"version":"interface-contracts-v1","modules":[{"name":"production","declarations":[
-    \\{"name":"helper","kind":"function","signature":"def(x:bool)->int","generics":"","permissions":"effects=;mutates=;origin=unknown","shape":""},
-    \\{"name":"D","kind":"domain","generics":"","permissions":"","shape":"backing:int"}]}]}
+    \\{"version":"interface-contracts-v2","modules":[{"name":"production","declarations":[
+    \\{"name":"helper","kind":"function","signature":"def(x:bool)->i64","generics":"","permissions":"effects=;mutates=;origin=unknown","shape":""},
+    \\{"name":"D","kind":"domain","generics":"","permissions":"","shape":"backing:i64"}]}]}
 ;
 const contract_changed_shape =
-    \\{"version":"interface-contracts-v1","modules":[{"name":"production","declarations":[
-    \\{"name":"helper","kind":"function","signature":"def(x:int)->int","generics":"","permissions":"effects=;mutates=;origin=unknown","shape":""},
+    \\{"version":"interface-contracts-v2","modules":[{"name":"production","declarations":[
+    \\{"name":"helper","kind":"function","signature":"def(x:i64)->i64","generics":"","permissions":"effects=;mutates=;origin=unknown","shape":""},
     \\{"name":"D","kind":"domain","generics":"","permissions":"","shape":"backing:bool"}]}]}
 ;
 const contract_missing =
-    \\{"version":"interface-contracts-v1","modules":[{"name":"production","declarations":[
-    \\{"name":"D","kind":"domain","generics":"","permissions":"","shape":"backing:int"}]}]}
+    \\{"version":"interface-contracts-v2","modules":[{"name":"production","declarations":[
+    \\{"name":"D","kind":"domain","generics":"","permissions":"","shape":"backing:i64"}]}]}
 ;
 
 fn parsedContract(allocator: std.mem.Allocator, bytes: []const u8) !std.json.Parsed(std.json.Value) {
@@ -355,10 +364,10 @@ test "declared test discovery schema and provider identities are stable" {
     const functions = array(field(schema, functions_key));
     try std.testing.expectEqual(@as(usize, 1), functions.len);
     try std.testing.expectEqualStrings("production::helper", text(field(functions[0], name_key)));
-    try std.testing.expectEqualStrings("int", text(field(functions[0], "result")));
+    try std.testing.expectEqualStrings("i64", text(field(functions[0], "result")));
 
     const bool_fixture = try parsedContract(a,
-        \\{"version":"interface-contracts-v1","modules":[{"name":"main","declarations":[
+        \\{"version":"interface-contracts-v2","modules":[{"name":"main","declarations":[
         \\{"name":"test_ok","kind":"function","signature":"def()->bool","generics":"","permissions":"effects=;mutates=;origin=unknown","shape":""}]}]}
     );
     defer bool_fixture.deinit();
