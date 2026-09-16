@@ -179,3 +179,8 @@ Source: [development-velocity-c3-c4-review-2026-09-16.md](../development-velocit
 
 After this pass: S1 remeasurement on one corrected commit, C4 per-function lazy
 lowering, D2, productivity trial and final acceptance remain open.
+
+Correction-pass integration log (2026-09-16):
+- `0c420fbc` G1 + N1: graph-key binding (v2 envelope, structural validation) and directory `--no-cache` forwarding; end-to-end directory run executes 2/0 with zero durable files, including `--jobs 1`.
+- `ddacfb57`/`ddacfb57` retention package rebased and merged (G1/N1 preceded it): bounded-prefix ordinary retention (SEMANTIC-CACHE-9), reference-sized ordinary relocation (SEMANTIC-CACHE-10), clear releases all three kinds (SEMANTIC-CACHE-13), shared `reuse.max_bytes` budget across ordinary/symbolic/specialization entries with deterministic eviction and per-kind reporting (SEMANTIC-CACHE-14).
+- `610656cf` retains cumulative eviction counts across `clear` and finalizes the SPEC/features registration; final Debug `zig build test` 1199/1199, ReleaseFast 1198/1199 with 1 Debug-only skip (both 39/39 steps).
