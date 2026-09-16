@@ -76,6 +76,9 @@ selection also needs the durable reduced preparation graph
 source identity and canonical provider identity. `mylang test --report` emits a
 `work-report-v1` line whose `executed_tests.performed`/`reused` counts reconcile
 with the `native-tests-v1` `executed`/`cached` fields.
+`--force` skips existing graph and result reuse but may publish refreshed graphs
+and successful receipts, whereas `--no-cache` performs no durable result or graph
+reads and writes at all.
 
 A successful deterministic case leaves a receipt under `.mylang-cache/tests`, or
 under `--cache-dir DIR`. The receipt's identity covers the case settings, the
