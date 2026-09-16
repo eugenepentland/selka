@@ -1,8 +1,8 @@
 # Development velocity: implementation status
 
-Status: **core packages plus the R1–R4/HASH/WARM and C3/C4 correction passes integrated on `610656cf`; release checklist partially met.**
+Status: **core packages plus the R1–R4/HASH/WARM and C3/C4 correction passes integrated, with the final cache-retention accounting fix and S1 remeasurement recorded on top; release checklist partially met.**
 Baseline: `9ce142e98cb22e684622ed1d5678071d6944206e` (post named-constraint fixes).
-Integration HEAD: `610656cf` (correction-pass code gate; later commits are status documentation only).
+Integration HEAD: `3f76446c` (correction-pass code gate; later commits record the D2 reconciliation and S1 evidence).
 Plan: [development-velocity-implementation-plan-2026-09-15.md](../development-velocity-implementation-plan-2026-09-15.md).
 Ledger and frozen contracts: [README.md](README.md), [contracts.md](contracts.md).
 
@@ -33,6 +33,7 @@ Ledger and frozen contracts: [README.md](README.md), [contracts.md](contracts.md
 | G1 | reduced graph bound to its requested input key (v2 envelope + structural validation); a copied entry is a miss | `0c420fbc` |
 | N1 | directory fan-out forwards `--no-cache`; seeded/empty caches execute every case and write zero durable files | `0c420fbc` |
 | Retention | bounded-prefix ordinary retention, reference-sized ordinary remap, clear releases all three entry kinds, shared `reuse.max_bytes` budget with per-kind reporting | `9699895b`/`610656cf` |
+| B1 | exact cache-retention accounting: stdlib minimum capacity/header/alignment plus arena chunk bookkeeping; boundary tests | `3f76446c` |
 | R3 | canonical declaration type descriptors; manifest `interface-contracts-v2` | `bc462aa6` |
 | R1/R2 | receipt acceptance bound to selected dependency closure; one checked project/prepared library per selected provider graph | `1ed663b9` |
 | R4 | batched semantic-store inventory: statx 128/256/512/1024 → 260/516/1028/2052 | `d54cc302` |
@@ -40,13 +41,14 @@ Ledger and frozen contracts: [README.md](README.md), [contracts.md](contracts.md
 | WARM | per-file content dependency removes the cold-build requirement for runtime edits | `70eecedf` |
 | Follow-up | F1 keeps the space before `mutates(...)`; board-trial/schematic standalone runners accept the driver's trailing `--cache-dir` | `26e8121` |
 
-Still open from the plan: the **S1** remeasurement on this corrected tree and the
-productivity trial. **D2**'s documentation reconciliation is in the working tree,
-with its documentation gates deliberately deferred until the S1 run finishes. C4's
-per-function lazy lowering/emission boundary also remains: a changed snapshot
-performs one whole-project preparation emission and an uncached selection builds
-the whole selected-provider library, while fully cached selections skip all
-lowering/emission/linking.
+Still open from the plan: the **productivity trial**. **B1** is closed by
+`3f76446c`; the **S1** remeasurement is recorded in
+[`s1-corrected-report-2026-09-16.md`](s1-corrected-report-2026-09-16.md) (the
+100k latency objectives remain unmet); **D2**'s documentation reconciliation is
+complete and its gates are green. C4's per-function lazy lowering/emission
+boundary also remains: a changed snapshot performs one whole-project preparation
+emission and an uncached selection builds the whole selected-provider library,
+while fully cached selections skip all lowering/emission/linking.
 
 ## Final gate evidence
 
@@ -60,6 +62,17 @@ Gates on the corrected C3/C3S/C4 tree (`610656cf`, worktrees rebuilt from the C3
 | WARM end-to-end probe | in-place bundled-runtime edit refreshed `content_hash`, installed archive names and materialized runtime bytes without cleaning |
 | Guardian whole-tree commit gate | 88/88 checks passed |
 | `zig build fmt-check`, `test-doc-coverage`, `test-docs`, `test-qbe`, `test-native-tests` | covered by the `test` graph and independently green |
+
+Follow-up gates on the B1/D2/S1 tree (`3f76446c` plus docs/S1 commits through
+`50a4c64a`):
+
+| Gate | Result |
+| --- | --- |
+| `zig build test --summary all -j8` (Debug, final `50a4c64a`) | **39/39 steps succeeded; exit 0** |
+| `zig build fmt-check --summary all` | **2/2 steps succeeded** |
+| `zig build test-doc-coverage --summary all` | **121 documented features (81 language, 40 tooling), 0 failures; 20/20 steps** |
+| `zig build test-docs --summary all` | **242 files scanned, 441 blocks, 120 run, 24 checked, 10 skipped, 0 failed; 21/21 steps** (run on the D2 tree immediately before the final one-word SPEC prose correction) |
+| Guardian whole-tree commit gate | 88/88 checks passed on each commit |
 
 The ReleaseFast test-root compile peaked at 2.55 GiB on this tree, above the old
 2.15 GiB `rss.compile` bound, so `build.zig` now declares 3 GiB with a measured
@@ -83,9 +96,9 @@ Pinned toolchain: Zig `0.17.0-dev.1683+5ceec001b`; QBE built from `vendor/qbe`
 | A fake can replace an unfinished production body against a checked contract | **Met** | P1 checks declarations/interfaces first, fully checks only the selected provider graph, validates every replaced public contract with the directional relation, and binds contract/provider/source identities into receipts. |
 | Configured architecture policy cannot be skipped by ordinary commands or caches | **Met** | A1 config discovery/enforcement cold and warm, statuses 2/3, cwd-independent, receipts include policy identity. |
 | Selective tests retain correctness and skip unnecessary compilation work | **Met for fully cached selections; per-function lazy lowering remains** | R1/R2 bind receipts to the selected closure and share one prepared graph/library per provider identity; C4 skips all lowering/emission/linking for a warm unchanged selection (zero executions) and executes only dependent tests after an edit. Any snapshot change still pays one whole-project preparation emission and an uncached selection builds the whole selected-provider library. |
-| Representative scale limits, latency and memory measured honestly | **Met as measurement; objectives not met** | S1: 100k check p95 2.9–4.9 s vs <500 ms target; forced-test measurement blocked; 500k provisional only; productivity trial unrun. |
-| Current documentation and feature claims match the final executable | **Docs reconciled in working tree; gates deferred** | D2 reconciled C3/C4 and the `native-test-graph-v2` boundary, the exact cache-retention accounting, `src/features.json`, README/tooling pages and VM/watch historical redirects, and confirmed `scripts/profile_large_project.py` emits only current syntax. `test-docs`, `doc-coverage` and the full gates still need to run after the S1 remeasurement. |
-| Relevant gates and Guardian feedback complete | **Met for the integrated scope** | Both final gates green; consolidated feedback committed to `~/ai/canopy/guardian-zig/FEEDBACK.md`. |
+| Representative scale limits, latency and memory measured honestly | **Met as measurement; objectives not met** | Corrected S1 (ReleaseFast, `3f76446c`) low-load 100k p95: ordinary cold 1255.9 ms, unchanged 99.3 ms, implementation/constant/signature edits 1013.6–1113.7 ms, sessions 999.2–1009.6 ms; 10k edits 68.3–106.9 ms and forced tests 727.5/765.5 ms. 100k forced tests are blocked by whole-project lowering (150 s time-box). Budget/eviction evidence and the 500k gap remain in [`s1-corrected-report-2026-09-16.md`](s1-corrected-report-2026-09-16.md); productivity trial unrun. |
+| Current documentation and feature claims match the final executable | **Met** | D2 reconciled C3/C4 and the `native-test-graph-v2` boundary, the exact cache-retention accounting, `src/features.json`, README/tooling pages and VM/watch historical redirects, and confirmed `scripts/profile_large_project.py` emits only current syntax. Final gates: `test-doc-coverage` 121 features/0 failures, `test-docs` 441 blocks/0 failed, `fmt-check` 2/2, full Debug `39/39` steps. |
+| Relevant gates and Guardian feedback complete | **Met for the integrated scope** | Earlier Debug and ReleaseFast final gates green; B1/D2/S1 follow-up gates green (full Debug `39/39` steps on final `50a4c64a`, doc coverage and doc examples 0 failures); consolidated feedback committed to `~/ai/canopy/guardian-zig/FEEDBACK.md`. |
 
 ## Known limitations carried forward
 
@@ -99,14 +112,17 @@ Pinned toolchain: Zig `0.17.0-dev.1683+5ceec001b`; QBE built from `vendor/qbe`
   remains a body-local fact.
 - **Transitive generic mutation substitution:** abstract generic checking enforces
   attributed direct writes; concrete specializations are fully re-checked.
-- **Scale:** the default loader still bounds projects at 256 modules/16 MiB, the
-  in-memory semantic body cache bypasses at 100k bodies, navigation rejects both
-  100k workloads, and the performance targets are unmet without C3/C4. `S1` has
-  not been remeasured after C2/R4; the persistent cache now populates with linear
-  filesystem work (statx 260/516/1028/2052 for 128/256/512/1024 bodies).
-- **Documentation:** D2's document reconciliation is in the working tree and its
-  gates are deferred until the S1 run finishes; the productivity trial remains
-  outstanding.
+- **Scale:** the default loader still bounds projects at 256 modules/16 MiB and
+  navigation rejects both 100k workloads. Corrected S1 shows ordinary-100k
+  `implementation_edit` p95 1013.6 ms vs the <500 ms target; the dominant gap is
+  the 16 MiB shared retention budget truncating the retained set (~8.8k of 33.5k
+  ordinary bodies retained, so ~24.6k are rechecked per edit). Managed 100k
+  specializations still report `128/0` reuse across processes. Affected-test
+  feedback at 100k remains blocked by whole-project lowering; an eviction-cost
+  workload with >16 MiB of distinct specializations has not yet been built.
+- **Productivity trial:** D2's documentation gates are now green; the comparative
+  unfamiliar-code productivity trial remains outstanding and no superiority claim
+  is made.
 
 Historical audit documents and probe JSON were not rewritten; where an audit
 example now correctly rejects, its fence is marked `notest` so the historical
