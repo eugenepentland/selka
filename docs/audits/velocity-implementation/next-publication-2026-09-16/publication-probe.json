@@ -1,0 +1,211 @@
+{
+  "version": "semantic-publication-probe-v1",
+  "compiler": "/tmp/vel-rf-pub/bin/mylang",
+  "compiler_sha256": "16ddcf8b8d40e7f592869e4b0475a4371bcd515156be25e137da7c04ebb0606c",
+  "bodies": 101,
+  "source_bytes": 4834,
+  "host_load_before": "4.01 3.37 3.62 4/1022 1338717",
+  "filesystems": [
+    {
+      "label": "tmpfs",
+      "root": "/tmp/.mylang-publication-rhr4k1ih",
+      "states": [
+        {
+          "state": "no_cache",
+          "command": [
+            "/tmp/vel-rf-pub/bin/mylang",
+            "check-project",
+            "/tmp/.mylang-publication-rhr4k1ih/main.my",
+            "--report",
+            "--timings=json",
+            "--no-cache"
+          ],
+          "exit": 0,
+          "wall_ms": 2.5712469941936433,
+          "retention_store_io_ms": 0.000712,
+          "dependency_key_preparation_ms": 0.237814,
+          "total_phase_ms": 1.51374,
+          "cache": {
+            "files": 0,
+            "bytes": 0
+          },
+          "stderr_tail": ""
+        },
+        {
+          "state": "cold_0",
+          "command": [
+            "/tmp/vel-rf-pub/bin/mylang",
+            "check-project",
+            "/tmp/.mylang-publication-rhr4k1ih/main.my",
+            "--report",
+            "--timings=json",
+            "--cache-dir=/tmp/.mylang-publication-rhr4k1ih/cold-0"
+          ],
+          "exit": 0,
+          "wall_ms": 5.0986940041184425,
+          "retention_store_io_ms": 1.80815,
+          "dependency_key_preparation_ms": 0.179649,
+          "total_phase_ms": 4.061702,
+          "cache": {
+            "files": 103,
+            "bytes": 97830
+          },
+          "stderr_tail": ""
+        },
+        {
+          "state": "cold_1",
+          "command": [
+            "/tmp/vel-rf-pub/bin/mylang",
+            "check-project",
+            "/tmp/.mylang-publication-rhr4k1ih/main.my",
+            "--report",
+            "--timings=json",
+            "--cache-dir=/tmp/.mylang-publication-rhr4k1ih/cold-1"
+          ],
+          "exit": 0,
+          "wall_ms": 5.566935986280441,
+          "retention_store_io_ms": 1.910968,
+          "dependency_key_preparation_ms": 0.178323,
+          "total_phase_ms": 4.578944,
+          "cache": {
+            "files": 103,
+            "bytes": 97830
+          },
+          "stderr_tail": ""
+        },
+        {
+          "state": "cold_2",
+          "command": [
+            "/tmp/vel-rf-pub/bin/mylang",
+            "check-project",
+            "/tmp/.mylang-publication-rhr4k1ih/main.my",
+            "--report",
+            "--timings=json",
+            "--cache-dir=/tmp/.mylang-publication-rhr4k1ih/cold-2"
+          ],
+          "exit": 0,
+          "wall_ms": 10.216524999123067,
+          "retention_store_io_ms": 6.601695,
+          "dependency_key_preparation_ms": 0.193395,
+          "total_phase_ms": 9.241963,
+          "cache": {
+            "files": 103,
+            "bytes": 97830
+          },
+          "stderr_tail": ""
+        },
+        {
+          "state": "cold_trace",
+          "exit": 0,
+          "wall_ms": 29.37249100068584,
+          "retention_store_io_ms": 20.004384,
+          "syscalls": {
+            "syncfs": 1
+          },
+          "strace_available": true
+        }
+      ]
+    },
+    {
+      "label": "ext4",
+      "root": "/home/epentland/ai/canopy/.mylang-publication-5efluhao",
+      "states": [
+        {
+          "state": "no_cache",
+          "command": [
+            "/tmp/vel-rf-pub/bin/mylang",
+            "check-project",
+            "/home/epentland/ai/canopy/.mylang-publication-5efluhao/main.my",
+            "--report",
+            "--timings=json",
+            "--no-cache"
+          ],
+          "exit": 0,
+          "wall_ms": 2.479198999935761,
+          "retention_store_io_ms": 0.000254,
+          "dependency_key_preparation_ms": 0.206891,
+          "total_phase_ms": 1.472295,
+          "cache": {
+            "files": 0,
+            "bytes": 0
+          },
+          "stderr_tail": ""
+        },
+        {
+          "state": "cold_0",
+          "command": [
+            "/tmp/vel-rf-pub/bin/mylang",
+            "check-project",
+            "/home/epentland/ai/canopy/.mylang-publication-5efluhao/main.my",
+            "--report",
+            "--timings=json",
+            "--cache-dir=/home/epentland/ai/canopy/.mylang-publication-5efluhao/cold-0"
+          ],
+          "exit": 0,
+          "wall_ms": 14.5824039936997,
+          "retention_store_io_ms": 10.644695,
+          "dependency_key_preparation_ms": 0.366361,
+          "total_phase_ms": 13.693924,
+          "cache": {
+            "files": 103,
+            "bytes": 97830
+          },
+          "stderr_tail": ""
+        },
+        {
+          "state": "cold_1",
+          "command": [
+            "/tmp/vel-rf-pub/bin/mylang",
+            "check-project",
+            "/home/epentland/ai/canopy/.mylang-publication-5efluhao/main.my",
+            "--report",
+            "--timings=json",
+            "--cache-dir=/home/epentland/ai/canopy/.mylang-publication-5efluhao/cold-1"
+          ],
+          "exit": 0,
+          "wall_ms": 17.069566994905472,
+          "retention_store_io_ms": 13.279828,
+          "dependency_key_preparation_ms": 0.202246,
+          "total_phase_ms": 16.15893,
+          "cache": {
+            "files": 103,
+            "bytes": 97830
+          },
+          "stderr_tail": ""
+        },
+        {
+          "state": "cold_2",
+          "command": [
+            "/tmp/vel-rf-pub/bin/mylang",
+            "check-project",
+            "/home/epentland/ai/canopy/.mylang-publication-5efluhao/main.my",
+            "--report",
+            "--timings=json",
+            "--cache-dir=/home/epentland/ai/canopy/.mylang-publication-5efluhao/cold-2"
+          ],
+          "exit": 0,
+          "wall_ms": 16.59434800967574,
+          "retention_store_io_ms": 12.799731,
+          "dependency_key_preparation_ms": 0.192561,
+          "total_phase_ms": 15.598226,
+          "cache": {
+            "files": 103,
+            "bytes": 97830
+          },
+          "stderr_tail": ""
+        },
+        {
+          "state": "cold_trace",
+          "exit": 0,
+          "wall_ms": 38.4853919968009,
+          "retention_store_io_ms": 28.874983,
+          "syscalls": {
+            "syncfs": 1
+          },
+          "strace_available": true
+        }
+      ]
+    }
+  ],
+  "host_load_after": "4.01 3.37 3.62 4/1022 1338731"
+}

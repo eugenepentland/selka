@@ -5,6 +5,7 @@ const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const semantic_key = @import("semantic_key.zig");
 const cache_key = @import("cache_key.zig");
+const semantic_store = @import("semantic_store.zig");
 const Cache = language.semantic_cache.Cache;
 const prefix =
     \\def helper(n: i64) -> i64:
@@ -774,7 +775,7 @@ test "durable semantic entries survive a new cache process and roll back cleanly
 
 const DurableRun = struct { checked: usize, reused: usize, evicted: usize = 0 };
 
-fn durableRun(allocator: std.mem.Allocator, root: []const u8, source: []const u8, contract: cache_key.Contract, mutation_contract: []const u8, limits: @import("semantic_store.zig").Limits) !DurableRun {
+fn durableRun(allocator: std.mem.Allocator, root: []const u8, source: []const u8, contract: cache_key.Contract, mutation_contract: []const u8, limits: semantic_store.Limits) !DurableRun {
     var store = language.semantic_cache.Store.init(allocator, t.io, root, contract, mutation_contract);
     defer store.deinit();
     store.limits = limits;
@@ -876,6 +877,142 @@ test "durable publication batch inventories a fresh namespace once instead of pe
     try t.expectEqual(@as(usize, 0), warm_cache.statistics.checked);
     try t.expectEqual(@as(usize, 65), warm_cache.statistics.reused);
     try t.expectEqual(@as(usize, 0), warm_store.statistics.retained.inventories);
+}
+
+// spec: SEMANTIC-CACHE-15
+test "durable batch publication issues one shared sync per batch and none when warm" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    var source: std.ArrayList(u8) = .empty;
+    defer source.deinit(t.allocator);
+    try source.appendSlice(t.allocator, "def main() -> i64:\n    return 42\n\n");
+    var line_buffer: [64]u8 = undefined;
+    for (0..64) |i| {
+        const line = try std.fmt.bufPrint(&line_buffer, "def f{d}() -> i64:\n    return {d}\n\n", .{ i, i });
+        try source.appendSlice(t.allocator, line);
+    }
+    var store = language.semantic_cache.Store.init(t.allocator, t.io, root, cache_key.Contract.default, language.semantic_cache.mutation_contract_version);
+    defer store.deinit();
+    const fingerprint = try cache_key.Contract.default.fingerprint(t.allocator);
+    defer t.allocator.free(fingerprint);
+    var cache = Cache.initWithContract(t.allocator, 4 * 1024 * 1024, fingerprint);
+    defer cache.deinit();
+    cache.context.persistent = &store;
+    try compare(t.allocator, &cache, source.items, 42);
+    try t.expect(store.statistics.stored >= 2);
+    // One publication batch covers every fresh body, so the group costs one
+    // shared sync instead of a synchronous flush per body.
+    try t.expectEqual(@as(usize, 1), store.statistics.retained.syncs);
+    var warm_store = language.semantic_cache.Store.init(t.allocator, t.io, root, cache_key.Contract.default, language.semantic_cache.mutation_contract_version);
+    defer warm_store.deinit();
+    var warm_cache = Cache.initWithContract(t.allocator, 4 * 1024 * 1024, fingerprint);
+    defer warm_cache.deinit();
+    warm_cache.context.persistent = &warm_store;
+    try compare(t.allocator, &warm_cache, source.items, 42);
+    try t.expectEqual(@as(usize, 65), warm_cache.statistics.reused);
+    // A warm request publishes nothing and must not synchronize at all.
+    try t.expectEqual(@as(usize, 0), warm_store.statistics.retained.syncs);
+}
+
+// spec-case: SEMANTIC-CACHE-15
+test "a torn durable entry is a miss that rechecks and republishes in one batch" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const contract = cache_key.Contract.default;
+    {
+        var store = language.semantic_cache.Store.init(t.allocator, t.io, root, contract, language.semantic_cache.mutation_contract_version);
+        defer store.deinit();
+        const fingerprint = try contract.fingerprint(t.allocator);
+        defer t.allocator.free(fingerprint);
+        var cache = Cache.initWithContract(t.allocator, 4 * 1024 * 1024, fingerprint);
+        defer cache.deinit();
+        cache.context.persistent = &store;
+        try compare(t.allocator, &cache, prefix ++ suffix, 42);
+    }
+    try t.expect(try truncateFirstEntry(t.allocator, root, contract));
+    var store = language.semantic_cache.Store.init(t.allocator, t.io, root, contract, language.semantic_cache.mutation_contract_version);
+    defer store.deinit();
+    const fingerprint = try contract.fingerprint(t.allocator);
+    defer t.allocator.free(fingerprint);
+    var cache = Cache.initWithContract(t.allocator, 4 * 1024 * 1024, fingerprint);
+    defer cache.deinit();
+    cache.context.persistent = &store;
+    try compare(t.allocator, &cache, prefix ++ suffix, 42);
+    // The torn image missed and its body checked fresh, then the fresh group was
+    // republished under one shared sync; acceptance and diagnostics still agree.
+    try t.expect(cache.statistics.checked > 0);
+    try t.expectEqual(@as(usize, 1), store.statistics.retained.syncs);
+}
+
+// spec-case: SEMANTIC-CACHE-15
+test "an interrupted staging file and a foreign entry are ignored" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const contract = cache_key.Contract.default;
+    {
+        var store = language.semantic_cache.Store.init(t.allocator, t.io, root, contract, language.semantic_cache.mutation_contract_version);
+        defer store.deinit();
+        const fingerprint = try contract.fingerprint(t.allocator);
+        defer t.allocator.free(fingerprint);
+        var cache = Cache.initWithContract(t.allocator, 4 * 1024 * 1024, fingerprint);
+        defer cache.deinit();
+        cache.context.persistent = &store;
+        try compare(t.allocator, &cache, prefix ++ suffix, 42);
+    }
+    // A crashed staging file and an unrelated complete-looking file model an
+    // interrupted publisher and a concurrent one; both are invisible to lookup.
+    try writeNamespaceFile(t.allocator, root, contract, "interrupted.tmp", "garbage");
+    try writeNamespaceFile(t.allocator, root, contract, "foreign-entry", "garbage");
+    var store = language.semantic_cache.Store.init(t.allocator, t.io, root, contract, language.semantic_cache.mutation_contract_version);
+    defer store.deinit();
+    const fingerprint = try contract.fingerprint(t.allocator);
+    defer t.allocator.free(fingerprint);
+    var cache = Cache.initWithContract(t.allocator, 4 * 1024 * 1024, fingerprint);
+    defer cache.deinit();
+    cache.context.persistent = &store;
+    try compare(t.allocator, &cache, prefix ++ suffix, 42);
+    try t.expectEqual(@as(usize, 0), cache.statistics.checked);
+    try t.expectEqual(@as(usize, 3), cache.statistics.reused);
+    try t.expectEqual(@as(usize, 0), store.statistics.retained.syncs);
+}
+
+/// Write one file directly into the contract namespace, bypassing publication.
+fn writeNamespaceFile(allocator: std.mem.Allocator, root: []const u8, contract: cache_key.Contract, name: []const u8, bytes: []const u8) !void {
+    var hex: [64]u8 = undefined;
+    contract.fingerprintHex(&hex);
+    const directory = try std.fs.path.join(allocator, &.{ root, semantic_store.format_version, &hex });
+    defer allocator.free(directory);
+    try std.Io.Dir.cwd().createDirPath(t.io, directory);
+    const path = try std.fs.path.join(allocator, &.{ directory, name });
+    defer allocator.free(path);
+    try std.Io.Dir.cwd().writeFile(t.io, .{ .sub_path = path, .data = bytes });
+}
+
+/// Truncate the first durable entry file under `root` so its checksum fails.
+fn truncateFirstEntry(allocator: std.mem.Allocator, root: []const u8, contract: cache_key.Contract) !bool {
+    var hex: [64]u8 = undefined;
+    contract.fingerprintHex(&hex);
+    const directory = try std.fs.path.join(allocator, &.{ root, semantic_store.format_version, &hex });
+    defer allocator.free(directory);
+    var dir = std.Io.Dir.cwd().openDir(t.io, directory, .{ .iterate = true }) catch return false;
+    defer dir.close(t.io);
+    var iterator = dir.iterate();
+    while (try iterator.next(t.io)) |item| {
+        if (item.kind != .file or std.mem.endsWith(u8, item.name, ".tmp")) continue;
+        const path = try std.fs.path.join(allocator, &.{ directory, item.name });
+        defer allocator.free(path);
+        const file = try std.Io.Dir.cwd().openFile(t.io, path, .{ .mode = .write_only });
+        defer file.close(t.io);
+        try file.setLength(t.io, 32);
+        return true;
+    }
+    return false;
 }
 
 // spec-case: SEMANTIC-CACHE-7

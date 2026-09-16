@@ -11,9 +11,12 @@ Status: **implementation + measurement.** Two packages from the
    instead of re-checking the project in a second frontend process.
 
 Both objectives improved materially but neither target is fully met:
-ordinary-100k edits are now **549 ms p50 / 556 ms p95** (goal <500 ms) and
-100k affected/forced tests are **1.32 s p95 ordinary / 1.54 s p95 managed**
-(goal <1 s). Correctness is unchanged and the full gate is green.
+ordinary-100k edits are now **549 ms p50 / 556 ms p95** (goal <500 ms).
+Forced runs are **1.32 s p95 ordinary / 1.54 s p95 managed**, but forced
+execution is not every affected edit: the actual 100k used-helper edit is
+**1.45 s p95 ordinary / 3.47 s p95 managed** (goal <1 s). Correctness is
+unchanged and the full gate is green. A later correction measures the managed
+edit path and attributes its gap to object compilation, not checking.
 
 ## 1. Identity and host caveat
 
@@ -214,8 +217,15 @@ or object files (verified in all four probe workloads).
 | ordinary-100k constant edit p95 < 500 ms | **554.6 ms** | no (1.11×) |
 | ordinary-100k signature edit p95 < 500 ms | **560.7 ms** | no (1.12×) |
 | managed-100k cold / edit p95 < 500 ms | 861.3 / 780.4 ms | no |
-| 100k affected tests p95 < 1 s | **1,327 ms** ordinary / **1,545 ms** managed | no (1.3–1.5×) |
+| 100k forced execution p95 < 1 s | **1,327 ms** ordinary / **1,545 ms** managed | no (1.3–1.5×) |
+| 100k used-helper edit p95 < 1 s | **1,452 ms** ordinary / **3,587 ms** managed | no (1.5–3.6×) |
 | 10k forced tests p95 < 1 s (context) | 283 ms ordinary / 342 ms managed | yes |
+
+The forced-execution row is not the affected-test acceptance criterion; the
+used-helper edit row is the real edit-to-result path. The follow-up
+publication report profiles the managed edit and attributes its ~1.9 s gap over
+a forced run to QBE object compilation of 64 re-emitted fragments, not to
+provider materialization or additional checking.
 
 The two packages are the dominant part of the remaining gap. Ordinary-100k
 edits moved from 2.0× to 1.11× the check target and 100k affected tests from
