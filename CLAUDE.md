@@ -18,11 +18,19 @@ any other toolchain.
 ## Fast loops (use these while iterating)
 
 - `zig build test-units -Dtest-filter=SUBSTRING` — runs only `src/root_test.zig` tests
-  whose name contains SUBSTRING. `-Dtest-filter=arena` is 37 tests in 1.5 s; the whole
+  whose name contains SUBSTRING. `-Dtest-filter=arena` is 34 tests in about 1.5 s; the whole
   root is 889 tests in 25 s. `zig build test-cli -Dtest-filter=…` does the same for
-  `test/integration.zig`. Neither runs Python drivers or Guardian. The filter also
-  applies to `zig build test` and `test-compile`. A filter that names nothing fails
+  `test/integration.zig`. Neither runs Python drivers, Guardian, or the install graph:
+  they depend only on their test binary plus unattached copies of `qbe` and the compiler. The filter also
+  applies to `zig build test` and `test-compile`. An explicitly empty
+  `-Dtest-filter=` is rejected at configure time, and a filter that names nothing fails
   rather than reporting green, so filter one root at a time.
+- `python3 scripts/focused_test.py units arena` — the supported wrapper over the same
+  targets (`units`, `cli`, `golden`). It rejects a missing/empty/whitespace filter before
+  invoking Zig, prints the runner's selected-test count and PASS/FAIL verdict, saves the
+  full output under `.mylang-cache/focused-tests/`, reports wall time, and exits with the
+  wrapped command's status. Use `python3 scripts/focused_test.py full` for the explicit
+  whole-suite request; it refuses a filter.
 - `zig-out/bin/mylang test <entry.my|dir> --filter SUBSTRING` — guest (`.my`) tests,
   each built and run as its own native process.
   A bare substring matches anywhere in the qualified name; a pattern containing

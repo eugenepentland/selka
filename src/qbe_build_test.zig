@@ -290,3 +290,28 @@ test "bundled content hash digests exactly the embedded runtime bytes" {
     const hex = std.fmt.bytesToHex(digest, .lower);
     try std.testing.expectEqualStrings(bundled.content_hash, &hex);
 }
+
+/// True when the generated compiler identity names `path`.
+fn identityNames(path: []const u8) bool {
+    for (bundled.identity_inputs) |input| {
+        if (std.mem.eql(u8, input, path)) return true;
+    }
+    return false;
+}
+
+// `compiler_identity` names every production source input, the toolchain and the
+// optimize mode. A test-only edit must not invalidate the production compiler, so
+// the generated list omits test roots and their helpers while still naming the
+// compiler and runtime inputs that a real edit must invalidate.
+test "compiler identity omits test-only sources and names production inputs" {
+    try std.testing.expect(identityNames("main.zig"));
+    try std.testing.expect(identityNames("compiler.zig"));
+    try std.testing.expect(identityNames("sema.zig"));
+    try std.testing.expect(identityNames("qbe_build.zig"));
+    try std.testing.expect(identityNames("native_format.zig"));
+    try std.testing.expect(!identityNames("root_test.zig"));
+    try std.testing.expect(!identityNames("compiler_test.zig"));
+    try std.testing.expect(!identityNames("qbe_build_test.zig"));
+    try std.testing.expect(!identityNames("byte_io/tests.zig"));
+    try std.testing.expect(!identityNames("test_support.zig"));
+}

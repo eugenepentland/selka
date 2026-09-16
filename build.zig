@@ -21,9 +21,7 @@ fn vendoredQbe(b: *std.Build, target: std.Build.ResolvedTarget) *std.Build.Step.
     const module = b.createModule(.{ .target = target, .optimize = .ReleaseFast, .link_libc = true });
     module.addIncludePath(b.path("vendor/qbe"));
     module.addCSourceFiles(.{ .root = b.path("vendor/qbe"), .files = &qbe_sources, .flags = &.{ "-std=c99", "-fno-sanitize=undefined" } });
-    const exe = b.addExecutable(.{ .max_rss = rss.compile, .name = "qbe", .root_module = module });
-    b.installArtifact(exe);
-    return exe;
+    return b.addExecutable(.{ .max_rss = rss.compile, .name = "qbe", .root_module = module });
 }
 
 /// One mebibyte, the unit the resident-memory ceilings below are written in.
@@ -66,6 +64,16 @@ const rss = struct {
 var tool_qbe: []const u8 = "";
 var tool_zig: []const u8 = "";
 var install_all: ?*std.Build.Step = null;
+/// The tools a focused test needs on disk (`MYLANG_QBE`, and the compiler the
+/// unit root resolves beside it), installed to a private prefix. These installs
+/// are deliberately not attached to the default install step: Guardian reorders
+/// every artifact install attached there to run after its gate, which would drag
+/// Guardian back into the focused graph.
+var tool_qbe_focus: []const u8 = "";
+var install_qbe_focus: ?*std.Build.Step = null;
+/// The focused prefix pairs the compiler with `qbe`, because tests in the unit
+/// root resolve `mylang` from the directory `MYLANG_QBE` names.
+var install_exe_focus: ?*std.Build.Step = null;
 /// Declare a step's resident-memory ceiling, and give it the native tools a guest
 /// build needs; harmless on steps that build no guest.
 fn bounded(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
@@ -76,6 +84,31 @@ fn bounded(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
         if (install_all) |install| step.step.dependOn(install);
     }
     return step;
+}
+/// A focused test step: bound it, name the native tools, and depend only on the
+/// unattached `qbe` and compiler copies, not on the whole installation. The
+/// compiler under test builds guests from its embedded runtime assets, so a
+/// focused test needs neither the runtime archive, the host applications nor
+/// Guardian.
+fn focused(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
+    step.step.max_rss = bytes;
+    // A test command must execute and report its selection; otherwise a warm
+    // cache reuses the previous verdict and hides the selected-test count.
+    step.has_side_effects = true;
+    if (tool_qbe_focus.len != 0) {
+        step.setEnvironmentVariable("MYLANG_QBE", tool_qbe_focus);
+        step.setEnvironmentVariable("MYLANG_ZIG", tool_zig);
+        if (install_qbe_focus) |qbe| step.step.dependOn(qbe);
+        if (install_exe_focus) |compiler| step.step.dependOn(compiler);
+    }
+    return step;
+}
+/// Forward the compiler-applied `-Dtest-filter` values to the Guardian runner.
+/// Zig already excludes non-matching named tests at compile time; telling the
+/// runner the filter lets it refuse a filter that named nothing instead of
+/// silently passing with only the unnamed `test { }` blocks it cannot filter.
+fn forwardFilters(b: *std.Build, step: *std.Build.Step.Run, filters: []const []const u8) void {
+    for (filters) |filter| step.addArg(b.fmt("--guardian-filter={s}", .{filter}));
 }
 /// Guardian's `addAllChecks` returns nothing, so bound the check steps it has
 /// just appended to `step`, which are the run steps naming its executable.
@@ -91,10 +124,15 @@ pub fn build(b: *std.Build) void {
     const target = b.resolveTargetQuery(.{});
     const optimize = b.standardOptimizeOption(.{});
     // `-Dtest-filter=SUBSTRING` narrows the unit and CLI suites to one area in seconds.
-    const test_filters: []const []const u8 = if (b.option([]const u8, "test-filter", "Run only Zig tests whose name contains this substring")) |needle|
-        b.dupeStrings(&.{needle})
-    else
-        &.{};
+    // An absent flag runs every test; an explicitly empty one is a footgun that
+    // silently selects the whole suite, so reject it before it reaches a test root.
+    const test_filters: []const []const u8 = if (b.option([]const u8, "test-filter", "Run only Zig tests whose name contains this substring")) |needle| blk: {
+        if (std.mem.trim(u8, needle, " \t\r\n").len == 0) {
+            std.debug.print("error: -Dtest-filter= needs a non-empty substring; run `zig build test` for the full suite\n", .{});
+            std.process.exit(2);
+        }
+        break :blk b.dupeStrings(&.{needle});
+    } else &.{};
     // The guest-running hosts live under src/<host>/, so they cannot reach
     // src/memory_budget.zig by path; they import it as a module instead. The
     // compiler itself reaches the same file directly from its own root module.
@@ -120,9 +158,12 @@ pub fn build(b: *std.Build) void {
     });
     const build_assets = @import("build_qbe_assets.zig").module(b, target, optimize);
     exe.root_module.addImport("qbe_build_assets", build_assets);
-    b.installArtifact(exe);
+    const install_exe = b.addInstallArtifact(exe, .{});
+    b.getInstallStep().dependOn(&install_exe.step);
     // Installed beside `mylang`, where the native build driver looks for it before `PATH`.
     const qbe_exe = vendoredQbe(b, target);
+    const install_qbe_step = b.addInstallArtifact(qbe_exe, .{});
+    b.getInstallStep().dependOn(&install_qbe_step.step);
     // Guest-running drivers invoke an uninstalled compiler with no tools beside it
     // and none on `PATH`; name the vendored tools for them through the environment.
     // The build runs with the project root as its working directory, and the
@@ -130,6 +171,14 @@ pub fn build(b: *std.Build) void {
     const root = std.Io.Dir.cwd().realPathFileAlloc(b.graph.io, ".", b.allocator) catch @panic("build root");
     tool_qbe = b.pathJoin(&.{ root, "zig-out", "bin", "qbe" });
     tool_zig = b.graph.zig_exe;
+    // Focused tests need `qbe` on disk but must stay off the gated install graph.
+    // A separate, unattached install of the same compile step gives them a stable
+    // path without pulling in Guardian or the other installed artifacts.
+    const focus_qbe_step = b.addInstallArtifact(qbe_exe, .{ .dest_dir = .{ .override = .{ .custom = "focus" } } });
+    const focus_exe_step = b.addInstallArtifact(exe, .{ .dest_dir = .{ .override = .{ .custom = "focus" } } });
+    tool_qbe_focus = b.pathJoin(&.{ root, "zig-out", "focus", "qbe" });
+    install_qbe_focus = &focus_qbe_step.step;
+    install_exe_focus = &focus_exe_step.step;
     // Prebuild the runtime archive (and text-formatter object) for each optimize
     // mode with the freshly built compiler and install them beside it under
     // `lib/mylang-runtime`, so a cold `mylang build` links a matching prebuilt
@@ -255,14 +304,17 @@ pub fn build(b: *std.Build) void {
     compile_tests.dependOn(&schematic_unit.step);
     compile_tests.dependOn(&byte_io_unit.step);
     compile_tests.dependOn(&integration.step);
-    const run_integration = bounded(b.addRunArtifact(integration), rss.suite);
+    const run_integration = focused(b.addRunArtifact(integration), rss.suite);
+    forwardFilters(b, run_integration, test_filters);
     const test_step = b.step("test", "Run interpreter, checker, CLI, and tooling regression tests");
     b.step("test-interpreter", "Run the default interpreter acceptance suite").dependOn(test_step);
     guardian.addAllChecks(b, guardian_exe, test_step, .{});
     boundedChecks(test_step);
-    const run_unit = bounded(b.addRunArtifact(unit), rss.suite);
+    const run_unit = focused(b.addRunArtifact(unit), rss.suite);
+    forwardFilters(b, run_unit, test_filters);
     test_step.dependOn(&run_unit.step);
-    // The fast inner loops: no Python drivers and no Guardian, so `-Dtest-filter` returns in seconds.
+    // The fast inner loops: no Python drivers, no Guardian and no full install graph,
+    // so `-Dtest-filter` returns in seconds.
     b.step("test-units", "Run only src/root_test.zig, honouring -Dtest-filter").dependOn(&run_unit.step);
     b.step("test-cli", "Run only test/integration.zig, honouring -Dtest-filter").dependOn(&run_integration.step);
     const byte_io_step = b.step("test-byte-io", "Verify raw guest stdin/stdout and host bounds");
@@ -359,6 +411,7 @@ pub fn build(b: *std.Build) void {
     guardian.enableTestDiagnostics(golden_unit.root_module);
     compile_tests.dependOn(&golden_unit.step);
     const run_golden = bounded(b.addRunArtifact(golden_unit), rss.suite);
+    forwardFilters(b, run_golden, test_filters);
     run_golden.setCwd(b.path("."));
     golden_step.dependOn(&run_golden.step);
     qbe_step.dependOn(golden_step);

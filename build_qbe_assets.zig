@@ -9,7 +9,9 @@ const Sources = std.StringArrayHashMapUnmanaged([]const u8);
 /// Every source input, the selected runtime subset, and the Zig units still to scan.
 const Selection = struct { sources: Sources, chosen: std.StringArrayHashMapUnmanaged(void) = .empty, pending: std.ArrayList([]const u8) = .empty };
 /// Build the embedded runtime asset module: the selected inputs, their content hash,
-/// and the compiler identity derived from every source input and the toolchain.
+/// and the compiler identity derived from every *production* source input and the
+/// toolchain. Test-only sources are read by their own test roots, so they neither
+/// bundle nor participate in the identity.
 pub fn module(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode) *std.Build.Module {
     b.dependOnDirectory(b.path("src"));
     const sources = read(b);
@@ -17,6 +19,10 @@ pub fn module(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.bui
     select(b, &selection);
     const paths = selection.chosen.keys();
     std.mem.sort([]const u8, paths, {}, order);
+    // The identity is a sorted list of every production source; exposing it lets a
+    // test root assert the split, and keeps the digest and the emitted list in step.
+    const identity_paths = b.allocator.dupe([]const u8, sources.keys()) catch @panic("OOM");
+    std.mem.sort([]const u8, identity_paths, {}, order);
     const files = b.addWriteFiles();
     var text: std.Io.Writer.Allocating = .init(b.allocator);
     text.writer.writeAll("pub const Asset = struct { path: []const u8, bytes: []const u8 };\npub const files = [_]Asset{\n") catch @panic("OOM");
@@ -25,9 +31,24 @@ pub fn module(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.bui
         text.writer.print(".{{ .path=\"{s}\", .bytes=@embedFile(\"src/{s}\") }},\n", .{ path, path }) catch @panic("OOM");
     }
     text.writer.print("}};\npub const zig_version = \"{s}\";\n", .{@import("builtin").zig_version_string}) catch @panic("OOM");
+    text.writer.writeAll("pub const identity_inputs = [_][]const u8{\n") catch @panic("OOM");
+    for (identity_paths) |path| text.writer.print("    \"{s}\",\n", .{path}) catch @panic("OOM");
+    text.writer.writeAll("};\n") catch @panic("OOM");
     text.writer.print("pub const content_hash = \"{s}\";\n", .{digest(b, manifest(b, sources, paths))}) catch @panic("OOM");
-    text.writer.print("pub const compiler_identity = \"{s}\";\n", .{identity(b, sources, optimize)}) catch @panic("OOM");
+    text.writer.print("pub const compiler_identity = \"{s}\";\n", .{identity(b, sources, identity_paths, optimize)}) catch @panic("OOM");
     return b.createModule(.{ .root_source_file = files.add("assets.zig", text.written()), .target = target, .optimize = optimize });
+}
+/// True when a source path is consumed only by a test root. The production
+/// compiler and runtime never import these, so they must neither bundle nor
+/// invalidate `compiler_identity`; a Zig test root already tracks them directly.
+fn testOnly(path: []const u8) bool {
+    const name = std.fs.path.basename(path);
+    if (std.mem.endsWith(u8, name, "_test.zig")) return true;
+    if (std.mem.eql(u8, name, "tests.zig")) return true;
+    return std.mem.eql(u8, name, "test_support.zig") or
+        std.mem.eql(u8, name, "unit_test.zig") or
+        std.mem.eql(u8, name, "nominal_provider_fixture.zig") or
+        std.mem.eql(u8, name, "stdlib_fixture.zig");
 }
 /// Read every compiler source input once; the same bytes feed identity and selection.
 fn read(b: *std.Build) Sources {
@@ -40,6 +61,10 @@ fn read(b: *std.Build) Sources {
         const relative = b.pathJoin(&.{ "src", entry.path });
         if (entry.kind == .directory) b.dependOnDirectory(b.path(relative));
         if (entry.kind != .file) continue;
+        // A test-only file is compiled by its test root, which Zig tracks on its
+        // own. Binding it here would rebuild the compiler for an edit that cannot
+        // affect it, so drop it from both the content dependency and the identity.
+        if (testOnly(entry.path)) continue;
         // A directory dependency only repeats the configure phase when a name is
         // added, removed or renamed; an in-place content edit would otherwise
         // leave `content_hash`/`compiler_identity` at their cached values while
@@ -100,10 +125,9 @@ fn manifest(b: *std.Build, sources: Sources, paths: []const []const u8) []const 
     }
     return text.written();
 }
-/// The compiler's own identity: every source input, the Zig toolchain, and the optimize mode.
-fn identity(b: *std.Build, sources: Sources, optimize: std.builtin.OptimizeMode) []const u8 {
-    const paths = b.allocator.dupe([]const u8, sources.keys()) catch @panic("OOM");
-    std.mem.sort([]const u8, paths, {}, order);
+/// The compiler's own identity: every production source input, the Zig toolchain,
+/// and the optimize mode. Test-only edits leave this digest unchanged.
+fn identity(b: *std.Build, sources: Sources, paths: []const []const u8, optimize: std.builtin.OptimizeMode) []const u8 {
     const summary = std.fmt.allocPrint(b.allocator, "mylang-compiler-identity-v1\n{s}\n{s}\n{s}", .{
         @import("builtin").zig_version_string, @tagName(optimize), manifest(b, sources, paths),
     }) catch @panic("OOM");
