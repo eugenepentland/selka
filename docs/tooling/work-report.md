@@ -105,6 +105,8 @@ the test-selection integration (C4). Until then a consumer reconciles
   report conservatively counts a publish step and never claims link reuse.
 - `instantiated_specializations` is observed from the fresh checked program, not
   from a specialization reuse engine (that is C3).
-- One-shot checked-body reuse is not implemented (that is C2); the one-shot
-  `checked_bodies.reused` count is therefore zero and `bypassed` names the
-  unavailable semantic reuse.
+- One-shot checked-body reuse is implemented by C2 for ordinary `check`,
+  project checking, `build`, `run` and native-test preparation. The one-shot
+  `checked_bodies.reused` count is observed at the body-copy site, not inferred
+  from a fingerprint; a `bypassed` reason names an exact conservative fresh-path
+  cause when a body cannot be admitted. Generic specialization reuse remains C3.

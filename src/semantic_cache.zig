@@ -9,10 +9,15 @@ const copy = @import("semantic_copy.zig");
 const owned = @import("semantic_entry.zig");
 const interfaces = @import("interfaces.zig");
 const cache_key = @import("cache_key.zig");
+const semantic_store = @import("semantic_store.zig");
 
 /// Re-exported so host wiring can bind the full contract without depending on
 /// the compiler module's internal file layout.
 pub const Contract = cache_key.Contract;
+/// Durable store type and default root re-exported so host wiring shares the
+/// compiler module's exact type instead of importing a duplicate file instance.
+pub const Store = semantic_store.Store;
+pub const default_store_directory = semantic_store.default_directory;
 /// Version of the M1/M2 mutation-contract encoding that semantic entries embed.
 /// A change invalidates every retained body just like a changed effect contract.
 pub const mutation_contract_version = "mutation-v1";
@@ -99,6 +104,10 @@ pub const Statistics = struct {
 pub const Context = struct {
     contract: []const u8 = "",
     mutation_contract: []const u8 = mutation_contract_version,
+    /// Optional durable store attached to this cache session. It is part of the
+    /// context so the public `Cache` shape does not grow another field solely for
+    /// host wiring.
+    persistent: ?*semantic_store.Store = null,
 };
 
 /// Caller-serialized cache; returned typed trees never borrow retained storage.
@@ -138,9 +147,47 @@ pub const Cache = struct {
         self.index = .empty;
         self.statistics.retained_bytes = 0;
     }
+    /// Decode only entries whose stable key and dependency context are current.
+    /// Any malformed file, missing identity or ambiguous remap is a miss; the
+    /// decoder never enters this list unvalidated.
+    fn loadPersistent(self: *Cache, persistent: *semantic_store.Store, prepared: key.Prepared) error{ OutOfMemory, InternalError }!void {
+        var loaded: std.ArrayList(owned.Entry) = .empty;
+        var index: std.StringHashMapUnmanaged(usize) = .empty;
+        // UNTESTED-ERROR: the cache's existing FailingAllocator scenario covers allocation failure at the checkWithCache boundary; this branch only releases entries already decoded by a partial load.
+        errdefer {
+            for (loaded.items) |*entry| entry.deinit();
+            loaded.deinit(self.allocator);
+            index.deinit(self.allocator);
+        }
+        for (prepared.ordinary_ast) |ast_index| {
+            const stable_key = prepared.keys[ast_index];
+            if (index.contains(stable_key)) continue;
+            const entry = (try persistent.lookup(self.allocator, stable_key, prepared.contexts[ast_index])) orelse continue;
+            // UNTESTED-ERROR: allocation failure while appending a completed decoded entry is covered by the cache-wide FailingAllocator scenario; this catch only releases that one entry.
+            loaded.append(self.allocator, entry) catch |err| {
+                var owned_entry = entry;
+                owned_entry.deinit();
+                return err;
+            };
+            // UNTESTED-ERROR: allocation failure while publishing the persistent index is covered by the cache-wide FailingAllocator scenario; this catch releases the just-appended entry.
+            index.put(self.allocator, loaded.items[loaded.items.len - 1].meta.identity.key, loaded.items.len - 1) catch |err| {
+                var owned_entry = loaded.items[loaded.items.len - 1];
+                owned_entry.deinit();
+                loaded.items.len -= 1;
+                return err;
+            };
+        }
+        if (loaded.items.len == 0) return;
+        self.entries = try loaded.toOwnedSlice(self.allocator);
+        self.index = index;
+    }
+
     /// Begin after fresh declaration/type collection, before checking any body.
     pub fn begin(self: *Cache, allocator: std.mem.Allocator, src: source.Source, syntax: ast.Program, records: []const typed.Record) error{ OutOfMemory, InternalError }!Session {
         const prepared = try key.prepare(allocator, src, syntax, self.context.contract, self.context.mutation_contract, self.resolution);
+        if (self.context.persistent) |persistent| {
+            if (self.entries.len == 0) try self.loadPersistent(persistent, prepared);
+        }
         // Per-function eligibility: an unrelated generic, alias, constant or
         // callback no longer disables ordinary-body reuse. A zero-retention cache
         // still reports a bypass because reuse was never consulted.
@@ -212,11 +259,11 @@ pub const Session = struct {
         const before = entry.meta.identity.body;
         const after = self.prepared.bodies[ast_index];
         if (before.end - before.start != after.end - after.start) return self.reason(.region_length_changed);
-        if (!std.mem.eql(u8, entry.generation.bytes[before.start..before.end], self.src.bytes[after.start..after.end])) return self.reason(.region_bytes_changed);
+        if (!std.mem.eql(u8, entry.source.body_bytes, self.src.bytes[after.start..after.end])) return self.reason(.region_bytes_changed);
         const old_region = entry.meta.identity.region;
         const new_region = self.prepared.regions[ast_index];
         if (old_region.end - old_region.start != new_region.end - new_region.start) return self.reason(.region_length_changed);
-        if (!std.mem.eql(u8, entry.generation.bytes[old_region.start..old_region.end], self.src.bytes[new_region.start..new_region.end])) return self.reason(.region_bytes_changed);
+        if (!std.mem.eql(u8, entry.source.region_bytes, self.src.bytes[new_region.start..new_region.end])) return self.reason(.region_bytes_changed);
 
         const functions = try allocator.alloc(?typed.FunctionId, entry.meta.old_function_count);
         @memset(functions, null);
@@ -408,8 +455,21 @@ pub const Session = struct {
         cache.statistics.retained_bytes = retained;
         cache.statistics.stored += 1;
         published = true;
+        try persistFresh(cache, fresh.items);
     }
 };
+
+/// Publish only entries freshly created by this request. Already-retained
+/// entries are either durable from an earlier process or intentionally bypassed
+/// by the current in-memory budget, and re-serializing them would add work
+/// without extending reuse.
+fn persistFresh(cache: *Cache, fresh: []const bool) error{OutOfMemory}!void {
+    const persistent = cache.context.persistent orelse return;
+    for (cache.entries, 0..) |*entry, i| {
+        if (i >= fresh.len or !fresh[i]) continue;
+        _ = try persistent.put(entry);
+    }
+}
 
 const Reuse = struct {
     enabled: bool,

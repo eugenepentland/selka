@@ -727,3 +727,100 @@ fn functionReturnOrigin(program: @import("typed.zig").Program, name: []const u8)
     for (program.functions) |function| if (std.mem.eql(u8, function.name, name)) return function.signature.return_origin;
     unreachable;
 }
+
+// C2 durable-store behavior is not yet registered in SPEC.md; the required registration patch is reported with this package.
+test "durable semantic entries survive a new cache process and roll back cleanly on damage" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const contract = cache_key.Contract.default;
+    {
+        var store = language.semantic_cache.Store.init(t.allocator, t.io, root, contract, language.semantic_cache.mutation_contract_version);
+        defer store.deinit();
+        const fingerprint = try contract.fingerprint(t.allocator);
+        defer t.allocator.free(fingerprint);
+        var cache = Cache.initWithContract(t.allocator, 4 * 1024 * 1024, fingerprint);
+        defer cache.deinit();
+        cache.context.persistent = &store;
+        try compare(t.allocator, &cache, prefix ++ suffix, 42);
+        try t.expectEqual(@as(usize, 3), cache.statistics.checked);
+        try t.expect(store.statistics.stored != 0);
+    }
+    {
+        var store = language.semantic_cache.Store.init(t.allocator, t.io, root, contract, language.semantic_cache.mutation_contract_version);
+        defer store.deinit();
+        const fingerprint = try contract.fingerprint(t.allocator);
+        defer t.allocator.free(fingerprint);
+        var cache = Cache.initWithContract(t.allocator, 4 * 1024 * 1024, fingerprint);
+        defer cache.deinit();
+        cache.context.persistent = &store;
+        try compare(t.allocator, &cache, prefix ++ suffix, 42);
+        try t.expectEqual(@as(usize, 3), cache.statistics.reused);
+        try t.expectEqual(@as(usize, 0), cache.statistics.checked);
+    }
+}
+
+const DurableRun = struct { checked: usize, reused: usize, evicted: usize = 0 };
+
+fn durableRun(allocator: std.mem.Allocator, root: []const u8, source: []const u8, contract: cache_key.Contract, mutation_contract: []const u8, limits: @import("semantic_store.zig").Limits) !DurableRun {
+    var store = language.semantic_cache.Store.init(allocator, t.io, root, contract, mutation_contract);
+    defer store.deinit();
+    store.limits = limits;
+    const fingerprint = try contract.fingerprint(allocator);
+    defer allocator.free(fingerprint);
+    var cache = Cache.initWithContract(allocator, 4 * 1024 * 1024, fingerprint);
+    defer cache.deinit();
+    cache.context.persistent = &store;
+    cache.context.mutation_contract = mutation_contract;
+    try compare(allocator, &cache, source, 42);
+    return .{ .checked = cache.statistics.checked, .reused = cache.statistics.reused, .evicted = store.statistics.evicted };
+}
+
+test "durable entries isolate every contract dimension and the mutation version" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const source = prefix ++ suffix;
+    const base = cache_key.Contract.default;
+    try t.expectEqual(@as(usize, 3), (try durableRun(t.allocator, root, source, base, "mutation-v1", .{})).checked);
+    const variants = [_]cache_key.Contract{
+        .{ .bootstrap_language = "bootstrap-v2", .target = base.target, .runtime_abi = base.runtime_abi, .effects = base.effects, .flags = base.flags, .compiler_identity = base.compiler_identity },
+        .{ .bootstrap_language = base.bootstrap_language, .target = "wasm32", .runtime_abi = base.runtime_abi, .effects = base.effects, .flags = base.flags, .compiler_identity = base.compiler_identity },
+        .{ .bootstrap_language = base.bootstrap_language, .target = base.target, .runtime_abi = "runtime-abi-v2", .effects = base.effects, .flags = base.flags, .compiler_identity = base.compiler_identity },
+        .{ .bootstrap_language = base.bootstrap_language, .target = base.target, .runtime_abi = base.runtime_abi, .effects = "effects-v2", .flags = base.flags, .compiler_identity = base.compiler_identity },
+        .{ .bootstrap_language = base.bootstrap_language, .target = base.target, .runtime_abi = base.runtime_abi, .effects = base.effects, .flags = "--release", .compiler_identity = base.compiler_identity },
+        .{ .bootstrap_language = base.bootstrap_language, .target = base.target, .runtime_abi = base.runtime_abi, .effects = base.effects, .flags = base.flags, .compiler_identity = "sha256:other" },
+    };
+    for (variants) |variant| {
+        const outcome = try durableRun(t.allocator, root, source, variant, "mutation-v1", .{});
+        try t.expectEqual(@as(usize, 3), outcome.checked);
+        try t.expectEqual(@as(usize, 0), outcome.reused);
+    }
+    try t.expectEqual(@as(usize, 0), (try durableRun(t.allocator, root, source, base, "mutation-v1", .{})).checked);
+    try t.expectEqual(@as(usize, 3), (try durableRun(t.allocator, root, source, base, "mutation-v1", .{})).reused);
+    const changed_mutation = try durableRun(t.allocator, root, source, base, "mutation-v2", .{});
+    try t.expectEqual(@as(usize, 3), changed_mutation.checked);
+    try t.expectEqual(@as(usize, 0), changed_mutation.reused);
+}
+
+test "durable entry and byte bounds evict without changing acceptance" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const source = prefix ++ suffix;
+    const entry_bound = try durableRun(t.allocator, root, source, cache_key.Contract.default, "mutation-v1", .{ .max_entries = 1 });
+    try t.expectEqual(@as(usize, 3), entry_bound.checked);
+    try t.expect(entry_bound.evicted != 0);
+    const entry_reuse = try durableRun(t.allocator, root, source, cache_key.Contract.default, "mutation-v1", .{ .max_entries = 1 });
+    try t.expectEqual(@as(usize, 2), entry_reuse.checked);
+    try t.expectEqual(@as(usize, 1), entry_reuse.reused);
+    const byte_bound = try durableRun(t.allocator, root, source, cache_key.Contract.default, "mutation-v1", .{ .max_bytes = 1 });
+    try t.expectEqual(@as(usize, 3), byte_bound.checked);
+    try t.expect(byte_bound.evicted != 0);
+    const byte_reuse = try durableRun(t.allocator, root, source, cache_key.Contract.default, "mutation-v1", .{ .max_bytes = 1 });
+    try t.expectEqual(@as(usize, 3), byte_reuse.checked);
+    try t.expectEqual(@as(usize, 0), byte_reuse.reused);
+}

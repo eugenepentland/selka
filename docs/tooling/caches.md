@@ -21,10 +21,13 @@ Actual work and reuse are reported separately from cache fingerprints; see
 ## Persistent frontend cache
 
 Ordinary one-shot `mylang check`, `mylang run`, `mylang build` and `mylang test`
-also reuse work across processes through a content-addressed on-disk cache. It is
-deliberately narrow: it can skip lexing and parsing, and it can replay a whole
-program's already-successful warnings; it never stores a checked program, a symbol
-index, an interface or a resolved declaration.
+also reuse work across processes through content-addressed on-disk caches. The
+syntax/verdict layers can skip lexing and parsing and can replay a whole
+program's already-successful warnings. C2 adds a separate checked-body store:
+ordinary `check`, project checking, `build`, `run` and native-test preparation
+can reuse an unchanged ordinary function's checked body after the fresh
+declaration/type collection and all global effect/mutation/codec passes run.
+Neither layer stores a symbol index, an interface or a resolved declaration table.
 
 The cache root is `<cache-dir>/frontend/` when `--cache-dir` is given, otherwise
 `MYLANG_FRONTEND_CACHE`, otherwise the per-project `.mylang-cache/frontend`.
@@ -59,12 +62,13 @@ list owns exactly its items and never advertises capacity it did not allocate.
 
 ### Limits and fallbacks
 
-- **Nothing typed is persisted.** Checked `typed.Program` bodies, the semantic
-  function cache, symbol indexes, interfaces and resolved declarations are never
-  written. A re-invocation after any edit re-checks every function body; only the
-  in-process `check-session` reuses checked bodies. The persistent cache therefore
-  cannot mask a changed declaration, visibility, ownership or effect bound, and it
-  does not reproduce the `functions` counters of a session.
+- **Typed bodies are persisted only as validated, remappable snapshots.** C2
+  writes one complete checked ordinary body per file after a successful check.
+  Fresh declaration/type collection, per-function dependency digests, global
+  effect/mutation validation and codec validation still run on every request, and
+  every decoded declaration/catalog reference is remapped through C1R or treated
+  as a miss. A fresh error is never replaced by a previous pass. Symbol indexes,
+  interfaces and resolved declaration tables are still never written.
 - **Failed checks are never stored.** A verdict entry is written only after a
   complete, error-free `check-project`; a type, privacy, import or deleted-file
   error can never inherit an earlier success. The verdict key covers all loaded
@@ -109,6 +113,50 @@ $ mylang check-project app/main.my --explain-invalidation --report --cache-dir=.
 {"version":"invalidation-report-v1","hits":6,"misses":3,"queries":[{"stage":"load_source","status":"miss","key":"...","first_changed":"module:main"},{"stage":"resolve_interface","status":"hit","key":"..."},{"stage":"check_body","status":"miss","key":"...","first_changed":"module:main::main"}]}
 {"version":"frontend-cache-v1","syntax_hits":2,"syntax_misses":0,...,"stages":{"load_source":{"hits":1,"misses":0},"lex_parse":{"hits":1,"misses":0},"resolve_interface":{"hits":1,"misses":0}}}
 ```
+
+## Persistent checked-body store
+
+Ordinary one-shot `check`, project checking, `build`, `run` and native-test
+preparation use the same checked-body query path. The durable store lives under
+`<cache-dir>/semantic/` when `--cache-dir` is given and
+`.mylang-cache/semantic/` otherwise; it is one contract-namespaced directory of
+versioned `semantic-cache-v1` files. Each file contains one stable declaration
+key, the dependency context, the checked contract digest, the owned relocatable
+`typed.Function`/node/statement tree, referenced stable identities, source
+region/body bytes, the body-local binding-warning notes (code, severity, span and
+message), a payload length and an XxHash checksum. No pointer, allocator
+capacity, catalog ordinal or process address is written. The fresh binding pass
+still relocates and emits those warnings from the copied locals, so persisted
+notes never duplicate a diagnostic in output.
+
+A hit requires all of the following before a body is admitted: format version,
+compiler/effects/runtime-ABI/flags contract fingerprint, mutation-contract
+version, stable declaration key, dependency context, checksum, bounded lengths,
+reference ordinals and source ranges. Decoding does not integrate the body:
+`semantic_cache.Session.lookup` still remaps old `FunctionId` and record ordinals
+through the fresh catalog, verifies that the declaration region is byte-identical
+at its new location, and treats any missing or ambiguous remap or failed
+relocation as a fresh check. The fresh project's effect, mutation, codec and
+binding-warning passes always run over the copied body, so a replayed body cannot
+carry an obsolete global verdict and warning locations relocate with the source.
+
+```console
+$ mylang check app/main.my --cache-dir=.mylang-cache/demo --report
+{"version":"work-report-v1","command":"check","reused":false,...,"checked_bodies":{"status":"miss","performed":3,"reused":0},...}
+$ mylang check app/main.my --cache-dir=.mylang-cache/demo --report
+{"version":"work-report-v1","command":"check","reused":true,...,"checked_bodies":{"status":"hit","performed":0,"reused":3},...}
+```
+
+Publication stages the complete image in a same-directory `.tmp` file, flushes
+and syncs it, and renames it over the stable key, so readers observe the previous
+complete file or the new one, never a partial image. Concurrent publishers may
+race on the same key; a loser only costs a later miss. Each contract namespace
+retains at most 128 MiB and 65,536 entry files by default; a larger single body is
+bypassed, and after each successful store the directory is trimmed
+oldest-mtime-first. Truncated, oversized, damaged, foreign-version or
+contract-incompatible files are plain misses and are re-derived. `--no-cache`
+performs no durable reads or writes and preserves the same acceptance and
+diagnostics.
 
 ## Syntax cache
 
@@ -161,7 +209,9 @@ $ printf 'check\ncheck\nclear\ncheck\nquit\n' | mylang check-session examples/mo
 ## Function body cache
 
 When the verdict cache misses because a module changed, the checked bodies of
-functions that did not change can still be reused. Reuse is conservative and
+functions that did not change can be reused. The in-process `check-session` path
+uses this cache directly; ordinary one-shot commands use the durable store above
+and hydrate the same cache only from validated entries. Reuse is conservative and
 independently owned: a snapshot carries its own spans, nodes, statements and
 locals, relocated into the current source, and any relocation that cannot be
 validated falls back to checking fresh rather than trusting a stale reference.

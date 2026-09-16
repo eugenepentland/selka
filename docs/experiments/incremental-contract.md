@@ -91,11 +91,34 @@ contract fingerprint = SHA256(compiler_identity, bootstrap-v1, target, runtime-a
 ```
 
 The fingerprint is folded into the persistent syntax key, the whole-program
-verdict key, the checked-function-body digest, the generic-specialization key and
-the native object identity. Changing any dimension invalidates those entries even
-when every source byte is identical. The persistent frontend cache also keeps its
-existing compiler-identity partition; `runtime_abi` and `flags` are explicit so a
-future runtime ABI or flag change cannot silently reuse an older entry.
+verdict key, the durable `semantic-cache-v1` checked-body key and header, the
+generic-specialization key and the native object identity. The checked-body store
+also embeds the M1/M2 mutation-contract version. Changing any dimension
+invalidates those entries even when every source byte is identical. The
+persistent frontend cache also keeps its existing compiler-identity partition;
+`runtime_abi` and `flags` are explicit so a future runtime ABI or flag change
+cannot silently reuse an older entry.
+
+### Durable checked-body entries
+
+C2 persists one ordinary function body per `semantic-cache-v1` file. The header
+repeats the format version, cache-contract fingerprint, mutation-contract version,
+stable declaration key, dependency context, entry count, payload length and
+checksum. The payload contains the owned relocatable `typed.Function` tree, node
+and statement slices, checked-contract digest, stable referenced function/record
+identities, the source region/body bytes and the derived body-local
+binding-warning notes. The fresh binding pass still relocates and re-emits those
+warnings from the copied locals rather than replaying the notes, so relocation
+and cold-check diagnostics stay identical. It never contains pointers, allocator
+capacity or runtime catalog ordinals.
+
+A decode is admitted only after every field, range, tag, ordinal and declared
+length validates. C1R then remaps stable identities into the fresh catalog;
+missing or ambiguous remapping is a miss. Only successful checks publish, using a
+same-directory temporary file, flush/sync and atomic rename. Damaged, truncated,
+oversized, foreign-version and contract-incompatible files are discarded and
+re-derived; `--no-cache` performs no durable reads or writes. The store is bounded
+by total bytes and entry count and evicts oldest-mtime-first after publication.
 
 ## Invalidation observability
 

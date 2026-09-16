@@ -197,21 +197,25 @@ fn dispatch(process: std.process.Init) !u8 {
 fn run(init: Context, parsed: Parsed) !u8 {
     if (parsed.command == .@"check-session") return checkSession(init, parsed);
     var frontend_cache = openFrontendCache(init, parsed);
+    var semantic_store = openSemanticStore(init, parsed);
     var observation: RunObservation = .{ .executed = executedStages(parsed.command) };
     observation.work.command = @tagName(parsed.command);
     var command_init = init;
     command_init.observation = &observation;
     var with_frontend = parsed;
     with_frontend.frontend = if (frontend_cache) |*cache| cache else null;
+    with_frontend.semantic = if (semantic_store) |*store| store else null;
     const status = runCommand(command_init, with_frontend) catch |err| {
         best_effort: {
             reportMeasured(init, parsed, if (frontend_cache) |*cache| cache else null, &observation) catch break :best_effort;
         }
         if (frontend_cache) |*cache| cache.deinit();
+        if (semantic_store) |*store| store.deinit();
         return err;
     };
     try reportMeasured(init, parsed, if (frontend_cache) |*cache| cache else null, &observation);
     if (frontend_cache) |*cache| cache.deinit();
+    if (semantic_store) |*store| store.deinit();
     return status;
 }
 
@@ -321,11 +325,11 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         return 0;
     }
     const check_start = if (parsed.reporting.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
-    // Parse through the persistent syntax cache, then check through a
-    // zero-retention semantic cache so the real `checkFunction` execution-site
-    // count is observed. No checked body is reused for one-shot commands.
+    // Parse through the persistent syntax cache, then check through the same
+    // checked-body query path used by project commands. Reuse is recorded at the
+    // copy site; `--no-cache` keeps a zero-retention counting cache.
     const disk_before: usize = if (parsed.frontend) |opened| opened.statistics.syntax.hits else 0;
-    var counting = language.semantic_cache.Cache.init(allocator, 0);
+    var counting = try openSemanticCache(init, parsed);
     defer counting.deinit();
     compilation.parseCached(parsed.frontend) catch |err| switch (err) {
         error.SourceError => {
@@ -554,6 +558,9 @@ const Parsed = struct {
     /// Persistent frontend cache opened by `run` for commands that reuse frontend
     /// work; null for commands (or sessions) that do not.
     frontend: ?*language.frontend_cache.Cache = null,
+    /// Persistent checked-body store opened by `run`. It shares the existing
+    /// `--cache-dir` root and is null under `--no-cache`.
+    semantic: ?*language.semantic_cache.Store = null,
 };
 fn parseArgs(allocator: std.mem.Allocator, args: []const []const u8) ArgError!Parsed {
     if (args.len < 2) return error.Usage;
@@ -848,12 +855,10 @@ const ModuleFiles = struct {
     }
 };
 fn listModules(init: Context, parsed: Parsed) !u8 {
-    // A one-shot command has no persistent checked-body cache (C2 is not
-    // implemented yet), but `sema` only counts checked bodies through a cache.
-    // A zero-retention cache performs no reuse and records the real count at the
-    // `checkFunction` execution site. It is replaced here, never derived from a
-    // fingerprint comparison.
-    var functions = language.semantic_cache.Cache.init(init.gpa, 0);
+    // C2 shares the one checked-body query path with the frontend cache. The
+    // cache hydrates only validated durable entries and records reuse at the
+    // actual `checkFunction`/copy site; `--no-cache` gets zero retention.
+    var functions = try openSemanticCache(init, parsed);
     defer functions.deinit();
     const status = try listModulesWithCache(init, parsed, null, null, &functions);
     recordSemanticBypass(init, &functions, null);
@@ -1745,13 +1750,52 @@ fn validEntryBasename(basename: []const u8) bool {
 /// needs: compiler identity, bootstrap language, target, effects-v3, runtime ABI,
 /// relevant flags and the mutation-contract version. Persistence itself is C2;
 /// this fingerprint only partitions retained bodies inside the session.
-fn semanticCacheContract(init: Context) ![]const u8 {
+fn semanticCacheContractValue(init: Context) !language.semantic_cache.Contract {
     const allocator = init.arena.allocator();
     var contract = language.semantic_cache.Contract.default;
     const compiler_hex = std.fmt.bytesToHex(build_identity, .lower);
     contract.compiler_identity = try allocator.dupe(u8, &compiler_hex);
     contract.flags = "";
+    return contract;
+}
+
+fn semanticCacheContract(init: Context) ![]const u8 {
+    const allocator = init.arena.allocator();
+    const contract = try semanticCacheContractValue(init);
     return contract.fingerprint(allocator);
+}
+
+/// Resolve the durable checked-body store root from the same shared cache-root
+/// option as the frontend cache. `--no-cache` returns null, an explicit
+/// `--cache-dir=DIR` nests under `DIR/semantic`, and the default is the
+/// per-project `.mylang-cache/semantic` leaf.
+fn semanticRoot(init: Context, parsed: Parsed) ?[]const u8 {
+    if (parsed.no_cache) return null;
+    const default_directory = language.semantic_cache.default_store_directory;
+    const base = parsed.cache_dir orelse default_directory;
+    if (std.mem.eql(u8, base, default_directory)) return default_directory;
+    return std.fs.path.join(init.gpa, &.{ base, "semantic" }) catch null;
+}
+
+/// Open the durable checked-body store on demand. A missing or unwritable
+/// directory only disables reuse; a host command is never failed by caching.
+fn openSemanticStore(init: Context, parsed: Parsed) ?language.semantic_cache.Store {
+    const root = semanticRoot(init, parsed) orelse return null;
+    const contract = semanticCacheContractValue(init) catch return null;
+    var store = language.semantic_cache.Store.init(init.gpa, init.io, root, contract, language.semantic_cache.mutation_contract_version);
+    store.root.owned = root.ptr != language.semantic_cache.default_store_directory.ptr;
+    return store;
+}
+
+/// Open the per-invocation semantic cache. `--no-cache` gets a zero-retention
+/// counting cache so it never reads or writes the durable store. A persistent
+/// store is attached before `begin`, which hydrates only exact key/context hits.
+fn openSemanticCache(init: Context, parsed: Parsed) !language.semantic_cache.Cache {
+    if (parsed.semantic == null) return language.semantic_cache.Cache.init(init.gpa, 0);
+    const contract = try semanticCacheContract(init);
+    var cache = language.semantic_cache.Cache.initWithContract(init.gpa, 16 * 1024 * 1024, contract);
+    cache.context.persistent = parsed.semantic;
+    return cache;
 }
 
 const SessionCache = struct {
