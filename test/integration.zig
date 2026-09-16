@@ -230,6 +230,7 @@ fn c2FileLength(path: []const u8) !u64 {
 
 // C2 is not yet registered in SPEC.md; this block is the regression evidence for
 // ordinary checked-body persistence and must be reported with its SPEC patch.
+// spec: SEMANTIC-CACHE-8
 test "C2 ordinary body reuse crosses processes and relocates warnings" {
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();

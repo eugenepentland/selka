@@ -397,6 +397,11 @@
       "summary": "Native traps carry bounded structured index/length and operand detail rendered identically in text and JSON, transported from the child as one versioned stderr record.",
       "doc": "docs/io.md#runtime-diagnostics"
     },
+    "persistent-checked-bodies": {
+      "kind": "tooling",
+      "summary": "Ordinary checked bodies persist across compiler processes as versioned, validated semantic-cache-v1 entries with atomic publication, remap-or-miss decoding, contract isolation and --no-cache correctness.",
+      "doc": "docs/tooling/caches.md#persistent-checked-body-store"
+    },
     "selected-test-providers": {
       "kind": "tooling",
       "summary": "Native test preparation validates exported declaration contracts first and fully checks only the selected replacement provider graph; replacements must satisfy every public contract they replace, and receipts bind contract, provider and source identities.",
