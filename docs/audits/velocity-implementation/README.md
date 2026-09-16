@@ -110,7 +110,7 @@ Source: [development-velocity-c2-p1-review-2026-09-16.md](../development-velocit
 
 | ID | Finding | Owner branch | Worktree | Base | Status |
 | --- | --- | --- | --- | --- | --- |
-| R1/R2 | Bind receipt reuse to the selected dependency closure; memoize preparation/executor per selected provider graph | `codex/velocity-r12` | `velocity-r12` | `6a99ef4b` | in progress |
+| R1/R2 | Bind receipt reuse to the selected dependency closure; memoize preparation/executor per selected provider graph | `codex/velocity-r12` | `velocity-r12` | `6a99ef4b` | **done** `1ed663b9`, merged `720d9a7d` |
 | R3 | Canonical declaration-level type descriptors for discovery and provider comparison | `codex/velocity-r3` | `velocity-r3` | `6a99ef4b` | **done** `bc462aa6` (manifest `interface-contracts-v2`) |
 | R4 | Amortize persistent-cache inventory/eviction (quadratic → linear) | `codex/velocity-r4` | `velocity-r4` | `6a99ef4b` | in progress |
 | HASH | Declared mutation positions + return-origin in the public API fingerprint | `codex/velocity-hash` | `velocity-hash` | `6a99ef4b` | in progress |
