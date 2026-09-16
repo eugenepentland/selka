@@ -21,6 +21,10 @@ const eIterationShadow = "iteration binding shadows an active declaration";
 const eWildcardArm = "E_WILDCARD_ARM";
 const eConversionBody = "E_CONVERSION_BODY";
 const eByteConversion = "E_BYTES_CONVERSION";
+const sem_copy = @import("semantic_copy.zig");
+const generic_specializations = @import("generic_specializations.zig");
+const semantic_key = @import("semantic_key.zig");
+const sem_entry = @import("semantic_entry.zig");
 /// Managed collection methods whose only argument has the receiver's own sequence type.
 /// Recognize `case _`, the contextual arm that stands for every remaining variant.
 fn wildcard(src: source.Source, arm: anytype) bool {
@@ -129,6 +133,18 @@ const Checker = struct {
     resolved_nodes: std.ArrayList(usize) = .empty,
     instance_keys: std.ArrayList(instances.Key) = .empty,
     generic_registry: instances.Registry = .{},
+    /// C3 concrete-specialization reuse: stable declaration facts and the
+    /// canonical fingerprint -> fresh instance-index map. Empty when no
+    /// semantic cache is attached.
+    prepared: ?*const semantic_key.Prepared = null,
+    spec_build: []const u8 = "",
+    spec_fingerprints: std.ArrayList(?[]const u8) = .empty,
+    spec_ranges: std.ArrayList(sem_copy.Range) = .empty,
+    spec_index: std.StringHashMapUnmanaged(typed.FunctionId) = .empty,
+    spec_fresh: std.ArrayList(usize) = .empty,
+    ordinary_instance_by_key: std.StringHashMapUnmanaged(usize) = .empty,
+    record_by_name: std.StringHashMapUnmanaged(usize) = .empty,
+    initial_record_count: usize = 0,
     ordinary_ids: []?typed.FunctionId,
     ordinary_count: usize = 0,
     current_function: ?typed.FunctionId = null,
@@ -386,8 +402,276 @@ const Checker = struct {
             else => return self.sink.fail("E_GENERIC_LIMIT", span, "generic specialization exceeds instance or type argument budget"),
         };
         const index = self.ordinary_count + @backingInt(instance);
-        if (index == self.instance_keys.items.len) try self.instance_keys.append(self.allocator, (self.generic_registry.get(instance) catch return error.InternalError));
+        if (index == self.instance_keys.items.len) {
+            const owned_key = self.generic_registry.get(instance) catch return error.InternalError;
+            try self.instance_keys.append(self.allocator, owned_key);
+            try self.spec_ranges.append(self.allocator, .{ .nodes = .{ .start = 0, .end = 0 }, .statements = .{ .start = 0, .end = 0 } });
+            const fingerprint = try self.specializationFingerprint(@backingInt(declaration), arguments, lengths);
+            try self.spec_fingerprints.append(self.allocator, fingerprint);
+            if (fingerprint) |canonical| {
+                const entry = try self.spec_index.getOrPut(self.allocator, canonical);
+                entry.value_ptr.* = @fromBackingInt(index);
+            }
+        }
         return @fromBackingInt(index);
+    }
+    /// Canonical `specialization-v1` fingerprint of one fresh instance. Null
+    /// when no semantic cache (and therefore no prepared declaration facts) is
+    /// attached. The template identity, ordered positional descriptors, resolved
+    /// provider contracts, template constraint dependency, declared
+    /// effect/mutation/return-origin contract and build context all participate;
+    /// every boundary is length-prefixed by the key engine.
+    fn specializationFingerprint(self: *Checker, declaration: usize, arguments: []const typed.Type, lengths: []const ?usize) Error!?[]const u8 {
+        const prepared = self.prepared orelse return null;
+        const function = self.syntax.functions[declaration];
+        const descriptors = try self.allocator.alloc([]const u8, arguments.len);
+        for (arguments, 0..) |argument, i| descriptors[i] = try semantic_key.argumentDescriptor(self.allocator, argument, if (i < lengths.len) lengths[i] else null, self.catalog.records);
+        const provider = try semantic_key.providerIdentity(self.allocator, arguments, self.catalog.records);
+        const contract = semantic_key.declaredContractDigest(function.policy.effect_bound, function.signature.mutates);
+        const canonical = try semantic_key.specializationFingerprint(self.allocator, .{
+            .template_identity = prepared.keys[declaration],
+            .arguments = descriptors,
+            .provider = provider,
+            .constraints = prepared.contexts[declaration][0..],
+            .contracts = contract[0..],
+            .build = self.spec_build,
+        });
+        return canonical;
+    }
+    /// Replay one checked concrete specialization when every retained reference
+    /// remaps to a fresh identity. A missing or ambiguous reference, an
+    /// unvalidated fingerprint, a changed defining region or a reference to a
+    /// specialization that the fresh run has not instantiated is a conservative
+    /// miss; an unvalidated specialization is never reused.
+    fn lookupSpecialization(self: *Checker, reuse: *generic_specializations.Session, allocator: std.mem.Allocator, index: usize, nodes: *std.ArrayList(typed.Node), statements: *std.ArrayList(typed.Statement)) Error!?typed.Function {
+        if (index >= self.spec_fingerprints.items.len) return null;
+        const fingerprint = self.spec_fingerprints.items[index] orelse return null;
+        const prepared = self.prepared orelse {
+            reuse.noteMiss(.context_changed);
+            return null;
+        };
+        const instance = self.instance_keys.items[index];
+        const declaration = @backingInt(instance.declaration);
+        const context = prepared.contexts[declaration];
+        const entry = (try reuse.open(fingerprint, context)) orelse return null;
+        if (!std.mem.eql(u8, entry.payload.identity.fingerprint, fingerprint)) {
+            reuse.noteMiss(.stale_identity);
+            return null;
+        }
+        if (!std.mem.eql(u8, entry.payload.identity.template, prepared.keys[declaration])) {
+            reuse.noteMiss(.stale_identity);
+            return null;
+        }
+        if (!std.mem.eql(u8, entry.payload.identity.context[0..], context[0..])) {
+            reuse.noteMiss(.context_changed);
+            return null;
+        }
+        const fresh_region = prepared.regions[declaration];
+        const region_len = entry.payload.source.region.end - entry.payload.source.region.start;
+        if (region_len != fresh_region.end - fresh_region.start) {
+            reuse.noteMiss(.region_length_changed);
+            return null;
+        }
+        if (!std.mem.eql(u8, entry.payload.source.region_bytes, self.src.bytes[fresh_region.start..fresh_region.end])) {
+            reuse.noteMiss(.region_bytes_changed);
+            return null;
+        }
+        const fresh_body = prepared.bodies[declaration];
+        const body_len = entry.payload.source.body.end - entry.payload.source.body.start;
+        if (body_len != fresh_body.end - fresh_body.start) {
+            reuse.noteMiss(.region_length_changed);
+            return null;
+        }
+        if (!std.mem.eql(u8, entry.payload.source.body_bytes, self.src.bytes[fresh_body.start..fresh_body.end])) {
+            reuse.noteMiss(.region_bytes_changed);
+            return null;
+        }
+        const functions = try allocator.alloc(?typed.FunctionId, entry.payload.counts.old_function_count);
+        @memset(functions, null);
+        for (entry.payload.refs.function_refs) |reference| {
+            const id = @backingInt(reference.id);
+            if (id >= functions.len) {
+                reuse.noteMiss(.relocation_failed);
+                return null;
+            }
+            switch (reference.kind) {
+                .ordinary => {
+                    const fresh = self.ordinary_instance_by_key.get(reference.key) orelse {
+                        reuse.noteMiss(.missing_ordinary);
+                        return null;
+                    };
+                    if (fresh == std.math.maxInt(usize)) {
+                        reuse.noteMiss(.ambiguous_ordinary);
+                        return null;
+                    }
+                    functions[id] = @fromBackingInt(fresh);
+                },
+                .specialization => {
+                    const fresh = self.spec_index.get(reference.key) orelse {
+                        reuse.noteMiss(.missing_specialization);
+                        return null;
+                    };
+                    functions[id] = fresh;
+                },
+            }
+        }
+        const record_remaps = try allocator.alloc(?typed.Type, entry.payload.counts.old_record_count);
+        @memset(record_remaps, null);
+        for (entry.payload.refs.record_refs) |reference| {
+            if (reference.index >= self.initial_record_count) {
+                reuse.noteMiss(.interned_record);
+                return null;
+            }
+            const fresh = self.record_by_name.get(reference.key) orelse {
+                reuse.noteMiss(.missing_record);
+                return null;
+            };
+            if (fresh == std.math.maxInt(usize)) {
+                reuse.noteMiss(.ambiguous_record);
+                return null;
+            }
+            record_remaps[reference.index] = @fromBackingInt(fresh + typed.Type.record_base);
+        }
+        var segment = [_]sem_copy.Segment{.{ .before = entry.payload.source.region, .after = fresh_region.start }};
+        const mapper: sem_copy.Mapper = .{
+            .segments = &segment,
+            .before = entry.payload.body.range,
+            .after = .{
+                .nodes = .{ .start = nodes.items.len, .end = nodes.items.len + entry.payload.body.nodes.len },
+                .statements = .{ .start = statements.items.len, .end = statements.items.len + entry.payload.body.statements.len },
+            },
+            .functions = functions,
+            .records = record_remaps,
+        };
+        const function = mapper.copy(allocator, typed.Function, entry.payload.body.function) catch |err| return specializationRelocationMiss(reuse, err);
+        const copied_nodes = mapper.copy(allocator, []const typed.Node, entry.payload.body.nodes) catch |err| return specializationRelocationMiss(reuse, err);
+        const copied_statements = mapper.copy(allocator, []const typed.Statement, entry.payload.body.statements) catch |err| return specializationRelocationMiss(reuse, err);
+        try nodes.appendSlice(allocator, copied_nodes);
+        try statements.appendSlice(allocator, copied_statements);
+        reuse.noteReused();
+        return function;
+    }
+    fn specializationRelocationMiss(reuse: *generic_specializations.Session, err: sem_copy.Error) error{ OutOfMemory, InternalError }!?typed.Function {
+        return switch (err) {
+            error.InvalidRelocation => blk: {
+                reuse.noteMiss(.relocation_failed);
+                break :blk null;
+            },
+            error.OutOfMemory => error.OutOfMemory,
+            error.InternalError => error.InternalError,
+        };
+    }
+    /// Capture every specialization freshly checked by this request and publish
+    /// them after the whole graph passed. A tree that references a synthesized
+    /// lambda, an interned catalog record or an unresolvable identity is a
+    /// conservative miss, never a partial entry.
+    fn publishSpecializations(self: *Checker, reuse: *generic_specializations.Session, allocator: std.mem.Allocator, program: typed.Program) Error!void {
+        // Zero retention must perform the checks but publish nothing, so
+        // `--no-cache` never reads or writes a specialization entry.
+        if (!reuse.backend.enabled) return;
+        const prepared = self.prepared orelse return;
+        for (self.spec_fresh.items) |index| {
+            if (index >= self.spec_fingerprints.items.len) continue;
+            const fingerprint = self.spec_fingerprints.items[index] orelse continue;
+            const instance = self.instance_keys.items[index];
+            const declaration = @backingInt(instance.declaration);
+            if (declaration >= prepared.keys.len) continue;
+            const range = self.spec_ranges.items[index];
+            if (range.nodes.end > program.nodes.len or range.statements.end > program.statements.len) continue;
+            var refs = sem_copy.RefSet.init(allocator);
+            defer refs.deinit();
+            sem_copy.collectRefs(allocator, program.functions[index], program.nodes[range.nodes.start..range.nodes.end], program.statements[range.statements.start..range.statements.end], &refs) catch continue;
+            const function_refs = allocator.alloc(sem_entry.SpecializationFunctionRef, refs.functions.count()) catch return error.OutOfMemory;
+            defer allocator.free(function_refs);
+            var iterator = refs.functions.keyIterator();
+            var function_count: usize = 0;
+            var representable = true;
+            while (iterator.next()) |id| {
+                const old = id.*;
+                if (old < prepared.ordinary_ast.len) {
+                    function_refs[function_count] = .{ .kind = .ordinary, .id = @fromBackingInt(old), .key = prepared.keys[prepared.ordinary_ast[old]] };
+                } else if (old < self.ordinary_count) {
+                    representable = false;
+                    break;
+                } else {
+                    if (old >= self.spec_fingerprints.items.len) {
+                        representable = false;
+                        break;
+                    }
+                    const canonical = self.spec_fingerprints.items[old] orelse {
+                        representable = false;
+                        break;
+                    };
+                    function_refs[function_count] = .{ .kind = .specialization, .id = @fromBackingInt(old), .key = canonical };
+                }
+                function_count += 1;
+            }
+            if (!representable) {
+                reuse.noteMiss(.lambda_reference);
+                continue;
+            }
+            const record_refs = allocator.alloc(sem_entry.RecordRef, refs.records.count()) catch return error.OutOfMemory;
+            defer allocator.free(record_refs);
+            var record_iterator = refs.records.keyIterator();
+            var record_count: usize = 0;
+            var stable_records = true;
+            while (record_iterator.next()) |record_index| {
+                if (record_index.* >= self.initial_record_count or record_index.* >= program.records.len) {
+                    stable_records = false;
+                    break;
+                }
+                record_refs[record_count] = .{ .index = record_index.*, .key = program.records[record_index.*].name };
+                record_count += 1;
+            }
+            if (!stable_records) {
+                reuse.noteMiss(.interned_record);
+                continue;
+            }
+            const descriptors = allocator.alloc([]const u8, instance.arguments.len) catch return error.OutOfMemory;
+            defer allocator.free(descriptors);
+            for (instance.arguments, 0..) |argument, argument_index| {
+                descriptors[argument_index] = semantic_key.argumentDescriptor(allocator, argument, instance.length(argument_index), program.records) catch return error.OutOfMemory;
+            }
+            const region = prepared.regions[declaration];
+            const body = prepared.bodies[declaration];
+            // The retained entry owns an arena backed by the cache's allocator,
+            // never this per-request compilation arena: the cache outlives the
+            // request that produced the body.
+            const entry = sem_entry.createSpecialization(reuse.allocator, program, index, range, .{
+                .identity = .{
+                    .key = generic_specializations.Session.stableKey(allocator, fingerprint) catch return error.OutOfMemory,
+                    .fingerprint = fingerprint,
+                    .template = prepared.keys[declaration],
+                    .context = prepared.contexts[declaration],
+                    .arguments = descriptors,
+                    .lengths = instance.lengths,
+                },
+                .source = .{
+                    .old_len = self.src.bytes.len,
+                    .region = region,
+                    .body = body,
+                    .region_bytes = self.src.bytes[region.start..region.end],
+                    .body_bytes = self.src.bytes[body.start..body.end],
+                },
+                .function_refs = function_refs[0..function_count],
+                .record_refs = record_refs[0..record_count],
+                .old_function_count = self.instance_keys.items.len,
+                .old_record_count = program.records.len,
+            }) catch |err| switch (err) {
+                error.OutOfMemory => return error.OutOfMemory,
+                error.InternalError => continue,
+            };
+            // UNTESTED-ERROR: this branch only releases the just-built entry
+            // when the cache-owned append allocation fails; the cache-wide
+            // FailingAllocator scenario covers allocation failure at the
+            // checkWithCache boundary, not this release path.
+            reuse.record(entry) catch |err| {
+                var released = entry;
+                released.deinit();
+                return err;
+            };
+        }
+        try reuse.publish();
     }
     fn inferArguments(self: *Checker, signature: @FieldType(ast.Function, "signature"), call: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span, arguments: []typed.Type, lengths: []?usize) Error!void {
         const inference = @import("generic_inference.zig");
@@ -3467,13 +3751,108 @@ fn checkGenericContracts(src: source.Source, program: ast.Program, sink: *diagno
 /// a prepared ordinary session. Kept separate so `checkCached` stays readable.
 fn openSymbolicSession(cache: ?*semantic_cache.Cache, session: *?semantic_cache.Session, src: source.Source, project_mode: bool) Error!?generic_cache.Session {
     const c = cache orelse return null;
-    const queries = session.* orelse return null;
-    const opened = try c.symbolicSession(src, &queries.prepared, if (project_mode) "project" else "unit");
-    return opened;
+    if (session.*) |*queries| {
+        const opened = try c.symbolicSession(src, &queries.prepared, if (project_mode) "project" else "unit");
+        return opened;
+    }
+    return null;
 }
 /// Release an optional symbolic session without branching in `checkCached`.
 fn deinitSymbolic(session: *?generic_cache.Session) void {
     if (session.*) |*reuse| reuse.deinit();
+}
+/// Open the C3 concrete-specialization session beside the ordinary one. The
+/// prepared declaration facts outlive the request through the caller's
+/// `semantic_cache.Session`.
+fn openSpecializationSession(cache: ?*semantic_cache.Cache, session: *?semantic_cache.Session) Error!?generic_specializations.Session {
+    const c = cache orelse return null;
+    _ = c;
+    if (session.*) |*queries| {
+        const opened = try queries.cache.specializationSession(&queries.prepared);
+        return opened;
+    }
+    return null;
+}
+/// Release an optional specialization session without branching in `checkCached`.
+fn deinitSpecialization(session: *?generic_specializations.Session) void {
+    if (session.*) |*reuse| reuse.deinit();
+}
+/// Populate the per-request specialization identity maps and prepared facts.
+fn initSpecializationReuse(
+    checker: *Checker,
+    allocator: std.mem.Allocator,
+    catalog_records: []const typed.Record,
+    session: *?semantic_cache.Session,
+    spec_session: *?generic_specializations.Session,
+) Error!void {
+    checker.prepared = if (session.*) |*queries| &queries.prepared else null;
+    checker.spec_build = if (spec_session.*) |*reuse| reuse.backend.build else "";
+    checker.initial_record_count = catalog_records.len;
+    if (checker.prepared) |prepared| for (prepared.ordinary_ast, 0..) |ast_index, instance| {
+        const entry = try checker.ordinary_instance_by_key.getOrPut(allocator, prepared.keys[ast_index]);
+        if (entry.found_existing) entry.value_ptr.* = std.math.maxInt(usize) else entry.value_ptr.* = instance;
+    };
+    for (catalog_records, 0..) |record, index| {
+        const entry = try checker.record_by_name.getOrPut(allocator, record.name);
+        if (entry.found_existing) entry.value_ptr.* = std.math.maxInt(usize) else entry.value_ptr.* = index;
+    }
+}
+/// Look up one checked body, preferring the ordinary store and falling back to
+/// the concrete-specialization store. Counts performed/reused work at the same
+/// site so `work-report-v1` never infers reuse from a fingerprint.
+fn reuseBody(
+    checker: *Checker,
+    session: *?semantic_cache.Session,
+    spec_session: *?generic_specializations.Session,
+    cache: ?*semantic_cache.Cache,
+    allocator: std.mem.Allocator,
+    i: usize,
+) Error!?typed.Function {
+    var function = if (session.*) |*queries| (try queries.lookup(allocator, i, &checker.nodes, &checker.statements)) else null;
+    if (function == null and i >= checker.ordinary_count) {
+        if (spec_session.*) |*reuse| function = try checker.lookupSpecialization(reuse, allocator, i, &checker.nodes, &checker.statements);
+    }
+    if (function == null) {
+        if (cache) |c| c.statistics.checked += 1;
+        if (i >= checker.ordinary_count) if (spec_session.*) |*reuse| reuse.noteChecked();
+    } else if (i >= checker.ordinary_count) {
+        if (cache) |c| c.statistics.reused += 1;
+    }
+    return function;
+}
+/// One body's fresh interval recording inputs.
+const RangeRecord = struct {
+    checker: *Checker,
+    session: *?semantic_cache.Session,
+    allocator: std.mem.Allocator,
+    index: usize,
+    start_nodes: usize,
+    start_statements: usize,
+    reused: bool,
+};
+/// Record the fresh node/statement interval for one body and remember a fresh
+/// specialization for publication.
+fn recordBodyRange(record: RangeRecord) Error!void {
+    const checker = record.checker;
+    const range: sem_copy.Range = .{
+        .nodes = .{ .start = record.start_nodes, .end = checker.nodes.items.len },
+        .statements = .{ .start = record.start_statements, .end = checker.statements.items.len },
+    };
+    if (record.session.*) |*queries| {
+        if (record.index < queries.ranges.len) queries.ranges[record.index] = range;
+    }
+    if (record.index < checker.spec_ranges.items.len) checker.spec_ranges.items[record.index] = range;
+    if (!record.reused and record.index >= checker.ordinary_count) try checker.spec_fresh.append(record.allocator, record.index);
+}
+/// Publish freshly checked specializations only after every cross-function pass
+/// succeeded.
+fn publishSpecializationSession(
+    spec_session: *?generic_specializations.Session,
+    checker: *Checker,
+    allocator: std.mem.Allocator,
+    program: typed.Program,
+) Error!void {
+    if (spec_session.*) |*reuse| try checker.publishSpecializations(reuse, allocator, program);
 }
 /// Type-check linked module names and validate ownership, effects, and domain codecs.
 pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!typed.Program {
@@ -3510,6 +3889,8 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     var session = if (cache) |c| try c.begin(allocator, src, program, catalog.records) else null;
     var symbolic = try openSymbolicSession(cache, &session, src, module_names != null);
     defer deinitSymbolic(&symbolic);
+    var spec_session = try openSpecializationSession(cache, &session);
+    defer deinitSpecialization(&spec_session);
     var failed = false;
     checkGenericContracts(src, program, sink, catalog, &symbolic) catch |err| switch (err) {
         error.SourceError => failed = true,
@@ -3536,6 +3917,9 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
         .lambda_captures = lambda_captures,
     };
     defer allocator.free(checker.managed_types);
+    // C3 reuse: prepared declaration facts and fresh identity maps are
+    // per-request; only populated when a semantic cache is attached.
+    try initSpecializationReuse(&checker, allocator, catalog.records, &session, &spec_session);
     for (program.functions, 0..) |function, i| {
         const name = if (module_names) |names| try names.functionDeclaration(function.policy.owner, function.name) else try functionName(allocator, src, function.policy.owner, function.name);
         if (checker.catalog.names.contains(name) or checker.catalog.templates.names.contains(name)) return sink.fail("E_DUPLICATE_NAME", function.name, "function name conflicts with a declared type");
@@ -3552,10 +3936,16 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
         if (function.signature.type_parameters.len == 0) {
             ordinary_ids[i] = @fromBackingInt(checker.instance_keys.items.len);
             try checker.instance_keys.append(allocator, .{ .declaration = @fromBackingInt(i), .arguments = &.{} });
+            try checker.spec_fingerprints.append(allocator, null);
+            try checker.spec_ranges.append(allocator, .{ .nodes = .{ .start = 0, .end = 0 }, .statements = .{ .start = 0, .end = 0 } });
         }
     }
     checker.lambda_start = checker.instance_keys.items.len;
-    for (program.lambdas) |_| try checker.instance_keys.append(allocator, .{ .declaration = @fromBackingInt(0), .arguments = &.{} });
+    for (program.lambdas) |_| {
+        try checker.instance_keys.append(allocator, .{ .declaration = @fromBackingInt(0), .arguments = &.{} });
+        try checker.spec_fingerprints.append(allocator, null);
+        try checker.spec_ranges.append(allocator, .{ .nodes = .{ .start = 0, .end = 0 }, .statements = .{ .start = 0, .end = 0 } });
+    }
     const main_name = if (module_names) |names| try std.fmt.allocPrint(allocator, "{s}::main", .{names.index.project.modules.items[0].name}) else "main";
     checker.ordinary_count = checker.instance_keys.items.len;
     const main_declaration = checker.functions.get(main_name) orelse {
@@ -3581,10 +3971,7 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     while (i < checker.instance_keys.items.len and (!contracts_failed or i < checker.ordinary_count)) : (i += 1) {
         const start_nodes = checker.nodes.items.len;
         const start_statements = checker.statements.items.len;
-        const reused = if (session) |*queries| try queries.lookup(allocator, i, &checker.nodes, &checker.statements) else null;
-        if (reused == null) if (cache) |c| {
-            c.statistics.checked += 1;
-        };
+        const reused = try reuseBody(&checker, &session, &spec_session, cache, allocator, i);
         const function = reused orelse checker.checkFunction(i) catch |err| switch (err) {
             error.SourceError => {
                 failed = true;
@@ -3592,12 +3979,15 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
             },
             else => return err,
         };
-        if (session) |*queries| if (i < queries.ranges.len) {
-            queries.ranges[i] = .{
-                .nodes = .{ .start = start_nodes, .end = checker.nodes.items.len },
-                .statements = .{ .start = start_statements, .end = checker.statements.items.len },
-            };
-        };
+        try recordBodyRange(.{
+            .checker = &checker,
+            .session = &session,
+            .allocator = allocator,
+            .index = i,
+            .start_nodes = start_nodes,
+            .start_statements = start_statements,
+            .reused = reused != null,
+        });
         try checked_functions.append(allocator, function);
     }
     // Failed functions leave no executable placeholders. Cross-function passes
@@ -3621,6 +4011,7 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     try @import("domain_codecs.zig").check(allocator, src, program.types.domains, checker.catalog, .{ .items = functions, .names = executable_names }, sink);
     try warnBindings(allocator, functions, sink);
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
+    try publishSpecializationSession(&spec_session, &checker, allocator, checked);
     if (session) |*queries| try queries.remember(checked);
     return checked;
 }

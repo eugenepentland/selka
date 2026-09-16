@@ -232,6 +232,33 @@ pub const Store = struct {
         return .{ .arena = arena, .payload = payload };
     }
 
+    /// Decode one checked concrete-specialization entry. Uses the same header,
+    /// checksum and bounds validation as `lookup`; the payload kind, canonical
+    /// fingerprint, ordered descriptors and every function/record reference are
+    /// validated before the entry is returned. The caller still remaps the
+    /// references against the fresh compilation and treats a missing or
+    /// ambiguous remap as a miss.
+    pub fn lookupSpecialization(self: *Store, allocator: std.mem.Allocator, stable_key: []const u8, context: [32]u8) error{ OutOfMemory, InternalError }!?owned.SpecializationEntry {
+        const payload_bytes = (try self.readPayload(stable_key, context)) orelse return null;
+        defer self.allocator.free(payload_bytes);
+        var arena = std.heap.ArenaAllocator.init(allocator);
+        var accepted = false;
+        defer if (!accepted) arena.deinit();
+        var payload_reader = codec.Reader.init(arena.allocator(), payload_bytes);
+        const payload = payload_reader.read(owned.StoredSpecialization) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => return self.rejectSpecialization(),
+        };
+        if (!payload_reader.done()) return self.rejectSpecialization();
+        if (!owned.validSpecialization(payload, max_declarations, self.limits.max_entry_bytes)) return self.rejectSpecialization();
+        if (!std.mem.eql(u8, payload.identity.key, stable_key)) return self.rejectSpecialization();
+        if (!std.mem.eql(u8, &payload.identity.context, &context)) return self.rejectSpecialization();
+
+        self.statistics.hits += 1;
+        accepted = true;
+        return .{ .arena = arena, .payload = payload };
+    }
+
     /// Read and validate one complete on-disk image, returning an owned copy of
     /// its payload bytes. Header, contract, key, context, length and checksum
     /// are all checked before the caller decodes the payload kind.
@@ -287,6 +314,12 @@ pub const Store = struct {
     }
 
     fn rejectSymbolic(self: *Store) ?owned.SymbolicEntry {
+        self.statistics.damaged += 1;
+        self.statistics.misses += 1;
+        return null;
+    }
+
+    fn rejectSpecialization(self: *Store) ?owned.SpecializationEntry {
         self.statistics.damaged += 1;
         self.statistics.misses += 1;
         return null;
@@ -377,6 +410,20 @@ pub const Store = struct {
         var payload = codec.Writer.init(self.allocator);
         defer payload.deinit();
         payload.write(owned.StoredSymbolic, entry.payload) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+        };
+        return self.publishPayload(entry.payload.identity.key, entry.payload.identity.context, payload.bytes.items);
+    }
+
+    /// Publish one checked concrete-specialization entry under its own kind.
+    pub fn putSpecialization(self: *Store, entry: *const owned.SpecializationEntry) error{OutOfMemory}!bool {
+        if (!owned.validSpecialization(entry.payload, max_declarations, self.limits.max_entry_bytes)) {
+            self.statistics.bypassed += 1;
+            return false;
+        }
+        var payload = codec.Writer.init(self.allocator);
+        defer payload.deinit();
+        payload.write(owned.StoredSpecialization, entry.payload) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
         };
         return self.publishPayload(entry.payload.identity.key, entry.payload.identity.context, payload.bytes.items);

@@ -23,7 +23,7 @@ manifest under the `incremental` object of the `project-dependencies-v1` receipt
 | exported interface item | module, kind, owner, canonical name | body edits |
 | type / nominal template | module, kind, canonical name, template marker | body edits |
 | function body | declaration identity plus exact body bytes | untouched bodies |
-| generic specialization | template identity, concrete arguments, provider shape, target ABI, compiler identity | unrelated specializations |
+| generic specialization | template identity, ordered positional type/length descriptors, transitive name-ordered provider contracts, template constraint dependencies, declared effect/mutation/return-origin contracts, build context | unrelated specializations |
 | emitted fragment | symbol identity, fragment kind, normalized emitted bytes | untouched fragments |
 
 The observable interface hash of a declaration (`interface_sha256`) includes only
@@ -100,6 +100,22 @@ persistent frontend cache also keeps its existing compiler-identity partition;
 cannot silently reuse an older entry.
 
 ### Durable checked-body entries
+
+C2 persists one ordinary function body per `semantic-cache-v1` file. C3 adds two
+more payload kinds in the same contract namespace: `symbolic-template-v1` for
+abstract generic templates and `specialization-v1` for concrete specializations.
+The specialization key is canonical over the template identity, the ordered
+positional type/length descriptors, the transitive name-ordered provider
+contracts, the template constraint dependency, the declared
+effect/mutation/return-origin contract and the build context, with every boundary
+length-prefixed. A concrete reuse is admitted only when the defining template's
+declaration region/body bytes are byte-identical, the template dependency context
+matches, and every stored function/record reference remaps to exactly one fresh
+identity; a missing or ambiguous remap, a nested specialization that the fresh
+run has not instantiated, or a synthesized lambda reference is a conservative
+miss. The whole-graph effect and mutation passes are never cached: they rerun from
+the combined fresh and replayed trees on every request, so a changed provider or
+callee body can never inherit a stale transitive verdict.
 
 C2 persists one ordinary function body per `semantic-cache-v1` file. The header
 repeats the format version, cache-contract fingerprint, mutation-contract version,

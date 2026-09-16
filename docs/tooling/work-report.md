@@ -2,7 +2,12 @@
 
 A `symbolic_templates` object reports real checked/reused symbolic-template counts
 alongside the ordinary work stages; a template replay is never inferred from an
-unchanged fingerprint.
+unchanged fingerprint. Concrete specialization bodies are reported through the
+ordinary `checked_bodies` performed/reused split: a replayed concrete
+specialization increments `checked_bodies.reused` and does not increment
+`checked_bodies.performed`, while `instantiated_specializations` still names how
+many specializations the checked program contains. `--no-cache` counts the fresh
+specialization checks it performed and reads or writes no entry.
 
 `work-report-v1` separates **actual work and reuse** from the older reports that
 compare input fingerprints. A comparison `hit` means "the compared input digest
@@ -70,8 +75,8 @@ whose `version` is `work-report-v1`; do not assume a single stderr line.
 | stage | counted where |
 | --- | --- |
 | `parsed_modules` | module bodies lexed and parsed fresh vs returned by the in-process or persistent syntax lookup |
-| `checked_bodies` | `sema` body-check iterations vs checked-body cache copies |
-| `instantiated_specializations` | concrete specializations present in a fresh checked program |
+| `checked_bodies` | `sema` body-check iterations vs checked-body and concrete-specialization copies |
+| `instantiated_specializations` | concrete specializations present in the checked program; a specialization body replay is an actual `checked_bodies.reused` hit |
 | `lowered_functions` | functions in the retained bytecode program after lowering |
 | `emitted_fragments` | independently linkable QBE units emitted |
 | `links` | native publish/run steps; object-level build reuse is not claimed here |

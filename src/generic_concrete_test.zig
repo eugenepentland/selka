@@ -460,3 +460,57 @@ test "generic concrete enum tables require complete unique nominal keys" {
         \\    return 0
     , "E_DUPLICATE_KEY");
 }
+
+const semantic_key = @import("semantic_key.zig");
+
+// spec-case: SEMANTIC-CACHE-12
+test "canonical specialization keys distinguish every keyed dimension and argument order" {
+    const allocator = t.allocator;
+    const base = try semantic_key.specializationFingerprint(allocator, .{
+        .template_identity = "pkg::render",
+        .arguments = &.{ "T:i64", "L:3" },
+        .provider = "provider-a",
+        .constraints = "constraints-a",
+        .contracts = "contracts-a",
+        .build = "build-a",
+    });
+    defer allocator.free(base);
+    const same = try semantic_key.specializationFingerprint(allocator, .{
+        .template_identity = "pkg::render",
+        .arguments = &.{ "T:i64", "L:3" },
+        .provider = "provider-a",
+        .constraints = "constraints-a",
+        .contracts = "contracts-a",
+        .build = "build-a",
+    });
+    defer allocator.free(same);
+    try t.expectEqualStrings(base, same);
+
+    const changed_inputs = [_]semantic_key.SpecializationInputs{
+        .{ .template_identity = "pkg::other", .arguments = &.{ "T:i64", "L:3" }, .provider = "provider-a", .constraints = "constraints-a", .contracts = "contracts-a", .build = "build-a" },
+        .{ .template_identity = "pkg::render", .arguments = &.{ "T:u8", "L:3" }, .provider = "provider-a", .constraints = "constraints-a", .contracts = "contracts-a", .build = "build-a" },
+        .{ .template_identity = "pkg::render", .arguments = &.{ "T:i64", "L:4" }, .provider = "provider-a", .constraints = "constraints-a", .contracts = "contracts-a", .build = "build-a" },
+        .{ .template_identity = "pkg::render", .arguments = &.{ "L:3", "T:i64" }, .provider = "provider-a", .constraints = "constraints-a", .contracts = "contracts-a", .build = "build-a" },
+        .{ .template_identity = "pkg::render", .arguments = &.{ "T:i64", "L:3" }, .provider = "provider-b", .constraints = "constraints-a", .contracts = "contracts-a", .build = "build-a" },
+        .{ .template_identity = "pkg::render", .arguments = &.{ "T:i64", "L:3" }, .provider = "provider-a", .constraints = "constraints-b", .contracts = "contracts-a", .build = "build-a" },
+        .{ .template_identity = "pkg::render", .arguments = &.{ "T:i64", "L:3" }, .provider = "provider-a", .constraints = "constraints-a", .contracts = "contracts-b", .build = "build-a" },
+        .{ .template_identity = "pkg::render", .arguments = &.{ "T:i64", "L:3" }, .provider = "provider-a", .constraints = "constraints-a", .contracts = "contracts-a", .build = "build-b" },
+    };
+    for (changed_inputs) |variant| {
+        const changed = try semantic_key.specializationFingerprint(allocator, variant);
+        defer allocator.free(changed);
+        try t.expect(!std.mem.eql(u8, base, changed));
+    }
+
+    const length_descriptor = try semantic_key.argumentDescriptor(allocator, .u64, 3, &.{});
+    defer allocator.free(length_descriptor);
+    try t.expectEqualStrings("L:3", length_descriptor);
+    const type_descriptor = try semantic_key.argumentDescriptor(allocator, .i64, null, &.{});
+    defer allocator.free(type_descriptor);
+    try t.expectEqualStrings("T:i64", type_descriptor);
+
+    const bound = @import("effect_set.zig").Bound{ .span = .{ .start = 0, .end = 1 }, .allowed = 0 };
+    const digest_a = semantic_key.declaredContractDigest(bound, &.{});
+    const digest_b = semantic_key.declaredContractDigest(bound, &.{1});
+    try t.expect(!std.mem.eql(u8, &digest_a, &digest_b));
+}

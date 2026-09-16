@@ -4369,3 +4369,428 @@ test "R3 canonical descriptors compare provider scalar and nominal contracts" {
     try testing.expect(nominal.term != .exited or nominal.term.exited != 0);
     try testing.expect(std.mem.indexOf(u8, nominal.stderr, "IncompatibleProvider") != null);
 }
+
+// C3 concrete-specialization reuse is not yet registered in SPEC.md; this block
+// is the fresh-process regression evidence and must be reported with its patch.
+
+fn c3sCheckProjectReport(path: []const u8, cache_argument: []const u8, no_cache: bool) !std.process.RunResult {
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "check-project", path, "--report" });
+    if (cache_argument.len != 0) try args.append(testing.allocator, cache_argument);
+    if (no_cache) try args.append(testing.allocator, "--no-cache");
+    return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+}
+
+fn c3sCheckReport(path: []const u8, cache_argument: []const u8, no_cache: bool) !std.process.RunResult {
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "check", path, "--report" });
+    if (cache_argument.len != 0) try args.append(testing.allocator, cache_argument);
+    if (no_cache) try args.append(testing.allocator, "--no-cache");
+    return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+}
+
+/// First semantic file whose payload carries the `specialization-v1` stable-key
+/// prefix. The durable file name is a hash, so the kind marker is the discriminator.
+fn c3sFirstSpecializationFile(allocator: std.mem.Allocator, cache_base: []const u8) ![]u8 {
+    const version_dir = try std.fs.path.join(allocator, &.{ cache_base, "semantic", "semantic-cache-v1" });
+    defer allocator.free(version_dir);
+    var directory = std.Io.Dir.cwd().openDir(testing.io, version_dir, .{ .iterate = true }) catch return error.MissingSpecializationEntry;
+    defer directory.close(testing.io);
+    var contracts = directory.iterate();
+    while (contracts.next(testing.io) catch return error.MissingSpecializationEntry) |contract| {
+        if (contract.kind != .directory) continue;
+        const contract_dir = try std.fs.path.join(allocator, &.{ version_dir, contract.name });
+        defer allocator.free(contract_dir);
+        var entries = std.Io.Dir.cwd().openDir(testing.io, contract_dir, .{ .iterate = true }) catch continue;
+        defer entries.close(testing.io);
+        var files = entries.iterate();
+        while (files.next(testing.io) catch return error.MissingSpecializationEntry) |file| {
+            if (file.kind != .file or std.mem.endsWith(u8, file.name, ".tmp")) continue;
+            const path = try std.fs.path.join(allocator, &.{ contract_dir, file.name });
+            const bytes = std.Io.Dir.cwd().readFileAlloc(testing.io, path, allocator, .limited(1024 * 1024)) catch {
+                allocator.free(path);
+                continue;
+            };
+            defer allocator.free(bytes);
+            if (std.mem.indexOf(u8, bytes, "spec\x1fv1\x1f") != null) return path;
+            allocator.free(path);
+        }
+    }
+    return error.MissingSpecializationEntry;
+}
+
+// spec-case: SEMANTIC-CACHE-12
+test "C3s concrete specialization reuse survives fresh processes with selective invalidation" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(directory);
+    const entry = try std.fs.path.join(testing.allocator, &.{ directory, "main.my" });
+    defer testing.allocator.free(entry);
+    const cache_base = try std.fs.path.join(testing.allocator, &.{ directory, "cache" });
+    defer testing.allocator.free(cache_base);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_base});
+    defer testing.allocator.free(cache_argument);
+
+    const library_render40 =
+        \\module lib
+        \\export render
+        \\export label
+        \\
+        \\
+        \\def render[T: integer](value: T) -> i64 effects():
+        \\    _ = value
+        \\    return 40
+        \\
+        \\
+        \\def label[T: integer](value: T) -> i64 effects():
+        \\    _ = value
+        \\    return 7
+    ;
+    const library_render41 =
+        \\module lib
+        \\export render
+        \\export label
+        \\
+        \\
+        \\def render[T: integer](value: T) -> i64 effects():
+        \\    _ = value
+        \\    return 41
+        \\
+        \\
+        \\def label[T: integer](value: T) -> i64 effects():
+        \\    _ = value
+        \\    return 7
+    ;
+    const library_label8 =
+        \\module lib
+        \\export render
+        \\export label
+        \\
+        \\
+        \\def render[T: integer](value: T) -> i64 effects():
+        \\    _ = value
+        \\    return 41
+        \\
+        \\
+        \\def label[T: integer](value: T) -> i64 effects():
+        \\    _ = value
+        \\    return 8
+    ;
+    const entry_u8 =
+        \\module main
+        \\import lib
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return lib.render[u8](1u8) + lib.label[i64](2)
+    ;
+    const entry_split =
+        \\module main
+        \\import lib
+        \\
+        \\
+        \\def main() -> i64:
+        \\    a = lib.render[u8](1u8)
+        \\    return a + lib.label[i64](2)
+    ;
+    const entry_i64 =
+        \\module main
+        \\import lib
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return lib.render[i64](1) + lib.label[i64](2)
+    ;
+
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "lib.my", .data = library_render40 });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = entry_u8 });
+    const seed = try c3sCheckProjectReport(entry, cache_argument, false);
+    defer testing.allocator.free(seed.stdout);
+    defer testing.allocator.free(seed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, seed.term);
+    const cold = try c2Counts(seed.stderr);
+    try testing.expectEqual(@as(usize, 0), cold.reused);
+
+    // A body edit in the entry forces a recheck; both concrete specializations
+    // replay even though the source bytes changed.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = entry_split });
+    const warm = try c3sCheckProjectReport(entry, cache_argument, false);
+    defer testing.allocator.free(warm.stdout);
+    defer testing.allocator.free(warm.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, warm.term);
+    const unchanged = try c2Counts(warm.stderr);
+    try testing.expectEqual(@as(usize, 2), unchanged.reused);
+    try testing.expectEqual(@as(usize, 1), unchanged.performed);
+
+    // Editing `render`'s template body invalidates only its specialization;
+    // `label[i64]` remains reusable.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "lib.my", .data = library_render41 });
+    const template_edit = try c3sCheckProjectReport(entry, cache_argument, false);
+    defer testing.allocator.free(template_edit.stdout);
+    defer testing.allocator.free(template_edit.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, template_edit.term);
+    const template_counts = try c2Counts(template_edit.stderr);
+    try testing.expectEqual(@as(usize, 1), template_counts.reused);
+    try testing.expectEqual(@as(usize, 2), template_counts.performed);
+
+    // Editing the concrete argument instantiates a fresh `render[i64]` while
+    // `label[i64]` still replays.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = entry_i64 });
+    const argument_edit = try c3sCheckProjectReport(entry, cache_argument, false);
+    defer testing.allocator.free(argument_edit.stdout);
+    defer testing.allocator.free(argument_edit.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, argument_edit.term);
+    const argument_counts = try c2Counts(argument_edit.stderr);
+    try testing.expectEqual(@as(usize, 1), argument_counts.reused);
+    try testing.expectEqual(@as(usize, 2), argument_counts.performed);
+
+    // Editing `label`'s template body invalidates only its specialization.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "lib.my", .data = library_label8 });
+    const label_edit = try c3sCheckProjectReport(entry, cache_argument, false);
+    defer testing.allocator.free(label_edit.stdout);
+    defer testing.allocator.free(label_edit.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, label_edit.term);
+    const label_counts = try c2Counts(label_edit.stderr);
+    try testing.expectEqual(@as(usize, 1), label_counts.reused);
+    try testing.expectEqual(@as(usize, 2), label_counts.performed);
+
+    // Cold/warm agreement: an uncached check accepts exactly like the cached one.
+    const uncached = try c3sCheckProjectReport(entry, cache_argument, true);
+    defer testing.allocator.free(uncached.stdout);
+    defer testing.allocator.free(uncached.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, uncached.term);
+    const uncached_counts = try c2Counts(uncached.stderr);
+    try testing.expectEqual(@as(usize, 0), uncached_counts.reused);
+    try testing.expectEqual(@as(usize, 3), uncached_counts.performed);
+}
+
+test "C3s provider body changes stay visible through reused specializations" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(directory);
+    const entry = try std.fs.path.join(testing.allocator, &.{ directory, "main.my" });
+    defer testing.allocator.free(entry);
+    const cache_base = try std.fs.path.join(testing.allocator, &.{ directory, "cache" });
+    defer testing.allocator.free(cache_base);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_base});
+    defer testing.allocator.free(cache_argument);
+    const base_library =
+        \\module lib
+        \\export render
+        \\
+        \\
+        \\def helper(n: i64) -> i64 effects():
+        \\    return n + 1
+        \\
+        \\
+        \\def render[T: integer](value: T) -> i64 effects():
+        \\    _ = value
+        \\    return helper(40)
+    ;
+    const edited_library =
+        \\module lib
+        \\export render
+        \\
+        \\
+        \\def helper(n: i64) -> i64 effects():
+        \\    return n + 2
+        \\
+        \\
+        \\def render[T: integer](value: T) -> i64 effects():
+        \\    _ = value
+        \\    return helper(40)
+    ;
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "lib.my", .data = base_library });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
+        \\module main
+        \\import lib
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return lib.render[u8](1u8)
+    });
+    const warm_argv = [_][]const u8{ compiler_path, "run-project", entry, "--print-result", cache_argument };
+    const first = try std.process.run(testing.allocator, testing.io, .{ .argv = &warm_argv });
+    defer testing.allocator.free(first.stdout);
+    defer testing.allocator.free(first.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 41 }, first.term);
+    try testing.expectEqualStrings("41\n", first.stdout);
+
+    // The provider body edit must appear in the generated code even though
+    // `render`'s specialization region is unchanged.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "lib.my", .data = edited_library });
+    const warm = try std.process.run(testing.allocator, testing.io, .{ .argv = &warm_argv });
+    defer testing.allocator.free(warm.stdout);
+    defer testing.allocator.free(warm.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 42 }, warm.term);
+    try testing.expectEqualStrings("42\n", warm.stdout);
+    const cold_argv = [_][]const u8{ compiler_path, "run-project", entry, "--print-result", "--no-cache" };
+    const cold = try std.process.run(testing.allocator, testing.io, .{ .argv = &cold_argv });
+    defer testing.allocator.free(cold.stdout);
+    defer testing.allocator.free(cold.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 42 }, cold.term);
+    try testing.expectEqualStrings(warm.stdout, cold.stdout);
+}
+
+test "C3s damaged truncated and foreign specialization entries fall back fresh" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(directory);
+    const entry = try std.fs.path.join(testing.allocator, &.{ directory, "main.my" });
+    defer testing.allocator.free(entry);
+    const cache_base = try std.fs.path.join(testing.allocator, &.{ directory, "cache" });
+    defer testing.allocator.free(cache_base);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_base});
+    defer testing.allocator.free(cache_argument);
+    const source =
+        \\def size[T: integer](value: T) -> i64 effects():
+        \\    _ = value
+        \\    return 7
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return size[u8](1u8)
+    ;
+    const edited =
+        \\def size[T: integer](value: T) -> i64 effects():
+        \\    _ = value
+        \\    return 7
+        \\
+        \\
+        \\def main() -> i64:
+        \\    value = size[u8](1u8)
+        \\    return value
+    ;
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = source });
+    const seed = try c3sCheckReport(entry, cache_argument, false);
+    defer testing.allocator.free(seed.stdout);
+    defer testing.allocator.free(seed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, seed.term);
+    const spec_file = try c3sFirstSpecializationFile(testing.allocator, cache_base);
+    defer testing.allocator.free(spec_file);
+
+    const original_len = try c2FileLength(spec_file);
+    try c2SetFileLength(spec_file, original_len / 2);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = edited });
+    const truncated = try c3sCheckReport(entry, cache_argument, false);
+    defer testing.allocator.free(truncated.stdout);
+    defer testing.allocator.free(truncated.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, truncated.term);
+    try testing.expectEqual(@as(usize, 0), (try c2Counts(truncated.stderr)).reused);
+
+    // Republish a clean entry, then simulate a foreign format version.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = source });
+    const republished = try c3sCheckReport(entry, cache_argument, false);
+    defer testing.allocator.free(republished.stdout);
+    defer testing.allocator.free(republished.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, republished.term);
+    const version_bytes = try std.Io.Dir.cwd().readFileAlloc(testing.io, spec_file, testing.allocator, .limited(1024 * 1024));
+    defer testing.allocator.free(version_bytes);
+    version_bytes[12] ^= 0x20;
+    try std.Io.Dir.cwd().writeFile(testing.io, .{ .sub_path = spec_file, .data = version_bytes });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = edited });
+    const foreign = try c3sCheckReport(entry, cache_argument, false);
+    defer testing.allocator.free(foreign.stdout);
+    defer testing.allocator.free(foreign.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, foreign.term);
+    try testing.expectEqual(@as(usize, 0), (try c2Counts(foreign.stderr)).reused);
+}
+
+test "C3s no-cache performs specialization checks without reads or writes" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(directory);
+    const entry = try std.fs.path.join(testing.allocator, &.{ directory, "main.my" });
+    defer testing.allocator.free(entry);
+    const cache_base = try std.fs.path.join(testing.allocator, &.{ directory, "nocache" });
+    defer testing.allocator.free(cache_base);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_base});
+    defer testing.allocator.free(cache_argument);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
+        \\def size[T: integer](value: T) -> i64 effects():
+        \\    _ = value
+        \\    return 7
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return size[u8](1u8)
+    });
+    const first = try c3sCheckReport(entry, cache_argument, true);
+    defer testing.allocator.free(first.stdout);
+    defer testing.allocator.free(first.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term);
+    const counts = try c2Counts(first.stderr);
+    try testing.expect(counts.performed > 0);
+    try testing.expectEqual(@as(usize, 0), counts.reused);
+    const second = try c3sCheckReport(entry, cache_argument, true);
+    defer testing.allocator.free(second.stdout);
+    defer testing.allocator.free(second.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, second.term);
+    try testing.expectEqual(@as(usize, 0), (try c2Counts(second.stderr)).reused);
+    try testing.expect(!c2PathExists(cache_base));
+}
+
+test "C3s reused specialization warnings relocate and defaults stay equivalent" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(directory);
+    const entry = try std.fs.path.join(testing.allocator, &.{ directory, "main.my" });
+    defer testing.allocator.free(entry);
+    const cache_base = try std.fs.path.join(testing.allocator, &.{ directory, "cache" });
+    defer testing.allocator.free(cache_base);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_base});
+    defer testing.allocator.free(cache_argument);
+    const base =
+        \\def size[T: integer](value: T, extra: i64 = 5) -> i64 effects():
+        \\    unused_local = 3
+        \\    _ = value
+        \\    return extra
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return size[u8](1u8)
+    ;
+    const edited =
+        \\type Marker = i64
+        \\
+        \\
+        \\def size[T: integer](value: T, extra: i64 = 5) -> i64 effects():
+        \\    unused_local = 3
+        \\    _ = value
+        \\    return extra
+        \\
+        \\
+        \\def main() -> i64:
+        \\    a = size[u8](1u8)
+        \\    return a
+    ;
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = base });
+    const seed = try c3sCheckReport(entry, cache_argument, false);
+    defer testing.allocator.free(seed.stdout);
+    defer testing.allocator.free(seed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, seed.term);
+
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = edited });
+    const warm = try c3sCheckReport(entry, cache_argument, false);
+    defer testing.allocator.free(warm.stdout);
+    defer testing.allocator.free(warm.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, warm.term);
+    const counts = try c2Counts(warm.stderr);
+    try testing.expectEqual(@as(usize, 1), counts.reused);
+    try testing.expectEqual(@as(usize, 1), counts.performed);
+
+    const cold = try c3sCheckReport(entry, cache_argument, true);
+    defer testing.allocator.free(cold.stdout);
+    defer testing.allocator.free(cold.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cold.term);
+    // The replayed body's unused-binding warning must relocate to the edited
+    // source and render byte-identically to the uncached check.
+    try testing.expectEqualStrings(try c2WarningLine(cold.stderr), try c2WarningLine(warm.stderr));
+}
