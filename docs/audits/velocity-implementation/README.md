@@ -152,3 +152,15 @@ acceptance includes the end-to-end two-provider, two-case reversed-order regress
 Also preserved: `wip/cache-prefix-2026-09-16` (`4fa44aa3`) holds concurrent uncommitted
 semantic-cache retention/remap work found in the integration checkout (SEMANTIC-CACHE-9/10
 numbering). It is not merged or evaluated here; C3 used 11/12 to avoid colliding with it.
+
+### C3S / C4 status
+
+| ID | Work | Owner branch | Base | Status |
+| --- | --- | --- | --- | --- |
+| C3S | Validated concrete-specialization reuse (`specialization-v1`), typed remap, effect-rerun discipline | `codex/velocity-c3s` | `121032ec` | **done** `f444ddc5`; merged; real replay via `checked_bodies.reused` plus new `specialization_bodies` report |
+| C4 | Shared cached test preparation, receipt-first selection, lazy lowering/emission, provider-order e2e | `codex/velocity-c4` | `ee392fbf` | in progress |
+
+C3S residual conservative misses: ordinary bodies that reference a specialization still
+miss (`.generic_specialization`) because invertible specialization recipes are not
+persisted; nested refs whose instance is not yet materialized miss
+(`.missing_specialization`); interned-catalog and synthesized-lambda refs miss.
