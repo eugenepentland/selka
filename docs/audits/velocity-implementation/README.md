@@ -114,7 +114,7 @@ Source: [development-velocity-c2-p1-review-2026-09-16.md](../development-velocit
 | R3 | Canonical declaration-level type descriptors for discovery and provider comparison | `codex/velocity-r3` | `velocity-r3` | `6a99ef4b` | **done** `bc462aa6` (manifest `interface-contracts-v2`) |
 | R4 | Amortize persistent-cache inventory/eviction (quadratic → linear) | `codex/velocity-r4` | `velocity-r4` | `6a99ef4b` | **done** `d54cc302`; statx 128/256/512/1024 → 260/516/1028/2052 |
 | HASH | Declared mutation positions + return-origin in the public API fingerprint | `codex/velocity-hash` | `velocity-hash` | `6a99ef4b` | **done** `4e2d1600` (function/project hashes now change on `mutates(a)`→`mutates(b)`) |
-| WARM | Generated `qbe_build_assets` warm-build invalidation | `codex/velocity-warm` | `velocity-warm` | `6a99ef4b` | in progress |
+| WARM | Generated `qbe_build_assets` warm-build invalidation | `codex/velocity-warm` | `velocity-warm` | `6a99ef4b` | **done** `70eecedf` — per-file `dependOnFileContents`; warm in-place runtime edits refresh identity/archive/materialized bytes |
 
 Acceptance for the pass: R1 unused edits execute zero tests; R2 two ordinary cases share
 one preparation and one native library while distinct graphs stay isolated; R3 boolean
@@ -123,3 +123,8 @@ reject; R4 initial namespace population is approximately linear in `statx` work 
 bounds/races/damage intact; HASH changes the function and project interface hashes on a
 `mutates(a)`→`mutates(b)` edit; WARM picks up a changed bundled runtime source without a
 clean build. C2/P1 positive probes must remain green.
+
+| 2026-09-16 | `720d9a7d` | R3 + R1/R2 | canonical `interface-contracts-v2` descriptors; closure-bound receipts and shared per-provider-graph preparation |
+| 2026-09-16 | `4e2d1600` | HASH | declared `mutates` positions and exported return-origin bound in the API fingerprint |
+| 2026-09-16 | `d54cc302` | R4 | batched semantic-store inventory; statx 128/256/512/1024 → 260/516/1028/2052 |
+| 2026-09-16 | `70eecedf` | WARM | per-file content dependency; warm in-place runtime edits refresh content hash/archives |
