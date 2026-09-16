@@ -150,6 +150,267 @@ fn runFixture(command: []const u8, text: []const u8, options: []const []const u8
     return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
 }
 
+const C2Counts = struct { performed: usize, reused: usize };
+
+fn c2NumberAfter(text: []const u8, field: []const u8) !usize {
+    const marker = try std.fmt.allocPrint(testing.allocator, "\"{s}\":", .{field});
+    defer testing.allocator.free(marker);
+    const at = std.mem.indexOf(u8, text, marker) orelse return error.MissingCounter;
+    var index = at + marker.len;
+    while (index < text.len and !std.ascii.isDigit(text[index])) : (index += 1) {}
+    const start = index;
+    while (index < text.len and std.ascii.isDigit(text[index])) : (index += 1) {}
+    if (start == index) return error.MissingCounter;
+    return std.fmt.parseInt(usize, text[start..index], 10);
+}
+
+fn c2Counts(stderr: []const u8) !C2Counts {
+    const section = std.mem.indexOf(u8, stderr, "\"checked_bodies\":") orelse return error.MissingCounter;
+    const end = std.mem.indexOfPos(u8, stderr, section, "}") orelse stderr.len;
+    return .{
+        .performed = try c2NumberAfter(stderr[section..end], "performed"),
+        .reused = try c2NumberAfter(stderr[section..end], "reused"),
+    };
+}
+
+fn c2RunCheckReport(path: []const u8, cache_argument: []const u8, no_cache: bool) !std.process.RunResult {
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "check", path, "--report" });
+    if (cache_argument.len != 0) try args.append(testing.allocator, cache_argument);
+    if (no_cache) try args.append(testing.allocator, "--no-cache");
+    return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+}
+
+fn c2WarningLine(stderr: []const u8) ![]const u8 {
+    var lines = std.mem.splitScalar(u8, stderr, '\n');
+    while (lines.next()) |line| {
+        if (std.mem.indexOf(u8, line, "warning[W_UNUSED_BINDING]") != null) return line;
+    }
+    return error.MissingWarning;
+}
+
+fn c2PathExists(path: []const u8) bool {
+    var directory = std.Io.Dir.cwd().openDir(testing.io, path, .{}) catch return false;
+    directory.close(testing.io);
+    return true;
+}
+
+fn c2FirstSemanticFile(allocator: std.mem.Allocator, cache_base: []const u8) ![]u8 {
+    const version_dir = try std.fs.path.join(allocator, &.{ cache_base, "semantic", "semantic-cache-v1" });
+    defer allocator.free(version_dir);
+    var directory = std.Io.Dir.cwd().openDir(testing.io, version_dir, .{ .iterate = true }) catch return error.MissingSemanticEntry;
+    defer directory.close(testing.io);
+    var contracts = directory.iterate();
+    while (contracts.next(testing.io) catch return error.MissingSemanticEntry) |contract| {
+        if (contract.kind != .directory) continue;
+        const contract_dir = try std.fs.path.join(allocator, &.{ version_dir, contract.name });
+        defer allocator.free(contract_dir);
+        var entries = std.Io.Dir.cwd().openDir(testing.io, contract_dir, .{ .iterate = true }) catch continue;
+        defer entries.close(testing.io);
+        var files = entries.iterate();
+        while (files.next(testing.io) catch return error.MissingSemanticEntry) |file| {
+            if (file.kind != .file or std.mem.endsWith(u8, file.name, ".tmp")) continue;
+            return std.fs.path.join(allocator, &.{ contract_dir, file.name });
+        }
+    }
+    return error.MissingSemanticEntry;
+}
+
+fn c2SetFileLength(path: []const u8, length: u64) !void {
+    const file = try std.Io.Dir.cwd().createFile(testing.io, path, .{ .truncate = false });
+    defer file.close(testing.io);
+    try file.setLength(testing.io, length);
+}
+
+fn c2FileLength(path: []const u8) !u64 {
+    const stat = try std.Io.Dir.cwd().statFile(testing.io, path, .{});
+    return stat.size;
+}
+
+// C2 is not yet registered in SPEC.md; this block is the regression evidence for
+// ordinary checked-body persistence and must be reported with its SPEC patch.
+test "C2 ordinary body reuse crosses processes and relocates warnings" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(directory);
+    const entry = try std.fs.path.join(testing.allocator, &.{ directory, "main.my" });
+    defer testing.allocator.free(entry);
+    const cache_base = try std.fs.path.join(testing.allocator, &.{ directory, "cache" });
+    defer testing.allocator.free(cache_base);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_base});
+    defer testing.allocator.free(cache_argument);
+    const seed =
+        \\def helper(n: i64) -> i64:
+        \\    return n + 1
+        \\
+        \\
+        \\def keep(n: i64) -> i64:
+        \\    unused = 3
+        \\    return n + 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return keep(helper(40))
+    ;
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = seed });
+    const first = try c2RunCheckReport(entry, cache_argument, false);
+    defer testing.allocator.free(first.stdout);
+    defer testing.allocator.free(first.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term);
+    const seeded = try c2Counts(first.stderr);
+    try testing.expectEqual(@as(usize, 3), seeded.performed);
+    try testing.expectEqual(@as(usize, 0), seeded.reused);
+
+    const edited =
+        \\def helper(n: i64) -> i64:
+        \\    return n + 2
+        \\
+        \\
+        \\type Marker = i64
+        \\
+        \\
+        \\def keep(n: i64) -> i64:
+        \\    unused = 3
+        \\    return n + 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return keep(helper(40))
+    ;
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = edited });
+    const second = try c2RunCheckReport(entry, cache_argument, false);
+    defer testing.allocator.free(second.stdout);
+    defer testing.allocator.free(second.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, second.term);
+    const changed = try c2Counts(second.stderr);
+    try testing.expectEqual(@as(usize, 1), changed.performed);
+    try testing.expectEqual(@as(usize, 2), changed.reused);
+
+    const cold = try c2RunCheckReport(entry, cache_argument, true);
+    defer testing.allocator.free(cold.stdout);
+    defer testing.allocator.free(cold.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cold.term);
+    const uncached = try c2Counts(cold.stderr);
+    try testing.expectEqual(@as(usize, 3), uncached.performed);
+    try testing.expectEqual(@as(usize, 0), uncached.reused);
+    try testing.expectEqualStrings(try c2WarningLine(second.stderr), try c2WarningLine(cold.stderr));
+
+    const third = try c2RunCheckReport(entry, cache_argument, false);
+    defer testing.allocator.free(third.stdout);
+    defer testing.allocator.free(third.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, third.term);
+    const unchanged = try c2Counts(third.stderr);
+    try testing.expectEqual(@as(usize, 0), unchanged.performed);
+    try testing.expectEqual(@as(usize, 3), unchanged.reused);
+
+    const no_cache_base = try std.fs.path.join(testing.allocator, &.{ directory, "nocache" });
+    defer testing.allocator.free(no_cache_base);
+    const no_cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{no_cache_base});
+    defer testing.allocator.free(no_cache_argument);
+    const disabled = try c2RunCheckReport(entry, no_cache_argument, true);
+    defer testing.allocator.free(disabled.stdout);
+    defer testing.allocator.free(disabled.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, disabled.term);
+    const no_reuse = try c2Counts(disabled.stderr);
+    try testing.expectEqual(@as(usize, 3), no_reuse.performed);
+    try testing.expectEqual(@as(usize, 0), no_reuse.reused);
+    try testing.expect(!c2PathExists(no_cache_base));
+}
+
+test "C2 damaged truncated oversized and foreign-version entries fall back fresh" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(directory);
+    const entry = try std.fs.path.join(testing.allocator, &.{ directory, "main.my" });
+    defer testing.allocator.free(entry);
+    const cache_base = try std.fs.path.join(testing.allocator, &.{ directory, "cache" });
+    defer testing.allocator.free(cache_base);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_base});
+    defer testing.allocator.free(cache_argument);
+    const source =
+        \\def main() -> i64:
+        \\    return 42
+    ;
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = source });
+    const seed = try c2RunCheckReport(entry, cache_argument, false);
+    defer testing.allocator.free(seed.stdout);
+    defer testing.allocator.free(seed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, seed.term);
+    try testing.expectEqual(@as(usize, 0), (try c2Counts(seed.stderr)).reused);
+    const semantic_file = try c2FirstSemanticFile(testing.allocator, cache_base);
+    defer testing.allocator.free(semantic_file);
+
+    const original_len = try c2FileLength(semantic_file);
+    try c2SetFileLength(semantic_file, original_len / 2);
+    const truncated = try c2RunCheckReport(entry, cache_argument, false);
+    defer testing.allocator.free(truncated.stdout);
+    defer testing.allocator.free(truncated.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, truncated.term);
+    try testing.expectEqual(@as(usize, 0), (try c2Counts(truncated.stderr)).reused);
+
+    try c2SetFileLength(semantic_file, 70 * 1024 * 1024);
+    const oversized = try c2RunCheckReport(entry, cache_argument, false);
+    defer testing.allocator.free(oversized.stdout);
+    defer testing.allocator.free(oversized.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, oversized.term);
+    try testing.expectEqual(@as(usize, 0), (try c2Counts(oversized.stderr)).reused);
+
+    const version_bytes = try std.Io.Dir.cwd().readFileAlloc(testing.io, semantic_file, testing.allocator, .limited(1024 * 1024));
+    defer testing.allocator.free(version_bytes);
+    version_bytes[12] ^= 0x20;
+    try std.Io.Dir.cwd().writeFile(testing.io, .{ .sub_path = semantic_file, .data = version_bytes });
+    const foreign = try c2RunCheckReport(entry, cache_argument, false);
+    defer testing.allocator.free(foreign.stdout);
+    defer testing.allocator.free(foreign.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, foreign.term);
+    try testing.expectEqual(@as(usize, 0), (try c2Counts(foreign.stderr)).reused);
+
+    const damaged_bytes = try std.Io.Dir.cwd().readFileAlloc(testing.io, semantic_file, testing.allocator, .limited(1024 * 1024));
+    defer testing.allocator.free(damaged_bytes);
+    damaged_bytes[damaged_bytes.len - 12] ^= 0x01;
+    try std.Io.Dir.cwd().writeFile(testing.io, .{ .sub_path = semantic_file, .data = damaged_bytes });
+    const damaged = try c2RunCheckReport(entry, cache_argument, false);
+    defer testing.allocator.free(damaged.stdout);
+    defer testing.allocator.free(damaged.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, damaged.term);
+    try testing.expectEqual(@as(usize, 0), (try c2Counts(damaged.stderr)).reused);
+}
+
+test "C2 concurrent publishers never expose a partial entry" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(directory);
+    const entry = try std.fs.path.join(testing.allocator, &.{ directory, "main.my" });
+    defer testing.allocator.free(entry);
+    const cache_base = try std.fs.path.join(testing.allocator, &.{ directory, "cache" });
+    defer testing.allocator.free(cache_base);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_base});
+    defer testing.allocator.free(cache_argument);
+    const source =
+        \\def helper(n: i64) -> i64:
+        \\    return n + 1
+        \\def main() -> i64:
+        \\    return helper(41)
+    ;
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = source });
+    const argv = [_][]const u8{ compiler_path, "check", entry, cache_argument };
+    var first = try std.process.spawn(testing.io, .{ .argv = &argv, .stdin = .ignore, .stdout = .ignore, .stderr = .ignore });
+    var second = try std.process.spawn(testing.io, .{ .argv = &argv, .stdin = .ignore, .stdout = .ignore, .stderr = .ignore });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, try first.wait(testing.io));
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, try second.wait(testing.io));
+    const warm = try c2RunCheckReport(entry, cache_argument, false);
+    defer testing.allocator.free(warm.stdout);
+    defer testing.allocator.free(warm.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, warm.term);
+    const counts = try c2Counts(warm.stderr);
+    try testing.expectEqual(@as(usize, 0), counts.performed);
+    try testing.expectEqual(@as(usize, 2), counts.reused);
+}
+
 // spec-case: CAPABILITY-3
 test "run build --run and installed executables share the restricted capability diagnostic" {
     const program =
