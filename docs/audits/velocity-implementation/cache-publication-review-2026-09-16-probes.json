@@ -1,0 +1,2329 @@
+{
+  "compiler_sha256": "d2dde81c6d4dfd8c6397489efa379d09e7c4b5ae1db996e9482654b88acaa866",
+  "source": "module main\n\ndef helper0() -> int effects():\n    return 0\n\ndef helper1() -> int effects():\n    return 1\n\ndef helper2() -> int effects():\n    return 2\n\ndef helper3() -> int effects():\n    return 3\n\ndef helper4() -> int effects():\n    return 4\n\ndef helper5() -> int effects():\n    return 5\n\ndef helper6() -> int effects():\n    return 6\n\ndef helper7() -> int effects():\n    return 7\n\ndef helper8() -> int effects():\n    return 8\n\ndef helper9() -> int effects():\n    return 9\n\ndef helper10() -> int effects():\n    return 10\n\ndef helper11() -> int effects():\n    return 11\n\ndef helper12() -> int effects():\n    return 12\n\ndef helper13() -> int effects():\n    return 13\n\ndef helper14() -> int effects():\n    return 14\n\ndef helper15() -> int effects():\n    return 15\n\ndef helper16() -> int effects():\n    return 16\n\ndef helper17() -> int effects():\n    return 17\n\ndef helper18() -> int effects():\n    return 18\n\ndef helper19() -> int effects():\n    return 19\n\ndef helper20() -> int effects():\n    return 20\n\ndef helper21() -> int effects():\n    return 21\n\ndef helper22() -> int effects():\n    return 22\n\ndef helper23() -> int effects():\n    return 23\n\ndef helper24() -> int effects():\n    return 24\n\ndef helper25() -> int effects():\n    return 25\n\ndef helper26() -> int effects():\n    return 26\n\ndef helper27() -> int effects():\n    return 27\n\ndef helper28() -> int effects():\n    return 28\n\ndef helper29() -> int effects():\n    return 29\n\ndef helper30() -> int effects():\n    return 30\n\ndef helper31() -> int effects():\n    return 31\n\ndef helper32() -> int effects():\n    return 32\n\ndef helper33() -> int effects():\n    return 33\n\ndef helper34() -> int effects():\n    return 34\n\ndef helper35() -> int effects():\n    return 35\n\ndef helper36() -> int effects():\n    return 36\n\ndef helper37() -> int effects():\n    return 37\n\ndef helper38() -> int effects():\n    return 38\n\ndef helper39() -> int effects():\n    return 39\n\ndef helper40() -> int effects():\n    return 40\n\ndef helper41() -> int effects():\n    return 41\n\ndef helper42() -> int effects():\n    return 42\n\ndef helper43() -> int effects():\n    return 43\n\ndef helper44() -> int effects():\n    return 44\n\ndef helper45() -> int effects():\n    return 45\n\ndef helper46() -> int effects():\n    return 46\n\ndef helper47() -> int effects():\n    return 47\n\ndef helper48() -> int effects():\n    return 48\n\ndef helper49() -> int effects():\n    return 49\n\ndef helper50() -> int effects():\n    return 50\n\ndef helper51() -> int effects():\n    return 51\n\ndef helper52() -> int effects():\n    return 52\n\ndef helper53() -> int effects():\n    return 53\n\ndef helper54() -> int effects():\n    return 54\n\ndef helper55() -> int effects():\n    return 55\n\ndef helper56() -> int effects():\n    return 56\n\ndef helper57() -> int effects():\n    return 57\n\ndef helper58() -> int effects():\n    return 58\n\ndef helper59() -> int effects():\n    return 59\n\ndef helper60() -> int effects():\n    return 60\n\ndef helper61() -> int effects():\n    return 61\n\ndef helper62() -> int effects():\n    return 62\n\ndef helper63() -> int effects():\n    return 63\n\ndef helper64() -> int effects():\n    return 64\n\ndef helper65() -> int effects():\n    return 65\n\ndef helper66() -> int effects():\n    return 66\n\ndef helper67() -> int effects():\n    return 67\n\ndef helper68() -> int effects():\n    return 68\n\ndef helper69() -> int effects():\n    return 69\n\ndef helper70() -> int effects():\n    return 70\n\ndef helper71() -> int effects():\n    return 71\n\ndef helper72() -> int effects():\n    return 72\n\ndef helper73() -> int effects():\n    return 73\n\ndef helper74() -> int effects():\n    return 74\n\ndef helper75() -> int effects():\n    return 75\n\ndef helper76() -> int effects():\n    return 76\n\ndef helper77() -> int effects():\n    return 77\n\ndef helper78() -> int effects():\n    return 78\n\ndef helper79() -> int effects():\n    return 79\n\ndef helper80() -> int effects():\n    return 80\n\ndef helper81() -> int effects():\n    return 81\n\ndef helper82() -> int effects():\n    return 82\n\ndef helper83() -> int effects():\n    return 83\n\ndef helper84() -> int effects():\n    return 84\n\ndef helper85() -> int effects():\n    return 85\n\ndef helper86() -> int effects():\n    return 86\n\ndef helper87() -> int effects():\n    return 87\n\ndef helper88() -> int effects():\n    return 88\n\ndef helper89() -> int effects():\n    return 89\n\ndef helper90() -> int effects():\n    return 90\n\ndef helper91() -> int effects():\n    return 91\n\ndef helper92() -> int effects():\n    return 92\n\ndef helper93() -> int effects():\n    return 93\n\ndef helper94() -> int effects():\n    return 94\n\ndef helper95() -> int effects():\n    return 95\n\ndef helper96() -> int effects():\n    return 96\n\ndef helper97() -> int effects():\n    return 97\n\ndef helper98() -> int effects():\n    return 98\n\ndef helper99() -> int effects():\n    return 99\n\ndef main() -> int:\n    return helper99()\n",
+  "samples": [
+    {
+      "filesystem": "tmpfs",
+      "state": "no_cache",
+      "command": [
+        "/tmp/mylang-fs-review-il3c_v1r/mylang",
+        "check-project",
+        "/tmp/.mylang-fs-review-h82cprdi/main.my",
+        "--report",
+        "--timings=json",
+        "--no-cache"
+      ],
+      "exit": 0,
+      "wall_ms": 2.41717099561356,
+      "phases": [
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "source_load_parse",
+          "duration_ns": 261407,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "syntax_parse",
+          "duration_ns": 266718,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "declarations_interfaces",
+          "duration_ns": 18496,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "source_merge",
+          "duration_ns": 60219,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "dependency_key_preparation",
+          "duration_ns": 171739,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "symbolic_templates",
+          "duration_ns": 3725,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "ordinary_body_replay",
+          "duration_ns": 2341,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "fresh_body_check",
+          "duration_ns": 141692,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "entry_adaptation",
+          "duration_ns": 4928,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "effect_origin_passes",
+          "duration_ns": 79401,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "domain_codec_validation",
+          "duration_ns": 295,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "warning_derivation",
+          "duration_ns": 442,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "retention_store_io",
+          "duration_ns": 586,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "total",
+          "duration_ns": 1299723,
+          "inclusive": true,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        }
+      ],
+      "stdout": "",
+      "stderr": "{\"version\":\"work-report-v1\",\"command\":\"check-project\",\"reused\":false,\"parsed_modules\":{\"status\":\"miss\",\"performed\":1,\"reused\":0},\"checked_bodies\":{\"status\":\"miss\",\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"status\":\"miss\",\"performed\":0,\"reused\":0},\"lowered_functions\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"links\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"executed_tests\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"reused_results\":0,\"session_reused_results\":0,\"symbolic_templates\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"specialization_bodies\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"semantic_cache\":{\"retained_bytes\":0,\"ordinary_bytes\":0,\"symbolic_bytes\":0,\"specialization_bytes\":0,\"evicted\":0},\"bypassed\":[{\"reason\":\"semantic-reuse-unavailable\",\"count\":1},{\"reason\":\"cache-disabled\",\"count\":1}],\"session\":{\"parsed_modules\":{\"performed\":1,\"reused\":0},\"checked_bodies\":{\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"performed\":0,\"reused\":0},\"lowered_functions\":{\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"performed\":0,\"reused\":0},\"links\":{\"performed\":0,\"reused\":0},\"executed_tests\":{\"performed\":0,\"reused\":0}}}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_load_parse\",\"duration_ns\":261407,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"syntax_parse\",\"duration_ns\":266718,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"declarations_interfaces\",\"duration_ns\":18496,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_merge\",\"duration_ns\":60219,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"dependency_key_preparation\",\"duration_ns\":171739,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"symbolic_templates\",\"duration_ns\":3725,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"ordinary_body_replay\",\"duration_ns\":2341,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"fresh_body_check\",\"duration_ns\":141692,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"entry_adaptation\",\"duration_ns\":4928,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"effect_origin_passes\",\"duration_ns\":79401,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"domain_codec_validation\",\"duration_ns\":295,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"warning_derivation\",\"duration_ns\":442,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"retention_store_io\",\"duration_ns\":586,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"total\",\"duration_ns\":1299723,\"inclusive\":true,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n"
+    },
+    {
+      "filesystem": "tmpfs",
+      "state": "cold_0",
+      "command": [
+        "/tmp/mylang-fs-review-il3c_v1r/mylang",
+        "check-project",
+        "/tmp/.mylang-fs-review-h82cprdi/main.my",
+        "--report",
+        "--timings=json",
+        "--cache-dir=/tmp/.mylang-fs-review-h82cprdi/cold_0"
+      ],
+      "exit": 0,
+      "wall_ms": 9.116221976000816,
+      "phases": [
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "source_load_parse",
+          "duration_ns": 255214,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "syntax_parse",
+          "duration_ns": 1227197,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "declarations_interfaces",
+          "duration_ns": 18582,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "source_merge",
+          "duration_ns": 59161,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "dependency_key_preparation",
+          "duration_ns": 167790,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "retention_store_io",
+          "duration_ns": 5802373,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "symbolic_templates",
+          "duration_ns": 290,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "ordinary_body_replay",
+          "duration_ns": 2494,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "fresh_body_check",
+          "duration_ns": 130729,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "entry_adaptation",
+          "duration_ns": 4797,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "effect_origin_passes",
+          "duration_ns": 74233,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "domain_codec_validation",
+          "duration_ns": 232,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "warning_derivation",
+          "duration_ns": 254,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "total",
+          "duration_ns": 8058250,
+          "inclusive": true,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        }
+      ],
+      "stdout": "",
+      "stderr": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":1,\"syntax_stored\":1,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":19522,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n{\"version\":\"work-report-v1\",\"command\":\"check-project\",\"reused\":false,\"parsed_modules\":{\"status\":\"miss\",\"performed\":1,\"reused\":0},\"checked_bodies\":{\"status\":\"miss\",\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"status\":\"miss\",\"performed\":0,\"reused\":0},\"lowered_functions\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"links\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"executed_tests\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"reused_results\":0,\"session_reused_results\":0,\"symbolic_templates\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"specialization_bodies\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"semantic_cache\":{\"retained_bytes\":194004,\"ordinary_bytes\":194004,\"symbolic_bytes\":0,\"specialization_bytes\":0,\"evicted\":0},\"bypassed\":[],\"session\":{\"parsed_modules\":{\"performed\":1,\"reused\":0},\"checked_bodies\":{\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"performed\":0,\"reused\":0},\"lowered_functions\":{\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"performed\":0,\"reused\":0},\"links\":{\"performed\":0,\"reused\":0},\"executed_tests\":{\"performed\":0,\"reused\":0}}}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_load_parse\",\"duration_ns\":255214,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"syntax_parse\",\"duration_ns\":1227197,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"declarations_interfaces\",\"duration_ns\":18582,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_merge\",\"duration_ns\":59161,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"dependency_key_preparation\",\"duration_ns\":167790,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"retention_store_io\",\"duration_ns\":5802373,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"symbolic_templates\",\"duration_ns\":290,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"ordinary_body_replay\",\"duration_ns\":2494,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"fresh_body_check\",\"duration_ns\":130729,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"entry_adaptation\",\"duration_ns\":4797,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"effect_origin_passes\",\"duration_ns\":74233,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"domain_codec_validation\",\"duration_ns\":232,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"warning_derivation\",\"duration_ns\":254,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"total\",\"duration_ns\":8058250,\"inclusive\":true,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n"
+    },
+    {
+      "filesystem": "tmpfs",
+      "state": "cold_1",
+      "command": [
+        "/tmp/mylang-fs-review-il3c_v1r/mylang",
+        "check-project",
+        "/tmp/.mylang-fs-review-h82cprdi/main.my",
+        "--report",
+        "--timings=json",
+        "--cache-dir=/tmp/.mylang-fs-review-h82cprdi/cold_1"
+      ],
+      "exit": 0,
+      "wall_ms": 5.8896029950119555,
+      "phases": [
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "source_load_parse",
+          "duration_ns": 244981,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "syntax_parse",
+          "duration_ns": 1234901,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "declarations_interfaces",
+          "duration_ns": 18856,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "source_merge",
+          "duration_ns": 59536,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "dependency_key_preparation",
+          "duration_ns": 178978,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "retention_store_io",
+          "duration_ns": 2808764,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "symbolic_templates",
+          "duration_ns": 486,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "ordinary_body_replay",
+          "duration_ns": 2354,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "fresh_body_check",
+          "duration_ns": 131138,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "entry_adaptation",
+          "duration_ns": 4857,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "effect_origin_passes",
+          "duration_ns": 73480,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "domain_codec_validation",
+          "duration_ns": 170,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "warning_derivation",
+          "duration_ns": 251,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "total",
+          "duration_ns": 5009967,
+          "inclusive": true,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        }
+      ],
+      "stdout": "",
+      "stderr": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":1,\"syntax_stored\":1,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":19522,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n{\"version\":\"work-report-v1\",\"command\":\"check-project\",\"reused\":false,\"parsed_modules\":{\"status\":\"miss\",\"performed\":1,\"reused\":0},\"checked_bodies\":{\"status\":\"miss\",\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"status\":\"miss\",\"performed\":0,\"reused\":0},\"lowered_functions\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"links\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"executed_tests\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"reused_results\":0,\"session_reused_results\":0,\"symbolic_templates\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"specialization_bodies\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"semantic_cache\":{\"retained_bytes\":194004,\"ordinary_bytes\":194004,\"symbolic_bytes\":0,\"specialization_bytes\":0,\"evicted\":0},\"bypassed\":[],\"session\":{\"parsed_modules\":{\"performed\":1,\"reused\":0},\"checked_bodies\":{\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"performed\":0,\"reused\":0},\"lowered_functions\":{\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"performed\":0,\"reused\":0},\"links\":{\"performed\":0,\"reused\":0},\"executed_tests\":{\"performed\":0,\"reused\":0}}}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_load_parse\",\"duration_ns\":244981,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"syntax_parse\",\"duration_ns\":1234901,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"declarations_interfaces\",\"duration_ns\":18856,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_merge\",\"duration_ns\":59536,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"dependency_key_preparation\",\"duration_ns\":178978,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"retention_store_io\",\"duration_ns\":2808764,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"symbolic_templates\",\"duration_ns\":486,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"ordinary_body_replay\",\"duration_ns\":2354,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"fresh_body_check\",\"duration_ns\":131138,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"entry_adaptation\",\"duration_ns\":4857,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"effect_origin_passes\",\"duration_ns\":73480,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"domain_codec_validation\",\"duration_ns\":170,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"warning_derivation\",\"duration_ns\":251,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"total\",\"duration_ns\":5009967,\"inclusive\":true,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n"
+    },
+    {
+      "filesystem": "tmpfs",
+      "state": "cold_2",
+      "command": [
+        "/tmp/mylang-fs-review-il3c_v1r/mylang",
+        "check-project",
+        "/tmp/.mylang-fs-review-h82cprdi/main.my",
+        "--report",
+        "--timings=json",
+        "--cache-dir=/tmp/.mylang-fs-review-h82cprdi/cold_2"
+      ],
+      "exit": 0,
+      "wall_ms": 3.8711369852535427,
+      "phases": [
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "source_load_parse",
+          "duration_ns": 242446,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "syntax_parse",
+          "duration_ns": 821180,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "declarations_interfaces",
+          "duration_ns": 16462,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "source_merge",
+          "duration_ns": 49508,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "dependency_key_preparation",
+          "duration_ns": 141628,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "retention_store_io",
+          "duration_ns": 1431670,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "symbolic_templates",
+          "duration_ns": 180,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "ordinary_body_replay",
+          "duration_ns": 1947,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "fresh_body_check",
+          "duration_ns": 101699,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "entry_adaptation",
+          "duration_ns": 3720,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "effect_origin_passes",
+          "duration_ns": 51951,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "domain_codec_validation",
+          "duration_ns": 248,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "warning_derivation",
+          "duration_ns": 246,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "total",
+          "duration_ns": 3115208,
+          "inclusive": true,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        }
+      ],
+      "stdout": "",
+      "stderr": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":1,\"syntax_stored\":1,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":19522,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n{\"version\":\"work-report-v1\",\"command\":\"check-project\",\"reused\":false,\"parsed_modules\":{\"status\":\"miss\",\"performed\":1,\"reused\":0},\"checked_bodies\":{\"status\":\"miss\",\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"status\":\"miss\",\"performed\":0,\"reused\":0},\"lowered_functions\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"links\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"executed_tests\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"reused_results\":0,\"session_reused_results\":0,\"symbolic_templates\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"specialization_bodies\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"semantic_cache\":{\"retained_bytes\":194004,\"ordinary_bytes\":194004,\"symbolic_bytes\":0,\"specialization_bytes\":0,\"evicted\":0},\"bypassed\":[],\"session\":{\"parsed_modules\":{\"performed\":1,\"reused\":0},\"checked_bodies\":{\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"performed\":0,\"reused\":0},\"lowered_functions\":{\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"performed\":0,\"reused\":0},\"links\":{\"performed\":0,\"reused\":0},\"executed_tests\":{\"performed\":0,\"reused\":0}}}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_load_parse\",\"duration_ns\":242446,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"syntax_parse\",\"duration_ns\":821180,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"declarations_interfaces\",\"duration_ns\":16462,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_merge\",\"duration_ns\":49508,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"dependency_key_preparation\",\"duration_ns\":141628,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"retention_store_io\",\"duration_ns\":1431670,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"symbolic_templates\",\"duration_ns\":180,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"ordinary_body_replay\",\"duration_ns\":1947,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"fresh_body_check\",\"duration_ns\":101699,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"entry_adaptation\",\"duration_ns\":3720,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"effect_origin_passes\",\"duration_ns\":51951,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"domain_codec_validation\",\"duration_ns\":248,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"warning_derivation\",\"duration_ns\":246,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"total\",\"duration_ns\":3115208,\"inclusive\":true,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n"
+    },
+    {
+      "filesystem": "tmpfs",
+      "state": "cold_trace",
+      "command": [
+        "strace",
+        "-c",
+        "-e",
+        "trace=fsync,fdatasync,rename,renameat,renameat2",
+        "/tmp/mylang-fs-review-il3c_v1r/mylang",
+        "check-project",
+        "/tmp/.mylang-fs-review-h82cprdi/main.my",
+        "--report",
+        "--timings=json",
+        "--cache-dir=/tmp/.mylang-fs-review-h82cprdi/cold_trace"
+      ],
+      "exit": 0,
+      "wall_ms": 23.849541990784928,
+      "phases": [
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "source_load_parse",
+          "duration_ns": 426463,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "syntax_parse",
+          "duration_ns": 1762240,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "declarations_interfaces",
+          "duration_ns": 19147,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "source_merge",
+          "duration_ns": 52628,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "dependency_key_preparation",
+          "duration_ns": 152698,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "retention_store_io",
+          "duration_ns": 8278016,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "symbolic_templates",
+          "duration_ns": 477,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "ordinary_body_replay",
+          "duration_ns": 1667,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "fresh_body_check",
+          "duration_ns": 102970,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "entry_adaptation",
+          "duration_ns": 4065,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "effect_origin_passes",
+          "duration_ns": 54215,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "domain_codec_validation",
+          "duration_ns": 172,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "warning_derivation",
+          "duration_ns": 331,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "total",
+          "duration_ns": 11481447,
+          "inclusive": true,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        }
+      ],
+      "stdout": "",
+      "stderr": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":1,\"syntax_stored\":1,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":19522,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n{\"version\":\"work-report-v1\",\"command\":\"check-project\",\"reused\":false,\"parsed_modules\":{\"status\":\"miss\",\"performed\":1,\"reused\":0},\"checked_bodies\":{\"status\":\"miss\",\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"status\":\"miss\",\"performed\":0,\"reused\":0},\"lowered_functions\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"links\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"executed_tests\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"reused_results\":0,\"session_reused_results\":0,\"symbolic_templates\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"specialization_bodies\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"semantic_cache\":{\"retained_bytes\":194004,\"ordinary_bytes\":194004,\"symbolic_bytes\":0,\"specialization_bytes\":0,\"evicted\":0},\"bypassed\":[],\"session\":{\"parsed_modules\":{\"performed\":1,\"reused\":0},\"checked_bodies\":{\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"performed\":0,\"reused\":0},\"lowered_functions\":{\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"performed\":0,\"reused\":0},\"links\":{\"performed\":0,\"reused\":0},\"executed_tests\":{\"performed\":0,\"reused\":0}}}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_load_parse\",\"duration_ns\":426463,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"syntax_parse\",\"duration_ns\":1762240,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"declarations_interfaces\",\"duration_ns\":19147,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_merge\",\"duration_ns\":52628,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"dependency_key_preparation\",\"duration_ns\":152698,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"retention_store_io\",\"duration_ns\":8278016,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"symbolic_templates\",\"duration_ns\":477,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"ordinary_body_replay\",\"duration_ns\":1667,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"fresh_body_check\",\"duration_ns\":102970,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"entry_adaptation\",\"duration_ns\":4065,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"effect_origin_passes\",\"duration_ns\":54215,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"domain_codec_validation\",\"duration_ns\":172,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"warning_derivation\",\"duration_ns\":331,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"total\",\"duration_ns\":11481447,\"inclusive\":true,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n% time     seconds  usecs/call     calls    errors syscall\n------ ----------- ----------- --------- --------- ----------------\n 75.08    0.000235           2       103           renameat\n 24.92    0.000078           0       101           fsync\n------ ----------- ----------- --------- --------- ----------------\n100.00    0.000313           1       204           total\n"
+    },
+    {
+      "filesystem": "ext4",
+      "state": "no_cache",
+      "command": [
+        "/tmp/mylang-fs-review-il3c_v1r/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.mylang-fs-review-l8dfkhu6/main.my",
+        "--report",
+        "--timings=json",
+        "--no-cache"
+      ],
+      "exit": 0,
+      "wall_ms": 2.360511978622526,
+      "phases": [
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "source_load_parse",
+          "duration_ns": 292511,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "syntax_parse",
+          "duration_ns": 289595,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "declarations_interfaces",
+          "duration_ns": 19408,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "source_merge",
+          "duration_ns": 60504,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "dependency_key_preparation",
+          "duration_ns": 195062,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "symbolic_templates",
+          "duration_ns": 3459,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "ordinary_body_replay",
+          "duration_ns": 2651,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "fresh_body_check",
+          "duration_ns": 152735,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "entry_adaptation",
+          "duration_ns": 5428,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "effect_origin_passes",
+          "duration_ns": 86618,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "domain_codec_validation",
+          "duration_ns": 98,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "warning_derivation",
+          "duration_ns": 290,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "retention_store_io",
+          "duration_ns": 225,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "total",
+          "duration_ns": 1396165,
+          "inclusive": true,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        }
+      ],
+      "stdout": "",
+      "stderr": "{\"version\":\"work-report-v1\",\"command\":\"check-project\",\"reused\":false,\"parsed_modules\":{\"status\":\"miss\",\"performed\":1,\"reused\":0},\"checked_bodies\":{\"status\":\"miss\",\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"status\":\"miss\",\"performed\":0,\"reused\":0},\"lowered_functions\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"links\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"executed_tests\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"reused_results\":0,\"session_reused_results\":0,\"symbolic_templates\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"specialization_bodies\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"semantic_cache\":{\"retained_bytes\":0,\"ordinary_bytes\":0,\"symbolic_bytes\":0,\"specialization_bytes\":0,\"evicted\":0},\"bypassed\":[{\"reason\":\"semantic-reuse-unavailable\",\"count\":1},{\"reason\":\"cache-disabled\",\"count\":1}],\"session\":{\"parsed_modules\":{\"performed\":1,\"reused\":0},\"checked_bodies\":{\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"performed\":0,\"reused\":0},\"lowered_functions\":{\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"performed\":0,\"reused\":0},\"links\":{\"performed\":0,\"reused\":0},\"executed_tests\":{\"performed\":0,\"reused\":0}}}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_load_parse\",\"duration_ns\":292511,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"syntax_parse\",\"duration_ns\":289595,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"declarations_interfaces\",\"duration_ns\":19408,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_merge\",\"duration_ns\":60504,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"dependency_key_preparation\",\"duration_ns\":195062,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"symbolic_templates\",\"duration_ns\":3459,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"ordinary_body_replay\",\"duration_ns\":2651,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"fresh_body_check\",\"duration_ns\":152735,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"entry_adaptation\",\"duration_ns\":5428,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"effect_origin_passes\",\"duration_ns\":86618,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"domain_codec_validation\",\"duration_ns\":98,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"warning_derivation\",\"duration_ns\":290,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"retention_store_io\",\"duration_ns\":225,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"total\",\"duration_ns\":1396165,\"inclusive\":true,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n"
+    },
+    {
+      "filesystem": "ext4",
+      "state": "cold_0",
+      "command": [
+        "/tmp/mylang-fs-review-il3c_v1r/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.mylang-fs-review-l8dfkhu6/main.my",
+        "--report",
+        "--timings=json",
+        "--cache-dir=/home/epentland/ai/canopy/.mylang-fs-review-l8dfkhu6/cold_0"
+      ],
+      "exit": 0,
+      "wall_ms": 306.9612229883205,
+      "phases": [
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "source_load_parse",
+          "duration_ns": 240820,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "syntax_parse",
+          "duration_ns": 1370134,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "declarations_interfaces",
+          "duration_ns": 18161,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "source_merge",
+          "duration_ns": 55735,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "dependency_key_preparation",
+          "duration_ns": 192599,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "retention_store_io",
+          "duration_ns": 303495155,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "symbolic_templates",
+          "duration_ns": 195,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "ordinary_body_replay",
+          "duration_ns": 2378,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "fresh_body_check",
+          "duration_ns": 125223,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "entry_adaptation",
+          "duration_ns": 4986,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "effect_origin_passes",
+          "duration_ns": 72465,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "domain_codec_validation",
+          "duration_ns": 82,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "warning_derivation",
+          "duration_ns": 261,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "total",
+          "duration_ns": 305900093,
+          "inclusive": true,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        }
+      ],
+      "stdout": "",
+      "stderr": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":1,\"syntax_stored\":1,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":19522,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n{\"version\":\"work-report-v1\",\"command\":\"check-project\",\"reused\":false,\"parsed_modules\":{\"status\":\"miss\",\"performed\":1,\"reused\":0},\"checked_bodies\":{\"status\":\"miss\",\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"status\":\"miss\",\"performed\":0,\"reused\":0},\"lowered_functions\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"links\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"executed_tests\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"reused_results\":0,\"session_reused_results\":0,\"symbolic_templates\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"specialization_bodies\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"semantic_cache\":{\"retained_bytes\":194004,\"ordinary_bytes\":194004,\"symbolic_bytes\":0,\"specialization_bytes\":0,\"evicted\":0},\"bypassed\":[],\"session\":{\"parsed_modules\":{\"performed\":1,\"reused\":0},\"checked_bodies\":{\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"performed\":0,\"reused\":0},\"lowered_functions\":{\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"performed\":0,\"reused\":0},\"links\":{\"performed\":0,\"reused\":0},\"executed_tests\":{\"performed\":0,\"reused\":0}}}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_load_parse\",\"duration_ns\":240820,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"syntax_parse\",\"duration_ns\":1370134,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"declarations_interfaces\",\"duration_ns\":18161,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_merge\",\"duration_ns\":55735,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"dependency_key_preparation\",\"duration_ns\":192599,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"retention_store_io\",\"duration_ns\":303495155,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"symbolic_templates\",\"duration_ns\":195,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"ordinary_body_replay\",\"duration_ns\":2378,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"fresh_body_check\",\"duration_ns\":125223,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"entry_adaptation\",\"duration_ns\":4986,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"effect_origin_passes\",\"duration_ns\":72465,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"domain_codec_validation\",\"duration_ns\":82,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"warning_derivation\",\"duration_ns\":261,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"total\",\"duration_ns\":305900093,\"inclusive\":true,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n"
+    },
+    {
+      "filesystem": "ext4",
+      "state": "cold_1",
+      "command": [
+        "/tmp/mylang-fs-review-il3c_v1r/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.mylang-fs-review-l8dfkhu6/main.my",
+        "--report",
+        "--timings=json",
+        "--cache-dir=/home/epentland/ai/canopy/.mylang-fs-review-l8dfkhu6/cold_1"
+      ],
+      "exit": 0,
+      "wall_ms": 290.22701701615006,
+      "phases": [
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "source_load_parse",
+          "duration_ns": 362018,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "syntax_parse",
+          "duration_ns": 409775,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "declarations_interfaces",
+          "duration_ns": 15816,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "source_merge",
+          "duration_ns": 50168,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "dependency_key_preparation",
+          "duration_ns": 156573,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "retention_store_io",
+          "duration_ns": 287657741,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "symbolic_templates",
+          "duration_ns": 253,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "ordinary_body_replay",
+          "duration_ns": 1620,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "fresh_body_check",
+          "duration_ns": 93078,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "entry_adaptation",
+          "duration_ns": 3971,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "effect_origin_passes",
+          "duration_ns": 53252,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "domain_codec_validation",
+          "duration_ns": 230,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "warning_derivation",
+          "duration_ns": 292,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "total",
+          "duration_ns": 289090943,
+          "inclusive": true,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        }
+      ],
+      "stdout": "",
+      "stderr": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":1,\"syntax_stored\":1,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":19522,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n{\"version\":\"work-report-v1\",\"command\":\"check-project\",\"reused\":false,\"parsed_modules\":{\"status\":\"miss\",\"performed\":1,\"reused\":0},\"checked_bodies\":{\"status\":\"miss\",\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"status\":\"miss\",\"performed\":0,\"reused\":0},\"lowered_functions\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"links\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"executed_tests\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"reused_results\":0,\"session_reused_results\":0,\"symbolic_templates\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"specialization_bodies\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"semantic_cache\":{\"retained_bytes\":194004,\"ordinary_bytes\":194004,\"symbolic_bytes\":0,\"specialization_bytes\":0,\"evicted\":0},\"bypassed\":[],\"session\":{\"parsed_modules\":{\"performed\":1,\"reused\":0},\"checked_bodies\":{\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"performed\":0,\"reused\":0},\"lowered_functions\":{\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"performed\":0,\"reused\":0},\"links\":{\"performed\":0,\"reused\":0},\"executed_tests\":{\"performed\":0,\"reused\":0}}}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_load_parse\",\"duration_ns\":362018,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"syntax_parse\",\"duration_ns\":409775,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"declarations_interfaces\",\"duration_ns\":15816,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_merge\",\"duration_ns\":50168,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"dependency_key_preparation\",\"duration_ns\":156573,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"retention_store_io\",\"duration_ns\":287657741,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"symbolic_templates\",\"duration_ns\":253,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"ordinary_body_replay\",\"duration_ns\":1620,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"fresh_body_check\",\"duration_ns\":93078,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"entry_adaptation\",\"duration_ns\":3971,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"effect_origin_passes\",\"duration_ns\":53252,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"domain_codec_validation\",\"duration_ns\":230,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"warning_derivation\",\"duration_ns\":292,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"total\",\"duration_ns\":289090943,\"inclusive\":true,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n"
+    },
+    {
+      "filesystem": "ext4",
+      "state": "cold_2",
+      "command": [
+        "/tmp/mylang-fs-review-il3c_v1r/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.mylang-fs-review-l8dfkhu6/main.my",
+        "--report",
+        "--timings=json",
+        "--cache-dir=/home/epentland/ai/canopy/.mylang-fs-review-l8dfkhu6/cold_2"
+      ],
+      "exit": 0,
+      "wall_ms": 298.4020700096153,
+      "phases": [
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "source_load_parse",
+          "duration_ns": 240868,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "syntax_parse",
+          "duration_ns": 557444,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "declarations_interfaces",
+          "duration_ns": 15671,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "source_merge",
+          "duration_ns": 47362,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "dependency_key_preparation",
+          "duration_ns": 215830,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "retention_store_io",
+          "duration_ns": 295569991,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "symbolic_templates",
+          "duration_ns": 316,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "ordinary_body_replay",
+          "duration_ns": 1916,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "fresh_body_check",
+          "duration_ns": 109437,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "entry_adaptation",
+          "duration_ns": 4386,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "effect_origin_passes",
+          "duration_ns": 56070,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "domain_codec_validation",
+          "duration_ns": 178,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "warning_derivation",
+          "duration_ns": 330,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "total",
+          "duration_ns": 297148342,
+          "inclusive": true,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        }
+      ],
+      "stdout": "",
+      "stderr": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":1,\"syntax_stored\":1,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":19522,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n{\"version\":\"work-report-v1\",\"command\":\"check-project\",\"reused\":false,\"parsed_modules\":{\"status\":\"miss\",\"performed\":1,\"reused\":0},\"checked_bodies\":{\"status\":\"miss\",\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"status\":\"miss\",\"performed\":0,\"reused\":0},\"lowered_functions\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"links\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"executed_tests\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"reused_results\":0,\"session_reused_results\":0,\"symbolic_templates\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"specialization_bodies\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"semantic_cache\":{\"retained_bytes\":194004,\"ordinary_bytes\":194004,\"symbolic_bytes\":0,\"specialization_bytes\":0,\"evicted\":0},\"bypassed\":[],\"session\":{\"parsed_modules\":{\"performed\":1,\"reused\":0},\"checked_bodies\":{\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"performed\":0,\"reused\":0},\"lowered_functions\":{\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"performed\":0,\"reused\":0},\"links\":{\"performed\":0,\"reused\":0},\"executed_tests\":{\"performed\":0,\"reused\":0}}}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_load_parse\",\"duration_ns\":240868,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"syntax_parse\",\"duration_ns\":557444,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"declarations_interfaces\",\"duration_ns\":15671,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_merge\",\"duration_ns\":47362,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"dependency_key_preparation\",\"duration_ns\":215830,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"retention_store_io\",\"duration_ns\":295569991,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"symbolic_templates\",\"duration_ns\":316,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"ordinary_body_replay\",\"duration_ns\":1916,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"fresh_body_check\",\"duration_ns\":109437,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"entry_adaptation\",\"duration_ns\":4386,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"effect_origin_passes\",\"duration_ns\":56070,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"domain_codec_validation\",\"duration_ns\":178,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"warning_derivation\",\"duration_ns\":330,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"total\",\"duration_ns\":297148342,\"inclusive\":true,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n"
+    },
+    {
+      "filesystem": "ext4",
+      "state": "cold_trace",
+      "command": [
+        "strace",
+        "-c",
+        "-e",
+        "trace=fsync,fdatasync,rename,renameat,renameat2",
+        "/tmp/mylang-fs-review-il3c_v1r/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.mylang-fs-review-l8dfkhu6/main.my",
+        "--report",
+        "--timings=json",
+        "--cache-dir=/home/epentland/ai/canopy/.mylang-fs-review-l8dfkhu6/cold_trace"
+      ],
+      "exit": 0,
+      "wall_ms": 300.6268960016314,
+      "phases": [
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "source_load_parse",
+          "duration_ns": 292874,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "syntax_parse",
+          "duration_ns": 730662,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "declarations_interfaces",
+          "duration_ns": 16764,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "source_merge",
+          "duration_ns": 48002,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "dependency_key_preparation",
+          "duration_ns": 143748,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "retention_store_io",
+          "duration_ns": 292202109,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "symbolic_templates",
+          "duration_ns": 253,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "ordinary_body_replay",
+          "duration_ns": 1722,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "fresh_body_check",
+          "duration_ns": 108524,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "entry_adaptation",
+          "duration_ns": 3811,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "effect_origin_passes",
+          "duration_ns": 64468,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "domain_codec_validation",
+          "duration_ns": 157,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "warning_derivation",
+          "duration_ns": 443,
+          "inclusive": false,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        },
+        {
+          "version": "phase-timings-v1",
+          "kind": "timing",
+          "tool": "compiler",
+          "name": "total",
+          "duration_ns": 294284173,
+          "inclusive": true,
+          "counts": {
+            "modules": 1,
+            "source_bytes": 4834,
+            "ast_nodes": 303,
+            "typed_nodes": 303
+          },
+          "exit_code": 0
+        }
+      ],
+      "stdout": "",
+      "stderr": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":1,\"syntax_stored\":1,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":19522,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n{\"version\":\"work-report-v1\",\"command\":\"check-project\",\"reused\":false,\"parsed_modules\":{\"status\":\"miss\",\"performed\":1,\"reused\":0},\"checked_bodies\":{\"status\":\"miss\",\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"status\":\"miss\",\"performed\":0,\"reused\":0},\"lowered_functions\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"links\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"executed_tests\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"reused_results\":0,\"session_reused_results\":0,\"symbolic_templates\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"specialization_bodies\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"semantic_cache\":{\"retained_bytes\":194004,\"ordinary_bytes\":194004,\"symbolic_bytes\":0,\"specialization_bytes\":0,\"evicted\":0},\"bypassed\":[],\"session\":{\"parsed_modules\":{\"performed\":1,\"reused\":0},\"checked_bodies\":{\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"performed\":0,\"reused\":0},\"lowered_functions\":{\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"performed\":0,\"reused\":0},\"links\":{\"performed\":0,\"reused\":0},\"executed_tests\":{\"performed\":0,\"reused\":0}}}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_load_parse\",\"duration_ns\":292874,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"syntax_parse\",\"duration_ns\":730662,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"declarations_interfaces\",\"duration_ns\":16764,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_merge\",\"duration_ns\":48002,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"dependency_key_preparation\",\"duration_ns\":143748,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"retention_store_io\",\"duration_ns\":292202109,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"symbolic_templates\",\"duration_ns\":253,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"ordinary_body_replay\",\"duration_ns\":1722,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"fresh_body_check\",\"duration_ns\":108524,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"entry_adaptation\",\"duration_ns\":3811,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"effect_origin_passes\",\"duration_ns\":64468,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"domain_codec_validation\",\"duration_ns\":157,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"warning_derivation\",\"duration_ns\":443,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"total\",\"duration_ns\":294284173,\"inclusive\":true,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n% time     seconds  usecs/call     calls    errors syscall\n------ ----------- ----------- --------- --------- ----------------\n 63.51    0.001817          17       101           fsync\n 36.49    0.001044          10       103           renameat\n------ ----------- ----------- --------- --------- ----------------\n100.00    0.002861          14       204           total\n"
+    }
+  ],
+  "roots": {
+    "tmpfs": "/tmp/.mylang-fs-review-h82cprdi",
+    "ext4": "/home/epentland/ai/canopy/.mylang-fs-review-l8dfkhu6"
+  },
+  "wall_trace": {
+    "command": [
+      "strace",
+      "-w",
+      "-c",
+      "-e",
+      "trace=%file,write,fsync,fdatasync",
+      "/tmp/mylang-fs-review-il3c_v1r/mylang",
+      "check-project",
+      "/home/epentland/ai/canopy/.mylang-fs-review-l8dfkhu6/main.my",
+      "--report",
+      "--timings=json",
+      "--cache-dir=/home/epentland/ai/canopy/.mylang-fs-review-l8dfkhu6/cold-wall-trace"
+    ],
+    "exit": 0,
+    "wall_ms": 319.2956860002596,
+    "stdout": "",
+    "stderr": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":1,\"syntax_stored\":1,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":19522,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n{\"version\":\"work-report-v1\",\"command\":\"check-project\",\"reused\":false,\"parsed_modules\":{\"status\":\"miss\",\"performed\":1,\"reused\":0},\"checked_bodies\":{\"status\":\"miss\",\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"status\":\"miss\",\"performed\":0,\"reused\":0},\"lowered_functions\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"links\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"executed_tests\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"reused_results\":0,\"session_reused_results\":0,\"symbolic_templates\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"specialization_bodies\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"semantic_cache\":{\"retained_bytes\":194004,\"ordinary_bytes\":194004,\"symbolic_bytes\":0,\"specialization_bytes\":0,\"evicted\":0},\"bypassed\":[],\"session\":{\"parsed_modules\":{\"performed\":1,\"reused\":0},\"checked_bodies\":{\"performed\":101,\"reused\":0},\"instantiated_specializations\":{\"performed\":0,\"reused\":0},\"lowered_functions\":{\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"performed\":0,\"reused\":0},\"links\":{\"performed\":0,\"reused\":0},\"executed_tests\":{\"performed\":0,\"reused\":0}}}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_load_parse\",\"duration_ns\":416734,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"syntax_parse\",\"duration_ns\":1832004,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"declarations_interfaces\",\"duration_ns\":19416,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_merge\",\"duration_ns\":57803,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"dependency_key_preparation\",\"duration_ns\":204822,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"retention_store_io\",\"duration_ns\":310513897,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"symbolic_templates\",\"duration_ns\":309,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"ordinary_body_replay\",\"duration_ns\":2408,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"fresh_body_check\",\"duration_ns\":167970,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"entry_adaptation\",\"duration_ns\":5131,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"effect_origin_passes\",\"duration_ns\":82474,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"domain_codec_validation\",\"duration_ns\":224,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"warning_derivation\",\"duration_ns\":714,\"inclusive\":false,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"total\",\"duration_ns\":314358395,\"inclusive\":true,\"counts\":{\"modules\":1,\"source_bytes\":4834,\"ast_nodes\":303,\"typed_nodes\":303},\"exit_code\":0}\n% time     seconds  usecs/call     calls    errors syscall\n------ ----------- ----------- --------- --------- ----------------\n 97.40    0.287891        2850       101           fsync\n  0.94    0.002781          13       211       104 openat\n  0.79    0.002323          22       103           renameat\n  0.48    0.001411           6       212         6 statx\n  0.32    0.000953           8       111       105 mkdirat\n  0.07    0.000217         217         1           execve\n------ ----------- ----------- --------- --------- ----------------\n100.00    0.295576         399       739       215 total\n"
+  },
+  "driver": "import pathlib,tempfile,subprocess,time,json,hashlib,shutil,os\nsrcbin=pathlib.Path('/tmp/vel-rf-final/bin/mylang'); root=pathlib.Path(tempfile.mkdtemp(prefix='mylang-fs-review-'));compiler=root/'mylang';shutil.copy2(srcbin,compiler)\nsource='module main\\n\\n'+''.join(f'def helper{i}() -> int effects():\\n    return {i}\\n\\n' for i in range(100))+'def main() -> int:\\n    return helper99()\\n'\nenv=os.environ.copy();env['MYLANG_SEMANTIC_BUDGET']='16777216'\ndoc={'compiler_sha256':hashlib.sha256(compiler.read_bytes()).hexdigest(),'source':source,'samples':[],'roots':{}}\nfor family,parent in [('tmpfs','/tmp'),('ext4','/home/epentland/ai/canopy')]:\n base=pathlib.Path(tempfile.mkdtemp(prefix='.mylang-fs-review-',dir=parent));entry=base/'main.my';entry.write_text(source);doc['roots'][family]=str(base)\n for state in ['no_cache','cold_0','cold_1','cold_2','cold_trace']:\n  cache=base/state;cmd=[str(compiler),'check-project',str(entry),'--report','--timings=json','--cache-dir='+str(cache)]\n  if state=='no_cache':cmd=[str(compiler),'check-project',str(entry),'--report','--timings=json','--no-cache']\n  if state=='cold_trace':cmd=['strace','-c','-e','trace=fsync,fdatasync,rename,renameat,renameat2']+cmd\n  begin=time.monotonic();r=subprocess.run(cmd,env=env,capture_output=True,text=True,timeout=30)\n  phases=[]\n  for line in r.stderr.splitlines():\n   if line.startswith('{'):\n    try:x=json.loads(line)\n    except ValueError:continue\n    if x.get('version')=='phase-timings-v1':phases.append(x)\n  item={'filesystem':family,'state':state,'command':cmd,'exit':r.returncode,'wall_ms':(time.monotonic()-begin)*1000,'phases':phases,'stdout':r.stdout,'stderr':r.stderr};doc['samples'].append(item)\n  print(family,state,r.returncode,round(item['wall_ms'],2),[(x['name'],round(x['duration_ns']/1e6,2)) for x in phases if x['name']=='retention_store_io'],flush=True)\n  (root/'evidence.json').write_text(json.dumps(doc,indent=2)+'\\n')\nprint('EVIDENCE',root/'evidence.json');pathlib.Path('/tmp/mylang-fs-review-current.json').write_text(json.dumps({'root':str(root),'evidence':str(root/'evidence.json')}))\n",
+  "scope": "101-body diagnostic probe; three untraced cold samples per filesystem, one no-cache control and syscall probes. Not a new S1 run. No repository build/Guardian gate invoked.",
+  "mounts": {
+    "/tmp": {
+      "filesystem": "tmpfs",
+      "source": "tmpfs"
+    },
+    "/home/epentland/ai": {
+      "filesystem": "ext4",
+      "source": "/dev/nvme0n1p1"
+    }
+  }
+}

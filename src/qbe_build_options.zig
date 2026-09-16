@@ -124,6 +124,7 @@ const Flag = enum {
     @"--target",
     @"--cache-dir",
     @"--select-file",
+    @"--manifest-file",
     @"--report",
     @"--run",
     @"--max-memory",
@@ -158,6 +159,9 @@ fn assign(result: *Options, flag: Flag, value: []const u8) Error!void {
         // The selective frontend input travels in `link_arguments`, which the
         // build driver forwards without adding another frozen Options field.
         .@"--select-file" => {},
+        // An already-checked frontend manifest also travels in `link_arguments`:
+        // the build driver links it directly instead of re-running the frontend.
+        .@"--manifest-file" => {},
         .@"--max-memory" => result.max_memory = @import("memory_budget").parse(value) catch return error.InvalidBuildArguments,
         else => unreachable,
     }
@@ -203,6 +207,12 @@ test "build options accept --no-cache only without a cache directory" {
     try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--no-cache", "--cache-dir=dir" }));
     try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--cache-dir=dir", "--no-cache" }));
     try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--no-cache", "--no-cache" }));
+}
+
+test "build options carry an internal already-checked manifest without a new field" {
+    const parsed = try parse(&.{ "main.my", "--project", "--library", "-o", "lib.so", "--manifest-file=checked.json" });
+    try std.testing.expect(parsed.project and parsed.library);
+    try std.testing.expectEqualStrings("--manifest-file=checked.json", parsed.link_arguments[5]);
 }
 
 // spec-case: MEMORY-CEILING-1

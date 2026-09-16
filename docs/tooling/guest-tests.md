@@ -83,13 +83,19 @@ line whose `executed_tests.performed`/`reused` counts reconcile with the
 and successful receipts, whereas `--no-cache` performs no durable result or graph
 reads and writes at all.
 
-When facts or receipts miss, `native-test-graph` checks the project without QBE
-lowering; the planner then selects only the uncached tests' reachable function
+When facts or receipts miss, one checked compilation per selected provider graph
+produces the test facts and is retained in that graph's `native-test-compile`
+session; the planner then selects only the uncached tests' reachable function
 closure, including required adapters, specializations, runtime support and a
-conservative set around indirect calls and codec boundaries. Only that closure
-is lowered, emitted, compiled and linked, so a helper edit does not rebuild the
-whole selected-provider project. Distinct provider graphs stay isolated;
-identical graphs share one closure and library per invocation.
+conservative set around indirect calls and codec boundaries. Selective lowering
+consumes that same checked result, and the linking driver consumes its checked
+frontend manifest (`--manifest-file`) instead of spawning a second frontend, so
+each provider graph is fully checked once. Only that closure is lowered, emitted,
+compiled and linked, so a helper edit does not rebuild the whole selected-provider
+project. A whole-project request with no selection keeps its own frontend check
+and is reported as a named `work-report-v1` bypass rather than hidden. Distinct
+provider graphs stay isolated; identical graphs share one closure and library per
+invocation.
 
 A successful deterministic case leaves a receipt under `.mylang-cache/tests`, or
 under `--cache-dir DIR`. The receipt's identity covers the case settings, the

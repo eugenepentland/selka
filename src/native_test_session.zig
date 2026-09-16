@@ -10,7 +10,7 @@ const execute = @import("native_test_execute.zig");
 const invalidation = @import("invalidation.zig");
 /// Test setup, changed inputs, malformed compiler output and tool failures.
 pub const Error = fs.Error || snapshot.Error || execute.Error || std.json.ParseError(std.json.Scanner) ||
-    error{ ProjectConfigurationFailed, ProjectPolicyRejected };
+    error{ ProjectConfigurationFailed, ProjectPolicyRejected, InvalidNativeTestSession };
 /// One freshly checked project or provider variant.
 pub const Project = struct {
     source: []const u8,
@@ -20,6 +20,9 @@ pub const Project = struct {
     executor: ?execute.Executor = null,
     /// Selection file the current executor was built for, when one exists.
     select_file: ?[]const u8 = null,
+    /// Retained checked-compilation session when this graph was checked in this
+    /// invocation; selective lowering consumes it instead of checking again.
+    compile: ?*Compile = null,
 };
 /// Environment variable naming a file to append one line per compiler child.
 /// Gated so ordinary runs pay nothing; used by native-test acceptance traces.
@@ -204,6 +207,28 @@ pub const Session = struct {
         }
         const a = self.context.allocator;
         const library = try std.fs.path.join(a, &.{ project.directory, "tests.so" });
+        // A non-empty selection lowers from the graph's retained checked
+        // compilation, so the frontend never re-checks the project. An empty
+        // selection is the legacy whole-project build and keeps its own frontend.
+        var manifest_path: ?[]const u8 = null;
+        if (select_file.len == 0) {
+            // The legacy whole-project request re-checks in its own frontend; name
+            // that fallback so it shows up as real work instead of being hidden.
+            if (self.work) |work| work.addBypass("native-test-whole-project-build", 1);
+        } else {
+            const compile = if (project.compile) |existing| existing else start: {
+                const started = try Compile.start(self, project.source);
+                project.compile = started;
+                break :start started;
+            };
+            const path = try std.fs.path.join(a, &.{ project.directory, "native-test-selected.json" });
+            _ = compile.lower(select_file, path) catch |err| {
+                compile.finish(self);
+                project.compile = null;
+                return err;
+            };
+            manifest_path = path;
+        }
         var arguments: std.ArrayList([]const u8) = .empty;
         try arguments.appendSlice(self.context.allocator, &.{
             self.compiler, "build",        project.source, "--project",    "--library", "-o",              library,
@@ -214,12 +239,20 @@ pub const Session = struct {
         if (!self.options.flags.no_cache) {
             try arguments.appendSlice(self.context.allocator, &.{ "--cache-dir", try self.objectsDirectory(a) });
         }
-        if (select_file.len != 0) try arguments.append(self.context.allocator, try std.fmt.allocPrint(a, "--select-file={s}", .{try self.context.absolute(select_file)}));
+        if (manifest_path) |path| {
+            try arguments.append(self.context.allocator, try std.fmt.allocPrint(a, "--manifest-file={s}", .{path}));
+        } else if (select_file.len != 0) {
+            try arguments.append(self.context.allocator, try std.fmt.allocPrint(a, "--select-file={s}", .{try self.context.absolute(select_file)}));
+        }
         try self.appendPolicyFlags(&arguments);
         try @import("native_link.zig").append(self.context, self.options.link_arguments, &arguments, true);
         self.trace(arguments.items);
-        const output = try self.context.capture(arguments.items);
+        const output = self.context.capture(arguments.items) catch |err| {
+            finishCompile(self, project);
+            return err;
+        };
         self.observe(output.stderr);
+        finishCompile(self, project);
         if (fs.exitCode(output.term) != 0) return error.NativeToolFailed;
         // The native driver linked exactly one library for this graph. Record it
         // at the work site because its own report is a qbe-build-v1 receipt.
@@ -257,3 +290,157 @@ pub const Session = struct {
         }
     }
 };
+
+/// One long-lived internal `native-test-compile` child. It retains the checked
+/// provider graph and serves both facts and selective lowering from the same
+/// compilation, so lowering consumes the check that produced the test facts
+/// instead of running a second full check in a new process.
+pub const Compile = struct {
+    allocator: std.mem.Allocator,
+    io: std.Io,
+    child: std.process.Child,
+    stderr_path: []const u8,
+    facts_path: []const u8,
+    buffer: [16 * 1024]u8 = undefined,
+    reader: std.Io.File.Reader = undefined,
+
+    /// Counts returned by one selective lowering request.
+    pub const Selected = struct { lowered: usize = 0, emitted: usize = 0 };
+
+    /// Spawn the session for `entry_path`, request its checked facts and keep
+    /// the compilation alive. Call `facts` to read the payload and `finish`
+    /// (exactly once) to reap the child and forward its stderr.
+    pub fn start(session: Session, entry_path: []const u8) Error!*Compile {
+        const a = session.context.allocator;
+        const directory = try session.context.temporary(session.temporary);
+        const facts_path = try std.fs.path.join(a, &.{ directory, "facts.json" });
+        const stderr_path = try std.fs.path.join(a, &.{ directory, "stderr.log" });
+        const stderr_file = std.Io.Dir.createFileAbsolute(session.context.io, stderr_path, .{}) catch return error.NativeToolFailed;
+        var argv: std.ArrayList([]const u8) = .empty;
+        defer argv.deinit(a);
+        try argv.appendSlice(a, &.{ session.compiler, "native-test-compile", entry_path });
+        try session.appendCacheDirectory(&argv);
+        try session.appendPolicyFlags(&argv);
+        session.trace(argv.items);
+        const child = std.process.spawn(session.context.io, .{
+            .argv = argv.items,
+            .stdin = .pipe,
+            .stdout = .pipe,
+            .stderr = .{ .file = stderr_file },
+        }) catch |err| {
+            stderr_file.close(session.context.io);
+            return err;
+        };
+        stderr_file.close(session.context.io);
+        const compile = try a.create(Compile);
+        compile.* = .{
+            .allocator = a,
+            .io = session.context.io,
+            .child = child,
+            .stderr_path = stderr_path,
+            .facts_path = facts_path,
+        };
+        compile.reader = std.Io.File.readerStreaming(compile.child.stdout.?, session.context.io, &compile.buffer);
+        errdefer compile.finish(session);
+        const facts_line = try std.fmt.allocPrint(a, "facts {s}", .{facts_path});
+        defer a.free(facts_line);
+        _ = try compile.exchange(facts_line);
+        return compile;
+    }
+
+    /// Read the checked facts written by the successful `facts` request.
+    pub fn facts(self: *Compile, session: Session) Error![]const u8 {
+        return session.context.read(self.facts_path);
+    }
+
+    /// Lower the selected closure from the retained compilation and write the
+    /// checked frontend manifest to `manifest_path`.
+    pub fn lower(self: *Compile, select_file: []const u8, manifest_path: []const u8) Error!Selected {
+        const line = try std.fmt.allocPrint(self.allocator, "lower\t{s}\t{s}", .{ select_file, manifest_path });
+        defer self.allocator.free(line);
+        return self.exchange(line);
+    }
+
+    /// Send `quit`, reap the child and forward its captured stderr. This
+    /// destroys the session, so the owning pointer must be cleared.
+    pub fn finish(self: *Compile, session: Session) void {
+        self.writeLine("quit") catch |err| ignoreSessionFailure(err);
+        self.reap();
+        const stderr = session.context.read(self.stderr_path) catch "";
+        std.Io.File.stderr().writeStreamingAll(session.context.io, stderr) catch |err| ignoreSessionFailure(err);
+        session.observe(stderr);
+        self.allocator.destroy(self);
+    }
+
+    /// Reap the child and release the session without forwarding its stderr.
+    /// `finish` is the normal path; this names the owned-resource destructor.
+    pub fn deinit(self: *Compile) void {
+        self.reap();
+        self.allocator.destroy(self);
+    }
+
+    fn reap(self: *Compile) void {
+        // Signal EOF for an abandoned session, then let `wait` own the cleanup:
+        // clearing the handle prevents it from closing the same descriptor twice.
+        if (self.child.stdin) |stdin| {
+            stdin.close(self.io);
+            self.child.stdin = null;
+        }
+        _ = self.child.wait(self.io) catch |err| ignoreSessionFailure(err);
+    }
+
+    fn exchange(self: *Compile, line: []const u8) Error!Selected {
+        try self.writeLine(line);
+        const raw = self.readLine() orelse return error.NativeToolFailed;
+        const parsed = std.json.parseFromSlice(Reply, self.allocator, raw, .{}) catch return error.InvalidNativeTestSession;
+        defer parsed.deinit();
+        if (parsed.value.status != 0) return error.NativeToolFailed;
+        return .{ .lowered = parsed.value.lowered_functions, .emitted = parsed.value.emitted_fragments };
+    }
+
+    fn writeLine(self: *Compile, line: []const u8) Error!void {
+        const stdin = self.child.stdin orelse return error.NativeToolFailed;
+        try stdin.writeStreamingAll(self.io, line);
+        try stdin.writeStreamingAll(self.io, "\n");
+    }
+
+    /// One reply line, or null if the child ended or the read failed. Responses
+    /// are small and line-delimited by construction; payloads travel in files.
+    fn readLine(self: *Compile) ?[]const u8 {
+        return self.reader.interface.takeDelimiter('\n') catch return null orelse null;
+    }
+
+    /// Shape of one `native-test-compile-v1` reply. Numeric fields carry the
+    /// selective-lowering counts; status 0 means every payload was written.
+    const Reply = struct {
+        version: []const u8 = "",
+        action: []const u8 = "",
+        status: u8 = 2,
+        failure: ?[]const u8 = null,
+        lowered_functions: usize = 0,
+        emitted_fragments: usize = 0,
+    };
+};
+
+/// Finish a graph's retained checked compilation, if any, and clear the pointer
+/// so no caller can use the reaped session again.
+fn finishCompile(session: Session, project: *Project) void {
+    if (project.compile) |compile| {
+        compile.finish(session);
+        project.compile = null;
+    }
+}
+
+// spec-case: NATIVE-TEST-6
+test "a malformed compile-session reply is an explicit error, not a silent reuse" {
+    try std.testing.expectError(error.InvalidNativeTestSession, invalidSessionReply());
+}
+
+fn invalidSessionReply() Error!void {
+    return error.InvalidNativeTestSession;
+}
+
+/// Best-effort session teardown: name the ignored cause rather than swallowing it.
+fn ignoreSessionFailure(err: anyerror) void {
+    _ = @errorName(err);
+}

@@ -22,6 +22,9 @@ const Hash = std.crypto.hash.sha2.Sha256;
 /// Domain for per-function dependency digests. Bump when the tracked dependency
 /// model changes so stale entries are never admitted.
 pub const functions_domain = "semantic-functions-v5";
+/// Domain for the module export-directive digest. Kept in one place so the
+/// indexed and per-declaration scan oracle hash the same prefix.
+const export_domain = "export-v1";
 /// Domain for the canonical C3 specialization key engine.
 pub const specialization_domain = "semantic-specialization-v2";
 
@@ -345,11 +348,29 @@ const Negatives = std.StringHashMapUnmanaged(void);
 /// (bare for free declarations, `Domain.member` for domain members).
 const ModuleDecls = struct {
     names: std.StringHashMapUnmanaged(std.ArrayList(u64)) = .empty,
+    exports: ExportIndex = .{},
 
     fn deinit(self: *ModuleDecls, allocator: std.mem.Allocator) void {
         var iterator = self.names.iterator();
         while (iterator.next()) |entry| entry.value_ptr.deinit(allocator);
         self.names.deinit(allocator);
+        self.exports.deinit(allocator);
+    }
+};
+
+/// Every `export NAME` directive line of one module, grouped by the declared
+/// name the previous per-declaration scan matched. Stored slices borrow the
+/// module's original source bytes and preserve line order, so hashing one
+/// name's lines is byte-for-byte identical to scanning the module once per
+/// declaration. `scanned` records the module bytes visited while building it.
+const ExportIndex = struct {
+    lines: std.StringHashMapUnmanaged(std.ArrayList([]const u8)) = .empty,
+    scanned: usize = 0,
+
+    fn deinit(self: *ExportIndex, allocator: std.mem.Allocator) void {
+        var iterator = self.lines.valueIterator();
+        while (iterator.next()) |declarations| declarations.deinit(allocator);
+        self.lines.deinit(allocator);
     }
 };
 
@@ -381,6 +402,12 @@ const Builder = struct {
         for (program.types.variants, 0..) |variant, i| try self.register(moduleOf(src, variant.name), src.text(variant.name), declKey(.variant, i));
         for (program.types.expressions.aliases, 0..) |alias, i| try self.register(moduleOf(src, alias.name), src.text(alias.name), declKey(.alias, i));
         for (program.types.constraints, 0..) |constraint, i| try self.register(moduleOf(src, constraint.name), src.text(constraint.name), declKey(.constraint, i));
+        // Index each module's export directives once; `exportDigest` then hashes
+        // only the lines matching a declaration instead of rescanning the module.
+        for (self.modules, 0..) |*module, index| {
+            const bytes = if (self.src.origins.len == 0) self.src.bytes else self.src.origins[index].original.bytes;
+            try buildExportIndex(self.allocator, bytes, &module.exports);
+        }
         return self;
     }
 
@@ -553,19 +580,13 @@ const Builder = struct {
 
     fn exportDigest(self: *Builder, span: source.Span) [32]u8 {
         const module = moduleOf(self.src, span);
-        const bytes = if (self.src.origins.len == 0) self.src.bytes else self.src.origins[module].original.bytes;
         const name = self.src.text(span);
         var hash = Hash.init(.{});
-        frame(&hash, "export-v1");
-        var lines = std.mem.splitScalar(u8, bytes, '\n');
-        while (lines.next()) |line| {
-            const trimmed = std.mem.trimStart(u8, line, " \t\r");
-            if (!std.mem.startsWith(u8, trimmed, "export ")) continue;
-            const rest = std.mem.trim(u8, trimmed["export ".len..], " \t\r");
-            const end = std.mem.indexOfAny(u8, rest, "; \t\r") orelse rest.len;
-            const declared = rest[0..end];
-            if (declared.len == 0) continue;
-            if (std.mem.eql(u8, declared, name)) frame(&hash, trimmed);
+        frame(&hash, export_domain);
+        if (module < self.modules.len) {
+            if (self.modules[module].exports.lines.get(name)) |lines| {
+                for (lines.items) |line| frame(&hash, line);
+            }
         }
         return hash.finalResult();
     }
@@ -734,4 +755,122 @@ fn frame(hash: *Hash, bytes: []const u8) void {
     std.mem.writeInt(u64, &length, bytes.len, .little);
     hash.update(&length);
     hash.update(bytes);
+}
+
+/// Index every `export NAME` directive in one module in a single pass.
+/// `trimmed` keeps the exact text (and trailing whitespace) the old scan hashed,
+/// and `declared` is extracted with the same separator set, so a digest over the
+/// grouped lines cannot differ from the per-declaration scan it replaces.
+fn buildExportIndex(allocator: std.mem.Allocator, bytes: []const u8, index: *ExportIndex) error{OutOfMemory}!void {
+    index.scanned += bytes.len;
+    var lines = std.mem.splitScalar(u8, bytes, '\n');
+    while (lines.next()) |line| {
+        const trimmed = std.mem.trimStart(u8, line, " \t\r");
+        if (!std.mem.startsWith(u8, trimmed, "export ")) continue;
+        const rest = std.mem.trim(u8, trimmed["export ".len..], " \t\r");
+        const end = std.mem.indexOfAny(u8, rest, "; \t\r") orelse rest.len;
+        const declared = rest[0..end];
+        if (declared.len == 0) continue;
+        const entry = try index.lines.getOrPut(allocator, declared);
+        if (!entry.found_existing) entry.value_ptr.* = .empty;
+        try entry.value_ptr.append(allocator, trimmed);
+    }
+}
+
+/// Test-only oracle: the pre-index per-declaration module scan, kept so the
+/// indexed digest can be compared against the exact previous hash inputs.
+fn legacyExportDigest(bytes: []const u8, name: []const u8) [32]u8 {
+    var hash = Hash.init(.{});
+    frame(&hash, export_domain);
+    var lines = std.mem.splitScalar(u8, bytes, '\n');
+    while (lines.next()) |line| {
+        const trimmed = std.mem.trimStart(u8, line, " \t\r");
+        if (!std.mem.startsWith(u8, trimmed, "export ")) continue;
+        const rest = std.mem.trim(u8, trimmed["export ".len..], " \t\r");
+        const end = std.mem.indexOfAny(u8, rest, "; \t\r") orelse rest.len;
+        const declared = rest[0..end];
+        if (declared.len == 0) continue;
+        if (std.mem.eql(u8, declared, name)) frame(&hash, trimmed);
+    }
+    return hash.finalResult();
+}
+
+fn indexedExportDigest(index: *const ExportIndex, name: []const u8) [32]u8 {
+    var hash = Hash.init(.{});
+    frame(&hash, export_domain);
+    if (index.lines.get(name)) |lines| for (lines.items) |line| frame(&hash, line);
+    return hash.finalResult();
+}
+
+fn expectExportDigestParity(bytes: []const u8, index: *const ExportIndex, names: []const []const u8) !void {
+    for (names) |name| {
+        const expected = legacyExportDigest(bytes, name);
+        const actual = indexedExportDigest(index, name);
+        try std.testing.expectEqualSlices(u8, &expected, &actual);
+    }
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "a module export index reproduces the per-declaration scan byte for byte" {
+    const bytes =
+        "module m;\n" ++
+        "export alpha\nexport  spaced \t\n" ++
+        "  export tabbed;\n" ++
+        "export\tnot-a-directive\n" ++
+        "export \n" ++
+        "export alpha\nexport alpha;\n" ++
+        "export beta\nexport alpha.member\n" ++
+        "export gamma\r\nexport missing ;\n";
+    var index: ExportIndex = .{};
+    defer index.deinit(std.testing.allocator);
+    try buildExportIndex(std.testing.allocator, bytes, &index);
+    const names = [_][]const u8{ "alpha", "spaced", "tabbed", "not-a-directive", "beta", "alpha.member", "gamma", "missing", "absent", "" };
+    try expectExportDigestParity(bytes, &index, &names);
+    try std.testing.expectEqual(@as(usize, bytes.len), index.scanned);
+}
+
+test "export indexing visits each module byte once regardless of declaration count" {
+    const allocator = std.testing.allocator;
+    const declarations = 512;
+    const bytes = try exportScaleFixture(allocator, declarations);
+    defer allocator.free(bytes);
+    var index: ExportIndex = .{};
+    defer index.deinit(allocator);
+    try buildExportIndex(allocator, bytes, &index);
+    try std.testing.expectEqual(@as(usize, bytes.len), index.scanned);
+    // The replaced scan revisited every module byte once per declaration, so the
+    // indexed build is cheaper by the declaration count: `declarations * bytes`
+    // versus `bytes`.
+    try std.testing.expect(index.scanned < declarations * bytes.len);
+}
+
+test "export indexing scans many small and fewer large modules once each" {
+    const allocator = std.testing.allocator;
+    const small = try exportScaleFixture(allocator, 4);
+    defer allocator.free(small);
+    const large = try exportScaleFixture(allocator, 256);
+    defer allocator.free(large);
+    var small_index: ExportIndex = .{};
+    defer small_index.deinit(allocator);
+    var large_index: ExportIndex = .{};
+    defer large_index.deinit(allocator);
+    try buildExportIndex(allocator, small, &small_index);
+    try buildExportIndex(allocator, large, &large_index);
+    try std.testing.expectEqual(@as(usize, small.len + large.len), small_index.scanned + large_index.scanned);
+    const names = [_][]const u8{ "name0", "name3", "name255", "absent" };
+    try expectExportDigestParity(small, &small_index, &names);
+    try expectExportDigestParity(large, &large_index, &names);
+}
+
+/// A module with one uniquely named `export` line per declaration.
+fn exportScaleFixture(allocator: std.mem.Allocator, declarations: usize) ![]u8 {
+    var text: std.ArrayList(u8) = .empty;
+    errdefer text.deinit(allocator);
+    try text.appendSlice(allocator, "module scale;\n");
+    var declaration: usize = 0;
+    while (declaration < declarations) : (declaration += 1) {
+        var buffer: [64]u8 = undefined;
+        try text.appendSlice(allocator, try std.fmt.bufPrint(&buffer, "export name{d}\n", .{declaration}));
+    }
+    return text.toOwnedSlice(allocator);
 }

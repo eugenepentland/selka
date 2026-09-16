@@ -38,7 +38,21 @@ const Graphs = struct {
     entries: std.StringHashMapUnmanaged(*Graph) = .empty,
 
     fn deinit(self: *Graphs) void {
+        self.finishSessions();
         self.entries.deinit(self.allocator);
+    }
+
+    /// Reap every retained checked-compilation session and fold its work report.
+    /// Call this before the invocation's own report so child counters are complete.
+    fn finishSessions(self: *Graphs) void {
+        var iterator = self.entries.valueIterator();
+        while (iterator.next()) |entry| {
+            const project = &entry.*.project;
+            if (project.compile) |compile| {
+                compile.finish(self.session);
+                project.compile = null;
+            }
+        }
     }
 
     fn get(self: *Graphs, case: cases.Case) Error!*Graph {
@@ -68,13 +82,18 @@ const Graphs = struct {
                 .source_identity = self.captured.identity,
             };
         }
-        try self.entries.put(self.allocator, provider_identity, graph);
+        self.entries.put(self.allocator, provider_identity, graph) catch |err| {
+            // The graph map is the owner of a successful graph; if publishing the
+            // entry fails, its retained checked compilation must still be reaped.
+            if (graph.project.compile) |compile| compile.finish(self.session);
+            return err;
+        };
         return graph;
     }
 
     /// Admit durable checked facts only after the project passes the shared query
-    /// cache; otherwise produce facts with `native-test-graph`, which checks every
-    /// body but performs no lowering or QBE emission.
+    /// cache; otherwise check once through the retained `native-test-compile`
+    /// session, which performs no lowering or QBE emission on the facts request.
     fn prepare(self: *Graphs, entry_path: []const u8, source_identity: []const u8, provider_identity: []const u8) Error!sessions.Project {
         const session = self.session;
         const key = try graph_store.key(self.allocator, .{
@@ -94,7 +113,13 @@ const Graphs = struct {
                 return session.projectFromValue(entry_path, facts);
             }
         }
-        const project = try session.facts(entry_path);
+        const compile = try sessions.Compile.start(session, entry_path);
+        // Any failure after the session starts must reap it; a successful return
+        // transfers the retained compilation to the graph.
+        errdefer compile.finish(session);
+        const facts = try compile.facts(session);
+        var project = try session.projectFromManifest(entry_path, facts);
+        project.compile = compile;
         if (!session.options.flags.no_cache and session.environment.cacheable) {
             const payload = std.json.Stringify.valueAlloc(self.allocator, project.manifest, .{}) catch return error.OutOfMemory;
             graph_store.store(session.context, self.directory, key, payload) catch |err| ignoreStoreFailure(err);
@@ -169,6 +194,9 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     };
     try prepareSelectedGraphs(context, session, results, pending.items);
     try executeSelectedCases(context, session, selected, results, pending.items);
+    // Reap any retained checked-compilation sessions before the invocation's own
+    // work report so their child counters are folded into it.
+    graphs.finishSessions();
     try session.verify();
     if (opts.cases) |path| {
         if (!std.mem.eql(u8, config_bytes, try context.read(path))) return error.SourceChanged;
@@ -393,7 +421,15 @@ test "one prepared project graph is shared per selected provider identity" {
         "\"functions\":[{\"name\":\"main::x\",\"symbol\":\"sym\"," ++
         "\"test_dependencies\":{\"implementation_hash\":\"0000000000000000000000000000000000000000000000000000000000000000\"," ++
         "\"dependencies\":[],\"cacheable\":true,\"reasons\":[]}}]}";
-    try text.appendSlice(context.allocator, "' ;;\n  native-test-graph) printf '%s\\n' '" ++ graph_manifest ++ "' ;;\nesac\n");
+    try text.appendSlice(context.allocator, "' ;;\n  native-test-compile)\n" ++
+        "    while read -r action first second; do\n" ++
+        "      case \"$action\" in\n" ++
+        "        facts) printf '%s' '" ++ graph_manifest ++ "' > \"$first\" ;;\n" ++
+        "        lower) printf '%s' '" ++ graph_manifest ++ "' > \"$second\" ;;\n" ++
+        "        quit) exit 0 ;;\n" ++
+        "      esac\n" ++
+        "      printf '%s\\n' '{\"version\":\"native-test-compile-v1\",\"action\":\"ok\",\"status\":0,\"failure\":null,\"lowered_functions\":0,\"emitted_fragments\":0}'\n" ++
+        "    done\n    ;;\nesac\n");
     var file = try std.Io.Dir.createFileAbsolute(context.io, script, .{ .permissions = .executable_file });
     try file.writeStreamingAll(context.io, text.items);
     file.close(context.io);
@@ -428,7 +464,7 @@ test "one prepared project graph is shared per selected provider identity" {
     const provider_distinct = try graphs.get(second_provider);
     try std.testing.expect(provider_first != provider_distinct);
     const calls = try context.read(log);
-    try std.testing.expectEqual(@as(usize, 3), std.mem.count(u8, calls, "native-test-graph"));
+    try std.testing.expectEqual(@as(usize, 3), std.mem.count(u8, calls, "native-test-compile"));
     try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, calls, "list-interfaces"));
 }
 

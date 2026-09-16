@@ -4,6 +4,8 @@ const inputs_prefix = "--inputs=";
 const policy_prefix = "--policy=";
 const cache_directory_prefix = "--cache-dir=";
 const select_file_prefix = "--select-file=";
+/// Shared internal session failure name for an over-long request line.
+const request_too_long = "RequestTooLong";
 /// Phase label and default cache-directory leaf, shared so the literal is not
 /// repeated across the timer and the persistent-cache path join.
 const frontend_label = "frontend";
@@ -257,6 +259,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .@"fmt-project",
         .@"emit-project-qbe",
         .@"native-test-graph",
+        .@"native-test-compile",
         => return listModules(init, parsed),
         else => {},
     }
@@ -370,6 +373,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .@"list-declarations",
         .@"emit-project-qbe",
         .@"native-test-graph",
+        .@"native-test-compile",
         .@"list-modules",
         .@"list-interfaces",
         .@"check-project",
@@ -516,6 +520,7 @@ const Command = enum {
     @"input-module",
     @"emit-project-qbe",
     @"native-test-graph",
+    @"native-test-compile",
     @"fmt-project",
     @"fmt-module",
     @"report-project-quality",
@@ -1116,6 +1121,10 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         recordCheckWork(init, functions, semantic_before, compilation.program);
         init.timings.counts.ast_nodes = compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len;
         init.timings.counts.typed_nodes = compilation.program.?.nodes.len + compilation.program.?.statements.len;
+        // The internal native-test compile session keeps this one checked
+        // compilation alive and serves facts plus selective lowering from it, so
+        // a provider graph is never checked again just to emit its closure.
+        if (parsed.command == .@"native-test-compile") return nativeTestCompileSession(init, &compilation);
         const executed = executedStages(parsed.command);
         // A selective `emit-project-qbe --select-file` lowers only its closure in
         // the emission helper; the whole-project receipt pass must not lower first.
@@ -1244,6 +1253,81 @@ fn emitNativeTestFacts(init: Context, compilation: *language.project_compile.Com
     };
     init.timings.end();
     return facts;
+}
+
+/// Internal checked-compilation session. It keeps the one compilation already
+/// checked by `listModulesWithCache` and serves facts plus selective lowering
+/// requests from it, so a native-test provider graph is checked exactly once.
+/// Requests are one line each: `facts <out>`, `lower <select> <out>`, `quit`.
+fn nativeTestCompileSession(init: Context, compilation: *language.project_compile.Compilation) !u8 {
+    var buffer: [8192]u8 = undefined;
+    var input = std.Io.File.stdin().readerStreaming(init.io, &buffer);
+    while (true) {
+        const raw = input.interface.takeDelimiter('\n') catch |err| switch (err) {
+            error.StreamTooLong => return nativeTestCompileReply(init, "invalid", 2, request_too_long, 0, 0),
+            else => return err,
+        } orelse return 0;
+        const line = std.mem.trim(u8, raw, " \t\r");
+        if (std.mem.eql(u8, line, "quit")) return nativeTestCompileReply(init, "quit", 0, null, 0, 0);
+        if (std.mem.startsWith(u8, line, "facts ")) {
+            const path = std.mem.trim(u8, line["facts ".len..], " \t");
+            if (path.len == 0) return nativeTestCompileReply(init, "facts", 2, "MissingOutput", 0, 0);
+            const facts = emitNativeTestFacts(init, compilation) catch |err| switch (err) {
+                error.SourceError => return nativeTestCompileReply(init, "facts", 1, "SourceError", 0, 0),
+                else => return err,
+            };
+            defer init.gpa.free(facts);
+            try std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = path, .data = facts });
+            _ = try nativeTestCompileReply(init, "facts", 0, null, 0, 0);
+            continue;
+        }
+        if (std.mem.startsWith(u8, line, "lower")) {
+            var fields = std.mem.splitScalar(u8, line, '\t');
+            _ = fields.next();
+            const select = std.mem.trim(u8, fields.next() orelse "", " \t");
+            const output = std.mem.trim(u8, fields.next() orelse "", " \t");
+            if (select.len == 0 or output.len == 0) return nativeTestCompileReply(init, "lower", 2, "MissingSelection", 0, 0);
+            const names = selectionNames(init, select) catch |err| switch (err) {
+                error.OutOfMemory => return err,
+                else => return nativeTestCompileReply(init, "lower", 1, "SelectionReadFailed", 0, 0),
+            };
+            defer {
+                for (names) |name| init.gpa.free(name);
+                init.gpa.free(names);
+            }
+            init.timings.begin(lowering_phase, false);
+            var stats: language.project_compile.Compilation.SelectedStats = .{};
+            const manifest = compilation.emitQbeSelected(init.gpa, names, &stats) catch |err| switch (err) {
+                error.SourceError => return nativeTestCompileReply(init, "lower", 1, "SourceError", 0, 0),
+                else => return err,
+            };
+            defer init.gpa.free(manifest);
+            recordLoweredCount(init, stats.lowered_functions);
+            setWork(init, .emitted_fragments, stats.emitted_fragments, 0);
+            init.timings.end();
+            try std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = output, .data = manifest });
+            _ = try nativeTestCompileReply(init, "lower", 0, null, stats.lowered_functions, stats.emitted_fragments);
+            continue;
+        }
+        return nativeTestCompileReply(init, "invalid", 2, "UnknownSessionCommand", 0, 0);
+    }
+}
+
+/// One `native-test-compile-v1` reply line. The checked payload itself is
+/// written to the request's output path so the session stream stays line-sized.
+fn nativeTestCompileReply(init: Context, action: []const u8, status: u8, failure: ?[]const u8, lowered: usize, emitted: usize) !u8 {
+    const text = try std.json.Stringify.valueAlloc(init.gpa, .{
+        .version = "native-test-compile-v1",
+        .action = action,
+        .status = status,
+        .failure = failure,
+        .lowered_functions = lowered,
+        .emitted_fragments = emitted,
+    }, .{});
+    defer init.gpa.free(text);
+    try std.Io.File.stdout().writeStreamingAll(init.io, text);
+    try std.Io.File.stdout().writeStreamingAll(init.io, "\n");
+    return status;
 }
 
 fn emitRequestedOutput(init: Context, compilation: *language.project_compile.Compilation, parsed: Parsed) !?[]u8 {
@@ -1918,13 +2002,13 @@ fn checkSession(init: Context, parsed: Parsed) !u8 {
     while (true) {
         const line = input.interface.takeDelimiter('\n') catch |err| switch (err) {
             error.StreamTooLong => {
-                try sessionReply(init, .{ .action = "invalid", .status = 2, .failure = "RequestTooLong" }, cache.syntax.statistics, &cache, .{});
+                try sessionReply(init, .{ .action = "invalid", .status = 2, .failure = request_too_long }, cache.syntax.statistics, &cache, .{});
                 return 2;
             },
             else => return err,
         } orelse return 0;
         if (line.len > 128) {
-            try sessionReply(init, .{ .action = "invalid", .status = 2, .failure = "RequestTooLong" }, cache.syntax.statistics, &cache, .{});
+            try sessionReply(init, .{ .action = "invalid", .status = 2, .failure = request_too_long }, cache.syntax.statistics, &cache, .{});
             return 2;
         }
         const action = std.mem.trim(u8, line, " \t\r");

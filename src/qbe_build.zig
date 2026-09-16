@@ -100,7 +100,6 @@ fn frontendCompiler(context: fs.Context) fs.Error![]const u8 {
 }
 fn build(context: fs.Context, parsed: options.Options, controls: []const []const u8) !u8 {
     const a = context.allocator;
-    const compiler = try frontendCompiler(context);
     const prepared = prepare(context, parsed) catch |err| switch (err) {
         error.NativeToolFailed => return 2,
         else => return err,
@@ -109,32 +108,40 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
     const temporary = cache.temporary;
     defer context.remove(temporary);
     const start = std.Io.Timestamp.now(context.io, .awake);
-    // The frontend child reuses its persistent content-addressed cache by default.
-    // An explicit `--cache-dir` keeps the frontend under that same root; the
-    // `no_cache` sentinel disables reuse for this build.
-    // `build --run` follows `run`'s project detection: a source that opens as a
-    // module should load its imports rather than being treated as one unit.
-    var project = parsed.project;
-    if (!project and parsed.run) project = module_syntax.usesModuleSyntax(try context.read(try context.absolute(parsed.source)));
-    var arguments: std.ArrayList([]const u8) = .empty;
-    try arguments.appendSlice(a, &.{ compiler, if (project) "emit-project-qbe" else "emit-qbe", try context.absolute(parsed.source) });
-    if (std.mem.eql(u8, parsed.cache, options.no_cache)) {
-        try arguments.append(a, "--no-cache");
-    } else if (!std.mem.eql(u8, parsed.cache, options.default_cache)) {
-        try arguments.append(a, try std.fmt.allocPrint(a, "--cache-dir={s}", .{parsed.cache}));
-    }
-    if (selectFile(parsed.link_arguments)) |path| {
-        try arguments.append(a, try std.fmt.allocPrint(a, "--select-file={s}", .{path}));
-        // Forward the work-report request for selective test builds so native-test
-        // parents observe the frontend's real lowering/emission counts.
-        if (parsed.report) try arguments.append(a, "--report");
-    }
-    const generated = try context.capture(arguments.items);
-    const code = fs.exitCode(generated.term);
-    if (code != 0) return code;
-    const manifest = (try std.json.parseFromSlice(std.json.Value, a, generated.stdout, .{ .allocate = .alloc_always })).value;
+    // An internal `--manifest-file` names an already checked frontend manifest,
+    // so the frontend is not spawned again and its check is consumed directly.
+    const checked_manifest = manifestFile(parsed.link_arguments);
+    const manifest_bytes = if (checked_manifest) |path| try context.read(path) else frontend: {
+        // The frontend child reuses its persistent content-addressed cache by default.
+        // An explicit `--cache-dir` keeps the frontend under that same root; the
+        // `no_cache` sentinel disables reuse for this build.
+        // `build --run` follows `run`'s project detection: a source that opens as a
+        // module should load its imports rather than being treated as one unit.
+        var project = parsed.project;
+        if (!project and parsed.run) project = module_syntax.usesModuleSyntax(try context.read(try context.absolute(parsed.source)));
+        const compiler = try frontendCompiler(context);
+        var arguments: std.ArrayList([]const u8) = .empty;
+        try arguments.appendSlice(a, &.{ compiler, if (project) "emit-project-qbe" else "emit-qbe", try context.absolute(parsed.source) });
+        if (std.mem.eql(u8, parsed.cache, options.no_cache)) {
+            try arguments.append(a, "--no-cache");
+        } else if (!std.mem.eql(u8, parsed.cache, options.default_cache)) {
+            try arguments.append(a, try std.fmt.allocPrint(a, "--cache-dir={s}", .{parsed.cache}));
+        }
+        if (selectFile(parsed.link_arguments)) |path| {
+            try arguments.append(a, try std.fmt.allocPrint(a, "--select-file={s}", .{path}));
+            // Forward the work-report request for selective test builds so native-test
+            // parents observe the frontend's real lowering/emission counts.
+            if (parsed.report) try arguments.append(a, "--report");
+        }
+        const generated = try context.capture(arguments.items);
+        const code = fs.exitCode(generated.term);
+        if (code != 0) return code;
+        break :frontend generated.stdout;
+    };
+    const manifest = (try std.json.parseFromSlice(std.json.Value, a, manifest_bytes, .{ .allocate = .alloc_always })).value;
     try validate(manifest);
-    const frontend = seconds(context, start);
+    // A consumed manifest reports no frontend time because no frontend ran.
+    const frontend = if (checked_manifest != null) 0 else seconds(context, start);
     const native_start = std.Io.Timestamp.now(context.io, .awake);
     var state = State{ .context = context, .cache = cache, .manifest = manifest };
     const codegen_start = std.Io.Timestamp.now(context.io, .awake);
@@ -174,6 +181,13 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
 /// field count is frozen by the repository's type-size ratchet.
 fn selectFile(args: []const []const u8) ?[]const u8 {
     for (args) |argument| if (std.mem.startsWith(u8, argument, "--select-file=")) return argument["--select-file=".len..];
+    return null;
+}
+
+/// Find an internal `--manifest-file=PATH` in the original build arguments. It
+/// names a checked frontend manifest, so the driver skips the frontend child.
+fn manifestFile(args: []const []const u8) ?[]const u8 {
+    for (args) |argument| if (std.mem.startsWith(u8, argument, "--manifest-file=")) return argument["--manifest-file=".len..];
     return null;
 }
 
