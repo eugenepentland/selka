@@ -1,5 +1,9 @@
 # Compiler work and reuse report
 
+A `symbolic_templates` object reports real checked/reused symbolic-template counts
+alongside the ordinary work stages; a template replay is never inferred from an
+unchanged fingerprint.
+
 `work-report-v1` separates **actual work and reuse** from the older reports that
 compare input fingerprints. A comparison `hit` means "the compared input digest
 is equal"; it does not mean the command reused a stored result. `work-report-v1`

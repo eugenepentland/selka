@@ -873,6 +873,7 @@ test "durable publication batch inventories a fresh namespace once instead of pe
 }
 
 // spec-case: SEMANTIC-CACHE-7
+// spec: SEMANTIC-CACHE-11
 test "symbolic template direct results reuse while changed templates miss" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
@@ -970,6 +971,7 @@ test "unused malformed generics are still checked on cold and warm requests" {
 }
 
 // spec-case: INCREMENTAL-KEYS-1
+// spec: SEMANTIC-CACHE-12
 test "specialization key engine canonicalizes arguments providers constraints and build context" {
     const typed = @import("typed.zig");
     const span = @import("source.zig").Span{ .start = 0, .end = 0 };

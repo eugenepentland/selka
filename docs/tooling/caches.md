@@ -147,6 +147,15 @@ $ mylang check app/main.my --cache-dir=.mylang-cache/demo --report
 {"version":"work-report-v1","command":"check","reused":true,...,"checked_bodies":{"status":"hit","performed":0,"reused":3},...}
 ```
 
+A second entry kind, `symbolic-template-v1`, stores one checked symbolic generic
+template's direct abstract results: effect/mutation masks, body-local diagnostics
+and ordered abstract call edges. It lives in the same contract namespace but is
+keyed away from ordinary bodies, and replay additionally requires a byte-identical
+declaration region/body, matching dependency context, name-resolution mode and
+abstract-checker version. Scoped-bound resolution, structural validation and the
+whole-graph effect propagation still run on every request, so a replayed template
+never carries a stale transitive verdict.
+
 Publication stages the complete image in a same-directory `.tmp` file, flushes
 and syncs it, and renames it over the stable key, so readers observe the previous
 complete file or the new one, never a partial image. Concurrent publishers may

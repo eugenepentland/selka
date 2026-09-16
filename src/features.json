@@ -397,6 +397,16 @@
       "summary": "Native traps carry bounded structured index/length and operand detail rendered identically in text and JSON, transported from the child as one versioned stderr record.",
       "doc": "docs/io.md#runtime-diagnostics"
     },
+    "symbolic-template-reuse": {
+      "kind": "tooling",
+      "summary": "Checked symbolic generic templates persist direct abstract results under symbolic-template-v1 and replay across processes when the body, dependency context, name-resolution mode and checker version still match; whole-graph effects always rerun.",
+      "doc": "docs/tooling/caches.md#persistent-checked-body-store"
+    },
+    "canonical-specialization-keys": {
+      "kind": "tooling",
+      "summary": "Concrete specialization keys are canonical over template identity, ordered positional descriptors, provider contracts, constraints, declared contracts and build context; unvalidated specializations are conservatively rechecked.",
+      "doc": "docs/tooling/work-report.md#compiler-work-and-reuse-report"
+    },
     "persistent-checked-bodies": {
       "kind": "tooling",
       "summary": "Ordinary checked bodies persist across compiler processes as versioned, validated semantic-cache-v1 entries with atomic publication, remap-or-miss decoding, contract isolation and --no-cache correctness.",
