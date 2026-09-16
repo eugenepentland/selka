@@ -5,6 +5,7 @@ test {
     _ = @import("native_test_snapshot.zig");
     _ = @import("native_test_plan.zig");
     _ = @import("native_test_dependencies.zig");
+    _ = @import("native_test_facts.zig");
     _ = @import("native_test_execute.zig");
     _ = @import("native_test_wire.zig");
     _ = @import("native_test_options.zig");

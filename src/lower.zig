@@ -444,36 +444,51 @@ fn binaryInstruction(binary: anytype, nodes: []const typed.Node, records: []cons
 /// Allocate and validate bytecode lowered from the checked typed program.
 pub fn lower(allocator: std.mem.Allocator, program: typed.Program) LowerError!bc.Program {
     const functions = try allocator.alloc(bc.Function, program.functions.len);
-    for (program.functions, functions) |function, *out| {
-        var emitter: Emitter = .{ .allocator = allocator, .program = program };
-        defer emitter.loops.deinit(allocator);
-        out.* = .{
-            .policy = .{
-                .host = function.policy.host,
-                .c_abi = function.policy.c_abi,
-                .effect_bound = function.policy.effect_bound,
-                .effects = function.policy.effects,
-                .owner = function.policy.owner,
-                .restricted = function.policy.restricted,
-                .conversion = function.policy.conversion,
-            },
-            .signature = .{
-                .parameter_count = function.signature.parameter_count,
-                .return_type = function.signature.return_type,
-                .mutates = function.signature.mutates,
-                .return_origin = function.signature.return_origin,
-                .declared_mutates = function.signature.declared_mutates,
-                .mutation_facts = function.signature.mutation_facts,
-            },
-            .scope = .{
-                .locals = function.scope.locals,
-                .instructions = if (function.policy.host != null) &.{} else try emitter.finish(function.scope.body),
-            },
-            .id = function.id,
-            .name = function.name,
-        };
-    }
+    for (program.functions, 0..) |function, index| functions[index] = try lowerFunction(allocator, program, function, true);
     const result: bc.Program = .{ .functions = functions, .main = program.main, .records = program.records };
     try bc.validate(allocator, result);
     return result;
+}
+
+/// Allocate a selective bytecode program. Selected functions carry lowered
+/// instructions; every other entry keeps its checked policy, signature and
+/// locals so callers can resolve callee ABIs without lowering that body. The
+/// selection mask is caller-owned and must remain live through validation.
+pub fn lowerSelected(allocator: std.mem.Allocator, program: typed.Program, selected: []const bool) LowerError!bc.Program {
+    if (selected.len != program.functions.len) return error.InternalError;
+    const functions = try allocator.alloc(bc.Function, program.functions.len);
+    for (program.functions, 0..) |function, index| functions[index] = try lowerFunction(allocator, program, function, selected[index]);
+    const result: bc.Program = .{ .functions = functions, .main = program.main, .records = program.records };
+    bc.validateSelected(allocator, result, selected) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
+    return result;
+}
+
+fn lowerFunction(allocator: std.mem.Allocator, program: typed.Program, function: typed.Function, with_body: bool) LowerError!bc.Function {
+    var emitter: Emitter = .{ .allocator = allocator, .program = program };
+    defer emitter.loops.deinit(allocator);
+    return .{
+        .policy = .{
+            .host = function.policy.host,
+            .c_abi = function.policy.c_abi,
+            .effect_bound = function.policy.effect_bound,
+            .effects = function.policy.effects,
+            .owner = function.policy.owner,
+            .restricted = function.policy.restricted,
+            .conversion = function.policy.conversion,
+        },
+        .signature = .{
+            .parameter_count = function.signature.parameter_count,
+            .return_type = function.signature.return_type,
+            .mutates = function.signature.mutates,
+            .return_origin = function.signature.return_origin,
+            .declared_mutates = function.signature.declared_mutates,
+            .mutation_facts = function.signature.mutation_facts,
+        },
+        .scope = .{
+            .locals = function.scope.locals,
+            .instructions = if (with_body and function.policy.host == null) try emitter.finish(function.scope.body) else &.{},
+        },
+        .id = function.id,
+        .name = function.name,
+    };
 }

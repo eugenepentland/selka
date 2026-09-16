@@ -72,8 +72,9 @@ const Graphs = struct {
         return graph;
     }
 
-    /// Admit a durable reduced graph only after the project passes the shared
-    /// query cache; otherwise fall back to full checking, lowering and emission.
+    /// Admit durable checked facts only after the project passes the shared query
+    /// cache; otherwise produce facts with `native-test-graph`, which checks every
+    /// body but performs no lowering or QBE emission.
     fn prepare(self: *Graphs, entry_path: []const u8, source_identity: []const u8, provider_identity: []const u8) Error!sessions.Project {
         const session = self.session;
         const key = try graph_store.key(self.allocator, .{
@@ -85,20 +86,17 @@ const Graphs = struct {
             .source_identity = source_identity,
             .provider_identity = provider_identity,
         });
-        // A forced run must re-lower and re-emit so its own graph is fresh; a
-        // `--no-cache` run reads and writes no durable entry at all.
+        // A forced run must re-check and re-emit fresh facts; a `--no-cache` run
+        // reads and writes no durable entry at all.
         if (durableReuseAllowed(session.options, session.environment.cacheable)) {
-            if (graph_store.load(session.context, self.directory, key)) |reduced| {
+            if (graph_store.load(session.context, self.directory, key)) |facts| {
                 try session.validate(entry_path);
-                return session.projectFromValue(entry_path, reduced);
+                return session.projectFromValue(entry_path, facts);
             }
         }
-        const project = try session.check(entry_path);
+        const project = try session.facts(entry_path);
         if (!session.options.flags.no_cache and session.environment.cacheable) {
-            const payload = graph_store.reduce(self.allocator, project.manifest) catch |err| switch (err) {
-                error.OutOfMemory => return error.OutOfMemory,
-                else => return error.InvalidNativeTestManifest,
-            };
+            const payload = std.json.Stringify.valueAlloc(self.allocator, project.manifest, .{}) catch return error.OutOfMemory;
             graph_store.store(session.context, self.directory, key, payload) catch |err| ignoreStoreFailure(err);
         }
         return project;
@@ -161,11 +159,16 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     const selected = try cases.discover(context.allocator, declared_schema, config, opts.filter);
     const results = try context.allocator.alloc(receipts.Result, selected.len);
     try context.mkdir(directory);
-    for (selected, results) |case, *result| result.* = perform(&graphs, case, directory) catch |err| switch (err) {
+    var pending: std.ArrayList(Pending) = .empty;
+    defer pending.deinit(context.allocator);
+
+    planSelectedCases(context, &graphs, directory, selected, results, &pending) catch |err| switch (err) {
         error.ProjectConfigurationFailed => return 2,
         error.ProjectPolicyRejected => return 3,
         else => return err,
     };
+    try prepareSelectedGraphs(context, session, results, pending.items);
+    try executeSelectedCases(context, session, selected, results, pending.items);
     try session.verify();
     if (opts.cases) |path| {
         if (!std.mem.eql(u8, config_bytes, try context.read(path))) return error.SourceChanged;
@@ -174,6 +177,7 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     if (opts.flags.report) try emitWorkReport(context, &work, results);
     return report(context, results, opts.flags.json);
 }
+
 /// Record the native test outcome as real performed/reused work. Parser, body
 /// check, lowering, emission and link counts come from the compiler children's
 /// own `work-report-v1` lines, which `Session.observe` folded in.
@@ -204,55 +208,134 @@ fn durableReuseAllowed(opts: options.Options, cacheable: bool) bool {
     if (opts.flags.no_cache) return false;
     return cacheable;
 }
-fn perform(graphs: *Graphs, case: cases.Case, directory: []const u8) Error!receipts.Result {
-    const session = graphs.session;
-    var result: receipts.Result = .{ .name = case.name, .status = "skipped", .expected = case.expected };
-    if (case.skip) |reason| {
-        result.reason = reason;
-        return result;
+fn planSelectedCases(
+    context: fs.Context,
+    graphs: *Graphs,
+    directory: []const u8,
+    selected: []const cases.Case,
+    results: []receipts.Result,
+    pending: *std.ArrayList(Pending),
+) Error!void {
+    for (selected, 0..) |case, case_index| {
+        const result = &results[case_index];
+        result.* = .{ .name = case.name, .status = "skipped", .expected = case.expected };
+        if (case.skip) |reason| {
+            result.reason = reason;
+            continue;
+        }
+        const has_providers = case.providers == .object and case.providers.object.count() != 0;
+        const graph = try graphs.get(case);
+        const contract_identity = if (has_providers) blk: {
+            const modules = try contracts.moduleNames(context.allocator, case.providers);
+            break :blk try contracts.contractIdentity(context.allocator, graphs.production, modules);
+        } else blk: {
+            const modules = [_][]const u8{try testModuleName(context.allocator, case.name)};
+            break :blk try contracts.contractIdentity(context.allocator, graphs.production, &modules);
+        };
+        const project = &graph.project;
+        const identity: receipts.Identity = .{ .contract = contract_identity, .provider = graph.provider_identity, .source = graph.source_identity };
+        const checked = checkedFunction(project.schema, case.name) orelse case.function;
+        const session = graphs.session;
+        const plan = try planner.plan(context.allocator, project.manifest, try symbol(project.manifest, case.name), try session.key(case.settings, checked));
+        result.key = try context.allocator.dupe(u8, &plan.key);
+        result.dependencies = plan.dependencies;
+        result.cacheable = plan.cacheable and session.environment.cacheable;
+        result.context = .{ .reasons = plan.reasons, .identity = identity };
+        const path = try receipts.path(context, directory, result.key);
+        if (durableReuseAllowed(session.options, result.cacheable) and receipts.hit(context, path, result.key, case.name, case.expected, identity)) {
+            result.status = "cached";
+            result.actual = case.expected;
+            continue;
+        }
+        // Evict any older pass before a forced or repaired execution can fail.
+        if (!session.options.flags.no_cache) try receipts.invalidate(context, path);
+        try pending.append(context.allocator, .{ .case_index = case_index, .graph = graph, .selected = checked });
     }
-    const has_providers = case.providers == .object and case.providers.object.count() != 0;
-    // Creating a graph performs declaration-first validation and, for provider
-    // replacements, replacement-contract validation before any selected body is
-    // checked. Identical provider graphs reuse the checked project and executor.
-    const graph = try graphs.get(case);
-    const contract_identity = if (has_providers) blk: {
-        const modules = try contracts.moduleNames(session.context.allocator, case.providers);
-        break :blk try contracts.contractIdentity(session.context.allocator, graphs.production, modules);
-    } else blk: {
-        const modules = [_][]const u8{try testModuleName(session.context.allocator, case.name)};
-        break :blk try contracts.contractIdentity(session.context.allocator, graphs.production, &modules);
-    };
-    const project = &graph.project;
-    const identity: receipts.Identity = .{ .contract = contract_identity, .provider = graph.provider_identity, .source = graph.source_identity };
-    const selected = checkedFunction(project.schema, case.name) orelse case.function;
-    const plan = try planner.plan(session.context.allocator, project.manifest, try symbol(project.manifest, case.name), try session.key(case.settings, selected));
-    result.key = try session.context.allocator.dupe(u8, &plan.key);
-    result.dependencies = plan.dependencies;
-    result.cacheable = plan.cacheable and session.environment.cacheable;
-    result.context = .{ .reasons = plan.reasons, .identity = identity };
-    const path = try receipts.path(session.context, directory, result.key);
-    if (durableReuseAllowed(session.options, result.cacheable) and receipts.hit(session.context, path, result.key, case.name, case.expected, identity)) {
-        result.status = "cached";
-        result.actual = case.expected;
-        return result;
-    }
-    // Evict any older pass before a forced or repaired execution can fail.
-    if (!session.options.flags.no_cache) try receipts.invalidate(session.context, path);
-    const executor = try session.executor(project);
-    const outcome = try executor.execute(selected, case.arguments, session.options.limits);
-    result.actual = outcome.actual;
-    result.steps = outcome.steps;
-    result.reason = try std.mem.replaceOwned(u8, session.context.allocator, outcome.diagnostics, std.fs.path.dirname(project.source).?, session.source.root);
-    const passed = std.mem.eql(u8, outcome.status, "value") and snapshot.equivalent(outcome.actual, case.expected);
-    result.status = if (passed) "passed" else "failed";
-    if (!passed and result.reason.len == 0) result.reason = "actual value does not match expected value";
-    return result;
 }
+
+fn prepareSelectedGraphs(
+    context: fs.Context,
+    session: sessions.Session,
+    results: []receipts.Result,
+    pending: []const Pending,
+) Error!void {
+    var groups: std.ArrayList(*Group) = .empty;
+    defer {
+        for (groups.items) |group| {
+            group.symbols.deinit(context.allocator);
+            group.names.deinit(context.allocator);
+            context.allocator.destroy(group);
+        }
+        groups.deinit(context.allocator);
+    }
+    for (pending) |entry| {
+        var group = for (groups.items) |candidate| {
+            if (std.mem.eql(u8, candidate.graph.provider_identity, entry.graph.provider_identity)) break candidate;
+        } else null;
+        if (group == null) {
+            const created = try context.allocator.create(Group);
+            created.* = .{ .graph = entry.graph };
+            try groups.append(context.allocator, created);
+            group = created;
+        }
+        for (results[entry.case_index].dependencies) |dependency| {
+            _ = try group.?.symbols.getOrPut(context.allocator, dependency);
+        }
+    }
+    for (groups.items) |group| {
+        for (v.array(v.get(group.graph.project.manifest, contracts.functions_key))) |function| {
+            const symbol_text = v.text(v.get(function, "symbol"));
+            if (group.symbols.contains(symbol_text)) try group.names.append(context.allocator, v.text(v.get(function, "name")));
+        }
+        if (group.names.items.len != group.symbols.count()) return error.InvalidGraph;
+        var text: std.ArrayList(u8) = .empty;
+        defer text.deinit(context.allocator);
+        for (group.names.items) |name| {
+            try text.appendSlice(context.allocator, name);
+            try text.append(context.allocator, '\n');
+        }
+        const select_path = try std.fs.path.join(context.allocator, &.{ group.graph.project.directory, "native-test-select.txt" });
+        try context.write(select_path, text.items);
+        _ = try session.executor(&group.graph.project, select_path);
+    }
+}
+
+fn executeSelectedCases(
+    context: fs.Context,
+    session: sessions.Session,
+    selected: []const cases.Case,
+    results: []receipts.Result,
+    pending: []const Pending,
+) Error!void {
+    for (pending) |entry| {
+        const case = selected[entry.case_index];
+        const result = &results[entry.case_index];
+        const executor = entry.graph.project.executor orelse return error.InvalidGraph;
+        const outcome = try executor.execute(entry.selected, case.arguments, session.options.limits);
+        result.actual = outcome.actual;
+        result.steps = outcome.steps;
+        result.reason = try std.mem.replaceOwned(u8, context.allocator, outcome.diagnostics, std.fs.path.dirname(entry.graph.project.source).?, session.source.root);
+        const passed = std.mem.eql(u8, outcome.status, "value") and snapshot.equivalent(outcome.actual, case.expected);
+        result.status = if (passed) "passed" else "failed";
+        if (!passed and result.reason.len == 0) result.reason = "actual value does not match expected value";
+    }
+}
+
+const Pending = struct {
+    case_index: usize,
+    graph: *Graph,
+    selected: std.json.Value,
+};
+
+const Group = struct {
+    graph: *Graph,
+    symbols: std.StringHashMapUnmanaged(void) = .empty,
+    names: std.ArrayList([]const u8) = .empty,
+};
 
 /// The checked schema entry for one qualified test name, when present.
 fn checkedFunction(schema: std.json.Value, name: []const u8) ?std.json.Value {
-    for (v.array(v.get(schema, "functions"))) |function| {
+    for (v.array(v.get(schema, contracts.functions_key))) |function| {
         if (std.mem.eql(u8, name, v.text(v.get(function, "name")))) return function;
     }
     return null;
@@ -263,7 +346,7 @@ fn testModuleName(allocator: std.mem.Allocator, qualified: []const u8) Error![]c
     return allocator.dupe(u8, qualified[0..at]);
 }
 fn symbol(manifest: std.json.Value, name: []const u8) Error![]const u8 {
-    for (v.array(v.get(manifest, "functions"))) |function| {
+    for (v.array(v.get(manifest, contracts.functions_key))) |function| {
         if (std.mem.eql(u8, name, v.text(v.get(v.get(function, "export"), "name")))) return v.text(v.get(function, "symbol"));
     }
     return error.UnknownFunction;
@@ -310,7 +393,7 @@ test "one prepared project graph is shared per selected provider identity" {
         "\"functions\":[{\"name\":\"main::x\",\"symbol\":\"sym\"," ++
         "\"test_dependencies\":{\"implementation_hash\":\"0000000000000000000000000000000000000000000000000000000000000000\"," ++
         "\"dependencies\":[],\"cacheable\":true,\"reasons\":[]}}]}";
-    try text.appendSlice(context.allocator, "' ;;\n  emit-project-qbe) printf '%s\\n' '" ++ graph_manifest ++ "' ;;\nesac\n");
+    try text.appendSlice(context.allocator, "' ;;\n  native-test-graph) printf '%s\\n' '" ++ graph_manifest ++ "' ;;\nesac\n");
     var file = try std.Io.Dir.createFileAbsolute(context.io, script, .{ .permissions = .executable_file });
     try file.writeStreamingAll(context.io, text.items);
     file.close(context.io);
@@ -318,7 +401,7 @@ test "one prepared project graph is shared per selected provider identity" {
     defer parsed.deinit();
     const session: sessions.Session = .{
         .context = context,
-        .options = .{ .source = entry },
+        .options = .{ .source = entry, .flags = .{ .no_cache = true } },
         .compiler = script,
         .tools = .{ .zig = "/bin/true", .qbe = "/bin/true" },
         .hashes = .{ "", "", "" },
@@ -345,7 +428,7 @@ test "one prepared project graph is shared per selected provider identity" {
     const provider_distinct = try graphs.get(second_provider);
     try std.testing.expect(provider_first != provider_distinct);
     const calls = try context.read(log);
-    try std.testing.expectEqual(@as(usize, 3), std.mem.count(u8, calls, "emit-project-qbe"));
+    try std.testing.expectEqual(@as(usize, 3), std.mem.count(u8, calls, "native-test-graph"));
     try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, calls, "list-interfaces"));
 }
 

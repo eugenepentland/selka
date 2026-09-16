@@ -36,6 +36,7 @@ pub fn entry(allocator: std.mem.Allocator, manifest: std.json.Value, provider: b
     errdefer buffer.deinit();
     const w = &buffer.writer;
     const name = v.text(v.get(manifest, "entry"));
+    if (name.len == 0) return error.UnsupportedNativeEntry;
     const parameters = v.array(v.get(manifest, "entry_parameters"));
     const argv_element = v.text(v.get(manifest, "entry_argv_element"));
     if (argv_element.len != 0 and parameters.len == 0) return error.UnsupportedNativeEntry;

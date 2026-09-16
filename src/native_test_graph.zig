@@ -1,19 +1,18 @@
-//! Durable reduced preparation graphs for native tests.
+//! Durable checked-facts graphs and their store envelope.
 //!
-//! Full `emit-project-qbe` output carries per-function QBE IL, source locations
-//! and runtime data. Native test selection only needs the checked schema and the
-//! per-function dependency facts that compute a result receipt key. This module
-//! separates that reduced graph from emission: a warm, unchanged project loads
-//! the graph without lowering or emitting, validates the project through the
-//! shared compiler caches, and looks up result receipts normally. A miss falls
-//! back to full emission and stores the reduced graph for later invocations.
+//! `native-test-graph-v3` payloads carry the checked schema and per-function
+//! semantic fingerprints/dependency edges without QBE IL or source locations.
+//! A warm, unchanged project loads the graph without lowering or emitting,
+//! validates the project through the shared compiler caches, and looks up result
+//! receipts normally. `reduce` remains as a compatibility reducer for full
+//! manifests; current producers write checked facts directly.
 const std = @import("std");
 const fs = @import("qbe_build_io.zig");
 const v = @import("qbe_build_value.zig");
 /// Graph cache IO, JSON and malformed compiler output failures.
 pub const Error = fs.Error || std.Io.Writer.Error || error{InvalidGraph};
 /// Bumped when the reduced graph wire shape changes so stale files are ignored.
-pub const version = "native-test-graph-v2";
+pub const version = "native-test-graph-v3";
 /// Key domain string; a change invalidates every stored graph.
 const key_domain = "native-test-graph-key-v1";
 /// Shared JSON key for the emitted implementation hash.
@@ -199,7 +198,7 @@ test "a stored reduced graph is bound to its requested input key" {
     defer temporary.cleanup();
     const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
     const payload =
-        "{\"version\":\"native-test-graph-v2\",\"abi\":\"a\",\"schema\":\"{}\",\"entry\":\"e\"," ++
+        "{\"version\":\"native-test-graph-v3\",\"abi\":\"a\",\"schema\":\"{}\",\"entry\":\"e\"," ++
         "\"functions\":[{\"name\":\"f\",\"symbol\":\"s\",\"export\":null," ++
         "\"test_dependencies\":{\"implementation_hash\":\"0000000000000000000000000000000000000000000000000000000000000000\"," ++
         "\"dependencies\":[],\"cacheable\":false,\"reasons\":[]}}]}";

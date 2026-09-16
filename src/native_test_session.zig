@@ -12,7 +12,15 @@ const invalidation = @import("invalidation.zig");
 pub const Error = fs.Error || snapshot.Error || execute.Error || std.json.ParseError(std.json.Scanner) ||
     error{ ProjectConfigurationFailed, ProjectPolicyRejected };
 /// One freshly checked project or provider variant.
-pub const Project = struct { source: []const u8, manifest: std.json.Value, schema: std.json.Value, directory: []const u8, executor: ?execute.Executor = null };
+pub const Project = struct {
+    source: []const u8,
+    manifest: std.json.Value,
+    schema: std.json.Value,
+    directory: []const u8,
+    executor: ?execute.Executor = null,
+    /// Selection file the current executor was built for, when one exists.
+    select_file: ?[]const u8 = null,
+};
 /// Environment variable naming a file to append one line per compiler child.
 /// Gated so ordinary runs pay nothing; used by native-test acceptance traces.
 pub const trace_variable = "MYLANG_TEST_TRACE";
@@ -59,6 +67,18 @@ pub const Session = struct {
     fn appendPolicyFlags(self: Session, argv: *std.ArrayList([]const u8)) Error!void {
         if (self.options.flags.no_cache) try argv.append(self.context.allocator, "--no-cache");
         if (self.options.flags.report) try argv.append(self.context.allocator, "--report");
+    }
+    /// The native object-cache directory also carries the frontend semantic and
+    /// syntax caches for this environment, so facts and selective emission share
+    /// one checked-body store instead of checking the project twice.
+    fn objectsDirectory(self: Session, allocator: std.mem.Allocator) Error![]const u8 {
+        return std.fs.path.join(allocator, &.{ self.directory, "objects", self.environment.hash });
+    }
+    /// Point a compiler child at the shared query cache. `--no-cache` deliberately
+    /// omits this argument so no durable entry is opened anywhere.
+    fn appendCacheDirectory(self: Session, argv: *std.ArrayList([]const u8)) Error!void {
+        if (self.options.flags.no_cache) return;
+        try argv.append(self.context.allocator, try std.fmt.allocPrint(self.context.allocator, "--cache-dir={s}", .{try self.objectsDirectory(self.context.allocator)}));
     }
     /// Record one compiler child invocation when the trace variable is set.
     /// This is a test hook: it never changes control flow or receipt identity.
@@ -123,6 +143,22 @@ pub const Session = struct {
         var argv: std.ArrayList([]const u8) = .empty;
         defer argv.deinit(self.context.allocator);
         try argv.appendSlice(self.context.allocator, &.{ self.compiler, "emit-project-qbe", source });
+        try self.appendCacheDirectory(&argv);
+        try self.appendPolicyFlags(&argv);
+        self.trace(argv.items);
+        const output = try self.context.capture(argv.items);
+        self.observe(output.stderr);
+        const code = fs.exitCode(output.term);
+        if (code != 0) return mapExit(code);
+        return self.projectFromManifest(source, output.stdout);
+    }
+    /// Checked facts via `native-test-graph`: full project validity, schema and
+    /// per-function dependency fingerprints with no QBE lowering or emission.
+    pub fn facts(self: Session, source: []const u8) Error!Project {
+        var argv: std.ArrayList([]const u8) = .empty;
+        defer argv.deinit(self.context.allocator);
+        try argv.appendSlice(self.context.allocator, &.{ self.compiler, "native-test-graph", source });
+        try self.appendCacheDirectory(&argv);
         try self.appendPolicyFlags(&argv);
         self.trace(argv.items);
         const output = try self.context.capture(argv.items);
@@ -138,6 +174,7 @@ pub const Session = struct {
         var argv: std.ArrayList([]const u8) = .empty;
         defer argv.deinit(self.context.allocator);
         try argv.appendSlice(self.context.allocator, &.{ self.compiler, "check-project", source });
+        try self.appendCacheDirectory(&argv);
         try self.appendPolicyFlags(&argv);
         self.trace(argv.items);
         const output = try self.context.capture(argv.items);
@@ -158,9 +195,13 @@ pub const Session = struct {
         const parsed_schema = try std.json.parseFromSlice(std.json.Value, self.context.allocator, schema.string, .{ .allocate = .alloc_always });
         return .{ .source = source, .manifest = manifest, .schema = parsed_schema.value, .directory = try self.context.temporary(self.temporary) };
     }
-    /// Build only when at least one case actually needs to execute.
-    pub fn executor(self: Session, project: *Project) Error!execute.Executor {
-        if (project.executor) |existing| return existing;
+    /// Build only when at least one case actually needs to execute. `select_file`
+    /// names the checked closure for that graph; an empty path keeps the old
+    /// whole-project behavior for callers that do not use selective test builds.
+    pub fn executor(self: Session, project: *Project, select_file: []const u8) Error!execute.Executor {
+        if (project.executor) |existing| {
+            if (project.select_file) |old| if (std.mem.eql(u8, old, select_file)) return existing;
+        }
         const a = self.context.allocator;
         const library = try std.fs.path.join(a, &.{ project.directory, "tests.so" });
         var arguments: std.ArrayList([]const u8) = .empty;
@@ -171,16 +212,20 @@ pub const Session = struct {
         // `--no-cache` and an explicit object directory are contradictory in the
         // build frontend; the sentinel disables durable query reuse instead.
         if (!self.options.flags.no_cache) {
-            const objects = try std.fs.path.join(a, &.{ self.directory, "objects", self.environment.hash });
-            try arguments.appendSlice(self.context.allocator, &.{ "--cache-dir", objects });
+            try arguments.appendSlice(self.context.allocator, &.{ "--cache-dir", try self.objectsDirectory(a) });
         }
+        if (select_file.len != 0) try arguments.append(self.context.allocator, try std.fmt.allocPrint(a, "--select-file={s}", .{try self.context.absolute(select_file)}));
         try self.appendPolicyFlags(&arguments);
         try @import("native_link.zig").append(self.context, self.options.link_arguments, &arguments, true);
         self.trace(arguments.items);
         const output = try self.context.capture(arguments.items);
         self.observe(output.stderr);
         if (fs.exitCode(output.term) != 0) return error.NativeToolFailed;
+        // The native driver linked exactly one library for this graph. Record it
+        // at the work site because its own report is a qbe-build-v1 receipt.
+        if (self.work) |work| work.note(.links, 1, 0);
         project.executor = try execute.Executor.init(self.context, project.manifest, library, project.directory, self.tools.zig);
+        project.select_file = try a.dupe(u8, select_file);
         return project.executor.?;
     }
     /// Include tools, runtime (embedded in compiler), case settings and

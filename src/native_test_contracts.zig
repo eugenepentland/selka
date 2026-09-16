@@ -29,7 +29,7 @@ const signature_key = "signature";
 const generics_key = "generics";
 const permissions_key = "permissions";
 const shape_key = "shape";
-const functions_key = "functions";
+pub const functions_key = "functions";
 const version_key = "version";
 
 /// Map each `providers` key (a relative `.my` path) to its dotted module name.

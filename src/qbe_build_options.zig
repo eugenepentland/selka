@@ -123,6 +123,7 @@ const Flag = enum {
     @"--mode",
     @"--target",
     @"--cache-dir",
+    @"--select-file",
     @"--report",
     @"--run",
     @"--max-memory",
@@ -154,6 +155,9 @@ fn assign(result: *Options, flag: Flag, value: []const u8) Error!void {
             if (std.mem.eql(u8, result.cache, no_cache)) return error.InvalidBuildArguments;
             result.cache = value;
         },
+        // The selective frontend input travels in `link_arguments`, which the
+        // build driver forwards without adding another frozen Options field.
+        .@"--select-file" => {},
         .@"--max-memory" => result.max_memory = @import("memory_budget").parse(value) catch return error.InvalidBuildArguments,
         else => unreachable,
     }
