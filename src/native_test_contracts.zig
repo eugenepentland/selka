@@ -33,18 +33,29 @@ const functions_key = "functions";
 const version_key = "version";
 
 /// Map each `providers` key (a relative `.my` path) to its dotted module name.
+/// Entries are ordered by provider path so a JSON map's key insertion order can
+/// never change the selected contract-module sequence or its identity.
 pub fn moduleNames(allocator: std.mem.Allocator, providers: std.json.Value) Error![][]const u8 {
     if (providers != .object or providers.object.count() == 0) return error.InvalidContracts;
-    var names = try allocator.alloc([]const u8, providers.object.count());
+    const PathPair = struct { path: []const u8, name: []const u8 };
+    const pairs = try allocator.alloc(PathPair, providers.object.count());
+    defer allocator.free(pairs);
     var entries = providers.object.iterator();
     var index: usize = 0;
     while (entries.next()) |entry| : (index += 1) {
         if (entry.value_ptr.* != .string) {
-            allocator.free(names[0..index]);
+            for (pairs[0..index]) |pair| allocator.free(pair.name);
             return error.InvalidContracts;
         }
-        names[index] = try moduleNameFromPath(allocator, entry.key_ptr.*);
+        pairs[index] = .{ .path = entry.key_ptr.*, .name = try moduleNameFromPath(allocator, entry.key_ptr.*) };
     }
+    std.mem.sort(PathPair, pairs, {}, struct {
+        fn lessThan(_: void, a: PathPair, b: PathPair) bool {
+            return std.mem.lessThan(u8, a.path, b.path);
+        }
+    }.lessThan);
+    const names = try allocator.alloc([]const u8, pairs.len);
+    for (pairs, names) |pair, *name| name.* = pair.name;
     return names;
 }
 

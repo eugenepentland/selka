@@ -7,23 +7,31 @@ const snapshot = @import("native_test_snapshot.zig");
 const options = @import("native_test_options.zig");
 const environment = @import("native_test_environment.zig");
 const execute = @import("native_test_execute.zig");
+const invalidation = @import("invalidation.zig");
 /// Test setup, changed inputs, malformed compiler output and tool failures.
 pub const Error = fs.Error || snapshot.Error || execute.Error || std.json.ParseError(std.json.Scanner) ||
     error{ ProjectConfigurationFailed, ProjectPolicyRejected };
 /// One freshly checked project or provider variant.
 pub const Project = struct { source: []const u8, manifest: std.json.Value, schema: std.json.Value, directory: []const u8, executor: ?execute.Executor = null };
+/// Environment variable naming a file to append one line per compiler child.
+/// Gated so ordinary runs pay nothing; used by native-test acceptance traces.
+pub const trace_variable = "MYLANG_TEST_TRACE";
 /// Invocation-owned paths and tool fingerprints.
 pub const Session = struct {
     context: fs.Context,
     options: options.Options,
     compiler: []const u8,
-    zig: []const u8,
-    qbe: []const u8,
+    /// Resolved native tool paths, grouped to keep the session surface bounded.
+    tools: struct { zig: []const u8, qbe: []const u8 },
     hashes: [3][]const u8,
     environment: environment.Fingerprint,
     directory: []const u8,
     temporary: []const u8,
     source: snapshot.Snapshot,
+    /// Optional shared accumulator for child `work-report-v1` receipts. The
+    /// pointer outlives every Session copy, so `mylang test --report` reports
+    /// the real parser/check/lower/emission work its children performed.
+    work: ?*invalidation.Work = null,
     /// Pin sources and tools before checking or consulting successful-result receipts.
     pub fn init(context: fs.Context, opts: options.Options) Error!Session {
         const compiler = try std.Io.Dir.cwd().realPathFileAlloc(context.io, "/proc/self/exe", context.allocator);
@@ -39,8 +47,7 @@ pub const Session = struct {
             .context = context,
             .options = opts,
             .compiler = compiler,
-            .zig = zig,
-            .qbe = qbe,
+            .tools = .{ .zig = zig, .qbe = qbe },
             .hashes = .{ bundled.compiler_identity, try context.stamp(zig), try context.stamp(qbe) },
             .environment = try environment.capture(context),
             .directory = directory,
@@ -48,44 +55,104 @@ pub const Session = struct {
             .source = source,
         };
     }
+    /// Append the cache-policy flags shared by every compiler child.
+    fn appendPolicyFlags(self: Session, argv: *std.ArrayList([]const u8)) Error!void {
+        if (self.options.flags.no_cache) try argv.append(self.context.allocator, "--no-cache");
+        if (self.options.flags.report) try argv.append(self.context.allocator, "--report");
+    }
+    /// Record one compiler child invocation when the trace variable is set.
+    /// This is a test hook: it never changes control flow or receipt identity.
+    fn trace(self: Session, argv: []const []const u8) void {
+        const path = self.context.environ.get(trace_variable) orelse return;
+        var line: std.ArrayList(u8) = .empty;
+        defer line.deinit(self.context.allocator);
+        for (argv, 0..) |argument, index| {
+            if (index != 0) line.append(self.context.allocator, ' ') catch return;
+            line.appendSlice(self.context.allocator, argument) catch return;
+        }
+        line.append(self.context.allocator, '\n') catch return;
+        const existing = self.context.read(path) catch "";
+        const joined = std.mem.concat(self.context.allocator, u8, &.{ existing, line.items }) catch return;
+        // Tracing is best-effort and must never fail a test invocation.
+        self.context.write(path, joined) catch return;
+    }
+    /// Forward real child work stages into the invocation report. Child reports
+    /// are one-shot processes, so their top-level stage counters are deltas.
+    fn observe(self: Session, stderr: []const u8) void {
+        const work = self.work orelse return;
+        var lines = std.mem.splitScalar(u8, stderr, '\n');
+        while (lines.next()) |raw| {
+            const line = std.mem.trim(u8, raw, " \t\r");
+            if (line.len == 0 or line[0] != '{') continue;
+            if (std.mem.indexOf(u8, line, "work-report-v1") == null) continue;
+            const parsed = std.json.parseFromSlice(std.json.Value, self.context.allocator, line, .{ .allocate = .alloc_always }) catch continue;
+            if (!std.mem.eql(u8, v.text(v.get(parsed.value, "version")), "work-report-v1")) continue;
+            work.results.request += v.number(v.get(parsed.value, "reused_results"));
+            for (std.meta.tags(invalidation.WorkStage)) |stage| {
+                const count = v.get(parsed.value, @tagName(stage));
+                if (std.mem.eql(u8, v.text(v.get(count, "status")), "skipped")) continue;
+                work.note(stage, v.number(v.get(count, "performed")), v.number(v.get(count, "reused")));
+            }
+        }
+    }
+    fn mapExit(code: u8) Error {
+        return switch (code) {
+            2 => error.ProjectConfigurationFailed,
+            3 => error.ProjectPolicyRejected,
+            else => error.NativeToolFailed,
+        };
+    }
     /// Declaration/interface check: parse every reachable module and validate
     /// exported signatures, visibility and explicit ceilings without checking any
     /// body. The returned manifest is `interface-contracts-v2` with canonical type descriptors.
     pub fn interfaceCheck(self: Session, source: []const u8) Error!std.json.Value {
-        const output = try self.context.capture(&.{ self.compiler, "list-interfaces", "--contracts", source });
+        var argv: std.ArrayList([]const u8) = .empty;
+        defer argv.deinit(self.context.allocator);
+        try argv.appendSlice(self.context.allocator, &.{ self.compiler, "list-interfaces", "--contracts", source });
+        try self.appendPolicyFlags(&argv);
+        self.trace(argv.items);
+        const output = try self.context.capture(argv.items);
+        self.observe(output.stderr);
         const code = fs.exitCode(output.term);
-        if (code != 0) {
-            std.Io.File.stderr().writeStreamingAll(self.context.io, output.stderr) catch |err| switch (err) {
-                error.BrokenPipe => {},
-                else => {},
-            };
-            return switch (code) {
-                2 => error.ProjectConfigurationFailed,
-                3 => error.ProjectPolicyRejected,
-                else => error.NativeToolFailed,
-            };
-        }
+        if (code != 0) return mapExit(code);
         return (try std.json.parseFromSlice(std.json.Value, self.context.allocator, output.stdout, .{ .allocate = .alloc_always })).value;
     }
-    /// Fresh semantic checking always precedes result reuse, including warm builds.
+    /// Full checked graph via `emit-project-qbe`: lower, emit and return the
+    /// complete manifest. This is the fallback when no reduced graph is stored.
     pub fn check(self: Session, source: []const u8) Error!Project {
-        const output = try self.context.capture(&.{ self.compiler, "emit-project-qbe", source });
+        var argv: std.ArrayList([]const u8) = .empty;
+        defer argv.deinit(self.context.allocator);
+        try argv.appendSlice(self.context.allocator, &.{ self.compiler, "emit-project-qbe", source });
+        try self.appendPolicyFlags(&argv);
+        self.trace(argv.items);
+        const output = try self.context.capture(argv.items);
+        self.observe(output.stderr);
         const code = fs.exitCode(output.term);
-        if (code != 0) {
-            // The child ran the same required-policy frontend gate as ordinary
-            // commands; forward its located diagnostic and preserve the status.
-            // A failed best-effort write must not mask the child's real status.
-            std.Io.File.stderr().writeStreamingAll(self.context.io, output.stderr) catch |err| switch (err) {
-                error.BrokenPipe => {},
-                else => {},
-            };
-            return switch (code) {
-                2 => error.ProjectConfigurationFailed,
-                3 => error.ProjectPolicyRejected,
-                else => error.NativeToolFailed,
-            };
-        }
-        const manifest = (try std.json.parseFromSlice(std.json.Value, self.context.allocator, output.stdout, .{ .allocate = .alloc_always })).value;
+        if (code != 0) return mapExit(code);
+        return self.projectFromManifest(source, output.stdout);
+    }
+    /// Validate one materialized project graph through the shared compiler
+    /// query caches without lowering or emitting. A green result here is the
+    /// precondition for admitting a stored reduced graph and result receipts.
+    pub fn validate(self: Session, source: []const u8) Error!void {
+        var argv: std.ArrayList([]const u8) = .empty;
+        defer argv.deinit(self.context.allocator);
+        try argv.appendSlice(self.context.allocator, &.{ self.compiler, "check-project", source });
+        try self.appendPolicyFlags(&argv);
+        self.trace(argv.items);
+        const output = try self.context.capture(argv.items);
+        self.observe(output.stderr);
+        const code = fs.exitCode(output.term);
+        if (code != 0) return mapExit(code);
+    }
+    /// Parse a compiler manifest and expose its checked schema.
+    pub fn projectFromManifest(self: Session, source: []const u8, stdout: []const u8) Error!Project {
+        const manifest = (try std.json.parseFromSlice(std.json.Value, self.context.allocator, stdout, .{ .allocate = .alloc_always })).value;
+        return self.projectFromValue(source, manifest);
+    }
+    /// Build one checked project view from an already-parsed graph manifest.
+    /// Used both by full emission and by an admitted reduced graph.
+    pub fn projectFromValue(self: Session, source: []const u8, manifest: std.json.Value) Error!Project {
         const schema = v.get(manifest, "schema");
         if (schema != .string) return error.InvalidNativeTestManifest;
         const parsed_schema = try std.json.parseFromSlice(std.json.Value, self.context.allocator, schema.string, .{ .allocate = .alloc_always });
@@ -96,15 +163,28 @@ pub const Session = struct {
         if (project.executor) |existing| return existing;
         const a = self.context.allocator;
         const library = try std.fs.path.join(a, &.{ project.directory, "tests.so" });
-        const objects = try std.fs.path.join(a, &.{ self.directory, "objects", self.environment.hash });
         var arguments: std.ArrayList([]const u8) = .empty;
-        try arguments.appendSlice(self.context.allocator, &.{ self.compiler, "build", project.source, "--project", "--library", "-o", library, "--cache-dir", objects, "--zig", self.zig, "--qbe", self.qbe, "--mode", self.options.mode });
+        try arguments.appendSlice(self.context.allocator, &.{
+            self.compiler, "build",        project.source, "--project",    "--library", "-o",              library,
+            "--zig",       self.tools.zig, "--qbe",        self.tools.qbe, "--mode",    self.options.mode,
+        });
+        // `--no-cache` and an explicit object directory are contradictory in the
+        // build frontend; the sentinel disables durable query reuse instead.
+        if (!self.options.flags.no_cache) {
+            const objects = try std.fs.path.join(a, &.{ self.directory, "objects", self.environment.hash });
+            try arguments.appendSlice(self.context.allocator, &.{ "--cache-dir", objects });
+        }
+        try self.appendPolicyFlags(&arguments);
         try @import("native_link.zig").append(self.context, self.options.link_arguments, &arguments, true);
-        try self.context.command(arguments.items, null);
-        project.executor = try execute.Executor.init(self.context, project.manifest, library, project.directory, self.zig);
+        self.trace(arguments.items);
+        const output = try self.context.capture(arguments.items);
+        self.observe(output.stderr);
+        if (fs.exitCode(output.term) != 0) return error.NativeToolFailed;
+        project.executor = try execute.Executor.init(self.context, project.manifest, library, project.directory, self.tools.zig);
         return project.executor.?;
     }
-    /// Include tools, runtime (embedded in compiler), case settings and execution policy.
+    /// Include tools, runtime (embedded in compiler), case settings and
+    /// execution policy. Every one is a receipt identity dimension.
     pub fn key(self: Session, settings: std.json.Value, function: std.json.Value) Error![]const u8 {
         const bytes = try std.json.Stringify.valueAlloc(self.context.allocator, .{
             .version = "native-test-context-v1",
@@ -127,7 +207,7 @@ pub const Session = struct {
     pub fn verify(self: Session) Error!void {
         try snapshot.verify(self.context, self.source);
         if (!std.mem.eql(u8, self.hashes[0], bundled.compiler_identity)) return error.SourceChanged;
-        for ([_][]const u8{ self.zig, self.qbe }, self.hashes[1..]) |path, old| {
+        for ([_][]const u8{ self.tools.zig, self.tools.qbe }, self.hashes[1..]) |path, old| {
             if (!std.mem.eql(u8, old, try self.context.stamp(path))) return error.SourceChanged;
         }
     }

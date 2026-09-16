@@ -4,6 +4,15 @@ const execute = @import("native_test_execute.zig");
 const budget = @import("memory_budget");
 /// Invalid native test command arguments.
 pub const Error = error{InvalidTestArguments};
+/// Boolean mode switches, grouped to keep the options surface bounded.
+pub const Flags = struct {
+    force: bool = false,
+    /// `--no-cache` reads and writes no durable result, graph or query entry.
+    no_cache: bool = false,
+    /// `--report` emits a work-report-v1 line for this test invocation.
+    report: bool = false,
+    json: bool = false,
+};
 /// Discovery, execution and cache policy.
 pub const Options = struct {
     link_arguments: []const []const u8 = &.{},
@@ -14,15 +23,15 @@ pub const Options = struct {
     qbe: []const u8 = "qbe",
     zig: []const u8 = "zig",
     mode: []const u8 = "Debug",
-    force: bool = false,
-    json: bool = false,
+    flags: Flags = .{},
     jobs: ?usize = null,
     limits: execute.Limits = .{},
 };
 /// Native tests require no Python interpreter.
 pub const usage = "usage: mylang test <entry.my|directory> [--filter SUBSTRING|GLOB] [--cases FILE]\n" ++
     "  --link FILE --link-library NAME --library-path DIR (repeatable)\n" ++
-    "  --cache-dir DIR --force --json --qbe PATH --zig PATH --mode Debug|ReleaseFast\n" ++
+    "  --cache-dir DIR --force --no-cache --report --json --qbe PATH --zig PATH\n" ++
+    "  --mode Debug|ReleaseFast\n" ++
     "  --max-steps N --max-frames N --max-calls N --timeout-ms N\n" ++
     "  --max-memory BYTES  per-test byte ceiling (K/M/G suffixes; default 512M)\n" ++
     "  --jobs N  directory fan-out width (default: cores, capped by free memory)\n";
@@ -38,11 +47,19 @@ pub fn parse(args: []const []const u8) Error!Options {
             continue;
         }
         if (std.mem.eql(u8, arg, "--force")) {
-            result.force = true;
+            result.flags.force = true;
+            continue;
+        }
+        if (std.mem.eql(u8, arg, "--no-cache")) {
+            result.flags.no_cache = true;
+            continue;
+        }
+        if (std.mem.eql(u8, arg, "--report")) {
+            result.flags.report = true;
             continue;
         }
         if (std.mem.eql(u8, arg, "--json")) {
-            result.json = true;
+            result.flags.json = true;
             continue;
         }
         const split = std.mem.indexOfScalar(u8, arg, '=') orelse arg.len;
@@ -85,7 +102,9 @@ fn number(value: []const u8) Error!u64 {
 }
 test "native test options validate budgets and discovery controls" {
     const opts = try parse(&.{ "main.my", "--filter=*ok", "--force", "--json", "--max-steps", "100" });
-    try std.testing.expect(opts.force and opts.json);
+    try std.testing.expect(opts.flags.force and opts.flags.json);
+    const fresh = try parse(&.{ "main.my", "--no-cache", "--report" });
+    try std.testing.expect(fresh.flags.no_cache and fresh.flags.report);
     try std.testing.expectEqual(@as(u64, 100), opts.limits.max_steps);
     for ([_][]const []const u8{ &.{}, &.{ "x", "--wat" }, &.{ "x", "--max-steps=0" }, &.{ "x", "--mode=Fast" }, &.{ "x", "--cases" } }) |args| {
         try std.testing.expectError(error.InvalidTestArguments, parse(args));

@@ -3,6 +3,7 @@ const std = @import("std");
 const fs = @import("qbe_build_io.zig");
 const v = @import("qbe_build_value.zig");
 const options = @import("native_test_options.zig");
+const invalidation = @import("invalidation.zig");
 const budget = @import("memory_budget");
 /// Directory discovery and child-report transport failures.
 pub const Error = fs.Error || std.json.ParseError(std.json.Scanner) || std.Io.Dir.OpenError ||
@@ -106,7 +107,7 @@ fn argv(context: fs.Context, shared: Fanout, source: []const u8) Error![]const [
     // Resolved before the fan-out, so every child enforces the same ceiling and
     // keys its receipts on it rather than rediscovering the environment itself.
     try list.appendSlice(a, &.{ "--max-memory", try decimal(a, opts.limits.max_memory orelse budget.test_default) });
-    if (opts.force) try list.append(a, "--force");
+    if (opts.flags.force) try list.append(a, "--force");
     try @import("native_link.zig").append(context, opts.link_arguments, &list, true);
     return list.items;
 }
@@ -131,10 +132,24 @@ fn summarize(context: fs.Context, opts: options.Options, count: usize, outcomes:
         totals.skipped += @intCast(v.number(v.get(parsed, "skipped")));
         for (v.array(v.get(parsed, "tests"))) |row| try rows.append(a, row);
     }
-    try publish(context, opts.json, count, totals, rows.items);
+    try publish(context, opts.flags.json, count, totals, rows.items);
+    if (opts.flags.report) try reportWork(context, totals);
     if (totals.setup != 0) return 2;
     if (totals.failed != 0) return 1;
     return if (totals.passed + totals.cached != 0) 0 else 3;
+}
+/// A directory run reports the selected/executed/reused test counts it can
+/// observe across children; per-stage compiler work is not aggregated here.
+fn reportWork(context: fs.Context, totals: Totals) Error!void {
+    var work: invalidation.Work = .{ .command = "test" };
+    const executed = totals.passed + totals.failed;
+    if (executed + totals.cached != 0) work.set(.executed_tests, executed, totals.cached);
+    work.addBypass("directory-fanout-stage-detail", 1);
+    const rendered = invalidation.renderWork(context.allocator, work) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.InvalidCurrent => return error.UnusableTestReport,
+    };
+    try std.Io.File.stderr().writeStreamingAll(context.io, try std.fmt.allocPrint(context.allocator, "{s}\n", .{rendered}));
 }
 fn publish(context: fs.Context, json: bool, count: usize, totals: Totals, rows: []const std.json.Value) Error!void {
     const a = context.allocator;
