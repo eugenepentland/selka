@@ -99,10 +99,27 @@ pub const Statistics = struct {
     checked: usize = 0,
     stored: usize = 0,
     bypassed: usize = 0,
+    /// Total owned in-memory retention bytes across ordinary bodies, symbolic
+    /// templates and concrete specializations, including entry rows, arenas,
+    /// keys and hash-index capacity. This is the field `check-session` reports
+    /// as `functions.retained_bytes`.
     retained_bytes: usize = 0,
     /// Conservative per-reason miss counts for bodies that were not reused. These
     /// name an exact cause even when the body is checked fresh.
     misses: MissCounts = @splat(0),
+    /// Per-kind breakdown and eviction count for the shared budget.
+    retention: RetentionDetail = .{},
+};
+
+/// Per-kind retained storage and eviction detail exposed beside the existing
+/// total so a report can attribute `retained_bytes` without guessing.
+pub const RetentionDetail = struct {
+    ordinary_bytes: usize = 0,
+    symbolic_bytes: usize = 0,
+    specialization_bytes: usize = 0,
+    /// Entries released to hold the combined budget: ordinary bodies dropped
+    /// from the retained prefix plus generic entries evicted oldest-first.
+    evicted: usize = 0,
 };
 
 /// One host-bound semantic cache context. C2 persists this fingerprint so an
@@ -120,6 +137,10 @@ pub const Context = struct {
 /// so the cache keeps one bounded retention policy rather than a second switch.
 pub const Retention = struct {
     max_bytes: usize = 0,
+    /// Process-local insertion order for generic entries. Both generic tables
+    /// share it, so the combined budget evicts the globally oldest entry
+    /// deterministically. Runtime-only and never persisted.
+    sequence: u64 = 0,
     /// C3 symbolic-template results. It shares the same durable store and
     /// retention budget, but lives under its own entry kind and stable-key
     /// namespace so it can never collide with an ordinary checked body.
@@ -155,20 +176,61 @@ pub const Cache = struct {
     pub fn initWithContract(allocator: std.mem.Allocator, max_bytes: usize, contract: []const u8) Cache {
         return .{ .allocator = allocator, .reuse = .{ .max_bytes = max_bytes }, .context = .{ .contract = contract } };
     }
-    /// Release every retained tree and source generation.
+    /// Release every retained ordinary body, symbolic template and concrete
+    /// specialization. Safe to call after `clear`.
     pub fn deinit(self: *Cache) void {
         self.clear();
-        self.reuse.symbolic.clear();
-        self.reuse.specializations.clear();
     }
-    /// Evict retained bodies; already-returned compilations remain valid.
+    /// Evict retained bodies of every kind; already-returned compilations remain
+    /// valid because checked trees are copied out of cache-owned storage. Work
+    /// counters stay cumulative, but retained-byte fields report the actual
+    /// (now empty) storage rather than entries that no longer exist.
     pub fn clear(self: *Cache) void {
         for (self.entries) |*entry| entry.deinit();
         self.allocator.free(self.entries);
         self.entries = &.{};
         self.index.deinit(self.allocator);
         self.index = .empty;
+        self.reuse.symbolic.clear();
+        self.reuse.specializations.clear();
         self.statistics.retained_bytes = 0;
+        self.statistics.retention = .{};
+    }
+    /// Recompute the reported retained bytes from the three owned tables.
+    pub fn recountRetention(self: *Cache) void {
+        const ordinary = self.ordinaryRetainedBytes();
+        const symbolic_bytes = self.reuse.symbolic.retainedBytes();
+        const specialization_bytes = self.reuse.specializations.retainedBytes();
+        self.statistics.retention.ordinary_bytes = ordinary;
+        self.statistics.retention.symbolic_bytes = symbolic_bytes;
+        self.statistics.retention.specialization_bytes = specialization_bytes;
+        self.statistics.retained_bytes = ordinary + symbolic_bytes + specialization_bytes;
+    }
+    /// Owned bytes of the ordinary table: rows, arenas (metadata, dependency
+    /// keys and source slices) and the stable-key hash index capacity.
+    fn ordinaryRetainedBytes(self: *const Cache) usize {
+        var bytes: usize = self.entries.len * @sizeOf(owned.Entry);
+        for (self.entries) |entry| bytes += entry.arena.queryCapacity();
+        bytes += owned.hashIndexBytes(self.index.capacity());
+        return bytes;
+    }
+    /// Hold the combined ordinary + symbolic + specialization budget by
+    /// releasing generic entries oldest-first. Ordinary bodies are already
+    /// bounded by `remember` against the generic total, so this only needs to
+    /// evict generic entries; it is also the universal convergence point called
+    /// after every generic promotion or durable-hit promotion.
+    fn enforceGenericRetention(self: *Cache) void {
+        if (self.reuse.max_bytes == 0) return;
+        while (self.ordinaryRetainedBytes() + self.reuse.symbolic.retainedBytes() + self.reuse.specializations.retainedBytes() > self.reuse.max_bytes) {
+            const symbolic_age = self.reuse.symbolic.oldestSequence();
+            const specialization_age = self.reuse.specializations.oldestSequence();
+            if (symbolic_age == null and specialization_age == null) break;
+            const evict_symbolic = if (symbolic_age) |symbolic_order| if (specialization_age) |specialization_order| symbolic_order <= specialization_order else true else false;
+            const released = if (evict_symbolic) self.reuse.symbolic.evictOldest() else self.reuse.specializations.evictOldest();
+            if (released == null) break;
+            self.statistics.retention.evicted += 1;
+        }
+        self.recountRetention();
     }
     /// Open one symbolic-template request over the prepared declaration facts.
     /// `prepared` must outlive the returned session; `mode` distinguishes the
@@ -179,6 +241,8 @@ pub const Cache = struct {
             .persistent = self.context.persistent,
             .enabled = self.reuse.max_bytes != 0,
             .mode = mode,
+            .retention = .{ .owner = self, .reconcile = reconcileRetention },
+            .sequence = &self.reuse.sequence,
         });
     }
     /// Open one concrete-specialization request over the prepared declaration
@@ -189,12 +253,18 @@ pub const Cache = struct {
             .persistent = self.context.persistent,
             .enabled = self.reuse.max_bytes != 0,
             .build = self.context.contract,
+            .retention = .{ .owner = self, .reconcile = reconcileRetention },
+            .sequence = &self.reuse.sequence,
         });
     }
     /// Decode only entries whose stable key and dependency context are current.
     /// Any malformed file, missing identity or ambiguous remap is a miss; the
     /// decoder never enters this list unvalidated.
     fn loadPersistent(self: *Cache, persistent: *semantic_store.Store, prepared: key.Prepared) error{ OutOfMemory, InternalError }!void {
+        if (self.reuse.max_bytes == 0) return;
+        const generic_bytes = self.reuse.symbolic.retainedBytes() + self.reuse.specializations.retainedBytes();
+        const ordinary_budget = self.reuse.max_bytes -| generic_bytes;
+        var running: usize = 0;
         var loaded: std.ArrayList(owned.Entry) = .empty;
         var index: std.StringHashMapUnmanaged(usize) = .empty;
         // UNTESTED-ERROR: the cache's existing FailingAllocator scenario covers allocation failure at the checkWithCache boundary; this branch only releases entries already decoded by a partial load.
@@ -207,6 +277,15 @@ pub const Cache = struct {
             const stable_key = prepared.keys[ast_index];
             if (index.contains(stable_key)) continue;
             const entry = (try persistent.lookup(self.allocator, stable_key, prepared.contexts[ast_index])) orelse continue;
+            // Durable entries are promoted into memory only while they fit the
+            // ordinary share of the shared budget; the rest stay on disk and are
+            // decoded on demand.
+            const cost = owned.entryCost(entry);
+            if (!fitsOrdinaryBudget(running, cost, loaded.items.len + 1, ordinary_budget)) {
+                var dropped = entry;
+                dropped.deinit();
+                break;
+            }
             // UNTESTED-ERROR: allocation failure while appending a completed decoded entry is covered by the cache-wide FailingAllocator scenario; this catch only releases that one entry.
             loaded.append(self.allocator, entry) catch |err| {
                 var owned_entry = entry;
@@ -220,6 +299,7 @@ pub const Cache = struct {
                 loaded.items.len -= 1;
                 return err;
             };
+            running += cost;
         }
         if (loaded.items.len == 0) return;
         self.entries = try loaded.toOwnedSlice(self.allocator);
@@ -309,20 +389,24 @@ pub const Session = struct {
         if (old_region.end - old_region.start != new_region.end - new_region.start) return self.reason(.region_length_changed);
         if (!std.mem.eql(u8, entry.source.region_bytes, self.src.bytes[new_region.start..new_region.end])) return self.reason(.region_bytes_changed);
 
-        const functions = try allocator.alloc(?typed.FunctionId, entry.meta.old_function_count);
-        @memset(functions, null);
-        for (entry.meta.function_refs) |reference| {
+        // Resolve only the declarations this body actually references. A dense
+        // old-ordinal-indexed array would allocate and initialize one slot per
+        // program function for every reused body, which is quadratic across a
+        // whole-project body set.
+        const functions = try allocator.alloc(copy.FunctionRemap, entry.meta.function_refs.len);
+        for (entry.meta.function_refs, functions) |reference, *out| {
             const fresh = self.remap.functions.get(reference.key) orelse return self.reason(.missing_function);
             if (fresh == std.math.maxInt(usize)) return self.reason(.ambiguous_function);
-            functions[@backingInt(reference.id)] = @fromBackingInt(fresh);
+            out.* = .{ .old = @backingInt(reference.id), .fresh = @fromBackingInt(fresh) };
         }
-        const records = try allocator.alloc(?typed.Type, entry.meta.old_record_count);
-        @memset(records, null);
-        for (entry.meta.record_refs) |reference| {
+        copy.sortFunctionRemaps(functions);
+        const records = try allocator.alloc(copy.RecordRemap, entry.meta.record_refs.len);
+        for (entry.meta.record_refs, records) |reference, *out| {
             const fresh = self.remap.records.get(reference.key) orelse return self.reason(.missing_record);
             if (fresh == std.math.maxInt(usize)) return self.reason(.ambiguous_record);
-            records[reference.index] = @fromBackingInt(fresh + typed.Type.record_base);
+            out.* = .{ .old = reference.index, .fresh = @fromBackingInt(fresh + typed.Type.record_base) };
         }
+        copy.sortRecordRemaps(records);
         var segment = [_]copy.Segment{.{ .before = old_region, .after = new_region.start }};
         const mapper: copy.Mapper = .{
             .segments = &segment,
@@ -331,8 +415,8 @@ pub const Session = struct {
                 .nodes = .{ .start = nodes.items.len, .end = nodes.items.len + entry.nodes.len },
                 .statements = .{ .start = statements.items.len, .end = statements.items.len + entry.statements.len },
             },
-            .functions = functions,
-            .records = records,
+            .function_remaps = functions,
+            .record_remaps = records,
         };
         const function = mapper.copy(allocator, typed.Function, entry.function) catch |err| return self.relocationMiss(err);
         const copied_nodes = mapper.copy(allocator, []const typed.Node, entry.nodes) catch |err| return self.relocationMiss(err);
@@ -354,14 +438,102 @@ pub const Session = struct {
             error.InternalError => error.InternalError,
         };
     }
+    /// Build one retained entry for a freshly checked body, or record the exact
+    /// conservative miss and return null. Every temporary key slice is copied
+    /// into the entry arena by `Entry.create`, so the temporaries can be freed
+    /// before return.
+    fn buildFreshEntry(self: *Session, program: typed.Program, i: usize, range: copy.Range) error{ OutOfMemory, InternalError }!?owned.Entry {
+        const cache = self.cache;
+        const ast_index = self.prepared.ordinary_ast[i];
+        const stable_key = self.prepared.keys[ast_index];
+        var refs = copy.RefSet.init(cache.allocator);
+        defer refs.deinit();
+        try copy.collectRefs(cache.allocator, program.functions[i], program.nodes[range.nodes.start..range.nodes.end], program.statements[range.statements.start..range.statements.end], &refs);
+        // A body that references a concrete specialization cannot be reused
+        // without re-instantiating it, so it stays on the fresh path with an
+        // explicit reason until C3.
+        const function_refs = try cache.allocator.alloc(owned.FunctionRef, refs.functions.count());
+        defer cache.allocator.free(function_refs);
+        var function_iterator = refs.functions.keyIterator();
+        var function_count: usize = 0;
+        var specialization = false;
+        while (function_iterator.next()) |id| {
+            if (id.* >= self.prepared.ordinary_ast.len) {
+                specialization = true;
+                break;
+            }
+            function_refs[function_count] = .{
+                .id = @fromBackingInt(id.*),
+                .key = self.prepared.keys[self.prepared.ordinary_ast[id.*]],
+            };
+            function_count += 1;
+        }
+        if (specialization) return self.freshMiss(.generic_specialization);
+        // Every referenced aggregate must have a stable identity that exists
+        // before checking. A declared callback, record or prelude type does;
+        // a callable contract or structural array interned while checking does
+        // not, so the body stays fresh with the exact reason.
+        const record_refs = try cache.allocator.alloc(owned.RecordRef, refs.records.count());
+        defer cache.allocator.free(record_refs);
+        var record_iterator = refs.records.keyIterator();
+        var record_count: usize = 0;
+        var unstable: ?MissReason = null;
+        while (record_iterator.next()) |index| {
+            if (index.* >= program.records.len) {
+                unstable = .missing_record;
+                break;
+            }
+            if (index.* >= self.remap.initial_record_count) {
+                const callable = declaredCallback(program.records, index.*);
+                unstable = if (callable and (refs.function_values or refs.invokes)) .function_value else .interned_record;
+                break;
+            }
+            const name = program.records[index.*].name;
+            const fresh_index = self.remap.records.get(name) orelse {
+                unstable = .missing_record;
+                break;
+            };
+            if (fresh_index == std.math.maxInt(usize)) {
+                unstable = .ambiguous_record;
+                break;
+            }
+            record_refs[record_count] = .{ .index = index.*, .key = name };
+            record_count += 1;
+        }
+        if (unstable) |why| return self.freshMiss(why);
+        const spec: owned.Spec = .{
+            .identity = .{
+                .key = stable_key,
+                .context = self.prepared.contexts[ast_index],
+                .body = self.prepared.bodies[ast_index],
+                .region = self.prepared.regions[ast_index],
+                .checked_contract = key.contractDigest(program.functions[i]),
+            },
+            .function_refs = function_refs,
+            .record_refs = record_refs,
+        };
+        const entry = try owned.Entry.create(cache.allocator, self.src.bytes, program, i, range, spec);
+        return entry;
+    }
+    /// Count one body that cannot be retained, with the exact conservative reason.
+    fn freshMiss(self: *Session, why: MissReason) ?owned.Entry {
+        self.cache.statistics.misses[@backingInt(why)] += 1;
+        return null;
+    }
+
     /// Atomically retain changed bodies and transfer unchanged entries; OOM keeps the old cache.
+    ///
+    /// The in-memory budget is shared with the symbolic and concrete
+    /// specialization tables, so this request keeps the longest leading prefix
+    /// of stable ordinary bodies whose owned storage plus index overhead fits
+    /// the share of the budget the generic tables leave. A body that does not
+    /// fit is a fresh miss on its next request rather than a reason to disable
+    /// reuse for every body.
     pub fn remember(self: *Session, program: typed.Program) error{ OutOfMemory, InternalError }!void {
         const cache = self.cache;
         if (cache.reuse.max_bytes == 0) return;
-        if (self.src.bytes.len > cache.reuse.max_bytes) {
-            cache.statistics.bypassed += 1;
-            return;
-        }
+        const generic_bytes = cache.reuse.symbolic.retainedBytes() + cache.reuse.specializations.retainedBytes();
+        const ordinary_budget = cache.reuse.max_bytes -| generic_bytes;
         const ordinary_count = self.prepared.ordinary_ast.len;
         if (program.functions.len < ordinary_count) return;
         var pending: std.ArrayList(owned.Entry) = .empty;
@@ -373,16 +545,23 @@ pub const Session = struct {
         const used = try cache.allocator.alloc(bool, cache.entries.len);
         defer cache.allocator.free(used);
         @memset(used, false);
-        var generation: ?*owned.Generation = null;
-        defer if (generation) |value| value.deinit();
         var published = false;
         defer if (!published) {
             for (pending.items, 0..) |*entry, i| if (fresh.items[i]) entry.deinit();
         };
+        var running: usize = 0;
+        var budget_exhausted = false;
+        var stopped_at: usize = ordinary_count;
         for (0..ordinary_count) |i| {
             const ast_index = self.prepared.ordinary_ast[i];
             const stable_key = self.prepared.keys[ast_index];
             if (self.reuse.functions[i]) if (cache.index.get(stable_key)) |old_index| if (!used[old_index]) {
+                const cost = owned.entryCost(cache.entries[old_index]);
+                if (!fitsOrdinaryBudget(running, cost, pending.items.len + 1, ordinary_budget)) {
+                    budget_exhausted = true;
+                    stopped_at = i;
+                    break;
+                }
                 used[old_index] = true;
                 try fresh.append(cache.allocator, false);
                 var transferred = cache.entries[old_index];
@@ -392,84 +571,20 @@ pub const Session = struct {
                 transferred.meta.identity.checked_contract = key.contractDigest(program.functions[i]);
                 pending.append(cache.allocator, transferred) catch |err| return err;
                 try new_index.put(cache.allocator, pending.items[pending.items.len - 1].meta.identity.key, pending.items.len - 1);
+                running += cost;
                 continue;
             };
             const range = self.ranges[i];
             if (range.nodes.end > program.nodes.len or range.statements.end > program.statements.len) return error.InternalError;
-            var refs = copy.RefSet.init(cache.allocator);
-            defer refs.deinit();
-            try copy.collectRefs(cache.allocator, program.functions[i], program.nodes[range.nodes.start..range.nodes.end], program.statements[range.statements.start..range.statements.end], &refs);
-            // A body that references a concrete specialization cannot be reused
-            // without re-instantiating it, so it stays on the fresh path with an
-            // explicit reason until C3.
-            const function_refs = try cache.allocator.alloc(owned.FunctionRef, refs.functions.count());
-            defer cache.allocator.free(function_refs);
-            var function_iterator = refs.functions.keyIterator();
-            var function_count: usize = 0;
-            var specialization = false;
-            while (function_iterator.next()) |id| {
-                if (id.* >= ordinary_count) {
-                    specialization = true;
-                    break;
-                }
-                function_refs[function_count] = .{
-                    .id = @fromBackingInt(id.*),
-                    .key = self.prepared.keys[self.prepared.ordinary_ast[id.*]],
-                };
-                function_count += 1;
+            const entry = (try self.buildFreshEntry(program, i, range)) orelse continue;
+            const cost = owned.entryCost(entry);
+            if (!fitsOrdinaryBudget(running, cost, pending.items.len + 1, ordinary_budget)) {
+                var dropped = entry;
+                dropped.deinit();
+                budget_exhausted = true;
+                stopped_at = i;
+                break;
             }
-            if (specialization) {
-                cache.statistics.misses[@backingInt(MissReason.generic_specialization)] += 1;
-                continue;
-            }
-            // Every referenced aggregate must have a stable identity that exists
-            // before checking. A declared callback, record or prelude type does;
-            // a callable contract or structural array interned while checking does
-            // not, so the body stays fresh with the exact reason.
-            const record_refs = try cache.allocator.alloc(owned.RecordRef, refs.records.count());
-            defer cache.allocator.free(record_refs);
-            var record_iterator = refs.records.keyIterator();
-            var record_count: usize = 0;
-            var unstable: ?MissReason = null;
-            while (record_iterator.next()) |index| {
-                if (index.* >= program.records.len) {
-                    unstable = .missing_record;
-                    break;
-                }
-                if (index.* >= self.remap.initial_record_count) {
-                    const callable = declaredCallback(program.records, index.*);
-                    unstable = if (callable and (refs.function_values or refs.invokes)) .function_value else .interned_record;
-                    break;
-                }
-                const name = program.records[index.*].name;
-                const fresh_index = self.remap.records.get(name) orelse {
-                    unstable = .missing_record;
-                    break;
-                };
-                if (fresh_index == std.math.maxInt(usize)) {
-                    unstable = .ambiguous_record;
-                    break;
-                }
-                record_refs[record_count] = .{ .index = index.*, .key = name };
-                record_count += 1;
-            }
-            if (unstable) |why| {
-                cache.statistics.misses[@backingInt(why)] += 1;
-                continue;
-            }
-            if (generation == null) generation = try owned.Generation.create(cache.allocator, self.src.bytes, self.prepared.bodies);
-            const spec: owned.Spec = .{
-                .identity = .{
-                    .key = stable_key,
-                    .context = self.prepared.contexts[ast_index],
-                    .body = self.prepared.bodies[ast_index],
-                    .region = self.prepared.regions[ast_index],
-                    .checked_contract = key.contractDigest(program.functions[i]),
-                },
-                .function_refs = function_refs,
-                .record_refs = record_refs,
-            };
-            const entry = try owned.Entry.create(cache.allocator, generation.?, program, i, range, spec);
             fresh.append(cache.allocator, true) catch |err| {
                 var owned_entry = entry;
                 owned_entry.deinit();
@@ -481,11 +596,27 @@ pub const Session = struct {
                 return err;
             };
             try new_index.put(cache.allocator, entry.meta.identity.key, pending.items.len - 1);
+            running += cost;
         }
-        const retained = owned.retained(pending.items);
-        if (retained > cache.reuse.max_bytes) {
-            cache.statistics.bypassed += 1;
-            return;
+        if (budget_exhausted and pending.items.len == 0) {
+            // Nothing from this request fits. Preserve the previous complete
+            // snapshot only when it still fits this request's share of the
+            // budget; otherwise release it so a generic promotion cannot push
+            // the combined total over the advertised bound.
+            const previous = owned.retained(cache.entries) + owned.hashIndexBytes(cache.index.capacity());
+            if (previous <= ordinary_budget) {
+                cache.statistics.bypassed += 1;
+                return;
+            }
+            cache.statistics.retention.evicted += cache.entries.len;
+        } else if (budget_exhausted) {
+            // Previously retained bodies beyond the prefix are released by the
+            // smaller ordinary share; count them so eviction is reported.
+            for (stopped_at..ordinary_count) |i| {
+                const ast_index = self.prepared.ordinary_ast[i];
+                const stable_key = self.prepared.keys[ast_index];
+                if (cache.index.contains(stable_key)) cache.statistics.retention.evicted += 1;
+            }
         }
         // Complete the one fallible publication step before touching live cache
         // state so an OOM leaves the previous complete snapshot intact.
@@ -496,9 +627,9 @@ pub const Session = struct {
         cache.entries = new_entries;
         cache.index = new_index;
         new_index = .empty;
-        cache.statistics.retained_bytes = retained;
         cache.statistics.stored += 1;
         published = true;
+        cache.recountRetention();
         try persistFresh(cache, fresh.items);
     }
 };
@@ -535,6 +666,21 @@ fn persistFresh(cache: *Cache, fresh: []const bool) error{OutOfMemory}!void {
         _ = try persistent.put(entry);
     }
     try persistent.endBatch();
+}
+
+/// Bind a generic session back to the cache that owns the shared budget. The
+/// entry modules invoke this through `owned.RetentionHook`, so they never import
+/// the cache module.
+fn reconcileRetention(owner: ?*anyopaque) void {
+    const cache: *Cache = @ptrCast(@alignCast(owner orelse return));
+    cache.enforceGenericRetention();
+}
+
+/// Whether the next ordinary entry still fits `budget` once the body's own
+/// storage and the index capacity the standard hash map allocates for that
+/// entry count are both counted.
+fn fitsOrdinaryBudget(running: usize, cost: usize, count: usize, budget: usize) bool {
+    return running + cost + owned.indexBytesFor(count) <= budget;
 }
 
 const Reuse = struct {

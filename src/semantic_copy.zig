@@ -7,6 +7,48 @@ const source = @import("source.zig");
 pub const Segment = struct { before: source.Span, after: usize };
 /// Contiguous expression/statement IDs belonging to one checked function.
 pub const Range = struct { nodes: source.Span, statements: source.Span };
+/// One old declaration ordinal resolved to a fresh function identity. The list
+/// is sized by the body's actual references, never by the whole program
+/// catalog, so relocation stays proportional to the body it copies.
+pub const FunctionRemap = struct { old: usize, fresh: typed.FunctionId };
+/// One old aggregate ordinal resolved to a fresh aggregate type.
+pub const RecordRemap = struct { old: usize, fresh: typed.Type };
+/// Sort a function remap list so `findFunction` can binary-search it.
+pub fn sortFunctionRemaps(remaps: []FunctionRemap) void {
+    std.mem.sort(FunctionRemap, remaps, {}, lessFunctionRemap);
+}
+/// Sort a record remap list so `findRecord` can binary-search it.
+pub fn sortRecordRemaps(remaps: []RecordRemap) void {
+    std.mem.sort(RecordRemap, remaps, {}, lessRecordRemap);
+}
+fn lessFunctionRemap(_: void, a: FunctionRemap, b: FunctionRemap) bool {
+    return a.old < b.old;
+}
+fn lessRecordRemap(_: void, a: RecordRemap, b: RecordRemap) bool {
+    return a.old < b.old;
+}
+/// Resolve one old function ordinal, or null when the body did not reference it.
+pub fn findFunction(remaps: []const FunctionRemap, id: usize) ?typed.FunctionId {
+    var low: usize = 0;
+    var high = remaps.len;
+    while (low < high) {
+        const middle = low + (high - low) / 2;
+        if (remaps[middle].old < id) low = middle + 1 else high = middle;
+    }
+    if (low >= remaps.len or remaps[low].old != id) return null;
+    return remaps[low].fresh;
+}
+/// Resolve one old aggregate ordinal, or null when the body did not reference it.
+pub fn findRecord(remaps: []const RecordRemap, index: usize) ?typed.Type {
+    var low: usize = 0;
+    var high = remaps.len;
+    while (low < high) {
+        const middle = low + (high - low) / 2;
+        if (remaps[middle].old < index) low = middle + 1 else high = middle;
+    }
+    if (low >= remaps.len or remaps[low].old != index) return null;
+    return remaps[low].fresh;
+}
 /// Validation failures indicate a cache miss, never a trusted unchecked identity.
 pub const Error = error{ OutOfMemory, InternalError, InvalidRelocation };
 
@@ -81,10 +123,18 @@ pub const Mapper = struct {
     segments: []const Segment,
     before: Range,
     after: Range,
-    /// Old FunctionId ordinal -> remapped identity, or null when ambiguous.
+    /// Legacy dense old FunctionId ordinal -> remapped identity, or null when
+    /// ambiguous. Used by callers that already build a full-catalog table (the
+    /// concrete-specialization replay); new per-body callers should prefer the
+    /// reference-sized `function_remaps` below.
     functions: []const ?typed.FunctionId = &.{},
-    /// Old record ordinal -> remapped aggregate type, or null when ambiguous.
+    /// Legacy dense old record ordinal -> remapped aggregate type, or null.
     records: []const ?typed.Type = &.{},
+    /// Reference-sized old function ordinal -> fresh identity, sorted by `old`.
+    /// Takes precedence over the legacy dense `functions` when non-empty.
+    function_remaps: []const FunctionRemap = &.{},
+    /// Reference-sized old record ordinal -> fresh aggregate type.
+    record_remaps: []const RecordRemap = &.{},
     /// Return an independently owned function subtree without borrowing cached storage.
     pub fn copy(self: Mapper, allocator: std.mem.Allocator, comptime T: type, input: T) Error!T {
         const clone: @import("ast_copy.zig").Mapper = .{};
@@ -116,6 +166,10 @@ pub const Mapper = struct {
         }
         if (T == typed.FunctionId) {
             const id = @backingInt(value.*);
+            if (self.function_remaps.len != 0) {
+                value.* = findFunction(self.function_remaps, id) orelse return error.InvalidRelocation;
+                return;
+            }
             if (id >= self.functions.len) return error.InvalidRelocation;
             value.* = self.functions[id] orelse return error.InvalidRelocation;
             return;
@@ -123,6 +177,10 @@ pub const Mapper = struct {
         if (T == typed.Type) {
             if (!value.isAggregate()) return;
             const index = value.recordIndex();
+            if (self.record_remaps.len != 0) {
+                value.* = findRecord(self.record_remaps, index) orelse return error.InvalidRelocation;
+                return;
+            }
             if (index >= self.records.len) return error.InvalidRelocation;
             value.* = self.records[index] orelse return error.InvalidRelocation;
             return;

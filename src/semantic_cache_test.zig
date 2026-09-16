@@ -1168,3 +1168,349 @@ test "const-length specialization keys keep identity and nominal generics miss c
     try t.expectEqual(nominal_before.reused, nominal_after.reused);
     try t.expect(nominal_after.misses[@backingInt(spec_reason.interned_record)] > nominal_before.misses[@backingInt(spec_reason.interned_record)]);
 }
+
+const owned_entry = @import("semantic_entry.zig");
+
+/// Build `count` ordinary helper bodies plus a `main` that returns their sum,
+/// so a test can drive a program whose retained snapshot exceeds one budget.
+fn manyFunctionProgram(allocator: std.mem.Allocator, count: usize) ![]u8 {
+    var out: std.ArrayList(u8) = .empty;
+    errdefer out.deinit(allocator);
+    var line: [96]u8 = undefined;
+    var index: usize = 0;
+    while (index < count) : (index += 1) {
+        try out.appendSlice(allocator, try std.fmt.bufPrint(&line, "def step{d}(n: i64) -> i64:\n    return n + {d}\n\n", .{ index, index + 1 }));
+    }
+    try out.appendSlice(allocator, "def main() -> i64:\n    return ");
+    index = 0;
+    while (index < count) : (index += 1) {
+        if (index != 0) try out.appendSlice(allocator, " + ");
+        try out.appendSlice(allocator, try std.fmt.bufPrint(&line, "step{d}(0)", .{index}));
+    }
+    try out.appendSlice(allocator, "\n");
+    return out.toOwnedSlice(allocator);
+}
+
+// spec-pending: SEMANTIC-CACHE-9
+// spec-case: SEMANTIC-CACHE-7
+test "semantic cache retains a bounded prefix of bodies when the snapshot exceeds its budget" {
+    const source = try manyFunctionProgram(t.allocator, 8);
+    defer t.allocator.free(source);
+    var full = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer full.deinit();
+    try compare(t.allocator, &full, source, 36);
+    try t.expectEqual(@as(usize, 9), full.entries.len);
+    // Shrink the budget by exactly the last body's retained cost. Every cost is
+    // read from this same snapshot, so the leading eight bodies fit and the
+    // ninth cannot, independent of allocator chunk-size variation.
+    const last_cost = @sizeOf(owned_entry.Entry) + full.entries[8].arena.queryCapacity();
+    full.reuse.max_bytes = full.statistics.retained_bytes - last_cost;
+    const prefix_budget = full.reuse.max_bytes;
+    try compare(t.allocator, &full, source, 36);
+    try t.expectEqual(@as(usize, 8), full.entries.len);
+    try t.expect(full.statistics.retained_bytes <= prefix_budget);
+    try t.expectEqual(@as(usize, 0), full.statistics.bypassed);
+    const reused_before = full.statistics.reused;
+    const checked_before = full.statistics.checked;
+    try compare(t.allocator, &full, source, 36);
+    // The retained prefix is copied; only the body dropped by the smaller
+    // budget is rechecked, and the request is still not a whole-cache bypass.
+    try t.expectEqual(reused_before + 8, full.statistics.reused);
+    try t.expectEqual(checked_before + 1, full.statistics.checked);
+    try t.expectEqual(@as(usize, 0), full.statistics.bypassed);
+    try t.expect(full.statistics.retention.evicted > 0);
+}
+
+// spec-pending: SEMANTIC-CACHE-10
+// spec-case: SEMANTIC-CACHE-3
+test "semantic body relocation resolves only the references the body carries" {
+    const relocation = @import("semantic_copy.zig");
+    const typed = @import("typed.zig");
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const mapper: relocation.Mapper = .{
+        .segments = &.{},
+        .before = .{ .nodes = .{ .start = 0, .end = 0 }, .statements = .{ .start = 0, .end = 0 } },
+        .after = .{ .nodes = .{ .start = 0, .end = 0 }, .statements = .{ .start = 0, .end = 0 } },
+        .function_remaps = &.{.{ .old = 2, .fresh = @fromBackingInt(7) }},
+        .record_remaps = &.{.{ .old = 1, .fresh = @fromBackingInt(typed.Type.record_base + 3) }},
+    };
+    try t.expectEqual(@as(typed.FunctionId, @fromBackingInt(7)), try mapper.copy(arena.allocator(), typed.FunctionId, @fromBackingInt(2)));
+    try t.expectError(error.InvalidRelocation, mapper.copy(arena.allocator(), typed.FunctionId, @fromBackingInt(3)));
+    try t.expectEqual(@as(typed.Type, @fromBackingInt(typed.Type.record_base + 3)), try mapper.copy(arena.allocator(), typed.Type, @fromBackingInt(typed.Type.record_base + 1)));
+    try t.expectError(error.InvalidRelocation, mapper.copy(arena.allocator(), typed.Type, @fromBackingInt(typed.Type.record_base + 2)));
+}
+
+/// An ordinary body, a template and a concrete call, so one check exercises
+/// all three entry kinds.
+const all_kinds_program =
+    \\def helper(n: i64) -> i64:
+    \\    return n + 1
+    \\
+    \\
+    \\def identity[T](value: T) -> T:
+    \\    return value
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return identity[i64](helper(41))
+;
+
+// spec-pending: SEMANTIC-CACHE-13
+// spec-case: SEMANTIC-CACHE-1
+test "clear releases ordinary symbolic and specialization entries and keeps returned programs valid" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    var returned = try language.Compilation.init(t.allocator, "edited.my", all_kinds_program);
+    defer returned.deinit();
+    try returned.checkWithCache(&cache);
+    try t.expectEqual(@as(i64, 42), (try native.run(&returned)).value);
+    try t.expect(cache.entries.len > 0);
+    try t.expect(cache.reuse.symbolic.entries.items.len > 0);
+    try t.expect(cache.reuse.specializations.entries.items.len > 0);
+    try t.expect(cache.statistics.retained_bytes != 0);
+    const ordinary_checked = cache.statistics.checked;
+    const symbolic_checked = cache.reuse.symbolic.statistics.checked;
+    const specialization_checked = cache.reuse.specializations.statistics.checked;
+
+    cache.clear();
+    try t.expectEqual(@as(usize, 0), cache.entries.len);
+    try t.expectEqual(@as(usize, 0), cache.index.count());
+    try t.expectEqual(@as(usize, 0), cache.reuse.symbolic.entries.items.len);
+    try t.expectEqual(@as(usize, 0), cache.reuse.symbolic.index.count());
+    try t.expectEqual(@as(usize, 0), cache.reuse.specializations.entries.items.len);
+    try t.expectEqual(@as(usize, 0), cache.reuse.specializations.index.count());
+    try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);
+    try t.expectEqual(@as(usize, 0), cache.statistics.retention.ordinary_bytes);
+    try t.expectEqual(@as(usize, 0), cache.statistics.retention.symbolic_bytes);
+    try t.expectEqual(@as(usize, 0), cache.statistics.retention.specialization_bytes);
+    // A program returned before the clear owns its checked trees and stays valid.
+    try t.expectEqual(@as(i64, 42), (try native.run(&returned)).value);
+
+    // The same source checks every body/template specialization fresh after clear.
+    var again = try language.Compilation.init(t.allocator, "edited.my", all_kinds_program);
+    defer again.deinit();
+    try again.checkWithCache(&cache);
+    try t.expect(cache.statistics.checked > ordinary_checked);
+    try t.expect(cache.reuse.symbolic.statistics.checked > symbolic_checked);
+    try t.expect(cache.reuse.specializations.statistics.checked > specialization_checked);
+    // The cache is usable and deinit-after-clear is safe (no double free/leak).
+    try compare(t.allocator, &cache, all_kinds_program, 42);
+}
+
+/// Const-length template: every distinct `N` is a distinct specialization key.
+const size_template =
+    \\def size[const N: u64]() -> u64:
+    \\    return N
+    \\
+    \\
+;
+
+fn sizeProgram(allocator: std.mem.Allocator, n: usize) ![]u8 {
+    return std.fmt.allocPrint(allocator, "{s}def main() -> i64:\n    return i64(size[{d}]())\n", .{ size_template, n });
+}
+
+/// Fill every slot with a distinct const-length specialization program.
+fn fillSizeSources(allocator: std.mem.Allocator, sources: [][]u8, start: usize) !void {
+    for (sources, 0..) |*slot, i| slot.* = try sizeProgram(allocator, start + i);
+}
+
+/// Persist `sources` with a generous in-memory budget, then return a small
+/// shared budget that fits about two retained specialization units.
+fn primeSpecializationStore(
+    allocator: std.mem.Allocator,
+    root: []const u8,
+    contract: cache_key.Contract,
+    fingerprint: []const u8,
+    sources: []const []u8,
+) !usize {
+    var store = language.semantic_cache.Store.init(allocator, t.io, root, contract, language.semantic_cache.mutation_contract_version);
+    defer store.deinit();
+    var cache = Cache.initWithContract(allocator, 4 * 1024 * 1024, fingerprint);
+    defer cache.deinit();
+    cache.context.persistent = &store;
+    for (sources, 0..) |source, i| try compare(allocator, &cache, source, @intCast(200 + i));
+    if (cache.reuse.specializations.entries.items.len == 0) return error.TestUnexpectedResult;
+    return (@sizeOf(owned_entry.SpecializationEntry) + cache.reuse.specializations.entries.items[0].arena.queryCapacity()) * 2;
+}
+
+// spec-pending: SEMANTIC-CACHE-14
+// spec-case: SEMANTIC-CACHE-12
+test "shared retention budget bounds distinct specializations and eviction forces fresh checks" {
+    // Measure one retained specialization unit with a generous budget.
+    var probe = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer probe.deinit();
+    const probe_source = try sizeProgram(t.allocator, 2);
+    defer t.allocator.free(probe_source);
+    try compare(t.allocator, &probe, probe_source, 2);
+    try t.expect(probe.reuse.specializations.entries.items.len >= 1);
+    const unit = @sizeOf(owned_entry.SpecializationEntry) + probe.reuse.specializations.entries.items[0].arena.queryCapacity();
+    const budget = unit * 3;
+
+    var cache = Cache.init(t.allocator, budget);
+    defer cache.deinit();
+    for (100..130) |n| {
+        const source = try sizeProgram(t.allocator, n);
+        defer t.allocator.free(source);
+        try compare(t.allocator, &cache, source, @intCast(n));
+        try t.expect(cache.statistics.retained_bytes <= cache.reuse.max_bytes);
+    }
+    const retained_after = cache.statistics.retained_bytes;
+    const evicted_after = cache.statistics.retention.evicted;
+    const spec_bytes_after = cache.statistics.retention.specialization_bytes;
+    try t.expect(evicted_after > 0);
+    try t.expect(retained_after <= budget);
+
+    // The oldest specialization was evicted, so re-checking it is fresh work.
+    const oldest = try sizeProgram(t.allocator, 100);
+    defer t.allocator.free(oldest);
+    const spec_checked_before = cache.reuse.specializations.statistics.checked;
+    const spec_reused_before = cache.reuse.specializations.statistics.reused;
+    try compare(t.allocator, &cache, oldest, 100);
+    try t.expect(cache.reuse.specializations.statistics.checked > spec_checked_before);
+    try t.expectEqual(spec_reused_before, cache.reuse.specializations.statistics.reused);
+    std.debug.print("retention: budget={d} retained={d} spec_bytes={d} evictions={d} oldest_fresh_checks=+{d}\n", .{
+        budget, retained_after, spec_bytes_after, evicted_after, cache.reuse.specializations.statistics.checked - spec_checked_before,
+    });
+}
+
+// spec-pending: SEMANTIC-CACHE-14
+// spec-case: SEMANTIC-CACHE-11
+test "zero shared budget disables ordinary symbolic and specialization reuse" {
+    var cache = Cache.init(t.allocator, 0);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, all_kinds_program, 42);
+    const ordinary_checked = cache.statistics.checked;
+    const symbolic_checked = cache.reuse.symbolic.statistics.checked;
+    const specialization_checked = cache.reuse.specializations.statistics.checked;
+    try compare(t.allocator, &cache, all_kinds_program, 42);
+    try t.expectEqual(@as(usize, 0), cache.statistics.reused);
+    try t.expectEqual(@as(usize, 0), cache.reuse.symbolic.statistics.reused);
+    try t.expectEqual(@as(usize, 0), cache.reuse.specializations.statistics.reused);
+    try t.expectEqual(ordinary_checked * 2, cache.statistics.checked);
+    try t.expectEqual(symbolic_checked * 2, cache.reuse.symbolic.statistics.checked);
+    try t.expectEqual(specialization_checked * 2, cache.reuse.specializations.statistics.checked);
+    try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);
+}
+
+// spec-pending: SEMANTIC-CACHE-14
+// spec-case: SEMANTIC-CACHE-8
+test "shared budget holds after an oversized-single-entry session without changing acceptance" {
+    // A budget smaller than one specialization unit admits no retained generic
+    // entry; the checks still run and agree with a fresh compile.
+    var cache = Cache.init(t.allocator, 1);
+    defer cache.deinit();
+    for (1..6) |n| {
+        const source = try sizeProgram(t.allocator, n);
+        defer t.allocator.free(source);
+        try compare(t.allocator, &cache, source, @intCast(n));
+        try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);
+    }
+}
+
+// spec-pending: SEMANTIC-CACHE-14
+// spec-case: SEMANTIC-CACHE-8
+test "durable-hit promotion is bounded by the shared budget without changing acceptance" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const contract = cache_key.Contract.default;
+    const fingerprint = try contract.fingerprint(t.allocator);
+    defer t.allocator.free(fingerprint);
+
+    var sources: [6][]u8 = undefined;
+    defer {
+        for (sources) |source| t.allocator.free(source);
+    }
+    try fillSizeSources(t.allocator, &sources, 200);
+    const budget = try primeSpecializationStore(t.allocator, root, contract, fingerprint, &sources);
+
+    var store = language.semantic_cache.Store.init(t.allocator, t.io, root, contract, language.semantic_cache.mutation_contract_version);
+    defer store.deinit();
+    var cache = Cache.initWithContract(t.allocator, budget, fingerprint);
+    defer cache.deinit();
+    cache.context.persistent = &store;
+    for (sources, 0..) |source, i| {
+        try compare(t.allocator, &cache, source, @intCast(200 + i));
+        try t.expect(cache.statistics.retained_bytes <= budget);
+    }
+    // Durable entries were promoted into memory and then reconciled against the
+    // shared bound, either retained within budget or evicted.
+    try t.expect(cache.reuse.specializations.statistics.reused > 0);
+    try t.expect(cache.statistics.retention.evicted > 0);
+}
+
+/// Build `count` distinct generic templates and a constant `main`, so the
+/// symbolic pass produces one retained template per declaration.
+fn manyTemplateProgram(allocator: std.mem.Allocator, count: usize) ![]u8 {
+    var out: std.ArrayList(u8) = .empty;
+    errdefer out.deinit(allocator);
+    var line: [128]u8 = undefined;
+    var index: usize = 0;
+    while (index < count) : (index += 1) {
+        try out.appendSlice(allocator, try std.fmt.bufPrint(&line, "def t{d}[T: integer](value: T) -> i64 effects():\n    _ = value\n    return {d}\n\n", .{ index, index }));
+    }
+    try out.appendSlice(allocator, "def main() -> i64:\n    return 0\n");
+    return out.toOwnedSlice(allocator);
+}
+
+// spec-pending: SEMANTIC-CACHE-14
+// spec-case: SEMANTIC-CACHE-11
+test "shared retention budget bounds many distinct symbolic templates" {
+    const count = 12;
+    const source = try manyTemplateProgram(t.allocator, count);
+    defer t.allocator.free(source);
+    // Measure one retained symbolic unit with a generous budget.
+    var probe = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer probe.deinit();
+    const probe_source = try manyTemplateProgram(t.allocator, 1);
+    defer t.allocator.free(probe_source);
+    try compare(t.allocator, &probe, probe_source, 0);
+    try t.expect(probe.reuse.symbolic.entries.items.len >= 1);
+    // Split the probe's shared total into the ordinary main body and one
+    // symbolic table unit, then budget the main body plus two templates.
+    const symbolic_unit = probe.reuse.symbolic.retainedBytes();
+    const ordinary_bytes = probe.statistics.retained_bytes - symbolic_unit;
+    const budget = ordinary_bytes + symbolic_unit * 3;
+
+    var cache = Cache.init(t.allocator, budget);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, source, 0);
+    try t.expect(cache.statistics.retained_bytes <= budget);
+    try t.expect(cache.reuse.symbolic.entries.items.len < count);
+    try t.expect(cache.statistics.retention.evicted > 0);
+
+    // Evicted templates are rechecked; the survivors replay.
+    const checked_before = cache.reuse.symbolic.statistics.checked;
+    const reused_before = cache.reuse.symbolic.statistics.reused;
+    try compare(t.allocator, &cache, source, 0);
+    try t.expect(cache.reuse.symbolic.statistics.checked > checked_before);
+    try t.expect(cache.reuse.symbolic.statistics.reused > reused_before);
+    try t.expect(cache.statistics.retained_bytes <= budget);
+    std.debug.print("symbolic retention: budget={d} retained={d} symbolic_bytes={d} templates={d} evictions={d} warm_fresh=+{d} warm_reused=+{d}\n", .{
+        budget,
+        cache.statistics.retained_bytes,
+        cache.statistics.retention.symbolic_bytes,
+        cache.reuse.symbolic.entries.items.len,
+        cache.statistics.retention.evicted,
+        cache.reuse.symbolic.statistics.checked - checked_before,
+        cache.reuse.symbolic.statistics.reused - reused_before,
+    });
+}
+
+/// One check of a program that uses a symbolic template and a concrete
+/// specialization, so a FailingAllocator exercises both generic publish paths.
+fn genericScenario(allocator: std.mem.Allocator) !void {
+    var cache = Cache.init(allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(allocator, &cache, all_kinds_program, 42);
+    try compare(allocator, &cache, all_kinds_program, 42);
+}
+
+// spec-pending: SEMANTIC-CACHE-14
+// spec-case: SEMANTIC-CACHE-11
+test "generic publication rolls back cleanly on allocation failure" {
+    try genericScenario(t.allocator);
+    try t.checkAllAllocationFailures(t.allocator, genericScenario, .{});
+}
