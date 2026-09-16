@@ -8,6 +8,7 @@ const Value = std.json.Value;
 pub const Error = error{ OutOfMemory, InvalidManifest, WriteFailed };
 /// Generate all scalar, ordinary copied-value and codec public library entry points.
 pub fn libraryWrapper(allocator: std.mem.Allocator, manifest: Value) Error![]const u8 {
+    if (manifest != .object) return error.InvalidManifest;
     var output: std.Io.Writer.Allocating = .init(allocator);
     defer output.deinit();
     const w = &output.writer;
@@ -18,12 +19,14 @@ pub fn libraryWrapper(allocator: std.mem.Allocator, manifest: Value) Error![]con
     try w.writeAll(templates.embed_prelude);
     try w.writeByte('\n');
     try schema(w, v.get(manifest, "schema"));
-    try declaration(w, entry, parameters.len);
+    if (entry.len != 0) try declaration(w, entry, parameters.len);
     for (units) |unit| {
         const item = v.get(unit, "export");
         if (item != .null and supported(item)) try declaration(w, v.text(v.get(unit, "symbol")), v.array(v.get(item, v.parameters_key)).len);
     }
-    try entryRun(w, entry, parameters);
+    if (entry.len == 0) {
+        try w.writeAll("static uint64_t entry_run(void *ctx){(void)ctx;return 0;}\n");
+    } else try entryRun(w, entry, parameters);
     try scalarDispatch(w, units);
     try w.writeAll(templates.embed_run);
     try w.writeByte('\n');

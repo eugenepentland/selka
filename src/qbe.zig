@@ -12,13 +12,15 @@ const diagnostic = @import("diagnostic.zig");
 const Source = @import("source.zig").Source;
 const entry_adapter = @import("entry_adapter.zig");
 const native_descriptors = @import("native_descriptors.zig");
+const test_dependencies = @import("native_test_dependencies.zig");
+const native_interface = @import("native_interface.zig");
 const prelude = @import("prelude.zig");
 /// Failures producing independent QBE native units.
 pub const GenerateError = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 const drop_local = " call $myl_native_owned_drop(l %heap, l extern ${s}, l %l{d})\n";
 const store_scalar = " storel {d}, %s{d}\n";
 const Location = struct { path: []const u8, line: usize, column: usize };
-const Unit = struct { test_dependencies: ?@import("native_test_dependencies.zig").Metadata = null, name: []const u8, symbol: []const u8, il: []const u8, locations: []const Location, @"export": ?@import("qbe_exports.zig").Export = null };
+const Unit = struct { test_dependencies: ?test_dependencies.Metadata = null, name: []const u8, symbol: []const u8, il: []const u8, locations: []const Location, @"export": ?@import("qbe_exports.zig").Export = null };
 
 /// Generate a JSON manifest whose independently linkable functions have stable names.
 pub fn generate(allocator: std.mem.Allocator, program: bytecode.Program, src: Source, sink: *diagnostic.Sink) GenerateError![]u8 {
@@ -26,7 +28,20 @@ pub fn generate(allocator: std.mem.Allocator, program: bytecode.Program, src: So
 }
 
 /// Include authoritative public exports and an immutable interface schema snapshot.
-pub fn generateWithInterface(allocator: std.mem.Allocator, program: bytecode.Program, src: Source, sink: *diagnostic.Sink, interface: @import("native_interface.zig").Interface) GenerateError![]u8 {
+pub fn generateWithInterface(allocator: std.mem.Allocator, program: bytecode.Program, src: Source, sink: *diagnostic.Sink, interface: native_interface.Interface) GenerateError![]u8 {
+    return generateImpl(allocator, program, src, sink, interface, null);
+}
+
+/// Emit only selected independently linkable units. `selected` is indexed by the
+/// full bytecode function id and must mark every direct callee, every indirect
+/// target and every codec method the manifest runtime metadata refers to.
+pub fn generateSelectedWithInterface(allocator: std.mem.Allocator, program: bytecode.Program, src: Source, sink: *diagnostic.Sink, interface: native_interface.Interface, selected: []const bool) GenerateError![]u8 {
+    if (selected.len != program.functions.len) return error.InternalError;
+    try validateSelection(allocator, program, selected);
+    return generateImpl(allocator, program, src, sink, interface, selected);
+}
+
+fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: Source, sink: *diagnostic.Sink, interface: native_interface.Interface, selected: ?[]const bool) GenerateError![]u8 {
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
     const a = arena.allocator();
@@ -34,18 +49,26 @@ pub fn generateWithInterface(allocator: std.mem.Allocator, program: bytecode.Pro
     defer layouts.deinit();
     const units = try a.alloc(Unit, program.functions.len);
     for (program.functions, units, 0..) |function, *unit, index| {
-        const locations = try a.alloc(Location, function.scope.instructions.len);
-        for (function.scope.instructions, locations) |instruction, *location| {
+        const emit = selected == null or selected.?[index];
+        const locations = try a.alloc(Location, if (emit) function.scope.instructions.len else 0);
+        if (emit) for (function.scope.instructions, locations) |instruction, *location| {
             const value = src.locate(instruction.span.start);
             location.* = .{ .path = value.path, .line = value.line, .column = value.column };
-        }
-        unit.* = .{ .name = function.name, .symbol = try symbol(a, function.name), .il = "", .locations = locations, .@"export" = try @import("qbe_exports.zig").describe(a, program, index, interface.roots) };
+        };
+        unit.* = .{
+            .name = function.name,
+            .symbol = try symbol(a, function.name),
+            .il = "",
+            .locations = locations,
+            .@"export" = if (emit) try @import("qbe_exports.zig").describe(a, program, index, interface.roots) else null,
+        };
     }
     const arenas = arena_lower.present(program);
     for (program.functions, units, 0..) |function, *unit, index| {
+        if (selected != null and !selected.?[index]) continue;
         var emitter = Emitter{ .allocator = a, .program = program, .function = function, .units = units, .layouts = &layouts, .sink = sink, .output = .init(a), .arenas = arenas };
         unit.il = try emitter.emit(unit.symbol);
-        unit.test_dependencies = @import("native_test_dependencies.zig").describe(a, program, index, unit.il, &layouts, emitter.states) catch |err| return layoutError(err);
+        unit.test_dependencies = test_dependencies.describe(a, program, index, unit.il, &layouts, emitter.states) catch |err| return layoutError(err);
     }
     const entry_function = program.functions[@backingInt(program.main)];
     const entry_parameters = try a.alloc([]const u8, entry_function.signature.parameter_count);
@@ -63,6 +86,7 @@ pub fn generateWithInterface(allocator: std.mem.Allocator, program: bytecode.Pro
         if (needsTextRuntime(program, instruction.op)) text_format = true;
     };
     const host = @import("qbe_host.zig").describe(a, program, &layouts) catch |err| return layoutError(err);
+    const emitted = if (selected) |mask| try selectedUnits(a, units, mask) else units;
     return std.json.Stringify.valueAlloc(allocator, .{
         .host = host,
         .text_format = text_format,
@@ -73,10 +97,43 @@ pub fn generateWithInterface(allocator: std.mem.Allocator, program: bytecode.Pro
         .schema = interface.schema,
         .runtime_data = runtime_data,
         .version = "qbe-units-v1",
-        .abi = "mylang-qbe-native-v4",
-        .functions = units,
-        .entry = units[@backingInt(program.main)].symbol,
+        .abi = test_dependencies.abi,
+        .functions = emitted,
+        .entry = if (selected == null) units[@backingInt(program.main)].symbol else "",
     }, .{});
+}
+
+fn selectedUnits(allocator: std.mem.Allocator, units: []const Unit, selected: []const bool) GenerateError![]const Unit {
+    var count: usize = 0;
+    for (selected) |flag| count += @intFromBool(flag);
+    const result = try allocator.alloc(Unit, count);
+    var index: usize = 0;
+    for (units, selected) |unit, flag| if (flag) {
+        result[index] = unit;
+        index += 1;
+    };
+    return result;
+}
+
+fn validateSelection(allocator: std.mem.Allocator, program: bytecode.Program, selected: []const bool) GenerateError!void {
+    var address_taken: std.ArrayList(typed.FunctionId) = .empty;
+    defer address_taken.deinit(allocator);
+    for (program.functions) |function| for (function.scope.instructions) |instruction| {
+        if (instruction.op == .function_value) try address_taken.append(allocator, instruction.op.function_value.function);
+    };
+    for (program.functions, selected) |function, emit| {
+        if (!emit) continue;
+        for (function.scope.instructions) |instruction| switch (instruction.op) {
+            .call => |target| if (!selected[@backingInt(target)]) return error.InternalError,
+            .function_value => |value| if (!selected[@backingInt(value.function)]) return error.InternalError,
+            .invoke => for (address_taken.items) |target| if (!selected[@backingInt(target)]) return error.InternalError,
+            else => {},
+        };
+    }
+    for (program.records) |record| {
+        const codec = record.contract.codec orelse continue;
+        if (!selected[@backingInt(codec.decode)] or !selected[@backingInt(codec.encode)]) return error.InternalError;
+    }
 }
 
 /// Whether one operation needs the shared Zig text runtime unit: `str(value)`

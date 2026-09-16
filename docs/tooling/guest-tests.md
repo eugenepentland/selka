@@ -71,23 +71,25 @@ query cache, but admits valid result receipts without lowering, emitting or link
 any code, so it executes zero tests. Receipt reuse is bound to the selected
 dependency closure, contract and provider identities plus fixture, environment and
 budget identities; a helper edit executes only its dependent tests. A fully cached
-selection also needs the durable reduced preparation graph
-(`native-test-graph-v2`), keyed by compiler/tool stamps, mode, environment hash,
-source identity and canonical provider identity. A v2 graph stores the requested
-input key in its envelope, checksums its payload, and rejects a missing, damaged,
-wrong-version or structurally invalid graph; an intact graph copied under another
-key is a miss rather than a stale success. `mylang test --report` emits a
-`work-report-v1` line whose `executed_tests.performed`/`reused` counts reconcile
-with the `native-tests-v1` `executed`/`cached` fields.
+selection also needs durable checked facts (`native-test-graph-v3`), keyed by
+compiler/tool stamps, mode, environment hash, source identity and canonical
+provider identity. The graph stores the requested input key in its envelope,
+checksums its payload, and rejects a missing, damaged, wrong-version or
+structurally invalid graph; an intact graph copied under another key is a miss
+rather than a stale success. `mylang test --report` emits a `work-report-v1`
+line whose `executed_tests.performed`/`reused` counts reconcile with the
+`native-tests-v1` `executed`/`cached` fields.
 `--force` skips existing graph and result reuse but may publish refreshed graphs
 and successful receipts, whereas `--no-cache` performs no durable result or graph
 reads and writes at all.
 
-This selection is not per-function lazy compilation yet. Any changed snapshot
-still pays one whole-project preparation emission, and an uncached selection
-builds the whole selected-provider library rather than only the selected tests'
-required functions; a fully cached selection is the case that skips all lowering,
-emission and linking.
+When facts or receipts miss, `native-test-graph` checks the project without QBE
+lowering; the planner then selects only the uncached tests' reachable function
+closure, including required adapters, specializations, runtime support and a
+conservative set around indirect calls and codec boundaries. Only that closure
+is lowered, emitted, compiled and linked, so a helper edit does not rebuild the
+whole selected-provider project. Distinct provider graphs stay isolated;
+identical graphs share one closure and library per invocation.
 
 A successful deterministic case leaves a receipt under `.mylang-cache/tests`, or
 under `--cache-dir DIR`. The receipt's identity covers the case settings, the

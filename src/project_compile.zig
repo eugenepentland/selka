@@ -38,6 +38,7 @@ pub const EmitError = error{
     SourceError,
 };
 
+const std = @import("std");
 const interfaces = @import("interfaces.zig");
 const syntax = @import("project_syntax.zig");
 const source = @import("source.zig");
@@ -76,13 +77,85 @@ pub const Compilation = struct {
         try self.emit();
         const roots = try self.exportRoots(allocator);
         defer allocator.free(roots);
-        const schema = @import("schema_graph.zig").render(allocator, self.index, self.program.?, roots) catch |err| switch (err) {
+        const schema = try self.renderSchema(allocator, roots);
+        defer allocator.free(schema);
+        return @import("qbe.zig").generateWithInterface(allocator, self.code.?, self.src, &self.diagnostics, .{ .roots = roots, .schema = schema });
+    }
+
+    /// Emit checked native-test dependency facts without lowering or QBE emission.
+    ///
+    /// The returned bytes are a `native-test-graph-v3` payload: schema plus each
+    /// checked function's semantic fingerprint and dependency edges. It is the
+    /// graph a warm `mylang test` loads before selecting result receipts.
+    pub fn emitNativeTestFacts(self: *Compilation, allocator: @import("std").mem.Allocator) EmitNativeError![]u8 {
+        try self.check();
+        const roots = try self.exportRoots(allocator);
+        defer allocator.free(roots);
+        const schema = try self.renderSchema(allocator, roots);
+        defer allocator.free(schema);
+        return @import("native_test_facts.zig").render(allocator, self.src, self.program.?, roots, schema) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => return error.InternalError,
+        };
+    }
+
+    /// Lower and emit only the selected functions (plus conservative runtime
+    /// support). `names` are checked qualified function names borrowed by the
+    /// caller. `stats` receives the closure width actually lowered and emitted.
+    pub fn emitQbeSelected(self: *Compilation, allocator: @import("std").mem.Allocator, names: []const []const u8, stats: *SelectedStats) EmitNativeError![]u8 {
+        try self.check();
+        const roots = try self.exportRoots(allocator);
+        defer allocator.free(roots);
+        const schema = try self.renderSchema(allocator, roots);
+        defer allocator.free(schema);
+        const selected = try self.selectFunctions(allocator, names);
+        defer allocator.free(selected);
+        @import("native_test_facts.zig").expandSelection(allocator, self.program.?, selected) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => return error.InternalError,
+        };
+        var count: usize = 0;
+        for (selected) |flag| count += @intFromBool(flag);
+        const code = @import("lower.zig").lowerSelected(self.index.project.arena.allocator(), self.program.?, selected) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => return error.InternalError,
+        };
+        stats.* = .{ .lowered_functions = count, .emitted_fragments = count };
+        return @import("qbe.zig").generateSelectedWithInterface(allocator, code, self.src, &self.diagnostics, .{ .roots = roots, .schema = schema }, selected) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.SourceError => return error.SourceError,
+            error.WriteFailed => return error.WriteFailed,
+            else => return error.InternalError,
+        };
+    }
+
+    /// Lowering/emission counts for one selective native build.
+    pub const SelectedStats = struct { lowered_functions: usize = 0, emitted_fragments: usize = 0 };
+
+    fn selectFunctions(self: *Compilation, allocator: @import("std").mem.Allocator, names: []const []const u8) CheckError![]bool {
+        const selected = try allocator.alloc(bool, self.program.?.functions.len);
+        @memset(selected, false);
+        for (names) |name| {
+            if (name.len == 0) continue;
+            var found = false;
+            for (self.program.?.functions, 0..) |function, index| {
+                if (std.mem.eql(u8, function.name, name)) {
+                    selected[index] = true;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) return error.InternalError;
+        }
+        return selected;
+    }
+
+    fn renderSchema(self: *Compilation, allocator: @import("std").mem.Allocator, roots: []const typed.FunctionId) EmitNativeError![]u8 {
+        return @import("schema_graph.zig").render(allocator, self.index, self.program.?, roots) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             error.SourceError => return error.SourceError,
             else => return error.InternalError,
         };
-        defer allocator.free(schema);
-        return @import("qbe.zig").generateWithInterface(allocator, self.code.?, self.src, &self.diagnostics, .{ .roots = roots, .schema = schema });
     }
     /// Allocate the function identities exposed by the checked public interface.
     pub fn exportRoots(self: *Compilation, allocator: @import("std").mem.Allocator) CheckError![]typed.FunctionId {

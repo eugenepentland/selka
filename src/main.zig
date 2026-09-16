@@ -3,6 +3,7 @@ const lowering_phase = "bytecode_lowering";
 const inputs_prefix = "--inputs=";
 const policy_prefix = "--policy=";
 const cache_directory_prefix = "--cache-dir=";
+const select_file_prefix = "--select-file=";
 /// Phase label and default cache-directory leaf, shared so the literal is not
 /// repeated across the timer and the persistent-cache path join.
 const frontend_label = "frontend";
@@ -255,6 +256,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .@"report-project-quality",
         .@"fmt-project",
         .@"emit-project-qbe",
+        .@"native-test-graph",
         => return listModules(init, parsed),
         else => {},
     }
@@ -367,6 +369,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .@"fmt-project",
         .@"list-declarations",
         .@"emit-project-qbe",
+        .@"native-test-graph",
         .@"list-modules",
         .@"list-interfaces",
         .@"check-project",
@@ -512,6 +515,7 @@ const Command = enum {
     @"schema-project",
     @"input-module",
     @"emit-project-qbe",
+    @"native-test-graph",
     @"fmt-project",
     @"fmt-module",
     @"report-project-quality",
@@ -551,6 +555,8 @@ const Parsed = struct {
     discovery: language.duplicates.Options,
     reporting: Reporting,
     max_memory: ?u64,
+    /// Internal selective native emission input; one qualified function per line.
+    select_file: ?[]const u8,
     /// `--no-cache` disables all persistent frontend reuse for this command.
     no_cache: bool,
     /// `--cache-dir` selects the cache root; null uses the default location.
@@ -643,6 +649,7 @@ const ArgumentParser = struct {
     reporting: Reporting = .{},
     no_cache: bool = false,
     cache_dir: ?[]const u8 = null,
+    select_file: ?[]const u8 = null,
     saw_min: bool = false,
     saw_population: bool = false,
     saw_work: bool = false,
@@ -771,6 +778,9 @@ const ArgumentParser = struct {
             self.native.qbe = try self.value(arg, "--qbe=");
         } else if (std.mem.startsWith(u8, arg, "--zig=")) {
             self.native.zig = try self.value(arg, "--zig=");
+        } else if (std.mem.startsWith(u8, arg, select_file_prefix)) {
+            if (self.command != .@"emit-project-qbe" or self.select_file != null or arg.len == select_file_prefix.len) return error.Usage;
+            self.select_file = arg[select_file_prefix.len..];
         } else return false;
         return true;
     }
@@ -825,6 +835,7 @@ const ArgumentParser = struct {
             .max_memory = self.max_memory,
             .no_cache = self.no_cache,
             .cache_dir = self.cache_dir,
+            .select_file = self.select_file,
         };
     }
 };
@@ -1106,10 +1117,17 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         init.timings.counts.ast_nodes = compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len;
         init.timings.counts.typed_nodes = compilation.program.?.nodes.len + compilation.program.?.statements.len;
         const executed = executedStages(parsed.command);
+        // A selective `emit-project-qbe --select-file` lowers only its closure in
+        // the emission helper; the whole-project receipt pass must not lower first.
+        var receipt_stages = executed;
+        if (parsed.command == .@"emit-project-qbe" and parsed.select_file != null) {
+            receipt_stages[@backingInt(invalidation.Stage.lower_function)] = false;
+            receipt_stages[@backingInt(invalidation.Stage.emit_fragment)] = false;
+        }
         // A command that lowers must do so before the receipt is built: emitted
         // fragments are real inputs to the lower/emit/link explanation, not an
         // empty table that can only compare equal.
-        if (!try lowerForReceipt(init, &compilation, executed)) {
+        if (!try lowerForReceipt(init, &compilation, receipt_stages)) {
             try reportProject(init, &compilation);
             if (parsed.reporting.explain_invalidation) {
                 try reportFailedInvalidation(init, parsed, &compilation, files.inputs);
@@ -1124,23 +1142,16 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
             dependency_receipt = try dependencyReport(init, &compilation, files.inputs, policy_receipt);
         }
         if (parsed.reporting.explain_invalidation) try reportInvalidation(init, parsed, dependency_receipt.?, executed, true);
-        if (parsed.command == .@"emit-project-qbe") break :result (try emitProjectNative(init, &compilation)) orelse return 1;
+        const requested_output = emitRequestedOutput(init, &compilation, parsed) catch |err| switch (err) {
+            error.SourceError => return 1,
+            else => return err,
+        };
+        if (requested_output) |output| break :result output;
         try reportProject(init, &compilation);
         if (parsed.command == .@"project-dependencies") break :result try init.gpa.dupe(u8, dependency_receipt.?);
         if (parsed.command == .@"check-project") {
             try rememberFrontendVerdict(init, parsed.command, &project, &compilation, frontend);
             return rememberCheck(verdict, &project, &compilation);
-        }
-        if (parsed.command == .@"schema-project") break :result if (parsed.schema_report)
-            try language.schema_report.render(init.gpa, &compilation, try compilerIdentity(init.io))
-        else
-            try language.schema.render(init.gpa, &compilation);
-        if (parsed.command == .@"report-project-quality") {
-            const roots = try compilation.exportRoots(init.gpa);
-            defer init.gpa.free(roots);
-            var analysis = try language.quality.analyzeWithExports(init.gpa, compilation.program.?, compilation.src, parsed.quality, roots);
-            defer analysis.deinit();
-            break :result try language.quality.render(init.gpa, analysis, compilation.program.?, compilation.src);
         }
         if (parsed.command == .@"discover-project-duplicates") return discoverProject(init, parsed, &project, &compilation, frontend_start);
         if (parsed.command == .@"check-policy") return checkProjectPolicy(init, parsed, &project);
@@ -1206,18 +1217,56 @@ fn runProjectProgram(init: Context, compilation: *language.project_compile.Compi
     return runNative(init, parsed, manifest);
 }
 
-fn emitProjectNative(init: Context, compilation: *language.project_compile.Compilation) !?[]u8 {
-    const generated = emitMeasuredNative(init, compilation) catch |err| switch (err) {
+fn emitProjectNative(init: Context, compilation: *language.project_compile.Compilation, select_file: ?[]const u8) !?[]u8 {
+    const generated = (if (select_file) |path| emitMeasuredSelectedNative(init, compilation, path) else emitMeasuredNative(init, compilation)) catch |err| switch (err) {
         error.SourceError => {
             try reportProject(init, compilation);
             return null;
         },
         else => return err,
     };
-    init.timings.end();
     errdefer init.gpa.free(generated);
     try reportProject(init, compilation);
     return generated;
+}
+
+/// `native-test-graph` is an internal checked-facts producer. It emits no
+/// lowering/emission receipt because no QBE work occurred, and stdout stays a
+/// pure graph payload for the native-test parent.
+fn emitNativeTestFacts(init: Context, compilation: *language.project_compile.Compilation) ![]u8 {
+    init.timings.begin(frontend_label, false);
+    const facts = compilation.emitNativeTestFacts(init.gpa) catch |err| switch (err) {
+        error.SourceError => {
+            try reportProject(init, compilation);
+            return error.SourceError;
+        },
+        else => return err,
+    };
+    init.timings.end();
+    return facts;
+}
+
+fn emitRequestedOutput(init: Context, compilation: *language.project_compile.Compilation, parsed: Parsed) !?[]u8 {
+    return switch (parsed.command) {
+        .@"native-test-graph" => try emitNativeTestFacts(init, compilation),
+        .@"emit-project-qbe" => (try emitProjectNative(init, compilation, parsed.select_file)) orelse error.SourceError,
+        .@"schema-project" => blk: {
+            try reportProject(init, compilation);
+            break :blk if (parsed.schema_report)
+                try language.schema_report.render(init.gpa, compilation, try compilerIdentity(init.io))
+            else
+                try language.schema.render(init.gpa, compilation);
+        },
+        .@"report-project-quality" => blk: {
+            try reportProject(init, compilation);
+            const roots = try compilation.exportRoots(init.gpa);
+            defer init.gpa.free(roots);
+            var analysis = try language.quality.analyzeWithExports(init.gpa, compilation.program.?, compilation.src, parsed.quality, roots);
+            defer analysis.deinit();
+            break :blk try language.quality.render(init.gpa, analysis, compilation.program.?, compilation.src);
+        },
+        else => null,
+    };
 }
 
 fn partialNavigation(init: Context, project: *language.project.Project, command: Command) !u8 {
@@ -2060,4 +2109,47 @@ fn emitMeasuredNative(init: Context, compilation: anytype) ![]u8 {
     if (compilation.code) |code| setWork(init, .emitted_fragments, code.functions.len, 0);
     init.timings.end();
     return generated;
+}
+
+/// Lower and emit only functions named in `select_file`. The file contains one
+/// qualified function name per line and is produced by the native-test planner's
+/// closure, so the whole-project emission path is never entered for an affected
+/// selection.
+fn emitMeasuredSelectedNative(init: Context, compilation: *language.project_compile.Compilation, select_file: []const u8) ![]u8 {
+    const names = try selectionNames(init, select_file);
+    defer {
+        for (names) |name| init.gpa.free(name);
+        init.gpa.free(names);
+    }
+    init.timings.begin(lowering_phase, false);
+    var stats: language.project_compile.Compilation.SelectedStats = .{};
+    const generated = try compilation.emitQbeSelected(init.gpa, names, &stats);
+    recordLoweredCount(init, stats.lowered_functions);
+    setWork(init, .emitted_fragments, stats.emitted_fragments, 0);
+    init.timings.end();
+    return generated;
+}
+
+fn selectionNames(init: Context, path: []const u8) ![]const []const u8 {
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, path, init.gpa, .limited(16 * 1024 * 1024));
+    defer init.gpa.free(bytes);
+    var names: std.ArrayList([]const u8) = .empty;
+    // UNTESTED-ERROR: cleanup on a failed read/append is covered by generic allocator-failure tests; a deterministic partial-read hook does not exist here.
+    errdefer {
+        for (names.items) |name| init.gpa.free(name);
+        names.deinit(init.gpa);
+    }
+    var lines = std.mem.splitScalar(u8, bytes, '\n');
+    while (lines.next()) |raw| {
+        const line = std.mem.trim(u8, raw, " \t\r");
+        if (line.len == 0) continue;
+        var duplicate = false;
+        for (names.items) |existing| if (std.mem.eql(u8, existing, line)) {
+            duplicate = true;
+            break;
+        };
+        if (duplicate) continue;
+        try names.append(init.gpa, try init.gpa.dupe(u8, line));
+    }
+    return names.toOwnedSlice(init.gpa);
 }

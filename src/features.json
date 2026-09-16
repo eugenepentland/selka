@@ -419,7 +419,7 @@
     },
     "native-test-preparation-reuse": {
       "kind": "tooling",
-      "summary": "A warm unchanged native-test run validates through the shared query cache, reuses closure-bound result receipts and executes zero tests without lowering, emitting or linking; a durable reduced preparation graph keys fully cached selections.",
+      "summary": "A warm unchanged native-test run validates through the shared query cache, reuses closure-bound result receipts and executes zero tests without lowering, emitting or linking; durable checked facts key fully cached selections, and a miss lowers, emits and links only the selected tests' reachable closure.",
       "doc": "docs/tooling/guest-tests.md#reusing-unaffected-results"
     },
     "selected-test-providers": {

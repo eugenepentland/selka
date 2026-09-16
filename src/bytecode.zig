@@ -37,6 +37,29 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
     }
 }
 
+/// Validate one selective lowering without requiring unselected stubs to carry
+/// instructions. Program-wide metadata and every selected function are still
+/// checked; unselected functions only need the signatures/locals QBE reads when
+/// resolving callee ABIs.
+pub fn validateSelected(allocator: std.mem.Allocator, program: Program, selected: []const bool) Error!void {
+    if (selected.len != program.functions.len) return error.InternalError;
+    if (@backingInt(program.main) >= program.functions.len) return error.InternalError;
+    try validateRecords(program);
+    try @import("codec_bytecode.zig").validate(allocator, program);
+    try validateEntry(program);
+    for (program.functions, 0..) |function, index| {
+        if (!selected[index]) continue;
+        try validateFunction(program, function, index);
+        if (function.policy.c_abi and function.policy.host == null) return error.InternalError;
+        if (function.policy.host != null) {
+            try validateHost(allocator, program, function);
+            continue;
+        }
+        for (function.scope.instructions) |instruction| try validateInstruction(allocator, program, function, instruction);
+        try validateFlow(allocator, program, function);
+    }
+}
+
 fn validateRecords(program: Program) Error!void {
     for (program.records, 0..) |record, i| {
         if (@backingInt(record.id) != i + typed.Type.record_base) return error.InternalError;

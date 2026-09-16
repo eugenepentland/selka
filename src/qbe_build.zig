@@ -13,7 +13,7 @@ pub const Error = fs.Error || std.json.ParseError(std.json.Scanner) || outputs.E
     @import("qbe_build_embed.zig").Error || cache_api.Error ||
     @import("memory_budget").Error ||
     error{ UnsupportedNativeHost, ZigVersionMismatch, InvalidNativeManifest };
-const abi = "mylang-qbe-native-v4";
+const native_abi = "mylang-qbe-native-v4";
 const Record = struct { name: []const u8, symbol: []const u8, key: []const u8, object: []const u8, reused: bool };
 /// Fixed runtime translation units archived together once per build environment.
 const runtime_units = [_][]const u8{
@@ -69,7 +69,7 @@ pub fn prepare(context: fs.Context, parsed: options.Options) Error!Prepared {
     const temporary = try context.temporary(directory);
     const environment = try std.json.Stringify.valueAlloc(a, .{
         .version = "zig-qbe-build-v2",
-        .abi = abi,
+        .abi = native_abi,
         .compiler = bundled.compiler_identity,
         .runtime = bundled.content_hash,
         .zig = try context.stamp(zig),
@@ -123,6 +123,12 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
     } else if (!std.mem.eql(u8, parsed.cache, options.default_cache)) {
         try arguments.append(a, try std.fmt.allocPrint(a, "--cache-dir={s}", .{parsed.cache}));
     }
+    if (selectFile(parsed.link_arguments)) |path| {
+        try arguments.append(a, try std.fmt.allocPrint(a, "--select-file={s}", .{path}));
+        // Forward the work-report request for selective test builds so native-test
+        // parents observe the frontend's real lowering/emission counts.
+        if (parsed.report) try arguments.append(a, "--report");
+    }
     const generated = try context.capture(arguments.items);
     const code = fs.exitCode(generated.term);
     if (code != 0) return code;
@@ -163,6 +169,14 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
     if (parsed.run) return spawnParts(context, output, controls, parsed);
     return 0;
 }
+/// Find an internal `--select-file=PATH` in the original build arguments. The
+/// selective frontend input is intentionally not stored in `Options`, whose
+/// field count is frozen by the repository's type-size ratchet.
+fn selectFile(args: []const []const u8) ?[]const u8 {
+    for (args) |argument| if (std.mem.startsWith(u8, argument, "--select-file=")) return argument["--select-file=".len..];
+    return null;
+}
+
 /// The argument vector for one built program and the options it was given.
 pub fn command(context: fs.Context, output: []const u8, arguments: []const []const u8) Error![]const []const u8 {
     var argv: std.ArrayList([]const u8) = .empty;
@@ -344,16 +358,19 @@ fn seconds(context: fs.Context, start: std.Io.Timestamp) f64 {
 }
 fn validate(manifest: std.json.Value) !void {
     if (!std.mem.eql(u8, v.text(v.get(manifest, "version")), "qbe-units-v1")) return error.InvalidNativeManifest;
-    if (!std.mem.eql(u8, v.text(v.get(manifest, "abi")), abi)) return error.InvalidNativeManifest;
+    if (!std.mem.eql(u8, v.text(v.get(manifest, "abi")), native_abi)) return error.InvalidNativeManifest;
     const units = v.array(v.get(manifest, "functions"));
-    var entry_found = false;
+    const entry = v.text(v.get(manifest, "entry"));
+    // A selective library manifest has no executable entry; `build --library`
+    // emits a stub entry_run instead. Executable manifests still require one.
+    var entry_found = entry.len == 0;
     for (units, 0..) |unit, index| {
         const symbol = v.text(v.get(unit, "symbol"));
         if (symbol.len == 0 or v.get(unit, "il") != .string) return error.InvalidNativeManifest;
         if (!std.ascii.isAlphabetic(symbol[0]) and symbol[0] != '_') return error.InvalidNativeManifest;
         for (symbol) |character| if (!std.ascii.isAlphanumeric(character) and character != '_') return error.InvalidNativeManifest;
         for (units[0..index]) |other| if (std.mem.eql(u8, symbol, v.text(v.get(other, "symbol")))) return error.InvalidNativeManifest;
-        if (std.mem.eql(u8, symbol, v.text(v.get(manifest, "entry")))) entry_found = true;
+        if (std.mem.eql(u8, symbol, entry)) entry_found = true;
     }
     if (!entry_found) return error.InvalidNativeManifest;
 }
@@ -420,7 +437,7 @@ const State = struct {
         try args.appendSlice(a, &.{ self.runtime.path, "-lm", "-Wl,--gc-sections", "-o", candidate });
         try self.context.command(args.items, null);
         if (parsed.run) return self.context.publish(candidate, output);
-        const report = try std.json.Stringify.valueAlloc(a, .{ .version = "qbe-manifest-v1", .abi = abi, .entry = v.text(v.get(self.manifest, "entry")), .functions = self.records.items, .runtime_object = self.runtime.path }, .{});
+        const report = try std.json.Stringify.valueAlloc(a, .{ .version = "qbe-manifest-v1", .abi = native_abi, .entry = v.text(v.get(self.manifest, "entry")), .functions = self.records.items, .runtime_object = self.runtime.path }, .{});
         const sidecar = try std.fmt.allocPrint(a, "{s}.qbe-manifest.json", .{output});
         const staged = try std.fs.path.join(a, &.{ temporary, "manifest.json" });
         try self.context.write(staged, report);

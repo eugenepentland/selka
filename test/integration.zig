@@ -4859,14 +4859,20 @@ fn c4TraceCount(path: []const u8, needle: []const u8) !usize {
     return std.mem.count(u8, bytes, needle);
 }
 
-/// The parent `command:"test"` work-report line, distinct from compiler children.
-fn c4WorkLine(stderr: []const u8) ![]const u8 {
+/// One `work-report-v1` line for a named child command.
+fn c4CommandWorkLine(stderr: []const u8, command: []const u8) ![]const u8 {
+    const marker = try std.fmt.allocPrint(testing.allocator, "\"command\":\"{s}\"", .{command});
+    defer testing.allocator.free(marker);
     var lines = std.mem.splitScalar(u8, stderr, '\n');
     while (lines.next()) |line| {
         if (std.mem.indexOf(u8, line, "work-report-v1") == null) continue;
-        if (std.mem.indexOf(u8, line, "\"command\":\"test\"") != null) return line;
+        if (std.mem.indexOf(u8, line, marker) != null) return line;
     }
     return error.MissingWorkReport;
+}
+/// The parent `command:"test"` work-report line, distinct from compiler children.
+fn c4WorkLine(stderr: []const u8) ![]const u8 {
+    return c4CommandWorkLine(stderr, "test");
 }
 fn c4WorkCount(line: []const u8, stage: []const u8, field: []const u8) !usize {
     const marker = try std.fmt.allocPrint(testing.allocator, "\"{s}\"", .{stage});
@@ -4882,6 +4888,16 @@ fn c4WorkCount(line: []const u8, stage: []const u8, field: []const u8) !usize {
     while (end_of_digits < digits.len and std.ascii.isDigit(digits[end_of_digits])) end_of_digits += 1;
     if (end_of_digits == 0) return error.MissingWorkReport;
     return std.fmt.parseInt(usize, digits[0..end_of_digits], 10) catch return error.MissingWorkReport;
+}
+fn c4WorkStatus(line: []const u8, stage: []const u8) ![]const u8 {
+    const marker = try std.fmt.allocPrint(testing.allocator, "\"{s}\"", .{stage});
+    defer testing.allocator.free(marker);
+    const start = std.mem.indexOf(u8, line, marker) orelse return error.MissingWorkReport;
+    const status_marker = "\"status\":\"";
+    const at = std.mem.indexOfPos(u8, line, start, status_marker) orelse return error.MissingWorkReport;
+    const value = line[at + status_marker.len ..];
+    const end = std.mem.indexOfScalar(u8, value, '"') orelse return error.MissingWorkReport;
+    return value[0..end];
 }
 fn c4Invoke(entry: []const u8, cases_path: ?[]const u8, cache: []const u8, trace: []const u8, extra: []const []const u8) !std.process.RunResult {
     var args: std.ArrayList([]const u8) = .empty;
@@ -4935,11 +4951,20 @@ test "C4 unchanged deterministic rerun executes zero tests without lowering emis
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cold.term);
     const cold_counts = try c4Counts(cold.stdout);
     try testing.expectEqual(@as(usize, 2), cold_counts.executed);
-    try testing.expectEqual(@as(usize, 1), try c4TraceCount(project.trace, "emit-project-qbe"));
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(project.trace, "native-test-graph"));
     try testing.expectEqual(@as(usize, 1), try c4TraceCount(project.trace, " build "));
     const cold_work = try c4WorkLine(cold.stderr);
     try testing.expectEqual(@as(usize, 2), try c4WorkCount(cold_work, "executed_tests", "performed"));
     try testing.expect(try c4WorkCount(cold_work, "lowered_functions", "performed") > 0);
+    const facts_work = try c4CommandWorkLine(cold.stderr, "native-test-graph");
+    try testing.expectEqualStrings("skipped", try c4WorkStatus(facts_work, "lowered_functions"));
+    try testing.expectEqualStrings("skipped", try c4WorkStatus(facts_work, "emitted_fragments"));
+    const cold_build = try c4CommandWorkLine(cold.stderr, "emit-project-qbe");
+    const cold_lowered = try c4WorkCount(cold_build, "lowered_functions", "performed");
+    try testing.expect(cold_lowered > 0);
+    // The checked fixture has five functions; closure selection must leave the
+    // unreferenced `main` body out instead of lowering the whole project.
+    try testing.expect(cold_lowered < 5);
 
     c4TraceReset(project.trace);
     const warm = try c4Invoke(project.entry, project.cases_path, project.cache, project.trace, &.{});
@@ -4949,7 +4974,7 @@ test "C4 unchanged deterministic rerun executes zero tests without lowering emis
     const warm_counts = try c4Counts(warm.stdout);
     try testing.expectEqual(@as(usize, 0), warm_counts.executed);
     try testing.expectEqual(@as(usize, 2), warm_counts.cached);
-    try testing.expectEqual(@as(usize, 0), try c4TraceCount(project.trace, "emit-project-qbe"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(project.trace, "native-test-graph"));
     try testing.expectEqual(@as(usize, 0), try c4TraceCount(project.trace, " build "));
     // Validity is still re-established through the shared query cache before any receipt.
     try testing.expectEqual(@as(usize, 1), try c4TraceCount(project.trace, "check-project"));
@@ -4989,8 +5014,16 @@ test "C4 helper edit reruns only the dependent test and lower only on an uncache
     try testing.expectEqual(@as(usize, 1), counts.cached);
     try testing.expectEqual(@as(usize, 1), counts.failed);
     // The changed helper is in exactly one closure, so exactly one test executed.
-    try testing.expectEqual(@as(usize, 1), try c4TraceCount(project.trace, "emit-project-qbe"));
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(project.trace, "native-test-graph"));
     try testing.expectEqual(@as(usize, 1), try c4TraceCount(project.trace, " build "));
+    const edited_build = try c4CommandWorkLine(edited.stderr, "emit-project-qbe");
+    const edited_lowered = try c4WorkCount(edited_build, "lowered_functions", "performed");
+    try testing.expect(edited_lowered > 0);
+    // Cold built the union of both test closures; a helper edit lowers only the
+    // one dependent test and its helper.
+    const cold_build = try c4CommandWorkLine(cold.stderr, "emit-project-qbe");
+    const cold_lowered = try c4WorkCount(cold_build, "lowered_functions", "performed");
+    try testing.expect(cold_lowered > edited_lowered);
 }
 
 // spec-case: NATIVE-TEST-5
@@ -5117,7 +5150,7 @@ test "C4 two providers with reversed map order prepare one graph and one library
     defer testing.allocator.free(forced.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, forced.term);
     try testing.expectEqual(@as(usize, 2), (try c4Counts(forced.stdout)).executed);
-    try testing.expectEqual(@as(usize, 1), try c4TraceCount(trace, "emit-project-qbe"));
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(trace, "native-test-graph"));
     try testing.expectEqual(@as(usize, 1), try c4TraceCount(trace, " build "));
 
     // The same graph is reused when both provider maps select identical bytes.
@@ -5127,7 +5160,7 @@ test "C4 two providers with reversed map order prepare one graph and one library
     defer testing.allocator.free(warm.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, warm.term);
     try testing.expectEqual(@as(usize, 2), (try c4Counts(warm.stdout)).cached);
-    try testing.expectEqual(@as(usize, 0), try c4TraceCount(trace, "emit-project-qbe"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(trace, "native-test-graph"));
     try testing.expectEqual(@as(usize, 0), try c4TraceCount(trace, " build "));
 
     // Changing one replacement's bytes invalidates only that case's graph and
@@ -5145,7 +5178,7 @@ test "C4 two providers with reversed map order prepare one graph and one library
     const edited_counts = try c4Counts(edited.stdout);
     try testing.expectEqual(@as(usize, 1), edited_counts.executed);
     try testing.expectEqual(@as(usize, 1), edited_counts.cached);
-    try testing.expectEqual(@as(usize, 1), try c4TraceCount(trace, "emit-project-qbe"));
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(trace, "native-test-graph"));
     try testing.expectEqual(@as(usize, 1), try c4TraceCount(trace, " build "));
 
     // A forced run still sees two distinct graphs: one per replacement byte set.
@@ -5154,7 +5187,7 @@ test "C4 two providers with reversed map order prepare one graph and one library
     defer testing.allocator.free(distinct.stdout);
     defer testing.allocator.free(distinct.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, distinct.term);
-    try testing.expectEqual(@as(usize, 2), try c4TraceCount(trace, "emit-project-qbe"));
+    try testing.expectEqual(@as(usize, 2), try c4TraceCount(trace, "native-test-graph"));
     try testing.expectEqual(@as(usize, 2), try c4TraceCount(trace, " build "));
 }
 
