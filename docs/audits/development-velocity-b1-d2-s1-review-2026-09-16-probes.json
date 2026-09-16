@@ -1,0 +1,566 @@
+{
+  "head": "763eb38686ab33db9b009ea2a51a75241076e921",
+  "compiler": "/tmp/mylang-b1-s1-review-ttzk_xt6/bin/mylang",
+  "compiler_sha256": "58a39d625369491cc696f9585d002aac4d6e9265afb2d5458b425d92cc61f57f",
+  "scratch": "/tmp/mylang-b1-s1-review-ttzk_xt6",
+  "results": [
+    {
+      "family": "ordinary",
+      "state": "seed",
+      "command": [
+        "/tmp/mylang-b1-s1-review-ttzk_xt6/bin/mylang",
+        "check-project",
+        "/tmp/mylang-b1-s1-review-ttzk_xt6/ordinary/main.my",
+        "--cache-dir=/tmp/mylang-b1-s1-review-ttzk_xt6/ordinary-cache",
+        "--report",
+        "--timings=json"
+      ],
+      "exit": 0,
+      "wall_ms": 1199.949027999537,
+      "stdout": "",
+      "stderr": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":66,\"syntax_stored\":66,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":12771237,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":66,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n{\"version\":\"work-report-v1\",\"command\":\"check-project\",\"reused\":false,\"parsed_modules\":{\"status\":\"miss\",\"performed\":66,\"reused\":0},\"checked_bodies\":{\"status\":\"miss\",\"performed\":33475,\"reused\":0},\"instantiated_specializations\":{\"status\":\"miss\",\"performed\":0,\"reused\":0},\"lowered_functions\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"links\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"executed_tests\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"reused_results\":0,\"session_reused_results\":0,\"symbolic_templates\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"specialization_bodies\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"bypassed\":[],\"session\":{\"parsed_modules\":{\"performed\":66,\"reused\":0},\"checked_bodies\":{\"performed\":33475,\"reused\":0},\"instantiated_specializations\":{\"performed\":0,\"reused\":0},\"lowered_functions\":{\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"performed\":0,\"reused\":0},\"links\":{\"performed\":0,\"reused\":0},\"executed_tests\":{\"performed\":0,\"reused\":0}}}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_load_parse\",\"duration_ns\":93153834,\"inclusive\":false,\"counts\":{\"modules\":66,\"source_bytes\":1969415,\"ast_nodes\":200971,\"typed_nodes\":200974},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"frontend\",\"duration_ns\":1079472351,\"inclusive\":false,\"counts\":{\"modules\":66,\"source_bytes\":1969415,\"ast_nodes\":200971,\"typed_nodes\":200974},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"total\",\"duration_ns\":1198233774,\"inclusive\":true,\"counts\":{\"modules\":66,\"source_bytes\":1969415,\"ast_nodes\":200971,\"typed_nodes\":200974},\"exit_code\":0}\n"
+    },
+    {
+      "family": "ordinary",
+      "state": "body_edit",
+      "command": [
+        "/tmp/mylang-b1-s1-review-ttzk_xt6/bin/mylang",
+        "check-project",
+        "/tmp/mylang-b1-s1-review-ttzk_xt6/ordinary/main.my",
+        "--cache-dir=/tmp/mylang-b1-s1-review-ttzk_xt6/ordinary-cache",
+        "--report",
+        "--timings=json"
+      ],
+      "exit": 0,
+      "wall_ms": 972.0511509804055,
+      "stdout": "",
+      "stderr": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":65,\"syntax_misses\":1,\"syntax_stored\":1,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":12970517,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":65,\"misses\":1,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n{\"version\":\"work-report-v1\",\"command\":\"check-project\",\"reused\":true,\"parsed_modules\":{\"status\":\"miss\",\"performed\":1,\"reused\":65},\"checked_bodies\":{\"status\":\"miss\",\"performed\":24655,\"reused\":8820},\"instantiated_specializations\":{\"status\":\"miss\",\"performed\":0,\"reused\":0},\"lowered_functions\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"links\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"executed_tests\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"reused_results\":0,\"session_reused_results\":0,\"symbolic_templates\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"specialization_bodies\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"bypassed\":[{\"reason\":\"no-retained-body\",\"count\":24653},{\"reason\":\"declaration-region-length-changed\",\"count\":1},{\"reason\":\"relocation-failed\",\"count\":1}],\"session\":{\"parsed_modules\":{\"performed\":1,\"reused\":65},\"checked_bodies\":{\"performed\":24655,\"reused\":8820},\"instantiated_specializations\":{\"performed\":0,\"reused\":0},\"lowered_functions\":{\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"performed\":0,\"reused\":0},\"links\":{\"performed\":0,\"reused\":0},\"executed_tests\":{\"performed\":0,\"reused\":0}}}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_load_parse\",\"duration_ns\":89497292,\"inclusive\":false,\"counts\":{\"modules\":66,\"source_bytes\":1969419,\"ast_nodes\":200971,\"typed_nodes\":200974},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"frontend\",\"duration_ns\":859330941,\"inclusive\":false,\"counts\":{\"modules\":66,\"source_bytes\":1969419,\"ast_nodes\":200971,\"typed_nodes\":200974},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"total\",\"duration_ns\":969637768,\"inclusive\":true,\"counts\":{\"modules\":66,\"source_bytes\":1969419,\"ast_nodes\":200971,\"typed_nodes\":200974},\"exit_code\":0}\n"
+    },
+    {
+      "family": "ordinary",
+      "state": "no_cache",
+      "command": [
+        "/tmp/mylang-b1-s1-review-ttzk_xt6/bin/mylang",
+        "check-project",
+        "/tmp/mylang-b1-s1-review-ttzk_xt6/ordinary/main.my",
+        "--no-cache",
+        "--report",
+        "--timings=json"
+      ],
+      "exit": 0,
+      "wall_ms": 989.8651950061321,
+      "stdout": "",
+      "stderr": "{\"version\":\"work-report-v1\",\"command\":\"check-project\",\"reused\":false,\"parsed_modules\":{\"status\":\"miss\",\"performed\":66,\"reused\":0},\"checked_bodies\":{\"status\":\"miss\",\"performed\":33475,\"reused\":0},\"instantiated_specializations\":{\"status\":\"miss\",\"performed\":0,\"reused\":0},\"lowered_functions\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"links\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"executed_tests\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"reused_results\":0,\"session_reused_results\":0,\"symbolic_templates\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"specialization_bodies\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"bypassed\":[{\"reason\":\"semantic-reuse-unavailable\",\"count\":1},{\"reason\":\"cache-disabled\",\"count\":1}],\"session\":{\"parsed_modules\":{\"performed\":66,\"reused\":0},\"checked_bodies\":{\"performed\":33475,\"reused\":0},\"instantiated_specializations\":{\"performed\":0,\"reused\":0},\"lowered_functions\":{\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"performed\":0,\"reused\":0},\"links\":{\"performed\":0,\"reused\":0},\"executed_tests\":{\"performed\":0,\"reused\":0}}}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_load_parse\",\"duration_ns\":90953550,\"inclusive\":false,\"counts\":{\"modules\":66,\"source_bytes\":1969419,\"ast_nodes\":200971,\"typed_nodes\":200974},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"frontend\",\"duration_ns\":875298114,\"inclusive\":false,\"counts\":{\"modules\":66,\"source_bytes\":1969419,\"ast_nodes\":200971,\"typed_nodes\":200974},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"total\",\"duration_ns\":988862830,\"inclusive\":true,\"counts\":{\"modules\":66,\"source_bytes\":1969419,\"ast_nodes\":200971,\"typed_nodes\":200974},\"exit_code\":0}\n"
+    },
+    {
+      "family": "managed",
+      "state": "seed",
+      "command": [
+        "/tmp/mylang-b1-s1-review-ttzk_xt6/bin/mylang",
+        "check-project",
+        "/tmp/mylang-b1-s1-review-ttzk_xt6/managed/main.my",
+        "--cache-dir=/tmp/mylang-b1-s1-review-ttzk_xt6/managed-cache",
+        "--report",
+        "--timings=json"
+      ],
+      "exit": 0,
+      "wall_ms": 1258.3597050106619,
+      "stdout": "",
+      "stderr": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":68,\"syntax_stored\":68,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":12510088,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":68,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n{\"version\":\"work-report-v1\",\"command\":\"check-project\",\"reused\":false,\"parsed_modules\":{\"status\":\"miss\",\"performed\":68,\"reused\":0},\"checked_bodies\":{\"status\":\"miss\",\"performed\":32708,\"reused\":0},\"instantiated_specializations\":{\"status\":\"miss\",\"performed\":128,\"reused\":0},\"lowered_functions\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"links\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"executed_tests\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"reused_results\":0,\"session_reused_results\":0,\"symbolic_templates\":{\"status\":\"miss\",\"performed\":2,\"reused\":0},\"specialization_bodies\":{\"status\":\"miss\",\"performed\":128,\"reused\":0},\"bypassed\":[{\"reason\":\"generic-specialization\",\"count\":1},{\"reason\":\"symbolic-no-retained-template\",\"count\":2}],\"session\":{\"parsed_modules\":{\"performed\":68,\"reused\":0},\"checked_bodies\":{\"performed\":32708,\"reused\":0},\"instantiated_specializations\":{\"performed\":128,\"reused\":0},\"lowered_functions\":{\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"performed\":0,\"reused\":0},\"links\":{\"performed\":0,\"reused\":0},\"executed_tests\":{\"performed\":0,\"reused\":0}}}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_load_parse\",\"duration_ns\":91914832,\"inclusive\":false,\"counts\":{\"modules\":68,\"source_bytes\":1954868,\"ast_nodes\":196908,\"typed_nodes\":199016},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"frontend\",\"duration_ns\":1137191805,\"inclusive\":false,\"counts\":{\"modules\":68,\"source_bytes\":1954868,\"ast_nodes\":196908,\"typed_nodes\":199016},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"total\",\"duration_ns\":1256656529,\"inclusive\":true,\"counts\":{\"modules\":68,\"source_bytes\":1954868,\"ast_nodes\":196908,\"typed_nodes\":199016},\"exit_code\":0}\n"
+    },
+    {
+      "family": "managed",
+      "state": "body_edit",
+      "command": [
+        "/tmp/mylang-b1-s1-review-ttzk_xt6/bin/mylang",
+        "check-project",
+        "/tmp/mylang-b1-s1-review-ttzk_xt6/managed/main.my",
+        "--cache-dir=/tmp/mylang-b1-s1-review-ttzk_xt6/managed-cache",
+        "--report",
+        "--timings=json"
+      ],
+      "exit": 0,
+      "wall_ms": 1081.1064569861628,
+      "stdout": "",
+      "stderr": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":67,\"syntax_misses\":1,\"syntax_stored\":1,\"verdict_hits\":0,\"verdict_misses\":1,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":12705168,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":67,\"misses\":1,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n{\"version\":\"work-report-v1\",\"command\":\"check-project\",\"reused\":true,\"parsed_modules\":{\"status\":\"miss\",\"performed\":1,\"reused\":67},\"checked_bodies\":{\"status\":\"miss\",\"performed\":24137,\"reused\":8571},\"instantiated_specializations\":{\"status\":\"miss\",\"performed\":128,\"reused\":0},\"lowered_functions\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"links\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"executed_tests\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"reused_results\":0,\"session_reused_results\":0,\"symbolic_templates\":{\"status\":\"hit\",\"performed\":0,\"reused\":2},\"specialization_bodies\":{\"status\":\"miss\",\"performed\":64,\"reused\":64},\"bypassed\":[{\"reason\":\"not-ordinary-body\",\"count\":128},{\"reason\":\"no-retained-body\",\"count\":24055},{\"reason\":\"declaration-region-length-changed\",\"count\":1},{\"reason\":\"relocation-failed\",\"count\":17},{\"reason\":\"generic-specialization\",\"count\":1}],\"session\":{\"parsed_modules\":{\"performed\":1,\"reused\":67},\"checked_bodies\":{\"performed\":24137,\"reused\":8571},\"instantiated_specializations\":{\"performed\":128,\"reused\":0},\"lowered_functions\":{\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"performed\":0,\"reused\":0},\"links\":{\"performed\":0,\"reused\":0},\"executed_tests\":{\"performed\":0,\"reused\":0}}}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_load_parse\",\"duration_ns\":90232518,\"inclusive\":false,\"counts\":{\"modules\":68,\"source_bytes\":1954872,\"ast_nodes\":196908,\"typed_nodes\":199016},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"frontend\",\"duration_ns\":964620691,\"inclusive\":false,\"counts\":{\"modules\":68,\"source_bytes\":1954872,\"ast_nodes\":196908,\"typed_nodes\":199016},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"total\",\"duration_ns\":1078871757,\"inclusive\":true,\"counts\":{\"modules\":68,\"source_bytes\":1954872,\"ast_nodes\":196908,\"typed_nodes\":199016},\"exit_code\":0}\n"
+    },
+    {
+      "family": "managed",
+      "state": "no_cache",
+      "command": [
+        "/tmp/mylang-b1-s1-review-ttzk_xt6/bin/mylang",
+        "check-project",
+        "/tmp/mylang-b1-s1-review-ttzk_xt6/managed/main.my",
+        "--no-cache",
+        "--report",
+        "--timings=json"
+      ],
+      "exit": 0,
+      "wall_ms": 1095.8680780022405,
+      "stdout": "",
+      "stderr": "{\"version\":\"work-report-v1\",\"command\":\"check-project\",\"reused\":false,\"parsed_modules\":{\"status\":\"miss\",\"performed\":68,\"reused\":0},\"checked_bodies\":{\"status\":\"miss\",\"performed\":32708,\"reused\":0},\"instantiated_specializations\":{\"status\":\"miss\",\"performed\":128,\"reused\":0},\"lowered_functions\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"links\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"executed_tests\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"reused_results\":0,\"session_reused_results\":0,\"symbolic_templates\":{\"status\":\"miss\",\"performed\":2,\"reused\":0},\"specialization_bodies\":{\"status\":\"miss\",\"performed\":128,\"reused\":0},\"bypassed\":[{\"reason\":\"semantic-reuse-unavailable\",\"count\":1},{\"reason\":\"cache-disabled\",\"count\":1}],\"session\":{\"parsed_modules\":{\"performed\":68,\"reused\":0},\"checked_bodies\":{\"performed\":32708,\"reused\":0},\"instantiated_specializations\":{\"performed\":128,\"reused\":0},\"lowered_functions\":{\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"performed\":0,\"reused\":0},\"links\":{\"performed\":0,\"reused\":0},\"executed_tests\":{\"performed\":0,\"reused\":0}}}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"source_load_parse\",\"duration_ns\":94314318,\"inclusive\":false,\"counts\":{\"modules\":68,\"source_bytes\":1954872,\"ast_nodes\":196908,\"typed_nodes\":199016},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"frontend\",\"duration_ns\":976773320,\"inclusive\":false,\"counts\":{\"modules\":68,\"source_bytes\":1954872,\"ast_nodes\":196908,\"typed_nodes\":199016},\"exit_code\":0}\n{\"version\":\"phase-timings-v1\",\"kind\":\"timing\",\"tool\":\"compiler\",\"name\":\"total\",\"duration_ns\":1094727163,\"inclusive\":true,\"counts\":{\"modules\":68,\"source_bytes\":1954872,\"ast_nodes\":196908,\"typed_nodes\":199016},\"exit_code\":0}\n"
+    }
+  ],
+  "controlled_budget_sweep": {
+    "source": "const std = @import(\"std\");\nconst language = @import(\"language\");\nconst a = std.heap.smp_allocator;\nconst Files = struct {\n    disk: language.project_files.Files,\n    token: usize,\n    fn read(ctx: ?*anyopaque, allocator: std.mem.Allocator, relative: []const u8, limit: usize) language.project.ReadError![]u8 {\n        const self: *Files = @ptrCast(@alignCast(ctx.?));\n        const bytes = try language.project_files.Files.read(&self.disk, allocator, relative, limit);\n        if (!std.mem.eql(u8, relative, \"m000.my\")) return bytes;\n        defer allocator.free(bytes);\n        const replacement = try std.fmt.allocPrint(allocator, \"    return base(x) + {d}\", .{self.token});\n        defer allocator.free(replacement);\n        return std.mem.replaceOwned(u8, allocator, bytes, \"    return base(x) + 1\", replacement);\n    }\n};\nfn now() std.Io.Timestamp { return std.Io.Timestamp.now(std.testing.io, .awake); }\nfn ms(begin: std.Io.Timestamp, end: std.Io.Timestamp) f64 { return @as(f64,@floatFromInt(begin.durationTo(end).nanoseconds))/1e6; }\ntest \"review controlled semantic budget sweep\" {\n    const root = \"/tmp/mylang-s1-corrected-work/100k-ord-low/sources/ordinary-100k\";\n    for ([_]usize{0,16,32,64,128}) |mib| {\n        var cache = language.semantic_cache.Cache.init(a, mib*1024*1024);\n        defer cache.deinit();\n        var syntax = language.syntax_cache.Cache.init(a, .{});\n        defer syntax.deinit();\n        for (0..6) |iteration| {\n            var files: Files = .{.disk=.{.io=std.testing.io,.root=root},.token=70001+iteration};\n            const start=now();\n            var project=language.project.Project.init(a);\n            defer project.deinit();\n            try project.load(.{.context=&files,.read=Files.read}, \"main\", .{});\n            const loaded=now();\n            var index=try language.interfaces.buildWithCache(&project,&syntax,null);\n            const indexed=now();\n            var compilation=try language.project_compile.Compilation.init(&index);\n            const merged=now();\n            const before=cache.statistics;\n            try compilation.checkWithCache(&cache);\n            const done=now();\n            std.debug.print(\"{{\\\"budget_mib\\\":{d},\\\"iteration\\\":{d},\\\"load_ms\\\":{d:.3},\\\"index_ms\\\":{d:.3},\\\"merge_ms\\\":{d:.3},\\\"check_ms\\\":{d:.3},\\\"total_ms\\\":{d:.3},\\\"checked\\\":{d},\\\"reused\\\":{d},\\\"retained\\\":{d}}}\\n\", .{mib,iteration,ms(start,loaded),ms(loaded,indexed),ms(indexed,merged),ms(merged,done),ms(start,done),cache.statistics.checked-before.checked,cache.statistics.reused-before.reused,cache.statistics.retained_bytes});\n        }\n    }\n}\n",
+    "raw_output": "1/1 review-s1-budget-sweep.test.review controlled semantic budget sweep...{\"budget_mib\":0,\"iteration\":0,\"load_ms\":114.899,\"index_ms\":173.782,\"merge_ms\":37.964,\"check_ms\":838.949,\"total_ms\":1165.594,\"checked\":33475,\"reused\":0,\"retained\":0}\n{\"budget_mib\":0,\"iteration\":1,\"load_ms\":115.362,\"index_ms\":175.442,\"merge_ms\":39.369,\"check_ms\":840.525,\"total_ms\":1170.698,\"checked\":33475,\"reused\":0,\"retained\":0}\n{\"budget_mib\":0,\"iteration\":2,\"load_ms\":114.019,\"index_ms\":167.163,\"merge_ms\":36.642,\"check_ms\":762.436,\"total_ms\":1080.260,\"checked\":33475,\"reused\":0,\"retained\":0}\n{\"budget_mib\":0,\"iteration\":3,\"load_ms\":100.547,\"index_ms\":151.246,\"merge_ms\":34.657,\"check_ms\":703.951,\"total_ms\":990.399,\"checked\":33475,\"reused\":0,\"retained\":0}\n{\"budget_mib\":0,\"iteration\":4,\"load_ms\":98.648,\"index_ms\":155.570,\"merge_ms\":34.274,\"check_ms\":711.676,\"total_ms\":1000.169,\"checked\":33475,\"reused\":0,\"retained\":0}\n{\"budget_mib\":0,\"iteration\":5,\"load_ms\":98.879,\"index_ms\":153.440,\"merge_ms\":35.185,\"check_ms\":706.335,\"total_ms\":993.839,\"checked\":33475,\"reused\":0,\"retained\":0}\n{\"budget_mib\":16,\"iteration\":0,\"load_ms\":98.926,\"index_ms\":152.873,\"merge_ms\":34.702,\"check_ms\":719.682,\"total_ms\":1006.184,\"checked\":33475,\"reused\":0,\"retained\":16776636}\n{\"budget_mib\":16,\"iteration\":1,\"load_ms\":98.734,\"index_ms\":153.588,\"merge_ms\":34.648,\"check_ms\":683.880,\"total_ms\":970.851,\"checked\":24202,\"reused\":9273,\"retained\":16776636}\n{\"budget_mib\":16,\"iteration\":2,\"load_ms\":97.983,\"index_ms\":163.163,\"merge_ms\":33.684,\"check_ms\":671.442,\"total_ms\":966.273,\"checked\":24202,\"reused\":9273,\"retained\":16776636}\n{\"budget_mib\":16,\"iteration\":3,\"load_ms\":97.623,\"index_ms\":153.274,\"merge_ms\":33.587,\"check_ms\":667.646,\"total_ms\":952.130,\"checked\":24202,\"reused\":9273,\"retained\":16776636}\n{\"budget_mib\":16,\"iteration\":4,\"load_ms\":97.696,\"index_ms\":153.447,\"merge_ms\":33.644,\"check_ms\":668.134,\"total_ms\":952.921,\"checked\":24202,\"reused\":9273,\"retained\":16776636}\n{\"budget_mib\":16,\"iteration\":5,\"load_ms\":98.244,\"index_ms\":153.178,\"merge_ms\":33.990,\"check_ms\":669.479,\"total_ms\":954.891,\"checked\":24202,\"reused\":9273,\"retained\":16776636}\n{\"budget_mib\":32,\"iteration\":0,\"load_ms\":97.824,\"index_ms\":151.010,\"merge_ms\":33.806,\"check_ms\":706.484,\"total_ms\":989.124,\"checked\":33475,\"reused\":0,\"retained\":33554386}\n{\"budget_mib\":32,\"iteration\":1,\"load_ms\":97.953,\"index_ms\":152.036,\"merge_ms\":34.145,\"check_ms\":645.209,\"total_ms\":929.343,\"checked\":14911,\"reused\":18564,\"retained\":33554386}\n{\"budget_mib\":32,\"iteration\":2,\"load_ms\":97.978,\"index_ms\":151.852,\"merge_ms\":33.954,\"check_ms\":641.394,\"total_ms\":925.178,\"checked\":14911,\"reused\":18564,\"retained\":33554386}\n{\"budget_mib\":32,\"iteration\":3,\"load_ms\":97.956,\"index_ms\":153.375,\"merge_ms\":34.069,\"check_ms\":641.455,\"total_ms\":926.855,\"checked\":14911,\"reused\":18564,\"retained\":33554386}\n{\"budget_mib\":32,\"iteration\":4,\"load_ms\":97.900,\"index_ms\":152.201,\"merge_ms\":33.955,\"check_ms\":640.782,\"total_ms\":924.838,\"checked\":14911,\"reused\":18564,\"retained\":33554386}\n{\"budget_mib\":32,\"iteration\":5,\"load_ms\":97.827,\"index_ms\":152.420,\"merge_ms\":35.024,\"check_ms\":644.537,\"total_ms\":929.809,\"checked\":14911,\"reused\":18564,\"retained\":33554386}\n{\"budget_mib\":64,\"iteration\":0,\"load_ms\":97.798,\"index_ms\":152.216,\"merge_ms\":34.640,\"check_ms\":718.778,\"total_ms\":1003.432,\"checked\":33475,\"reused\":0,\"retained\":60639212}\n{\"budget_mib\":64,\"iteration\":1,\"load_ms\":97.773,\"index_ms\":152.384,\"merge_ms\":34.980,\"check_ms\":600.168,\"total_ms\":885.304,\"checked\":2,\"reused\":33473,\"retained\":60639212}\n{\"budget_mib\":64,\"iteration\":2,\"load_ms\":97.389,\"index_ms\":153.301,\"merge_ms\":35.081,\"check_ms\":600.814,\"total_ms\":886.585,\"checked\":2,\"reused\":33473,\"retained\":60639212}\n{\"budget_mib\":64,\"iteration\":3,\"load_ms\":97.255,\"index_ms\":150.241,\"merge_ms\":35.120,\"check_ms\":601.320,\"total_ms\":883.935,\"checked\":2,\"reused\":33473,\"retained\":60639212}\n{\"budget_mib\":64,\"iteration\":4,\"load_ms\":97.502,\"index_ms\":152.224,\"merge_ms\":34.967,\"check_ms\":602.280,\"total_ms\":886.973,\"checked\":2,\"reused\":33473,\"retained\":60639212}\n{\"budget_mib\":64,\"iteration\":5,\"load_ms\":97.470,\"index_ms\":152.808,\"merge_ms\":35.228,\"check_ms\":601.875,\"total_ms\":887.381,\"checked\":2,\"reused\":33473,\"retained\":60639212}\n{\"budget_mib\":128,\"iteration\":0,\"load_ms\":97.388,\"index_ms\":151.544,\"merge_ms\":35.289,\"check_ms\":713.807,\"total_ms\":998.028,\"checked\":33475,\"reused\":0,\"retained\":60639212}\n{\"budget_mib\":128,\"iteration\":1,\"load_ms\":96.705,\"index_ms\":151.192,\"merge_ms\":35.159,\"check_ms\":600.822,\"total_ms\":883.878,\"checked\":2,\"reused\":33473,\"retained\":60639212}\n{\"budget_mib\":128,\"iteration\":2,\"load_ms\":97.610,\"index_ms\":150.018,\"merge_ms\":35.286,\"check_ms\":599.371,\"total_ms\":882.284,\"checked\":2,\"reused\":33473,\"retained\":60639212}\n{\"budget_mib\":128,\"iteration\":3,\"load_ms\":97.663,\"index_ms\":152.334,\"merge_ms\":35.072,\"check_ms\":601.021,\"total_ms\":886.090,\"checked\":2,\"reused\":33473,\"retained\":60639212}\n{\"budget_mib\":128,\"iteration\":4,\"load_ms\":97.387,\"index_ms\":152.361,\"merge_ms\":35.284,\"check_ms\":600.656,\"total_ms\":885.687,\"checked\":2,\"reused\":33473,\"retained\":60639212}\n{\"budget_mib\":128,\"iteration\":5,\"load_ms\":97.538,\"index_ms\":152.976,\"merge_ms\":36.403,\"check_ms\":598.813,\"total_ms\":885.729,\"checked\":2,\"reused\":33473,\"retained\":60639212}\nOK\nAll 1 tests passed.\n\n",
+    "samples": [
+      {
+        "budget_mib": 0,
+        "iteration": 0,
+        "load_ms": 114.899,
+        "index_ms": 173.782,
+        "merge_ms": 37.964,
+        "check_ms": 838.949,
+        "total_ms": 1165.594,
+        "checked": 33475,
+        "reused": 0,
+        "retained": 0
+      },
+      {
+        "budget_mib": 0,
+        "iteration": 1,
+        "load_ms": 115.362,
+        "index_ms": 175.442,
+        "merge_ms": 39.369,
+        "check_ms": 840.525,
+        "total_ms": 1170.698,
+        "checked": 33475,
+        "reused": 0,
+        "retained": 0
+      },
+      {
+        "budget_mib": 0,
+        "iteration": 2,
+        "load_ms": 114.019,
+        "index_ms": 167.163,
+        "merge_ms": 36.642,
+        "check_ms": 762.436,
+        "total_ms": 1080.26,
+        "checked": 33475,
+        "reused": 0,
+        "retained": 0
+      },
+      {
+        "budget_mib": 0,
+        "iteration": 3,
+        "load_ms": 100.547,
+        "index_ms": 151.246,
+        "merge_ms": 34.657,
+        "check_ms": 703.951,
+        "total_ms": 990.399,
+        "checked": 33475,
+        "reused": 0,
+        "retained": 0
+      },
+      {
+        "budget_mib": 0,
+        "iteration": 4,
+        "load_ms": 98.648,
+        "index_ms": 155.57,
+        "merge_ms": 34.274,
+        "check_ms": 711.676,
+        "total_ms": 1000.169,
+        "checked": 33475,
+        "reused": 0,
+        "retained": 0
+      },
+      {
+        "budget_mib": 0,
+        "iteration": 5,
+        "load_ms": 98.879,
+        "index_ms": 153.44,
+        "merge_ms": 35.185,
+        "check_ms": 706.335,
+        "total_ms": 993.839,
+        "checked": 33475,
+        "reused": 0,
+        "retained": 0
+      },
+      {
+        "budget_mib": 16,
+        "iteration": 0,
+        "load_ms": 98.926,
+        "index_ms": 152.873,
+        "merge_ms": 34.702,
+        "check_ms": 719.682,
+        "total_ms": 1006.184,
+        "checked": 33475,
+        "reused": 0,
+        "retained": 16776636
+      },
+      {
+        "budget_mib": 16,
+        "iteration": 1,
+        "load_ms": 98.734,
+        "index_ms": 153.588,
+        "merge_ms": 34.648,
+        "check_ms": 683.88,
+        "total_ms": 970.851,
+        "checked": 24202,
+        "reused": 9273,
+        "retained": 16776636
+      },
+      {
+        "budget_mib": 16,
+        "iteration": 2,
+        "load_ms": 97.983,
+        "index_ms": 163.163,
+        "merge_ms": 33.684,
+        "check_ms": 671.442,
+        "total_ms": 966.273,
+        "checked": 24202,
+        "reused": 9273,
+        "retained": 16776636
+      },
+      {
+        "budget_mib": 16,
+        "iteration": 3,
+        "load_ms": 97.623,
+        "index_ms": 153.274,
+        "merge_ms": 33.587,
+        "check_ms": 667.646,
+        "total_ms": 952.13,
+        "checked": 24202,
+        "reused": 9273,
+        "retained": 16776636
+      },
+      {
+        "budget_mib": 16,
+        "iteration": 4,
+        "load_ms": 97.696,
+        "index_ms": 153.447,
+        "merge_ms": 33.644,
+        "check_ms": 668.134,
+        "total_ms": 952.921,
+        "checked": 24202,
+        "reused": 9273,
+        "retained": 16776636
+      },
+      {
+        "budget_mib": 16,
+        "iteration": 5,
+        "load_ms": 98.244,
+        "index_ms": 153.178,
+        "merge_ms": 33.99,
+        "check_ms": 669.479,
+        "total_ms": 954.891,
+        "checked": 24202,
+        "reused": 9273,
+        "retained": 16776636
+      },
+      {
+        "budget_mib": 32,
+        "iteration": 0,
+        "load_ms": 97.824,
+        "index_ms": 151.01,
+        "merge_ms": 33.806,
+        "check_ms": 706.484,
+        "total_ms": 989.124,
+        "checked": 33475,
+        "reused": 0,
+        "retained": 33554386
+      },
+      {
+        "budget_mib": 32,
+        "iteration": 1,
+        "load_ms": 97.953,
+        "index_ms": 152.036,
+        "merge_ms": 34.145,
+        "check_ms": 645.209,
+        "total_ms": 929.343,
+        "checked": 14911,
+        "reused": 18564,
+        "retained": 33554386
+      },
+      {
+        "budget_mib": 32,
+        "iteration": 2,
+        "load_ms": 97.978,
+        "index_ms": 151.852,
+        "merge_ms": 33.954,
+        "check_ms": 641.394,
+        "total_ms": 925.178,
+        "checked": 14911,
+        "reused": 18564,
+        "retained": 33554386
+      },
+      {
+        "budget_mib": 32,
+        "iteration": 3,
+        "load_ms": 97.956,
+        "index_ms": 153.375,
+        "merge_ms": 34.069,
+        "check_ms": 641.455,
+        "total_ms": 926.855,
+        "checked": 14911,
+        "reused": 18564,
+        "retained": 33554386
+      },
+      {
+        "budget_mib": 32,
+        "iteration": 4,
+        "load_ms": 97.9,
+        "index_ms": 152.201,
+        "merge_ms": 33.955,
+        "check_ms": 640.782,
+        "total_ms": 924.838,
+        "checked": 14911,
+        "reused": 18564,
+        "retained": 33554386
+      },
+      {
+        "budget_mib": 32,
+        "iteration": 5,
+        "load_ms": 97.827,
+        "index_ms": 152.42,
+        "merge_ms": 35.024,
+        "check_ms": 644.537,
+        "total_ms": 929.809,
+        "checked": 14911,
+        "reused": 18564,
+        "retained": 33554386
+      },
+      {
+        "budget_mib": 64,
+        "iteration": 0,
+        "load_ms": 97.798,
+        "index_ms": 152.216,
+        "merge_ms": 34.64,
+        "check_ms": 718.778,
+        "total_ms": 1003.432,
+        "checked": 33475,
+        "reused": 0,
+        "retained": 60639212
+      },
+      {
+        "budget_mib": 64,
+        "iteration": 1,
+        "load_ms": 97.773,
+        "index_ms": 152.384,
+        "merge_ms": 34.98,
+        "check_ms": 600.168,
+        "total_ms": 885.304,
+        "checked": 2,
+        "reused": 33473,
+        "retained": 60639212
+      },
+      {
+        "budget_mib": 64,
+        "iteration": 2,
+        "load_ms": 97.389,
+        "index_ms": 153.301,
+        "merge_ms": 35.081,
+        "check_ms": 600.814,
+        "total_ms": 886.585,
+        "checked": 2,
+        "reused": 33473,
+        "retained": 60639212
+      },
+      {
+        "budget_mib": 64,
+        "iteration": 3,
+        "load_ms": 97.255,
+        "index_ms": 150.241,
+        "merge_ms": 35.12,
+        "check_ms": 601.32,
+        "total_ms": 883.935,
+        "checked": 2,
+        "reused": 33473,
+        "retained": 60639212
+      },
+      {
+        "budget_mib": 64,
+        "iteration": 4,
+        "load_ms": 97.502,
+        "index_ms": 152.224,
+        "merge_ms": 34.967,
+        "check_ms": 602.28,
+        "total_ms": 886.973,
+        "checked": 2,
+        "reused": 33473,
+        "retained": 60639212
+      },
+      {
+        "budget_mib": 64,
+        "iteration": 5,
+        "load_ms": 97.47,
+        "index_ms": 152.808,
+        "merge_ms": 35.228,
+        "check_ms": 601.875,
+        "total_ms": 887.381,
+        "checked": 2,
+        "reused": 33473,
+        "retained": 60639212
+      },
+      {
+        "budget_mib": 128,
+        "iteration": 0,
+        "load_ms": 97.388,
+        "index_ms": 151.544,
+        "merge_ms": 35.289,
+        "check_ms": 713.807,
+        "total_ms": 998.028,
+        "checked": 33475,
+        "reused": 0,
+        "retained": 60639212
+      },
+      {
+        "budget_mib": 128,
+        "iteration": 1,
+        "load_ms": 96.705,
+        "index_ms": 151.192,
+        "merge_ms": 35.159,
+        "check_ms": 600.822,
+        "total_ms": 883.878,
+        "checked": 2,
+        "reused": 33473,
+        "retained": 60639212
+      },
+      {
+        "budget_mib": 128,
+        "iteration": 2,
+        "load_ms": 97.61,
+        "index_ms": 150.018,
+        "merge_ms": 35.286,
+        "check_ms": 599.371,
+        "total_ms": 882.284,
+        "checked": 2,
+        "reused": 33473,
+        "retained": 60639212
+      },
+      {
+        "budget_mib": 128,
+        "iteration": 3,
+        "load_ms": 97.663,
+        "index_ms": 152.334,
+        "merge_ms": 35.072,
+        "check_ms": 601.021,
+        "total_ms": 886.09,
+        "checked": 2,
+        "reused": 33473,
+        "retained": 60639212
+      },
+      {
+        "budget_mib": 128,
+        "iteration": 4,
+        "load_ms": 97.387,
+        "index_ms": 152.361,
+        "merge_ms": 35.284,
+        "check_ms": 600.656,
+        "total_ms": 885.687,
+        "checked": 2,
+        "reused": 33473,
+        "retained": 60639212
+      },
+      {
+        "budget_mib": 128,
+        "iteration": 5,
+        "load_ms": 97.538,
+        "index_ms": 152.976,
+        "merge_ms": 36.403,
+        "check_ms": 598.813,
+        "total_ms": 885.729,
+        "checked": 2,
+        "reused": 33473,
+        "retained": 60639212
+      }
+    ],
+    "summary": [
+      {
+        "budget_mib": 0,
+        "samples": 5,
+        "median_ms": 1000.169,
+        "median_check_ms": 711.676,
+        "checked": 33475,
+        "reused": 0,
+        "retained_bytes": 0
+      },
+      {
+        "budget_mib": 16,
+        "samples": 5,
+        "median_ms": 954.891,
+        "median_check_ms": 669.479,
+        "checked": 24202,
+        "reused": 9273,
+        "retained_bytes": 16776636
+      },
+      {
+        "budget_mib": 32,
+        "samples": 5,
+        "median_ms": 926.855,
+        "median_check_ms": 641.455,
+        "checked": 14911,
+        "reused": 18564,
+        "retained_bytes": 33554386
+      },
+      {
+        "budget_mib": 64,
+        "samples": 5,
+        "median_ms": 886.585,
+        "median_check_ms": 601.32,
+        "checked": 2,
+        "reused": 33473,
+        "retained_bytes": 60639212
+      },
+      {
+        "budget_mib": 128,
+        "samples": 5,
+        "median_ms": 885.687,
+        "median_check_ms": 600.656,
+        "checked": 2,
+        "reused": 33473,
+        "retained_bytes": 60639212
+      }
+    ],
+    "compiler_source_commit": "763eb38686ab33db9b009ea2a51a75241076e921",
+    "optimize": "ReleaseFast",
+    "scope": "Direct in-process project loader, syntax cache, interface index, merge, semantic cache. No persistent store, CLI policy/report/receipt work, or lowering. Five measured edit requests after one seed per budget. Durations exclude final project deinit. A diagnostic experiment, not S1 p95 or fresh-process acceptance.",
+    "command": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "test",
+      "-OReleaseFast",
+      "--dep",
+      "language",
+      "-Mroot=/tmp/review-s1-budget-sweep.zig",
+      "-Mlanguage=/home/epentland/ai/canopy/mylang/src/compiler.zig",
+      "--test-filter",
+      "review controlled"
+    ]
+  },
+  "b1_reproducer": {
+    "source": "const std = @import(\"std\");\nconst language = @import(\"language\");\nconst src = \"def main() -> i64:\\n    return 1\\n\";\nfn check(cache: *language.semantic_cache.Cache) !void {\n    var compilation = try language.Compilation.init(std.testing.allocator, \"probe.my\", src);\n    defer compilation.deinit();\n    try compilation.checkWithCache(cache);\n}\ntest \"review ordinary index budget boundary\" {\n    const a = std.testing.allocator;\n    var full = language.semantic_cache.Cache.init(a, 1024 * 1024);\n    defer full.deinit();\n    try check(&full);\n    const row_cost = @sizeOf(@TypeOf(full.entries[0])) + full.entries[0].arena.queryCapacity();\n    const budget = row_cost + 50;\n    var limited = language.semantic_cache.Cache.init(a, budget);\n    defer limited.deinit();\n    try check(&limited);\n    const first_retained = limited.statistics.retained_bytes;\n    try check(&limited);\n    std.debug.print(\"review: row_cost={d} budget={d} first_retained={d} second_retained={d} index_capacity={d} entries={d}\\n\", .{row_cost,budget,first_retained,limited.statistics.retained_bytes,limited.index.capacity(),limited.entries.len});\n    try std.testing.expect(limited.statistics.retained_bytes <= budget);\n}\ntest \"review owned retained allocation accounting\" {\n    var tracker = std.testing.FailingAllocator.init(std.testing.allocator, .{});\n    var cache = language.semantic_cache.Cache.init(tracker.allocator(), 1024 * 1024);\n    defer cache.deinit();\n    try check(&cache);\n    const owned_bytes = tracker.allocated_bytes - tracker.freed_bytes;\n    std.debug.print(\"review: reported={d} owned_allocator_bytes={d} undercount={d}\\n\", .{cache.statistics.retained_bytes,owned_bytes,owned_bytes-cache.statistics.retained_bytes});\n    try std.testing.expectEqual(owned_bytes, cache.statistics.retained_bytes);\n}\n",
+    "command": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "test",
+      "--dep",
+      "language",
+      "-Mroot=/tmp/c3c4-correction-budget-probe.zig",
+      "-Mlanguage=/home/epentland/ai/canopy/mylang/src/compiler.zig",
+      "--test-filter",
+      "review"
+    ],
+    "exit": 0,
+    "result": "Both original assertions pass. 1400-byte budget: first_retained=0, second_retained=0, index_capacity=0, entries=0. Reported retained bytes=1598, allocator-tracked owned bytes=1598."
+  },
+  "cli_driver": "import pathlib,json,subprocess,tempfile,shutil,time,hashlib\nrepo=pathlib.Path('/home/epentland/ai/canopy/mylang'); evidence=repo/'docs/audits/velocity-implementation/s1-corrected-2026-09-16'\nbase=pathlib.Path(tempfile.mkdtemp(prefix='mylang-b1-s1-review-'));(base/'bin').mkdir();shutil.copy2('/tmp/mylang-s1-corrected/zig-out/bin/mylang',base/'bin/mylang');compiler=str(base/'bin/mylang')\ndoc={'head':subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip(),'compiler':compiler,'compiler_sha256':hashlib.sha256(pathlib.Path(compiler).read_bytes()).hexdigest(),'scratch':str(base),'results':[]};out=base/'evidence.json';pathlib.Path('/tmp/mylang-b1-s1-review-current.json').write_text(json.dumps({'base':str(base),'output':str(out),'compiler':compiler}))\nfor family,raw in [('ordinary','100k-ordinary-lowload.json'),('managed','100k-managed-lowload.json')]:\n d=json.loads((evidence/raw).read_text());entry=pathlib.Path(d['workloads'][0]['entry']);root=base/family;root.mkdir()\n for p in entry.parent.glob('*.my'):shutil.copy2(p,root/p.name)\n for state in ['seed','body_edit','no_cache']:\n  if state=='body_edit':\n   path=root/('m000.my' if family=='ordinary' else 'provider000.my');s=path.read_text();old='    return base(x) + 1' if family=='ordinary' else '    return size(Node.leaf(x)) + 1';assert old in s;path.write_text(s.replace(old,old[:-1]+'70001'))\n  cmd=[compiler,'check-project',str(root/entry.name),'--cache-dir='+str(base/(family+'-cache')),'--report','--timings=json']\n  if state=='no_cache':cmd=[compiler,'check-project',str(root/entry.name),'--no-cache','--report','--timings=json']\n  t=time.monotonic();p=subprocess.run(cmd,text=True,capture_output=True,timeout=30);row={'family':family,'state':state,'command':cmd,'exit':p.returncode,'wall_ms':1000*(time.monotonic()-t),'stdout':p.stdout,'stderr':p.stderr};doc['results'].append(row);out.write_text(json.dumps(doc,indent=2)+'\\n');print(family,state,p.returncode,round(row['wall_ms']),p.stderr[:900],flush=True)\nprint(out)\n",
+  "measurement_validation": {
+    "summary_percentiles_recomputed": true,
+    "files": [
+      "10k-lowload.json",
+      "100k-ordinary-lowload.json",
+      "100k-managed-lowload.json",
+      "100k-forced-attempt.json"
+    ],
+    "unexpected_summary_mismatches": 0,
+    "failed_or_timed_out_samples": "Only the documented 100k forced-test timeout; no successful affected-edit/cached-test measurements in that file.",
+    "perf_available": false,
+    "perf_reason": "perf_event_paranoid=4 rejects task-clock; no system setting changed."
+  },
+  "review_scope": {
+    "full_gates_rerun": false,
+    "guardian_exercised": false,
+    "production_sources_changed": false,
+    "new_artifacts_only": true
+  }
+}
