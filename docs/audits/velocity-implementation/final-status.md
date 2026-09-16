@@ -69,6 +69,7 @@ Follow-up gates on the B1/D2/S1 tree (`3f76446c` plus docs/S1 commits through
 | Gate | Result |
 | --- | --- |
 | `zig build test --summary all -j8` (Debug, final `50a4c64a`) | **39/39 steps succeeded; exit 0** |
+| `zig build test -Doptimize=ReleaseFast --summary all -j1` (final `a0cbf87f`) | **39/39 steps succeeded; 1204/1205 passed, 1 expected Debug-only allocation-sweep skip; exit 0** |
 | `zig build fmt-check --summary all` | **2/2 steps succeeded** |
 | `zig build test-doc-coverage --summary all` | **121 documented features (81 language, 40 tooling), 0 failures; 20/20 steps** |
 | `zig build test-docs --summary all` | **242 files scanned, 441 blocks, 120 run, 24 checked, 10 skipped, 0 failed; 21/21 steps** (run on the D2 tree immediately before the final one-word SPEC prose correction) |
