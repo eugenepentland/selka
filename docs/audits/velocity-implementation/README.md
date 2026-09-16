@@ -139,3 +139,16 @@ clean build. C2/P1 positive probes must remain green.
 
 The correction review's remaining P2 (provider ordering) is fixed ahead of C4; C4's
 acceptance includes the end-to-end two-provider, two-case reversed-order regression.
+
+### C3 split — symbolic landed, specialization completion queued
+
+| ID | Work | Owner branch | Worktree | Base | Status |
+| --- | --- | --- | --- | --- | --- |
+| C3a | Symbolic-template reuse (`symbolic-template-v1`) | `codex/velocity-c3` | `velocity-c3` | `8def75e8` | **done** `8b212f7e`/`d7a1cf00`; registered `SEMANTIC-CACHE-11` |
+| C3b | Canonical specialization keys (conservative miss) | `codex/velocity-c3` | `velocity-c3` | `8def75e8` | **done** `b0b156e8`/`27520639`; registered `SEMANTIC-CACHE-12` |
+| C3S | Concrete specialization body reuse, remap and durable payload | `codex/velocity-c3s` | `velocity-c3s` | `121032ec` | in progress |
+| C4 | Shared cached test preparation and lazy lowering/emission; two-provider reversed-order regression | `codex/velocity-c4` | `velocity-c4` | C3S integrated | blocked on C3S |
+
+Also preserved: `wip/cache-prefix-2026-09-16` (`4fa44aa3`) holds concurrent uncommitted
+semantic-cache retention/remap work found in the integration checkout (SEMANTIC-CACHE-9/10
+numbering). It is not merged or evaluated here; C3 used 11/12 to avoid colliding with it.
