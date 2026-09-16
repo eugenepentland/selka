@@ -152,8 +152,13 @@ and syncs it, and renames it over the stable key, so readers observe the previou
 complete file or the new one, never a partial image. Concurrent publishers may
 race on the same key; a loser only costs a later miss. Each contract namespace
 retains at most 128 MiB and 65,536 entry files by default; a larger single body is
-bypassed, and after each successful store the directory is trimmed
-oldest-mtime-first. Truncated, oversized, damaged, foreign-version or
+bypassed. One request publishes all of its fresh bodies as a batch: the batch
+inventories the namespace once, charges each body to in-memory accounting, and
+reconciles at batch end with a fresh mtime-sorted trim, so populating a namespace
+costs linear filesystem work instead of a full scan per body. Reconciliation
+tolerates a bounded slack (one sixteenth of the limit, at least 1,024 bytes or
+entries) and converges to the limits at the end of every publishing batch; a warm
+request with no fresh bodies performs no inventory at all. Truncated, oversized, damaged, foreign-version or
 contract-incompatible files are plain misses and are re-derived. `--no-cache`
 performs no durable reads or writes and preserves the same acceptance and
 diagnostics.
