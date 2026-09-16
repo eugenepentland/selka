@@ -879,6 +879,17 @@ fn recordSemanticBypass(init: Context, functions: *const language.semantic_cache
         if (why == .cache_disabled) continue;
         recordBypass(init, language.semantic_cache.missReasonName(why), count);
     }
+    // C3 symbolic-template misses are reported with the same conservative-reason
+    // discipline; a template is never counted as reused unless a direct result
+    // was actually replayed.
+    index = 0;
+    while (index < language.semantic_cache.symbolic.miss_reason_count) : (index += 1) {
+        const why: language.semantic_cache.symbolic.MissReason = @fromBackingInt(@intCast(index));
+        if (why == .cache_disabled) continue;
+        const count = functions.reuse.symbolic.statistics.misses[@backingInt(why)];
+        if (count == 0) continue;
+        recordBypass(init, language.semantic_cache.symbolic.missReasonName(why), count);
+    }
 }
 
 /// Result of the required-policy frontend gate. `status` means the command must
@@ -1130,6 +1141,10 @@ fn recordCheckWork(init: Context, functions: ?*language.semantic_cache.Cache, be
     if (functions) |f| {
         const prior = before orelse language.semantic_cache.Statistics{};
         recordWork(init, .checked_bodies, f.statistics.checked - prior.checked, f.statistics.reused - prior.reused);
+        if (init.observation) |observation| {
+            observation.work.symbolic.checked +|= f.reuse.symbolic.statistics.checked;
+            observation.work.symbolic.reused +|= f.reuse.symbolic.statistics.reused;
+        }
     }
     if (program) |checked| {
         var specializations: usize = 0;
@@ -1310,7 +1325,7 @@ fn replayCheck(init: Context, command: Command, project: *const language.project
     if (init.observation) |observation| {
         observation.executed = @splat(false);
         observation.executed[@backingInt(invalidation.Stage.load_source)] = true;
-        observation.work.reused_results += 1;
+        observation.work.results.request += 1;
     }
     return true;
 }
@@ -1329,7 +1344,7 @@ fn replayFrontendVerdict(init: Context, command: Command, project: *const langua
         // stored verdict, so none of them may be reported as fresh work.
         observation.executed = @splat(false);
         observation.executed[@backingInt(invalidation.Stage.load_source)] = true;
-        observation.work.reused_results += 1;
+        observation.work.results.request += 1;
         // No module body was parsed and no body was checked.
         for (std.meta.tags(invalidation.WorkStage)) |stage| observation.work.skip(stage);
     }
@@ -1867,7 +1882,7 @@ fn sessionCheck(init: Context, parsed: Parsed, cache: *SessionCache) !void {
     request_init.observation = &observation;
     const before = cache.syntax.statistics;
     const status = listModulesWithCache(request_init, request, &cache.syntax, &cache.semantic, &cache.functions) catch |err| {
-        cache.verdict_reuses += observation.work.reused_results;
+        cache.verdict_reuses += observation.work.results.request;
         cache.specializations += observation.work.stages[@backingInt(invalidation.WorkStage.instantiated_specializations)].performed;
         const reported: u8 = switch (err) {
             error.PolicyViolation => 3,
@@ -1876,7 +1891,7 @@ fn sessionCheck(init: Context, parsed: Parsed, cache: *SessionCache) !void {
         try sessionReply(init, .{ .action = "check", .status = reported, .failure = @errorName(err) }, before, cache, observation.work);
         return;
     };
-    cache.verdict_reuses += observation.work.reused_results;
+    cache.verdict_reuses += observation.work.results.request;
     cache.specializations += observation.work.stages[@backingInt(invalidation.WorkStage.instantiated_specializations)].performed;
     try sessionReply(init, .{ .action = "check", .status = status }, before, cache, observation.work);
 }
@@ -1915,7 +1930,7 @@ fn sessionReply(
 ) !void {
     var work = request_work;
     work.session = sessionStages(cache);
-    work.session_reused_results = cache.verdict_reuses;
+    work.results.session = cache.verdict_reuses;
     const summary = invalidation.summarize(&work);
     const text = try std.json.Stringify.valueAlloc(init.gpa, .{
         .version = "check-session-v1",

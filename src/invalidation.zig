@@ -199,17 +199,23 @@ pub const Bypass = struct { reason: []const u8 = "", count: usize = 0 };
 /// deliberately distinct from `reused`, which only becomes true when a lookup
 /// actually returned a stored result.
 pub const Work = struct {
+    /// Actual reuse observations not tied to one stage (for example a replayed
+    /// whole-project verdict). Never inferred from equal fingerprints.
+    pub const Results = struct { request: usize = 0, session: usize = 0 };
+    /// C3 symbolic-template direct results actually checked and replayed. Kept
+    /// separate from `checked_bodies` so a template hit is never inferred from a
+    /// fingerprint comparison.
+    pub const Symbolic = struct { checked: usize = 0, reused: usize = 0 };
+
     command: []const u8 = "",
     /// Null when this invocation ran no baseline comparison.
     fingerprint_unchanged: ?bool = null,
-    /// Actual reuse observations not tied to one stage (for example a replayed
-    /// whole-project verdict). Never inferred from equal fingerprints.
-    reused_results: usize = 0,
+    results: Results = .{},
+    symbolic: Symbolic = .{},
     stages: [work_stage_count]StageCount = @splat(.{}),
     /// Cumulative process counters. Null means this is a one-shot invocation and
     /// the request counters are already the whole-process totals.
     session: ?[work_stage_count]StageCount = null,
-    session_reused_results: usize = 0,
     bypassed: BypassSet = .{},
 
     /// Borrow the mutable counter for one stage.
@@ -243,7 +249,7 @@ pub const Work = struct {
     /// influence this result.
     pub fn reused(self: Work) bool {
         for (self.stages) |count| if (count.reused != 0) return true;
-        return self.reused_results != 0;
+        return self.results.request != 0;
     }
     /// Work-stage status: skipped when the command never reached it, hit only
     /// when reuse happened and no fresh work did, miss otherwise.
@@ -307,8 +313,8 @@ pub fn summarize(work: *const Work) Summary {
         .reused = work.reused(),
         .request = sessionView(work.stages),
         .session = sessionView(cumulative),
-        .request_reused_results = work.reused_results,
-        .session_reused_results = if (work.session == null) work.reused_results else work.session_reused_results,
+        .request_reused_results = work.results.request,
+        .session_reused_results = if (work.session == null) work.results.request else work.results.session,
         .bypassed = work.bypassed.slice(),
     };
 }
@@ -340,7 +346,7 @@ fn sessionView(stages: [work_stage_count]StageCount) SessionView {
 /// process totals (identical to the request for a one-shot process).
 pub fn renderWork(allocator: std.mem.Allocator, work: Work) Error![]u8 {
     const cumulative = work.session orelse work.stages;
-    const session_reused = if (work.session == null) work.reused_results else work.session_reused_results;
+    const session_reused = if (work.session == null) work.results.request else work.results.session;
     return std.json.Stringify.valueAlloc(allocator, .{
         .version = "work-report-v1",
         .command = work.command,
@@ -353,11 +359,29 @@ pub fn renderWork(allocator: std.mem.Allocator, work: Work) Error![]u8 {
         .emitted_fragments = stageView(work, .emitted_fragments),
         .links = stageView(work, .links),
         .executed_tests = stageView(work, .executed_tests),
-        .reused_results = work.reused_results,
+        .reused_results = work.results.request,
         .session_reused_results = session_reused,
+        .symbolic_templates = symbolicView(work),
         .bypassed = work.bypassed.slice(),
         .session = sessionView(cumulative),
     }, .{ .emit_null_optional_fields = false });
+}
+
+/// Per-request view of C3 symbolic-template work. `skipped` means the abstract
+/// pass never ran; `hit` means every visited template was replayed.
+fn symbolicView(work: Work) StageView {
+    const performed = work.symbolic.checked;
+    const reused = work.symbolic.reused;
+    return .{
+        .status = if (performed == 0 and reused == 0)
+            "skipped"
+        else if (performed == 0)
+            "hit"
+        else
+            "miss",
+        .performed = performed,
+        .reused = reused,
+    };
 }
 
 fn allMiss(allocator: std.mem.Allocator, reason: []const u8, executed: []const bool) Error!Explanation {

@@ -866,3 +866,100 @@ test "durable publication batch inventories a fresh namespace once instead of pe
     try t.expectEqual(@as(usize, 65), warm_cache.statistics.reused);
     try t.expectEqual(@as(usize, 0), warm_store.statistics.retained.inventories);
 }
+
+// spec-case: SEMANTIC-CACHE-7
+test "symbolic template direct results reuse while changed templates miss" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const template =
+        \\def size[T: integer](value: T) -> i64 effects():
+        \\    _ = value
+        \\    return 7
+        \\
+        \\
+        \\
+    ;
+    const program = template ++
+        \\def main() -> i64:
+        \\    return size[u8](1u8)
+    ;
+    try compare(t.allocator, &cache, program, 7);
+    const first_checked = cache.reuse.symbolic.statistics.checked;
+    try t.expect(first_checked > 0);
+    try t.expectEqual(@as(usize, 0), cache.reuse.symbolic.statistics.reused);
+    // The unchanged template replays its direct result on the next request.
+    try compare(t.allocator, &cache, program, 7);
+    try t.expect(cache.reuse.symbolic.statistics.reused >= 1);
+    try t.expectEqual(first_checked, cache.reuse.symbolic.statistics.checked);
+    // An unrelated ordinary body edit preserves the template's reuse.
+    const unrelated = template ++
+        \\def helper(n: i64) -> i64:
+        \\    return n + 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return size[u8](1u8)
+    ;
+    const before_unrelated_reuse = cache.reuse.symbolic.statistics.reused;
+    try compare(t.allocator, &cache, unrelated, 7);
+    try t.expect(cache.reuse.symbolic.statistics.reused > before_unrelated_reuse);
+    // Editing the template body invalidates its retained direct result.
+    const edited =
+        \\def size[T: integer](value: T) -> i64 effects():
+        \\    _ = value
+        \\    return 8
+        \\
+        \\
+        \\
+    ++
+        \\def main() -> i64:
+        \\    return size[u8](1u8)
+    ;
+    const before_edit_checked = cache.reuse.symbolic.statistics.checked;
+    try compare(t.allocator, &cache, edited, 8);
+    try t.expect(cache.reuse.symbolic.statistics.checked > before_edit_checked);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "symbolic capture rejects an out-of-region related span" {
+    const region = @import("source.zig").Span{ .start = 10, .end = 20 };
+    const note = @import("diagnostic.zig").Diagnostic{
+        .code = "E_OUTSIDE",
+        .span = .{ .start = 12, .end = 14 },
+        .message = "primary",
+        .related = .{ .span = .{ .start = 0, .end = 1 }, .message = "declared here" },
+    };
+    try t.expectError(error.Unrepresentable, @import("generic_cache.zig").captureNote(t.allocator, region, note));
+    const inside = @import("diagnostic.zig").Diagnostic{
+        .code = "E_INSIDE",
+        .span = .{ .start = 12, .end = 14 },
+        .message = "primary",
+        .related = .{ .span = .{ .start = 15, .end = 16 }, .message = "declared here" },
+    };
+    const captured = try @import("generic_cache.zig").captureNote(t.allocator, region, inside);
+    defer {
+        t.allocator.free(captured.code);
+        t.allocator.free(captured.message);
+        if (captured.notes.related) |related| t.allocator.free(related.message);
+    }
+    try t.expectEqual(@as(i64, 2), captured.span.start);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "unused malformed generics are still checked on cold and warm requests" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const malformed =
+        \\def broken[T](value: T) -> i64 effects():
+        \\    return value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ;
+    // The template is unused, but abstract checking must still reject the body
+    // on the cold request and again on the warm request; no failed result is
+    // ever inherited from a previous pass.
+    try compare(t.allocator, &cache, malformed, null);
+    try compare(t.allocator, &cache, malformed, null);
+}

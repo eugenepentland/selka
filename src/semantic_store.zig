@@ -180,48 +180,8 @@ pub const Store = struct {
     /// Decode at most one exact stable-key/context entry. Every malformed or
     /// version-incompatible file is a miss and never reaches the caller.
     pub fn lookup(self: *Store, allocator: std.mem.Allocator, stable_key: []const u8, context: [32]u8) error{ OutOfMemory, InternalError }!?owned.Entry {
-        const path = self.entryPath(stable_key, context) catch return error.OutOfMemory;
-        defer self.allocator.free(path);
-        const bytes = std.Io.Dir.cwd().readFileAlloc(self.io, path, self.allocator, .limited(@min(self.limits.max_entry_bytes, self.limits.max_bytes))) catch |err| switch (err) {
-            error.FileNotFound => {
-                self.statistics.misses += 1;
-                return null;
-            },
-            error.StreamTooLong => {
-                self.statistics.damaged += 1;
-                self.statistics.misses += 1;
-                return null;
-            },
-            error.OutOfMemory => return error.OutOfMemory,
-            else => {
-                self.statistics.misses += 1;
-                return null;
-            },
-        };
-        defer self.allocator.free(bytes);
-
-        var reader = codec.Reader.init(self.allocator, bytes);
-        const magic = reader.integer(u32) catch return self.reject();
-        if (magic != entry_magic) return self.reject();
-        const version = takeString(&reader) catch return self.reject();
-        if (!std.mem.eql(u8, version, format_version)) return self.reject();
-        const contract = reader.integer([64]u8) catch return self.reject();
-        if (!std.mem.eql(u8, &contract, &self.context.hex)) return self.reject();
-        const mutation = takeString(&reader) catch return self.reject();
-        if (!std.mem.eql(u8, mutation, self.context.mutation_contract)) return self.reject();
-        const entry_count = reader.integer(u64) catch return self.reject();
-        if (entry_count != 1) return self.reject();
-        const key = takeString(&reader) catch return self.reject();
-        if (!std.mem.eql(u8, key, stable_key)) return self.reject();
-        const stored_context = reader.integer([32]u8) catch return self.reject();
-        if (!std.mem.eql(u8, &stored_context, &context)) return self.reject();
-        const payload_len = reader.integer(u64) catch return self.reject();
-        const payload = reader.slice(std.math.cast(usize, payload_len) orelse return self.reject()) catch return self.reject();
-        const checksum = reader.integer(u64) catch return self.reject();
-        if (!reader.done()) return self.reject();
-        const checksum_offset = reader.at - @sizeOf(u64);
-        if (std.hash.XxHash3.hash(0, bytes[0..checksum_offset]) != checksum) return self.reject();
-
+        const payload = (try self.readPayload(stable_key, context)) orelse return null;
+        defer self.allocator.free(payload);
         var arena = std.heap.ArenaAllocator.init(allocator);
         var accepted = false;
         defer if (!accepted) arena.deinit();
@@ -248,7 +208,91 @@ pub const Store = struct {
         };
     }
 
+    /// Decode one abstract-checked symbolic entry. Uses the same header,
+    /// checksum and bounds validation as `lookup`; the payload kind and every
+    /// relative span are validated before the entry is returned.
+    pub fn lookupSymbolic(self: *Store, allocator: std.mem.Allocator, stable_key: []const u8, context: [32]u8) error{ OutOfMemory, InternalError }!?owned.SymbolicEntry {
+        const payload_bytes = (try self.readPayload(stable_key, context)) orelse return null;
+        defer self.allocator.free(payload_bytes);
+        var arena = std.heap.ArenaAllocator.init(allocator);
+        var accepted = false;
+        defer if (!accepted) arena.deinit();
+        var payload_reader = codec.Reader.init(arena.allocator(), payload_bytes);
+        const payload = payload_reader.read(owned.StoredSymbolic) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => return self.rejectSymbolic(),
+        };
+        if (!payload_reader.done()) return self.rejectSymbolic();
+        if (!owned.validSymbolic(payload, max_declarations, self.limits.max_entry_bytes)) return self.rejectSymbolic();
+        if (!std.mem.eql(u8, payload.identity.key, stable_key)) return self.rejectSymbolic();
+        if (!std.mem.eql(u8, &payload.identity.context, &context)) return self.rejectSymbolic();
+
+        self.statistics.hits += 1;
+        accepted = true;
+        return .{ .arena = arena, .payload = payload };
+    }
+
+    /// Read and validate one complete on-disk image, returning an owned copy of
+    /// its payload bytes. Header, contract, key, context, length and checksum
+    /// are all checked before the caller decodes the payload kind.
+    fn readPayload(self: *Store, stable_key: []const u8, context: [32]u8) error{ OutOfMemory, InternalError }!?[]u8 {
+        const path = self.entryPath(stable_key, context) catch return error.OutOfMemory;
+        defer self.allocator.free(path);
+        const bytes = std.Io.Dir.cwd().readFileAlloc(self.io, path, self.allocator, .limited(@min(self.limits.max_entry_bytes, self.limits.max_bytes))) catch |err| switch (err) {
+            error.FileNotFound => {
+                self.statistics.misses += 1;
+                return null;
+            },
+            error.StreamTooLong => {
+                self.statistics.damaged += 1;
+                self.statistics.misses += 1;
+                return null;
+            },
+            error.OutOfMemory => return error.OutOfMemory,
+            else => {
+                self.statistics.misses += 1;
+                return null;
+            },
+        };
+        defer self.allocator.free(bytes);
+
+        var reader = codec.Reader.init(self.allocator, bytes);
+        const magic = reader.integer(u32) catch return self.rejectPayload();
+        if (magic != entry_magic) return self.rejectPayload();
+        const version = takeString(&reader) catch return self.rejectPayload();
+        if (!std.mem.eql(u8, version, format_version)) return self.rejectPayload();
+        const contract = reader.integer([64]u8) catch return self.rejectPayload();
+        if (!std.mem.eql(u8, &contract, &self.context.hex)) return self.rejectPayload();
+        const mutation = takeString(&reader) catch return self.rejectPayload();
+        if (!std.mem.eql(u8, mutation, self.context.mutation_contract)) return self.rejectPayload();
+        const entry_count = reader.integer(u64) catch return self.rejectPayload();
+        if (entry_count != 1) return self.rejectPayload();
+        const key = takeString(&reader) catch return self.rejectPayload();
+        if (!std.mem.eql(u8, key, stable_key)) return self.rejectPayload();
+        const stored_context = reader.integer([32]u8) catch return self.rejectPayload();
+        if (!std.mem.eql(u8, &stored_context, &context)) return self.rejectPayload();
+        const payload_len = reader.integer(u64) catch return self.rejectPayload();
+        const payload = reader.slice(std.math.cast(usize, payload_len) orelse return self.rejectPayload()) catch return self.rejectPayload();
+        const checksum = reader.integer(u64) catch return self.rejectPayload();
+        if (!reader.done()) return self.rejectPayload();
+        const checksum_offset = reader.at - @sizeOf(u64);
+        if (std.hash.XxHash3.hash(0, bytes[0..checksum_offset]) != checksum) return self.rejectPayload();
+        return self.allocator.dupe(u8, payload) catch error.OutOfMemory;
+    }
+
     fn reject(self: *Store) ?owned.Entry {
+        self.statistics.damaged += 1;
+        self.statistics.misses += 1;
+        return null;
+    }
+
+    fn rejectSymbolic(self: *Store) ?owned.SymbolicEntry {
+        self.statistics.damaged += 1;
+        self.statistics.misses += 1;
+        return null;
+    }
+
+    fn rejectPayload(self: *Store) ?[]u8 {
         self.statistics.damaged += 1;
         self.statistics.misses += 1;
         return null;
@@ -309,7 +353,6 @@ pub const Store = struct {
             self.statistics.bypassed += 1;
             return false;
         }
-        const context = entry.meta.identity.context;
         var payload = codec.Writer.init(self.allocator);
         defer payload.deinit();
         payload.write(StoredBody, .{
@@ -322,11 +365,31 @@ pub const Store = struct {
         }) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
         };
-        if (payload.bytes.items.len > self.limits.max_entry_bytes) {
+        return self.publishPayload(entry.meta.identity.key, entry.meta.identity.context, payload.bytes.items);
+    }
+
+    /// Publish one abstract-checked symbolic entry under the C3 entry kind.
+    pub fn putSymbolic(self: *Store, entry: *const owned.SymbolicEntry) error{OutOfMemory}!bool {
+        if (!owned.validSymbolic(entry.payload, max_declarations, self.limits.max_entry_bytes)) {
             self.statistics.bypassed += 1;
             return false;
         }
+        var payload = codec.Writer.init(self.allocator);
+        defer payload.deinit();
+        payload.write(owned.StoredSymbolic, entry.payload) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+        };
+        return self.publishPayload(entry.payload.identity.key, entry.payload.identity.context, payload.bytes.items);
+    }
 
+    /// Encode and atomically publish one already-serialized payload. The
+    /// checksum covers the complete header and payload image, and the rename is
+    /// the only step visible to a concurrent reader.
+    fn publishPayload(self: *Store, stable_key: []const u8, context: [32]u8, payload_bytes: []const u8) error{OutOfMemory}!bool {
+        if (payload_bytes.len > self.limits.max_entry_bytes) {
+            self.statistics.bypassed += 1;
+            return false;
+        }
         var image = codec.Writer.init(self.allocator);
         defer image.deinit();
         image.integer(entry_magic) catch |err| switch (err) {
@@ -344,23 +407,23 @@ pub const Store = struct {
         image.integer(@as(u64, 1)) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
         };
-        image.write([]const u8, entry.meta.identity.key) catch |err| switch (err) {
+        image.write([]const u8, stable_key) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
         };
         image.raw(&context) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
         };
-        image.integer(@as(u64, payload.bytes.items.len)) catch |err| switch (err) {
+        image.integer(@as(u64, payload_bytes.len)) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
         };
-        image.raw(payload.bytes.items) catch |err| switch (err) {
+        image.raw(payload_bytes) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
         };
         image.integer(std.hash.XxHash3.hash(0, image.bytes.items)) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
         };
 
-        const path = self.entryPath(entry.meta.identity.key, context) catch return error.OutOfMemory;
+        const path = self.entryPath(stable_key, context) catch return error.OutOfMemory;
         defer self.allocator.free(path);
         const directory = std.fs.path.dirname(path) orelse return false;
         std.Io.Dir.cwd().createDirPath(self.io, directory) catch {

@@ -412,6 +412,114 @@ test "C2 concurrent publishers never expose a partial entry" {
     try testing.expectEqual(@as(usize, 2), counts.reused);
 }
 
+const SymbolicCounts = struct { performed: usize, reused: usize };
+
+fn symbolicCounts(stderr: []const u8) !SymbolicCounts {
+    const marker = std.mem.indexOf(u8, stderr, "\"symbolic_templates\":") orelse return error.MissingCounter;
+    const end = std.mem.indexOfPos(u8, stderr, marker, "}") orelse stderr.len;
+    return .{
+        .performed = try c2NumberAfter(stderr[marker..end], "performed"),
+        .reused = try c2NumberAfter(stderr[marker..end], "reused"),
+    };
+}
+
+fn symbolicCheck(entry: []const u8, cache_argument: []const u8, no_cache: bool) !std.process.RunResult {
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "check", entry, "--report" });
+    if (cache_argument.len != 0) try args.append(testing.allocator, cache_argument);
+    if (no_cache) try args.append(testing.allocator, "--no-cache");
+    return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+}
+
+// C3 top-level SPEC registration is outstanding; this test is the fresh-process
+// evidence for the symbolic-template half and must be reported with its patch.
+// spec-case: SEMANTIC-CACHE-7
+test "C3 symbolic template reuse crosses processes and preserves selective invalidation" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(directory);
+    const entry = try std.fs.path.join(testing.allocator, &.{ directory, "main.my" });
+    defer testing.allocator.free(entry);
+    const cache_base = try std.fs.path.join(testing.allocator, &.{ directory, "cache" });
+    defer testing.allocator.free(cache_base);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_base});
+    defer testing.allocator.free(cache_argument);
+    const base_template =
+        \\def size[T: integer](value: T) -> i64 effects():
+        \\    _ = value
+        \\    return 7
+        \\
+        \\
+        \\
+    ;
+    const edited_template =
+        \\def size[T: integer](value: T) -> i64 effects():
+        \\    _ = value
+        \\    return 8
+        \\
+        \\
+        \\
+    ;
+    const base_helper =
+        \\def helper(n: i64) -> i64:
+        \\    return n + 1
+        \\
+        \\
+        \\
+    ;
+    const edited_helper =
+        \\def helper(n: i64) -> i64:
+        \\    return n + 2
+        \\
+        \\
+        \\
+    ;
+    const main_fn =
+        \\def main() -> i64:
+        \\    return size[u8](1u8) + helper(0)
+    ;
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = base_template ++ base_helper ++ main_fn });
+    // Cold process: one abstract template check, no reuse.
+    const first = try symbolicCheck(entry, cache_argument, false);
+    defer testing.allocator.free(first.stdout);
+    defer testing.allocator.free(first.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term);
+    try testing.expectEqual(@as(usize, 1), (try symbolicCounts(first.stderr)).performed);
+    try testing.expectEqual(@as(usize, 0), (try symbolicCounts(first.stderr)).reused);
+    // Fresh process, unchanged source: the template is replayed.
+    const warm = try symbolicCheck(entry, cache_argument, false);
+    defer testing.allocator.free(warm.stdout);
+    defer testing.allocator.free(warm.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, warm.term);
+    try testing.expectEqual(@as(usize, 0), (try symbolicCounts(warm.stderr)).performed);
+    try testing.expectEqual(@as(usize, 1), (try symbolicCounts(warm.stderr)).reused);
+    // Editing an unrelated ordinary body must not disturb template reuse.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = base_template ++ edited_helper ++ main_fn });
+    const unrelated = try symbolicCheck(entry, cache_argument, false);
+    defer testing.allocator.free(unrelated.stdout);
+    defer testing.allocator.free(unrelated.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, unrelated.term);
+    try testing.expectEqual(@as(usize, 0), (try symbolicCounts(unrelated.stderr)).performed);
+    try testing.expectEqual(@as(usize, 1), (try symbolicCounts(unrelated.stderr)).reused);
+    // Editing the template body invalidates its retained direct result.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = edited_template ++ edited_helper ++ main_fn });
+    const edited = try symbolicCheck(entry, cache_argument, false);
+    defer testing.allocator.free(edited.stdout);
+    defer testing.allocator.free(edited.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, edited.term);
+    try testing.expectEqual(@as(usize, 1), (try symbolicCounts(edited.stderr)).performed);
+    try testing.expectEqual(@as(usize, 0), (try symbolicCounts(edited.stderr)).reused);
+    // Disabling the cache must not change acceptance and must report fresh work.
+    const disabled = try symbolicCheck(entry, cache_argument, true);
+    defer testing.allocator.free(disabled.stdout);
+    defer testing.allocator.free(disabled.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, disabled.term);
+    try testing.expectEqual(@as(usize, 1), (try symbolicCounts(disabled.stderr)).performed);
+    try testing.expectEqual(@as(usize, 0), (try symbolicCounts(disabled.stderr)).reused);
+}
+
 // spec-case: CAPABILITY-3
 test "run build --run and installed executables share the restricted capability diagnostic" {
     const program =
