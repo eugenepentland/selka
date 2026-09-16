@@ -51,7 +51,10 @@ const rss = struct {
     /// peak leaves room for a ReleaseFast build of the same tree.
     /// Observed (debug): src/root_test.zig 335M, the mylang executable 270M, the
     /// other test roots 166-232M, the small runner executables 42M.
-    const compile: u64 = 2048 * mib;
+    /// Observed (ReleaseFast, C3/C4 tree): a test-root compile peaked at 2.55G,
+    /// so the old 2.15G bound blocked the documented gate; 3G keeps a bounded
+    /// ceiling with headroom for the same tree.
+    const compile: u64 = 3072 * mib;
     /// `zig build run`, which executes whatever program the caller names.
     /// Matches the 4 GiB ceiling `mylang run` gives a guest.
     const guest: u64 = 4096 * mib;
