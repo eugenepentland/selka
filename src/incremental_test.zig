@@ -37,6 +37,20 @@ fn declaration(report: incremental.Report, module: []const u8, name: []const u8)
     unreachable;
 }
 
+fn functionInterfaceHash(allocator: std.mem.Allocator, bytes: []const u8, name: []const u8) ![]const u8 {
+    var entries = [_]File{.{ .path = "main.my", .bytes = bytes }};
+    const report = try describe(&entries, allocator);
+    defer incremental.deinit(report, allocator);
+    return allocator.dupe(u8, declaration(report, "main", name).interface_sha256.?);
+}
+
+fn projectInterfaceHash(allocator: std.mem.Allocator, bytes: []const u8) ![]const u8 {
+    var entries = [_]File{.{ .path = "main.my", .bytes = bytes }};
+    const report = try describe(&entries, allocator);
+    defer incremental.deinit(report, allocator);
+    return allocator.dupe(u8, report.project_interface_sha256);
+}
+
 // spec: INCREMENTAL-ID-1
 test "module and declaration identities ignore body edits and interface fingerprints follow signatures" {
     var entries = [_]File{
@@ -327,6 +341,196 @@ test "an exported body edit inside its declared ceiling preserves the API finger
     // The implementation still changed, so body cacheability and runtime-test
     // receipts keyed on the body must invalidate.
     try t.expect(!std.mem.eql(u8, first_body, declaration(second, "main", "emit").body_sha256.?));
+}
+
+test "declared mutation positions and normalized clause spellings change function and project fingerprints" {
+    const mutates_a =
+        \\module main
+        \\export change
+        \\
+        \\
+        \\def change(a: list[int], b: list[int]) -> None effects(mutation) mutates(a):
+        \\    pass
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    const mutates_b =
+        \\module main
+        \\export change
+        \\
+        \\
+        \\def change(a: list[int], b: list[int]) -> None effects(mutation) mutates(b):
+        \\    pass
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    const a_interface = try functionInterfaceHash(t.allocator, mutates_a, "change");
+    defer t.allocator.free(a_interface);
+    const b_interface = try functionInterfaceHash(t.allocator, mutates_b, "change");
+    defer t.allocator.free(b_interface);
+    const a_project = try projectInterfaceHash(t.allocator, mutates_a);
+    defer t.allocator.free(a_project);
+    const b_project = try projectInterfaceHash(t.allocator, mutates_b);
+    defer t.allocator.free(b_project);
+    try t.expect(!std.mem.eql(u8, a_interface, b_interface));
+    try t.expect(!std.mem.eql(u8, a_project, b_project));
+
+    // M1 requires sorted, duplicate-free positions: spelling order and repeated
+    // binders are not part of the contract identity.
+    const ordered =
+        \\module main
+        \\export change
+        \\
+        \\
+        \\def change(a: list[int], b: list[int]) -> None effects(mutation) mutates(a, b):
+        \\    pass
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    const reordered =
+        \\module main
+        \\export change
+        \\
+        \\
+        \\def change(a: list[int], b: list[int]) -> None effects(mutation) mutates(b, a, b):
+        \\    pass
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    const ordered_interface = try functionInterfaceHash(t.allocator, ordered, "change");
+    defer t.allocator.free(ordered_interface);
+    const reordered_interface = try functionInterfaceHash(t.allocator, reordered, "change");
+    defer t.allocator.free(reordered_interface);
+    const ordered_project = try projectInterfaceHash(t.allocator, ordered);
+    defer t.allocator.free(ordered_project);
+    const reordered_project = try projectInterfaceHash(t.allocator, reordered);
+    defer t.allocator.free(reordered_project);
+    try t.expectEqualStrings(ordered_interface, reordered_interface);
+    try t.expectEqualStrings(ordered_project, reordered_project);
+
+    // Explicit `mutates()` normalizes exactly like omission: both are the empty
+    // footprint and neither contributes a clause region to the declaration hash.
+    const empty =
+        \\module main
+        \\export change
+        \\
+        \\
+        \\def change(a: list[int], b: list[int]) -> None effects(mutation) mutates():
+        \\    pass
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    const omitted =
+        \\module main
+        \\export change
+        \\
+        \\
+        \\def change(a: list[int], b: list[int]) -> None effects(mutation):
+        \\    pass
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    const empty_interface = try functionInterfaceHash(t.allocator, empty, "change");
+    defer t.allocator.free(empty_interface);
+    const omitted_interface = try functionInterfaceHash(t.allocator, omitted, "change");
+    defer t.allocator.free(omitted_interface);
+    const empty_project = try projectInterfaceHash(t.allocator, empty);
+    defer t.allocator.free(empty_project);
+    const omitted_project = try projectInterfaceHash(t.allocator, omitted);
+    defer t.allocator.free(omitted_project);
+    try t.expectEqualStrings(empty_interface, omitted_interface);
+    try t.expectEqualStrings(empty_project, omitted_project);
+
+    // Generic templates use the AST declaration region because they do not have
+    // a checked ordinary-function body in the manifest. The clause must still
+    // participate there.
+    const generic_a =
+        \\module main
+        \\export pick
+        \\
+        \\
+        \\def pick[T](value: T, a: list[int], b: list[int]) -> list[int] effects(mutation) mutates(a):
+        \\    return a
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    const generic_b =
+        \\module main
+        \\export pick
+        \\
+        \\
+        \\def pick[T](value: T, a: list[int], b: list[int]) -> list[int] effects(mutation) mutates(b):
+        \\    return a
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    const generic_a_interface = try functionInterfaceHash(t.allocator, generic_a, "pick");
+    defer t.allocator.free(generic_a_interface);
+    const generic_b_interface = try functionInterfaceHash(t.allocator, generic_b, "pick");
+    defer t.allocator.free(generic_b_interface);
+    const generic_a_project = try projectInterfaceHash(t.allocator, generic_a);
+    defer t.allocator.free(generic_a_project);
+    const generic_b_project = try projectInterfaceHash(t.allocator, generic_b);
+    defer t.allocator.free(generic_b_project);
+    try t.expect(!std.mem.eql(u8, generic_a_interface, generic_b_interface));
+    try t.expect(!std.mem.eql(u8, generic_a_project, generic_b_project));
+}
+
+test "exported return-origin bound is the declared unknown default and excludes inferred bodies" {
+    const returns_param =
+        \\module main
+        \\export pick
+        \\
+        \\
+        \\def pick(a: list[int], b: list[int]) -> list[int] effects(managed_allocation):
+        \\    return a
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    const returns_fresh =
+        \\module main
+        \\export pick
+        \\
+        \\
+        \\def pick(a: list[int], b: list[int]) -> list[int] effects(managed_allocation):
+        \\    return [1]
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    // The inferred origin differs (`params(0)` versus `fresh`), but the public
+    // declaration has no source syntax for a narrower bound, so both publish
+    // `unknown` and keep the same interface hash. Inferred summaries remain
+    // separate implementation/cache facts.
+    const param_interface = try functionInterfaceHash(t.allocator, returns_param, "pick");
+    defer t.allocator.free(param_interface);
+    const fresh_interface = try functionInterfaceHash(t.allocator, returns_fresh, "pick");
+    defer t.allocator.free(fresh_interface);
+    const param_project = try projectInterfaceHash(t.allocator, returns_param);
+    defer t.allocator.free(param_project);
+    const fresh_project = try projectInterfaceHash(t.allocator, returns_fresh);
+    defer t.allocator.free(fresh_project);
+    try t.expectEqualStrings(param_interface, fresh_interface);
+    try t.expectEqualStrings(param_project, fresh_project);
 }
 
 test "record field and union case edits change the nominal interface hash" {

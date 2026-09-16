@@ -353,7 +353,7 @@ fn astDeclarationInterface(scratch: std.mem.Allocator, unit: interface.Unit, sym
                 const value = try normalizedDeclarationHash(scratch, src, "constant", span);
                 return value;
             }
-            const value = try normalizedDeclarationHash(scratch, src, function_kind, functionSpan(unit.syntax, function));
+            const value = try normalizedFunctionDeclarationHash(scratch, src, unit.syntax, function, function_kind);
             return value;
         },
         .type => {
@@ -401,7 +401,7 @@ fn declarationInterface(scratch: std.mem.Allocator, module_name: []const u8, uni
                     return hash;
                 }
                 if (function.signature.type_parameters.len != 0) {
-                    const hash = try normalizedDeclarationHash(scratch, src, "function-template", functionSpan(unit.syntax, function));
+                    const hash = try normalizedFunctionDeclarationHash(scratch, src, unit.syntax, function, "function-template");
                     return hash;
                 }
             }
@@ -413,14 +413,14 @@ fn declarationInterface(scratch: std.mem.Allocator, module_name: []const u8, uni
                 // normalized declaration header (which includes defaults) as well.
                 if (ast_function) |declared| {
                     try writerWrite(&out.writer, "\x00");
-                    try writerWrite(&out.writer, try normalizeSpan(scratch, src, functionSpan(unit.syntax, declared)));
+                    try writerWrite(&out.writer, try normalizedFunctionSpan(scratch, src, unit.syntax, declared));
                 }
                 const bytes = out.toOwnedSlice() catch return error.OutOfMemory;
                 const hash = try hashFields(scratch, declaration_interface_domain, &.{ function_kind, bytes });
                 return hash;
             }
             if (ast_function) |function| {
-                const hash = try normalizedDeclarationHash(scratch, src, function_kind, functionSpan(unit.syntax, function));
+                const hash = try normalizedFunctionDeclarationHash(scratch, src, unit.syntax, function, function_kind);
                 return hash;
             }
             return null;
@@ -492,6 +492,85 @@ fn normalizeSpan(scratch: std.mem.Allocator, src: source.Source, span: source.Sp
     return out.toOwnedSlice() catch return error.OutOfMemory;
 }
 
+/// Hash the function declaration header after normalizing its optional
+/// `mutates(...)` clause to the contract's sorted, duplicate-free parameter
+/// positions. The clause region therefore changes with the declared contract
+/// without making binder spelling or argument order part of the type identity.
+fn normalizedFunctionDeclarationHash(scratch: std.mem.Allocator, src: source.Source, syntax: ast.Program, function: ast.Function, kind: []const u8) Error![]const u8 {
+    const normalized = try normalizedFunctionSpan(scratch, src, syntax, function);
+    // Generic templates and AST-only fallbacks have no checked `typed.Function`
+    // serializer, so append the same declared contract fields here. The
+    // return-origin bound is the conservative exported default: no source
+    // syntax publishes a narrower one.
+    var out: std.Io.Writer.Allocating = .init(scratch);
+    defer out.deinit();
+    try writerWrite(&out.writer, normalized);
+    try writerWrite(&out.writer, "\x00public-mutates=");
+    if (function.signature.mutates.len == 0) try writerWrite(&out.writer, "none") else try writePositions(&out.writer, function.signature.mutates);
+    try writerWrite(&out.writer, "\x00public-return-origin=");
+    try writeReturnOrigin(&out.writer, .unknown);
+    const bytes = out.toOwnedSlice() catch return error.OutOfMemory;
+    return hashFields(scratch, declaration_interface_domain, &.{ kind, bytes });
+}
+
+fn normalizedFunctionSpan(scratch: std.mem.Allocator, src: source.Source, syntax: ast.Program, function: ast.Function) Error![]const u8 {
+    const span = try functionSpan(scratch, src, syntax, function);
+    if (span.start > span.end or span.end > src.bytes.len) return error.InternalError;
+    var sink: diagnostic.Sink = .{ .allocator = scratch };
+    const tokens = lexer.lexRange(scratch, src.bytes, span, &sink) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return error.InternalError,
+    };
+    const clause = try mutatesClauseSpan(scratch, src, syntax, function);
+    var out: std.Io.Writer.Allocating = .init(scratch);
+    defer out.deinit();
+    var first = true;
+    var index: usize = 0;
+    while (tokens[index].tag != .eof) {
+        if (clause) |region| {
+            if (tokens[index].span.start == region.start) {
+                if (!first) try writerWrite(&out.writer, "\x00");
+                first = false;
+                try writeCanonicalMutates(&out.writer, function.signature.mutates);
+                while (tokens[index].tag != .eof and tokens[index].span.end <= region.end) index += 1;
+                continue;
+            }
+        }
+        const token = tokens[index];
+        if (token.span.start > token.span.end or token.span.end > src.bytes.len) return error.InternalError;
+        if (!first) try writerWrite(&out.writer, "\x00");
+        first = false;
+        try writerWrite(&out.writer, src.bytes[token.span.start..token.span.end]);
+        index += 1;
+    }
+    return out.toOwnedSlice() catch return error.OutOfMemory;
+}
+
+fn writeCanonicalMutates(writer: *std.Io.Writer, positions: []const u16) Error!void {
+    try writerWrite(writer, "mutates(");
+    try writePositions(writer, positions);
+    try writerWrite(writer, ")");
+}
+
+fn writePositions(writer: *std.Io.Writer, positions: []const u16) Error!void {
+    for (positions, 0..) |position, index| {
+        if (index != 0) try writerWrite(writer, ",");
+        try writerPrint(writer, "{d}", .{position});
+    }
+}
+
+fn writeReturnOrigin(writer: *std.Io.Writer, origin: typed.ReturnOrigin) Error!void {
+    switch (origin) {
+        .fresh => try writerWrite(writer, "fresh"),
+        .unknown => try writerWrite(writer, "unknown"),
+        .params => |positions| {
+            try writerWrite(writer, "params(");
+            try writePositions(writer, positions);
+            try writerWrite(writer, ")");
+        },
+    }
+}
+
 fn writeTypedFunction(writer: *std.Io.Writer, function: typed.Function, records: []const typed.Record) Error!void {
     try writerWrite(writer, "function\nname=");
     try writerWrite(writer, function.name);
@@ -526,6 +605,21 @@ fn writeTypedFunction(writer: *std.Io.Writer, function: typed.Function, records:
     // the API fingerprint or invalidate callers' type checking.
     try writerWrite(writer, "\npublic-ceiling=");
     if (function.policy.effect_bound) |bound| try writeEffectMask(writer, bound.allowed) else try writerWrite(writer, "unbounded");
+
+    // M1/M2: the declared ceiling also includes the normalized mutation
+    // footprint and the return-origin bound. Exported declarations publish the
+    // conservative `unknown` return-origin default because there is no source
+    // syntax for a narrower bound. Private inferred summaries remain separate:
+    // they stay in the checked program and in `body_sha256`/C2 context, and are
+    // deliberately not mixed into this declaration interface fingerprint. This
+    // is the public API fingerprint, so inferred implementation effect sets are
+    // also excluded above.
+    const declared_mutates = function.signature.declared_mutates;
+    const declared_return_origin: typed.ReturnOrigin = .unknown;
+    try writerWrite(writer, "\npublic-mutates=");
+    if (declared_mutates.len == 0) try writerWrite(writer, "none") else try writePositions(writer, declared_mutates);
+    try writerWrite(writer, "\npublic-return-origin=");
+    try writeReturnOrigin(writer, declared_return_origin);
 }
 
 fn writeTypedRecord(writer: *std.Io.Writer, record: typed.Record, records: []const typed.Record) Error!void {
@@ -598,6 +692,9 @@ fn writeTypedAlias(writer: *std.Io.Writer, alias: typed.TypeAlias, records: []co
     try writerWrite(writer, typed.typeName(alias.target, records));
 }
 
+// twin-drift-ok: canonical fingerprint spelling is a brace-set over effect tags;
+// src/interfaces.zig renders schema text for a different consumer, so the shared
+// shape is intentional while the emitted bytes are not interchangeable.
 fn writeEffectMask(writer: *std.Io.Writer, mask: effect_set.Mask) Error!void {
     try writerWrite(writer, "{");
     var separator = false;
@@ -850,7 +947,7 @@ fn aliasSpan(alias: ast.TypeAlias) source.Span {
     return .{ .start = alias.name.start, .end = alias.target.end };
 }
 
-fn functionSpan(syntax: ast.Program, function: ast.Function) source.Span {
+fn baseFunctionSpan(syntax: ast.Program, function: ast.Function) source.Span {
     var end = @max(function.name.end, typeParametersEnd(function.signature.type_parameters));
     end = @max(end, function.signature.return_type.end);
     for (function.signature.parameters) |parameter| {
@@ -861,6 +958,51 @@ fn functionSpan(syntax: ast.Program, function: ast.Function) source.Span {
     }
     if (function.policy.effect_bound) |bound| end = @max(end, bound.span.end);
     return .{ .start = function.name.start, .end = end };
+}
+
+/// The declaration region hashed into the public interface. For a nonempty
+/// `mutates(...)` clause this extends the header span through the closing
+/// parenthesis; the normalizer replaces those tokens with the contract's sorted
+/// parameter positions, so `mutates()`/omitted remain the same and binder
+/// spelling or argument order cannot leak into the fingerprint.
+fn functionSpan(scratch: std.mem.Allocator, src: source.Source, syntax: ast.Program, function: ast.Function) Error!source.Span {
+    var span = baseFunctionSpan(syntax, function);
+    if (try mutatesClauseSpan(scratch, src, syntax, function)) |clause| span.end = @max(span.end, clause.end);
+    return span;
+}
+
+fn mutatesClauseSpan(scratch: std.mem.Allocator, src: source.Source, syntax: ast.Program, function: ast.Function) Error!?source.Span {
+    if (function.signature.mutates.len == 0) return null;
+    const bound = function.policy.effect_bound orelse return null;
+    var limit = src.bytes.len;
+    const body_span = syntax.statements.items[@backingInt(function.body)].span;
+    if (body_span.start >= bound.span.end and body_span.start <= src.bytes.len) limit = body_span.start;
+    if (bound.span.end > limit or limit > src.bytes.len) return error.InternalError;
+    var sink: diagnostic.Sink = .{ .allocator = scratch };
+    const tokens = lexer.lexRange(scratch, src.bytes, .{ .start = bound.span.end, .end = limit }, &sink) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return error.InternalError,
+    };
+    var index: usize = 0;
+    while (tokens[index].tag != .eof) : (index += 1) {
+        if (tokens[index].tag != .ident) continue;
+        if (!std.mem.eql(u8, src.bytes[tokens[index].span.start..tokens[index].span.end], "mutates")) continue;
+        if (index + 1 >= tokens.len or tokens[index + 1].tag != .lparen) continue;
+        var depth: usize = 0;
+        var close = index + 1;
+        while (close < tokens.len) : (close += 1) {
+            switch (tokens[close].tag) {
+                .lparen => depth += 1,
+                .rparen => {
+                    depth -|= 1;
+                    if (depth == 0) return .{ .start = tokens[index].span.start, .end = tokens[close].span.end };
+                },
+                else => {},
+            }
+        }
+        return error.InternalError;
+    }
+    return error.InternalError;
 }
 
 fn typeParametersEnd(parameters: []const ast.TypeParameter) usize {
