@@ -39,6 +39,14 @@ def inbox(seq, when, job_id, status='completed', exit_code=0, command='zig build
                  'source': {'kind': 'plugin', 'plugin': 'tool-jobs', 'form': 'notice'}}]}}
 
 
+def delivered(seq, when, job_id, status='completed', exit_code=0, command='zig build test'):
+    text = (f'background job {job_id} (bash: {command}) finished '
+            f'[status: {status}, exit code: {exit_code}]. Read its output with job_output.')
+    return {'type': 'user/message', 'seq': seq, 'time': when,
+            'data': {'content': [{'type': 'text', 'text': text}],
+                     'source': {'kind': 'plugin', 'plugin': 'tool-jobs', 'form': 'notice'}}}
+
+
 class AuditTests(unittest.TestCase):
     def test_overlaps_do_not_count_twice(self):
         self.assertEqual(audit.seconds([(0, 2000), (500, 1000), (1500, 3000), (4000, 5000)]), 4)
@@ -149,27 +157,65 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(len(partial['calls']), 1)
         self.assertTrue(any('zstd exited' in issue for issue in partial['issues']))
 
-    def test_background_job_separates_execution_from_foreground_blocking(self):
+    def test_background_job_separates_execution_delivery_and_reads(self):
         events = [
             header(),
             call(1, 0, command='zig build test-qbe', call_id='bg', run_in_background=True),
             result(2, 100, 'bg', text='started background job bash-7'),
             inbox(3, 5000, 'bash-7'),
-            call(4, 6000, command='', name='job_output', call_id='read', job_id='bash-7', wait=True),
-            result(5, 6300, 'read', text='ok'),
+            delivered(4, 8000, 'bash-7'),
+            call(5, 9000, command='', name='job_output', call_id='r1', job_id='bash-7', wait=True),
+            result(6, 9200, 'r1', text='ok\n[status: completed]'),
+            call(7, 10000, command='', name='job_output', call_id='r2', job_id='bash-7'),
+            result(8, 10050, 'r2', text='ok'),
         ]
         report = audit.make_report([audit.parse_events(events, 'root')], Path('/project'))
         self.assertEqual(len(report['background_jobs']), 1)
         job = report['background_jobs'][0]
+        self.assertEqual(job['completion_source'], 'settlement-notice')
         self.assertEqual(job['execution_seconds'], 5.0)
-        self.assertEqual(job['completion_to_consumption_seconds'], 1.0)
+        self.assertEqual(job['notification_delay_seconds'], 3.0)
+        self.assertEqual(job['completion_to_consumption_seconds'], 4.0)
         self.assertEqual(job['start_blocked_seconds'], 0.1)
-        self.assertEqual(job['collection_blocked_seconds'], 0.3)
+        self.assertEqual(job['read_count'], 2)
+        self.assertEqual(job['read_blocked_seconds'], 0.25)
+        self.assertEqual(job['wait_calls'], 1)
+        self.assertEqual(job['wait_blocked_seconds'], 0.2)
         self.assertEqual(job['outcome'], 'completed')
         summary = report['background_job_summary']
         self.assertEqual(summary['jobs'], 1)
         self.assertEqual(summary['execution_seconds'], 5.0)
-        self.assertEqual(summary['collection_blocked_seconds'], 0.3)
+        self.assertEqual(summary['notification_delay_seconds'], 3.0)
+        self.assertEqual(summary['read_calls'], 2)
+        self.assertEqual(summary['wait_calls'], 1)
+        self.assertEqual(len(report['job_waits']), 2)
+
+    def test_unmatched_job_wait_is_still_counted(self):
+        events = [
+            header(),
+            call(1, 0, command='', name='job_output', call_id='r', job_id='bash-9', wait=True),
+            result(2, 4000, 'r', text='done\n[status: completed]'),
+        ]
+        report = audit.make_report([audit.parse_events(events, 'root')], Path('/project'))
+        self.assertEqual(report['background_job_summary']['read_calls'], 1)
+        self.assertEqual(report['background_job_summary']['unmatched_read_calls'], 1)
+        self.assertEqual(report['background_job_summary']['unmatched_read_seconds'], 4.0)
+        self.assertEqual(len(report['unmatched_job_waits']), 1)
+        self.assertEqual(len(report['job_waits']), 1)
+
+    def test_completion_falls_back_to_a_terminal_read_without_a_notice(self):
+        events = [
+            header(),
+            call(1, 0, command='zig build', call_id='bg', run_in_background=True),
+            result(2, 100, 'bg', text='started background job bash-3'),
+            call(3, 2000, command='', name='job_output', call_id='r', job_id='bash-3', wait=True),
+            result(4, 7000, 'r', text='ok\n[status: completed]'),
+        ]
+        report = audit.make_report([audit.parse_events(events, 'root')], Path('/project'))
+        job = report['background_jobs'][0]
+        self.assertEqual(job['completion_source'], 'terminal-read')
+        self.assertEqual(job['execution_seconds'], 7.0)
+        self.assertEqual(job['outcome'], 'completed')
 
     def test_timeout_without_wait_is_reported_as_misuse(self):
         events = [

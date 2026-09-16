@@ -35,6 +35,8 @@ BACKGROUND_START = re.compile(r"^started background job (\S+)$", re.M)
 BACKGROUND_DONE = re.compile(
     r"^background job (\S+)\b.*?\bfinished \[status: ([a-z]+)(?:, exit code: (-?\d+))?\]\. "
     r"Read its output with job_output\.$", re.M)
+# Statuses a `job_output` read can report once the job is no longer running.
+TERMINAL_JOB_STATUSES = frozenset({'completed', 'failed', 'killed'})
 # One comparability key for a `zig build` invocation. Two runs are only a fair
 # comparison when the target, `-Dtest-filter`, optimize mode and cache condition
 # all match, so the audit groups by the complete key instead of by command text.
@@ -197,10 +199,14 @@ def parse_events(events, source):
             retries += 1
         elif kind in {'agent/inbox/spliced', 'user/message'}:
             text = notice_text(event)
+            # An inbox splice is the jobs plugin reacting to settlement; the
+            # delivered copy is the same text entering the model's context. Keep
+            # them apart so notification delay is not charged to execution.
+            form = 'inbox' if kind == 'agent/inbox/spliced' else 'delivered'
             for match in BACKGROUND_DONE.finditer(text):
                 if timestamp is not None:
                     notices.append({'session': header.get('id', source), 'job_id': match.group(1),
-                                    'time_ms': timestamp, 'seq': seq, 'status': match.group(2),
+                                    'time_ms': timestamp, 'seq': seq, 'form': form, 'status': match.group(2),
                                     'exit_code': int(match.group(3)) if match.group(3) is not None else None})
         elif kind == 'tool/call':
             call_id = data.get('callId')
@@ -243,6 +249,7 @@ def parse_events(events, source):
                 'guardian_failed': bool(re.search(r'guardian/test: FAIL|"failed"\s*:\s*[1-9]', text)),
                 'background_started': args.get('run_in_background') is True,
                 'background_job_id': started.group(1) if started else None,
+                'job_status': first_group(re.search(r'\[status: ([a-z]+)', text)),
                 'schema': call_schema, 'turn': request.get('turn'), 'step': request.get('step'),
             })
     return {'header': header, 'source': source, 'calls': calls, 'model_intervals': models,
@@ -351,64 +358,113 @@ def utc(milliseconds):
     return datetime.fromtimestamp(milliseconds / 1000, timezone.utc).isoformat() if milliseconds is not None else None
 
 
-def background_jobs(rows, notices):
-    """Pair each managed background start with its completion notice and collection.
+def job_waits(rows):
+    """Every `job_output` call, whether or not it pairs with a started job."""
+    waits = []
+    for row in rows:
+        if row['name'] != 'job_output':
+            continue
+        job_id = row['args'].get('job_id')
+        waits.append({
+            'session': row['session'], 'seq': row['seq'],
+            'job_id': job_id if isinstance(job_id, str) else None,
+            'read_seconds': round(row['seconds'], 3),
+            'wait': row['args'].get('wait') is True,
+            'status': row.get('job_status'),
+        })
+    return waits
 
-    ``execution_seconds`` is the job's own start-to-completion wall time. The
-    foreground ``*_blocked_seconds`` fields are what the model actually waited on:
-    the start call's return and the ``job_output`` collection. The gap between the
-    completion notice and collection is detection delay, not command work.
+
+def background_jobs(rows, notices):
+    """Pair each managed background start with settlement, delivery and every read.
+
+    ``completed_ms`` is the jobs plugin reacting to settlement (the inbox
+    splice); ``delivered_ms`` is that same notice reaching the model. Every
+    ``job_output`` call for the id is counted, and a terminal read bounds
+    completion when no notice was captured.
     """
-    earliest = {}
+    notices_by_key = defaultdict(list)
     for notice in notices:
-        key = (notice['session'], notice['job_id'])
-        current = earliest.get(key)
-        if current is None or notice['time_ms'] < current['time_ms']:
-            earliest[key] = notice
-    collections = defaultdict(list)
+        notices_by_key[(notice['session'], notice['job_id'])].append(notice)
+    reads_by_key = defaultdict(list)
     for row in rows:
         if row['name'] != 'job_output':
             continue
         job_id = row['args'].get('job_id')
         if isinstance(job_id, str):
-            collections[(row['session'], job_id)].append(row)
+            reads_by_key[(row['session'], job_id)].append(row)
+    starts = sorted((row for row in rows if row.get('background_job_id')), key=lambda row: row['start_ms'])
+    matched = {(row['session'], row['background_job_id']) for row in starts}
     jobs = []
-    for start in sorted((row for row in rows if row.get('background_job_id')), key=lambda row: row['start_ms']):
+    for start in starts:
         key = (start['session'], start['background_job_id'])
-        notice = earliest.get(key)
-        collect = min(collections.get(key, []), key=lambda row: row['start_ms'], default=None)
-        completed = notice['time_ms'] if notice else None
-        consumed = collect['start_ms'] if collect else None
+        events = sorted(notices_by_key.get(key, []), key=lambda event: (event['time_ms'], event['seq']))
+        inbox = next((event for event in events if event['form'] == 'inbox'), None)
+        delivered = next((event for event in events if event['form'] == 'delivered'), None)
+        reads = sorted(reads_by_key.get(key, []), key=lambda row: row['start_ms'])
+        terminal = [row for row in reads if row.get('job_status') in TERMINAL_JOB_STATUSES]
+        read_bound = min((row['end_ms'] for row in terminal), default=None)
+        completed = inbox['time_ms'] if inbox else (delivered['time_ms'] if delivered else read_bound)
+        source = ('settlement-notice' if inbox else
+                  'delivery-notice' if delivered else
+                  'terminal-read' if read_bound is not None else None)
+        consumed = reads[0]['start_ms'] if reads else None
+        waited = [row for row in reads if row['args'].get('wait') is True]
+        notice = inbox or delivered
+        outcome = notice['status'] if notice else (terminal[0]['job_status'] if terminal else None)
         jobs.append({
             'job_id': start['background_job_id'], 'session': start['session'], 'start_seq': start['seq'],
             'started_at': utc(start['start_ms']),
             'completed_at': utc(completed) if completed is not None else None,
+            'completion_source': source,
+            'delivered_at': utc(delivered['time_ms']) if delivered else None,
             'consumed_at': utc(consumed) if consumed is not None else None,
             'execution_seconds': round((completed - start['start_ms']) / 1000, 3)
                                   if completed is not None and completed >= start['start_ms'] else None,
-            'start_blocked_seconds': round(start['seconds'], 3),
-            'collection_blocked_seconds': round(collect['seconds'], 3) if collect else None,
+            'notification_delay_seconds': round((delivered['time_ms'] - completed) / 1000, 3)
+                                          if delivered is not None and completed is not None and delivered['time_ms'] >= completed else None,
             'completion_to_consumption_seconds': round((consumed - completed) / 1000, 3)
                                                  if completed is not None and consumed is not None and consumed >= completed else None,
-            'wait_requested': bool(collect and collect['args'].get('wait') is True),
-            'outcome': notice['status'] if notice else None,
+            'delivery_to_consumption_seconds': round((consumed - delivered['time_ms']) / 1000, 3)
+                                               if delivered is not None and consumed is not None and consumed >= delivered['time_ms'] else None,
+            'start_blocked_seconds': round(start['seconds'], 3),
+            'read_count': len(reads),
+            'read_blocked_seconds': round(sum(row['seconds'] for row in reads), 3),
+            'wait_calls': len(waited),
+            'wait_blocked_seconds': round(sum(row['seconds'] for row in waited), 3),
+            'outcome': outcome,
             'exit_code': notice['exit_code'] if notice else None,
         })
-    return jobs
+    unmatched = []
+    for (session, job_id), reads in reads_by_key.items():
+        if (session, job_id) in matched:
+            continue
+        for row in reads:
+            unmatched.append({'session': session, 'seq': row['seq'], 'job_id': job_id,
+                              'read_seconds': round(row['seconds'], 3),
+                              'wait': row['args'].get('wait') is True, 'status': row.get('job_status')})
+    return jobs, unmatched
 
 
-def summarize_jobs(jobs):
-    """Aggregate the foreground cost and background lifetime of managed jobs."""
+def summarize_jobs(jobs, waits, unmatched):
+    """Aggregate background lifetime and every foreground wait."""
     finished = [job for job in jobs if job['execution_seconds'] is not None]
-    detected = [job for job in jobs if job['completion_to_consumption_seconds'] is not None]
+    delayed = [job for job in jobs if job['notification_delay_seconds'] is not None]
+    collected = [job for job in jobs if job['completion_to_consumption_seconds'] is not None]
     return {
         'jobs': len(jobs), 'completed': len(finished),
         'execution_seconds': round(sum(job['execution_seconds'] for job in finished), 3),
         'start_blocked_seconds': round(sum(job['start_blocked_seconds'] for job in jobs), 3),
-        'collection_blocked_seconds': round(sum(job['collection_blocked_seconds'] or 0 for job in jobs), 3),
-        'completion_to_consumption_seconds': round(sum(job['completion_to_consumption_seconds'] for job in detected), 3),
+        'read_calls': len(waits),
+        'read_blocked_seconds': round(sum(wait['read_seconds'] for wait in waits), 3),
+        'wait_calls': sum(1 for wait in waits if wait['wait']),
+        'wait_blocked_seconds': round(sum(wait['read_seconds'] for wait in waits if wait['wait']), 3),
+        'unmatched_read_calls': len(unmatched),
+        'unmatched_read_seconds': round(sum(wait['read_seconds'] for wait in unmatched), 3),
+        'notification_delay_seconds': round(sum(job['notification_delay_seconds'] for job in delayed), 3),
+        'completion_to_consumption_seconds': round(sum(job['completion_to_consumption_seconds'] for job in collected), 3),
         'max_execution_seconds': max((job['execution_seconds'] for job in finished), default=0),
-        'max_completion_to_consumption_seconds': max((job['completion_to_consumption_seconds'] for job in detected), default=0),
+        'max_completion_to_consumption_seconds': max((job['completion_to_consumption_seconds'] for job in collected), default=0),
     }
 
 
@@ -448,7 +504,8 @@ def make_report(sessions, project, include_commands=False, exclusions=()):
     excluded = [r for r in rows if r['category'] in EXCLUDED]
     timeout_rows = [r for r in included if r['persistent_timeout']]
     notices = [notice for session in sessions for notice in session['notices']]
-    jobs = background_jobs(rows, notices)
+    jobs, unmatched_reads = background_jobs(rows, notices)
+    waits = job_waits(rows)
     # `timeout_ms` is only meaningful with `wait: true`; without it the read
     # returns immediately, so the model learns nothing and spends a turn.
     timeout_without_wait = [r for r in rows if r['name'] == 'job_output'
@@ -511,7 +568,8 @@ def make_report(sessions, project, include_commands=False, exclusions=()):
         'top_calls': [public_call(r, include_commands) for r in sorted(included, key=lambda r: r['seconds'], reverse=True)[:30]],
         'timeout_calls': [public_call(r, include_commands) for r in timeout_rows],
         'repeated_commands': repeated[:30], 'manifest': manifest,
-        'background_jobs': jobs, 'background_job_summary': summarize_jobs(jobs),
+        'background_jobs': jobs, 'background_job_summary': summarize_jobs(jobs, waits, unmatched_reads),
+        'job_waits': waits, 'unmatched_job_waits': unmatched_reads,
         'job_output_timeout_without_wait': len(timeout_without_wait),
         'job_output_misuse_calls': [public_call(r, include_commands) for r in timeout_without_wait[:30]],
         'comparable_build_groups': comparable_build_groups(included),
@@ -559,21 +617,27 @@ def markdown(report):
               f'- Unfinished calls: {sum(s["unfinished_calls"] for s in report["manifest"])}; '
               f'unmatched results: {sum(s["orphan_results"] for s in report["manifest"])}; '
               f'sessions with parse/decode issues: {sum(bool(s["issues"]) for s in report["manifest"])}.',
-              f'- job_output calls passing timeout_ms without wait: true (they return immediately): '
+               f'- job_output calls passing timeout_ms without wait: true (they return immediately): '
                f'{report["job_output_timeout_without_wait"]}.',
-               f'- Managed background jobs observed: {report["background_job_summary"]["jobs"]}; '
-              f'execution {report["background_job_summary"]["execution_seconds"] / 60:.1f} minutes, '
-              f'start+collection blocking {report["background_job_summary"]["start_blocked_seconds"] + report["background_job_summary"]["collection_blocked_seconds"]:.1f} seconds, '
-              f'completion-to-consumption {report["background_job_summary"]["completion_to_consumption_seconds"] / 60:.1f} minutes.',
-              '', '## Managed background jobs', '',
-              'Execution is the job lifetime; blocking is foreground model wait.', '',
-              '| Job | Session | Execution s | Start block s | Collect block s | Complete->consume s | Outcome |',
-              '|---|---|---:|---:|---:|---:|---|']
+               f'- Managed background jobs: {report["background_job_summary"]["jobs"]}; '
+               f'execution {report["background_job_summary"]["execution_seconds"] / 60:.1f} minutes, '
+               f'notification delay {report["background_job_summary"]["notification_delay_seconds"]:.1f} s, '
+               f'every read {report["background_job_summary"]["read_calls"]} calls / '
+               f'{report["background_job_summary"]["read_blocked_seconds"]:.1f} s '
+               f'(blocking waits {report["background_job_summary"]["wait_calls"]} / '
+               f'{report["background_job_summary"]["wait_blocked_seconds"]:.1f} s), '
+               f'unmatched reads {report["background_job_summary"]["unmatched_read_calls"]}, '
+               f'completion-to-consumption {report["background_job_summary"]["completion_to_consumption_seconds"] / 60:.1f} minutes.',
+               '', '## Managed background jobs', '',
+               'Execution ends at the settlement notice; delivery delay is separate; every read is counted.', '',
+               '| Job | Session | Execution s | Notify delay s | Start block s | Reads | Read block s | Wait calls | Complete->consume s | Outcome |',
+               '|---|---|---:|---:|---:|---:|---:|---:|---:|---|']
     for job in sorted(report['background_jobs'], key=lambda item: item['execution_seconds'] or 0, reverse=True)[:20]:
         lines.append(f'| `{job["job_id"]}` | `{job["session"]}` | '
                      f'{job["execution_seconds"] if job["execution_seconds"] is not None else "-"} | '
-                     f'{job["start_blocked_seconds"]:.3f} | '
-                     f'{job["collection_blocked_seconds"] if job["collection_blocked_seconds"] is not None else "-"} | '
+                     f'{job["notification_delay_seconds"] if job["notification_delay_seconds"] is not None else "-"} | '
+                     f'{job["start_blocked_seconds"]:.3f} | {job["read_count"]} | '
+                     f'{job["read_blocked_seconds"]:.3f} | {job["wait_calls"]} | '
                      f'{job["completion_to_consumption_seconds"] if job["completion_to_consumption_seconds"] is not None else "-"} | '
                      f'{job["outcome"] or "running/unreported"} |')
     lines += ['', '## Comparable build groups', '',
