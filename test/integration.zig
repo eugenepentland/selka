@@ -4021,3 +4021,243 @@ test "P1 ignores an unselected production body type error while its declarations
     try testing.expect(full.term != .exited or full.term.exited != 0);
     try testing.expect(std.mem.indexOf(u8, full.stderr, "E_TYPE") != null);
 }
+
+// --- R3: canonical declaration-level type descriptors ---
+
+fn r3TestInvoke(entry: []const u8, cases_path: ?[]const u8, cache: []const u8) !std.process.RunResult {
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    const cache_arg = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
+    defer testing.allocator.free(cache_arg);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "test", entry, "--json", cache_arg });
+    if (cases_path) |path| try args.appendSlice(testing.allocator, &.{ "--cases", path });
+    try args.appendSlice(testing.allocator, &tools);
+    return runCompiler(testing.allocator, args.items);
+}
+fn r3WriteCases(dir: *std.testing.TmpDir, name: []const u8, qualified: []const u8, key: []const u8, source: []const u8) !void {
+    const a = testing.allocator;
+    var providers: std.json.ObjectMap = .empty;
+    defer providers.deinit(a);
+    try providers.put(a, key, .{ .string = source });
+    var settings: std.json.ObjectMap = .empty;
+    defer settings.deinit(a);
+    try settings.put(a, "providers", .{ .object = providers });
+    var root: std.json.ObjectMap = .empty;
+    defer root.deinit(a);
+    try root.put(a, qualified, .{ .object = settings });
+    const bytes = try std.json.Stringify.valueAlloc(a, std.json.Value{ .object = root }, .{});
+    defer a.free(bytes);
+    try dir.dir.writeFile(testing.io, .{ .sub_path = name, .data = bytes });
+}
+
+const r3_alias_main =
+    \\module main
+    \\export Truth
+    \\export Count
+    \\export Counts
+    \\export Pair
+    \\export Chosen
+    \\export size
+    \\export pick
+    \\export test_alias
+    \\
+    \\
+    \\type Truth = bool
+    \\type Count = int
+    \\type Counts = [2]Count
+    \\class Pair[T]:
+    \\    left: T
+    \\    right: T
+    \\type Chosen = Pair[Count]
+    \\
+    \\
+    \\def size(values: Counts) -> Count effects():
+    \\    return values[0] + values[1]
+    \\
+    \\
+    \\def pick(value: Chosen) -> Count effects():
+    \\    return value.left
+    \\
+    \\
+    \\def test_alias() -> Truth effects():
+    \\    return True
+    \\
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+
+// spec-case: NATIVE-TEST-3
+test "R3 canonical descriptors expand transparent aliases for discovery and nested contracts" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try writeProjectFile(&temp, "main.my", r3_alias_main);
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const root = std.fs.path.dirname(entry).?;
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
+    defer testing.allocator.free(cache);
+
+    // A boolean alias is discovered with the same default expectation as bool.
+    const tested = try r3TestInvoke(entry, null, cache);
+    defer testing.allocator.free(tested.stdout);
+    defer testing.allocator.free(tested.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, tested.term);
+    try testing.expect(std.mem.indexOf(u8, tested.stdout, "\"passed\":1") != null);
+
+    // The producer descriptor is canonical through nested transparent aliases.
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "list-interfaces", "--contracts", entry });
+    const contracts = try runCompiler(testing.allocator, args.items);
+    defer testing.allocator.free(contracts.stdout);
+    defer testing.allocator.free(contracts.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, contracts.term);
+    try testing.expect(std.mem.indexOf(u8, contracts.stdout, "\"version\":\"interface-contracts-v2\"") != null);
+    for ([_][]const u8{
+        "{\"name\":\"Count\",\"kind\":\"alias\",\"signature\":\"\",\"generics\":\"\",\"permissions\":\"\",\"shape\":\"target:i64\"}",
+        "{\"name\":\"Counts\",\"kind\":\"alias\",\"signature\":\"\",\"generics\":\"\",\"permissions\":\"\",\"shape\":\"target:[2]i64\"}",
+        "{\"name\":\"Chosen\",\"kind\":\"alias\",\"signature\":\"\",\"generics\":\"\",\"permissions\":\"\",\"shape\":\"target:main::Pair[i64]\"}",
+        "{\"name\":\"size\",\"kind\":\"function\",\"signature\":\"def(values:[2]i64)->i64\"",
+        "{\"name\":\"pick\",\"kind\":\"function\",\"signature\":\"def(value:main::Pair[i64])->i64\"",
+        "{\"name\":\"test_alias\",\"kind\":\"function\",\"signature\":\"def()->bool\"",
+    }) |needle| {
+        testing.expect(std.mem.indexOf(u8, contracts.stdout, needle) != null) catch |err| {
+            std.debug.print("missing canonical contract fragment: {s}\n", .{needle});
+            return err;
+        };
+    }
+}
+
+const r3_scalar_main =
+    \\module main
+    \\import reading
+    \\export test_reading
+    \\
+    \\
+    \\def test_reading() -> bool effects():
+    \\    return reading.sample() == 42
+    \\
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+const r3_scalar_production =
+    \\module reading
+    \\export sample
+    \\
+    \\
+    \\def sample() -> int effects():
+    \\    return todo[int]()
+;
+const r3_nominal_main =
+    \\module main
+    \\import reading
+    \\export test_reading
+    \\
+    \\
+    \\def test_reading() -> bool effects():
+    \\    return True
+    \\
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+const r3_nominal_production =
+    \\module reading
+    \\export D
+    \\export sample
+    \\
+    \\
+    \\domain D: i64:
+    \\    def make(x: i64) -> D effects():
+    \\        return wrap[D](x)
+    \\
+    \\
+    \\def sample() -> D effects():
+    \\    return todo[D]()
+;
+const r3_nominal_fake =
+    \\module reading
+    \\export D
+    \\export E
+    \\export sample
+    \\
+    \\
+    \\domain D: i64:
+    \\    def make(x: i64) -> D effects():
+    \\        return wrap[D](x)
+    \\
+    \\
+    \\domain E: i64:
+    \\    def make(x: i64) -> E effects():
+    \\        return wrap[E](x)
+    \\
+    \\
+    \\def sample() -> E effects():
+    \\    return E.make(1)
+;
+
+// spec-case: NATIVE-TEST-3
+test "R3 canonical descriptors compare provider scalar and nominal contracts" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try writeProjectFile(&temp, "main.my", r3_scalar_main);
+    try writeProjectFile(&temp, "reading.my", r3_scalar_production);
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const root = std.fs.path.dirname(entry).?;
+    const cases_path = try std.fs.path.join(testing.allocator, &.{ root, "cases.json" });
+    defer testing.allocator.free(cases_path);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
+    defer testing.allocator.free(cache);
+
+    const equivalent =
+        \\module reading
+        \\export sample
+        \\
+        \\
+        \\def sample() -> i64 effects():
+        \\    return 42
+    ;
+    try r3WriteCases(&temp, "cases.json", "main::test_reading", "reading.my", equivalent);
+    const accepted = try r3TestInvoke(entry, cases_path, cache);
+    defer testing.allocator.free(accepted.stdout);
+    defer testing.allocator.free(accepted.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, accepted.term);
+    try testing.expect(std.mem.indexOf(u8, accepted.stdout, "\"passed\":1") != null);
+
+    const scalar_variants = [_][]const u8{
+        \\module reading
+        \\export sample
+        \\
+        \\
+        \\def sample() -> u8 effects():
+        \\    return 42
+        ,
+        \\module reading
+        \\export sample
+        \\
+        \\
+        \\def sample() -> str effects():
+        \\    return "x"
+        ,
+    };
+    for (scalar_variants) |fake| {
+        try r3WriteCases(&temp, "cases.json", "main::test_reading", "reading.my", fake);
+        const rejected = try r3TestInvoke(entry, cases_path, cache);
+        defer testing.allocator.free(rejected.stdout);
+        defer testing.allocator.free(rejected.stderr);
+        try testing.expect(rejected.term != .exited or rejected.term.exited != 0);
+        try testing.expect(std.mem.indexOf(u8, rejected.stderr, "IncompatibleProvider") != null);
+    }
+
+    try writeProjectFile(&temp, "main.my", r3_nominal_main);
+    try writeProjectFile(&temp, "reading.my", r3_nominal_production);
+    try r3WriteCases(&temp, "cases.json", "main::test_reading", "reading.my", r3_nominal_fake);
+    const nominal = try r3TestInvoke(entry, cases_path, cache);
+    defer testing.allocator.free(nominal.stdout);
+    defer testing.allocator.free(nominal.stderr);
+    try testing.expect(nominal.term != .exited or nominal.term.exited != 0);
+    try testing.expect(std.mem.indexOf(u8, nominal.stderr, "IncompatibleProvider") != null);
+}
