@@ -1,0 +1,16 @@
+workload,family,target_lines,state,sample,wall_ms,peak_rss_kb,exit,timed_out,success,parsed_performed,parsed_reused,checked_performed,checked_reused,specializations_performed,specialization_bodies_performed,specialization_bodies_reused,symbolic_templates_performed,symbolic_templates_reused,semantic_retained_bytes,semantic_ordinary_bytes,semantic_symbolic_bytes,semantic_specialization_bytes,semantic_evicted,lowered_performed,emitted_performed,links_performed,tests_performed,tests_cached,tests_executed,reused_results,bypassed,phase_count
+ordinary-100k,ordinary,100000,cold,0,1212.330,543936,0,False,True,66,0,33475,0,0,0,0,0,0,16776636,16776636,0,0,0,0,0,0,0,,,,[],14
+ordinary-100k,ordinary,100000,cold,1,1219.401,543864,0,False,True,66,0,33475,0,0,0,0,0,0,16776636,16776636,0,0,0,0,0,0,0,,,,[],14
+ordinary-100k,ordinary,100000,cold,2,1219.629,543688,0,False,True,66,0,33475,0,0,0,0,0,0,16776636,16776636,0,0,0,0,0,0,0,,,,[],14
+ordinary-100k,ordinary,100000,cold,3,1227.799,543832,0,False,True,66,0,33475,0,0,0,0,0,0,16776636,16776636,0,0,0,0,0,0,0,,,,[],14
+ordinary-100k,ordinary,100000,cold,4,1223.132,543784,0,False,True,66,0,33475,0,0,0,0,0,0,16776636,16776636,0,0,0,0,0,0,0,,,,[],14
+ordinary-100k,ordinary,100000,unchanged,0,97.276,39788,0,False,True,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,[],2
+ordinary-100k,ordinary,100000,unchanged,1,96.474,39788,0,False,True,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,[],2
+ordinary-100k,ordinary,100000,unchanged,2,97.941,39788,0,False,True,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,[],2
+ordinary-100k,ordinary,100000,unchanged,3,94.666,39788,0,False,True,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,[],2
+ordinary-100k,ordinary,100000,unchanged,4,100.689,39788,0,False,True,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,[],2
+ordinary-100k,ordinary,100000,implementation_edit,0,994.307,441608,0,False,True,1,65,24655,8820,0,0,0,0,0,16775562,16775562,0,0,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-length-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]",15
+ordinary-100k,ordinary,100000,implementation_edit,1,978.727,442212,0,False,True,1,65,24655,8820,0,0,0,0,0,16775562,16775562,0,0,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]",15
+ordinary-100k,ordinary,100000,implementation_edit,2,980.934,442124,0,False,True,1,65,24655,8820,0,0,0,0,0,16775562,16775562,0,0,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]",15
+ordinary-100k,ordinary,100000,implementation_edit,3,981.849,442184,0,False,True,1,65,24655,8820,0,0,0,0,0,16775562,16775562,0,0,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]",15
+ordinary-100k,ordinary,100000,implementation_edit,4,979.328,442028,0,False,True,1,65,24655,8820,0,0,0,0,0,16775562,16775562,0,0,0,0,0,0,0,,,,"[{""reason"": ""no-retained-body"", ""count"": 24653}, {""reason"": ""declaration-region-changed"", ""count"": 1}, {""reason"": ""relocation-failed"", ""count"": 1}]",15

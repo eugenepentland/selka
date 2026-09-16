@@ -1,0 +1,32 @@
+# S1 final rerun identity
+
+commit: c18c0d187f4478e240c5a8373d7db866f3e5fe40
+branch: codex/velocity-integration
+measured compiler: /tmp/bisect-c18c0d18/zig-out/bin/mylang (clean detached worktree at c18c0d18; ReleaseFast)
+compiler sha256: 8e58100c03aaad22cb1c9edcb56d8aa91266228c9feec88b5c18867bb584cb48
+features compiler_sha256: 431cdcd620b5e50517e981e0990a21f1f2f03732d1c79b59b5dd9382e37c6aa5
+qbe: /tmp/bisect-c18c0d18/zig-out/bin/qbe sha256 966c8ce714289a797ea93043f17dbfb15365e546afb2c7a64575b06f139325bb (.qbeversion 1.3)
+zig: 0.17.0-dev.1683+5ceec001b at /home/epentland/.local/bin/zig
+harness: /tmp/bisect-c18c0d18/scripts/profile_large_project.py (c18c0d18 tree)
+host: linuxserver, 12th Gen Intel Core i7-12700H, 20 threads, 30 GiB RAM, Ubuntu 26.04, Linux 7.0.0-31-generic x86_64
+load: shared host concurrent with another agent editing the main worktree; loads recorded per run
+
+## Main-worktree contamination (quarantined)
+The handoff ReleaseFast main-worktree binary (28,638,464 bytes, sha256 624818799473f784d7bba277fa5e177d606c90d731356d1475bb154652f09641, features 431cdcd6...) was overwritten at 2026-09-16 17:09:19 UTC by another agent with an 82,735,871-byte Debug build (sha256 0a5ef78c..., features 298f871e...). Four tracked files (CLAUDE.md, build.zig, build_qbe_assets.zig, src/qbe_build_test.zig) were also modified uncommitted during the run. The first 10k matrix and the attempted 100k run are preserved under contaminated/ and are NOT used for any headline number.
+
+## Branch advanced after the instructed commit (identity note)
+
+While this task ran the integration branch received three commits on top of
+c18c0d18: 7472a0da (focus build graph), 1c40467f and 9a177b53 (audits). None
+touches a production compiler source (`git diff c18c0d18..HEAD -- src/` lists
+only src/qbe_build_test.zig), but build_qbe_assets.zig now excludes test-only
+sources from compiler_identity, so a ReleaseFast build of HEAD reports a
+different identity:
+
+- HEAD at report time: 9a177b532348228e48f54016b995e6fd35eb1381
+- HEAD ReleaseFast binary: /tmp/head-9a177b53/zig-out/bin/mylang
+  sha256 6951cf789894f88994c85ede60c83be11d11355c145aaac6b0b559a920f504df
+  features compiler_sha256 eefa70b382a501c83032ee2e88939d0f5d886261702afa5ea683de0d3e8e964d
+- 5-sample ordinary-100k spot check on HEAD: cold p50 1219.6, unchanged 97.3,
+  implementation_edit 980.9 ms (pinned c18c0d18: 1246.7 / 101.3 / 998.0) —
+  within noise. Evidence: head-verify-100k.json.

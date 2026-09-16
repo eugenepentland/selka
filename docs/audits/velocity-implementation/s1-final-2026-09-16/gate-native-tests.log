@@ -1,0 +1,61 @@
+start 2026-09-16T17:45:59Z load=12.17 9.43 6.82 1/993 4095003
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source d2ec9a489e00)
+guardian: diff-scoped vs a9e29d4845ab2f8a700eeb238ed03023d2ac701e: 107/350 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 5 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 10 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 2239 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs a9e29d4845ab2f8a700eeb238ed03023d2ac701e, 107 file(s) in scope
+guardian: diff-scoped vs a9e29d4845ab2f8a700eeb238ed03023d2ac701e: 107/350 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 5 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 10 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 2239 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs a9e29d4845ab2f8a700eeb238ed03023d2ac701e, 107 file(s) in scope
+test-native-tests
++- run test w
+guardian/test: 56 test(s) selected
+guardian/test: test wall 0.03s
+guardian/test: PASS — 56 passed
+guardian/test: RESULT {"passed":56,"failed":0,"skipped":0}
+failed command: SHLVL=1 PS1="dsh> " OLDPWD=/home/epentland/ai/canopy/mylang _=/usr/bin/timeout MYLANG_QBE=/tmp/bisect-c18c0d18/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/1381332ae4dc3b394f8cb1a7af84b6f8/test --cache-dir=./.zig-cache --seed=0x81712081 --listen=-
+
+Build Summary: 22/22 steps succeeded; 56/56 tests passed
+test-native-tests success
++- run test 56 pass (56 total) 40ms MaxRSS:8M
+|  +- compile test debug native success 982ms MaxRSS:192M
+|  |  +- WriteFile src/native_bytes.c success
+|  +- install success
+|     +- install mylang success
+|     |  +- compile exe mylang debug native success 2s MaxRSS:307M
+|     |  |  +- WriteFile src/native_bytes.c (reused)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check success 802ms
+|     |     +- guardian-selfcheck success
+|     |        +- run ../guardian-zig/zig-out/bin/guardian-check success 4ms
+|     +- install qbe cached
+|     |  +- compile exe qbe fast native cached 17ms MaxRSS:39M
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|     +- install generated/ success
+|     |  +- run exe mylang (mylang-runtime) success 1s
+|     |     +- compile exe mylang debug native (+1 more reused dependencies)
+|     |     +- compile exe qbe fast native (reused)
+|     +- install board-trial success
+|     |  +- compile exe board-trial debug native success 2s MaxRSS:260M
+|     |  |  +- options cached
+|     |  |  |  +- compile exe qbe fast native (reused)
+|     |  |  +- WriteFile src/native_bytes.c (reused)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|     +- install schematic-svg success
+|     |  +- compile exe schematic-svg debug native success 2s MaxRSS:258M
+|     |  |  +- options (+1 more reused dependencies)
+|     |  |  +- WriteFile src/native_bytes.c (reused)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|     +- install mylang-io success
+|     |  +- compile exe mylang-io debug native success 1s MaxRSS:259M
+|     |  |  +- options (+1 more reused dependencies)
+|     |  |  +- WriteFile src/native_bytes.c (reused)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|     +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- run ../guardian-zig/zig-out/bin/guardian-check success 773ms
+   +- guardian-selfcheck (+1 more reused dependencies)
+
+exit=0
+end 2026-09-16T17:46:03Z load=13.04 9.65 6.91 1/1001 4095517

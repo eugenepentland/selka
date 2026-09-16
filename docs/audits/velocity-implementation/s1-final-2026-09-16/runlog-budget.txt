@@ -1,0 +1,80 @@
+start 2026-09-16T17:56:19Z load=15.61 12.08 8.55 14/1024 125821
+### budget 0 MiB
+[s1] measuring ordinary-100k ...
+[s1]   state cold ...
+[s1]   state unchanged ...
+[s1]   state implementation_edit ...
+[s1] ordinary-100k: measured
+{
+  "output": "/home/epentland/ai/canopy/mylang/docs/audits/velocity-implementation/s1-final-2026-09-16/budget-0mib.json",
+  "workloads": [
+    {
+      "label": "ordinary-100k",
+      "status": "measured",
+      "objectives": {
+        "target_lines": 100000,
+        "implementation_edit": {
+          "p95_ms": 1114.1628180048428,
+          "under_500ms": false
+        },
+        "cold": {
+          "p95_ms": 2505.1122910226695,
+          "under_500ms": false
+        }
+      }
+    }
+  ]
+}
+### budget 16 MiB
+[s1] measuring ordinary-100k ...
+[s1]   state cold ...
+[s1]   state unchanged ...
+[s1]   state implementation_edit ...
+[s1] ordinary-100k: measured
+{
+  "output": "/home/epentland/ai/canopy/mylang/docs/audits/velocity-implementation/s1-final-2026-09-16/budget-16mib.json",
+  "workloads": [
+    {
+      "label": "ordinary-100k",
+      "status": "measured",
+      "objectives": {
+        "target_lines": 100000,
+        "implementation_edit": {
+          "p95_ms": 1161.167365993606,
+          "under_500ms": false
+        },
+        "cold": {
+          "p95_ms": 1429.5604189974256,
+          "under_500ms": false
+        }
+      }
+    }
+  ]
+}
+### budget 64 MiB
+[s1] measuring ordinary-100k ...
+[s1]   state cold ...
+[s1]   state unchanged ...
+[s1]   state implementation_edit ...
+[s1] ordinary-100k: measured
+{
+  "output": "/home/epentland/ai/canopy/mylang/docs/audits/velocity-implementation/s1-final-2026-09-16/budget-64mib.json",
+  "workloads": [
+    {
+      "label": "ordinary-100k",
+      "status": "measured",
+      "objectives": {
+        "target_lines": 100000,
+        "implementation_edit": {
+          "p95_ms": 1301.4455960073974,
+          "under_500ms": false
+        },
+        "cold": {
+          "p95_ms": 1808.9204599964432,
+          "under_500ms": false
+        }
+      }
+    }
+  ]
+}
+end 2026-09-16T17:57:23Z load=8.52 10.73 8.32 2/987 138945

@@ -1,0 +1,16 @@
+workload,family,target_lines,state,sample,wall_ms,peak_rss_kb,exit,timed_out,success,parsed_performed,parsed_reused,checked_performed,checked_reused,specializations_performed,specialization_bodies_performed,specialization_bodies_reused,symbolic_templates_performed,symbolic_templates_reused,semantic_retained_bytes,semantic_ordinary_bytes,semantic_symbolic_bytes,semantic_specialization_bytes,semantic_evicted,lowered_performed,emitted_performed,links_performed,tests_performed,tests_cached,tests_executed,reused_results,bypassed,phase_count
+ordinary-100k,ordinary,100000,cold,0,1491.686,525772,0,False,True,66,0,33475,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]",14
+ordinary-100k,ordinary,100000,cold,1,1972.835,525752,0,False,True,66,0,33475,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]",14
+ordinary-100k,ordinary,100000,cold,2,1452.254,525632,0,False,True,66,0,33475,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]",14
+ordinary-100k,ordinary,100000,cold,3,2505.112,525932,0,False,True,66,0,33475,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]",14
+ordinary-100k,ordinary,100000,cold,4,1409.580,525804,0,False,True,66,0,33475,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]",14
+ordinary-100k,ordinary,100000,unchanged,0,123.708,40108,0,False,True,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,[],2
+ordinary-100k,ordinary,100000,unchanged,1,125.488,40108,0,False,True,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,[],2
+ordinary-100k,ordinary,100000,unchanged,2,125.186,39948,0,False,True,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,[],2
+ordinary-100k,ordinary,100000,unchanged,3,128.269,40108,0,False,True,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,[],2
+ordinary-100k,ordinary,100000,unchanged,4,129.978,39948,0,False,True,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,[],2
+ordinary-100k,ordinary,100000,implementation_edit,0,1080.113,410280,0,False,True,1,65,33475,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]",15
+ordinary-100k,ordinary,100000,implementation_edit,1,1095.734,410372,0,False,True,1,65,33475,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]",15
+ordinary-100k,ordinary,100000,implementation_edit,2,1114.163,410276,0,False,True,1,65,33475,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]",15
+ordinary-100k,ordinary,100000,implementation_edit,3,1071.235,410060,0,False,True,1,65,33475,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]",15
+ordinary-100k,ordinary,100000,implementation_edit,4,1061.379,410424,0,False,True,1,65,33475,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,"[{""reason"": ""semantic-reuse-unavailable"", ""count"": 1}]",15

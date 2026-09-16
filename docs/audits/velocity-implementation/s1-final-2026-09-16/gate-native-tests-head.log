@@ -1,0 +1,61 @@
+start 2026-09-16T18:04:19Z load=1.45 4.25 6.10 1/993 222703
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source d2ec9a489e00)
+guardian: diff-scoped vs a9e29d4845ab2f8a700eeb238ed03023d2ac701e: 107/350 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 5 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 10 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 2239 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs a9e29d4845ab2f8a700eeb238ed03023d2ac701e, 107 file(s) in scope
+guardian: diff-scoped vs a9e29d4845ab2f8a700eeb238ed03023d2ac701e: 107/350 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 5 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 10 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 2239 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs a9e29d4845ab2f8a700eeb238ed03023d2ac701e, 107 file(s) in scope
+test-native-tests
++- run test w
+guardian/test: 56 test(s) selected
+guardian/test: test wall 0.03s
+guardian/test: PASS — 56 passed
+guardian/test: RESULT {"passed":56,"failed":0,"skipped":0}
+failed command: OLDPWD=/home/epentland/ai/canopy/mylang MYLANG_QBE=/tmp/head-9a177b53/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/aa6768fa1589d23e4bec220eb565792b/test --cache-dir=./.zig-cache --seed=0xed8e4e2b --listen=-
+
+Build Summary: 22/22 steps succeeded; 56/56 tests passed
+test-native-tests success
++- run test 56 pass (56 total) 47ms MaxRSS:7M
+|  +- compile test debug native success 742ms MaxRSS:192M
+|  |  +- WriteFile src/native_bytes.c success
+|  +- install success
+|     +- install mylang success
+|     |  +- compile exe mylang debug native success 2s MaxRSS:309M
+|     |  |  +- WriteFile src/native_bytes.c (reused)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|     |     +- guardian-selfcheck success
+|     |        +- run ../guardian-zig/zig-out/bin/guardian-check success 5ms
+|     +- install qbe cached
+|     |  +- compile exe qbe fast native cached 25ms MaxRSS:39M
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|     +- install generated/ success
+|     |  +- run exe mylang (mylang-runtime) success 1s
+|     |     +- compile exe mylang debug native (+1 more reused dependencies)
+|     |     +- compile exe qbe fast native (reused)
+|     +- install board-trial success
+|     |  +- compile exe board-trial debug native success 1s MaxRSS:261M
+|     |  |  +- options cached
+|     |  |  |  +- compile exe qbe fast native (reused)
+|     |  |  +- WriteFile src/native_bytes.c (reused)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|     +- install schematic-svg success
+|     |  +- compile exe schematic-svg debug native success 1s MaxRSS:259M
+|     |  |  +- options (+1 more reused dependencies)
+|     |  |  +- WriteFile src/native_bytes.c (reused)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|     +- install mylang-io success
+|     |  +- compile exe mylang-io debug native success 1s MaxRSS:257M
+|     |  |  +- options (+1 more reused dependencies)
+|     |  |  +- WriteFile src/native_bytes.c (reused)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|     +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- run ../guardian-zig/zig-out/bin/guardian-check success 871ms
+   +- guardian-selfcheck (+1 more reused dependencies)
+
+exit=0
+end 2026-09-16T18:04:22Z load=2.53 4.43 6.14 1/992 223173

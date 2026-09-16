@@ -1,0 +1,10 @@
+start 2026-09-16T17:47:20Z load=3.59 7.45 6.36 1/989 4096532
+[native] ordinary-10k: first=1701.2580450100359ms warm=49.52929500723258ms forced=327.432489983039ms
+[native] ordinary-100k: first=15906.621689995518ms warm=423.6196510028094ms forced=2731.6625970124733ms
+[native] managed-10k: first=8456.958449009107ms warm=53.579887986416ms forced=413.63913897657767ms
+[native] managed-100k: first=11268.85081801447ms warm=415.7852520002052ms forced=2980.711037002038ms
+{
+  "output": "/home/epentland/ai/canopy/mylang/docs/audits/velocity-implementation/s1-final-2026-09-16/native-probe.json"
+}
+exit=0
+end 2026-09-16T17:52:59Z load=15.02 8.89 6.90 16/1052 88165

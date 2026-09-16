@@ -1,0 +1,87 @@
+2026-09-16T17:08:08Z load=15.29 12.52 12.36 18/1015 3677967
+start 2026-09-16T17:08:08Z load=15.29 12.52 12.36 17/1016 3677970
+[s1] measuring ordinary-10k ...
+[s1]   state cold ...
+[s1]   state unchanged ...
+[s1]   state no_cache ...
+[s1]   state implementation_edit ...
+[s1]   state constant_edit ...
+[s1]   state signature_edit ...
+[s1]   state union_edit ...
+[s1]   state provider_edit ...
+[s1]   state effect_edit ...
+[s1]   state session_implementation_edit ...
+[s1]   state session_constant_edit ...
+[s1]   state forced_tests ...
+[s1] ordinary-10k: measured
+[s1] measuring managed-10k ...
+[s1]   state cold ...
+[s1]   state unchanged ...
+[s1]   state no_cache ...
+[s1]   state implementation_edit ...
+[s1]   state constant_edit ...
+[s1]   state signature_edit ...
+[s1]   state union_edit ...
+[s1]   state provider_edit ...
+[s1]   state effect_edit ...
+[s1]   state session_implementation_edit ...
+[s1]   state session_constant_edit ...
+[s1]   state forced_tests ...
+[s1] managed-10k: measured
+{
+  "output": "docs/audits/velocity-implementation/s1-final-2026-09-16/matrix-10k.json",
+  "workloads": [
+    {
+      "label": "ordinary-10k",
+      "status": "measured",
+      "objectives": {
+        "target_lines": 10000,
+        "implementation_edit": {
+          "p95_ms": 397.32804798404686,
+          "under_500ms": true
+        },
+        "constant_edit": {
+          "p95_ms": 395.2728540170938,
+          "under_500ms": true
+        },
+        "signature_edit": {
+          "p95_ms": 386.38806401286274,
+          "under_500ms": true
+        },
+        "cold": {
+          "p95_ms": 499.4791700155474,
+          "under_500ms": true
+        },
+        "forced_tests": {
+          "p95_ms": 871.084455982782,
+          "under_1000ms": true
+        }
+      }
+    },
+    {
+      "label": "managed-10k",
+      "status": "measured",
+      "objectives": {
+        "target_lines": 10000,
+        "implementation_edit": {
+          "p95_ms": 424.38975602271967,
+          "under_500ms": true
+        },
+        "constant_edit": {
+          "p95_ms": 172.34742600703612,
+          "under_500ms": true
+        },
+        "cold": {
+          "p95_ms": 496.0419549897779,
+          "under_500ms": true
+        },
+        "forced_tests": {
+          "p95_ms": 15503.370396996615,
+          "under_1000ms": false
+        }
+      }
+    }
+  ]
+}
+exit=0
+end 2026-09-16T17:10:00Z load=8.46 11.44 12.02 5/989 3701479

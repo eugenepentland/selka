@@ -1,0 +1,86 @@
+start 2026-09-16T17:27:05Z load=4.06 5.13 7.30 2/987 3915042
+[s1] measuring ordinary-10k ...
+[s1]   state cold ...
+[s1]   state unchanged ...
+[s1]   state no_cache ...
+[s1]   state implementation_edit ...
+[s1]   state constant_edit ...
+[s1]   state signature_edit ...
+[s1]   state union_edit ...
+[s1]   state provider_edit ...
+[s1]   state effect_edit ...
+[s1]   state session_implementation_edit ...
+[s1]   state session_constant_edit ...
+[s1]   state forced_tests ...
+[s1] ordinary-10k: measured
+[s1] measuring managed-10k ...
+[s1]   state cold ...
+[s1]   state unchanged ...
+[s1]   state no_cache ...
+[s1]   state implementation_edit ...
+[s1]   state constant_edit ...
+[s1]   state signature_edit ...
+[s1]   state union_edit ...
+[s1]   state provider_edit ...
+[s1]   state effect_edit ...
+[s1]   state session_implementation_edit ...
+[s1]   state session_constant_edit ...
+[s1]   state forced_tests ...
+[s1] managed-10k: measured
+{
+  "output": "/home/epentland/ai/canopy/mylang/docs/audits/velocity-implementation/s1-final-2026-09-16/matrix-10k.json",
+  "workloads": [
+    {
+      "label": "ordinary-10k",
+      "status": "measured",
+      "objectives": {
+        "target_lines": 10000,
+        "implementation_edit": {
+          "p95_ms": 88.299024006119,
+          "under_500ms": true
+        },
+        "constant_edit": {
+          "p95_ms": 90.44493897818029,
+          "under_500ms": true
+        },
+        "signature_edit": {
+          "p95_ms": 83.43338602571748,
+          "under_500ms": true
+        },
+        "cold": {
+          "p95_ms": 125.0729369930923,
+          "under_500ms": true
+        },
+        "forced_tests": {
+          "p95_ms": 356.257823004853,
+          "under_1000ms": true
+        }
+      }
+    },
+    {
+      "label": "managed-10k",
+      "status": "measured",
+      "objectives": {
+        "target_lines": 10000,
+        "implementation_edit": {
+          "p95_ms": 107.09934300393797,
+          "under_500ms": true
+        },
+        "constant_edit": {
+          "p95_ms": 123.45570398611017,
+          "under_500ms": true
+        },
+        "cold": {
+          "p95_ms": 147.36556902062148,
+          "under_500ms": true
+        },
+        "forced_tests": {
+          "p95_ms": 446.94029400125146,
+          "under_1000ms": true
+        }
+      }
+    }
+  ]
+}
+exit=0
+end 2026-09-16T17:27:48Z load=3.20 4.77 7.08 2/979 3925798

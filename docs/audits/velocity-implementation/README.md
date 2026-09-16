@@ -1,6 +1,6 @@
 # Development velocity: execution ledger
 
-Status: **W0 in progress — baseline established, contracts frozen 2026-09-15.**
+Status: **historical W0 ledger — baseline established, contracts frozen 2026-09-15; the current executable status is in the dated "Final S1 rerun" section at the end and in [`s1-final-report-2026-09-16.md`](s1-final-report-2026-09-16.md).**
 
 Plan: [development-velocity-implementation-plan-2026-09-15.md](../development-velocity-implementation-plan-2026-09-15.md)
 Handoff: [development-velocity-agent-handoff-2026-09-15.md](../development-velocity-agent-handoff-2026-09-15.md)
@@ -191,3 +191,31 @@ Correction-pass integration log (2026-09-16):
 - `0c420fbc` G1 + N1: graph-key binding (v2 envelope, structural validation) and directory `--no-cache` forwarding; end-to-end directory run executes 2/0 with zero durable files, including `--jobs 1`.
 - `ddacfb57`/`ddacfb57` retention package rebased and merged (G1/N1 preceded it): bounded-prefix ordinary retention (SEMANTIC-CACHE-9), reference-sized ordinary relocation (SEMANTIC-CACHE-10), clear releases all three kinds (SEMANTIC-CACHE-13), shared `reuse.max_bytes` budget across ordinary/symbolic/specialization entries with deterministic eviction and per-kind reporting (SEMANTIC-CACHE-14).
 - `610656cf` retains cumulative eviction counts across `clear` and finalizes the SPEC/features registration; final Debug `zig build test` 1199/1199, ReleaseFast 1198/1199 with 1 Debug-only skip (both 39/39 steps).
+
+## Final S1 rerun — integrated `c18c0d18` (2026-09-16)
+
+The final S1 performance rerun on the integrated tree is recorded in
+[`s1-final-report-2026-09-16.md`](s1-final-report-2026-09-16.md) with raw
+evidence under [`s1-final-2026-09-16/`](s1-final-2026-09-16/). It supersedes the
+earlier "C4 blocked"/"per-function lazy lowering remains" rows above for the
+current executable:
+
+- Integrated HEAD is `c18c0d18` (merge of the warm-check telemetry/profiling
+  package and C4 selective native-test preparation/lowering).
+- C4 lowers only the `--select-file` closure. A changed snapshot runs
+  `native-test-graph` for checked facts without QBE work; an uncached selection
+  lowers/emits/links only the reachable closure; a warm unchanged selection and
+  an unused-helper edit lower/emit/link/execute nothing.
+- 100k ordinary first native build lowers 524 of 33,475 checked bodies and
+  completes in 15.6 s; 100k managed lowers 322 and completes in 11.3 s. The
+  affected-test objective is now measured, not blocked: forced-test p95
+  2,846.0 ms (ordinary) / 3,173.7 ms (managed).
+- The 100k check-feedback (<500 ms) and affected-test (<1 s) objectives remain
+  unmet. `dependency_key_preparation` is the largest remaining phase (518.6 ms
+  ordinary / 495.8 ms managed p50 per 100k implementation edit); retention
+  truncation stays a work multiplier and modest session benefit, and managed
+  `specialization_bodies` replay at 64/64.
+- Measurement caveat: the main worktree was concurrently mutated by another
+  agent (Debug binary overwrite plus four uncommitted tracked files); all final
+  numbers use a clean detached `c18c0d18` ReleaseFast worktree. The ledger rows
+  above are historical and were not rewritten.

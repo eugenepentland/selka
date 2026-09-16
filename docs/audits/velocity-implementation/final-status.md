@@ -1,8 +1,8 @@
 # Development velocity: implementation status
 
-Status: **core packages plus the R1–R4/HASH/WARM and C3/C4 correction passes integrated, with the final cache-retention accounting fix and S1 remeasurement recorded on top; release checklist partially met.**
+Status: **core packages plus the R1–R4/HASH/WARM and C3/C4 correction passes integrated, with the final cache-retention accounting fix and the final S1 rerun recorded on top; release checklist partially met.**
 Baseline: `9ce142e98cb22e684622ed1d5678071d6944206e` (post named-constraint fixes).
-Integration HEAD: `3f76446c` (correction-pass code gate; later commits record the D2 reconciliation and S1 evidence).
+Integration HEAD: `9a177b53` (three build/audit commits on top of the measured `c18c0d18`, the merge of the warm-check telemetry/profiling package and C4 selective native-test preparation/lowering; the two trees are byte-identical in production compiler sources — see the identity note in the final S1 report).
 Plan: [development-velocity-implementation-plan-2026-09-15.md](../development-velocity-implementation-plan-2026-09-15.md).
 Ledger and frozen contracts: [README.md](README.md), [contracts.md](contracts.md).
 
@@ -43,12 +43,16 @@ Ledger and frozen contracts: [README.md](README.md), [contracts.md](contracts.md
 
 Still open from the plan: the **productivity trial**. **B1** is closed by
 `3f76446c`; the **S1** remeasurement is recorded in
-[`s1-corrected-report-2026-09-16.md`](s1-corrected-report-2026-09-16.md) (the
-100k latency objectives remain unmet); **D2**'s documentation reconciliation is
-complete and its gates are green. C4's per-function lazy lowering/emission
-boundary also remains: a changed snapshot performs one whole-project preparation
-emission and an uncached selection builds the whole selected-provider library,
-while fully cached selections skip all lowering/emission/linking.
+[`s1-corrected-report-2026-09-16.md`](s1-corrected-report-2026-09-16.md) and the
+final integrated rerun in
+[`s1-final-report-2026-09-16.md`](s1-final-report-2026-09-16.md) (the 100k
+check-feedback and affected-test latency objectives remain unmet); **D2**'s
+documentation reconciliation is complete and its gates are green. C4 lowers only
+the selected closure: a changed snapshot runs `native-test-graph` for checked
+facts with no lowering or emission, and an uncached selection lowers/emits/links
+only the reachable function closure named in `--select-file`; a fully cached
+selection skips all lowering/emission/linking. See the final report for measured
+counters.
 
 ## Final gate evidence
 
@@ -96,8 +100,8 @@ Pinned toolchain: Zig `0.17.0-dev.1683+5ceec001b`; QBE built from `vendor/qbe`
 | Warm/cold/no-cache status, diagnostic, interface and native results agree | **Met for the implemented reuse scope** | C2/C3/C3S test cold/warm/`--no-cache` for ordinary bodies, symbolic templates and concrete specializations, including damage, contract isolation, concurrency and eviction; WARM proves in-place runtime edits refresh identity/archives without cleaning. C4 shows a warm unchanged native-test run executes zero tests with no lowering/emission/linking and that `--report` reconciles `executed_tests.performed/reused` with `native-tests-v1`. |
 | A fake can replace an unfinished production body against a checked contract | **Met** | P1 checks declarations/interfaces first, fully checks only the selected provider graph, validates every replaced public contract with the directional relation, and binds contract/provider/source identities into receipts. |
 | Configured architecture policy cannot be skipped by ordinary commands or caches | **Met** | A1 config discovery/enforcement cold and warm, statuses 2/3, cwd-independent, receipts include policy identity. |
-| Selective tests retain correctness and skip unnecessary compilation work | **Met for fully cached selections; per-function lazy lowering remains** | R1/R2 bind receipts to the selected closure and share one prepared graph/library per provider identity; C4 skips all lowering/emission/linking for a warm unchanged selection (zero executions) and executes only dependent tests after an edit. Any snapshot change still pays one whole-project preparation emission and an uncached selection builds the whole selected-provider library. |
-| Representative scale limits, latency and memory measured honestly | **Met as measurement; objectives not met** | Corrected S1 (ReleaseFast, `3f76446c`) low-load 100k p95: ordinary cold 1255.9 ms, unchanged 99.3 ms, implementation/constant/signature edits 1013.6–1113.7 ms, sessions 999.2–1009.6 ms; 10k edits 68.3–106.9 ms and forced tests 727.5/765.5 ms. 100k forced tests are blocked by whole-project lowering (150 s time-box). Budget/eviction evidence and the 500k gap remain in [`s1-corrected-report-2026-09-16.md`](s1-corrected-report-2026-09-16.md); productivity trial unrun. |
+| Selective tests retain correctness and skip unnecessary compilation work | **Met** | R1/R2 bind receipts to the selected closure and share one prepared graph/library per provider identity; C4 skips all lowering/emission/linking for a warm unchanged selection (zero executions, `executed_tests 0/1`). A changed snapshot runs `native-test-graph` for checked facts without lowering/emission, then `mylang test` builds only the `--select-file` closure: the final 100k ordinary first build lowers 524 of 33,475 checked bodies and a used-helper edit lowers only that closure; an unused-helper edit executes zero tests and lowers nothing. Whole-project lowering is not on the `mylang test` path. |
+| Representative scale limits, latency and memory measured honestly | **Met as measurement; objectives not met** | Final S1 rerun (ReleaseFast, pinned `8e58100c…`, low-load 100k, [`s1-final-report-2026-09-16.md`](s1-final-report-2026-09-16.md)): ordinary cold p95 1262.2 ms, unchanged 103.3 ms, implementation/constant/signature edits 1014.2–1020.5 ms, sessions 1041.2/1044.1 ms; managed edits 1091.3–1102.3 ms. 100k forced tests are now measured, not blocked: ordinary p95 2846.0 ms (first selective build 15.6 s), managed p95 3173.7 ms (first selective build 11.3 s); 10k forced p95 356.3/446.9 ms. Check feedback <500 ms and affected tests <1 s remain unmet. Budget/eviction evidence and the 500k gap remain in [`s1-corrected-report-2026-09-16.md`](s1-corrected-report-2026-09-16.md); productivity trial unrun. |
 | Current documentation and feature claims match the final executable | **Met** | D2 reconciled C3/C4 and the `native-test-graph-v2` boundary, the exact cache-retention accounting, `src/features.json`, README/tooling pages and VM/watch historical redirects, and confirmed `scripts/profile_large_project.py` emits only current syntax. Final gates: `test-doc-coverage` 121 features/0 failures, `test-docs` 441 blocks/0 failed, `fmt-check` 2/2, full Debug `39/39` steps. |
 | Relevant gates and Guardian feedback complete | **Met for the integrated scope** | Earlier Debug and ReleaseFast final gates green; B1/D2/S1 follow-up gates green (full Debug `39/39` steps on final `50a4c64a`, doc coverage and doc examples 0 failures); consolidated feedback committed to `~/ai/canopy/guardian-zig/FEEDBACK.md`. |
 
@@ -116,20 +120,23 @@ Pinned toolchain: Zig `0.17.0-dev.1683+5ceec001b`; QBE built from `vendor/qbe`
   (`specialization_bodies 64/64` at 16–128 MiB in the corrected profile), and the
   remaining misses are `specialization-missing-instance-identity`.
 - **Scale:** the default loader still bounds projects at 256 modules/16 MiB and
-  navigation rejects both 100k workloads. Corrected S1 shows ordinary-100k
-  `implementation_edit` p95 1013.6 ms vs the <500 ms target. The 16 MiB shared
-  retention budget is a demonstrated work multiplier and moderate session
-  benefit, not the established dominant wall-time cost: the corrected 20-sample
-  profile in
-  [`s1-profile-warm-2026-09-16.md`](s1-profile-warm-2026-09-16.md) measures
-  dependency-key preparation at 608–826 ms p50 after near-total replay, with
-  retention/publication second at 384–443 ms p50. Managed concrete
-  specialization bodies partially replay (`specialization_bodies 64/64`; the
-  remaining 64 misses are `specialization-missing-instance-identity`), and the
-  old `instantiated_specializations 128/0` counter is checked-program shape, not
-  body-replay evidence. Affected-test feedback at 100k remains blocked by
-  whole-project lowering; an eviction-cost workload with churn beyond the chosen
-  budget has not yet been built.
+  navigation rejects both 100k workloads. The final S1 rerun shows ordinary-100k
+  `implementation_edit` p95 1016.5 ms vs the <500 ms target and 100k forced tests
+  p95 2846.0 ms vs the <1 s affected-test target (both now measured). The 16 MiB
+  shared retention budget is a demonstrated work multiplier and moderate session
+  benefit, not the established dominant wall-time cost: the final report and the
+  20-sample profile in
+  [`s1-profile-warm-2026-09-16.md`](s1-profile-warm-2026-09-16.md) measure
+  dependency-key preparation as the largest warm-check phase (final ordinary
+  100k implementation edit p50 518.6 ms), with retention/publication second
+  (final 75.9 ms at 16 MiB; the profile's 384–443 ms at 64/128 MiB). Managed
+  concrete specialization bodies partially replay (`specialization_bodies 64/64`;
+  the remaining 64 misses are `specialization-missing-instance-identity`), and
+  the old `instantiated_specializations 128/0` counter is checked-program shape,
+  not body-replay evidence. C4 makes 100k affected-test feedback feasible
+  (whole-project lowering is no longer required), but it does not meet the <1 s
+  target; an eviction-cost workload with churn beyond the chosen budget has not
+  yet been built.
 - **Productivity trial:** D2's documentation gates are now green; the comparative
   unfamiliar-code productivity trial remains outstanding and no superiority claim
   is made.
