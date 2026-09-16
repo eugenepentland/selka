@@ -103,3 +103,23 @@ Never share a mutable checkout, installed binary or `zig-out`/`.zig-cache`.
 | 2026-09-15 | `86ffbb7c` | C2 start | persistence package launched |
 | 2026-09-15 | `88691e7b` | C1R/P1/C2 checkpoint | pre-C2 gates 1147/1147 Debug and 1146/1147 ReleaseFast; post-C2 gates 1153/1153 Debug and 1152/1153 ReleaseFast (1 skipped) |
 | 2026-09-15 | (note) | build cache | a warm `.zig-cache` can keep a stale generated `qbe_build_assets` module after large `src/` edits; cold `zig build test-units` passes 969/969. Final gate must be cold. |
+
+## Corrective pass — C2/P1 review 2026-09-16 (R1–R4 + carried gaps)
+
+Source: [development-velocity-c2-p1-review-2026-09-16.md](../development-velocity-c2-p1-review-2026-09-16.md).
+
+| ID | Finding | Owner branch | Worktree | Base | Status |
+| --- | --- | --- | --- | --- | --- |
+| R1/R2 | Bind receipt reuse to the selected dependency closure; memoize preparation/executor per selected provider graph | `codex/velocity-r12` | `velocity-r12` | `6a99ef4b` | in progress |
+| R3 | Canonical declaration-level type descriptors for discovery and provider comparison | `codex/velocity-r3` | `velocity-r3` | `6a99ef4b` | in progress |
+| R4 | Amortize persistent-cache inventory/eviction (quadratic → linear) | `codex/velocity-r4` | `velocity-r4` | `6a99ef4b` | in progress |
+| HASH | Declared mutation positions + return-origin in the public API fingerprint | `codex/velocity-hash` | `velocity-hash` | `6a99ef4b` | in progress |
+| WARM | Generated `qbe_build_assets` warm-build invalidation | `codex/velocity-warm` | `velocity-warm` | `6a99ef4b` | in progress |
+
+Acceptance for the pass: R1 unused edits execute zero tests; R2 two ordinary cases share
+one preparation and one native library while distinct graphs stay isolated; R3 boolean
+aliases discover and `int`/`i64` providers match while different scalar/nominal types
+reject; R4 initial namespace population is approximately linear in `statx` work with
+bounds/races/damage intact; HASH changes the function and project interface hashes on a
+`mutates(a)`→`mutates(b)` edit; WARM picks up a changed bundled runtime source without a
+clean build. C2/P1 positive probes must remain green.
