@@ -173,9 +173,9 @@ Source: [development-velocity-c3-c4-review-2026-09-16.md](../development-velocit
 | --- | --- | --- | --- |
 | G1 | Reduced graph not bound to its requested input key | integration (`native_test_graph.zig`) | **done** `0c420fbc` — v2 envelope stores/verifies key + structural validation; copied-entry regression |
 | N1 | Directory tests ignored `--no-cache` | integration (`native_test_directory.zig`) | **done** `0c420fbc` — flag forwarded to every child; seeded and empty caches execute 2/0 with zero durable files, including `--jobs 1` |
-| C3R1 | `check-session clear` retained generic tables | `codex/velocity-retain` | in progress |
-| C3R2 | Generic tables lack the shared retention budget | `codex/velocity-retain` | in progress |
-| WIP | Rebase/review preserved retention/remap work | `codex/velocity-retain` | in progress |
+| C3R1 | `check-session clear` retained generic tables | `codex/velocity-retain` | **done** `ddacfb57`, merged |
+| C3R2 | Generic tables lack the shared retention budget | `codex/velocity-retain` | **done** `ddacfb57`, merged; SEMANTIC-CACHE-14 registered |
+| WIP | Rebase/review preserved retention/remap work | `codex/velocity-retain` | **done** `ddacfb57`; rebased onto C3/C3S, SEMANTIC-CACHE-9/10 registered |
 
 After this pass: S1 remeasurement on one corrected commit, C4 per-function lazy
 lowering, D2, productivity trial and final acceptance remain open.
