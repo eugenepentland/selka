@@ -11,6 +11,7 @@ const interfaces = @import("interfaces.zig");
 const cache_key = @import("cache_key.zig");
 const semantic_store = @import("semantic_store.zig");
 const generic_cache = @import("generic_cache.zig");
+const generic_specializations = @import("generic_specializations.zig");
 
 /// Re-exported so host wiring can bind the full contract without depending on
 /// the compiler module's internal file layout.
@@ -21,6 +22,8 @@ pub const Store = semantic_store.Store;
 pub const default_store_directory = semantic_store.default_directory;
 /// C3 symbolic-template reuse surface for host wiring and reports.
 pub const symbolic = generic_cache;
+/// C3 concrete-specialization reuse surface for host wiring and reports.
+pub const specializations = generic_specializations;
 /// Version of the M1/M2 mutation-contract encoding that semantic entries embed.
 /// A change invalidates every retained body just like a changed effect contract.
 pub const mutation_contract_version = "mutation-v1";
@@ -121,6 +124,9 @@ pub const Retention = struct {
     /// retention budget, but lives under its own entry kind and stable-key
     /// namespace so it can never collide with an ordinary checked body.
     symbolic: generic_cache.Table = .{},
+    /// C3 concrete-specialization results. Same durable store and retention
+    /// budget, under the `specialization-v1` kind and its own key namespace.
+    specializations: generic_specializations.Table = .{},
 };
 
 /// Caller-serialized cache; returned typed trees never borrow retained storage.
@@ -153,6 +159,7 @@ pub const Cache = struct {
     pub fn deinit(self: *Cache) void {
         self.clear();
         self.reuse.symbolic.clear();
+        self.reuse.specializations.clear();
     }
     /// Evict retained bodies; already-returned compilations remain valid.
     pub fn clear(self: *Cache) void {
@@ -172,6 +179,16 @@ pub const Cache = struct {
             .persistent = self.context.persistent,
             .enabled = self.reuse.max_bytes != 0,
             .mode = mode,
+        });
+    }
+    /// Open one concrete-specialization request over the prepared declaration
+    /// facts. `prepared` must outlive the returned session.
+    pub fn specializationSession(self: *Cache, prepared: *const key.Prepared) error{OutOfMemory}!generic_specializations.Session {
+        return generic_specializations.Session.init(self.allocator, prepared, .{
+            .memory = &self.reuse.specializations,
+            .persistent = self.context.persistent,
+            .enabled = self.reuse.max_bytes != 0,
+            .build = self.context.contract,
         });
     }
     /// Decode only entries whose stable key and dependency context are current.

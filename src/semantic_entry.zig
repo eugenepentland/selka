@@ -306,3 +306,191 @@ fn symbolicSpanValid(span: RelativeSpan, region_len: usize) bool {
     const end = std.math.cast(usize, span.end) orelse return false;
     return end <= region_len and start <= end;
 }
+
+/// C3 concrete-specialization entry kind. A specialization entry shares the C2
+/// durable store but lives under its own stable-key namespace and payload
+/// version so it can never be confused with an ordinary checked body or an
+/// abstract symbolic template.
+pub const specialization_kind = "specialization-v1";
+/// Prefix applied to a canonical specialization fingerprint for durable keys.
+/// Embedded version invalidates every retained concrete result when the
+/// specialization encoding or remap rules change.
+pub const specialization_key_prefix = "spec\x1fv1\x1f";
+
+/// Whether one stored function reference names an ordinary declaration or a
+/// concrete specialization. The stable key is a semantic declaration key for
+/// ordinary functions and a canonical specialization fingerprint for
+/// specializations; the old numeric ordinal is retained only to index the
+/// relocation table, never as identity.
+/// Whether one reference names an ordinary function or a specialization.
+pub const FunctionRefKind = enum(u8) { ordinary = 0, specialization = 1 };
+/// One stored function reference: `key` is a stable semantic declaration key
+/// for ordinary functions and a canonical specialization fingerprint for
+/// specializations; `id` only indexes the relocation table.
+pub const SpecializationFunctionRef = struct { kind: FunctionRefKind, id: typed.FunctionId, key: []const u8 };
+
+/// Stable identity of one concrete specialization. `fingerprint` is the
+/// canonical key over template identity, ordered positional descriptors,
+/// provider contracts, constraint dependencies, declared contracts and build
+/// context. `template` is the defining template's stable declaration key.
+pub const SpecializationIdentity = struct {
+    kind: []const u8 = specialization_kind,
+    /// Durable store key: `specialization_key_prefix` followed by `fingerprint`.
+    key: []const u8,
+    fingerprint: []const u8,
+    template: []const u8,
+    /// Template dependency digest; the durable entry is namespaced by it.
+    context: [32]u8,
+    /// Ordered positional descriptors (`T:<type>` or `L:<length>`).
+    arguments: []const []const u8,
+    lengths: []const ?usize,
+};
+
+/// The owned checked tree of one specialization, grouped to keep the payload
+/// shape within the struct-field budget.
+pub const SpecializationBody = struct {
+    function: typed.Function,
+    nodes: []const typed.Node,
+    statements: []const typed.Statement,
+    range: copy.Range,
+};
+/// Stable remap tables of one specialization tree.
+pub const SpecializationRefs = struct {
+    function_refs: []const SpecializationFunctionRef,
+    record_refs: []const RecordRef,
+};
+/// Catalog cardinalities the stored reference ordinals were captured against.
+pub const SpecializationCounts = struct { old_function_count: usize, old_record_count: usize };
+
+/// Persisted payload for one checked concrete specialization. All slices are
+/// owned by the entry arena. `source.region`/`source.body` are the defining
+/// template's absolute intervals in the captured source; the checked tree's
+/// node ids are absolute in that same source and are relocated on replay.
+pub const StoredSpecialization = struct {
+    identity: SpecializationIdentity,
+    source: SymbolicSource,
+    body: SpecializationBody,
+    refs: SpecializationRefs,
+    counts: SpecializationCounts,
+};
+
+/// One decoded or freshly captured concrete specialization. The arena owns
+/// every slice borrowed by `payload`.
+pub const SpecializationEntry = struct {
+    arena: std.heap.ArenaAllocator,
+    payload: StoredSpecialization,
+
+    pub fn deinit(self: *SpecializationEntry) void {
+        self.arena.deinit();
+    }
+};
+
+/// Whether one specialization payload is internally consistent. Called by the
+/// store before a decoded entry can reach the checker; a false result is a
+/// miss, never a trusted unchecked identity.
+pub fn validSpecialization(payload: StoredSpecialization, max_declarations: usize, max_entry_bytes: usize) bool {
+    if (!std.mem.eql(u8, payload.identity.kind, specialization_kind)) return false;
+    if (payload.identity.key.len == 0 or payload.identity.key.len > max_entry_bytes) return false;
+    if (payload.identity.fingerprint.len == 0 or payload.identity.fingerprint.len > max_entry_bytes) return false;
+    if (payload.identity.template.len == 0 or payload.identity.template.len > max_entry_bytes) return false;
+    if (payload.identity.arguments.len > max_declarations) return false;
+    if (payload.identity.lengths.len != 0 and payload.identity.lengths.len != payload.identity.arguments.len) return false;
+    for (payload.identity.arguments) |argument| {
+        if (argument.len == 0 or argument.len > max_entry_bytes) return false;
+    }
+    const region: source.Span = payload.source.region;
+    const body: source.Span = payload.source.body;
+    if (payload.source.old_len == 0) return false;
+    if (region.start > region.end or region.end > payload.source.old_len) return false;
+    if (body.start > body.end or body.end > payload.source.old_len) return false;
+    if (body.start < region.start or body.end > region.end) return false;
+    if (payload.source.region_bytes.len != region.end - region.start) return false;
+    if (payload.source.body_bytes.len != body.end - body.start) return false;
+    if (payload.body.range.nodes.start > payload.body.range.nodes.end) return false;
+    if (payload.body.range.nodes.end - payload.body.range.nodes.start != payload.body.nodes.len) return false;
+    if (payload.body.range.statements.start > payload.body.range.statements.end) return false;
+    if (payload.body.range.statements.end - payload.body.range.statements.start != payload.body.statements.len) return false;
+    if (!validSpecializationRefs(payload.refs, payload.counts, max_declarations, max_entry_bytes)) return false;
+    return true;
+}
+/// Validate the stored remap tables independently of the tree body.
+fn validSpecializationRefs(refs: SpecializationRefs, counts: SpecializationCounts, max_declarations: usize, max_entry_bytes: usize) bool {
+    if (counts.old_function_count > max_declarations or counts.old_record_count > max_declarations) return false;
+    if (refs.function_refs.len > max_declarations or refs.record_refs.len > max_declarations) return false;
+    for (refs.function_refs) |reference| {
+        if (@backingInt(reference.id) >= counts.old_function_count) return false;
+        if (reference.key.len == 0 or reference.key.len > max_entry_bytes) return false;
+    }
+    for (refs.record_refs) |reference| {
+        if (reference.index >= counts.old_record_count) return false;
+        if (reference.key.len == 0 or reference.key.len > max_entry_bytes) return false;
+    }
+    return true;
+}
+
+/// Inputs for one freshly checked concrete specialization. All slices are
+/// borrowed for the duration of `SpecializationEntry.create`.
+pub const SpecializationSpec = struct {
+    identity: SpecializationIdentity,
+    source: SymbolicSource,
+    function_refs: []const SpecializationFunctionRef,
+    record_refs: []const RecordRef,
+    old_function_count: usize,
+    old_record_count: usize,
+};
+
+/// Snapshot one freshly checked specialization tree into independently owned
+/// arena storage. `index` selects the checked function in `program`; `range`
+/// is its node/statement interval. Spans stay absolute in `program`'s source,
+/// exactly like `Entry.create`, and are relocated on replay.
+pub fn createSpecialization(
+    allocator: std.mem.Allocator,
+    program: typed.Program,
+    index: usize,
+    range: copy.Range,
+    spec: SpecializationSpec,
+) error{ OutOfMemory, InternalError }!SpecializationEntry {
+    if (index >= program.functions.len) return error.InternalError;
+    if (range.nodes.start > range.nodes.end or range.nodes.end > program.nodes.len) return error.InternalError;
+    if (range.statements.start > range.statements.end or range.statements.end > program.statements.len) return error.InternalError;
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    errdefer arena.deinit();
+    const a = arena.allocator();
+    const mapper: @import("ast_copy.zig").Mapper = .{};
+    const function = mapper.value(a, typed.Function, program.functions[index]) catch |err| return classify(err);
+    const nodes = mapper.value(a, []const typed.Node, program.nodes[range.nodes.start..range.nodes.end]) catch |err| return classify(err);
+    const statements = mapper.value(a, []const typed.Statement, program.statements[range.statements.start..range.statements.end]) catch |err| return classify(err);
+    const function_refs = try a.alloc(SpecializationFunctionRef, spec.function_refs.len);
+    for (spec.function_refs, function_refs) |reference, *out| out.* = .{ .kind = reference.kind, .id = reference.id, .key = try a.dupe(u8, reference.key) };
+    const record_refs = try a.alloc(RecordRef, spec.record_refs.len);
+    for (spec.record_refs, record_refs) |reference, *out| out.* = .{ .index = reference.index, .key = try a.dupe(u8, reference.key) };
+    const arguments = try a.alloc([]const u8, spec.identity.arguments.len);
+    for (spec.identity.arguments, arguments) |argument, *out| out.* = try a.dupe(u8, argument);
+    const lengths = try a.dupe(?usize, spec.identity.lengths);
+    const identity: SpecializationIdentity = .{
+        .kind = specialization_kind,
+        .key = try a.dupe(u8, spec.identity.key),
+        .fingerprint = try a.dupe(u8, spec.identity.fingerprint),
+        .template = try a.dupe(u8, spec.identity.template),
+        .context = spec.identity.context,
+        .arguments = arguments,
+        .lengths = lengths,
+    };
+    const source_ref: SymbolicSource = .{
+        .old_len = spec.source.old_len,
+        .region = spec.source.region,
+        .body = spec.source.body,
+        .region_bytes = try a.dupe(u8, spec.source.region_bytes),
+        .body_bytes = try a.dupe(u8, spec.source.body_bytes),
+    };
+    return .{
+        .arena = arena,
+        .payload = .{
+            .identity = identity,
+            .source = source_ref,
+            .body = .{ .function = function, .nodes = nodes, .statements = statements, .range = range },
+            .refs = .{ .function_refs = function_refs, .record_refs = record_refs },
+            .counts = .{ .old_function_count = spec.old_function_count, .old_record_count = spec.old_record_count },
+        },
+    };
+}

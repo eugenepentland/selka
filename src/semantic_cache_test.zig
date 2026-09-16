@@ -581,7 +581,7 @@ test "a function value with no matching declared callback misses with its exact 
 // reused. The durable concrete entry kind, typed FunctionRef instantiation and
 // fresh instance remap are the reported remaining work.
 // spec-case: SEMANTIC-CACHE-7
-test "generic specialization references miss with their exact reason" {
+test "generic specialization bodies reuse while their callers miss with their exact reason" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const program =
@@ -595,8 +595,14 @@ test "generic specialization references miss with their exact reason" {
     try compare(t.allocator, &cache, program, 42);
     try t.expect(cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.generic_specialization)] > 0);
     const before = cache.statistics.reused;
+    const before_specialization = cache.reuse.specializations.statistics.reused;
     try compare(t.allocator, &cache, program, 42);
-    try t.expectEqual(before, cache.statistics.reused);
+    // C3: the leaf specialization body itself is reused. Its caller is still a
+    // conservative miss because ordinary bodies that reference a specialization
+    // are not retained without a validated instance-key remap.
+    try t.expectEqual(before + 1, cache.statistics.reused);
+    try t.expectEqual(before_specialization + 1, cache.reuse.specializations.statistics.reused);
+    try t.expect(cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.generic_specialization)] > 0);
 }
 
 // spec-case: SEMANTIC-CACHE-7
@@ -1052,4 +1058,113 @@ test "specialization key engine canonicalizes arguments providers constraints an
     defer t.allocator.free(build_change);
     for ([_][]const u8{ reordered, constraint_change, contract_change, build_change }) |changed|
         try t.expect(!std.mem.eql(u8, same, changed));
+}
+
+test "createSpecialization rejects an out-of-range function index" {
+    const typed = @import("typed.zig");
+    const entry = @import("semantic_entry.zig");
+    const semantic_copy = @import("semantic_copy.zig");
+    const program: typed.Program = .{ .nodes = &.{}, .statements = &.{}, .functions = &.{}, .main = @fromBackingInt(0) };
+    const range: semantic_copy.Range = .{ .nodes = .{ .start = 0, .end = 0 }, .statements = .{ .start = 0, .end = 0 } };
+    const spec: entry.SpecializationSpec = undefined;
+    try t.expectError(error.InternalError, entry.createSpecialization(t.allocator, program, 0, range, spec));
+}
+
+const spec_stats = language.semantic_cache.specializations.Statistics;
+const spec_reason = language.semantic_cache.specializations.MissReason;
+
+test "nested concrete specializations conservatively miss and self-recursion remaps" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const nested =
+        \\def inner[T](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def outer[T](x: T) -> T:
+        \\    return inner[T](x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return outer[i64](4)
+    ;
+    try compare(t.allocator, &cache, nested, 4);
+    const nested_before: spec_stats = cache.reuse.specializations.statistics;
+    try compare(t.allocator, &cache, nested, 4);
+    const nested_after: spec_stats = cache.reuse.specializations.statistics;
+    // `inner[i64]` is reachable once `outer[i64]` is checked; at `outer`'s
+    // lookup the nested instance key does not exist yet, so it conservatively
+    // misses while the leaf instance replays.
+    try t.expectEqual(nested_before.reused + 1, nested_after.reused);
+    try t.expect(nested_after.misses[@backingInt(spec_reason.missing_specialization)] > nested_before.misses[@backingInt(spec_reason.missing_specialization)]);
+
+    const recursive =
+        \\def recur[T](x: T, n: i64) -> i64:
+        \\    _ = x
+        \\    if n == 0:
+        \\        return 0
+        \\    return recur[T](x, n - 1)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return recur[i64](1, 3)
+    ;
+    try compare(t.allocator, &cache, recursive, 0);
+    const recursive_before: spec_stats = cache.reuse.specializations.statistics;
+    try compare(t.allocator, &cache, recursive, 0);
+    const recursive_after: spec_stats = cache.reuse.specializations.statistics;
+    // A self-reference resolves to the fresh instance's own canonical key.
+    try t.expectEqual(recursive_before.reused + 1, recursive_after.reused);
+}
+
+test "const-length specialization keys keep identity and nominal generics miss conservatively" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const size_fn =
+        \\def size[const N: u64]() -> u64:
+        \\    return N
+        \\
+        \\
+        \\
+    ;
+    try compare(t.allocator, &cache, size_fn ++
+        \\def main() -> i64:
+        \\    return i64(size[2]())
+    , 2);
+    const stored_two = cache.reuse.specializations.statistics.stored;
+    try compare(t.allocator, &cache, size_fn ++
+        \\def main() -> i64:
+        \\    return i64(size[2]())
+    , 2);
+    try t.expectEqual(stored_two, cache.reuse.specializations.statistics.stored);
+    try t.expect(cache.reuse.specializations.statistics.reused > 0);
+    try compare(t.allocator, &cache, size_fn ++
+        \\def main() -> i64:
+        \\    return i64(size[3]())
+    , 3);
+    // `size[3]` is a distinct positional length descriptor, never a hit on
+    // `size[2]`'s retained body.
+    try t.expectEqual(stored_two + 1, cache.reuse.specializations.statistics.stored);
+
+    const nominal =
+        \\class Box[T]:
+        \\    value: T
+        \\
+        \\
+        \\def make[T](x: T) -> Box[T]:
+        \\    return Box[T](value=x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    b = make[i64](3)
+        \\    return b.value
+    ;
+    try compare(t.allocator, &cache, nominal, 3);
+    const nominal_before: spec_stats = cache.reuse.specializations.statistics;
+    try compare(t.allocator, &cache, nominal, 3);
+    const nominal_after: spec_stats = cache.reuse.specializations.statistics;
+    // The body instantiates a nominal application while checking, so its
+    // record reference has no pre-collected stable identity and stays fresh.
+    try t.expectEqual(nominal_before.reused, nominal_after.reused);
+    try t.expect(nominal_after.misses[@backingInt(spec_reason.interned_record)] > nominal_before.misses[@backingInt(spec_reason.interned_record)]);
 }

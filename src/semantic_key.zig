@@ -16,6 +16,7 @@ const typed = @import("typed.zig");
 const source = @import("source.zig");
 const nominal = @import("nominal_type_syntax.zig");
 const interfaces = @import("interfaces.zig");
+const effect_set = @import("effect_set.zig");
 const Hash = std.crypto.hash.sha2.Sha256;
 
 /// Domain for per-function dependency digests. Bump when the tracked dependency
@@ -130,6 +131,32 @@ pub fn contractDigest(function: typed.Function) [32]u8 {
     }
     frame(&hash, if (function.signature.mutation_facts.writes) "writes" else "no-writes");
     frame(&hash, if (function.signature.mutation_facts.external) "external" else "internal");
+    return hash.finalResult();
+}
+
+/// Declared-contract digest of one generic template signature: the declared
+/// effect ceiling (or an explicit "none"), the normalized mutation footprint
+/// and the published return-origin bound. It is a canonical specialization-key
+/// dimension, so a declared ceiling or footprint edit invalidates every
+/// concrete specialization of that template while unrelated ones stay reusable.
+pub fn declaredContractDigest(effect_bound: ?effect_set.Bound, mutates: []const u16) [32]u8 {
+    var hash = Hash.init(.{});
+    frame(&hash, "declared-contract-v1");
+    if (effect_bound) |bound| {
+        frame(&hash, "ceiling");
+        var mask: [4]u8 = undefined;
+        std.mem.writeInt(u32, &mask, bound.allowed, .little);
+        hash.update(&mask);
+    } else frame(&hash, "no-ceiling");
+    var count: [8]u8 = undefined;
+    std.mem.writeInt(u64, &count, mutates.len, .little);
+    hash.update(&count);
+    for (mutates) |position| {
+        var encoded: [2]u8 = undefined;
+        std.mem.writeInt(u16, &encoded, position, .little);
+        hash.update(&encoded);
+    }
+    frame(&hash, "return-origin-unknown");
     return hash.finalResult();
 }
 

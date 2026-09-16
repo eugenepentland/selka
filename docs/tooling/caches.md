@@ -156,6 +156,25 @@ abstract-checker version. Scoped-bound resolution, structural validation and the
 whole-graph effect propagation still run on every request, so a replayed template
 never carries a stale transitive verdict.
 
+A third entry kind, `specialization-v1`, stores one checked concrete
+specialization under the canonical key over the template identity, ordered
+positional type/length descriptors, transitive name-ordered provider contracts,
+template constraint dependencies, declared effect/mutation/return-origin
+contracts and build context. Replay additionally requires the defining template's
+declaration region/body to be byte-identical and every stored function/record
+reference to remap to exactly one fresh identity. Ordinary callees remap by
+stable declaration key; nested specializations remap by canonical fingerprint
+only when the fresh run has already instantiated them, so a nested or mutually
+recursive chain is a conservative miss when its dependency is not yet present,
+while a self-recursive specialization remaps to its own fresh instance. Missing,
+ambiguous, interned-catalog or synthesized-lambda references fall back to a fresh
+check. The specialization payload stores no effect or mutation verdict: the whole
+graph `effects.check` and `origins.check` passes always rerun over the combined
+fresh and replayed trees, so a changed provider body is reflected in generated
+code and a changed declared ceiling invalidates by key. Concrete specialization
+reuse increments `checked_bodies.reused` beside ordinary body reuse; the
+`symbolic_templates` object only counts abstract template replay.
+
 Publication stages the complete image in a same-directory `.tmp` file, flushes
 and syncs it, and renames it over the stable key, so readers observe the previous
 complete file or the new one, never a partial image. Concurrent publishers may
