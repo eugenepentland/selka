@@ -13,6 +13,61 @@ const fanout = @import("native_test_directory.zig");
 const budget = @import("memory_budget");
 /// Setup failures never produce a cached green test run.
 pub const Error = sessions.Error || cases.Error || planner.Error || receipts.Error || fanout.Error || contracts.Error;
+
+/// One fully checked and (when needed) prepared project graph. Cases that
+/// select the same provider replacement set share it, including the native
+/// library executor; execution itself remains one isolated process per case.
+const Graph = struct {
+    project: sessions.Project,
+    provider_identity: []const u8,
+    source_identity: []const u8,
+};
+
+/// Invocation-local memoization of declaration validation and checked project
+/// preparation keyed by the selected provider graph identity. The baseline
+/// graph (no replacement sources) is represented by the empty identity.
+const Graphs = struct {
+    allocator: std.mem.Allocator,
+    session: sessions.Session,
+    captured: snapshot.Snapshot,
+    production: std.json.Value,
+    entries: std.StringHashMapUnmanaged(*Graph) = .empty,
+
+    fn deinit(self: *Graphs) void {
+        self.entries.deinit(self.allocator);
+    }
+
+    fn get(self: *Graphs, case: cases.Case) Error!*Graph {
+        const has_providers = case.providers == .object and case.providers.object.count() != 0;
+        const provider_identity = if (has_providers) try contracts.providerIdentity(self.allocator, case.providers) else "";
+        if (self.entries.get(provider_identity)) |existing| return existing;
+        const graph = try self.allocator.create(Graph);
+        errdefer self.allocator.destroy(graph);
+        if (has_providers) {
+            // The unselected production module passed declaration-first
+            // validation above. Validate this replacement graph's declarations
+            // before checking any selected implementation body, then share the
+            // checked project across every case selecting the same graph.
+            const copied = try snapshot.replace(self.session.context, self.captured, case.providers, try self.session.context.temporary(self.session.temporary));
+            const replacement = try self.session.interfaceCheck(copied.entry_path);
+            const modules = try contracts.moduleNames(self.allocator, case.providers);
+            try contracts.validate(self.allocator, self.production, replacement, modules);
+            graph.* = .{
+                .project = try self.session.check(copied.entry_path),
+                .provider_identity = provider_identity,
+                .source_identity = copied.identity,
+            };
+        } else {
+            graph.* = .{
+                .project = try self.session.check(self.captured.entry_path),
+                .provider_identity = provider_identity,
+                .source_identity = self.captured.identity,
+            };
+        }
+        try self.entries.put(self.allocator, provider_identity, graph);
+        return graph;
+    }
+};
 /// The fan-out width asked for: `--jobs` first, then `MYLANG_JOBS`, then none,
 /// which leaves the default derived from cores and free memory.
 fn requested(flag: ?usize, environ: *const std.process.Environ.Map) budget.Error!?usize {
@@ -58,6 +113,8 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
         error.ProjectPolicyRejected => return 3,
         else => return err,
     };
+    var graphs: Graphs = .{ .allocator = context.allocator, .session = session, .captured = captured, .production = production };
+    defer graphs.deinit();
     const config_bytes = if (opts.cases) |path| try context.read(path) else "null";
     const config = (try std.json.parseFromSlice(std.json.Value, context.allocator, config_bytes, .{ .allocate = .alloc_always })).value;
     const declared_schema = try contracts.testSchema(context.allocator, production);
@@ -65,7 +122,7 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     const results = try context.allocator.alloc(receipts.Result, selected.len);
     const directory = try std.fs.path.join(context.allocator, &.{ session.directory, "results" });
     try context.mkdir(directory);
-    for (selected, results) |case, *result| result.* = perform(session, captured, production, case, directory) catch |err| switch (err) {
+    for (selected, results) |case, *result| result.* = perform(&graphs, case, directory) catch |err| switch (err) {
         error.ProjectConfigurationFailed => return 2,
         error.ProjectPolicyRejected => return 3,
         else => return err,
@@ -77,35 +134,27 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     for (results) |result| try receipts.write(context, directory, result);
     return report(context, results, opts.json);
 }
-fn perform(session: sessions.Session, captured: snapshot.Snapshot, production: std.json.Value, case: cases.Case, directory: []const u8) Error!receipts.Result {
+fn perform(graphs: *Graphs, case: cases.Case, directory: []const u8) Error!receipts.Result {
+    const session = graphs.session;
     var result: receipts.Result = .{ .name = case.name, .status = "skipped", .expected = case.expected };
     if (case.skip) |reason| {
         result.reason = reason;
         return result;
     }
-    var checked: sessions.Project = undefined;
-    var contract_identity: []const u8 = "";
-    var provider_identity: []const u8 = "";
-    var source_identity: []const u8 = captured.identity;
-    if (case.providers == .object and case.providers.object.count() != 0) {
-        // Select and validate the replacement graph before any production body
-        // is checked. The unselected production module still had to parse and
-        // pass its exported-signature contract above.
-        const copied = try snapshot.replace(session.context, captured, case.providers, try session.context.temporary(session.temporary));
-        const replacement = try session.interfaceCheck(copied.entry_path);
+    const has_providers = case.providers == .object and case.providers.object.count() != 0;
+    // Creating a graph performs declaration-first validation and, for provider
+    // replacements, replacement-contract validation before any selected body is
+    // checked. Identical provider graphs reuse the checked project and executor.
+    const graph = try graphs.get(case);
+    const contract_identity = if (has_providers) blk: {
         const modules = try contracts.moduleNames(session.context.allocator, case.providers);
-        try contracts.validate(session.context.allocator, production, replacement, modules);
-        provider_identity = try contracts.providerIdentity(session.context.allocator, case.providers);
-        contract_identity = try contracts.contractIdentity(session.context.allocator, production, modules);
-        source_identity = copied.identity;
-        checked = try session.check(copied.entry_path);
-    } else {
+        break :blk try contracts.contractIdentity(session.context.allocator, graphs.production, modules);
+    } else blk: {
         const modules = [_][]const u8{try testModuleName(session.context.allocator, case.name)};
-        contract_identity = try contracts.contractIdentity(session.context.allocator, production, &modules);
-        checked = try session.check(captured.entry_path);
-    }
-    const project = &checked;
-    const identity: receipts.Identity = .{ .contract = contract_identity, .provider = provider_identity, .source = source_identity };
+        break :blk try contracts.contractIdentity(session.context.allocator, graphs.production, &modules);
+    };
+    const project = &graph.project;
+    const identity: receipts.Identity = .{ .contract = contract_identity, .provider = graph.provider_identity, .source = graph.source_identity };
     const selected = checkedFunction(project.schema, case.name) orelse case.function;
     const plan = try planner.plan(session.context.allocator, project.manifest, try symbol(project.manifest, case.name), try session.key(case.settings, selected));
     result.key = try session.context.allocator.dupe(u8, &plan.key);
@@ -130,6 +179,7 @@ fn perform(session: sessions.Session, captured: snapshot.Snapshot, production: s
     if (!passed and result.reason.len == 0) result.reason = "actual value does not match expected value";
     return result;
 }
+
 /// The checked schema entry for one qualified test name, when present.
 fn checkedFunction(schema: std.json.Value, name: []const u8) ?std.json.Value {
     for (v.array(v.get(schema, "functions"))) |function| {
@@ -161,6 +211,69 @@ test "an explicit fan-out width outranks the environment, which outranks the der
     try environ.put(budget.jobs_variable, "0");
     try std.testing.expectError(error.InvalidMemoryLimit, requested(null, &environ));
 }
+// spec-case: NATIVE-TEST-5
+test "one prepared project graph is shared per selected provider identity" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(context.io, ".", context.allocator);
+    const entry = try std.fs.path.join(context.allocator, &.{ root, "main.my" });
+    const production_path = try std.fs.path.join(context.allocator, &.{ root, "production.my" });
+    try context.write(entry, "module main;\n");
+    try context.write(production_path, "module production;\n");
+    const captured = try snapshot.capture(context, entry);
+    const log = try std.fs.path.join(context.allocator, &.{ root, "compiler.log" });
+    const script = try std.fs.path.join(context.allocator, &.{ root, "fake-compiler" });
+    var text: std.ArrayList(u8) = .empty;
+    try text.appendSlice(context.allocator, "#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"");
+    try text.appendSlice(context.allocator, log);
+    try text.appendSlice(context.allocator, "\"\ncase \"$1\" in\n  list-interfaces) printf '%s\\n' '");
+    const contracts_json = "{\"modules\":[{\"name\":\"production\",\"declarations\":[{\"name\":\"value\",\"kind\":\"function\",\"generics\":\"\",\"signature\":\"def() -> int effects()\"," ++
+        "\"permissions\":\"effects=;mutates=;origin=unknown\"}]}]}";
+    try text.appendSlice(context.allocator, contracts_json);
+    try text.appendSlice(context.allocator, "' ;;\n  emit-project-qbe) printf '%s\\n' '{\"schema\":\"{\\\"functions\\\":[],\\\"types\\\":[]}\"}' ;;\nesac\n");
+    var file = try std.Io.Dir.createFileAbsolute(context.io, script, .{ .permissions = .executable_file });
+    try file.writeStreamingAll(context.io, text.items);
+    file.close(context.io);
+    var parsed = try std.json.parseFromSlice(std.json.Value, context.allocator, contracts_json, .{ .allocate = .alloc_always });
+    defer parsed.deinit();
+    const session: sessions.Session = .{
+        .context = context,
+        .options = .{ .source = entry },
+        .compiler = script,
+        .zig = "/bin/true",
+        .qbe = "/bin/true",
+        .hashes = .{ "", "", "" },
+        .environment = .{ .hash = "", .cacheable = true },
+        .directory = root,
+        .temporary = root,
+        .source = captured,
+    };
+    var graphs: Graphs = .{ .allocator = context.allocator, .session = session, .captured = captured, .production = parsed.value };
+    defer graphs.deinit();
+    const ordinary: cases.Case = .{ .name = "main::test_ordinary", .function = .null, .arguments = .null, .expected = .null, .skip = null, .providers = .null, .settings = .null };
+    const ordinary_first = try graphs.get(ordinary);
+    const ordinary_second = try graphs.get(ordinary);
+    try std.testing.expectEqual(ordinary_first, ordinary_second);
+    var first_providers: std.json.ObjectMap = .empty;
+    try first_providers.put(context.allocator, "production.my", .{ .string = "module production; // one" });
+    const first_provider: cases.Case = .{ .name = "main::test_provider_one", .function = .null, .arguments = .null, .expected = .null, .skip = null, .providers = .{ .object = first_providers }, .settings = .null };
+    const provider_first = try graphs.get(first_provider);
+    const provider_second = try graphs.get(first_provider);
+    try std.testing.expectEqual(provider_first, provider_second);
+    var second_providers: std.json.ObjectMap = .empty;
+    try second_providers.put(context.allocator, "production.my", .{ .string = "module production; // two" });
+    const second_provider: cases.Case = .{ .name = "main::test_provider_two", .function = .null, .arguments = .null, .expected = .null, .skip = null, .providers = .{ .object = second_providers }, .settings = .null };
+    const provider_distinct = try graphs.get(second_provider);
+    try std.testing.expect(provider_first != provider_distinct);
+    const calls = try context.read(log);
+    try std.testing.expectEqual(@as(usize, 3), std.mem.count(u8, calls, "emit-project-qbe"));
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, calls, "list-interfaces"));
+}
+
 fn report(context: fs.Context, results: []const receipts.Result, json: bool) Error!u8 {
     var passed: usize = 0;
     var failed: usize = 0;

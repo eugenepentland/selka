@@ -5,11 +5,13 @@ const v = @import("qbe_build_value.zig");
 const same = @import("native_test_snapshot.zig").equivalent;
 /// Filesystem and serialization failures while recording a successful result.
 pub const Error = fs.Error || std.Io.Writer.Error || std.Io.Dir.DeleteFileError;
-/// The contract, selected-provider and source identities a receipt records.
-/// A receipt is only reused while all three still match.
+/// The contract and selected-provider identities a receipt now uses, plus the
+/// whole-snapshot source identity retained for diagnostics. Reuse is decided by
+/// the semantic dependency-closure key in `hit`, not by `source`.
 pub const Identity = struct {
     contract: []const u8 = "",
     provider: []const u8 = "",
+    /// Diagnostic whole-snapshot identity; intentionally not an acceptance term.
     source: []const u8 = "",
 };
 /// Planner reasons and the replacement's identity evidence, grouped so the
@@ -48,7 +50,10 @@ pub const Result = struct {
         });
     }
 };
-/// A receipt is valid only when its full payload and expectation agree.
+/// A receipt is valid when its semantic dependency-closure key, selected
+/// contract and selected-provider identities still match. The whole-snapshot
+/// `source` identity is diagnostic only: unrelated edits intentionally keep a
+/// valid closure's result reusable.
 pub fn hit(context: fs.Context, filename: []const u8, key: []const u8, name: []const u8, expected: std.json.Value, identity: Identity) bool {
     const bytes = context.read(filename) catch return false;
     const parsed = std.json.parseFromSlice(std.json.Value, context.allocator, bytes, .{}) catch return false;
@@ -61,7 +66,6 @@ pub fn hit(context: fs.Context, filename: []const u8, key: []const u8, name: []c
         std.mem.eql(u8, v.text(v.get(item.value, "status")), "passed") and
         std.mem.eql(u8, v.text(v.get(item.value, "contract")), identity.contract) and
         std.mem.eql(u8, v.text(v.get(item.value, "provider")), identity.provider) and
-        std.mem.eql(u8, v.text(v.get(item.value, "source")), identity.source) and
         same(v.get(item.value, "actual"), expected) and same(v.get(item.value, "expected"), expected);
 }
 /// A rerun must remove any old success before it can fail or be interrupted.
@@ -108,7 +112,7 @@ test "positive receipts reject corruption mismatched expectations and failures" 
 }
 
 // spec-case: NATIVE-TEST-3
-test "receipt identity binds the contract provider and source a pass was verified against" {
+test "receipt identity binds its semantic key contract and provider, not the whole snapshot" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
     defer environment.deinit();
     var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
@@ -116,7 +120,7 @@ test "receipt identity binds the contract provider and source a pass was verifie
     var temporary = std.testing.tmpDir(.{});
     defer temporary.cleanup();
     const directory = try temporary.dir.realPathFileAlloc(context.io, ".", context.allocator);
-    const identity: Identity = .{ .contract = "contract-a", .provider = "provider-a", .source = "source-a" };
+    const identity: Identity = .{ .contract = "contract-a", .provider = "provider-a", .source = "snapshot-a" };
     const result: Result = .{
         .name = "test_ok",
         .status = "passed",
@@ -129,7 +133,10 @@ test "receipt identity binds the contract provider and source a pass was verifie
     const filename = try path(context, directory, result.key);
     try write(context, directory, result);
     try std.testing.expect(hit(context, filename, result.key, result.name, result.expected, identity));
+    // An unrelated source edit keeps the selected closure and contracts valid.
+    try std.testing.expect(hit(context, filename, result.key, result.name, result.expected, .{ .contract = identity.contract, .provider = identity.provider, .source = "snapshot-b" }));
+    // A changed closure, contract or provider no longer matches the receipt.
+    try std.testing.expect(!hit(context, filename, "other-key", result.name, result.expected, identity));
     try std.testing.expect(!hit(context, filename, result.key, result.name, result.expected, .{ .contract = "contract-b", .provider = identity.provider, .source = identity.source }));
     try std.testing.expect(!hit(context, filename, result.key, result.name, result.expected, .{ .contract = identity.contract, .provider = "provider-b", .source = identity.source }));
-    try std.testing.expect(!hit(context, filename, result.key, result.name, result.expected, .{ .contract = identity.contract, .provider = identity.provider, .source = "source-b" }));
 }
