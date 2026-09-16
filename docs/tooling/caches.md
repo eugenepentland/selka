@@ -147,6 +147,16 @@ $ mylang check app/main.my --cache-dir=.mylang-cache/demo --report
 {"version":"work-report-v1","command":"check","reused":true,...,"checked_bodies":{"status":"hit","performed":0,"reused":3},...}
 ```
 
+Retained in-memory storage is governed by one shared budget: ordinary checked
+bodies, `symbolic-template-v1` templates and `specialization-v1` instances all
+charge their owned rows, arenas, stable keys and index capacity against
+`reuse.max_bytes`. Publication and durable-hit promotion evict deterministically
+oldest-first and compact the row/index storage, oversized entries bypass
+retention without changing acceptance, a zero budget disables reuse, and the
+reported retained bytes and per-kind evictions reflect the actual storage.
+`check-session clear` releases all three kinds together, so a subsequent check
+recomputes them fresh.
+
 A second entry kind, `symbolic-template-v1`, stores one checked symbolic generic
 template's direct abstract results: effect/mutation masks, body-local diagnostics
 and ordered abstract call edges. It lives in the same contract namespace but is

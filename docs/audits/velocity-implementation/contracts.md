@@ -86,6 +86,11 @@ Calls through a stored callable use the destination contract's ceiling.
 
 ## 6. Semantic cache entries (C1/C2)
 
+- In-memory retention uses one shared byte budget across ordinary, symbolic and
+  specialization entries. A snapshot over budget keeps a bounded stable prefix
+  rather than disabling reuse; relocation remaps only the references a body
+  actually carries; oversized entries bypass retention; eviction is deterministic
+  and index storage is compacted; clear releases every entry kind.
 - Version tag `semantic-cache-v1`. Entries carry checksum, length, compiler
   identity, `effects-v3`, mutation-contract version, runtime ABI and build flags.
 - Persistent references are stable qualified identities (defining module +

@@ -1191,7 +1191,7 @@ fn manyFunctionProgram(allocator: std.mem.Allocator, count: usize) ![]u8 {
     return out.toOwnedSlice(allocator);
 }
 
-// spec-pending: SEMANTIC-CACHE-9
+// spec: SEMANTIC-CACHE-9
 // spec-case: SEMANTIC-CACHE-7
 test "semantic cache retains a bounded prefix of bodies when the snapshot exceeds its budget" {
     const source = try manyFunctionProgram(t.allocator, 8);
@@ -1221,7 +1221,7 @@ test "semantic cache retains a bounded prefix of bodies when the snapshot exceed
     try t.expect(full.statistics.retention.evicted > 0);
 }
 
-// spec-pending: SEMANTIC-CACHE-10
+// spec: SEMANTIC-CACHE-10
 // spec-case: SEMANTIC-CACHE-3
 test "semantic body relocation resolves only the references the body carries" {
     const relocation = @import("semantic_copy.zig");
@@ -1256,7 +1256,7 @@ const all_kinds_program =
     \\    return identity[i64](helper(41))
 ;
 
-// spec-pending: SEMANTIC-CACHE-13
+// spec: SEMANTIC-CACHE-13
 // spec-case: SEMANTIC-CACHE-1
 test "clear releases ordinary symbolic and specialization entries and keeps returned programs valid" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
@@ -1334,7 +1334,7 @@ fn primeSpecializationStore(
     return (@sizeOf(owned_entry.SpecializationEntry) + cache.reuse.specializations.entries.items[0].arena.queryCapacity()) * 2;
 }
 
-// spec-pending: SEMANTIC-CACHE-14
+// spec: SEMANTIC-CACHE-14
 // spec-case: SEMANTIC-CACHE-12
 test "shared retention budget bounds distinct specializations and eviction forces fresh checks" {
     // Measure one retained specialization unit with a generous budget.
@@ -1374,7 +1374,7 @@ test "shared retention budget bounds distinct specializations and eviction force
     });
 }
 
-// spec-pending: SEMANTIC-CACHE-14
+// spec-case: SEMANTIC-CACHE-14
 // spec-case: SEMANTIC-CACHE-11
 test "zero shared budget disables ordinary symbolic and specialization reuse" {
     var cache = Cache.init(t.allocator, 0);
@@ -1393,7 +1393,7 @@ test "zero shared budget disables ordinary symbolic and specialization reuse" {
     try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);
 }
 
-// spec-pending: SEMANTIC-CACHE-14
+// spec-case: SEMANTIC-CACHE-14
 // spec-case: SEMANTIC-CACHE-8
 test "shared budget holds after an oversized-single-entry session without changing acceptance" {
     // A budget smaller than one specialization unit admits no retained generic
@@ -1408,7 +1408,7 @@ test "shared budget holds after an oversized-single-entry session without changi
     }
 }
 
-// spec-pending: SEMANTIC-CACHE-14
+// spec-case: SEMANTIC-CACHE-14
 // spec-case: SEMANTIC-CACHE-8
 test "durable-hit promotion is bounded by the shared budget without changing acceptance" {
     var temporary = t.tmpDir(.{});
@@ -1455,7 +1455,7 @@ fn manyTemplateProgram(allocator: std.mem.Allocator, count: usize) ![]u8 {
     return out.toOwnedSlice(allocator);
 }
 
-// spec-pending: SEMANTIC-CACHE-14
+// spec-case: SEMANTIC-CACHE-14
 // spec-case: SEMANTIC-CACHE-11
 test "shared retention budget bounds many distinct symbolic templates" {
     const count = 12;
@@ -1508,7 +1508,7 @@ fn genericScenario(allocator: std.mem.Allocator) !void {
     try compare(allocator, &cache, all_kinds_program, 42);
 }
 
-// spec-pending: SEMANTIC-CACHE-14
+// spec-case: SEMANTIC-CACHE-14
 // spec-case: SEMANTIC-CACHE-11
 test "generic publication rolls back cleanly on allocation failure" {
     try genericScenario(t.allocator);
