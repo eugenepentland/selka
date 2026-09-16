@@ -12,6 +12,7 @@ const cache_key = @import("cache_key.zig");
 const semantic_store = @import("semantic_store.zig");
 const generic_cache = @import("generic_cache.zig");
 const generic_specializations = @import("generic_specializations.zig");
+const timings = @import("timings.zig");
 
 /// Re-exported so host wiring can bind the full contract without depending on
 /// the compiler module's internal file layout.
@@ -133,6 +134,9 @@ pub const Context = struct {
     /// context so the public `Cache` shape does not grow another field solely for
     /// host wiring.
     persistent: ?*semantic_store.Store = null,
+    /// Opt-in phase recorder. Kept in the context so the public cache shape does
+    /// not grow another field solely for instrumentation.
+    timing: ?*timings.Profile = null,
 };
 
 /// Retention budget and the symbolic-template table that shares it. Grouped
@@ -315,9 +319,16 @@ pub const Cache = struct {
 
     /// Begin after fresh declaration/type collection, before checking any body.
     pub fn begin(self: *Cache, allocator: std.mem.Allocator, src: source.Source, syntax: ast.Program, records: []const typed.Record) error{ OutOfMemory, InternalError }!Session {
+        const profile = if (self.context.timing) |p| if (p.enabled) p else null else null;
+        const prepare_start = if (profile) |p| p.now() else std.Io.Timestamp.zero;
         const prepared = try key.prepare(allocator, src, syntax, self.context.contract, self.context.mutation_contract, self.resolution);
+        if (profile) |p| p.addSince("dependency_key_preparation", prepare_start, false);
         if (self.context.persistent) |persistent| {
-            if (self.entries.len == 0) try self.loadPersistent(persistent, prepared);
+            if (self.entries.len == 0) {
+                const io_start = if (profile) |p| p.now() else std.Io.Timestamp.zero;
+                try self.loadPersistent(persistent, prepared);
+                if (profile) |p| p.addSince("retention_store_io", io_start, false);
+            }
         }
         // Per-function eligibility: an unrelated generic, alias, constant or
         // callback no longer disables ordinary-body reuse. A zero-retention cache

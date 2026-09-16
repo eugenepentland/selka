@@ -39,6 +39,7 @@ import json
 import math
 import os
 import re
+import select
 import selectors
 import shutil
 import signal
@@ -191,6 +192,113 @@ def extract_native_tests(text):
         if record.get("version") == "native-tests-v1":
             return record
     return None
+
+
+def extract_protocol_records(text, version):
+    """Return every JSON Lines record with `version`, in stream order."""
+    records = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line.startswith("{"):
+            continue
+        try:
+            record = json.loads(line)
+        except ValueError:
+            continue
+        if record.get("version") == version:
+            records.append(record)
+    return records
+
+
+def extract_phase_timings(text):
+    """Preserve every phase-timings-v1 record emitted for one sample."""
+    return extract_protocol_records(text, "phase-timings-v1")
+
+
+def extract_frontend_cache(text):
+    """Return the first frontend-cache-v1 comparison receipt, or None."""
+    records = extract_protocol_records(text, "frontend-cache-v1")
+    return records[0] if records else None
+
+
+def work_stage(report, name):
+    stage = (report or {}).get(name)
+    return stage if isinstance(stage, dict) else {}
+
+
+def work_count(report, name, field):
+    value = work_stage(report, name).get(field)
+    return value if isinstance(value, int) else None
+
+
+def semantic_retention(report):
+    """Semantic retention totals, per-kind bytes and evictions (not frontend)."""
+    semantic = (report or {}).get("semantic_cache")
+    return semantic if isinstance(semantic, dict) else None
+
+
+def one_shot_success(sample):
+    """A sample is successful only when it exited 0 and emitted a work receipt."""
+    return (not sample.get("timed_out") and sample.get("exit") == 0
+            and sample.get("work_report") is not None)
+
+
+def summarize_ns(values):
+    if not values:
+        return {"count": 0, "p50_ns": None, "p95_ns": None, "min_ns": None,
+                "max_ns": None}
+    ordered = sorted(values)
+    return {
+        "count": len(ordered),
+        "p50_ns": ordered[len(ordered) // 2] if len(ordered) % 2
+        else (ordered[len(ordered) // 2 - 1] + ordered[len(ordered) // 2]) // 2,
+        "p95_ns": percentile_nearest_rank(ordered, 0.95),
+        "min_ns": ordered[0],
+        "max_ns": ordered[-1],
+    }
+
+
+def summarize_phase_timings(records):
+    """Per-phase nearest-rank p50/p95 over successful samples only."""
+    grouped = {}
+    for record in records:
+        if not one_shot_success(record):
+            continue
+        for phase in record.get("phase_timings") or []:
+            name = phase.get("name")
+            duration = phase.get("duration_ns")
+            if not isinstance(name, str) or not isinstance(duration, int) or duration < 0:
+                continue
+            entry = grouped.setdefault(name, {"inclusive": bool(phase.get("inclusive")), "values": []})
+            entry["values"].append(duration)
+    return {name: {"inclusive": entry["inclusive"], **summarize_ns(entry["values"])}
+            for name, entry in grouped.items()}
+
+
+def semantic_budget_bytes():
+    try:
+        return int(os.environ.get("MYLANG_SEMANTIC_BUDGET", str(16 * MIB)))
+    except ValueError:
+        return 16 * MIB
+
+
+def host_snapshot():
+    """Small bounded host-load and memory snapshot for reproducible evidence."""
+    snapshot = {"loadavg": None, "cpu_count": os.cpu_count()}
+    try:
+        snapshot["loadavg"] = Path("/proc/loadavg").read_text().strip()
+    except OSError:
+        pass
+    try:
+        meminfo = {}
+        for line in Path("/proc/meminfo").read_text().splitlines():
+            key, _, rest = line.partition(":")
+            if key in ("MemTotal", "MemAvailable", "SwapTotal", "SwapFree"):
+                meminfo[key] = rest.strip()
+        snapshot["meminfo"] = meminfo
+    except OSError:
+        pass
+    return snapshot
 
 
 def sha256_bytes(data):
@@ -693,9 +801,16 @@ def collect_metrics(compiler, entry, work_report, with_call_depth=True):
     functions = None
     specializations = None
     checked_bodies = None
+    specialization_bodies = None
+    symbolic_templates = None
     if work_report is not None:
         checked_bodies = work_report["checked_bodies"]["performed"]
+        # `instantiated_specializations` counts concrete functions in the checked
+        # program and its reused field is zero by construction. Keep it as a
+        # program-shape metric; use `specialization_bodies` for body replay.
         specializations = work_report["instantiated_specializations"]["performed"]
+        specialization_bodies = work_report.get("specialization_bodies")
+        symbolic_templates = work_report.get("symbolic_templates")
         functions = checked_bodies
     metrics = {
         "lines": lines,
@@ -704,7 +819,9 @@ def collect_metrics(compiler, entry, work_report, with_call_depth=True):
         "module_report": structure,
         "functions_checked": functions,
         "checked_bodies": checked_bodies,
-        "specializations": specializations,
+        "instantiated_specializations": specializations,
+        "specialization_bodies": specialization_bodies,
+        "symbolic_templates": symbolic_templates,
     }
     if with_call_depth:
         metrics["call_graph"] = collect_call_depth(compiler, entry)
@@ -749,7 +866,7 @@ def validate(compiler, entry, run=False, timeout=600):
 # --------------------------------------------------------------------------- #
 
 def one_shot_sample(compiler, entry, cache_dir, state, timeout):
-    argv = [compiler, "check-project", entry, "--report"]
+    argv = [compiler, "check-project", entry, "--report", "--timings=json"]
     if state == "cold":
         shutil.rmtree(cache_dir, ignore_errors=True)
         argv += ["--cache-dir=" + str(cache_dir)]
@@ -759,16 +876,30 @@ def one_shot_sample(compiler, entry, cache_dir, state, timeout):
         argv += ["--cache-dir=" + str(cache_dir)]
     result = run_measured(argv, timeout=timeout)
     report = extract_work_report(result["stderr"])
+    phase_timings = extract_phase_timings(result["stderr"])
+    frontend_cache = extract_frontend_cache(result["stderr"])
     return {
         "state": state,
         "wall_ms": result["wall_ms"],
         "peak_rss_kb": result["peak_rss_kb"],
         "exit": result["exit"],
         "timed_out": result["timed_out"],
+        "success": one_shot_success({
+            "exit": result["exit"], "timed_out": result["timed_out"],
+            "work_report": report,
+        }),
+        # Complete receipt, not a hand-picked subset. Convenience `stages`
+        # remains for existing raw-JSON readers, but new analyses should read
+        # `work_report` directly.
+        "work_report": report,
+        "phase_timings": phase_timings,
+        "frontend_cache": frontend_cache,
         "stages": None if report is None else {
             "parsed_modules": report["parsed_modules"],
             "checked_bodies": report["checked_bodies"],
             "instantiated_specializations": report["instantiated_specializations"],
+            "symbolic_templates": report.get("symbolic_templates"),
+            "specialization_bodies": report.get("specialization_bodies"),
             "lowered_functions": report["lowered_functions"],
             "emitted_fragments": report["emitted_fragments"],
             "links": report["links"],
@@ -776,16 +907,36 @@ def one_shot_sample(compiler, entry, cache_dir, state, timeout):
             "reused": report.get("reused"),
             "bypassed": report.get("bypassed"),
         },
+        "semantic_retention": semantic_retention(report),
         "diagnostic": result["stderr"][:500] if result["exit"] != 0 else "",
     }
 
 
 def measure_one_shot_state(compiler, entry, cache_dir, state, samples, timeout, edit=None, restore=None):
     cache_dir = Path(cache_dir)
+    warm_up = None
     if state not in ("cold", "no_cache"):
-        # One warm check before sampling so edit samples see a warm parse/verdict cache.
+        # One successful warm check is required before any sample may be
+        # labeled warm. A failed/timed-out warm-up blocks the state instead of
+        # manufacturing a warm measurement.
         shutil.rmtree(cache_dir, ignore_errors=True)
-        one_shot_sample(compiler, entry, cache_dir, "unchanged", timeout)
+        warm_up = one_shot_sample(compiler, entry, cache_dir, "unchanged", timeout)
+        if not one_shot_success(warm_up):
+            reason = "warm-up timed out" if warm_up["timed_out"] else (
+                "warm-up exited nonzero" if warm_up["exit"] != 0 else
+                "warm-up emitted no work-report-v1")
+            return {
+                "state": state,
+                "status": "blocked",
+                "reason": reason,
+                "warm_up": warm_up,
+                "summary": summarize([]),
+                "phase_summary": {},
+                "peak_rss_kb_max": None,
+                "samples": [],
+                "successful_samples": 0,
+                "failed_samples": 0,
+            }
     records = []
     for index in range(samples):
         if edit is not None:
@@ -793,10 +944,15 @@ def measure_one_shot_state(compiler, entry, cache_dir, state, samples, timeout, 
                 restore()
             edit(index)
         records.append(one_shot_sample(compiler, entry, cache_dir, state, timeout))
+    successful = [record for record in records if one_shot_success(record)]
     return {
         "state": state,
-        "summary": summarize([record["wall_ms"] for record in records if not record["timed_out"]]),
-        "peak_rss_kb_max": max((record["peak_rss_kb"] for record in records), default=None),
+        "summary": summarize([record["wall_ms"] for record in successful]),
+        "phase_summary": summarize_phase_timings(records),
+        "peak_rss_kb_max": max((record["peak_rss_kb"] for record in successful), default=None),
+        "successful_samples": len(successful),
+        "failed_samples": len(records) - len(successful),
+        "warm_up": warm_up,
         "samples": records,
     }
 
@@ -831,73 +987,208 @@ def measure_forced_tests(compiler, entry, cache_dir, samples, timeout):
     warm = run_measured(argv_base, timeout=timeout)
     warm_record = _test_record(warm)
     warm_record["role"] = "cold_build"
+    warm_ok = (not warm_record["timed_out"] and warm_record["exit"] == 0
+               and warm_record.get("passed") is not None)
+    if not warm_ok:
+        warm_record["blocked_reason"] = "warm first build did not produce a successful native-tests-v1 receipt"
+        return {
+            "state": "forced_tests",
+            "status": "blocked",
+            "reason": warm_record["blocked_reason"],
+            "cold_build": warm_record,
+            "summary": summarize([]),
+            "phase_summary": {},
+            "peak_rss_kb_max": None,
+            "successful_samples": 0,
+            "failed_samples": 0,
+            "samples": [],
+            "memory_note": "direct-child ru_maxrss only; host build children are not included",
+        }
     argv_force = [compiler, "test", entry, "--force", "--json", "--cache-dir=" + str(cache_dir)]
     records = []
     for _ in range(samples):
         records.append(_test_record(run_measured(argv_force, timeout=timeout)))
+    successful = [record for record in records
+                  if not record["timed_out"] and record["exit"] == 0 and record.get("passed") is not None]
     return {
         "state": "forced_tests",
         "cold_build": warm_record,
-        "summary": summarize([record["wall_ms"] for record in records if not record["timed_out"]]),
+        "summary": summarize([record["wall_ms"] for record in successful]),
+        "phase_summary": {},
         "peak_rss_kb_max": max([warm_record["peak_rss_kb"]] +
-                               [record["peak_rss_kb"] for record in records]),
+                               [record["peak_rss_kb"] for record in successful], default=None),
+        "successful_samples": len(successful),
+        "failed_samples": len(records) - len(successful),
         "memory_note": "direct-child ru_maxrss only; host build children are not included",
+        "samples": records,
+    }
+
+
+def start_session(compiler, entry, cwd=None):
+    """Start the existing check-session protocol with a bounded read timeout."""
+    import subprocess
+    return subprocess.Popen(
+        [str(compiler), "check-session", str(entry)],
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+        text=True, bufsize=1, cwd=cwd)
+
+
+def session_request(process, action, timeout):
+    """Send one check-session line and return (wall_ms, parsed reply)."""
+    started = time.monotonic()
+    process.stdin.write(action + "\n")
+    process.stdin.flush()
+    ready, _, _ = select.select([process.stdout], [], [], timeout)
+    if not ready:
+        raise TimeoutError(f"check-session {action!r} exceeded {timeout:g}s")
+    line = process.stdout.readline()
+    if not line:
+        raise RuntimeError("check-session exited unexpectedly")
+    try:
+        record = json.loads(line)
+    except ValueError as exc:
+        raise RuntimeError(f"check-session reply was not JSON: {line[:160]!r}") from exc
+    return (time.monotonic() - started) * 1000.0, record
+
+
+def stop_session(process):
+    if process.poll() is None:
+        try:
+            process.stdin.write("quit\n")
+            process.stdin.flush()
+        except (BrokenPipeError, OSError, ValueError):
+            pass
+        try:
+            process.wait(timeout=10)
+        except Exception:
+            process.kill()
+            process.wait()
+
+
+def session_success(reply):
+    return isinstance(reply, dict) and reply.get("status") == 0
+
+
+def summarize_session_replies(records):
+    successful = [record for record in records if session_success(record.get("reply"))]
+    phase_summary = {}
+    return {
+        "summary": summarize([record["wall_ms"] for record in successful]),
+        "phase_summary": phase_summary,
+        "successful_samples": len(successful),
+        "failed_samples": len(records) - len(successful),
         "samples": records,
     }
 
 
 def measure_session_edits(compiler, entry, cwd, restore, edit, samples, warmup, timeout):
     """In-process check-session edit latency. Excludes process startup."""
-    import subprocess
-    process = subprocess.Popen(
-        [str(compiler), "check-session", str(entry)],
-        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-        text=True, bufsize=1, cwd=cwd)
+    process = start_session(compiler, entry, cwd)
     records = []
+    warm_replies = []
     try:
-        def request(action):
-            started = time.monotonic()
-            process.stdin.write(action + "\n")
-            process.stdin.flush()
-            line = process.stdout.readline()
-            if not line:
-                raise RuntimeError("check-session exited unexpectedly")
-            record = json.loads(line)
-            return (time.monotonic() - started) * 1000.0, record
-
         restore()
+        warm_ok = True
         for _ in range(max(1, warmup)):
-            request("check")
+            _, reply = session_request(process, "check", timeout)
+            warm_replies.append(reply)
+            if not session_success(reply):
+                warm_ok = False
+                break
+        if not warm_ok:
+            return {
+                "state": "session_edit",
+                "status": "blocked",
+                "reason": "session warm-up check did not return status 0",
+                "warm_up": warm_replies,
+                "summary": summarize([]),
+                "phase_summary": {},
+                "successful_samples": 0,
+                "failed_samples": 0,
+                "samples": [],
+            }
         for index in range(samples):
             restore()
             edit(index)
-            elapsed, record = request("check")
-            work = record.get("work") or {}
+            elapsed, reply = session_request(process, "check", timeout)
+            work = reply.get("work") or {}
             records.append({
                 "wall_ms": elapsed,
-                "status": record.get("status"),
+                "status": reply.get("status"),
                 "reused": work.get("reused"),
                 "request": work.get("request"),
-                "diagnostic": record.get("failure"),
+                "diagnostic": reply.get("failure"),
+                # Keep the complete check-session-v1 reply, including retention
+                # totals, per-kind counters and labelled miss reasons.
+                "reply": reply,
             })
-        request("quit")
+    except Exception as exc:  # preserve the failed/blocked state instead of emitting partial summaries
+        return {
+            "state": "session_edit",
+            "status": "blocked",
+            "reason": f"{type(exc).__name__}: {exc}",
+            "warm_up": warm_replies,
+            "summary": summarize([]),
+            "phase_summary": {},
+            "successful_samples": 0,
+            "failed_samples": len(records),
+            "samples": records,
+        }
     finally:
-        if process.poll() is None:
-            try:
-                process.stdin.write("quit\n")
-                process.stdin.flush()
-            except (BrokenPipeError, ValueError):
-                pass
-            try:
-                process.wait(timeout=10)
-            except Exception:
-                process.kill()
-                process.wait()
-    return {
-        "state": "session_edit",
-        "summary": summarize([record["wall_ms"] for record in records]),
-        "samples": records,
-    }
+        stop_session(process)
+    result = summarize_session_replies(records)
+    result.update({"state": "session_edit"})
+    return result
+
+
+def collect_session_probe(compiler, entry, cwd, timeout, checks=3, restore=None, edit=None):
+    """Bounded retention/miss probe over the existing check-session protocol.
+
+    It keeps every raw `check-session-v1` reply, including semantic retention
+    totals, per-kind bytes, eviction counters, specialization-body counters and
+    labelled ordinary/symbolic/specialization miss reasons.
+    """
+    process = start_session(compiler, entry, cwd)
+    replies = []
+    try:
+        if restore is not None and edit is not None:
+            restore()
+            warm_started = time.monotonic()
+            _, warm_reply = session_request(process, "check", timeout)
+            replies.append({
+                "role": "warmup",
+                "probe_index": None,
+                "wall_ms": (time.monotonic() - warm_started) * 1000.0,
+                "reply": warm_reply,
+            })
+            edit(9000)
+        for index in range(max(1, checks)):
+            started = time.monotonic()
+            _, reply = session_request(process, "check", timeout)
+            replies.append({
+                "role": "measurement",
+                "probe_index": index,
+                "wall_ms": (time.monotonic() - started) * 1000.0,
+                "reply": reply,
+            })
+        return {
+            "status": "measured",
+            "protocol": "check-session-v1",
+            "checks": len([reply for reply in replies if reply["role"] == "measurement"]),
+            "replies": replies,
+        }
+    except Exception as exc:
+        return {
+            "status": "blocked",
+            "reason": f"{type(exc).__name__}: {exc}",
+            "protocol": "check-session-v1",
+            "checks": len(replies),
+            "replies": replies,
+        }
+    finally:
+        if restore is not None and edit is not None:
+            restore()
+        stop_session(process)
 
 
 # --------------------------------------------------------------------------- #
@@ -1190,9 +1481,11 @@ def measure_workload(compiler, workload, options, scratch):
                 continue
             edit = edits[state]
         samples = state_samples(state, options)
-        states[state] = measure_one_shot_state(compiler, entry, cache_dir, state, samples,
-                                               options.timeout, edit=edit, restore=restore)
-        states[state]["status"] = "measured"
+        measured = measure_one_shot_state(compiler, entry, cache_dir, state, samples,
+                                          options.timeout, edit=edit, restore=restore)
+        if "status" not in measured:
+            measured["status"] = "measured" if measured.get("successful_samples", 0) > 0 else "failed"
+        states[state] = measured
     if edits:
         originals = pristine
         for state in options.states:
@@ -1206,17 +1499,28 @@ def measure_workload(compiler, workload, options, scratch):
             print(f"[s1]   state {state} ...", flush=True)
             session_cwd = Path(scratch) / "session-cwd" / label
             session_cwd.mkdir(parents=True, exist_ok=True)
-            states[state] = measure_session_edits(
+            measured = measure_session_edits(
                 compiler, entry, session_cwd,
                 lambda: restore_files(originals), edits[base],
                 options.samples, 1, options.timeout)
-            states[state]["status"] = "measured"
+            if "status" not in measured:
+                measured["status"] = "measured" if measured.get("successful_samples", 0) > 0 else "failed"
+            states[state] = measured
     if "forced_tests" in options.states:
         print("[s1]   state forced_tests ...", flush=True)
-        states["forced_tests"] = measure_forced_tests(
+        measured = measure_forced_tests(
             compiler, entry, cache_dir, options.test_samples, options.timeout)
-        states["forced_tests"]["status"] = "measured"
+        if "status" not in measured:
+            measured["status"] = "measured" if measured.get("successful_samples", 0) > 0 else "failed"
+        states["forced_tests"] = measured
     workload["states"] = states
+    if getattr(options, "session_probe", False):
+        print(f"[s1]   session probe {label} ...", flush=True)
+        probe_edit = (edits or {}).get("implementation_edit")
+        workload["session_probe"] = collect_session_probe(
+            compiler, entry, Path(scratch) / "session-cwd" / label,
+            options.timeout, checks=options.session_probe_checks,
+            restore=lambda: restore_files(pristine), edit=probe_edit)
     return workload
 
 
@@ -1278,9 +1582,14 @@ def evaluate_objectives(workload):
 
 CSV_COLUMNS = [
     "workload", "family", "target_lines", "state", "sample", "wall_ms", "peak_rss_kb", "exit",
-    "timed_out", "parsed_performed", "parsed_reused", "checked_performed", "checked_reused",
-    "specializations_performed", "lowered_performed", "emitted_performed", "links_performed",
+    "timed_out", "success", "parsed_performed", "parsed_reused", "checked_performed", "checked_reused",
+    "specializations_performed", "specialization_bodies_performed", "specialization_bodies_reused",
+    "symbolic_templates_performed", "symbolic_templates_reused",
+    "semantic_retained_bytes", "semantic_ordinary_bytes", "semantic_symbolic_bytes",
+    "semantic_specialization_bytes", "semantic_evicted",
+    "lowered_performed", "emitted_performed", "links_performed",
     "tests_performed", "tests_cached", "tests_executed", "reused_results", "bypassed",
+    "phase_count",
 ]
 
 
@@ -1291,24 +1600,45 @@ def write_csv(path, workloads):
         for workload in workloads:
             for state_name, state in (workload.get("states") or {}).items():
                 for index, sample in enumerate(state.get("samples") or []):
+                    report = sample.get("work_report")
+                    reply = sample.get("reply") or {}
                     stages = sample.get("stages") or {}
                     def performed(key):
+                        if report is not None:
+                            return work_count(report, key, "performed")
                         value = stages.get(key)
                         return value.get("performed") if isinstance(value, dict) else None
                     def reused(key):
+                        if report is not None:
+                            return work_count(report, key, "reused")
                         value = stages.get(key)
                         return value.get("reused") if isinstance(value, dict) else None
+                    spec_bodies = work_stage(report, "specialization_bodies") if report is not None else reply.get("specialization_bodies") or {}
+                    symbolic = work_stage(report, "symbolic_templates") if report is not None else reply.get("symbolic_templates") or {}
+                    retention = (semantic_retention(report) if report is not None
+                                 else reply.get("semantic_retention")) or {}
                     writer.writerow([
                         workload["label"], workload["family"], workload.get("target_lines"),
                         state_name, index, f"{sample.get('wall_ms', 0):.3f}", sample.get("peak_rss_kb"),
-                        sample.get("exit"), sample.get("timed_out"),
+                        sample.get("exit"), sample.get("timed_out"), sample.get("success"),
                         performed("parsed_modules"), reused("parsed_modules"),
                         performed("checked_bodies"), reused("checked_bodies"),
-                        performed("instantiated_specializations"), performed("lowered_functions"),
+                        performed("instantiated_specializations"),
+                        spec_bodies.get("performed", spec_bodies.get("checked")),
+                        spec_bodies.get("reused"),
+                        symbolic.get("performed", symbolic.get("checked")),
+                        symbolic.get("reused"),
+                        retention.get("retained_bytes"),
+                        retention.get("ordinary_bytes"),
+                        retention.get("symbolic_bytes"),
+                        retention.get("specialization_bytes"),
+                        retention.get("evicted"),
+                        performed("lowered_functions"),
                         performed("emitted_fragments"), performed("links"),
                         performed("executed_tests"), sample.get("cached"),
                         sample.get("executed"), stages.get("reused_results"),
                         json.dumps(stages.get("bypassed")) if stages.get("bypassed") is not None else "",
+                        len(sample.get("phase_timings") or []),
                     ])
 
 
@@ -1372,6 +1702,10 @@ def parse_args(argv):
     parser.add_argument("--session-samples", type=int, default=None,
                         help="samples for in-process session edits (default: min(--samples,5))")
     parser.add_argument("--timeout", type=float, default=900.0)
+    parser.add_argument("--session-probe", action="store_true",
+                        help="run a bounded check-session-v1 retention/miss probe per workload")
+    parser.add_argument("--session-probe-checks", type=int, default=3,
+                        help="bounded post-edit check-session probe requests (default 3)")
     parser.add_argument("--states", type=lambda value: value.split(","),
                         default=["cold", "unchanged", "no_cache", "implementation_edit",
                                  "constant_edit", "signature_edit", "union_edit",
@@ -1427,11 +1761,21 @@ def main(argv=None):
         feature_document = {}
 
     smoke = smoke_validation(compiler, scratch)
+    host_before = host_snapshot()
     document = {
-        "version": "large-project-profile-v2",
+        "version": "large-project-profile-v3",
+        "schema": {
+            "sample_work_report": "complete work-report-v1 object under sample.work_report; convenience stage views under sample.stages",
+            "sample_phase_timings": "complete phase-timings-v1 JSON records under sample.phase_timings; exclusive records are disjoint, total is inclusive",
+            "semantic_vs_frontend_retention": "sample.semantic_retention is the semantic checked-body store; sample.frontend_cache.retained_bytes is the syntax/frontend cache and must not be conflated with it",
+            "successful_summary": "only samples with exit 0, no timeout and a work-report-v1 receipt enter summary/phase_summary",
+            "warm_label": "state.status == measured only after a successful warm-up; failed/timed-out warm-ups are status blocked",
+            "session_probe": "bounded raw check-session-v1 replies including semantic retention, per-kind bytes, evictions, specialization-body counters and labelled miss reasons",
+        },
         "smoke_validation": smoke,
         "generated_at_unix": time.time(),
         "generator_sha256": sha256_file(__file__),
+        "host": {"before": host_before, "after": None},
         "compiler": {
             "path": compiler,
             "sha256": sha256_file(compiler),
@@ -1439,14 +1783,17 @@ def main(argv=None):
             "zig_version": feature_document.get("zig_version"),
         },
         "method": {
-            "wall_time": "process-start-to-exit, including dynamic linking, source load and command work",
-            "memory": "child ru_maxrss from wait4, per sample",
+            "wall_time": "process-start-to-exit, including dynamic linking, source load and command work; successful samples exclude nonzero exit and timeouts",
+            "memory": "child ru_maxrss from wait4, max over successful samples",
             "percentile": "nearest-rank; sorted ascending; index ceil(0.95*n)-1",
             "samples_per_state": args.samples,
             "forced_test_samples": args.test_samples,
-            "warmup": "one warm check before sampling for unchanged/edit states",
+            "warmup": "one successful warm check is required before unchanged/edit states are measured; failed warm-up marks the state blocked",
             "edit_independence": "each sample writes a deterministic edit token unique to that sample",
             "validation": "check-project --no-cache --report must exit 0 before any timing; run-project for <=20k-line workloads",
+            "phase_convention": "phase records are disjoint and inclusive=false except total (inclusive=true); nested parent phases are not emitted",
+            "semantic_budget_env": "MYLANG_SEMANTIC_BUDGET",
+            "semantic_budget_bytes": semantic_budget_bytes(),
         },
         "limits": verify_limit_sources(repo_root),
         "limit_findings": limit_findings(),
@@ -1464,6 +1811,7 @@ def main(argv=None):
         write_outputs(args, document)
         print(f"[s1] {workload['label']}: {measured.get('status')}", flush=True)
 
+    document["host"]["after"] = host_snapshot()
     write_outputs(args, document)
     print(json.dumps({
         "output": str(args.output),

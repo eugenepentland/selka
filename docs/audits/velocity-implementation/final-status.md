@@ -112,15 +112,24 @@ Pinned toolchain: Zig `0.17.0-dev.1683+5ceec001b`; QBE built from `vendor/qbe`
   declarations hash the conservative `unknown` bound; inferred private precision
   remains a body-local fact.
 - **Transitive generic mutation substitution:** abstract generic checking enforces
-  attributed direct writes; concrete specializations are fully re-checked.
+  attributed direct writes; concrete specialization bodies partially replay
+  (`specialization_bodies 64/64` at 16–128 MiB in the corrected profile), and the
+  remaining misses are `specialization-missing-instance-identity`.
 - **Scale:** the default loader still bounds projects at 256 modules/16 MiB and
   navigation rejects both 100k workloads. Corrected S1 shows ordinary-100k
-  `implementation_edit` p95 1013.6 ms vs the <500 ms target; the dominant gap is
-  the 16 MiB shared retention budget truncating the retained set (~8.8k of 33.5k
-  ordinary bodies retained, so ~24.6k are rechecked per edit). Managed 100k
-  specializations still report `128/0` reuse across processes. Affected-test
-  feedback at 100k remains blocked by whole-project lowering; an eviction-cost
-  workload with >16 MiB of distinct specializations has not yet been built.
+  `implementation_edit` p95 1013.6 ms vs the <500 ms target. The 16 MiB shared
+  retention budget is a demonstrated work multiplier and moderate session
+  benefit, not the established dominant wall-time cost: the corrected 20-sample
+  profile in
+  [`s1-profile-warm-2026-09-16.md`](s1-profile-warm-2026-09-16.md) measures
+  dependency-key preparation at 608–826 ms p50 after near-total replay, with
+  retention/publication second at 384–443 ms p50. Managed concrete
+  specialization bodies partially replay (`specialization_bodies 64/64`; the
+  remaining 64 misses are `specialization-missing-instance-identity`), and the
+  old `instantiated_specializations 128/0` counter is checked-program shape, not
+  body-replay evidence. Affected-test feedback at 100k remains blocked by
+  whole-project lowering; an eviction-cost workload with churn beyond the chosen
+  budget has not yet been built.
 - **Productivity trial:** D2's documentation gates are now green; the comparative
   unfamiliar-code productivity trial remains outstanding and no superiority claim
   is made.

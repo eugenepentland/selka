@@ -81,6 +81,7 @@ const records = @import("records.zig");
 const Error = diagnostic.Error;
 const instances = @import("generic_instances.zig");
 const semantic_cache = @import("semantic_cache.zig");
+const timings = @import("timings.zig");
 const generic_cache = @import("generic_cache.zig");
 const Names = @import("module_names.zig").Names;
 const LoopScope = struct { id: usize, before: []const Pending, arenas: usize = 0, exited: bool = false };
@@ -3797,6 +3798,20 @@ fn initSpecializationReuse(
         if (entry.found_existing) entry.value_ptr.* = std.math.maxInt(usize) else entry.value_ptr.* = index;
     }
 }
+/// Active opt-in phase recorder, if any. Timing never changes semantic results.
+fn activeTiming(cache: ?*semantic_cache.Cache) ?*timings.Profile {
+    const c = cache orelse return null;
+    const p = c.context.timing orelse return null;
+    return if (p.enabled) p else null;
+}
+fn timingStart(timing: ?*timings.Profile) ?std.Io.Timestamp {
+    if (timing) |p| return p.now();
+    return null;
+}
+fn timingAdd(timing: ?*timings.Profile, name: []const u8, start: ?std.Io.Timestamp) void {
+    if (timing) |p| if (start) |at| p.addSince(name, at, false);
+}
+
 /// Look up one checked body, preferring the ordinary store and falling back to
 /// the concrete-specialization store. Counts performed/reused work at the same
 /// site so `work-report-v1` never infers reuse from a fingerprint.
@@ -3808,9 +3823,19 @@ fn reuseBody(
     allocator: std.mem.Allocator,
     i: usize,
 ) Error!?typed.Function {
-    var function = if (session.*) |*queries| (try queries.lookup(allocator, i, &checker.nodes, &checker.statements)) else null;
+    const timing = activeTiming(cache);
+    var function: ?typed.Function = null;
+    if (session.*) |*queries| {
+        const start = timingStart(timing);
+        function = try queries.lookup(allocator, i, &checker.nodes, &checker.statements);
+        timingAdd(timing, "ordinary_body_replay", start);
+    }
     if (function == null and i >= checker.ordinary_count) {
-        if (spec_session.*) |*reuse| function = try checker.lookupSpecialization(reuse, allocator, i, &checker.nodes, &checker.statements);
+        if (spec_session.*) |*reuse| {
+            const start = timingStart(timing);
+            function = try checker.lookupSpecialization(reuse, allocator, i, &checker.nodes, &checker.statements);
+            timingAdd(timing, "specialization_body_replay", start);
+        }
     }
     if (function == null) {
         if (cache) |c| c.statistics.checked += 1;
@@ -3885,6 +3910,7 @@ fn exportedFunctions(allocator: std.mem.Allocator, module_names: ?*Names, functi
 /// Reuse supported checked bodies, then rerun all cross-function validation passes.
 pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names, cache: ?*semantic_cache.Cache) Error!typed.Program {
     defer normalizeDiagnostics(sink);
+    const timing = activeTiming(cache);
     const catalog = try records.collectWithNames(allocator, src, program, sink, module_names);
     var session = if (cache) |c| try c.begin(allocator, src, program, catalog.records) else null;
     var symbolic = try openSymbolicSession(cache, &session, src, module_names != null);
@@ -3892,10 +3918,12 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     var spec_session = try openSpecializationSession(cache, &session);
     defer deinitSpecialization(&spec_session);
     var failed = false;
+    const symbolic_start = timingStart(timing);
     checkGenericContracts(src, program, sink, catalog, &symbolic) catch |err| switch (err) {
         error.SourceError => failed = true,
         else => return err,
     };
+    timingAdd(timing, "symbolic_templates", symbolic_start);
     const contracts_failed = failed;
     const resolved = try allocator.alloc(?typed.NodeId, program.nodes.items.len);
     @memset(resolved, null);
@@ -3972,6 +4000,9 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
         const start_nodes = checker.nodes.items.len;
         const start_statements = checker.statements.items.len;
         const reused = try reuseBody(&checker, &session, &spec_session, cache, allocator, i);
+        const fresh = reused == null;
+        const fresh_start = if (fresh) timingStart(timing) else null;
+        defer if (fresh) timingAdd(timing, "fresh_body_check", fresh_start);
         const function = reused orelse checker.checkFunction(i) catch |err| switch (err) {
             error.SourceError => {
                 failed = true;
@@ -4005,14 +4036,24 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
         .main = main,
         .records = checker.catalog.records,
     };
+    const entry_start = timingStart(timing);
     try entry_adapter.adapt(allocator, &checked);
     const exported = try exportedFunctions(allocator, module_names, checked.functions);
+    timingAdd(timing, "entry_adaptation", entry_start);
+    const effects_start = timingStart(timing);
     try @import("effects.zig").check(allocator, checked, exported, sink);
+    timingAdd(timing, "effect_origin_passes", effects_start);
+    const codecs_start = timingStart(timing);
     try @import("domain_codecs.zig").check(allocator, src, program.types.domains, checker.catalog, .{ .items = functions, .names = executable_names }, sink);
+    timingAdd(timing, "domain_codec_validation", codecs_start);
+    const warnings_start = timingStart(timing);
     try warnBindings(allocator, functions, sink);
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
+    timingAdd(timing, "warning_derivation", warnings_start);
+    const retain_start = timingStart(timing);
     try publishSpecializationSession(&spec_session, &checker, allocator, checked);
     if (session) |*queries| try queries.remember(checked);
+    timingAdd(timing, "retention_store_io", retain_start);
     return checked;
 }
 

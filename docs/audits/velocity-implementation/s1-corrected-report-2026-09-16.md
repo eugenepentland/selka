@@ -3,10 +3,14 @@
 Status: **measurement only; no compiler/source behavior changed.** The corrected
 compiler is substantially faster than the prior S1 baseline in every comparable
 state, but the **100k check-feedback target (<500 ms) is still not met**, and the
-**100k affected-test target is still unmeasured/blocked**. The dominant remaining
-cost is the shared 16 MiB semantic retention budget: at 100k it saturates and
-stops retaining ~24.6k of 33.5k ordinary bodies, so every edit rechecks ~24.6k
-bodies and an edit costs about the same as `--no-cache`.
+**100k affected-test target is still unmeasured/blocked**. The 16 MiB shared
+semantic retention budget is a demonstrated source of extra work: it retains
+only ~8.8k of 33.5k ordinary bodies at 100k, so every edit rechecks ~24.6k
+bodies. Later 20-sample profile evidence shows that retention truncation is a
+modest session benefit, not the established dominant wall-time cost; after
+near-total body replay the largest demonstrated warm-check cost is dependency-key
+preparation. See the corrected profile:
+[s1-profile-warm-2026-09-16.md](s1-profile-warm-2026-09-16.md).
 
 Prepared 2026-09-16 on branch `codex/velocity-integration`, commit
 `3f76446c9e4134d7fea0c67045dee4a28fb24507`.
@@ -251,11 +255,13 @@ native build exceed 150 s (the 10k cold build is already 84–94 s). Lazy loweri
 ## 6. Eviction / retention observations
 
 **The S1 workloads saturate the 16 MiB shared semantic retention budget but do
-not increment `retention.evicted`.** The harness does not record
-`functions.retention` (its session reply carries it, but the harness keeps only
-`wall_ms`/`reused`/`request`; `work-report-v1` has no retention field), so this
-was captured with a thin probe over the same `check-session` protocol and the
-same harness-generated sources (`retention-*.json`):
+not increment `retention.evicted`.** The original S1 harness version dropped
+`functions.retention` (its session reply carried it, but the harness kept only
+`wall_ms`/`reused`/`request`; `work-report-v1` then had no retention field), so
+this was captured with a thin probe over the same `check-session` protocol and
+the same harness-generated sources (`retention-*.json`). The repaired harness
+now preserves the complete work report and semantic retention/per-kind/eviction
+counters directly.
 
 | project | retained_bytes | budget | ordinary / symbolic / specialization bytes | `retention.evicted` |
 | --- | ---: | ---: | --- | ---: |
@@ -267,10 +273,16 @@ same harness-generated sources (`retention-*.json`):
 Interpretation: the budget is enforced by retaining only the prefix that fits
 and refusing the rest (`no-retained-body` bypass), not by oldest-first
 eviction. At 100k this leaves only ~8.8k of 33.5k ordinary bodies retained; the
-other ~24.6k are rechecked on **every** edit. That is why
-`implementation_edit` (1001.5 ms) ≈ `no_cache` (1026.8 ms): the fix's durable
-reuse is real (it reuses 8820 bodies where the prior baseline reused 0) but the
-16 MiB cap removes nearly all of its benefit at 100k.
+other ~24.6k are rechecked on **every** edit. The fix's durable reuse is real
+(it reuses 8820 bodies where the prior baseline reused 0). The 20-sample
+profile sweep in
+[s1-profile-warm-2026-09-16.md](s1-profile-warm-2026-09-16.md) still shows a
+modest benefit rather than a dominant wall-time effect: raising the budget to
+64/128 MiB removes nearly all ordinary rechecks, but dependency-key preparation
+and retention/publication remain, and host variance keeps the p50 comparison
+from demonstrating a stable large win. Retention truncation is therefore a
+demonstrated work multiplier and a moderate session benefit, not the established
+dominant latency cost.
 
 **Where eviction does happen (existing focused retention tests).** The
 repository's focused retention contract tests force genuine old-to-new eviction
@@ -319,11 +331,16 @@ approximate.
 | ordinary-10k | session_impl | 3138/3139 reused (10k session reuse existed) | 3139 total, ~full reuse | maintained |
 | ordinary-100k | implementation_edit | 33475/0 | **24655/8820** | partial reuse appears, capped by 16 MiB |
 | ordinary-100k | session_impl | 33475/0, `bypassed=1, retained 0` | 24202/9273 | session no longer bypasses, still capped |
-| managed-100k | implementation_edit | 32708/0, specs 128 | 24137/8571, specs **128/0** | partial ordinary reuse; specializations still never reused |
+| managed-100k | implementation_edit | 32708/0, specs 128 | 24137/8571, specs 128/0; **specialization_bodies 64/64** | partial ordinary reuse; concrete specialization bodies replay 64/64, with 64 misses `specialization-missing-instance-identity` |
 
 So the budget-accounting work already converts "reuse every body" from 0 to
-8820/33475 at 100k and to near-full reuse at 10k. The remaining gap to the
-objective is the budget cap, not the absence of the mechanism.
+8820/33475 at 100k and to near-full reuse at 10k. Raising the budget to 64/128
+MiB reaches 33473/33475 reused ordinary bodies in the corrected profile, so the
+ordinary retention cap is a real work multiplier. It is not, by itself, the
+dominant latency explanation: after near-total replay the profile still measures
+dependency-key preparation at 608-826 ms p50 and retention/publication at
+384-443 ms p50. The old `instantiated_specializations 128/0` counter is checked
+program shape; the actual specialization-body counter is `64/64`.
 
 ### Absolute comparison (conflates Debug vs ReleaseFast — read with the warning)
 
@@ -354,33 +371,45 @@ both builds.
 
 ## 8. Top remaining compilation/lowering costs (next implementation step)
 
-1. **Retention budget truncation is the #1 edit cost at 100k.** The shared
-   16 MiB budget holds only ~8.8k/33.5k ordinary bodies; every edit rechecks
-   ~24.6k bodies (`no-retained-body`), so edit ≈ `no_cache` (~1.0 s vs ~1.03 s)
-   and in-process edits do not beat fresh checks. Priorities: shrink the retained
-   representation (compaction / dense specialization remaps / dedupe dependency
-   keys) and/or raise the shared budget with a measured retained-tree model, so
-   the working set fits. This single change moves every 100k edit state, including
-   sessions, toward the 500 ms target.
-2. **Managed specializations are never reused across processes.** Every managed
-   state shows `instantiated_specializations 128/0`; `not-ordinary-body×128` and
-   `relocation-failed×17` appear on every edit. Dense specialization remaps /
-   durable specialization reuse would remove ~128 redundant instantiations per
-   edit (small in bytes here, but pure repeated work and a scaling risk as
-   provider counts grow).
-3. **Affected-test feedback at 100k is blocked by whole-project lowering.** The
-   150 s time-box cannot complete the warm native build; the 10k cold build is
-   already 84–94 s. Lazy lowering plus affected-test selection is required before
-   the <1 s affected-test objective can even be measured at 100k. (At 10k the
-   forced re-run is already 0.72–0.77 s p95 thanks to object/test reuse.)
-4. **Cold/first check ~1.2 s and RSS ~0.53 GiB at 100k.** `no_cache` (33,475
-   bodies) is ~1.03 s and RSS ~0.51–0.54 GiB; the parser is not the problem
-   (edits reuse 65/66 modules). Per-body check throughput and check-time memory
-   are the next throughput levers after retention.
-5. **Eviction-cost measurement gap.** Add a realistic workload whose distinct
-   specializations/symbolic templates exceed 16 MiB (or churn providers) to
-   measure eviction/re-admission cost; the current S1 managed family only
-   evicts in the focused unit tests, not under load.
+1. **Dependency-key preparation is the largest demonstrated warm-check cost
+   after near-total replay.** The corrected profile measures
+   `dependency_key_preparation` at 608–826 ms p50 across full-reuse budgets
+   (roughly 40–50% of measured total), while fresh ordinary body checking falls
+   to 1.3–1.5 ms p50 and ordinary replay is 52–67 ms p50. The cost is
+   `semantic_key.prepare` building stable function identities and dependency
+   contexts for every AST function before any body lookup. The next package
+   should make that preparation incremental or session-reusable for unchanged
+   declaration regions, with exact dependency-digest preservation; this package
+   deliberately did not change cache identities.
+2. **Retention/publication is the second-largest measured phase, and a larger
+   budget alone is only a trade.** At 64/128 MiB all 33,473 ordinary bodies are
+   retained and fresh ordinary checks fall to two, but `retention_store_io`
+   (`Session.remember` plus durable publication) rises to 384–443 ms p50 because
+   full retention transfers/publishes O(N) entries. Raising the default budget
+   from 16 MiB would trade memory for fewer checks; it would not remove the
+   dominant key-preparation cost and needs its own measured policy decision.
+   Reducing the O(N) publication/transfer work is a bounded follow-up.
+3. **Managed concrete-specialization body replay is partial.** The corrected
+   profile reports `specialization_bodies 64/64` across 16/32/64/128 MiB; the
+   remaining 64 misses are `specialization-missing-instance-identity`, and
+   `instantiated_specializations 128/0` is not body-replay evidence. Nested
+   specialization identity materialization/remapping is the bounded follow-up;
+   sparse remapping alone does not make those 64 identities replayable.
+4. **Affected-test feedback at 100k remains blocked by whole-project lowering.**
+   The 150 s time-box cannot complete the warm native build; the 10k cold build
+   is already 84–94 s. Lazy lowering plus affected-test selection is required
+   before the <1 s affected-test objective can be measured at 100k. Keep this
+   work separate from whole-project preparation/lowering and linking.
+5. **Cold/first check ~1.5–2.2 s and RSS ~0.53–0.60 GiB at 100k under load.**
+   `no_cache` (33,475 bodies) is ~1.3–1.5 s p50 and RSS ~0.51–0.53 GiB. The
+   parser is not the problem (edits replay 65/66 modules). Per-body check
+   throughput and check-time memory remain throughput levers after the
+   dependency-key and publication work.
+6. **Eviction-cost measurement gap.** Add a realistic workload whose distinct
+   specializations/symbolic templates exceed the chosen budget or churn providers
+   to measure eviction/re-admission cost; the current managed family fills the
+   16/32 MiB budgets and evicts generic entries, but the stable 128-specialization
+   workload does not cover churn.
 
 ## 9. Accuracy notes / limitations
 

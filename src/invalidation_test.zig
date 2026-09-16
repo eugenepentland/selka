@@ -418,6 +418,35 @@ test "work report separates fingerprint equality from reuse and marks skipped st
 }
 
 // spec-case: WORK-REPORT-1
+test "work report preserves semantic retention separate from frontend bytes" {
+    var work: invalidation.Work = .{ .command = "check-project" };
+    work.counters.semantic = .{
+        .retained_bytes = 4096,
+        .ordinary_bytes = 3000,
+        .symbolic_bytes = 96,
+        .specialization_bytes = 1000,
+        .evicted = 7,
+    };
+    work.addBypass("no-retained-body", 2);
+    work.addBypass("no-retained-body", 3);
+
+    const rendered = try invalidation.renderWork(t.allocator, work);
+    defer t.allocator.free(rendered);
+    var parsed = try std.json.parseFromSlice(std.json.Value, t.allocator, rendered, .{});
+    defer parsed.deinit();
+    const root = parsed.value;
+    const semantic = root.object.get("semantic_cache").?.object;
+    try t.expectEqual(@as(i64, 4096), semantic.get("retained_bytes").?.integer);
+    try t.expectEqual(@as(i64, 3000), semantic.get("ordinary_bytes").?.integer);
+    try t.expectEqual(@as(i64, 96), semantic.get("symbolic_bytes").?.integer);
+    try t.expectEqual(@as(i64, 1000), semantic.get("specialization_bytes").?.integer);
+    try t.expectEqual(@as(i64, 7), semantic.get("evicted").?.integer);
+    const bypass = root.object.get("bypassed").?.array.items[0].object;
+    try t.expectEqualStrings("no-retained-body", bypass.get("reason").?.string);
+    try t.expectEqual(@as(i64, 5), bypass.get("count").?.integer);
+}
+
+// spec-case: WORK-REPORT-1
 test "work report counts observed reuse as a hit rather than as fresh work" {
     var work: invalidation.Work = .{ .command = "run-project" };
     work.set(.parsed_modules, 0, 3);

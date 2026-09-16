@@ -60,8 +60,18 @@ mean their durations should be added to a second measure of their children.
 - Single-source `source_load` reads source bytes. `frontend` copies the source,
   lexes, parses, and checks it; it is not a standalone type-check measurement.
 - Project `source_load_parse` prepares generated inputs and loads source with
-  header parsing, dependency discovery and hashes. `frontend` builds interfaces,
-  combines syntax and checks the project. These phases are disjoint.
+  header parsing, dependency discovery and hashes. The project path now reports
+  the formerly composite `frontend` interval as disjoint phases:
+  `syntax_replay` or `syntax_parse` (per-module parse-table acquisition),
+  `declarations_interfaces` (module/export indexing and exported signature
+  validation, excluding syntax acquisition), `source_merge` (combining relocated
+  module syntax), and, when checking runs, `dependency_key_preparation`,
+  `symbolic_templates`, `ordinary_body_replay`, `specialization_body_replay`,
+  `fresh_body_check`, `entry_adaptation`, `effect_origin_passes`,
+  `domain_codec_validation`, `warning_derivation` and `retention_store_io`.
+  These records are disjoint (`inclusive:false`). A successful whole-project
+  verdict replay may report only `source_load_parse` plus `total` because no
+  frontend/check work executed.
 - `bytecode_lowering` runs after checking and lowers the checked program to the
   internal bytecode the native backend consumes. `native_emission` covers native
   validation and QBE rendering after that separately measured lowering.
