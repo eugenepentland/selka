@@ -1,8 +1,8 @@
 # Development velocity: implementation status
 
-Status: **core packages plus the R1–R4/HASH/WARM correction pass integrated on `35b9090d`; release checklist partially met.**
+Status: **core packages plus the R1–R4/HASH/WARM and C3/C4 correction passes integrated on `610656cf`; release checklist partially met.**
 Baseline: `9ce142e98cb22e684622ed1d5678071d6944206e` (post named-constraint fixes).
-Integration HEAD: `c3cf37c6` (code gate; later commits are status documentation only).
+Integration HEAD: `610656cf` (correction-pass code gate; later commits are status documentation only).
 Plan: [development-velocity-implementation-plan-2026-09-15.md](../development-velocity-implementation-plan-2026-09-15.md).
 Ledger and frozen contracts: [README.md](README.md), [contracts.md](contracts.md).
 
@@ -30,6 +30,9 @@ Ledger and frozen contracts: [README.md](README.md), [contracts.md](contracts.md
 | C3b | canonical specialization-key engine (template/positional/provider/constraint/contract/build dimensions) | `b0b156e8` |
 | C3S | validated concrete-specialization replay (`specialization-v1`) with typed remap and effect-rerun discipline | `f444ddc5` |
 | C4 | receipt-first test selection with a durable reduced preparation graph (`native-test-graph-v1`); warm unchanged reruns execute zero tests with no lowering/emission/linking | `aea9b525` |
+| G1 | reduced graph bound to its requested input key (v2 envelope + structural validation); a copied entry is a miss | `0c420fbc` |
+| N1 | directory fan-out forwards `--no-cache`; seeded/empty caches execute every case and write zero durable files | `0c420fbc` |
+| Retention | bounded-prefix ordinary retention, reference-sized ordinary remap, clear releases all three entry kinds, shared `reuse.max_bytes` budget with per-kind reporting | `9699895b`/`610656cf` |
 | R3 | canonical declaration type descriptors; manifest `interface-contracts-v2` | `bc462aa6` |
 | R1/R2 | receipt acceptance bound to selected dependency closure; one checked project/prepared library per selected provider graph | `1ed663b9` |
 | R4 | batched semantic-store inventory: statx 128/256/512/1024 → 260/516/1028/2052 | `d54cc302` |
@@ -46,13 +49,13 @@ lowering/emission/linking.
 
 ## Final gate evidence
 
-Gates on the C3/C3S/C4 tree (`c3cf37c6`, fresh worktrees unless noted):
+Gates on the corrected C3/C3S/C4 tree (`610656cf`, worktrees rebuilt from the C3/C4 tree):
 
 | Gate | Result |
 | --- | --- |
-| `zig build test --summary all -j8` (Debug, cold fresh worktree at `4afd5203`, identical src) | **39/39 steps succeeded; 1189/1189 tests passed; exit 0** |
-| `zig build test --summary all -j8` (Debug rebuild at `c3cf37c6`, build-only cap change) | **39/39 steps succeeded; exit 0** |
-| `zig build test -Doptimize=ReleaseFast --summary all -j1` (fresh worktree at `c3cf37c6`) | **39/39 steps succeeded; 1188/1189 passed, 1 skipped (Debug-only allocation sweep); exit 0** |
+| `zig build test --summary all -j8` (Debug) | **39/39 steps succeeded; 1199/1199 tests passed; exit 0** |
+| `zig build test -Doptimize=ReleaseFast --summary all -j1` | **39/39 steps succeeded; 1198/1199 passed, 1 skipped (Debug-only allocation sweep); exit 0** |
+| Retention batch (ReleaseFast at the retention commit `92218ee2`) | **39/39 steps; 1198/1199 passed, 1 skipped; exit 0** |
 | WARM end-to-end probe | in-place bundled-runtime edit refreshed `content_hash`, installed archive names and materialized runtime bytes without cleaning |
 | Guardian whole-tree commit gate | 88/88 checks passed |
 | `zig build fmt-check`, `test-doc-coverage`, `test-docs`, `test-qbe`, `test-native-tests` | covered by the `test` graph and independently green |
