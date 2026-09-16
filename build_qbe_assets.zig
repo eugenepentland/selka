@@ -37,8 +37,16 @@ fn read(b: *std.Build) Sources {
     defer walker.deinit();
     var sources: Sources = .empty;
     while (walker.next(b.graph.io) catch @panic("read native assets")) |entry| {
-        if (entry.kind == .directory) b.dependOnDirectory(b.path(b.pathJoin(&.{ "src", entry.path })));
+        const relative = b.pathJoin(&.{ "src", entry.path });
+        if (entry.kind == .directory) b.dependOnDirectory(b.path(relative));
         if (entry.kind != .file) continue;
+        // A directory dependency only repeats the configure phase when a name is
+        // added, removed or renamed; an in-place content edit would otherwise
+        // leave `content_hash`/`compiler_identity` at their cached values while
+        // the `@embedFile` copies tracked by the write-file step move to the new
+        // bytes. Bind every input's contents so the identity the artifact embeds
+        // and the bytes it bundles can never disagree.
+        b.dependOnFileContents(b.path(relative));
         const bytes = directory.readFileAlloc(b.graph.io, entry.path, b.allocator, .unlimited) catch @panic("read native asset");
         sources.put(b.allocator, b.dupe(entry.path), bytes) catch @panic("OOM");
     }
