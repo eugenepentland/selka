@@ -1,0 +1,3879 @@
+{
+  "provenance": {
+    "scratch": "/tmp/mylang-speed-20260916-ry8hnipe",
+    "source_head": "58ad13f57828f2a0679b90bda88b3c5c30606613",
+    "date": "2026-09-16",
+    "generator_sha256": "9cb579c34039a923110ee3aa2abbf2b3d4f4e01a9590e08b249c2683c23caec6",
+    "machine": "Linux linuxserver 7.0.0-31-generic #31-Ubuntu SMP PREEMPT_DYNAMIC Sat Aug  1 04:26:38 UTC 2026 x86_64 GNU/Linux",
+    "load_start": [
+      2.8232421875,
+      0.92529296875,
+      0.50390625
+    ],
+    "compilers": {
+      "release": {
+        "path": "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+        "binary_sha256": "d2f68f5b76437e383956d621d0c3554750e24a9b089ca5d0783032ec183c2c86",
+        "compiler_identity": "5e12ed92e4e4a43a8c45ca09ad1f5c431170c0f8499220a74c18a26f61044918",
+        "commit": "88691e7b3c5d6dea0a05e82ffadb375bd865981f"
+      },
+      "debug": {
+        "path": "/tmp/mylang-speed-20260916-ry8hnipe/debug/bin/mylang",
+        "binary_sha256": "a88a7068495a3b5d3778bdb7ec2b0cc60bb5a2ad91a03a064d61dce84cff91f8",
+        "compiler_identity": "3c2bb209b69eb9829ead395093f08bd8a8034f3efdef93d410ab5b3fc03c7110",
+        "commit": "88691e7b3c5d6dea0a05e82ffadb375bd865981f"
+      }
+    }
+  },
+  "method": {
+    "clock": "process start to exit; reused existing run_measured helper",
+    "guest_mode": "Debug, for the development test/build loop; host compiler ReleaseFast",
+    "timeout_seconds": 180,
+    "rss": "direct child only, build grandchildren excluded",
+    "cold": "Empty mylang native cache. OS page caches, the Zig global cache and installed runtime archives are available.",
+    "machine": "Shared i7-12700H, 20 logical CPUs, 30 GiB RAM. All measured commands sequential. Load averages are provenance, not proof of an idle host."
+  },
+  "workloads": [
+    {
+      "name": "ordinary-10k-tests",
+      "lines_bytes_files": [
+        9935,
+        186437,
+        66
+      ],
+      "states": {
+        "cold": {
+          "summary": {
+            "samples_ms": [
+              109203.70457599347
+            ],
+            "count": 1,
+            "median_ms": 109203.70457599347,
+            "p95_ms": 109203.70457599347,
+            "min_ms": 109203.70457599347,
+            "max_ms": 109203.70457599347,
+            "percentile_method": "nearest-rank; sorted ascending; index ceil(0.95*n)-1"
+          },
+          "samples": [
+            {
+              "wall_ms": 109203.70457599347,
+              "peak_rss_kb": 121236,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            }
+          ]
+        },
+        "unchanged": {
+          "summary": {
+            "samples_ms": [
+              230.82976999285165,
+              232.56601000321098,
+              240.79202899883967,
+              242.9173270065803,
+              245.97209799685515,
+              251.8905890028691,
+              261.5985419979552,
+              266.4393820014084,
+              284.40399799728766,
+              285.98579099343624,
+              302.60149399691727,
+              302.7890560042579,
+              309.3173250090331,
+              317.3419849917991,
+              318.28577400301583,
+              333.4892710117856,
+              364.379534003092,
+              406.2004789884668,
+              425.80302599526476,
+              731.1295770050492
+            ],
+            "count": 20,
+            "median_ms": 294.29364249517675,
+            "p95_ms": 425.80302599526476,
+            "min_ms": 230.82976999285165,
+            "max_ms": 731.1295770050492,
+            "percentile_method": "nearest-rank; sorted ascending; index ceil(0.95*n)-1"
+          },
+          "samples": [
+            {
+              "wall_ms": 425.80302599526476,
+              "peak_rss_kb": 249684,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "cached",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 731.1295770050492,
+              "peak_rss_kb": 249680,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "cached",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 364.379534003092,
+              "peak_rss_kb": 249680,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "cached",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 317.3419849917991,
+              "peak_rss_kb": 249684,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "cached",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 333.4892710117856,
+              "peak_rss_kb": 249488,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "cached",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 285.98579099343624,
+              "peak_rss_kb": 249516,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "cached",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 266.4393820014084,
+              "peak_rss_kb": 249684,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "cached",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 302.7890560042579,
+              "peak_rss_kb": 249664,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "cached",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 318.28577400301583,
+              "peak_rss_kb": 249620,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "cached",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 251.8905890028691,
+              "peak_rss_kb": 249668,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "cached",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 406.2004789884668,
+              "peak_rss_kb": 249360,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "cached",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 302.60149399691727,
+              "peak_rss_kb": 249616,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "cached",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 309.3173250090331,
+              "peak_rss_kb": 249536,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "cached",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 284.40399799728766,
+              "peak_rss_kb": 249652,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "cached",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 230.82976999285165,
+              "peak_rss_kb": 249320,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "cached",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 261.5985419979552,
+              "peak_rss_kb": 249600,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "cached",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 232.56601000321098,
+              "peak_rss_kb": 249420,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "cached",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 242.9173270065803,
+              "peak_rss_kb": 249404,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "cached",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 240.79202899883967,
+              "peak_rss_kb": 249292,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "cached",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 245.97209799685515,
+              "peak_rss_kb": 249644,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "cached",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            }
+          ]
+        },
+        "forced": {
+          "summary": {
+            "samples_ms": [
+              850.5277280055452,
+              857.0539889915381,
+              896.5436720027355,
+              910.4846309928689,
+              922.4265460070455
+            ],
+            "count": 5,
+            "median_ms": 896.5436720027355,
+            "p95_ms": 922.4265460070455,
+            "min_ms": 850.5277280055452,
+            "max_ms": 922.4265460070455,
+            "percentile_method": "nearest-rank; sorted ascending; index ceil(0.95*n)-1"
+          },
+          "samples": [
+            {
+              "wall_ms": 910.4846309928689,
+              "peak_rss_kb": 249384,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k",
+                "--force"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 922.4265460070455,
+              "peak_rss_kb": 249488,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k",
+                "--force"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 850.5277280055452,
+              "peak_rss_kb": 249604,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k",
+                "--force"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 896.5436720027355,
+              "peak_rss_kb": 249624,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k",
+                "--force"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            },
+            {
+              "wall_ms": 857.0539889915381,
+              "peak_rss_kb": 249616,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k",
+                "--force"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "f49a53633c138795d2835837b1c31ae73fcaa93a4b8d91531538612d5ffa7ace"
+                }
+              ]
+            }
+          ]
+        },
+        "implementation_edit": {
+          "summary": {
+            "samples_ms": [
+              896.8933500000276,
+              1008.4364640060812,
+              1021.32250800787,
+              1060.5039509973722,
+              1065.9557659964776,
+              1129.883139001322,
+              1132.3116720013786,
+              1141.2286959966877,
+              1145.0097119959537,
+              1175.139017010224,
+              1177.5219179980922,
+              1206.5137309982674,
+              1237.7205780067015,
+              1307.8559009882156,
+              1317.0047540043015,
+              1339.1700380016118,
+              1353.8904769957298,
+              1648.2969149947166,
+              1778.7261359917466,
+              1932.1266309998464
+            ],
+            "count": 20,
+            "median_ms": 1176.3304675041582,
+            "p95_ms": 1778.7261359917466,
+            "min_ms": 896.8933500000276,
+            "max_ms": 1932.1266309998464,
+            "percentile_method": "nearest-rank; sorted ascending; index ceil(0.95*n)-1"
+          },
+          "samples": [
+            {
+              "wall_ms": 896.8933500000276,
+              "peak_rss_kb": 251584,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "2eb3290066c3e99d7836dca04b851b0cb9b012bccda25eef5ee26f440f257580"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1778.7261359917466,
+              "peak_rss_kb": 254856,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "3a09fc7c8af48578cb2d4982f325426cb7e43384843b18f0c915e69c8d09f55a"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1339.1700380016118,
+              "peak_rss_kb": 255112,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "d040a30e236f0889587a8c831ae50a5cbb608365bb858b3461f8c883ef785ae8"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1129.883139001322,
+              "peak_rss_kb": 254904,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "cc8710242992aa8e6c37511a5613b635b00d6cba0ea79d0cb7c68246456cc90b"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1008.4364640060812,
+              "peak_rss_kb": 254696,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "7876cdc14a25b18ef18f3d62f4ff0a8a46e0a6d7559f16bdcfe564fe4d7e88b9"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1021.32250800787,
+              "peak_rss_kb": 255004,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "4918835dcbb308e71e5d08bc9bf4cc656709c10717ed18fc6987d3e75af6f0bd"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1307.8559009882156,
+              "peak_rss_kb": 254908,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "ebf27c667911c56a414b4f031ae744918c9e5560dc357ff9d4d8a6ee7647950d"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1648.2969149947166,
+              "peak_rss_kb": 255120,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "3d99d286e32e8ba0ba8e12da70a11610822c831d55133e98f2cf0741320efd21"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1317.0047540043015,
+              "peak_rss_kb": 255116,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "4216e525adc9de2342231151496013d51a6e9bc4034492442c6a90a6c53aa207"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1177.5219179980922,
+              "peak_rss_kb": 255120,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "bdd2e17cf1cd667960e16a5db0e11de1383b034f164a05ea100863773799ee3f"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1237.7205780067015,
+              "peak_rss_kb": 255040,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "aaa52c80c71ff87a9cb348fcc3c12034d2537019d082f5ef162b9cf121d6c23c"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1932.1266309998464,
+              "peak_rss_kb": 255104,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "20d1a39a199f7f6f3da6f377aebfb7a1fd2ae322541fe7bf38b6a577b59636a1"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1206.5137309982674,
+              "peak_rss_kb": 254896,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "e7934e852e84f628feefb821afdd5477bf6e5c0e2d4e2e0591c2051254672a11"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1060.5039509973722,
+              "peak_rss_kb": 254668,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "8be30868a3e0b50719388502d6ced788f11e94f08e79db0a5815ca278f1c20e2"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1353.8904769957298,
+              "peak_rss_kb": 254840,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "29f8cb5c874abf41f21d5218e89dbcc0c9b1079b60be14107e4bb1d19f266e88"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1141.2286959966877,
+              "peak_rss_kb": 255116,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "4e366b6949d613c01791730ff80fa45b9a953d245ad07b7754800345eb9a173c"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1132.3116720013786,
+              "peak_rss_kb": 254908,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "c9c2a0b83325aa4ba9308fee97e2b7fd99546b19d134e14bb52a0ecb20305f1c"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1065.9557659964776,
+              "peak_rss_kb": 254916,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "da0f67cf31ea9ff19f39dc75ad4aa21d51fe0a5b93846644861dc7f930dcffe3"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1145.0097119959537,
+              "peak_rss_kb": 254804,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "794736d9c31714b92c82d8c493cabf5b512c3abf79d5779bd251ea63e2a408b3"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1175.139017010224,
+              "peak_rss_kb": 255064,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/ordinary-10k-release/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/ordinary-10k"
+              ],
+              "tests": {
+                "passed": 1,
+                "cached": 0,
+                "failed": 0,
+                "executed": 1,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_ordinary",
+                  "status": "passed",
+                  "key": "cd31e8ad7cdd04a3a21cdfc2b9d3897c4d20760dae36621c0aeac427d39ee204"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "selfhost-prototype-build",
+      "lines_bytes_files": [
+        720,
+        22812,
+        3
+      ],
+      "states": {
+        "cold": {
+          "summary": {
+            "samples_ms": [
+              1063.4000599966384
+            ],
+            "count": 1,
+            "median_ms": 1063.4000599966384,
+            "p95_ms": 1063.4000599966384,
+            "min_ms": 1063.4000599966384,
+            "max_ms": 1063.4000599966384,
+            "percentile_method": "nearest-rank; sorted ascending; index ceil(0.95*n)-1"
+          },
+          "samples": [
+            {
+              "wall_ms": 1063.4000599966384,
+              "peak_rss_kb": 75892,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "build",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/selfhost-prototype-release/bench.my",
+                "--project",
+                "-o",
+                "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "--report",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--mode",
+                "Debug",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/selfhost-build"
+              ],
+              "build": {
+                "version": "qbe-build-v1",
+                "output": "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "output_changed": true,
+                "compiled_functions": 22,
+                "reused_functions": 0,
+                "runtime_reused": true,
+                "runtime_installed": true,
+                "metadata_reused": false,
+                "frontend_seconds": 0.024062983,
+                "codegen_seconds": 0.988841033,
+                "link_seconds": 0.039665724,
+                "native_seconds": 1.028510194,
+                "target": "amd64_sysv",
+                "mode": "Debug",
+                "zig_version": "0.17.0-dev.1683+5ceec001b",
+                "artifact_kind": "executable"
+              }
+            }
+          ]
+        },
+        "unchanged": {
+          "summary": {
+            "samples_ms": [
+              118.94831799145322,
+              125.92895500711165,
+              133.5524739988614,
+              145.61038299871143,
+              151.22227900428697
+            ],
+            "count": 5,
+            "median_ms": 133.5524739988614,
+            "p95_ms": 151.22227900428697,
+            "min_ms": 118.94831799145322,
+            "max_ms": 151.22227900428697,
+            "percentile_method": "nearest-rank; sorted ascending; index ceil(0.95*n)-1"
+          },
+          "samples": [
+            {
+              "wall_ms": 145.61038299871143,
+              "peak_rss_kb": 73700,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "build",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/selfhost-prototype-release/bench.my",
+                "--project",
+                "-o",
+                "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "--report",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--mode",
+                "Debug",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/selfhost-build"
+              ],
+              "build": {
+                "version": "qbe-build-v1",
+                "output": "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "output_changed": false,
+                "compiled_functions": 0,
+                "reused_functions": 22,
+                "runtime_reused": true,
+                "runtime_installed": true,
+                "metadata_reused": true,
+                "frontend_seconds": 0.021346392,
+                "codegen_seconds": 0.064110547,
+                "link_seconds": 0.051897154,
+                "native_seconds": 0.116009301,
+                "target": "amd64_sysv",
+                "mode": "Debug",
+                "zig_version": "0.17.0-dev.1683+5ceec001b",
+                "artifact_kind": "executable"
+              }
+            },
+            {
+              "wall_ms": 151.22227900428697,
+              "peak_rss_kb": 73936,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "build",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/selfhost-prototype-release/bench.my",
+                "--project",
+                "-o",
+                "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "--report",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--mode",
+                "Debug",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/selfhost-build"
+              ],
+              "build": {
+                "version": "qbe-build-v1",
+                "output": "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "output_changed": false,
+                "compiled_functions": 0,
+                "reused_functions": 22,
+                "runtime_reused": true,
+                "runtime_installed": true,
+                "metadata_reused": true,
+                "frontend_seconds": 0.023229374,
+                "codegen_seconds": 0.072912339,
+                "link_seconds": 0.047633294,
+                "native_seconds": 0.120547008,
+                "target": "amd64_sysv",
+                "mode": "Debug",
+                "zig_version": "0.17.0-dev.1683+5ceec001b",
+                "artifact_kind": "executable"
+              }
+            },
+            {
+              "wall_ms": 118.94831799145322,
+              "peak_rss_kb": 74428,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "build",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/selfhost-prototype-release/bench.my",
+                "--project",
+                "-o",
+                "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "--report",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--mode",
+                "Debug",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/selfhost-build"
+              ],
+              "build": {
+                "version": "qbe-build-v1",
+                "output": "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "output_changed": false,
+                "compiled_functions": 0,
+                "reused_functions": 22,
+                "runtime_reused": true,
+                "runtime_installed": true,
+                "metadata_reused": true,
+                "frontend_seconds": 0.021073014,
+                "codegen_seconds": 0.041482521,
+                "link_seconds": 0.048725533,
+                "native_seconds": 0.090209,
+                "target": "amd64_sysv",
+                "mode": "Debug",
+                "zig_version": "0.17.0-dev.1683+5ceec001b",
+                "artifact_kind": "executable"
+              }
+            },
+            {
+              "wall_ms": 133.5524739988614,
+              "peak_rss_kb": 74268,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "build",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/selfhost-prototype-release/bench.my",
+                "--project",
+                "-o",
+                "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "--report",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--mode",
+                "Debug",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/selfhost-build"
+              ],
+              "build": {
+                "version": "qbe-build-v1",
+                "output": "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "output_changed": false,
+                "compiled_functions": 0,
+                "reused_functions": 22,
+                "runtime_reused": true,
+                "runtime_installed": true,
+                "metadata_reused": true,
+                "frontend_seconds": 0.022938347,
+                "codegen_seconds": 0.054393491,
+                "link_seconds": 0.047857006,
+                "native_seconds": 0.102251722,
+                "target": "amd64_sysv",
+                "mode": "Debug",
+                "zig_version": "0.17.0-dev.1683+5ceec001b",
+                "artifact_kind": "executable"
+              }
+            },
+            {
+              "wall_ms": 125.92895500711165,
+              "peak_rss_kb": 74072,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "build",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/selfhost-prototype-release/bench.my",
+                "--project",
+                "-o",
+                "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "--report",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--mode",
+                "Debug",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/selfhost-build"
+              ],
+              "build": {
+                "version": "qbe-build-v1",
+                "output": "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "output_changed": false,
+                "compiled_functions": 0,
+                "reused_functions": 22,
+                "runtime_reused": true,
+                "runtime_installed": true,
+                "metadata_reused": true,
+                "frontend_seconds": 0.02281421,
+                "codegen_seconds": 0.04848959,
+                "link_seconds": 0.046814982,
+                "native_seconds": 0.095305966,
+                "target": "amd64_sysv",
+                "mode": "Debug",
+                "zig_version": "0.17.0-dev.1683+5ceec001b",
+                "artifact_kind": "executable"
+              }
+            }
+          ]
+        },
+        "implementation_edit": {
+          "summary": {
+            "samples_ms": [
+              173.77103699254803,
+              189.6742930111941,
+              190.24181099666748,
+              207.366821996402,
+              365.69315601082053
+            ],
+            "count": 5,
+            "median_ms": 190.24181099666748,
+            "p95_ms": 365.69315601082053,
+            "min_ms": 173.77103699254803,
+            "max_ms": 365.69315601082053,
+            "percentile_method": "nearest-rank; sorted ascending; index ceil(0.95*n)-1"
+          },
+          "samples": [
+            {
+              "wall_ms": 207.366821996402,
+              "peak_rss_kb": 73976,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "build",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/selfhost-prototype-release/bench.my",
+                "--project",
+                "-o",
+                "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "--report",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--mode",
+                "Debug",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/selfhost-build"
+              ],
+              "build": {
+                "version": "qbe-build-v1",
+                "output": "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "output_changed": true,
+                "compiled_functions": 1,
+                "reused_functions": 21,
+                "runtime_reused": true,
+                "runtime_installed": true,
+                "metadata_reused": true,
+                "frontend_seconds": 0.0141449,
+                "codegen_seconds": 0.130762806,
+                "link_seconds": 0.054790799,
+                "native_seconds": 0.185556579,
+                "target": "amd64_sysv",
+                "mode": "Debug",
+                "zig_version": "0.17.0-dev.1683+5ceec001b",
+                "artifact_kind": "executable"
+              }
+            },
+            {
+              "wall_ms": 189.6742930111941,
+              "peak_rss_kb": 74328,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "build",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/selfhost-prototype-release/bench.my",
+                "--project",
+                "-o",
+                "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "--report",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--mode",
+                "Debug",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/selfhost-build"
+              ],
+              "build": {
+                "version": "qbe-build-v1",
+                "output": "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "output_changed": true,
+                "compiled_functions": 1,
+                "reused_functions": 21,
+                "runtime_reused": true,
+                "runtime_installed": true,
+                "metadata_reused": true,
+                "frontend_seconds": 0.016985121,
+                "codegen_seconds": 0.11818387,
+                "link_seconds": 0.046767781,
+                "native_seconds": 0.164953968,
+                "target": "amd64_sysv",
+                "mode": "Debug",
+                "zig_version": "0.17.0-dev.1683+5ceec001b",
+                "artifact_kind": "executable"
+              }
+            },
+            {
+              "wall_ms": 173.77103699254803,
+              "peak_rss_kb": 74300,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "build",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/selfhost-prototype-release/bench.my",
+                "--project",
+                "-o",
+                "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "--report",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--mode",
+                "Debug",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/selfhost-build"
+              ],
+              "build": {
+                "version": "qbe-build-v1",
+                "output": "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "output_changed": true,
+                "compiled_functions": 1,
+                "reused_functions": 21,
+                "runtime_reused": true,
+                "runtime_installed": true,
+                "metadata_reused": true,
+                "frontend_seconds": 0.014737926,
+                "codegen_seconds": 0.108197672,
+                "link_seconds": 0.04399531,
+                "native_seconds": 0.152195459,
+                "target": "amd64_sysv",
+                "mode": "Debug",
+                "zig_version": "0.17.0-dev.1683+5ceec001b",
+                "artifact_kind": "executable"
+              }
+            },
+            {
+              "wall_ms": 365.69315601082053,
+              "peak_rss_kb": 74412,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "build",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/selfhost-prototype-release/bench.my",
+                "--project",
+                "-o",
+                "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "--report",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--mode",
+                "Debug",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/selfhost-build"
+              ],
+              "build": {
+                "version": "qbe-build-v1",
+                "output": "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "output_changed": true,
+                "compiled_functions": 1,
+                "reused_functions": 21,
+                "runtime_reused": true,
+                "runtime_installed": true,
+                "metadata_reused": true,
+                "frontend_seconds": 0.014443367,
+                "codegen_seconds": 0.292851768,
+                "link_seconds": 0.050601812,
+                "native_seconds": 0.343457071,
+                "target": "amd64_sysv",
+                "mode": "Debug",
+                "zig_version": "0.17.0-dev.1683+5ceec001b",
+                "artifact_kind": "executable"
+              }
+            },
+            {
+              "wall_ms": 190.24181099666748,
+              "peak_rss_kb": 74264,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "build",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/selfhost-prototype-release/bench.my",
+                "--project",
+                "-o",
+                "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "--report",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--mode",
+                "Debug",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/selfhost-build"
+              ],
+              "build": {
+                "version": "qbe-build-v1",
+                "output": "/tmp/mylang-speed-20260916-ry8hnipe/prototype-bench",
+                "output_changed": true,
+                "compiled_functions": 1,
+                "reused_functions": 21,
+                "runtime_reused": true,
+                "runtime_installed": true,
+                "metadata_reused": true,
+                "frontend_seconds": 0.027117775,
+                "codegen_seconds": 0.113476417,
+                "link_seconds": 0.040972907,
+                "native_seconds": 0.154452771,
+                "target": "amd64_sysv",
+                "mode": "Debug",
+                "zig_version": "0.17.0-dev.1683+5ceec001b",
+                "artifact_kind": "executable"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "test-count-scaling",
+      "lines_bytes_files": [
+        1079,
+        19719,
+        10
+      ],
+      "states": {
+        "seed_all_32": {
+          "summary": {
+            "samples_ms": [
+              20746.539229992777
+            ],
+            "count": 1,
+            "median_ms": 20746.539229992777,
+            "p95_ms": 20746.539229992777,
+            "min_ms": 20746.539229992777,
+            "max_ms": 20746.539229992777,
+            "percentile_method": "nearest-rank; sorted ascending; index ceil(0.95*n)-1"
+          },
+          "samples": [
+            {
+              "wall_ms": 20746.539229992777,
+              "peak_rss_kb": 265972,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/test-count/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/test-count"
+              ],
+              "tests": {
+                "passed": 32,
+                "cached": 0,
+                "failed": 0,
+                "executed": 32,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_a00",
+                  "status": "passed",
+                  "key": "723e99427a6b5e53bd4e56516dbf2eecc67521dcaf5e99a19502690b05595da1"
+                },
+                {
+                  "name": "main::test_a01",
+                  "status": "passed",
+                  "key": "c4004a772e07ebe9b507312b8e2c05fbc3b8cb75802a0e247f7323fe24280ac8"
+                },
+                {
+                  "name": "main::test_a02",
+                  "status": "passed",
+                  "key": "93fa741f023685a0a05a544ec2f455249976f2d72b7407c05cdcf7c1e6eabbf6"
+                },
+                {
+                  "name": "main::test_a03",
+                  "status": "passed",
+                  "key": "9938f6929a599e01c1e0da31bbc3096c36d3f13c6da2da0f3bc37e021ac1bd20"
+                },
+                {
+                  "name": "main::test_a04",
+                  "status": "passed",
+                  "key": "e0420a971120664fac0e019e94585b110e5cc6cd801cc23e1d58deeb4e981602"
+                },
+                {
+                  "name": "main::test_a05",
+                  "status": "passed",
+                  "key": "c5a17a8f8530e3eef48e2957d8cbc4cd663c531ef30fcf13d193e694ecdeb389"
+                },
+                {
+                  "name": "main::test_a06",
+                  "status": "passed",
+                  "key": "cf10a2b4725e530607ac4c9fd66c5cb6aeae5321242d058d73eb6a628235f301"
+                },
+                {
+                  "name": "main::test_a07",
+                  "status": "passed",
+                  "key": "a8f995abfe78b7035ec57d39bc991950b527226bea45c12c1d2b9725bd421276"
+                },
+                {
+                  "name": "main::test_b00",
+                  "status": "passed",
+                  "key": "85b7427d6b6b263685435b2e2e806f6f3afae95345a52cded34aaa7ffef35f9d"
+                },
+                {
+                  "name": "main::test_b01",
+                  "status": "passed",
+                  "key": "d9f44e17ead9e10767543a4a383a48320b430e93a20aba1dfbe0315126bfc269"
+                },
+                {
+                  "name": "main::test_b02",
+                  "status": "passed",
+                  "key": "62e62aef2590a0f17827e885e74df5d951ad3f4d3e0e35bfd0066df63ab9ae13"
+                },
+                {
+                  "name": "main::test_b03",
+                  "status": "passed",
+                  "key": "3346d05d3016243263d6465396d10c854674b9f0aa4424322cb2994984b73de5"
+                },
+                {
+                  "name": "main::test_b04",
+                  "status": "passed",
+                  "key": "9dcc3902a155e82eed80ddb6bfd509b228da50c891bdf3f6913554b79be08b62"
+                },
+                {
+                  "name": "main::test_b05",
+                  "status": "passed",
+                  "key": "53a7b688972c6ecb86783c0649b85cdbfcf105700672d1ffa66d3362aeed7cfc"
+                },
+                {
+                  "name": "main::test_b06",
+                  "status": "passed",
+                  "key": "71750266af898a2854534825e61dd8db4d062fd06fabeb2a4d5f33ace41a1a68"
+                },
+                {
+                  "name": "main::test_b07",
+                  "status": "passed",
+                  "key": "94b45d005c37092d502e93988b39606c6128ed5243ada94da6ac091cadd945d0"
+                },
+                {
+                  "name": "main::test_b08",
+                  "status": "passed",
+                  "key": "4b9586b918970f259199dff66a9ab4db87b3881b0c3d830c7bb8f2c119e6d6b2"
+                },
+                {
+                  "name": "main::test_b09",
+                  "status": "passed",
+                  "key": "cc5aa2e986616deb6d2e3276e67ee5879ba3ef11d886d0fd71622447d98bf9a7"
+                },
+                {
+                  "name": "main::test_b10",
+                  "status": "passed",
+                  "key": "1ff7c1ba7df77848f98950484494d36883259af3b0c7a6b839f8b07278523a48"
+                },
+                {
+                  "name": "main::test_b11",
+                  "status": "passed",
+                  "key": "e57414c93b1a2468c12bc86a33dd5081129e17a5db3695eb73a0db08e9ec0167"
+                },
+                {
+                  "name": "main::test_b12",
+                  "status": "passed",
+                  "key": "715901b999f842dd63490037cc6fb003ce2a2478b586193dd00814395a9b2728"
+                },
+                {
+                  "name": "main::test_b13",
+                  "status": "passed",
+                  "key": "d87e8cd97a7ef43cf4200c6eff50a64850f5b64cd44b4d9bb53b980374dddce4"
+                },
+                {
+                  "name": "main::test_b14",
+                  "status": "passed",
+                  "key": "6cbed66a45a6d58c9b57744ec56164646f2ef451b63743ddfb32b397decfb700"
+                },
+                {
+                  "name": "main::test_b15",
+                  "status": "passed",
+                  "key": "a9a0ab28b84e6cc3f4dd049ef5d50cccaa2f133564f7a3722d6f09b29b905237"
+                },
+                {
+                  "name": "main::test_b16",
+                  "status": "passed",
+                  "key": "817f3e771cfeef5bde9d40c4d9aa293149759f030fedc37001b92609b640d226"
+                },
+                {
+                  "name": "main::test_b17",
+                  "status": "passed",
+                  "key": "d02099688d493668eb071503b149cdfdfbef82b1439811d72f721fba601a3030"
+                },
+                {
+                  "name": "main::test_b18",
+                  "status": "passed",
+                  "key": "83079746dc45e79e7767bd3315f3cfd2d4ffbeb9f67454c58a28bab2a51b9826"
+                },
+                {
+                  "name": "main::test_b19",
+                  "status": "passed",
+                  "key": "2d2acc94f0e562b0499912229200c5515ec48582fefc25538eec5c0424c678bc"
+                },
+                {
+                  "name": "main::test_b20",
+                  "status": "passed",
+                  "key": "72eecd4ff5e642f91579451ac888ae8be84abfb2ac8e92ec4028ad186d86fa08"
+                },
+                {
+                  "name": "main::test_b21",
+                  "status": "passed",
+                  "key": "6b584267bb53724bacef04c607e0df871bc6f5103ef789321a7add18d1059644"
+                },
+                {
+                  "name": "main::test_b22",
+                  "status": "passed",
+                  "key": "4c1bd072b4c329eedb56daf6088e5455905cefa224be34d52566ad6f50981ed7"
+                },
+                {
+                  "name": "main::test_b23",
+                  "status": "passed",
+                  "key": "a112365922c3692d45315bb329d339bbf428e49758cbe8730e9914440958313f"
+                }
+              ]
+            }
+          ]
+        },
+        "cached_1": {
+          "summary": {
+            "samples_ms": [
+              46.07483500149101,
+              46.630968994577415,
+              47.493001009570435,
+              52.58216999936849,
+              85.0543260021368
+            ],
+            "count": 5,
+            "median_ms": 47.493001009570435,
+            "p95_ms": 85.0543260021368,
+            "min_ms": 46.07483500149101,
+            "max_ms": 85.0543260021368,
+            "percentile_method": "nearest-rank; sorted ascending; index ceil(0.95*n)-1"
+          },
+          "samples": [
+            {
+              "wall_ms": 52.58216999936849,
+              "peak_rss_kb": 26816,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/test-count/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/test-count",
+                "--filter",
+                "*::test_a00"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_a00",
+                  "status": "cached",
+                  "key": "723e99427a6b5e53bd4e56516dbf2eecc67521dcaf5e99a19502690b05595da1"
+                }
+              ]
+            },
+            {
+              "wall_ms": 46.630968994577415,
+              "peak_rss_kb": 26816,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/test-count/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/test-count",
+                "--filter",
+                "*::test_a00"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_a00",
+                  "status": "cached",
+                  "key": "723e99427a6b5e53bd4e56516dbf2eecc67521dcaf5e99a19502690b05595da1"
+                }
+              ]
+            },
+            {
+              "wall_ms": 46.07483500149101,
+              "peak_rss_kb": 26816,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/test-count/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/test-count",
+                "--filter",
+                "*::test_a00"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_a00",
+                  "status": "cached",
+                  "key": "723e99427a6b5e53bd4e56516dbf2eecc67521dcaf5e99a19502690b05595da1"
+                }
+              ]
+            },
+            {
+              "wall_ms": 47.493001009570435,
+              "peak_rss_kb": 26816,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/test-count/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/test-count",
+                "--filter",
+                "*::test_a00"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_a00",
+                  "status": "cached",
+                  "key": "723e99427a6b5e53bd4e56516dbf2eecc67521dcaf5e99a19502690b05595da1"
+                }
+              ]
+            },
+            {
+              "wall_ms": 85.0543260021368,
+              "peak_rss_kb": 26816,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/test-count/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/test-count",
+                "--filter",
+                "*::test_a00"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 1,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_a00",
+                  "status": "cached",
+                  "key": "723e99427a6b5e53bd4e56516dbf2eecc67521dcaf5e99a19502690b05595da1"
+                }
+              ]
+            }
+          ]
+        },
+        "cached_8": {
+          "summary": {
+            "samples_ms": [
+              287.07514199777506,
+              313.6216470011277,
+              378.5707060014829,
+              422.55403099989053,
+              460.8368409972172
+            ],
+            "count": 5,
+            "median_ms": 378.5707060014829,
+            "p95_ms": 460.8368409972172,
+            "min_ms": 287.07514199777506,
+            "max_ms": 460.8368409972172,
+            "percentile_method": "nearest-rank; sorted ascending; index ceil(0.95*n)-1"
+          },
+          "samples": [
+            {
+              "wall_ms": 460.8368409972172,
+              "peak_rss_kb": 64660,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/test-count/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/test-count",
+                "--filter",
+                "*::test_a*"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 8,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_a00",
+                  "status": "cached",
+                  "key": "723e99427a6b5e53bd4e56516dbf2eecc67521dcaf5e99a19502690b05595da1"
+                },
+                {
+                  "name": "main::test_a01",
+                  "status": "cached",
+                  "key": "c4004a772e07ebe9b507312b8e2c05fbc3b8cb75802a0e247f7323fe24280ac8"
+                },
+                {
+                  "name": "main::test_a02",
+                  "status": "cached",
+                  "key": "93fa741f023685a0a05a544ec2f455249976f2d72b7407c05cdcf7c1e6eabbf6"
+                },
+                {
+                  "name": "main::test_a03",
+                  "status": "cached",
+                  "key": "9938f6929a599e01c1e0da31bbc3096c36d3f13c6da2da0f3bc37e021ac1bd20"
+                },
+                {
+                  "name": "main::test_a04",
+                  "status": "cached",
+                  "key": "e0420a971120664fac0e019e94585b110e5cc6cd801cc23e1d58deeb4e981602"
+                },
+                {
+                  "name": "main::test_a05",
+                  "status": "cached",
+                  "key": "c5a17a8f8530e3eef48e2957d8cbc4cd663c531ef30fcf13d193e694ecdeb389"
+                },
+                {
+                  "name": "main::test_a06",
+                  "status": "cached",
+                  "key": "cf10a2b4725e530607ac4c9fd66c5cb6aeae5321242d058d73eb6a628235f301"
+                },
+                {
+                  "name": "main::test_a07",
+                  "status": "cached",
+                  "key": "a8f995abfe78b7035ec57d39bc991950b527226bea45c12c1d2b9725bd421276"
+                }
+              ]
+            },
+            {
+              "wall_ms": 422.55403099989053,
+              "peak_rss_kb": 64820,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/test-count/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/test-count",
+                "--filter",
+                "*::test_a*"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 8,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_a00",
+                  "status": "cached",
+                  "key": "723e99427a6b5e53bd4e56516dbf2eecc67521dcaf5e99a19502690b05595da1"
+                },
+                {
+                  "name": "main::test_a01",
+                  "status": "cached",
+                  "key": "c4004a772e07ebe9b507312b8e2c05fbc3b8cb75802a0e247f7323fe24280ac8"
+                },
+                {
+                  "name": "main::test_a02",
+                  "status": "cached",
+                  "key": "93fa741f023685a0a05a544ec2f455249976f2d72b7407c05cdcf7c1e6eabbf6"
+                },
+                {
+                  "name": "main::test_a03",
+                  "status": "cached",
+                  "key": "9938f6929a599e01c1e0da31bbc3096c36d3f13c6da2da0f3bc37e021ac1bd20"
+                },
+                {
+                  "name": "main::test_a04",
+                  "status": "cached",
+                  "key": "e0420a971120664fac0e019e94585b110e5cc6cd801cc23e1d58deeb4e981602"
+                },
+                {
+                  "name": "main::test_a05",
+                  "status": "cached",
+                  "key": "c5a17a8f8530e3eef48e2957d8cbc4cd663c531ef30fcf13d193e694ecdeb389"
+                },
+                {
+                  "name": "main::test_a06",
+                  "status": "cached",
+                  "key": "cf10a2b4725e530607ac4c9fd66c5cb6aeae5321242d058d73eb6a628235f301"
+                },
+                {
+                  "name": "main::test_a07",
+                  "status": "cached",
+                  "key": "a8f995abfe78b7035ec57d39bc991950b527226bea45c12c1d2b9725bd421276"
+                }
+              ]
+            },
+            {
+              "wall_ms": 378.5707060014829,
+              "peak_rss_kb": 65140,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/test-count/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/test-count",
+                "--filter",
+                "*::test_a*"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 8,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_a00",
+                  "status": "cached",
+                  "key": "723e99427a6b5e53bd4e56516dbf2eecc67521dcaf5e99a19502690b05595da1"
+                },
+                {
+                  "name": "main::test_a01",
+                  "status": "cached",
+                  "key": "c4004a772e07ebe9b507312b8e2c05fbc3b8cb75802a0e247f7323fe24280ac8"
+                },
+                {
+                  "name": "main::test_a02",
+                  "status": "cached",
+                  "key": "93fa741f023685a0a05a544ec2f455249976f2d72b7407c05cdcf7c1e6eabbf6"
+                },
+                {
+                  "name": "main::test_a03",
+                  "status": "cached",
+                  "key": "9938f6929a599e01c1e0da31bbc3096c36d3f13c6da2da0f3bc37e021ac1bd20"
+                },
+                {
+                  "name": "main::test_a04",
+                  "status": "cached",
+                  "key": "e0420a971120664fac0e019e94585b110e5cc6cd801cc23e1d58deeb4e981602"
+                },
+                {
+                  "name": "main::test_a05",
+                  "status": "cached",
+                  "key": "c5a17a8f8530e3eef48e2957d8cbc4cd663c531ef30fcf13d193e694ecdeb389"
+                },
+                {
+                  "name": "main::test_a06",
+                  "status": "cached",
+                  "key": "cf10a2b4725e530607ac4c9fd66c5cb6aeae5321242d058d73eb6a628235f301"
+                },
+                {
+                  "name": "main::test_a07",
+                  "status": "cached",
+                  "key": "a8f995abfe78b7035ec57d39bc991950b527226bea45c12c1d2b9725bd421276"
+                }
+              ]
+            },
+            {
+              "wall_ms": 287.07514199777506,
+              "peak_rss_kb": 64820,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/test-count/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/test-count",
+                "--filter",
+                "*::test_a*"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 8,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_a00",
+                  "status": "cached",
+                  "key": "723e99427a6b5e53bd4e56516dbf2eecc67521dcaf5e99a19502690b05595da1"
+                },
+                {
+                  "name": "main::test_a01",
+                  "status": "cached",
+                  "key": "c4004a772e07ebe9b507312b8e2c05fbc3b8cb75802a0e247f7323fe24280ac8"
+                },
+                {
+                  "name": "main::test_a02",
+                  "status": "cached",
+                  "key": "93fa741f023685a0a05a544ec2f455249976f2d72b7407c05cdcf7c1e6eabbf6"
+                },
+                {
+                  "name": "main::test_a03",
+                  "status": "cached",
+                  "key": "9938f6929a599e01c1e0da31bbc3096c36d3f13c6da2da0f3bc37e021ac1bd20"
+                },
+                {
+                  "name": "main::test_a04",
+                  "status": "cached",
+                  "key": "e0420a971120664fac0e019e94585b110e5cc6cd801cc23e1d58deeb4e981602"
+                },
+                {
+                  "name": "main::test_a05",
+                  "status": "cached",
+                  "key": "c5a17a8f8530e3eef48e2957d8cbc4cd663c531ef30fcf13d193e694ecdeb389"
+                },
+                {
+                  "name": "main::test_a06",
+                  "status": "cached",
+                  "key": "cf10a2b4725e530607ac4c9fd66c5cb6aeae5321242d058d73eb6a628235f301"
+                },
+                {
+                  "name": "main::test_a07",
+                  "status": "cached",
+                  "key": "a8f995abfe78b7035ec57d39bc991950b527226bea45c12c1d2b9725bd421276"
+                }
+              ]
+            },
+            {
+              "wall_ms": 313.6216470011277,
+              "peak_rss_kb": 64980,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/test-count/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/test-count",
+                "--filter",
+                "*::test_a*"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 8,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_a00",
+                  "status": "cached",
+                  "key": "723e99427a6b5e53bd4e56516dbf2eecc67521dcaf5e99a19502690b05595da1"
+                },
+                {
+                  "name": "main::test_a01",
+                  "status": "cached",
+                  "key": "c4004a772e07ebe9b507312b8e2c05fbc3b8cb75802a0e247f7323fe24280ac8"
+                },
+                {
+                  "name": "main::test_a02",
+                  "status": "cached",
+                  "key": "93fa741f023685a0a05a544ec2f455249976f2d72b7407c05cdcf7c1e6eabbf6"
+                },
+                {
+                  "name": "main::test_a03",
+                  "status": "cached",
+                  "key": "9938f6929a599e01c1e0da31bbc3096c36d3f13c6da2da0f3bc37e021ac1bd20"
+                },
+                {
+                  "name": "main::test_a04",
+                  "status": "cached",
+                  "key": "e0420a971120664fac0e019e94585b110e5cc6cd801cc23e1d58deeb4e981602"
+                },
+                {
+                  "name": "main::test_a05",
+                  "status": "cached",
+                  "key": "c5a17a8f8530e3eef48e2957d8cbc4cd663c531ef30fcf13d193e694ecdeb389"
+                },
+                {
+                  "name": "main::test_a06",
+                  "status": "cached",
+                  "key": "cf10a2b4725e530607ac4c9fd66c5cb6aeae5321242d058d73eb6a628235f301"
+                },
+                {
+                  "name": "main::test_a07",
+                  "status": "cached",
+                  "key": "a8f995abfe78b7035ec57d39bc991950b527226bea45c12c1d2b9725bd421276"
+                }
+              ]
+            }
+          ]
+        },
+        "cached_32": {
+          "summary": {
+            "samples_ms": [
+              1678.9672729937593,
+              1755.8329059975222,
+              1811.6003860050114,
+              1817.7606009994633,
+              1875.8623019966763
+            ],
+            "count": 5,
+            "median_ms": 1811.6003860050114,
+            "p95_ms": 1875.8623019966763,
+            "min_ms": 1678.9672729937593,
+            "max_ms": 1875.8623019966763,
+            "percentile_method": "nearest-rank; sorted ascending; index ceil(0.95*n)-1"
+          },
+          "samples": [
+            {
+              "wall_ms": 1875.8623019966763,
+              "peak_rss_kb": 261140,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/test-count/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/test-count",
+                "--filter",
+                "*::test_*"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 32,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_a00",
+                  "status": "cached",
+                  "key": "723e99427a6b5e53bd4e56516dbf2eecc67521dcaf5e99a19502690b05595da1"
+                },
+                {
+                  "name": "main::test_a01",
+                  "status": "cached",
+                  "key": "c4004a772e07ebe9b507312b8e2c05fbc3b8cb75802a0e247f7323fe24280ac8"
+                },
+                {
+                  "name": "main::test_a02",
+                  "status": "cached",
+                  "key": "93fa741f023685a0a05a544ec2f455249976f2d72b7407c05cdcf7c1e6eabbf6"
+                },
+                {
+                  "name": "main::test_a03",
+                  "status": "cached",
+                  "key": "9938f6929a599e01c1e0da31bbc3096c36d3f13c6da2da0f3bc37e021ac1bd20"
+                },
+                {
+                  "name": "main::test_a04",
+                  "status": "cached",
+                  "key": "e0420a971120664fac0e019e94585b110e5cc6cd801cc23e1d58deeb4e981602"
+                },
+                {
+                  "name": "main::test_a05",
+                  "status": "cached",
+                  "key": "c5a17a8f8530e3eef48e2957d8cbc4cd663c531ef30fcf13d193e694ecdeb389"
+                },
+                {
+                  "name": "main::test_a06",
+                  "status": "cached",
+                  "key": "cf10a2b4725e530607ac4c9fd66c5cb6aeae5321242d058d73eb6a628235f301"
+                },
+                {
+                  "name": "main::test_a07",
+                  "status": "cached",
+                  "key": "a8f995abfe78b7035ec57d39bc991950b527226bea45c12c1d2b9725bd421276"
+                },
+                {
+                  "name": "main::test_b00",
+                  "status": "cached",
+                  "key": "85b7427d6b6b263685435b2e2e806f6f3afae95345a52cded34aaa7ffef35f9d"
+                },
+                {
+                  "name": "main::test_b01",
+                  "status": "cached",
+                  "key": "d9f44e17ead9e10767543a4a383a48320b430e93a20aba1dfbe0315126bfc269"
+                },
+                {
+                  "name": "main::test_b02",
+                  "status": "cached",
+                  "key": "62e62aef2590a0f17827e885e74df5d951ad3f4d3e0e35bfd0066df63ab9ae13"
+                },
+                {
+                  "name": "main::test_b03",
+                  "status": "cached",
+                  "key": "3346d05d3016243263d6465396d10c854674b9f0aa4424322cb2994984b73de5"
+                },
+                {
+                  "name": "main::test_b04",
+                  "status": "cached",
+                  "key": "9dcc3902a155e82eed80ddb6bfd509b228da50c891bdf3f6913554b79be08b62"
+                },
+                {
+                  "name": "main::test_b05",
+                  "status": "cached",
+                  "key": "53a7b688972c6ecb86783c0649b85cdbfcf105700672d1ffa66d3362aeed7cfc"
+                },
+                {
+                  "name": "main::test_b06",
+                  "status": "cached",
+                  "key": "71750266af898a2854534825e61dd8db4d062fd06fabeb2a4d5f33ace41a1a68"
+                },
+                {
+                  "name": "main::test_b07",
+                  "status": "cached",
+                  "key": "94b45d005c37092d502e93988b39606c6128ed5243ada94da6ac091cadd945d0"
+                },
+                {
+                  "name": "main::test_b08",
+                  "status": "cached",
+                  "key": "4b9586b918970f259199dff66a9ab4db87b3881b0c3d830c7bb8f2c119e6d6b2"
+                },
+                {
+                  "name": "main::test_b09",
+                  "status": "cached",
+                  "key": "cc5aa2e986616deb6d2e3276e67ee5879ba3ef11d886d0fd71622447d98bf9a7"
+                },
+                {
+                  "name": "main::test_b10",
+                  "status": "cached",
+                  "key": "1ff7c1ba7df77848f98950484494d36883259af3b0c7a6b839f8b07278523a48"
+                },
+                {
+                  "name": "main::test_b11",
+                  "status": "cached",
+                  "key": "e57414c93b1a2468c12bc86a33dd5081129e17a5db3695eb73a0db08e9ec0167"
+                },
+                {
+                  "name": "main::test_b12",
+                  "status": "cached",
+                  "key": "715901b999f842dd63490037cc6fb003ce2a2478b586193dd00814395a9b2728"
+                },
+                {
+                  "name": "main::test_b13",
+                  "status": "cached",
+                  "key": "d87e8cd97a7ef43cf4200c6eff50a64850f5b64cd44b4d9bb53b980374dddce4"
+                },
+                {
+                  "name": "main::test_b14",
+                  "status": "cached",
+                  "key": "6cbed66a45a6d58c9b57744ec56164646f2ef451b63743ddfb32b397decfb700"
+                },
+                {
+                  "name": "main::test_b15",
+                  "status": "cached",
+                  "key": "a9a0ab28b84e6cc3f4dd049ef5d50cccaa2f133564f7a3722d6f09b29b905237"
+                },
+                {
+                  "name": "main::test_b16",
+                  "status": "cached",
+                  "key": "817f3e771cfeef5bde9d40c4d9aa293149759f030fedc37001b92609b640d226"
+                },
+                {
+                  "name": "main::test_b17",
+                  "status": "cached",
+                  "key": "d02099688d493668eb071503b149cdfdfbef82b1439811d72f721fba601a3030"
+                },
+                {
+                  "name": "main::test_b18",
+                  "status": "cached",
+                  "key": "83079746dc45e79e7767bd3315f3cfd2d4ffbeb9f67454c58a28bab2a51b9826"
+                },
+                {
+                  "name": "main::test_b19",
+                  "status": "cached",
+                  "key": "2d2acc94f0e562b0499912229200c5515ec48582fefc25538eec5c0424c678bc"
+                },
+                {
+                  "name": "main::test_b20",
+                  "status": "cached",
+                  "key": "72eecd4ff5e642f91579451ac888ae8be84abfb2ac8e92ec4028ad186d86fa08"
+                },
+                {
+                  "name": "main::test_b21",
+                  "status": "cached",
+                  "key": "6b584267bb53724bacef04c607e0df871bc6f5103ef789321a7add18d1059644"
+                },
+                {
+                  "name": "main::test_b22",
+                  "status": "cached",
+                  "key": "4c1bd072b4c329eedb56daf6088e5455905cefa224be34d52566ad6f50981ed7"
+                },
+                {
+                  "name": "main::test_b23",
+                  "status": "cached",
+                  "key": "a112365922c3692d45315bb329d339bbf428e49758cbe8730e9914440958313f"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1817.7606009994633,
+              "peak_rss_kb": 260820,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/test-count/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/test-count",
+                "--filter",
+                "*::test_*"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 32,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_a00",
+                  "status": "cached",
+                  "key": "723e99427a6b5e53bd4e56516dbf2eecc67521dcaf5e99a19502690b05595da1"
+                },
+                {
+                  "name": "main::test_a01",
+                  "status": "cached",
+                  "key": "c4004a772e07ebe9b507312b8e2c05fbc3b8cb75802a0e247f7323fe24280ac8"
+                },
+                {
+                  "name": "main::test_a02",
+                  "status": "cached",
+                  "key": "93fa741f023685a0a05a544ec2f455249976f2d72b7407c05cdcf7c1e6eabbf6"
+                },
+                {
+                  "name": "main::test_a03",
+                  "status": "cached",
+                  "key": "9938f6929a599e01c1e0da31bbc3096c36d3f13c6da2da0f3bc37e021ac1bd20"
+                },
+                {
+                  "name": "main::test_a04",
+                  "status": "cached",
+                  "key": "e0420a971120664fac0e019e94585b110e5cc6cd801cc23e1d58deeb4e981602"
+                },
+                {
+                  "name": "main::test_a05",
+                  "status": "cached",
+                  "key": "c5a17a8f8530e3eef48e2957d8cbc4cd663c531ef30fcf13d193e694ecdeb389"
+                },
+                {
+                  "name": "main::test_a06",
+                  "status": "cached",
+                  "key": "cf10a2b4725e530607ac4c9fd66c5cb6aeae5321242d058d73eb6a628235f301"
+                },
+                {
+                  "name": "main::test_a07",
+                  "status": "cached",
+                  "key": "a8f995abfe78b7035ec57d39bc991950b527226bea45c12c1d2b9725bd421276"
+                },
+                {
+                  "name": "main::test_b00",
+                  "status": "cached",
+                  "key": "85b7427d6b6b263685435b2e2e806f6f3afae95345a52cded34aaa7ffef35f9d"
+                },
+                {
+                  "name": "main::test_b01",
+                  "status": "cached",
+                  "key": "d9f44e17ead9e10767543a4a383a48320b430e93a20aba1dfbe0315126bfc269"
+                },
+                {
+                  "name": "main::test_b02",
+                  "status": "cached",
+                  "key": "62e62aef2590a0f17827e885e74df5d951ad3f4d3e0e35bfd0066df63ab9ae13"
+                },
+                {
+                  "name": "main::test_b03",
+                  "status": "cached",
+                  "key": "3346d05d3016243263d6465396d10c854674b9f0aa4424322cb2994984b73de5"
+                },
+                {
+                  "name": "main::test_b04",
+                  "status": "cached",
+                  "key": "9dcc3902a155e82eed80ddb6bfd509b228da50c891bdf3f6913554b79be08b62"
+                },
+                {
+                  "name": "main::test_b05",
+                  "status": "cached",
+                  "key": "53a7b688972c6ecb86783c0649b85cdbfcf105700672d1ffa66d3362aeed7cfc"
+                },
+                {
+                  "name": "main::test_b06",
+                  "status": "cached",
+                  "key": "71750266af898a2854534825e61dd8db4d062fd06fabeb2a4d5f33ace41a1a68"
+                },
+                {
+                  "name": "main::test_b07",
+                  "status": "cached",
+                  "key": "94b45d005c37092d502e93988b39606c6128ed5243ada94da6ac091cadd945d0"
+                },
+                {
+                  "name": "main::test_b08",
+                  "status": "cached",
+                  "key": "4b9586b918970f259199dff66a9ab4db87b3881b0c3d830c7bb8f2c119e6d6b2"
+                },
+                {
+                  "name": "main::test_b09",
+                  "status": "cached",
+                  "key": "cc5aa2e986616deb6d2e3276e67ee5879ba3ef11d886d0fd71622447d98bf9a7"
+                },
+                {
+                  "name": "main::test_b10",
+                  "status": "cached",
+                  "key": "1ff7c1ba7df77848f98950484494d36883259af3b0c7a6b839f8b07278523a48"
+                },
+                {
+                  "name": "main::test_b11",
+                  "status": "cached",
+                  "key": "e57414c93b1a2468c12bc86a33dd5081129e17a5db3695eb73a0db08e9ec0167"
+                },
+                {
+                  "name": "main::test_b12",
+                  "status": "cached",
+                  "key": "715901b999f842dd63490037cc6fb003ce2a2478b586193dd00814395a9b2728"
+                },
+                {
+                  "name": "main::test_b13",
+                  "status": "cached",
+                  "key": "d87e8cd97a7ef43cf4200c6eff50a64850f5b64cd44b4d9bb53b980374dddce4"
+                },
+                {
+                  "name": "main::test_b14",
+                  "status": "cached",
+                  "key": "6cbed66a45a6d58c9b57744ec56164646f2ef451b63743ddfb32b397decfb700"
+                },
+                {
+                  "name": "main::test_b15",
+                  "status": "cached",
+                  "key": "a9a0ab28b84e6cc3f4dd049ef5d50cccaa2f133564f7a3722d6f09b29b905237"
+                },
+                {
+                  "name": "main::test_b16",
+                  "status": "cached",
+                  "key": "817f3e771cfeef5bde9d40c4d9aa293149759f030fedc37001b92609b640d226"
+                },
+                {
+                  "name": "main::test_b17",
+                  "status": "cached",
+                  "key": "d02099688d493668eb071503b149cdfdfbef82b1439811d72f721fba601a3030"
+                },
+                {
+                  "name": "main::test_b18",
+                  "status": "cached",
+                  "key": "83079746dc45e79e7767bd3315f3cfd2d4ffbeb9f67454c58a28bab2a51b9826"
+                },
+                {
+                  "name": "main::test_b19",
+                  "status": "cached",
+                  "key": "2d2acc94f0e562b0499912229200c5515ec48582fefc25538eec5c0424c678bc"
+                },
+                {
+                  "name": "main::test_b20",
+                  "status": "cached",
+                  "key": "72eecd4ff5e642f91579451ac888ae8be84abfb2ac8e92ec4028ad186d86fa08"
+                },
+                {
+                  "name": "main::test_b21",
+                  "status": "cached",
+                  "key": "6b584267bb53724bacef04c607e0df871bc6f5103ef789321a7add18d1059644"
+                },
+                {
+                  "name": "main::test_b22",
+                  "status": "cached",
+                  "key": "4c1bd072b4c329eedb56daf6088e5455905cefa224be34d52566ad6f50981ed7"
+                },
+                {
+                  "name": "main::test_b23",
+                  "status": "cached",
+                  "key": "a112365922c3692d45315bb329d339bbf428e49758cbe8730e9914440958313f"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1755.8329059975222,
+              "peak_rss_kb": 260980,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/test-count/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/test-count",
+                "--filter",
+                "*::test_*"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 32,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_a00",
+                  "status": "cached",
+                  "key": "723e99427a6b5e53bd4e56516dbf2eecc67521dcaf5e99a19502690b05595da1"
+                },
+                {
+                  "name": "main::test_a01",
+                  "status": "cached",
+                  "key": "c4004a772e07ebe9b507312b8e2c05fbc3b8cb75802a0e247f7323fe24280ac8"
+                },
+                {
+                  "name": "main::test_a02",
+                  "status": "cached",
+                  "key": "93fa741f023685a0a05a544ec2f455249976f2d72b7407c05cdcf7c1e6eabbf6"
+                },
+                {
+                  "name": "main::test_a03",
+                  "status": "cached",
+                  "key": "9938f6929a599e01c1e0da31bbc3096c36d3f13c6da2da0f3bc37e021ac1bd20"
+                },
+                {
+                  "name": "main::test_a04",
+                  "status": "cached",
+                  "key": "e0420a971120664fac0e019e94585b110e5cc6cd801cc23e1d58deeb4e981602"
+                },
+                {
+                  "name": "main::test_a05",
+                  "status": "cached",
+                  "key": "c5a17a8f8530e3eef48e2957d8cbc4cd663c531ef30fcf13d193e694ecdeb389"
+                },
+                {
+                  "name": "main::test_a06",
+                  "status": "cached",
+                  "key": "cf10a2b4725e530607ac4c9fd66c5cb6aeae5321242d058d73eb6a628235f301"
+                },
+                {
+                  "name": "main::test_a07",
+                  "status": "cached",
+                  "key": "a8f995abfe78b7035ec57d39bc991950b527226bea45c12c1d2b9725bd421276"
+                },
+                {
+                  "name": "main::test_b00",
+                  "status": "cached",
+                  "key": "85b7427d6b6b263685435b2e2e806f6f3afae95345a52cded34aaa7ffef35f9d"
+                },
+                {
+                  "name": "main::test_b01",
+                  "status": "cached",
+                  "key": "d9f44e17ead9e10767543a4a383a48320b430e93a20aba1dfbe0315126bfc269"
+                },
+                {
+                  "name": "main::test_b02",
+                  "status": "cached",
+                  "key": "62e62aef2590a0f17827e885e74df5d951ad3f4d3e0e35bfd0066df63ab9ae13"
+                },
+                {
+                  "name": "main::test_b03",
+                  "status": "cached",
+                  "key": "3346d05d3016243263d6465396d10c854674b9f0aa4424322cb2994984b73de5"
+                },
+                {
+                  "name": "main::test_b04",
+                  "status": "cached",
+                  "key": "9dcc3902a155e82eed80ddb6bfd509b228da50c891bdf3f6913554b79be08b62"
+                },
+                {
+                  "name": "main::test_b05",
+                  "status": "cached",
+                  "key": "53a7b688972c6ecb86783c0649b85cdbfcf105700672d1ffa66d3362aeed7cfc"
+                },
+                {
+                  "name": "main::test_b06",
+                  "status": "cached",
+                  "key": "71750266af898a2854534825e61dd8db4d062fd06fabeb2a4d5f33ace41a1a68"
+                },
+                {
+                  "name": "main::test_b07",
+                  "status": "cached",
+                  "key": "94b45d005c37092d502e93988b39606c6128ed5243ada94da6ac091cadd945d0"
+                },
+                {
+                  "name": "main::test_b08",
+                  "status": "cached",
+                  "key": "4b9586b918970f259199dff66a9ab4db87b3881b0c3d830c7bb8f2c119e6d6b2"
+                },
+                {
+                  "name": "main::test_b09",
+                  "status": "cached",
+                  "key": "cc5aa2e986616deb6d2e3276e67ee5879ba3ef11d886d0fd71622447d98bf9a7"
+                },
+                {
+                  "name": "main::test_b10",
+                  "status": "cached",
+                  "key": "1ff7c1ba7df77848f98950484494d36883259af3b0c7a6b839f8b07278523a48"
+                },
+                {
+                  "name": "main::test_b11",
+                  "status": "cached",
+                  "key": "e57414c93b1a2468c12bc86a33dd5081129e17a5db3695eb73a0db08e9ec0167"
+                },
+                {
+                  "name": "main::test_b12",
+                  "status": "cached",
+                  "key": "715901b999f842dd63490037cc6fb003ce2a2478b586193dd00814395a9b2728"
+                },
+                {
+                  "name": "main::test_b13",
+                  "status": "cached",
+                  "key": "d87e8cd97a7ef43cf4200c6eff50a64850f5b64cd44b4d9bb53b980374dddce4"
+                },
+                {
+                  "name": "main::test_b14",
+                  "status": "cached",
+                  "key": "6cbed66a45a6d58c9b57744ec56164646f2ef451b63743ddfb32b397decfb700"
+                },
+                {
+                  "name": "main::test_b15",
+                  "status": "cached",
+                  "key": "a9a0ab28b84e6cc3f4dd049ef5d50cccaa2f133564f7a3722d6f09b29b905237"
+                },
+                {
+                  "name": "main::test_b16",
+                  "status": "cached",
+                  "key": "817f3e771cfeef5bde9d40c4d9aa293149759f030fedc37001b92609b640d226"
+                },
+                {
+                  "name": "main::test_b17",
+                  "status": "cached",
+                  "key": "d02099688d493668eb071503b149cdfdfbef82b1439811d72f721fba601a3030"
+                },
+                {
+                  "name": "main::test_b18",
+                  "status": "cached",
+                  "key": "83079746dc45e79e7767bd3315f3cfd2d4ffbeb9f67454c58a28bab2a51b9826"
+                },
+                {
+                  "name": "main::test_b19",
+                  "status": "cached",
+                  "key": "2d2acc94f0e562b0499912229200c5515ec48582fefc25538eec5c0424c678bc"
+                },
+                {
+                  "name": "main::test_b20",
+                  "status": "cached",
+                  "key": "72eecd4ff5e642f91579451ac888ae8be84abfb2ac8e92ec4028ad186d86fa08"
+                },
+                {
+                  "name": "main::test_b21",
+                  "status": "cached",
+                  "key": "6b584267bb53724bacef04c607e0df871bc6f5103ef789321a7add18d1059644"
+                },
+                {
+                  "name": "main::test_b22",
+                  "status": "cached",
+                  "key": "4c1bd072b4c329eedb56daf6088e5455905cefa224be34d52566ad6f50981ed7"
+                },
+                {
+                  "name": "main::test_b23",
+                  "status": "cached",
+                  "key": "a112365922c3692d45315bb329d339bbf428e49758cbe8730e9914440958313f"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1811.6003860050114,
+              "peak_rss_kb": 261460,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/test-count/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/test-count",
+                "--filter",
+                "*::test_*"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 32,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_a00",
+                  "status": "cached",
+                  "key": "723e99427a6b5e53bd4e56516dbf2eecc67521dcaf5e99a19502690b05595da1"
+                },
+                {
+                  "name": "main::test_a01",
+                  "status": "cached",
+                  "key": "c4004a772e07ebe9b507312b8e2c05fbc3b8cb75802a0e247f7323fe24280ac8"
+                },
+                {
+                  "name": "main::test_a02",
+                  "status": "cached",
+                  "key": "93fa741f023685a0a05a544ec2f455249976f2d72b7407c05cdcf7c1e6eabbf6"
+                },
+                {
+                  "name": "main::test_a03",
+                  "status": "cached",
+                  "key": "9938f6929a599e01c1e0da31bbc3096c36d3f13c6da2da0f3bc37e021ac1bd20"
+                },
+                {
+                  "name": "main::test_a04",
+                  "status": "cached",
+                  "key": "e0420a971120664fac0e019e94585b110e5cc6cd801cc23e1d58deeb4e981602"
+                },
+                {
+                  "name": "main::test_a05",
+                  "status": "cached",
+                  "key": "c5a17a8f8530e3eef48e2957d8cbc4cd663c531ef30fcf13d193e694ecdeb389"
+                },
+                {
+                  "name": "main::test_a06",
+                  "status": "cached",
+                  "key": "cf10a2b4725e530607ac4c9fd66c5cb6aeae5321242d058d73eb6a628235f301"
+                },
+                {
+                  "name": "main::test_a07",
+                  "status": "cached",
+                  "key": "a8f995abfe78b7035ec57d39bc991950b527226bea45c12c1d2b9725bd421276"
+                },
+                {
+                  "name": "main::test_b00",
+                  "status": "cached",
+                  "key": "85b7427d6b6b263685435b2e2e806f6f3afae95345a52cded34aaa7ffef35f9d"
+                },
+                {
+                  "name": "main::test_b01",
+                  "status": "cached",
+                  "key": "d9f44e17ead9e10767543a4a383a48320b430e93a20aba1dfbe0315126bfc269"
+                },
+                {
+                  "name": "main::test_b02",
+                  "status": "cached",
+                  "key": "62e62aef2590a0f17827e885e74df5d951ad3f4d3e0e35bfd0066df63ab9ae13"
+                },
+                {
+                  "name": "main::test_b03",
+                  "status": "cached",
+                  "key": "3346d05d3016243263d6465396d10c854674b9f0aa4424322cb2994984b73de5"
+                },
+                {
+                  "name": "main::test_b04",
+                  "status": "cached",
+                  "key": "9dcc3902a155e82eed80ddb6bfd509b228da50c891bdf3f6913554b79be08b62"
+                },
+                {
+                  "name": "main::test_b05",
+                  "status": "cached",
+                  "key": "53a7b688972c6ecb86783c0649b85cdbfcf105700672d1ffa66d3362aeed7cfc"
+                },
+                {
+                  "name": "main::test_b06",
+                  "status": "cached",
+                  "key": "71750266af898a2854534825e61dd8db4d062fd06fabeb2a4d5f33ace41a1a68"
+                },
+                {
+                  "name": "main::test_b07",
+                  "status": "cached",
+                  "key": "94b45d005c37092d502e93988b39606c6128ed5243ada94da6ac091cadd945d0"
+                },
+                {
+                  "name": "main::test_b08",
+                  "status": "cached",
+                  "key": "4b9586b918970f259199dff66a9ab4db87b3881b0c3d830c7bb8f2c119e6d6b2"
+                },
+                {
+                  "name": "main::test_b09",
+                  "status": "cached",
+                  "key": "cc5aa2e986616deb6d2e3276e67ee5879ba3ef11d886d0fd71622447d98bf9a7"
+                },
+                {
+                  "name": "main::test_b10",
+                  "status": "cached",
+                  "key": "1ff7c1ba7df77848f98950484494d36883259af3b0c7a6b839f8b07278523a48"
+                },
+                {
+                  "name": "main::test_b11",
+                  "status": "cached",
+                  "key": "e57414c93b1a2468c12bc86a33dd5081129e17a5db3695eb73a0db08e9ec0167"
+                },
+                {
+                  "name": "main::test_b12",
+                  "status": "cached",
+                  "key": "715901b999f842dd63490037cc6fb003ce2a2478b586193dd00814395a9b2728"
+                },
+                {
+                  "name": "main::test_b13",
+                  "status": "cached",
+                  "key": "d87e8cd97a7ef43cf4200c6eff50a64850f5b64cd44b4d9bb53b980374dddce4"
+                },
+                {
+                  "name": "main::test_b14",
+                  "status": "cached",
+                  "key": "6cbed66a45a6d58c9b57744ec56164646f2ef451b63743ddfb32b397decfb700"
+                },
+                {
+                  "name": "main::test_b15",
+                  "status": "cached",
+                  "key": "a9a0ab28b84e6cc3f4dd049ef5d50cccaa2f133564f7a3722d6f09b29b905237"
+                },
+                {
+                  "name": "main::test_b16",
+                  "status": "cached",
+                  "key": "817f3e771cfeef5bde9d40c4d9aa293149759f030fedc37001b92609b640d226"
+                },
+                {
+                  "name": "main::test_b17",
+                  "status": "cached",
+                  "key": "d02099688d493668eb071503b149cdfdfbef82b1439811d72f721fba601a3030"
+                },
+                {
+                  "name": "main::test_b18",
+                  "status": "cached",
+                  "key": "83079746dc45e79e7767bd3315f3cfd2d4ffbeb9f67454c58a28bab2a51b9826"
+                },
+                {
+                  "name": "main::test_b19",
+                  "status": "cached",
+                  "key": "2d2acc94f0e562b0499912229200c5515ec48582fefc25538eec5c0424c678bc"
+                },
+                {
+                  "name": "main::test_b20",
+                  "status": "cached",
+                  "key": "72eecd4ff5e642f91579451ac888ae8be84abfb2ac8e92ec4028ad186d86fa08"
+                },
+                {
+                  "name": "main::test_b21",
+                  "status": "cached",
+                  "key": "6b584267bb53724bacef04c607e0df871bc6f5103ef789321a7add18d1059644"
+                },
+                {
+                  "name": "main::test_b22",
+                  "status": "cached",
+                  "key": "4c1bd072b4c329eedb56daf6088e5455905cefa224be34d52566ad6f50981ed7"
+                },
+                {
+                  "name": "main::test_b23",
+                  "status": "cached",
+                  "key": "a112365922c3692d45315bb329d339bbf428e49758cbe8730e9914440958313f"
+                }
+              ]
+            },
+            {
+              "wall_ms": 1678.9672729937593,
+              "peak_rss_kb": 261140,
+              "exit": 0,
+              "timed_out": false,
+              "command": [
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/mylang",
+                "test",
+                "/tmp/mylang-speed-20260916-ry8hnipe/sources/test-count/main.my",
+                "--json",
+                "--zig",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/zig",
+                "--qbe",
+                "/tmp/mylang-speed-20260916-ry8hnipe/release/bin/qbe",
+                "--cache-dir",
+                "/tmp/mylang-speed-20260916-ry8hnipe/native/test-count",
+                "--filter",
+                "*::test_*"
+              ],
+              "tests": {
+                "passed": 0,
+                "cached": 32,
+                "failed": 0,
+                "executed": 0,
+                "skipped": 0
+              },
+              "case_statuses": [
+                {
+                  "name": "main::test_a00",
+                  "status": "cached",
+                  "key": "723e99427a6b5e53bd4e56516dbf2eecc67521dcaf5e99a19502690b05595da1"
+                },
+                {
+                  "name": "main::test_a01",
+                  "status": "cached",
+                  "key": "c4004a772e07ebe9b507312b8e2c05fbc3b8cb75802a0e247f7323fe24280ac8"
+                },
+                {
+                  "name": "main::test_a02",
+                  "status": "cached",
+                  "key": "93fa741f023685a0a05a544ec2f455249976f2d72b7407c05cdcf7c1e6eabbf6"
+                },
+                {
+                  "name": "main::test_a03",
+                  "status": "cached",
+                  "key": "9938f6929a599e01c1e0da31bbc3096c36d3f13c6da2da0f3bc37e021ac1bd20"
+                },
+                {
+                  "name": "main::test_a04",
+                  "status": "cached",
+                  "key": "e0420a971120664fac0e019e94585b110e5cc6cd801cc23e1d58deeb4e981602"
+                },
+                {
+                  "name": "main::test_a05",
+                  "status": "cached",
+                  "key": "c5a17a8f8530e3eef48e2957d8cbc4cd663c531ef30fcf13d193e694ecdeb389"
+                },
+                {
+                  "name": "main::test_a06",
+                  "status": "cached",
+                  "key": "cf10a2b4725e530607ac4c9fd66c5cb6aeae5321242d058d73eb6a628235f301"
+                },
+                {
+                  "name": "main::test_a07",
+                  "status": "cached",
+                  "key": "a8f995abfe78b7035ec57d39bc991950b527226bea45c12c1d2b9725bd421276"
+                },
+                {
+                  "name": "main::test_b00",
+                  "status": "cached",
+                  "key": "85b7427d6b6b263685435b2e2e806f6f3afae95345a52cded34aaa7ffef35f9d"
+                },
+                {
+                  "name": "main::test_b01",
+                  "status": "cached",
+                  "key": "d9f44e17ead9e10767543a4a383a48320b430e93a20aba1dfbe0315126bfc269"
+                },
+                {
+                  "name": "main::test_b02",
+                  "status": "cached",
+                  "key": "62e62aef2590a0f17827e885e74df5d951ad3f4d3e0e35bfd0066df63ab9ae13"
+                },
+                {
+                  "name": "main::test_b03",
+                  "status": "cached",
+                  "key": "3346d05d3016243263d6465396d10c854674b9f0aa4424322cb2994984b73de5"
+                },
+                {
+                  "name": "main::test_b04",
+                  "status": "cached",
+                  "key": "9dcc3902a155e82eed80ddb6bfd509b228da50c891bdf3f6913554b79be08b62"
+                },
+                {
+                  "name": "main::test_b05",
+                  "status": "cached",
+                  "key": "53a7b688972c6ecb86783c0649b85cdbfcf105700672d1ffa66d3362aeed7cfc"
+                },
+                {
+                  "name": "main::test_b06",
+                  "status": "cached",
+                  "key": "71750266af898a2854534825e61dd8db4d062fd06fabeb2a4d5f33ace41a1a68"
+                },
+                {
+                  "name": "main::test_b07",
+                  "status": "cached",
+                  "key": "94b45d005c37092d502e93988b39606c6128ed5243ada94da6ac091cadd945d0"
+                },
+                {
+                  "name": "main::test_b08",
+                  "status": "cached",
+                  "key": "4b9586b918970f259199dff66a9ab4db87b3881b0c3d830c7bb8f2c119e6d6b2"
+                },
+                {
+                  "name": "main::test_b09",
+                  "status": "cached",
+                  "key": "cc5aa2e986616deb6d2e3276e67ee5879ba3ef11d886d0fd71622447d98bf9a7"
+                },
+                {
+                  "name": "main::test_b10",
+                  "status": "cached",
+                  "key": "1ff7c1ba7df77848f98950484494d36883259af3b0c7a6b839f8b07278523a48"
+                },
+                {
+                  "name": "main::test_b11",
+                  "status": "cached",
+                  "key": "e57414c93b1a2468c12bc86a33dd5081129e17a5db3695eb73a0db08e9ec0167"
+                },
+                {
+                  "name": "main::test_b12",
+                  "status": "cached",
+                  "key": "715901b999f842dd63490037cc6fb003ce2a2478b586193dd00814395a9b2728"
+                },
+                {
+                  "name": "main::test_b13",
+                  "status": "cached",
+                  "key": "d87e8cd97a7ef43cf4200c6eff50a64850f5b64cd44b4d9bb53b980374dddce4"
+                },
+                {
+                  "name": "main::test_b14",
+                  "status": "cached",
+                  "key": "6cbed66a45a6d58c9b57744ec56164646f2ef451b63743ddfb32b397decfb700"
+                },
+                {
+                  "name": "main::test_b15",
+                  "status": "cached",
+                  "key": "a9a0ab28b84e6cc3f4dd049ef5d50cccaa2f133564f7a3722d6f09b29b905237"
+                },
+                {
+                  "name": "main::test_b16",
+                  "status": "cached",
+                  "key": "817f3e771cfeef5bde9d40c4d9aa293149759f030fedc37001b92609b640d226"
+                },
+                {
+                  "name": "main::test_b17",
+                  "status": "cached",
+                  "key": "d02099688d493668eb071503b149cdfdfbef82b1439811d72f721fba601a3030"
+                },
+                {
+                  "name": "main::test_b18",
+                  "status": "cached",
+                  "key": "83079746dc45e79e7767bd3315f3cfd2d4ffbeb9f67454c58a28bab2a51b9826"
+                },
+                {
+                  "name": "main::test_b19",
+                  "status": "cached",
+                  "key": "2d2acc94f0e562b0499912229200c5515ec48582fefc25538eec5c0424c678bc"
+                },
+                {
+                  "name": "main::test_b20",
+                  "status": "cached",
+                  "key": "72eecd4ff5e642f91579451ac888ae8be84abfb2ac8e92ec4028ad186d86fa08"
+                },
+                {
+                  "name": "main::test_b21",
+                  "status": "cached",
+                  "key": "6b584267bb53724bacef04c607e0df871bc6f5103ef789321a7add18d1059644"
+                },
+                {
+                  "name": "main::test_b22",
+                  "status": "cached",
+                  "key": "4c1bd072b4c329eedb56daf6088e5455905cefa224be34d52566ad6f50981ed7"
+                },
+                {
+                  "name": "main::test_b23",
+                  "status": "cached",
+                  "key": "a112365922c3692d45315bb329d339bbf428e49758cbe8730e9914440958313f"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "load_finish": [
+    12.39990234375,
+    7.24755859375,
+    3.4453125
+  ],
+  "runner_snapshot": "velocity-speed-2026-09-16/run_native.py",
+  "ordinary_10k_receipt_dependency_counts": [
+    50
+  ]
+}
