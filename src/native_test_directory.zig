@@ -108,6 +108,7 @@ fn argv(context: fs.Context, shared: Fanout, source: []const u8) Error![]const [
     // keys its receipts on it rather than rediscovering the environment itself.
     try list.appendSlice(a, &.{ "--max-memory", try decimal(a, opts.limits.max_memory orelse budget.test_default) });
     if (opts.flags.force) try list.append(a, "--force");
+    if (opts.flags.no_cache) try list.append(a, "--no-cache");
     try @import("native_link.zig").append(context, opts.link_arguments, &list, true);
     return list.items;
 }
@@ -221,7 +222,7 @@ test "each child command inherits the selection, budgets and tool choices of the
     defer environment.deinit();
     var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
     defer context.deinit();
-    const opts = try options.parse(&.{ "suite", "--filter", "adder", "--force", "--max-steps", "77", "--mode", "ReleaseFast" });
+    const opts = try options.parse(&.{ "suite", "--filter", "adder", "--force", "--no-cache", "--max-steps", "77", "--mode", "ReleaseFast" });
     const shared: Fanout = .{ .compiler = "/usr/bin/mylang", .options = opts, .workspace = "/tmp/work" };
     const line = try std.mem.join(context.allocator, " ", try argv(context, shared, "/programs/one.my"));
     try std.testing.expect(std.mem.startsWith(u8, line, "/usr/bin/mylang test /programs/one.my --json"));
@@ -229,6 +230,7 @@ test "each child command inherits the selection, budgets and tool choices of the
     try std.testing.expect(std.mem.indexOf(u8, line, "--max-steps 77") != null);
     try std.testing.expect(std.mem.indexOf(u8, line, "--mode ReleaseFast") != null);
     try std.testing.expect(std.mem.indexOf(u8, line, "--force") != null);
+    try std.testing.expect(std.mem.indexOf(u8, line, "--no-cache") != null);
     try std.testing.expectError(error.DirectoryCasesUnsupported, run(context, try options.parse(&.{ "suite", "--cases", "cases.json" })));
 }
 // spec-case: NATIVE-TEST-4

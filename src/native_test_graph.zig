@@ -13,9 +13,11 @@ const v = @import("qbe_build_value.zig");
 /// Graph cache IO, JSON and malformed compiler output failures.
 pub const Error = fs.Error || std.Io.Writer.Error || error{InvalidGraph};
 /// Bumped when the reduced graph wire shape changes so stale files are ignored.
-pub const version = "native-test-graph-v1";
+pub const version = "native-test-graph-v2";
 /// Key domain string; a change invalidates every stored graph.
 const key_domain = "native-test-graph-key-v1";
+/// Shared JSON key for the emitted implementation hash.
+const hash_key = "implementation_hash";
 /// Exactly the fields `native_test_plan.plan` and the runner schema need.
 const ReducedExport = struct { name: []const u8 = "" };
 const ReducedDependency = struct { symbol: []const u8 = "", kind: []const u8 = "" };
@@ -81,7 +83,7 @@ pub fn reduce(allocator: std.mem.Allocator, full: std.json.Value) Error![]u8 {
     for (raw_functions, 0..) |function, index| {
         const facts = v.get(function, "test_dependencies");
         if (facts != .object) return error.InvalidGraph;
-        if (v.text(v.get(facts, "implementation_hash")).len != 64) return error.InvalidGraph;
+        if (v.text(v.get(facts, hash_key)).len != 64) return error.InvalidGraph;
         const raw_dependencies = v.array(v.get(facts, "dependencies"));
         const dependencies = try allocator.alloc(ReducedDependency, raw_dependencies.len);
         for (raw_dependencies, 0..) |dependency, slot| {
@@ -99,7 +101,7 @@ pub fn reduce(allocator: std.mem.Allocator, full: std.json.Value) Error![]u8 {
             .symbol = v.text(v.get(function, "symbol")),
             .@"export" = if (exported == .object) .{ .name = v.text(v.get(exported, "name")) } else null,
             .test_dependencies = .{
-                .implementation_hash = v.text(v.get(facts, "implementation_hash")),
+                .implementation_hash = v.text(v.get(facts, hash_key)),
                 .dependencies = dependencies,
                 .cacheable = v.boolean(v.get(facts, "cacheable")),
                 .reasons = reasons,
@@ -121,13 +123,37 @@ pub fn load(context: fs.Context, directory: []const u8, key_bytes: []const u8) ?
     const bytes = context.read(path) catch return null;
     const wrapper = std.json.parseFromSlice(std.json.Value, context.allocator, bytes, .{ .allocate = .alloc_always }) catch return null;
     if (!std.mem.eql(u8, v.text(v.get(wrapper.value, "version")), version)) return null;
+    // The filename is derived from the requested key, but a file can be moved
+    // under another name. Bind the envelope to its requested input key so an
+    // intact graph from another snapshot is a miss, not a stale success.
+    if (!std.mem.eql(u8, v.text(v.get(wrapper.value, "key")), key_bytes)) return null;
     const payload = v.get(wrapper.value, "payload");
     if (payload != .string) return null;
     const digest = fs.hash(context.allocator, payload.string) catch return null;
     if (!std.mem.eql(u8, digest, v.text(v.get(wrapper.value, "sha256")))) return null;
     const graph = std.json.parseFromSlice(std.json.Value, context.allocator, payload.string, .{ .allocate = .alloc_always }) catch return null;
-    if (!std.mem.eql(u8, v.text(v.get(graph.value, "version")), version)) return null;
+    if (!validGraph(graph.value)) return null;
     return graph.value;
+}
+
+/// Reject a structurally invalid reduced graph before its facts are trusted.
+fn validGraph(value: std.json.Value) bool {
+    if (value != .object) return false;
+    if (!std.mem.eql(u8, v.text(v.get(value, "version")), version)) return false;
+    if (v.text(v.get(value, "abi")).len == 0) return false;
+    if (v.get(value, "schema") != .string) return false;
+    if (v.get(value, "entry") != .string) return false;
+    const functions = v.get(value, "functions");
+    if (functions != .array) return false;
+    for (functions.array.items) |function| {
+        if (function != .object) return false;
+        if (v.get(function, "name") != .string or v.get(function, "symbol") != .string) return false;
+        const facts = v.get(function, "test_dependencies");
+        if (facts != .object) return false;
+        if (v.text(v.get(facts, hash_key)).len != 64) return false;
+        if (v.get(facts, "dependencies") != .array or v.get(facts, "reasons") != .array) return false;
+    }
+    return true;
 }
 
 /// Publish a reduced graph atomically. Callers pass the exact `reduce` bytes.
@@ -135,6 +161,7 @@ pub fn store(context: fs.Context, directory: []const u8, key_bytes: []const u8, 
     try context.mkdir(directory);
     const wrapper = try std.json.Stringify.valueAlloc(context.allocator, .{
         .version = version,
+        .key = key_bytes,
         .sha256 = try fs.hash(context.allocator, payload),
         .payload = payload,
     }, .{});
@@ -160,4 +187,27 @@ test "a reduced graph copies dependency facts and rejects malformed manifests" {
     const parsed = try std.json.parseFromSlice(std.json.Value, a, reduced, .{ .allocate = .alloc_always });
     try std.testing.expectEqual(@as(usize, 1), v.array(v.get(parsed.value, "functions")).len);
     try std.testing.expectError(error.InvalidGraph, reduce(a, .null));
+}
+
+// spec-case: NATIVE-TEST-6
+test "a stored reduced graph is bound to its requested input key" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    const payload =
+        "{\"version\":\"native-test-graph-v2\",\"abi\":\"a\",\"schema\":\"{}\",\"entry\":\"e\"," ++
+        "\"functions\":[{\"name\":\"f\",\"symbol\":\"s\",\"export\":null," ++
+        "\"test_dependencies\":{\"implementation_hash\":\"0000000000000000000000000000000000000000000000000000000000000000\"," ++
+        "\"dependencies\":[],\"cacheable\":false,\"reasons\":[]}}]}";
+    try store(context, root, "key-a", payload);
+    try std.testing.expect(load(context, root, "key-a") != null);
+    // A complete entry copied under another key must miss even when its checksum
+    // and payload are intact.
+    const copied = try context.read(try pathFor(context, root, "key-a"));
+    try context.write(try pathFor(context, root, "key-b"), copied);
+    try std.testing.expect(load(context, root, "key-b") == null);
 }
