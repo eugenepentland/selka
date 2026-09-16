@@ -10,9 +10,11 @@ const planner = @import("native_test_plan.zig");
 const receipts = @import("native_test_receipts.zig");
 const contracts = @import("native_test_contracts.zig");
 const fanout = @import("native_test_directory.zig");
+const graph_store = @import("native_test_graph.zig");
+const invalidation = @import("invalidation.zig");
 const budget = @import("memory_budget");
 /// Setup failures never produce a cached green test run.
-pub const Error = sessions.Error || cases.Error || planner.Error || receipts.Error || fanout.Error || contracts.Error;
+pub const Error = sessions.Error || cases.Error || planner.Error || receipts.Error || fanout.Error || contracts.Error || graph_store.Error;
 
 /// One fully checked and (when needed) prepared project graph. Cases that
 /// select the same provider replacement set share it, including the native
@@ -31,6 +33,8 @@ const Graphs = struct {
     session: sessions.Session,
     captured: snapshot.Snapshot,
     production: std.json.Value,
+    /// Durable reduced-graph directory; empty when the invocation is uncached.
+    directory: []const u8,
     entries: std.StringHashMapUnmanaged(*Graph) = .empty,
 
     fn deinit(self: *Graphs) void {
@@ -53,19 +57,51 @@ const Graphs = struct {
             const modules = try contracts.moduleNames(self.allocator, case.providers);
             try contracts.validate(self.allocator, self.production, replacement, modules);
             graph.* = .{
-                .project = try self.session.check(copied.entry_path),
+                .project = try self.prepare(copied.entry_path, copied.identity, provider_identity),
                 .provider_identity = provider_identity,
                 .source_identity = copied.identity,
             };
         } else {
             graph.* = .{
-                .project = try self.session.check(self.captured.entry_path),
+                .project = try self.prepare(self.captured.entry_path, self.captured.identity, provider_identity),
                 .provider_identity = provider_identity,
                 .source_identity = self.captured.identity,
             };
         }
         try self.entries.put(self.allocator, provider_identity, graph);
         return graph;
+    }
+
+    /// Admit a durable reduced graph only after the project passes the shared
+    /// query cache; otherwise fall back to full checking, lowering and emission.
+    fn prepare(self: *Graphs, entry_path: []const u8, source_identity: []const u8, provider_identity: []const u8) Error!sessions.Project {
+        const session = self.session;
+        const key = try graph_store.key(self.allocator, .{
+            .compiler_identity = session.hashes[0],
+            .zig_stamp = session.hashes[1],
+            .qbe_stamp = session.hashes[2],
+            .mode = session.options.mode,
+            .environment_hash = session.environment.hash,
+            .source_identity = source_identity,
+            .provider_identity = provider_identity,
+        });
+        // A forced run must re-lower and re-emit so its own graph is fresh; a
+        // `--no-cache` run reads and writes no durable entry at all.
+        if (durableReuseAllowed(session.options, session.environment.cacheable)) {
+            if (graph_store.load(session.context, self.directory, key)) |reduced| {
+                try session.validate(entry_path);
+                return session.projectFromValue(entry_path, reduced);
+            }
+        }
+        const project = try session.check(entry_path);
+        if (!session.options.flags.no_cache and session.environment.cacheable) {
+            const payload = graph_store.reduce(self.allocator, project.manifest) catch |err| switch (err) {
+                error.OutOfMemory => return error.OutOfMemory,
+                else => return error.InvalidNativeTestManifest,
+            };
+            graph_store.store(session.context, self.directory, key, payload) catch |err| ignoreStoreFailure(err);
+        }
+        return project;
     }
 };
 /// The fan-out width asked for: `--jobs` first, then `MYLANG_JOBS`, then none,
@@ -101,8 +137,10 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     };
     // A directory names many independent projects, so each one runs as its own child.
     if (fanout.selected(context, opts.source)) return fanout.run(context, opts);
-    const session = try sessions.Session.init(context, opts);
+    var session = try sessions.Session.init(context, opts);
     defer context.remove(session.temporary);
+    var work: invalidation.Work = .{ .command = "test" };
+    if (opts.flags.report) session.work = &work;
     const captured = try snapshot.materialize(context, session.source, try context.temporary(session.temporary));
     // Resolve configuration first. `list-interfaces --contracts` parses every
     // module and validates exported signatures and explicit ceilings without
@@ -113,14 +151,15 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
         error.ProjectPolicyRejected => return 3,
         else => return err,
     };
-    var graphs: Graphs = .{ .allocator = context.allocator, .session = session, .captured = captured, .production = production };
+    const directory = try std.fs.path.join(context.allocator, &.{ session.directory, "results" });
+    const graphs_directory = if (opts.flags.no_cache) "" else try std.fs.path.join(context.allocator, &.{ session.directory, "graphs" });
+    var graphs: Graphs = .{ .allocator = context.allocator, .session = session, .captured = captured, .production = production, .directory = graphs_directory };
     defer graphs.deinit();
     const config_bytes = if (opts.cases) |path| try context.read(path) else "null";
     const config = (try std.json.parseFromSlice(std.json.Value, context.allocator, config_bytes, .{ .allocate = .alloc_always })).value;
     const declared_schema = try contracts.testSchema(context.allocator, production);
     const selected = try cases.discover(context.allocator, declared_schema, config, opts.filter);
     const results = try context.allocator.alloc(receipts.Result, selected.len);
-    const directory = try std.fs.path.join(context.allocator, &.{ session.directory, "results" });
     try context.mkdir(directory);
     for (selected, results) |case, *result| result.* = perform(&graphs, case, directory) catch |err| switch (err) {
         error.ProjectConfigurationFailed => return 2,
@@ -131,8 +170,39 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     if (opts.cases) |path| {
         if (!std.mem.eql(u8, config_bytes, try context.read(path))) return error.SourceChanged;
     }
-    for (results) |result| try receipts.write(context, directory, result);
-    return report(context, results, opts.json);
+    if (!opts.flags.no_cache) for (results) |result| try receipts.write(context, directory, result);
+    if (opts.flags.report) try emitWorkReport(context, &work, results);
+    return report(context, results, opts.flags.json);
+}
+/// Record the native test outcome as real performed/reused work. Parser, body
+/// check, lowering, emission and link counts come from the compiler children's
+/// own `work-report-v1` lines, which `Session.observe` folded in.
+fn emitWorkReport(context: fs.Context, work: *invalidation.Work, results: []const receipts.Result) Error!void {
+    var executed: usize = 0;
+    var cached: usize = 0;
+    for (results) |result| {
+        if (std.mem.eql(u8, result.status, "cached")) cached += 1;
+        if (std.mem.eql(u8, result.status, "passed") or std.mem.eql(u8, result.status, "failed")) executed += 1;
+    }
+    if (results.len != 0) work.set(.executed_tests, executed, cached);
+    const rendered = invalidation.renderWork(context.allocator, work.*) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.InvalidCurrent => return error.InvalidGraph,
+    };
+    try std.Io.File.stderr().writeStreamingAll(context.io, try std.fmt.allocPrint(context.allocator, "{s}\n", .{rendered}));
+}
+/// A refused graph-store write must never fail a test run; the graph is an
+/// optional acceleration reused on the next unchanged invocation.
+fn ignoreStoreFailure(err: graph_store.Error) void {
+    // The graph is an optional acceleration; name the ignored cause explicitly.
+    _ = @errorName(err);
+}
+/// Durable graph and result receipts are reusable only when neither force nor
+/// `--no-cache` asked for fresh work and persistence is allowed.
+fn durableReuseAllowed(opts: options.Options, cacheable: bool) bool {
+    if (opts.flags.force) return false;
+    if (opts.flags.no_cache) return false;
+    return cacheable;
 }
 fn perform(graphs: *Graphs, case: cases.Case, directory: []const u8) Error!receipts.Result {
     const session = graphs.session;
@@ -162,13 +232,13 @@ fn perform(graphs: *Graphs, case: cases.Case, directory: []const u8) Error!recei
     result.cacheable = plan.cacheable and session.environment.cacheable;
     result.context = .{ .reasons = plan.reasons, .identity = identity };
     const path = try receipts.path(session.context, directory, result.key);
-    if (!session.options.force and result.cacheable and receipts.hit(session.context, path, result.key, case.name, case.expected, identity)) {
+    if (durableReuseAllowed(session.options, result.cacheable) and receipts.hit(session.context, path, result.key, case.name, case.expected, identity)) {
         result.status = "cached";
         result.actual = case.expected;
         return result;
     }
     // Evict any older pass before a forced or repaired execution can fail.
-    try receipts.invalidate(session.context, path);
+    if (!session.options.flags.no_cache) try receipts.invalidate(session.context, path);
     const executor = try session.executor(project);
     const outcome = try executor.execute(selected, case.arguments, session.options.limits);
     result.actual = outcome.actual;
@@ -234,7 +304,13 @@ test "one prepared project graph is shared per selected provider identity" {
     const contracts_json = "{\"version\":\"interface-contracts-v2\",\"modules\":[{\"name\":\"production\",\"declarations\":[{\"name\":\"value\",\"kind\":\"function\",\"generics\":\"\",\"signature\":\"def() -> i64 effects()\"," ++
         "\"permissions\":\"effects=;mutates=;origin=unknown\"}]}]}";
     try text.appendSlice(context.allocator, contracts_json);
-    try text.appendSlice(context.allocator, "' ;;\n  emit-project-qbe) printf '%s\\n' '{\"schema\":\"{\\\"functions\\\":[],\\\"types\\\":[]}\"}' ;;\nesac\n");
+    const graph_manifest =
+        "{\"abi\":\"test-abi\"," ++
+        "\"schema\":\"{\\\"functions\\\":[],\\\"types\\\":[]}\"," ++
+        "\"functions\":[{\"name\":\"main::x\",\"symbol\":\"sym\"," ++
+        "\"test_dependencies\":{\"implementation_hash\":\"0000000000000000000000000000000000000000000000000000000000000000\"," ++
+        "\"dependencies\":[],\"cacheable\":true,\"reasons\":[]}}]}";
+    try text.appendSlice(context.allocator, "' ;;\n  emit-project-qbe) printf '%s\\n' '" ++ graph_manifest ++ "' ;;\nesac\n");
     var file = try std.Io.Dir.createFileAbsolute(context.io, script, .{ .permissions = .executable_file });
     try file.writeStreamingAll(context.io, text.items);
     file.close(context.io);
@@ -244,15 +320,14 @@ test "one prepared project graph is shared per selected provider identity" {
         .context = context,
         .options = .{ .source = entry },
         .compiler = script,
-        .zig = "/bin/true",
-        .qbe = "/bin/true",
+        .tools = .{ .zig = "/bin/true", .qbe = "/bin/true" },
         .hashes = .{ "", "", "" },
         .environment = .{ .hash = "", .cacheable = true },
         .directory = root,
         .temporary = root,
         .source = captured,
     };
-    var graphs: Graphs = .{ .allocator = context.allocator, .session = session, .captured = captured, .production = parsed.value };
+    var graphs: Graphs = .{ .allocator = context.allocator, .session = session, .captured = captured, .production = parsed.value, .directory = "" };
     defer graphs.deinit();
     const ordinary: cases.Case = .{ .name = "main::test_ordinary", .function = .null, .arguments = .null, .expected = .null, .skip = null, .providers = .null, .settings = .null };
     const ordinary_first = try graphs.get(ordinary);

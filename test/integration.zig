@@ -4794,3 +4794,450 @@ test "C3s reused specialization warnings relocate and defaults stay equivalent" 
     // source and render byte-identically to the uncached check.
     try testing.expectEqualStrings(try c2WarningLine(cold.stderr), try c2WarningLine(warm.stderr));
 }
+
+// ---------------------------------------------------------------------------
+// C4 native test preparation: reduced checked graphs and receipt reuse
+// ---------------------------------------------------------------------------
+
+const c4_main =
+    \\module main
+    \\import helpers
+    \\export test_a
+    \\export test_b
+    \\
+    \\
+    \\def main() -> int:
+    \\    return 0
+    \\
+    \\
+    \\def test_a(x: i64) -> bool effects():
+    \\    return helpers.a() == x
+    \\
+    \\
+    \\def test_b() -> bool effects():
+    \\    return helpers.b() == 2
+;
+const c4_helpers =
+    \\module helpers
+    \\export a
+    \\export b
+    \\
+    \\
+    \\def a() -> i64 effects():
+    \\    return 1
+    \\
+    \\
+    \\def b() -> i64 effects():
+    \\    return 2
+;
+const c4_cases =
+    \\{"main::test_a":{"arguments":{"x":"1"},"expected":true},"main::test_b":{"expected":true}}
+;
+
+const C4Counts = struct { passed: usize, failed: usize, skipped: usize, cached: usize, executed: usize };
+
+fn c4Counts(stdout: []const u8) !C4Counts {
+    const parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, stdout, .{});
+    defer parsed.deinit();
+    const root = parsed.value;
+    return .{
+        .passed = @intCast(root.object.get("passed").?.integer),
+        .failed = @intCast(root.object.get("failed").?.integer),
+        .skipped = @intCast(root.object.get("skipped").?.integer),
+        .cached = @intCast(root.object.get("cached").?.integer),
+        .executed = @intCast(root.object.get("executed").?.integer),
+    };
+}
+
+fn c4TraceReset(path: []const u8) void {
+    std.Io.Dir.cwd().deleteFile(testing.io, path) catch {};
+}
+
+fn c4TraceCount(path: []const u8, needle: []const u8) !usize {
+    const bytes = std.Io.Dir.cwd().readFileAlloc(testing.io, path, testing.allocator, .limited(1 << 20)) catch return 0;
+    defer testing.allocator.free(bytes);
+    return std.mem.count(u8, bytes, needle);
+}
+
+/// The parent `command:"test"` work-report line, distinct from compiler children.
+fn c4WorkLine(stderr: []const u8) ![]const u8 {
+    var lines = std.mem.splitScalar(u8, stderr, '\n');
+    while (lines.next()) |line| {
+        if (std.mem.indexOf(u8, line, "work-report-v1") == null) continue;
+        if (std.mem.indexOf(u8, line, "\"command\":\"test\"") != null) return line;
+    }
+    return error.MissingWorkReport;
+}
+fn c4WorkCount(line: []const u8, stage: []const u8, field: []const u8) !usize {
+    const marker = try std.fmt.allocPrint(testing.allocator, "\"{s}\"", .{stage});
+    defer testing.allocator.free(marker);
+    const start = std.mem.indexOf(u8, line, marker) orelse return error.MissingWorkReport;
+    const end = std.mem.indexOfPos(u8, line, start, "}") orelse return error.MissingWorkReport;
+    const section = line[start..end];
+    const field_marker = try std.fmt.allocPrint(testing.allocator, "\"{s}\":", .{field});
+    defer testing.allocator.free(field_marker);
+    const at = std.mem.indexOf(u8, section, field_marker) orelse return error.MissingWorkReport;
+    const digits = section[at + field_marker.len ..];
+    var end_of_digits: usize = 0;
+    while (end_of_digits < digits.len and std.ascii.isDigit(digits[end_of_digits])) end_of_digits += 1;
+    if (end_of_digits == 0) return error.MissingWorkReport;
+    return std.fmt.parseInt(usize, digits[0..end_of_digits], 10) catch return error.MissingWorkReport;
+}
+fn c4Invoke(entry: []const u8, cases_path: ?[]const u8, cache: []const u8, trace: []const u8, extra: []const []const u8) !std.process.RunResult {
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "test", entry, "--json", "--report" });
+    if (cases_path) |path| try args.appendSlice(testing.allocator, &.{ "--cases", path });
+    try args.appendSlice(testing.allocator, extra);
+    const cache_arg = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
+    defer testing.allocator.free(cache_arg);
+    try args.append(testing.allocator, cache_arg);
+    try args.appendSlice(testing.allocator, &tools);
+    var environment: std.process.Environ.Map = .init(testing.allocator);
+    defer environment.deinit();
+    try environment.put("MYLANG_TEST_TRACE", trace);
+    try environment.put("HOME", std.fs.path.dirname(entry) orelse ".");
+    return spawnWithEnv(args.items, &environment);
+}
+
+fn c4Project(temp: *std.testing.TmpDir) !struct { entry: []const u8, root: []const u8, cases_path: []const u8, cache: []const u8, trace: []const u8 } {
+    try writeProjectFile(temp, "main.my", c4_main);
+    try writeProjectFile(temp, "helpers.my", c4_helpers);
+    try writeProjectFile(temp, "cases.json", c4_cases);
+    const root_sentinel = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root_sentinel);
+    const root = try testing.allocator.dupe(u8, root_sentinel);
+    return .{
+        .entry = try std.fs.path.join(testing.allocator, &.{ root, "main.my" }),
+        .root = root,
+        .cases_path = try std.fs.path.join(testing.allocator, &.{ root, "cases.json" }),
+        .cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" }),
+        .trace = try std.fs.path.join(testing.allocator, &.{ root, "trace.log" }),
+    };
+}
+
+// spec-case: NATIVE-TEST-5
+test "C4 unchanged deterministic rerun executes zero tests without lowering emission or linking" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const project = try c4Project(&temp);
+    defer testing.allocator.free(project.entry);
+    defer testing.allocator.free(project.root);
+    defer testing.allocator.free(project.cases_path);
+    defer testing.allocator.free(project.cache);
+    defer testing.allocator.free(project.trace);
+
+    c4TraceReset(project.trace);
+    const cold = try c4Invoke(project.entry, project.cases_path, project.cache, project.trace, &.{});
+    defer testing.allocator.free(cold.stdout);
+    defer testing.allocator.free(cold.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cold.term);
+    const cold_counts = try c4Counts(cold.stdout);
+    try testing.expectEqual(@as(usize, 2), cold_counts.executed);
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(project.trace, "emit-project-qbe"));
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(project.trace, " build "));
+    const cold_work = try c4WorkLine(cold.stderr);
+    try testing.expectEqual(@as(usize, 2), try c4WorkCount(cold_work, "executed_tests", "performed"));
+    try testing.expect(try c4WorkCount(cold_work, "lowered_functions", "performed") > 0);
+
+    c4TraceReset(project.trace);
+    const warm = try c4Invoke(project.entry, project.cases_path, project.cache, project.trace, &.{});
+    defer testing.allocator.free(warm.stdout);
+    defer testing.allocator.free(warm.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, warm.term);
+    const warm_counts = try c4Counts(warm.stdout);
+    try testing.expectEqual(@as(usize, 0), warm_counts.executed);
+    try testing.expectEqual(@as(usize, 2), warm_counts.cached);
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(project.trace, "emit-project-qbe"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(project.trace, " build "));
+    // Validity is still re-established through the shared query cache before any receipt.
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(project.trace, "check-project"));
+    const warm_work = try c4WorkLine(warm.stderr);
+    try testing.expectEqual(@as(usize, 0), try c4WorkCount(warm_work, "executed_tests", "performed"));
+    try testing.expectEqual(@as(usize, 2), try c4WorkCount(warm_work, "executed_tests", "reused"));
+    try testing.expect(std.mem.indexOf(u8, warm_work, "\"lowered_functions\":{\"status\":\"skipped\"") != null);
+}
+
+// spec-case: NATIVE-TEST-5
+test "C4 helper edit reruns only the dependent test and lower only on an uncached selection" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const project = try c4Project(&temp);
+    defer testing.allocator.free(project.entry);
+    defer testing.allocator.free(project.root);
+    defer testing.allocator.free(project.cases_path);
+    defer testing.allocator.free(project.cache);
+    defer testing.allocator.free(project.trace);
+
+    c4TraceReset(project.trace);
+    const cold = try c4Invoke(project.entry, project.cases_path, project.cache, project.trace, &.{});
+    defer testing.allocator.free(cold.stdout);
+    defer testing.allocator.free(cold.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cold.term);
+
+    const edited_helpers = try std.mem.replaceOwned(u8, testing.allocator, c4_helpers, "return 1", "return 3");
+    defer testing.allocator.free(edited_helpers);
+    try writeProjectFile(&temp, "helpers.my", edited_helpers);
+    c4TraceReset(project.trace);
+    const edited = try c4Invoke(project.entry, project.cases_path, project.cache, project.trace, &.{});
+    defer testing.allocator.free(edited.stdout);
+    defer testing.allocator.free(edited.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, edited.term);
+    const counts = try c4Counts(edited.stdout);
+    try testing.expectEqual(@as(usize, 1), counts.executed);
+    try testing.expectEqual(@as(usize, 1), counts.cached);
+    try testing.expectEqual(@as(usize, 1), counts.failed);
+    // The changed helper is in exactly one closure, so exactly one test executed.
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(project.trace, "emit-project-qbe"));
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(project.trace, " build "));
+}
+
+// spec-case: NATIVE-TEST-5
+test "C4 invalid selected project fails before any green result" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const project = try c4Project(&temp);
+    defer testing.allocator.free(project.entry);
+    defer testing.allocator.free(project.root);
+    defer testing.allocator.free(project.cases_path);
+    defer testing.allocator.free(project.cache);
+    defer testing.allocator.free(project.trace);
+
+    const cold = try c4Invoke(project.entry, project.cases_path, project.cache, project.trace, &.{});
+    defer testing.allocator.free(cold.stdout);
+    defer testing.allocator.free(cold.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cold.term);
+
+    const invalid_main = try std.mem.replaceOwned(u8, testing.allocator, c4_main, "return helpers.a() == x", "return 42");
+    defer testing.allocator.free(invalid_main);
+    try writeProjectFile(&temp, "main.my", invalid_main);
+    const invalid = try c4Invoke(project.entry, project.cases_path, project.cache, project.trace, &.{});
+    defer testing.allocator.free(invalid.stdout);
+    defer testing.allocator.free(invalid.stderr);
+    try testing.expect(invalid.term != .exited or invalid.term.exited != 0);
+    try testing.expectEqual(@as(usize, 0), invalid.stdout.len);
+    try testing.expect(std.mem.indexOf(u8, invalid.stderr, "E_TYPE") != null);
+}
+
+// spec-case: NATIVE-TEST-5
+test "C4 expectation argument budget environment and force invalidate the right receipts" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const project = try c4Project(&temp);
+    defer testing.allocator.free(project.entry);
+    defer testing.allocator.free(project.root);
+    defer testing.allocator.free(project.cases_path);
+    defer testing.allocator.free(project.cache);
+    defer testing.allocator.free(project.trace);
+
+    const seed = try c4Invoke(project.entry, project.cases_path, project.cache, project.trace, &.{});
+    defer testing.allocator.free(seed.stdout);
+    defer testing.allocator.free(seed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, seed.term);
+
+    // A changed test argument invalidates only that test's receipt.
+    const changed_cases = "{\"main::test_a\":{\"arguments\":{\"x\":\"2\"},\"expected\":false},\"main::test_b\":{\"expected\":true}}";
+    try writeProjectFile(&temp, "cases.json", changed_cases);
+    const argument = try c4Invoke(project.entry, project.cases_path, project.cache, project.trace, &.{});
+    defer testing.allocator.free(argument.stdout);
+    defer testing.allocator.free(argument.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, argument.term);
+    const argument_counts = try c4Counts(argument.stdout);
+    try testing.expectEqual(@as(usize, 1), argument_counts.executed);
+    try testing.expectEqual(@as(usize, 1), argument_counts.cached);
+
+    // A changed expectation likewise invalidates only the edited test.
+    const changed_expectation = "{\"main::test_a\":{\"arguments\":{\"x\":\"2\"},\"expected\":false},\"main::test_b\":{\"expected\":false}}";
+    try writeProjectFile(&temp, "cases.json", changed_expectation);
+    const expectation = try c4Invoke(project.entry, project.cases_path, project.cache, project.trace, &.{});
+    defer testing.allocator.free(expectation.stdout);
+    defer testing.allocator.free(expectation.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, expectation.term);
+    const expectation_counts = try c4Counts(expectation.stdout);
+    try testing.expectEqual(@as(usize, 1), expectation_counts.executed);
+    try testing.expectEqual(@as(usize, 1), expectation_counts.cached);
+
+    // A changed execution budget invalidates every receipt.
+    const budget = try c4Invoke(project.entry, project.cases_path, project.cache, project.trace, &.{ "--max-steps", "500000" });
+    defer testing.allocator.free(budget.stdout);
+    defer testing.allocator.free(budget.stderr);
+    try testing.expectEqual(@as(usize, 2), (try c4Counts(budget.stdout)).executed);
+
+    // A changed environment fingerprint invalidates every receipt.
+    var environment: std.process.Environ.Map = .init(testing.allocator);
+    defer environment.deinit();
+    try environment.put("MYLANG_TEST_TRACE", project.trace);
+    try environment.put("HOME", project.root);
+    try environment.put("MYLANG_C4_CHANGED", "1");
+    var env_args: std.ArrayList([]const u8) = .empty;
+    defer env_args.deinit(testing.allocator);
+    const cache_arg = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{project.cache});
+    defer testing.allocator.free(cache_arg);
+    try env_args.appendSlice(testing.allocator, &.{ compiler_path, "test", project.entry, "--json", "--cases", project.cases_path, "--report", cache_arg });
+    try env_args.appendSlice(testing.allocator, &tools);
+    const changed_env = try spawnWithEnv(env_args.items, &environment);
+    defer testing.allocator.free(changed_env.stdout);
+    defer testing.allocator.free(changed_env.stderr);
+    try testing.expectEqual(@as(usize, 2), (try c4Counts(changed_env.stdout)).executed);
+
+    // Force re-executes every selected test even with a valid warm receipt.
+    const forced = try c4Invoke(project.entry, project.cases_path, project.cache, project.trace, &.{"--force"});
+    defer testing.allocator.free(forced.stdout);
+    defer testing.allocator.free(forced.stderr);
+    const forced_counts = try c4Counts(forced.stdout);
+    try testing.expectEqual(@as(usize, 2), forced_counts.executed);
+    try testing.expectEqual(@as(usize, 0), forced_counts.cached);
+}
+
+// spec-case: NATIVE-TEST-5
+test "C4 two providers with reversed map order prepare one graph and one library" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try writeProjectFile(&temp, "first.my", c4_first);
+    try writeProjectFile(&temp, "second.my", c4_second);
+    try writeProjectFile(&temp, "main.my", c4_provider_main);
+    const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const entry = try std.fs.path.join(testing.allocator, &.{ root, "main.my" });
+    defer testing.allocator.free(entry);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
+    defer testing.allocator.free(cache);
+    const trace = try std.fs.path.join(testing.allocator, &.{ root, "trace.log" });
+    defer testing.allocator.free(trace);
+
+    const provider_cases = try c4ProviderCases(testing.allocator, c4_first, c4_second);
+    defer testing.allocator.free(provider_cases);
+    try writeProjectFile(&temp, "cases.json", provider_cases);
+    const cases_path = try std.fs.path.join(testing.allocator, &.{ root, "cases.json" });
+    defer testing.allocator.free(cases_path);
+    c4TraceReset(trace);
+    const forced = try c4Invoke(entry, cases_path, cache, trace, &.{"--force"});
+    defer testing.allocator.free(forced.stdout);
+    defer testing.allocator.free(forced.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, forced.term);
+    try testing.expectEqual(@as(usize, 2), (try c4Counts(forced.stdout)).executed);
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(trace, "emit-project-qbe"));
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(trace, " build "));
+
+    // The same graph is reused when both provider maps select identical bytes.
+    c4TraceReset(trace);
+    const warm = try c4Invoke(entry, cases_path, cache, trace, &.{});
+    defer testing.allocator.free(warm.stdout);
+    defer testing.allocator.free(warm.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, warm.term);
+    try testing.expectEqual(@as(usize, 2), (try c4Counts(warm.stdout)).cached);
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(trace, "emit-project-qbe"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(trace, " build "));
+
+    // Changing one replacement's bytes invalidates only that case's graph and
+    // receipt: the unchanged case keeps its graph and does not execute.
+    const changed_first = try std.mem.replaceOwned(u8, testing.allocator, c4_first, "return 1", "return 1 + 0");
+    defer testing.allocator.free(changed_first);
+    const changed_cases = try c4ProviderCasesChanged(testing.allocator, c4_first, changed_first, c4_second);
+    defer testing.allocator.free(changed_cases);
+    try writeProjectFile(&temp, "cases.json", changed_cases);
+    c4TraceReset(trace);
+    const edited = try c4Invoke(entry, cases_path, cache, trace, &.{});
+    defer testing.allocator.free(edited.stdout);
+    defer testing.allocator.free(edited.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, edited.term);
+    const edited_counts = try c4Counts(edited.stdout);
+    try testing.expectEqual(@as(usize, 1), edited_counts.executed);
+    try testing.expectEqual(@as(usize, 1), edited_counts.cached);
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(trace, "emit-project-qbe"));
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(trace, " build "));
+
+    // A forced run still sees two distinct graphs: one per replacement byte set.
+    c4TraceReset(trace);
+    const distinct = try c4Invoke(entry, cases_path, cache, trace, &.{"--force"});
+    defer testing.allocator.free(distinct.stdout);
+    defer testing.allocator.free(distinct.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, distinct.term);
+    try testing.expectEqual(@as(usize, 2), try c4TraceCount(trace, "emit-project-qbe"));
+    try testing.expectEqual(@as(usize, 2), try c4TraceCount(trace, " build "));
+}
+
+// spec-case: NATIVE-TEST-5
+test "C4 no-cache performs fresh runs without durable result or graph entries" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const project = try c4Project(&temp);
+    defer testing.allocator.free(project.entry);
+    defer testing.allocator.free(project.root);
+    defer testing.allocator.free(project.cases_path);
+    defer testing.allocator.free(project.cache);
+    defer testing.allocator.free(project.trace);
+
+    const first = try c4Invoke(project.entry, project.cases_path, project.cache, project.trace, &.{"--no-cache"});
+    defer testing.allocator.free(first.stdout);
+    defer testing.allocator.free(first.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term);
+    try testing.expectEqual(@as(usize, 2), (try c4Counts(first.stdout)).executed);
+
+    const second = try c4Invoke(project.entry, project.cases_path, project.cache, project.trace, &.{"--no-cache"});
+    defer testing.allocator.free(second.stdout);
+    defer testing.allocator.free(second.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, second.term);
+    try testing.expectEqual(@as(usize, 2), (try c4Counts(second.stdout)).executed);
+    try testing.expect(!c4DirHasFiles(project.cache, "results"));
+    try testing.expect(!c4DirHasFiles(project.cache, "graphs"));
+}
+
+fn c4DirHasFiles(base: []const u8, leaf: []const u8) bool {
+    const path = std.fs.path.join(testing.allocator, &.{ base, leaf }) catch return false;
+    defer testing.allocator.free(path);
+    var directory = std.Io.Dir.cwd().openDir(testing.io, path, .{ .iterate = true }) catch return false;
+    defer directory.close(testing.io);
+    var iterator = directory.iterate();
+    while (iterator.next(testing.io) catch return false) |_| return true;
+    return false;
+}
+
+const c4_first =
+    \\module first
+    \\export value
+    \\
+    \\
+    \\def value() -> i64 effects():
+    \\    return 1
+;
+const c4_second =
+    \\module second
+    \\export value
+    \\
+    \\
+    \\def value() -> i64 effects():
+    \\    return 2
+;
+const c4_provider_main =
+    \\module main
+    \\import first
+    \\import second
+    \\export test_one
+    \\export test_two
+    \\
+    \\
+    \\def main() -> int:
+    \\    return 0
+    \\
+    \\
+    \\def test_one() -> bool effects():
+    \\    return first.value() + second.value() == 3
+    \\
+    \\
+    \\def test_two() -> bool effects():
+    \\    return second.value() + first.value() == 3
+;
+
+fn c4ProviderCases(allocator: std.mem.Allocator, first: []const u8, second: []const u8) ![]u8 {
+    return std.json.Stringify.valueAlloc(allocator, .{
+        .@"main::test_one" = .{ .providers = .{ .@"first.my" = first, .@"second.my" = second } },
+        .@"main::test_two" = .{ .providers = .{ .@"second.my" = second, .@"first.my" = first } },
+    }, .{});
+}
+fn c4ProviderCasesChanged(allocator: std.mem.Allocator, first: []const u8, changed: []const u8, second: []const u8) ![]u8 {
+    return std.json.Stringify.valueAlloc(allocator, .{
+        .@"main::test_one" = .{ .providers = .{ .@"first.my" = first, .@"second.my" = second } },
+        .@"main::test_two" = .{ .providers = .{ .@"second.my" = second, .@"first.my" = changed } },
+    }, .{});
+}
