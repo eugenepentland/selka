@@ -59,11 +59,41 @@ pub fn moduleNameFromPath(allocator: std.mem.Allocator, path: []const u8) Error!
     return name;
 }
 
+/// One provider replacement entry for canonical identity ordering.
+const ProviderPair = struct { path: []const u8, source: []const u8 };
+
+fn providerLessThan(_: void, a: ProviderPair, b: ProviderPair) bool {
+    return std.mem.lessThan(u8, a.path, b.path);
+}
+
 /// A stable identity for the replacement sources named by one case's providers.
+/// Entries are sorted by path and length-prefixed, so JSON key insertion order
+/// cannot produce a distinct graph identity for the same replacement set.
 pub fn providerIdentity(allocator: std.mem.Allocator, providers: std.json.Value) Error![]const u8 {
-    const bytes = std.json.Stringify.valueAlloc(allocator, providers, .{}) catch return error.OutOfMemory;
-    defer allocator.free(bytes);
-    return fs.hash(allocator, bytes) catch error.OutOfMemory;
+    if (providers != .object) return error.InvalidContracts;
+    const pairs = allocator.alloc(ProviderPair, providers.object.count()) catch return error.OutOfMemory;
+    defer allocator.free(pairs);
+    var iterator = providers.object.iterator();
+    var index: usize = 0;
+    while (iterator.next()) |entry| : (index += 1) {
+        const source = switch (entry.value_ptr.*) {
+            .string => |source_text| source_text,
+            else => return error.InvalidContracts,
+        };
+        pairs[index] = .{ .path = entry.key_ptr.*, .source = source };
+    }
+    std.mem.sort(ProviderPair, pairs, {}, providerLessThan);
+    var out: std.ArrayList(u8) = .empty;
+    defer out.deinit(allocator);
+    for (pairs) |pair| {
+        var header: [16]u8 = undefined;
+        try out.appendSlice(allocator, std.fmt.bufPrint(&header, "{x}\x00", .{pair.path.len}) catch return error.OutOfMemory);
+        try out.appendSlice(allocator, pair.path);
+        try out.appendSlice(allocator, std.fmt.bufPrint(&header, "{x}\x00", .{pair.source.len}) catch return error.OutOfMemory);
+        try out.appendSlice(allocator, pair.source);
+        try out.append(allocator, '\n');
+    }
+    return fs.hash(allocator, out.items) catch error.OutOfMemory;
 }
 
 /// A stable identity for the production declarations a case replaces. Every
@@ -389,4 +419,14 @@ test "declared test discovery schema and provider identities are stable" {
     const second_identity = try providerIdentity(a, second.value);
     defer a.free(second_identity);
     try std.testing.expect(!std.mem.eql(u8, first_identity, second_identity));
+
+    const ordered = try std.json.parseFromSlice(std.json.Value, a, "{\"a.my\":\"module a\",\"b.my\":\"module b\"}", .{});
+    defer ordered.deinit();
+    const reversed = try std.json.parseFromSlice(std.json.Value, a, "{\"b.my\":\"module b\",\"a.my\":\"module a\"}", .{});
+    defer reversed.deinit();
+    const ordered_identity = try providerIdentity(a, ordered.value);
+    defer a.free(ordered_identity);
+    const reversed_identity = try providerIdentity(a, reversed.value);
+    defer a.free(reversed_identity);
+    try std.testing.expectEqualStrings(ordered_identity, reversed_identity);
 }
