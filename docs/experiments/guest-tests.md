@@ -13,8 +13,8 @@ reachable schema. Each selected case executes QBE native code in a fresh process
 Parameter-free Boolean tests assert `true`; other result types require explicit
 expected typed JSON. Tests may call ordinary private helpers. Types appearing in
 exported test signatures must also be exported. Python is not a runtime dependency
-of this command; the existing `scripts/test_project.py` remains a VM comparison
-runner with its original report format.
+of this command; `scripts/test_project.py` now wraps the native command and reports
+its outcomes as a `guest-tests-v1` document.
 
 ## Inputs and assertions
 
@@ -49,8 +49,12 @@ used by the test. Changing a called helper invalidates its affected tests;
 changing an unrelated function can retain their results. Failed tests and traps
 execute again. `--force` executes every selected, unskipped case.
 
-This reuses test results and native function objects. The frontend still checks
-the project on each invocation; it is not a persistent incremental frontend.
+This reuses test results, native function objects and the durable reduced
+preparation graph. Project validity is still checked through the shared query
+cache on every invocation, but an unchanged selection reuses closure-bound
+receipts without lowering, emitting or linking. A changed snapshot still pays one
+whole-project preparation emission, and an uncached selection builds the whole
+selected-provider library rather than only the selected tests' functions.
 Compilation reads a private copy of the captured sources. Source inventories and
 compiler identity are checked before results are published. The inherited
 environment is fingerprinted; dynamic-loader overrides disable result reuse.
@@ -60,13 +64,17 @@ A failed forced rerun removes its previous successful receipt.
 
 A case may set `providers` to an object mapping existing dependency `.my` paths
 to replacement source strings. For example, replace a dependency's
-`host fn sample(x:i64)->i64 effects(host);` with
-`fn sample(x:i64)->i64{return x+35;}` while retaining its module and exports.
+`host def sample(x: int) -> int effects(host)` with
+`def sample(x: int) -> int effects(): return x + 35` while retaining its module
+and exports.
 
 The command copies a bounded source inventory into a private directory, applies
-the replacements, checks the resulting project, and verifies the selected test's
-parameter/result contract and exported data layouts. Original source files are
-never modified. Fixtures cannot replace the test entry or introduce unknown
+the replacements, then validates exported declarations and interfaces first and
+fully checks only the selected provider graph. A replacement is validated against
+every public contract it replaces — names, defaults, types and nominal identities,
+data shapes, generic requirements, declared effects, mutation footprints and
+return-origin bounds — with the directional subset relation. Original source files
+are never modified. Fixtures cannot replace the test entry or introduce unknown
 paths. Source snapshots reject symbolic links and are bounded to 16 MiB; provider
 snapshots additionally allow at most 128 source files. Generated directories
 (`.mylang-cache`, `.zig-cache`, `zig-out`, `.git`) and the configured result cache
@@ -95,5 +103,5 @@ execution. The runner grants no implicit effects or external resources.
 
 `zig build test-native-tests -Dqbe=/path/to/qbe` runs the native CLI acceptance
 suite: discovery, typed assertions, traps, filtering, skips, successful-result
-reuse, affected helper edits, and provider isolation. `tests/guest_tests.py`
-continues to exercise the original VM runner.
+reuse, affected helper edits, provider isolation and reduced-graph key binding.
+`tests/guest` holds the `.my` acceptance fixtures for the native runner.

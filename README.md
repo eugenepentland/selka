@@ -10,14 +10,16 @@ would confirm it. The working language name and `.my` extension are provisional.
 
 The [incremental QBE native backend](docs/experiments/incremental-qbe.md) is the
 only runtime. `mylang build` produces an executable, reusing individual native
-function objects while checking the frontend fresh (making that frontend reuse the
-default is a stated goal, not yet the case — see
-[the plan](docs/plan.md#1-project-direction)), and `mylang run` is that same
-build followed by running the result. The bytecode interpreter that used to sit
-beside it was removed on 2026-09-14; bytecode survives only as the internal IR
-QBE consumes. The backend supports the current typed operations, managed
-collections, resources and embedding APIs on Linux x86-64; persistent frontend
-caching remains future work.
+function objects, and the ordinary frontend reuses checked ordinary bodies,
+symbolic generic templates and concrete specializations across processes by
+default while still collecting declarations, types and global
+effect/mutation/codec facts fresh (see [the caches guide](docs/tooling/caches.md)).
+`mylang run` is that same build followed by running the result. The bytecode
+interpreter that used to sit beside it was removed on 2026-09-14; bytecode
+survives only as the internal IR QBE consumes. The backend supports the current
+typed operations, managed collections, resources and embedding APIs on Linux
+x86-64. Per-function lazy lowering/emission and incremental native linking
+remain open; [the plan](docs/plan.md#1-project-direction) tracks them.
 
 Typed host-library calls execute through explicit registrations. The
 [board-validation trial](experiments/board_trial/README.md)
@@ -399,8 +401,11 @@ python3 scripts/navigate.py --compiler zig-out/bin/mylang \
 Indexes carry source/compiler receipts, and failed bodies expose unchecked
 partial declarations. The optional bounded cache supports equivalent worktrees.
 [Larger-project measurements](docs/experiments/large-project-checking.md) justified
-retaining 256 parsed modules within the existing memory budget; semantic reuse
-below module/project granularity remains conditional on demonstrated cost.
+retaining 256 parsed modules within the existing memory budget. Per-function
+checked-body reuse, symbolic-template reuse, concrete-specialization reuse and
+receipt-first native-test selection are now implemented with conservative
+fallbacks; see [the caches guide](docs/tooling/caches.md) and
+[guest tests](docs/tooling/guest-tests.md).
 
 Module header discovery is available with `zig build run -- list-modules examples/modules/main.my`.
 It reports bounded import graphs and cycles. `list-interfaces` on the same entry
@@ -412,9 +417,11 @@ shared domain factory. `check-project` validates all imported bodies with nomina
 types, private boundaries, ownership, and effects. See
 [module execution](docs/experiments/module-execution.md) for scope and remaining work.
 
-Optional dependency policy is available through `check-policy <entry.my> --policy=<rules.json>`.
-It checks the language first and exits 3 for a separate policy failure. See
-[import policy](docs/experiments/import-policy.md); ordinary project commands do not load it.
+A discovered entry-anchored `mylang.json` makes its import policy required for
+ordinary `check`, `build`, `run`, project variants and native-test preparation
+before any cached success; `check-policy <entry.my> --policy=<rules.json>` remains
+available for explicit inspection and exits 3 for a separate policy failure. See
+[import policy](docs/tooling/import-policy.md).
 
 Cross-file discovery is available through `discover-project-duplicates <entry.my>`,
 with the same exact/approximate options as single-file discovery. Try
@@ -437,8 +444,9 @@ no imports and checks nothing; see [declaration listing](docs/experiments/list-d
 was removed on 2026-09-14 along with the interpreter it needed; so were its
 evaluation reports and its persistent evaluation cache. Run a program with
 `mylang run`, which builds it natively and executes it. Checked schemas and exact
-successful-check caching are implemented below; finer semantic reuse remains
-measurement-driven.
+successful-check caching are implemented below; per-function checked-body,
+symbolic-template and concrete-specialization reuse run by default through the
+shared semantic cache.
 
 `input-module` validates [typed JSON input manifests](docs/experiments/input-manifests.md)
 and emits ordinary exported functions. The example at `examples/input-values/`
@@ -533,10 +541,12 @@ each fresh project; all semantic checking still runs. See
 observations, and the remaining incremental-compilation work.
 
 Use `mylang check-session path/to/main.my` for a persistent checking process. Send
-`check`, `clear`, or `quit` lines on stdin; each reply reports status, parse reuse
-and successful-verdict reuse as JSON. Exact successful snapshots skip semantic
-checking and replay their warnings; changed snapshots are checked afresh. Files and `--inputs` manifests are loaded afresh on every check. See
-[persistent checking sessions](docs/experiments/check-session.md).
+`check`, `clear`, or `quit` lines on stdin; each reply reports status, syntax
+reuse, successful-verdict reuse and per-function checked-body reuse as JSON.
+Exact successful snapshots skip semantic checking and replay their warnings; a
+changed snapshot reuses unchanged checked bodies through the shared semantic
+cache and rechecks the rest. Files and `--inputs` manifests are loaded afresh on
+every check. See [persistent checking sessions](docs/experiments/check-session.md).
 
 Automatic project watching is not part of the folded toolchain. The former
 `scripts/watch.py` driver was dropped; `mylang check-session` remains the

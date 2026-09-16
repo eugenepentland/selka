@@ -1,5 +1,14 @@
 # Disk projects and incremental verification
 
+> **Current status (2026-09-16):** this page records the 2026-09-07 disk-project
+> and verification plan. The bytecode VM it assumes as the execution target was
+> removed on 2026-09-14; QBE native code is the only runtime. Disk projects,
+> affected verification and the native development host are live, but semantic
+> query reuse is no longer conditional: C1-C4 added per-function checked-body,
+> symbolic-template and concrete-specialization reuse plus receipt-first
+> native-test selection. Per-function lazy lowering/emission remains open. See
+> [development velocity implementation status](../audits/velocity-implementation/final-status.md).
+
 Status: 2026-09-07. Disk loading and the bounded first implementations of phases
 1–5 are available. [Verification commands and limits](verification-runtime.md) and
 [the persistent development host](development-host.md) describe current behavior.

@@ -17,9 +17,10 @@
 The scalar MVP and substantial post-MVP experiments are implemented, and all of them now
 run as native code: the compiler checks a program, lowers it to its internal bytecode IR,
 and QBE compiles that to an amd64 Linux executable. The
-[revision 3 plan](plan.md) and [current roadmap](experiments/roadmap.md) define
+[revision 3 plan](plan.md) and [current development-velocity status](audits/velocity-implementation/final-status.md) define
 active priorities; the dated entries below preserve milestone evidence, including the
-entries written while a bytecode interpreter was the runtime.
+entries written while a bytecode interpreter was the runtime. A dated entry's
+"remains open" or "future work" sentence describes that checkpoint, not the current binary.
 
 ## 2026-09-06: Interpreter-first direction adopted
 

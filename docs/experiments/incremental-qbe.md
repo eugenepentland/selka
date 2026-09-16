@@ -2,9 +2,13 @@
 
 QBE compiles independently linkable guest functions. The driver caches each
 assembled object across compiler processes and links the current function set.
-The frontend still checks and lowers the complete program on every build.
-This provides native object reuse; persistent frontend queries, incremental
-linking, and hot reload remain separate future work.
+The ordinary frontend now reuses checked ordinary bodies, symbolic generic
+templates and concrete specializations by default, but `mylang build` still lowers
+the complete checked program and renders its QBE units on every build; the
+object cache reuses assembled per-function objects. Native object reuse is the
+part this page documents; per-function lazy lowering/emission, incremental native
+linking and hot reload remain open ([implementation
+status](../audits/velocity-implementation/final-status.md)).
 
 ## Build and run
 
@@ -164,10 +168,11 @@ The QBE target exercises the installed `mylang build` command with Python absent
 from PATH and the compiler relocated outside the checkout. It checks object-cache
 reuse and corruption repair, failed-build output preservation, source diagnostics,
 module builds, providers, typed JSON, and shared-library APIs. Other acceptance
-checks cover VM/native parity, embedding,
+checks covered the removed interpreter's VM/native parity, embedding,
 managed allocation stress, providers, resources, and normative JSON conversions.
 C runtime tests include undefined-behavior checks; the optional memory command
-adds AddressSanitizer. The default interpreter test suite does not require QBE.
+adds AddressSanitizer. That interpreter comparison suite was removed with the VM
+on 2026-09-14.
 
 `experiments/qbe-native/suite.json` freezes workload hashes, expected outputs,
 five warmups, 21 alternating C/QBE samples, and a maximum QBE/C runtime ratio of

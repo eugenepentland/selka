@@ -1,5 +1,15 @@
 # Post-MVP experiment sequence
 
+> **Current status (2026-09-16):** the interpreter-first direction recorded below
+> was reversed on 2026-09-14. The bytecode interpreter was removed and QBE native
+> code is the only runtime, so the VM/native sequencing, "finer semantic reuse
+> remains conditional" notes and "deferred native execution" lines below are
+> history. Per-function checked-body, symbolic-template and concrete-specialization
+> reuse plus receipt-first native-test selection are implemented; per-function lazy
+> lowering/emission remains open. See
+> [development velocity implementation status](../audits/velocity-implementation/final-status.md)
+> and the [current language reference](../current-language.md).
+
 > Removed on 2026-09-13: the explicit storage tier (buffers, pools, legacy `list`
 > declarations, the `allocator` capability, references and slices, lexical borrows and
 > legacy arena scopes) and the C backend. Dated entries below that describe them are

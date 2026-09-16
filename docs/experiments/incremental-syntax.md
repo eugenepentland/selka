@@ -54,6 +54,12 @@ compiler suites exercise the shared copier. Ordinary CLI invocations use indepen
 in explicitly, and [check-session](check-session.md) retains a cache across CLI
 requests while reloading source and input manifests.
 
-This is the first frontend query-reuse component. Persistent syntax storage, semantic
-query/dependency caching, automatic watch integration, finer invalidation reports,
-and native incremental linking remain open. It does not complete the F roadmap track.
+This is the first frontend query-reuse component. Since these measurements,
+persistent syntax storage and semantic query/dependency caching have landed through
+the frontend and `semantic-cache-v1` stores: one-shot commands reuse checked
+ordinary bodies, symbolic templates and validated concrete specializations, and
+native-test selection adds receipt and reduced-graph reuse. Automatic watch
+integration was dropped with the Python watch driver; finer invalidation reports,
+per-function lazy lowering and native incremental linking remain open. The
+embedding cache described here still covers parsing only. It does not complete the
+F roadmap track.

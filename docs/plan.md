@@ -35,9 +35,12 @@ Guardian. Opt-in dependency inventories/affected-suite testing, shared successfu
 receipts, a local agent scheduler and combined-merge certificates are implemented.
 The schematic development host builds its guest natively and rebuilds it at request
 boundaries. These are bounded tools with explicit input contracts; production gates
-remain full gates while shadow evidence is gathered. Profiling is implemented; finer
-semantic query reuse remains conditional because measured schematic checks are already
-small. The linked plan and runtime guides specify limitations and acceptance evidence.
+remain full gates while shadow evidence is gathered. Profiling is implemented. The
+C1-C4 incremental packages have since added per-function checked-body,
+symbolic-template and concrete-specialization reuse plus receipt-first native-test
+selection; the measured S1 latency targets are still unmet and per-function lazy
+lowering/emission remains open ([implementation status](audits/velocity-implementation/final-status.md)).
+The linked plan and runtime guides specify limitations and acceptance evidence.
 
 Status: revision 3; the interpreter-first direction adopted on 2026-09-06 was reversed on 2026-09-14, when the bytecode interpreter was removed and QBE native code became the only runtime. Scalar MVP M0–M5 and substantial post-MVP experiments are implemented. The current priorities below supersede older sequencing and dated “next” statements; completed experiments remain historical evidence.
 

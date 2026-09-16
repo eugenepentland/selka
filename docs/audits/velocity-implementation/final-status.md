@@ -29,7 +29,7 @@ Ledger and frozen contracts: [README.md](README.md), [contracts.md](contracts.md
 | C3a | symbolic-template reuse (`symbolic-template-v1`): durable direct abstract results, selective invalidation, whole-graph effects rerun | `8b212f7e` |
 | C3b | canonical specialization-key engine (template/positional/provider/constraint/contract/build dimensions) | `b0b156e8` |
 | C3S | validated concrete-specialization replay (`specialization-v1`) with typed remap and effect-rerun discipline | `f444ddc5` |
-| C4 | receipt-first test selection with a durable reduced preparation graph (`native-test-graph-v1`); warm unchanged reruns execute zero tests with no lowering/emission/linking | `aea9b525` |
+| C4 | receipt-first test selection with a durable reduced preparation graph (`native-test-graph-v2` after G1's key envelope and structural validation); warm unchanged reruns execute zero tests with no lowering/emission/linking | `aea9b525` |
 | G1 | reduced graph bound to its requested input key (v2 envelope + structural validation); a copied entry is a miss | `0c420fbc` |
 | N1 | directory fan-out forwards `--no-cache`; seeded/empty caches execute every case and write zero durable files | `0c420fbc` |
 | Retention | bounded-prefix ordinary retention, reference-sized ordinary remap, clear releases all three entry kinds, shared `reuse.max_bytes` budget with per-kind reporting | `9699895b`/`610656cf` |
@@ -40,8 +40,9 @@ Ledger and frozen contracts: [README.md](README.md), [contracts.md](contracts.md
 | WARM | per-file content dependency removes the cold-build requirement for runtime edits | `70eecedf` |
 | Follow-up | F1 keeps the space before `mutates(...)`; board-trial/schematic standalone runners accept the driver's trailing `--cache-dir` | `26e8121` |
 
-Still open from the plan: **D2** (final documentation/feature reconciliation), the
-**S1** remeasurement on this corrected tree, and the productivity trial. C4's
+Still open from the plan: the **S1** remeasurement on this corrected tree and the
+productivity trial. **D2**'s documentation reconciliation is in the working tree,
+with its documentation gates deliberately deferred until the S1 run finishes. C4's
 per-function lazy lowering/emission boundary also remains: a changed snapshot
 performs one whole-project preparation emission and an uncached selection builds
 the whole selected-provider library, while fully cached selections skip all
@@ -83,7 +84,7 @@ Pinned toolchain: Zig `0.17.0-dev.1683+5ceec001b`; QBE built from `vendor/qbe`
 | Configured architecture policy cannot be skipped by ordinary commands or caches | **Met** | A1 config discovery/enforcement cold and warm, statuses 2/3, cwd-independent, receipts include policy identity. |
 | Selective tests retain correctness and skip unnecessary compilation work | **Met for fully cached selections; per-function lazy lowering remains** | R1/R2 bind receipts to the selected closure and share one prepared graph/library per provider identity; C4 skips all lowering/emission/linking for a warm unchanged selection (zero executions) and executes only dependent tests after an edit. Any snapshot change still pays one whole-project preparation emission and an uncached selection builds the whole selected-provider library. |
 | Representative scale limits, latency and memory measured honestly | **Met as measurement; objectives not met** | S1: 100k check p95 2.9–4.9 s vs <500 ms target; forced-test measurement blocked; 500k provisional only; productivity trial unrun. |
-| Current documentation and feature claims match the final executable | **Partial** | M3 and F1/D1/C0/E1/E2/C1 docs are current; D2's full reconciliation, historical page redirects and benchmark-script follow-ups remain. |
+| Current documentation and feature claims match the final executable | **Docs reconciled in working tree; gates deferred** | D2 reconciled C3/C4 and the `native-test-graph-v2` boundary, the exact cache-retention accounting, `src/features.json`, README/tooling pages and VM/watch historical redirects, and confirmed `scripts/profile_large_project.py` emits only current syntax. `test-docs`, `doc-coverage` and the full gates still need to run after the S1 remeasurement. |
 | Relevant gates and Guardian feedback complete | **Met for the integrated scope** | Both final gates green; consolidated feedback committed to `~/ai/canopy/guardian-zig/FEEDBACK.md`. |
 
 ## Known limitations carried forward
@@ -103,7 +104,9 @@ Pinned toolchain: Zig `0.17.0-dev.1683+5ceec001b`; QBE built from `vendor/qbe`
   100k workloads, and the performance targets are unmet without C3/C4. `S1` has
   not been remeasured after C2/R4; the persistent cache now populates with linear
   filesystem work (statx 260/516/1028/2052 for 128/256/512/1024 bodies).
-- **Documentation:** D2's final pass and the productivity trial are outstanding.
+- **Documentation:** D2's document reconciliation is in the working tree and its
+  gates are deferred until the S1 run finishes; the productivity trial remains
+  outstanding.
 
 Historical audit documents and probe JSON were not rewritten; where an audit
 example now correctly rejects, its fence is marked `notest` so the historical

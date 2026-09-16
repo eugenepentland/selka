@@ -1,5 +1,13 @@
 # Typed host functions
 
+> **Historical design record (VM host registry).** The `language.vm_host` registry
+> and `vm.runWithHost`/`invokeWithHost` APIs below ran guest code in the bytecode
+> interpreter, which was removed on 2026-09-14. Explicit `host def` declarations
+> remain part of the language and run through the QBE native path; current host
+> capabilities are documented in [capabilities and effects](../effects.md) and
+> [printing, files and command-line authority](../io.md). Read the registry
+> details below as history.
+
 Explicit guest declarations now execute through the bytecode VM and the trusted
 registration/value-copy boundary. Ordinary and imported calls, generic helpers,
 typed results, effects, preflight and cleanup have executed acceptance. Native
@@ -38,7 +46,7 @@ signature is entirely integers and booleans crosses the boundary without any
 allocator round trip: the graph walk in `data_type` returns before it builds
 traversal state, and copied arguments up to a small arity stay in the caller's
 frame. Nominal graphs keep the full bounded traversal and spill as before. This
-matters because raw byte hosts such as `mylang-io` call `io::byte`/`io::put`
+matters because raw byte hosts such as `mylang-io` call `io.byte`/`io.put`
 once per transported byte, and a safety-checked build charges several
 microseconds for each allocation such a call would otherwise make.
 

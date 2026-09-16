@@ -2,7 +2,7 @@
 
 Status: implemented in `scripts/verify.py`, with the repository's explicit 11-step
 `verify.json` manifest. This is a Python standard-library workflow tool, separate
-from compiler type checking and VM execution. It requires Python 3 and POSIX process
+from compiler type checking and native guest execution. It requires Python 3 and POSIX process
 groups; no package installation or service is needed.
 
 ```sh

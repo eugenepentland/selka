@@ -27,8 +27,8 @@ storage. Function identities are opaque, have no numeric conversion or equality,
 and cannot cross portable data/host-value serialization boundaries.
 
 Arguments and results retain ordinary handling rules: a returned result still
-needs matching, propagation, or onward transfer. The VM and generated native code
-check each dynamic target against the signature. Ordinary frame/instruction limits
+needs matching, propagation, or onward transfer. Generated native code checks
+each dynamic target against the signature. Ordinary frame/instruction limits
 and trap/OOM unwinding apply to callback recursion and aggregate results.
 
 Callable values may also pass through type-only generic records or generic helpers

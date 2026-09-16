@@ -46,3 +46,10 @@ and source locations still need fresh semantic validation after changes. More
 complex dependency keys are not justified by these measurements alone. Continue
 profiling real projects, especially rich generic instantiations and generated code,
 before treating this synthetic result as representative.
+
+> **Current status (2026-09-16):** the "deferred by measurement" conclusion belongs
+> to these measurements. C1-C4 have since added per-function checked-body reuse,
+> symbolic-template and concrete-specialization replay and receipt-first native-test
+> selection; the tables above are preserved as the evidence that justified the
+> syntax-cache capacity change. See
+> [development velocity implementation status](../audits/velocity-implementation/final-status.md).

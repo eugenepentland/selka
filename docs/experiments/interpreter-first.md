@@ -1,5 +1,11 @@
 # Interpreter-first design and acceptance
 
+> **Historical design record (direction adopted 2026-09-06, reversed
+> 2026-09-14).** The custom bytecode VM this page treats as the runtime was
+> removed and QBE native code is the only runtime. Read the page as history; for
+> current behavior see [the language reference](../current-language.md) and
+> [development velocity implementation status](../audits/velocity-implementation/final-status.md).
+
 Native execution is outside the active roadmap-completion goal. Preserve the
 ability to add a backend later, but do not implement or extend native execution
 as part of completing this roadmap. The current goal is to develop the language

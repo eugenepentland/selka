@@ -404,12 +404,12 @@
     },
     "canonical-specialization-keys": {
       "kind": "tooling",
-      "summary": "Concrete specialization keys are canonical over template identity, ordered positional descriptors, provider contracts, constraints, declared contracts and build context; unvalidated specializations are conservatively rechecked.",
+      "summary": "Concrete specialization keys are canonical over template identity, ordered positional descriptors, provider contracts, constraints, declared contracts and build context; validated concrete specialization bodies replay under specialization-v1 with typed remap and conservatively miss on unresolved references.",
       "doc": "docs/tooling/work-report.md#compiler-work-and-reuse-report"
     },
     "shared-semantic-retention-budget": {
       "kind": "tooling",
-      "summary": "Ordinary checked bodies, symbolic templates and concrete specializations share one reuse.max_bytes in-memory budget with account for rows, arenas, keys and index capacity; eviction converges to the bound, oversized entries bypass, a zero budget disables reuse, and retained bytes plus a per-kind breakdown are reported.",
+      "summary": "Ordinary checked bodies, symbolic templates and concrete specializations share one reuse.max_bytes in-memory budget accounting for exact owned entry rows, arena backing including chunk bookkeeping, stable keys and the exact stdlib hash-index backing; eviction converges to the bound, oversized entries bypass, a zero budget disables reuse, and retained bytes plus a per-kind breakdown are reported.",
       "doc": "docs/tooling/caches.md#persistent-checked-body-store"
     },
     "persistent-checked-bodies": {
@@ -635,7 +635,7 @@
     "gc": "single-threaded nonmoving tracing; retained guest values root intermediates; collect-on-allocation stress option",
     "python": "static fixed-width types, function-scoped locals with E_UNBOUND definite assignment, value records; indentation is the only block syntax",
     "dictionaries": "managed insertion order; homogeneous int or str keys and copyable values",
-    "native_tests": "fresh QBE processes; exported typed-call-compatible signatures; positive deterministic receipts only; frontend checks fresh; provider snapshots at most128sources/16MiB",
+    "native_tests": "fresh QBE processes; exported typed-call-compatible signatures; positive deterministic receipts only; project validity is always checked through the shared query cache; only a fully cached selection skips lowering/emission/linking, while a changed snapshot still pays one whole-project preparation emission and an uncached selection builds the whole selected-provider library; provider snapshots at most 128 sources/16 MiB",
     "standard_library": "ten embedded Python-syntax modules over managed types: math, strings, sort, path, hex, base64, json, pool, random, time"
   },
   "removed": {

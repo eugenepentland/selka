@@ -105,20 +105,26 @@ the caches' own cumulative execution-site counters.
 
 `mylang test` keeps its `native-tests-v1` receipt. Its `executed` field counts
 tests that ran (`passed + failed`) and `cached` counts replayed receipts, so
-`executed + cached == selected` for a successful run. `work-report-v1` names the
-same quantity as `executed_tests`; emitting it from the native-test command needs
-the test-selection integration (C4). Until then a consumer reconciles
-`work-report-v1.executed_tests` for ordinary commands with `native-tests-v1` for
-`mylang test`.
+`executed + cached == selected` for a successful run. `mylang test --report`
+emits a `work-report-v1` line whose `executed_tests.performed`/`reused` counts
+name the same quantity and reconcile with `native-tests-v1` `executed`/`cached`.
+The test command folds the parser, body-check, lowering, emission and link
+counters from the compiler children that actually prepared or emitted code, so a
+fully cached selection reports zero executions, lowerings, emissions and links.
 
 ## Limitations
 
 - Link-stage object reuse inside the native build is not distinguished; the
   report conservatively counts a publish step and never claims link reuse.
-- `instantiated_specializations` is observed from the fresh checked program, not
-  from a specialization reuse engine (that is C3).
+- `instantiated_specializations` counts the concrete specializations present in
+  the fresh checked program. A replayed concrete-specialization body is an actual
+  `checked_bodies.reused` hit; the separate `specialization_bodies` object reports
+  specialization-specific performed/reused counts.
 - One-shot checked-body reuse is implemented by C2 for ordinary `check`,
-  project checking, `build`, `run` and native-test preparation. The one-shot
-  `checked_bodies.reused` count is observed at the body-copy site, not inferred
-  from a fingerprint; a `bypassed` reason names an exact conservative fresh-path
-  cause when a body cannot be admitted. Generic specialization reuse remains C3.
+  project checking, `build`, `run` and native-test preparation; C3a replays
+  symbolic generic templates and C3S replays validated concrete specializations
+  through the same checked-body path. The one-shot `checked_bodies.reused` count
+  is observed at the body-copy site, not inferred from a fingerprint; a
+  `bypassed` reason names an exact conservative fresh-path cause when a body
+  cannot be admitted (for example an unmaterialized nested specialization or an
+  interned or synthesized-lambda reference).

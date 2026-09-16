@@ -295,8 +295,9 @@ def main() -> int:
     return 0
 ```
 
-Private helpers derive a precision return-origin bound from their bodies;
-exported declarations that publish no bound default to `unknown`, never `fresh`.
+Private helpers derive a precision return-origin bound from their bodies. The
+language currently has no syntax for a narrower declared return-origin, so an
+exported declaration defaults to `unknown`, never `fresh`.
 
 ### Fresh local mutation
 

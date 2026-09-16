@@ -76,7 +76,7 @@ $ printf 'hello bytes' | mylang-io --project examples/contract-echo
 hello bytes
 $ printf 'hello bytes' | mylang-io --project examples/contract-echo --max-input=64 --max-output=5
 main.my:6:13: error[R_HOST_LIMIT]: HostWorkLimit
-          _ = io::put(io::byte(index));
+          _ = io.put(io.byte(index));
               ^
   in main::main at main.my:6:13
 mylang-io: GuestTrap

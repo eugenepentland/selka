@@ -149,13 +149,16 @@ $ mylang check app/main.my --cache-dir=.mylang-cache/demo --report
 
 Retained in-memory storage is governed by one shared budget: ordinary checked
 bodies, `symbolic-template-v1` templates and `specialization-v1` instances all
-charge their owned rows, arenas, stable keys and index capacity against
-`reuse.max_bytes`. Publication and durable-hit promotion evict deterministically
-oldest-first and compact the row/index storage, oversized entries bypass
-retention without changing acceptance, a zero budget disables reuse, and the
-reported retained bytes and per-kind evictions reflect the actual storage.
-`check-session clear` releases all three kinds together, so a subsequent check
-recomputes them fresh.
+charge their owned entry rows, exact arena backing allocations including
+per-chunk allocator bookkeeping, stable keys, and the exact stable-key
+hash-index backing allocation — including the standard map's minimum capacity,
+header and alignment — against `reuse.max_bytes`. Publication and durable-hit
+promotion converge on the bound by releasing the globally oldest generic entry or
+truncating the ordinary snapshot to its fitting leading prefix; oversized entries
+bypass retention without changing acceptance, a zero budget disables reuse, and
+the reported retained bytes and per-kind eviction counts reflect the actual owned
+storage. `check-session clear` releases all three kinds together, so a subsequent
+check recomputes them fresh.
 
 A second entry kind, `symbolic-template-v1`, stores one checked symbolic generic
 template's direct abstract results: effect/mutation masks, body-local diagnostics

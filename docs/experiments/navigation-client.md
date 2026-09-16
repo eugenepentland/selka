@@ -76,5 +76,8 @@ Those measurements include Python inventory/digest/JSON costs and describe this
 local workload, not a general speed guarantee. The evidence includes the exact
 compiler hash in `experiments/navigation-profile.json`; reproduce it with
 `scripts/profile_navigation.py --compiler BINARY --output /tmp/navigation-profile.json`.
-This measured index cost supports exact index reuse without introducing semantic
-body-verdict caching.
+This measured index cost justified exact index reuse on its own; it did not
+decide whether semantic body-verdict caching should exist. Per-function
+checked-body, symbolic-template and concrete-specialization reuse later landed
+independently through the shared semantic cache; see
+[development velocity implementation status](../audits/velocity-implementation/final-status.md).
