@@ -146,9 +146,12 @@ Pinned toolchain: Zig `0.17.0-dev.1683+5ceec001b`; QBE built from `vendor/qbe`
   (whole-project lowering is no longer required), but it does not meet the <1 s
   target; an eviction-cost workload with churn beyond the chosen budget has not
   yet been built.
-- **Productivity trial:** D2's documentation gates are now green; the comparative
-  unfamiliar-code productivity trial remains outstanding and no superiority claim
-  is made.
+- **Productivity trial:** D2's documentation gates are now green, but the comparative
+  unfamiliar-code productivity trial remains unrun. The application-comparison
+  pilot task packs are still draft-unreviewed, scored launch is disabled, and no
+  reviewed cohort/model/tool baseline has been frozen. Running it is a separate
+  coordinator/task-pack authorization step; performance measurements above are
+  not productivity evidence.
 
 Historical audit documents and probe JSON were not rewritten; where an audit
 example now correctly rejects, its fence is marked `notest` so the historical
