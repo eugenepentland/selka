@@ -1253,6 +1253,31 @@ fn checkCachedOnly(allocator: std.mem.Allocator, cache: *Cache, bytes: []const u
 
 const one_body_source = "def main() -> i64:\n    return 1\n";
 
+fn profileHas(profile: *const language.timings.Profile, name: []const u8) bool {
+    for (profile.records.phases[0..profile.records.len]) |phase| {
+        if (std.mem.eql(u8, phase.name, name)) return true;
+    }
+    return false;
+}
+
+// spec-case: PHASE-TIMING-2
+test "semantic cache timing records dependency keys and retention separately" {
+    var cache = Cache.init(t.allocator, 1024 * 1024);
+    defer cache.deinit();
+    var profile = language.timings.Profile.init(t.io, true, .compiler);
+    cache.context.timing = &profile;
+    try checkCachedOnly(t.allocator, &cache, one_body_source);
+    try t.expect(profileHas(&profile, "dependency_key_preparation"));
+    try t.expect(profileHas(&profile, "retention_store_io"));
+    try t.expect(profileHas(&profile, "ordinary_body_replay"));
+    try t.expect(profileHas(&profile, "effect_origin_passes"));
+    for (profile.records.phases[0..profile.records.len]) |phase| {
+        if (std.mem.eql(u8, phase.name, "dependency_key_preparation")) {
+            try t.expect(!phase.inclusive);
+        }
+    }
+}
+
 // spec-case: SEMANTIC-CACHE-14
 test "shared budget honors the ordinary one-entry hash minimum boundary" {
     // Retain one ordinary snapshot and measure its real owned cost. The

@@ -38,13 +38,14 @@ def main():
             return subprocess.run(argv, input=data, capture_output=True, timeout=30)
         baseline = command(compiler, 'run', str(single), '--print-result')
         measured = command(compiler, 'run', str(single), '--print-result', '--timings=json')
-        assert baseline.returncode == measured.returncode == 0
+        # `run` adopts the guest exit status, so this fixture exits 7.
+        assert baseline.returncode == measured.returncode == 7
         assert baseline.stdout == measured.stdout == b'7\n' and not baseline.stderr
         counts = records(measured, 'compiler', ['source_load', 'frontend', 'bytecode_lowering', 'native_emission', 'native_execution', 'total'])
         assert counts['source_bytes'] == single.stat().st_size and counts['modules'] == 1
         assert counts['ast_nodes'] and counts['typed_nodes']
         legacy = command(compiler, 'run', str(single), '--print-result', '--timings')
-        assert legacy.returncode == 0 and legacy.stdout == baseline.stdout
+        assert legacy.returncode == baseline.returncode and legacy.stdout == baseline.stdout
         assert legacy.stderr.startswith(b'timings: native_ns='), legacy
         checked = command(compiler, 'check', str(single), '--timings=json')
         assert checked.returncode == 0 and not checked.stdout
@@ -65,12 +66,23 @@ def main():
         records(trapped, 'compiler', ['source_load', 'frontend', 'bytecode_lowering', 'native_emission', 'native_execution', 'total'])
         project = root / 'main.my'
         project.write_text('module main\n\n\ndef main() -> i64:\n    return 7\n')
+        check_phases = [
+            'dependency_key_preparation', 'symbolic_templates', 'ordinary_body_replay',
+            'fresh_body_check', 'entry_adaptation', 'effect_origin_passes',
+            'domain_codec_validation', 'warning_derivation', 'retention_store_io',
+        ]
         for mode, phases in [('check-project', []), ('run-project', ['bytecode_lowering', 'native_emission', 'native_execution']), ('index-project', []), ('emit-project-qbe', ['bytecode_lowering', 'native_emission'])]:
             normal = command(compiler, mode, str(project))
-            timed = command(compiler, mode, str(project), '--timings=json')
-            assert timed.returncode == normal.returncode == 0, timed
+            # --no-cache keeps this protocol check on the instrumented fresh
+            # path instead of letting a stored whole-project verdict skip it.
+            timed = command(compiler, mode, str(project), '--timings=json', '--no-cache')
+            expected_rc = 7 if mode == 'run-project' else 0
+            assert timed.returncode == normal.returncode == expected_rc, (mode, timed)
             assert timed.stdout == normal.stdout, (mode, timed)
-            records(timed, 'compiler', ['source_load_parse', 'frontend', *phases, 'total'])
+            expected = ['source_load_parse', 'syntax_parse', 'declarations_interfaces', 'source_merge']
+            expected += check_phases
+            expected += phases + ['total']
+            records(timed, 'compiler', expected)
         (root / 'io.my').write_text('module io\nexport length\nexport byte\nexport put\n\n\nhost def length() -> i64 effects(host)\nhost def byte(index: i64) -> u8 effects(host)\nhost def put(value: u8) -> i64 effects(host)\n')
         project.write_text('module main\nimport io\n\n\ndef main() -> i64:\n    i = 0\n    while i < io.length():\n        _ = io.put(io.byte(i))\n        i += 1\n    return 0\n')
         payload = b'\x00\xff\xc0\x80{broken}'

@@ -202,6 +202,16 @@ pub const Work = struct {
     /// Actual reuse observations not tied to one stage (for example a replayed
     /// whole-project verdict). Never inferred from equal fingerprints.
     pub const Results = struct { request: usize = 0, session: usize = 0 };
+    /// Optional snapshot of the semantic retention table. Kept separate from the
+    /// syntax/frontend `retained_bytes` counter so the two cache kinds cannot be
+    /// conflated in telemetry.
+    pub const Semantic = struct {
+        retained_bytes: usize = 0,
+        ordinary_bytes: usize = 0,
+        symbolic_bytes: usize = 0,
+        specialization_bytes: usize = 0,
+        evicted: usize = 0,
+    };
     /// C3 symbolic-template direct results actually checked and replayed. Kept
     /// separate from `checked_bodies` so a template hit is never inferred from a
     /// fingerprint comparison.
@@ -212,7 +222,7 @@ pub const Work = struct {
     pub const Specializations = struct { checked: usize = 0, reused: usize = 0 };
     /// C3 work grouped into one record so the observation stays within the
     /// struct field budget as more C3 counters are added.
-    pub const Counters = struct { symbolic: Symbolic = .{}, specializations: Specializations = .{} };
+    pub const Counters = struct { symbolic: Symbolic = .{}, specializations: Specializations = .{}, semantic: ?Semantic = null };
 
     command: []const u8 = "",
     /// Null when this invocation ran no baseline comparison.
@@ -270,12 +280,20 @@ pub const Work = struct {
 
 /// A bounded, reason-tagged bypass list carried inline by `Work`.
 pub const BypassSet = struct {
-    items: [8]Bypass = @splat(.{}),
+    items: [48]Bypass = @splat(.{}),
     len: usize = 0,
 
-    /// Append one bypass reason; zero counts and overflow are ignored.
+    /// Append one bypass reason; zero counts and overflow are ignored. Repeated
+    /// reasons merge so the bounded report keeps one row per exact cause.
     pub fn add(self: *BypassSet, reason: []const u8, count: usize) void {
-        if (count == 0 or self.len == self.items.len) return;
+        if (count == 0) return;
+        for (self.items[0..self.len]) |*item| {
+            if (std.mem.eql(u8, item.reason, reason)) {
+                item.count +|= count;
+                return;
+            }
+        }
+        if (self.len == self.items.len) return;
         self.items[self.len] = .{ .reason = reason, .count = count };
         self.len += 1;
     }
@@ -370,6 +388,7 @@ pub fn renderWork(allocator: std.mem.Allocator, work: Work) Error![]u8 {
         .session_reused_results = session_reused,
         .symbolic_templates = symbolicView(work),
         .specialization_bodies = specializationView(work),
+        .semantic_cache = work.counters.semantic,
         .bypassed = work.bypassed.slice(),
         .session = sessionView(cumulative),
     }, .{ .emit_null_optional_fields = false });

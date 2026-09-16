@@ -859,6 +859,7 @@ fn listModules(init: Context, parsed: Parsed) !u8 {
     // cache hydrates only validated durable entries and records reuse at the
     // actual `checkFunction`/copy site; `--no-cache` gets zero retention.
     var functions = try openSemanticCache(init, parsed);
+    functions.context.timing = init.timings;
     defer functions.deinit();
     const status = try listModulesWithCache(init, parsed, null, null, &functions);
     recordSemanticBypass(init, &functions, null);
@@ -869,6 +870,15 @@ fn listModules(init: Context, parsed: Parsed) !u8 {
 /// plus each exact conservative fresh-path reason observed since `before`.
 fn recordSemanticBypass(init: Context, functions: *const language.semantic_cache.Cache, before: ?language.semantic_cache.Statistics) void {
     const prior = before orelse language.semantic_cache.Statistics{};
+    if (init.observation) |observation| {
+        observation.work.counters.semantic = .{
+            .retained_bytes = functions.statistics.retained_bytes,
+            .ordinary_bytes = functions.statistics.retention.ordinary_bytes,
+            .symbolic_bytes = functions.statistics.retention.symbolic_bytes,
+            .specialization_bytes = functions.statistics.retention.specialization_bytes,
+            .evicted = functions.statistics.retention.evicted,
+        };
+    }
     const delta = functions.statistics.bypassed - prior.bypassed;
     if (delta != 0) recordBypass(init, "semantic-reuse-unavailable", delta);
     var index: usize = 0;
@@ -889,6 +899,16 @@ fn recordSemanticBypass(init: Context, functions: *const language.semantic_cache
         const count = functions.reuse.symbolic.statistics.misses[@backingInt(why)];
         if (count == 0) continue;
         recordBypass(init, language.semantic_cache.symbolic.missReasonName(why), count);
+    }
+    // C3 concrete-specialization misses must be reported too: the checked
+    // program's `instantiated_specializations` counter is not body-replay work.
+    index = 0;
+    while (index < language.semantic_cache.specializations.miss_reason_count) : (index += 1) {
+        const why: language.semantic_cache.specializations.MissReason = @fromBackingInt(@intCast(index));
+        if (why == .cache_disabled) continue;
+        const count = functions.reuse.specializations.statistics.misses[@backingInt(why)];
+        if (count == 0) continue;
+        recordBypass(init, language.semantic_cache.specializations.missReasonName(why), count);
     }
 }
 
@@ -1065,9 +1085,10 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     // publishes those declared contracts for provider validation.
     if (parsed.command == .@"list-interfaces") return listInterfaces(init, &project, parsed, cache, frontend);
     const output = if (parsed.command != .@"list-modules") result: {
-        init.timings.begin(frontend_label, false);
         var index = (try buildIndex(init, &project, cache, frontend)) orelse return partialNavigation(init, &project, parsed.command);
+        init.timings.begin("source_merge", false);
         var compilation = try language.project_compile.Compilation.init(&index);
+        init.timings.end();
         if (parsed.command == .@"index-project") break :result try renderNavigation(init, &compilation, functions);
         const semantic_before = if (functions) |f| f.statistics else null;
         compilation.checkWithCache(functions) catch |err| switch (err) {
@@ -1084,7 +1105,6 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         recordCheckWork(init, functions, semantic_before, compilation.program);
         init.timings.counts.ast_nodes = compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len;
         init.timings.counts.typed_nodes = compilation.program.?.nodes.len + compilation.program.?.statements.len;
-        init.timings.end();
         const executed = executedStages(parsed.command);
         // A command that lowers must do so before the receipt is built: emitted
         // fragments are real inputs to the lower/emit/link explanation, not an
@@ -1237,7 +1257,6 @@ fn loadModules(init: Context, project: *language.project.Project, files: *Module
 }
 
 fn listInterfaces(init: Context, project: *language.project.Project, parsed: Parsed, cache: ?*language.syntax_cache.Cache, frontend: ?*language.frontend_cache.Cache) !u8 {
-    init.timings.begin(frontend_label, false);
     var index = (try buildIndex(init, project, cache, frontend)) orelse return partialNavigation(init, project, parsed.command);
     if (parsed.contracts) {
         const contracts = index.renderContracts(init.gpa) catch |err| switch (err) {
@@ -1245,19 +1264,16 @@ fn listInterfaces(init: Context, project: *language.project.Project, parsed: Par
                 const message = try diagnostic_output.renderProject(init.gpa, project, init.diagnostics);
                 defer init.gpa.free(message);
                 try std.Io.File.stderr().writeStreamingAll(init.io, message);
-                init.timings.end();
                 return 1;
             },
             else => return err,
         };
         defer init.gpa.free(contracts);
-        init.timings.end();
         try std.Io.File.stdout().writeStreamingAll(init.io, contracts);
         return 0;
     }
     const text = try index.render(init.gpa);
     defer init.gpa.free(text);
-    init.timings.end();
     try std.Io.File.stdout().writeStreamingAll(init.io, text);
     return 0;
 }
@@ -1265,7 +1281,7 @@ fn listInterfaces(init: Context, project: *language.project.Project, parsed: Par
 fn buildIndex(init: Context, project: *language.project.Project, cache: ?*language.syntax_cache.Cache, frontend: ?*language.frontend_cache.Cache) !?language.interfaces.Index {
     const syntax_before: usize = if (cache) |opened| opened.statistics.hits else 0;
     const disk_before: usize = if (frontend) |opened| opened.statistics.syntax.hits else 0;
-    const index = language.interfaces.buildWithCache(project, cache, frontend) catch |err| switch (err) {
+    const index = language.interfaces.buildWithCacheTimed(project, cache, frontend, init.timings) catch |err| switch (err) {
         error.SourceError => {
             recordParsedModules(init, project, cache, frontend, syntax_before, disk_before);
             const message = try diagnostic_output.renderProject(init.gpa, project, init.diagnostics);
@@ -1804,13 +1820,21 @@ fn openSemanticStore(init: Context, parsed: Parsed) ?language.semantic_cache.Sto
     return store;
 }
 
+/// Measurement-only semantic retention cap. The default is the production
+/// 16 MiB budget; `MYLANG_SEMANTIC_BUDGET` is an opt-in profiling control used
+/// by the large-project harness and never changes language semantics.
+fn semanticBudget(init: Context) usize {
+    const raw = init.environ.get("MYLANG_SEMANTIC_BUDGET") orelse return 16 * 1024 * 1024;
+    return std.fmt.parseInt(usize, raw, 10) catch 16 * 1024 * 1024;
+}
+
 /// Open the per-invocation semantic cache. `--no-cache` gets a zero-retention
 /// counting cache so it never reads or writes the durable store. A persistent
 /// store is attached before `begin`, which hydrates only exact key/context hits.
 fn openSemanticCache(init: Context, parsed: Parsed) !language.semantic_cache.Cache {
     if (parsed.semantic == null) return language.semantic_cache.Cache.init(init.gpa, 0);
     const contract = try semanticCacheContract(init);
-    var cache = language.semantic_cache.Cache.initWithContract(init.gpa, 16 * 1024 * 1024, contract);
+    var cache = language.semantic_cache.Cache.initWithContract(init.gpa, semanticBudget(init), contract);
     cache.context.persistent = parsed.semantic;
     return cache;
 }
@@ -1834,7 +1858,7 @@ fn checkSession(init: Context, parsed: Parsed) !u8 {
     var cache: SessionCache = .{
         .syntax = language.syntax_cache.Cache.init(init.gpa, .{}),
         .semantic = language.check_cache.Cache.init(init.gpa, 16 * 1024 * 1024),
-        .functions = language.semantic_cache.Cache.initWithContract(init.gpa, 16 * 1024 * 1024, contract_fingerprint),
+        .functions = language.semantic_cache.Cache.initWithContract(init.gpa, semanticBudget(init), contract_fingerprint),
     };
     defer cache.syntax.deinit();
     defer cache.semantic.deinit();
@@ -1922,6 +1946,7 @@ fn sessionStages(cache: *const SessionCache) [invalidation.work_stage_count]inva
 
 /// One check-session reply's action, exit status and optional failure name.
 const SessionReply = struct { action: []const u8, status: u8, failure: ?[]const u8 = null };
+const ReasonCount = struct { reason: []const u8, count: usize };
 
 fn sessionReply(
     init: Context,
@@ -1934,6 +1959,30 @@ fn sessionReply(
     work.session = sessionStages(cache);
     work.results.session = cache.verdict_reuses;
     const summary = invalidation.summarize(&work);
+    var ordinary_misses: [language.semantic_cache.miss_reason_count]ReasonCount = undefined;
+    var ordinary_len: usize = 0;
+    for (std.meta.tags(language.semantic_cache.MissReason)) |why| {
+        const count = cache.functions.statistics.misses[@backingInt(why)];
+        if (count == 0) continue;
+        ordinary_misses[ordinary_len] = .{ .reason = language.semantic_cache.missReasonName(why), .count = count };
+        ordinary_len += 1;
+    }
+    var symbolic_misses: [language.semantic_cache.symbolic.miss_reason_count]ReasonCount = undefined;
+    var symbolic_len: usize = 0;
+    for (std.meta.tags(language.semantic_cache.symbolic.MissReason)) |why| {
+        const count = cache.functions.reuse.symbolic.statistics.misses[@backingInt(why)];
+        if (count == 0) continue;
+        symbolic_misses[symbolic_len] = .{ .reason = language.semantic_cache.symbolic.missReasonName(why), .count = count };
+        symbolic_len += 1;
+    }
+    var specialization_misses: [language.semantic_cache.specializations.miss_reason_count]ReasonCount = undefined;
+    var specialization_len: usize = 0;
+    for (std.meta.tags(language.semantic_cache.specializations.MissReason)) |why| {
+        const count = cache.functions.reuse.specializations.statistics.misses[@backingInt(why)];
+        if (count == 0) continue;
+        specialization_misses[specialization_len] = .{ .reason = language.semantic_cache.specializations.missReasonName(why), .count = count };
+        specialization_len += 1;
+    }
     const text = try std.json.Stringify.valueAlloc(init.gpa, .{
         .version = "check-session-v1",
         .action = reply.action,
@@ -1943,6 +1992,28 @@ fn sessionReply(
         .cache = cache.syntax.statistics,
         .semantic = cache.semantic.statistics,
         .functions = cache.functions.statistics,
+        .semantic_retention = .{
+            .retained_bytes = cache.functions.statistics.retained_bytes,
+            .ordinary_bytes = cache.functions.statistics.retention.ordinary_bytes,
+            .symbolic_bytes = cache.functions.statistics.retention.symbolic_bytes,
+            .specialization_bytes = cache.functions.statistics.retention.specialization_bytes,
+            .evicted = cache.functions.statistics.retention.evicted,
+        },
+        .semantic_miss_reasons = .{
+            .ordinary = ordinary_misses[0..ordinary_len],
+            .symbolic = symbolic_misses[0..symbolic_len],
+            .specializations = specialization_misses[0..specialization_len],
+        },
+        .symbolic_templates = .{
+            .checked = cache.functions.reuse.symbolic.statistics.checked,
+            .reused = cache.functions.reuse.symbolic.statistics.reused,
+            .stored = cache.functions.reuse.symbolic.statistics.stored,
+        },
+        .specialization_bodies = .{
+            .checked = cache.functions.reuse.specializations.statistics.checked,
+            .reused = cache.functions.reuse.specializations.statistics.reused,
+            .stored = cache.functions.reuse.specializations.statistics.stored,
+        },
         // work-report-v1 request deltas and cumulative session counters. The
         // request values reconcile with `cache`/`functions` deltas by
         // construction: both are read from the same execution-site counters.

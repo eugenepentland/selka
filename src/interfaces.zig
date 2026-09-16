@@ -12,6 +12,8 @@ const generic_requirements = @import("generic_requirements.zig");
 const structural_declarations = @import("structural_declarations.zig");
 const effect_set = @import("effect_set.zig");
 const prelude = @import("prelude.zig");
+const SyntaxCache = @import("syntax_cache.zig").Cache;
+const FrontendCache = @import("frontend_cache.zig").Cache;
 /// One exported declaration's canonical declared contract for provider validation.
 /// Exact fields (`signature`, `generics`, `shape`) compare for equality; the
 /// permission field (`permissions`) uses the frozen directional subset relation
@@ -837,13 +839,35 @@ pub fn build(project: *graph.Project) (diagnostic.Error || error{IncompleteProje
 /// Reuse unchanged parse tables from either an in-process syntax cache, a
 /// persistent content-addressed frontend cache, or both, while rebuilding every
 /// symbol, export and exported signature check.
-pub fn buildWithCache(project: *graph.Project, cache: ?*@import("syntax_cache.zig").Cache, frontend: ?*@import("frontend_cache.zig").Cache) (diagnostic.Error || error{IncompleteProject})!Index {
+pub fn buildWithCache(project: *graph.Project, cache: ?*SyntaxCache, frontend: ?*FrontendCache) (diagnostic.Error || error{IncompleteProject})!Index {
+    return buildWithCacheTimed(project, cache, frontend, null);
+}
+/// Same as `buildWithCache`, with optional opt-in phase timing. Syntax replay and
+/// parse are accumulated per module; `declarations_interfaces` is the remaining
+/// inclusive wall interval of this function (index construction plus signature
+/// validation), so the two records do not double-count syntax work.
+pub fn buildWithCacheTimed(
+    project: *graph.Project,
+    cache: ?*SyntaxCache,
+    frontend: ?*FrontendCache,
+    timing: ?*@import("timings.zig").Profile,
+) (diagnostic.Error || error{IncompleteProject})!Index {
     if (!project.progress.complete or project.problem != null) return error.IncompleteProject;
     const allocator = project.arena.allocator();
+    const include_timing = if (timing) |profile| profile.enabled else false;
+    const total_start = if (include_timing) timing.?.now() else std.Io.Timestamp.zero;
+    var syntax_ns: i96 = 0;
     var index: Index = .{ .project = project, .units = try allocator.alloc(Unit, project.modules.items.len) };
     for (project.order.items) |module_id| {
         const module = project.modules.items[module_id];
-        const syntax = try moduleSyntax(project, module_id, cache, frontend);
+        const syntax_start = if (include_timing) timing.?.now() else std.Io.Timestamp.zero;
+        var replayed = false;
+        const syntax = try moduleSyntax(project, module_id, cache, frontend, &replayed);
+        if (include_timing) {
+            const elapsed = syntax_start.durationTo(timing.?.now()).nanoseconds;
+            syntax_ns += elapsed;
+            timing.?.add(if (replayed) "syntax_replay" else "syntax_parse", elapsed, false);
+        }
         index.units[module_id] = .{ .syntax = syntax };
         inline for (.{ "records", "domains", "variants", "resources" }) |field| {
             for (@field(syntax.types, field)) |declaration| try index.add(module_id, declaration.name, .type, null, false);
@@ -863,6 +887,10 @@ pub fn buildWithCache(project: *graph.Project, cache: ?*@import("syntax_cache.zi
     for (project.order.items) |module| {
         try index.checkSignatures(module);
     }
+    if (include_timing) {
+        const elapsed = total_start.durationTo(timing.?.now()).nanoseconds;
+        timing.?.add("declarations_interfaces", @max(0, elapsed - syntax_ns), false);
+    }
     return index;
 }
 
@@ -871,16 +899,23 @@ fn sameOwner(local: bool, owner: ?[]const u8, declared: []const u8) bool {
     return std.mem.eql(u8, owner orelse return false, declared);
 }
 
-fn moduleSyntax(project: *graph.Project, module_id: usize, cache: ?*@import("syntax_cache.zig").Cache, frontend: ?*@import("frontend_cache.zig").Cache) diagnostic.Error!ast.Program {
+fn moduleSyntax(project: *graph.Project, module_id: usize, cache: ?*SyntaxCache, frontend: ?*FrontendCache, replayed: *bool) diagnostic.Error!ast.Program {
     const module = project.modules.items[module_id];
     const allocator = project.arena.allocator();
+    replayed.* = false;
     if (cache) |retained| {
-        if (try retained.lookup(allocator, module.src, module.header.body_start)) |syntax| return syntax;
+        if (try retained.lookup(allocator, module.src, module.header.body_start)) |syntax| {
+            replayed.* = true;
+            return syntax;
+        }
     }
     // A persistent hit still rebuilds every symbol and signature check below; it
     // only skips lexing and parsing. A rejected or damaged entry is a miss.
     if (frontend) |disk| {
-        if (try disk.lookupSyntax(allocator, module.src, module.header.body_start)) |syntax| return syntax;
+        if (try disk.lookupSyntax(allocator, module.src, module.header.body_start)) |syntax| {
+            replayed.* = true;
+            return syntax;
+        }
     }
     var sink: diagnostic.Sink = .{ .allocator = allocator };
     const syntax = parseModule(project, module_id, &sink) catch |err| {
