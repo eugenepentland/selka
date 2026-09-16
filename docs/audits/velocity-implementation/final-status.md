@@ -2,7 +2,7 @@
 
 Status: **core packages plus the R1–R4/HASH/WARM and C3/C4 correction passes integrated, with the final cache-retention accounting fix and the final S1 rerun recorded on top; release checklist partially met.**
 Baseline: `9ce142e98cb22e684622ed1d5678071d6944206e` (post named-constraint fixes).
-Integration HEAD: `9a177b53` (three build/audit commits on top of the measured `c18c0d18`, the merge of the warm-check telemetry/profiling package and C4 selective native-test preparation/lowering; the two trees are byte-identical in production compiler sources — see the identity note in the final S1 report).
+Integration HEAD: `936b3e69` (final S1 evidence/docs commit, on top of the three concurrent build/audit commits `7472a0da`/`1c40467f`/`9a177b53`; the measured compiler is `c18c0d18`, the merge of the warm-check telemetry/profiling package and C4 selective native-test preparation/lowering, and the two trees are byte-identical in production compiler sources — see the identity note in the final S1 report).
 Plan: [development-velocity-implementation-plan-2026-09-15.md](../development-velocity-implementation-plan-2026-09-15.md).
 Ledger and frozen contracts: [README.md](README.md), [contracts.md](contracts.md).
 
@@ -79,6 +79,15 @@ Follow-up gates on the B1/D2/S1 tree (`3f76446c` plus docs/S1 commits through
 | `zig build test-docs --summary all` | **242 files scanned, 441 blocks, 120 run, 24 checked, 10 skipped, 0 failed; 21/21 steps** (run on the D2 tree immediately before the final one-word SPEC prose correction) |
 | Guardian whole-tree commit gate | 88/88 checks passed on each commit |
 
+Final acceptance gates on `936b3e69` (Debug and ReleaseFast, after the S1
+evidence/docs commit and the concurrent build/audit commits):
+
+| Gate | Result |
+| --- | --- |
+| `zig build test --summary all -j8` (Debug) | **41/41 steps succeeded; 1211/1211 tests passed; exit 0** |
+| `zig build test -Doptimize=ReleaseFast --summary all -j1` | **41/41 steps succeeded; 1210/1211 tests passed, 1 expected Debug-only allocation-sweep skip; exit 0** |
+| `zig build test-doc-coverage` / `test-docs` | **121 features, 0 failures; 251 doc files/451 blocks, 0 failed** |
+
 The ReleaseFast test-root compile peaked at 2.55 GiB on this tree, above the old
 2.15 GiB `rss.compile` bound, so `build.zig` now declares 3 GiB with a measured
 comment. ReleaseFast still runs at `-j1` on this host for memory stability. This
@@ -103,7 +112,7 @@ Pinned toolchain: Zig `0.17.0-dev.1683+5ceec001b`; QBE built from `vendor/qbe`
 | Selective tests retain correctness and skip unnecessary compilation work | **Met** | R1/R2 bind receipts to the selected closure and share one prepared graph/library per provider identity; C4 skips all lowering/emission/linking for a warm unchanged selection (zero executions, `executed_tests 0/1`). A changed snapshot runs `native-test-graph` for checked facts without lowering/emission, then `mylang test` builds only the `--select-file` closure: the final 100k ordinary first build lowers 524 of 33,475 checked bodies and a used-helper edit lowers only that closure; an unused-helper edit executes zero tests and lowers nothing. Whole-project lowering is not on the `mylang test` path. |
 | Representative scale limits, latency and memory measured honestly | **Met as measurement; objectives not met** | Final S1 rerun (ReleaseFast, pinned `8e58100c…`, low-load 100k, [`s1-final-report-2026-09-16.md`](s1-final-report-2026-09-16.md)): ordinary cold p95 1262.2 ms, unchanged 103.3 ms, implementation/constant/signature edits 1014.2–1020.5 ms, sessions 1041.2/1044.1 ms; managed edits 1091.3–1102.3 ms. 100k forced tests are now measured, not blocked: ordinary p95 2846.0 ms (first selective build 15.6 s), managed p95 3173.7 ms (first selective build 11.3 s); 10k forced p95 356.3/446.9 ms. Check feedback <500 ms and affected tests <1 s remain unmet. Budget/eviction evidence and the 500k gap remain in [`s1-corrected-report-2026-09-16.md`](s1-corrected-report-2026-09-16.md); productivity trial unrun. |
 | Current documentation and feature claims match the final executable | **Met** | D2 reconciled C3/C4 and the `native-test-graph-v2` boundary, the exact cache-retention accounting, `src/features.json`, README/tooling pages and VM/watch historical redirects, and confirmed `scripts/profile_large_project.py` emits only current syntax. Final gates: `test-doc-coverage` 121 features/0 failures, `test-docs` 441 blocks/0 failed, `fmt-check` 2/2, full Debug `39/39` steps. |
-| Relevant gates and Guardian feedback complete | **Met for the integrated scope** | Earlier Debug and ReleaseFast final gates green; B1/D2/S1 follow-up gates green (full Debug `39/39` steps on final `50a4c64a`, doc coverage and doc examples 0 failures); consolidated feedback committed to `~/ai/canopy/guardian-zig/FEEDBACK.md`. |
+| Relevant gates and Guardian feedback complete | **Met for the integrated scope** | Final `936b3e69` gates: full Debug `41/41` steps / `1211/1211` tests; ReleaseFast `41/41` steps / `1210/1211` with the expected Debug-only allocation-sweep skip; doc coverage and doc examples 0 failures; Guardian whole-tree checks pass on each commit. Consolidated feedback committed to `~/ai/canopy/guardian-zig/FEEDBACK.md`. |
 
 ## Known limitations carried forward
 
