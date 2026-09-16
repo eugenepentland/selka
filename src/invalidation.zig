@@ -206,12 +206,19 @@ pub const Work = struct {
     /// separate from `checked_bodies` so a template hit is never inferred from a
     /// fingerprint comparison.
     pub const Symbolic = struct { checked: usize = 0, reused: usize = 0 };
+    /// C3 concrete-specialization bodies actually checked fresh and actually
+    /// replayed. Kept separate from the checked-program instantiation count and
+    /// from `checked_bodies` so a replay is never inferred from a fingerprint.
+    pub const Specializations = struct { checked: usize = 0, reused: usize = 0 };
+    /// C3 work grouped into one record so the observation stays within the
+    /// struct field budget as more C3 counters are added.
+    pub const Counters = struct { symbolic: Symbolic = .{}, specializations: Specializations = .{} };
 
     command: []const u8 = "",
     /// Null when this invocation ran no baseline comparison.
     fingerprint_unchanged: ?bool = null,
     results: Results = .{},
-    symbolic: Symbolic = .{},
+    counters: Counters = .{},
     stages: [work_stage_count]StageCount = @splat(.{}),
     /// Cumulative process counters. Null means this is a one-shot invocation and
     /// the request counters are already the whole-process totals.
@@ -362,6 +369,7 @@ pub fn renderWork(allocator: std.mem.Allocator, work: Work) Error![]u8 {
         .reused_results = work.results.request,
         .session_reused_results = session_reused,
         .symbolic_templates = symbolicView(work),
+        .specialization_bodies = specializationView(work),
         .bypassed = work.bypassed.slice(),
         .session = sessionView(cumulative),
     }, .{ .emit_null_optional_fields = false });
@@ -370,8 +378,26 @@ pub fn renderWork(allocator: std.mem.Allocator, work: Work) Error![]u8 {
 /// Per-request view of C3 symbolic-template work. `skipped` means the abstract
 /// pass never ran; `hit` means every visited template was replayed.
 fn symbolicView(work: Work) StageView {
-    const performed = work.symbolic.checked;
-    const reused = work.symbolic.reused;
+    const performed = work.counters.symbolic.checked;
+    const reused = work.counters.symbolic.reused;
+    return .{
+        .status = if (performed == 0 and reused == 0)
+            "skipped"
+        else if (performed == 0)
+            "hit"
+        else
+            "miss",
+        .performed = performed,
+        .reused = reused,
+    };
+}
+
+/// Per-request view of concrete-specialization body work. `skipped` means no
+/// specialization was visited; `hit` means every visited specialization was
+/// replayed; a replay is never inferred from an unchanged fingerprint.
+fn specializationView(work: Work) StageView {
+    const performed = work.counters.specializations.checked;
+    const reused = work.counters.specializations.reused;
     return .{
         .status = if (performed == 0 and reused == 0)
             "skipped"

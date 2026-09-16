@@ -618,7 +618,7 @@
     "workers": "no host worker facility and no guest spawn syntax; parallelism is one guest process per task",
     "floating_point": "float literals, ordinary operators, signed int conversions; IEEE binary64; standard sqrt is the correctly rounded binary64 operation, decimal parsing is accurate rather than correctly rounded; no transcendentals",
     "callbacks": "generic signatures, exact effect ceilings, explicit readonly context borrows, no captures or reference results",
-    "semantic_reuse": "conservative function-body queries; generics constants aliases and inferred callback schemas check fresh",
+    "semantic_reuse": "ordinary checked bodies and concrete specializations replay across processes; symbolic templates keep abstract checking; unresolved nested or interned-identity references stay conservative",
     "text_data": "managed Unicode scalar strings and managed bytes; host byte I/O keeps its scalar ABI",
     "time_random": "Unix wall clock and explicit entropy capabilities; deterministic noncryptographic SplitMix64",
     "managed_lists": "copyable shared aliases; automatic growth; no owned/resource elements, borrowed interiors, untraced storage embedding, or host escape",

@@ -1,5 +1,8 @@
 # Compiler work and reuse report
 
+A `specialization_bodies` object reports concrete-specialization bodies actually
+checked fresh and actually replayed; `instantiated_specializations` remains the
+count of specializations present in the checked program and is not a reuse count.
 A `symbolic_templates` object reports real checked/reused symbolic-template counts
 alongside the ordinary work stages; a template replay is never inferred from an
 unchanged fingerprint. Concrete specialization bodies are reported through the

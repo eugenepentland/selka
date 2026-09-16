@@ -1142,8 +1142,10 @@ fn recordCheckWork(init: Context, functions: ?*language.semantic_cache.Cache, be
         const prior = before orelse language.semantic_cache.Statistics{};
         recordWork(init, .checked_bodies, f.statistics.checked - prior.checked, f.statistics.reused - prior.reused);
         if (init.observation) |observation| {
-            observation.work.symbolic.checked +|= f.reuse.symbolic.statistics.checked;
-            observation.work.symbolic.reused +|= f.reuse.symbolic.statistics.reused;
+            observation.work.counters.symbolic.checked +|= f.reuse.symbolic.statistics.checked;
+            observation.work.counters.symbolic.reused +|= f.reuse.symbolic.statistics.reused;
+            observation.work.counters.specializations.checked +|= f.reuse.specializations.statistics.checked;
+            observation.work.counters.specializations.reused +|= f.reuse.specializations.statistics.reused;
         }
     }
     if (program) |checked| {
