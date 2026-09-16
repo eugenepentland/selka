@@ -128,3 +128,14 @@ clean build. C2/P1 positive probes must remain green.
 | 2026-09-16 | `4e2d1600` | HASH | declared `mutates` positions and exported return-origin bound in the API fingerprint |
 | 2026-09-16 | `d54cc302` | R4 | batched semantic-store inventory; statx 128/256/512/1024 → 260/516/1028/2052 |
 | 2026-09-16 | `70eecedf` | WARM | per-file content dependency; warm in-place runtime edits refresh content hash/archives |
+
+## C3/C4 continuation — correction review 2026-09-16
+
+| ID | Work | Owner branch | Worktree | Base | Status |
+| --- | --- | --- | --- | --- | --- |
+| ORDER | Canonicalize provider-map order before graph hashing | integration | main checkout | `81cd79bb` | **done** `8def75e8` — sorted length-prefixed path/source pairs; native 102/102 |
+| C3 | Symbolic-template reuse, then concrete-specialization reuse | `codex/velocity-c3` | `velocity-c3` | `8def75e8` | in progress |
+| C4 | Shared cached test preparation and lazy lowering/emission; two-provider reversed-order regression | `codex/velocity-c4` | `velocity-c4` | C3 integrated | blocked on C3 |
+
+The correction review's remaining P2 (provider ordering) is fixed ahead of C4; C4's
+acceptance includes the end-to-end two-provider, two-case reversed-order regression.
