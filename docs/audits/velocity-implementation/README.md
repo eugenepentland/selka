@@ -134,7 +134,7 @@ clean build. C2/P1 positive probes must remain green.
 | ID | Work | Owner branch | Worktree | Base | Status |
 | --- | --- | --- | --- | --- | --- |
 | ORDER | Canonicalize provider-map order before graph hashing | integration | main checkout | `81cd79bb` | **done** `8def75e8` — sorted length-prefixed path/source pairs; native 102/102 |
-| C3 | Symbolic-template reuse, then concrete-specialization reuse | `codex/velocity-c3` | `velocity-c3` | `8def75e8` | in progress |
+| C3 | Symbolic-template reuse, then concrete-specialization reuse | `codex/velocity-c3` + `codex/velocity-c3s` | `velocity-c3`, `velocity-c3s` | `8def75e8` | **done** symbolic `8b212f7e`, keys `b0b156e8`, concrete reuse `f444ddc5` |
 | C4 | Shared cached test preparation and lazy lowering/emission; two-provider reversed-order regression | `codex/velocity-c4` | `velocity-c4` | C3 integrated | blocked on C3 |
 
 The correction review's remaining P2 (provider ordering) is fixed ahead of C4; C4's
@@ -158,7 +158,7 @@ numbering). It is not merged or evaluated here; C3 used 11/12 to avoid colliding
 | ID | Work | Owner branch | Base | Status |
 | --- | --- | --- | --- | --- |
 | C3S | Validated concrete-specialization reuse (`specialization-v1`), typed remap, effect-rerun discipline | `codex/velocity-c3s` | `121032ec` | **done** `f444ddc5`; merged; real replay via `checked_bodies.reused` plus new `specialization_bodies` report |
-| C4 | Shared cached test preparation, receipt-first selection, lazy lowering/emission, provider-order e2e | `codex/velocity-c4` | `ee392fbf` | in progress |
+| C4 | Shared cached test preparation, receipt-first selection, provider-order e2e | `codex/velocity-c4` | `ee392fbf` | **done** `aea9b525`, merged `5538a5d9`; per-function lazy lowering remains |
 
 C3S residual conservative misses: ordinary bodies that reference a specialization still
 miss (`.generic_specialization`) because invertible specialization recipes are not
