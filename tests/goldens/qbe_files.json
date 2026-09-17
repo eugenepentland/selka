@@ -2,7 +2,7 @@
  "entries": {
   "03c5557d69bfb80c92cffc0beda210b5": {
    "case": [
-    "def main(fs: Filesystem) -> int:\n    match listdir(fs, \".\"):\n        case Ok(names):\n            found = 0\n            for name in names:\n                if name == \"greeting.txt\" or name == \"lines.txt\":\n                    found += 1\n            print(len(names), found)\n        case Err(message):\n            print(message)\n    print(listdir(fs, \"absent\"))\n    return 0\n",
+    "def main(fs: Filesystem, out: Stream) -> int:\n    match listdir(fs, \".\"):\n        case Ok(names):\n            found = 0\n            for name in names:\n                if name == \"greeting.txt\" or name == \"lines.txt\":\n                    found += 1\n            out.print(len(names), found)\n        case Err(message):\n            out.print(message)\n    out.print(listdir(fs, \"absent\"))\n    return 0\n",
     [],
     [
      "--gc-stress"
@@ -14,7 +14,7 @@
   },
   "0447686f140f57d19b6ebd0af755ad73": {
    "case": [
-    "def count(fs: Filesystem) -> Result[int, str]:\n    total = 0\n    with open(fs, \"lines.txt\", \"r\")? as f:\n        for line in f.readlines():\n            total = total + 1\n    return Ok(total)\n\ndef main(fs: Filesystem) -> int:\n    print(read_text(fs, \"greeting.txt\"))\n    print(exists(fs, \"greeting.txt\"), exists(fs, \"absent.txt\"))\n    with open(fs, \"greeting.txt\", \"rb\") as f:\n        print(f.read())\n    match count(fs):\n        case Ok(value):\n            print(value)\n        case Err(message):\n            print(message)\n    print(read_file(fs, \"absent.txt\"))\n    return 0\n",
+    "def count(fs: Filesystem) -> Result[int, str]:\n    total = 0\n    with open(fs, \"lines.txt\", \"r\")? as f:\n        for line in f.readlines():\n            total = total + 1\n    return Ok(total)\n\ndef main(fs: Filesystem, out: Stream) -> int:\n    out.print(read_text(fs, \"greeting.txt\"))\n    out.print(exists(fs, \"greeting.txt\"), exists(fs, \"absent.txt\"))\n    with open(fs, \"greeting.txt\", \"rb\") as f:\n        out.print(f.read())\n    match count(fs):\n        case Ok(value):\n            out.print(value)\n        case Err(message):\n            out.print(message)\n    out.print(read_file(fs, \"absent.txt\"))\n    return 0\n",
     [],
     [
      "--gc-stress"
@@ -26,7 +26,7 @@
   },
   "056759b64efd53a7f4c0a29288290f3b": {
    "case": [
-    "def first(fs: Filesystem, path: str) -> Result[int, str]:\n    with open(fs, path, \"r\")? as f:\n        return Ok(len(f.readline()))\n\ndef main(fs: Filesystem) -> int:\n    total = 0\n    for round in range(4):\n        with open(fs, \"lines.txt\", \"r\") as f:\n            if round == 1:\n                continue\n            if round == 3:\n                break\n            total = total + len(f.readline())\n    match first(fs, \"greeting.txt\"):\n        case Ok(value):\n            total = total + value\n        case Err(message):\n            total = total - len(message)\n    match first(fs, \"absent.txt\"):\n        case Ok(value):\n            print(value)\n        case Err(message):\n            print(message)\n    print(total)\n    return 0\n",
+    "def first(fs: Filesystem, path: str) -> Result[int, str]:\n    with open(fs, path, \"r\")? as f:\n        return Ok(len(f.readline()))\n\ndef main(fs: Filesystem, out: Stream) -> int:\n    total = 0\n    for round in range(4):\n        with open(fs, \"lines.txt\", \"r\") as f:\n            if round == 1:\n                continue\n            if round == 3:\n                break\n            total = total + len(f.readline())\n    match first(fs, \"greeting.txt\"):\n        case Ok(value):\n            total = total + value\n        case Err(message):\n            total = total - len(message)\n    match first(fs, \"absent.txt\"):\n        case Ok(value):\n            out.print(value)\n        case Err(message):\n            out.print(message)\n    out.print(total)\n    return 0\n",
     [],
     [
      "--gc-stress"
@@ -38,7 +38,7 @@
   },
   "2468eb90df17ec8bac5b25deeeee6feb": {
    "case": [
-    "def main(fs: Filesystem) -> int:\n    print(exists(fs, \"greeting.txt\"))\n    return 0\n",
+    "def main(fs: Filesystem, out: Stream) -> int:\n    out.print(exists(fs, \"greeting.txt\"))\n    return 0\n",
     [
      "--restrict"
     ],
@@ -50,7 +50,7 @@
   },
   "345eca99acaaa8b6a0c48b309953f20a": {
    "case": [
-    "def main(fs: Filesystem, clock: Clock, entropy: Entropy, names: Environment) -> int:\n    print(exists(fs, \"greeting.txt\"))\n    return 0\n",
+    "def main(fs: Filesystem, clock: Clock, entropy: Entropy, names: Environment, out: Stream) -> int:\n    out.print(exists(fs, \"greeting.txt\"))\n    return 0\n",
     [],
     []
    ],
@@ -60,7 +60,7 @@
   },
   "44905125317ae9ddb41a57663057945b": {
    "case": [
-    "def main(fs: Filesystem) -> int:\n    print(read_text(fs, \"greeting.txt\"))\n    print(read_text(fs, \"../escape\"))\n    print(write_text(fs, \"new.txt\", \"x\"))\n    print(mkdir(fs, \"fresh\"))\n    print(remove(fs, \"greeting.txt\"))\n    return 0\n",
+    "def main(fs: Filesystem, out: Stream) -> int:\n    out.print(read_text(fs, \"greeting.txt\"))\n    out.print(read_text(fs, \"../escape\"))\n    out.print(write_text(fs, \"new.txt\", \"x\"))\n    out.print(mkdir(fs, \"fresh\"))\n    out.print(remove(fs, \"greeting.txt\"))\n    return 0\n",
     [
      "--restrict",
      "--allow-read=."
@@ -75,7 +75,7 @@
   },
   "6c8455ab3d47a29db9b40e0487e4d8bc": {
    "case": [
-    "def main(fs: Filesystem) -> int:\n    print(exists(fs, \"greeting.txt\"))\n    return 0\n",
+    "def main(fs: Filesystem, out: Stream) -> int:\n    out.print(exists(fs, \"greeting.txt\"))\n    return 0\n",
     [
      "--restrict"
     ],
@@ -89,7 +89,7 @@
   },
   "6c9e52e1ed53e80172c5dd0fef60ff08": {
    "case": [
-    "def main(fs: Filesystem) -> int:\n    print(write_file(fs, \"broken.bin\", b\"\\xff\\xfe\"))\n    print(read_text(fs, \"broken.bin\"))\n    print(read_file(fs, \"broken.bin\"))\n    print(remove(fs, \"broken.bin\"))\n    return 0\n",
+    "def main(fs: Filesystem, out: Stream) -> int:\n    out.print(write_file(fs, \"broken.bin\", b\"\\xff\\xfe\"))\n    out.print(read_text(fs, \"broken.bin\"))\n    out.print(read_file(fs, \"broken.bin\"))\n    out.print(remove(fs, \"broken.bin\"))\n    return 0\n",
     [],
     []
    ],
@@ -99,7 +99,7 @@
   },
   "82fed4d19765b9a0fb235e46951abd09": {
    "case": [
-    "def count(fs: Filesystem) -> Result[int, str]:\n    total = 0\n    with open(fs, \"lines.txt\", \"r\")? as f:\n        for line in f.readlines():\n            total = total + 1\n    return Ok(total)\n\ndef main(fs: Filesystem) -> int:\n    print(read_text(fs, \"greeting.txt\"))\n    print(exists(fs, \"greeting.txt\"), exists(fs, \"absent.txt\"))\n    with open(fs, \"greeting.txt\", \"rb\") as f:\n        print(f.read())\n    match count(fs):\n        case Ok(value):\n            print(value)\n        case Err(message):\n            print(message)\n    print(read_file(fs, \"absent.txt\"))\n    return 0\n",
+    "def count(fs: Filesystem) -> Result[int, str]:\n    total = 0\n    with open(fs, \"lines.txt\", \"r\")? as f:\n        for line in f.readlines():\n            total = total + 1\n    return Ok(total)\n\ndef main(fs: Filesystem, out: Stream) -> int:\n    out.print(read_text(fs, \"greeting.txt\"))\n    out.print(exists(fs, \"greeting.txt\"), exists(fs, \"absent.txt\"))\n    with open(fs, \"greeting.txt\", \"rb\") as f:\n        out.print(f.read())\n    match count(fs):\n        case Ok(value):\n            out.print(value)\n        case Err(message):\n            out.print(message)\n    out.print(read_file(fs, \"absent.txt\"))\n    return 0\n",
     [],
     []
    ],
@@ -122,7 +122,7 @@
   },
   "8af0d3b5da68d266c13761d5d9c83d40": {
    "case": [
-    "def main(fs: Filesystem) -> int:\n    with open(fs, \"absent.txt\", \"r\") as f:\n        print(f.read())\n    return 0\n",
+    "def main(fs: Filesystem, out: Stream) -> int:\n    with open(fs, \"absent.txt\", \"r\") as f:\n        out.print(f.read())\n    return 0\n",
     [],
     []
    ],
@@ -132,7 +132,7 @@
   },
   "8ea25ee27413af44fde6734c22ab171d": {
    "case": [
-    "def main(fs: Filesystem) -> int:\n    print(write_file(fs, \"broken.bin\", b\"\\xff\\xfe\"))\n    print(read_text(fs, \"broken.bin\"))\n    print(read_file(fs, \"broken.bin\"))\n    print(remove(fs, \"broken.bin\"))\n    return 0\n",
+    "def main(fs: Filesystem, out: Stream) -> int:\n    out.print(write_file(fs, \"broken.bin\", b\"\\xff\\xfe\"))\n    out.print(read_text(fs, \"broken.bin\"))\n    out.print(read_file(fs, \"broken.bin\"))\n    out.print(remove(fs, \"broken.bin\"))\n    return 0\n",
     [],
     [
      "--gc-stress"
@@ -144,7 +144,7 @@
   },
   "90eba2b17c66db1959b67e404b805d4e": {
    "case": [
-    "def main(fs: Filesystem) -> int:\n    kept: list[str] = []\n    with arena() as scratch:\n        with open(fs, \"lines.txt\", \"r\") as f:\n            lines = f.readlines()\n            kept = scratch.escape(lines)\n    print(len(kept), kept[0])\n    return 0\n",
+    "def main(fs: Filesystem, out: Stream) -> int:\n    kept: list[str] = []\n    with arena() as scratch:\n        with open(fs, \"lines.txt\", \"r\") as f:\n            lines = f.readlines()\n            kept = scratch.escape(lines)\n    out.print(len(kept), kept[0])\n    return 0\n",
     [],
     []
    ],
@@ -154,7 +154,7 @@
   },
   "9ea76b2a9c728163af3be477a9ececa0": {
    "case": [
-    "def main(fs: Filesystem, clock: Clock, entropy: Entropy, names: Environment) -> int:\n    print(exists(fs, \"greeting.txt\"))\n    return 0\n",
+    "def main(fs: Filesystem, clock: Clock, entropy: Entropy, names: Environment, out: Stream) -> int:\n    out.print(exists(fs, \"greeting.txt\"))\n    return 0\n",
     [],
     [
      "--gc-stress"
@@ -181,7 +181,7 @@
   },
   "9f115ba86084917f666491553203ad9f": {
    "case": [
-    "def main(fs: Filesystem) -> int:\n    with open(fs, \"absent.txt\", \"r\") as f:\n        print(f.read())\n    return 0\n",
+    "def main(fs: Filesystem, out: Stream) -> int:\n    with open(fs, \"absent.txt\", \"r\") as f:\n        out.print(f.read())\n    return 0\n",
     [],
     [
      "--gc-stress"
@@ -193,7 +193,7 @@
   },
   "a5cfa2778dcef304585ac6899f7eedef": {
    "case": [
-    "def main(fs: Filesystem) -> int:\n    match listdir(fs, \".\"):\n        case Ok(names):\n            found = 0\n            for name in names:\n                if name == \"greeting.txt\" or name == \"lines.txt\":\n                    found += 1\n            print(len(names), found)\n        case Err(message):\n            print(message)\n    print(listdir(fs, \"absent\"))\n    return 0\n",
+    "def main(fs: Filesystem, out: Stream) -> int:\n    match listdir(fs, \".\"):\n        case Ok(names):\n            found = 0\n            for name in names:\n                if name == \"greeting.txt\" or name == \"lines.txt\":\n                    found += 1\n            out.print(len(names), found)\n        case Err(message):\n            out.print(message)\n    out.print(listdir(fs, \"absent\"))\n    return 0\n",
     [],
     []
    ],
@@ -203,7 +203,7 @@
   },
   "acb1bdec0c88bf09dd5259212a12fc1a": {
    "case": [
-    "def main(fs: Filesystem) -> int:\n    print(write_text(fs, \"kept.txt\", \"value\"))\n    print(read_text(fs, \"kept.txt\"))\n    print(remove(fs, \"kept.txt\"))\n    return 0\n",
+    "def main(fs: Filesystem, out: Stream) -> int:\n    out.print(write_text(fs, \"kept.txt\", \"value\"))\n    out.print(read_text(fs, \"kept.txt\"))\n    out.print(remove(fs, \"kept.txt\"))\n    return 0\n",
     [
      "--restrict",
      "--allow-write=."
@@ -216,7 +216,7 @@
   },
   "b1bb41663bf1bf07beacda5756031bc0": {
    "case": [
-    "def first(fs: Filesystem, path: str) -> Result[int, str]:\n    with open(fs, path, \"r\")? as f:\n        return Ok(len(f.readline()))\n\ndef main(fs: Filesystem) -> int:\n    total = 0\n    for round in range(4):\n        with open(fs, \"lines.txt\", \"r\") as f:\n            if round == 1:\n                continue\n            if round == 3:\n                break\n            total = total + len(f.readline())\n    match first(fs, \"greeting.txt\"):\n        case Ok(value):\n            total = total + value\n        case Err(message):\n            total = total - len(message)\n    match first(fs, \"absent.txt\"):\n        case Ok(value):\n            print(value)\n        case Err(message):\n            print(message)\n    print(total)\n    return 0\n",
+    "def first(fs: Filesystem, path: str) -> Result[int, str]:\n    with open(fs, path, \"r\")? as f:\n        return Ok(len(f.readline()))\n\ndef main(fs: Filesystem, out: Stream) -> int:\n    total = 0\n    for round in range(4):\n        with open(fs, \"lines.txt\", \"r\") as f:\n            if round == 1:\n                continue\n            if round == 3:\n                break\n            total = total + len(f.readline())\n    match first(fs, \"greeting.txt\"):\n        case Ok(value):\n            total = total + value\n        case Err(message):\n            total = total - len(message)\n    match first(fs, \"absent.txt\"):\n        case Ok(value):\n            out.print(value)\n        case Err(message):\n            out.print(message)\n    out.print(total)\n    return 0\n",
     [],
     []
    ],
@@ -226,7 +226,7 @@
   },
   "b28bf920e42da53ee1c6086ccbe7c730": {
    "case": [
-    "def main(fs: Filesystem) -> int:\n    print(write_text(fs, \"out.txt\", \"first\\nsecond\\n\"))\n    with open(fs, \"out.txt\", \"a\") as f:\n        print(f.write(\"third\\n\"))\n    print(read_text(fs, \"out.txt\"))\n    with open(fs, \"out.txt\", \"r\") as f:\n        print(f.readline(), f.read(3), f.read())\n        f.flush()\n        f.close()\n    print(write_file(fs, \"raw.bin\", b\"\\x00\\x01\\xff\"))\n    print(read_file(fs, \"raw.bin\"))\n    print(mkdir(fs, \"nested\"), write_text(fs, \"nested/inner.txt\", \"x\"))\n    print(read_text(fs, \"nested/inner.txt\"), exists(fs, \"nested\"))\n    print(remove(fs, \"nested/inner.txt\"), remove(fs, \"nested\"), exists(fs, \"nested\"))\n    print(remove(fs, \"missing.txt\"))\n    print(write_text(fs, \"out.txt\", \"again\\n\"), read_text(fs, \"out.txt\"))\n    return 0\n",
+    "def main(fs: Filesystem, out: Stream) -> int:\n    out.print(write_text(fs, \"out.txt\", \"first\\nsecond\\n\"))\n    with open(fs, \"out.txt\", \"a\") as f:\n        out.print(f.write(\"third\\n\"))\n    out.print(read_text(fs, \"out.txt\"))\n    with open(fs, \"out.txt\", \"r\") as f:\n        out.print(f.readline(), f.read(3), f.read())\n        f.flush()\n        f.close()\n    out.print(write_file(fs, \"raw.bin\", b\"\\x00\\x01\\xff\"))\n    out.print(read_file(fs, \"raw.bin\"))\n    out.print(mkdir(fs, \"nested\"), write_text(fs, \"nested/inner.txt\", \"x\"))\n    out.print(read_text(fs, \"nested/inner.txt\"), exists(fs, \"nested\"))\n    out.print(remove(fs, \"nested/inner.txt\"), remove(fs, \"nested\"), exists(fs, \"nested\"))\n    out.print(remove(fs, \"missing.txt\"))\n    out.print(write_text(fs, \"out.txt\", \"again\\n\"), read_text(fs, \"out.txt\"))\n    return 0\n",
     [],
     [
      "--gc-stress"
@@ -238,7 +238,7 @@
   },
   "c9979616ffb2e5e15b0ae35505787fac": {
    "case": [
-    "def main(fs: Filesystem) -> int:\n    print(exists(fs, \"greeting.txt\"))\n    return 0\n",
+    "def main(fs: Filesystem, out: Stream) -> int:\n    out.print(exists(fs, \"greeting.txt\"))\n    return 0\n",
     [
      "--restrict",
      "--allow-read=absent-directory"
@@ -251,7 +251,7 @@
   },
   "cc6337dd3dc589a25cc07a325b053e0d": {
    "case": [
-    "def main(fs: Filesystem) -> int:\n    print(read_text(fs, \"greeting.txt\"))\n    print(read_text(fs, \"../escape\"))\n    print(write_text(fs, \"new.txt\", \"x\"))\n    print(mkdir(fs, \"fresh\"))\n    print(remove(fs, \"greeting.txt\"))\n    return 0\n",
+    "def main(fs: Filesystem, out: Stream) -> int:\n    out.print(read_text(fs, \"greeting.txt\"))\n    out.print(read_text(fs, \"../escape\"))\n    out.print(write_text(fs, \"new.txt\", \"x\"))\n    out.print(mkdir(fs, \"fresh\"))\n    out.print(remove(fs, \"greeting.txt\"))\n    return 0\n",
     [
      "--restrict",
      "--allow-read=."
@@ -264,7 +264,7 @@
   },
   "d035f76a581478406810981819cd47c8": {
    "case": [
-    "def main(fs: Filesystem) -> int:\n    with open(fs, \"greeting.txt\", \"r\") as f:\n        f.close()\n        print(f.read())\n    return 0\n",
+    "def main(fs: Filesystem, out: Stream) -> int:\n    with open(fs, \"greeting.txt\", \"r\") as f:\n        f.close()\n        out.print(f.read())\n    return 0\n",
     [],
     [
      "--gc-stress"
@@ -276,7 +276,7 @@
   },
   "d2c5f0dc7001785484437c4ed402d9b9": {
    "case": [
-    "def main(fs: Filesystem) -> int:\n    with open(fs, \"greeting.txt\", \"r\") as f:\n        f.close()\n        print(f.read())\n    return 0\n",
+    "def main(fs: Filesystem, out: Stream) -> int:\n    with open(fs, \"greeting.txt\", \"r\") as f:\n        f.close()\n        out.print(f.read())\n    return 0\n",
     [],
     []
    ],
@@ -286,7 +286,7 @@
   },
   "dff251829bbf706212f5d276d4ee893f": {
    "case": [
-    "def main(fs: Filesystem) -> int:\n    kept: list[str] = []\n    with arena() as scratch:\n        with open(fs, \"lines.txt\", \"r\") as f:\n            lines = f.readlines()\n            kept = scratch.escape(lines)\n    print(len(kept), kept[0])\n    return 0\n",
+    "def main(fs: Filesystem, out: Stream) -> int:\n    kept: list[str] = []\n    with arena() as scratch:\n        with open(fs, \"lines.txt\", \"r\") as f:\n            lines = f.readlines()\n            kept = scratch.escape(lines)\n    out.print(len(kept), kept[0])\n    return 0\n",
     [],
     [
      "--gc-stress"
@@ -298,7 +298,7 @@
   },
   "e0c8dfab36e9c8c5d6410b47ee693d53": {
    "case": [
-    "def main(fs: Filesystem) -> int:\n    print(write_text(fs, \"kept.txt\", \"value\"))\n    print(read_text(fs, \"kept.txt\"))\n    print(remove(fs, \"kept.txt\"))\n    return 0\n",
+    "def main(fs: Filesystem, out: Stream) -> int:\n    out.print(write_text(fs, \"kept.txt\", \"value\"))\n    out.print(read_text(fs, \"kept.txt\"))\n    out.print(remove(fs, \"kept.txt\"))\n    return 0\n",
     [
      "--restrict",
      "--allow-write=."
@@ -313,7 +313,7 @@
   },
   "ebd61f251e72c6e53a853ea102c5999c": {
    "case": [
-    "def main(fs: Filesystem) -> int:\n    print(exists(fs, \"greeting.txt\"))\n    return 0\n",
+    "def main(fs: Filesystem, out: Stream) -> int:\n    out.print(exists(fs, \"greeting.txt\"))\n    return 0\n",
     [
      "--restrict",
      "--allow-read=absent-directory"
@@ -328,7 +328,7 @@
   },
   "fe75df848f9c20c0d4cc117dd2bc0a07": {
    "case": [
-    "def main(fs: Filesystem) -> int:\n    print(write_text(fs, \"out.txt\", \"first\\nsecond\\n\"))\n    with open(fs, \"out.txt\", \"a\") as f:\n        print(f.write(\"third\\n\"))\n    print(read_text(fs, \"out.txt\"))\n    with open(fs, \"out.txt\", \"r\") as f:\n        print(f.readline(), f.read(3), f.read())\n        f.flush()\n        f.close()\n    print(write_file(fs, \"raw.bin\", b\"\\x00\\x01\\xff\"))\n    print(read_file(fs, \"raw.bin\"))\n    print(mkdir(fs, \"nested\"), write_text(fs, \"nested/inner.txt\", \"x\"))\n    print(read_text(fs, \"nested/inner.txt\"), exists(fs, \"nested\"))\n    print(remove(fs, \"nested/inner.txt\"), remove(fs, \"nested\"), exists(fs, \"nested\"))\n    print(remove(fs, \"missing.txt\"))\n    print(write_text(fs, \"out.txt\", \"again\\n\"), read_text(fs, \"out.txt\"))\n    return 0\n",
+    "def main(fs: Filesystem, out: Stream) -> int:\n    out.print(write_text(fs, \"out.txt\", \"first\\nsecond\\n\"))\n    with open(fs, \"out.txt\", \"a\") as f:\n        out.print(f.write(\"third\\n\"))\n    out.print(read_text(fs, \"out.txt\"))\n    with open(fs, \"out.txt\", \"r\") as f:\n        out.print(f.readline(), f.read(3), f.read())\n        f.flush()\n        f.close()\n    out.print(write_file(fs, \"raw.bin\", b\"\\x00\\x01\\xff\"))\n    out.print(read_file(fs, \"raw.bin\"))\n    out.print(mkdir(fs, \"nested\"), write_text(fs, \"nested/inner.txt\", \"x\"))\n    out.print(read_text(fs, \"nested/inner.txt\"), exists(fs, \"nested\"))\n    out.print(remove(fs, \"nested/inner.txt\"), remove(fs, \"nested\"), exists(fs, \"nested\"))\n    out.print(remove(fs, \"missing.txt\"))\n    out.print(write_text(fs, \"out.txt\", \"again\\n\"), read_text(fs, \"out.txt\"))\n    return 0\n",
     [],
     []
    ],

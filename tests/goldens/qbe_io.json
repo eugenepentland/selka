@@ -2,7 +2,7 @@
  "entries": {
   "1039c48ba058b52a72da6a71c9938ece": {
    "case": [
-    "def main() -> int:\n    deep: list[list[int]] = [[1]]\n    rows: list[list[list[int]]] = [[[2]]]\n    print(deep, rows)\n    values: list[int] = [1]\n    box = values\n    ladder: list[list[int]] = [box]\n    step = 0\n    while step < 30:\n        ladder = [ladder[0]]\n        step += 1\n    print(ladder)\n    return 0\n",
+    "def main(out: Stream) -> int:\n    deep: list[list[int]] = [[1]]\n    rows: list[list[list[int]]] = [[[2]]]\n    out.print(deep, rows)\n    values: list[int] = [1]\n    box = values\n    ladder: list[list[int]] = [box]\n    step = 0\n    while step < 30:\n        ladder = [ladder[0]]\n        step += 1\n    out.print(ladder)\n    return 0\n",
     []
    ],
    "returncode": 0,
@@ -11,7 +11,7 @@
   },
   "1914376c71591b3ccf3cd011771441c2": {
    "case": [
-    "record Point:\n    x: int\n    y: int\n\nenum Colour:\n    red,\n    green\n\n\nunion Shape:\n    dot,\n    span: int\n\ndef pick(n: int) -> Result[int, str]:\n    if n < 0:\n        return Err(\"nope\")\n    return Ok(n)\n\ndef main() -> int:\n    print(Point(x=1, y=2), Colour.green, Colour.red)\n    found: Option[int] = Some(4)\n    missing: Option[int] = None\n    print(pick(3), pick(-1), found, missing)\n    dot: Shape = Shape.dot\n    span: Shape = Shape.span(7)\n    print(dot, span)\n    return 0\n",
+    "record Point:\n    x: int\n    y: int\n\nenum Colour:\n    red,\n    green\n\n\nunion Shape:\n    dot,\n    span: int\n\ndef pick(n: int) -> Result[int, str]:\n    if n < 0:\n        return Err(\"nope\")\n    return Ok(n)\n\ndef main(out: Stream) -> int:\n    out.print(Point(x=1, y=2), Colour.green, Colour.red)\n    found: Option[int] = Some(4)\n    missing: Option[int] = None\n    out.print(pick(3), pick(-1), found, missing)\n    dot: Shape = Shape.dot\n    span: Shape = Shape.span(7)\n    out.print(dot, span)\n    return 0\n",
     []
    ],
    "returncode": 0,
@@ -20,7 +20,7 @@
   },
   "1c7078f5cd023cf59f716e032967f696": {
    "case": [
-    "def main() -> int:\n    print(0, -9223372036854775808, 9223372036854775807)\n    print(255u8, 65535u16, 4294967295u32, 18446744073709551615u64)\n    print(-128i8, -32768i16, -2147483648i32)\n    print([1u8, 2u8], {1: 2u16})\n    return 0\n",
+    "def main(out: Stream) -> int:\n    out.print(0, -9223372036854775808, 9223372036854775807)\n    out.print(255u8, 65535u16, 4294967295u32, 18446744073709551615u64)\n    out.print(-128i8, -32768i16, -2147483648i32)\n    out.print([1u8, 2u8], {1: 2u16})\n    return 0\n",
     []
    ],
    "returncode": 0,
@@ -29,7 +29,7 @@
   },
   "23810d8e705280aa32db92672ef9e5a3": {
    "case": [
-    "def main() -> int:\n    values: list[int] = []\n    table: dict[str, int] = {}\n    print(values, table, \"\")\n    print([values], [table])\n    return 0\n",
+    "def main(out: Stream) -> int:\n    values: list[int] = []\n    table: dict[str, int] = {}\n    out.print(values, table, \"\")\n    out.print([values], [table])\n    return 0\n",
     []
    ],
    "returncode": 0,
@@ -38,7 +38,7 @@
   },
   "2d2bc4546998fc9ba6cf8f9a3e591866": {
    "case": [
-    "def main() -> int:\n    print(\"hello\", 42, True, None)\n    print([\"a\", \"b\"], {\"k\": 1}, b\"\\x00\\xff\")\n    print()\n    print(1, 2, 3, sep=\"-\", end=\"!\\n\")\n    print(\"only\", end=\"\")\n    print(\"\", sep=\"|\")\n    return 0\n",
+    "def main(out: Stream) -> int:\n    out.print(\"hello\", 42, True, None)\n    out.print([\"a\", \"b\"], {\"k\": 1}, b\"\\x00\\xff\")\n    out.print()\n    out.print(1, 2, 3, sep=\"-\", end=\"!\\n\")\n    out.print(\"only\", end=\"\")\n    out.print(\"\", sep=\"|\")\n    return 0\n",
     []
    ],
    "returncode": 0,
@@ -47,7 +47,7 @@
   },
   "682c16cacb72531f79a1cf12489b6f5d": {
    "case": [
-    "record Inner:\n    label: str\n    values: list[int]\n\nrecord Outer:\n    inner: Inner\n    flag: bool\n\ndef main() -> int:\n    value = Outer(inner=Inner(label=\"deep\", values=[1, 2]), flag=False)\n    print(value)\n    print([value])\n    box: Option[Outer] = Some(value)\n    print(box)\n    table: dict[str, Outer] = {\"one\": value}\n    print(table)\n    return 0\n",
+    "record Inner:\n    label: str\n    values: list[int]\n\nrecord Outer:\n    inner: Inner\n    flag: bool\n\ndef main(out: Stream) -> int:\n    value = Outer(inner=Inner(label=\"deep\", values=[1, 2]), flag=False)\n    out.print(value)\n    out.print([value])\n    box: Option[Outer] = Some(value)\n    out.print(box)\n    table: dict[str, Outer] = {\"one\": value}\n    out.print(table)\n    return 0\n",
     []
    ],
    "returncode": 0,
@@ -56,7 +56,7 @@
   },
   "842afbc93bc9863a5ceac667fda67506": {
    "case": [
-    "def main() -> int:\n    row: [3]int = [1, 2, 3]\n    print(row)\n    return 0\n",
+    "def main(out: Stream) -> int:\n    row: [3]int = [1, 2, 3]\n    out.print(row)\n    return 0\n",
     []
    ],
    "returncode": 0,
@@ -65,7 +65,7 @@
   },
   "da2dd4bb6e7deeda4de2184e876466db": {
    "case": [
-    "def main() -> int:\n    print(b\"\")\n    print(b\"plain\")\n    print(b\"\\x00\\x1f\\x20\\x7e\\x7f\\xff\")\n    print(b\"quote'and\\\\slash\\ttab\\nnewline\")\n    print([b\"ab\"], {\"k\": b\"cd\"})\n    return 0\n",
+    "def main(out: Stream) -> int:\n    out.print(b\"\")\n    out.print(b\"plain\")\n    out.print(b\"\\x00\\x1f\\x20\\x7e\\x7f\\xff\")\n    out.print(b\"quote'and\\\\slash\\ttab\\nnewline\")\n    out.print([b\"ab\"], {\"k\": b\"cd\"})\n    return 0\n",
     []
    ],
    "returncode": 0,
@@ -74,7 +74,7 @@
   },
   "e52beb26d9dd0d0c9c2b69577568001b": {
    "case": [
-    "def main() -> int:\n    text = \"quote'and\\\\slash\\ttab\\nnewline\\rreturn\"\n    print(text)\n    print([text])\n    print({text: text})\n    print(\"h\\u00e9\\U0001f642\")\n    print([\"h\\u00e9\\U0001f642\"])\n    return 0\n",
+    "def main(out: Stream) -> int:\n    text = \"quote'and\\\\slash\\ttab\\nnewline\\rreturn\"\n    out.print(text)\n    out.print([text])\n    out.print({text: text})\n    out.print(\"h\\u00e9\\U0001f642\")\n    out.print([\"h\\u00e9\\U0001f642\"])\n    return 0\n",
     []
    ],
    "returncode": 0,
@@ -83,7 +83,7 @@
   },
   "fe0fa6208590f5506015ba97bac16252": {
    "case": [
-    "def main() -> int:\n    print(0.0, 1.0, 2.5, 0.1, 100.0)\n    print(1e20, 1e-7, 1.7976931348623157e308)\n    print(3.0 / 7.0, 1.0 / 3.0, 2.0 / 3.0)\n    print(0.0 / 0.0, 1.0 / 0.0, -1.0 / 0.0)\n    print([0.5], {\"k\": 0.25})\n    return 0\n",
+    "def main(out: Stream) -> int:\n    out.print(0.0, 1.0, 2.5, 0.1, 100.0)\n    out.print(1e20, 1e-7, 1.7976931348623157e308)\n    out.print(3.0 / 7.0, 1.0 / 3.0, 2.0 / 3.0)\n    out.print(0.0 / 0.0, 1.0 / 0.0, -1.0 / 0.0)\n    out.print([0.5], {\"k\": 0.25})\n    return 0\n",
     []
    ],
    "returncode": 2,
