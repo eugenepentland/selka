@@ -1,5 +1,6 @@
 //! Recursive descent for statements; precedence climbing for expressions.
 const syntax_code = "E_SYNTAX";
+const eInternalName = "E_INTERNAL_NAME";
 const eDefaultArgument = "E_DEFAULT_ARGUMENT";
 const eRequirement = diagnostic.generic_requirement;
 const eGenericLimit = diagnostic.generic_limit;
@@ -991,16 +992,7 @@ pub const Parser = struct {
             .kw_read_resource, .kw_write_resource => try self.parseResourceIo(token),
             .kw_environment_get => try self.parseEnvironmentGated(token),
             .kw_acquire_resource, .kw_complete_resource => try self.parseResource(token),
-            .kw_clock_now, .kw_random_u64 => external: {
-                self.cursor.pos += 1;
-                _ = try self.expect(.lbracket);
-                const ty = try self.typeName();
-                _ = try self.expect(.rbracket);
-                _ = try self.expect(.lparen);
-                const capability = try self.expression(0);
-                const close = try self.expect(.rparen);
-                break :external try self.append(.{ .span = .join(token.span, close.span), .data = .{ .external_read = .{ .kind = if (token.tag == .kw_clock_now) .clock else .random, .ty = ty, .capability = capability } } });
-            },
+            .kw_clock_now, .kw_random_u64 => try self.parseExternalGated(token),
             .kw_f64_add,
             .kw_f64_sub,
             .kw_f64_mul,
@@ -1023,7 +1015,7 @@ pub const Parser = struct {
             .kw_f64_sqrt => if (self.trustedStdlib())
                 try self.parseFloatUnary(token)
             else
-                return self.sink.fail("E_INTERNAL_NAME", token.span, "`__float_sqrt` is reserved for compiler-internal standard-library sources; use the public `sqrt` operation"),
+                return self.sink.fail(eInternalName, token.span, "`__float_sqrt` is reserved for compiler-internal standard-library sources; use the public `sqrt` operation"),
             .kw_f64_floor, .kw_f64_ceil, .kw_f64_trunc, .kw_f64_abs, .kw_f64_neg, .kw_f64_from_u64, .kw_f64_to_u64 => try self.parseFloatUnary(token),
             .kw_wrap => try self.parseWrap(token),
             .kw_i8, .kw_i16, .kw_i32, .kw_i64, .kw_u8, .kw_u16, .kw_u32, .kw_u64 => try self.parseWidthConversion(token),
@@ -1279,8 +1271,26 @@ pub const Parser = struct {
     /// Reject the raw `environment_get[...]` spelling in ordinary source; only
     /// compiler-owned standard-library bytes may reach its parser arm.
     fn parseEnvironmentGated(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
-        if (!self.trustedStdlib()) return self.sink.fail("E_INTERNAL_NAME", token.span, "`environment_get[...]` is reserved for compiler-internal standard-library sources; use `env.get(\"NAME\")`");
+        if (!self.trustedStdlib()) return self.sink.fail(eInternalName, token.span, "`environment_get[...]` is reserved for compiler-internal standard-library sources; use `env.get(\"NAME\")`");
         return self.parseEnvironment(token);
+    }
+
+    /// Reject the raw `clock_now[...]`/`random_u64[...]` spellings in ordinary
+    /// source; only compiler-owned standard-library bytes may reach their arm.
+    fn parseExternalGated(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
+        if (!self.trustedStdlib()) return self.sink.fail(eInternalName, token.span, "`clock_now[...]` and `random_u64[...]` are reserved for compiler-internal standard-library sources; use the `time` or `random` standard module");
+        return self.parseExternalRead(token);
+    }
+
+    fn parseExternalRead(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
+        self.cursor.pos += 1;
+        _ = try self.expect(.lbracket);
+        const ty = try self.typeName();
+        _ = try self.expect(.rbracket);
+        _ = try self.expect(.lparen);
+        const capability = try self.expression(0);
+        const close = try self.expect(.rparen);
+        return self.append(.{ .span = .join(token.span, close.span), .data = .{ .external_read = .{ .kind = if (token.tag == .kw_clock_now) .clock else .random, .ty = ty, .capability = capability } } });
     }
 
     fn parseEnvironment(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {

@@ -110,7 +110,7 @@ const helpers =
     \\
 ;
 fn helperScenario(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, "helpers.my", declarations ++ helpers);
+    var compilation = try language.Compilation.initTrusted(allocator, "helpers.my", declarations ++ helpers);
     defer compilation.deinit();
     try compilation.parse();
     var sink: diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
@@ -243,13 +243,13 @@ test "generic calls reject reachable clock effects even behind cycles and false 
         \\
         \\
     ;
-    var ordinary = try language.Compilation.init(t.allocator, "ordinary.my", effectful ++
+    var ordinary = try language.Compilation.initTrusted(t.allocator, "ordinary.my", effectful ++
         \\def main(c: Clock) -> i64:
         \\    return helper(c)
     );
     defer ordinary.deinit();
     try ordinary.check();
-    var generic = try language.Compilation.init(t.allocator, "generic.my", effectful ++
+    var generic = try language.Compilation.initTrusted(t.allocator, "generic.my", effectful ++
         \\def f[T](x: T, c: Clock) -> i64 effects():
         \\    _ = x
         \\    return helper(c)

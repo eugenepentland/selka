@@ -1,22 +1,24 @@
-result Time:
-    ok: int,
-    err: int
+module main
+import random
+import time
 
 
-result Random:
-    ok: u64,
-    err: int
+def sample(clock: Clock, rng: Entropy) -> Result[int, str] effects(clock, random, managed_allocation):
+    match time.now(clock):
+        case Ok(instant):
+            match random.from_entropy(rng):
+                case Ok(generator):
+                    _ = generator
+                    return Ok(instant.unix_nanoseconds)
+                case Err(message):
+                    return Err(message)
+        case Err(message):
+            return Err(message)
 
 
-def sample(clock: Clock, rng: Entropy) -> Time effects(clock, random):
-    now = clock_now[Time](clock)?
-    _ = random_u64[Random](rng)?
-    return Ok(now)
-
-
-def main(clock: Clock, rng: Entropy) -> int noio:
+def main(clock: Clock, rng: Entropy) -> int:
     match sample(clock, rng):
-        case Time.ok(now):
+        case Ok(now):
             return now
-        case Time.err(code):
-            return code
+        case Err(message):
+            return len(message)
