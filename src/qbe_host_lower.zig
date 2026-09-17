@@ -5,20 +5,23 @@ pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 /// Host calls use caller-owned native argument storage and a copied-node bridge.
 pub fn emit(self: anytype, name: []const u8) Error![]u8 {
     const function = self.function;
+    const parameters = function.scope.locals[0..function.signature.parameter_count];
+    // The leading `Host` operand is checked by the caller and dropped here, so the
+    // copied host bridge sees only the ordinary value parameters.
+    const values = parameters[@min(1, parameters.len)..];
     const large_result = try self.largeResult(function);
     const packed_parameters = try self.packedParameters(function);
     const output_size = @max(8, (try self.layout(function.signature.return_type)).size);
-    const argument_bytes = std.math.mul(u64, function.signature.parameter_count, 8) catch return self.reject(0);
+    const argument_bytes = std.math.mul(u64, values.len, 8) catch return self.reject(0);
     var frame_bytes: u64 = if (large_result) 0 else output_size;
     frame_bytes = std.math.add(u64, frame_bytes, argument_bytes) catch return self.reject(0);
-    for (function.scope.locals[0..function.signature.parameter_count]) |local| {
+    for (values) |local| {
         if (self.isScalar(local.ty)) frame_bytes = std.math.add(u64, frame_bytes, 8) catch return self.reject(0);
     }
     const heap_arguments = frame_bytes > 32768;
     try self.typeDefinitions();
     try self.print("export function {s} ${s}(l %ctx", .{ try self.returnType(function), name });
     if (large_result) try self.print(", l %out", .{});
-    const parameters = function.scope.locals[0..function.signature.parameter_count];
     if (packed_parameters) {
         try self.print(", l %packed", .{});
     } else {
@@ -32,7 +35,8 @@ pub fn emit(self: anytype, name: []const u8) Error![]u8 {
         try self.print(" %failed =l call $myl_qbe_failed(l %ctx)\n jnz %failed, @done, @arguments\n@arguments\n", .{});
     } else try self.print(" %args =l alloc8 {d}\n", .{@max(8, argument_bytes)});
     var scalar_offset = argument_bytes;
-    for (parameters, 0..) |local, i| {
+    for (values, 1..) |local, i| {
+        const slot = i - 1;
         if (packed_parameters) {
             try self.print(" %packed_slot{d} =l add %packed, {d}\n %a{d} =l loadl %packed_slot{d}\n", .{ i, i * 8, i, i });
         }
@@ -43,7 +47,7 @@ pub fn emit(self: anytype, name: []const u8) Error![]u8 {
             } else try self.print(" %arg{d} =l alloc8 8\n", .{i});
             try self.print(" storel %a{d}, %arg{d}\n", .{ i, i });
         } else try self.print(" %arg{d} =l copy %a{d}\n", .{ i, i });
-        try self.print(" %slot{d} =l add %args, {d}\n storel %arg{d}, %slot{d}\n", .{ i, i * 8, i, i });
+        try self.print(" %slot{d} =l add %args, {d}\n storel %arg{d}, %slot{d}\n", .{ slot, slot * 8, i, slot });
     }
     try self.print(" call ${s}_host(l %ctx, l %args, l %output)\n", .{name});
     if (heap_arguments) try self.print(" call $myl_qbe_frame_release(l %ctx, l %args)\n jmp @done\n@done\n", .{});

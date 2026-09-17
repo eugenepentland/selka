@@ -16,11 +16,11 @@ fn reject(source: []const u8, code: []const u8) !void {
 }
 test "direct C imports preserve formatting and reject VM registry and legacy C emission" {
     const source =
-        \\extern def abs(x: i32) -> i32 effects(host)
+        \\extern def abs(host: Host, x: i32) -> i32 effects(host)
         \\
         \\
-        \\def main() -> i64:
-        \\    return i64(abs(-7))
+        \\def main(host: Host) -> i64:
+        \\    return i64(abs(host, -7))
     ;
     var c = try language.Compilation.init(t.allocator, "foreign.my", source);
     defer c.deinit();
@@ -38,64 +38,64 @@ test "direct C imports preserve formatting and reject VM registry and legacy C e
 }
 test "direct C supports bool void and binary64 without provider registration" {
     var c = try language.Compilation.init(t.allocator, "foreign.my",
-        \\extern def floor(x: float) -> float effects(host)
+        \\extern def floor(host: Host, x: float) -> float effects(host)
         \\
         \\
-        \\extern def flush() -> None effects(host)
+        \\extern def flush(host: Host) -> None effects(host)
         \\
         \\
-        \\extern def invert(x: bool) -> bool effects(host)
+        \\extern def invert(host: Host, x: bool) -> bool effects(host)
     ++ entry);
     defer c.deinit();
     try c.emit();
     const manifest = try c.emitQbe(t.allocator);
     defer t.allocator.free(manifest);
-    try t.expect(std.mem.indexOf(u8, manifest, "call $floor(d %c0)") != null);
+    try t.expect(std.mem.indexOf(u8, manifest, "call $floor(d %c1)") != null);
     try t.expect(std.mem.indexOf(u8, manifest, "call $flush()") != null);
-    try t.expect(std.mem.indexOf(u8, manifest, "call $invert(ub %a0)") != null);
+    try t.expect(std.mem.indexOf(u8, manifest, "call $invert(ub %a1)") != null);
     try t.expect(std.mem.indexOf(u8, manifest, "\"declarations\":[]") != null);
 }
 
 // spec: C-FFI-1
 test "direct C declarations reject unsupported signatures and preserve effect checking" {
     try reject(
-        \\extern def f(x: None) -> i64 effects(host)
+        \\extern def f(host: Host, x: None) -> i64 effects(host)
     ++ entry, "E_EXTERN_SIGNATURE");
     try reject(
         \\class R:
         \\    x: i64
         \\
         \\
-        \\extern def f(x: R) -> i64 effects(host)
+        \\extern def f(host: Host, x: R) -> i64 effects(host)
     ++ entry, "E_EXTERN_SIGNATURE");
     try reject(
-        \\extern def f[T](x: T) -> T effects(host)
+        \\extern def f[T](host: Host, x: T) -> T effects(host)
     ++ entry, "E_HOST_DECLARATION");
     try reject(
-        \\extern def f() -> i64
+        \\extern def f(host: Host) -> i64
     ++ entry, "E_HOST_EFFECTS");
     try reject(
-        \\extern def f() effects(host)
+        \\extern def f(host: Host) effects(host)
     ++ entry, "E_EXTERN_SIGNATURE");
     try reject(
-        \\extern def myl_intrude() -> i64 effects(host)
+        \\extern def myl_intrude(host: Host) -> i64 effects(host)
     ++ entry, "E_EXTERN_SYMBOL");
     try reject(
-        \\extern def f() -> i64 effects(host)
+        \\extern def f(host: Host) -> i64 effects(host)
         \\
         \\
-        \\def main() -> i64 effects():
-        \\    return f()
+        \\def main(host: Host) -> i64 effects():
+        \\    return f(host)
     , "E_EFFECT_BOUND");
 }
 
 test "direct C imports preserve formatting and reject VM registry binding" {
     const source =
-        \\extern def abs(x: i32) -> i32 effects(host)
+        \\extern def abs(host: Host, x: i32) -> i32 effects(host)
         \\
         \\
-        \\def main() -> i64:
-        \\    return i64(abs(-7))
+        \\def main(host: Host) -> i64:
+        \\    return i64(abs(host, -7))
     ;
     var c = try language.Compilation.init(t.allocator, "foreign.my", source);
     defer c.deinit();
@@ -110,4 +110,14 @@ test "direct C imports preserve formatting and reject VM registry binding" {
     var forged = c.code.?;
     forged.functions = functions;
     try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, forged));
+}
+
+// spec: HOST-CAPABILITY
+test "foreign declarations require a leading Host capability parameter" {
+    try reject(
+        \\extern def f(x: i64) -> i64 effects(host)
+    ++ entry, "E_HOST_CAPABILITY");
+    try reject(
+        \\host def f(x: i64) -> i64 effects(host)
+    ++ entry, "E_HOST_CAPABILITY");
 }

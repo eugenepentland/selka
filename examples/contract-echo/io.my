@@ -4,10 +4,10 @@ export byte
 export put
 
 
-host def length() -> int effects(host)
+host def length(host: Host) -> int effects(host)
 
 
-host def byte(index: int) -> u8 effects(host)
+host def byte(host: Host, index: int) -> u8 effects(host)
 
 
-host def put(value: u8) -> int effects(host)
+host def put(host: Host, value: u8) -> int effects(host)

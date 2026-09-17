@@ -7,6 +7,7 @@ pub const Error = error{InvalidBuildArguments};
 pub fn runtimeControl(argument: []const u8) bool {
     if (std.mem.eql(u8, argument, "--restrict")) return true;
     if (std.mem.eql(u8, argument, "--allow-clock")) return true;
+    if (std.mem.eql(u8, argument, "--allow-host")) return true;
     if (std.mem.eql(u8, argument, "--allow-all")) return true;
     if (std.mem.eql(u8, argument, "--gc-stress")) return true;
     if (std.mem.eql(u8, argument, "--print-result")) return true;

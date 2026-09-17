@@ -119,15 +119,17 @@ fn validateHost(allocator: std.mem.Allocator, program: Program, function: Functi
     if (function.signature.parameter_count != function.scope.locals.len) return error.InternalError;
     if (function.policy.c_abi) {
         const foreign = @import("c_abi.zig");
+        if (function.scope.locals.len == 0 or function.scope.locals[0].ty != .host_cap) return error.InternalError;
         if (!foreign.validSymbol(foreign.symbol(function.name)) or !foreign.supported(function.signature.return_type, program.records, true)) return error.InternalError;
-        for (function.scope.locals) |parameter| {
+        for (function.scope.locals[1..]) |parameter| {
             if (parameter.mutable) return error.InternalError;
             if (!foreign.supported(parameter.ty, program.records, false)) return error.InternalError;
         }
         return;
     }
+    if (function.scope.locals.len == 0 or function.scope.locals[0].ty != .host_cap) return error.InternalError;
     try validateHostType(allocator, program.records, function.signature.return_type);
-    for (function.scope.locals) |parameter| {
+    for (function.scope.locals[1..]) |parameter| {
         if (parameter.mutable) return error.InternalError;
         try validateHostType(allocator, program.records, parameter.ty);
     }

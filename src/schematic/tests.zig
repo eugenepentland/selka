@@ -11,16 +11,16 @@ const declarations =
     \\export issue
     \\
     \\
-    \\host def length(file: i64) -> i64 effects(host)
+    \\host def length(host: Host, file: i64) -> i64 effects(host)
     \\
     \\
-    \\host def byte(file: i64, position: i64) -> u8 effects(host)
+    \\host def byte(host: Host, file: i64, position: i64) -> u8 effects(host)
     \\
     \\
-    \\host def put(value: u8) -> i64 effects(host)
+    \\host def put(host: Host, value: u8) -> i64 effects(host)
     \\
     \\
-    \\host def issue(code: i64, file: i64, position: i64) -> i64 effects(host)
+    \\host def issue(host: Host, code: i64, file: i64, position: i64) -> i64 effects(host)
 ;
 const empty: [3][]const u8 = .{ "", "", "" };
 const budget = [_][]const u8{@import("host_native").step_budget};

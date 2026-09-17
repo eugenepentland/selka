@@ -81,7 +81,7 @@ pub fn entry(allocator: std.mem.Allocator, manifest: std.json.Value, provider: b
     return buffer.toOwnedSlice();
 }
 fn grant(name: []const u8) Error![]const u8 {
-    const names = [_][]const u8{ "allocator", "clock_cap", "random_cap", "environment_cap", "filesystem_cap", "network_cap" };
+    const names = [_][]const u8{ "allocator", "clock_cap", "random_cap", "environment_cap", "filesystem_cap", "network_cap", "host_cap" };
     const calls = [_][]const u8{
         "UINT64_C(1)",
         "myl_qbe_grant_external_checked(ctx,0,\"--allow-clock\")",
@@ -89,6 +89,7 @@ fn grant(name: []const u8) Error![]const u8 {
         "myl_qbe_grant_external_checked(ctx,2,\"--allow-env\")",
         "myl_qbe_grant_resource_checked(ctx,0,\"--allow-read=DIR\")",
         "myl_qbe_grant_resource_checked(ctx,1,\"--allow-endpoint\")",
+        "myl_qbe_grant_host_checked(ctx,\"--allow-host\")",
     };
     for (names, calls) |type_name, call| if (std.mem.eql(u8, name, type_name)) return call;
     return error.UnsupportedNativeEntry;

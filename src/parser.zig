@@ -499,6 +499,15 @@ pub const Parser = struct {
         for (parameters.items) |parameter| try parameter_names.append(self.arena.allocator(), parameter.name);
         const mutates = try self.mutatesClause(parameter_names.items, effect_bound);
         if (c_abi and !annotated_return) return self.sink.fail("E_EXTERN_SIGNATURE", name.span, "extern functions require an explicit return type (unit for C void)");
+        // A foreign call is the one ambient authority left, so every `extern def`
+        // and `host def` takes the `Host` capability as a visible first parameter.
+        if (host != null) {
+            if (parameters.items.len == 0 or !std.mem.eql(u8, self.src.text(parameters.items[0].ty), "Host")) return self.sink.fail(
+                "E_HOST_CAPABILITY",
+                if (parameters.items.len == 0) name.span else parameters.items[0].ty,
+                "an extern or host declaration must take `host: Host` as its first parameter",
+            );
+        }
         const body = if (host != null) try self.addStatement(.{ .span = (try self.expect(.semicolon)).span, .data = .{ .block = &.{} } }) else try self.block();
         return .{
             .policy = .{

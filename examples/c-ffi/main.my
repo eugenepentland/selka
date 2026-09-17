@@ -1,10 +1,10 @@
-extern def abs(value: i32) -> i32 effects(host)
+extern def abs(host: Host, value: i32) -> i32 effects(host)
 
 
-extern def floor(value: float) -> float effects(host)
+extern def floor(host: Host, value: float) -> float effects(host)
 
 
-def main() -> int:
-    if floor(3.9) != 3.0:
+def main(host: Host) -> int:
+    if floor(host, 3.9) != 3.0:
         return 1
-    return int(abs(-42))
+    return int(abs(host, -42))

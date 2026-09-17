@@ -10,7 +10,7 @@ const main_source =
     \\    return 0
 ;
 const declaration =
-    \\host def measure(x: i64) -> i64 effects(host)
+    \\host def measure(host: Host, x: i64) -> i64 effects(host)
     \\
     \\
     \\
@@ -23,12 +23,12 @@ fn reject(bytes: []const u8, code: []const u8) !void {
 }
 test "a host call is rejected under an effect bound that withholds host authority" {
     var c = try language.Compilation.init(t.allocator, "host-eval.my", declaration ++
-        \\def bounded() -> i64 effects():
-        \\    return measure(1)
+        \\def bounded(host: Host) -> i64 effects():
+        \\    return measure(host, 1)
         \\
         \\
-        \\def main() -> i64:
-        \\    return bounded()
+        \\def main(host: Host) -> i64:
+        \\    return bounded(host)
     );
     defer c.deinit();
     try t.expectError(error.SourceError, c.check());
@@ -36,15 +36,15 @@ test "a host call is rejected under an effect bound that withholds host authorit
 }
 test "host declarations preserve contextual names formatting and separate external implementations" {
     const bytes = declaration ++
-        \\host def other(x: i64) -> i64 effects(host)
+        \\host def other(host: Host, x: i64) -> i64 effects(host)
         \\
         \\
-        \\def host(x: i64) -> i64:
+        \\def identity(x: i64) -> i64:
         \\    return x
         \\
         \\
         \\def main() -> i64:
-        \\    return host(3)
+        \\    return identity(3)
     ;
     var c = try language.Compilation.init(t.allocator, "host-format.my", bytes);
     defer c.deinit();
@@ -98,28 +98,28 @@ test "host bytecode validation rejects forged bodies signatures entry and effect
 }
 test "host effects propagate through ordinary generic and uncalled helper paths" {
     try reject(declaration ++
-        \\def main() -> i64 effects():
-        \\    return measure(1)
+        \\def main(host: Host) -> i64 effects():
+        \\    return measure(host, 1)
     , "E_EFFECT_BOUND");
     try reject(declaration ++
-        \\def helper() -> i64:
-        \\    return measure(1)
+        \\def helper(host: Host) -> i64:
+        \\    return measure(host, 1)
         \\
         \\
-        \\def f[T](x: T) -> i64 effects():
+        \\def f[T](host: Host, x: T) -> i64 effects():
         \\    _ = x
-        \\    return helper()
+        \\    return helper(host)
     ++ main_source, "E_EFFECT_BOUND");
     try reject(
-        \\host def read() -> i64 effects(host,filesystem)
+        \\host def read(host: Host) -> i64 effects(host,filesystem)
         \\
         \\
-        \\def main() -> i64 effects(host):
-        \\    return read()
+        \\def main(host: Host) -> i64 effects(host):
+        \\    return read(host)
     , "E_EFFECT_BOUND");
     try reject(declaration ++
-        \\def main() -> i64:
-        \\    return measure(True)
+        \\def main(host: Host) -> i64:
+        \\    return measure(host, True)
     , "E_TYPE");
     try reject(
         \\result R:
@@ -127,52 +127,52 @@ test "host effects propagate through ordinary generic and uncalled helper paths"
         \\    err: i64
         \\
         \\
-        \\host def f() -> R effects(host)
+        \\host def f(host: Host) -> R effects(host)
         \\
         \\
-        \\def main() -> i64:
-        \\    value = f()
+        \\def main(host: Host) -> i64:
+        \\    value = f(host)
         \\    return 0
     , "E_RESULT_UNHANDLED");
 }
 // spec: HOST-SOURCE-1
 test "host source declarations require explicit value signatures effects and guest main" {
     try reject(
-        \\host def f() -> i64
+        \\host def f(host: Host) -> i64
     ++ main_source, "E_HOST_EFFECTS");
     try reject(
-        \\host def f() -> i64 effects()
+        \\host def f(host: Host) -> i64 effects()
     ++ main_source, "E_HOST_EFFECTS");
     try reject(
-        \\host def f() -> i64 noalloc
+        \\host def f(host: Host) -> i64 noalloc
     ++ main_source, "E_HOST_EFFECTS");
     try reject(
-        \\host def f[T](x: T) -> T effects(host)
+        \\host def f[T](host: Host, x: T) -> T effects(host)
     ++ main_source, "E_HOST_DECLARATION");
     try reject(
         \\host conversion def f(x: i64) -> i64 effects(host)
     ++ main_source, "E_HOST_DECLARATION");
     try reject(
         \\domain D: i64:
-        \\    host def f() -> i64 effects(host)
+        \\    host def f(host: Host) -> i64 effects(host)
     ++ main_source, "E_HOST_DECLARATION");
     try reject(
-        \\host def f() -> Clock effects(host)
+        \\host def f(host: Host) -> Clock effects(host)
     ++ main_source, "E_HOST_SIGNATURE");
     try reject(
         \\resource File: filesystem
         \\
         \\
-        \\host def f(x: File) -> i64 effects(host)
+        \\host def f(host: Host, x: File) -> i64 effects(host)
     ++ main_source, "E_HOST_SIGNATURE");
     try reject(
-        \\host def f(x: list[i64]) -> i64 effects(host)
+        \\host def f(host: Host, x: list[i64]) -> i64 effects(host)
     ++ main_source, "E_HOST_SIGNATURE");
     try reject(
-        \\host def f() -> i64 effects(host):
+        \\host def f(host: Host) -> i64 effects(host):
         \\    return 1
     ++ main_source, "E_SYNTAX");
     try reject(
-        \\host def main() -> i64 effects(host)
+        \\host def main(host: Host) -> i64 effects(host)
     , "E_MAIN");
 }

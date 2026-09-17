@@ -16,16 +16,16 @@ result Outcome:
     err: i64
 
 
-host def echo(value: Outcome) -> Outcome effects(host)
+host def echo(host: Host, value: Outcome) -> Outcome effects(host)
 
 
 def forward[T](value: T) -> T:
     return value
 
 
-def main() -> i64:
+def main(host: Host) -> i64:
     pair = Pair(tag=D.make(40), bytes=[1u8, 2u8])
-    match echo(Ok(forward[Pair](pair))):
+    match echo(host, Ok(forward[Pair](pair))):
         case Outcome.err(_):
             return -1
         case Outcome.ok(value):

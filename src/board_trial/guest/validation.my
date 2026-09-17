@@ -17,7 +17,7 @@ def add(report: m.Report, position: u64, kind: m.ViolationKind, region: m.Region
     return m.Report(violations=report.violations + 1u64, first=first)
 
 
-def inspect(board: m.Board, item: m.Feature, position: u64, previous: m.Report) -> m.Validation effects(host):
+def inspect(host: Host, board: m.Board, item: m.Feature, position: u64, previous: m.Report) -> m.Validation effects(host):
     report = previous
     rect = bounds.rectangle(item)
     if not bounds.inside(board.outline, rect):
@@ -29,7 +29,7 @@ def inspect(board: m.Board, item: m.Feature, position: u64, previous: m.Report) 
                 pass
             case m.Slot[m.Region].some(region):
                 if policy.applies(item, region):
-                    contact = geometry.contact(rect, region.rect)?
+                    contact = geometry.contact(host, rect, region.rect)?
                     match contact:
                         case m.Contact.clear:
                             pass
@@ -39,7 +39,7 @@ def inspect(board: m.Board, item: m.Feature, position: u64, previous: m.Report) 
     return Ok(report)
 
 
-def validate(board: m.Board) -> m.Validation effects(host):
+def validate(host: Host, board: m.Board) -> m.Validation effects(host):
     _ = checks.preflight(board)?
     empty: m.Slot[m.Violation] = m.Slot.none
     report = m.Report(violations=0u64, first=empty)
@@ -49,6 +49,6 @@ def validate(board: m.Board) -> m.Validation effects(host):
             case m.Slot[m.Feature].none:
                 pass
             case m.Slot[m.Feature].some(item):
-                report = inspect(board, item, i, report)?
+                report = inspect(host, board, item, i, report)?
         i = i + 1u64
     return Ok(report)
