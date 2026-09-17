@@ -154,13 +154,23 @@ pub const Compilation = struct {
 
     /// Lazily lower the checked program into bytecode owned by the compilation.
     pub fn emit(self: *Compilation) EmitError!void {
+        return self.emitWithOptions(false);
+    }
+
+    /// Lower with an explicit `debug` policy: a ReleaseFast build drops the nodes.
+    pub fn emitWithOptions(self: *Compilation, drop_debug: bool) EmitError!void {
         try self.check();
-        if (self.code == null) self.code = try lower.lower(self.arena.allocator(), self.program.?);
+        if (self.code == null) self.code = try lower.lowerWith(self.arena.allocator(), self.program.?, drop_debug);
     }
 
     /// Allocate independently compilable scalar QBE units after full checking.
     pub fn emitQbe(self: *Compilation, allocator: std.mem.Allocator) EmitNativeError![]u8 {
-        try self.emit();
+        return self.emitQbeWithOptions(allocator, false);
+    }
+
+    /// Emit QBE units under an explicit `debug` policy.
+    pub fn emitQbeWithOptions(self: *Compilation, allocator: std.mem.Allocator, drop_debug: bool) EmitNativeError![]u8 {
+        try self.emitWithOptions(drop_debug);
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
         return @import("qbe.zig").generate(allocator, self.code.?, self.src, &sink);

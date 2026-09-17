@@ -132,6 +132,8 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
         } else if (!std.mem.eql(u8, parsed.cache, options.default_cache)) {
             try arguments.append(a, try std.fmt.allocPrint(a, "--cache-dir={s}", .{parsed.cache}));
         }
+        // A ReleaseFast `build` drops `debug` lines in lowering; `run` keeps them.
+        if (!parsed.run and std.mem.eql(u8, parsed.mode, "ReleaseFast")) try arguments.append(a, "--drop-debug");
         if (selectFile(parsed.link_arguments)) |path| {
             try arguments.append(a, try std.fmt.allocPrint(a, "--select-file={s}", .{path}));
             // Forward the work-report request for selective test builds so native-test

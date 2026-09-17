@@ -432,22 +432,34 @@ test "insert delete and reorder unrelated declarations preserve function and typ
 test "a negative name lookup misses when a declaration is introduced later" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
-    const base = "def main() -> i64:\n    print(\"hi\")\n    return 1\n";
-    try compare(t.allocator, &cache, base, 1);
+    // `debug` is a reserved builtin (a recorded negative lookup) and, unlike a
+    // stream write, leaves the native run's stderr clean, so this test checks
+    // resolution without executing a program.
+    const base = "def main() -> i64:\n    debug(\"hi\")\n    return 1\n";
+    var cached = try language.Compilation.init(t.allocator, "edited.my", base);
+    defer cached.deinit();
+    var fresh = try language.Compilation.init(t.allocator, "edited.my", base);
+    defer fresh.deinit();
+    try cached.checkWithCache(&cache);
+    try fresh.check();
     const introduced =
-        \\def print(message: str) -> None:
+        \\def debug(message: str) -> None:
         \\    _ = message
         \\
         \\
         \\def main() -> i64:
-        \\    print("hi")
+        \\    debug("hi")
         \\    return 1
     ;
     const before = cache.statistics.reused;
-    try compare(t.allocator, &cache, introduced, 1);
-    // `print` used to resolve to the reserved builtin (a recorded negative
-    // lookup); introducing a declaration changes resolution, so `main` misses
-    // even though its body bytes are unchanged.
+    var changed = try language.Compilation.init(t.allocator, "edited.my", introduced);
+    defer changed.deinit();
+    var changed_fresh = try language.Compilation.init(t.allocator, "edited.my", introduced);
+    defer changed_fresh.deinit();
+    try changed.checkWithCache(&cache);
+    try changed_fresh.check();
+    // Introducing the declaration changes resolution, so `main` misses even
+    // though its body bytes are unchanged.
     try t.expectEqual(before, cache.statistics.reused);
 }
 

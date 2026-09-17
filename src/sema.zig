@@ -1228,14 +1228,16 @@ const Checker = struct {
     /// The destination of one `print`-shaped call: an ambient sink, a runtime
     /// `Stream` receiver, or the `debug` stderr spelling.
     const PrintTarget = struct { sink: typed.Sink = .stdout, stream: ?typed.NodeId = null, debug: bool = false };
-    /// `print`/`eprint` are reserved unless a local binding or declared function shadows the spelling.
+    /// `print`/`eprint` without a receiver are gone: once no local binding,
+    /// declared function or imported name shadows the spelling, they name
+    /// `E_OUTPUT_CAPABILITY` rather than an ambient sink.
     fn outputBuiltin(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?typed.Sink {
         if (call.owner != null or call.type_arguments.len != 0) return null;
         const name = self.src.text(call.name);
-        const sink: typed.Sink = if (std.mem.eql(u8, name, "print")) .stdout else if (std.mem.eql(u8, name, "eprint")) .stderr else return null;
+        if (!std.mem.eql(u8, name, "print") and !std.mem.eql(u8, name, "eprint")) return null;
         if (self.active.contains(name) or self.functions.contains(name)) return null;
         if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return null;
-        return sink;
+        return self.sink.fail(io_builtins.output_capability_code, call.name, io_builtins.output_capability_message);
     }
     fn checkPrintOperand(self: *Checker, id: ast.NodeId, expected_text: bool) Error!typed.NodeId {
         const value = self.resolved[@backingInt(id)].?;

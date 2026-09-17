@@ -17,11 +17,11 @@ def trace_requested(env: Environment) -> bool:
         case Lookup.err(code):
             return code < 0
 
-def main(args: list[str], fs: Filesystem, env: Environment) -> Result[int, str]:
+def main(args: list[str], fs: Filesystem, env: Environment, out: Stream, err: Stream) -> Result[int, str]:
     if len(args) != 1:
         return Err("usage: boundary-cli <source.my>")
     if trace_requested(env):
-        eprint("reading", args[0])
+        err.print("reading", args[0])
     source = read_text(fs, args[0])?
-    print(summary.render(source))
+    out.print(summary.render(source))
     return Ok(0)

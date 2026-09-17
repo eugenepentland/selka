@@ -21,9 +21,11 @@ pub fn describeWithDomains(allocator: std.mem.Allocator, catalog: *native.Catalo
     errdefer types.deinit(allocator);
     for (0..typed.Type.record_base + catalog.records.len) |index| {
         const ty: typed.Type = @fromBackingInt(index);
+        const ordinary = ty.isInteger() or ty == .bool;
+        const injected_stream = codecs and ty == .stream_cap;
         if (ty.isAggregate()) {
             if (!flags[ty.recordIndex()]) continue;
-        } else if (!ty.isInteger() and ty != .bool) continue;
+        } else if (!ordinary and !injected_stream) continue;
         const layout = try catalog.layout(ty);
         if (layout.trace or layout.drop) continue;
         var item: Type = .{ .name = typed.typeName(ty, catalog.records), .kind = "scalar", .size = layout.size, .alignment = layout.alignment };

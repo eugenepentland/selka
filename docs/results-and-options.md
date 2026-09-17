@@ -26,12 +26,12 @@ def divide(numerator: int, denominator: int) -> Result[int, str]:
         return Err("division by zero")
     return Ok(numerator // denominator)
 
-def main() -> int:
+def main(out: Stream) -> int:
     match divide(21, 3):
         case Ok(value):
-            print(value)
+            out.print(value)
         case Err(message):
-            print(message)
+            out.print(message)
     ignored = divide(1, 0)
     return 0
 ```

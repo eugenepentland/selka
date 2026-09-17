@@ -35,8 +35,8 @@ def area(width: int, height: int) -> int:
 def report(width: int, height: int) -> int noalloc:
     return area(width, height)
 
-def main() -> int effects(output):
-    print(report(6, 7))
+def main(out: Stream) -> int effects(output):
+    out.print(report(6, 7))
     return 0
 ```
 
@@ -143,10 +143,10 @@ shared, with no overlap diagnostic.
 def replace_first(values: list[int], replacement: int) -> None effects(mutation) mutates(values):
     values[0] = replacement
 
-def main() -> int effects(managed_allocation, output):
+def main(out: Stream) -> int effects(managed_allocation, output):
     values = [1]
     replace_first(values, 7)
-    print(values[0])
+    out.print(values[0])
     return 0
 ```
 
@@ -176,11 +176,11 @@ def set_first(values: list[int], replacement: int) -> None effects(mutation) mut
     values[0] = replacement
 
 
-def main() -> int effects(managed_allocation, output):
+def main(out: Stream) -> int effects(managed_allocation, output):
     shared = [1, 2]
     alias = shared
     set_first(alias, 5)
-    print(shared[0])
+    out.print(shared[0])
     return 0
 ```
 
@@ -191,13 +191,13 @@ the copy is still the same object:
 ```mylang
 # doc: expect 1
 # doc: expect 9
-def main() -> int effects(managed_allocation, output):
+def main(out: Stream) -> int effects(managed_allocation, output):
     original = [[1]]
     copy = original.copy()
     copy.append([2])
     copy[0][0] = 9
-    print(len(original))
-    print(original[0][0])
+    out.print(len(original))
+    out.print(original[0][0])
     return 0
 ```
 
@@ -329,12 +329,12 @@ def doubled(values: list[int]) -> list[int] effects(managed_allocation):
     return out
 
 
-def main() -> int effects(managed_allocation, output):
+def main(out: Stream) -> int effects(managed_allocation, output):
     values = [1, 2]
     extra = doubled(values)
     extra[0] = 9
-    print(values[0])
-    print(extra[0])
+    out.print(values[0])
+    out.print(extra[0])
     return 0
 ```
 

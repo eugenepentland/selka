@@ -159,12 +159,13 @@ pub fn testSchema(allocator: std.mem.Allocator, contracts: std.json.Value) Error
 }
 
 /// Count the top-level parameters in a canonical `def(...)->T` signature, so a
-/// case that passes no `arguments` can be rejected before execution.
+/// case that passes no `arguments` can be rejected before execution. A declared
+/// `Stream` is injected by the runner, so it needs no cases-file argument.
 fn declaredParameterCount(signature: []const u8) usize {
     const open = std.mem.indexOfScalar(u8, signature, '(') orelse return 0;
     var depth: usize = 0;
     var count: usize = 0;
-    var present: bool = false;
+    var start = open + 1;
     var index = open;
     while (index < signature.len) : (index += 1) {
         switch (signature[index]) {
@@ -172,18 +173,26 @@ fn declaredParameterCount(signature: []const u8) usize {
             ')' => {
                 if (depth == 0) return 0;
                 depth -= 1;
-                if (depth == 0) return if (present) count + 1 else 0;
+                if (depth == 0) {
+                    if (countsAsArgument(signature[start..index])) count += 1;
+                    return count;
+                }
             },
             ',' => if (depth == 1) {
-                count += 1;
-                present = true;
+                if (countsAsArgument(signature[start..index])) count += 1;
+                start = index + 1;
             },
-            else => {
-                if (depth == 1 and !std.ascii.isWhitespace(signature[index])) present = true;
-            },
+            else => {},
         }
     }
     return 0;
+}
+
+/// Whether one top-level parameter must appear in a case's `arguments`.
+fn countsAsArgument(part: []const u8) bool {
+    const trimmed = std.mem.trim(u8, part, " \t\r\n");
+    if (trimmed.len == 0) return false;
+    return !std.mem.endsWith(u8, trimmed, ":stream_cap");
 }
 
 /// Recover the declared result spelling from a canonical `def(...)->T` string by

@@ -74,7 +74,12 @@ pub const Compilation = struct {
     }
     /// Allocate independently compilable scalar QBE units after full project checking.
     pub fn emitQbe(self: *Compilation, allocator: @import("std").mem.Allocator) EmitNativeError![]u8 {
-        try self.emit();
+        return self.emitQbeWithOptions(allocator, false);
+    }
+
+    /// Emit QBE units under an explicit `debug` policy.
+    pub fn emitQbeWithOptions(self: *Compilation, allocator: @import("std").mem.Allocator, drop_debug: bool) EmitNativeError![]u8 {
+        try self.emitWithOptions(drop_debug);
         const roots = try self.exportRoots(allocator);
         defer allocator.free(roots);
         const schema = try self.renderSchema(allocator, roots);
@@ -236,7 +241,12 @@ pub const Compilation = struct {
     }
     /// Lazily lower the checked project into its retained bytecode representation.
     pub fn emit(self: *Compilation) EmitError!void {
+        return self.emitWithOptions(false);
+    }
+
+    /// Lower with an explicit `debug` policy: a ReleaseFast build drops the nodes.
+    pub fn emitWithOptions(self: *Compilation, drop_debug: bool) EmitError!void {
         try self.check();
-        if (self.code == null) self.code = try @import("lower.zig").lower(self.index.project.arena.allocator(), self.program.?);
+        if (self.code == null) self.code = try @import("lower.zig").lowerWith(self.index.project.arena.allocator(), self.program.?, drop_debug);
     }
 };

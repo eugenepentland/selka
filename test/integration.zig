@@ -61,10 +61,10 @@ test "CLI managed constants import run build installed and invalidate warm cache
         \\import constants
         \\def read[T]() -> str effects(managed_allocation):
         \\    return constants.TEXT
-        \\def main() -> int:
-        \\    print(read[int]())
-        \\    print(len(constants.DATA))
-        \\    print(constants.DATA[1])
+        \\def main(out: Stream) -> int:
+        \\    out.print(read[int]())
+        \\    out.print(len(constants.DATA))
+        \\    out.print(constants.DATA[1])
         \\    return 0
     });
     const original = "module constants\nexport TEXT\nexport DATA\nconst TEXT: str = \"hé🙂\"\nconst DATA: bytes = b\"\\x00\\xff\"\n";
@@ -637,10 +637,10 @@ test "CLI maps Result main ok and err to status codes and one diagnostic" {
 // spec: EPRINT-1
 test "CLI separates eprint stderr from print stdout byte-exactly" {
     const program =
-        \\def main() -> int:
-        \\    print("out", 1)
-        \\    eprint("err", 7, sep="-", end="!\n")
-        \\    eprint()
+        \\def main(out: Stream, err: Stream) -> int:
+        \\    out.print("out", 1)
+        \\    err.print("err", 7, sep="-", end="!\n")
+        \\    err.print()
         \\    return 0
     ;
     const outcome = try runFixture("run", program, &.{});
@@ -656,10 +656,10 @@ test "CLI forwards guest arguments after -- for run and build --run" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     const program =
-        \\def main(args: list[str]) -> int:
-        \\    print("count", len(args))
+        \\def main(args: list[str], out: Stream) -> int:
+        \\    out.print("count", len(args))
         \\    for value in args:
-        \\        print("[" + value + "]")
+        \\        out.print("[" + value + "]")
         \\    return 0
     ;
     try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = program });
@@ -751,8 +751,8 @@ test "build --run detects module projects and installed binaries receive the sam
         \\module main
         \\import helper
         \\
-        \\def main(args: list[str]) -> int:
-        \\    print(helper.render(args))
+        \\def main(args: list[str], out: Stream) -> int:
+        \\    out.print(helper.render(args))
         \\    return 0
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
@@ -3028,10 +3028,10 @@ test "CLI directory grants scope the file surface and separate reading from writ
     const write_grant = try std.fmt.allocPrint(testing.allocator, "--allow-write={s}", .{directory});
     defer testing.allocator.free(write_grant);
     const program =
-        \\def main(fs: Filesystem) -> int:
-        \\    print(read_text(fs, "notes.txt"))
-        \\    print(write_text(fs, "copy.txt", "beta\n"))
-        \\    print(read_text(fs, "../escape"))
+        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\    out.print(read_text(fs, "notes.txt"))
+        \\    out.print(write_text(fs, "copy.txt", "beta\n"))
+        \\    out.print(read_text(fs, "../escape"))
         \\    return 0
     ;
     // These fixtures pass --print-result, so the entry point's `0` follows the program's output.
@@ -3047,8 +3047,8 @@ test "CLI directory grants scope the file surface and separate reading from writ
 // spec-case: IO-1
 test "CLI streams program output and reports the entry result only on request" {
     const program =
-        \\def main() -> int:
-        \\    print("streamed")
+        \\def main(out: Stream) -> int:
+        \\    out.print("streamed")
         \\    return 7
     ;
     var temporary = testing.tmpDir(.{});
@@ -3075,18 +3075,18 @@ test "CLI resolves the Python capability spellings inside projects that import m
         \\import time
         \\import random
         \\
-        \\def main(clock: Clock, rng: Entropy, fs: Filesystem) -> int:
+        \\def main(clock: Clock, rng: Entropy, fs: Filesystem, out: Stream) -> int:
         \\    match time.now(clock):
         \\        case Ok(instant):
-        \\            print("clock", instant.unix_nanoseconds - instant.unix_nanoseconds)
+        \\            out.print("clock", instant.unix_nanoseconds - instant.unix_nanoseconds)
         \\        case Err(message):
-        \\            print(message)
+        \\            out.print(message)
         \\    match random.from_entropy(rng):
         \\        case Ok(stream):
-        \\            print("entropy", len(stream.state))
+        \\            out.print("entropy", len(stream.state))
         \\        case Err(message):
-        \\            print(message)
-        \\    print(exists(fs, "notes.txt"))
+        \\            out.print(message)
+        \\    out.print(exists(fs, "notes.txt"))
         \\    return 0
     ;
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = entry });
@@ -3119,10 +3119,10 @@ test "CLI grants every capability by default and resolves paths against the work
     defer testing.allocator.free(anchor);
     const directory = std.fs.path.dirname(anchor).?;
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
-        \\def main(fs: Filesystem) -> int:
-        \\    print(read_text(fs, "notes.txt"))
-        \\    print(write_text(fs, "made.txt", "beta\n"))
-        \\    print(read_text(fs, "../escape"))
+        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\    out.print(read_text(fs, "notes.txt"))
+        \\    out.print(write_text(fs, "made.txt", "beta\n"))
+        \\    out.print(read_text(fs, "../escape"))
         \\    return 0
     });
     const entry = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
@@ -3149,7 +3149,7 @@ test "CLI grants every capability by default and resolves paths against the work
     defer testing.allocator.free(written);
     try testing.expectEqualStrings("beta\n", written);
     // An absolute path names itself, and `--allow-*` without `--restrict` narrows nothing.
-    const absolute = try std.fmt.allocPrint(testing.allocator, "def main(fs: Filesystem) -> int:\n    print(read_text(fs, \"{s}\"))\n    return 0\n", .{anchor});
+    const absolute = try std.fmt.allocPrint(testing.allocator, "def main(fs: Filesystem, out: Stream) -> int:\n    out.print(read_text(fs, \"{s}\"))\n    return 0\n", .{anchor});
     defer testing.allocator.free(absolute);
     try invokeOptions("run", absolute, &.{"--allow-read=."}, 0, "Ok('alpha\\n')\n0\n", "");
 }
@@ -5758,18 +5758,18 @@ const guest_output_program =
     \\export test_assert
     \\
     \\
-    \\def test_chatty() -> bool effects(output, managed_allocation):
-    \\    print("debug-marker")
+    \\def test_chatty(out: Stream) -> bool effects(output, managed_allocation):
+    \\    out.print("debug-marker")
     \\    return True
     \\
     \\
-    \\def test_failing() -> bool effects(output, managed_allocation):
-    \\    print("debug-marker")
+    \\def test_failing(out: Stream) -> bool effects(output, managed_allocation):
+    \\    out.print("debug-marker")
     \\    return False
     \\
     \\
-    \\def test_assert() -> bool effects(output, managed_allocation):
-    \\    print("debug-marker")
+    \\def test_assert(out: Stream) -> bool effects(output, managed_allocation):
+    \\    out.print("debug-marker")
     \\    assert 1 == 2, "one equals two"
     \\    return True
     \\

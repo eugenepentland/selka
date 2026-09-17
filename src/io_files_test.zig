@@ -72,23 +72,23 @@ fn reject(text: []const u8, code: []const u8) !void {
 // spec: IO-7
 test "IO-7 with open binds a handle whose reads follow the declared mode" {
     try expectPrinted(
-        \\def main(fs: Filesystem) -> int:
+        \\def main(fs: Filesystem, out: Stream) -> int:
         \\    with open(fs, "notes.txt", "rb") as f:
-        \\        print(f.read())
+        \\        out.print(f.read())
         \\    return 0
     , "b'alpha\\nbeta\\n'\n");
     try expectPrinted(
-        \\def main(fs: Filesystem) -> int:
+        \\def main(fs: Filesystem, out: Stream) -> int:
         \\    with open(fs, "notes.txt", "r") as f:
-        \\        print(f.read(5))
-        \\        print(f.readline())
+        \\        out.print(f.read(5))
+        \\        out.print(f.readline())
         \\    return 0
     , "alpha\n\n\n");
     try expectPrinted(
-        \\def main(fs: Filesystem) -> int:
+        \\def main(fs: Filesystem, out: Stream) -> int:
         \\    with open(fs, "notes.txt", "r") as f:
         \\        for line in f.readlines():
-        \\            print(len(line))
+        \\            out.print(len(line))
         \\    return 0
     , "6\n5\n");
 }
@@ -99,9 +99,9 @@ test "IO-8 writing modes create truncate and append through a write grant" {
     try sandbox.init(true);
     defer sandbox.deinit();
     const program =
-        \\def main(fs: Filesystem) -> int:
+        \\def main(fs: Filesystem, out: Stream) -> int:
         \\    with open(fs, "out.txt", "w") as f:
-        \\        print(f.write("first\n"))
+        \\        out.print(f.write("first\n"))
         \\        f.flush()
         \\    with open(fs, "out.txt", "a") as f:
         \\        _ = f.write("second\n")
@@ -123,18 +123,18 @@ test "IO-9 whole-path helpers report provider failures as readable Result errors
     defer sandbox.deinit();
     try sandbox.temporary.dir.writeFile(t.io, .{ .sub_path = "notes.txt", .data = "alpha\n" });
     const program =
-        \\def main(fs: Filesystem) -> int:
-        \\    print(read_text(fs, "notes.txt"))
-        \\    print(read_file(fs, "notes.txt"))
-        \\    print(exists(fs, "notes.txt"), exists(fs, "absent.txt"))
-        \\    print(write_text(fs, "copy.txt", "beta\n"))
-        \\    print(read_text(fs, "copy.txt"))
-        \\    print(mkdir(fs, "sub"))
-        \\    print(listdir(fs, "sub"))
-        \\    print(remove(fs, "copy.txt"))
-        \\    print(exists(fs, "copy.txt"))
-        \\    print(read_text(fs, "absent.txt"))
-        \\    print(read_text(fs, "../escape"))
+        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\    out.print(read_text(fs, "notes.txt"))
+        \\    out.print(read_file(fs, "notes.txt"))
+        \\    out.print(exists(fs, "notes.txt"), exists(fs, "absent.txt"))
+        \\    out.print(write_text(fs, "copy.txt", "beta\n"))
+        \\    out.print(read_text(fs, "copy.txt"))
+        \\    out.print(mkdir(fs, "sub"))
+        \\    out.print(listdir(fs, "sub"))
+        \\    out.print(remove(fs, "copy.txt"))
+        \\    out.print(exists(fs, "copy.txt"))
+        \\    out.print(read_text(fs, "absent.txt"))
+        \\    out.print(read_text(fs, "../escape"))
         \\    return 0
     ;
     const outcome = try sandbox.run(module, program);
@@ -160,10 +160,10 @@ test "IO-10 a read-only grant denies every writing mode" {
     try sandbox.init(false);
     defer sandbox.deinit();
     const program =
-        \\def main(fs: Filesystem) -> int:
-        \\    print(write_text(fs, "out.txt", "x"))
-        \\    print(mkdir(fs, "sub"))
-        \\    print(remove(fs, "out.txt"))
+        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\    out.print(write_text(fs, "out.txt", "x"))
+        \\    out.print(mkdir(fs, "sub"))
+        \\    out.print(remove(fs, "out.txt"))
         \\    return 0
     ;
     const outcome = try sandbox.run(module, program);
@@ -212,9 +212,9 @@ test "IO-11 a with scope closes its file on every exit including traps and propa
     try t.expectEqual(@as(i64, 6 + 299 * 6), outcome.value);
     // Explicit close releases the handle before the scope ends.
     try expectPrinted(
-        \\def main(fs: Filesystem) -> int:
+        \\def main(fs: Filesystem, out: Stream) -> int:
         \\    with open(fs, "notes.txt", "r") as f:
-        \\        print(len(f.read()))
+        \\        out.print(len(f.read()))
         \\        f.close()
         \\    return 0
     , "11\n");

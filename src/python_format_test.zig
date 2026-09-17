@@ -101,21 +101,21 @@ const rendered_holes =
     \\        return Err("nope")
     \\    return Ok(n)
     \\
-    \\def main() -> int:
+    \\def main(out: Stream) -> int:
     \\    score = 0
     \\    values = [1, 2]
     \\    counts: dict[str, int] = {"k": 1}
     \\    spot = Point(x=1, y=2)
     \\    found: Option[int] = Some(4)
     \\    raw = b"ab"
-    \\    print(values, f"{values}")
-    \\    print(counts, f"{counts}")
-    \\    print(spot, f"{spot}")
-    \\    print(Colour.green, f"{Colour.green}")
-    \\    print(pick(3), f"{pick(3)}")
-    \\    print(pick(-1), f"{pick(-1)}")
-    \\    print(found, f"{found}")
-    \\    print(raw, f"{raw}")
+    \\    out.print(values, f"{values}")
+    \\    out.print(counts, f"{counts}")
+    \\    out.print(spot, f"{spot}")
+    \\    out.print(Colour.green, f"{Colour.green}")
+    \\    out.print(pick(3), f"{pick(3)}")
+    \\    out.print(pick(-1), f"{pick(-1)}")
+    \\    out.print(found, f"{found}")
+    \\    out.print(raw, f"{raw}")
     \\    if f"{values}" == "[1, 2]":
     \\        score = score + 1
     \\    if f"{counts}" == "{'k': 1}":

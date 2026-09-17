@@ -254,8 +254,8 @@ test "a published native executable carries neither debug information nor a symb
 
 test "native execution reports entry results, guest output and located traps" {
     const source =
-        \\def main() -> i64:
-        \\    print("hello")
+        \\def main(out: Stream) -> i64:
+        \\    out.print("hello")
         \\    return 7
     ;
     var compilation = try language.Compilation.init(std.testing.allocator, "run.my", source);

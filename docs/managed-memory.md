@@ -8,11 +8,11 @@ they are written.
 
 ```mylang
 # doc: expect 42
-def main() -> int:
+def main(out: Stream) -> int:
     values: list[int] = []
     alias = values
     alias.append(42)
-    print(values[0])
+    out.print(values[0])
     return 0
 ```
 

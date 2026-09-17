@@ -7,7 +7,9 @@ const typed = @import("typed.zig");
 pub const Error = error{ OutOfMemory, InternalError };
 
 /// Exact scalar ABI signature; unsupported public signatures remain discoverable.
-pub const Export = struct { name: []const u8, parameters: []const []const u8, result: []const u8, scalar: bool, references: bool };
+/// `parameter_names` lets the adapter inject a `Stream` sentinel by parameter
+/// name even though the type itself travels as an opaque word.
+pub const Export = struct { name: []const u8, parameters: []const []const u8, parameter_names: []const []const u8, result: []const u8, scalar: bool, references: bool };
 
 /// Return null for implementation-private functions and concrete generic instances.
 pub fn describe(allocator: std.mem.Allocator, program: bytecode.Program, index: usize, roots: []const typed.FunctionId) Error!?Export {
@@ -19,12 +21,14 @@ pub fn describe(allocator: std.mem.Allocator, program: bytecode.Program, index: 
     if (!exported) return null;
     const function = program.functions[index];
     const parameters = try allocator.alloc([]const u8, function.signature.parameter_count);
+    const parameter_names = try allocator.alloc([]const u8, function.signature.parameter_count);
     var scalar = scalarType(function.signature.return_type);
-    for (function.scope.locals[0..function.signature.parameter_count], parameters) |local, *parameter| {
+    for (function.scope.locals[0..function.signature.parameter_count], parameters, parameter_names) |local, *parameter, *name| {
         parameter.* = typed.typeName(local.ty, program.records);
+        name.* = local.name;
         if (!scalarType(local.ty)) scalar = false;
     }
-    return .{ .name = function.name, .parameters = parameters, .result = typed.typeName(function.signature.return_type, program.records), .scalar = scalar, .references = false };
+    return .{ .name = function.name, .parameters = parameters, .parameter_names = parameter_names, .result = typed.typeName(function.signature.return_type, program.records), .scalar = scalar, .references = false };
 }
 fn scalarType(ty: typed.Type) bool {
     return ty.isInteger() or ty == .bool;

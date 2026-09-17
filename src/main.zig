@@ -393,7 +393,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .@"report-project-quality",
         => unreachable,
         .@"emit-qbe" => {
-            const generated = emitMeasuredNative(init, &compilation) catch |err| switch (err) {
+            const generated = emitMeasuredNative(init, &compilation, parsed.drop_debug) catch |err| switch (err) {
                 error.SourceError => {
                     try report(init, &compilation);
                     return 1;
@@ -477,7 +477,7 @@ fn executeRun(init: Context, compilation: *language.Compilation, parsed: Parsed)
     };
     if (compilation.code) |code| recordLoweredCount(init, code.functions.len);
     if (grants.ungranted(compilation.code.?, parsed.grants)) |flag| return reportUngranted(init, flag);
-    const manifest = emitMeasuredNative(init, compilation) catch |err| switch (err) {
+    const manifest = emitMeasuredNative(init, compilation, false) catch |err| switch (err) {
         error.SourceError => {
             try report(init, compilation);
             return 1;
@@ -571,6 +571,8 @@ const Parsed = struct {
     max_memory: ?u64,
     /// Internal selective native emission input; one qualified function per line.
     select_file: ?[]const u8,
+    /// Internal `--drop-debug`: a ReleaseFast build omits `debug` lines.
+    drop_debug: bool,
     /// `--no-cache` disables all persistent frontend reuse for this command.
     no_cache: bool,
     /// `--cache-dir` selects the cache root; null uses the default location.
@@ -663,6 +665,7 @@ const ArgumentParser = struct {
     no_cache: bool = false,
     cache_dir: ?[]const u8 = null,
     select_file: ?[]const u8 = null,
+    drop_debug: bool = false,
     saw_min: bool = false,
     saw_population: bool = false,
     saw_work: bool = false,
@@ -807,6 +810,9 @@ const ArgumentParser = struct {
         } else if (std.mem.startsWith(u8, arg, select_file_prefix)) {
             if (self.command != .@"emit-project-qbe" or self.select_file != null or arg.len == select_file_prefix.len) return error.Usage;
             self.select_file = arg[select_file_prefix.len..];
+        } else if (std.mem.eql(u8, arg, "--drop-debug")) {
+            if ((self.command != .@"emit-qbe" and self.command != .@"emit-project-qbe") or self.drop_debug) return error.Usage;
+            self.drop_debug = true;
         } else return false;
         return true;
     }
@@ -861,6 +867,7 @@ const ArgumentParser = struct {
             .no_cache = self.no_cache,
             .cache_dir = self.cache_dir,
             .select_file = self.select_file,
+            .drop_debug = self.drop_debug,
         };
     }
 };
@@ -1234,7 +1241,7 @@ fn flushOutput(stdout: *std.Io.File.Writer) void {
 /// Build the checked project with the native backend and run its entry point.
 fn runProjectProgram(init: Context, compilation: *language.project_compile.Compilation, parsed: Parsed) !u8 {
     if (grants.ungranted(compilation.code.?, parsed.grants)) |flag| return reportUngranted(init, flag);
-    const manifest = emitMeasuredNative(init, compilation) catch |err| switch (err) {
+    const manifest = emitMeasuredNative(init, compilation, false) catch |err| switch (err) {
         error.SourceError => {
             try reportProject(init, compilation);
             return 1;
@@ -1246,8 +1253,8 @@ fn runProjectProgram(init: Context, compilation: *language.project_compile.Compi
     return runNative(init, parsed, manifest);
 }
 
-fn emitProjectNative(init: Context, compilation: *language.project_compile.Compilation, select_file: ?[]const u8) !?[]u8 {
-    const generated = (if (select_file) |path| emitMeasuredSelectedNative(init, compilation, path) else emitMeasuredNative(init, compilation)) catch |err| switch (err) {
+fn emitProjectNative(init: Context, compilation: *language.project_compile.Compilation, select_file: ?[]const u8, drop_debug: bool) !?[]u8 {
+    const generated = (if (select_file) |path| emitMeasuredSelectedNative(init, compilation, path) else emitMeasuredNative(init, compilation, drop_debug)) catch |err| switch (err) {
         error.SourceError => {
             try reportProject(init, compilation);
             return null;
@@ -1353,7 +1360,7 @@ fn nativeTestCompileReply(init: Context, action: []const u8, status: u8, failure
 fn emitRequestedOutput(init: Context, compilation: *language.project_compile.Compilation, parsed: Parsed) !?[]u8 {
     return switch (parsed.command) {
         .@"native-test-graph" => try emitNativeTestFacts(init, compilation),
-        .@"emit-project-qbe" => (try emitProjectNative(init, compilation, parsed.select_file)) orelse error.SourceError,
+        .@"emit-project-qbe" => (try emitProjectNative(init, compilation, parsed.select_file, parsed.drop_debug)) orelse error.SourceError,
         .@"schema-project" => blk: {
             try reportProject(init, compilation);
             break :blk if (parsed.schema_report)
@@ -2248,12 +2255,12 @@ fn featureReport(init: std.process.Init) !void {
     try std.Io.File.stdout().writeStreamingAll(init.io, "\n");
 }
 
-fn emitMeasuredNative(init: Context, compilation: anytype) ![]u8 {
+fn emitMeasuredNative(init: Context, compilation: anytype, drop_debug: bool) ![]u8 {
     init.timings.begin(lowering_phase, false);
-    try compilation.emit();
+    try compilation.emitWithOptions(drop_debug);
     if (compilation.code) |code| recordLoweredCount(init, code.functions.len);
     init.timings.begin("native_emission", false);
-    const generated = try compilation.emitQbe(init.gpa);
+    const generated = try compilation.emitQbeWithOptions(init.gpa, drop_debug);
     // `qbe-units-v1` emits one independently linkable fragment per lowered
     // function, so the fragment count is observed at the emission site.
     if (compilation.code) |code| setWork(init, .emitted_fragments, code.functions.len, 0);
