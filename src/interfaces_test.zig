@@ -93,6 +93,41 @@ test "module interfaces resolve nominal identities and exported domain methods w
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
+
+// spec: INTERFACE-SIGNATURE-1
+test "default interface listing renders the whole signature with Python capability spellings" {
+    const body =
+        \\module main
+        \\export main
+        \\export bump
+        \\
+        \\
+        \\def main(fs: Filesystem, clock: Clock) -> int:
+        \\    return 0
+        \\
+        \\
+        \\def bump(values: list[int]) -> int effects(mutation) mutates(values):
+        \\    values[0] = values[0] + 1
+        \\    return values[0]
+    ;
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = body }} };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try project_compile_module.Compilation.init(&index);
+    try compilation.check();
+    index.program = compilation.program.?;
+    const text = try index.render(t.allocator);
+    defer t.allocator.free(text);
+    try t.expect(std.mem.indexOf(u8, text, "def(fs:Filesystem,clock:Clock)->i64") != null);
+    try t.expect(std.mem.indexOf(u8, text, "filesystem_cap") == null);
+    try t.expect(std.mem.indexOf(u8, text, "clock_cap") == null);
+    try t.expect(std.mem.indexOf(u8, text, "effects()") != null);
+    try t.expect(std.mem.indexOf(u8, text, "mutates(values)") != null);
+    try t.expect(std.mem.indexOf(u8, text, "ceiling(mutation)") != null);
+}
+
 fn reject(body: []const u8, code: []const u8) !void {
     var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = body }, .{ .path = units_path, .bytes = units } } };
     var project = graph.Project.init(t.allocator);

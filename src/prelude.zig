@@ -56,6 +56,20 @@ pub fn reservedType(name: []const u8) ?typed.Type {
     }
     return null;
 }
+/// Python spelling of a reserved capability or open-handle type, or null for
+/// an ordinary scalar whose internal tag is already its source spelling.
+pub fn reservedTypeName(ty: typed.Type) ?[]const u8 {
+    return switch (ty) {
+        .filesystem_cap => "Filesystem",
+        .network_cap => "Network",
+        .clock_cap => "Clock",
+        .random_cap => "Entropy",
+        .environment_cap => "Environment",
+        .file => "File",
+        .text_file => "TextFile",
+        else => null,
+    };
+}
 /// Nonprimitive builtin names accepted by exported module signatures.
 pub fn scalar(name: []const u8) bool {
     if (std.mem.eql(u8, name, "str") or std.mem.eql(u8, name, "bytes") or std.mem.eql(u8, name, "float")) return true;

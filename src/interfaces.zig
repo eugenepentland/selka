@@ -416,8 +416,11 @@ pub const Index = struct {
             try self.genericSignatureType(module, function.signature.return_type, function.signature.type_parameters);
         }
     }
-    /// Render exported declarations after interface checking; output belongs to allocator.
-    pub fn render(self: *Index, allocator: std.mem.Allocator) (std.mem.Allocator.Error || error{IncompleteProject})![]u8 {
+    /// Render exported declarations after interface checking; output belongs to
+    /// allocator. Callable lines carry their whole signature, the inferred
+    /// `effects(...)` set, `mutates(...)` parameter names, and the declared
+    /// ceiling when the source wrote one.
+    pub fn render(self: *Index, allocator: std.mem.Allocator) ContractError![]u8 {
         if (self.project.problem != null) return error.IncompleteProject;
         var output: std.Io.Writer.Allocating = .init(allocator);
         errdefer output.deinit();
@@ -426,10 +429,55 @@ pub const Index = struct {
             output.writer.print("module {s}\n", .{self.project.modules.items[module].name}) catch return error.OutOfMemory;
             for (self.units[module].symbols.items) |symbol| {
                 if (!symbol.exported) continue;
+                if (symbol.kind == .function) {
+                    try self.renderFunctionLine(&output.writer, module, symbol);
+                    continue;
+                }
                 output.writer.print("  export {s} {s}\n", .{ @tagName(symbol.kind), symbol.name }) catch return error.OutOfMemory;
             }
         }
         return output.toOwnedSlice();
+    }
+    /// Render one exported function as `export function NAME def(...) effects(...)
+    /// [mutates(names)] [ceiling(...)]`. The ceiling is the already-inferred mask
+    /// when a checked program is attached, or the unbounded mask otherwise, which
+    /// is what an omitted declaration promises.
+    fn renderFunctionLine(self: *Index, writer: *std.Io.Writer, module: usize, symbol: Symbol) ContractError!void {
+        const allocator = self.project.arena.allocator();
+        const function = self.findFunction(self.units[module], symbol.span) orelse return error.InternalError;
+        const signature = try self.contractSignatureText(module, function.signature);
+        writer.print("  export function {s} {s} effects(", .{ symbol.name, signature }) catch return error.OutOfMemory;
+        var inferred: std.ArrayList(u8) = .empty;
+        try appendEffectNames(&inferred, allocator, self.publishedEffects(module, symbol));
+        writer.writeAll(inferred.items) catch return error.OutOfMemory;
+        writer.writeAll(")") catch return error.OutOfMemory;
+        const mutates = try self.mutatesNamesText(module, function.signature);
+        if (mutates.len != 0) writer.print(" mutates({s})", .{mutates}) catch return error.OutOfMemory;
+        if (function.policy.effect_bound) |bound| {
+            writer.writeAll(" ceiling(") catch return error.OutOfMemory;
+            var ceiling: std.ArrayList(u8) = .empty;
+            try appendEffectNames(&ceiling, allocator, bound.allowed);
+            writer.writeAll(ceiling.items) catch return error.OutOfMemory;
+            writer.writeAll(")") catch return error.OutOfMemory;
+        }
+        writer.writeAll("\n") catch return error.OutOfMemory;
+    }
+    /// Render one declared `mutates` footprint by source parameter name, falling
+    /// back to the numeric position only if the declaration is malformed.
+    fn mutatesNamesText(self: *Index, module: usize, signature: ast.FunctionSignature) ContractError![]const u8 {
+        if (signature.mutates.len == 0) return "";
+        const allocator = self.project.arena.allocator();
+        const src = self.project.modules.items[module].src;
+        var out: std.ArrayList(u8) = .empty;
+        for (signature.mutates, 0..) |position, index| {
+            if (index != 0) try out.appendSlice(allocator, ",");
+            if (position < signature.parameters.len) {
+                try out.appendSlice(allocator, src.text(signature.parameters[position].name));
+            } else {
+                try out.appendSlice(allocator, try std.fmt.allocPrint(allocator, "{d}", .{position}));
+            }
+        }
+        return out.toOwnedSlice(allocator);
     }
     /// Render exported declarations, plus the unexported `test_` declarations
     /// that already have the defaulting test shape, as a canonical
@@ -754,9 +802,9 @@ pub const Index = struct {
             try out.appendSlice(allocator, try self.contractTypeTextPath(module, array.element, parameters, path));
             return out.toOwnedSlice(allocator);
         }
-        if (typed.Type.fromName(text)) |builtin| return allocator.dupe(u8, typed.typeName(builtin, &.{}));
+        if (typed.Type.fromName(text)) |builtin| return allocator.dupe(u8, prelude.reservedTypeName(builtin) orelse typed.typeName(builtin, &.{}));
         if (!self.units[module].names.contains(text)) {
-            if (prelude.reservedType(text)) |reserved| return allocator.dupe(u8, typed.typeName(reserved, &.{}));
+            if (prelude.reservedType(text)) |reserved| return allocator.dupe(u8, prelude.reservedTypeName(reserved) orelse typed.typeName(reserved, &.{}));
             if (prelude.scalar(text)) return allocator.dupe(u8, text);
         }
         for (self.units[module].syntax.types.expressions.applications) |application| {

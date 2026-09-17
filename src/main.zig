@@ -1452,6 +1452,25 @@ fn listInterfaces(init: Context, project: *language.project.Project, parsed: Par
         try std.Io.File.stdout().writeStreamingAll(init.io, contracts);
         return 0;
     }
+    // Attach checked bodies when they are available so the default listing can
+    // publish each function's inferred `effects(...)`. A body that fails to
+    // check is ignored: the interface gate lists declarations whether or not
+    // bodies type-check, and it never reports body diagnostics.
+    var attached: ?language.project_compile.Compilation = language.project_compile.Compilation.init(&index) catch |err| switch (err) {
+        error.OutOfMemory => return err,
+        else => null,
+    };
+    if (attached) |*compilation| {
+        // Body checking may record a project problem; the interface gate owns
+        // only declaration diagnostics, so restore the pre-check problem.
+        const saved_problem = project.problem;
+        compilation.check() catch |err| switch (err) {
+            error.OutOfMemory => return err,
+            error.SourceError, error.InternalError => {},
+        };
+        project.problem = saved_problem;
+        index.program = compilation.program;
+    }
     const text = try index.render(init.gpa);
     defer init.gpa.free(text);
     try std.Io.File.stdout().writeStreamingAll(init.io, text);

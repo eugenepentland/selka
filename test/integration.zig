@@ -1485,6 +1485,29 @@ test "CLI module interfaces parse bodies and check exported signature visibility
     , 1, "", "E_PRIVATE_INTERFACE");
     try invokeOptions("list-interfaces", "module input", &.{"--check"}, 2, "", "usage:");
 }
+// spec: INTERFACE-SIGNATURE-CLI-1
+test "CLI list-interfaces renders capability parameters with their Python spelling" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
+        \\module input
+        \\export main
+        \\
+        \\
+        \\def main(fs: Filesystem, clock: Clock) -> int:
+        \\    return 0
+    });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "list-interfaces", path } });
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "Filesystem") != null);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "Clock") != null);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "filesystem_cap") == null);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "clock_cap") == null);
+}
 // spec: PROJ-5
 test "CLI run loads a project entry that imports a standard module and leaves single-file run unchanged" {
     var temporary = testing.tmpDir(.{});
