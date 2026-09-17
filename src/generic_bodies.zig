@@ -881,6 +881,16 @@ const Checker = struct {
             try self.compatible(value, .{ .concrete = .filesystem_cap }, owner);
             return .{ .concrete = .filesystem_cap };
         }
+        // The free `read_text(fs, path)` spelling is rejected by `callTarget`;
+        // reject the qualified `fs.read_text(path)` spelling the same way so the
+        // receiver names the reserved builtin rather than a missing function.
+        if (@import("file_operations.zig").access(name)) |_| {
+            const receiver_slot = self.active.get(self.src.text(owner)) orelse return null;
+            const receiver = self.locals.items[receiver_slot].ty;
+            if (receiver == .concrete and receiver.concrete == .filesystem_cap)
+                return self.sink.fail(eUnsupported, span, "file operations are not supported inside generic function bodies");
+            return null;
+        }
         const slot = self.active.get(self.src.text(owner)) orelse return null;
         const receiver = self.locals.items[slot].ty;
         if (receiver != .concrete or receiver.concrete != .environment_cap) return null;

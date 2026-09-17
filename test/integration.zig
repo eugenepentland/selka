@@ -2862,6 +2862,24 @@ test "CLI exposes fs.read_only permission attenuation and rejects the removed sp
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, extra, 1, "", "error[E_ARITY]");
 }
 
+// spec-case: FILE-METHOD-1
+test "CLI checks and lowers the qualified whole-path helper methods" {
+    const source = @embedFile("fixtures/file-methods.my");
+    try invoke("check", source, 0, "", "");
+    const dumped = try runFixture("dump-bytecode", source, &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    for ([_][]const u8{ "FILE_read_text", "FILE_read_file", "FILE_write_text", "FILE_write_file", "FILE_exists", "FILE_listdir", "FILE_mkdir", "FILE_remove", "FILE_open", "FILE_read local=" }) |text|
+        try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
+    const invalid =
+        \\def main(fs: Filesystem) -> int:
+        \\    _ = fs.read_text()
+        \\    return 0
+    ;
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_ARITY]");
+}
+
 const clock_program =
     \\result Time:
     \\    ok: i64,

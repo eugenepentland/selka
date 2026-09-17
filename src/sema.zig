@@ -1155,6 +1155,15 @@ const Checker = struct {
         if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return null;
         return kind;
     }
+    /// The whole-path helper a qualified call names on a local `Filesystem`, or
+    /// null for an ordinary receiver. The method form is never shadowed by a
+    /// same-named function or local: it belongs to the receiver alone.
+    fn fileAccessMethodKind(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) ?file_operations.Access {
+        const owner = call.owner orelse return null;
+        const slot = self.active.get(self.src.text(owner)) orelse return null;
+        if (self.locals.items[@backingInt(slot)].ty != .filesystem_cap) return null;
+        return file_operations.access(self.src.text(call.name));
+    }
     fn fileShapes(self: *Checker, span: source.Span) Error!typed.FileShapes {
         const text = try collections.preludeType(&self.catalog, "str", span);
         const bytes = try collections.preludeType(&self.catalog, "bytes", span);
@@ -1173,25 +1182,47 @@ const Checker = struct {
         };
         return collections.resultType(&self.catalog, payload, shapes.text, span);
     }
-    fn checkFileAccess(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), kind: file_operations.Access, out: *typed.Node) Error!void {
-        try call_arguments.positional(call, self.sink);
-        if (call.type_arguments.len != 0 or call.arguments.len != kind.arity()) return self.sink.fail("E_ARITY", node.span, "this file operation's argument count does not match its signature");
+    /// Check one whole-path helper after its receiver, shared by the free
+    /// `read_text(fs, path)` and qualified `fs.read_text(path)` spellings.
+    /// `value_arguments` excludes the capability, so `arguments[0]` is the
+    /// receiver and the typed operand order matches the free form exactly.
+    fn checkFileAccess(self: *Checker, node: ast.Node, kind: file_operations.Access, receiver: typed.NodeId, value_arguments: []const ast.NodeId, out: *typed.Node) Error!void {
         const shapes = try self.fileShapes(node.span);
-        const arguments = try self.allocator.alloc(typed.NodeId, call.arguments.len);
-        for (call.arguments, arguments) |id, *slot| slot.* = self.resolved[@backingInt(id)].?;
-        try self.require(self.nodes.items[@backingInt(arguments[0])].ty, .filesystem_cap, node.span);
+        const arguments = try self.allocator.alloc(typed.NodeId, value_arguments.len + 1);
+        arguments[0] = receiver;
+        for (value_arguments, arguments[1..]) |id, *slot| slot.* = self.resolved[@backingInt(id)].?;
+        try self.require(self.nodes.items[@backingInt(receiver)].ty, .filesystem_cap, node.span);
         try self.require(self.nodes.items[@backingInt(arguments[1])].ty, shapes.text, self.nodes.items[@backingInt(arguments[1])].span);
-        const mode = try self.openMode(call, kind);
+        const mode = try self.openMode(kind, value_arguments);
         if (kind == .write_file) try self.require(self.nodes.items[@backingInt(arguments[2])].ty, shapes.bytes, node.span);
         if (kind == .write_text) try self.require(self.nodes.items[@backingInt(arguments[2])].ty, shapes.text, node.span);
         const direct = kind == .open and self.trapping_open != null and std.meta.eql(self.trapping_open.?, node.span);
         out.ty = if (direct) (if (mode.text) .text_file else .file) else try self.fileAccessType(kind, mode, node.span);
         out.data = .{ .file_access = .{ .kind = kind, .mode = mode.letter, .text = mode.text, .arguments = arguments, .shapes = shapes } };
     }
+    /// Check the free `read_text(fs, path)` spelling, whose leading argument is
+    /// the capability the method form carries as its receiver.
+    fn checkFileAccessCall(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), kind: file_operations.Access, out: *typed.Node) Error!void {
+        try call_arguments.positional(call, self.sink);
+        if (call.type_arguments.len != 0 or call.arguments.len != kind.arity()) return self.sink.fail("E_ARITY", node.span, "this file operation's argument count does not match its signature");
+        return self.checkFileAccess(node, kind, self.resolved[@backingInt(call.arguments[0])].?, call.arguments[1..], out);
+    }
+    /// Check the qualified `fs.read_text(path)` spelling on a local `Filesystem`.
+    fn checkFileAccessMethod(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), kind: file_operations.Access, out: *typed.Node) Error!void {
+        try call_arguments.positional(call, self.sink);
+        if (call.type_arguments.len != 0 or call.arguments.len != kind.methodArity()) return self.sink.fail("E_ARITY", node.span, "this file operation's argument count does not match its signature");
+        const owner = call.owner.?;
+        const slot = self.active.get(self.src.text(owner)).?;
+        try self.requireReadable(slot, owner);
+        self.locals.items[@backingInt(slot)].usage.reads += 1;
+        const receiver: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = owner, .ty = .filesystem_cap, .data = .{ .local = slot } });
+        return self.checkFileAccess(node, kind, receiver, call.arguments, out);
+    }
     /// `open` needs a literal mode so the checker knows whether reads yield text.
-    fn openMode(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call"), kind: file_operations.Access) Error!file_operations.Mode {
+    fn openMode(self: *Checker, kind: file_operations.Access, value_arguments: []const ast.NodeId) Error!file_operations.Mode {
         if (kind != .open) return .{ .letter = 'r', .text = kind == .read_text or kind == .write_text };
-        const spelling = self.syntax.nodes.items[@backingInt(call.arguments[2])];
+        const spelling = self.syntax.nodes.items[@backingInt(value_arguments[1])];
         if (spelling.data != .text) return self.sink.fail(eFileArgument, spelling.span, "open requires a literal mode such as \"rb\", \"r\", \"wb\", \"w\", \"ab\" or \"a\"");
         return file_operations.parseMode(spelling.data.text) orelse self.sink.fail(eFileArgument, spelling.span, "unsupported open mode; use \"r\", \"w\", \"a\" with an optional \"b\" or \"t\"");
     }
@@ -2068,6 +2099,24 @@ const Checker = struct {
         }
         return false;
     }
+    /// Queue a qualified call on a local `Filesystem`. `read_only()` and `dir()`
+    /// queue no operands; a whole-path helper queues its value arguments, because
+    /// its receiver is a `Span` with no expression node and the checker
+    /// synthesizes that operand.
+    fn queueFilesystemCall(self: *Checker, work: *std.ArrayList(Work), call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
+        const owner = call.owner orelse return false;
+        const slot = self.active.get(self.src.text(owner)) orelse return false;
+        if (self.locals.items[@backingInt(slot)].ty != .filesystem_cap) return false;
+        const name = self.src.text(call.name);
+        if (std.mem.eql(u8, name, "read_only") or std.mem.eql(u8, name, "dir")) return true;
+        if (file_operations.access(name) == null) return false;
+        var index = call.arguments.len;
+        while (index > 0) {
+            index -= 1;
+            try work.append(self.allocator, .{ .id = call.arguments[index] });
+        }
+        return true;
+    }
     fn queueExpression(self: *Checker, work: *std.ArrayList(Work), id: ast.NodeId) Error!bool {
         const node = try self.collectionSyntax(id);
         switch (node.data) {
@@ -2162,10 +2211,7 @@ const Checker = struct {
             },
             .call => |call| {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
-                if (call.owner) |owner| if (self.active.get(self.src.text(owner))) |slot| {
-                    if (self.locals.items[@backingInt(slot)].ty == .filesystem_cap and
-                        (std.mem.eql(u8, self.src.text(call.name), "read_only") or std.mem.eql(u8, self.src.text(call.name), "dir"))) return true;
-                };
+                if (try self.queueFilesystemCall(work, call)) return true;
                 if (self.environmentMethod(call) != null) return true;
                 if (try self.cellConstructor(call) != null) {
                     if (self.expected_types.get(node.span)) |expected| if (expected.isAggregate() and self.catalog.records[expected.recordIndex()].isCell()) {
@@ -2695,6 +2741,10 @@ const Checker = struct {
             try self.checkDirCall(node, input, slot, out);
             return true;
         }
+        if (self.fileAccessMethodKind(input)) |kind| {
+            try self.checkFileAccessMethod(node, input, kind, out);
+            return true;
+        }
         return false;
     }
     /// Dispatch `env.get`, `env.only` and `env.names` on a local `Environment`.
@@ -2734,7 +2784,7 @@ const Checker = struct {
             out.data = .{ .cast = value };
             return;
         }
-        if (try self.fileAccessBuiltin(input)) |kind| return self.checkFileAccess(node, input, kind, out);
+        if (try self.fileAccessBuiltin(input)) |kind| return self.checkFileAccessCall(node, input, kind, out);
         if (try self.streamMethod(input)) |method| {
             if (method.write) return self.checkStreamWrite(node, input, method.stream, out);
             return self.checkPrint(node, input, .{ .stream = method.stream }, out);
@@ -3249,6 +3299,10 @@ const Checker = struct {
         // queued sub-expression, so it leaves no temporary for the caller to pop.
         if (node.data == .call and out.data == .restrict_resource) return 0;
         if (node.data == .call and out.data == .dir_resource) return 0;
+        // A qualified whole-path helper synthesizes its receiver instead of
+        // queueing it, so only the value arguments leave temporaries to pop.
+        if (node.data == .call and out.data == .file_access and node.data.call.owner != null)
+            return out.data.file_access.arguments.len - 1;
         // `env.get` and `env.only` read their literal names straight from the
         // syntax tree, so their receivers and arguments are not queued temporaries.
         if (node.data == .call and out.data == .environment_get) return 0;
@@ -3432,9 +3486,12 @@ const Checker = struct {
     /// A file `with` scope binds one open handle and closes it at every exit.
     fn statementWithFile(self: *Checker, stmt: ast.Statement, scope: @FieldType(@FieldType(ast.Statement, "data"), "with_scope"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         const head = self.syntax.nodes.items[@backingInt(scope.resource.?)];
-        if (head.data == .call) if (try self.fileAccessBuiltin(head.data.call)) |kind| {
-            if (kind == .open) self.trapping_open = head.span;
-        };
+        if (head.data == .call) {
+            const kind = try self.fileAccessBuiltin(head.data.call) orelse self.fileAccessMethodKind(head.data.call);
+            if (kind) |access| {
+                if (access == .open) self.trapping_open = head.span;
+            }
+        }
         defer self.trapping_open = null;
         const value = try self.expression(scope.resource.?);
         const value_type = self.nodes.items[@backingInt(value)].ty;
