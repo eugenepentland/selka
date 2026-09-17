@@ -19,13 +19,16 @@ pub const Type = enum(usize) {
     filesystem_cap,
     network_cap,
     environment_cap,
+    /// The authority behind an `extern def` or `host def`; checked at every call
+    /// and dropped before the foreign call itself.
+    host_cap,
     unit,
     /// An open byte-oriented file owned by the guest through a `with` scope.
     file,
     /// An open UTF-8 text file; its reads produce `str` rather than `bytes`.
     text_file,
     _,
-    pub const record_base: usize = 17;
+    pub const record_base: usize = 18;
     /// Return the compact builtin capability index, or null for non-capabilities.
     pub fn capabilityIndex(self: Type) ?u3 {
         return switch (self) {
@@ -34,6 +37,7 @@ pub const Type = enum(usize) {
             .filesystem_cap => 2,
             .network_cap => 3,
             .environment_cap => 4,
+            .host_cap => 5,
             else => null,
         };
     }

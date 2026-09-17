@@ -43,50 +43,50 @@ def kind(value: m.ViolationKind) -> u8:
             return 1u8
 
 
-def where(value: m.RegionIndex) -> i64:
+def where(host: Host, value: m.RegionIndex) -> i64:
     match value:
         case m.RegionIndex.board:
-            _ = io.put(0u8)
-            return wire.emitUnsigned(0u64)
+            _ = io.put(host, 0u8)
+            return wire.emitUnsigned(host, 0u64)
         case m.RegionIndex.keepout(index):
-            _ = io.put(1u8)
-            return wire.emitUnsigned(index)
+            _ = io.put(host, 1u8)
+            return wire.emitUnsigned(host, index)
 
 
-def violation(first: m.Slot[m.Violation]) -> i64:
+def violation(host: Host, first: m.Slot[m.Violation]) -> i64:
     match first:
         case m.Slot[m.Violation].none:
-            _ = io.put(0u8)
-            _ = wire.emitUnsigned(0u64)
-            _ = io.put(0u8)
-            _ = io.put(0u8)
-            return wire.emitUnsigned(0u64)
+            _ = io.put(host, 0u8)
+            _ = wire.emitUnsigned(host, 0u64)
+            _ = io.put(host, 0u8)
+            _ = io.put(host, 0u8)
+            return wire.emitUnsigned(host, 0u64)
         case m.Slot[m.Violation].some(item):
-            _ = io.put(1u8)
-            _ = wire.emitUnsigned(item.feature)
-            _ = io.put(kind(item.kind))
-            return where(item.region)
+            _ = io.put(host, 1u8)
+            _ = wire.emitUnsigned(host, item.feature)
+            _ = io.put(host, kind(item.kind))
+            return where(host, item.region)
 
 
-def report(value: m.Report) -> i64:
-    _ = io.put(0u8)
-    _ = wire.emitUnsigned(value.violations)
-    return violation(value.first)
+def report(host: Host, value: m.Report) -> i64:
+    _ = io.put(host, 0u8)
+    _ = wire.emitUnsigned(host, value.violations)
+    return violation(host, value.first)
 
 
-def failure(value: m.Failure) -> i64:
+def failure(host: Host, value: m.Failure) -> i64:
     match value:
         case m.Failure.input(cause):
-            _ = io.put(1u8)
-            return io.put(problem(cause))
+            _ = io.put(host, 1u8)
+            return io.put(host, problem(cause))
         case m.Failure.geometry(cause):
-            _ = io.put(2u8)
-            return io.put(unavailable(cause))
+            _ = io.put(host, 2u8)
+            return io.put(host, unavailable(cause))
 
 
-def publish(outcome: m.Validation) -> i64 effects(host):
+def publish(host: Host, outcome: m.Validation) -> i64 effects(host):
     match outcome:
         case m.Validation.ok(value):
-            return report(value)
+            return report(host, value)
         case m.Validation.err(value):
-            return failure(value)
+            return failure(host, value)

@@ -31,8 +31,10 @@ pub fn emit(self: anytype, name: []const u8) Error![]u8 {
     const float_result = contract.isFloat(result, self.program.records);
     if (result == .unit) try self.print(" call", .{}) else try self.print(" %result ={s} call", .{abi(result, self.program.records)});
     try self.print(" ${s}(", .{contract.symbol(f.name)});
-    for (parameters, 0..) |local, i| {
-        if (i != 0) try self.print(", ", .{});
+    var emitted = false;
+    for (parameters[1..], 1..) |local, i| {
+        if (emitted) try self.print(", ", .{});
+        emitted = true;
         try self.print("{s} %{s}{d}", .{ abi(local.ty, self.program.records), if (contract.isFloat(local.ty, self.program.records)) "c" else "a", i });
     }
     try self.print(")\n", .{});

@@ -31,41 +31,41 @@ const FEATURES: i64 = 396
 const REQUEST: i64 = 740
 
 
-def unsigned(position: i64) -> u64 effects(host):
+def unsigned(host: Host, position: i64) -> u64 effects(host):
     value = 0u64
     shift = 0u64
     i = 0i64
     while i < 8:
-        value = bit_or(value, shift_left(u64(io.byte(position + i)), shift))
+        value = bit_or(value, shift_left(u64(io.byte(host, position + i)), shift))
         shift = shift + 8u64
         i = i + 1
     return value
 
 
-def signed(position: i64) -> i64 effects(host):
-    value = i64(io.byte(position + 7))
+def signed(host: Host, position: i64) -> i64 effects(host):
+    value = i64(io.byte(host, position + 7))
     if value >= 128:
         value = value - 256
     i = 6i64
     while i >= 0:
-        value = bit_or(shift_left(value, 8), i64(io.byte(position + i)))
+        value = bit_or(shift_left(value, 8), i64(io.byte(host, position + i)))
         i = i - 1
     return value
 
 
-def code(position: i64) -> u8 effects(host):
-    return io.byte(position)
+def code(host: Host, position: i64) -> u8 effects(host):
+    return io.byte(host, position)
 
 
-def flag(position: i64) -> bool effects(host):
-    return io.byte(position) != 0u8
+def flag(host: Host, position: i64) -> bool effects(host):
+    return io.byte(host, position) != 0u8
 
 
-def emitUnsigned(value: u64) -> i64 effects(host):
+def emitUnsigned(host: Host, value: u64) -> i64 effects(host):
     shift = 0u64
     i = 0i64
     while i < 8:
-        _ = io.put(u8(bit_and(shift_right(value, shift), 255u64)))
+        _ = io.put(host, u8(bit_and(shift_right(value, shift), 255u64)))
         shift = shift + 8u64
         i = i + 1
     return 0

@@ -51,7 +51,7 @@ const kinds_module =
     \\resource Handle: filesystem
     \\
     \\
-    \\host def measure(x: i64) -> i64 effects(host)
+    \\host def measure(host: Host, x: i64) -> i64 effects(host)
     \\
     \\
     \\export main
@@ -101,7 +101,7 @@ const expected_declarations = [_]Expected{
     \\        return wrap[Distance](x)
     },
     .{ .kind = "resource", .name = "Handle", .exported = false, .text = "resource Handle: filesystem" },
-    .{ .kind = "host_fn", .name = "measure", .exported = false, .text = "host def measure(x: i64) -> i64 effects(host)" },
+    .{ .kind = "host_fn", .name = "measure", .exported = false, .text = "host def measure(host: Host, x: i64) -> i64 effects(host)" },
     .{ .kind = "fn", .name = "main", .exported = true, .text =
     \\def main() -> i64:
     \\    return LIMIT

@@ -187,12 +187,14 @@ const Checker = struct {
         try self.bindParameters(function);
         if (function.policy.c_abi) {
             const foreign = @import("c_abi.zig");
+            if (self.locals.items.len == 0 or self.locals.items[0].ty != .host_cap) return sink.fail("E_HOST_CAPABILITY", function.name, "an extern or host declaration must take `host: Host` as its first parameter");
             if (!foreign.supported(self.return_type, self.catalog.records, true)) return sink.fail("E_EXTERN_SIGNATURE", function.signature.return_type, foreign.signature_message);
-            for (self.locals.items) |local| if (!foreign.supported(local.ty, self.catalog.records, false)) return sink.fail("E_EXTERN_SIGNATURE", local.declaration, foreign.signature_message);
+            for (self.locals.items[1..]) |local| if (!foreign.supported(local.ty, self.catalog.records, false)) return sink.fail("E_EXTERN_SIGNATURE", local.declaration, foreign.signature_message);
             if (!foreign.validSymbol(src.text(function.name))) return sink.fail("E_EXTERN_SYMBOL", function.name, "extern names must be C identifiers outside the reserved myl_/mylang_ runtime namespaces");
         } else if (function.policy.host != null) {
+            if (self.locals.items.len == 0 or self.locals.items[0].ty != .host_cap) return sink.fail("E_HOST_CAPABILITY", function.name, "an extern or host declaration must take `host: Host` as its first parameter");
             try checkHostType(allocator, self.catalog.records, self.return_type, function.signature.return_type, sink);
-            for (self.locals.items) |local| try checkHostType(allocator, self.catalog.records, local.ty, local.declaration, sink);
+            for (self.locals.items[1..]) |local| try checkHostType(allocator, self.catalog.records, local.ty, local.declaration, sink);
         }
         self.conversion_fields = null;
         if (function.policy.conversion) {

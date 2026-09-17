@@ -53,7 +53,7 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "compiler's own 8G ceiling (0 removes it)\n  " ++
     "run/run-project authority: every capability is granted by default; --restrict denies them " ++
     "and enables --allow-read=DIR --allow-write=DIR (repeatable) --allow-clock --allow-random[=SEED] " ++
-    "--allow-env[=NAME,...] --allow-all. Under --restrict an entry point requesting an ungranted " ++
+    "--allow-env[=NAME,...] --allow-host --allow-all. Under --restrict an entry point requesting an ungranted " ++
     "capability exits 2 before execution; --allow-random=SEED pins the seed in either mode\n  " ++
     "run/run-project: -- ends compiler options; every later value is a guest argument\n  " ++
     "run: --timings (native execution nanoseconds on stderr; excludes compilation and linking)\n  " ++

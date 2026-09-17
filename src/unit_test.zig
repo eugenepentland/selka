@@ -42,7 +42,7 @@ test "unit data and host boundaries reject unsupported ABI values explicitly" {
     try t.expectEqual(@as(?u3, null), typed.Type.unit.capabilityIndex());
     try t.expectError(error.NotDataType, @import("data_type.zig").check(t.allocator, &.{}, .unit, true));
     var c = try language.Compilation.init(t.allocator, "host.my",
-        \\host def f() effects(host)
+        \\host def f(host: Host) effects(host)
         \\
         \\
         \\def main() -> i64:

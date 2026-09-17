@@ -276,24 +276,25 @@ test "semantic cache rechecks transitive effects when only a callee body changes
     // Only the callee body changes; the unchanged caller is reused but rechecked.
     // The host declaration is never executed, so this stays a checking-only test.
     const shared =
-        \\host def tick() -> i64 effects(host)
+        \\host def tick(host: Host) -> i64 effects(host)
         \\
         \\
-        \\def main() -> i64 effects(clock):
-        \\    return change()
+        \\def main(host: Host) -> i64 effects(clock):
+        \\    return change(host)
         \\
         \\
         \\
     ;
     var first = try language.Compilation.init(t.allocator, "edited.my", shared ++
-        \\def change() -> i64:
+        \\def change(host: Host) -> i64:
+        \\    _ = host
         \\    return 42
     );
     defer first.deinit();
     try first.checkWithCache(&cache);
     var second = try language.Compilation.init(t.allocator, "edited.my", shared ++
-        \\def change() -> i64:
-        \\    return tick()
+        \\def change(host: Host) -> i64:
+        \\    return tick(host)
     );
     defer second.deinit();
     try t.expectError(error.SourceError, second.checkWithCache(&cache));

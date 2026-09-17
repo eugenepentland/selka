@@ -6,14 +6,14 @@ registration or copied-node adapter is needed:
 ```mylang
 # doc: check
 # Calling libc needs a native build; `mylang build main.my --run` links and runs it.
-extern def abs(value: i32) -> i32 effects(host)
+extern def abs(host: Host, value: i32) -> i32 effects(host)
 
 
-extern def floor(value: float) -> float effects(host)
+extern def floor(host: Host, value: float) -> float effects(host)
 
 
-def main() -> i64:
-    return i64(abs(-42))
+def main(host: Host) -> i64:
+    return i64(abs(host, -42))
 ```
 
 ```sh

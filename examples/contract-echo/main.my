@@ -2,9 +2,9 @@ module main
 import io
 
 
-def main() -> int:
+def main(host: Host) -> int:
     index = 0
-    while index < io.length():
-        _ = io.put(io.byte(index))
+    while index < io.length(host):
+        _ = io.put(host, io.byte(host, index))
         index += 1
     return 0

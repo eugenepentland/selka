@@ -3,11 +3,11 @@ import model as m
 export contact
 
 
-host def overlap(a: m.Rect, b: m.Rect) -> m.Overlap effects(host)
+host def overlap(host: Host, a: m.Rect, b: m.Rect) -> m.Overlap effects(host)
 
 
-def contact(a: m.Rect, b: m.Rect) -> m.ContactResult effects(host):
-    match overlap(a, b):
+def contact(host: Host, a: m.Rect, b: m.Rect) -> m.ContactResult effects(host):
+    match overlap(host, a, b):
         case m.Overlap.ok(value):
             return Ok(value)
         case m.Overlap.err(problem):

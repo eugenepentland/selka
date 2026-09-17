@@ -14,21 +14,21 @@ def slot[T](present: bool, value: T) -> m.Slot[T]:
     return m.Slot.some(value)
 
 
-def rect(position: i64) -> m.Rect:
+def rect(host: Host, position: i64) -> m.Rect:
     return m.Rect(
-        x=units.Micrometres.make(wire.signed(position)),
-        y=units.Micrometres.make(wire.signed(position + 8)),
-        width=units.Micrometres.make(wire.signed(position + 16)),
-        height=units.Micrometres.make(wire.signed(position + 24))
+        x=units.Micrometres.make(wire.signed(host, position)),
+        y=units.Micrometres.make(wire.signed(host, position + 8)),
+        width=units.Micrometres.make(wire.signed(host, position + 16)),
+        height=units.Micrometres.make(wire.signed(host, position + 24))
     )
 
 
-def component(position: i64) -> m.Slot[ids.ComponentId]:
-    return slot[ids.ComponentId](wire.flag(position), ids.ComponentId.make(wire.unsigned(position + 1)))
+def component(host: Host, position: i64) -> m.Slot[ids.ComponentId]:
+    return slot[ids.ComponentId](wire.flag(host, position), ids.ComponentId.make(wire.unsigned(host, position + 1)))
 
 
-def net(position: i64) -> m.Slot[ids.NetId]:
-    return slot[ids.NetId](wire.flag(position), ids.NetId.make(wire.unsigned(position + 1)))
+def net(host: Host, position: i64) -> m.Slot[ids.NetId]:
+    return slot[ids.NetId](wire.flag(host, position), ids.NetId.make(wire.unsigned(host, position + 1)))
 
 
 def face(code: u8) -> m.Face:
@@ -53,61 +53,61 @@ def layer(code: u8) -> m.Layer:
     return m.Layer.inner
 
 
-def admitted(position: i64) -> [4]m.Slot[ids.NetId]:
-    return [net(position), net(position + wire.SLOT), net(position + 2 * wire.SLOT), net(position + 3 * wire.SLOT)]
+def admitted(host: Host, position: i64) -> [4]m.Slot[ids.NetId]:
+    return [net(host, position), net(host, position + wire.SLOT), net(host, position + 2 * wire.SLOT), net(host, position + 3 * wire.SLOT)]
 
 
-def region(position: i64) -> m.Slot[m.Region]:
+def region(host: Host, position: i64) -> m.Slot[m.Region]:
     value = m.Region(
-        rect=rect(position + 1),
-        face=regionFace(wire.code(position + 33)),
-        blocks=m.Blocks(component=wire.flag(position + 34), track=wire.flag(position + 35), via=wire.flag(position + 36)),
-        allow_nets=admitted(position + 37)
+        rect=rect(host, position + 1),
+        face=regionFace(wire.code(host, position + 33)),
+        blocks=m.Blocks(component=wire.flag(host, position + 34), track=wire.flag(host, position + 35), via=wire.flag(host, position + 36)),
+        allow_nets=admitted(host, position + 37)
     )
-    return slot[m.Region](wire.flag(position), value)
+    return slot[m.Region](wire.flag(host, position), value)
 
 
-def feature(position: i64) -> m.Slot[m.Feature]:
-    bounds = rect(position + 2)
-    identity = wire.unsigned(position + 34)
+def feature(host: Host, position: i64) -> m.Slot[m.Feature]:
+    bounds = rect(host, position + 2)
+    identity = wire.unsigned(host, position + 34)
     item = m.Feature.via(m.Via(net=ids.NetId.make(identity), rect=bounds))
-    if wire.code(position + 1) == 0u8:
-        item = m.Feature.component(m.Component(id=ids.ComponentId.make(identity), face=face(wire.code(position + 42)), rect=bounds))
-    if wire.code(position + 1) == 1u8:
-        item = m.Feature.track(m.Track(net=ids.NetId.make(identity), layer=layer(wire.code(position + 42)), rect=bounds))
-    return slot[m.Feature](wire.flag(position), item)
+    if wire.code(host, position + 1) == 0u8:
+        item = m.Feature.component(m.Component(id=ids.ComponentId.make(identity), face=face(wire.code(host, position + 42)), rect=bounds))
+    if wire.code(host, position + 1) == 1u8:
+        item = m.Feature.track(m.Track(net=ids.NetId.make(identity), layer=layer(wire.code(host, position + 42)), rect=bounds))
+    return slot[m.Feature](wire.flag(host, position), item)
 
 
-def components() -> [4]m.Slot[ids.ComponentId]:
-    return [component(wire.COMPONENTS), component(wire.COMPONENTS + wire.SLOT), component(wire.COMPONENTS + 2 * wire.SLOT), component(wire.COMPONENTS + 3 * wire.SLOT)]
+def components(host: Host) -> [4]m.Slot[ids.ComponentId]:
+    return [component(host, wire.COMPONENTS), component(host, wire.COMPONENTS + wire.SLOT), component(host, wire.COMPONENTS + 2 * wire.SLOT), component(host, wire.COMPONENTS + 3 * wire.SLOT)]
 
 
-def nets() -> [4]m.Slot[ids.NetId]:
-    return [net(wire.NETS), net(wire.NETS + wire.SLOT), net(wire.NETS + 2 * wire.SLOT), net(wire.NETS + 3 * wire.SLOT)]
+def nets(host: Host) -> [4]m.Slot[ids.NetId]:
+    return [net(host, wire.NETS), net(host, wire.NETS + wire.SLOT), net(host, wire.NETS + 2 * wire.SLOT), net(host, wire.NETS + 3 * wire.SLOT)]
 
 
-def regions() -> [4]m.Slot[m.Region]:
-    return [region(wire.REGIONS), region(wire.REGIONS + wire.REGION), region(wire.REGIONS + 2 * wire.REGION), region(wire.REGIONS + 3 * wire.REGION)]
+def regions(host: Host) -> [4]m.Slot[m.Region]:
+    return [region(host, wire.REGIONS), region(host, wire.REGIONS + wire.REGION), region(host, wire.REGIONS + 2 * wire.REGION), region(host, wire.REGIONS + 3 * wire.REGION)]
 
 
-def features() -> [8]m.Slot[m.Feature]:
+def features(host: Host) -> [8]m.Slot[m.Feature]:
     return [
-        feature(wire.FEATURES),
-        feature(wire.FEATURES + wire.FEATURE),
-        feature(wire.FEATURES + 2 * wire.FEATURE),
-        feature(wire.FEATURES + 3 * wire.FEATURE),
-        feature(wire.FEATURES + 4 * wire.FEATURE),
-        feature(wire.FEATURES + 5 * wire.FEATURE),
-        feature(wire.FEATURES + 6 * wire.FEATURE),
-        feature(wire.FEATURES + 7 * wire.FEATURE)
+        feature(host, wire.FEATURES),
+        feature(host, wire.FEATURES + wire.FEATURE),
+        feature(host, wire.FEATURES + 2 * wire.FEATURE),
+        feature(host, wire.FEATURES + 3 * wire.FEATURE),
+        feature(host, wire.FEATURES + 4 * wire.FEATURE),
+        feature(host, wire.FEATURES + 5 * wire.FEATURE),
+        feature(host, wire.FEATURES + 6 * wire.FEATURE),
+        feature(host, wire.FEATURES + 7 * wire.FEATURE)
     ]
 
 
-def board() -> m.Board effects(host):
+def board(host: Host) -> m.Board effects(host):
     return m.Board(
-        outline=rect(wire.OUTLINE),
-        components=components(),
-        nets=nets(),
-        regions=regions(),
-        features=features()
+        outline=rect(host, wire.OUTLINE),
+        components=components(host),
+        nets=nets(host),
+        regions=regions(host),
+        features=features(host)
     )

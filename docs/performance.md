@@ -216,20 +216,20 @@ the language does not provide — `hypot`, `tgamma`, `clock_gettime` and the res
 ```text
 # doc: not-mylang
 # C's `hypot`; the build below links libm.
-extern def hypot(a: float, b: float) -> float effects(host)
+extern def hypot(host: Host, a: float, b: float) -> float effects(host)
 
 
-def main() -> int:
-    return int(hypot(3.0, 4.0)) * 10 + int(hypot(5.0, 12.0))
+def main(host: Host) -> int:
+    return int(hypot(host, 3.0, 4.0)) * 10 + int(hypot(host, 5.0, 12.0))
 ```
 
 ```console
 $ cat > hyp.my <<'EOF'
-extern def hypot(a: float, b: float) -> float effects(host)
+extern def hypot(host: Host, a: float, b: float) -> float effects(host)
 
 
-def main() -> int:
-    return int(hypot(3.0, 4.0)) * 10 + int(hypot(5.0, 12.0))
+def main(host: Host) -> int:
+    return int(hypot(host, 3.0, 4.0)) * 10 + int(hypot(host, 5.0, 12.0))
 EOF
 $ mylang build hyp.my -o hyp --link-library m
 $ ./hyp --print-result

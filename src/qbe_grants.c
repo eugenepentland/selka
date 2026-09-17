@@ -16,10 +16,13 @@ typedef struct {
     MylangScoped scoped;
     MylangRequest directories[MYLANG_SCOPED_ROOTS];
     size_t count;
-    int clock, entropy, environment, restricted;
+    int clock, entropy, environment, restricted, host;
     const char *names;
     uint64_t state;
 } MylangGrants;
+/* Whether the command line granted the `Host` authority a foreign call needs.
+   Set once per process by provision() before any entry grant is queried. */
+static int host_authority = 0;
 static MylangClockResult clock_now(void *context) {
     (void)context;
     MylangClockResult result = {MYLANG_PROVIDER_FAILED, 0};
@@ -93,6 +96,7 @@ static int accept(MylangGrants *grants, const char *argument, int *matched) {
     if (!strncmp(argument, "--allow-read=", 13)) return directory(grants, argument + 13, 0);
     if (!strncmp(argument, "--allow-write=", 14)) return directory(grants, argument + 14, 1);
     if (!strcmp(argument, "--allow-clock")) return !grants->clock && (grants->clock = 1);
+    if (!strcmp(argument, "--allow-host")) return !grants->host && (grants->host = 1);
     const char *seed = optional(argument, "--allow-random", &grants->entropy);
     if (seed) {
         grants->entropy = 1;
@@ -106,8 +110,8 @@ static int accept(MylangGrants *grants, const char *argument, int *matched) {
         return 1;
     }
     if (!strcmp(argument, "--allow-all")) {
-        if (grants->clock || grants->entropy || grants->environment || grants->count) return 0;
-        grants->clock = grants->entropy = grants->environment = 1;
+        if (grants->clock || grants->host || grants->entropy || grants->environment || grants->count) return 0;
+        grants->clock = grants->entropy = grants->environment = grants->host = 1;
         grants->names = "";
         return directory(grants, ".", 1);
     }
@@ -129,6 +133,13 @@ static int writable(const MylangGrants *grants) {
     for (size_t i = 0; i < grants->count; ++i) if (grants->directories[i].writable) return 1;
     return 0;
 }
+/* The entry shim asks for the `Host` authority a foreign call needs. Without
+   `--restrict` it is granted like every other capability; under `--restrict`
+   only `--allow-host` provides it. */
+uint64_t myl_qbe_grant_host_checked(void *context, const char *flag) {
+    if (!host_authority) { myl_qbe_fail_missing_capability(context, flag); return 0; }
+    return UINT64_MAX - 5;
+}
 /* Apply the granted authority. A linked native provider is the program's whole
    authority unless `--restrict` is given; with no provider linked the command
    line decides, granting every capability by default. Write authority always
@@ -136,6 +147,7 @@ static int writable(const MylangGrants *grants) {
    read grant. */
 static int provision(MylangGrants *grants, MylangNativeProviders *providers, int linked) {
     (void)mylang_host_charge;
+    host_authority = !grants->restricted || grants->host;
     if (linked && !grants->restricted) return 1;
     if (!roots(grants)) return 0;
     int open = !grants->restricted;

@@ -6,8 +6,8 @@ import observe
 import validation
 
 
-def main() -> i64:
-    if io.length() != wire.REQUEST:
+def main(host: Host) -> i64:
+    if io.length(host) != wire.REQUEST:
         return 1
-    _ = observe.publish(validation.validate(request.board()))
+    _ = observe.publish(host, validation.validate(host, request.board(host)))
     return 0

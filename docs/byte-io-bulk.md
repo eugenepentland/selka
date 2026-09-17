@@ -15,10 +15,10 @@ record Block:
     count: i64
 
 
-host def read_block(offset: i64) -> Block effects(host)
+host def read_block(host: Host, offset: i64) -> Block effects(host)
 
 
-host def write_block(block: Block) -> i64 effects(host)
+host def write_block(host: Host, block: Block) -> i64 effects(host)
 ```
 
 Keep the existing `length`, `byte`, and `put` declarations. The host validates
@@ -42,13 +42,13 @@ For example, a complete copy can use:
 
 ```my
 # doc: skip needs host capability: the mylang-io byte host and its io.my module
-def main() -> i64:
-    size = io.length()
+def main(host: Host) -> i64:
+    size = io.length(host)
     offset = 0
     while offset < size:
-        block = io.read_block(offset)
+        block = io.read_block(host, offset)
         count = block.count
-        if io.write_block(block) != count:
+        if io.write_block(host, block) != count:
             return 1
         offset += count
     return 0

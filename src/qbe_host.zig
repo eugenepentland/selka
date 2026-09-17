@@ -16,8 +16,10 @@ pub fn describe(allocator: std.mem.Allocator, program: bc.Program, catalog: *nat
     var declarations: std.ArrayList(Declaration) = .empty;
     for (program.functions) |function| {
         if (function.policy.host == null or function.policy.c_abi) continue;
-        const parameters = try allocator.alloc([]const u8, function.signature.parameter_count);
-        for (parameters, function.scope.locals[0..parameters.len]) |*parameter, local| parameter.* = try catalog.identity(local.ty);
+        // The leading `Host` authority never reaches the copied host bridge.
+        const values = function.scope.locals[@min(1, function.scope.locals.len)..function.signature.parameter_count];
+        const parameters = try allocator.alloc([]const u8, values.len);
+        for (parameters, values) |*parameter, local| parameter.* = try catalog.identity(local.ty);
         var digest: [32]u8 = undefined;
         std.crypto.hash.sha2.Sha256.hash(function.name, &digest, .{});
         try declarations.append(allocator, .{

@@ -10,4 +10,8 @@
    module consumes never reach the budget parser. Returns the process exit
    status. */
 int mylang_qbe_run_grants(uint64_t (*entry)(void *), int argc, char **argv, const MylangNativeProviders *base);
+/* Grant the `Host` authority a foreign call needs, or fail the context when the
+   command line did not grant it. The entry shim calls this for a `Host` entry
+   parameter before the guest body runs. */
+uint64_t myl_qbe_grant_host_checked(void *context, const char *flag);
 #endif

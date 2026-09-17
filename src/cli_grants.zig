@@ -10,6 +10,7 @@ pub const max_directories = 8;
 const clock_flag = "--allow-clock";
 const random_flag = "--allow-random";
 const environment_flag = "--allow-env";
+const host_flag = "--allow-host";
 /// The flag that turns the default grant of every capability into a denial.
 pub const restrict_flag = "--restrict";
 /// One requested directory grant, borrowed from argv for the process lifetime.
@@ -26,6 +27,8 @@ pub const Config = struct {
     /// Absent for no grant, otherwise an optional reproducible seed.
     entropy: ??u64 = null,
     clock: bool = false,
+    /// Grant to make a foreign call under `--restrict`.
+    host: bool = false,
     restricted: bool = false,
 
     /// Consume one recognized authority option, rejecting duplicates and empty paths.
@@ -43,6 +46,11 @@ pub const Config = struct {
             self.clock = true;
             return true;
         }
+        if (std.mem.eql(u8, argument, host_flag)) {
+            if (self.host) return error.Usage;
+            self.host = true;
+            return true;
+        }
         if (try self.optional(argument, random_flag)) |digits| {
             self.entropy = if (digits.len == 0) @as(?u64, null) else std.fmt.parseUnsigned(u64, digits, 10) catch return error.Usage;
             return true;
@@ -52,8 +60,10 @@ pub const Config = struct {
             return true;
         }
         if (!std.mem.eql(u8, argument, "--allow-all")) return false;
-        if (self.clock or self.entropy != null or self.environment != null or self.count != 0) return error.Usage;
+        const already = self.clock or self.host or self.entropy != null;
+        if (already or self.environment != null or self.count != 0) return error.Usage;
         self.clock = true;
+        self.host = true;
         self.entropy = @as(?u64, null);
         self.environment = "";
         return self.directory(".", true);
@@ -88,6 +98,7 @@ pub fn flagFor(ty: language.values.Type) ?[]const u8 {
         .clock_cap => clock_flag,
         .random_cap => random_flag,
         .environment_cap => environment_flag,
+        .host_cap => host_flag,
         else => null,
     };
 }
@@ -103,6 +114,7 @@ pub fn ungranted(program: language.bytecode.Program, config: Config) ?[]const u8
             .clock_cap => config.clock,
             .random_cap => config.entropy != null,
             .environment_cap => config.environment != null,
+            .host_cap => config.host,
             else => true,
         };
         if (!granted) return flagFor(parameter.ty);

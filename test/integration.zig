@@ -10,11 +10,11 @@ const tools = [_][]const u8{
     "--zig=" ++ @import("test_options").zig_path,
 };
 const host_program =
-    \\host def measure(x: i64) -> i64 effects(host)
+    \\host def measure(host: Host, x: i64) -> i64 effects(host)
     \\
     \\
-    \\def main() -> i64:
-    \\    return measure(6)
+    \\def main(host: Host) -> i64:
+    \\    return measure(host, 6)
 ;
 
 // spec-case: CONSTANT-2
@@ -79,6 +79,30 @@ test "CLI checks host declarations and refuses to run one with no registration" 
     // Nothing registers a host implementation for a plain `mylang run`, so the
     // program cannot start; that is a host-boundary refusal, not a guest trap.
     try invoke("run", host_program, 2, "", "HostMissingRegistration");
+}
+// spec: HOST-CAPABILITY
+test "CLI threads a Host capability through an extern call and runs it natively" {
+    const source =
+        \\extern def abs(host: Host, x: i32) -> i32 effects(host)
+        \\
+        \\
+        \\def main(host: Host) -> i64:
+        \\    return i64(abs(host, -7))
+    ;
+    try invoke("check", source, 0, "", "");
+    try invokeOptions("run", source, &.{}, 0, "7\n", "");
+}
+// spec: HOST-CAPABILITY
+test "CLI withholds Host under restrict and grants it with --allow-host" {
+    const source =
+        \\extern def abs(host: Host, x: i32) -> i32 effects(host)
+        \\
+        \\
+        \\def main(host: Host) -> i64:
+        \\    return i64(abs(host, -7))
+    ;
+    try invokeOptions("run", source, &.{"--restrict"}, 2, "", "--allow-host");
+    try invokeOptions("run", source, &.{ "--restrict", "--allow-host" }, 0, "7\n", "");
 }
 // spec-case: ARENA-MANAGED-1
 test "CLI runs the managed arena example under normal and stress collection" {
@@ -2391,7 +2415,7 @@ const listing_module =
     \\    id: Count
     \\
     \\
-    \\host def measure(x: i64) -> i64 effects(host)
+    \\host def measure(host: Host, x: i64) -> i64 effects(host)
     \\
     \\
     \\export main
