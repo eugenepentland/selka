@@ -32,3 +32,16 @@ jobs:
       - run: zig build fmt-check
       - run: zig build test -Doptimize=${{ matrix.mode }} --summary all
       - run: zig build -Doptimize=${{ matrix.mode }}
+      # Performance reporting only: no approved baseline is consulted yet, so a
+      # noisy shared runner cannot fail the build. A required performance status
+      # and candidate promotion stay follow-ups per docs/tooling/benchmark-plan.md.
+      - name: Benchmark report
+        if: matrix.mode == 'ReleaseFast'
+        run: |
+          zig-out/bin/mylang test examples/benchmarks/main.my \
+            --cases examples/benchmarks/cases.json \
+            --bench '*' --mode ReleaseFast \
+            --bench-warmup 1 --bench-batches 3 \
+            --bench-output bench-candidate.json \
+            --cache-dir .mylang-cache/bench \
+            --qbe zig-out/bin/qbe --zig "$(command -v zig)"

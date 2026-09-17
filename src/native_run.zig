@@ -176,10 +176,11 @@ fn position(text: []const u8) ?Place {
     return .{ .path = text[0..previous], .line = line, .column = column };
 }
 
-/// Name an executable by everything that decides its bytes, without running a tool.
-/// A warm run must not pay for a toolchain probe it is about to skip.
-fn identity(context: fs.Context, settings: options.Options, manifest: []const u8) Error![]const u8 {
-    const environment = try std.json.Stringify.valueAlloc(context.allocator, .{
+/// Everything besides the program itself that decides an executable's bytes,
+/// captured without running a tool: a warm run must not pay for a toolchain
+/// probe it is about to skip.
+fn buildEnvironment(context: fs.Context, settings: options.Options) Error![]const u8 {
+    return std.json.Stringify.valueAlloc(context.allocator, .{
         .compiler = bundled.compiler_identity,
         .runtime = bundled.content_hash,
         .zig = try context.stamp(try context.executable(settings.zig)),
@@ -187,19 +188,34 @@ fn identity(context: fs.Context, settings: options.Options, manifest: []const u8
         .mode = settings.mode,
         .target = settings.target,
     }, .{});
-    return fs.hash(context.allocator, try std.mem.concat(context.allocator, u8, &.{ environment, manifest }));
+}
+
+/// Name an executable by its build environment and the units it was made from.
+fn identity(context: fs.Context, settings: options.Options, manifest: []const u8) Error![]const u8 {
+    return fs.hash(context.allocator, try std.mem.concat(context.allocator, u8, &.{ try buildEnvironment(context, settings), manifest }));
+}
+
+/// The directory this compiler generation's programs live in: `run/<hash>` under
+/// the cache root, named like the object cache's generations so a rebuilt
+/// compiler evicts its predecessor's programs along with its objects. Naming the
+/// directory costs no tool probe and creates nothing; only a cold build opens it.
+fn home(context: fs.Context, settings: options.Options) Error![]const u8 {
+    const root = try builder.cacheRoot(context, settings);
+    return std.fs.path.join(context.allocator, &.{ root, "run", try fs.hash(context.allocator, builder.generation_identity) });
 }
 
 fn publish(context: fs.Context, settings: options.Options, manifest: []const u8) Error![]const u8 {
-    const home = try std.fs.path.join(context.allocator, &.{ try context.absolute(settings.cache), "run" });
-    const path = try std.fs.path.join(context.allocator, &.{ home, try identity(context, settings, manifest) });
+    const name = try identity(context, settings, manifest);
+    const path = try std.fs.path.join(context.allocator, &.{ try home(context, settings), name });
     if (context.exists(path)) return path;
     const prepared = try builder.prepare(context, settings);
     defer context.remove(prepared.cache.temporary);
-    try context.mkdir(home);
+    // Opening this generation evicts every other generation's programs.
+    const directory = try builder.generation(context, prepared.root, "run", builder.generation_identity);
     const document = try std.json.parseFromSlice(std.json.Value, context.allocator, manifest, .{ .allocate = .alloc_always });
-    _ = try builder.assemble(prepared.cache, settings, document.value, path);
-    return path;
+    const published = try std.fs.path.join(context.allocator, &.{ directory, name });
+    _ = try builder.assemble(prepared.cache, settings, document.value, published);
+    return published;
 }
 
 test "a located runtime locator survives paths that carry colons" {
@@ -217,8 +233,8 @@ test "a run identity separates programs, toolchains and build modes" {
     defer context.deinit();
     var directory = std.testing.tmpDir(.{});
     defer directory.cleanup();
-    const home = try directory.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
-    const tool = try std.fs.path.join(context.allocator, &.{ home, "tool" });
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    const tool = try std.fs.path.join(context.allocator, &.{ root, "tool" });
     try context.write(tool, "#!/bin/sh\nexit 0\n");
     try std.Io.Dir.cwd().setFilePermissions(std.testing.io, tool, .executable_file, .{});
     // Pin both modes: the default is `ReleaseFast` now, so the test must name
@@ -232,6 +248,31 @@ test "a run identity separates programs, toolchains and build modes" {
     try std.testing.expect(!std.mem.eql(u8, first, second));
     try std.testing.expect(!std.mem.eql(u8, first, try identity(context, release, "{\"functions\":[]}")));
     try std.testing.expectEqualStrings(first, try identity(context, settings, "{\"functions\":[]}"));
+}
+
+// spec-case: QBE-GENERATION-1
+test "run programs are published under one directory per compiler generation whatever the mode" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    const cache = try std.fs.path.join(context.allocator, &.{ root, "cache" });
+    const settings: options.Options = .{ .source = "", .run = true, .mode = "Debug", .cache = cache };
+    const debug = try home(context, settings);
+    var release = settings;
+    release.mode = "ReleaseFast";
+    const runs = try std.fs.path.join(context.allocator, &.{ cache, "run" });
+    try std.testing.expectEqualStrings(runs, std.fs.path.dirname(debug).?);
+    try std.testing.expectEqual(@as(usize, 64), std.fs.path.basename(debug).len);
+    // Mode and tools stay in a program's own name, not in its generation, so
+    // concurrent builds by one compiler never evict each other's programs.
+    try std.testing.expectEqualStrings(debug, try home(context, release));
+    try std.testing.expectEqualStrings(debug, try home(context, settings));
+    // Naming a generation creates nothing: a warm run only looks for its program.
+    try std.testing.expect(!context.exists(runs));
 }
 
 test "native JSON traps attach structured detail from the machine record" {

@@ -1,0 +1,60 @@
+[
+  {
+    "name": "record-navigation",
+    "argv": [
+      "rg",
+      "-n",
+      "-e",
+      "record rename|record migration|rename.*record|class.*record|record.*class|agent comparison|paired agent",
+      "src",
+      "docs",
+      "SPEC.md",
+      "README.md"
+    ],
+    "milliseconds": [
+      12.406307010678574,
+      12.252408982021734,
+      12.270945007912815
+    ],
+    "output_bytes": 184506,
+    "exit_code": 0
+  },
+  {
+    "name": "field-rule",
+    "argv": [
+      "rg",
+      "-n",
+      "-e",
+      "ratchet|field.*7|seven|max_field",
+      "src",
+      "guardian.toml",
+      "CLAUDE.md"
+    ],
+    "milliseconds": [
+      7.968088990310207,
+      7.844490988645703,
+      7.952596992254257
+    ],
+    "output_bytes": 2734,
+    "exit_code": 0
+  },
+  {
+    "name": "float-symbol",
+    "argv": [
+      "rg",
+      "-n",
+      "-e",
+      "__float_sqrt",
+      "src",
+      "tests",
+      "test"
+    ],
+    "milliseconds": [
+      5.1799969805870205,
+      6.029896001564339,
+      6.065155001124367
+    ],
+    "output_bytes": 577,
+    "exit_code": 0
+  }
+]

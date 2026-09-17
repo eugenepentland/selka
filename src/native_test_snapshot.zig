@@ -8,6 +8,8 @@ pub const Error = fs.Error || std.Io.Dir.OpenError || std.Io.Dir.SelectiveWalker
     std.Io.File.StatError || std.Io.File.ReadPositionalError ||
     error{ InvalidTestSnapshot, SourceChanged, InvalidTestProviders, ProviderSignatureChanged };
 const byte_limit = 16 * 1024 * 1024;
+/// Entry-point body appended to a library entry so it can be checked as a project.
+const main_stub = "def main() -> int:\n    return 0\n";
 /// Captured bytes are independent of subsequent source edits.
 pub const File = struct { path: []const u8, data: []const u8, hash: []const u8 };
 /// Captured required-configuration files and their combined policy identity.
@@ -184,6 +186,68 @@ pub fn materialize(context: fs.Context, snapshot: Snapshot, directory: []const u
     };
 }
 
+/// Return a snapshot whose entry file declares a stub `main` when it has none,
+/// so a library module or `*_test.my` file can be checked and tested as a
+/// project. A file with a `main` and every other file are returned unchanged.
+/// A patched projection carries the identity of its patched bytes, because that
+/// is what the checker and `verify` see; the caller keeps the user's snapshot.
+pub fn withTestEntry(context: fs.Context, snapshot: Snapshot) Error!Snapshot {
+    const index = find(snapshot.files, snapshot.entry) orelse return error.InvalidTestSnapshot;
+    const original = snapshot.files[index].data;
+    if (declaresMain(original)) return snapshot;
+    var patched: std.ArrayList(u8) = .empty;
+    if (!hasModuleHeader(original)) {
+        const stem = snapshot.entry[0 .. snapshot.entry.len - ".my".len];
+        try patched.appendSlice(context.allocator, "module ");
+        try patched.appendSlice(context.allocator, stem);
+        try patched.append(context.allocator, '\n');
+    }
+    try patched.appendSlice(context.allocator, original);
+    if (original.len != 0 and original[original.len - 1] != '\n') try patched.append(context.allocator, '\n');
+    try patched.appendSlice(context.allocator, main_stub);
+    const files = try context.allocator.dupe(File, snapshot.files);
+    files[index] = .{ .path = snapshot.files[index].path, .data = patched.items, .hash = try fs.hash(context.allocator, patched.items) };
+    return .{
+        .root = snapshot.root,
+        .entry = snapshot.entry,
+        .entry_path = snapshot.entry_path,
+        .files = files,
+        .support = snapshot.support,
+        .identity = try identity(context.allocator, snapshot.entry, files, snapshot.support.files),
+        .excluded = snapshot.excluded,
+    };
+}
+
+/// Whether a source declares a top-level `def main`, the entry point a project
+/// check requires. Library modules and `*_test.my` files generally do not.
+pub fn declaresMain(source: []const u8) bool {
+    var lines = std.mem.splitScalar(u8, source, '\n');
+    while (lines.next()) |raw| {
+        const line = std.mem.trimStart(u8, raw, " \t");
+        if (!std.mem.startsWith(u8, line, "def")) continue;
+        const after_def = line["def".len..];
+        if (after_def.len == 0 or (after_def[0] != ' ' and after_def[0] != '\t')) continue;
+        const name = std.mem.trimStart(u8, after_def, " \t");
+        if (!std.mem.startsWith(u8, name, "main")) continue;
+        const after_name = name["main".len..];
+        if (after_name.len == 0 or after_name[0] == '(' or after_name[0] == ' ' or after_name[0] == '\t') return true;
+    }
+    return false;
+}
+
+/// Whether a source opens with a `module` declaration rather than a bare body.
+fn hasModuleHeader(source: []const u8) bool {
+    var lines = std.mem.splitScalar(u8, source, '\n');
+    while (lines.next()) |raw| {
+        const line = std.mem.trim(u8, raw, " \t\r");
+        if (line.len == 0 or line[0] == '#') continue;
+        if (!std.mem.startsWith(u8, line, "module")) return false;
+        const after = line["module".len..];
+        return after.len != 0 and (after[0] == ' ' or after[0] == '\t');
+    }
+    return false;
+}
+
 /// Place an absolute path under `temp_root` with its root stripped, preserving
 /// every ancestor directory so walk-up discovery observes the same hierarchy.
 fn mirrorPath(allocator: std.mem.Allocator, temp_root: []const u8, absolute: []const u8) Error![]const u8 {
@@ -299,6 +363,41 @@ test "provider signatures and typed values compare structurally" {
     try compatible(v.get(parsed.value, "before"), v.get(parsed.value, "after"), "test_ok");
     try std.testing.expectError(error.ProviderSignatureChanged, compatible(v.get(parsed.value, "before"), v.get(parsed.value, "changed"), "test_ok"));
     try std.testing.expect(!equivalent(.{ .bool = true }, .{ .integer = 1 }));
+}
+
+// spec: NATIVE-TEST-9
+test "a library test entry gains a stub main and a program entry is untouched" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary_dir = std.testing.tmpDir(.{});
+    defer temporary_dir.cleanup();
+    const root = try temporary_dir.dir.realPathFileAlloc(context.io, ".", context.allocator);
+    const library = try std.fs.path.join(context.allocator, &.{ root, "inventory.my" });
+    try context.write(library, "module inventory\nexport test_value\ndef test_value() -> bool effects():\n    return True\n");
+    const captured = try capture(context, library);
+    const prepared = try withTestEntry(context, captured);
+    const index = find(prepared.files, "inventory.my").?;
+    try std.testing.expect(std.mem.endsWith(u8, prepared.files[index].data, main_stub));
+    try std.testing.expect(!std.mem.eql(u8, captured.identity, prepared.identity));
+    var mirror = std.testing.tmpDir(.{});
+    defer mirror.cleanup();
+    const mirror_root = try mirror.dir.realPathFileAlloc(context.io, ".", context.allocator);
+    try verify(context, try materialize(context, prepared, mirror_root));
+    const bare = try std.fs.path.join(context.allocator, &.{ root, "bare_test.my" });
+    try context.write(bare, "export test_x\ndef test_x() -> bool effects():\n    return True\n");
+    const patched_bare = try withTestEntry(context, try capture(context, bare));
+    const bare_index = find(patched_bare.files, "bare_test.my").?;
+    try std.testing.expect(std.mem.startsWith(u8, patched_bare.files[bare_index].data, "module bare_test\n"));
+    const program = try std.fs.path.join(context.allocator, &.{ root, "app.my" });
+    try context.write(program, "module app\ndef main() -> int:\n    return 0\n");
+    const app = try capture(context, program);
+    const untouched = try withTestEntry(context, app);
+    const app_index = find(untouched.files, "app.my").?;
+    try std.testing.expectEqualStrings(app.files[app_index].data, untouched.files[app_index].data);
+    try std.testing.expect(declaresMain("def main() -> int:\n    return 0\n"));
+    try std.testing.expect(!declaresMain("def mainstreet() -> int:\n    return 0\n"));
 }
 
 test "source snapshots exclude generated sources and configured cache subtrees" {

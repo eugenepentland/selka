@@ -30,8 +30,8 @@ pub const embed_prelude =
     \\}
     \\extern void myl_qbe_host_begin(void *);
     \\static int execute(uint64_t (*entry)(void *),const MylangRunOptions *options,MylangRunResult *out) {
-    \\    uint64_t steps=options && options->max_steps ? options->max_steps : 10000000;
-    \\    uint64_t frames=options && options->max_frames ? options->max_frames : 1024;
+    \\    uint64_t steps=options && options->max_steps ? options->max_steps : MYL_QBE_UNBOUNDED;
+    \\    uint64_t frames=options && options->max_frames ? options->max_frames : MYL_QBE_UNBOUNDED;
     \\    MylQbeResult result;
     \\    int status=mylang_qbe_execute_config(entry,steps,frames,0,options ? options->providers : NULL,myl_qbe_host_begin,&result);
     \\    if (status && result.code && strncmp(result.code,"R_",2)) status=2;

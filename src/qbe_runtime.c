@@ -1,8 +1,10 @@
+#define _POSIX_C_SOURCE 200809L
 /* Separately compiled scalar runtime. Keep it independent of declaration order. */
 #include "qbe_runtime.h"
 #include "native_collections.h"
 #include "native_text.h"
 #include <inttypes.h>
+#include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,6 +12,8 @@
 #include <math.h>
 #include <float.h>
 #include <fenv.h>
+#include <time.h>
+#include <unistd.h>
 #if defined(__FAST_MATH__) || FLT_RADIX != 2 || DBL_MANT_DIG != 53 || DBL_MAX_EXP != 1024
 #error "mylang binary64 requires strict IEEE binary64 arithmetic"
 #endif
@@ -25,13 +29,42 @@ _Static_assert(offsetof(MylQbeActiveFrame, position) == 8, "QBE frame position A
 /* Stable trap for a guest that outgrew its byte ceiling. It is a runtime trap
    like any other R_ code, so it exits 1 rather than reporting a host defect. */
 static const char *const memory_budget_code = "R_MEMORY_BUDGET";
-/* A budget trap tells the reader which flag raises it, because a program that
-   stops at ten million steps is a budget decision, not a program defect. */
+/* A budget trap tells the reader which flag imposes it, because a bounded run
+   is a deliberate decision, not a program defect. */
 static const char *describe(const char *code) {
     if (!strcmp(code, memory_budget_code)) return "memory budget exhausted";
     if (!strcmp(code, "R_STEP_LIMIT")) return "instruction budget exhausted; raise it with --max-steps=N";
     if (!strcmp(code, "R_FRAME_LIMIT")) return "call-depth budget exhausted; raise it with --max-frames=N";
     return strncmp(code, "R_", 2) ? "QBE runtime failure" : "native execution failed";
+}
+/* Wall-clock guard for otherwise unbounded execution. The timer is monotonic,
+   so a system clock change cannot move it; when it fires the handler writes a
+   stable trap-like diagnostic and leaves via _exit, because only async-signal-
+   safe calls are legal there. `--timeout=SECONDS` arms it; no flag leaves the
+   program without an elapsed-time ceiling. */
+static timer_t timeout_timer;
+static void on_timeout(int signal_number) {
+    (void)signal_number;
+    static const char message[] = "R_TIMEOUT: wall-clock budget exhausted; raise it with --timeout=SECONDS\n";
+    ssize_t ignored = write(STDERR_FILENO, message, sizeof message - 1);
+    (void)ignored;
+    _exit(1);
+}
+/* Arm the monotonic timer for `seconds`; zero (no flag) arms nothing. Returns 0
+   when the process cannot install the handler or the timer. */
+static int arm_timeout(uint64_t seconds) {
+    if (!seconds) return 1;
+    struct sigaction action = {0};
+    action.sa_handler = on_timeout;
+    sigemptyset(&action.sa_mask);
+    if (sigaction(SIGALRM, &action, NULL)) return 0;
+    struct sigevent event = {0};
+    event.sigev_notify = SIGEV_SIGNAL;
+    event.sigev_signo = SIGALRM;
+    if (timer_create(CLOCK_MONOTONIC, &event, &timeout_timer)) return 0;
+    struct itimerspec spec = {0};
+    spec.it_value.tv_sec = (time_t)seconds;
+    return timer_settime(timeout_timer, 0, &spec, NULL) == 0;
 }
 /* Append one formatted fragment; returns 0 when the bounded buffer would
    truncate. The caller keeps the buffer NUL terminated on success. */
@@ -68,8 +101,27 @@ static size_t detail_text(const MylQbeTrapDetail *detail, char *out, size_t size
         if ((present & MYL_QBE_TRAP_PRESENT_WIDTH) &&
             !append(out, size, &used, ", width %" PRIu64, detail->width)) return 0;
         if (!append(out, size, &used, ")")) return 0;
+    } else if (detail->operation && *detail->operation) {
+        /* A message-only detail: `assert cond, "text"` records present=0 and the
+           assertion text as `operation`, so the human line reads
+           `R_ASSERT: text` without disturbing any numeric rendering above. */
+        if (!append(out, size, &used, ": %s", detail->operation)) return 0;
     }
     return used;
+}
+/* Append a quoted JSON string for arbitrary text. An assertion message is guest
+   data, so a quote, backslash or control byte is escaped rather than copied; the
+   record stays one valid JSON line for every message. Returns 0 on truncation. */
+static int append_json_string(char *out, size_t size, size_t *used, const char *value) {
+    if (!append(out, size, used, "\"")) return 0;
+    for (const unsigned char *byte = (const unsigned char *)value; *byte; ++byte) {
+        if (*byte == '"' || *byte == '\\') {
+            if (!append(out, size, used, "\\%c", *byte)) return 0;
+        } else if (*byte < 0x20) {
+            if (!append(out, size, used, "\\u%04x", *byte)) return 0;
+        } else if (!append(out, size, used, "%c", *byte)) return 0;
+    }
+    return append(out, size, used, "\"");
 }
 /* One bounded line of JSON for the structured transport. Only present numeric
    fields are emitted, matching the downstream `trap_detail` object. */
@@ -79,8 +131,8 @@ static size_t detail_json(const MylQbeTrapDetail *detail, char *out, size_t size
     out[0] = 0;
     if (!detail->version) return 0;
     uint32_t present = detail->present;
-    if (!append(out, size, &used, "{\"version\":%u,\"operation\":\"%s\"",
-                detail->version, detail->operation ? detail->operation : "operation")) return 0;
+    if (!append(out, size, &used, "{\"version\":%u,\"operation\":", detail->version)) return 0;
+    if (!append_json_string(out, size, &used, detail->operation ? detail->operation : "operation")) return 0;
     if ((present & MYL_QBE_TRAP_PRESENT_INDEX) &&
         !append(out, size, &used, ",\"index\":%" PRId64, detail->index)) return 0;
     if ((present & MYL_QBE_TRAP_PRESENT_LENGTH) &&
@@ -98,7 +150,10 @@ static uint64_t fail(void *context, const char *code) {
     Context *ctx = context;
     if (!ctx->trap) {
         ctx->trap = code;
-        for (uint64_t i = ctx->frames; i && ctx->trace_count < 16; --i) {
+        /* Only the slots the runtime actually tracked are walked; with unbounded
+           frames the logical depth may exceed the bounded trace storage. */
+        uint64_t depth = ctx->frames < ctx->max_frames ? ctx->frames : ctx->max_frames;
+        for (uint64_t i = depth; i && ctx->trace_count < 16; --i) {
             if (!ctx->frame_data) break;
             MylQbeActiveFrame frame = ctx->frame_data[i-1];
             if (!frame.function || frame.position >= frame.function->count) continue;
@@ -191,7 +246,23 @@ void myl_qbe_fail_allocation(void *context) {
     fail(context, ((Context *)context)->heap.exhausted ? memory_budget_code : "OutOfMemory");
 }
 void myl_qbe_fail_iteration(void *context) { fail(context, "R_LIST_ITERATION_MUTATION"); }
-void myl_qbe_fail_assert(void *context) { fail(context, "R_ASSERT"); }
+/* A failed assertion reports the `assert cond, "text"` message the current pc's
+   function metadata carries, as the trap's `operation`, so both the human stderr
+   line and the structured record name the message. A pc without a message (or a
+   frame whose function metadata predates messages) keeps the bare trap. */
+void myl_qbe_fail_assert(void *context) {
+    Context *ctx = context;
+    const MylQbeActiveFrame *frame = ctx->active_frame;
+    if (frame && frame->function && frame->function->messages &&
+        frame->position < frame->function->count) {
+        const char *message = frame->function->messages[frame->position];
+        if (message && *message) {
+            fail_detail(context, "R_ASSERT", message, 0, 0, 0, 0, 0, 0);
+            return;
+        }
+    }
+    fail(context, "R_ASSERT");
+}
 void myl_qbe_fail_bounds(void *context) {
     fail(context, "R_INDEX_BOUNDS");
 }
@@ -406,10 +477,12 @@ void myl_qbe_frame_release(void *context, void *payload) {
 }
 void myl_qbe_enter(void *context) {
     Context *ctx = context;
-    /* The logical budget is independent of the execution stack guard. */
-    if (ctx->frames == ctx->max_frames) { fail(context, "R_FRAME_LIMIT"); return; }
+    /* The logical ceiling is independent of the execution stack guard. A
+       context with unbounded frames still tracks at most `max_frames` slots for
+       trace reporting; deeper frames share one scratch slot. */
+    if (ctx->frames == ctx->frame_limit) { fail(context, "R_FRAME_LIMIT"); return; }
     if (ctx->frame_data) {
-        ctx->active_frame = &ctx->frame_data[ctx->frames];
+        ctx->active_frame = ctx->frames < ctx->max_frames ? &ctx->frame_data[ctx->frames] : &ctx->scratch_frame;
         *ctx->active_frame = (MylQbeActiveFrame){0};
     }
     ++ctx->frames;
@@ -419,7 +492,11 @@ void myl_qbe_leave(void *context) {
     if (!ctx->frames) { fail(context, "R_INTERNAL"); return; }
     if (ctx->active_frame) ctx->native_stack_bytes -= ctx->active_frame->native_bytes;
     --ctx->frames;
-    ctx->active_frame = ctx->frames && ctx->frame_data ? &ctx->frame_data[ctx->frames-1] : NULL;
+    if (!ctx->frames || !ctx->frame_data) {
+        ctx->active_frame = NULL;
+        return;
+    }
+    ctx->active_frame = ctx->frames <= ctx->max_frames ? &ctx->frame_data[ctx->frames-1] : &ctx->scratch_frame;
 }
 void myl_qbe_step(void *context) {
     Context *ctx = context;
@@ -462,8 +539,11 @@ int mylang_qbe_run_options(uint64_t (*entry)(void *), int argc, char **argv) {
     return mylang_qbe_run_providers(entry, argc, argv, NULL);
 }
 int mylang_qbe_run_providers(uint64_t (*entry)(void *), int argc, char **argv, const struct MylangNativeProvidersTag *providers) {
-    Context context = {.max_steps=10000000, .max_frames=1024};
-    int saw_steps = 0, saw_frames = 0, stress = 0, print = 0;
+    /* Unbounded by default: the memory ceiling contains a runaway allocation,
+       and --timeout=SECONDS is the elapsed-time guard. */
+    Context context = {.max_steps=MYL_QBE_UNBOUNDED, .max_frames=MYL_QBE_UNBOUNDED};
+    uint64_t timeout = 0;
+    int saw_steps = 0, saw_frames = 0, saw_timeout = 0, stress = 0, print = 0;
     int delimiter = 0;
     char **guest = calloc(argc > 1 ? (size_t)argc : 1, sizeof *guest);
     if (!guest) { fputs("OutOfMemory: QBE runtime failure\n", stderr); return 2; }
@@ -476,6 +556,7 @@ int mylang_qbe_run_providers(uint64_t (*entry)(void *), int argc, char **argv, c
         if (!delimiter) {
             if (!strncmp(argv[i], "--max-steps=", 12) && !saw_steps++) { context.max_steps = budget(&context, argv[i] + 12); continue; }
             if (!strncmp(argv[i], "--max-frames=", 13) && !saw_frames++) { context.max_frames = budget(&context, argv[i] + 13); continue; }
+            if (!strncmp(argv[i], "--timeout=", 10) && !saw_timeout++) { timeout = budget(&context, argv[i] + 10); continue; }
             if (!strcmp(argv[i], "--gc-stress") && !stress) { stress = 1; continue; }
             if (!strcmp(argv[i], "--print-result") && !print) { print = 1; continue; }
         }
@@ -483,6 +564,11 @@ int mylang_qbe_run_providers(uint64_t (*entry)(void *), int argc, char **argv, c
     }
     if (context.trap) {
         fprintf(stderr, "%s: QBE runtime failure\n", context.trap);
+        free(guest);
+        return 2;
+    }
+    if (!arm_timeout(timeout)) {
+        fputs("mylang: cannot arm the --timeout wall-clock guard\n", stderr);
         free(guest);
         return 2;
     }
@@ -536,7 +622,10 @@ int mylang_qbe_execute_providers(uint64_t (*entry)(void *), uint64_t steps, uint
 static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64_t frames, int stress, const struct MylangNativeProvidersTag *providers, void (*initialize)(void *), int guest_argc, char **guest_argv, MylQbeResult *result) {
     *result=(MylQbeResult){0};
     if (!steps || !frames) { result->code="InvalidBudget";return 1; }
-    if (frames>SIZE_MAX/sizeof(MylQbeActiveFrame)) { result->code="OutOfMemory";return 1; }
+    /* Unbounded frames still need a bounded native stack and trace buffer, so the
+       logical ceiling and the slot capacity are separate values. */
+    uint64_t capacity = frames == MYL_QBE_UNBOUNDED ? MYL_QBE_FRAME_CAPACITY : frames;
+    if (capacity>SIZE_MAX/sizeof(MylQbeActiveFrame)) { result->code="OutOfMemory";return 1; }
     /* Read the ceiling and arm the kernel backstop before the first allocation,
        so a runtime defect cannot outgrow the budget the heap will enforce. */
     int budgeted=1;
@@ -545,11 +634,11 @@ static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64
     myl_native_budget_guard(budget);
     Context *context=calloc(1,sizeof *context);
     if (!context) { result->code="OutOfMemory";return 1; }
-    context->max_steps=steps;context->max_frames=frames;context->providers=providers;
+    context->max_steps=steps;context->max_frames=capacity;context->frame_limit=frames;context->providers=providers;
     context->guest_argc=guest_argc;context->guest_argv=guest_argv;
     myl_native_heap_init(&context->heap, budget ? budget : SIZE_MAX);
     context->heap.stress = stress;
-    context->frame_data = calloc((size_t)frames, sizeof(MylQbeActiveFrame));
+    context->frame_data = calloc((size_t)capacity, sizeof(MylQbeActiveFrame));
     if (!context->frame_data) context->trap = "OutOfMemory";
     if (!context->trap && initialize) initialize(context);
     if (!context->trap) result->value = myl_qbe_on_stack(entry,context);

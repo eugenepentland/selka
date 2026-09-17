@@ -216,7 +216,9 @@ pub const Parser = struct {
         _ = try self.expect(.rparen);
         _ = try self.expect(.arrow);
         const result = try self.typeName();
-        const bound = try self.effectBound() orelse return self.sink.fail("E_CALLBACK_EFFECTS", first, "callback types require an explicit effects ceiling");
+        // An omitted callback ceiling is unbounded: the slot accepts any function
+        // value, and an explicit ceiling remains an upper bound on the callee.
+        const bound = try self.effectBound() orelse effects.Bound{ .span = first, .allowed = effects.all };
         const mutates = try self.mutatesClause(names.items, bound);
         const span: Span = .join(first, self.tokens[self.cursor.pos - 1].span);
         try self.syntax.types.callbacks.append(allocator, .{

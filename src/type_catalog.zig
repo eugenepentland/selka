@@ -129,11 +129,39 @@ pub const Catalog = struct {
     /// Resolve a variant name to its stable case index.
     pub fn variant(self: Catalog, ty: typed.Type, src: Source, name: Span, sink: *diagnostic.Sink) Error!usize {
         _ = try self.variants(ty, name, sink);
-        return self.field_names.items[ty.recordIndex()].get(src.text(name)) orelse sink.fail("E_UNKNOWN_VARIANT", name, "variant is not declared on this type");
+        const members = &self.field_names.items[ty.recordIndex()];
+        return members.get(src.text(name)) orelse {
+            const message = try declaredMessage(sink.allocator, "variant is not declared on this type", "variants", members);
+            return sink.fail("E_UNKNOWN_VARIANT", name, message);
+        };
     }
     /// Resolve a record field name to its stable field index.
     pub fn field(self: Catalog, ty: typed.Type, src: Source, name: Span, sink: *diagnostic.Sink) Error!usize {
         _ = try self.record(ty, name, sink);
-        return self.field_names.items[ty.recordIndex()].get(src.text(name)) orelse sink.fail("E_UNKNOWN_FIELD", name, "field does not exist on this record type");
+        const members = &self.field_names.items[ty.recordIndex()];
+        return members.get(src.text(name)) orelse {
+            const message = try declaredMessage(sink.allocator, "field does not exist on this record type", "fields", members);
+            return sink.fail("E_UNKNOWN_FIELD", name, message);
+        };
     }
 };
+
+/// Compose a diagnostic message with a sorted `; declared <label>: a, b` hint.
+fn declaredMessage(allocator: std.mem.Allocator, base: []const u8, label: []const u8, members: *const std.StringHashMapUnmanaged(usize)) Error![]const u8 {
+    const names = try allocator.alloc([]const u8, members.count());
+    defer allocator.free(names);
+    var count: usize = 0;
+    var iterator = members.iterator();
+    while (iterator.next()) |entry| : (count += 1) names[count] = entry.key_ptr.*;
+    std.mem.sort([]const u8, names, {}, nameLessThan);
+    var joined: std.ArrayList(u8) = .empty;
+    defer joined.deinit(allocator);
+    for (names[0..count], 0..) |name, index| {
+        if (index != 0) try joined.appendSlice(allocator, ", ");
+        try joined.appendSlice(allocator, name);
+    }
+    return std.fmt.allocPrint(allocator, "{s}; declared {s}: {s}", .{ base, label, joined.items });
+}
+fn nameLessThan(_: void, left: []const u8, right: []const u8) bool {
+    return std.mem.lessThan(u8, left, right);
+}

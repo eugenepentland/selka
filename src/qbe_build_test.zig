@@ -106,7 +106,7 @@ fn buildAndRun(context: fs.Context, spec: Spec) !BuildReport {
     return .{
         .installed = v.boolean(v.get(parsed.value, "runtime_installed")),
         .reused = v.boolean(v.get(parsed.value, "runtime_reused")),
-        .cache_archives = try countSuffix(context, spec.cache, ".a"),
+        .cache_archives = try archives(context, spec.cache),
         .output = output,
     };
 }
@@ -128,6 +128,15 @@ fn countSuffix(context: fs.Context, directory: []const u8, suffix: []const u8) !
     for (try entries(context, directory)) |name| {
         if (std.mem.endsWith(u8, name, suffix)) found += 1;
     }
+    return found;
+}
+
+/// How many runtime archives the cache holds across its object generations, which
+/// live one directory deep under `objects/`.
+fn archives(context: fs.Context, cache: []const u8) !usize {
+    var found: usize = 0;
+    const objects = try join(context.allocator, &.{ cache, "objects" });
+    for (try entries(context, objects)) |name| found += try countSuffix(context, try join(context.allocator, &.{ objects, name }), ".a");
     return found;
 }
 

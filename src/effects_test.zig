@@ -23,6 +23,12 @@ fn result(source: []const u8, expected: i64) !void {
     defer c.deinit();
     try t.expectEqual(expected, (try native.run(&c)).value);
 }
+fn accept(source: []const u8) !void {
+    var c = try language.Compilation.init(t.allocator, fixture_path, source);
+    defer c.deinit();
+    try c.check();
+    try c.emit();
+}
 
 const allocate_body = "def allocate() -> int:\n    items: list[int] = []\n    return len(items)\n\n";
 // spec: OWN-11
@@ -150,7 +156,7 @@ test "effect rendering propagates a full writer failure" {
     try t.expectError(error.WriteFailed, sets.write(&writer, sets.bit(.managed_allocation)));
 }
 
-// spec-case: EFFECT-CEILING-1
+// spec: EFFECT-CEILING-1
 test "declared ceilings reject hidden effects through generic and callback calls" {
     // A generic body that hides an allocating call behind an empty ceiling rejects
     // once it is instantiated, exactly like an ordinary direct call.
@@ -962,4 +968,67 @@ test "M2 cached callers are revalidated when a callee gains a mutation" {
     var second = try language.Compilation.init(t.allocator, "edited.my", after);
     defer second.deinit();
     try t.expectError(error.SourceError, second.checkWithCache(&cache));
+}
+
+// spec: EFFECT-LITERAL-1
+test "compile-time str literals contribute no managed allocation while computed strings and collections do" {
+    try accept(
+        \\def f() -> None effects(output):
+        \\    print("hi")
+        \\
+        \\
+        \\def main() -> int noalloc:
+        \\    return len("abc")
+    );
+    try result(
+        \\def g() -> str effects():
+        \\    return "x"
+        \\
+        \\
+        \\def main() -> int noalloc:
+        \\    return len(g())
+    , 1);
+    try reject(
+        \\def main() -> int noalloc:
+        \\    return len("a" + "b")
+    , "E_EFFECT_BOUND", "main");
+    try reject(
+        \\def main() -> int noalloc:
+        \\    data: bytes = b"ab"
+        \\    return len(data)
+    , "E_EFFECT_BOUND", "main");
+    try reject(
+        \\def main() -> int noalloc:
+        \\    items: list[int] = []
+        \\    return len(items)
+    , "E_EFFECT_BOUND", "main");
+}
+
+// spec: MUTATION-OVERLAP-1
+test "unannotated helpers accept shared collection arguments while declared mutates contracts still reject overlap" {
+    try accept(
+        \\def merge(dst: list[int], src: list[int]) -> None:
+        \\    for v in src:
+        \\        dst.append(v)
+        \\
+        \\
+        \\def combine(a: list[int], b: list[int]) -> None:
+        \\    merge(a, b)
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    );
+    try reject(
+        \\def touch(dst: list[int], src: list[int]) -> None effects(mutation) mutates(dst):
+        \\    dst[0] = src[0]
+        \\
+        \\
+        \\def combine(a: list[int], b: list[int]) -> None:
+        \\    touch(a, b)
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    , "E_MUTATION_OVERLAP", "may alias");
 }

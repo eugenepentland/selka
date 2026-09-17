@@ -19,6 +19,7 @@ pub const max_config_bytes = 1024 * 1024;
 pub const Error = error{
     ConfigTooLarge,
     DuplicateField,
+    InvalidBudget,
     InvalidImportPolicy,
     InvalidJson,
     InvalidVersion,
@@ -43,11 +44,25 @@ pub const Failure = struct {
     detail: []const u8 = "invalid project configuration",
 };
 
+/// One rejection message reused by every malformed numeric budget field.
+const invalid_budget_detail = "budget values must be positive integers";
+
+/// Optional `budgets` object in `mylang.json`. Each absent field keeps the
+/// matching `project.Options` default; present values must be positive integers.
+pub const Budgets = struct {
+    max_modules: ?usize = null,
+    max_imports: ?usize = null,
+    max_file_bytes: ?usize = null,
+    max_total_bytes: ?usize = null,
+};
+
 /// Strict minimal configuration shape. Unknown fields, duplicate keys and
 /// unsupported versions are rejected before any policy is loaded.
 pub const Document = struct {
     version: u32,
     import_policy: ?[]const u8 = null,
+    /// Per-project source-loading limits; all fields absent uses the defaults.
+    budgets: Budgets = .{},
 };
 
 /// One resolved policy file: absolute path, exact bytes and content digest.
@@ -256,6 +271,8 @@ fn parseDocument(allocator: std.mem.Allocator, bytes: []const u8, failure: *Fail
     var import_policy: ?[]u8 = null;
     errdefer if (import_policy) |value| allocator.free(value);
     var policy_seen = false;
+    var budgets: Budgets = .{};
+    var budgets_seen = false;
 
     while (true) {
         const key_token = try readToken(allocator, &scanner, failure);
@@ -277,6 +294,11 @@ fn parseDocument(allocator: std.mem.Allocator, bytes: []const u8, failure: *Fail
             if (text.len == 0) return fail(failure, &diagnostics, "import_policy must not be empty", error.InvalidImportPolicy);
             if (import_policy) |existing| allocator.free(existing);
             import_policy = try allocator.dupe(u8, text);
+        } else if (std.mem.eql(u8, key, "budgets")) {
+            if (budgets_seen) return fail(failure, &diagnostics, "duplicate budgets field", error.DuplicateField);
+            budgets_seen = true;
+            if (!isObjectBegin(value)) return fail(failure, &diagnostics, "budgets must be a JSON object", error.InvalidBudget);
+            budgets = try parseBudgets(allocator, &scanner, failure);
         } else {
             return fail(failure, &diagnostics, "unknown field in mylang.json", error.UnknownField);
         }
@@ -285,7 +307,42 @@ fn parseDocument(allocator: std.mem.Allocator, bytes: []const u8, failure: *Fail
     const trailing = try readToken(allocator, &scanner, failure);
     if (!isEndOfDocument(trailing)) return fail(failure, &diagnostics, "trailing content after the configuration object", error.InvalidJson);
     if (version == null) return fail(failure, &diagnostics, "mylang.json must carry version: 1", error.MissingVersion);
-    return .{ .version = version.?, .import_policy = import_policy };
+    return .{ .version = version.?, .import_policy = import_policy, .budgets = budgets };
+}
+
+/// Read the body of a `budgets` object after its opening brace. Every key is
+/// optional, unique and a positive integer; unknown keys stay rejected.
+fn parseBudgets(allocator: std.mem.Allocator, scanner: *std.json.Scanner, failure: *Failure) Error!Budgets {
+    var budgets: Budgets = .{};
+    var seen: u8 = 0;
+    while (true) {
+        const key_token = try readToken(allocator, scanner, failure);
+        defer freeToken(allocator, key_token);
+        if (isObjectEnd(key_token)) break;
+        const key = stringText(key_token) orelse return fail(failure, scanner.diagnostics.?, "budget keys must be strings", error.InvalidBudget);
+        const value = try readToken(allocator, scanner, failure);
+        defer freeToken(allocator, value);
+        var matched = false;
+        inline for (.{
+            .{ "max_modules", "max_modules" },
+            .{ "max_imports", "max_imports" },
+            .{ "max_file_bytes", "max_file_bytes" },
+            .{ "max_total_bytes", "max_total_bytes" },
+        }, 0..) |entry, index| {
+            if (std.mem.eql(u8, key, entry[0])) {
+                matched = true;
+                const bit: u8 = 1 << index;
+                if (seen & bit != 0) return fail(failure, scanner.diagnostics.?, "duplicate budget field", error.DuplicateField);
+                seen |= bit;
+                const text = numberText(value) orelse return fail(failure, scanner.diagnostics.?, invalid_budget_detail, error.InvalidBudget);
+                const parsed = std.fmt.parseUnsigned(usize, text, 10) catch return fail(failure, scanner.diagnostics.?, invalid_budget_detail, error.InvalidBudget);
+                if (parsed == 0) return fail(failure, scanner.diagnostics.?, invalid_budget_detail, error.InvalidBudget);
+                @field(budgets, entry[1]) = parsed;
+            }
+        }
+        if (!matched) return fail(failure, scanner.diagnostics.?, "unknown field in budgets", error.UnknownField);
+    }
+    return budgets;
 }
 
 fn freeToken(allocator: std.mem.Allocator, token: std.json.Scanner.Token) void {

@@ -96,7 +96,7 @@ test "a callback type names itself the way the surface writes it" {
     defer c.deinit();
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings("E_TYPE", c.diagnostics.items[0].code);
-    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "def(i64) -> i64 effects()") != null);
+    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "def(int) -> int effects()") != null);
     try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "fn") == null);
     try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "def@") == null);
 }
@@ -405,8 +405,8 @@ test "E1 pure callbacks enter output-permitting slots and the reverse direction 
     defer c.deinit();
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings("E_TYPE", c.diagnostics.items[0].code);
-    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "expected def(i64) -> i64 effects()") != null);
-    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "found def(i64) -> i64 effects(output)") != null);
+    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "expected def(int) -> int effects()") != null);
+    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "found def(int) -> int effects(output)") != null);
     try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "def@") == null);
     try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "effects(0)") == null);
 

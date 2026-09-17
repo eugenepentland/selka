@@ -19,7 +19,10 @@ pub const Toolchain = struct {
     qbe: []const u8,
     assets: []const u8,
     environment: []const u8,
+    /// This environment's object generation, where the suites' cached objects live.
     directory: []const u8,
+    /// This environment's executable generation, where built guest programs live.
+    executables: []const u8,
 };
 
 /// One test binary's native build session: a process-lifetime arena and the toolchain.
@@ -55,21 +58,33 @@ pub fn acquire() Error!*Session {
     var context = try fs.Context.init(owner, session.io, &session.environ);
     const prepared = try native_build.prepare(context, settings());
     context.remove(prepared.cache.temporary);
+    // Opening this compiler's executable generation evicts every other one, the
+    // way `prepare` already did for the objects.
+    const executables = try native_build.generation(context, prepared.root, "exe", native_build.generation_identity);
     session.toolchain = .{
         .zig = try owner.dupe(u8, prepared.cache.zig),
         .qbe = try owner.dupe(u8, prepared.cache.qbe),
         .assets = try owner.dupe(u8, prepared.cache.assets),
         .environment = try owner.dupe(u8, prepared.cache.environment),
         .directory = try owner.dupe(u8, prepared.cache.directory),
+        .executables = try owner.dupe(u8, executables),
     };
-    try std.Io.Dir.cwd().createDirPath(session.io, try std.fmt.allocPrint(owner, "{s}/exe", .{session.toolchain.directory}));
     return session;
 }
 
+// spec-case: QBE-GENERATION-1
 test "the native session resolves one toolchain and reuses it" {
     const first = try acquire();
     const second = try acquire();
     try std.testing.expectEqual(first, second);
     try std.testing.expect(first.toolchain.zig.len != 0 and first.toolchain.qbe.len != 0);
-    try std.testing.expect(std.mem.endsWith(u8, first.toolchain.directory, harness.cache_directory[1..]));
+    // Objects and executables each live in one generation directory under the suite cache.
+    const objects = try std.fmt.allocPrint(std.testing.allocator, "{s}/objects/", .{harness.cache_directory[1..]});
+    defer std.testing.allocator.free(objects);
+    const executables = try std.fmt.allocPrint(std.testing.allocator, "{s}/exe/", .{harness.cache_directory[1..]});
+    defer std.testing.allocator.free(executables);
+    try std.testing.expect(std.mem.indexOf(u8, first.toolchain.directory, objects) != null);
+    try std.testing.expect(std.mem.indexOf(u8, first.toolchain.executables, executables) != null);
+    try std.testing.expectEqual(@as(usize, 64), std.fs.path.basename(first.toolchain.directory).len);
+    try std.testing.expectEqual(@as(usize, 64), std.fs.path.basename(first.toolchain.executables).len);
 }

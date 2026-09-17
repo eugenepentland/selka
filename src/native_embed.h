@@ -6,7 +6,7 @@
 /* Include native_providers.h first. Build generated C with MYLANG_EMBED.
    One generated program per linked library. No guest pointer escapes this ABI. */
 typedef struct {
-    uint64_t max_steps, max_frames; /* zero selects 10000000 / 1024 */
+    uint64_t max_steps, max_frames; /* zero selects unbounded */
     const MylangNativeProviders *providers; /* NULL grants no external authority */
 } MylangRunOptions;
 typedef struct { const char *function, *path; size_t line, column; } MylangRunFrame;

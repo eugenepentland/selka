@@ -291,7 +291,7 @@ test "dictionary pop update and setdefault keep insertion order" {
 }
 
 // spec: PY-COLLECTIONS-18
-test "list += extends in place and items yields the value snapshot in order" {
+test "list += extends in place and items binds key then value in insertion order" {
     try run(
         \\def main() -> i64:
         \\    xs = [1]
@@ -299,14 +299,30 @@ test "list += extends in place and items yields the value snapshot in order" {
         \\    xs += [2, 3]
         \\    if len(xs) != 3 or len(alias) != 3:
         \\        return 1
-        \\    d = {"a": 1, "b": 2}
+        \\    d = {10: 100, 20: 200}
         \\    total = 0
-        \\    for position, value in d.items():
-        \\        total += position + value
-        \\    if total != 4:
+        \\    for key, value in d.items():
+        \\        total += key + value
+        \\    if total != 330:
         \\        return 2
         \\    return 42
     , 42);
+}
+
+// spec-case: PY-COLLECTIONS-18
+test "generic bodies bind items key then value in insertion order" {
+    try run(
+        \\def first_key[K, V](counts: dict[K, V], fallback: K) -> K:
+        \\    for key, value in counts.items():
+        \\        _ = value
+        \\        return key
+        \\    return fallback
+        \\
+        \\
+        \\def main() -> i64:
+        \\    counts = {10: 100, 20: 200}
+        \\    return first_key(counts, 0)
+    , 10);
 }
 
 // spec: PY-COLLECTIONS-19

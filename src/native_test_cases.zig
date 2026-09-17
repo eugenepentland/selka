@@ -21,9 +21,11 @@ pub fn discover(allocator: std.mem.Allocator, schema: std.json.Value, cases: std
     if (cases == .object) {
         var entries = cases.object.iterator();
         while (entries.next()) |entry| {
+            // A key naming any exported function is accepted here so one cases
+            // file can carry both tests and benchmarks; only a key that names
+            // nothing at all is an unknown case.
             const found = for (functions) |function| {
-                const name = v.text(v.get(function, "name"));
-                if (testName(name) and std.mem.eql(u8, name, entry.key_ptr.*)) break true;
+                if (std.mem.eql(u8, v.text(v.get(function, "name")), entry.key_ptr.*)) break true;
             } else false;
             if (!found) return error.UnknownTestCase;
         }

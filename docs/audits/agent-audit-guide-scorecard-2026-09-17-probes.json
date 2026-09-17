@@ -1,0 +1,1270 @@
+{
+ "version": "agent-audit-guide-scorecard-probes-v1",
+ "generated_on": "2026-09-17",
+ "compiler": "4a035f2a606e4e72db32ac8b739f79fae60d2dc3c6d896b54c248f634c9ed546",
+ "toolchain": {
+  "compiler_sha256": "4a035f2a606e4e72db32ac8b739f79fae60d2dc3c6d896b54c248f634c9ed546",
+  "zig_version": "0.17.0-dev.1683+5ceec001b",
+  "architecture": "x86_64",
+  "os": "linux",
+  "abi": "gnu",
+  "optimize": "debug"
+ },
+ "working_tree": {
+  "head": "bcd0c652",
+  "uncommitted_paths": 70,
+  "note": "the installed binary was built from the uncommitted working tree, which already removes E_EFFECT_CEILING, frees string literals, limits overlap checks to declared mutates(...) and fixes the test runner"
+ },
+ "load_average": {
+  "start": [
+   2.103515625,
+   1.572265625,
+   1.76904296875
+  ],
+  "end": [
+   2.49853515625,
+   1.75732421875,
+   1.82470703125
+  ]
+ },
+ "probes": [
+  {
+   "id": "D01",
+   "section": "diagnostics",
+   "purpose": "type mismatch: does the message point at the parameter declaration?",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "p01_type_mismatch.my",
+    "--print-result"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "p01_type_mismatch.my:5:19: error[E_TYPE]: expected i64, found str\n      return add(1, \"two\")\n                    ^\n",
+   "files": {
+    "p01_type_mismatch.my": "def add(a: int, b: int) -> int:\n    return a + b\n\ndef main() -> int:\n    return add(1, \"two\")\n"
+   }
+  },
+  {
+   "id": "D02",
+   "section": "diagnostics",
+   "purpose": "missing interface implementation: structural contract not satisfied",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "p04_structural_missing.my",
+    "--print-result"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "p04_structural_missing.my:7:30: error[E_GENERIC_ARGUMENT]: type lacks a required field with the declared type\n  def value_of[T: copy + field(value: int)](item: T) -> int:\n                               ^\n",
+   "files": {
+    "p04_structural_missing.my": "record Reading:\n    value: int\n\nrecord Other:\n    name: str\n\ndef value_of[T: copy + field(value: int)](item: T) -> int:\n    return item.value\n\ndef main() -> int:\n    return value_of[Other](Other(name=\"x\"))\n"
+   }
+  },
+  {
+   "id": "D03",
+   "section": "diagnostics",
+   "purpose": "arena value escaping its scope",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "p05_arena_escape.my",
+    "--print-result"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "p05_arena_escape.my:5:16: error[E_ARENA_ESCAPE]: `values` is assigned to `kept`, which outlives arena `scratch`; assign `scratch.escape(...)` instead\n          kept = values\n                 ^\n  note: p05_arena_escape.my:3:21: arena scope opened here\n  note: p05_arena_escape.my:2:5: value declared here\n",
+   "files": {
+    "p05_arena_escape.my": "def main() -> int:\n    kept: list[int] = []\n    with arena() as scratch:\n        values: list[int] = [1, 2, 3]\n        kept = values\n    return len(kept)\n"
+   }
+  },
+  {
+   "id": "D04",
+   "section": "diagnostics",
+   "purpose": "non-exhaustive match",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "p06_nonexhaustive.my",
+    "--print-result"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "p06_nonexhaustive.my:7:5: error[E_INCOMPLETE_MATCH]: match does not handle variant `empty`; every variant requires an explicit arm\n      match s:\n      ^\n  note: p06_nonexhaustive.my:4:5: unhandled variant declared here\n",
+   "files": {
+    "p06_nonexhaustive.my": "union Shape:\n    circle: int,\n    square: int,\n    empty\n\ndef area(s: Shape) -> int:\n    match s:\n        case Shape.circle(r):\n            return r * r * 3\n        case Shape.square(w):\n            return w * w\n\ndef main() -> int:\n    return area(Shape.circle(2))\n"
+   }
+  },
+  {
+   "id": "D05",
+   "section": "diagnostics",
+   "purpose": "error not handled: Result dropped",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "p07_result_unhandled.my",
+    "--print-result"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "p07_result_unhandled.my:8:5: error[E_RESULT_UNHANDLED]: result-bearing value leaves scope without being handled, returned, transferred, or explicitly discarded\n      return 0\n      ^\n  note: p07_result_unhandled.my:7:5: unhandled result-bearing binding\n",
+   "files": {
+    "p07_result_unhandled.my": "def divide(n: int, d: int) -> Result[int, str]:\n    if d == 0:\n        return Err(\"division by zero\")\n    return Ok(n // d)\n\ndef main() -> int:\n    r = divide(1, 0)\n    return 0\n"
+   }
+  },
+  {
+   "id": "D06",
+   "section": "diagnostics",
+   "purpose": "unknown function with a one-letter typo: is a candidate suggested?",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "p08_unknown_name_typo.my",
+    "--print-result"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "p08_unknown_name_typo.my:8:12: error[E_UNKNOWN_FUNCTION]: no function has this qualified name\n      return compute_totl([1, 2, 3])\n             ^\n",
+   "files": {
+    "p08_unknown_name_typo.my": "def compute_total(values: list[int]) -> int:\n    total = 0\n    for v in values:\n        total = total + v\n    return total\n\ndef main() -> int:\n    return compute_totl([1, 2, 3])\n"
+   }
+  },
+  {
+   "id": "D07",
+   "section": "diagnostics",
+   "purpose": "unknown field: are the record's fields listed?",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "p09_unknown_field.my",
+    "--print-result"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "p09_unknown_field.my:7:14: error[E_UNKNOWN_FIELD]: field does not exist on this record type\n      return p.z\n               ^\n",
+   "files": {
+    "p09_unknown_field.my": "record Point:\n    x: int\n    y: int\n\ndef main() -> int:\n    p = Point(x=1, y=2)\n    return p.z\n"
+   }
+  },
+  {
+   "id": "D08",
+   "section": "diagnostics",
+   "purpose": "arity: are expected and given counts shown?",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "p10_arity.my",
+    "--print-result"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "p10_arity.my:5:12: error[E_ARITY]: missing required argument\n      return add(1)\n             ^\n",
+   "files": {
+    "p10_arity.my": "def add(a: int, b: int) -> int:\n    return a + b\n\ndef main() -> int:\n    return add(1)\n"
+   }
+  },
+  {
+   "id": "D09",
+   "section": "diagnostics",
+   "purpose": "FFI type mismatch on extern def",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "build",
+    "p11_ffi_mismatch.my",
+    "--run"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "<scratch>/single/p11_ffi_mismatch.my:1:16: error[E_EXTERN_SIGNATURE]: extern signatures support fixed-width integers, bool, float (C double), and unit results (C void); pointers, aggregates and variadic calls are not supported\n  extern def abs(value: str) -> i32 effects(host)\n                 ^\n",
+   "files": {
+    "p11_ffi_mismatch.my": "extern def abs(value: str) -> i32 effects(host)\n\ndef main() -> int:\n    return i64(abs(\"x\"))\n"
+   }
+  },
+  {
+   "id": "D10",
+   "section": "diagnostics",
+   "purpose": "two errors in two functions: are both reported?",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "p13_two_errors.my",
+    "--print-result"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "p13_two_errors.my:2:14: error[E_TYPE]: expected i64, found str\n      return a + \"x\"\n               ^\np13_two_errors.my:5:14: error[E_TYPE]: expected i64, found bool\n      return b + True\n               ^\n",
+   "files": {
+    "p13_two_errors.my": "def first(a: int) -> int:\n    return a + \"x\"\n\ndef second(b: int) -> int:\n    return b + True\n\ndef main() -> int:\n    return first(1) + second(2)\n"
+   }
+  },
+  {
+   "id": "D11",
+   "section": "diagnostics",
+   "purpose": "removed spelling and misspelled method",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "p14_wrong_method.my",
+    "--print-result"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "p14_wrong_method.my:3:8: error[E_REMOVED_SPELLING]: `push` was removed; use `append(value)`\n      xs.push(4)\n         ^\n",
+   "files": {
+    "p14_wrong_method.my": "def main() -> int:\n    xs: list[int] = [3, 1, 2]\n    xs.push(4)\n    return xs.lenght()\n"
+   }
+  },
+  {
+   "id": "D12",
+   "section": "diagnostics",
+   "purpose": "read before definite assignment",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "p15_unbound.my",
+    "--print-result"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "p15_unbound.my:4:12: error[E_UNBOUND]: name may be read before it is assigned; some control-flow path reaching here leaves it unbound\n      return total\n             ^\n  note: p15_unbound.my:3:9: binding first assigned here\n",
+   "files": {
+    "p15_unbound.my": "def main() -> int:\n    if len(\"abc\") > 2:\n        total = 1\n    return total\n"
+   }
+  },
+  {
+   "id": "D13",
+   "section": "diagnostics",
+   "purpose": "effect bound exceeded three calls down: causal chain?",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "check",
+    "t03_effect_bound.my"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "t03_effect_bound.my:6:20: error[E_EFFECT_BOUND]: effect `managed_allocation` exceeds declared bound: count -> labels; inferred bound is effects(managed_allocation)\n  def count() -> int noalloc:\n                     ^\n  note: t03_effect_bound.my:2:24: effect originates at this operation or owned type\n",
+   "files": {
+    "t03_effect_bound.my": "def labels() -> list[str]:\n    names: list[str] = []\n    names.append(\"alpha\")\n    return names\n\ndef count() -> int noalloc:\n    return len(labels())\n\ndef main() -> int:\n    return count()\n"
+   }
+  },
+  {
+   "id": "D14",
+   "section": "diagnostics",
+   "purpose": "JSON diagnostics: type mismatch",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "check",
+    "p01_type_mismatch.my",
+    "--diagnostics=json"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TYPE\",\"severity\":\"error\",\"message\":\"expected i64, found str\",\"location\":{\"path\":\"p01_type_mismatch.my\",\"start\":{\"line\":5,\"column\":19},\"end\":{\"line\":5,\"column\":24},\"bytes\":{\"start\":87,\"end\":92}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+   "files": {
+    "p01_type_mismatch.my": "def add(a: int, b: int) -> int:\n    return a + b\n\ndef main() -> int:\n    return add(1, \"two\")\n"
+   }
+  },
+  {
+   "id": "D15",
+   "section": "diagnostics",
+   "purpose": "JSON diagnostics: arena escape with notes",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "check",
+    "p05_arena_escape.my",
+    "--diagnostics=json"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_ARENA_ESCAPE\",\"severity\":\"error\",\"message\":\"`values` is assigned to `kept`, which outlives arena `scratch`; assign `scratch.escape(...)` instead\",\"location\":{\"path\":\"p05_arena_escape.my\",\"start\":{\"line\":5,\"column\":16},\"end\":{\"line\":5,\"column\":22},\"bytes\":{\"start\":126,\"end\":132}},\"notes\":[{\"role\":\"related\",\"message\":\"arena scope opened here\",\"location\":{\"path\":\"p05_arena_escape.my\",\"start\":{\"line\":3,\"column\":21},\"end\":{\"line\":3,\"column\":28},\"bytes\":{\"start\":64,\"end\":71}}},{\"role\":\"origin\",\"message\":\"value declared here\",\"location\":{\"path\":\"p05_arena_escape.my\",\"start\":{\"line\":2,\"column\":5},\"end\":{\"line\":2,\"column\":9},\"bytes\":{\"start\":23,\"end\":27}}}],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+   "files": {
+    "p05_arena_escape.my": "def main() -> int:\n    kept: list[int] = []\n    with arena() as scratch:\n        values: list[int] = [1, 2, 3]\n        kept = values\n    return len(kept)\n"
+   }
+  },
+  {
+   "id": "D16",
+   "section": "diagnostics",
+   "purpose": "JSON diagnostics: two errors as two lines",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "check",
+    "p13_two_errors.my",
+    "--diagnostics=json"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TYPE\",\"severity\":\"error\",\"message\":\"expected i64, found str\",\"location\":{\"path\":\"p13_two_errors.my\",\"start\":{\"line\":2,\"column\":14},\"end\":{\"line\":2,\"column\":15},\"bytes\":{\"start\":39,\"end\":40}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TYPE\",\"severity\":\"error\",\"message\":\"expected i64, found bool\",\"location\":{\"path\":\"p13_two_errors.my\",\"start\":{\"line\":5,\"column\":14},\"end\":{\"line\":5,\"column\":15},\"bytes\":{\"start\":86,\"end\":87}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+   "files": {
+    "p13_two_errors.my": "def first(a: int) -> int:\n    return a + \"x\"\n\ndef second(b: int) -> int:\n    return b + True\n\ndef main() -> int:\n    return first(1) + second(2)\n"
+   }
+  },
+  {
+   "id": "S01",
+   "section": "semantics",
+   "purpose": "write through a loop-variable record copy (Python expects 2)",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "p02_record_copy_write.my",
+    "--print-result"
+   ],
+   "exit": 0,
+   "stdout": "0\n",
+   "stderr": "p02_record_copy_write.my:8:9: warning[W_DEAD_RECORD_WRITE]: field write to a record copy is never read; the binding holds a value copy, so the write does not reach the original value\n          it.visited = True\n          ^\n",
+   "files": {
+    "p02_record_copy_write.my": "record Item:\n    visited: bool\n    n: int\n\ndef main() -> int:\n    items: list[Item] = [Item(visited=False, n=1), Item(visited=False, n=2)]\n    for it in items:\n        it.visited = True\n    count = 0\n    for it in items:\n        if it.visited:\n            count = count + 1\n    return count\n"
+   }
+  },
+  {
+   "id": "S02",
+   "section": "semantics",
+   "purpose": "dict.items() binding (Python expects 330)",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "p03_dict_items.my",
+    "--print-result"
+   ],
+   "exit": 74,
+   "stdout": "330\n",
+   "stderr": "",
+   "files": {
+    "p03_dict_items.my": "def main() -> int:\n    d: dict[int, int] = {10: 100, 20: 200}\n    total = 0\n    for k, v in d.items():\n        total = total + k + v\n    return total\n"
+   }
+  },
+  {
+   "id": "S03",
+   "section": "semantics",
+   "purpose": "write through a by-value record parameter (Python expects 2); run",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "p12_by_value_param.my",
+    "--print-result"
+   ],
+   "exit": 1,
+   "stdout": "1\n",
+   "stderr": "",
+   "files": {
+    "p12_by_value_param.my": "record Counter:\n    n: int\n\ndef bump(c: Counter):\n    c.n = c.n + 1\n\ndef main() -> int:\n    c = Counter(n=1)\n    bump(c)\n    return c.n\n"
+   }
+  },
+  {
+   "id": "S03c",
+   "section": "semantics",
+   "purpose": "same program under check: any warning?",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "check",
+    "p12_by_value_param.my"
+   ],
+   "exit": 0,
+   "stdout": "",
+   "stderr": "",
+   "files": {
+    "p12_by_value_param.my": "record Counter:\n    n: int\n\ndef bump(c: Counter):\n    c.n = c.n + 1\n\ndef main() -> int:\n    c = Counter(n=1)\n    bump(c)\n    return c.n\n"
+   }
+  },
+  {
+   "id": "S04",
+   "section": "semantics",
+   "purpose": "the class spelling has value semantics (Python expects 1)",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "t04_class_alias.my",
+    "--print-result"
+   ],
+   "exit": 0,
+   "stdout": "0\n",
+   "stderr": "t04_class_alias.my:6:5: warning[W_DEAD_RECORD_WRITE]: field write to a record copy is never read; the binding holds a value copy, so the write does not reach the original value\n      n.seen = True\n      ^\nt04_class_alias.my:12:5: warning[W_DEAD_RECORD_WRITE]: field write to a record copy is never read; the binding holds a value copy, so the write does not reach the original value\n      n.seen = True\n      ^\n",
+   "files": {
+    "t04_class_alias.my": "class Node:\n    value: int\n    seen: bool\n\ndef visit(n: Node) -> None:\n    n.seen = True\n\ndef main() -> int:\n    nodes: list[Node] = [Node(value=1, seen=False)]\n    n = nodes[0]\n    visit(n)\n    n.seen = True\n    if nodes[0].seen:\n        return 1\n    return 0\n"
+   }
+  },
+  {
+   "id": "S05",
+   "section": "semantics",
+   "purpose": "list mutation through a parameter is invisible at the call site (Python-like, expects 43)",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "t05_list_param_mut.my",
+    "--print-result"
+   ],
+   "exit": 43,
+   "stdout": "43\n",
+   "stderr": "",
+   "files": {
+    "t05_list_param_mut.my": "def add_one(xs: list[int]) -> None:\n    xs.append(1)\n\ndef total(xs: list[int]) -> int:\n    add_one(xs)\n    s = 0\n    for x in xs:\n        s = s + x\n    return s\n\ndef main() -> int:\n    xs: list[int] = [40]\n    t = total(xs)\n    return len(xs) + t\n"
+   }
+  },
+  {
+   "id": "R01",
+   "section": "runtime",
+   "purpose": "trap three calls deep: source-mapped stack",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "t01_trap_deep.my",
+    "--print-result"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "t01_trap_deep.my:2:12: error[R_LIST_BOUNDS]: native execution failed (index 7, length 3)\n  in pick at t01_trap_deep.my:2:12\n  in middle at t01_trap_deep.my:5:12\n  in outer at t01_trap_deep.my:8:12\n  in main at t01_trap_deep.my:12:12\n",
+   "files": {
+    "t01_trap_deep.my": "def pick(values: list[int], index: int) -> int:\n    return values[index]\n\ndef middle(values: list[int]) -> int:\n    return pick(values, 7)\n\ndef outer(values: list[int]) -> int:\n    return middle(values) + 1\n\ndef main() -> int:\n    xs: list[int] = [1, 2, 3]\n    return outer(xs)\n"
+   }
+  },
+  {
+   "id": "R02",
+   "section": "runtime",
+   "purpose": "same trap as JSON with structured detail",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "t01_trap_deep.my",
+    "--diagnostics=json"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"R_LIST_BOUNDS\",\"severity\":\"error\",\"message\":\"native execution failed (index 7, length 3)\",\"location\":{\"path\":\"t01_trap_deep.my\",\"start\":{\"line\":2,\"column\":12}},\"notes\":[],\"stack\":{\"frames\":[{\"function\":\"pick\",\"location\":{\"path\":\"t01_trap_deep.my\",\"start\":{\"line\":2,\"column\":12}}},{\"function\":\"middle\",\"location\":{\"path\":\"t01_trap_deep.my\",\"start\":{\"line\":5,\"column\":12}}},{\"function\":\"outer\",\"location\":{\"path\":\"t01_trap_deep.my\",\"start\":{\"line\":8,\"column\":12}}},{\"function\":\"main\",\"location\":{\"path\":\"t01_trap_deep.my\",\"start\":{\"line\":12,\"column\":12}}}],\"omitted\":0},\"trap_detail\":{\"version\":1,\"operation\":\"index\",\"index\":7,\"length\":3}}}\n",
+   "files": {
+    "t01_trap_deep.my": "def pick(values: list[int], index: int) -> int:\n    return values[index]\n\ndef middle(values: list[int]) -> int:\n    return pick(values, 7)\n\ndef outer(values: list[int]) -> int:\n    return middle(values) + 1\n\ndef main() -> int:\n    xs: list[int] = [1, 2, 3]\n    return outer(xs)\n"
+   }
+  },
+  {
+   "id": "R03",
+   "section": "runtime",
+   "purpose": "assert with a message",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "t02_assert.my",
+    "--print-result"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "t02_assert.my:2:12: error[R_ASSERT]: native execution failed: n must exceed ten\n  in check at t02_assert.my:2:12\n  in main at t02_assert.my:6:12\n",
+   "files": {
+    "t02_assert.my": "def check(n: int) -> int:\n    assert n > 10, \"n must exceed ten\"\n    return n\n\ndef main() -> int:\n    return check(3)\n"
+   }
+  },
+  {
+   "id": "R04",
+   "section": "runtime",
+   "purpose": "--timings on a run",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "t02_assert.my",
+    "--timings"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "t02_assert.my:2:12: error[R_ASSERT]: native execution failed: n must exceed ten\n  in check at t02_assert.my:2:12\n  in main at t02_assert.my:6:12\ntimings: native_ns=3112527\n",
+   "files": {
+    "t02_assert.my": "def check(n: int) -> int:\n    assert n > 10, \"n must exceed ten\"\n    return n\n\ndef main() -> int:\n    return check(3)\n"
+   }
+  },
+  {
+   "id": "P01",
+   "section": "project",
+   "purpose": "run a project entry (exports carry no effect ceilings)",
+   "cwd": "<scratch>/proj",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "main.my",
+    "--print-result"
+   ],
+   "exit": 42,
+   "stdout": "12\n42\n",
+   "stderr": "",
+   "files": {
+    "main.my": "module main\nimport shared.geometry\nimport util\n\ndef main() -> int:\n    print(geometry.area(3, 4))\n    return util.twice(21)\n",
+    "shared/geometry.my": "module shared.geometry\nexport area\n\ndef area(w: int, h: int) -> int:\n    return w * h\n\ndef hidden() -> int:\n    return 1\n\ndef test_area() -> bool:\n    return area(2, 3) == 6\n",
+    "util.my": "module util\nexport twice\nexport test_twice\nexport test_prints\n\ndef twice(x: int) -> int:\n    return x * 2\n\ndef test_twice() -> bool:\n    return twice(2) == 4\n\ndef test_prints() -> bool:\n    print(\"debugging here\")\n    return twice(3) == 7\n"
+   }
+  },
+  {
+   "id": "P02",
+   "section": "project",
+   "purpose": "single-file check on a project entry",
+   "cwd": "<scratch>/proj",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "check",
+    "main.my"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "main.my:1:1: error[E_SYNTAX]: unexpected token; expected def\n  module main\n  ^\n"
+  },
+  {
+   "id": "P03",
+   "section": "project",
+   "purpose": "check-project",
+   "cwd": "<scratch>/proj",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "check-project",
+    "main.my"
+   ],
+   "exit": 0,
+   "stdout": "",
+   "stderr": ""
+  },
+  {
+   "id": "P04",
+   "section": "project",
+   "purpose": "test from the entry: print inside a test, expected/got, unexported test_area not discovered",
+   "cwd": "<scratch>/proj",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "test",
+    "main.my"
+   ],
+   "exit": 1,
+   "stdout": "failed util::test_prints: expected true, got false\ndebugging here\n\npassed util::test_twice\n1 passed, 0 cached, 1 failed, 0 skipped\n",
+   "stderr": ""
+  },
+  {
+   "id": "P05",
+   "section": "project",
+   "purpose": "test with a library module as the entry",
+   "cwd": "<scratch>/proj",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "test",
+    "util.my"
+   ],
+   "exit": 1,
+   "stdout": "failed util::test_prints: expected true, got false\ndebugging here\n\npassed util::test_twice\n1 passed, 0 cached, 1 failed, 0 skipped\n",
+   "stderr": ""
+  },
+  {
+   "id": "P06",
+   "section": "project",
+   "purpose": "directory test run discovers project roots",
+   "cwd": "<scratch>/proj",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "test",
+    "."
+   ],
+   "exit": 1,
+   "stdout": "failed util::test_prints: expected true, got false\ndebugging here\n\ncached util::test_twice\n0 passed, 1 cached, 1 failed, 0 skipped across 1 programs\n",
+   "stderr": ""
+  },
+  {
+   "id": "P07",
+   "section": "project",
+   "purpose": "compact API view",
+   "cwd": "<scratch>/proj",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "list-interfaces",
+    "main.my"
+   ],
+   "exit": 0,
+   "stdout": "module interfaces v1; declarations/signature visibility checked; bodies not type checked\nmodule shared.geometry\n  export function area\nmodule util\n  export function twice\n  export function test_twice\n  export function test_prints\nmodule main\n",
+   "stderr": ""
+  },
+  {
+   "id": "P08",
+   "section": "project",
+   "purpose": "module graph with hashes",
+   "cwd": "<scratch>/proj",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "list-modules",
+    "main.my"
+   ],
+   "exit": 0,
+   "stdout": "module graph v1; header discovery only; bodies/exports/types not checked\nmodule shared.geometry path=shared/geometry.my sha256=1787d30fade15a8937021beabea2120acf8dedee2a323f8dee932a3b37892681\nmodule util path=util.my sha256=7588b55e98e8914255f9464424edc91060028a9433e772d8211c12c5298639a4\nmodule main path=main.my sha256=78e5c37fa293151098ccd669adb2756dc3bcfeadd214afdf2aa4530f31bcd85f\n  import shared.geometry as geometry\n  import util as util\n",
+   "stderr": ""
+  },
+  {
+   "id": "P09",
+   "section": "project",
+   "purpose": "dependency report with per-declaration interface and body identities",
+   "cwd": "<scratch>/proj",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "project-dependencies",
+    "main.my"
+   ],
+   "exit": 0,
+   "stdout": "{\"version\":\"project-dependencies-v1\",\"complete\":true,\"entry\":\"main\",\"policy\":null,\"implementation\":{\"compiler_sha256\":\"4a035f2a606e4e72db32ac8b739f79fae60d2dc3c6d896b54c248f634c9ed546\",\"zig_version\":\"0.17.0-dev.1683+5ceec001b\",\"architecture\":\"x86_64\",\"os\":\"linux\",\"abi\":\"gnu\",\"optimize\":\"debug\"},\"inputs\":[{\"module\":\"shared.geometry\",\"path\":\"shared/geometry.my\",\"sha256\":\"1787d30fade15a8937021beabea2120acf8dedee2a323f8dee932a3b37892681\",\"bytes\":174,\"imports\":[]},{\"module\":\"util\",\"path\":\"util.my\",\"sha256\":\"7588b55e98e8914255f9464424edc91060028a9433e772d8211c12c5298639a4\",\"bytes\":239,\"imports\":[]},{\"module\":\"main\",\"path\":\"main.my\",\"sha256\":\"78e5c37fa293151098ccd669adb2756dc3bcfeadd214afdf2aa4530f31bcd85f\",\"bytes\":124,\"imports\":[{\"module\":\"shared.geometry\",\"alias\":\"geometry\"},{\"module\":\"util\",\"alias\":\"util\"}]}],\"manifests\":[],\"incremental\":{\"complete\":true,\"version\":\"incremental-identities-v2\",\"project_interface_sha256\":\"7958159311e51865d673e9ae134a57bd03edac09d25540cf37a510472cd50031\",\"modules\":[{\"name\":\"main\",\"identity\":\"22aa0243cd04c8107ee618328ed64db64ba612d500178b9b5389954ce0ca3657\",\"declarations\":[{\"name\":\"main\",\"kind\":\"function\",\"identity\":\"3740c816f804a8bf9d3311659133dc53bc024bbec9242b48ae29d5c6c1655f5f\",\"body_sha256\":\"194b67ce7e357dcb8438fdae43c60bdf22ada4b8ad4dd64e6382a9652fa255c0\",\"interface_sha256\":\"c9dd824c83a35251bfba7d84b78f6a4c27ab44a0b0175934f2ab4c70e58b7d85\",\"interface_identity\":null}]},{\"name\":\"shared.geometry\",\"identity\":\"e352273ccd083c5b8837198e98f74e36929ebfa42b96fb922e3bcce59daac7bf\",\"declarations\":[{\"name\":\"area\",\"kind\":\"function\",\"identity\":\"ecd61962ebde4623653acb1a46606db2a550f0820eada28c2d5fad55d6e92c0c\",\"body_sha256\":\"8f8359123611ec5ce8a9cde87e8122ae494aea7eaa33c22991a7c25defd54249\",\"interface_sha256\":\"ace517ab05630f0ea23891d973799c886914111d0d934e21de922d59316eb843\",\"interface_identity\":\"97e96bb33d06a2c51741554aabf5baf1a6603d47cb6e34d9209363d732785db4\"},{\"name\":\"hidden\",\"kind\":\"function\",\"identity\":\"809a7528f98236bcb914cdaa7dbd94012d781be4098e67ddbd95206c0b6baa2f\",\"body_sha256\":\"a83d7cab06d3f9599cdf15d5806aba3940eadb9e4026663c9c58cbe64f3ce0c4\",\"interface_sha256\":\"9678ba01a81b8682f99cb10f10d0942fec08a32df26d69cdff0f36dd2fda602c\",\"interface_identity\":null},{\"name\":\"test_area\",\"kind\":\"function\",\"identity\":\"7161923c93a79a0f196cfdb2c042fd555458a15b714f276b88efdc30055f72ac\",\"body_sha256\":\"99ec8168ce91b7824e97ae3184ffbb0e6c817dee2082db80598763777d019c54\",\"interface_sha256\":\"bd13f74a8b5a36c8ef09e454d6b5a30a65f8aa568d9ca02876524bb2c0055748\",\"interface_identity\":null}]},{\"name\":\"util\",\"identity\":\"8fb76fc1268458c22b8a2d3d2e50039ae20d01ed845ece1a7794aee614d955f2\",\"declarations\":[{\"name\":\"test_prints\",\"kind\":\"function\",\"identity\":\"22175c7332c298a7b979058ed95140312b1632f7909c96c4c3093b9f5370d59a\",\"body_sha256\":\"38b1d00b0d641a95333f44539e4fc0be78851aef2b33415fe5824f6ccbf089af\",\"interface_sha256\":\"96280495a9f15b653dbc2baab161984bb51a8131f23e59d93cb099bbc13bd8cf\",\"interface_identity\":\"69a432887e4175cc810fc6cfa950415f0efa9dfd236fe6fe2a61920fe323edcb\"},{\"name\":\"test_twice\",\"kind\":\"function\",\"identity\":\"45f36ab21cbafcaeb0419717f0065f46b0394171d48b422c67b909cc496a7213\",\"body_sha256\":\"52a4e8cb5bb6800538e92cc88743a5510018041e6e12334428dfed3065d22559\",\"interface_sha256\":\"189852fc866fb010aa8d2eeadb3ae5bea3497f5dcf7bccd0d816d9d7ce984010\",\"interface_identity\":\"110112d147108c98246036a35f198d973f91625ba651c04b82e399b89d4704d9\"},{\"name\":\"twice\",\"kind\":\"function\",\"identity\":\"e085b109b436f647afd991e830c856e5b02c490c07717562f3e6ff7928047186\",\"body_sha256\":\"ecdef3e59e2288548ffcd55e2bfc9540d49de23ea3eec54d3a20d3b2182c43a7\",\"interface_sha256\":\"a092c6d398823ca71597440ecbdaaea780c418380d6e6644acd3baca6993e07a\",\"interface_identity\":\"848689dd81df3f568a2236ffeb0c81ce2a2e3273c6ec2e0d51d1c37794adce78\"}]}],\"types\":[],\"specializations\":[],\"fragments\":[]}}",
+   "stderr": ""
+  },
+  {
+   "id": "P10",
+   "section": "project",
+   "purpose": "navigation index: symbols with effects, mutates, return origin, call and read edges",
+   "cwd": "<scratch>/proj",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "index-project",
+    "main.my"
+   ],
+   "exit": 0,
+   "stdout": "{\"version\":\"navigation-v1\",\"checked\":true,\"reference_scope\":\"resolved concrete bodies and specializations; generic declarations indexed; static edges are not runtime coverage\",\"snapshot_sha256\":\"9f126ff7968a7a81802c23fab509a1ca4fb4a631a497052dfba3e22dfc36bfa4\",\"snapshot\":{\"implementation\":{\"compiler_sha256\":\"4a035f2a606e4e72db32ac8b739f79fae60d2dc3c6d896b54c248f634c9ed546\",\"zig_version\":\"0.17.0-dev.1683+5ceec001b\",\"architecture\":\"x86_64\",\"os\":\"linux\",\"abi\":\"gnu\",\"optimize\":\"debug\"},\"inputs\":[{\"module\":\"shared.geometry\",\"path\":\"shared/geometry.my\",\"sha256\":\"1787d30fade15a8937021beabea2120acf8dedee2a323f8dee932a3b37892681\",\"bytes\":174,\"imports\":[]},{\"module\":\"util\",\"path\":\"util.my\",\"sha256\":\"7588b55e98e8914255f9464424edc91060028a9433e772d8211c12c5298639a4\",\"bytes\":239,\"imports\":[]},{\"module\":\"main\",\"path\":\"main.my\",\"sha256\":\"78e5c37fa293151098ccd669adb2756dc3bcfeadd214afdf2aa4530f31bcd85f\",\"bytes\":124,\"imports\":[{\"module\":\"shared.geometry\",\"alias\":\"geometry\"},{\"module\":\"util\",\"alias\":\"util\"}]}]},\"symbols\":[{\"id\":\"main::main\",\"name\":\"main\",\"kind\":\"function\",\"location\":{\"path\":\"main.my\",\"start\":52,\"end\":56,\"line\":5,\"column\":5},\"exported\":false,\"signature\":\"main() -> int\",\"type_name\":\"i64\",\"effects\":[\"output\"],\"mutates\":[],\"return_origin\":\"fresh\",\"mutation_writes\":false,\"snippet\":\"main() -> int:\\n    print(geometry.area(3, 4))\\n    return util.twice(21)\",\"snippet_truncated\":false},{\"id\":\"shared.geometry::area\",\"name\":\"area\",\"kind\":\"function\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":40,\"end\":44,\"line\":4,\"column\":5},\"exported\":true,\"signature\":\"area(w: int, h: int) -> int\",\"type_name\":\"i64\",\"effects\":[],\"mutates\":[],\"return_origin\":\"fresh\",\"mutation_writes\":false,\"snippet\":\"area(w: int, h: int) -> int:\\n    return w * h\",\"snippet_truncated\":false},{\"id\":\"shared.geometry::hidden\",\"name\":\"hidden\",\"kind\":\"function\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":91,\"end\":97,\"line\":7,\"column\":5},\"exported\":false,\"signature\":\"hidden() -> int\",\"type_name\":\"i64\",\"effects\":[],\"mutates\":[],\"return_origin\":\"fresh\",\"mutation_writes\":false,\"snippet\":\"hidden() -> int:\\n    return 1\",\"snippet_truncated\":false},{\"id\":\"shared.geometry::test_area\",\"name\":\"test_area\",\"kind\":\"function\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":126,\"end\":135,\"line\":10,\"column\":5},\"exported\":false,\"signature\":\"test_area() -> bool\",\"type_name\":\"bool\",\"effects\":[],\"mutates\":[],\"return_origin\":\"fresh\",\"mutation_writes\":false,\"snippet\":\"test_area() -> bool:\\n    return area(2, 3) == 6\",\"snippet_truncated\":false},{\"id\":\"util::twice\",\"name\":\"twice\",\"kind\":\"function\",\"location\":{\"path\":\"util.my\",\"start\":67,\"end\":72,\"line\":6,\"column\":5},\"exported\":true,\"signature\":\"twice(x: int) -> int\",\"type_name\":\"i64\",\"effects\":[],\"mutates\":[],\"return_origin\":\"fresh\",\"mutation_writes\":false,\"snippet\":\"twice(x: int) -> int:\\n    return x * 2\",\"snippet_truncated\":false},{\"id\":\"util::test_twice\",\"name\":\"test_twice\",\"kind\":\"function\",\"location\":{\"path\":\"util.my\",\"start\":111,\"end\":121,\"line\":9,\"column\":5},\"exported\":true,\"signature\":\"test_twice() -> bool\",\"type_name\":\"bool\",\"effects\":[],\"mutates\":[],\"return_origin\":\"fresh\",\"mutation_writes\":false,\"snippet\":\"test_twice() -> bool:\\n    return twice(2) == 4\",\"snippet_truncated\":false},{\"id\":\"util::test_prints\",\"name\":\"test_prints\",\"kind\":\"function\",\"location\":{\"path\":\"util.my\",\"start\":163,\"end\":174,\"line\":12,\"column\":5},\"exported\":true,\"signature\":\"test_prints() -> bool\",\"type_name\":\"bool\",\"effects\":[\"output\"],\"mutates\":[],\"return_origin\":\"fresh\",\"mutation_writes\":false,\"snippet\":\"test_prints() -> bool:\\n    print(\\\"debugging here\\\")\\n    return twice(3) == 7\",\"snippet_truncated\":false},{\"id\":\"shared.geometry::area/local:w@45\",\"name\":\"w\",\"kind\":\"parameter\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":45,\"end\":46,\"line\":4,\"column\":10},\"exported\":false,\"signature\":\"\",\"type_name\":\"i64\",\"effects\":[],\"mutates\":[],\"return_origin\":\"unknown\",\"mutation_writes\":false,\"snippet\":\"\",\"snippet_truncated\":false},{\"id\":\"shared.geometry::area/local:h@53\",\"name\":\"h\",\"kind\":\"parameter\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":53,\"end\":54,\"line\":4,\"column\":18},\"exported\":false,\"signature\":\"\",\"type_name\":\"i64\",\"effects\":[],\"mutates\":[],\"return_origin\":\"unknown\",\"mutation_writes\":false,\"snippet\":\"\",\"snippet_truncated\":false},{\"id\":\"util::twice/local:x@73\",\"name\":\"x\",\"kind\":\"parameter\",\"location\":{\"path\":\"util.my\",\"start\":73,\"end\":74,\"line\":6,\"column\":11},\"exported\":false,\"signature\":\"\",\"type_name\":\"i64\",\"effects\":[],\"mutates\":[],\"return_origin\":\"unknown\",\"mutation_writes\":false,\"snippet\":\"\",\"snippet_truncated\":false}],\"references\":[{\"from\":\"main::main\",\"to\":\"shared.geometry::area\",\"kind\":\"call\",\"location\":{\"path\":\"main.my\",\"start\":77,\"end\":96,\"line\":6,\"column\":11}},{\"from\":\"main::main\",\"to\":\"util::twice\",\"kind\":\"call\",\"location\":{\"path\":\"main.my\",\"start\":109,\"end\":123,\"line\":7,\"column\":12}},{\"from\":\"shared.geometry::area\",\"to\":\"shared.geometry::area/local:w@45\",\"kind\":\"read\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":80,\"end\":81,\"line\":5,\"column\":12}},{\"from\":\"shared.geometry::area\",\"to\":\"shared.geometry::area/local:h@53\",\"kind\":\"read\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":84,\"end\":85,\"line\":5,\"column\":16}},{\"from\":\"shared.geometry::test_area\",\"to\":\"shared.geometry::area\",\"kind\":\"call\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":158,\"end\":168,\"line\":11,\"column\":12}},{\"from\":\"util::twice\",\"to\":\"util::twice/local:x@73\",\"kind\":\"read\",\"location\":{\"path\":\"util.my\",\"start\":100,\"end\":101,\"line\":7,\"column\":12}},{\"from\":\"util::test_twice\",\"to\":\"util::twice\",\"kind\":\"call\",\"location\":{\"path\":\"util.my\",\"start\":144,\"end\":152,\"line\":10,\"column\":12}},{\"from\":\"util::test_prints\",\"to\":\"util::twice\",\"kind\":\"call\",\"location\":{\"path\":\"util.my\",\"start\":225,\"end\":233,\"line\":14,\"column\":12}}]}",
+   "stderr": ""
+  },
+  {
+   "id": "P11",
+   "section": "project",
+   "purpose": "exported contracts with types",
+   "cwd": "<scratch>/proj",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "schema-project",
+    "main.my"
+   ],
+   "exit": 0,
+   "stdout": "{\"version\":\"language-schema-v1\",\"scope\":\"reachable-module-exports\",\"representation\":\"language-contracts-no-wire-format-or-abi\",\"entry\":\"main\",\"exports\":[],\"functions\":[{\"name\":\"shared.geometry::area\",\"parameters\":[{\"name\":\"w\",\"type\":\"i64\",\"mode\":\"value\"},{\"name\":\"h\",\"type\":\"i64\",\"mode\":\"value\"}],\"result\":\"i64\",\"effects\":[],\"mutates\":[],\"return_origin\":\"fresh\"},{\"name\":\"util::test_prints\",\"parameters\":[],\"result\":\"bool\",\"effects\":[\"output\"],\"mutates\":[],\"return_origin\":\"fresh\"},{\"name\":\"util::test_twice\",\"parameters\":[],\"result\":\"bool\",\"effects\":[],\"mutates\":[],\"return_origin\":\"fresh\"},{\"name\":\"util::twice\",\"parameters\":[{\"name\":\"x\",\"type\":\"i64\",\"mode\":\"value\"}],\"result\":\"i64\",\"effects\":[],\"mutates\":[],\"return_origin\":\"fresh\"}],\"types\":[{\"name\":\"bool\",\"kind\":\"boolean\",\"move_only\":false,\"requires_handling\":false,\"opaque\":false},{\"name\":\"i64\",\"kind\":\"integer\",\"move_only\":false,\"requires_handling\":false,\"opaque\":false,\"bits\":64,\"signed\":true,\"minimum\":\"-9223372036854775808\",\"maximum\":\"9223372036854775807\"}],\"generic_templates_version\":\"generic-templates-v2\",\"generic_templates\":[]}",
+   "stderr": ""
+  },
+  {
+   "id": "P12",
+   "section": "project",
+   "purpose": "parse-only declaration listing with byte ranges",
+   "cwd": "<scratch>/proj",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "list-declarations",
+    "util.my"
+   ],
+   "exit": 0,
+   "stdout": "{\"version\":\"declarations-v1\",\"module\":\"util\",\"header\":{\"start\":0,\"end\":11},\"imports\":[],\"exports\":[{\"name\":\"twice\",\"bytes\":{\"start\":12,\"end\":24}},{\"name\":\"test_twice\",\"bytes\":{\"start\":25,\"end\":42}},{\"name\":\"test_prints\",\"bytes\":{\"start\":43,\"end\":61}}],\"declarations\":[{\"kind\":\"fn\",\"name\":\"twice\",\"exported\":true,\"bytes\":{\"start\":63,\"end\":105},\"comment_start\":63},{\"kind\":\"fn\",\"name\":\"test_twice\",\"exported\":true,\"bytes\":{\"start\":107,\"end\":157},\"comment_start\":107},{\"kind\":\"fn\",\"name\":\"test_prints\",\"exported\":true,\"bytes\":{\"start\":159,\"end\":238},\"comment_start\":159}]}",
+   "stderr": ""
+  },
+  {
+   "id": "D17",
+   "section": "diagnostics",
+   "purpose": "invalid cross-module visibility (text)",
+   "cwd": "<scratch>/proj_visibility",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "check-project",
+    "main.my"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "main.my:5:12: error[E_PRIVATE_SYMBOL]: declaration is private to its module\n      return geometry.hidden()\n             ^\n  note: shared/geometry.my:7:5: declaration is here\n",
+   "files": {
+    "main.my": "module main\nimport shared.geometry\n\ndef main() -> int:\n    return geometry.hidden()\n"
+   }
+  },
+  {
+   "id": "D18",
+   "section": "diagnostics",
+   "purpose": "invalid cross-module visibility (JSON)",
+   "cwd": "<scratch>/proj_visibility",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "check-project",
+    "main.my",
+    "--diagnostics=json"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_PRIVATE_SYMBOL\",\"severity\":\"error\",\"message\":\"declaration is private to its module\",\"location\":{\"path\":\"main.my\",\"start\":{\"line\":5,\"column\":12},\"end\":{\"line\":5,\"column\":27},\"bytes\":{\"start\":66,\"end\":81}},\"notes\":[{\"role\":\"related\",\"message\":\"declaration is here\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":{\"line\":7,\"column\":5},\"end\":{\"line\":7,\"column\":11},\"bytes\":{\"start\":91,\"end\":97}}}],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+  },
+  {
+   "id": "D19",
+   "section": "diagnostics",
+   "purpose": "import cycle",
+   "cwd": "<scratch>/cycle",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "check-project",
+    "a.my"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "b.my:2:8: error[E_IMPORT_CYCLE]: a -> b -> a\n  import a\n         ^\na.my:1:8: note: related module/import declaration\n",
+   "files": {
+    "a.my": "module a\nimport b\nexport fa\n\ndef fa() -> int:\n    return b.fb()\n\ndef main() -> int:\n    return fa()\n",
+    "b.my": "module b\nimport a\nexport fb\n\ndef fb() -> int:\n    return 1\n"
+   }
+  },
+  {
+   "id": "I01",
+   "section": "incremental",
+   "purpose": "warm unchanged check-project work report",
+   "cwd": "<scratch>/proj_incremental",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "check-project",
+    "main.my",
+    "--cache-dir=<scratch>/proj_incremental_cache",
+    "--report"
+   ],
+   "exit": 0,
+   "stdout": "",
+   "stderr": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":0,\"syntax_stored\":0,\"verdict_hits\":1,\"verdict_misses\":0,\"verdict_stored\":0,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":0,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"collect_declarations\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"resolve_interface\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"check_body\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"instantiate_specialization\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n{\"version\":\"work-report-v1\",\"command\":\"check-project\",\"reused\":true,\"parsed_modules\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"checked_bodies\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"instantiated_specializations\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"lowered_functions\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"links\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"executed_tests\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"reused_results\":1,\"session_reused_results\":1,\"symbolic_templates\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"specialization_bodies\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"semantic_cache\":{\"retained_bytes\":0,\"ordinary_bytes\":0,\"symbolic_bytes\":0,\"specialization_bytes\":0,\"evicted\":0},\"bypassed\":[],\"session\":{\"parsed_modules\":{\"performed\":0,\"reused\":0},\"checked_bodies\":{\"performed\":0,\"reused\":0},\"instantiated_specializations\":{\"performed\":0,\"reused\":0},\"lowered_functions\":{\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"performed\":0,\"reused\":0},\"links\":{\"performed\":0,\"reused\":0},\"executed_tests\":{\"performed\":0,\"reused\":0}}}\n",
+   "files": {
+    "main.my": "module main\nimport shared.geometry\nimport util\n\ndef main() -> int:\n    print(geometry.area(3, 4))\n    return util.twice(21)\n",
+    "shared/geometry.my": "module shared.geometry\nexport area\n\ndef area(w: int, h: int) -> int:\n    return w * h\n\ndef hidden() -> int:\n    return 1\n\nexport test_area\ndef test_area() -> bool:\n    return area(2, 3) == 6\n",
+    "util.my": "module util\nexport twice\nexport test_twice\nexport test_prints\n\ndef twice(x: int) -> int:\n    return x * 2\n\ndef test_twice() -> bool:\n    return twice(2) == 4\n\ndef test_prints() -> bool:\n    print(\"debugging here\")\n    return twice(3) == 6\n"
+   }
+  },
+  {
+   "id": "I02",
+   "section": "incremental",
+   "purpose": "baseline directory test run",
+   "cwd": "<scratch>/proj_incremental",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "test",
+    ".",
+    "--cache-dir=<scratch>/proj_incremental_cache"
+   ],
+   "exit": 0,
+   "stdout": "passed shared.geometry::test_area\npassed util::test_prints\npassed util::test_twice\n3 passed, 0 cached, 0 failed, 0 skipped across 1 programs\n",
+   "stderr": ""
+  },
+  {
+   "id": "I02b",
+   "section": "incremental",
+   "purpose": "second unchanged directory test run: which tests are reused?",
+   "cwd": "<scratch>/proj_incremental",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "test",
+    ".",
+    "--cache-dir=<scratch>/proj_incremental_cache"
+   ],
+   "exit": 0,
+   "stdout": "cached shared.geometry::test_area\npassed util::test_prints\ncached util::test_twice\n1 passed, 2 cached, 0 failed, 0 skipped across 1 programs\n",
+   "stderr": ""
+  },
+  {
+   "id": "I03",
+   "section": "incremental",
+   "purpose": "body-only edit of the unexported helper `hidden`: work report and invalidation explanation",
+   "cwd": "<scratch>/proj_incremental",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "check-project",
+    "main.my",
+    "--cache-dir=<scratch>/proj_incremental_cache",
+    "--report",
+    "--explain-invalidation"
+   ],
+   "exit": 0,
+   "stdout": "",
+   "stderr": "{\"version\":\"invalidation-report-v1\",\"hits\":0,\"misses\":6,\"skipped\":3,\"queries\":[{\"stage\":\"load_source\",\"status\":\"miss\",\"key\":\"load_source\",\"first_changed\":\"no-baseline\"},{\"stage\":\"lex_parse\",\"status\":\"miss\",\"key\":\"lex_parse\",\"first_changed\":\"no-baseline\"},{\"stage\":\"collect_declarations\",\"status\":\"miss\",\"key\":\"collect_declarations\",\"first_changed\":\"no-baseline\"},{\"stage\":\"resolve_interface\",\"status\":\"miss\",\"key\":\"resolve_interface\",\"first_changed\":\"no-baseline\"},{\"stage\":\"check_body\",\"status\":\"miss\",\"key\":\"check_body\",\"first_changed\":\"no-baseline\"},{\"stage\":\"instantiate_specialization\",\"status\":\"miss\",\"key\":\"instantiate_specialization\",\"first_changed\":\"no-baseline\"},{\"stage\":\"lower_function\",\"status\":\"skipped\",\"key\":\"lower_function\"},{\"stage\":\"emit_fragment\",\"status\":\"skipped\",\"key\":\"emit_fragment\"},{\"stage\":\"link\",\"status\":\"skipped\",\"key\":\"link\"}]}\n{\"version\":\"frontend-cache-v1\",\"syntax_hits\":2,\"syntax_misses\":1,\"syntax_stored\":1,\"verdict_hits\":0,\"verdict_misses\":0,\"verdict_stored\":1,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":4075,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n{\"version\":\"work-report-v1\",\"command\":\"check-project\",\"fingerprint_unchanged\":false,\"reused\":true,\"parsed_modules\":{\"status\":\"miss\",\"performed\":1,\"reused\":2},\"checked_bodies\":{\"status\":\"miss\",\"performed\":1,\"reused\":6},\"instantiated_specializations\":{\"status\":\"miss\",\"performed\":0,\"reused\":0},\"lowered_functions\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"links\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"executed_tests\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"reused_results\":0,\"session_reused_results\":0,\"symbolic_templates\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"specialization_bodies\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"semantic_cache\":{\"retained_bytes\":17756,\"ordinary_bytes\":17756,\"symbolic_bytes\":0,\"specialization_bytes\":0,\"evicted\":0},\"bypassed\":[{\"reason\":\"declaration-region-changed\",\"count\":1}],\"session\":{\"parsed_modules\":{\"performed\":1,\"reused\":2},\"checked_bodies\":{\"performed\":1,\"reused\":6},\"instantiated_specializations\":{\"performed\":0,\"reused\":0},\"lowered_functions\":{\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"performed\":0,\"reused\":0},\"links\":{\"performed\":0,\"reused\":0},\"executed_tests\":{\"performed\":0,\"reused\":0}}}\n",
+   "files": {
+    "shared/geometry.my": "module shared.geometry\nexport area\n\ndef area(w: int, h: int) -> int:\n    return w * h\n\ndef hidden() -> int:\n    return 2\n\nexport test_area\ndef test_area() -> bool:\n    return area(2, 3) == 6\n"
+   }
+  },
+  {
+   "id": "I04",
+   "section": "incremental",
+   "purpose": "directory test run after the body-only edit: test_area reused, dependents only",
+   "cwd": "<scratch>/proj_incremental",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "test",
+    ".",
+    "--cache-dir=<scratch>/proj_incremental_cache"
+   ],
+   "exit": 0,
+   "stdout": "cached shared.geometry::test_area\npassed util::test_prints\ncached util::test_twice\n1 passed, 2 cached, 0 failed, 0 skipped across 1 programs\n",
+   "stderr": ""
+  },
+  {
+   "id": "I05",
+   "section": "incremental",
+   "purpose": "interface edit (area gains a parameter): dependents fail, invalidation names the interface",
+   "cwd": "<scratch>/proj_incremental",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "check-project",
+    "main.my",
+    "--cache-dir=<scratch>/proj_incremental_cache",
+    "--explain-invalidation"
+   ],
+   "exit": 1,
+   "stdout": "",
+   "stderr": "main.my:6:11: error[E_ARITY]: missing required argument\n      print(geometry.area(3, 4))\n            ^\nshared/geometry.my:12:12: error[E_ARITY]: missing required argument\n      return area(2, 3) == 6\n             ^\n{\"version\":\"invalidation-report-v1\",\"hits\":3,\"misses\":3,\"skipped\":3,\"queries\":[{\"stage\":\"load_source\",\"status\":\"miss\",\"key\":\"db83ce562cd09331864bbb86eb1746a8a66f2b96eb7cedad943a643870747232\",\"first_changed\":\"module:shared.geometry\"},{\"stage\":\"lex_parse\",\"status\":\"miss\",\"key\":\"23c3b9b1186ee167a61849b74834f3a2b7f1cb1dab5ebafc77ba593cd2eed7d1\",\"first_changed\":\"module:shared.geometry\"},{\"stage\":\"collect_declarations\",\"status\":\"hit\",\"key\":\"58e43c0b6208f3682b30127a22870a414c7e7670b42d8fed494b0949b95fc6c1\"},{\"stage\":\"resolve_interface\",\"status\":\"miss\",\"key\":\"2acdc470331a1613bbe3685e0abee8d7058780348f82fdef5b10a96f12cba243\",\"first_changed\":\"interface\"},{\"stage\":\"check_body\",\"status\":\"hit\",\"key\":\"a2da98aaa32fd4cde2739339d03790c6b63ea1785ce68dfa67bbb13b467e4b79\"},{\"stage\":\"instantiate_specialization\",\"status\":\"hit\",\"key\":\"\"},{\"stage\":\"lower_function\",\"status\":\"skipped\",\"key\":\"lower_function\"},{\"stage\":\"emit_fragment\",\"status\":\"skipped\",\"key\":\"emit_fragment\"},{\"stage\":\"link\",\"status\":\"skipped\",\"key\":\"link\"}]}\n",
+   "files": {
+    "shared/geometry.my": "module shared.geometry\nexport area\n\ndef area(w: int, h: int, d: int) -> int:\n    return w * h\n\ndef hidden() -> int:\n    return 2\n\nexport test_area\ndef test_area() -> bool:\n    return area(2, 3) == 6\n"
+   }
+  },
+  {
+   "id": "I06",
+   "section": "incremental",
+   "purpose": "callers of area while the project is red",
+   "cwd": "<scratch>/proj_incremental",
+   "command": [
+    "python3",
+    "/home/epentland/ai/canopy/mylang/scripts/navigate.py",
+    "--compiler",
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "--entry",
+    "main.my",
+    "--symbol",
+    "shared.geometry::area",
+    "--relation",
+    "callers",
+    "--limit",
+    "10"
+   ],
+   "exit": 0,
+   "stdout": "{\"version\": \"navigation-query-v1\", \"checked\": false, \"snapshot_sha256\": \"0c2924fdb27bee1cc17ecb9f42854d93b7773c13e84f5251a405687195a1ff4e\", \"relation\": \"callers\", \"scope\": \"static source relationships; impact is not test coverage or proof of complete change impact\", \"symbols\": [{\"id\": \"shared.geometry::area\", \"name\": \"area\", \"kind\": \"function\", \"location\": {\"path\": \"shared/geometry.my\", \"start\": 40, \"end\": 44, \"line\": 4, \"column\": 5}, \"exported\": true, \"signature\": \"area(w: int, h: int, d: int) -> int\", \"type_name\": \"int\", \"effects\": [], \"mutates\": [], \"return_origin\": \"unknown\", \"mutation_writes\": false, \"snippet\": \"area(w: int, h: int, d: int) -> int:\\n    return w * h\", \"snippet_truncated\": false}], \"references\": [], \"omitted_symbols\": 0, \"omitted_references\": 0, \"traversal_truncated\": false, \"semantic_relations_available\": false, \"index_cached\": false}\n",
+   "stderr": ""
+  },
+  {
+   "id": "I07",
+   "section": "incremental",
+   "purpose": "revert the interface edit and add an exported record plus two unannotated mutating helpers",
+   "cwd": "<scratch>/proj_incremental",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "check-project",
+    "main.my",
+    "--cache-dir=<scratch>/proj_incremental_cache"
+   ],
+   "exit": 0,
+   "stdout": "",
+   "stderr": "",
+   "files": {
+    "shared/geometry.my": "module shared.geometry\nexport area\n\ndef area(w: int, h: int) -> int:\n    return w * h\n\ndef hidden() -> int:\n    return 2\n\nexport test_area\ndef test_area() -> bool:\n    return area(2, 3) == 6\n\nexport Rect\nrecord Rect:\n    w: int\n    h: int\n    tags: list[str]\n\nexport tag\ndef tag(r: Rect, name: str) -> None:\n    r.tags.append(name)\n\nexport bump_all\ndef bump_all(xs: list[int]) -> None:\n    xs.append(1)\n"
+   }
+  },
+  {
+   "id": "I08",
+   "section": "incremental",
+   "purpose": "callers of area on a green project",
+   "cwd": "<scratch>/proj_incremental",
+   "command": [
+    "python3",
+    "/home/epentland/ai/canopy/mylang/scripts/navigate.py",
+    "--compiler",
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "--entry",
+    "main.my",
+    "--symbol",
+    "shared.geometry::area",
+    "--relation",
+    "callers",
+    "--limit",
+    "10"
+   ],
+   "exit": 0,
+   "stdout": "{\"version\": \"navigation-query-v1\", \"checked\": true, \"snapshot_sha256\": \"00d3e7f99f7b8b9475fc94d69ab5f3332342842309e298009d224deda00fe7e9\", \"relation\": \"callers\", \"scope\": \"static source relationships; impact is not test coverage or proof of complete change impact\", \"symbols\": [{\"id\": \"main::main\", \"name\": \"main\", \"kind\": \"function\", \"location\": {\"path\": \"main.my\", \"start\": 52, \"end\": 56, \"line\": 5, \"column\": 5}, \"exported\": false, \"signature\": \"main() -> int\", \"type_name\": \"i64\", \"effects\": [\"output\"], \"mutates\": [], \"return_origin\": \"fresh\", \"mutation_writes\": false, \"snippet\": \"main() -> int:\\n    print(geometry.area(3, 4))\\n    return util.twice(21)\", \"snippet_truncated\": false}, {\"id\": \"shared.geometry::area\", \"name\": \"area\", \"kind\": \"function\", \"location\": {\"path\": \"shared/geometry.my\", \"start\": 40, \"end\": 44, \"line\": 4, \"column\": 5}, \"exported\": true, \"signature\": \"area(w: int, h: int) -> int\", \"type_name\": \"i64\", \"effects\": [], \"mutates\": [], \"return_origin\": \"fresh\", \"mutation_writes\": false, \"snippet\": \"area(w: int, h: int) -> int:\\n    return w * h\", \"snippet_truncated\": false}, {\"id\": \"shared.geometry::test_area\", \"name\": \"test_area\", \"kind\": \"function\", \"location\": {\"path\": \"shared/geometry.my\", \"start\": 143, \"end\": 152, \"line\": 11, \"column\": 5}, \"exported\": true, \"signature\": \"test_area() -> bool\", \"type_name\": \"bool\", \"effects\": [], \"mutates\": [], \"return_origin\": \"fresh\", \"mutation_writes\": false, \"snippet\": \"test_area() -> bool:\\n    return area(2, 3) == 6\", \"snippet_truncated\": false}], \"references\": [{\"from\": \"main::main\", \"to\": \"shared.geometry::area\", \"kind\": \"call\", \"location\": {\"path\": \"main.my\", \"start\": 77, \"end\": 96, \"line\": 6, \"column\": 11}}, {\"from\": \"shared.geometry::test_area\", \"to\": \"shared.geometry::area\", \"kind\": \"call\", \"location\": {\"path\": \"shared/geometry.my\", \"start\": 175, \"end\": 185, \"line\": 12, \"column\": 12}}], \"omitted_symbols\": 0, \"omitted_references\": 0, \"traversal_truncated\": false, \"semantic_relations_available\": true, \"index_cached\": false}\n",
+   "stderr": ""
+  },
+  {
+   "id": "I09",
+   "section": "incremental",
+   "purpose": "impact of area on a green project",
+   "cwd": "<scratch>/proj_incremental",
+   "command": [
+    "python3",
+    "/home/epentland/ai/canopy/mylang/scripts/navigate.py",
+    "--compiler",
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "--entry",
+    "main.my",
+    "--symbol",
+    "shared.geometry::area",
+    "--relation",
+    "impact",
+    "--limit",
+    "10"
+   ],
+   "exit": 0,
+   "stdout": "{\"version\": \"navigation-query-v1\", \"checked\": true, \"snapshot_sha256\": \"00d3e7f99f7b8b9475fc94d69ab5f3332342842309e298009d224deda00fe7e9\", \"relation\": \"impact\", \"scope\": \"static source relationships; impact is not test coverage or proof of complete change impact\", \"symbols\": [{\"id\": \"main::main\", \"name\": \"main\", \"kind\": \"function\", \"location\": {\"path\": \"main.my\", \"start\": 52, \"end\": 56, \"line\": 5, \"column\": 5}, \"exported\": false, \"signature\": \"main() -> int\", \"type_name\": \"i64\", \"effects\": [\"output\"], \"mutates\": [], \"return_origin\": \"fresh\", \"mutation_writes\": false, \"snippet\": \"main() -> int:\\n    print(geometry.area(3, 4))\\n    return util.twice(21)\", \"snippet_truncated\": false}, {\"id\": \"shared.geometry::area\", \"name\": \"area\", \"kind\": \"function\", \"location\": {\"path\": \"shared/geometry.my\", \"start\": 40, \"end\": 44, \"line\": 4, \"column\": 5}, \"exported\": true, \"signature\": \"area(w: int, h: int) -> int\", \"type_name\": \"i64\", \"effects\": [], \"mutates\": [], \"return_origin\": \"fresh\", \"mutation_writes\": false, \"snippet\": \"area(w: int, h: int) -> int:\\n    return w * h\", \"snippet_truncated\": false}, {\"id\": \"shared.geometry::test_area\", \"name\": \"test_area\", \"kind\": \"function\", \"location\": {\"path\": \"shared/geometry.my\", \"start\": 143, \"end\": 152, \"line\": 11, \"column\": 5}, \"exported\": true, \"signature\": \"test_area() -> bool\", \"type_name\": \"bool\", \"effects\": [], \"mutates\": [], \"return_origin\": \"fresh\", \"mutation_writes\": false, \"snippet\": \"test_area() -> bool:\\n    return area(2, 3) == 6\", \"snippet_truncated\": false}], \"references\": [{\"from\": \"main::main\", \"to\": \"shared.geometry::area\", \"kind\": \"call\", \"location\": {\"path\": \"main.my\", \"start\": 77, \"end\": 96, \"line\": 6, \"column\": 11}}, {\"from\": \"shared.geometry::test_area\", \"to\": \"shared.geometry::area\", \"kind\": \"call\", \"location\": {\"path\": \"shared/geometry.my\", \"start\": 175, \"end\": 185, \"line\": 12, \"column\": 12}}], \"omitted_symbols\": 0, \"omitted_references\": 0, \"traversal_truncated\": false, \"semantic_relations_available\": true, \"index_cached\": false}\n",
+   "stderr": ""
+  },
+  {
+   "id": "I10",
+   "section": "incremental",
+   "purpose": "index-project: inferred mutation facts for the unannotated helpers",
+   "cwd": "<scratch>/proj_incremental",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "index-project",
+    "main.my"
+   ],
+   "exit": 0,
+   "stdout": "{\"version\":\"navigation-v1\",\"checked\":true,\"reference_scope\":\"resolved concrete bodies and specializations; generic declarations indexed; static edges are not runtime coverage\",\"snapshot_sha256\":\"00d3e7f99f7b8b9475fc94d69ab5f3332342842309e298009d224deda00fe7e9\",\"snapshot\":{\"implementation\":{\"compiler_sha256\":\"4a035f2a606e4e72db32ac8b739f79fae60d2dc3c6d896b54c248f634c9ed546\",\"zig_version\":\"0.17.0-dev.1683+5ceec001b\",\"architecture\":\"x86_64\",\"os\":\"linux\",\"abi\":\"gnu\",\"optimize\":\"debug\"},\"inputs\":[{\"module\":\"shared.geometry\",\"path\":\"shared/geometry.my\",\"sha256\":\"46bb8dd4b3d1a578aa0892f4a3ed5e29e9c833450c0c9f2ff43eafaa23cd3c5e\",\"bytes\":403,\"imports\":[]},{\"module\":\"util\",\"path\":\"util.my\",\"sha256\":\"c73f7b38c11b63c2479487bd7550a34d3edabcf2a4eca54f7d6134796eb9e086\",\"bytes\":239,\"imports\":[]},{\"module\":\"main\",\"path\":\"main.my\",\"sha256\":\"78e5c37fa293151098ccd669adb2756dc3bcfeadd214afdf2aa4530f31bcd85f\",\"bytes\":124,\"imports\":[{\"module\":\"shared.geometry\",\"alias\":\"geometry\"},{\"module\":\"util\",\"alias\":\"util\"}]}]},\"symbols\":[{\"id\":\"main::main\",\"name\":\"main\",\"kind\":\"function\",\"location\":{\"path\":\"main.my\",\"start\":52,\"end\":56,\"line\":5,\"column\":5},\"exported\":false,\"signature\":\"main() -> int\",\"type_name\":\"i64\",\"effects\":[\"output\"],\"mutates\":[],\"return_origin\":\"fresh\",\"mutation_writes\":false,\"snippet\":\"main() -> int:\\n    print(geometry.area(3, 4))\\n    return util.twice(21)\",\"snippet_truncated\":false},{\"id\":\"shared.geometry::Rect\",\"name\":\"Rect\",\"kind\":\"type\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":211,\"end\":215,\"line\":15,\"column\":8},\"exported\":true,\"signature\":\"\",\"type_name\":\"\",\"effects\":[],\"mutates\":[],\"return_origin\":\"unknown\",\"mutation_writes\":false,\"snippet\":\"\",\"snippet_truncated\":false},{\"id\":\"shared.geometry::area\",\"name\":\"area\",\"kind\":\"function\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":40,\"end\":44,\"line\":4,\"column\":5},\"exported\":true,\"signature\":\"area(w: int, h: int) -> int\",\"type_name\":\"i64\",\"effects\":[],\"mutates\":[],\"return_origin\":\"fresh\",\"mutation_writes\":false,\"snippet\":\"area(w: int, h: int) -> int:\\n    return w * h\",\"snippet_truncated\":false},{\"id\":\"shared.geometry::hidden\",\"name\":\"hidden\",\"kind\":\"function\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":91,\"end\":97,\"line\":7,\"column\":5},\"exported\":false,\"signature\":\"hidden() -> int\",\"type_name\":\"i64\",\"effects\":[],\"mutates\":[],\"return_origin\":\"fresh\",\"mutation_writes\":false,\"snippet\":\"hidden() -> int:\\n    return 2\",\"snippet_truncated\":false},{\"id\":\"shared.geometry::test_area\",\"name\":\"test_area\",\"kind\":\"function\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":143,\"end\":152,\"line\":11,\"column\":5},\"exported\":true,\"signature\":\"test_area() -> bool\",\"type_name\":\"bool\",\"effects\":[],\"mutates\":[],\"return_origin\":\"fresh\",\"mutation_writes\":false,\"snippet\":\"test_area() -> bool:\\n    return area(2, 3) == 6\",\"snippet_truncated\":false},{\"id\":\"shared.geometry::tag\",\"name\":\"tag\",\"kind\":\"function\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":275,\"end\":278,\"line\":21,\"column\":5},\"exported\":false,\"signature\":\"tag(r: Rect, name: str) -> None\",\"type_name\":\"unit\",\"effects\":[\"managed_allocation\",\"mutation\"],\"mutates\":[0],\"return_origin\":\"fresh\",\"mutation_writes\":true,\"snippet\":\"tag(r: Rect, name: str) -> None:\\n    r.tags.append(name)\",\"snippet_truncated\":false},{\"id\":\"shared.geometry::bump_all\",\"name\":\"bump_all\",\"kind\":\"function\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":353,\"end\":361,\"line\":25,\"column\":5},\"exported\":true,\"signature\":\"bump_all(xs: list[int]) -> None\",\"type_name\":\"unit\",\"effects\":[\"managed_allocation\",\"mutation\"],\"mutates\":[0],\"return_origin\":\"fresh\",\"mutation_writes\":true,\"snippet\":\"bump_all(xs: list[int]) -> None:\\n    xs.append(1)\",\"snippet_truncated\":false},{\"id\":\"util::twice\",\"name\":\"twice\",\"kind\":\"function\",\"location\":{\"path\":\"util.my\",\"start\":67,\"end\":72,\"line\":6,\"column\":5},\"exported\":true,\"signature\":\"twice(x: int) -> int\",\"type_name\":\"i64\",\"effects\":[],\"mutates\":[],\"return_origin\":\"fresh\",\"mutation_writes\":false,\"snippet\":\"twice(x: int) -> int:\\n    return x * 2\",\"snippet_truncated\":false},{\"id\":\"util::test_twice\",\"name\":\"test_twice\",\"kind\":\"function\",\"location\":{\"path\":\"util.my\",\"start\":111,\"end\":121,\"line\":9,\"column\":5},\"exported\":true,\"signature\":\"test_twice() -> bool\",\"type_name\":\"bool\",\"effects\":[],\"mutates\":[],\"return_origin\":\"fresh\",\"mutation_writes\":false,\"snippet\":\"test_twice() -> bool:\\n    return twice(2) == 4\",\"snippet_truncated\":false},{\"id\":\"util::test_prints\",\"name\":\"test_prints\",\"kind\":\"function\",\"location\":{\"path\":\"util.my\",\"start\":163,\"end\":174,\"line\":12,\"column\":5},\"exported\":true,\"signature\":\"test_prints() -> bool\",\"type_name\":\"bool\",\"effects\":[\"output\"],\"mutates\":[],\"return_origin\":\"fresh\",\"mutation_writes\":false,\"snippet\":\"test_prints() -> bool:\\n    print(\\\"debugging here\\\")\\n    return twice(3) == 6\",\"snippet_truncated\":false},{\"id\":\"shared.geometry::Rect.w\",\"name\":\"w\",\"kind\":\"field\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":221,\"end\":222,\"line\":16,\"column\":5},\"exported\":false,\"signature\":\"\",\"type_name\":\"int\",\"effects\":[],\"mutates\":[],\"return_origin\":\"unknown\",\"mutation_writes\":false,\"snippet\":\"\",\"snippet_truncated\":false},{\"id\":\"shared.geometry::Rect.h\",\"name\":\"h\",\"kind\":\"field\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":232,\"end\":233,\"line\":17,\"column\":5},\"exported\":false,\"signature\":\"\",\"type_name\":\"int\",\"effects\":[],\"mutates\":[],\"return_origin\":\"unknown\",\"mutation_writes\":false,\"snippet\":\"\",\"snippet_truncated\":false},{\"id\":\"shared.geometry::Rect.tags\",\"name\":\"tags\",\"kind\":\"field\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":243,\"end\":247,\"line\":18,\"column\":5},\"exported\":false,\"signature\":\"\",\"type_name\":\"list[str]\",\"effects\":[],\"mutates\":[],\"return_origin\":\"unknown\",\"mutation_writes\":false,\"snippet\":\"\",\"snippet_truncated\":false},{\"id\":\"shared.geometry::area/local:w@45\",\"name\":\"w\",\"kind\":\"parameter\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":45,\"end\":46,\"line\":4,\"column\":10},\"exported\":false,\"signature\":\"\",\"type_name\":\"i64\",\"effects\":[],\"mutates\":[],\"return_origin\":\"unknown\",\"mutation_writes\":false,\"snippet\":\"\",\"snippet_truncated\":false},{\"id\":\"shared.geometry::area/local:h@53\",\"name\":\"h\",\"kind\":\"parameter\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":53,\"end\":54,\"line\":4,\"column\":18},\"exported\":false,\"signature\":\"\",\"type_name\":\"i64\",\"effects\":[],\"mutates\":[],\"return_origin\":\"unknown\",\"mutation_writes\":false,\"snippet\":\"\",\"snippet_truncated\":false},{\"id\":\"shared.geometry::tag/local:r@279\",\"name\":\"r\",\"kind\":\"parameter\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":279,\"end\":280,\"line\":21,\"column\":9},\"exported\":false,\"signature\":\"\",\"type_name\":\"shared.geometry::Rect\",\"effects\":[],\"mutates\":[],\"return_origin\":\"unknown\",\"mutation_writes\":false,\"snippet\":\"\",\"snippet_truncated\":false},{\"id\":\"shared.geometry::tag/local:name@288\",\"name\":\"name\",\"kind\":\"parameter\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":288,\"end\":292,\"line\":21,\"column\":18},\"exported\":false,\"signature\":\"\",\"type_name\":\"str\",\"effects\":[],\"mutates\":[],\"return_origin\":\"unknown\",\"mutation_writes\":false,\"snippet\":\"\",\"snippet_truncated\":false},{\"id\":\"shared.geometry::bump_all/local:xs@362\",\"name\":\"xs\",\"kind\":\"parameter\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":362,\"end\":364,\"line\":25,\"column\":14},\"exported\":false,\"signature\":\"\",\"type_name\":\"List<i64>\",\"effects\":[],\"mutates\":[],\"return_origin\":\"unknown\",\"mutation_writes\":false,\"snippet\":\"\",\"snippet_truncated\":false},{\"id\":\"util::twice/local:x@73\",\"name\":\"x\",\"kind\":\"parameter\",\"location\":{\"path\":\"util.my\",\"start\":73,\"end\":74,\"line\":6,\"column\":11},\"exported\":false,\"signature\":\"\",\"type_name\":\"i64\",\"effects\":[],\"mutates\":[],\"return_origin\":\"unknown\",\"mutation_writes\":false,\"snippet\":\"\",\"snippet_truncated\":false}],\"references\":[{\"from\":\"main::main\",\"to\":\"shared.geometry::area\",\"kind\":\"call\",\"location\":{\"path\":\"main.my\",\"start\":77,\"end\":96,\"line\":6,\"column\":11}},{\"from\":\"main::main\",\"to\":\"util::twice\",\"kind\":\"call\",\"location\":{\"path\":\"main.my\",\"start\":109,\"end\":123,\"line\":7,\"column\":12}},{\"from\":\"shared.geometry::area\",\"to\":\"shared.geometry::area/local:w@45\",\"kind\":\"read\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":80,\"end\":81,\"line\":5,\"column\":12}},{\"from\":\"shared.geometry::area\",\"to\":\"shared.geometry::area/local:h@53\",\"kind\":\"read\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":84,\"end\":85,\"line\":5,\"column\":16}},{\"from\":\"shared.geometry::test_area\",\"to\":\"shared.geometry::area\",\"kind\":\"call\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":175,\"end\":185,\"line\":12,\"column\":12}},{\"from\":\"shared.geometry::tag\",\"to\":\"shared.geometry::Rect\",\"kind\":\"accepts\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":279,\"end\":280,\"line\":21,\"column\":9}},{\"from\":\"shared.geometry::tag\",\"to\":\"shared.geometry::Rect.tags\",\"kind\":\"field_read\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":312,\"end\":318,\"line\":22,\"column\":5}},{\"from\":\"shared.geometry::tag\",\"to\":\"shared.geometry::Rect\",\"kind\":\"uses_type\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":312,\"end\":313,\"line\":22,\"column\":5}},{\"from\":\"shared.geometry::tag\",\"to\":\"shared.geometry::tag/local:r@279\",\"kind\":\"read\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":312,\"end\":313,\"line\":22,\"column\":5}},{\"from\":\"shared.geometry::tag\",\"to\":\"shared.geometry::tag/local:name@288\",\"kind\":\"read\",\"location\":{\"path\":\"shared/geometry.my\",\"start\":326,\"end\":330,\"line\":22,\"column\":19}},{\"from\":\"util::twice\",\"to\":\"util::twice/local:x@73\",\"kind\":\"read\",\"location\":{\"path\":\"util.my\",\"start\":100,\"end\":101,\"line\":7,\"column\":12}},{\"from\":\"util::test_twice\",\"to\":\"util::twice\",\"kind\":\"call\",\"location\":{\"path\":\"util.my\",\"start\":144,\"end\":152,\"line\":10,\"column\":12}},{\"from\":\"util::test_prints\",\"to\":\"util::twice\",\"kind\":\"call\",\"location\":{\"path\":\"util.my\",\"start\":225,\"end\":233,\"line\":14,\"column\":12}}]}",
+   "stderr": ""
+  },
+  {
+   "id": "I11",
+   "section": "incremental",
+   "purpose": "list-interfaces: does the compact view show effects or mutation?",
+   "cwd": "<scratch>/proj_incremental",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "list-interfaces",
+    "main.my"
+   ],
+   "exit": 0,
+   "stdout": "module interfaces v1; declarations/signature visibility checked; bodies not type checked\nmodule shared.geometry\n  export type Rect\n  export function area\n  export function test_area\n  export function bump_all\nmodule util\n  export function twice\n  export function test_twice\n  export function test_prints\nmodule main\n",
+   "stderr": ""
+  },
+  {
+   "id": "I12",
+   "section": "incremental",
+   "purpose": "schema-project: record fields and inferred mutates",
+   "cwd": "<scratch>/proj_incremental",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "schema-project",
+    "main.my"
+   ],
+   "exit": 0,
+   "stdout": "{\"version\":\"language-schema-v1\",\"scope\":\"reachable-module-exports\",\"representation\":\"language-contracts-no-wire-format-or-abi\",\"entry\":\"main\",\"exports\":[\"shared.geometry::Rect\"],\"functions\":[{\"name\":\"shared.geometry::area\",\"parameters\":[{\"name\":\"w\",\"type\":\"i64\",\"mode\":\"value\"},{\"name\":\"h\",\"type\":\"i64\",\"mode\":\"value\"}],\"result\":\"i64\",\"effects\":[],\"mutates\":[],\"return_origin\":\"fresh\"},{\"name\":\"shared.geometry::bump_all\",\"parameters\":[{\"name\":\"xs\",\"type\":\"List<i64>\",\"mode\":\"value\"}],\"result\":\"unit\",\"effects\":[\"managed_allocation\",\"mutation\"],\"mutates\":[0],\"return_origin\":\"fresh\"},{\"name\":\"shared.geometry::test_area\",\"parameters\":[],\"result\":\"bool\",\"effects\":[],\"mutates\":[],\"return_origin\":\"fresh\"},{\"name\":\"util::test_prints\",\"parameters\":[],\"result\":\"bool\",\"effects\":[\"output\"],\"mutates\":[],\"return_origin\":\"fresh\"},{\"name\":\"util::test_twice\",\"parameters\":[],\"result\":\"bool\",\"effects\":[],\"mutates\":[],\"return_origin\":\"fresh\"},{\"name\":\"util::twice\",\"parameters\":[{\"name\":\"x\",\"type\":\"i64\",\"mode\":\"value\"}],\"result\":\"i64\",\"effects\":[],\"mutates\":[],\"return_origin\":\"fresh\"}],\"types\":[{\"name\":\"List<i64>\",\"kind\":\"list\",\"move_only\":false,\"requires_handling\":false,\"opaque\":true,\"element\":\"i64\"},{\"name\":\"List<str>\",\"kind\":\"list\",\"move_only\":false,\"requires_handling\":false,\"opaque\":true,\"element\":\"str\"},{\"name\":\"bool\",\"kind\":\"boolean\",\"move_only\":false,\"requires_handling\":false,\"opaque\":false},{\"name\":\"i64\",\"kind\":\"integer\",\"move_only\":false,\"requires_handling\":false,\"opaque\":false,\"bits\":64,\"signed\":true,\"minimum\":\"-9223372036854775808\",\"maximum\":\"9223372036854775807\"},{\"name\":\"shared.geometry::Rect\",\"kind\":\"record\",\"move_only\":false,\"requires_handling\":false,\"opaque\":false,\"fields\":[{\"name\":\"w\",\"type\":\"i64\"},{\"name\":\"h\",\"type\":\"i64\"},{\"name\":\"tags\",\"type\":\"List<str>\"}]},{\"name\":\"str\",\"kind\":\"list\",\"move_only\":false,\"requires_handling\":false,\"opaque\":true,\"element\":\"u32\"},{\"name\":\"u32\",\"kind\":\"integer\",\"move_only\":false,\"requires_handling\":false,\"opaque\":false,\"bits\":32,\"signed\":false,\"minimum\":\"0\",\"maximum\":\"4294967295\"},{\"name\":\"unit\",\"kind\":\"unit\",\"move_only\":false,\"requires_handling\":false,\"opaque\":false}],\"generic_templates_version\":\"generic-templates-v2\",\"generic_templates\":[]}",
+   "stderr": ""
+  }
+ ],
+ "timings": [
+  {
+   "id": "T01",
+   "purpose": "cold check-project of the schematic guest (14 modules, 2186 lines), fresh cache",
+   "cwd": "<scratch>/schematic",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "check-project",
+    "main.my",
+    "--cache-dir=<scratch>/schematic_cache"
+   ],
+   "samples_seconds": [
+    0.259
+   ],
+   "exit": 0
+  },
+  {
+   "id": "T02",
+   "purpose": "warm unchanged check-project",
+   "cwd": "<scratch>/schematic",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "check-project",
+    "main.my",
+    "--cache-dir=<scratch>/schematic_cache"
+   ],
+   "samples_seconds": [
+    0.05,
+    0.056,
+    0.053
+   ],
+   "exit": 0
+  },
+  {
+   "id": "T03",
+   "purpose": "comment-only edit to circuit.my then check-project with work report",
+   "cwd": "<scratch>/schematic",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "check-project",
+    "main.my",
+    "--cache-dir=<scratch>/schematic_cache",
+    "--report"
+   ],
+   "samples_seconds": [
+    0.169,
+    0.176,
+    0.181
+   ],
+   "exit": 0,
+   "extracted": [
+    "\"checked_bodies\":{\"status\":\"hit\",\"performed\":0,\"reused\":114}",
+    "\"checked_bodies\":{\"status\":\"hit\",\"performed\":0,\"reused\":114}",
+    "\"checked_bodies\":{\"status\":\"hit\",\"performed\":0,\"reused\":114}"
+   ]
+  },
+  {
+   "id": "T04",
+   "purpose": "semantic one-line edit (new statement) in circuit.my then check-project with work report",
+   "cwd": "<scratch>/schematic",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "check-project",
+    "main.my",
+    "--cache-dir=<scratch>/schematic_cache",
+    "--report"
+   ],
+   "samples_seconds": [
+    0.186,
+    0.169,
+    0.186
+   ],
+   "exit": 0,
+   "extracted": [
+    "\"checked_bodies\":{\"status\":\"miss\",\"performed\":1,\"reused\":113}",
+    "\"checked_bodies\":{\"status\":\"miss\",\"performed\":1,\"reused\":113}",
+    "\"checked_bodies\":{\"status\":\"miss\",\"performed\":1,\"reused\":113}"
+   ]
+  },
+  {
+   "id": "T05",
+   "purpose": "warm unchanged native build of the schematic guest with its qbe-build report",
+   "cwd": "<scratch>/schematic",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "build",
+    "main.my",
+    "-o",
+    "<scratch>/schematic_app",
+    "--project",
+    "--cache-dir=<scratch>/schematic_cache",
+    "--report"
+   ],
+   "samples_seconds": [
+    2.935,
+    2.953,
+    3.043
+   ],
+   "exit": 0,
+   "extracted": [
+    {
+     "compiled_functions": 0,
+     "reused_functions": 115,
+     "runtime_reused": true,
+     "frontend_seconds": 2.026470136,
+     "codegen_seconds": 0.827264398,
+     "link_seconds": 0.047019351,
+     "native_seconds": 0.874285805,
+     "mode": "ReleaseFast"
+    },
+    {
+     "compiled_functions": 0,
+     "reused_functions": 115,
+     "runtime_reused": true,
+     "frontend_seconds": 2.095323608,
+     "codegen_seconds": 0.773456946,
+     "link_seconds": 0.044777838,
+     "native_seconds": 0.818236874,
+     "mode": "ReleaseFast"
+    },
+    {
+     "compiled_functions": 0,
+     "reused_functions": 115,
+     "runtime_reused": true,
+     "frontend_seconds": 2.323877805,
+     "codegen_seconds": 0.630793174,
+     "link_seconds": 0.050751583,
+     "native_seconds": 0.681547539,
+     "mode": "ReleaseFast"
+    }
+   ]
+  },
+  {
+   "id": "T06",
+   "purpose": "warm unchanged `run` of the schematic guest (exits 2: it wants arguments; the cost is the build)",
+   "cwd": "<scratch>/schematic",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "run",
+    "main.my",
+    "--cache-dir=<scratch>/schematic_cache"
+   ],
+   "samples_seconds": [
+    3.939,
+    2.698,
+    2.693
+   ],
+   "exit": 2
+  },
+  {
+   "id": "T07",
+   "purpose": "warm unchanged native build of the single-file examples/factorial.my",
+   "cwd": "/home/epentland/ai/canopy/mylang/examples",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "build",
+    "factorial.my",
+    "-o",
+    "<scratch>/factorial_app",
+    "--cache-dir=<scratch>/schematic_cache",
+    "--report"
+   ],
+   "samples_seconds": [
+    0.084,
+    0.084,
+    0.098
+   ],
+   "exit": 0,
+   "extracted": [
+    {
+     "compiled_functions": 0,
+     "reused_functions": 2,
+     "runtime_reused": true,
+     "frontend_seconds": 0.026148652,
+     "codegen_seconds": 0.003889261,
+     "link_seconds": 0.027967914,
+     "native_seconds": 0.031858509,
+     "mode": "ReleaseFast"
+    },
+    {
+     "compiled_functions": 0,
+     "reused_functions": 2,
+     "runtime_reused": true,
+     "frontend_seconds": 0.0265386,
+     "codegen_seconds": 0.00406677,
+     "link_seconds": 0.03136286,
+     "native_seconds": 0.035431095,
+     "mode": "ReleaseFast"
+    },
+    {
+     "compiled_functions": 0,
+     "reused_functions": 2,
+     "runtime_reused": true,
+     "frontend_seconds": 0.036694197,
+     "codegen_seconds": 0.003987355,
+     "link_seconds": 0.029228448,
+     "native_seconds": 0.033217217,
+     "mode": "ReleaseFast"
+    }
+   ]
+  },
+  {
+   "id": "T08",
+   "purpose": "warm unchanged native build of the three-module examples/modules/main.my",
+   "cwd": "/home/epentland/ai/canopy/mylang/examples/modules",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "build",
+    "main.my",
+    "-o",
+    "<scratch>/modules_app",
+    "--project",
+    "--cache-dir=<scratch>/schematic_cache",
+    "--report"
+   ],
+   "samples_seconds": [
+    0.097,
+    0.096,
+    0.084
+   ],
+   "exit": 0,
+   "extracted": [
+    {
+     "compiled_functions": 0,
+     "reused_functions": 4,
+     "runtime_reused": true,
+     "frontend_seconds": 0.039501689,
+     "codegen_seconds": 0.004765131,
+     "link_seconds": 0.030754331,
+     "native_seconds": 0.035521376,
+     "mode": "ReleaseFast"
+    },
+    {
+     "compiled_functions": 0,
+     "reused_functions": 4,
+     "runtime_reused": true,
+     "frontend_seconds": 0.027942392,
+     "codegen_seconds": 0.004884052,
+     "link_seconds": 0.030088928,
+     "native_seconds": 0.034974663,
+     "mode": "ReleaseFast"
+    },
+    {
+     "compiled_functions": 0,
+     "reused_functions": 4,
+     "runtime_reused": true,
+     "frontend_seconds": 0.026676617,
+     "codegen_seconds": 0.005156258,
+     "link_seconds": 0.029089983,
+     "native_seconds": 0.034247726,
+     "mode": "ReleaseFast"
+    }
+   ]
+  },
+  {
+   "id": "T09",
+   "purpose": "warm unchanged check of a 20-line single file",
+   "cwd": "<scratch>/single",
+   "command": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "check",
+    "p01_type_mismatch.my"
+   ],
+   "samples_seconds": [
+    0.019,
+    0.03,
+    0.019
+   ],
+   "exit": 1
+  }
+ ],
+ "velocity_probe_rerun": {
+  "source": "agent-velocity-2026-09-17-probes.json",
+  "previous_compiler": "d7bf295b7f028d6218d24d6c835060650ed932739dbd8e33cab5e0db243ec831",
+  "total": 110,
+  "unchanged_exit": 105,
+  "changed_exit": [
+   {
+    "name": "a15_lambda_nocapture.my",
+    "previous_exit": 1,
+    "exit": 42,
+    "stdout": "42",
+    "first_stderr_line": ""
+   },
+   {
+    "name": "a20_dict_items.my",
+    "previous_exit": 45,
+    "exit": 74,
+    "stdout": "330",
+    "first_stderr_line": ""
+   },
+   {
+    "name": "a27_sorted_key.my",
+    "previous_exit": 1,
+    "exit": 42,
+    "stdout": "42",
+    "first_stderr_line": ""
+   },
+   {
+    "name": "e01_step_budget.my",
+    "previous_exit": 1,
+    "exit": 21,
+    "stdout": "21",
+    "first_stderr_line": ""
+   },
+   {
+    "name": "e07_recursion_depth.my",
+    "previous_exit": 1,
+    "exit": 0,
+    "stdout": "0",
+    "first_stderr_line": ""
+   }
+  ]
+ }
+}

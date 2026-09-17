@@ -35,19 +35,55 @@ $ echo $?
 3
 ```
 
+### Test entries
+
+A test entry is a `.my` file, not necessarily a program. A library module without
+`main`, or a standalone file named `*_test.my`, is accepted: the runner checks a
+private copy with a stub `def main() -> int: return 0` appended, so the exported
+`test_` functions run without editing the source or weakening the `main`
+requirement for ordinary `run`. A bare `*_test.my` file without a `module`
+declaration also gains a matching header in the private copy.
+
+### Failure text
+
+A failed expectation reports both sides of the comparison as
+`expected <value>, got <value>` instead of a value-less sentence, and a failed
+`assert` keeps its `R_ASSERT` code and source location and reports the message
+written after the condition as `R_ASSERT: <message>`. Guest output written by
+`print` is redirected off the runner's binary protocol channel and captured; the
+runner appends it to a failure's text, so a debug print is visible without
+aborting the run. A passing test's output is captured and discarded, and a
+benchmarked function's output goes to the diagnostic stream so timing batches
+never corrupt the protocol.
+
+```console
+$ mylang test main.my --filter test_total
+failed main::test_total: expected 42, got 41
+0 passed, 0 cached, 1 failed, 0 skipped
+$ mylang test main.my --filter test_reading
+failed main::test_reading: R_ASSERT: x should be two
+  in main::test_reading at main.my:6:5
+
+reading 41 rows
+0 passed, 0 cached, 1 failed, 0 skipped
+```
+
 ## Directory runs
 
-The positional argument may be a directory instead of one entry. Every `.my`
-program beneath it is selected in sorted path order — generated `.mylang-cache`,
-`.zig-cache`, `zig-out` and `.git` trees are skipped — and each one runs as its
-own child command, up to the machine's core count at a time. The children share
-one object cache and one receipt directory, so an unchanged program reuses its
-results instead of rebuilding, and the runtime archive every program links is
-built once for the whole suite. Their reports merge into one case listing, one
-count line naming how many programs took part, and the most severe exit status:
-2 if any program failed to set up, 1 if any case failed, 3 if the whole selection
-was empty or skipped, and 0 otherwise. `--cases` is rejected for a directory run,
-because its keys name the tests of one project.
+The positional argument may be a directory instead of one entry. Every project
+root beneath it is selected in sorted path order: a `.my` file that declares a
+top-level `main`, plus standalone `*_test.my` files. A library module imported by
+a root is not run as a program of its own, so a multi-module project is one
+program rather than one `E_MAIN`/`E_MODULE_NAME` failure per module. Generated
+`.mylang-cache`, `.zig-cache`, `zig-out` and `.git` trees are skipped, and each
+root runs as its own child command, up to the machine's core count at a time.
+The children share one object cache and one receipt directory, so an unchanged
+program reuses its results instead of rebuilding, and the runtime archive every
+program links is built once for the whole suite. Their reports merge into one
+case listing, one count line naming how many programs took part, and the most
+severe exit status: 2 if any program failed to set up, 1 if any case failed, 3
+if the whole selection was empty or skipped, and 0 otherwise. `--cases` is
+rejected for a directory run, because its keys name the tests of one project.
 
 On a corpus of 100 small programs with 200 tests, a cold run takes about 7
 seconds, an unchanged rerun about 0.6 seconds, and a run after editing one
@@ -190,3 +226,72 @@ $ mylang test app/main.my --cases cases.json
 passed main::test_stamp
 1 passed, 0 cached, 0 failed, 0 skipped
 ```
+
+## Performance benchmarks
+
+`mylang test --bench PATTERN` discovers exported `bench_` functions beside the
+`test_` functions, runs the correctness tests first, and measures only after they
+pass. One invocation of a benchmark function is one operation; the harness owns
+repetition. Benchmark filtering is independent of `--filter`, and `--cases` is
+shared: a benchmark uses the same typed arguments, expectations, skips and
+provider substitutions as a test, and may declare `sizes` so one function covers
+small, medium and large inputs. Boolean results default to `true`; other result
+types need an explicit expectation. `--bench-only` skips the correctness pass for
+local iteration.
+
+```console
+$ mylang test app/main.my --bench '*' --mode ReleaseFast
+passed main::test_square
+1 passed, 0 cached, 0 failed, 0 skipped
+bench main::bench_sum[small] measured median=12.40 ns/op spread=1.20% samples=9
+benchmarks: 1 measured, 0 compared, passed
+$ cat cases.json
+{
+  "main::bench_sum": {
+    "sizes": {"small": {"arguments": {"limit": "1000"}, "expected": "499500"}}
+  }
+}
+```
+
+The declared timing boundary is the complete native copied-value call, including
+argument and result codec costs. Compilation, process startup, library loading,
+fixture preparation and report serialization are excluded. Every operation is a
+fresh copied-value call, so no guest state carries between operations, and the
+returned value is validated outside every timed region. A trap, an incorrect
+result, a timeout or an invalid output fails the run and is listed in the
+candidate's failures instead of producing a measurement. `--bench-warmup`,
+`--bench-batches` and `--bench-batch-ms` tune sampling, and `--bench-timeout-ms`
+bounds the whole child. A directory run measures one program at a time so timing
+batches never compete, and it rejects `--bench-output`, `--bench-baseline` and
+`--bench-policy` because it has no single aggregate report.
+
+### Reviewed baselines
+
+`--bench-output FILE` writes an atomic candidate report containing provenance,
+raw batch durations, medians and spreads. A candidate is not an approved
+baseline: promote it with `bench-promote`, which requires a complete, passing
+candidate and records the approver, reason, revision and the replaced
+measurements in retained history. The approved file is never modified by a
+comparison.
+
+```console
+$ mylang test app/main.my --bench '*' --mode ReleaseFast \
+    --bench-output perf/candidate.json
+$ mylang bench-promote --candidate perf/candidate.json --baseline perf/baseline.json \
+    --approver maintainer --reason "accept 4% growth" --revision testrev
+$ mylang test app/main.my --bench '*' --mode ReleaseFast \
+    --bench-baseline perf/baseline.json --bench-policy perf/policy.json
+```
+
+`perf/policy.json` supplies default and per-benchmark `allowed_growth_percent`,
+`minimum_meaningful_delta_ns` and an independent `max_ns_per_op` ceiling, the
+`required` benchmark suite and the noise budget. A relative regression is flagged
+only when both the percentage limit and the absolute floor are exceeded;
+equality with a limit passes and zero percent tolerance is valid. Runs are
+compared only when their optimization mode, runner profile, boundary version,
+sampling configuration, workload version and fixture identity match, so ordinary
+code and compiler revisions stay comparable. New, removed, skipped, incompatible
+and unresolved-noise results are explicit non-pass verdicts, and a near-limit or
+noisy sample earns at most one predefined confirmation whose batches are
+evaluated together. Malformed artifacts, unknown schema versions, duplicate
+benchmark IDs, invalid numbers and nonpositive baselines are rejected.

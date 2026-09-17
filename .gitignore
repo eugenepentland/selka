@@ -5,6 +5,8 @@ __pycache__/
 
 .mylang-cache/
 
+.pending/
+
 .guardian/cache/
 experiments/application_comparison/baselines/*/zig/.guardian/cache/
 qbe_runtime.o

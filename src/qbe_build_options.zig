@@ -10,7 +10,7 @@ pub fn runtimeControl(argument: []const u8) bool {
     if (std.mem.eql(u8, argument, "--allow-all")) return true;
     if (std.mem.eql(u8, argument, "--gc-stress")) return true;
     if (std.mem.eql(u8, argument, "--print-result")) return true;
-    inline for (.{ "--allow-read=", "--allow-write=", "--allow-random", "--allow-env", "--max-steps=", "--max-frames=" }) |prefix| {
+    inline for (.{ "--allow-read=", "--allow-write=", "--allow-random", "--allow-env", "--max-steps=", "--max-frames=", "--timeout=" }) |prefix| {
         if (std.mem.startsWith(u8, argument, prefix)) return true;
         if (std.mem.eql(u8, argument, prefix[0 .. prefix.len - 1])) return true;
     }
@@ -55,6 +55,7 @@ pub const usage = "usage: mylang build <file.my> (-o <output> | --run) [--projec
     "  --qbe PATH --zig PATH --mode Debug|ReleaseFast (default ReleaseFast) --target amd64_sysv\n" ++
     "  " ++ cache_dir_flag ++ "DIR  --no-cache  --report\n" ++
     "  --max-memory BYTES  byte ceiling for --run (K/M/G suffixes; default 4G)\n" ++
+    "  --timeout=SECONDS  wall-clock ceiling for --run (no default; a run past it exits 1 with R_TIMEOUT)\n" ++
     "  --run instead of -o: execute temporarily; pass guest arguments after --\n";
 /// Parse explicit build flags, rejecting unknown controls.
 pub fn parse(args: []const []const u8) Error!Options {

@@ -201,16 +201,16 @@ the value and `counts.pop(key, fallback)` answers the fallback when absent;
 fallback; `counts.copy()` returns a fresh shallow dictionary; and
 `counts.clear()` empties it. `counts.pop(key)` without a fallback traps with
 `R_MISSING_KEY`. `counts.items()` allocates a snapshot list of the dictionary's
-values in insertion order, so `for position, value in counts.items()` pairs the
-snapshot position with the value. A dictionary is shared by assignment exactly as
-a list is.
+values in insertion order, and a two-name loop `for name, value in counts.items()`
+binds each dictionary key with its value in insertion order. A dictionary is shared
+by assignment exactly as a list is.
 
 ```mylang
 # doc: expect 42
 def main() -> int:
     counts: dict[str, int] = {}
     counts["pear"] = 2
-    counts["apple"] = 3
+    counts["apple"] = 6
     counts["pear"] = counts["pear"] + 1
     counts.update({"plum": 4})
     _ = counts.setdefault("fig", 5)
@@ -227,9 +227,13 @@ def main() -> int:
         return 4
     if counts.get("plum", 0) != 0:
         return 5
+    keys: list[str] = []
     total = 0
-    for position, value in counts.items():
-        total += position + value
+    for name, value in counts.items():
+        keys.append(name)
+        total += value
+    if keys[0] != "pear" or keys[1] != "apple" or keys[2] != "fig":
+        return 7
     copy = counts.copy()
     copy.clear()
     if len(copy) != 0 or len(counts) != 3:
@@ -241,7 +245,9 @@ def main() -> int:
 
 `for name in source` visits a list's elements, a string's Unicode scalar values,
 a [byte string](bytes.md)'s octets as `int`, and a dictionary's keys in insertion
-order. `for index, value in enumerate(source)` adds the position, and
+order. `for key, value in counts.items()` visits each dictionary entry, binding the
+key and its value in insertion order. `for index, value in enumerate(source)` adds
+the position, and
 `for index in range(end)` or `range(start, end)` counts integers; there is no step
 argument. `break` and `continue` carry their Python meanings. A loop fixes its
 bound when it starts and rechecks it before each step, so changing the

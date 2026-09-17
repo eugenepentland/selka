@@ -3,6 +3,7 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const bodies = @import("generic_bodies.zig");
+const typed = @import("typed.zig");
 const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
 const pure =
@@ -201,4 +202,181 @@ test "generic body contracts bound wide statement work without host execution" {
         try text.writer.writeAll("    pass\n    return x\n");
         try checkBound(text.written(), length == 49999);
     }
+}
+
+fn expectMessage(text: []const u8, code: []const u8, message: []const u8) !void {
+    var compilation = try language.Compilation.init(t.allocator, "diagnostic.my", text);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.check());
+    const failure = compilation.diagnostics.items[0];
+    try t.expectEqualStrings(code, failure.code);
+    try t.expectEqualStrings(message, failure.message);
+}
+
+// spec: DIAG-ORACLE-1
+test "DIAG-ORACLE-1 arity diagnostics report expected and given counts" {
+    try expectMessage(
+        \\def f(a: i64, b: i64) -> i64:
+        \\    return a + b
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f(1)
+    , "E_ARITY", "missing required argument: expected 2, given 1");
+    try expectMessage(
+        \\def f(a: i64, b: i64) -> i64:
+        \\    return a + b
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f(1, 2, 3)
+    , "E_ARITY", "too many arguments for this function: expected 2, given 3");
+}
+
+// spec-case: DIAG-ORACLE-1
+test "DIAG-ORACLE-1 unknown field diagnostics list declared fields" {
+    try expectMessage(
+        \\class Point:
+        \\    y: i64
+        \\    x: i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    p = Point(x=1, y=2)
+        \\    return p.z
+    , "E_UNKNOWN_FIELD", "field does not exist on this record type; declared fields: x, y");
+}
+
+// spec-case: DIAG-ORACLE-1
+test "DIAG-ORACLE-1 unknown variant diagnostics list declared variants" {
+    try expectMessage(
+        \\enum Flag:
+        \\    yes,
+        \\    no
+        \\
+        \\
+        \\def f(x: Flag) -> i64:
+        \\    if x == Flag.maybe:
+        \\        return 1
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f(Flag.yes)
+    , "E_UNKNOWN_VARIANT", "variant is not declared on this type; declared variants: no, yes");
+}
+
+// spec-case: DIAG-ORACLE-1
+test "DIAG-ORACLE-1 unknown function diagnostics suggest close names" {
+    try expectMessage(
+        \\def twice(x: i64) -> i64:
+        \\    return x + x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return twic(2)
+    , "E_UNKNOWN_FUNCTION", "no function has this qualified name; did you mean `twice`?");
+    try expectMessage(
+        \\def abc() -> i64:
+        \\    return 1
+        \\
+        \\
+        \\def abd() -> i64:
+        \\    return 2
+        \\
+        \\
+        \\def abe() -> i64:
+        \\    return 3
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return abx()
+    , "E_UNKNOWN_FUNCTION", "no function has this qualified name; did you mean one of: `abc`, `abd`, `abe`?");
+}
+
+// spec-case: DIAG-ORACLE-1
+test "DIAG-ORACLE-1 generic body unknown function diagnostics suggest close names" {
+    try expectMessage(
+        \\def twice[T](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def call[T](x: T) -> T:
+        \\    return twic(x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_UNKNOWN_FUNCTION", "no function has this qualified name; did you mean `twice`?");
+}
+
+// spec-case: DIAG-ORACLE-1
+test "DIAG-ORACLE-1 type mismatch diagnostics use source type spellings" {
+    try expectMessage(
+        \\def f(x: i64) -> i64:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f("hi")
+    , "E_TYPE", "expected int, found str");
+    try expectMessage(
+        \\def f(xs: list[i64]) -> i64:
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f("hi")
+    , "E_TYPE", "expected list[int], found str");
+    try expectMessage(
+        \\def f(x: Option[i64]) -> i64:
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f("hi")
+    , "E_TYPE", "expected Option[int], found str");
+    try expectMessage(
+        \\def f(xs: list[list[i64]]) -> i64:
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f("hi")
+    , "E_TYPE", "expected list[list[int]], found str");
+    try expectMessage(
+        \\def f(xs: list[u8]) -> i64:
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f("hi")
+    , "E_TYPE", "expected list[u8], found str");
+}
+// spec-case: DIAG-ORACLE-1
+test "DIAG-ORACLE-1 surface type text uses source punctuation and spelling" {
+    const qualified = try typed.surfaceTypeText(t.allocator, "widgets::Widget");
+    defer t.allocator.free(qualified);
+    try t.expectEqualStrings("widgets.Widget", qualified);
+    const nested = try typed.surfaceTypeText(t.allocator, "List<List<i64>>");
+    defer t.allocator.free(nested);
+    try t.expectEqualStrings("list[list[int]]", nested);
+    const user = try typed.surfaceTypeText(t.allocator, "MyList<i64>");
+    defer t.allocator.free(user);
+    try t.expectEqualStrings("MyList[int]", user);
+    const callback = try typed.surfaceTypeText(t.allocator, "def(i64) -> i64 effects(managed_allocation)");
+    defer t.allocator.free(callback);
+    try t.expectEqualStrings("def(int) -> int effects(managed_allocation)", callback);
+    const byte_scalar = try typed.surfaceTypeText(t.allocator, "u8");
+    defer t.allocator.free(byte_scalar);
+    try t.expectEqualStrings("u8", byte_scalar);
+    const byte_list = try typed.surfaceTypeText(t.allocator, "list<u8>");
+    defer t.allocator.free(byte_list);
+    try t.expectEqualStrings("list[u8]", byte_list);
+    const result = try typed.surfaceTypeText(t.allocator, "Result<i64,i64>");
+    defer t.allocator.free(result);
+    try t.expectEqualStrings("Result[int, int]", result);
+    const dictionary = try typed.surfaceTypeText(t.allocator, "dict<str,list<i64>>");
+    defer t.allocator.free(dictionary);
+    try t.expectEqualStrings("dict[str, list[int]]", dictionary);
 }

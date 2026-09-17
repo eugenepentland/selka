@@ -261,9 +261,9 @@
     "def descend(n: i64) -> i64:\n    if n == 0:\n        return 0\n    return 1 + descend(n - 1)\n\n\ndef main() -> i64:\n    return descend(20000)\n",
     []
    ],
-   "returncode": 1,
-   "stderr": "PGNvcnB1cz4vY2FzZS5teTo0OjE2OiBlcnJvcltSX0ZSQU1FX0xJTUlUXTogYWN0aXZlIGZyYW1lIGJ1ZGdldCBleGhhdXN0ZWQKICAgICAgcmV0dXJuIDEgKyBkZXNjZW5kKG4gLSAxKQogICAgICAgICAgICAgICAgIF4KICBpbiBkZXNjZW5kIGF0IDxjb3JwdXM+L2Nhc2UubXk6NDoxNgogIGluIGRlc2NlbmQgYXQgPGNvcnB1cz4vY2FzZS5teTo0OjE2CiAgaW4gZGVzY2VuZCBhdCA8Y29ycHVzPi9jYXNlLm15OjQ6MTYKICBpbiBkZXNjZW5kIGF0IDxjb3JwdXM+L2Nhc2UubXk6NDoxNgogIGluIGRlc2NlbmQgYXQgPGNvcnB1cz4vY2FzZS5teTo0OjE2CiAgaW4gZGVzY2VuZCBhdCA8Y29ycHVzPi9jYXNlLm15OjQ6MTYKICBpbiBkZXNjZW5kIGF0IDxjb3JwdXM+L2Nhc2UubXk6NDoxNgogIGluIGRlc2NlbmQgYXQgPGNvcnB1cz4vY2FzZS5teTo0OjE2CiAgaW4gZGVzY2VuZCBhdCA8Y29ycHVzPi9jYXNlLm15OjQ6MTYKICBpbiBkZXNjZW5kIGF0IDxjb3JwdXM+L2Nhc2UubXk6NDoxNgogIGluIGRlc2NlbmQgYXQgPGNvcnB1cz4vY2FzZS5teTo0OjE2CiAgaW4gZGVzY2VuZCBhdCA8Y29ycHVzPi9jYXNlLm15OjQ6MTYKICBpbiBkZXNjZW5kIGF0IDxjb3JwdXM+L2Nhc2UubXk6NDoxNgogIGluIGRlc2NlbmQgYXQgPGNvcnB1cz4vY2FzZS5teTo0OjE2CiAgaW4gZGVzY2VuZCBhdCA8Y29ycHVzPi9jYXNlLm15OjQ6MTYKICBpbiBkZXNjZW5kIGF0IDxjb3JwdXM+L2Nhc2UubXk6NDoxNgogIC4uLiAxMDA4IG9sZGVyIGZyYW1lcyBvbWl0dGVkCg==",
-   "stdout": ""
+   "returncode": 32,
+   "stderr": "",
+   "stdout": "MjAwMDAK"
   },
   "75bb72d2919b1edc7cc7cb44d5a7bb98": {
    "case": [

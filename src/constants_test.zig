@@ -91,7 +91,11 @@ test "managed constants preserve literal content aliases generic reads effects a
     defer compilation.deinit();
     try t.expectEqual(@as(i64, 271), (try native.run(&compilation)).value);
     const allocation = @import("effect_set.zig").bit(.managed_allocation);
-    try t.expectEqual(allocation, compilation.program.?.functions[0].policy.effects);
+    // Constant initializers are published as synthetic functions: a str constant
+    // materializes its scalar codepoints without a managed allocation, while a
+    // bytes constant keeps its owned byte buffer. An explicit ceiling stays
+    // published as an upper bound.
+    try t.expectEqual(@as(@import("effect_set.zig").Mask, 0), compilation.program.?.functions[0].policy.effects);
     try t.expectEqual(allocation, compilation.program.?.functions[1].policy.effects);
     try t.expectEqual(allocation, compilation.program.?.functions[0].policy.effect_bound.?.allowed);
     const formatted = try compilation.format(t.allocator);
@@ -99,6 +103,12 @@ test "managed constants preserve literal content aliases generic reads effects a
     var again = try language.Compilation.init(t.allocator, "formatted.my", formatted);
     defer again.deinit();
     try t.expectEqual(@as(i64, 271), (try native.run(&again)).value);
+}
+
+fn acceptConstant(text: []const u8) !void {
+    var compilation = try language.Compilation.init(t.allocator, "valid-constant.my", text);
+    defer compilation.deinit();
+    try compilation.check();
 }
 
 fn rejectConstant(text: []const u8, code: []const u8) !void {
@@ -130,10 +140,13 @@ test "managed constants reject nonliteral initializers even when unused" {
 }
 
 // spec-case: CONSTANT-2
-test "managed constants require matching literal types and propagate allocation bounds" {
+test "managed constants require matching literal types and keep byte or generic reads allocating" {
     try rejectConstant("const S: str = b\"x\"\ndef main() -> int:\n    return 0\n", "E_TYPE");
     try rejectConstant("const B: bytes = \"x\"\ndef main() -> int:\n    return 0\n", "E_TYPE");
-    try rejectConstant("const S: str = \"x\"\ndef main() -> int noalloc:\n    return len(S)\n", "E_EFFECT_BOUND");
+    // A non-generic str constant read is a compile-time scalar, so an explicit
+    // noalloc ceiling accepts it; a bytes constant, and any generic body that
+    // returns one, still contributes managed_allocation.
+    try acceptConstant("const S: str = \"x\"\ndef main() -> int noalloc:\n    return len(S)\n");
     try rejectConstant("const B: bytes = b\"x\"\ndef main() -> int effects():\n    return len(B)\n", "E_EFFECT_BOUND");
     try rejectConstant("const S: str = \"x\"\ndef unused[T]() -> str noalloc:\n    return S\ndef main() -> int:\n    return 0\n", "E_EFFECT_BOUND");
     try rejectConstant("const B: bytes = b\"x\"\ndef unused[T]() -> bytes effects():\n    return B\ndef main() -> int:\n    return 0\n", "E_EFFECT_BOUND");

@@ -5,21 +5,26 @@ const v = @import("qbe_build_value.zig");
 const options = @import("native_test_options.zig");
 const invalidation = @import("invalidation.zig");
 const budget = @import("memory_budget");
+const snapshot = @import("native_test_snapshot.zig");
 /// Directory discovery and child-report transport failures.
 pub const Error = fs.Error || std.json.ParseError(std.json.Scanner) || std.Io.Dir.OpenError ||
     std.Io.Dir.SelectiveWalker.Error || std.Io.File.OpenError ||
-    error{ TooManyTestPrograms, UnusableTestReport, DirectoryCasesUnsupported };
+    error{ TooManyTestPrograms, UnusableTestReport, DirectoryCasesUnsupported, DirectoryBenchmarksUnsupported };
 /// Largest program count one directory run will fan out.
 const program_limit = 4096;
 const report_version = "native-tests-v1";
+/// Byte ceiling for reading one candidate entry while deciding whether it is a root.
+const entry_read_limit = 16 * 1024 * 1024;
 /// Whether the command's source argument names a directory of programs rather
 /// than one project entry.
 pub fn selected(context: fs.Context, source: []const u8) bool {
     const info = std.Io.Dir.cwd().statFile(context.io, source, .{}) catch return false;
     return info.kind == .directory;
 }
-/// Every `.my` program beneath `source`, in sorted path order, skipping the
-/// generated directories a source tree carries alongside its programs.
+/// Every `.my` entry beneath `source`, in sorted path order, skipping the
+/// generated directories a source tree carries alongside its programs. An entry
+/// is a file that declares a top-level `main` — so a directory holding one
+/// project is one program, not one per module — or a standalone `*_test.my`.
 pub fn programs(context: fs.Context, source: []const u8) Error![]const []const u8 {
     const root = try context.absolute(source);
     var directory = try std.Io.Dir.cwd().openDir(context.io, root, .{ .iterate = true, .follow_symlinks = false });
@@ -33,17 +38,38 @@ pub fn programs(context: fs.Context, source: []const u8) Error![]const []const u
             continue;
         }
         if (item.kind != .file or !std.mem.endsWith(u8, item.path, ".my")) continue;
-        try bounded(found.items.len);
         try found.append(context.allocator, try std.fs.path.join(context.allocator, &.{ root, item.path }));
     }
-    std.mem.sort([]const u8, found.items, {}, before);
-    return found.items;
+    var entries: std.ArrayList([]const u8) = .empty;
+    for (found.items) |path| {
+        if (!isTestFile(path) and !try declaresMainFile(context, path)) continue;
+        try bounded(entries.items.len);
+        try entries.append(context.allocator, path);
+    }
+    std.mem.sort([]const u8, entries.items, {}, before);
+    return entries.items;
+}
+/// A standalone test entry follows the `*_test.my` convention.
+fn isTestFile(path: []const u8) bool {
+    return std.mem.endsWith(u8, std.fs.path.basename(path), "_test.my");
+}
+/// A project root is a `.my` file with a top-level `main`; a module imported by
+/// one has neither. An unreadable or oversized file is not treated as an entry.
+fn declaresMainFile(context: fs.Context, path: []const u8) Error!bool {
+    const bytes = std.Io.Dir.cwd().readFileAlloc(context.io, path, context.allocator, .limited(entry_read_limit)) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return false,
+    };
+    return snapshot.declaresMain(bytes);
 }
 /// Workers one directory run may keep busy: `--jobs`/`MYLANG_JOBS` when asked
 /// for, otherwise the cores the machine has, capped by how many per-child
 /// ceilings its free memory holds. A cold fan-out on a loaded machine then
 /// waits instead of pushing the whole machine into swap.
 fn width(context: fs.Context, opts: options.Options, programs_found: usize) usize {
+    // Benchmark workers must not compete with each other, so a directory suite
+    // measures one program at a time even on a many-core machine.
+    if (opts.bench.pattern != null) return 1;
     return budget.workers(.{
         .jobs = opts.jobs,
         .programs = programs_found,
@@ -58,6 +84,9 @@ fn width(context: fs.Context, opts: options.Options, programs_found: usize) usiz
 /// contend over.
 pub fn run(context: fs.Context, opts: options.Options) Error!u8 {
     if (opts.cases != null) return error.DirectoryCasesUnsupported;
+    // Baseline enforcement needs one aggregated report; a directory run reports
+    // each program's benchmarks through its own exit status instead.
+    if (opts.bench.output != null or opts.bench.baseline != null or opts.bench.policy != null) return error.DirectoryBenchmarksUnsupported;
     const a = context.allocator;
     const compiler = try std.Io.Dir.cwd().realPathFileAlloc(context.io, "/proc/self/exe", a);
     const paths = try programs(context, opts.source);
@@ -109,6 +138,14 @@ fn argv(context: fs.Context, shared: Fanout, source: []const u8) Error![]const [
     try list.appendSlice(a, &.{ "--max-memory", try decimal(a, opts.limits.max_memory orelse budget.test_default) });
     if (opts.flags.force) try list.append(a, "--force");
     if (opts.flags.no_cache) try list.append(a, "--no-cache");
+    if (opts.bench.pattern) |pattern| {
+        try list.appendSlice(a, &.{ "--bench", pattern, "--bench-profile", opts.bench.profile });
+        if (opts.bench.only) try list.append(a, "--bench-only");
+        try list.appendSlice(a, &.{ "--bench-warmup", try decimal(a, opts.bench.tuning.sampling.warmup_iterations) });
+        try list.appendSlice(a, &.{ "--bench-batches", try decimal(a, opts.bench.tuning.sampling.batch_count) });
+        try list.appendSlice(a, &.{ "--bench-batch-ms", try decimal(a, opts.bench.tuning.sampling.target_batch_ns / 1_000_000) });
+        try list.appendSlice(a, &.{ "--bench-timeout-ms", try decimal(a, opts.bench.tuning.timeout_ms) });
+    }
     try @import("native_link.zig").append(context, opts.link_arguments, &list, true);
     return list.items;
 }
@@ -135,9 +172,22 @@ fn summarize(context: fs.Context, opts: options.Options, count: usize, outcomes:
     }
     try publish(context, opts.flags.json, count, totals, rows.items);
     if (opts.flags.report) try reportWork(context, totals);
+    // A benchmark run's children already fold their own correctness and
+    // performance gates into one status, so the parent takes the most severe
+    // child status instead of recomputing it from the test-case counts.
+    if (opts.bench.pattern != null) return worstCode(outcomes);
     if (totals.setup != 0) return 2;
     if (totals.failed != 0) return 1;
     return if (totals.passed + totals.cached != 0) 0 else 3;
+}
+/// Most severe child exit status: setup failure, then any failure, else green.
+fn worstCode(outcomes: []const Outcome) u8 {
+    var worst: u8 = 0;
+    for (outcomes) |outcome| {
+        if (outcome.code == 2) return 2;
+        if (outcome.code == 1) worst = 1;
+    }
+    return worst;
 }
 /// A directory run reports the selected/executed/reused test counts it can
 /// observe across children; per-stage compiler work is not aggregated here.
@@ -193,7 +243,7 @@ fn before(_: void, left: []const u8, right: []const u8) bool {
 }
 
 // spec: NATIVE-TEST-4
-test "a directory selects every program beneath it in sorted order" {
+test "a directory selects project roots and test-file entries, not every module" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
     defer environment.deinit();
     var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
@@ -203,16 +253,17 @@ test "a directory selects every program beneath it in sorted order" {
     const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
     try context.mkdir(try std.fs.path.join(context.allocator, &.{ root, "nested" }));
     try context.mkdir(try std.fs.path.join(context.allocator, &.{ root, ".zig-cache" }));
-    try context.write(try std.fs.path.join(context.allocator, &.{ root, "second.my" }), "module second\n");
-    try context.write(try std.fs.path.join(context.allocator, &.{ root, "first.my" }), "module first\n");
+    try context.write(try std.fs.path.join(context.allocator, &.{ root, "second_test.my" }), "export test_x\ndef test_x() -> bool effects():\n    return True\n");
+    try context.write(try std.fs.path.join(context.allocator, &.{ root, "first.my" }), "module first\nimport library\ndef main() -> int:\n    return 0\n");
+    try context.write(try std.fs.path.join(context.allocator, &.{ root, "library.my" }), "module library\nexport value\ndef value() -> int effects():\n    return 1\n");
     try context.write(try std.fs.path.join(context.allocator, &.{ root, "notes.txt" }), "prose");
-    try context.write(try std.fs.path.join(context.allocator, &.{ root, "nested", "third.my" }), "module third\n");
-    try context.write(try std.fs.path.join(context.allocator, &.{ root, ".zig-cache", "stale.my" }), "module stale\n");
+    try context.write(try std.fs.path.join(context.allocator, &.{ root, "nested", "third.my" }), "module third\ndef main() -> int:\n    return 0\n");
+    try context.write(try std.fs.path.join(context.allocator, &.{ root, ".zig-cache", "stale.my" }), "module stale\ndef main() -> int:\n    return 0\n");
     const found = try programs(context, root);
     try std.testing.expectEqual(@as(usize, 3), found.len);
     try std.testing.expectEqualStrings(try std.fs.path.join(context.allocator, &.{ root, "first.my" }), found[0]);
     try std.testing.expectEqualStrings(try std.fs.path.join(context.allocator, &.{ root, "nested", "third.my" }), found[1]);
-    try std.testing.expectEqualStrings(try std.fs.path.join(context.allocator, &.{ root, "second.my" }), found[2]);
+    try std.testing.expectEqualStrings(try std.fs.path.join(context.allocator, &.{ root, "second_test.my" }), found[2]);
     try std.testing.expect(selected(context, root));
     try std.testing.expect(!selected(context, found[0]));
 }
@@ -233,6 +284,29 @@ test "each child command inherits the selection, budgets and tool choices of the
     try std.testing.expect(std.mem.indexOf(u8, line, "--no-cache") != null);
     try std.testing.expectError(error.DirectoryCasesUnsupported, run(context, try options.parse(&.{ "suite", "--cases", "cases.json" })));
 }
+// spec: NATIVE-BENCH-6
+test "a directory benchmark run is sequential and rejects aggregate artifacts" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const sequential = try options.parse(&.{ "suite", "--bench=*" });
+    try std.testing.expectEqual(@as(usize, 1), width(context, sequential, 8));
+    // Benchmarks are forwarded to each child, including identity and sampling.
+    const shared: Fanout = .{ .compiler = "/usr/bin/mylang", .options = sequential, .workspace = "/tmp/work" };
+    const line = try std.mem.join(context.allocator, " ", try argv(context, shared, "/programs/one.my"));
+    try std.testing.expect(std.mem.indexOf(u8, line, "--bench *") != null);
+    try std.testing.expect(std.mem.indexOf(u8, line, "--bench-profile default") != null);
+    // One aggregate report cannot serve a multi-program timing run.
+    for ([_][]const []const u8{
+        &.{ "suite", "--bench=*", "--bench-output", "out.json" },
+        &.{ "suite", "--bench=*", "--bench-baseline", "base.json" },
+        &.{ "suite", "--bench=*", "--bench-policy", "policy.json" },
+    }) |args| {
+        try std.testing.expectError(error.DirectoryBenchmarksUnsupported, run(context, try options.parse(args)));
+    }
+}
+
 // spec-case: NATIVE-TEST-4
 test "a directory run refuses unbounded fan-out and reports a child could not produce" {
     try bounded(program_limit - 1);

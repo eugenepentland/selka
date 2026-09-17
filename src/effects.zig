@@ -4,9 +4,7 @@ pub const ValidateError = error{
     InternalError,
     OutOfMemory,
 };
-/// Stable diagnostic code for an exported declaration without a declared ceiling.
-pub const effect_ceiling = "E_EFFECT_CEILING";
-
+/// Diagnostic code for an exported declaration without a declared ceiling.
 const std = @import("std");
 const typed = @import("typed.zig");
 const sets = @import("effect_set.zig");
@@ -25,6 +23,15 @@ fn allocatingSequence(records: []const typed.Record, ty: typed.Type) bool {
 fn allocatingElement(records: []const typed.Record, ty: typed.Type) bool {
     if (!ty.isAggregate() or ty.recordIndex() >= records.len) return false;
     return records[ty.recordIndex()].collection.kind == .string;
+}
+/// Whether a managed aggregate literal allocates backing storage. A compile-time
+/// `str` literal is an immutable constant whose codepoints the checker already
+/// materialized, so it contributes no `managed_allocation`; a computed string
+/// (concatenation, slice, conversion) still does through its own operation.
+fn literalAllocates(records: []const typed.Record, ty: typed.Type) bool {
+    if (!ty.isAggregate() or ty.recordIndex() >= records.len) return false;
+    const record = records[ty.recordIndex()];
+    return record.managed and record.collection.kind != .string;
 }
 /// Inferred per-function mutation footprint and return-origin bound.
 const Facts = struct {
@@ -263,14 +270,6 @@ fn effectsText(allocator: std.mem.Allocator, mask: sets.Mask) diagnostic.Error![
     return std.fmt.allocPrint(allocator, "effects({s})", .{list.items}) catch return error.OutOfMemory;
 }
 
-/// Build the located diagnostic text for an exported body without a ceiling.
-/// The list is the inferred transitive effect set, described as a suggested
-/// upper bound so callers can copy a narrow contract rather than `effects(all)`.
-fn suggestedCeiling(allocator: std.mem.Allocator, mask: sets.Mask) diagnostic.Error![]const u8 {
-    const bound = try effectsText(allocator, mask);
-    return std.fmt.allocPrint(allocator, "exported function requires an explicit effect ceiling; the body's compiler-derived bound is {s}", .{bound}) catch return error.OutOfMemory;
-}
-
 /// Bundles the inferred graph with the program it indexes for violation reports.
 const BoundContext = struct { program: typed.Program, graph: *const Graph };
 
@@ -301,27 +300,6 @@ fn appendBoundViolation(allocator: std.mem.Allocator, ctx: BoundContext, index: 
         .message = message,
         .related = .{ .span = graph.states[cursor].witnesses[@backingInt(effect)].?.span, .message = "effect originates at this operation or owned type" },
     }) catch return error.OutOfMemory;
-}
-
-/// Report every exported declaration that lacks an explicit effect ceiling.
-fn reportMissingCeilings(
-    allocator: std.mem.Allocator,
-    program: typed.Program,
-    graph: *const Graph,
-    exported: []const bool,
-    sink: *diagnostic.Sink,
-) diagnostic.Error!bool {
-    var missing = false;
-    for (program.functions, 0..) |function, index| {
-        if (index >= exported.len or !exported[index]) continue;
-        if (function.policy.effect_bound != null) continue;
-        var suggested = graph.states[index].mask;
-        if (function.signature.mutation_facts.external) suggested |= sets.bit(.mutation);
-        const message = try suggestedCeiling(allocator, suggested);
-        sink.items.append(allocator, .{ .code = effect_ceiling, .span = function.declaration, .message = message }) catch return error.OutOfMemory;
-        missing = true;
-    }
-    return missing;
 }
 
 /// Infer transitive effects and reject function bodies that exceed declared effect bounds.
@@ -359,7 +337,10 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, exported: []c
                 .cast => if (allocatingSequence(program.records, node.ty)) {
                     graph.direct(index, .managed_allocation, node.span);
                 },
-                .array, .record => if (node.ty.isAggregate() and program.records[node.ty.recordIndex()].managed) {
+                .array => if (literalAllocates(program.records, node.ty)) {
+                    graph.direct(index, .managed_allocation, node.span);
+                },
+                .record => if (node.ty.isAggregate() and program.records[node.ty.recordIndex()].managed) {
                     graph.direct(index, .managed_allocation, node.span);
                 },
                 .binary => |binary| if (binary.op == .add and allocatingSequence(program.records, node.ty)) {
@@ -413,16 +394,15 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, exported: []c
     const mutation_violated = @import("origins.zig").check(allocator, program, exported, sink) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
     };
-    // E2: every exported declaration must publish an explicit ceiling. The
-    // suggestion is derived from this body's inferred transitive effects (a
-    // bound, never an unconditional `effects(all)`), and remains distinct from
-    // the raw inferred mask stored below for diagnostics/cacheability.
-    const missing_ceilings = try reportMissingCeilings(allocator, program, &graph, exported, sink);
+    // Exported declarations are no longer required to spell out a ceiling. The
+    // inferred transitive mask is frozen onto the checked function below and is
+    // what interfaces/fingerprints publish; an explicit `noalloc`, `noio` or
+    // `effects(...)` remains an opt-in upper bound enforced by the loop below.
     for (@constCast(program.functions), 0..) |*function, index| {
         function.policy.effects = graph.states[index].mask;
         if (function.signature.mutation_facts.external) function.policy.effects |= sets.bit(.mutation);
     }
-    var violated = mutation_violated or missing_ceilings;
+    var violated = mutation_violated;
     for (program.functions, 0..) |function, index| {
         const bound = function.policy.effect_bound orelse continue;
         const forbidden = function.policy.effects & ~bound.allowed;
@@ -455,16 +435,10 @@ pub fn checkAbstract(allocator: std.mem.Allocator, functions: []const @import("a
     }
     for (calls) |edge| try graph.call(edge.caller, edge.callee, edge.span);
     try graph.infer();
-    var missing_ceiling = false;
-    for (functions, 0..) |function, index| {
-        if (!exported[index] or function.policy.effect_bound != null) continue;
-        var suggested = graph.states[index].mask;
-        if (function.signature.inferred_mutation_writes) suggested |= sets.bit(.mutation);
-        const message = try suggestedCeiling(allocator, suggested);
-        sink.items.append(allocator, .{ .code = effect_ceiling, .span = function.name, .message = message }) catch return error.OutOfMemory;
-        missing_ceiling = true;
-    }
-    var violated = missing_ceiling;
+    // An exported generic template without an explicit ceiling is accepted; the
+    // concrete specializations freeze the inferred mask during `check`. Explicit
+    // ceilings on templates remain upper bounds enforced below.
+    var violated = false;
     for (functions, 0..) |function, index| {
         const bound = function.policy.effect_bound orelse continue;
         const forbidden = graph.states[index].mask & ~bound.allowed;
@@ -554,7 +528,9 @@ fn seedInstructionEffects(
         .cast_integer => |ty| if (allocatingSequence(program.records, ty)) {
             graph.direct(index, .managed_allocation, instruction.span);
         },
-        .make_record => |record| if (try managedType(program.records, record.ty)) {
+        .make_record => |record| if (try managedType(program.records, record.ty) and
+            program.records[record.ty.recordIndex()].collection.kind != .string)
+        {
             graph.direct(index, .managed_allocation, instruction.span);
         },
         .binary_integer => |binary| if (binary.op == .add and allocatingSequence(program.records, binary.ty)) {

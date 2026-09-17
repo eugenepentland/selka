@@ -1,4 +1,4 @@
-//! Command-line controls for native application tests.
+//! Command-line controls for native application tests and benchmarks.
 const std = @import("std");
 const execute = @import("native_test_execute.zig");
 const budget = @import("memory_budget");
@@ -13,6 +13,28 @@ pub const Flags = struct {
     report: bool = false,
     json: bool = false,
 };
+/// Sampling and whole-run bounds for one benchmark invocation.
+pub const Tuning = struct {
+    sampling: execute.Sampling = .{},
+    timeout_ms: u32 = 120000,
+};
+/// Benchmark discovery, artifacts and runner identity. A benchmark run always
+/// executes freshly; these controls never select a cached performance result.
+pub const BenchOptions = struct {
+    /// `--bench PATTERN` selects exported `bench_` functions and enables bench mode.
+    pattern: ?[]const u8 = null,
+    /// `--bench-only` skips correctness tests for local iteration.
+    only: bool = false,
+    /// Atomic candidate report path for inspection or a proposed baseline.
+    output: ?[]const u8 = null,
+    /// Approved baseline compared against, never replaced while checking.
+    baseline: ?[]const u8 = null,
+    /// Approved policy supplying limits, required suite and noise budget.
+    policy: ?[]const u8 = null,
+    /// Runner profile identity that must match the baseline provenance.
+    profile: []const u8 = "default",
+    tuning: Tuning = .{},
+};
 /// Discovery, execution and cache policy.
 pub const Options = struct {
     link_arguments: []const []const u8 = &.{},
@@ -26,6 +48,7 @@ pub const Options = struct {
     flags: Flags = .{},
     jobs: ?usize = null,
     limits: execute.Limits = .{},
+    bench: BenchOptions = .{},
 };
 /// Native tests require no Python interpreter.
 pub const usage = "usage: mylang test <entry.my|directory> [--filter SUBSTRING|GLOB] [--cases FILE]\n" ++
@@ -34,8 +57,12 @@ pub const usage = "usage: mylang test <entry.my|directory> [--filter SUBSTRING|G
     "  --mode Debug|ReleaseFast\n" ++
     "  --max-steps N --max-frames N --max-calls N --timeout-ms N\n" ++
     "  --max-memory BYTES  per-test byte ceiling (K/M/G suffixes; default 512M)\n" ++
-    "  --jobs N  directory fan-out width (default: cores, capped by free memory)\n";
-/// Parse options, rejecting malformed budgets and unknown flags.
+    "  --jobs N  directory fan-out width (default: cores, capped by free memory)\n" ++
+    "  bench: --bench PATTERN [--bench-only] [--bench-output FILE]\n" ++
+    "         [--bench-baseline FILE] [--bench-policy FILE] [--bench-profile ID]\n" ++
+    "         [--bench-warmup N] [--bench-batches N] [--bench-batch-ms N]\n" ++
+    "         [--bench-timeout-ms N]\n";
+/// Parse options, rejecting malformed budgets, sampling bounds and unknown flags.
 pub fn parse(args: []const []const u8) Error!Options {
     var result: Options = .{ .link_arguments = args };
     var i: usize = 0;
@@ -62,6 +89,10 @@ pub fn parse(args: []const []const u8) Error!Options {
             result.flags.json = true;
             continue;
         }
+        if (std.mem.eql(u8, arg, "--bench-only")) {
+            result.bench.only = true;
+            continue;
+        }
         const split = std.mem.indexOfScalar(u8, arg, '=') orelse arg.len;
         const flag = std.meta.stringToEnum(Flag, arg[0..split]) orelse return error.InvalidTestArguments;
         const value = if (split < arg.len) arg[split + 1 ..] else value: {
@@ -75,9 +106,36 @@ pub fn parse(args: []const []const u8) Error!Options {
     }
     if (result.source.len == 0) return error.InvalidTestArguments;
     if (!std.mem.eql(u8, result.mode, "Debug") and !std.mem.eql(u8, result.mode, "ReleaseFast")) return error.InvalidTestArguments;
+    const wanted = result.bench.only or result.bench.output != null or result.bench.baseline != null or result.bench.policy != null;
+    if (wanted and result.bench.pattern == null) return error.InvalidTestArguments;
     return result;
 }
-const Flag = enum { @"--link", @"--link-library", @"--library-path", @"--filter", @"--cases", @"--cache-dir", @"--qbe", @"--zig", @"--mode", @"--max-steps", @"--max-frames", @"--max-calls", @"--timeout-ms", @"--max-memory", @"--jobs" };
+const Flag = enum {
+    @"--link",
+    @"--link-library",
+    @"--library-path",
+    @"--filter",
+    @"--cases",
+    @"--cache-dir",
+    @"--qbe",
+    @"--zig",
+    @"--mode",
+    @"--max-steps",
+    @"--max-frames",
+    @"--max-calls",
+    @"--timeout-ms",
+    @"--max-memory",
+    @"--jobs",
+    @"--bench",
+    @"--bench-output",
+    @"--bench-baseline",
+    @"--bench-policy",
+    @"--bench-profile",
+    @"--bench-warmup",
+    @"--bench-batches",
+    @"--bench-batch-ms",
+    @"--bench-timeout-ms",
+};
 fn assign(result: *Options, flag: Flag, value: []const u8) Error!void {
     switch (flag) {
         .@"--link", .@"--link-library", .@"--library-path" => {},
@@ -93,11 +151,25 @@ fn assign(result: *Options, flag: Flag, value: []const u8) Error!void {
         .@"--timeout-ms" => result.limits.timeout_ms = @intCast(try number(value)),
         .@"--max-memory" => result.limits.max_memory = budget.parse(value) catch return error.InvalidTestArguments,
         .@"--jobs" => result.jobs = budget.jobs(value) catch return error.InvalidTestArguments,
+        .@"--bench" => result.bench.pattern = value,
+        .@"--bench-output" => result.bench.output = value,
+        .@"--bench-baseline" => result.bench.baseline = value,
+        .@"--bench-policy" => result.bench.policy = value,
+        .@"--bench-profile" => result.bench.profile = value,
+        .@"--bench-warmup" => result.bench.tuning.sampling.warmup_iterations = try bounded(value, 0, 1000),
+        .@"--bench-batches" => result.bench.tuning.sampling.batch_count = try bounded(value, 1, 64),
+        .@"--bench-batch-ms" => result.bench.tuning.sampling.target_batch_ns = (try bounded(value, 1, 86_400_000)) * 1_000_000,
+        .@"--bench-timeout-ms" => result.bench.tuning.timeout_ms = @intCast(try bounded(value, 1, std.math.maxInt(u32))),
     }
 }
 fn number(value: []const u8) Error!u64 {
     const n = std.fmt.parseInt(u64, value, 10) catch return error.InvalidTestArguments;
     if (n == 0 or n > std.math.maxInt(u32)) return error.InvalidTestArguments;
+    return n;
+}
+fn bounded(value: []const u8, minimum: u64, maximum: u64) Error!u64 {
+    const n = std.fmt.parseInt(u64, value, 10) catch return error.InvalidTestArguments;
+    if (n < minimum or n > maximum) return error.InvalidTestArguments;
     return n;
 }
 test "native test options validate budgets and discovery controls" {
@@ -107,6 +179,35 @@ test "native test options validate budgets and discovery controls" {
     try std.testing.expect(fresh.flags.no_cache and fresh.flags.report);
     try std.testing.expectEqual(@as(u64, 100), opts.limits.max_steps);
     for ([_][]const []const u8{ &.{}, &.{ "x", "--wat" }, &.{ "x", "--max-steps=0" }, &.{ "x", "--mode=Fast" }, &.{ "x", "--cases" } }) |args| {
+        try std.testing.expectError(error.InvalidTestArguments, parse(args));
+    }
+}
+
+// spec-case: NATIVE-BENCH-1
+test "benchmark options select a pattern, artifacts, identity and sampling bounds" {
+    const opts = try parse(&.{
+        "main.my",          "--bench",        "bench_*",            "--bench-output",  "out.json",
+        "--bench-baseline", "base.json",      "--bench-policy",     "policy.json",     "--bench-profile",
+        "linux-release",    "--bench-warmup", "0",                  "--bench-batches", "3",
+        "--bench-batch-ms", "50",             "--bench-timeout-ms", "9000",
+    });
+    try std.testing.expectEqualStrings("bench_*", opts.bench.pattern.?);
+    try std.testing.expectEqualStrings("linux-release", opts.bench.profile);
+    try std.testing.expectEqual(@as(u64, 0), opts.bench.tuning.sampling.warmup_iterations);
+    try std.testing.expectEqual(@as(u64, 3), opts.bench.tuning.sampling.batch_count);
+    try std.testing.expectEqual(@as(u64, 50_000_000), opts.bench.tuning.sampling.target_batch_ns);
+    try std.testing.expectEqual(@as(u32, 9000), opts.bench.tuning.timeout_ms);
+    const only = try parse(&.{ "main.my", "--bench", "*", "--bench-only" });
+    try std.testing.expect(only.bench.only);
+    // Artifact and benchmark-only switches need an explicit selection.
+    for ([_][]const []const u8{
+        &.{ "x", "--bench-only" },
+        &.{ "x", "--bench-output", "o.json" },
+        &.{ "x", "--bench-batches", "0" },
+        &.{ "x", "--bench-batches", "65" },
+        &.{ "x", "--bench-warmup", "1001" },
+        &.{ "x", "--bench-batch-ms", "0" },
+    }) |args| {
         try std.testing.expectError(error.InvalidTestArguments, parse(args));
     }
 }

@@ -51,8 +51,9 @@ fn runtimeControls(allocator: std.mem.Allocator, args: []const []const u8) ![]co
     }
     return list.toOwnedSlice(allocator);
 }
-/// A resolved toolchain and object cache, reusable across many native builds.
-pub const Prepared = struct { cache: cache_api.Cache, zig_version: []const u8 };
+/// A resolved toolchain and object cache, reusable across many native builds, and
+/// the cache root whose generation families (`objects`, `run`, `exe`) hold its output.
+pub const Prepared = struct { cache: cache_api.Cache, zig_version: []const u8, root: []const u8 };
 /// Resolve the native tools, publish the bundled runtime tree, and open the object cache.
 /// The returned cache owns a private staging directory; release it with `context.remove`.
 pub fn prepare(context: fs.Context, parsed: options.Options) Error!Prepared {
@@ -63,7 +64,7 @@ pub fn prepare(context: fs.Context, parsed: options.Options) Error!Prepared {
     if (fs.exitCode(version.term) != 0) return error.NativeToolFailed;
     const zig_version = std.mem.trim(u8, version.stdout, "\r\n ");
     try checkVersion(zig_version);
-    const directory = try context.absolute(nativeCacheDirectory(parsed));
+    const directory = try cacheRoot(context, parsed);
     try context.mkdir(directory);
     const assets = try materializeRuntime(context, parsed, directory);
     const temporary = try context.temporary(directory);
@@ -78,9 +79,12 @@ pub fn prepare(context: fs.Context, parsed: options.Options) Error!Prepared {
         .mode = parsed.mode,
         .target = parsed.target,
     }, .{});
+    // Objects live in this compiler's generation; opening it evicts every other.
+    const objects = try generation(context, directory, "objects", generation_identity);
     return .{
-        .cache = .{ .context = context, .directory = directory, .temporary = temporary, .assets = assets, .environment = environment, .zig = zig, .qbe = qbe, .mode = parsed.mode },
+        .cache = .{ .context = context, .directory = objects, .temporary = temporary, .assets = assets, .environment = environment, .zig = zig, .qbe = qbe, .mode = parsed.mode },
         .zig_version = zig_version,
+        .root = directory,
     };
 }
 /// Validate one emitted manifest and link it into `output`, reporting whether the file changed.
@@ -234,6 +238,33 @@ fn spawnParts(context: fs.Context, output: []const u8, controls: []const []const
 fn nativeCacheDirectory(parsed: options.Options) []const u8 {
     return if (std.mem.eql(u8, parsed.cache, options.no_cache)) options.default_cache else parsed.cache;
 }
+/// The absolute cache root a build's generations, runtime tree and staging live under.
+pub fn cacheRoot(context: fs.Context, parsed: options.Options) fs.Error![]const u8 {
+    return context.absolute(nativeCacheDirectory(parsed));
+}
+/// The generation every cache family is keyed by: the compiler's own build-time
+/// identity and the runtime it bundles. Tool stamps, mode and target stay in each
+/// entry's key but not here, so every process of one compiler build — whichever
+/// path it resolved its tools from, whichever mode it asked for — shares one
+/// generation and never evicts a concurrent sibling's entries; only a rebuilt
+/// compiler or a changed runtime opens a new generation and sweeps the old one.
+pub const generation_identity = "zig-qbe-build-v2\x00" ++ native_abi ++ "\x00" ++ bundled.compiler_identity ++ "\x00" ++ bundled.content_hash;
+/// One directory under `<root>/<family>` for everything one generation produces,
+/// named by the hash of `identity`. Creating a generation evicts every sibling: a
+/// rebuilt compiler can no longer hit those entries by their keys, so a cache root
+/// holds at most one live generation per family rather than every generation ever
+/// built. An existing generation is returned without a sweep, so a warm build pays
+/// one `stat`.
+pub fn generation(context: fs.Context, root: []const u8, family: []const u8, identity: []const u8) fs.Error![]const u8 {
+    const a = context.allocator;
+    const parent = try std.fs.path.join(a, &.{ root, family });
+    const current = try fs.hash(a, identity);
+    const path = try std.fs.path.join(a, &.{ parent, current });
+    if (context.exists(path)) return path;
+    try context.mkdir(path);
+    context.sweep(parent, current);
+    return path;
+}
 /// The directory that holds the materialized runtime source trees. An explicit
 /// `--cache-dir` keeps it hermetically under that directory; a default build shares
 /// a user-level location (`$XDG_CACHE_HOME/mylang/runtime`, else `$HOME/.cache/...`)
@@ -273,6 +304,9 @@ fn materialize(context: fs.Context, root: []const u8) ![]const u8 {
         context.remove(staging);
         if (!context.exists(directory)) return err;
     };
+    // A successful rename moved the whole staging child into place; reclaim the
+    // shared `.pending/` folder it came from so it does not outlive the build.
+    context.remove(staging);
     return directory;
 }
 /// Publish the bundled runtime tree, preferring the shared user cache but falling
@@ -448,7 +482,9 @@ const State = struct {
         try args.appendSlice(a, self.objects.items);
         try @import("native_link.zig").append(self.context, parsed.link_arguments, &args, false);
         // Unreferenced runtime sections leave with the archive members nothing pulled.
-        try args.appendSlice(a, &.{ self.runtime.path, "-lm", "-Wl,--gc-sections", "-o", candidate });
+        // `-s` drops the symbol table and any DWARF an object or an installed archive
+        // still carries: traps and their frames read the runtime's own tables.
+        try args.appendSlice(a, &.{ self.runtime.path, "-lm", "-Wl,--gc-sections", "-s", "-o", candidate });
         try self.context.command(args.items, null);
         if (parsed.run) return self.context.publish(candidate, output);
         const report = try std.json.Stringify.valueAlloc(a, .{ .version = "qbe-manifest-v1", .abi = native_abi, .entry = v.text(v.get(self.manifest, "entry")), .functions = self.records.items, .runtime_object = self.runtime.path }, .{});
@@ -484,6 +520,13 @@ fn checkHost(os: std.Target.Os.Tag, arch: std.Target.Cpu.Arch) error{Unsupported
 }
 fn checkVersion(version: []const u8) error{ZigVersionMismatch}!void {
     if (!std.mem.eql(u8, version, bundled.zig_version)) return error.ZigVersionMismatch;
+}
+// spec-case: RUNTIME-TIMEOUT-1
+test "build --run forwards a wall-clock timeout and stops at the guest delimiter" {
+    const controls = try runtimeControls(std.testing.allocator, &.{ "main.my", "--run", "--timeout=30", "--", "--timeout=9" });
+    defer std.testing.allocator.free(controls);
+    try std.testing.expectEqual(@as(usize, 1), controls.len);
+    try std.testing.expectEqualStrings("--timeout=30", controls[0]);
 }
 // spec: QBE-2
 test "native build rejects incompatible tools targets and malformed manifests" {
@@ -539,6 +582,38 @@ test "the runtime tree is published once per content hash and reused by later bu
     try context.write(marker, "kept");
     try std.testing.expectEqualStrings(first, try materialize(context, cache));
     try std.testing.expectEqualStrings("kept", try context.read(marker));
+}
+// spec: QBE-GENERATION-1
+test "a new build generation evicts its siblings and an existing one is reused untouched" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    const first = try generation(context, root, "objects", "toolchain one");
+    const marker = try std.fs.path.join(context.allocator, &.{ first, "unit.o" });
+    try context.write(marker, "one");
+    try std.testing.expectEqualStrings(try std.fs.path.join(context.allocator, &.{ root, "objects" }), std.fs.path.dirname(first).?);
+    try std.testing.expectEqual(@as(usize, 64), std.fs.path.basename(first).len);
+    // The same environment names the same generation and sweeps nothing.
+    try std.testing.expectEqualStrings(first, try generation(context, root, "objects", "toolchain one"));
+    try std.testing.expectEqualStrings("one", try context.read(marker));
+    // Another family is its own namespace with its own generations.
+    const executables = try generation(context, root, "exe", "toolchain one");
+    try std.testing.expect(context.exists(executables));
+    try std.testing.expect(!std.mem.eql(u8, first, executables));
+    // A changed environment opens a new generation and removes the old one, in its family only.
+    const second = try generation(context, root, "objects", "toolchain two");
+    try std.testing.expect(!std.mem.eql(u8, first, second));
+    try std.testing.expect(context.exists(second));
+    try std.testing.expect(!context.exists(first));
+    try std.testing.expect(!context.exists(marker));
+    try std.testing.expect(context.exists(executables));
+    // The live identity is the compiler build and its runtime, nothing per process.
+    try std.testing.expect(std.mem.indexOf(u8, generation_identity, bundled.compiler_identity) != null);
+    try std.testing.expect(std.mem.indexOf(u8, generation_identity, bundled.content_hash) != null);
 }
 // spec-case: QBE-3
 test "a default build shares the runtime root while an explicit cache-dir keeps it local" {

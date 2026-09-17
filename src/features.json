@@ -37,6 +37,11 @@
       "summary": "A test case may replace dependency sources inside a private bounded snapshot that never edits the originals.",
       "doc": "docs/tooling/guest-tests.md#isolated-source-provider-fixtures"
     },
+    "guest-performance-benchmarks": {
+      "kind": "tooling",
+      "summary": "`mylang test --bench` measures exported `bench_` workloads against versioned baselines and reviewed policy limits.",
+      "doc": "docs/tooling/guest-tests.md#performance-benchmarks"
+    },
     "keyword-arguments-and-immutable-defaults": {
       "kind": "language",
       "summary": "Calls accept positional and keyword arguments with trailing immutable scalar defaults.",
@@ -449,7 +454,7 @@
     },
     "native-instruction-and-frame-budgets": {
       "kind": "tooling",
-      "summary": "`--max-steps=N` and `--max-frames=N` raise the per-process instruction and call-depth budgets, and each trap names the flag that raises it.",
+      "summary": "`--max-steps=N` and `--max-frames=N` impose opt-in instruction and call-depth ceilings on an otherwise unbounded guest run, and each trap names the flag that raises it.",
       "doc": "docs/tooling/runtime-budgets.md#instruction-and-frame-budgets"
     },
     "memory-bounded-test-fanout": {

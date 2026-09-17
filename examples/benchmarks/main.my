@@ -1,0 +1,37 @@
+module main
+export test_scale
+export bench_sum
+export bench_list_sum
+
+
+def test_scale() -> bool effects():
+    return bench_sum(4) == 6
+
+
+def bench_sum(limit: int) -> int effects():
+    total: int = 0
+    index: int = 0
+    while index < limit:
+        total = total + index
+        index = index + 1
+    return total
+
+
+def sum_values(values: list[int]) -> int effects():
+    total: int = 0
+    index: int = 0
+    while index < len(values):
+        total = total + values[index]
+        index = index + 1
+    return total
+
+
+def bench_list_sum(size: int) -> int effects(managed_allocation):
+    values: list[int] = []
+    for index in range(size):
+        values.append(index)
+    return sum_values(values)
+
+
+def main() -> int:
+    return 0

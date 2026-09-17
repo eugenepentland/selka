@@ -32,8 +32,10 @@ const diagnostic = @import("diagnostic.zig");
 pub const ReadError = error{ OutOfMemory, NotFound, ReadFailed, TooLarge };
 /// Source reader callback; returned bytes use the supplied allocator and respect the byte limit.
 pub const Provider = struct { context: ?*anyopaque, read: *const fn (?*anyopaque, std.mem.Allocator, []const u8, usize) ReadError![]u8 };
-/// Bounds on module count, import edges, individual files, and total source bytes.
-pub const Options = struct { max_modules: usize = 256, max_imports: usize = 4096, max_file_bytes: usize = 4 * 1024 * 1024, max_total_bytes: usize = 16 * 1024 * 1024 };
+/// Bounds on module count, import edges, individual files, and total source
+/// bytes. A `mylang.json` `budgets` object may override each field; the defaults
+/// admit a project of several thousand modules.
+pub const Options = struct { max_modules: usize = 4096, max_imports: usize = 65536, max_file_bytes: usize = 4 * 1024 * 1024, max_total_bytes: usize = 16 * 1024 * 1024 };
 /// A source span paired with the module whose bytes it indexes.
 pub const Site = struct { module: usize, span: source.Span };
 /// Project diagnostic and optional related declaration/import location.

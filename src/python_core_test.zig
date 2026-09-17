@@ -14,6 +14,14 @@ fn run(text: []const u8, expected: i64) !void {
     try t.expect(!result.trapped());
     try t.expectEqual(expected, result.value);
 }
+fn expectMessage(text: []const u8, code: []const u8, message: []const u8) !void {
+    var compilation = try language.Compilation.init(t.allocator, "diagnostic.my", text);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.check());
+    const failure = compilation.diagnostics.items[0];
+    try t.expectEqualStrings(code, failure.code);
+    try t.expectEqualStrings(message, failure.message);
+}
 const Modules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (std.mem.eql(u8, path, "values.my")) return allocator.dupe(u8,
@@ -301,4 +309,178 @@ test "Python contextual Option constructors work in generic functions" {
         \\        case None:
         \\            return 1
     , 42);
+}
+// spec: CALLBACK-EFFECTS-1
+test "omitted callback ceilings are unbounded and unannotated functions fill slots" {
+    try run(
+        \\def double(value: int) -> int:
+        \\    return value * 2
+        \\
+        \\
+        \\def apply(f: def(int) -> int, x: int) -> int:
+        \\    return f(x)
+        \\
+        \\
+        \\def main() -> int:
+        \\    return apply(double, 21)
+    , 42);
+}
+// spec-case: CALLBACK-EFFECTS-1
+test "unannotated functions fill the sorted key callback slot" {
+    try run(
+        \\class Score:
+        \\    name: str
+        \\    points: int
+        \\
+        \\
+        \\def score(item: Score) -> int:
+        \\    return item.points
+        \\
+        \\
+        \\def main() -> int:
+        \\    items = [Score(name="a", points=3), Score(name="b", points=1)]
+        \\    ordered = sorted(items, key=score)
+        \\    return ordered[0].points * 42
+    , 42);
+}
+// spec-case: CALLBACK-EFFECTS-1
+test "an explicit narrow callback ceiling still rejects a wider function value" {
+    var compilation = try language.Compilation.init(t.allocator, "callback-bound.my",
+        \\def tick(value: int) -> int effects(clock):
+        \\    _ = value
+        \\    return 1
+        \\
+        \\
+        \\def apply(f: def(int) -> int effects(), x: int) -> int:
+        \\    return f(x)
+        \\
+        \\
+        \\def main() -> int:
+        \\    return apply(tick, 1)
+    );
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.check());
+    try t.expectEqualStrings("E_TYPE", compilation.diagnostics.items[0].code);
+}
+// spec: WARNING-DEAD-RECORD-WRITE-1
+test "dead record writes warn for loop and parameter copies but not fresh locals" {
+    var loop = try language.Compilation.init(t.allocator, "dead-loop.my",
+        \\class Item:
+        \\    visited: bool
+        \\
+        \\
+        \\def main() -> int:
+        \\    items = [Item(visited=False)]
+        \\    for it in items:
+        \\        it.visited = True
+        \\    return 0
+    );
+    defer loop.deinit();
+    try loop.check();
+    try t.expectEqualStrings("W_DEAD_RECORD_WRITE", loop.diagnostics.items[0].code);
+    var parameter = try language.Compilation.init(t.allocator, "dead-parameter.my",
+        \\class Counter:
+        \\    n: int
+        \\
+        \\
+        \\def bump(counter: Counter):
+        \\    counter.n = 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    bump(Counter(n=0))
+        \\    return 0
+    );
+    defer parameter.deinit();
+    try parameter.check();
+    try t.expectEqualStrings("W_DEAD_RECORD_WRITE", parameter.diagnostics.items[0].code);
+    // A self-referential right-hand side reads the copy as part of the write, so
+    // it still counts as a dead write when nothing observes the binding later.
+    var increment = try language.Compilation.init(t.allocator, "dead-increment.my",
+        \\class Counter:
+        \\    n: int
+        \\
+        \\
+        \\def bump(counter: Counter):
+        \\    counter.n = counter.n + 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    bump(Counter(n=0))
+        \\    return 0
+    );
+    defer increment.deinit();
+    try increment.check();
+    try t.expectEqualStrings("W_DEAD_RECORD_WRITE", increment.diagnostics.items[0].code);
+    var collection = try language.Compilation.init(t.allocator, "dead-collection.my",
+        \\class Node:
+        \\    value: int
+        \\
+        \\
+        \\def main() -> int:
+        \\    nodes = [Node(value=1)]
+        \\    node = nodes[0]
+        \\    node.value = 42
+        \\    return 0
+    );
+    defer collection.deinit();
+    try collection.check();
+    try t.expectEqualStrings("W_DEAD_RECORD_WRITE", collection.diagnostics.items[0].code);
+    var fresh = try language.Compilation.init(t.allocator, "fresh-record.my",
+        \\class Point:
+        \\    x: int
+        \\
+        \\
+        \\def main() -> int:
+        \\    point = Point(x=1)
+        \\    point.x = 3
+        \\    return point.x
+    );
+    defer fresh.deinit();
+    try fresh.check();
+    try t.expectEqual(@as(usize, 0), fresh.diagnostics.items.len);
+}
+// spec-case: WARNING-DEAD-RECORD-WRITE-1
+test "reading a parameter copy after a field write suppresses the dead-write warning" {
+    var observed = try language.Compilation.init(t.allocator, "read-after-write.my",
+        \\class Counter:
+        \\    n: int
+        \\
+        \\
+        \\def bump(counter: Counter) -> int:
+        \\    counter.n = 5
+        \\    return counter.n
+        \\
+        \\
+        \\def main() -> int:
+        \\    return bump(Counter(n=0))
+    );
+    defer observed.deinit();
+    try observed.check();
+    try t.expectEqual(@as(usize, 0), observed.diagnostics.items.len);
+}
+// spec-case: DIAG-ORACLE-1
+test "DIAG-ORACLE-1 unknown local names suggest close declared bindings" {
+    try expectMessage(
+        \\def main() -> int:
+        \\    value = 1
+        \\    return valu
+    , "E_UNKNOWN_NAME", "name is not defined in this scope; did you mean `value`?");
+}
+// spec-case: DIAG-ORACLE-1
+test "DIAG-ORACLE-1 unknown local names without a close candidate carry no suggestion" {
+    try expectMessage(
+        \\def main() -> int:
+        \\    value = 1
+        \\    return zzz
+    , "E_UNKNOWN_NAME", "name is not defined in this scope");
+}
+// spec-case: DIAG-ORACLE-1
+test "DIAG-ORACLE-1 unknown list methods name the accepted spellings" {
+    try expectMessage(
+        \\def main() -> int:
+        \\    items = [1, 2]
+        \\    items.appnd(3)
+        \\    return 0
+    , "E_LIST_METHOD", "unknown managed collection method; methods: append, clear, copy, extend, index, insert, pop, remove, reverse, sort");
 }

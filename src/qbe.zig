@@ -20,7 +20,18 @@ pub const GenerateError = error{ InternalError, OutOfMemory, SourceError, WriteF
 const drop_local = " call $myl_native_owned_drop(l %heap, l extern ${s}, l %l{d})\n";
 const store_scalar = " storel {d}, %s{d}\n";
 const Location = struct { path: []const u8, line: usize, column: usize };
-const Unit = struct { test_dependencies: ?test_dependencies.Metadata = null, name: []const u8, symbol: []const u8, il: []const u8, locations: []const Location, @"export": ?@import("qbe_exports.zig").Export = null };
+/// One independently linkable unit plus the per-program-counter metadata the
+/// generated C tables carry: a source location and an `assert` message, with
+/// an empty message for every pc that is not an assertion.
+const Unit = struct {
+    test_dependencies: ?test_dependencies.Metadata = null,
+    name: []const u8,
+    symbol: []const u8,
+    il: []const u8,
+    locations: []const Location,
+    messages: []const []const u8,
+    @"export": ?@import("qbe_exports.zig").Export = null,
+};
 
 /// Generate a JSON manifest whose independently linkable functions have stable names.
 pub fn generate(allocator: std.mem.Allocator, program: bytecode.Program, src: Source, sink: *diagnostic.Sink) GenerateError![]u8 {
@@ -51,15 +62,18 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
     for (program.functions, units, 0..) |function, *unit, index| {
         const emit = selected == null or selected.?[index];
         const locations = try a.alloc(Location, if (emit) function.scope.instructions.len else 0);
-        if (emit) for (function.scope.instructions, locations) |instruction, *location| {
+        const messages = try a.alloc([]const u8, if (emit) function.scope.instructions.len else 0);
+        if (emit) for (function.scope.instructions, locations, messages) |instruction, *location, *message| {
             const value = src.locate(instruction.span.start);
             location.* = .{ .path = value.path, .line = value.line, .column = value.column };
+            message.* = if (instruction.op == .assert_true) instruction.op.assert_true else "";
         };
         unit.* = .{
             .name = function.name,
             .symbol = try symbol(a, function.name),
             .il = "",
             .locations = locations,
+            .messages = messages,
             .@"export" = if (emit) try @import("qbe_exports.zig").describe(a, program, index, interface.roots) else null,
         };
     }

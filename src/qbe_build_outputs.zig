@@ -24,9 +24,20 @@ pub fn metadata(allocator: std.mem.Allocator, manifest: std.json.Value) Error![]
             try w.print(",{d},{d}}},\n", .{ v.number(v.get(location, "line")), v.number(v.get(location, "column")) });
         }
         if (locations.len == 0) try w.writeAll("{0,0,0},\n");
-        try w.print("}};\nconst MylQbeFunction {s}_meta = {{", .{symbol});
+        // One message per pc, `""` when the instruction is not an assertion. Pad
+        // to the location count so the runtime's `position < count` check always
+        // names a real entry, even for a hand-written manifest.
+        const messages = v.array(v.get(unit, "messages"));
+        try w.print("}};\nstatic const char *{s}_meta_messages[] = {{\n", .{symbol});
+        for (0..locations.len) |pc| {
+            try v.quote(w, if (pc < messages.len) v.text(messages[pc]) else "");
+            try w.writeAll(",\n");
+        }
+        if (locations.len == 0) try w.writeAll("\"\",\n");
+        try w.writeAll("};\n");
+        try w.print("const MylQbeFunction {s}_meta = {{", .{symbol});
         try v.quote(w, v.text(v.get(unit, "name")));
-        try w.print(",{s}_meta_locations,{d}}};\n", .{ symbol, locations.len });
+        try w.print(",{s}_meta_locations,{d},{s}_meta_messages}};\n", .{ symbol, locations.len, symbol });
     }
     return buffer.toOwnedSlice();
 }
@@ -108,4 +119,24 @@ test "entry and location metadata retain provider setup and byte-escaped source 
     const locations = try metadata(std.testing.allocator, parsed.value);
     defer std.testing.allocator.free(locations);
     try std.testing.expect(std.mem.indexOf(u8, locations, "main_native_meta_locations,1") != null);
+}
+// spec-case: NATIVE-TEST-10
+test "assert messages are emitted once per pc and linked into the function metadata" {
+    const parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator,
+        \\{"entry":"main_native","entry_parameters":[],"functions":[{"symbol":"main_native","name":"main","locations":[{"path":"a.my","line":1,"column":1},{"path":"a.my","line":4,"column":5}],"messages":["","x should be two"]}]}
+    , .{});
+    defer parsed.deinit();
+    const generated = try metadata(std.testing.allocator, parsed.value);
+    defer std.testing.allocator.free(generated);
+    try std.testing.expect(std.mem.indexOf(u8, generated, "static const char *main_native_meta_messages[] = {") != null);
+    try std.testing.expect(std.mem.indexOf(u8, generated, "\n\"\",\n\"x should be two\",\n};\n") != null);
+    try std.testing.expect(std.mem.indexOf(u8, generated, ",main_native_meta_locations,2,main_native_meta_messages};") != null);
+    const without = try std.json.parseFromSlice(std.json.Value, std.testing.allocator,
+        \\{"entry":"main_native","entry_parameters":[],"functions":[{"symbol":"main_native","name":"main","locations":[{"path":"a.my","line":1,"column":1}]}]}
+    , .{});
+    defer without.deinit();
+    const padded = try metadata(std.testing.allocator, without.value);
+    defer std.testing.allocator.free(padded);
+    try std.testing.expect(std.mem.indexOf(u8, padded, "static const char *main_native_meta_messages[] = {\n\"\",\n};\n") != null);
+    try std.testing.expect(std.mem.indexOf(u8, padded, ",main_native_meta_locations,1,main_native_meta_messages};") != null);
 }

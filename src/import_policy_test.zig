@@ -192,6 +192,32 @@ test "project config discovery walks up from the entry and resolves policy besid
     try t.expectEqual(@as(usize, 64), receipt.policy_sha256.?.len);
 }
 
+// spec-case: PROJ-6
+test "mylang json budgets override the project loading limits" {
+    var temp = t.tmpDir(.{});
+    defer temp.cleanup();
+    var failure: project_config.Failure = .{};
+    try writeTmp(&temp, "plain.json", "{\"version\":1}");
+    var plain = try loadTmp(&temp, "plain.json", &failure);
+    defer plain.deinit();
+    // An absent budgets object leaves every limit at the project default.
+    try t.expectEqual(@as(?usize, null), plain.document.budgets.max_modules);
+    try t.expectEqual(@as(?usize, null), plain.document.budgets.max_imports);
+    try writeTmp(&temp, "budgeted.json", "{\"version\":1,\"budgets\":{\"max_modules\":9000,\"max_imports\":20000,\"max_file_bytes\":8388608,\"max_total_bytes\":67108864}}");
+    var budgeted = try loadTmp(&temp, "budgeted.json", &failure);
+    defer budgeted.deinit();
+    try t.expectEqual(@as(?usize, 9000), budgeted.document.budgets.max_modules);
+    try t.expectEqual(@as(?usize, 20000), budgeted.document.budgets.max_imports);
+    try t.expectEqual(@as(?usize, 8 * 1024 * 1024), budgeted.document.budgets.max_file_bytes);
+    try t.expectEqual(@as(?usize, 64 * 1024 * 1024), budgeted.document.budgets.max_total_bytes);
+    try writeTmp(&temp, "zero.json", "{\"version\":1,\"budgets\":{\"max_modules\":0}}");
+    try t.expectError(error.InvalidBudget, loadTmp(&temp, "zero.json", &failure));
+    try writeTmp(&temp, "unknown.json", "{\"version\":1,\"budgets\":{\"max_names\":1}}");
+    try t.expectError(error.UnknownField, loadTmp(&temp, "unknown.json", &failure));
+    try writeTmp(&temp, "duplicate.json", "{\"version\":1,\"budgets\":{\"max_modules\":1,\"max_modules\":2}}");
+    try t.expectError(error.DuplicateField, loadTmp(&temp, "duplicate.json", &failure));
+}
+
 // spec-case: REQUIRED-PROJECT-IMPORT-POLICY-1
 test "project config rejects unknown duplicate malformed and unsupported shapes" {
     var temp = t.tmpDir(.{});

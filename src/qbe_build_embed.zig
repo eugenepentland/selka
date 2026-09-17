@@ -182,3 +182,11 @@ test "library adapter preserves hidden exports, exact schema and empty wire entr
     try std.testing.expect(std.mem.indexOf(u8, source, "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a") != null);
     try std.testing.expectError(error.InvalidManifest, libraryWrapper(allocator, .null));
 }
+
+// spec-case: RUNTIME-UNBOUNDED-1
+test "the embedded run adapter defaults to the unbounded runtime sentinel" {
+    try std.testing.expect(std.mem.indexOf(u8, templates.embed_prelude, "options->max_steps ? options->max_steps : MYL_QBE_UNBOUNDED") != null);
+    try std.testing.expect(std.mem.indexOf(u8, templates.embed_prelude, "options->max_frames ? options->max_frames : MYL_QBE_UNBOUNDED") != null);
+    try std.testing.expect(std.mem.indexOf(u8, templates.embed_prelude, ": 10000000") == null);
+    try std.testing.expect(std.mem.indexOf(u8, templates.embed_prelude, ": 1024") == null);
+}

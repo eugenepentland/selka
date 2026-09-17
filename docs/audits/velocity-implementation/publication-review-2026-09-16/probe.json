@@ -1,0 +1,352 @@
+{
+  "version": "publication-review-v1",
+  "compiler": "/tmp/vel-rf-pub/bin/mylang",
+  "compiler_sha256": "16ddcf8b8d40e7f592869e4b0475a4371bcd515156be25e137da7c04ebb0606c",
+  "providers": 4,
+  "functions_per_provider": 2,
+  "note": "QBE wrapper captures actual native-test child IL; diagnostic counts, not benchmark latency. No repository gates invoked.",
+  "samples": [
+    {
+      "state": "cold",
+      "exit": 0,
+      "qbe_compiles": 22,
+      "calls": [
+        {
+          "symbol": "myl_f_08315fa251bf9be531a7cdf3bf73015c7da4f5d583f9c06e886d5ae1173040a6",
+          "il_sha256": "3776b349ba6b7dfd5d153ed029c5ff2ab949a64c5b60f64f803a4a1363cb7bd2",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-529e1cfa9411491193a0cdd42bf42f4e/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-529e1cfa9411491193a0cdd42bf42f4e/unit.ssa"
+          ]
+        },
+        {
+          "symbol": "myl_f_0ccb691d2d215fafc33d37e4347d25755ec799fcdbe841fb3b26db1929bc40e0",
+          "il_sha256": "5a9a1f041ea71c3c80d90997522aa8865a616d424abe2e98b0954903c6a3922c",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-4ea23fa13834fe47e77828544b4f2c2f/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-4ea23fa13834fe47e77828544b4f2c2f/unit.ssa"
+          ]
+        },
+        {
+          "symbol": "myl_f_1b2c32d140fa10d5431701e82a08b42bf1444fa3101e62018bec3cb90abc71c9",
+          "il_sha256": "a40fb7f8c0e072c836d954dc21895fe04a8d3e3a91f8b9b9db7b68a1228ef00c",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-dd9ac4fd912b0288211e1123c56e262c/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-dd9ac4fd912b0288211e1123c56e262c/unit.ssa"
+          ]
+        },
+        {
+          "symbol": "myl_f_235f09f5933793237643d02beba8faca37166bdf4cc520586576753e3efd7104",
+          "il_sha256": "656773ca7be75ee985d37247daa38137592cc3b3e6fe2e57831eefbd72b9b826",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-d9c4e240f2a42259ca04e0388aa3f3ea/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-d9c4e240f2a42259ca04e0388aa3f3ea/unit.ssa"
+          ]
+        },
+        {
+          "symbol": "myl_f_287a161ced25232410f70aa4ff7009f6de5f3de0c01079c45265c98da7972886",
+          "il_sha256": "f8048b922a08c0c9c32b97ad38788f748a50af360c7adb13c82642a6e1b225b4",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-3bbbb9f479ffcd75510a827557c2325e/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-3bbbb9f479ffcd75510a827557c2325e/unit.ssa"
+          ]
+        },
+        {
+          "symbol": "myl_f_288d4bd1cdea0d877b9d70d582a88e5cc1bc4cf232688738560f72371a49928c",
+          "il_sha256": "ac79e96339e853f853b3b6339edffef4073166dfe1bbc4886ad8c594a7931c01",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-9929abc1cfd9d05b84ced708d3ac9eea/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-9929abc1cfd9d05b84ced708d3ac9eea/unit.ssa"
+          ]
+        },
+        {
+          "symbol": "myl_f_3dfd876bed8265011968df72d1a24b2ebaff6dfd7735251e12d39ded1d9bb690",
+          "il_sha256": "1c01f4517fa84ff66d7ac95a0f3749db2dc168284e766c0bd1fd3405187c5b0e",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-ca4f0918f035186ebbfcb8b3f8564340/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-ca4f0918f035186ebbfcb8b3f8564340/unit.ssa"
+          ]
+        },
+        {
+          "symbol": "myl_f_3f61509e64dc7a1a801f84692d63a049e39b01360ec6f9a2ff273a8d3e626c00",
+          "il_sha256": "adf4ff1992d2fbf21ca1aaa117368b8e26d7aad34408299b93df8418f7f2f777",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-07d6011d07448ca8e8bc8c6b31421dda/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-07d6011d07448ca8e8bc8c6b31421dda/unit.ssa"
+          ]
+        },
+        {
+          "symbol": "myl_f_40ad689d43b2761a189f1df63e247670906afce2c890894325e2fa99f0cb50b7",
+          "il_sha256": "60737b0637bd63df8b59d5eb7ac39337b33f6f1fa283ae6f13cb9c5b87a2b387",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-94dcbaaae822dc3c6726d41c96e57a59/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-94dcbaaae822dc3c6726d41c96e57a59/unit.ssa"
+          ]
+        },
+        {
+          "symbol": "myl_f_493d9bca19998aac50ac9962df2471b8d42e360ea6c02442a740c8275e515398",
+          "il_sha256": "422674ce6fcb3f1af4e8946697b90e43f71eb616936446c2161e7b9f70e1fde8",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-07c1f71209f4c890a68f6e1bcb18cf7c/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-07c1f71209f4c890a68f6e1bcb18cf7c/unit.ssa"
+          ]
+        },
+        {
+          "symbol": "myl_f_5c6709bdede733136bd2c4646b09774efcb6f44c4b754caea27b106f92a91bdf",
+          "il_sha256": "13d1959230a75ba8c2b54e1b2e3978d268ce94124a3a387568339514bf5cc6dd",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-40da8d35b520742a2eba929d8910b0d7/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-40da8d35b520742a2eba929d8910b0d7/unit.ssa"
+          ]
+        },
+        {
+          "symbol": "myl_f_5d34e8015d66cceb5dc3a9d3de76273f535d8ccf9b8c2cf4841cf0e318504795",
+          "il_sha256": "c4090170fe4fef8d64935a426ee89a01c4733792fa2358778545091bf27d0c5d",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-af87fe6c771a3d9eeb67e451869db58a/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-af87fe6c771a3d9eeb67e451869db58a/unit.ssa"
+          ]
+        },
+        {
+          "symbol": "myl_f_61e1511c5435005da0a6314ee26a7878aefe090e311968e328f1460fce769336",
+          "il_sha256": "b0f2c1956b64ba177e7de2d95522b8cecf782b1931f7e1fcf6daaa777ee8b5ce",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-c2ab131a194ad56f0a99a040d9aa0c3d/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-c2ab131a194ad56f0a99a040d9aa0c3d/unit.ssa"
+          ]
+        },
+        {
+          "symbol": "myl_f_76b458dcaa71316d6859393c98eda766010ece15bb22605e41313c848b928137",
+          "il_sha256": "9e6519ec12a84c2379f5204b09f69fc13bb835563d0de19a8715d3586820c9ae",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-fbf56902d8c732917d309bdee746c857/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-fbf56902d8c732917d309bdee746c857/unit.ssa"
+          ]
+        },
+        {
+          "symbol": "myl_f_7749385449c41dc62f38c3889bfdc57b2cd1c78097c0f8333d835f61a758eca6",
+          "il_sha256": "e0e6bf907d9037da63ca81bde90dd952cc9c803d40d55adf4f370b00f743546d",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-b3a455dcbe41b09a01dc91cd61b95d33/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-b3a455dcbe41b09a01dc91cd61b95d33/unit.ssa"
+          ]
+        },
+        {
+          "symbol": "myl_f_94b7d7a8a86ae17888c24efcb58781aa7471b5a159c5834444accf44c7f09cc3",
+          "il_sha256": "e1bfcc4e4523433a62a6bada76f28df61b459764cfecc064c1d8728a4fb87af2",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-c7b978266573b259676431bb9d2afeab/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-c7b978266573b259676431bb9d2afeab/unit.ssa"
+          ]
+        },
+        {
+          "symbol": "myl_f_98743c7b8eede16195a9db3e781a80cf6488b753fefd9e6d8d400f253d252125",
+          "il_sha256": "27b15bfafdac2438a024f954c35d7617d9be7b404f8ad4e20732b84bdb8f8481",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-9d53cc24d0d0095d567791f2c4d98442/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-9d53cc24d0d0095d567791f2c4d98442/unit.ssa"
+          ]
+        },
+        {
+          "symbol": "myl_f_9dbd45edb1408649f0b98a9e2383dcb31e66e4a33386ed5203c4de8a99940a37",
+          "il_sha256": "715f3903c45bd57ce16251ef319e190a452838a36370aa14cbd3d06930ca78f0",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-ef6d165cccde7dc18fb3a7f6826cf9a7/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-ef6d165cccde7dc18fb3a7f6826cf9a7/unit.ssa"
+          ]
+        },
+        {
+          "symbol": "myl_f_a3fd6f0f75f1f55e212c90244a43ca25d6f6db5a68aea6097452061bbed5404e",
+          "il_sha256": "3f6e88f6ce764119721d929c3d4a8acdfcf08daafddc86740eca2ae6c7940916",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-64906857901c4b60799bc784423894e6/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-64906857901c4b60799bc784423894e6/unit.ssa"
+          ]
+        },
+        {
+          "symbol": "myl_f_b3a9519d4aee5d212f3e0686d9a83e0f58d7763989c80d6d1586eb70515204af",
+          "il_sha256": "ac895bd025ee3b1d4657f121408811e38362c1544a46bc82adcbd11c01222a22",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-3dfc94ac7d8f3defdbbf4a8ea0468d48/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-3dfc94ac7d8f3defdbbf4a8ea0468d48/unit.ssa"
+          ]
+        },
+        {
+          "symbol": "myl_f_ef1f92c88eacee446425d00e722fe1da2873cff234b03a6a8168327f884b155d",
+          "il_sha256": "5e5bef4dcaa4c29b530fb42521f9730989fd24b532e6a0f1cea88b9d0b104d47",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-aed521ec949e4b7210bbafdf082e190d/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-aed521ec949e4b7210bbafdf082e190d/unit.ssa"
+          ]
+        },
+        {
+          "symbol": "myl_f_f9abe6a8ba405cb7880591113904e1cf88192998677123ad8e66d4ca4df9e8e5",
+          "il_sha256": "941830abae316e857a689bb009bf1accc4e056f38894a575c9f73fc88eb88c65",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-094acbabbf1539a04a1a40aa2a925941/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-522c39bf50b4bcd35003c8c743d47934/.pending-094acbabbf1539a04a1a40aa2a925941/unit.ssa"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "forced",
+      "exit": 0,
+      "qbe_compiles": 0,
+      "calls": []
+    },
+    {
+      "state": "template_edit",
+      "exit": 0,
+      "qbe_compiles": 4,
+      "calls": [
+        {
+          "symbol": "myl_f_235f09f5933793237643d02beba8faca37166bdf4cc520586576753e3efd7104",
+          "il_sha256": "9f887689be8946aace673fb370203056794f504f33415f3fe46d7e5caa42edcc",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-480fc1a8c67174d1f61f72a4196398f9/.pending-1ecf3352fb42e08f7d0cf61f5a6e4ccc/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-480fc1a8c67174d1f61f72a4196398f9/.pending-1ecf3352fb42e08f7d0cf61f5a6e4ccc/unit.ssa"
+          ],
+          "previous_il_sha256": "656773ca7be75ee985d37247daa38137592cc3b3e6fe2e57831eefbd72b9b826",
+          "il_diff": "--- previous\n+++ template_edit\n@@ -121,5 +121,39 @@\n  storel %v45, %ctx\n- %v46 =l loadl %s0\n+ storel 1000, %s1\n+ jmp @i7\n+@i7\n+ storel 7, %position\n+ %v46 =l loadl %ctx\n+ %v47 =l loadl %maxsteps\n+ %v48 =l ceql %v46, %v47\n+ jnz %v48, @step_limit, @step49\n+@step49\n+ %v49 =l add %v46, 1\n+ storel %v49, %ctx\n+ %v50 =l loadl %s1\n+ %v51 =l loadl %s0\n+ %v52 =l add %v51, %v50\n+ %v54 =l xor %v51, %v52\n+ %v55 =l xor %v50, %v52\n+ %v56 =l and %v54, %v55\n+ %v53 =l csltl %v56, 0\n+ jnz %v53, @overflow52, @checked52\n+@overflow52\n+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v51, l %v50, l 64)\n+ jmp @failure\n+@checked52\n+ storel %v52, %s0\n+ jmp @i8\n+@i8\n+ storel 8, %position\n+ %v57 =l loadl %ctx\n+ %v58 =l loadl %maxsteps\n+ %v59 =l ceql %v57, %v58\n+ jnz %v59, @step_limit, @step60\n+@step60\n+ %v60 =l add %v57, 1\n+ storel %v60, %ctx\n+ %v61 =l loadl %s0\n  call $myl_qbe_leave(l %ctx)\n- ret %v46\n+ ret %v61\n @step_limit\n"
+        },
+        {
+          "symbol": "myl_f_288d4bd1cdea0d877b9d70d582a88e5cc1bc4cf232688738560f72371a49928c",
+          "il_sha256": "2a009a28224c12a465a66e1dea7f17921a73e5aaf4a5df1f6921bca9c000e05f",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-480fc1a8c67174d1f61f72a4196398f9/.pending-4a7a6da33290e7a250ddcd9d38576e98/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-480fc1a8c67174d1f61f72a4196398f9/.pending-4a7a6da33290e7a250ddcd9d38576e98/unit.ssa"
+          ],
+          "previous_il_sha256": "ac79e96339e853f853b3b6339edffef4073166dfe1bbc4886ad8c594a7931c01",
+          "il_diff": "--- previous\n+++ template_edit\n@@ -121,5 +121,39 @@\n  storel %v45, %ctx\n- %v46 =l loadl %s0\n+ storel 1000, %s1\n+ jmp @i7\n+@i7\n+ storel 7, %position\n+ %v46 =l loadl %ctx\n+ %v47 =l loadl %maxsteps\n+ %v48 =l ceql %v46, %v47\n+ jnz %v48, @step_limit, @step49\n+@step49\n+ %v49 =l add %v46, 1\n+ storel %v49, %ctx\n+ %v50 =l loadl %s1\n+ %v51 =l loadl %s0\n+ %v52 =l add %v51, %v50\n+ %v54 =l xor %v51, %v52\n+ %v55 =l xor %v50, %v52\n+ %v56 =l and %v54, %v55\n+ %v53 =l csltl %v56, 0\n+ jnz %v53, @overflow52, @checked52\n+@overflow52\n+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v51, l %v50, l 64)\n+ jmp @failure\n+@checked52\n+ storel %v52, %s0\n+ jmp @i8\n+@i8\n+ storel 8, %position\n+ %v57 =l loadl %ctx\n+ %v58 =l loadl %maxsteps\n+ %v59 =l ceql %v57, %v58\n+ jnz %v59, @step_limit, @step60\n+@step60\n+ %v60 =l add %v57, 1\n+ storel %v60, %ctx\n+ %v61 =l loadl %s0\n  call $myl_qbe_leave(l %ctx)\n- ret %v46\n+ ret %v61\n @step_limit\n"
+        },
+        {
+          "symbol": "myl_f_5d34e8015d66cceb5dc3a9d3de76273f535d8ccf9b8c2cf4841cf0e318504795",
+          "il_sha256": "7a5b299ef091110740a52d845266b2c10fcc07ec078dfaf4de49ec6c346fae2e",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-480fc1a8c67174d1f61f72a4196398f9/.pending-6509ee431f64a8a21d7f92b3982e5205/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-480fc1a8c67174d1f61f72a4196398f9/.pending-6509ee431f64a8a21d7f92b3982e5205/unit.ssa"
+          ],
+          "previous_il_sha256": "c4090170fe4fef8d64935a426ee89a01c4733792fa2358778545091bf27d0c5d",
+          "il_diff": "--- previous\n+++ template_edit\n@@ -121,5 +121,39 @@\n  storel %v45, %ctx\n- %v46 =l loadl %s0\n+ storel 1000, %s1\n+ jmp @i7\n+@i7\n+ storel 7, %position\n+ %v46 =l loadl %ctx\n+ %v47 =l loadl %maxsteps\n+ %v48 =l ceql %v46, %v47\n+ jnz %v48, @step_limit, @step49\n+@step49\n+ %v49 =l add %v46, 1\n+ storel %v49, %ctx\n+ %v50 =l loadl %s1\n+ %v51 =l loadl %s0\n+ %v52 =l add %v51, %v50\n+ %v54 =l xor %v51, %v52\n+ %v55 =l xor %v50, %v52\n+ %v56 =l and %v54, %v55\n+ %v53 =l csltl %v56, 0\n+ jnz %v53, @overflow52, @checked52\n+@overflow52\n+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v51, l %v50, l 64)\n+ jmp @failure\n+@checked52\n+ storel %v52, %s0\n+ jmp @i8\n+@i8\n+ storel 8, %position\n+ %v57 =l loadl %ctx\n+ %v58 =l loadl %maxsteps\n+ %v59 =l ceql %v57, %v58\n+ jnz %v59, @step_limit, @step60\n+@step60\n+ %v60 =l add %v57, 1\n+ storel %v60, %ctx\n+ %v61 =l loadl %s0\n  call $myl_qbe_leave(l %ctx)\n- ret %v46\n+ ret %v61\n @step_limit\n"
+        },
+        {
+          "symbol": "myl_f_98743c7b8eede16195a9db3e781a80cf6488b753fefd9e6d8d400f253d252125",
+          "il_sha256": "5c1c5937db6e6c3d96f511a34a4b9da7e7de732d66df91314a6b9d09a709b0da",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-480fc1a8c67174d1f61f72a4196398f9/.pending-a8856f1717db64bdd7a8f56b464c8698/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-480fc1a8c67174d1f61f72a4196398f9/.pending-a8856f1717db64bdd7a8f56b464c8698/unit.ssa"
+          ],
+          "previous_il_sha256": "27b15bfafdac2438a024f954c35d7617d9be7b404f8ad4e20732b84bdb8f8481",
+          "il_diff": "--- previous\n+++ template_edit\n@@ -121,5 +121,39 @@\n  storel %v45, %ctx\n- %v46 =l loadl %s0\n+ storel 1000, %s1\n+ jmp @i7\n+@i7\n+ storel 7, %position\n+ %v46 =l loadl %ctx\n+ %v47 =l loadl %maxsteps\n+ %v48 =l ceql %v46, %v47\n+ jnz %v48, @step_limit, @step49\n+@step49\n+ %v49 =l add %v46, 1\n+ storel %v49, %ctx\n+ %v50 =l loadl %s1\n+ %v51 =l loadl %s0\n+ %v52 =l add %v51, %v50\n+ %v54 =l xor %v51, %v52\n+ %v55 =l xor %v50, %v52\n+ %v56 =l and %v54, %v55\n+ %v53 =l csltl %v56, 0\n+ jnz %v53, @overflow52, @checked52\n+@overflow52\n+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v51, l %v50, l 64)\n+ jmp @failure\n+@checked52\n+ storel %v52, %s0\n+ jmp @i8\n+@i8\n+ storel 8, %position\n+ %v57 =l loadl %ctx\n+ %v58 =l loadl %maxsteps\n+ %v59 =l ceql %v57, %v58\n+ jnz %v59, @step_limit, @step60\n+@step60\n+ %v60 =l add %v57, 1\n+ storel %v60, %ctx\n+ %v61 =l loadl %s0\n  call $myl_qbe_leave(l %ctx)\n- ret %v46\n+ ret %v61\n @step_limit\n"
+        }
+      ]
+    },
+    {
+      "state": "forced_after_edit",
+      "exit": 0,
+      "qbe_compiles": 0,
+      "calls": []
+    },
+    {
+      "state": "one_provider_body_edit",
+      "exit": 0,
+      "qbe_compiles": 1,
+      "calls": [
+        {
+          "symbol": "myl_f_ef1f92c88eacee446425d00e722fe1da2873cff234b03a6a8168327f884b155d",
+          "il_sha256": "08e0ecb8c4eaf1d3c7c5583e229d2f9ae569bf75180b76e7eaf9e7bd6beb5480",
+          "argv": [
+            "-t",
+            "amd64_sysv",
+            "-o",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-1d7bda71b118b3689640631b7bb919e6/.pending-210a4a92e2d56afb310a51af11a1333c/unit.s",
+            "/tmp/mylang-publication-review-5v99dm69/cache/objects/a5b7549ae3408459fc119d34ab7d7f3952f30f57f5bba1b9c384f5cbe7f18d9d/.pending-1d7bda71b118b3689640631b7bb919e6/.pending-210a4a92e2d56afb310a51af11a1333c/unit.ssa"
+          ],
+          "previous_il_sha256": "5e5bef4dcaa4c29b530fb42521f9730989fd24b532e6a0f1cea88b9d0b104d47",
+          "il_diff": "--- previous\n+++ one_provider_body_edit\n@@ -86,5 +86,39 @@\n  storel %v29, %ctx\n- %v30 =l loadl %s0\n+ storel 23, %s1\n+ jmp @i5\n+@i5\n+ storel 5, %position\n+ %v30 =l loadl %ctx\n+ %v31 =l loadl %maxsteps\n+ %v32 =l ceql %v30, %v31\n+ jnz %v32, @step_limit, @step33\n+@step33\n+ %v33 =l add %v30, 1\n+ storel %v33, %ctx\n+ %v34 =l loadl %s1\n+ %v35 =l loadl %s0\n+ %v36 =l add %v35, %v34\n+ %v38 =l xor %v35, %v36\n+ %v39 =l xor %v34, %v36\n+ %v40 =l and %v38, %v39\n+ %v37 =l csltl %v40, 0\n+ jnz %v37, @overflow36, @checked36\n+@overflow36\n+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v35, l %v34, l 64)\n+ jmp @failure\n+@checked36\n+ storel %v36, %s0\n+ jmp @i6\n+@i6\n+ storel 6, %position\n+ %v41 =l loadl %ctx\n+ %v42 =l loadl %maxsteps\n+ %v43 =l ceql %v41, %v42\n+ jnz %v43, @step_limit, @step44\n+@step44\n+ %v44 =l add %v41, 1\n+ storel %v44, %ctx\n+ %v45 =l loadl %s0\n  call $myl_qbe_leave(l %ctx)\n- ret %v30\n+ ret %v45\n @step_limit\n"
+        }
+      ]
+    }
+  ],
+  "method": "All five states in one Python process with fixed environment and tool identities. Native-test QBE wrapper records actual compiled function inputs. Latencies intentionally omitted because tracing is diagnostic.",
+  "raw_scratch": "/tmp/mylang-publication-review-5v99dm69/probe.json"
+}

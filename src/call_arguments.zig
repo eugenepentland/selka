@@ -10,7 +10,10 @@ pub const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
 /// Scalar literal defaults are appended after explicitly supplied expressions.
 pub fn bind(allocator: std.mem.Allocator, src: source.Source, call: Call, parameters: []const ast.Parameter, sink: *diagnostic.Sink) diagnostic.Error!Call {
     if (call.argument_names.len == 0 and call.arguments.len == parameters.len) return call;
-    if (call.arguments.len > parameters.len) return sink.fail("E_ARITY", call.name, "too many arguments for this function");
+    if (call.arguments.len > parameters.len) {
+        const message = try std.fmt.allocPrint(allocator, "too many arguments for this function: expected {d}, given {d}", .{ parameters.len, call.arguments.len });
+        return sink.fail("E_ARITY", call.name, message);
+    }
     const values = try allocator.alloc(ast.NodeId, parameters.len);
     errdefer allocator.free(values);
     const order = try allocator.alloc(usize, parameters.len);
@@ -28,7 +31,11 @@ pub fn bind(allocator: std.mem.Allocator, src: source.Source, call: Call, parame
     }
     var next = call.arguments.len;
     for (parameters, 0..) |parameter, index| if (!filled[index]) {
-        values[index] = parameter.default_value orelse return sink.fail("E_ARITY", call.name, "missing required argument");
+        const default = parameter.default_value orelse {
+            const message = try std.fmt.allocPrint(allocator, "missing required argument: expected {d}, given {d}", .{ parameters.len, call.arguments.len });
+            return sink.fail("E_ARITY", call.name, message);
+        };
+        values[index] = default;
         order[next] = index;
         next += 1;
     };

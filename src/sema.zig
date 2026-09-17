@@ -72,6 +72,7 @@ const unsupported_list = "operation is not supported by lists";
 const method_arity = "collection method argument count differs from its signature";
 
 const ast = @import("ast.zig");
+const effect_set = @import("effect_set.zig");
 const nominal_catalog = @import("nominal_catalog.zig");
 const entry_adapter = @import("entry_adapter.zig");
 const typed = @import("typed.zig");
@@ -768,7 +769,11 @@ const Checker = struct {
             try names.reference(call.owner orelse call.name, .function, member, bare_owner, self.sink)
         else
             try functionName(self.allocator, self.src, call.owner, call.name);
-        const function = self.functions.get(name) orelse return self.sink.fail("E_UNKNOWN_FUNCTION", call.name, "no function has this qualified name");
+        const function = self.functions.get(name) orelse {
+            const clause = try typed.suggestionClause(self.allocator, &self.functions, self.src.text(call.name));
+            const message = if (clause.len == 0) "no function has this qualified name" else try std.fmt.allocPrint(self.allocator, "no function has this qualified name{s}", .{clause});
+            return self.sink.fail("E_UNKNOWN_FUNCTION", call.name, message);
+        };
         const signature = self.syntax.functions[@backingInt(function)];
         if (signature.policy.restricted and self.owner != owner) return self.sink.failRelated(
             "E_PRIVATE_FUNCTION",
@@ -830,11 +835,36 @@ const Checker = struct {
                 if (callables.assignable(implementation, destination)) return;
             }
         }
-        const message = try std.fmt.allocPrint(self.allocator, "expected {s}, found {s}", .{ typed.typeName(expected, self.catalog.records), typed.typeName(actual, self.catalog.records) });
+        const expected_name = try typed.surfaceTypeName(self.allocator, expected, self.catalog.records);
+        const actual_name = try typed.surfaceTypeName(self.allocator, actual, self.catalog.records);
+        const message = try std.fmt.allocPrint(self.allocator, "expected {s}, found {s}", .{ expected_name, actual_name });
         return self.sink.fail("E_TYPE", span, message);
     }
     fn resolve(self: *Checker, name: source.Span) Error!typed.LocalId {
-        return self.active.get(self.src.text(name)) orelse self.sink.fail("E_UNKNOWN_NAME", name, "name is not defined in this scope");
+        const text = self.src.text(name);
+        return self.active.get(text) orelse {
+            const clause = try typed.suggestionClause(self.allocator, &self.active, text);
+            const message = if (clause.len == 0)
+                "name is not defined in this scope"
+            else
+                try std.fmt.allocPrint(self.allocator, "name is not defined in this scope{s}", .{clause});
+            return self.sink.fail("E_UNKNOWN_NAME", name, message);
+        };
+    }
+    /// Render the `unknown managed collection method` diagnostic with the method
+    /// spellings a receiver accepts, or their union when its family is not known.
+    fn unknownMethodMessage(self: *Checker, family: ?ManagedKind) Error![]const u8 {
+        const spellings = if (family) |kind|
+            try buffer_operations.methodSpellings(self.allocator, kind)
+        else
+            try buffer_operations.unionMethodSpellings(self.allocator);
+        var joined: std.ArrayList(u8) = .empty;
+        defer joined.deinit(self.allocator);
+        for (spellings, 0..) |spelling, index| {
+            if (index != 0) try joined.appendSlice(self.allocator, ", ");
+            try joined.appendSlice(self.allocator, spelling);
+        }
+        return std.fmt.allocPrint(self.allocator, "unknown managed collection method; methods: {s}", .{joined.items});
     }
     /// Reject reading a function-scoped binding that no path reaching here has
     /// assigned, or one that names a managed value confined to a released arena.
@@ -1291,7 +1321,8 @@ const Checker = struct {
                     const name = self.src.text(call.name);
                     const kind = buffer_operations.method(name) orelse {
                         _ = try @import("removed_names.zig").reject(self.sink, call.name, name);
-                        return self.sink.fail("E_LIST_METHOD", call.name, "unknown managed collection method");
+                        const family = self.catalog.records[value_type.recordIndex()].collection.kind;
+                        return self.sink.fail("E_LIST_METHOD", call.name, try self.unknownMethodMessage(family));
                     };
                     // The everyday vocabulary stays a buffer operation; the
                     // checker picks its arity from the receiver and `pop` name.
@@ -1333,6 +1364,11 @@ const Checker = struct {
         const root_node = self.syntax.nodes.items[@backingInt(root)];
         var statements: std.ArrayList(typed.StatementId) = .empty;
         const destination = try self.fieldDestination(root_node, &statements, temporaries);
+        // A field write through a by-name copy is only dead when the binding's
+        // value came from a copy and nothing reads the binding afterwards. The
+        // right-hand side is checked first: a read of the same binding there is
+        // part of the write and does not observe the value just stored.
+        const dead_owner: ?typed.LocalId = if (destination.index == null) destination.owner else null;
         var value = destination.value;
         const bases = try self.allocator.alloc(typed.NodeId, path_fields.items.len);
         const indices = try self.allocator.alloc(usize, path_fields.items.len);
@@ -1349,6 +1385,7 @@ const Checker = struct {
         const expected = self.nodes.items[@backingInt(value)].ty;
         try self.hint(assignment.value, expected);
         value = try self.expressionWithTemporaries(assignment.value, temporaries);
+        if (dead_owner) |owner| self.noteDeadRecordWrite(owner, node.span);
         try self.require(self.nodes.items[@backingInt(value)].ty, expected, node.span);
         if (destination.index == null) try self.requireArenaStore(destination.owner, value);
         const assigned = try b.local(expected);
@@ -1414,6 +1451,16 @@ const Checker = struct {
             .right = right,
             .op_span = span,
         } });
+    }
+    /// Record a candidate dead field write on a named binding whose value came
+    /// from a copy (a parameter, iteration variable, or indexed element). The
+    /// warning is emitted later when no read follows the most recent write.
+    fn noteDeadRecordWrite(self: *Checker, slot: typed.LocalId, span: source.Span) void {
+        const local = &self.locals.items[@backingInt(slot)];
+        if (local.origin == .local) return;
+        if (!local.ty.isAggregate() or self.catalog.records[local.ty.recordIndex()].isCollection()) return;
+        local.usage.dead_write_reads = local.usage.reads;
+        local.usage.dead_write_span = span;
     }
     fn fieldDestination(self: *Checker, root: ast.Node, statements: *std.ArrayList(typed.StatementId), temporaries: []const typed.Type) Error!FieldDestination {
         const b: collections.Builder(Checker) = .{ .checker = self, .span = root.span };
@@ -1621,7 +1668,7 @@ const Checker = struct {
         const call = node.data.method_call;
         const name = self.src.text(call.name);
         _ = try @import("removed_names.zig").reject(self.sink, call.name, name);
-        const kind = buffer_operations.method(name) orelse return self.sink.fail("E_COLLECTION_METHOD", call.name, "unknown managed collection method");
+        const kind = buffer_operations.method(name) orelse return self.sink.fail("E_COLLECTION_METHOD", call.name, try self.unknownMethodMessage(null));
         return self.checkListAccess(node, .{ .base = call.base, .kind = kind, .inputs = call.arguments }, temporaries);
     }
     fn checkCollectionSlice(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
@@ -2305,20 +2352,40 @@ const Checker = struct {
         const declaration = self.functions.get(key) orelse return false;
         const function = self.syntax.functions[@backingInt(declaration)];
         if (function.policy.owner != null or function.signature.type_parameters.len != 0) return self.sink.fail(callback_type_code, name, "function values require a nongeneric free function");
-        const bound = function.policy.effect_bound orelse return self.sink.fail("E_CALLBACK_EFFECTS", name, "function values require a declared effect ceiling");
         const parameters = try self.allocator.alloc(typed.Type, function.signature.parameters.len);
         if (parameters.len > 16) return self.sink.fail(callback_type_code, name, "callbacks support at most 16 parameters");
         for (function.signature.parameters, parameters) |input, *parameter| {
             parameter.* = try self.catalog.resolve(self.src, input.ty, self.sink);
         }
         const result = try self.catalog.resolve(self.src, function.signature.return_type, self.sink);
-        out.ty = try callables.intern(self.allocator, &self.catalog, .{
+        const expected_type = self.expected_types.get(name);
+        const destination = if (expected_type) |expected| callables.signature(expected, self.catalog.records) else null;
+        // An unannotated function value fills any callback slot: use the declared
+        // ceiling when there is one, otherwise the destination slot's ceiling when
+        // the call site fixes one, and finally unbounded `all`.
+        var allowed = if (function.policy.effect_bound) |bound| bound.allowed else effect_set.all;
+        if (function.policy.effect_bound == null) if (destination) |slot| {
+            if (slot.return_type == result and std.mem.eql(typed.Type, slot.parameters, parameters)) allowed = slot.effects;
+        };
+        const implementation: typed.Callable = .{
             .parameters = parameters,
             .return_type = result,
-            .effects = bound.allowed,
+            .effects = allowed,
             .mutates = function.signature.mutates,
             .return_origin = .unknown,
-        }, name, self.sink);
+        };
+        // Reuse the destination's interned schema when only its return-origin bound
+        // differs; interning again would mint a second record with the same name.
+        if (destination) |slot| {
+            var probe = implementation;
+            probe.return_origin = slot.return_origin;
+            if (callables.equal(probe, slot)) {
+                out.ty = expected_type.?;
+                out.data = .{ .function_value = self.ordinary_ids[@backingInt(declaration)] orelse return error.InternalError };
+                return true;
+            }
+        }
+        out.ty = try callables.intern(self.allocator, &self.catalog, implementation, name, self.sink);
         out.data = .{ .function_value = self.ordinary_ids[@backingInt(declaration)] orelse return error.InternalError };
         return true;
     }
@@ -3386,14 +3453,72 @@ const Checker = struct {
         flow.looping = flow.terminates;
         return .{ .loop = .{ .id = loop_id, .condition = condition, .body = body.id } };
     }
+    /// The dictionary receiver of one `items()` iteration source, in either the
+    /// `d.items()` call spelling or the postfix `expr.items()` spelling.
+    const ItemsSource = union(enum) { node: ast.NodeId, local: source.Span };
+
+    // twin-drift-ok: the concrete and symbolic checkers store the program under
+    // different fields (`syntax` vs `program`), so this AST-shape probe is duplicated.
+    /// Recognize `receiver.items()` as a for-each source. Only a two-name loop
+    /// consumes this: `for key, value in d.items()` binds the dictionary key and
+    /// value in insertion order instead of the value snapshot's position.
+    fn itemsSource(self: *Checker, id: ast.NodeId) ?ItemsSource {
+        const node = self.syntax.nodes.items[@backingInt(id)];
+        switch (node.data) {
+            .method_call => |method| if (method.arguments.len == 0 and std.mem.eql(u8, self.src.text(method.name), "items"))
+                return .{ .node = method.base },
+            .call => |invocation| {
+                const owner = invocation.owner orelse return null;
+                if (invocation.type_arguments.len != 0 or invocation.arguments.len != 0) return null;
+                if (!std.mem.eql(u8, self.src.text(invocation.name), "items")) return null;
+                if (!self.active.contains(self.src.text(owner))) return null;
+                return .{ .local = owner };
+            },
+            else => {},
+        }
+        return null;
+    }
+
+    /// Resolve the receiver of an `items()` source to a checked value, reading the
+    /// local for the receiver-name spelling rather than resolving the snapshot.
+    fn itemsReceiverValue(self: *Checker, items: ItemsSource) Error!typed.NodeId {
+        switch (items) {
+            .node => |id| return self.expression(id),
+            .local => |span| {
+                const slot = try self.resolve(span);
+                try self.requireReadable(slot, span);
+                self.locals.items[@backingInt(slot)].usage.reads += 1;
+                const id: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+                try self.nodes.append(self.allocator, .{ .span = span, .ty = self.locals.items[@backingInt(slot)].ty, .data = .{ .local = slot } });
+                return id;
+            },
+        }
+    }
+
     fn statementForEach(self: *Checker, stmt: ast.Statement, each: @FieldType(@FieldType(ast.Statement, "data"), "for_each")) Error!@FieldType(typed.Statement, "data") {
         if (try self.preludeIteration(stmt, each)) |statements| return .{ .block = statements };
         const b: collections.Builder(Checker) = .{ .checker = self, .span = stmt.span };
-        const iterable = try self.expression(each.iterable);
+        // `for key, value in d.items()` iterates the dictionary itself so the first
+        // name receives the key and the second the value, in insertion order. Any
+        // other spelling still resolves the iterable as written.
+        var dictionary_items = false;
+        var iterable: typed.NodeId = undefined;
+        if (each.index_name != null) if (self.itemsSource(each.iterable)) |items| {
+            const receiver = try self.itemsReceiverValue(items);
+            const receiver_type = self.nodes.items[@backingInt(receiver)].ty;
+            if (receiver_type.isAggregate() and self.catalog.records[receiver_type.recordIndex()].isCollection() and
+                self.catalog.records[receiver_type.recordIndex()].collection.kind == .dictionary)
+            {
+                iterable = receiver;
+                dictionary_items = true;
+            }
+        };
+        if (!dictionary_items) iterable = try self.expression(each.iterable);
         const iterable_type = self.nodes.items[@backingInt(iterable)].ty;
         if (!iterable_type.isAggregate() or !self.catalog.records[iterable_type.recordIndex()].isCollection()) return self.sink.fail(eCollectionMethod, stmt.span, "iteration requires a list, str, or dictionary");
         const schema = self.catalog.records[iterable_type.recordIndex()];
-        const element = switch (schema.collection.kind) {
+        const kind = schema.collection.kind;
+        const first_type = if (dictionary_items) schema.collection.key.? else switch (kind) {
             .list => schema.shape.buffer.?,
             .string => iterable_type,
             .bytes => typed.Type.i64,
@@ -3402,9 +3527,10 @@ const Checker = struct {
         const owner = try b.local(iterable_type);
         const index = try b.local(.i64);
         const limit = try b.local(.i64);
-        const value_slot = try b.local(element);
-        const names = [_]?source.Span{ each.name, each.index_name };
-        const slots = [_]typed.LocalId{ value_slot, index };
+        const first_slot = try b.local(first_type);
+        const second_slot = if (dictionary_items) try b.local(schema.shape.buffer.?) else index;
+        const names = if (dictionary_items) [_]?source.Span{ each.index_name, each.name } else [_]?source.Span{ each.name, each.index_name };
+        const slots = [_]typed.LocalId{ first_slot, second_slot };
         for (names) |maybe_name| if (maybe_name) |name| {
             if (try self.topLevel(name) or self.active.contains(self.src.text(name))) return self.sink.fail(eShadowing, name, eIterationShadow);
         };
@@ -3413,6 +3539,7 @@ const Checker = struct {
             self.locals.items[@backingInt(slot)].name = self.src.text(name);
             self.locals.items[@backingInt(slot)].declaration = name;
             self.locals.items[@backingInt(slot)].ownership.initialized = true;
+            self.locals.items[@backingInt(slot)].origin = .iteration;
             try self.active.put(self.allocator, self.src.text(name), slot);
         };
         defer for (names) |maybe_name| if (maybe_name) |name| {
@@ -3430,11 +3557,18 @@ const Checker = struct {
         self.restorePending(before);
         const i = try b.read(index);
         const iteration_check = try b.stmt(.{ .discard = try b.operation(owner, .iteration_check, &.{try b.read(limit)}) });
-        const iteration = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{
-            iteration_check,
-            try b.stmt(.{ .initialize = .{ .slot = value_slot, .value = try self.iterationValue(b, owner, schema.collection.kind, i) } }),
-            body.id,
-        }) });
+        var iteration_statements: std.ArrayList(typed.StatementId) = .empty;
+        try iteration_statements.append(self.allocator, iteration_check);
+        if (dictionary_items) {
+            try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = try b.operation(owner, .key_at, &.{i}) } }));
+            // The value at insertion position `i` is read through the key just bound,
+            // because `.read` on a dictionary takes a key rather than a position.
+            try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = second_slot, .value = try b.operation(owner, .read, &.{try b.read(first_slot)}) } }));
+        } else {
+            try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = try self.iterationValue(b, owner, kind, i) } }));
+        }
+        try iteration_statements.append(self.allocator, body.id);
+        const iteration = try b.stmt(.{ .block = try iteration_statements.toOwnedSlice(self.allocator) });
         const step = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{
             iteration_check,
             try b.stmt(.{ .assign = .{ .slot = index, .value = try b.binary(.add, i, try b.integer(1), .i64) } }),
@@ -3475,6 +3609,7 @@ const Checker = struct {
             // the ordinary for-each path; function-scoped locals need the binding
             // marked initialized or a body read is refused as use-before-assignment.
             self.locals.items[@backingInt(slot)].ownership.initialized = true;
+            self.locals.items[@backingInt(slot)].origin = .iteration;
             try self.active.put(self.allocator, self.src.text(name), slot);
         };
         defer for (names) |maybe_name| if (maybe_name) |name| {
@@ -3613,6 +3748,9 @@ const Checker = struct {
             .declaration = b.name,
             .ty = value_type,
             .mutable = b.mutable,
+            // A binding initialized from an index read holds an element copy,
+            // which is what makes a later field write dead when never read.
+            .origin = if (self.syntax.nodes.items[@backingInt(b.value)].data == .index) .collection_copy else .local,
         });
         try self.active.put(self.allocator, name, slot);
         return .{ .initialize = .{ .slot = slot, .value = value } };
@@ -3652,6 +3790,9 @@ const Checker = struct {
             self.locals.items[@backingInt(slot)].ownership.transfer_span = null;
         }
         self.locals.items[@backingInt(slot)].usage.writes += 1;
+        // A plain reassignment re-homes the value, so its copy provenance follows
+        // the new initializer; an indexed read still yields an element copy.
+        if (a.op == .set) self.locals.items[@backingInt(slot)].origin = if (self.syntax.nodes.items[@backingInt(a.value)].data == .index) .collection_copy else .local;
         // A reassignment definitely binds the name on this path and re-homes it out
         // of any arena it was previously confined to.
         self.locals.items[@backingInt(slot)].ownership.initialized = true;
@@ -3687,6 +3828,7 @@ const Checker = struct {
                     .declaration = parameter.name,
                     .ty = parameter_type,
                     .mutable = function.policy.host == null,
+                    .origin = .parameter,
                     .ownership = .{
                         .initialized = true,
                         .transfer_available = self.transfers(parameter_type),
@@ -4105,6 +4247,16 @@ fn warnBindings(allocator: std.mem.Allocator, functions: []const typed.Function,
     for (functions) |function| {
         if (function.policy.host != null) continue;
         for (function.scope.locals) |local| {
+            if (local.usage.dead_write_span) |span| {
+                // Each field write reads its destination once; a read beyond that
+                // means the copied binding is observed after the write.
+                if (local.origin != .local and local.usage.reads == local.usage.dead_write_reads) try sink.items.append(allocator, .{
+                    .severity = .warning,
+                    .code = "W_DEAD_RECORD_WRITE",
+                    .span = span,
+                    .message = "field write to a record copy is never read; the binding holds a value copy, so the write does not reach the original value",
+                });
+            }
             if (local.usage.temporary or local.usage.reads != 0) continue;
             try sink.items.append(allocator, .{
                 .severity = .warning,

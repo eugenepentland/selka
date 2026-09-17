@@ -665,23 +665,17 @@ const OverlapChecker = struct {
     }
 };
 
-fn allManagedMask(arguments: []const typed.NodeId) u16 {
-    var mask: u16 = 0;
-    if (arguments.len >= 16) return 0xffff;
-    var position: u5 = 0;
-    while (position < 16) : (position += 1) if (position < arguments.len) {
-        mask |= @as(u16, 1) << @intCast(position);
-    };
-    return mask;
-}
-
 fn overlapForCall(checker: *const OverlapChecker, function: typed.Function, origins: []const Origin, node: typed.Node, sink: *diagnostic.Sink) std.mem.Allocator.Error!bool {
     switch (node.data) {
         .call => |call| {
             const callee_index = @backingInt(call.function);
             const callee = checker.program.functions[callee_index];
-            const footprint = effectiveFootprint(checker.program, checker.summaries, callee_index);
-            const mask = if (footprint.unknown) allManagedMask(call.arguments) else footprint.positions;
+            // Overlap is a proof obligation created by a declared `mutates(...)`
+            // contract. An unannotated helper's inferred writes are not such a
+            // promise, so forwarding shared inputs through it is ordinary
+            // sequential aliasing; only a declared footprint is checked.
+            if (callee.signature.declared_mutates.len == 0) return false;
+            const mask = positionsBitset(callee.signature.declared_mutates);
             if (mask == 0) return false;
             const site = CallSite{
                 .function = function,

@@ -1,6 +1,10 @@
 //! Filesystem and child-process operations for native builds.
 const std = @import("std");
 const Sha = std.crypto.hash.sha2.Sha256;
+/// The one hidden folder every invocation stages beneath, so a destination
+/// directory keeps at most one shared staging folder instead of one
+/// `.pending-<hex>` sibling per build.
+const staging_name = ".pending";
 /// Native filesystem, process, and allocation failures preserve their diagnostics.
 pub const Error = std.Io.Dir.RealPathFileAllocError || std.Io.Dir.ReadFileAllocError ||
     std.Io.Dir.WriteFileError || std.Io.Dir.CreateDirPathError || std.Io.Dir.RenameError ||
@@ -99,17 +103,57 @@ pub const Context = struct {
         try std.Io.Dir.cwd().createDirPath(self.io, path);
     }
     /// Private directories isolate concurrent compilers and failed tool output.
+    /// Every invocation in one parent shares a single `.pending/` folder, and
+    /// each gets a unique child, so many concurrent builders leave one folder
+    /// rather than one sibling each, and stale scratch stays contained.
     pub fn temporary(self: Context, parent: []const u8) Error![]const u8 {
-        var random: [16]u8 = undefined;
-        std.Io.random(self.io, &random);
-        const name = try std.fmt.allocPrint(self.allocator, ".pending-{s}", .{std.fmt.bytesToHex(random, .lower)});
-        const path = try std.fs.path.join(self.allocator, &.{ parent, name });
-        try std.Io.Dir.cwd().createDir(self.io, path, .default_dir);
-        return path;
+        const staging = try std.fs.path.join(self.allocator, &.{ parent, staging_name });
+        // A concurrent `remove` may delete the shared folder after it empties
+        // and before this child is created; recreate it and retry.
+        var attempt: usize = 0;
+        while (attempt < 3) : (attempt += 1) {
+            try std.Io.Dir.cwd().createDirPath(self.io, staging);
+            var random: [16]u8 = undefined;
+            std.Io.random(self.io, &random);
+            const name = std.fmt.bytesToHex(random, .lower);
+            const path = try std.fs.path.join(self.allocator, &.{ staging, &name });
+            std.Io.Dir.cwd().createDir(self.io, path, .default_dir) catch |err| switch (err) {
+                error.FileNotFound => continue,
+                else => return err,
+            };
+            return path;
+        }
+        return error.FileNotFound;
     }
-    /// Remove only this invocation's private temporary directory.
+    /// Remove only this invocation's private staging directory, then the shared
+    /// `.pending/` folder when nothing else is using it. Removal stays best
+    /// effort: a failed or interrupted one leaves scratch inside that single
+    /// folder, where it is contained and can be swept as a unit.
     pub fn remove(self: Context, path: []const u8) void {
+        // The staging child may already have been renamed into place, which
+        // `deleteTree` treats as success; a non-empty or non-staging parent is
+        // simply left alone.
         std.Io.Dir.cwd().deleteTree(self.io, path) catch return;
+        const staging = std.fs.path.dirname(path) orelse return;
+        if (!std.mem.eql(u8, std.fs.path.basename(staging), staging_name)) return;
+        std.Io.Dir.cwd().deleteDir(self.io, staging) catch return;
+    }
+    /// Remove every entry of `parent` except the one named `keep` and the shared
+    /// staging folder. Eviction is best effort, like `remove`: a cache that cannot
+    /// be swept still serves the generation it keeps, and a stale entry a
+    /// concurrent sweep already removed is simply found gone. Names are collected
+    /// before anything is deleted, so the sweep never mutates a directory it is
+    /// still iterating.
+    pub fn sweep(self: Context, parent: []const u8, keep: []const u8) void {
+        var directory = std.Io.Dir.cwd().openDir(self.io, parent, .{ .iterate = true, .follow_symlinks = false }) catch return;
+        defer directory.close(self.io);
+        var names: std.ArrayList([]const u8) = .empty;
+        var iterator = directory.iterate();
+        while (iterator.next(self.io) catch null) |entry| {
+            if (std.mem.eql(u8, entry.name, keep) or std.mem.eql(u8, entry.name, staging_name)) continue;
+            names.append(self.allocator, self.allocator.dupe(u8, entry.name) catch return) catch return;
+        }
+        for (names.items) |name| directory.deleteTree(self.io, name) catch continue;
     }
     /// Rename within a filesystem for atomic publication.
     pub fn rename(self: Context, from: []const u8, to: []const u8) Error!void {
@@ -187,7 +231,7 @@ fn buildRound(parent: std.mem.Allocator, environment: *const std.process.Environ
     var context = try Context.init(parent, std.testing.io, environment);
     defer context.deinit();
     _ = try context.absolute("guest.my");
-    _ = try context.temporary(try context.absolute("."));
+    context.remove(try context.temporary(try context.absolute(".")));
 }
 // spec: NATIVE-BUILD-RECLAIM-1
 test "a build context reclaims its scratch on deinit, so repeated builds do not accumulate" {
@@ -198,6 +242,31 @@ test "a build context reclaims its scratch on deinit, so repeated builds do not 
     try buildRound(std.testing.allocator, &environment);
     try buildRound(std.testing.allocator, &environment);
     try buildRound(std.testing.allocator, &environment);
+}
+// spec: NATIVE-STAGING-1
+test "one staging folder per directory contains concurrent and abandoned scratch" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const parent = try temporary.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    const first = try context.temporary(parent);
+    const second = try context.temporary(parent);
+    // Both invocations stage under the one shared folder, never as siblings.
+    const staging = try std.fs.path.join(context.allocator, &.{ parent, staging_name });
+    try std.testing.expectEqualStrings(staging, std.fs.path.dirname(first).?);
+    try std.testing.expectEqualStrings(staging, std.fs.path.dirname(second).?);
+    try std.testing.expect(!std.mem.eql(u8, first, second));
+    // The first removal cannot take the folder while the second still uses it.
+    context.remove(first);
+    try std.testing.expect(context.exists(staging));
+    // A child renamed into place still reclaims the shared folder afterwards.
+    const published = try std.fs.path.join(context.allocator, &.{ parent, "published" });
+    try context.rename(second, published);
+    context.remove(second);
+    try std.testing.expect(!context.exists(staging));
 }
 test "native build IO owns allocations and rejects missing tools or failing commands" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
@@ -303,4 +372,32 @@ test "tool stamps distinguish rebuilt tools without rereading their contents" {
     try std.testing.expect(!std.mem.eql(u8, before, try context.stamp(tool)));
     try std.testing.expect(std.mem.indexOf(u8, before, tool) != null);
     try std.testing.expectError(error.FileNotFound, context.stamp(try std.fs.path.join(context.allocator, &.{ directory, "absent" })));
+}
+// spec-case: QBE-GENERATION-1
+test "sweeping a cache family removes every entry but the kept generation and the staging folder" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const parent = try temporary.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    const kept = try std.fs.path.join(context.allocator, &.{ parent, "current" });
+    const stale = try std.fs.path.join(context.allocator, &.{ parent, "stale", "nested" });
+    const loose = try std.fs.path.join(context.allocator, &.{ parent, "loose.o" });
+    try context.mkdir(kept);
+    try context.mkdir(stale);
+    try context.write(try std.fs.path.join(context.allocator, &.{ kept, "unit.o" }), "kept");
+    try context.write(try std.fs.path.join(context.allocator, &.{ stale, "unit.o" }), "stale");
+    try context.write(loose, "loose");
+    const staging = try context.temporary(parent);
+    context.sweep(parent, "current");
+    try std.testing.expect(context.exists(try std.fs.path.join(context.allocator, &.{ kept, "unit.o" })));
+    try std.testing.expect(context.exists(staging));
+    try std.testing.expect(!context.exists(stale));
+    try std.testing.expect(!context.exists(std.fs.path.dirname(stale).?));
+    try std.testing.expect(!context.exists(loose));
+    // A missing family is not an error: there is nothing to evict.
+    context.sweep(try std.fs.path.join(context.allocator, &.{ parent, "absent" }), "current");
+    try std.testing.expect(context.exists(kept));
 }

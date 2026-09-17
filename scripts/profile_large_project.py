@@ -1199,10 +1199,10 @@ LIMITS = [
     {
         "subsystem": "checking/build loader",
         "source": "src/project.zig",
-        "budgets": {"max_modules": 256, "max_imports": 4096,
+        "budgets": {"max_modules": 4096, "max_imports": 65536,
                     "max_file_bytes": 4 * MIB, "max_total_bytes": 16 * MIB,
                     "max_file_bytes_human": "4 MiB", "max_total_bytes_human": "16 MiB"},
-        "patterns": ["max_modules: usize = 256", "max_imports: usize = 4096",
+        "patterns": ["max_modules: usize = 4096", "max_imports: usize = 65536",
                      "max_file_bytes: usize = 4 * 1024 * 1024", "max_total_bytes: usize = 16 * 1024 * 1024"],
     },
     {
@@ -1250,9 +1250,10 @@ def limit_findings():
     return [
         {
             "finding": "module/import counts are bounded only by the loader",
-            "detail": "src/project.zig rejects module 257 with E_MODULE_LIMIT and import 4097 with E_IMPORT_LIMIT, "
+            "detail": "src/project.zig defaults to 4096 modules and 65536 import edges (overridable through a "
+                      "mylang.json budgets object) and rejects the next module with E_MODULE_LIMIT, "
                       "but src/native_test_snapshot.zig, scripts/navigate.py and scripts/packages.py enforce only "
-                      "byte/entry budgets. A 257-module project can therefore be snapshotted or materialized and then "
+                      "byte/entry budgets, so a project that large can be snapshotted or materialized and then "
                       "fail ordinary checking.",
             "sources": ["src/project.zig", "src/native_test_snapshot.zig", "scripts/navigate.py", "scripts/packages.py"],
             "action": "reported, not changed: a consistent fix must add the shared module/import budget to the "
@@ -1306,19 +1307,20 @@ def probe_bounded_failures(compiler, scratch):
     scratch = Path(scratch)
     records = []
 
-    # 257 modules -> E_MODULE_LIMIT
+    # A configured module budget of one -> E_MODULE_LIMIT
     module_root = scratch / "limit-modules"
     shutil.rmtree(module_root, ignore_errors=True)
     module_root.mkdir(parents=True)
-    for index in range(257):
+    for index in range(2):
         body = [f"module m{index:03d}"]
-        if index + 1 < 257:
+        if index + 1 < 2:
             body.append(f"import m{index + 1:03d}")
         body += ["", f"def value() -> int effects():", f"    return {index}"]
         _write(module_root / f"m{index:03d}.my", body)
+    _write(module_root / "mylang.json", ['{"version": 1, "budgets": {"max_modules": 1}}'])
     result = run_measured([compiler, "check-project", module_root / "m000.my", "--no-cache"], timeout=120)
     records.append({
-        "probe": "257-module project",
+        "probe": "project over its configured module budget",
         "expected": "E_MODULE_LIMIT",
         "exit": result["exit"],
         "observed": "E_MODULE_LIMIT" if "E_MODULE_LIMIT" in result["stderr"] else None,

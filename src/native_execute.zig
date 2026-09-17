@@ -2,9 +2,12 @@
 //!
 //! Unit tests execute guest programs the way `mylang run` does: one
 //! content-addressed native build, then one process. Executables are cached by
-//! manifest identity under the directory the build script supplies, so a program
-//! whose emitted units are unchanged is spawned rather than rebuilt. The
-//! toolchain and the cache itself come from the process wiring, resolved once.
+//! manifest identity in the session's executable generation — one directory per
+//! compiler build under the cache the build script supplies, swept when the
+//! compiler or its runtime changes — so a program whose emitted units are unchanged is
+//! spawned rather than rebuilt and a rebuilt compiler leaves no stale programs
+//! behind. The toolchain and the cache itself come from the process wiring,
+//! resolved once.
 const std = @import("std");
 const fs = @import("qbe_build_io.zig");
 const cache_api = @import("qbe_build_cache.zig");
@@ -69,7 +72,8 @@ pub const Options = struct {
     max_memory: ?u64 = null,
 };
 
-/// Build one checked compilation natively and run it once with default budgets.
+/// Build one checked compilation natively and run it once with the runtime's
+/// defaults, which impose no instruction or frame ceiling.
 /// The argument is a single-file or a project compilation; both emit QBE units.
 pub fn run(compilation: anytype) Error!Run {
     return runWithOptions(compilation, .{});
@@ -90,7 +94,7 @@ pub fn program(session: *wiring.Session, manifest: []const u8) Error![]const u8 
     defer scratch.deinit();
     const work = scratch.allocator();
     const identity = try fs.hash(work, try std.mem.concat(work, u8, &.{ session.toolchain.environment, manifest }));
-    const path = try std.fmt.allocPrint(session.allocator(), "{s}/exe/{s}", .{ session.toolchain.directory, identity });
+    const path = try std.fmt.allocPrint(session.allocator(), "{s}/{s}", .{ session.toolchain.executables, identity });
     if (std.Io.Dir.cwd().access(session.io, path, .{ .execute = true })) |_| return path else |_| {}
     try link(session, manifest, path);
     return path;
@@ -198,6 +202,54 @@ fn position(text: []const u8) ?struct { path: []const u8, line: u64, column: u64
     const line = std.fmt.parseInt(u64, text[previous + 1 .. last], 10) catch return null;
     const column = std.fmt.parseInt(u64, text[last + 1 ..], 10) catch return null;
     return .{ .path = text[0..previous], .line = line, .column = column };
+}
+
+/// The name of every section header in an ELF64 image, read through its section
+/// name string table, so a test can tell a stripped binary from a debug section
+/// name the runtime happens to carry as text in its read-only data.
+fn sectionNames(allocator: std.mem.Allocator, bytes: []const u8) ![]const []const u8 {
+    const header = std.mem.bytesToValue(std.elf.Elf64_Ehdr, bytes[0..@sizeOf(std.elf.Elf64_Ehdr)]);
+    const table = sectionHeader(bytes, header, header.e_shstrndx);
+    var names: std.ArrayList([]const u8) = .empty;
+    for (0..header.e_shnum) |index| {
+        const section = sectionHeader(bytes, header, @intCast(index));
+        const start: usize = @intCast(table.sh_offset + section.sh_name);
+        const rest = bytes[start..];
+        try names.append(allocator, rest[0..std.mem.indexOfScalar(u8, rest, 0).?]);
+    }
+    return names.items;
+}
+fn sectionHeader(bytes: []const u8, header: std.elf.Elf64_Ehdr, index: u16) std.elf.Elf64_Shdr {
+    const offset: usize = @intCast(header.e_shoff + @as(u64, index) * header.e_shentsize);
+    return std.mem.bytesToValue(std.elf.Elf64_Shdr, bytes[offset..][0..@sizeOf(std.elf.Elf64_Shdr)]);
+}
+fn hasSection(names: []const []const u8, prefix: []const u8) bool {
+    for (names) |name| if (std.mem.startsWith(u8, name, prefix)) return true;
+    return false;
+}
+
+// spec: QBE-STRIP-1
+test "a published native executable carries neither debug information nor a symbol table" {
+    var compilation = try language.Compilation.init(std.testing.allocator, "lean.my",
+        \\def main() -> i64:
+        \\    return 3
+    );
+    defer compilation.deinit();
+    const session = try wiring.acquire();
+    var scratch = std.heap.ArenaAllocator.init(session.allocator());
+    defer scratch.deinit();
+    const manifest = try compilation.emitQbe(scratch.allocator());
+    const path = try program(session, manifest);
+    try std.testing.expect(std.mem.startsWith(u8, path, session.toolchain.executables));
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(session.io, path, scratch.allocator(), .unlimited);
+    const names = try sectionNames(scratch.allocator(), bytes);
+    try std.testing.expect(hasSection(names, ".text"));
+    try std.testing.expect(!hasSection(names, ".debug_"));
+    try std.testing.expect(!hasSection(names, ".symtab"));
+    // Stripping changes nothing the program does: it still runs and returns its value.
+    const outcome = try spawn(path, .{});
+    try std.testing.expectEqual(@as(i64, 3), outcome.value);
+    try std.testing.expect(!outcome.trapped());
 }
 
 test "native execution reports entry results, guest output and located traps" {
@@ -308,4 +360,35 @@ test "native execution honours step budgets and separates the result line from o
     try std.testing.expectEqualStrings("a\nb\n", divided.output);
     try std.testing.expectEqual(@as(i64, 12), divided.value);
     try std.testing.expectError(error.UnreadableNativeResult, divide("no newline"));
+}
+
+// spec: RUNTIME-UNBOUNDED-1
+test "a native run completes a loop that outgrows the old default step budget" {
+    var compilation = try language.Compilation.init(std.testing.allocator, "unbounded.my",
+        \\def main() -> i64:
+        \\    i = 0
+        \\    while i < 3000000:
+        \\        i += 1
+        \\    return i
+    );
+    defer compilation.deinit();
+    // A 60-second guard keeps a regression from hanging the test runner; an
+    // honest loop that needs tens of millions of steps must still finish.
+    const outcome = try runWithOptions(&compilation, .{ .arguments = &.{"--timeout=60"} });
+    try std.testing.expect(!outcome.trapped());
+    try std.testing.expectEqual(@as(i64, 3000000), outcome.value);
+}
+
+// spec: RUNTIME-TIMEOUT-1
+test "a wall-clock timeout ends an unbounded native run with R_TIMEOUT" {
+    var compilation = try language.Compilation.init(std.testing.allocator, "timeout.my",
+        \\def main() -> i64:
+        \\    while True:
+        \\        pass
+        \\    return 0
+    );
+    defer compilation.deinit();
+    const outcome = try runWithOptions(&compilation, .{ .arguments = &.{"--timeout=1"} });
+    try std.testing.expect(outcome.trapped());
+    try std.testing.expectEqualStrings("R_TIMEOUT", outcome.trap.code);
 }

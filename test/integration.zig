@@ -900,6 +900,21 @@ test "CLI run and check success" {
     try invoke("run", @embedFile("fixtures/arithmetic.my"), 0, "7\n", "");
     try invoke("check", @embedFile("fixtures/arithmetic.my"), 0, "", "");
 }
+// spec-case: NATIVE-TEST-10
+test "a native run reports a failed assert with its message" {
+    try invoke("run",
+        \\def main() -> int:
+        \\    assert False, "x should be two"
+        \\    return 0
+    , 1, "", "error[R_ASSERT]: native execution failed: x should be two");
+    // A message carrying JSON syntax must not corrupt the machine record: the
+    // `trap_detail` object still parses and appears in the JSON diagnostics.
+    try invokeOptions("run",
+        \\def main() -> int:
+        \\    assert False, "say \"hi\""
+        \\    return 0
+    , &.{"--diagnostics=json"}, 1, "", "\"trap_detail\"");
+}
 // spec: NATIVE-TIMING-1
 test "CLI execution timings preserve results and runtime diagnostics" {
     const source =
@@ -1398,11 +1413,12 @@ test "CLI module discovery keeps header validity separate from compilation" {
         \\
         \\
         \\def main() -> i64:
-        \\    return 0
+        \\    return unknown()
     , &.{});
     defer testing.allocator.free(compilation.stdout);
     defer testing.allocator.free(compilation.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, compilation.term);
+    try testing.expect(std.mem.indexOf(u8, compilation.stderr, "E_UNKNOWN_SYMBOL") != null);
 }
 test "CLI module interfaces parse bodies and check exported signature visibility" {
     var temp = testing.tmpDir(.{});
@@ -1498,6 +1514,54 @@ test "CLI run loads a project entry that imports a standard module and leaves si
     try testing.expectEqualStrings("42\n", alias.stdout);
     // A plain single-file program still takes the original one-unit path.
     try invoke("run", @embedFile("fixtures/arithmetic.my"), 0, "7\n", "");
+}
+// spec: CHECK-PROJECT-ENTRY-1
+test "CLI check on a CHECK-PROJECT-ENTRY-1 module project loads the reachable graph" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
+        \\module main
+        \\import helper
+        \\
+        \\
+        \\def main() -> int:
+        \\    return helper.value()
+    });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data =
+        \\module helper
+        \\export value
+        \\
+        \\
+        \\def value() -> int effects():
+        \\    return 42
+    });
+    const path = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const checked = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", path } });
+    defer testing.allocator.free(checked.stdout);
+    defer testing.allocator.free(checked.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, checked.term);
+    try testing.expectEqualStrings("", checked.stdout);
+    try testing.expectEqualStrings("", checked.stderr);
+    const explicit = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-project", path } });
+    defer testing.allocator.free(explicit.stdout);
+    defer testing.allocator.free(explicit.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, explicit.term);
+    try testing.expectEqualStrings("", explicit.stdout);
+    try testing.expectEqualStrings("", explicit.stderr);
+}
+// spec-case: CHECK-PROJECT-ENTRY-1
+test "CLI check keeps plain single-file programs on the one-unit path" {
+    try invoke("check",
+        \\def main() -> int:
+        \\    return 7
+    , 0, "", "");
+    try invoke("check",
+        \\def main() -> int:
+        \\    x = True
+        \\    x = 1
+        \\    return 7
+    , 1, "", "E_TYPE");
 }
 // spec: CLI-6
 test "CLI answers removed C-backend commands with their QBE migration" {
@@ -2505,7 +2569,7 @@ test "CLI executes complete enum tables and rejects missing mappings in every co
         \\def main() -> i64:
         \\    table: [Key]i64 = {Key.a: 7}
         \\    return table[0]
-    , 1, "", "expected Key, found i64");
+    , 1, "", "expected Key, found int");
     // A positional list cannot stand in for an enum-keyed table; only named entries reach one.
     try invoke("check",
         \\enum Key:
@@ -3878,8 +3942,8 @@ const p1_production_unfinished =
     \\    def price(policy: Stub, subtotal: int) -> int effects(mutation) mutates(policy):
     \\        return todo[int]()
 ;
-const p1_production_missing_ceiling =
-    \\module production
+const p1_production_bad_interface =
+    \\module mismatched
     \\export Stub
     \\
     \\
@@ -3887,7 +3951,7 @@ const p1_production_missing_ceiling =
     \\    def make(discount: int) -> Stub effects():
     \\        return wrap[Stub](discount)
     \\
-    \\    def price(policy: Stub, subtotal: int) -> int:
+    \\    def price(policy: Stub, subtotal: int) -> int effects():
     \\        return subtotal
 ;
 const p1_main =
@@ -4038,13 +4102,13 @@ test "P1 rejects stronger or malformed replacements and a bad production interfa
     try testing.expect(std.mem.indexOf(u8, unknown.stderr, "InvalidTestProviders") != null);
 
     // A production interface error rejects before any provider is selected.
-    try writeProjectFile(&temp, "production.my", p1_production_missing_ceiling);
+    try writeProjectFile(&temp, "production.my", p1_production_bad_interface);
     try p1WriteCases(&temp, "cases.json", "production.my", narrow);
     const interface_error = try p1Invoke(entry, cases_path, cache);
     defer testing.allocator.free(interface_error.stdout);
     defer testing.allocator.free(interface_error.stderr);
     try testing.expect(interface_error.term != .exited or interface_error.term.exited != 0);
-    try testing.expect(std.mem.indexOf(u8, interface_error.stderr, "E_EFFECT_CEILING") != null);
+    try testing.expect(std.mem.indexOf(u8, interface_error.stderr, "E_MODULE_NAME") != null);
 }
 
 // spec-case: NATIVE-TEST-3
@@ -5278,4 +5342,400 @@ fn c4ProviderCasesChanged(allocator: std.mem.Allocator, first: []const u8, chang
         .@"main::test_one" = .{ .providers = .{ .@"first.my" = first, .@"second.my" = second } },
         .@"main::test_two" = .{ .providers = .{ .@"second.my" = second, .@"first.my" = changed } },
     }, .{});
+}
+
+// ---------------------------------------------------------------------------
+// Guest performance benchmarks: candidate, approval and immutable enforcement
+// ---------------------------------------------------------------------------
+
+const bench_program =
+    \\module main
+    \\export test_small
+    \\export bench_loop
+    \\
+    \\
+    \\def test_small() -> bool effects():
+    \\    return bench_loop(3) == 3
+    \\
+    \\
+    \\def bench_loop(limit: int) -> int effects():
+    \\    total: int = 0
+    \\    index: int = 0
+    \\    while index < limit:
+    \\        total = total + index
+    \\        index = index + 1
+    \\    return total
+    \\
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+const bench_cases =
+    \\{"main::bench_loop":{"sizes":{"small":{"arguments":{"limit":"10"},"expected":"45"}}}}
+;
+const bench_sampling = [_][]const u8{ "--bench-warmup", "0", "--bench-batches", "2", "--bench-batch-ms", "1" };
+const bench_policy_pass =
+    \\{"version":"bench-policy-v1","runner_profile":"default","default":{"allowed_growth_percent":1000,"minimum_meaningful_delta_ns":0,"max_ns_per_op":1000000000},"required":["main::bench_loop[small]"]}
+;
+const bench_policy_ceiling =
+    \\{"version":"bench-policy-v1","runner_profile":"default","default":{"allowed_growth_percent":1000,"minimum_meaningful_delta_ns":0,"max_ns_per_op":0.0000001},"required":["main::bench_loop[small]"]}
+;
+
+fn benchArgs(allocator: std.mem.Allocator, base: []const []const u8) ![]const []const u8 {
+    var args: std.ArrayList([]const u8) = .empty;
+    try args.appendSlice(allocator, base);
+    try args.appendSlice(allocator, &bench_sampling);
+    return args.items;
+}
+
+fn benchRun(allocator: std.mem.Allocator, entry: []const u8, cases: []const u8, cache: []const u8, extra: []const []const u8) !std.process.RunResult {
+    var args: std.ArrayList([]const u8) = .empty;
+    try args.appendSlice(allocator, &.{ compiler_path, "test", entry, "--cases", cases, "--json" });
+    try args.appendSlice(allocator, extra);
+    return benchSpawn(allocator, &args, cache);
+}
+
+/// A directory run rejects `--cases`; benchmarks there are argument-free.
+fn benchRunDirectory(allocator: std.mem.Allocator, entry: []const u8, cache: []const u8, extra: []const []const u8) !std.process.RunResult {
+    var args: std.ArrayList([]const u8) = .empty;
+    try args.appendSlice(allocator, &.{ compiler_path, "test", entry, "--json" });
+    try args.appendSlice(allocator, extra);
+    return benchSpawn(allocator, &args, cache);
+}
+
+fn benchSpawn(allocator: std.mem.Allocator, args: *std.ArrayList([]const u8), cache: []const u8) !std.process.RunResult {
+    const cache_argument = try std.fmt.allocPrint(allocator, "--cache-dir={s}", .{cache});
+    try args.append(allocator, cache_argument);
+    try args.appendSlice(allocator, &tools);
+    return std.process.run(allocator, testing.io, .{ .argv = args.items });
+}
+
+fn readFile(allocator: std.mem.Allocator, path: []const u8) ![]const u8 {
+    return std.Io.Dir.cwd().readFileAlloc(testing.io, path, allocator, .limited(1 << 20));
+}
+
+fn benchPromote(allocator: std.mem.Allocator, candidate: []const u8, baseline: []const u8) !std.process.RunResult {
+    return std.process.run(allocator, testing.io, .{ .argv = &.{
+        compiler_path, "bench-promote", "--candidate", candidate,
+        "--baseline",  baseline,        "--approver",  "maintainer",
+        "--reason",    "reviewed",      "--revision",  "testrev",
+    } });
+}
+
+// spec-case: NATIVE-BENCH-3
+test "guest benchmarks write a candidate and enforce an approved baseline immutably" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try writeProjectFile(&temporary, "main.my", bench_program);
+    try writeProjectFile(&temporary, "cases.json", bench_cases);
+    try writeProjectFile(&temporary, "pass.json", bench_policy_pass);
+    try writeProjectFile(&temporary, "ceiling.json", bench_policy_ceiling);
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    defer a.free(root);
+    const entry = try std.fs.path.join(a, &.{ root, "main.my" });
+    const cases = try std.fs.path.join(a, &.{ root, "cases.json" });
+    const candidate = try std.fs.path.join(a, &.{ root, "candidate.json" });
+    const baseline = try std.fs.path.join(a, &.{ root, "baseline.json" });
+    const pass_policy = try std.fs.path.join(a, &.{ root, "pass.json" });
+    const ceiling_policy = try std.fs.path.join(a, &.{ root, "ceiling.json" });
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    const candidate_run = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "ReleaseFast", "--bench-output", candidate }));
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, candidate_run.term);
+    const report = (try std.json.parseFromSlice(std.json.Value, a, try readFile(a, candidate), .{})).value;
+    try testing.expectEqualStrings("bench-report-v1", report.object.get("version").?.string);
+    try testing.expect(report.object.get("complete").?.bool);
+    try testing.expect(report.object.get("passed").?.bool);
+    try testing.expectEqual(@as(usize, 1), report.object.get("measurements").?.array.items.len);
+    try testing.expectEqualStrings("main::bench_loop[small]", report.object.get("measurements").?.array.items[0].object.get("id").?.string);
+    const promoted = try benchPromote(a, candidate, baseline);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, promoted.term);
+    const approved = try readFile(a, baseline);
+    const approved_json = (try std.json.parseFromSlice(std.json.Value, a, approved, .{})).value;
+    try testing.expectEqualStrings("bench-baseline-v1", approved_json.object.get("version").?.string);
+    try testing.expectEqualStrings("testrev", approved_json.object.get("provenance").?.object.get("revision").?.string);
+    const passing = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "ReleaseFast", "--bench-baseline", baseline, "--bench-policy", pass_policy }));
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, passing.term);
+    const failing = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "ReleaseFast", "--bench-baseline", baseline, "--bench-policy", ceiling_policy }));
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, failing.term);
+    // A failed check leaves the approved baseline byte-for-byte unchanged.
+    try testing.expectEqualStrings(approved, try readFile(a, baseline));
+}
+
+const bench_failure_program =
+    \\module main
+    \\export bench_wrong
+    \\export bench_trap
+    \\
+    \\
+    \\def bench_wrong() -> int effects():
+    \\    return 2
+    \\
+    \\
+    \\def bench_trap(divisor: int) -> int effects():
+    \\    return 10 // divisor
+    \\
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+const bench_failure_cases =
+    \\{"main::bench_wrong":{"expected":"1"},"main::bench_trap":{"arguments":{"divisor":"0"},"expected":"1"}}
+;
+
+// spec-case: NATIVE-BENCH-2
+test "a wrong benchmark result or trap fails the run and reports no measurement" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try writeProjectFile(&temporary, "main.my", bench_failure_program);
+    try writeProjectFile(&temporary, "cases.json", bench_failure_cases);
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const entry = try std.fs.path.join(a, &.{ root, "main.my" });
+    const cases = try std.fs.path.join(a, &.{ root, "cases.json" });
+    const candidate = try std.fs.path.join(a, &.{ root, "candidate.json" });
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    const run = try benchRun(a, entry, cases, cache, &.{ "--bench", "*", "--mode", "ReleaseFast", "--bench-output", candidate });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, run.term);
+    const report = (try std.json.parseFromSlice(std.json.Value, a, try readFile(a, candidate), .{})).value;
+    try testing.expect(!report.object.get("complete").?.bool);
+    try testing.expect(!report.object.get("passed").?.bool);
+    try testing.expectEqual(@as(usize, 0), report.object.get("measurements").?.array.items.len);
+    try testing.expectEqual(@as(usize, 2), report.object.get("failures").?.array.items.len);
+    try testing.expectEqualStrings("failed", failureStatus(report, "main::bench_wrong"));
+    try testing.expectEqualStrings("trap", failureStatus(report, "main::bench_trap"));
+}
+
+fn failureStatus(report: std.json.Value, id: []const u8) []const u8 {
+    for (report.object.get("failures").?.array.items) |failure| {
+        if (std.mem.eql(u8, failure.object.get("id").?.string, id)) return failure.object.get("status").?.string;
+    }
+    return "";
+}
+
+const bench_dir_program =
+    \\module main
+    \\export bench_ok
+    \\
+    \\
+    \\def bench_ok() -> bool effects():
+    \\    return 1 + 1 == 2
+    \\
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+
+// spec-case: NATIVE-BENCH-6
+test "a directory benchmark run measures sequentially and stays green without tests" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const suite = try std.fs.path.join(a, &.{ root, "suite" });
+    try writeProjectFile(&temporary, "suite/one/main.my", bench_dir_program);
+    try writeProjectFile(&temporary, "suite/two/main.my", bench_dir_program);
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    const run = try benchRunDirectory(a, suite, cache, &.{ "--bench", "*", "--mode", "ReleaseFast" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, run.term);
+}
+
+// Guest test transport, failure text and entry discovery
+// ------------------------------------------------------
+
+/// Run `mylang test ENTRY` with this build's tools and an isolated cache.
+fn guestTestRun(allocator: std.mem.Allocator, entry: []const u8, extra: []const []const u8, cache: []const u8) !std.process.RunResult {
+    var args: std.ArrayList([]const u8) = .empty;
+    try args.appendSlice(allocator, &.{ compiler_path, "test", entry });
+    try args.appendSlice(allocator, extra);
+    const cache_argument = try std.fmt.allocPrint(allocator, "--cache-dir={s}", .{cache});
+    try args.append(allocator, cache_argument);
+    try args.appendSlice(allocator, &tools);
+    return std.process.run(allocator, testing.io, .{ .argv = args.items });
+}
+
+const guest_output_program =
+    \\module main
+    \\export test_chatty
+    \\export test_failing
+    \\export test_assert
+    \\
+    \\
+    \\def test_chatty() -> bool effects(output, managed_allocation):
+    \\    print("debug-marker")
+    \\    return True
+    \\
+    \\
+    \\def test_failing() -> bool effects(output, managed_allocation):
+    \\    print("debug-marker")
+    \\    return False
+    \\
+    \\
+    \\def test_assert() -> bool effects(output, managed_allocation):
+    \\    print("debug-marker")
+    \\    assert 1 == 2, "one equals two"
+    \\    return True
+    \\
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+
+// spec: NATIVE-TEST-10
+// spec-case: NATIVE-TEST-7
+// spec-case: NATIVE-TEST-8
+test "guest print output stays off the test protocol and shows on failure" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try writeProjectFile(&temporary, "main.my", guest_output_program);
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const entry = try std.fs.path.join(a, &.{ root, "main.my" });
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    const passing = try guestTestRun(a, entry, &.{ "--filter", "test_chatty" }, cache);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, passing.term);
+    try testing.expect(std.mem.indexOf(u8, passing.stdout, "1 passed") != null);
+    try testing.expect(std.mem.indexOf(u8, passing.stderr, "InvalidNativeTestResponse") == null);
+    const failing = try guestTestRun(a, entry, &.{ "--filter", "test_failing" }, cache);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, failing.term);
+    try testing.expect(std.mem.indexOf(u8, failing.stdout, "expected true, got false") != null);
+    try testing.expect(std.mem.indexOf(u8, failing.stdout, "debug-marker") != null);
+    try testing.expect(std.mem.indexOf(u8, failing.stderr, "InvalidNativeTestResponse") == null);
+    const trapped = try guestTestRun(a, entry, &.{ "--filter", "test_assert" }, cache);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, trapped.term);
+    try testing.expect(std.mem.indexOf(u8, trapped.stdout, "R_ASSERT: one equals two") != null);
+    try testing.expect(std.mem.indexOf(u8, trapped.stdout, "in main::test_assert at main.my:") != null);
+    try testing.expect(std.mem.indexOf(u8, trapped.stdout, "debug-marker") != null);
+}
+
+const guest_typed_program =
+    \\module main
+    \\export test_value
+    \\
+    \\
+    \\def test_value() -> int effects():
+    \\    return 3
+    \\
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+
+// spec-case: NATIVE-TEST-8
+test "a typed expectation failure names both actual and expected values" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try writeProjectFile(&temporary, "main.my", guest_typed_program);
+    try writeProjectFile(&temporary, "cases.json", "{\"main::test_value\":{\"expected\":9}}");
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const entry = try std.fs.path.join(a, &.{ root, "main.my" });
+    const cases = try std.fs.path.join(a, &.{ root, "cases.json" });
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    const run = try guestTestRun(a, entry, &.{ "--cases", cases }, cache);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, run.term);
+    try testing.expect(std.mem.indexOf(u8, run.stdout, "expected 9, got 3") != null);
+}
+
+const library_entry_program =
+    \\module inventory
+    \\export test_count
+    \\
+    \\
+    \\def test_count() -> bool effects():
+    \\    return 3 == 3
+;
+
+const bare_test_entry_program =
+    \\export test_bare
+    \\
+    \\
+    \\def test_bare() -> bool effects():
+    \\    return True
+;
+
+// spec-case: NATIVE-TEST-9
+test "library modules and bare *_test.my files are valid guest test entries" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try writeProjectFile(&temporary, "inventory.my", library_entry_program);
+    try writeProjectFile(&temporary, "bare_test.my", bare_test_entry_program);
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const library = try std.fs.path.join(a, &.{ root, "inventory.my" });
+    const bare = try std.fs.path.join(a, &.{ root, "bare_test.my" });
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    const library_run = try guestTestRun(a, library, &.{ "--filter", "test_count" }, cache);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, library_run.term);
+    try testing.expect(std.mem.indexOf(u8, library_run.stdout, "1 passed") != null);
+    const bare_run = try guestTestRun(a, bare, &.{ "--filter", "test_bare" }, cache);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, bare_run.term);
+    try testing.expect(std.mem.indexOf(u8, bare_run.stdout, "1 passed") != null);
+}
+
+const directory_project_main =
+    \\module main
+    \\import helper
+    \\export test_main
+    \\
+    \\
+    \\def test_main() -> bool effects():
+    \\    return helper.value() == 7
+    \\
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+
+const directory_project_helper =
+    \\module helper
+    \\export value
+    \\
+    \\
+    \\def value() -> int effects():
+    \\    return 7
+;
+
+const directory_project_test =
+    \\module library_test
+    \\export test_alone
+    \\
+    \\
+    \\def test_alone() -> bool effects():
+    \\    return True
+;
+
+// spec-case: NATIVE-TEST-4
+test "a directory run discovers project roots instead of every module" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try writeProjectFile(&temporary, "suite/main.my", directory_project_main);
+    try writeProjectFile(&temporary, "suite/helper.my", directory_project_helper);
+    try writeProjectFile(&temporary, "suite/library_test.my", directory_project_test);
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const suite = try std.fs.path.join(a, &.{ root, "suite" });
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    const run = try guestTestRun(a, suite, &.{"--json"}, cache);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, run.term);
+    const report = (try std.json.parseFromSlice(std.json.Value, a, run.stdout, .{})).value;
+    try testing.expectEqual(@as(i64, 2), report.object.get("programs").?.integer);
+    try testing.expectEqual(@as(i64, 2), report.object.get("passed").?.integer);
+    try testing.expect(std.mem.indexOf(u8, run.stdout, "main::test_main") != null);
+    try testing.expect(std.mem.indexOf(u8, run.stdout, "library_test::test_alone") != null);
+    try testing.expect(std.mem.indexOf(u8, run.stderr, "E_MODULE_NAME") == null);
 }

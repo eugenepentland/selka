@@ -8,7 +8,9 @@ struct MylangNativeProvidersTag;
  * One context belongs to a synchronous execution; helpers do not terminate hosts.
  * Context prefix is an ABI contract for inline budget checks. */
 typedef struct { const char *path; uint64_t line, column; } MylQbeLocation;
-typedef struct { const char *name; const MylQbeLocation *locations; uint64_t count; } MylQbeFunction;
+/* `messages` has one entry per pc, `""` for a pc that is not an assertion. It is
+ * the `operation` text a failing `assert` reports; `count` bounds both tables. */
+typedef struct { const char *name; const MylQbeLocation *locations; uint64_t count; const char *const *messages; } MylQbeFunction;
 typedef struct { const MylQbeFunction *function; uint64_t position, native_bytes; } MylQbeActiveFrame;
 typedef struct { const char *function, *path; uint64_t line, column; } MylQbeTrace;
 /* Bounded typed values captured at the first failing operation. `present` is a
@@ -35,6 +37,13 @@ typedef struct {
  * stderr after its human-readable trap diagnostic. The record JSON carries the
  * same `MylQbeTrapDetail` fields. */
 #define MYL_QBE_TRAP_RECORD_MARKER "\x1eMYLANG-TRAP "
+/* The runtime's "no logical ceiling" sentinel for steps and frames. A program is
+ * unbounded by default; the inline step check compares `steps == max_steps`, so
+ * UINT64_MAX is unreachable, and for frames the same value keeps the native
+ * stack bounded while the logical call depth stays uncapped. */
+#define MYL_QBE_UNBOUNDED UINT64_MAX
+/* Frame slots and trace storage the runtime reserves when frames are unbounded. */
+#define MYL_QBE_FRAME_CAPACITY 1024
 typedef struct {
     uint64_t steps, frames, max_steps, max_frames;
     const char *trap;
@@ -56,6 +65,14 @@ typedef struct {
     char **guest_argv;
     int reported;
     MylQbeTrapDetail trap_detail;
+    /* Logical call-depth ceiling; MYL_QBE_UNBOUNDED means uncapped. Appended
+       after the ABI-prefix fields so `steps`/`max_steps`/`active_frame` offsets
+       stay frozen for generated code. */
+    uint64_t frame_limit;
+    /* Shared slot for frames deeper than the bounded trace capacity. Generated
+       code stores each instruction's position through `active_frame`, so it must
+       always name writable storage. */
+    MylQbeActiveFrame scratch_frame;
 } MylQbeContext;
 typedef struct {
     uint64_t value, steps;

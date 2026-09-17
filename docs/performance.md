@@ -58,13 +58,14 @@ def main() -> int:
 EOF
 mylang build loop10.my -o loop10
 run5() { for i in 1 2 3 4 5; do /usr/bin/time -f '%e s  %M kB' "$@" >/dev/null; done; }
-run5 ./loop10 --max-steps=2000000000
+run5 ./loop10
 ```
 
 `run5` prints wall seconds and peak resident kilobytes for each of five runs; the
-smallest wall time is what this page quotes. A built binary takes its budgets as
-ordinary arguments (`./loop10 --max-steps=N`), because the program itself parses
-them at start-up.
+smallest wall time is what this page quotes. A built binary still takes
+`--max-steps=N`, `--max-frames=N` and `--timeout=SECONDS` as ordinary arguments,
+because the program itself parses them at start-up; with none of them it runs
+unbounded.
 
 ## Build for speed
 
@@ -86,8 +87,8 @@ the C runtime units linked beside them.
 ```bash
 mylang build loop10.my -o loop10-fast                    # ReleaseFast
 mylang build loop10.my -o loop10-debug --mode Debug
-run5 ./loop10-fast  --max-steps=2000000000
-run5 ./loop10-debug --max-steps=2000000000
+run5 ./loop10-fast
+run5 ./loop10-debug
 ```
 
 `--mode` is a *build* flag. `mylang run prog.my` builds in the default mode and has
@@ -96,30 +97,35 @@ guest test run keeps its own `Debug` default, which `mylang test --mode ReleaseF
 overrides. The mode is part of the object-cache key and of the run identity, so
 switching modes never reuses another mode's objects.
 
-## Raise the budgets
+## Budgets are opt-in
 
-A run is bounded by two counters: **10,000,000 instructions** (`--max-steps`) and
-**1,024 frames** (`--max-frames`, including `main`). The budget is there so a
-runaway guest cannot spin forever, and it stops honest programs too: the loop above
-spends 15 steps per iteration, so the default budget ends it after roughly 660,000
-iterations — about 18 ms of native work, measured by bisecting `--max-steps` against
-the built binary.
+A run is bounded only when you ask for it. `mylang run`, `mylang build --run` and
+a binary you built and started yourself have **no instruction or frame ceiling** by
+default, because the byte ceiling below already stops a runaway allocation and a
+development loop should not stop an honest program. The old default stopped the
+loop above after roughly 660,000 iterations — about 18 ms of native work, measured
+by bisecting `--max-steps` against the built binary.
 
-The trap now says what to do about it:
+When you want a ceiling, ask for one and the trap names the flag that applies it:
 
 ```console
-$ ./loop10 --print-result
+$ ./loop10 --print-result --max-steps=200
 loop10.my:5:24: error[R_STEP_LIMIT]: instruction budget exhausted; raise it with --max-steps=N
   in main at loop10.my:5:24
 $ ./loop10 --print-result --max-steps=2000000000
 155298
 ```
 
-Raise the budget on whichever command runs the program: `mylang run prog.my
+Set the ceiling on whichever command runs the program: `mylang run prog.my
 --max-steps=N`, a built binary `./prog --max-steps=N`, and `mylang build prog.my
---run -- --max-steps=N` (runtime options follow `--`). `--max-frames=N` raises call
-depth the same way and its trap names that flag instead. `--max-steps=N` is also
-accepted by `mylang test`, where it bounds each test process.
+--run -- --max-steps=N` (runtime options follow `--`). `--max-frames=N` bounds call
+depth the same way and its trap names that flag instead. To bound elapsed time
+rather than work, `--timeout=SECONDS` arms a monotonic wall-clock timer on `mylang
+run`, `mylang build --run` and a built binary; when it fires the process writes
+`R_TIMEOUT` to standard error and exits 1. `mylang test` is the exception that keeps
+a budget by default — 1,000,000 instructions and 1,024 frames per test process —
+because a tight guard is useful there; `--max-steps=N` and `--max-frames=N` bound
+each test process.
 
 The byte ceiling is a *different* knob and not a speed one. `--max-memory=BYTES` and
 `MYLANG_MEMORY_LIMIT` (see [runtime budgets](tooling/runtime-budgets.md#guest-memory-ceilings))
@@ -187,7 +193,7 @@ open("scan4096.my", "w").write(fixed(4096, True, 1000))
 open("scanlist4096.my", "w").write(managed(4096, 1000))
 PY
 for name in peek8 peek1024 peek4096 scan4096 scanlist4096; do
-  mylang build $name.my -o $name && run5 ./$name --max-steps=4000000000
+  mylang build $name.my -o $name && run5 ./$name
 done
 ```
 
@@ -265,7 +271,7 @@ than once:
 
 ```bash
 mylang build prog.my -o prog
-run5 ./prog --max-steps=4000000000          # %e seconds, %M peak kilobytes
+run5 ./prog                                 # %e seconds, %M peak kilobytes
 ```
 
 Five runs are enough to see a 2× difference on a quiet machine and not enough on a

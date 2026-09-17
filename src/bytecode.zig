@@ -144,7 +144,21 @@ fn validateHostType(allocator: std.mem.Allocator, records: []const typed.Record,
 fn validateFunctionValue(program: Program, ty: typed.Type, target: typed.FunctionId) Error!void {
     const contract = callables.signature(ty, program.records) orelse return error.InternalError;
     if (@backingInt(target) >= program.functions.len) return error.InternalError;
-    if (!callables.accepts(contract, program.functions[@backingInt(target)])) return error.InternalError;
+    const function = program.functions[@backingInt(target)];
+    if (function.signature.parameter_count > 16 or function.signature.parameter_count != contract.parameters.len) return error.InternalError;
+    var parameters: [16]typed.Type = undefined;
+    for (function.scope.locals[0..function.signature.parameter_count], 0..) |parameter, index| parameters[index] = parameter.ty;
+    // An unannotated function value adopts the ceiling of the callback type it was
+    // checked against, so the node's own contract is the bound to compare with.
+    const allowed = if (function.policy.effect_bound) |bound| bound.allowed else contract.effects;
+    const implementation: typed.Callable = .{
+        .parameters = parameters[0..function.signature.parameter_count],
+        .return_type = function.signature.return_type,
+        .effects = allowed,
+        .mutates = function.signature.declared_mutates,
+        .return_origin = function.signature.return_origin,
+    };
+    if (!callables.assignable(implementation, contract)) return error.InternalError;
 }
 fn validateInvocation(program: Program, ty: typed.Type) Error!void {
     _ = callables.signature(ty, program.records) orelse return error.InternalError;

@@ -77,7 +77,7 @@ def main() -> int:
 is false, reporting the expression's own source text as the message and the
 location of that expression. `assert condition, "message"` reports the string
 literal instead; the message is a literal rather than an expression, and the
-native backend raises the same `R_ASSERT` code without carrying it. Assertions
+native backend carries it into the located `R_ASSERT` diagnostic. Assertions
 are permitted under every effect bound, including `noalloc` and `noio`, and
 inside generic function bodies, because checking a condition contributes no
 effect of its own. They are not removed in any build, so use them for invariants

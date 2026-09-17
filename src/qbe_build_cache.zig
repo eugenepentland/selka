@@ -114,9 +114,9 @@ pub const Cache = struct {
         try self.context.command(try self.mergeCommand(sources, output), null);
     }
     /// The single-invocation `zig build-obj` command that merges the runtime units.
-    /// Per-unit optimization, section splitting and path mapping match the loose
-    /// `zig cc` path so the merged member links identically, and one process start
-    /// replaces one per unit on a cold build.
+    /// Per-unit optimization, debug suppression, section splitting and path mapping
+    /// match the loose `zig cc` path so the merged member links identically, and one
+    /// process start replaces one per unit on a cold build.
     fn mergeCommand(self: Cache, sources: []const []const u8, output: []const u8) Error![]const []const u8 {
         const a = self.context.allocator;
         const zig_mode = if (std.mem.eql(u8, self.mode, "Debug")) "-ODebug" else "-OReleaseFast";
@@ -125,11 +125,11 @@ pub const Cache = struct {
         const shared_debug = try std.fmt.allocPrint(a, "-fdebug-prefix-map={s}=mylang-runtime", .{self.assets});
         var argv: std.ArrayList([]const u8) = .empty;
         try argv.appendSlice(a, &.{
-            self.zig,          "build-obj",  "-fPIC",      "-lc",
-            zig_mode,          "-I",         self.assets,  "-cflags",
-            "-std=c11",        optimization, "-fno-ident", "-ffunction-sections",
-            "-fdata-sections", shared,       shared_debug, "-fdebug-compilation-dir=mylang-runtime",
-            "--",
+            self.zig,                                 "build-obj",       "-fPIC",     "-lc",
+            zig_mode,                                 "-I",              self.assets, "-cflags",
+            "-std=c11",                               optimization,      "-g0",       "-fno-ident",
+            "-ffunction-sections",                    "-fdata-sections", shared,      shared_debug,
+            "-fdebug-compilation-dir=mylang-runtime", "--",
         });
         for (sources) |source| try argv.append(a, try std.fs.path.join(a, &.{ self.assets, source }));
         try argv.append(a, try std.fmt.allocPrint(a, "-femit-bin={s}", .{output}));
@@ -165,14 +165,18 @@ pub const Cache = struct {
                 const assembly = try std.fs.path.join(a, &.{ task.work, "unit.s" });
                 try self.context.write(source, task.input);
                 try self.context.command(&.{ self.qbe, "-t", "amd64_sysv", "-o", assembly, source }, null);
-                try self.context.command(&.{ self.zig, "cc", "-c", assembly, "-o", task.candidate }, null);
+                try self.context.command(&.{ self.zig, "cc", "-g0", "-c", assembly, "-o", task.candidate }, null);
             },
             .c_text => {
                 const source = try std.fs.path.join(a, &.{ task.work, "unit.c" });
                 try self.context.write(source, task.input);
                 try self.compileC(source, task.candidate, null);
             },
-            .zig_file => try self.context.command(&.{ self.zig, "build-obj", try std.fs.path.join(a, &.{ self.assets, task.input }), "-lc", "-fPIC", "-O", self.mode, try std.fmt.allocPrint(a, "-femit-bin={s}", .{task.candidate}) }, null),
+            .zig_file => {
+                const source = try std.fs.path.join(a, &.{ self.assets, task.input });
+                const emit = try std.fmt.allocPrint(a, "-femit-bin={s}", .{task.candidate});
+                try self.context.command(&.{ self.zig, "build-obj", source, "-lc", "-fPIC", "-fstrip", "-O", self.mode, emit }, null);
+            },
         }
     }
     /// Fresh provider compilations use private Zig caches to observe external inputs.
@@ -182,7 +186,9 @@ pub const Cache = struct {
         try args.appendSlice(self.context.allocator, &.{ "-c", source, "-o", output });
         try self.context.command(args.items, environment);
     }
-    /// Common native flags keep generated output independent of private directory names.
+    /// Common native flags keep generated output independent of private directory
+    /// names and free of debug information: `-g0` leaves only code and data in every
+    /// object, so the cache holds what a program runs and nothing it never reads.
     pub fn flags(self: Cache) Error![]const []const u8 {
         const a = self.context.allocator;
         const optimization = if (std.mem.eql(u8, self.mode, "Debug")) "-O0" else "-O2";
@@ -191,10 +197,10 @@ pub const Cache = struct {
         const shared = try std.fmt.allocPrint(a, "-ffile-prefix-map={s}=mylang-runtime", .{self.assets});
         const shared_debug = try std.fmt.allocPrint(a, "-fdebug-prefix-map={s}=mylang-runtime", .{self.assets});
         return a.dupe([]const u8, &.{
-            self.zig,     "cc",                                 "-std=c11",            optimization,
-            "-fno-ident", "-fPIC",                              "-ffunction-sections", "-fdata-sections",
-            files,        "-fdebug-compilation-dir=mylang-qbe", debug,                 shared,
-            shared_debug, "-I",                                 self.assets,
+            self.zig,                             "cc",    "-std=c11",            optimization,      "-g0",
+            "-fno-ident",                         "-fPIC", "-ffunction-sections", "-fdata-sections", files,
+            "-fdebug-compilation-dir=mylang-qbe", debug,   shared,                shared_debug,      "-I",
+            self.assets,
         });
     }
 };
@@ -226,6 +232,21 @@ test "the runtime units merge in one build-obj invocation naming every source" {
     try std.testing.expect(std.mem.indexOf(u8, joined, "/assets/native_heap.c") != null);
     try std.testing.expect(std.mem.indexOf(u8, joined, "-O2") != null);
     try std.testing.expectEqualStrings("-femit-bin=/tmp/out.o", argv[argv.len - 1]);
+}
+
+// spec-case: QBE-STRIP-1
+test "native compile commands emit no debug information" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const cache: Cache = .{ .context = context, .directory = "objects", .temporary = "work", .assets = "/assets", .environment = "env", .zig = "/zig", .qbe = "/qbe", .mode = "Debug" };
+    const loose = try std.mem.join(context.allocator, " ", try cache.flags());
+    try std.testing.expect(std.mem.indexOf(u8, loose, " -g0 ") != null);
+    try std.testing.expect(std.mem.indexOf(u8, loose, " -O0 ") != null);
+    const merged = try std.mem.join(context.allocator, " ", try cache.mergeCommand(&.{"qbe_runtime.c"}, "/tmp/out.o"));
+    try std.testing.expect(std.mem.indexOf(u8, merged, " -g0 ") != null);
+    try std.testing.expect(std.mem.indexOf(u8, merged, " -ODebug ") != null);
 }
 
 // spec-case: INCREMENTAL-KEYS-1

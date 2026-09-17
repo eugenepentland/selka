@@ -16,6 +16,16 @@ any function whose inferred set exceeds its declared bound. Because inference
 follows resolved call identities rather than names, a bound on one function
 constrains everything it transitively calls, including helpers written in other
 modules. An omitted annotation imposes no bound; it does not mean "no effects".
+That includes exported functions: the checker freezes the inferred mask as the
+published interface ceiling, so a plain `export` is enough and an explicit
+`noalloc`, `noio` or `effects(...)` is an opt-in narrowing that is still enforced
+as an upper bound.
+
+A compile-time `str` literal is an immutable constant, not an allocation:
+`print("hi")` under `effects(output)` and `len("abc")` under `noalloc` are
+accepted. A computed string — `"a" + "b"`, a slice, or a conversion — still
+contributes `managed_allocation`, and so does a `list`, `dict` or `bytes`
+literal.
 
 ```mylang
 # doc: expect 42
@@ -38,7 +48,7 @@ source error.
 
 | Effect | Contributed by |
 | --- | --- |
-| `managed_allocation` | creating or growing a list, dictionary, string or byte string, including `escape` out of an arena |
+| `managed_allocation` | creating or growing a list, dictionary, string or byte string, including `escape` out of an arena; a compile-time `str` literal is an immutable constant and is not an allocation |
 | `filesystem` | `open` and the whole-path file helpers |
 | `network` | the network capability surface |
 | `clock` | reading wall-clock time |
@@ -123,7 +133,10 @@ the compiler can prove the two are disjoint; passing the same value twice is the
 simplest case. Two writable aliases are permitted and ordinary sequential
 ordering applies. Unknown possible overlap is treated as overlap, so a caller
 that intends two independent arguments either declares both writable or builds an
-independent snapshot.
+independent snapshot. This is a proof obligation created by a declared
+`mutates(...)` clause: an unannotated helper's inferred writes carry no promise,
+so forwarding two shared collections through it behaves like Python — sequential,
+shared, with no overlap diagnostic.
 
 ```mylang
 # doc: expect 7

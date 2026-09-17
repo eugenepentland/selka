@@ -190,6 +190,30 @@ test "module interfaces reject duplicate exports missing symbols and private typ
         \\def broken(
     , "E_SYNTAX");
 }
+// spec-case: DIAG-ORACLE-1
+test "module interfaces suggest close function names for unknown symbols" {
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes =
+        \\module main
+        \\
+        \\
+        \\def twice(x: i64) -> i64:
+        \\    return x + x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    }} };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    const span = project.modules.items[0].header.declaration;
+    try t.expectError(error.SourceError, index.resolve(.{ .from = 0, .alias = null, .name = "twic", .kind = .function, .owner = null, .span = span }));
+    try t.expectEqualStrings("E_UNKNOWN_SYMBOL", project.problem.?.code);
+    const message = try project.renderProblem(t.allocator);
+    defer t.allocator.free(message);
+    try t.expect(std.mem.indexOf(u8, message, "did you mean `twice`?") != null);
+}
 test "module privacy rejects direct private access wrong kinds and transitive import names" {
     const cases = [_]struct { alias: ?[]const u8, name: []const u8, kind: interfaces.Kind, code: []const u8, from: usize = 0 }{
         .{ .alias = "units", .name = "hidden", .kind = .function, .code = "E_PRIVATE_SYMBOL" },
@@ -1972,33 +1996,10 @@ fn projectDiagnostic(index: *interfaces.Index, code: []const u8) !?diagnostic_mo
     return null;
 }
 
-// spec: EFFECT-CEILING-1
-test "exported ceilings are required while private helpers keep inference and suggestions are body-derived" {
-    const accepted =
-        \\module main
-        \\export value
-        \\
-        \\
-        \\def helper(x: i64) -> i64:
-        \\    return x + 1
-        \\
-        \\
-        \\def value(x: i64) -> i64 effects():
-        \\    return helper(x)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    return value(41)
-    ;
-    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = accepted }} };
-    var project = graph.Project.init(t.allocator);
-    defer project.deinit();
-    try project.load(files.provider(), "main", .{});
-    var index = try interfaces.build(&project);
-    var compilation = try project_compile_module.Compilation.init(&index);
-    try compilation.check();
-
-    const missing_pure =
+// spec: EFFECT-CEILING-INFERRED-1
+test "exported functions publish their inferred ceiling while explicit ceilings stay upper bounds" {
+    // A pure export checks without an author ceiling and publishes effects=.
+    const pure =
         \\module main
         \\export value
         \\
@@ -2010,21 +2011,21 @@ test "exported ceilings are required while private helpers keep inference and su
         \\def main() -> i64:
         \\    return value(41)
     ;
-    var files_missing: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = missing_pure }} };
-    var project_missing = graph.Project.init(t.allocator);
-    defer project_missing.deinit();
-    try project_missing.load(files_missing.provider(), "main", .{});
-    var index_missing = try interfaces.build(&project_missing);
-    var compilation_missing = try project_compile_module.Compilation.init(&index_missing);
-    try t.expectError(error.SourceError, compilation_missing.check());
-    const pure = (try projectDiagnostic(&index_missing, "E_EFFECT_CEILING")).?;
-    try t.expect(std.mem.indexOf(u8, pure.message, "effects()") != null);
-    const rendered = try pure.render(t.allocator, compilation_missing.src);
-    defer t.allocator.free(rendered);
-    try t.expect(std.mem.indexOf(u8, rendered, "main.my:") != null);
-    try t.expect(std.mem.indexOf(u8, rendered, "value") != null);
+    var files_pure: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = pure }} };
+    var project_pure = graph.Project.init(t.allocator);
+    defer project_pure.deinit();
+    try project_pure.load(files_pure.provider(), "main", .{});
+    var index_pure = try interfaces.build(&project_pure);
+    var compilation_pure = try project_compile_module.Compilation.init(&index_pure);
+    try compilation_pure.check();
+    index_pure.program = compilation_pure.program.?;
+    const pure_contracts = try index_pure.renderContracts(t.allocator);
+    defer t.allocator.free(pure_contracts);
+    try t.expect(std.mem.indexOf(u8, pure_contracts, "\"name\":\"value\"") != null);
+    try t.expect(std.mem.indexOf(u8, pure_contracts, "\"permissions\":\"effects=;mutates=;origin=unknown\"") != null);
 
-    const missing_allocating =
+    // An allocating export publishes the derived managed_allocation ceiling.
+    const allocating =
         \\module main
         \\export value
         \\
@@ -2038,18 +2039,20 @@ test "exported ceilings are required while private helpers keep inference and su
         \\def main() -> i64:
         \\    return value()
     ;
-    var files_alloc: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = missing_allocating }} };
+    var files_alloc: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = allocating }} };
     var project_alloc = graph.Project.init(t.allocator);
     defer project_alloc.deinit();
     try project_alloc.load(files_alloc.provider(), "main", .{});
     var index_alloc = try interfaces.build(&project_alloc);
     var compilation_alloc = try project_compile_module.Compilation.init(&index_alloc);
-    try t.expectError(error.SourceError, compilation_alloc.check());
-    const allocating = (try projectDiagnostic(&index_alloc, "E_EFFECT_CEILING")).?;
-    try t.expect(std.mem.indexOf(u8, allocating.message, "effects(managed_allocation)") != null);
-    try t.expect(std.mem.indexOf(u8, allocating.message, "effects(all)") == null);
+    try compilation_alloc.check();
+    index_alloc.program = compilation_alloc.program.?;
+    const alloc_contracts = try index_alloc.renderContracts(t.allocator);
+    defer t.allocator.free(alloc_contracts);
+    try t.expect(std.mem.indexOf(u8, alloc_contracts, "\"permissions\":\"effects=managed_allocation;mutates=;origin=unknown\"") != null);
+    try t.expect(std.mem.indexOf(u8, alloc_contracts, "effects=managed_allocation,output") == null);
 
-    // An exported generic function is a public declaration too.
+    // An exported generic template and a public domain operation also check and publish.
     const generic =
         \\module main
         \\export identity
@@ -2068,10 +2071,13 @@ test "exported ceilings are required while private helpers keep inference and su
     try project_generic.load(files_generic.provider(), "main", .{});
     var index_generic = try interfaces.build(&project_generic);
     var compilation_generic = try project_compile_module.Compilation.init(&index_generic);
-    try t.expectError(error.SourceError, compilation_generic.check());
-    try t.expect((try projectDiagnostic(&index_generic, "E_EFFECT_CEILING")) != null);
+    try compilation_generic.check();
+    index_generic.program = compilation_generic.program.?;
+    const generic_contracts = try index_generic.renderContracts(t.allocator);
+    defer t.allocator.free(generic_contracts);
+    try t.expect(std.mem.indexOf(u8, generic_contracts, "\"name\":\"identity\"") != null);
+    try t.expect(std.mem.indexOf(u8, generic_contracts, "\"permissions\":\"effects=;mutates=;origin=unknown\"") != null);
 
-    // A public domain operation exposed through an exported type follows the rule.
     const domain =
         \\module main
         \\export Distance
@@ -2094,6 +2100,32 @@ test "exported ceilings are required while private helpers keep inference and su
     try project_domain.load(files_domain.provider(), "main", .{});
     var index_domain = try interfaces.build(&project_domain);
     var compilation_domain = try project_compile_module.Compilation.init(&index_domain);
-    try t.expectError(error.SourceError, compilation_domain.check());
-    try t.expect((try projectDiagnostic(&index_domain, "E_EFFECT_CEILING")) != null);
+    try compilation_domain.check();
+    index_domain.program = compilation_domain.program.?;
+    const domain_contracts = try index_domain.renderContracts(t.allocator);
+    defer t.allocator.free(domain_contracts);
+    try t.expect(std.mem.indexOf(u8, domain_contracts, "\"name\":\"Distance.make\"") != null);
+    try t.expect(std.mem.indexOf(u8, domain_contracts, "\"permissions\":\"effects=;mutates=;origin=unknown\"") != null);
+
+    // An explicit ceiling is still an opt-in narrowing and still rejects excess.
+    const narrowed =
+        \\module main
+        \\export value
+        \\
+        \\
+        \\def value() -> i64 noalloc:
+        \\    items: list[i64] = []
+        \\    items.append(7)
+        \\    return items[0]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return value()
+    ;
+    var files_narrow: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = narrowed }} };
+    var project_narrow = graph.Project.init(t.allocator);
+    defer project_narrow.deinit();
+    try project_narrow.load(files_narrow.provider(), "main", .{});
+    var index_narrow = try interfaces.build(&project_narrow);
+    try t.expect((try projectDiagnostic(&index_narrow, "E_EFFECT_BOUND")) != null);
 }

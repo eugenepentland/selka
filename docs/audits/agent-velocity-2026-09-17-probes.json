@@ -1,0 +1,775 @@
+{
+ "compiler": "d7bf295b7f028d6218d24d6c835060650ed932739dbd8e33cab5e0db243ec831",
+ "probes": [
+  {
+   "name": "a01_ternary.my",
+   "source": "def main() -> int:\n    x = 5\n    y = 42 if x > 0 else 0\n    return y\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a01_ternary.my:3:12: error[E_SYNTAX]: unexpected token; expected a newline\n      y = 42 if x > 0 else 0\n             ^\n"
+  },
+  {
+   "name": "a02_chained_cmp.my",
+   "source": "def main() -> int:\n    x = 5\n    if 0 < x < 10:\n        return 42\n    return 0\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a02_chained_cmp.my:3:14: error[E_TYPE]: expected bool, found i64\n      if 0 < x < 10:\n               ^\n"
+  },
+  {
+   "name": "a03_tuple_swap.my",
+   "source": "def main() -> int:\n    a = 1\n    b = 41\n    a, b = b, a\n    return a + b\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a03_tuple_swap.my:4:6: error[E_SYNTAX]: unexpected token; expected a newline\n      a, b = b, a\n       ^\n"
+  },
+  {
+   "name": "a04_tuple_return.my",
+   "source": "def divmod2(a: int, b: int) -> tuple[int, int]:\n    return a // b, a % b\n\ndef main() -> int:\n    q, r = divmod2(85, 2)\n    return q\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a04_tuple_return.my:2:18: error[E_SYNTAX]: unexpected token; expected a newline\n      return a // b, a % b\n                   ^\n"
+  },
+  {
+   "name": "a05_is_none.my",
+   "source": "def find(xs: list[int], v: int) -> Option[int]:\n    for i, x in enumerate(xs):\n        if x == v:\n            return Some(i)\n    return None\n\ndef main() -> int:\n    r = find([1, 2, 3], 3)\n    if r is None:\n        return 0\n    return 42\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a05_is_none.my:9:10: error[E_SYNTAX]: unexpected token; expected an indented block\n      if r is None:\n           ^\n"
+  },
+  {
+   "name": "a06_eq_none.my",
+   "source": "def find(xs: list[int], v: int) -> Option[int]:\n    for i, x in enumerate(xs):\n        if x == v:\n            return Some(i)\n    return None\n\ndef main() -> int:\n    r = find([1, 2, 3], 3)\n    if r == None:\n        return 0\n    return 42\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a06_eq_none.my:9:10: error[E_TYPE]: expected Option<i64>, found unit\n      if r == None:\n           ^\n"
+  },
+  {
+   "name": "a07_option_unwrap.my",
+   "source": "def find(xs: list[int], v: int) -> Option[int]:\n    for i, x in enumerate(xs):\n        if x == v:\n            return Some(i)\n    return None\n\ndef main() -> int:\n    r = find([1, 2, 3], 3)\n    match r:\n        case Some(i):\n            return 40 + i\n        case None:\n            return 0\n",
+   "exit": 42,
+   "stdout": "42\n",
+   "stderr": ""
+  },
+  {
+   "name": "a08_aug_subscript.my",
+   "source": "def main() -> int:\n    counts: dict[str, int] = {}\n    counts[\"a\"] = 0\n    counts[\"a\"] += 41\n    xs = [1]\n    xs[0] += 1\n    return counts[\"a\"] + xs[0]\n",
+   "exit": 43,
+   "stdout": "43\n",
+   "stderr": ""
+  },
+  {
+   "name": "a09_aug_str_list.my",
+   "source": "def main() -> int:\n    s = \"ab\"\n    s += \"cd\"\n    xs = [1, 2]\n    xs += [3, 4]\n    f = 1.5\n    f += 2.5\n    return len(s) + len(xs) + int(f) * 9\n",
+   "exit": 44,
+   "stdout": "44\n",
+   "stderr": ""
+  },
+  {
+   "name": "a10_chained_assign.my",
+   "source": "def main() -> int:\n    x = y = 21\n    return x + y\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a10_chained_assign.my:2:11: error[E_SYNTAX]: unexpected token; expected a newline\n      x = y = 21\n            ^\n"
+  },
+  {
+   "name": "a11_truthiness.my",
+   "source": "def main() -> int:\n    xs: list[int] = []\n    if not xs:\n        return 42\n    return 0\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a11_truthiness.my:3:8: error[E_TYPE]: expected bool, found List<i64>\n      if not xs:\n         ^\n"
+  },
+  {
+   "name": "a12_docstring.my",
+   "source": "\"\"\"Module docstring.\"\"\"\n\ndef f(x: int) -> int:\n    \"\"\"Return x doubled.\"\"\"\n    return x * 2\n\ndef main() -> int:\n    return f(21)\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a12_docstring.my:1:1: error[E_SYNTAX]: unexpected token; expected def\n  \"\"\"Module docstring.\"\"\"\n  ^\n"
+  },
+  {
+   "name": "a13_nested_def.my",
+   "source": "def main() -> int:\n    def helper(x: int) -> int:\n        return x * 2\n    return helper(21)\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a13_nested_def.my:2:5: error[E_EXPRESSION]: expected an expression\n      def helper(x: int) -> int:\n      ^\n"
+  },
+  {
+   "name": "a14_lambda_capture.my",
+   "source": "def apply(f: def(int) -> int, v: int) -> int:\n    return f(v)\n\ndef main() -> int:\n    k = 2\n    return apply(lambda x: x * k, 21)\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a14_lambda_capture.my:1:14: error[E_CALLBACK_EFFECTS]: callback types require an explicit effects ceiling\n  def apply(f: def(int) -> int, v: int) -> int:\n               ^\n"
+  },
+  {
+   "name": "a15_lambda_nocapture.my",
+   "source": "def apply(f: def(int) -> int, v: int) -> int:\n    return f(v)\n\ndef main() -> int:\n    return apply(lambda x: x * 2, 21)\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a15_lambda_nocapture.my:1:14: error[E_CALLBACK_EFFECTS]: callback types require an explicit effects ceiling\n  def apply(f: def(int) -> int, v: int) -> int:\n               ^\n"
+  },
+  {
+   "name": "a16_fstring_spec.my",
+   "source": "def main() -> int:\n    x = 3.14159\n    s = f\"{x:.2f}\"\n    print(s)\n    return 42\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a16_fstring_spec.my:3:13: error[E_FORMAT_STRING]: format specifications are not supported; convert the value before interpolating it\n      s = f\"{x:.2f}\"\n              ^\n"
+  },
+  {
+   "name": "a17_percent_format.my",
+   "source": "def main() -> int:\n    s = \"%d items\" % 3\n    print(s)\n    return 42\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a17_percent_format.my:2:20: error[E_TYPE]: expected str, found i64\n      s = \"%d items\" % 3\n                     ^\n"
+  },
+  {
+   "name": "a18_str_format.my",
+   "source": "def main() -> int:\n    s = \"{} items\".format(3)\n    print(s)\n    return 42\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a18_str_format.my:2:20: error[E_COLLECTION_METHOD]: unknown managed collection method\n      s = \"{} items\".format(3)\n                     ^\n"
+  },
+  {
+   "name": "a19_str_repeat.my",
+   "source": "def main() -> int:\n    s = \"ab\" * 3\n    return len(s) * 7\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a19_str_repeat.my:2:14: error[E_TYPE]: expected str, found i64\n      s = \"ab\" * 3\n               ^\n"
+  },
+  {
+   "name": "a20_dict_items.my",
+   "source": "def main() -> int:\n    d = {10: 100, 20: 200}\n    total = 0\n    for k, v in d.items():\n        total += k + v\n    return total\n",
+   "exit": 45,
+   "stdout": "301\n",
+   "stderr": ""
+  },
+  {
+   "name": "a21_set.my",
+   "source": "def main() -> int:\n    seen: set[int] = set()\n    seen.add(1)\n    seen.add(1)\n    seen.add(2)\n    return len(seen) * 21\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a21_set.my:2:11: error[E_UNKNOWN_TYPE]: type is not declared\n      seen: set[int] = set()\n            ^\n"
+  },
+  {
+   "name": "a22_set_literal.my",
+   "source": "def main() -> int:\n    seen = {1, 2, 2}\n    if 2 in seen:\n        return 42\n    return 0\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a22_set_literal.my:2:14: error[E_SYNTAX]: unexpected token; expected :\n      seen = {1, 2, 2}\n               ^\n"
+  },
+  {
+   "name": "a23_optional_annot.my",
+   "source": "def f(x: int | None) -> int:\n    if x is None:\n        return 0\n    return x\n\ndef main() -> int:\n    return f(42)\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a23_optional_annot.my:1:14: error[E_TOKEN]: unexpected character in source\n  def f(x: int | None) -> int:\n               ^\n"
+  },
+  {
+   "name": "a24_optional_typing.my",
+   "source": "from typing import Optional\n\ndef f(x: Optional[int]) -> int:\n    return 42\n\ndef main() -> int:\n    return f(None)\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a24_optional_typing.my:1:1: error[E_SYNTAX]: unexpected token; expected def\n  from typing import Optional\n  ^\n"
+  },
+  {
+   "name": "a25_nested_list.my",
+   "source": "def main() -> int:\n    grid: list[list[int]] = [[1, 2], [3, 4]]\n    grid[1][1] = 40\n    return grid[1][1] + grid[0][1]\n",
+   "exit": 42,
+   "stdout": "42\n",
+   "stderr": ""
+  },
+  {
+   "name": "a26_sort_key.my",
+   "source": "record P:\n    name: str\n    score: int\n\ndef main() -> int:\n    ps = [P(\"a\", 3), P(\"b\", 1), P(\"c\", 2)]\n    ps.sort(key=lambda p: p.score)\n    return ps[0].score * 42\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a26_sort_key.my:7:8: error[E_CALL_ARGUMENT]: keyword arguments require a declared function or record constructor\n      ps.sort(key=lambda p: p.score)\n         ^\n/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a26_sort_key.my:7:17: error[E_LAMBDA_CONTEXT]: lambda requires an expected callback type\n      ps.sort(key=lambda p: p.score)\n                  ^\n"
+  },
+  {
+   "name": "a27_sorted_key.my",
+   "source": "record P:\n    name: str\n    score: int\n\ndef score(p: P) -> int:\n    return p.score\n\ndef main() -> int:\n    ps = [P(\"a\", 3), P(\"b\", 1), P(\"c\", 2)]\n    out = sorted(ps, key=score)\n    return out[0].score * 42\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a27_sorted_key.my:10:26: error[E_CALLBACK_EFFECTS]: function values require a declared effect ceiling\n      out = sorted(ps, key=score)\n                           ^\n"
+  },
+  {
+   "name": "a28_sorted_reverse.my",
+   "source": "def main() -> int:\n    xs = sorted([3, 1, 2], reverse=True)\n    return xs[0] * 14\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a28_sorted_reverse.my:2:10: error[E_CALL_ARGUMENT]: sorted accepts only the named argument key=callback\n      xs = sorted([3, 1, 2], reverse=True)\n           ^\n"
+  },
+  {
+   "name": "a29_max_two_args.my",
+   "source": "def main() -> int:\n    return max(40, 42) + min(0, 5)\n",
+   "exit": 42,
+   "stdout": "42\n",
+   "stderr": ""
+  },
+  {
+   "name": "a30_range_step.my",
+   "source": "def main() -> int:\n    t = 0\n    for i in range(0, 10, 2):\n        t += i\n    return t + 22\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a30_range_step.my:3:14: error[E_ARITY]: range requires end or start, end\n      for i in range(0, 10, 2):\n               ^\n"
+  },
+  {
+   "name": "a31_slice_neg.my",
+   "source": "def main() -> int:\n    xs = [1, 2, 3, 4]\n    r = xs[::-1]\n    return r[0] * 10 + xs[-1] + xs[1:][0] * 0\n",
+   "exit": 44,
+   "stdout": "44\n",
+   "stderr": ""
+  },
+  {
+   "name": "a32_join_map.my",
+   "source": "def main() -> int:\n    xs = [1, 2, 3]\n    s = \", \".join([str(x) for x in xs])\n    print(s)\n    return 42\n",
+   "exit": 42,
+   "stdout": "1, 2, 3\n42\n",
+   "stderr": ""
+  },
+  {
+   "name": "a33_round2.my",
+   "source": "def main() -> int:\n    x = round(3.14159, 2)\n    print(x)\n    return 42\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a33_round2.my:2:9: error[E_ARITY]: round requires exactly one argument\n      x = round(3.14159, 2)\n          ^\n"
+  },
+  {
+   "name": "a34_power.my",
+   "source": "def main() -> int:\n    return 2 ** 5 + 10\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a34_power.my:2:15: error[E_EXPRESSION]: expected an expression\n      return 2 ** 5 + 10\n                ^\n"
+  },
+  {
+   "name": "a35_div.my",
+   "source": "def main() -> int:\n    x = 7 / 2\n    print(x)\n    print(-7 // 2, -7 % 2)\n    return 42\n",
+   "exit": 42,
+   "stdout": "3.5\n-4 1\n42\n",
+   "stderr": ""
+  },
+  {
+   "name": "a36_module_global.my",
+   "source": "counter = 0\n\ndef bump() -> int:\n    global counter\n    counter += 1\n    return counter\n\ndef main() -> int:\n    bump()\n    return bump() * 21\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a36_module_global.my:1:1: error[E_SYNTAX]: unexpected token; expected def\n  counter = 0\n  ^\n"
+  },
+  {
+   "name": "a37_const.my",
+   "source": "MAX = 42\n\ndef main() -> int:\n    return MAX\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a37_const.my:1:1: error[E_SYNTAX]: unexpected token; expected def\n  MAX = 42\n  ^\n"
+  },
+  {
+   "name": "a38_class_methods.my",
+   "source": "class Point:\n    def __init__(self, x: int, y: int):\n        self.x = x\n        self.y = y\n\n    def norm1(self) -> int:\n        return self.x + self.y\n\ndef main() -> int:\n    p = Point(40, 2)\n    return p.norm1()\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a38_class_methods.my:2:5: error[E_SYNTAX]: unexpected token; expected a name\n      def __init__(self, x: int, y: int):\n      ^\n"
+  },
+  {
+   "name": "a39_dataclass.my",
+   "source": "from dataclasses import dataclass\n\n@dataclass\nclass Point:\n    x: int\n    y: int\n\ndef main() -> int:\n    p = Point(40, 2)\n    return p.x + p.y\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a39_dataclass.my:3:1: error[E_TOKEN]: unexpected character in source\n  @dataclass\n  ^\n"
+  },
+  {
+   "name": "a40_try_except.my",
+   "source": "def main() -> int:\n    try:\n        x = int(\"zz\")\n    except ValueError:\n        return 42\n    return 0\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a40_try_except.my:2:8: error[E_SYNTAX]: unexpected token; expected a newline\n      try:\n         ^\n"
+  },
+  {
+   "name": "a41_import_os.my",
+   "source": "import os\nimport sys\n\ndef main() -> int:\n    print(sys.argv)\n    return 42\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "a41_import_os.my:1:1: error[E_MODULE_HEADER]: file must begin with a module declaration\n  import os\n  ^\n"
+  },
+  {
+   "name": "a42_open_python.my",
+   "source": "def main() -> int:\n    with open(\"/etc/hostname\") as f:\n        data = f.read()\n    return 42\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a42_open_python.my:2:10: error[E_ARITY]: this file operation's argument count does not match its signature\n      with open(\"/etc/hostname\") as f:\n           ^\n"
+  },
+  {
+   "name": "a43_len_dict.my",
+   "source": "def main() -> int:\n    d = {\"a\": 1, \"b\": 2}\n    return len(d) * 21\n",
+   "exit": 42,
+   "stdout": "42\n",
+   "stderr": ""
+  },
+  {
+   "name": "a44_enumerate_start.my",
+   "source": "def main() -> int:\n    t = 0\n    for i, x in enumerate([10, 20], start=1):\n        t += i\n    return t * 14\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a44_enumerate_start.my:3:17: error[E_ARITY]: enumerate requires one iterable and two iteration names\n      for i, x in enumerate([10, 20], start=1):\n                  ^\n"
+  },
+  {
+   "name": "a45_record_default.my",
+   "source": "record Config:\n    name: str\n    retries: int = 3\n\ndef main() -> int:\n    c = Config(name=\"x\")\n    return c.retries * 14\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a45_record_default.my:3:18: error[E_SYNTAX]: unexpected token; expected a dedent\n      retries: int = 3\n                   ^\n"
+  },
+  {
+   "name": "a46_record_eq.my",
+   "source": "record P:\n    x: int\n    y: int\n\ndef main() -> int:\n    if P(1, 2) == P(1, 2):\n        return 42\n    return 0\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a46_record_eq.my:6:16: error[E_TYPE]: aggregate equality is not defined; compare the relevant elements explicitly\n      if P(1, 2) == P(1, 2):\n                 ^\n"
+  },
+  {
+   "name": "a47_print_record.my",
+   "source": "record P:\n    x: int\n    tags: list[str]\n\ndef main() -> int:\n    p = P(1, [\"a\"])\n    print(p)\n    print(str(p))\n    print(f\"{p}\")\n    return 42\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a47_print_record.my:8:11: error[E_TEXT_CONVERSION]: str conversion requires a scalar or str value\n      print(str(p))\n            ^\n"
+  },
+  {
+   "name": "a48_for_else.my",
+   "source": "def main() -> int:\n    for x in [1, 2, 3]:\n        if x == 5:\n            break\n    else:\n        return 42\n    return 0\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a48_for_else.my:5:5: error[E_EXPRESSION]: expected an expression\n      else:\n      ^\n"
+  },
+  {
+   "name": "a49_match_literal.my",
+   "source": "def main() -> int:\n    x = 3\n    match x:\n        case 1:\n            return 0\n        case 3:\n            return 42\n        case _:\n            return 1\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a49_match_literal.my:4:14: error[E_SYNTAX]: unexpected token; expected a name\n          case 1:\n               ^\n"
+  },
+  {
+   "name": "a50_match_str.my",
+   "source": "def kind(s: str) -> int:\n    match s:\n        case \"a\":\n            return 1\n        case \"b\":\n            return 42\n        case _:\n            return 0\n\ndef main() -> int:\n    return kind(\"b\")\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a50_match_str.my:3:14: error[E_SYNTAX]: unexpected token; expected a name\n          case \"a\":\n               ^\n"
+  },
+  {
+   "name": "a51_del.my",
+   "source": "def main() -> int:\n    xs = [1, 2, 3]\n    del xs[0]\n    d = {\"a\": 1}\n    del d[\"a\"]\n    return len(xs) * 21 + len(d)\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a51_del.my:3:9: error[E_SYNTAX]: unexpected token; expected a newline\n      del xs[0]\n          ^\n"
+  },
+  {
+   "name": "a52_pop_insert.my",
+   "source": "def main() -> int:\n    xs = [1, 2, 3]\n    first = xs.pop(0)\n    xs.insert(0, 40)\n    return xs[0] + first + xs.pop()  - 2\n",
+   "exit": 42,
+   "stdout": "42\n",
+   "stderr": ""
+  },
+  {
+   "name": "a53_multiline_str.my",
+   "source": "def main() -> int:\n    s = \"\"\"line1\nline2\"\"\"\n    r = r\"a\\nb\"\n    return len(s) + len(r) * 3\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a53_multiline_str.my:2:11: error[E_BYTE_LITERAL]: unterminated byte literal; escape newlines with \\n\n      s = \"\"\"line1\n            ^\n"
+  },
+  {
+   "name": "a54_bitops.my",
+   "source": "def main() -> int:\n    x = 0b1010 & 0xFF | 1 << 4\n    y = ~0\n    return (x ^ 0) + y + 17\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a54_bitops.my:2:16: error[E_REMOVED_SPELLING]: `&` was removed and has no replacement\n      x = 0b1010 & 0xFF | 1 << 4\n                 ^\n"
+  },
+  {
+   "name": "a55_chr_ord_hex.my",
+   "source": "def main() -> int:\n    c = chr(65)\n    o = ord(\"A\")\n    h = hex(255)\n    print(c, o, h)\n    return 42\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a55_chr_ord_hex.my:2:9: error[E_UNKNOWN_FUNCTION]: no function has this qualified name\n      c = chr(65)\n          ^\n"
+  },
+  {
+   "name": "a56_divmod_pow.my",
+   "source": "def main() -> int:\n    q, r = divmod(85, 2)\n    return q + pow(2, 0) - 1\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a56_divmod_pow.my:2:6: error[E_SYNTAX]: unexpected token; expected a newline\n      q, r = divmod(85, 2)\n       ^\n"
+  },
+  {
+   "name": "a57_assert_fstring.my",
+   "source": "def main() -> int:\n    x = 1\n    assert x == 2, f\"x was {x}\"\n    return 0\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a57_assert_fstring.my:3:20: error[E_SYNTAX]: unexpected token; expected a string\n      assert x == 2, f\"x was {x}\"\n                     ^\n"
+  },
+  {
+   "name": "a58_main_guard.my",
+   "source": "def main() -> int:\n    return 42\n\nif __name__ == \"__main__\":\n    main()\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a58_main_guard.my:4:1: error[E_SYNTAX]: unexpected token; expected def\n  if __name__ == \"__main__\":\n  ^\n"
+  },
+  {
+   "name": "a59_reassign_annot.my",
+   "source": "def main() -> int:\n    x: int = 0\n    x = 42\n    return x\n",
+   "exit": 42,
+   "stdout": "42\n",
+   "stderr": ""
+  },
+  {
+   "name": "a60_overflow.my",
+   "source": "def main() -> int:\n    x = 9223372036854775807\n    x = x + 1\n    return 0\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a60_overflow.my:3:11: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in main at /tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a60_overflow.my:3:11\n"
+  },
+  {
+   "name": "a61_result_unwrap.my",
+   "source": "def parse(s: str) -> Result[int, str]:\n    match int(s):\n        case Some(v):\n            return Ok(v)\n        case None:\n            return Err(\"bad\")\n\ndef main() -> int:\n    v = parse(\"42\").unwrap()\n    return v\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a61_result_unwrap.my:9:21: error[E_SYNTAX]: unexpected token; expected a name\n      v = parse(\"42\").unwrap()\n                      ^\n"
+  },
+  {
+   "name": "a62_option_or.my",
+   "source": "def main() -> int:\n    d = {\"a\": 1}\n    v = d.get(\"b\") or 42\n    return v\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a62_option_or.my:3:9: error[E_ARITY]: list method argument count does not match its signature\n      v = d.get(\"b\") or 42\n          ^\n"
+  },
+  {
+   "name": "a63_dict_get_option.my",
+   "source": "def main() -> int:\n    d = {\"a\": 1}\n    v = d.get(\"b\")\n    match v:\n        case Some(x):\n            return x\n        case None:\n            return 42\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a63_dict_get_option.my:3:9: error[E_ARITY]: list method argument count does not match its signature\n      v = d.get(\"b\")\n          ^\n"
+  },
+  {
+   "name": "a64_split_noargs.my",
+   "source": "def main() -> int:\n    parts = \"a  b\\tc\".split()\n    return len(parts) * 14\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a64_split_noargs.my:2:13: error[E_ARITY]: collection method argument count differs from its signature\n      parts = \"a  b\\tc\".split()\n              ^\n"
+  },
+  {
+   "name": "a65_str_cmp.my",
+   "source": "def main() -> int:\n    if \"abc\" < \"abd\":\n        return 42\n    return 0\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a65_str_cmp.my:2:14: error[E_TEXT_OPERATOR]: managed collections support equality and str/bytes support concatenation\n      if \"abc\" < \"abd\":\n               ^\n"
+  },
+  {
+   "name": "a66_nested_comp.my",
+   "source": "def main() -> int:\n    grid = [[1, 2], [3, 4]]\n    flat = [x for row in grid for x in row]\n    return sum(flat) * 4 + 2\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a66_nested_comp.my:3:31: error[E_SYNTAX]: unexpected token; expected ]\n      flat = [x for row in grid for x in row]\n                                ^\n"
+  },
+  {
+   "name": "a67_dict_comp.my",
+   "source": "def main() -> int:\n    d = {x: x * x for x in range(4)}\n    return d[3] * 4 + 6\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a67_dict_comp.my:2:19: error[E_SYNTAX]: unexpected token; expected }\n      d = {x: x * x for x in range(4)}\n                    ^\n"
+  },
+  {
+   "name": "a68_genexp.my",
+   "source": "def main() -> int:\n    xs = [1, 2, 3]\n    if any(x > 2 for x in xs):\n        return sum(x * x for x in xs) * 3\n    return 0\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a68_genexp.my:3:18: error[E_SYNTAX]: unexpected token; expected )\n      if any(x > 2 for x in xs):\n                   ^\n"
+  },
+  {
+   "name": "a69_print_end.my",
+   "source": "def main() -> int:\n    print(\"a\", end=\"\")\n    print(\"b\")\n    return 42\n",
+   "exit": 42,
+   "stdout": "ab\n42\n",
+   "stderr": ""
+  },
+  {
+   "name": "a70_int_from_float.my",
+   "source": "def main() -> int:\n    return int(42.9) + int(float(\"0.5\") if False else 0.0)\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a70_int_from_float.my:2:41: error[E_SYNTAX]: unexpected token; expected )\n      return int(42.9) + int(float(\"0.5\") if False else 0.0)\n                                          ^\n"
+  },
+  {
+   "name": "a71_type_alias.my",
+   "source": "Grid = list[list[int]]\n\ndef total(g: Grid) -> int:\n    return g[0][0]\n\ndef main() -> int:\n    return total([[42]])\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a71_type_alias.my:1:1: error[E_SYNTAX]: unexpected token; expected def\n  Grid = list[list[int]]\n  ^\n"
+  },
+  {
+   "name": "a72_type_alias_kw.my",
+   "source": "type Grid = list[list[int]]\n\ndef total(g: Grid) -> int:\n    return g[0][0]\n\ndef main() -> int:\n    return total([[42]])\n",
+   "exit": 42,
+   "stdout": "42\n",
+   "stderr": ""
+  },
+  {
+   "name": "a73_while_else_walrus.my",
+   "source": "def main() -> int:\n    xs = [1, 2, 3]\n    if (n := len(xs)) > 2:\n        return n * 14\n    return 0\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a73_while_else_walrus.my:3:11: error[E_SYNTAX]: unexpected token; expected )\n      if (n := len(xs)) > 2:\n            ^\n"
+  },
+  {
+   "name": "a74_str_in_list.my",
+   "source": "def main() -> int:\n    names = [\"a\", \"b\"]\n    if \"b\" in names and \"x\" not in names and \"b\" in \"abc\":\n        return 42\n    return 0\n",
+   "exit": 42,
+   "stdout": "42\n",
+   "stderr": ""
+  },
+  {
+   "name": "a75_list_of_records_mutate.my",
+   "source": "record Item:\n    n: int\n\ndef main() -> int:\n    items = [Item(1), Item(2)]\n    for it in items:\n        it.n = 21\n    items[0].n += 0\n    return items[0].n + items[1].n\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a75_list_of_records_mutate.my:8:16: error[E_ASSIGNMENT_TARGET]: augmented assignment to a record field is not supported; write the field out in full\n      items[0].n += 0\n                 ^\n"
+  },
+  {
+   "name": "a76_record_in_dict.my",
+   "source": "record P:\n    x: int\n\ndef main() -> int:\n    d: dict[str, P] = {}\n    d[\"a\"] = P(1)\n    d[\"a\"].x = 42\n    return d[\"a\"].x\n",
+   "exit": 42,
+   "stdout": "42\n",
+   "stderr": ""
+  },
+  {
+   "name": "a77_dict_record_key.my",
+   "source": "record K:\n    a: int\n    b: int\n\ndef main() -> int:\n    d: dict[K, int] = {}\n    d[K(1, 2)] = 42\n    return d[K(1, 2)]\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a77_dict_record_key.my:6:23: error[E_DICT_KEY]: dictionary keys must be integers or str\n      d: dict[K, int] = {}\n                        ^\n"
+  },
+  {
+   "name": "a78_multiple_return_record.my",
+   "source": "record Pair:\n    q: int\n    r: int\n\ndef dm(a: int, b: int) -> Pair:\n    return Pair(a // b, a % b)\n\ndef main() -> int:\n    p = dm(85, 2)\n    return p.q\n",
+   "exit": 42,
+   "stdout": "42\n",
+   "stderr": ""
+  },
+  {
+   "name": "a79_str_methods.my",
+   "source": "def main() -> int:\n    s = \"  Hello, World  \"\n    t = s.strip().lower().replace(\"world\", \"there\")\n    parts = t.split(\", \")\n    if t.startswith(\"hello\") and parts[1] == \"there\" and t.title() == \"Hello, There\":\n        return 42\n    return len(t)\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a79_str_methods.my:5:60: error[E_LIST_METHOD]: unknown managed collection method\n      if t.startswith(\"hello\") and parts[1] == \"there\" and t.title() == \"Hello, There\":\n                                                             ^\n"
+  },
+  {
+   "name": "a80_none_return_call.my",
+   "source": "def log(msg: str):\n    print(msg)\n\ndef main() -> int:\n    log(\"hi\")\n    x = log(\"there\")\n    return 42\n",
+   "exit": 42,
+   "stdout": "hi\nthere\n42\n",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/a80_none_return_call.my:6:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n      x = log(\"there\")\n      ^\n"
+  },
+  {
+   "name": "c01_option_q.my",
+   "source": "def first_even(xs: list[int]) -> Option[int]:\n    for x in xs:\n        if x % 2 == 0:\n            return Some(x)\n    return None\n\ndef doubled(xs: list[int]) -> Option[int]:\n    v = first_even(xs)?\n    return Some(v * 2)\n\ndef main() -> int:\n    match doubled([1, 21, 3]):\n        case Some(v):\n            return v\n        case None:\n            return 0\n",
+   "exit": 0,
+   "stdout": "0\n",
+   "stderr": ""
+  },
+  {
+   "name": "c02_result_err_convert.my",
+   "source": "def parse(s: str) -> Result[int, str]:\n    match int(s):\n        case Some(v):\n            return Ok(v)\n        case None:\n            return Err(\"not a number: \" + s)\n\ndef load() -> Result[int, int]:\n    v = parse(\"42\")?\n    return Ok(v)\n\ndef main() -> int:\n    match load():\n        case Ok(v):\n            return v\n        case Err(e):\n            return e\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/c02_result_err_convert.my:9:9: error[E_TYPE]: expected i64, found str\n      v = parse(\"42\")?\n          ^\n"
+  },
+  {
+   "name": "c03_main_result_str.my",
+   "source": "def parse(s: str) -> Result[int, str]:\n    match int(s):\n        case Some(v):\n            return Ok(v)\n        case None:\n            return Err(\"not a number: \" + s)\n\ndef main() -> Result[int, str]:\n    v = parse(\"zz\")?\n    return Ok(v)\n",
+   "exit": 1,
+   "stdout": "1\n",
+   "stderr": "not a number: zz\n"
+  },
+  {
+   "name": "c04_option_default.my",
+   "source": "def main() -> int:\n    d = {\"a\": 1}\n    v = d.get(\"b\", 42)\n    return v\n",
+   "exit": 42,
+   "stdout": "42\n",
+   "stderr": ""
+  },
+  {
+   "name": "c05_option_field.my",
+   "source": "record User:\n    name: str\n    email: Option[str]\n\ndef main() -> int:\n    u = User(name=\"a\", email=None)\n    v = User(name=\"b\", email=Some(\"x@y\"))\n    match v.email:\n        case Some(e):\n            return len(e) * 8 + 2\n        case None:\n            return 0\n",
+   "exit": 26,
+   "stdout": "26\n",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/c05_option_field.my:6:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n      u = User(name=\"a\", email=None)\n      ^\n"
+  },
+  {
+   "name": "c06_result_record_err.my",
+   "source": "record ParseError:\n    line: int\n    message: str\n\ndef parse(s: str) -> Result[int, ParseError]:\n    if s == \"\":\n        return Err(ParseError(line=1, message=\"empty\"))\n    return Ok(42)\n\ndef main() -> int:\n    match parse(\"\"):\n        case Ok(v):\n            return v\n        case Err(e):\n            print(e.message)\n            return e.line\n",
+   "exit": 1,
+   "stdout": "empty\n1\n",
+   "stderr": ""
+  },
+  {
+   "name": "c07_if_let_style.my",
+   "source": "def find(xs: list[int], v: int) -> Option[int]:\n    for i, x in enumerate(xs):\n        if x == v:\n            return Some(i)\n    return None\n\ndef main() -> int:\n    r = find([5, 6], 6)\n    if r == Some(1):\n        return 42\n    return 0\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/c07_if_let_style.my:9:13: error[E_OPTION_INFERENCE]: Some requires an expected Option type\n      if r == Some(1):\n              ^\n"
+  },
+  {
+   "name": "c08_match_expr.my",
+   "source": "def main() -> int:\n    d = {\"a\": 1}\n    v = match d.get(\"b\", 0):\n        case 0: 42\n        case _: 0\n    return v\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/c08_match_expr.my:3:9: error[E_EXPRESSION]: expected an expression\n      v = match d.get(\"b\", 0):\n          ^\n"
+  },
+  {
+   "name": "d01_loop_record_copy.my",
+   "source": "record Item:\n    n: int\n    visited: bool\n\ndef main() -> int:\n    items = [Item(1, False), Item(2, False)]\n    for it in items:\n        it.visited = True\n    count = 0\n    for it in items:\n        if it.visited:\n            count += 1\n    print(\"visited:\", count)\n    return count\n",
+   "exit": 0,
+   "stdout": "visited: 0\n0\n",
+   "stderr": ""
+  },
+  {
+   "name": "d02_alias_record_copy.my",
+   "source": "record Node:\n    value: int\n\ndef main() -> int:\n    nodes = [Node(1)]\n    node = nodes[0]\n    node.value = 42\n    print(\"nodes[0].value =\", nodes[0].value)\n    return nodes[0].value\n",
+   "exit": 1,
+   "stdout": "nodes[0].value = 1\n1\n",
+   "stderr": ""
+  },
+  {
+   "name": "d03_record_param_mutate.my",
+   "source": "record Counter:\n    n: int\n\ndef bump(c: Counter):\n    c.n += 1\n\ndef main() -> int:\n    c = Counter(0)\n    bump(c)\n    bump(c)\n    print(\"n =\", c.n)\n    return c.n\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/d03_record_param_mutate.my:5:9: error[E_ASSIGNMENT_TARGET]: augmented assignment to a record field is not supported; write the field out in full\n      c.n += 1\n          ^\n"
+  },
+  {
+   "name": "d04_dict_items_keys.my",
+   "source": "def main() -> int:\n    d = {\"x\": 1, \"y\": 2}\n    for k, v in d.items():\n        print(k, v)\n    return 0\n",
+   "exit": 0,
+   "stdout": "0 1\n1 2\n0\n",
+   "stderr": ""
+  },
+  {
+   "name": "d05_round_half.my",
+   "source": "def main() -> int:\n    print(round(2.5), round(0.5), round(-2.5))\n    return 0\n",
+   "exit": 0,
+   "stdout": "3.0 1.0 -3.0\n0\n",
+   "stderr": ""
+  },
+  {
+   "name": "d06_record_field_in_dict_loop.my",
+   "source": "record Acc:\n    total: int\n\ndef main() -> int:\n    accounts: dict[str, Acc] = {\"a\": Acc(0)}\n    a = accounts[\"a\"]\n    a.total = 42\n    print(accounts[\"a\"].total)\n    return accounts[\"a\"].total\n",
+   "exit": 0,
+   "stdout": "0\n0\n",
+   "stderr": ""
+  },
+  {
+   "name": "d07_str_index_assign.my",
+   "source": "def main() -> int:\n    s = \"abc\"\n    s[0] = \"z\"\n    return 0\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/d07_str_index_assign.my:3:5: error[E_COLLECTION_METHOD]: operation is not supported by this collection\n      s[0] = \"z\"\n      ^\n"
+  },
+  {
+   "name": "d08_int_float_mix.my",
+   "source": "def main() -> int:\n    x = 3\n    y = 1.5\n    z = x * y\n    w = x + y\n    print(z, w)\n    avg = sum([1, 2, 3]) / 3\n    print(avg)\n    return 0\n",
+   "exit": 0,
+   "stdout": "4.5 4.5\n2.0\n0\n",
+   "stderr": ""
+  },
+  {
+   "name": "d09_shadow_builtin.my",
+   "source": "def main() -> int:\n    list = [1, 2]\n    str = \"x\"\n    return len(list) + len(str) * 40\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/d09_shadow_builtin.my:3:5: error[E_SHADOWING]: binding shadows an active local or top-level function\n      str = \"x\"\n      ^\n"
+  },
+  {
+   "name": "d10_unused_result.my",
+   "source": "def risky(x: int) -> Result[int, str]:\n    if x < 0:\n        return Err(\"negative\")\n    return Ok(x)\n\ndef main() -> int:\n    risky(1)\n    return 42\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/d10_unused_result.my:7:5: error[E_EXPLICIT_DISCARD_REQUIRED]: a standalone non-unit value requires `_ =` or result handling\n      risky(1)\n      ^\n"
+  },
+  {
+   "name": "e01_step_budget.my",
+   "source": "def main() -> int:\n    total = 0\n    i = 0\n    while i < 2000000:\n        total = (total + i) % 1000003\n        i += 1\n    return total % 100\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/e01_step_budget.my:5:24: error[R_STEP_LIMIT]: instruction budget exhausted; raise it with --max-steps=N\n  in main at /tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/e01_step_budget.my:5:24\n"
+  },
+  {
+   "name": "e02_bitops_each.my",
+   "source": "def main() -> int:\n    a = 6 | 1\n    return a\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/e02_bitops_each.my:2:11: error[E_TOKEN]: unexpected character in source\n      a = 6 | 1\n            ^\n"
+  },
+  {
+   "name": "e03_shift.my",
+   "source": "def main() -> int:\n    a = 1 << 4\n    return a\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/e03_shift.my:2:12: error[E_EXPRESSION]: expected an expression\n      a = 1 << 4\n             ^\n"
+  },
+  {
+   "name": "e04_generic.my",
+   "source": "record Stack[T]:\n    items: list[T]\n\ndef push[T](s: Stack[T], v: T):\n    s.items.append(v)\n\ndef top[T](s: Stack[T]) -> Option[T]:\n    if len(s.items) == 0:\n        return None\n    return Some(s.items[len(s.items) - 1])\n\ndef main() -> int:\n    s = Stack[int](items=[])\n    push(s, 42)\n    match top(s):\n        case Some(v):\n            return v\n        case None:\n            return 0\n",
+   "exit": 42,
+   "stdout": "42\n",
+   "stderr": ""
+  },
+  {
+   "name": "e05_str_concat_perf.my",
+   "source": "def main() -> int:\n    s = \"\"\n    i = 0\n    while i < 20000:\n        s += \"x\"\n        i += 1\n    return len(s) % 100\n",
+   "exit": 0,
+   "stdout": "0\n",
+   "stderr": ""
+  },
+  {
+   "name": "e06_list_of_lists_build.my",
+   "source": "def main() -> int:\n    grid: list[list[int]] = []\n    for r in range(100):\n        row: list[int] = []\n        for c in range(100):\n            row.append(r * c)\n        grid.append(row)\n    return grid[99][99] % 100\n",
+   "exit": 1,
+   "stdout": "1\n",
+   "stderr": ""
+  },
+  {
+   "name": "e07_recursion_depth.my",
+   "source": "def depth(n: int) -> int:\n    if n == 0:\n        return 0\n    return 1 + depth(n - 1)\n\ndef main() -> int:\n    return depth(5000) % 100\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "pth.my:4:16\n  in depth at /tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/e07_recursion_depth.my:4:16\n  in depth at /tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/e07_recursion_depth.my:4:16\n  in depth at /tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/e07_recursion_depth.my:4:16\n  in depth at /tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/e07_recursion_depth.my:4:16\n"
+  },
+  {
+   "name": "e08_format_float.my",
+   "source": "module main\nimport strings\n\ndef main() -> int:\n    x = 3.14159\n    match strings.format_float(x, 2):\n        case Ok(s):\n            print(s)\n            return 0\n        case Err(e):\n            print(e)\n            return 1\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "e08_format_float.my:1:8: error[E_MODULE_NAME]: declared module name does not match its requested path\n  module main\n         ^\n"
+  },
+  {
+   "name": "e09_walk_dict_sorted.my",
+   "source": "def main() -> int:\n    counts = {\"b\": 2, \"a\": 1}\n    for k in sorted(counts.keys()):\n        print(k, counts[k])\n    return 0\n",
+   "exit": 0,
+   "stdout": "a 1\nb 2\n0\n",
+   "stderr": ""
+  },
+  {
+   "name": "e10_while_assign_after_loop.my",
+   "source": "def main() -> int:\n    xs = [1, 2, 3]\n    for x in xs:\n        last = x\n    return last\n",
+   "exit": 1,
+   "stdout": "",
+   "stderr": "/tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/e10_while_assign_after_loop.my:5:12: error[E_UNBOUND]: name may be read before it is assigned; some control-flow path reaching here leaves it unbound\n      return last\n             ^\n  note: /tmp/claude-1000/-home-epentland-ai-canopy-mylang/4e76f10b-7fc8-4403-8e49-7d83d8722fd9/scratchpad/probes/e10_while_assign_after_loop.my:4:9: binding first assigned here\n"
+  },
+  {
+   "name": "e11_if_no_else_bind.my",
+   "source": "def main() -> int:\n    x = 5\n    if x > 3:\n        label = \"big\"\n    else:\n        label = \"small\"\n    print(label)\n    return 0\n",
+   "exit": 0,
+   "stdout": "big\n0\n",
+   "stderr": ""
+  },
+  {
+   "name": "e12_none_default_param.my",
+   "source": "def greet(name: str, title: Option[str] = None) -> str:\n    match title:\n        case Some(t):\n            return t + \" \" + name\n        case None:\n            return name\n\ndef main() -> int:\n    print(greet(\"x\"))\n    return 0\n",
+   "exit": 0,
+   "stdout": "x\n0\n",
+   "stderr": ""
+  }
+ ]
+}

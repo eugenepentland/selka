@@ -13,8 +13,11 @@ const fanout = @import("native_test_directory.zig");
 const graph_store = @import("native_test_graph.zig");
 const invalidation = @import("invalidation.zig");
 const budget = @import("memory_budget");
+const execute = @import("native_test_execute.zig");
+const bench = @import("native_bench.zig");
+const builtin = @import("builtin");
 /// Setup failures never produce a cached green test run.
-pub const Error = sessions.Error || cases.Error || planner.Error || receipts.Error || fanout.Error || contracts.Error || graph_store.Error;
+pub const Error = sessions.Error || cases.Error || planner.Error || receipts.Error || fanout.Error || contracts.Error || graph_store.Error || bench.Error;
 
 /// One fully checked and (when needed) prepared project graph. Cases that
 /// select the same provider replacement set share it, including the native
@@ -164,7 +167,8 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     defer context.remove(session.temporary);
     var work: invalidation.Work = .{ .command = "test" };
     if (opts.flags.report) session.work = &work;
-    const captured = try snapshot.materialize(context, session.source, try context.temporary(session.temporary));
+    const prepared = try snapshot.withTestEntry(context, session.source);
+    const captured = try snapshot.materialize(context, prepared, try context.temporary(session.temporary));
     // Resolve configuration first. `list-interfaces --contracts` parses every
     // module and validates exported signatures and explicit ceilings without
     // checking any body, so an unfinished replacement target cannot block
@@ -181,8 +185,11 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     const config_bytes = if (opts.cases) |path| try context.read(path) else "null";
     const config = (try std.json.parseFromSlice(std.json.Value, context.allocator, config_bytes, .{ .allocate = .alloc_always })).value;
     const declared_schema = try contracts.testSchema(context.allocator, production);
-    const selected = try cases.discover(context.allocator, declared_schema, config, opts.filter);
+    const selected: []const cases.Case = if (opts.bench.only) &.{} else try cases.discover(context.allocator, declared_schema, config, opts.filter);
+    const benches: []const bench.Selection = if (opts.bench.pattern) |pattern| try bench.discover(context.allocator, declared_schema, config, pattern) else &.{};
     const results = try context.allocator.alloc(receipts.Result, selected.len);
+    const bench_states = try context.allocator.alloc(Bench, benches.len);
+    for (benches, bench_states) |selection, *state| state.* = .{ .plan = .{ .selection = selection } };
     try context.mkdir(directory);
     var pending: std.ArrayList(Pending) = .empty;
     defer pending.deinit(context.allocator);
@@ -192,8 +199,14 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
         error.ProjectPolicyRejected => return 3,
         else => return err,
     };
-    try prepareSelectedGraphs(context, session, results, pending.items);
+    try planSelectedBenches(context, &graphs, bench_states, &pending);
+    try prepareSelectedGraphs(context, session, pending.items);
     try executeSelectedCases(context, session, selected, results, pending.items);
+    var bench_context = try initBenchContext(context, opts, session);
+    // Benchmarks always execute freshly and never reuse receipts or timings;
+    // a failing correctness test blocks measurement entirely.
+    const test_failed = anyFailed(results);
+    if (!test_failed) try executeSelectedBenches(context, session, opts, bench_states, pending.items, bench_context.run());
     // Reap any retained checked-compilation sessions before the invocation's own
     // work report so their child counters are folded into it.
     graphs.finishSessions();
@@ -203,7 +216,231 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     }
     if (!opts.flags.no_cache) for (results) |result| try receipts.write(context, directory, result);
     if (opts.flags.report) try emitWorkReport(context, &work, results);
-    return report(context, results, opts.flags.json);
+    const test_status = try report(context, results, opts.flags.json);
+    return finish(context, opts, bench_states, &bench_context, test_status, test_failed);
+}
+
+/// Benchmark policy, baseline, identity and provenance for one invocation. The
+/// `run` view borrows this value, so it must outlive every comparison.
+const BenchContext = struct {
+    policy: bench.Policy = .{},
+    baseline: ?bench.Baseline = null,
+    identity: bench.Identity = .{},
+    provenance: bench.Provenance = .{},
+
+    fn run(self: *BenchContext) bench.Run {
+        const approved: ?*const bench.Baseline = if (self.baseline) |*value| value else null;
+        return .{ .policy = &self.policy, .baseline = approved, .identity = self.identity };
+    }
+};
+/// Readable prefix of a tool stamp: path and size, without the NUL-separated
+/// modification-time bytes. Provenance is diagnostic and never gates a comparison.
+fn stampText(value: []const u8) []const u8 {
+    return if (std.mem.indexOfScalar(u8, value, 0)) |at| value[0..at] else value;
+}
+/// Environment variable carrying a source revision for provenance; empty when absent.
+const revision_variable = "MYLANG_BENCH_REVISION";
+/// Load the approved policy and baseline; absent artifacts use safe defaults.
+fn initBenchContext(context: fs.Context, opts: options.Options, session: sessions.Session) Error!BenchContext {
+    var result: BenchContext = .{
+        .identity = .{
+            .mode = session.options.mode,
+            .runner_profile = opts.bench.profile,
+            .boundary_version = 1,
+            .warmup_iterations = opts.bench.tuning.sampling.warmup_iterations,
+            .batch_count = opts.bench.tuning.sampling.batch_count,
+            .target_batch_ns = opts.bench.tuning.sampling.target_batch_ns,
+        },
+    };
+    result.provenance = .{
+        .revision = context.environ.get(revision_variable) orelse "",
+        .identity = result.identity,
+        .tools = .{ .compiler = session.hashes[0], .zig = stampText(session.hashes[1]), .qbe = stampText(session.hashes[2]) },
+        .platform = .{ .os = @tagName(builtin.os.tag), .arch = @tagName(builtin.cpu.arch) },
+    };
+    result.policy = if (opts.bench.policy) |path| try bench.parsePolicy(context.allocator, try context.read(path)) else .{ .runner_profile = opts.bench.profile };
+    if (opts.bench.baseline) |path| result.baseline = try bench.parseBaseline(context.allocator, try context.read(path));
+    return result;
+}
+/// A measured benchmark's identity, function, dependency closure and samples.
+const BenchPlan = struct { selection: bench.Selection, function: std.json.Value = .null, dependencies: []const []const u8 = &.{} };
+const BenchSample = struct { status: []const u8 = "skipped", diagnostics: []const u8 = "", raw: []const execute.Batch = &.{}, stats: bench.Stats = .{} };
+const Bench = struct { plan: BenchPlan, sample: BenchSample = .{}, measurement: ?bench.Measurement = null, comparison: ?bench.Comparison = null };
+/// Whether a required benchmark ID was selected in this invocation.
+fn isRequired(policy: bench.Policy, id: []const u8) bool {
+    for (policy.required) |required| if (std.mem.eql(u8, required, id)) return true;
+    return false;
+}
+/// Whether any correctness test failed; a failed test blocks measurement.
+fn anyFailed(results: []const receipts.Result) bool {
+    for (results) |result| if (std.mem.eql(u8, result.status, "failed")) return true;
+    return false;
+}
+/// Plan each discovered benchmark exactly like a test: resolve its provider
+/// graph and semantic dependency closure so selective lowering includes it.
+fn planSelectedBenches(context: fs.Context, graphs: *Graphs, benches: []Bench, pending: *std.ArrayList(Pending)) Error!void {
+    for (benches, 0..) |*state, index| {
+        const selection = state.plan.selection;
+        if (selection.case.skip) |reason| {
+            state.sample.status = "skipped";
+            state.sample.diagnostics = reason;
+            continue;
+        }
+        const graph = try graphs.get(selection.case);
+        const project = &graph.project;
+        const checked = checkedFunction(project.schema, selection.case.name) orelse selection.case.function;
+        state.plan.function = checked;
+        const plan = try planner.plan(context.allocator, project.manifest, try symbol(project.manifest, selection.case.name), try graphs.session.key(selection.case.settings, checked));
+        state.plan.dependencies = plan.dependencies;
+        try pending.append(context.allocator, .{ .graph = graph, .selected = checked, .dependencies = plan.dependencies, .kind = .benchmarks, .slot = index });
+    }
+}
+/// Sample every planned benchmark and, when a comparison is near a limit or
+/// noisy, run the single predefined confirmation and evaluate all batches.
+fn executeSelectedBenches(
+    context: fs.Context,
+    session: sessions.Session,
+    opts: options.Options,
+    benches: []Bench,
+    pending: []const Pending,
+    gate: bench.Run,
+) Error!void {
+    for (pending) |entry| {
+        if (entry.kind != .benchmarks) continue;
+        const state = &benches[entry.slot];
+        const executor = entry.graph.project.executor orelse return error.InvalidGraph;
+        const config: execute.BenchConfig = .{ .limits = session.options.limits, .sampling = opts.bench.tuning.sampling, .timeout_ms = opts.bench.tuning.timeout_ms };
+        try recordSample(context, session, state, entry.graph.project.source, try executor.benchmark(entry.selected, state.plan.selection.case.arguments, config));
+        if (gate.baseline == null or !std.mem.eql(u8, state.sample.status, "passed")) continue;
+        const first = state.measurement.?;
+        const comparison = bench.compare(gate, first);
+        if (gate.policy.noise.confirmation_runs < 1 or !bench.needsConfirmation(gate.policy, first, comparison)) continue;
+        const second = try executor.benchmark(entry.selected, state.plan.selection.case.arguments, config);
+        if (std.mem.eql(u8, second.status, "value") and snapshot.equivalent(second.actual, state.plan.selection.case.expected)) {
+            state.sample.raw = try bench.combinedRaw(context.allocator, state.sample.raw, second.raw);
+            state.sample.stats = try bench.summarize(context.allocator, state.sample.raw, second.calibrated_iterations);
+            state.measurement = measurementOf(state.*);
+        } else {
+            try recordSample(context, session, state, entry.graph.project.source, second);
+        }
+    }
+}
+/// Fold one native outcome into a benchmark's observable result and statistics.
+fn recordSample(context: fs.Context, session: sessions.Session, state: *Bench, project_source: []const u8, outcome: execute.BenchOutcome) Error!void {
+    const selection = state.plan.selection;
+    state.sample.status = outcome.status;
+    state.sample.raw = outcome.raw;
+    state.sample.diagnostics = try failureReason(context, .{
+        .status = outcome.status,
+        .expected = selection.case.expected,
+        .actual = outcome.actual,
+        .diagnostics = outcome.diagnostics,
+        .output = "",
+        .project_source = project_source,
+        .root = session.source.root,
+    });
+    state.sample.stats = bench.summarize(context.allocator, outcome.raw, outcome.calibrated_iterations) catch |err| switch (err) {
+        error.InvalidBenchReport => bench.Stats{},
+        else => return err,
+    };
+    if (std.mem.eql(u8, outcome.status, "value") and !snapshot.equivalent(outcome.actual, selection.case.expected)) {
+        state.sample.status = "failed";
+        if (state.sample.diagnostics.len == 0) state.sample.diagnostics = "actual value does not match expected value";
+    }
+    if (std.mem.eql(u8, state.sample.status, "value")) state.sample.status = "passed";
+    if (std.mem.eql(u8, state.sample.status, "passed")) state.measurement = measurementOf(state.*);
+}
+/// The baseline measurement view of a successfully sampled benchmark.
+fn measurementOf(state: Bench) bench.Measurement {
+    const selection = state.plan.selection;
+    return .{
+        .id = selection.id,
+        .workload_version = selection.workload_version,
+        .fixture_identity = selection.fixture_identity,
+        .median_ns_per_op = state.sample.stats.median_ns_per_op,
+        .spread_percent = state.sample.stats.spread_percent,
+        .raw = state.sample.raw,
+    };
+}
+/// Print, compare and publish benchmark results; never mutate the approved baseline.
+fn emitBenchmarks(context: fs.Context, opts: options.Options, benches: []const Bench, ctx: *BenchContext) Error!u8 {
+    var measurements: std.ArrayList(bench.Measurement) = .empty;
+    var comparisons: std.ArrayList(bench.Comparison) = .empty;
+    var failures: std.ArrayList(bench.Failure) = .empty;
+    // Asking for benchmarks and selecting none is incomplete coverage, not a
+    // green performance run.
+    var complete = benches.len != 0;
+    const compared = ctx.run().baseline != null;
+    for (benches) |state| {
+        if (std.mem.eql(u8, state.sample.status, "passed")) {
+            const measurement = state.measurement orelse {
+                complete = false;
+                continue;
+            };
+            try measurements.append(context.allocator, measurement);
+            if (compared) {
+                const comparison = bench.applyNoiseBudget(&ctx.policy, measurement, bench.compare(ctx.run(), measurement));
+                if (comparison.verdict == .unbaselined or comparison.verdict == .incompatible or comparison.verdict == .inconclusive) complete = false;
+                try comparisons.append(context.allocator, comparison);
+            }
+        } else {
+            try failures.append(context.allocator, .{ .id = state.plan.selection.id, .status = state.sample.status, .reason = state.sample.diagnostics });
+            if (isRequired(ctx.policy, state.plan.selection.id)) complete = false;
+            if (!std.mem.eql(u8, state.sample.status, "skipped")) complete = false;
+        }
+    }
+    if (!bench.coversRequired(&ctx.policy, measurements.items)) complete = false;
+    const passed = complete and (!compared or bench.allPassed(comparisons.items, true));
+    try printBenchmarks(context, benches, comparisons.items, compared);
+    if (opts.bench.output) |path| {
+        const rendered = try bench.renderReport(context.allocator, .{
+            .provenance = ctx.provenance,
+            .measurements = measurements.items,
+            .comparisons = comparisons.items,
+            .failures = failures.items,
+            .complete = complete,
+            .passed = passed,
+        });
+        try context.atomic(path, rendered);
+    }
+    try std.Io.File.stderr().writeStreamingAll(context.io, try std.fmt.allocPrint(context.allocator, "benchmarks: {d} measured, {d} compared, {s}\n", .{ measurements.items.len, comparisons.items.len, if (passed) "passed" else "failed" }));
+    return if (passed) 0 else 1;
+}
+fn printBenchmarks(context: fs.Context, benches: []const Bench, comparisons: []const bench.Comparison, compared: bool) Error!void {
+    for (benches) |state| {
+        const id = state.plan.selection.id;
+        if (!std.mem.eql(u8, state.sample.status, "passed")) {
+            const reason = state.sample.diagnostics;
+            try std.Io.File.stderr().writeStreamingAll(context.io, try std.fmt.allocPrint(context.allocator, "bench {s} {s}{s}{s}\n", .{ id, state.sample.status, if (reason.len != 0) ": " else "", reason }));
+            continue;
+        }
+        var verdict: []const u8 = "measured";
+        var reason: []const u8 = "";
+        for (comparisons) |comparison| if (std.mem.eql(u8, comparison.id, id)) {
+            verdict = bench.verdictName(comparison.verdict);
+            reason = comparison.reason;
+        };
+        try std.Io.File.stderr().writeStreamingAll(context.io, try std.fmt.allocPrint(context.allocator, "bench {s} {s} median={d:.2} ns/op spread={d:.2}% samples={d}{s}{s}\n", .{
+            id,
+            verdict,
+            state.measurement.?.median_ns_per_op,
+            state.measurement.?.spread_percent,
+            state.sample.stats.sample_count,
+            if (compared and reason.len != 0) ": " else "",
+            if (compared) reason else "",
+        }));
+    }
+}
+/// Fold benchmark status into the command status: a failed benchmark gate
+/// fails the invocation, while passing benchmarks keep a bench-only run green.
+fn finish(context: fs.Context, opts: options.Options, benches: []const Bench, ctx: *BenchContext, test_status: u8, test_failed: bool) Error!u8 {
+    if (opts.bench.pattern == null) return test_status;
+    if (test_failed) {
+        try std.Io.File.stderr().writeStreamingAll(context.io, "benchmarks skipped: correctness tests failed\n");
+        return test_status;
+    }
+    const status = try emitBenchmarks(context, opts, benches, ctx);
+    return if (status != 0) status else 0;
 }
 
 /// Record the native test outcome as real performed/reused work. Parser, body
@@ -277,14 +514,13 @@ fn planSelectedCases(
         }
         // Evict any older pass before a forced or repaired execution can fail.
         if (!session.options.flags.no_cache) try receipts.invalidate(context, path);
-        try pending.append(context.allocator, .{ .case_index = case_index, .graph = graph, .selected = checked });
+        try pending.append(context.allocator, .{ .graph = graph, .selected = checked, .dependencies = plan.dependencies, .kind = .tests, .slot = case_index });
     }
 }
 
 fn prepareSelectedGraphs(
     context: fs.Context,
     session: sessions.Session,
-    results: []receipts.Result,
     pending: []const Pending,
 ) Error!void {
     var groups: std.ArrayList(*Group) = .empty;
@@ -306,7 +542,7 @@ fn prepareSelectedGraphs(
             try groups.append(context.allocator, created);
             group = created;
         }
-        for (results[entry.case_index].dependencies) |dependency| {
+        for (entry.dependencies) |dependency| {
             _ = try group.?.symbols.getOrPut(context.allocator, dependency);
         }
     }
@@ -336,24 +572,136 @@ fn executeSelectedCases(
     pending: []const Pending,
 ) Error!void {
     for (pending) |entry| {
-        const case = selected[entry.case_index];
-        const result = &results[entry.case_index];
+        if (entry.kind != .tests) continue;
+        const case = selected[entry.slot];
+        const result = &results[entry.slot];
         const executor = entry.graph.project.executor orelse return error.InvalidGraph;
         const outcome = try executor.execute(entry.selected, case.arguments, session.options.limits);
         result.actual = outcome.actual;
         result.steps = outcome.steps;
-        result.reason = try std.mem.replaceOwned(u8, context.allocator, outcome.diagnostics, std.fs.path.dirname(entry.graph.project.source).?, session.source.root);
         const passed = std.mem.eql(u8, outcome.status, "value") and snapshot.equivalent(outcome.actual, case.expected);
         result.status = if (passed) "passed" else "failed";
+        result.reason = try failureReason(context, .{
+            .status = outcome.status,
+            .expected = case.expected,
+            .actual = outcome.actual,
+            .diagnostics = outcome.diagnostics,
+            .output = outcome.output,
+            .project_source = entry.graph.project.source,
+            .root = session.source.root,
+        });
         if (!passed and result.reason.len == 0) result.reason = "actual value does not match expected value";
     }
 }
 
+/// One executed case's failure inputs, grouped to keep the renderer signature small.
+const Failure = struct {
+    status: []const u8,
+    expected: std.json.Value,
+    actual: std.json.Value,
+    diagnostics: []const u8,
+    output: []const u8,
+    project_source: []const u8,
+    root: []const u8,
+};
+
+/// Render one executed case's failure text: trap diagnostics, or both sides of
+/// a typed expectation mismatch, followed by any guest stdout the child
+/// captured. A passing case returns an empty string.
+fn failureReason(context: fs.Context, failure: Failure) Error![]const u8 {
+    if (std.mem.eql(u8, failure.status, "value") and snapshot.equivalent(failure.actual, failure.expected)) return "";
+    var reason: []const u8 = "";
+    if (std.mem.eql(u8, failure.status, "value")) {
+        reason = try std.fmt.allocPrint(context.allocator, "expected {s}, got {s}", .{
+            try describeValue(context.allocator, failure.expected),
+            try describeValue(context.allocator, failure.actual),
+        });
+    } else {
+        reason = try stripRoot(context.allocator, failure.diagnostics, failure.project_source, failure.root);
+    }
+    if (failure.output.len == 0) return reason;
+    const captured = try stripRoot(context.allocator, failure.output, failure.project_source, failure.root);
+    if (reason.len == 0) return captured;
+    return std.fmt.allocPrint(context.allocator, "{s}\n{s}", .{ reason, captured });
+}
+
+/// Render one typed JSON expectation value for a failure line: a string keeps
+/// its source spelling, a Boolean is `true`/`false`, and an aggregate is compact JSON.
+fn describeValue(allocator: std.mem.Allocator, value: std.json.Value) Error![]const u8 {
+    return switch (value) {
+        .string => |text| allocator.dupe(u8, text),
+        .bool => |flag| if (flag) "true" else "false",
+        else => std.json.Stringify.valueAlloc(allocator, value, .{}),
+    };
+}
+
+/// Rewrite the materialized project directory back to the user's source root in
+/// diagnostic text; a source path with no directory is returned unchanged.
+fn stripRoot(allocator: std.mem.Allocator, text: []const u8, project_source: []const u8, root: []const u8) Error![]const u8 {
+    const directory = std.fs.path.dirname(project_source) orelse return allocator.dupe(u8, text);
+    return std.mem.replaceOwned(u8, allocator, text, directory, root);
+}
+
+// spec: NATIVE-TEST-8
+// spec-case: NATIVE-TEST-10
+test "a failed expectation reports both values and any captured guest output" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const mismatch = try failureReason(context, .{
+        .status = "value",
+        .expected = .{ .bool = true },
+        .actual = .{ .bool = false },
+        .diagnostics = "",
+        .output = "",
+        .project_source = "/snapshot/project/main.my",
+        .root = "/work/project",
+    });
+    try std.testing.expectEqualStrings("expected true, got false", mismatch);
+    const typed = try failureReason(context, .{
+        .status = "value",
+        .expected = .{ .string = "9" },
+        .actual = .{ .string = "3" },
+        .diagnostics = "",
+        .output = "",
+        .project_source = "/snapshot/project/main.my",
+        .root = "/work/project",
+    });
+    try std.testing.expectEqualStrings("expected 9, got 3", typed);
+    const trapped = try failureReason(context, .{
+        .status = "trap",
+        .expected = .null,
+        .actual = .null,
+        .diagnostics = "R_ASSERT: x should be two\n  in main::test_x at main.my:3:5\n",
+        .output = "debug-marker\n",
+        .project_source = "/snapshot/project/main.my",
+        .root = "/work/project",
+    });
+    try std.testing.expect(std.mem.indexOf(u8, trapped, "R_ASSERT: x should be two") != null);
+    try std.testing.expect(std.mem.indexOf(u8, trapped, "in main::test_x at main.my:3:5") != null);
+    try std.testing.expect(std.mem.indexOf(u8, trapped, "debug-marker") != null);
+    const passed = try failureReason(context, .{
+        .status = "value",
+        .expected = .{ .bool = true },
+        .actual = .{ .bool = true },
+        .diagnostics = "",
+        .output = "",
+        .project_source = "/snapshot/project/main.my",
+        .root = "/work/project",
+    });
+    try std.testing.expectEqualStrings("", passed);
+}
+
 const Pending = struct {
-    case_index: usize,
     graph: *Graph,
     selected: std.json.Value,
+    dependencies: []const []const u8,
+    kind: Kind,
+    slot: usize,
 };
+/// A planned case either runs once as a correctness test or is sampled.
+const Kind = enum { tests, benchmarks };
 
 const Group = struct {
     graph: *Graph,

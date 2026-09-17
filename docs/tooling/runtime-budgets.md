@@ -35,25 +35,32 @@ zig build test
 ## Instruction and frame budgets
 
 Every process that runs guest code also counts **instructions** and **call depth**.
-The defaults are **10,000,000** instructions (`--max-steps`) and **1,024** frames
-(`--max-frames`, including the entry frame) for `mylang run`, `mylang build --run`
-and a binary you built and started yourself. A `mylang test` child starts lower, at
-**1,000,000** instructions, and keeps the same frame default; `--max-steps` and
-`--max-frames` on `mylang test` bound each test process. Raise a budget with the
-flag on whichever command runs the program:
+`mylang run`, `mylang build --run` and a binary you built and started yourself
+have **no step or frame ceiling by default**: the byte ceiling below already
+contains a runaway allocation, and a development loop should not stop an honest
+program. Pass `--max-steps=N` or `--max-frames=N` to impose one, and
+`--timeout=SECONDS` to cap elapsed time on whichever command runs the program:
 
 ```console
-$ mylang run loop.my --max-steps=1000000
-loop.my:3:13: error[R_STEP_LIMIT]: instruction budget exhausted; raise it with --max-steps=N
-  in main at loop.my:3:13
 $ ./loop --max-steps=500000000        # built binary: the same flags are ordinary arguments
+$ mylang run loop.my --max-steps=500000000
 $ mylang build loop.my --run -- --max-steps=500000000
+$ mylang run loop.my --timeout=30     # wall-clock guard; no default
+loop.my:3:13: error[R_TIMEOUT]: wall-clock budget exhausted; raise it with --timeout=SECONDS
 ```
 
-`R_FRAME_LIMIT` answers "call-depth budget exhausted; raise it with
---max-frames=N" the same way. The hints appear in text and in the `message` field
-of `--diagnostics=json`. A zero, negative, empty or non-numeric budget is refused
-before the run rather than treated as unlimited.
+A `mylang test` child is different: each test process starts at **1,000,000**
+instructions and **1,024** frames, because a test is the one place a tight guard
+is useful. `--max-steps` and `--max-frames` on `mylang test` bound each test
+process and may be lowered or raised.
+
+Once a ceiling is in force, `R_STEP_LIMIT` answers "instruction budget
+exhausted; raise it with --max-steps=N" and `R_FRAME_LIMIT` answers "call-depth
+budget exhausted; raise it with --max-frames=N". The hints appear in text and in
+the `message` field of `--diagnostics=json`. A zero, negative, empty or
+non-numeric budget is refused before the run rather than treated as unlimited.
+`--timeout` arms a monotonic timer inside the guest; when it fires the process
+writes `R_TIMEOUT` to standard error and exits 1.
 
 These counters bound *compiler-generated work*, not elapsed time: one step is a
 dispatch, so a program that calls into a linked C function can spend arbitrary time
@@ -103,7 +110,7 @@ def grow(values: list[int], rounds: int) -> int:
 def main() -> int:
     values: list[int] = []
     return grow(values, 100000000)
-$ mylang build grow.my --run --max-memory=64M -- --max-steps=4000000000
+$ mylang build grow.my --run --max-memory=64M
 grow.my:3:9: error[R_MEMORY_BUDGET]: memory budget exhausted
   in grow at grow.my:3:9
   in main at grow.my:9:12

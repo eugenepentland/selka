@@ -15,4 +15,6 @@ test {
     _ = @import("native_test_session.zig");
     _ = @import("native_test_directory.zig");
     _ = @import("native_test_command.zig");
+    _ = @import("native_bench.zig");
+    _ = @import("native_bench_command.zig");
 }

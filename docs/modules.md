@@ -68,7 +68,10 @@ root by turning the dotted name into a path: `import units` reads `units.my`, an
 dependency order; `mylang run-project` is the explicit project-entry alias.
 Nothing is exported implicitly: a declaration is visible to importers only when
 an `export` directive names it, and an exported signature that mentions a
-private type rejects rather than leaking it.
+private type rejects rather than leaking it. Exported functions do not need to
+spell an effect ceiling: the checker freezes each body's inferred effect set as
+the published interface contract, and an explicit `noalloc`, `noio` or
+`effects(...)` is an opt-in narrowing enforced as an upper bound.
 
 ```mylang
 # doc: project measure

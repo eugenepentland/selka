@@ -364,7 +364,11 @@ const Checker = struct {
             try names.reference(invocation.owner orelse invocation.name, .function, if (invocation.owner != null) invocation.name else null, if (self.owner) |owner| self.src.text(owner) else null, self.sink)
         else
             try @import("function_identity.zig").localName(self.sink.allocator, self.src, invocation.owner, invocation.name);
-        const index = self.functions.get(key) orelse return self.sink.fail("E_UNKNOWN_FUNCTION", invocation.name, "no function has this qualified name");
+        const index = self.functions.get(key) orelse {
+            const clause = try typed.suggestionClause(self.allocator, self.functions, self.src.text(invocation.name));
+            const message = if (clause.len == 0) "no function has this qualified name" else try std.fmt.allocPrint(self.allocator, "no function has this qualified name{s}", .{clause});
+            return self.sink.fail("E_UNKNOWN_FUNCTION", invocation.name, message);
+        };
         const function = self.program.functions[index];
         try self.effect_calls.append(self.allocator, .{ .caller = self.function_index, .callee = index, .span = call_span });
         if (self.module_names == null and function.policy.restricted) {
@@ -485,6 +489,36 @@ const Checker = struct {
         const kind = self.shapes().collectionKind(owner) orelse return self.sink.fail(eListType, span, "operation requires a managed list, string, or dictionary");
         if (kind == .string) return owner;
         return (try self.shapes().container(owner, span)).?.element;
+    }
+    /// The dictionary receiver of one `items()` iteration source in a template body.
+    const ItemsSource = union(enum) { node: ast.NodeId, local: source.Span };
+
+    // twin-drift-ok: mirrors the concrete checker's AST-shape probe; the concrete
+    // checker stores the program under `syntax` and this one under `program`.
+    /// Recognize `receiver.items()` as a for-each source, matching the concrete checker.
+    fn itemsSource(self: *Checker, id: ast.NodeId) ?ItemsSource {
+        const node = self.program.nodes.items[@backingInt(id)];
+        switch (node.data) {
+            .method_call => |method| if (method.arguments.len == 0 and std.mem.eql(u8, self.src.text(method.name), "items"))
+                return .{ .node = method.base },
+            .call => |invocation| {
+                const owner = invocation.owner orelse return null;
+                if (invocation.type_arguments.len != 0 or invocation.arguments.len != 0) return null;
+                if (!std.mem.eql(u8, self.src.text(invocation.name), "items")) return null;
+                if (!self.active.contains(self.src.text(owner))) return null;
+                return .{ .local = owner };
+            },
+            else => {},
+        }
+        return null;
+    }
+
+    /// Resolve an `items()` source's receiver without resolving the value snapshot.
+    fn itemsReceiverValue(self: *Checker, items: ItemsSource) Error!Symbolic {
+        switch (items) {
+            .node => |id| return self.expression(id),
+            .local => |span| return self.namedValue(span),
+        }
     }
     fn fieldAssignment(self: *Checker, node: ast.Node) Error!Symbolic {
         const assignment = node.data.field_assignment;
@@ -1486,12 +1520,31 @@ const Checker = struct {
             },
             .branch => |branch| return self.branchValue(branch, statement_value.span),
             .for_each => |each| {
-                const owner = try self.expression(each.iterable);
+                // `for key, value in d.items()` iterates the dictionary itself in a
+                // template body too, so both bindings agree with a concrete check.
+                var dictionary_items = false;
+                var owner: Symbolic = undefined;
+                if (each.index_name != null) if (self.itemsSource(each.iterable)) |items| {
+                    const receiver = try self.itemsReceiverValue(items);
+                    if (self.shapes().managed(receiver) and self.shapes().collectionKind(receiver) == .dictionary) {
+                        owner = receiver;
+                        dictionary_items = true;
+                    }
+                };
+                if (!dictionary_items) owner = try self.expression(each.iterable);
                 if (!self.shapes().managed(owner)) return self.sink.fail(eListType, statement_value.span, "iteration requires a list");
-                const shape = if (self.shapes().collectionKind(owner) == .dictionary) try self.shapes().collectionKey(owner, statement_value.span) else try self.collectionElement(owner, statement_value.span);
+                const kind = self.shapes().collectionKind(owner);
                 const first = self.locals.items.len;
-                try self.bind(each.name, shape, false);
-                if (each.index_name) |name| try self.bind(name, .{ .concrete = .i64 }, false);
+                if (dictionary_items) {
+                    const key = try self.shapes().collectionKey(owner, statement_value.span);
+                    const value = try self.collectionElement(owner, statement_value.span);
+                    try self.bind(each.index_name.?, key, false);
+                    try self.bind(each.name, value, false);
+                } else {
+                    const shape = if (kind == .dictionary) try self.shapes().collectionKey(owner, statement_value.span) else try self.collectionElement(owner, statement_value.span);
+                    try self.bind(each.name, shape, false);
+                    if (each.index_name) |name| try self.bind(name, .{ .concrete = .i64 }, false);
+                }
                 defer self.endScope(first);
                 const before = try self.pendingState(self.locals.items.len);
                 defer self.allocator.free(before);

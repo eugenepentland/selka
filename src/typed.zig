@@ -261,6 +261,130 @@ pub fn requiresHandling(ty: Type, records: []const Record) bool {
 pub fn typeName(ty: Type, records: []const Record) []const u8 {
     return if (ty.isAggregate()) records[ty.recordIndex()].name else @tagName(ty);
 }
+/// Render a type the way source spells it, for user-facing diagnostics.
+pub fn surfaceTypeName(allocator: std.mem.Allocator, ty: Type, records: []const Record) std.mem.Allocator.Error![]const u8 {
+    return surfaceTypeText(allocator, typeName(ty, records));
+}
+/// Rewrite an internal type or signature spelling into the source surface spelling.
+pub fn surfaceTypeText(allocator: std.mem.Allocator, raw: []const u8) std.mem.Allocator.Error![]const u8 {
+    var out: std.ArrayList(u8) = .empty;
+    defer out.deinit(allocator);
+    var index: usize = 0;
+    while (index < raw.len) {
+        const ch = raw[index];
+        if (ch == '-' and index + 1 < raw.len and raw[index + 1] == '>') {
+            try out.appendSlice(allocator, "->");
+            index += 2;
+            continue;
+        }
+        if (ch == ':' and index + 1 < raw.len and raw[index + 1] == ':') {
+            try out.append(allocator, '.');
+            index += 2;
+            continue;
+        }
+        if (ch == '<') {
+            try out.append(allocator, '[');
+            index += 1;
+            continue;
+        }
+        if (ch == '>') {
+            try out.append(allocator, ']');
+            index += 1;
+            continue;
+        }
+        if (ch == ',') {
+            try out.appendSlice(allocator, ", ");
+            index += 1;
+            while (index < raw.len and raw[index] == ' ') index += 1;
+            continue;
+        }
+        if (std.ascii.isAlphanumeric(ch) or ch == '_') {
+            var end = index;
+            while (end < raw.len and (std.ascii.isAlphanumeric(raw[end]) or raw[end] == '_')) end += 1;
+            const word = raw[index..end];
+            if (std.mem.eql(u8, word, "i64")) {
+                try out.appendSlice(allocator, "int");
+            } else if (std.mem.eql(u8, word, "f64")) {
+                try out.appendSlice(allocator, "float");
+            } else {
+                try out.appendSlice(allocator, word);
+            }
+            index = end;
+            continue;
+        }
+        try out.append(allocator, ch);
+        index += 1;
+    }
+    const rendered = try out.toOwnedSlice(allocator);
+    // `List` is the compiler-internal spelling; source always writes `list`.
+    // Lowercase every standalone `List[` so nested lists read `list[...]` too.
+    var cursor: usize = 0;
+    while (std.mem.indexOfPos(u8, rendered, cursor, "List[")) |at| {
+        const standalone = at == 0 or !(std.ascii.isAlphanumeric(rendered[at - 1]) or rendered[at - 1] == '_');
+        if (standalone) rendered[at] = 'l';
+        cursor = at + 5;
+    }
+    return rendered;
+}
+/// Return the segment after the final `::` or `.` of a qualified name.
+pub fn localSegment(name: []const u8) []const u8 {
+    var start: usize = 0;
+    for (name, 0..) |ch, index| if (ch == ':' or ch == '.') {
+        start = index + 1;
+    };
+    return name[start..];
+}
+/// Bounded Levenshtein distance; returns `limit + 1` when the distance exceeds it.
+pub fn editDistanceAtMost(a: []const u8, b: []const u8, limit: usize) usize {
+    if (a.len > b.len + limit or b.len > a.len + limit) return limit + 1;
+    if (a.len > 256 or b.len > 256) return limit + 1;
+    var previous: [257]usize = undefined;
+    var current: [257]usize = undefined;
+    for (0..b.len + 1) |j| previous[j] = j;
+    for (a, 0..) |left, i| {
+        current[0] = i + 1;
+        for (b, 0..) |right, j| {
+            const substitution = previous[j] + @as(usize, @intFromBool(left != right));
+            const deletion = previous[j + 1] + 1;
+            const insertion = current[j] + 1;
+            current[j + 1] = @min(@min(substitution, deletion), insertion);
+        }
+        @memcpy(previous[0 .. b.len + 1], current[0 .. b.len + 1]);
+    }
+    return previous[b.len];
+}
+/// Render the `; did you mean ...?` clause naming declared keys within edit
+/// distance two of `target`, or an empty slice when no close candidate exists.
+pub fn suggestionClause(allocator: std.mem.Allocator, map: anytype, target: []const u8) std.mem.Allocator.Error![]const u8 {
+    var candidates: std.ArrayList([]const u8) = .empty;
+    defer candidates.deinit(allocator);
+    var iterator = map.iterator();
+    while (iterator.next()) |entry| {
+        const name = localSegment(entry.key_ptr.*);
+        if (std.mem.eql(u8, name, target)) continue;
+        if (editDistanceAtMost(name, target, 2) > 2) continue;
+        try candidates.append(allocator, name);
+    }
+    if (candidates.items.len == 0) return "";
+    std.mem.sort([]const u8, candidates.items, {}, nameLessThan);
+    var unique: usize = 0;
+    for (candidates.items, 0..) |name, index| {
+        if (index != 0 and std.mem.eql(u8, candidates.items[unique - 1], name)) continue;
+        candidates.items[unique] = name;
+        unique += 1;
+    }
+    const shown = candidates.items[0..@min(unique, 3)];
+    var joined: std.ArrayList(u8) = .empty;
+    defer joined.deinit(allocator);
+    for (shown, 0..) |name, index| {
+        if (index != 0) try joined.appendSlice(allocator, "`, `");
+        try joined.appendSlice(allocator, name);
+    }
+    return std.fmt.allocPrint(allocator, "; did you mean {s}`{s}`?", .{ if (shown.len == 1) "" else "one of: ", joined.items });
+}
+fn nameLessThan(_: void, left: []const u8, right: []const u8) bool {
+    return std.mem.lessThan(u8, left, right);
+}
 /// Resolved local assignment target and the expression being stored.
 pub const Store = struct { slot: LocalId, value: NodeId };
 /// Checked control flow, ownership operations, and expression statements.
@@ -294,11 +418,23 @@ pub const Local = struct {
     declaration: Span,
     ty: Type,
     mutable: bool,
+    /// Where this binding's value came from, for copy-semantics diagnostics.
+    origin: LocalOrigin = .local,
 };
 /// Compile-time ownership availability, definite-assignment, and arena confinement.
 pub const LocalOwnership = struct { transfer_span: ?Span = null, initialized: bool = false, arena_confined: bool = false, transfer_available: bool = false };
 /// Static binding reads and writes used by quality diagnostics.
-pub const LocalUsage = struct { temporary: bool = false, reads: usize = 0, writes: usize = 0 };
+pub const LocalUsage = struct {
+    temporary: bool = false,
+    reads: usize = 0,
+    writes: usize = 0,
+    /// Read count immediately after the most recent candidate field write.
+    dead_write_reads: usize = 0,
+    /// Span of the most recent candidate field write; null when none happened.
+    dead_write_span: ?Span = null,
+};
+/// Source of a local's value when differing copy semantics matter.
+pub const LocalOrigin = enum { local, parameter, iteration, collection_copy };
 
 /// Checked function signature, local/reference metadata, effects, and body identity.
 pub const Function = struct {

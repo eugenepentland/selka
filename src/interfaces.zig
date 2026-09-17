@@ -1,6 +1,8 @@
 //! Module declaration identities and export boundaries, before body type checking.
 const std = @import("std");
 const eGenericArity = "E_GENERIC_ARITY";
+/// Format one module-qualified declaration name as `module::symbol`.
+const qualified_name_format = "{s}::{s}";
 const graph = @import("project.zig");
 const ast = @import("ast.zig");
 const source = @import("source.zig");
@@ -73,6 +75,10 @@ const ConstraintLookup = struct {
 pub const Index = struct {
     project: *graph.Project,
     units: []Unit,
+    /// Checked bodies, when the caller has them, so `renderContracts` can publish
+    /// each unannotated callable's frozen inferred ceiling instead of demanding
+    /// the author retype it. Null during pure interface pre-validation.
+    program: ?typed.Program = null,
     fn add(self: *Index, module: usize, span: source.Span, kind: Kind, owner: ?source.Span, restricted: bool) diagnostic.Error!void {
         const allocator = self.project.arena.allocator();
         const src = self.project.modules.items[module].src;
@@ -110,13 +116,43 @@ pub const Index = struct {
             }
             if (!found) return self.project.fail("E_UNKNOWN_IMPORT", "name does not identify a direct import alias", site, null);
         }
-        const symbol_id = self.units[target].names.get(name) orelse return self.project.fail("E_UNKNOWN_SYMBOL", "declaration is not present in the resolved module", site, null);
+        const symbol_id = self.units[target].names.get(name) orelse {
+            const message = if (kind == .function)
+                try self.functionMissMessage(from, target, name)
+            else
+                "declaration is not present in the resolved module";
+            return self.project.fail("E_UNKNOWN_SYMBOL", message, site, null);
+        };
         const symbol = self.units[target].symbols.items[symbol_id];
         const declaration: graph.Site = .{ .module = target, .span = symbol.span };
         if (target != from and !symbol.exported) return self.project.fail("E_PRIVATE_SYMBOL", "declaration is private to its module", site, declaration);
         if (symbol.restricted and !sameOwner(target == from, owner, symbol.owner.?)) return self.project.fail("E_PRIVATE_FUNCTION", "private domain function requires the same declaring domain", site, declaration);
         if (symbol.kind != kind) return self.project.fail("E_SYMBOL_KIND", "declaration has the wrong kind for this reference", site, declaration);
         return .{ .module = target, .symbol = symbol_id };
+    }
+    /// Message for an unresolved function, naming close visible declarations.
+    fn functionMissMessage(self: *Index, from: usize, target: usize, name: []const u8) std.mem.Allocator.Error![]const u8 {
+        const allocator = self.project.arena.allocator();
+        var candidates: std.ArrayList([]const u8) = .empty;
+        defer candidates.deinit(allocator);
+        for (self.units[target].symbols.items) |symbol| {
+            if (symbol.kind != .function) continue;
+            if (std.mem.indexOfScalar(u8, symbol.name, '.') != null) continue;
+            if (target != from and !symbol.exported) continue;
+            if (std.mem.eql(u8, symbol.name, name)) continue;
+            if (typed.editDistanceAtMost(symbol.name, name, 2) > 2) continue;
+            try candidates.append(allocator, symbol.name);
+        }
+        if (candidates.items.len == 0) return "declaration is not present in the resolved module";
+        std.mem.sort([]const u8, candidates.items, {}, tokenLess);
+        const shown = candidates.items[0..@min(candidates.items.len, 3)];
+        var joined: std.ArrayList(u8) = .empty;
+        defer joined.deinit(allocator);
+        for (shown, 0..) |candidate, index| {
+            if (index != 0) try joined.appendSlice(allocator, "`, `");
+            try joined.appendSlice(allocator, candidate);
+        }
+        return std.fmt.allocPrint(allocator, "declaration is not present in the resolved module; did you mean {s}`{s}`?", .{ if (shown.len == 1) "" else "one of: ", joined.items });
     }
     fn resolveConstraint(self: *Index, module: usize, reference: ast.BoundReference, sink: *diagnostic.Sink) diagnostic.Error!Identity {
         const src = self.project.modules.items[module].src;
@@ -435,20 +471,38 @@ pub const Index = struct {
     }
     fn contractFunction(self: *Index, module: usize, symbol: Symbol) ContractError!ContractDeclaration {
         const function = self.findFunction(self.units[module], symbol.span) orelse return error.InternalError;
-        // E2 published ceilings are part of the declaration, so the provider path
-        // rejects a missing exported ceiling before any body is checked. The
-        // body-derived suggestion is unavailable here and is intentionally omitted.
-        const bound = function.policy.effect_bound orelse return self.project.fail(
-            "E_EFFECT_CEILING",
-            "exported function requires an explicit effect ceiling",
-            .{ .module = module, .span = function.name },
-            null,
-        );
+        // An explicit `noalloc`/`noio`/`effects(...)` is an opt-in narrowing and
+        // is published exactly as declared. Without one, publish the ceiling the
+        // checker already inferred for the body instead of refusing to build the
+        // contract; pure interface pre-validation falls back to the unbounded
+        // `all` mask, which is what an omitted ceiling promises.
+        const mask = if (function.policy.effect_bound) |bound| bound.allowed else self.publishedEffects(module, symbol);
         var out: ContractDeclaration = .{ .name = symbol.name, .kind = "function" };
         out.generics = try self.contractGenericsText(module, function.signature.type_parameters);
         out.signature = try self.contractSignatureText(module, function.signature);
-        out.permissions = try permissionsText(self.project.arena.allocator(), bound.allowed, function.signature.mutates, "unknown");
+        out.permissions = try permissionsText(self.project.arena.allocator(), mask, function.signature.mutates, "unknown");
         return out;
+    }
+    /// Ceiling the interface publishes for one exported function. An explicit
+    /// `noalloc`/`noio`/`effects(...)` wins as an opt-in narrowing; otherwise the
+    /// typed program's frozen inferred mask is used, matched by the
+    /// module-qualified name so ordinary, domain and generic specialization
+    /// entries all match. With no checked program attached (pure interface
+    /// pre-validation) or no instantiation to read, the published contract is
+    /// the unbounded `all` mask, which is what an omitted ceiling promises.
+    fn publishedEffects(self: *Index, module: usize, symbol: Symbol) effect_set.Mask {
+        const program = self.program orelse return effect_set.all;
+        const prefix = std.fmt.allocPrint(
+            self.project.arena.allocator(),
+            qualified_name_format,
+            .{ self.project.modules.items[module].name, symbol.name },
+        ) catch return effect_set.all;
+        for (program.functions) |function| {
+            if (!std.mem.startsWith(u8, function.name, prefix)) continue;
+            if (function.name.len != prefix.len and function.name[prefix.len] != '[') continue;
+            return function.policy.effects;
+        }
+        return effect_set.all;
     }
     fn contractSignatureText(self: *Index, module: usize, signature: ast.FunctionSignature) ContractError![]const u8 {
         const allocator = self.project.arena.allocator();
@@ -492,7 +546,7 @@ pub const Index = struct {
             for (parameter.named_requirements) |reference| {
                 var sink: diagnostic.Sink = .{ .allocator = allocator };
                 const resolution = try self.constraintDeclaration(module, reference, &sink);
-                try appendUniqueToken(allocator, &tokens, try std.fmt.allocPrint(allocator, "{s}::{s}", .{
+                try appendUniqueToken(allocator, &tokens, try std.fmt.allocPrint(allocator, qualified_name_format, .{
                     self.project.modules.items[resolution.identity.module].name,
                     self.units[resolution.identity.module].symbols.items[resolution.identity.symbol].name,
                 }));
@@ -714,7 +768,7 @@ pub const Index = struct {
             .{ .module = module, .span = span },
             .{ .module = id.module, .span = self.units[id.module].symbols.items[id.symbol].span },
         );
-        return std.fmt.allocPrint(allocator, "{s}::{s}", .{
+        return std.fmt.allocPrint(allocator, qualified_name_format, .{
             self.project.modules.items[id.module].name,
             self.units[id.module].symbols.items[id.symbol].name,
         });

@@ -4,6 +4,8 @@ const inputs_prefix = "--inputs=";
 const policy_prefix = "--policy=";
 const cache_directory_prefix = "--cache-dir=";
 const select_file_prefix = "--select-file=";
+/// Wall-clock ceiling forwarded to the guest runtime, which parses the same flag.
+const timeout_prefix = "--timeout=";
 /// Shared internal session failure name for an over-long request line.
 const request_too_long = "RequestTooLong";
 /// Phase label and default cache-directory leaf, shared so the literal is not
@@ -27,7 +29,10 @@ const Reporting = struct {
         return self.timings_json or self.report;
     }
 };
-const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--json] [--force]\n       mylang build <file.my> (-o <output> | --run) [--help]\n" ++
+const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--json] [--force]\n" ++
+    "       mylang test <entry.my|directory> --bench GLOB [--bench-output FILE] [--bench-baseline FILE] [--bench-policy FILE]\n" ++
+    "       mylang bench-promote --candidate FILE --approver NAME --reason TEXT [--baseline FILE] [--output FILE] [--revision REV]\n" ++
+    "       mylang build <file.my> (-o <output> | --run) [--help]\n" ++
     "       mylang doc-coverage [<repo-root>] (every implemented feature and standard export needs a documented example)\n       mylang " ++
     "doctest [<repo-root>] [--filter GLOB] [--report PATH] [--verbose] (run every fenced documentation example)\n       mylang " ++
     "<schema-project|input-module|check|run|dump-bytecode|di" ++
@@ -39,7 +44,8 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "input-module: reads a typed JSON manifest and writes generated " ++
     "module source\n  run: builds the program natively and runs it; it loads the whole project when the entry " ++
     "file opens with a module header (or a module-only import/export), and stays single-unit otherwise; " ++
-    "run-project is the explicit project-entry alias\n  run/run-project: --max-steps=N --max-frames=N " ++
+    "run-project is the explicit project-entry alias\n  run/run-project: unbounded in instructions and frames by default; " ++
+    "--max-steps=N and --max-frames=N impose a ceiling and --timeout=SECONDS caps elapsed time; " ++
     "--max-memory=BYTES --gc-stress --print-result --cache-dir=DIR --qbe=PATH --zig=PATH " ++
     "(native objects default to .mylang-cache/qbe, shared with build)\n  " ++
     "run/run-project: --max-memory takes K/M/G suffixes and caps the guest process's address space; " ++
@@ -91,8 +97,6 @@ const project_config = @import("project_config.zig");
 const module_syntax = @import("module_syntax.zig");
 const native_run = @import("native_run.zig");
 const native_options = @import("qbe_build_options.zig");
-/// Execution budgets a run or an evaluation may narrow from the command line.
-const Budgets = struct { max_steps: u64 = 10_000_000, max_frames: u64 = 1024 };
 /// Per-stage observations collected when an invalidation explanation ran.
 const StageTally = struct { hits: usize = 0, misses: usize = 0, skipped: usize = 0 };
 const RunObservation = struct {
@@ -161,6 +165,7 @@ fn dispatch(process: std.process.Init) !u8 {
     if (args.len >= 2 and std.mem.eql(u8, args[1], "build")) return @import("qbe_build.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "emit-runtime")) return @import("qbe_build.zig").emitRuntime(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "test")) return @import("native_test_command.zig").run(process, args[2..]);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "bench-promote")) return @import("native_bench_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "doc-coverage")) return @import("doc_coverage_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "doctest")) return @import("doctest_command.zig").run(process, args[2..]);
     // The C backend is gone. Answer its command names with a migration that
@@ -269,11 +274,16 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
     init.timings.counts.source_bytes = bytes.len;
     init.timings.counts.modules = 1;
     init.timings.end();
-    // `run` accepts a project entry: a file that opens with a module header (or a
-    // module-only import/export) loads its reachable graph exactly as
-    // `run-project` does. A plain single-file program skips this and keeps the
-    // original one-unit path byte-for-byte.
+    // `run` and `check` accept a project entry: a file that opens with a module
+    // header (or a module-only import/export) loads its reachable graph exactly as
+    // `run-project`/`check-project` does. A plain single-file program skips this
+    // and keeps the original one-unit path byte-for-byte.
     if (parsed.command == .run and module_syntax.usesModuleSyntax(bytes)) return listModules(init, parsed);
+    if (parsed.command == .check and module_syntax.usesModuleSyntax(bytes)) {
+        var project = parsed;
+        project.command = .@"check-project";
+        return listModules(init, project);
+    }
     // A single-unit program has no import edges, but a configured project still
     // owns the same required configuration contract; validate it before checking.
     validateUnitConfiguredPolicy(init, parsed) catch |err| return policyFailureStatus(err);
@@ -554,7 +564,6 @@ const Parsed = struct {
     command: Command,
     path: []const u8,
     grants: grants.Config,
-    budgets: Budgets,
     native: native_options.Options,
     runtime: []const []const u8,
     discovery: language.duplicates.Options,
@@ -641,7 +650,6 @@ const ArgumentParser = struct {
     path: ?[]const u8 = null,
     policy: ?[]const u8 = null,
     grants: grants.Config = .{},
-    budgets: Budgets = .{},
     native: native_options.Options = .{ .source = "", .run = true },
     allocator: std.mem.Allocator,
     runtime: std.ArrayList([]const u8) = .empty,
@@ -742,6 +750,15 @@ const ArgumentParser = struct {
     fn forward(self: *ArgumentParser, arg: []const u8) ArgError!void {
         return self.appendRuntime(arg);
     }
+    /// Whether an option with this prefix was already forwarded before the `--`
+    /// guest delimiter, so a repeat cannot silently override the first value.
+    fn forwarded(self: *const ArgumentParser, prefix: []const u8) bool {
+        for (self.runtime.items) |existing| {
+            if (std.mem.eql(u8, existing, "--")) break;
+            if (std.mem.startsWith(u8, existing, prefix)) return true;
+        }
+        return false;
+    }
     /// Append one raw child argument, including the `--` guest delimiter.
     fn appendRuntime(self: *ArgumentParser, arg: []const u8) ArgError!void {
         try self.runtime.append(self.allocator, arg);
@@ -765,13 +782,17 @@ const ArgumentParser = struct {
         } else if (std.mem.startsWith(u8, arg, "--max-steps=")) {
             if (!self.executes() or self.saw_steps) return error.Usage;
             self.saw_steps = true;
-            self.budgets.max_steps = try positive(arg["--max-steps=".len..]);
-            if (self.executes()) try self.forward(arg);
+            _ = try positive(arg["--max-steps=".len..]);
+            try self.forward(arg);
         } else if (std.mem.startsWith(u8, arg, "--max-frames=")) {
             if (!self.executes() or self.saw_frames) return error.Usage;
             self.saw_frames = true;
-            self.budgets.max_frames = try positive(arg["--max-frames=".len..]);
-            if (self.executes()) try self.forward(arg);
+            _ = try positive(arg["--max-frames=".len..]);
+            try self.forward(arg);
+        } else if (std.mem.startsWith(u8, arg, timeout_prefix)) {
+            if (!self.executes() or self.forwarded(timeout_prefix)) return error.Usage;
+            _ = try positive(arg[timeout_prefix.len..]);
+            try self.forward(arg);
         } else if (std.mem.startsWith(u8, arg, "--max-memory=")) {
             if (!self.executes() or self.max_memory != null) return error.Usage;
             self.max_memory = budget.parse(arg["--max-memory=".len..]) catch return error.Usage;
@@ -832,7 +853,6 @@ const ArgumentParser = struct {
             .command = self.command,
             .path = self.path orelse return error.Usage,
             .grants = self.grants,
-            .budgets = self.budgets,
             .native = self.native,
             .runtime = self.runtime.items,
             .discovery = self.discovery,
@@ -1084,7 +1104,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     files.inputs = (try prepareInputs(init, parsed, basename)) orelse return 2;
     var project = language.project.Project.init(init.gpa);
     defer project.deinit();
-    if (try loadModules(init, &project, &files, basename)) |status| return status;
+    if (try loadModules(init, &project, &files, basename, try projectLimits(init, parsed))) |status| return status;
     init.timings.counts.modules = project.modules.items.len;
     init.timings.counts.source_bytes = project.counts.bytes;
     init.timings.end();
@@ -1375,8 +1395,35 @@ fn renderNavigation(init: Context, compilation: *language.project_compile.Compil
     return language.navigation.render(init.gpa, compilation, try compilerIdentity(init.io), .{});
 }
 
-fn loadModules(init: Context, project: *language.project.Project, files: *ModuleFiles, basename: []const u8) !?u8 {
-    project.load(.{ .context = files, .read = ModuleFiles.read }, basename[0 .. basename.len - 3], .{}) catch |err| switch (err) {
+/// Source-loading limits from the entry project's `mylang.json`, or the
+/// built-in defaults when no configuration exists or it cannot be read. Each
+/// present `budgets` field overrides the matching default. A malformed
+/// configuration is reported by `loadConfiguredPolicy` after the graph loads,
+/// exactly as before.
+fn projectLimits(init: Context, parsed: Parsed) !language.project.Options {
+    const discovered = project_config.discover(init.gpa, init.io, parsed.path) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return .{},
+    };
+    const config_path = discovered orelse return .{};
+    defer init.gpa.free(config_path);
+    var failure: project_config.Failure = .{};
+    var config = project_config.load(init.gpa, init.io, config_path, &failure) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return .{},
+    };
+    defer config.deinit();
+    var options: language.project.Options = .{};
+    const budgets = config.document.budgets;
+    if (budgets.max_modules) |value| options.max_modules = value;
+    if (budgets.max_imports) |value| options.max_imports = value;
+    if (budgets.max_file_bytes) |value| options.max_file_bytes = value;
+    if (budgets.max_total_bytes) |value| options.max_total_bytes = value;
+    return options;
+}
+
+fn loadModules(init: Context, project: *language.project.Project, files: *ModuleFiles, basename: []const u8, options: language.project.Options) !?u8 {
+    project.load(.{ .context = files, .read = ModuleFiles.read }, basename[0 .. basename.len - 3], options) catch |err| switch (err) {
         error.SourceError => {
             const message = try diagnostic_output.renderProject(init.gpa, project, init.diagnostics);
             defer init.gpa.free(message);

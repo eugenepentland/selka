@@ -51,6 +51,27 @@ keys cover the compiler's own build-time identity, the runtime content hash, the
 Zig and QBE tool stamps, and the target and optimize mode, so a changed tool or
 mode never reuses an object built by another one.
 
+Objects live in one *generation* directory, `objects/<hash>`, named by the
+compiler's own build-time identity and the runtime it bundles. Opening a
+generation evicts every sibling generation: the keys a rebuilt compiler asks for
+can no longer match the old entries, so nothing is lost by removing them, and
+the cache never accumulates one set of objects per compiler build. Tool stamps,
+mode and target stay in each object's key but not in the generation, so every
+process of one compiler build shares one generation — whichever path it resolved
+its tools from, whichever mode it asked for — and concurrent builds never evict
+each other. `mylang run` keeps its programs the same way under `run/<hash>`, and
+the Zig test suites keep the guest executables they build under `exe/<hash>`. A
+cache root therefore only ever holds the generation of the compiler that last
+built with it. Eviction is best effort: a cache that cannot be swept still
+serves the generation it keeps.
+
+Every object, archive and executable is built without debug information: C and
+assembly compiles pass `-g0`, the Zig runtime unit is built with `-fstrip`, and
+the link strips the symbol table. Native traps, their frames and their
+structured detail come from the runtime's own tables rather than from DWARF, so
+a program reports the same diagnostics with none of the weight; a `mylang run`
+executable is tens of kilobytes rather than over a megabyte.
+
 The fixed runtime translation units are not linked as loose objects. A single
 `zig build-obj` compiles all of them in one process into one relocatable object —
 a cold build pays one toolchain start rather than one per unit — and that object
@@ -106,8 +127,9 @@ generated entry and metadata objects `#include` them. That tree materializes onc
 per content hash, and where it lands follows the cache selection:
 
 - **`--cache-dir DIR`** keeps everything hermetically under `DIR`: objects in
-  `DIR`, the runtime tree in `DIR/runtime/<hash>`. Nothing outside `DIR` is read
-  or written, which is what the test suite relies on for isolation.
+  `DIR/objects/<generation>`, the runtime tree in `DIR/runtime/<hash>`. Nothing
+  outside `DIR` is read or written, which is what the test suite relies on for
+  isolation.
 - **The default (no `--cache-dir`)** keeps the per-project object cache at
   `.mylang-cache/qbe` but shares the runtime tree at a user-level location —
   `$XDG_CACHE_HOME/mylang/runtime/<hash>`, falling back to
