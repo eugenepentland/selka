@@ -6,6 +6,7 @@ const collections = @import("collection_lower.zig");
 const needs_list = "operation requires a managed list";
 const eListType = @import("collection_lower.zig").list_type_error;
 const call_arguments = @import("call_arguments.zig");
+const external_resources = @import("external_resources.zig");
 const io_builtins = @import("io_builtins.zig");
 const io_render = @import("io_render.zig");
 const file_operations = @import("file_operations.zig");
@@ -2088,6 +2089,9 @@ const Checker = struct {
             },
             .call => |call| {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
+                if (call.owner) |owner| if (self.active.get(self.src.text(owner))) |slot| {
+                    if (self.locals.items[@backingInt(slot)].ty == .filesystem_cap and std.mem.eql(u8, self.src.text(call.name), "read_only")) return true;
+                };
                 if (try self.cellConstructor(call) != null) {
                     if (self.expected_types.get(node.span)) |expected| if (expected.isAggregate() and self.catalog.records[expected.recordIndex()].isCell()) {
                         try self.hint(call.arguments[0], self.catalog.records[expected.recordIndex()].fields[0].ty);
@@ -2520,6 +2524,22 @@ const Checker = struct {
         out.data = .{ .cast = value };
     }
     fn checkCall(self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
+        // `fs.read_only() -> Filesystem` is a Python-shaped narrowing method on a
+        // capability value. It reuses the permission intersection of the removed
+        // `restrict_resource[...]` spelling, so the result is an ordinary typed
+        // value, performs no I/O, and contributes no effect.
+        if (input.owner) |owner| if (self.active.get(self.src.text(owner))) |slot| {
+            if (self.locals.items[@backingInt(slot)].ty == .filesystem_cap and std.mem.eql(u8, self.src.text(input.name), "read_only")) {
+                if (input.type_arguments.len != 0 or input.arguments.len != 0) return self.sink.fail("E_ARITY", node.span, "read_only takes no arguments");
+                try self.requireReadable(slot, owner);
+                self.locals.items[@backingInt(slot)].usage.reads += 1;
+                const value: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+                try self.nodes.append(self.allocator, .{ .span = owner, .ty = .filesystem_cap, .data = .{ .local = slot } });
+                out.ty = .filesystem_cap;
+                out.data = .{ .restrict_resource = .{ .permissions = external_resources.permissionBit(.read), .value = value } };
+                return;
+            }
+        };
         if (try self.cellConstructor(input)) |declaration| {
             const value = self.resolved[@backingInt(input.arguments[0])].?;
             const element = self.nodes.items[@backingInt(value)].ty;
@@ -2835,7 +2855,7 @@ const Checker = struct {
             .restrict_resource => |restrict| {
                 const value = self.resolved[@backingInt(restrict.value)].?;
                 out.ty = self.nodes.items[@backingInt(value)].ty;
-                if (out.ty.resourceKind() == null) return self.sink.fail("E_TYPE", node.span, "restrict_resource requires a filesystem or network capability");
+                if (out.ty != .filesystem_cap) return self.sink.fail("E_TYPE", node.span, "read_only requires a Filesystem capability");
                 out.data = .{ .restrict_resource = .{ .permissions = restrict.permissions, .value = value } };
             },
             .resource_io => |io| try self.checkResourceIo(node, io, &out),
@@ -3026,6 +3046,9 @@ const Checker = struct {
         if (node.data == .list_literal or node.data == .format or node.data == .comprehension) return 0;
         if (node.data == .dictionary_literal) return node.data.dictionary_literal.len;
         if (node.data == .binary) return 2;
+        // `fs.read_only()` is a narrowing method whose receiver is a local, not a
+        // queued sub-expression, so it leaves no temporary for the caller to pop.
+        if (node.data == .call and out.data == .restrict_resource) return 0;
         if (node.data == .call and try self.numericConversion(node.data.call) != null) return node.data.call.arguments.len;
         if (node.data == .call and try self.typeConversion(node.data.call) != null) return 1;
         return switch (out.data) {

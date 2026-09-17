@@ -17,7 +17,7 @@ result Read:
 
 
 def delegate(fs: Filesystem) -> Filesystem effects():
-    return restrict_resource[read](fs)
+    return fs.read_only()
 
 
 def main(fs: Filesystem) -> int:

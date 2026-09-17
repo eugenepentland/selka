@@ -664,6 +664,12 @@ const Checker = struct {
     fn listMethod(self: *Checker, node: ast.Node) Error!Symbolic {
         const method = node.data.method_call;
         const name = self.src.text(method.name);
+        if (std.mem.eql(u8, name, "read_only")) {
+            if (method.arguments.len != 0) return self.sink.fail("E_ARITY", node.span, "read_only takes no arguments");
+            const value = try self.expression(method.base);
+            if (try self.concreteValue(value, node.span) != .filesystem_cap) return self.sink.fail("E_TYPE", node.span, "read_only requires a Filesystem capability");
+            return value;
+        }
         if (std.mem.eql(u8, name, "push")) return self.sink.fail("E_REMOVED_SPELLING", method.name, "`push` was removed; use `append(value)`");
         const kind = buffer_operations.method(name) orelse return self.sink.fail("E_LIST_METHOD", method.name, "unknown collection method");
         return self.listOperation(node, .{ .base = method.base, .kind = kind, .arguments = method.arguments });
@@ -844,6 +850,12 @@ const Checker = struct {
         return Symbolic{ .concrete = target };
     }
     fn specialCall(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
+        if (input_call.owner) |owner| if (std.mem.eql(u8, self.src.text(input_call.name), "read_only")) {
+            if (input_call.arguments.len != 0 or input_call.type_arguments.len != 0) return self.sink.fail("E_ARITY", span, "read_only takes no arguments");
+            const value = try self.namedValue(owner);
+            try self.compatible(value, .{ .concrete = .filesystem_cap }, owner);
+            return .{ .concrete = .filesystem_cap };
+        };
         if (try self.textConstructor(input_call, span)) |value| return value;
         if (std.mem.eql(u8, self.src.text(input_call.name), "todo") and input_call.owner == null) {
             _ = try self.ty(input_call.type_arguments[0]);

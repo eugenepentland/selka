@@ -83,7 +83,7 @@ const retry = declarations ++
     \\
     \\
     \\def main(fs: Filesystem) -> i64 noalloc:
-    \\    return attempt(fs) * 100 + attempt(restrict_resource[read](fs))
+    \\    return attempt(fs) * 100 + attempt(fs.read_only())
 ;
 fn retryScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, module, retry);
@@ -109,6 +109,35 @@ test "source acquisition delegates authority and failed completion returns owned
 test "ownExternal and source acquisition completion retry clean every allocation failure" {
     var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(no_resize.allocator(), retryScenario, .{});
+}
+const write_denial = declarations ++
+    \\def writeRequest() -> [10]u8:
+    \\    return [119u8, 58u8, 100u8, 97u8, 116u8, 97u8, 46u8, 98u8, 105u8, 110u8]
+    \\
+    \\
+    \\def acquires(fs: Filesystem) -> i64 effects(filesystem):
+    \\    match acquire_resource[Open](fs, writeRequest()):
+    \\        case Open.ok(file):
+    \\            match complete_resource[Finish](file):
+    \\                case Finish.ok(_):
+    \\                    return 1
+    \\                case Finish.err(_):
+    \\                    return 0
+    \\        case Open.err(_):
+    \\            return 0
+    \\
+    \\
+    \\def main(fs: Filesystem) -> i64:
+    \\    return acquires(fs) * 10 + acquires(fs.read_only())
+;
+// spec: CAPABILITY-METHOD-NARROWING-1
+test "fs.read_only denies a write acquisition the full capability allows" {
+    var box: Sandbox = undefined;
+    try sandbox(&box);
+    defer box.deinit();
+    const outcome = try box.run("write-denial.my", write_denial);
+    try t.expectEqualStrings("", outcome.trap.code);
+    try t.expectEqual(@as(i64, 10), outcome.value);
 }
 const partial = declarations ++ helpers ++
     \\def work(fs: Filesystem) -> Status:
@@ -335,6 +364,10 @@ const generic_retry = declarations ++
     \\
     \\
 ++ helpers ++
+    \\def narrow[G](cap: Filesystem) -> Filesystem:
+    \\    return cap.read_only()
+    \\
+    \\
     \\def attempt(cap: Filesystem) -> i64 effects(filesystem):
     \\    match open[bool](cap):
     \\        case Open.ok(file):
@@ -348,7 +381,7 @@ const generic_retry = declarations ++
     \\
     \\
     \\def main(cap: Filesystem) -> i64:
-    \\    return attempt(cap) * 100 + attempt(restrict_resource[read](cap))
+    \\    return attempt(cap) * 100 + attempt(narrow[bool](cap))
 ;
 fn genericRetryScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "generic-retry.my", generic_retry);
