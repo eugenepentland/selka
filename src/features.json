@@ -574,7 +574,7 @@
     },
     "python-print-and-output-effect": {
       "kind": "language",
-      "summary": "`print` renders values Python-style and contributes an `output` effect.",
+      "summary": "`stream.print`/`out.print` renders values Python-style through a `Stream` and contributes an `output` effect.",
       "doc": "docs/io.md#print"
     },
     "python-file-surface": {
