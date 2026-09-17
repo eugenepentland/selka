@@ -73,6 +73,11 @@ typedef struct {
        code stores each instruction's position through `active_frame`, so it must
        always name writable storage. */
     MylQbeActiveFrame scratch_frame;
+    /* Bounded `fs.dir(path)` scope registry: each entry owns the joined prefix
+       path a derived Filesystem resolves under, and the resource sentinel carries
+       a 1-based index into it. Appended after the frozen ABI prefix. */
+    void *resource_scopes;
+    size_t resource_scope_count, resource_scope_capacity;
 } MylQbeContext;
 typedef struct {
     uint64_t value, steps;

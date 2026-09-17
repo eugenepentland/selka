@@ -259,3 +259,22 @@ test "a scoped request rejects the paths a direct request accepts" {
     try scoped.scopedSpec(.{ .mode = 'l', .path = "" });
     try t.expectError(error.Denied, scoped.scopedSpec(.{ .mode = 'r', .path = "" }));
 }
+
+// spec-case: FILESYSTEM-DIR-1
+test "a dir-prefixed request resolves under the root and rejects traversal" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.createDir(t.io, "nested", .default_dir);
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "nested/data", .data = "ok" });
+    var context: scoped.Context = .{ .allocator = t.allocator, .io = t.io, .roots = &.{.{ .dir = temporary.dir }} };
+    defer context.deinit();
+    var store = try resources.Store.init(t.allocator, .filesystem, context.filesystem(), 4);
+    defer store.deinit();
+    const authority = try store.grant();
+    const found = try store.acquire(authority, "r:nested/data");
+    var bytes: [2]u8 = undefined;
+    try t.expectEqual(@as(usize, 2), (try store.read(found, &bytes)).length);
+    try t.expectEqualStrings("ok", &bytes);
+    try store.complete(found);
+    try t.expectError(error.Denied, store.acquire(authority, "r:nested/../data"));
+}

@@ -78,6 +78,10 @@ const Analyzer = struct {
                     pops = 1;
                     result = restrict.ty;
                 },
+                .dir_resource => |dir| {
+                    pops = 2;
+                    result = dir.output;
+                },
                 .resource_io => |io| {
                     pops = if (io.kind == .write) 1 else 0;
                     result = io.output;

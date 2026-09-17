@@ -278,6 +278,11 @@ const Emitter = struct {
                 try self.instruction(node.span, .{ .restrict_resource = .{ .permissions = restrict.permissions, .ty = node.ty } });
                 try self.push(.{ .expression = restrict.value });
             },
+            .dir_resource => |dir| {
+                try self.instruction(node.span, .{ .dir_resource = .{ .output = node.ty, .path = self.program.nodes[@backingInt(dir.path)].ty } });
+                try self.push(.{ .expression = dir.path });
+                try self.push(.{ .expression = dir.capability });
+            },
             .resource_io => |io| {
                 try self.instruction(node.span, .{ .resource_io = .{ .kind = io.kind, .owner = io.owner, .output = node.ty, .input = if (io.value) |value| self.program.nodes[@backingInt(value)].ty else null } });
                 if (io.value) |value| try self.push(.{ .expression = value });

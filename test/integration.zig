@@ -2858,6 +2858,7 @@ test "CLI exposes fs.read_only permission attenuation and rejects the removed sp
     defer testing.allocator.free(dumped.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
     try testing.expect(std.mem.indexOf(u8, dumped.stdout, "RESTRICT_RESOURCE permissions=1 -> filesystem_cap") != null);
+    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "DIR_RESOURCE -> filesystem_cap") != null);
     const invalid =
         \\def main(fs: Filesystem) -> i64:
         \\    _ = restrict_resource[read, read](fs)

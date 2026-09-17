@@ -43,6 +43,10 @@ pub const Walker = struct {
             .expression => |id| switch (self.program.nodes[@backingInt(id)].data) {
                 .function_value, .unit, .integer, .boolean, .local => {},
                 .restrict_resource => |restrict| try self.expr(restrict.value),
+                .dir_resource => |dir| {
+                    try self.expr(dir.path);
+                    try self.expr(dir.capability);
+                },
                 .resource_io => |io| if (io.value) |value| try self.expr(value),
                 .environment_get => |get| {
                     try self.expr(get.name);

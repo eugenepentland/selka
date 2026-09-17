@@ -195,6 +195,10 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
         .restrict_resource => |restrict| {
             if (restrict.ty.resourceKind() == null or restrict.permissions & ~external_resources.all_permissions != 0) return error.InternalError;
         },
+        .dir_resource => |dir| {
+            const kind = dir.output.resourceKind() orelse return error.InternalError;
+            if (kind != .filesystem or !typed.byteRequest(dir.path, program.records)) return error.InternalError;
+        },
         .environment_get => |get| {
             if (typed.environmentShape(get.output, program.records) == null or !typed.byteRequest(get.name, program.records)) return error.InternalError;
         },
@@ -533,7 +537,7 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
                 if (height < 2) return error.InternalError;
                 height -= 1;
             },
-            .acquire_resource, .environment_get => {
+            .acquire_resource, .environment_get, .dir_resource => {
                 if (height < 2) return error.InternalError;
                 height -= 1;
             },

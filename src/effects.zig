@@ -61,7 +61,7 @@ fn returnContribution(program: typed.Program, function: typed.Function, value: t
         .local, .call, .invoke, .complete_resource, .acquire_resource, .acquire_buffer, .array, .record, .variant, .update => {
             if (node.ty.isAggregate()) ctx.unknown.* = true;
         },
-        .binary, .unary, .cast, .wrap, .unwrap, .length, .field, .index, .replace, .buffer_operation, .file_access, .file_method, .print, .stream_write, .arena_escape, .block_value, .propagate, .restrict_resource => {
+        .binary, .unary, .cast, .wrap, .unwrap, .length, .field, .index, .replace, .buffer_operation, .file_access, .file_method, .print, .stream_write, .arena_escape, .block_value, .propagate, .restrict_resource, .dir_resource => {
             if (node.ty.isAggregate()) ctx.unknown.* = true;
         },
         .resource_io => {
@@ -371,6 +371,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, exported: []c
                 },
                 .arena_escape => graph.direct(index, .managed_allocation, node.span),
                 .restrict_resource,
+                .dir_resource,
                 .function_value,
                 .integer,
                 .boolean,
@@ -564,6 +565,7 @@ fn seedInstructionEffects(
         .begin_arena,
         .end_arena,
         .restrict_resource,
+        .dir_resource,
         .function_value,
         .push_i64,
         .add_i64_checked,

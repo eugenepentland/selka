@@ -17,7 +17,8 @@ result Read:
 
 
 def delegate(fs: Filesystem) -> Filesystem effects():
-    return fs.read_only()
+    scoped = fs.dir("nested")
+    return scoped.read_only()
 
 
 def main(fs: Filesystem) -> int:

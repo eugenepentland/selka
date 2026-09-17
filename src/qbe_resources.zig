@@ -17,6 +17,14 @@ pub fn Lower(comptime E: type) type {
                     try self.print(" %v{d} =l call $myl_qbe_restrict_resource(l %ctx, l %v{d}, w {d})\n", .{ value, input, restrict.permissions });
                     try self.store(h - 1, value);
                 },
+                .dir_resource => |dir| {
+                    const authority = try self.load("s", h - 2);
+                    const path = try self.load("s", h - 1);
+                    const value = self.temp();
+                    try self.print(" %v{d} =l call $myl_qbe_dir_resource(l %ctx, l %v{d}, l %v{d}, l {d})\n", .{ value, authority, path, (try self.layout(dir.path)).size });
+                    try self.checkFailure("failure");
+                    try self.store(h - 2, value);
+                },
                 .acquire_resource => |acquire| {
                     const shape = typed.resultShape(acquire.output, self.program.records).?;
                     const authority = try self.load("s", h - 2);

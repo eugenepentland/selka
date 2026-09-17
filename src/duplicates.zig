@@ -241,6 +241,11 @@ const CanonicalWriter = struct {
                 writer.print("permissions {d}\n", .{restrict.permissions}) catch return error.OutOfMemory;
                 try work.append(allocator, .{ .expression = restrict.value });
             },
+            .dir_resource => |dir| {
+                writer.writeAll("dir\n") catch return error.OutOfMemory;
+                try work.append(allocator, .{ .expression = dir.path });
+                try work.append(allocator, .{ .expression = dir.capability });
+            },
             .environment_get => |get| {
                 try work.append(allocator, .{ .expression = get.name });
                 try work.append(allocator, .{ .expression = get.capability });

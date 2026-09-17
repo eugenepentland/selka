@@ -103,6 +103,7 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
             typed.typeName(io.output, program.records),
         }),
         .restrict_resource => |restrict| try writer.print("RESTRICT_RESOURCE permissions={d} -> {s}", .{ restrict.permissions, typed.typeName(restrict.ty, program.records) }),
+        .dir_resource => |dir| try writer.print("DIR_RESOURCE -> {s}", .{typed.typeName(dir.output, program.records)}),
         .environment_get => |get| try writer.print("ENVIRONMENT_GET -> {s}", .{typed.typeName(get.output, program.records)}),
         .complete_resource => |output| try writer.print("COMPLETE_RESOURCE -> {s}", .{typed.typeName(output, program.records)}),
         .acquire_resource => |acquire| try writer.print("ACQUIRE_RESOURCE -> {s}", .{typed.typeName(acquire.output, program.records)}),

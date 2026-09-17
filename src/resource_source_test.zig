@@ -400,3 +400,154 @@ test "generic resource acquisition and completion return ownership for retry und
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), genericRetryScenario, .{});
 }
+
+const directory_scope = declarations ++ helpers ++
+    \\def escapeRequest() -> [13]u8:
+    \\    return [114u8, 58u8, 46u8, 46u8, 47u8, 100u8, 97u8, 116u8, 97u8, 46u8, 98u8, 105u8, 110u8]
+    \\
+    \\
+    \\def openAndFinish(d: Filesystem) -> i64 effects(filesystem):
+    \\    match acquire_resource[Open](d, request()):
+    \\        case Open.ok(file):
+    \\            match complete_resource[Finish](file):
+    \\                case Finish.ok(_):
+    \\                    return 1
+    \\                case Finish.err(_):
+    \\                    return 0
+    \\        case Open.err(code):
+    \\            return code
+    \\
+    \\
+    \\def escapeAndFinish(d: Filesystem) -> i64 effects(filesystem):
+    \\    match acquire_resource[Open](d, escapeRequest()):
+    \\        case Open.ok(file):
+    \\            match complete_resource[Finish](file):
+    \\                case Finish.ok(_):
+    \\                    return 0
+    \\                case Finish.err(_):
+    \\                    return 1
+    \\        case Open.err(code):
+    \\            return code
+    \\
+    \\
+    \\def main(fs: Filesystem) -> i64:
+    \\    d = fs.dir("nested")
+    \\    return openAndFinish(d) * 100 + escapeAndFinish(d)
+;
+/// A granted directory with a nested subdirectory for `fs.dir` scope tests.
+fn directorySandbox(box: *Sandbox) !void {
+    try box.init(true);
+    try box.temporary.dir.createDir(t.io, "nested", .default_dir);
+    try box.temporary.dir.writeFile(t.io, .{ .sub_path = "data.bin", .data = "root" });
+    try box.temporary.dir.writeFile(t.io, .{ .sub_path = "nested/data.bin", .data = "nested" });
+}
+// spec: FILESYSTEM-DIR-1
+test "fs.dir confines a derived filesystem to its root and refuses escapes" {
+    var box: Sandbox = undefined;
+    try directorySandbox(&box);
+    defer box.deinit();
+    const outcome = try box.run("directory-scope.my", directory_scope);
+    try t.expectEqualStrings("", outcome.trap.code);
+    try t.expectEqual(@as(i64, 102), outcome.value);
+}
+const directory_lazy =
+    \\def main(fs: Filesystem) -> i64 effects():
+    \\    d = fs.dir("absent-directory")
+    \\    _ = d
+    \\    return 7
+;
+// spec-case: FILESYSTEM-DIR-1
+test "fs.dir records a scope without opening the directory or adding an effect" {
+    var box: Sandbox = undefined;
+    try sandbox(&box);
+    defer box.deinit();
+    const outcome = try box.run("directory-lazy.my", directory_lazy);
+    try t.expectEqualStrings("", outcome.trap.code);
+    try t.expectEqual(@as(i64, 7), outcome.value);
+}
+const directory_readonly = declarations ++ helpers ++
+    \\def main(fs: Filesystem) -> i64:
+    \\    d = fs.dir("nested")
+    \\    r = d.read_only()
+    \\    match acquire_resource[Open](r, request()):
+    \\        case Open.ok(file):
+    \\            _ = file
+    \\            return 1
+    \\        case Open.err(code):
+    \\            return code
+;
+/// A granted directory whose only fixture is the nested one, so a lost scope
+/// cannot accidentally resolve `data.bin` at the root.
+fn readOnlyScopeSandbox(box: *Sandbox) !void {
+    try box.init(true);
+    try box.temporary.dir.createDir(t.io, "nested", .default_dir);
+    try box.temporary.dir.writeFile(t.io, .{ .sub_path = "nested/data.bin", .data = "nested" });
+}
+// spec-case: FILESYSTEM-DIR-1
+test "fs.read_only preserves a dir scope while narrowing permissions" {
+    var box: Sandbox = undefined;
+    try readOnlyScopeSandbox(&box);
+    defer box.deinit();
+    const outcome = try box.run("directory-readonly.my", directory_readonly);
+    try t.expectEqualStrings("", outcome.trap.code);
+    try t.expectEqual(@as(i64, 1), outcome.value);
+}
+const dynamic_dir = declarations ++
+    \\def main(fs: Filesystem) -> i64:
+    \\    path = "nested"
+    \\    d = fs.dir(path)
+    \\    _ = d
+    \\    return 0
+;
+const escaping_dir = declarations ++
+    \\def main(fs: Filesystem) -> i64:
+    \\    d = fs.dir("../escape")
+    \\    _ = d
+    \\    return 0
+;
+fn dirDiagnostic(name: []const u8, source: []const u8) ![]const u8 {
+    var compilation = try language.Compilation.init(t.allocator, name, source);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.check());
+    return compilation.diagnostics.items[0].code;
+}
+// spec-case: FILESYSTEM-DIR-1
+test "fs.dir rejects a dynamic path and a path escaping the current root" {
+    try t.expectEqualStrings("E_FILESYSTEM_DIR", try dirDiagnostic("dynamic-dir.my", dynamic_dir));
+    try t.expectEqualStrings("E_FILESYSTEM_DIR", try dirDiagnostic("escaping-dir.my", escaping_dir));
+}
+const generic_dir = declarations ++ helpers ++
+    \\def openIn[G](cap: Filesystem) -> Open effects(filesystem):
+    \\    scoped = cap.dir("nested")
+    \\    return acquire_resource[Open](scoped, request())
+    \\
+    \\
+    \\def main(fs: Filesystem) -> i64:
+    \\    match openIn[bool](fs):
+    \\        case Open.ok(file):
+    \\            match complete_resource[Finish](file):
+    \\                case Finish.ok(_):
+    \\                    return 1
+    \\                case Finish.err(_):
+    \\                    return 0
+    \\        case Open.err(code):
+    \\            return code
+;
+fn genericDirScenario(allocator: std.mem.Allocator) !void {
+    var c = try language.Compilation.init(allocator, "generic-dir.my", generic_dir);
+    defer c.deinit();
+    try c.emit();
+    try t.expect(c.code.?.functions.len != 0);
+}
+// spec-case: FILESYSTEM-DIR-1
+test "generic bodies derive a dir scope and resolve under it" {
+    var box: Sandbox = undefined;
+    try directorySandbox(&box);
+    defer box.deinit();
+    const outcome = try box.run("generic-dir.my", generic_dir);
+    try t.expectEqualStrings("", outcome.trap.code);
+    try t.expectEqual(@as(i64, 1), outcome.value);
+    try genericDirScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), genericDirScenario, .{});
+}

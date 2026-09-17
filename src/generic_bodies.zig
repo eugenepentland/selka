@@ -34,6 +34,16 @@ const provider_shapes = @import("symbolic_providers.zig");
 const generic_cache = @import("generic_cache.zig");
 const Symbolic = symbolic.Value;
 const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
+/// Reject a literal `dir()` path that could leave a scoped root, mirroring `scopedPath`.
+fn scopedDirectoryPath(bytes: []const u8) bool {
+    if (bytes.len == 0) return true;
+    if (std.mem.indexOfAny(u8, bytes, "\\\x00") != null) return false;
+    var parts = std.mem.splitScalar(u8, bytes, '/');
+    while (parts.next()) |part| {
+        if (part.len == 0 or std.mem.eql(u8, part, ".") or std.mem.eql(u8, part, "..")) return false;
+    }
+    return true;
+}
 const FunctionMap = std.StringHashMapUnmanaged(usize);
 const Pending = struct { available: bool, transfer_span: ?source.Span };
 const Local = struct {
@@ -852,6 +862,18 @@ const Checker = struct {
     fn specialCall(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
         if (input_call.owner) |owner| if (std.mem.eql(u8, self.src.text(input_call.name), "read_only")) {
             if (input_call.arguments.len != 0 or input_call.type_arguments.len != 0) return self.sink.fail("E_ARITY", span, "read_only takes no arguments");
+            const value = try self.namedValue(owner);
+            try self.compatible(value, .{ .concrete = .filesystem_cap }, owner);
+            return .{ .concrete = .filesystem_cap };
+        };
+        if (input_call.owner) |owner| if (std.mem.eql(u8, self.src.text(input_call.name), "dir")) {
+            if (input_call.arguments.len != 1 or input_call.type_arguments.len != 0 or input_call.argument_names.len != 0) return self.sink.fail("E_ARITY", span, "dir takes one path argument");
+            const argument = self.program.nodes.items[@backingInt(input_call.arguments[0])];
+            const bytes = switch (argument.data) {
+                .text, .bytes => |spelling| spelling,
+                else => return self.sink.fail("E_FILESYSTEM_DIR", argument.span, "dir requires a string literal path"),
+            };
+            if (!scopedDirectoryPath(bytes)) return self.sink.fail("E_FILESYSTEM_DIR", argument.span, "dir path must stay within the current root");
             const value = try self.namedValue(owner);
             try self.compatible(value, .{ .concrete = .filesystem_cap }, owner);
             return .{ .concrete = .filesystem_cap };

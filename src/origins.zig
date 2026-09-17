@@ -240,6 +240,7 @@ const Context = struct {
             .acquire_buffer,
             .acquire_resource,
             .complete_resource,
+            .dir_resource,
             .environment_get,
             .external_read,
             .resource_io,

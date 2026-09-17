@@ -93,6 +93,18 @@ const eUnbound = "E_UNBOUND";
 const eArenaBinding = "E_ARENA_BINDING";
 const eWithResource = "E_WITH_RESOURCE";
 const eFileArgument = "E_FILE_ARGUMENT";
+const eFilesystemDir = "E_FILESYSTEM_DIR";
+/// Reject a literal `dir()` path that could leave a scoped root, mirroring the
+/// `scopedPath` rule. An empty path names the root itself.
+fn scopedDirectoryPath(bytes: []const u8) bool {
+    if (bytes.len == 0) return true;
+    if (std.mem.indexOfAny(u8, bytes, "\\\x00") != null) return false;
+    var parts = std.mem.splitScalar(u8, bytes, '/');
+    while (parts.next()) |part| {
+        if (part.len == 0 or std.mem.eql(u8, part, ".") or std.mem.eql(u8, part, "..")) return false;
+    }
+    return true;
+}
 const Pending = struct { available: bool, transfer_span: ?source.Span };
 const Work = struct { default_value: bool = false, id: ast.NodeId, emit: bool = false, checkpoint: bool = false, sorted_key: bool = false, verify: ?[]const Pending = null };
 const FieldDestination = struct { owner: typed.LocalId, index: ?typed.NodeId, value: typed.NodeId, refresh: typed.StatementId };
@@ -2148,7 +2160,8 @@ const Checker = struct {
             .call => |call| {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
                 if (call.owner) |owner| if (self.active.get(self.src.text(owner))) |slot| {
-                    if (self.locals.items[@backingInt(slot)].ty == .filesystem_cap and std.mem.eql(u8, self.src.text(call.name), "read_only")) return true;
+                    if (self.locals.items[@backingInt(slot)].ty == .filesystem_cap and
+                        (std.mem.eql(u8, self.src.text(call.name), "read_only") or std.mem.eql(u8, self.src.text(call.name), "dir"))) return true;
                 };
                 if (try self.cellConstructor(call) != null) {
                     if (self.expected_types.get(node.span)) |expected| if (expected.isAggregate() and self.catalog.records[expected.recordIndex()].isCell()) {
@@ -2598,6 +2611,14 @@ const Checker = struct {
                 return;
             }
         };
+        // `fs.dir(path) -> Filesystem` is the Python-shaped derivation that roots
+        // a filesystem at a literal path resolved under the receiver's root. It
+        // records a scope lazily, performs no I/O, and contributes no effect.
+        if (input.owner) |owner| if (self.active.get(self.src.text(owner))) |slot| {
+            if (self.locals.items[@backingInt(slot)].ty == .filesystem_cap and std.mem.eql(u8, self.src.text(input.name), "dir")) {
+                return self.checkDirCall(node, input, slot, out);
+            }
+        };
         if (try self.cellConstructor(input)) |declaration| {
             const value = self.resolved[@backingInt(input.arguments[0])].?;
             const element = self.nodes.items[@backingInt(value)].ty;
@@ -2655,6 +2676,28 @@ const Checker = struct {
             .call = call,
             .parameters = signature.signature.parameters,
         }).apply(self.allocator, &out.data.call);
+    }
+    /// Check `fs.dir(path)`: the receiver must be a `Filesystem` and the path a
+    /// single string literal that stays within the current root.
+    fn checkDirCall(self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), slot: typed.LocalId, out: *typed.Node) Error!void {
+        const owner = input.owner.?;
+        if (input.type_arguments.len != 0 or input.arguments.len != 1 or input.argument_names.len != 0) return self.sink.fail("E_ARITY", node.span, "dir takes one path argument");
+        const argument = self.syntax.nodes.items[@backingInt(input.arguments[0])];
+        const bytes = switch (argument.data) {
+            .text, .bytes => |spelling| spelling,
+            else => return self.sink.fail(eFilesystemDir, argument.span, "dir requires a string literal path"),
+        };
+        if (!scopedDirectoryPath(bytes)) return self.sink.fail(eFilesystemDir, argument.span, "dir path must stay within the current root");
+        try self.requireReadable(slot, owner);
+        self.locals.items[@backingInt(slot)].usage.reads += 1;
+        const capability: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = owner, .ty = .filesystem_cap, .data = .{ .local = slot } });
+        const path_type = try self.catalog.instantiateArray(self.allocator, .u8, bytes.len, argument.span, self.sink);
+        const values = try self.byteValues(bytes, argument.span);
+        const path: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = argument.span, .ty = path_type, .data = .{ .array = values } });
+        out.ty = .filesystem_cap;
+        out.data = .{ .dir_resource = .{ .capability = capability, .path = path } };
     }
     fn byteValues(self: *Checker, bytes: []const u8, span: source.Span) Error![]const typed.NodeId {
         const values = try self.allocator.alloc(typed.NodeId, bytes.len);
@@ -3112,10 +3155,11 @@ const Checker = struct {
         // `fs.read_only()` is a narrowing method whose receiver is a local, not a
         // queued sub-expression, so it leaves no temporary for the caller to pop.
         if (node.data == .call and out.data == .restrict_resource) return 0;
+        if (node.data == .call and out.data == .dir_resource) return 0;
         if (node.data == .call and try self.numericConversion(node.data.call) != null) return node.data.call.arguments.len;
         if (node.data == .call and try self.typeConversion(node.data.call) != null) return 1;
         return switch (out.data) {
-            .function_value, .unit, .integer, .boolean, .local, .block_value => 0,
+            .function_value, .unit, .integer, .boolean, .local, .block_value, .dir_resource => 0,
             .arena_escape, .cast, .wrap, .unwrap, .length, .field, .unary, .propagate, .external_read, .complete_resource, .restrict_resource => 1,
             .acquire_buffer => 1,
             .acquire_resource, .environment_get => 2,
