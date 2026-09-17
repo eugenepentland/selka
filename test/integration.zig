@@ -174,6 +174,52 @@ fn runFixture(command: []const u8, text: []const u8, options: []const []const u8
     return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
 }
 
+/// `runFixture` for a module-syntax entry. The public clock/random read surface
+/// lives in the embedded `time`/`random` modules, so a capability program can
+/// reach it only as a project entry whose declared module matches its file stem;
+/// this writes `main.my` so `check`/`run` auto-route to the project loader.
+fn runProjectFixture(command: []const u8, text: []const u8, options: []const []const u8) !std.process.RunResult {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = text });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(path);
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, command, path });
+    if (std.mem.startsWith(u8, command, "run")) try args.appendSlice(testing.allocator, &(.{"--print-result"} ++ tools));
+    try args.appendSlice(testing.allocator, options);
+    return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+}
+
+fn invokeProject(command: []const u8, text: []const u8, expected_status: u8, expected_stdout: []const u8, stderr_part: []const u8) !void {
+    return invokeProjectOptions(command, text, &.{}, expected_status, expected_stdout, stderr_part);
+}
+
+fn invokeProjectOptions(command: []const u8, text: []const u8, options: []const []const u8, expected_status: u8, expected_stdout: []const u8, stderr_part: []const u8) !void {
+    const outcome = try runProjectFixture(command, text, options);
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    const wanted = if (std.mem.startsWith(u8, command, "run") and expected_status == 0) resultStatus(expected_stdout) else expected_status;
+    try testing.expectEqual(std.process.Child.Term{ .exited = wanted }, outcome.term);
+    try testing.expectEqualStrings(expected_stdout, outcome.stdout);
+    if (stderr_part.len == 0) try testing.expectEqualStrings("", outcome.stderr) else try testing.expect(std.mem.indexOf(u8, outcome.stderr, stderr_part) != null);
+}
+
+/// `check` a project entry that imports the embedded `random` module. That
+/// module's private `below` helper carries a pre-existing `W_MUTATES_MISSING`
+/// advisory, so the check must succeed without a diagnostic even though stderr
+/// is non-empty; the advisory is not a capability failure.
+fn checkProjectClean(text: []const u8) !void {
+    const outcome = try runProjectFixture("check", text, &.{});
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    try testing.expectEqualStrings("", outcome.stdout);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, "error[") == null);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, "host failure:") == null);
+}
+
 const C2Counts = struct { performed: usize, reused: usize };
 
 fn c2NumberAfter(text: []const u8, field: []const u8) !usize {
@@ -2800,26 +2846,28 @@ test "CLI handles recoverable results and rejects silent error loss" {
         \\    return 0
     , 1, "", "error[E_EXPLICIT_DISCARD_REQUIRED]");
 }
+// spec-case: CLOCK-INTRINSIC-1
 test "CLI checks external capabilities but cannot silently grant ambient providers" {
     const source = @embedFile("fixtures/external-capabilities.my");
-    try invoke("check", source, 0, "", "");
-    try invokeOptions("run", source, &.{"--restrict"}, 2, "", "--restrict is active");
-    const dumped = try runFixture("dump-bytecode", source, &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    for ([_][]const u8{ "EXTERNAL_clock", "EXTERNAL_random", "effects {clock, random}" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
+    try checkProjectClean(source);
+    try invokeProjectOptions("run", source, &.{"--restrict"}, 2, "", "--restrict is active");
+    const emitted = try runProjectFixture("emit-project-qbe", source, &.{});
+    defer testing.allocator.free(emitted.stdout);
+    defer testing.allocator.free(emitted.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, emitted.term);
+    // The clock and random modules lower to the same provider boundary the raw
+    // spellings did, so the emitted program still carries both reads.
+    try testing.expect(std.mem.indexOf(u8, emitted.stdout, "myl_qbe_external_read") != null);
     const invalid =
-        \\result T:
-        \\    ok: i64,
-        \\    err: i64
+        \\module main
+        \\import time
         \\
         \\
-        \\def main(c: Clock) -> i64 effects():
-        \\    _ = clock_now[T](c)
+        \\def main(c: Clock) -> int effects():
+        \\    _ = time.now(c)
         \\    return 0
     ;
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_EFFECT_BOUND]");
+    for ([_][]const u8{ "check", "run", "emit-project-qbe", "discover-project-duplicates" }) |command| try invokeProject(command, invalid, 1, "", "error[E_EFFECT_BOUND]");
 }
 test "CLI checks bounded environment access without granting ambient process access" {
     const source = @embedFile("fixtures/environment.my");
@@ -2863,21 +2911,20 @@ test "CLI exposes fs.read_only permission attenuation and rejects the removed sp
 }
 
 const clock_program =
-    \\result Time:
-    \\    ok: i64,
-    \\    err: i64
+    \\module main
+    \\import time
     \\
     \\
-    \\def main(clock: Clock) -> i64:
-    \\    match clock_now[Time](clock):
-    \\        case Time.ok(now):
-    \\            return now - now
-    \\        case Time.err(code):
-    \\            return code
+    \\def main(clock: Clock) -> int:
+    \\    match time.now(clock):
+    \\        case Ok(instant):
+    \\            return instant.unix_nanoseconds - instant.unix_nanoseconds
+    \\        case Err(message):
+    \\            return len(message)
 ;
 // spec: CAPABILITY-1
 test "CLI accepts Python capability spellings and lets a declared type keep the name" {
-    try invoke("check", clock_program, 0, "", "");
+    try invokeProject("check", clock_program, 0, "", "");
     const declared =
         \\class Clock:
         \\    ticks: int
@@ -2887,16 +2934,15 @@ test "CLI accepts Python capability spellings and lets a declared type keep the 
     ;
     try invoke("run", declared, 0, "7\n", "");
     const entropy =
-        \\result Word:
-        \\    ok: u64,
-        \\    err: i64
+        \\module main
+        \\import random
         \\
         \\
-        \\def main(rng: Entropy) -> i64:
-        \\    _ = random_u64[Word](rng)
+        \\def main(rng: Entropy) -> int:
+        \\    _ = random.from_entropy(rng)
         \\    return 0
     ;
-    try invoke("check", entropy, 0, "", "");
+    try checkProjectClean(entropy);
     try invoke("check",
         \\def main(env: Environment) -> i64:
         \\    _ = env
@@ -2919,10 +2965,10 @@ test "CLI grant flags reject repeats empty values and commands that do not execu
         &.{ "--allow-all", "--allow-clock" },
         &.{"--allow-nonsense"},
         &.{ "--restrict", "--restrict" },
-    }) |options| try invokeOptions("run", clock_program, options, 2, "", "usage:");
-    try invokeOptions("check", clock_program, &.{"--allow-clock"}, 2, "", "usage:");
-    try invokeOptions("check", clock_program, &.{"--restrict"}, 2, "", "usage:");
-    try invokeOptions("dump-bytecode", clock_program, &.{"--allow-clock"}, 2, "", "usage:");
+    }) |options| try invokeProjectOptions("run", clock_program, options, 2, "", "usage:");
+    try invokeProjectOptions("check", clock_program, &.{"--allow-clock"}, 2, "", "usage:");
+    try invokeProjectOptions("check", clock_program, &.{"--restrict"}, 2, "", "usage:");
+    try invokeProjectOptions("emit-project-qbe", clock_program, &.{"--allow-clock"}, 2, "", "usage:");
 }
 // spec: CAPABILITY-3
 test "CLI refuses an ungranted entry capability only while --restrict is active" {
@@ -2931,13 +2977,14 @@ test "CLI refuses an ungranted entry capability only while --restrict is active"
         \\    _ = env.get("PATH")
         \\    return 0
     ;
-    for ([_][]const u8{ clock_program, environment }) |program| {
-        try invokeOptions("run", program, &.{"--restrict"}, 2, "", "--restrict is active");
-        try invokeOptions("run", program, &.{"--restrict"}, 2, "", "drop --restrict");
-        // The default grants every capability, so the same program runs unchanged.
-        try invoke("run", program, 0, "0\n", "");
-    }
-    try invokeOptions("run", clock_program, &.{ "--restrict", "--allow-clock" }, 0, "0\n", "");
+    try invokeProjectOptions("run", clock_program, &.{"--restrict"}, 2, "", "--restrict is active");
+    try invokeProjectOptions("run", clock_program, &.{"--restrict"}, 2, "", "drop --restrict");
+    // The default grants every capability, so the same program runs unchanged.
+    try invokeProject("run", clock_program, 0, "0\n", "");
+    try invokeOptions("run", environment, &.{"--restrict"}, 2, "", "--restrict is active");
+    try invokeOptions("run", environment, &.{"--restrict"}, 2, "", "drop --restrict");
+    try invoke("run", environment, 0, "0\n", "");
+    try invokeProjectOptions("run", clock_program, &.{ "--restrict", "--allow-clock" }, 0, "0\n", "");
     try invokeOptions("run", environment, &.{ "--restrict", "--allow-env=PATH" }, 0, "0\n", "");
     // A grant the entry point never requests is simply never read.
     try invokeOptions("run",
@@ -2948,22 +2995,21 @@ test "CLI refuses an ungranted entry capability only while --restrict is active"
 // spec: CAPABILITY-5
 test "CLI clock entropy and environment providers honour their grants" {
     const seeded =
-        \\result Word:
-        \\    ok: u64,
-        \\    err: i64
+        \\module main
+        \\import random
         \\
         \\
-        \\def main(rng: Entropy) -> i64:
-        \\    match random_u64[Word](rng):
-        \\        case Word.ok(value):
-        \\            return i64(value % 1000u64)
-        \\        case Word.err(code):
-        \\            return code
+        \\def main(rng: Entropy) -> int:
+        \\    match random.from_entropy(rng):
+        \\        case Ok(generator):
+        \\            return int(generator.state[0] % 1000u64)
+        \\        case Err(message):
+        \\            return len(message)
     ;
-    const first = try runFixture("run", seeded, &.{"--allow-random=11"});
+    const first = try runProjectFixture("run", seeded, &.{"--allow-random=11"});
     defer testing.allocator.free(first.stdout);
     defer testing.allocator.free(first.stderr);
-    const again = try runFixture("run", seeded, &.{"--allow-random=11"});
+    const again = try runProjectFixture("run", seeded, &.{"--allow-random=11"});
     defer testing.allocator.free(again.stdout);
     defer testing.allocator.free(again.stderr);
     try testing.expectEqualStrings(first.stdout, again.stdout);

@@ -19,10 +19,32 @@ const declarations =
     \\
 ;
 fn reject(source: []const u8, code: []const u8) !void {
-    var c = try language.Compilation.init(t.allocator, module, source);
+    var c = try language.Compilation.initTrusted(t.allocator, module, source);
     defer c.deinit();
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
+}
+/// An ordinary, non-trusted compilation may not spell the raw provider reads.
+fn rejectRaw(source: []const u8) !void {
+    var c = try language.Compilation.init(t.allocator, module, source);
+    defer c.deinit();
+    try t.expectError(error.SourceError, c.check());
+    try t.expectEqualStrings("E_INTERNAL_NAME", c.diagnostics.items[0].code);
+    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "time") != null);
+    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "random") != null);
+}
+// spec: CLOCK-INTRINSIC-1
+test "ordinary source cannot spell the raw clock and random provider reads" {
+    try rejectRaw(declarations ++
+        \\def main(c: Clock) -> i64:
+        \\    _ = clock_now[Time](c)
+        \\    return 0
+    );
+    try rejectRaw(declarations ++
+        \\def main(r: Entropy) -> i64:
+        \\    _ = random_u64[Random](r)
+        \\    return 0
+    );
 }
 // The runtime's pinned SplitMix64 stream draws 16294208416658607535 first from
 // seed zero, and that word's high bit proves the sample keeps all its bits.
@@ -50,7 +72,7 @@ const forwarded = declarations ++
     \\            return e
 ;
 fn scenario(allocator: std.mem.Allocator) !void {
-    var c = try language.Compilation.init(allocator, module, forwarded);
+    var c = try language.Compilation.initTrusted(allocator, module, forwarded);
     defer c.deinit();
     try c.emit();
     const dump = try c.dump(allocator);
@@ -59,7 +81,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
 }
 test "external entry grants forward through wrappers and preserve full width samples" {
     try scenario(t.allocator);
-    var c = try language.Compilation.init(t.allocator, module, forwarded);
+    var c = try language.Compilation.initTrusted(t.allocator, module, forwarded);
     defer c.deinit();
     const outcome = try native.runWithOptions(&c, .{ .arguments = &.{"--allow-random=0"} });
     try t.expectEqualStrings("", outcome.trap.code);
@@ -71,12 +93,12 @@ test "external execution and emission release every failed allocation" {
     try t.checkAllAllocationFailures(no_resize.allocator(), scenario, .{});
 }
 test "every grant an entry point names is materialized before its body runs" {
-    var c = try language.Compilation.init(t.allocator, module, forwarded);
+    var c = try language.Compilation.initTrusted(t.allocator, module, forwarded);
     defer c.deinit();
     const withheld = try native.runWithOptions(&c, .{ .arguments = &.{ "--restrict", "--allow-random=0" } });
     try t.expectEqualStrings("CapabilityUnavailable", withheld.trap.code);
     try t.expectEqualStrings("", withheld.stdout);
-    var unused = try language.Compilation.init(t.allocator, "unused.my",
+    var unused = try language.Compilation.initTrusted(t.allocator, "unused.my",
         \\def main(clock: Clock) -> i64 effects():
         \\    _ = clock
         \\    return 1
@@ -106,14 +128,14 @@ const generic_provider_source = declarations ++
     \\            return e
 ;
 fn genericProviderScenario(allocator: std.mem.Allocator) !void {
-    var c = try language.Compilation.init(allocator, "generic-provider.my", generic_provider_source);
+    var c = try language.Compilation.initTrusted(allocator, "generic-provider.my", generic_provider_source);
     defer c.deinit();
     try c.emit();
     try t.expect(c.code.?.functions.len != 0);
 }
 // spec: GENERIC-PROVIDER-EXEC-1
 test "generic provider reads preserve values callback counts and allocation cleanup" {
-    var c = try language.Compilation.init(t.allocator, "generic-provider.my", generic_provider_source);
+    var c = try language.Compilation.initTrusted(t.allocator, "generic-provider.my", generic_provider_source);
     defer c.deinit();
     // Two distinct words can only come from two separate entropy reads.
     try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
@@ -140,7 +162,7 @@ test "clock and random bounds propagate through calls independently of noio and 
         \\    _ = read(r)
         \\    return 0
     , "E_EFFECT_BOUND");
-    var c = try language.Compilation.init(t.allocator, module, declarations ++
+    var c = try language.Compilation.initTrusted(t.allocator, module, declarations ++
         \\def main(c: Clock, r: Entropy) -> i64 noalloc:
         \\    _ = clock_now[Time](c)
         \\    _ = random_u64[Random](r)
@@ -153,7 +175,7 @@ test "clock and random bounds propagate through calls independently of noio and 
     try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
 }
 test "repeated provider reads keep the guest inside one frame" {
-    var c = try language.Compilation.init(t.allocator, module, declarations ++
+    var c = try language.Compilation.initTrusted(t.allocator, module, declarations ++
         \\def main(c: Clock) -> i64:
         \\    n = 0
         \\    while n < 10000:
@@ -168,7 +190,7 @@ test "repeated provider reads keep the guest inside one frame" {
     try t.expectEqual(@as(i64, 10000), outcome.value);
 }
 test "clock reads advance monotonically while a short circuited operand never reads" {
-    var c = try language.Compilation.init(t.allocator, module, declarations ++
+    var c = try language.Compilation.initTrusted(t.allocator, module, declarations ++
         \\def positive(c: Clock) -> bool:
         \\    match clock_now[Time](c):
         \\        case Time.ok(v):
@@ -201,7 +223,7 @@ test "clock reads advance monotonically while a short circuited operand never re
     try t.expectEqual(@as(i64, 7), outcome.value);
 }
 test "external emission rejects a forged result shape before any provider call" {
-    var c = try language.Compilation.init(t.allocator, module, declarations ++
+    var c = try language.Compilation.initTrusted(t.allocator, module, declarations ++
         \\def main(c: Clock) -> i64:
         \\    _ = clock_now[Time](c)
         \\    return 0
