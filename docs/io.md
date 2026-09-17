@@ -284,27 +284,31 @@ def main(env: Environment) -> int effects(environment):
 ## Files
 
 File functions take the capability as their first argument, so authority is
-visible at every call site rather than hidden in a global.
+visible at every call site rather than hidden in a global. Every whole-path
+helper is also a method on the `Filesystem` value: `fs.read_text(path)` is the
+qualified spelling of `read_text(fs, path)`. Both are accepted; the method form
+belongs to the receiver, so a declared function or local named `read_text` still
+claims the free spelling.
 
 ```mylang
 # doc: allow-read notes
 # doc: expect Ok('hello from a granted directory\n')
 # doc: expect True False
 def main(fs: Filesystem, out: Stream) -> int:
-    out.print(read_text(fs, "greeting.txt"))
-    out.print(exists(fs, "greeting.txt"), exists(fs, "absent.txt"))
+    out.print(fs.read_text("greeting.txt"))
+    out.print(fs.exists("greeting.txt"), fs.exists("absent.txt"))
     return 0
 ```
 
-`open(fs, path, mode)` returns `Result[File, str]` for a binary mode and
+`fs.open(path, mode)` returns `Result[File, str]` for a binary mode and
 `Result[TextFile, str]` for a text mode. The mode is a literal: `"r"`, `"w"` or
 `"a"` with an optional `"b"` or `"t"`. A binary handle reads `bytes`; a text
-handle reads `str`.
+handle reads `str`. The free `open(fs, path, mode)` form is equivalent.
 
-`with open(...) as f:` opens the file and **traps** with a located `R_FILE` error
-if it cannot, the way Python's `open` raises. Writing `with open(...)? as f:`
-propagates the failure instead, in a function that returns a compatible
-`Result`:
+`with fs.open(...) as f:` opens the file and **traps** with a located `R_FILE`
+error if it cannot, the way Python's `open` raises. Writing
+`with fs.open(...)? as f:` propagates the failure instead, in a function that
+returns a compatible `Result`:
 
 ```mylang
 # doc: allow-read notes
@@ -312,13 +316,13 @@ propagates the failure instead, in a function that returns a compatible
 # doc: expect 3
 def count(fs: Filesystem) -> Result[int, str]:
     total = 0
-    with open(fs, "lines.txt", "r")? as f:
+    with fs.open("lines.txt", "r")? as f:
         for line in f.readlines():
             total = total + 1
     return Ok(total)
 
 def main(fs: Filesystem, out: Stream) -> int:
-    with open(fs, "greeting.txt", "rb") as f:
+    with fs.open("greeting.txt", "rb") as f:
         out.print(f.read())
     match count(fs):
         case Ok(value):
@@ -344,18 +348,19 @@ traps with `R_FILE`, as does any provider failure during a method, because
 An open binding is used only through its own methods; it cannot be stored,
 passed or returned.
 
-The whole-path helpers are:
+The whole-path helpers are methods on the `Filesystem` value, and each keeps a
+free-function spelling that takes the capability first:
 
-| Call | Result |
-| --- | --- |
-| `read_file(fs, path)` | `Result[bytes, str]` |
-| `read_text(fs, path)` | `Result[str, str]` |
-| `write_file(fs, path, data)` | `Result[None, str]` |
-| `write_text(fs, path, text)` | `Result[None, str]` |
-| `exists(fs, path)` | `bool` |
-| `listdir(fs, path)` | `Result[list[str], str]` |
-| `mkdir(fs, path)` | `Result[None, str]` |
-| `remove(fs, path)` | `Result[None, str]` |
+| Method | Free form | Result |
+| --- | --- | --- |
+| `fs.read_file(path)` | `read_file(fs, path)` | `Result[bytes, str]` |
+| `fs.read_text(path)` | `read_text(fs, path)` | `Result[str, str]` |
+| `fs.write_file(path, data)` | `write_file(fs, path, data)` | `Result[None, str]` |
+| `fs.write_text(path, text)` | `write_text(fs, path, text)` | `Result[None, str]` |
+| `fs.exists(path)` | `exists(fs, path)` | `bool` |
+| `fs.listdir(path)` | `listdir(fs, path)` | `Result[list[str], str]` |
+| `fs.mkdir(path)` | `mkdir(fs, path)` | `Result[None, str]` |
+| `fs.remove(path)` | `remove(fs, path)` | `Result[None, str]` |
 
 Their error text names the operation, the path and a readable reason, for example
 `read 'absent.txt': failed: the path does not exist or could not be used`.
@@ -375,8 +380,8 @@ narrower than read authority:
 # doc: expect Err('read \'../escape\': denied: outside the granted directories, or the mode needs a write grant')
 # doc: expect Err('write \'new.txt\': denied: outside the granted directories, or the mode needs a write grant')
 def main(fs: Filesystem, out: Stream) -> int:
-    out.print(read_text(fs, "../escape"))
-    out.print(write_text(fs, "new.txt", "x"))
+    out.print(fs.read_text("../escape"))
+    out.print(fs.write_text("new.txt", "x"))
     return 0
 ```
 
@@ -385,7 +390,7 @@ File operations contribute the `filesystem` effect, so `noio` rejects them:
 ```mylang
 # doc: expect-error E_EFFECT_BOUND
 def main(fs: Filesystem) -> int noio:
-    _ = exists(fs, "notes.txt")
+    _ = fs.exists("notes.txt")
     return 0
 ```
 

@@ -308,3 +308,168 @@ test "a program with no granted filesystem refuses to start rather than reading 
     try t.expectEqual(@as(u8, 2), outcome.status);
     try t.expectEqualStrings("", outcome.stdout);
 }
+
+// spec: FILE-METHOD-1
+test "FILE-METHOD-1 the whole-path helpers accept the qualified method spelling" {
+    var sandbox: Sandbox = undefined;
+    try sandbox.init(true);
+    defer sandbox.deinit();
+    try sandbox.temporary.dir.writeFile(t.io, .{ .sub_path = "notes.txt", .data = "alpha\n" });
+    const program =
+        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\    out.print(fs.read_text("notes.txt"))
+        \\    out.print(fs.read_file("notes.txt"))
+        \\    out.print(fs.exists("notes.txt"), fs.exists("absent.txt"))
+        \\    out.print(fs.write_text("copy.txt", "beta\n"))
+        \\    out.print(fs.read_text("copy.txt"))
+        \\    out.print(fs.mkdir("sub"))
+        \\    out.print(fs.listdir("sub"))
+        \\    out.print(fs.write_file("bin.txt", b"raw"))
+        \\    out.print(fs.read_file("bin.txt"))
+        \\    out.print(fs.remove("copy.txt"))
+        \\    out.print(fs.exists("copy.txt"))
+        \\    return 0
+    ;
+    const outcome = try sandbox.run(module, program);
+    try t.expectEqualStrings(
+        "Ok('alpha\\n')\n" ++
+            "Ok(b'alpha\\n')\n" ++
+            "True False\n" ++
+            "Ok(None)\n" ++
+            "Ok('beta\\n')\n" ++
+            "Ok(None)\n" ++
+            "Ok([])\n" ++
+            "Ok(None)\n" ++
+            "Ok(b'raw')\n" ++
+            "Ok(None)\n" ++
+            "False\n",
+        outcome.stdout,
+    );
+}
+
+// spec-case: FILE-METHOD-1
+test "FILE-METHOD-1 the method spelling shares the free form's result types modes and arity" {
+    var compilation = try language.Compilation.init(t.allocator, module,
+        \\def main(fs: Filesystem) -> int:
+        \\    text: Result[str, str] = fs.read_text("notes.txt")
+        \\    raw: Result[bytes, str] = fs.read_file("notes.txt")
+        \\    listing: Result[list[str], str] = fs.listdir(".")
+        \\    present: bool = fs.exists("notes.txt")
+        \\    wrote_text: Result[None, str] = fs.write_text("copy.txt", "x")
+        \\    wrote_raw: Result[None, str] = fs.write_file("copy.bin", b"x")
+        \\    made: Result[None, str] = fs.mkdir("sub")
+        \\    dropped: Result[None, str] = fs.remove("sub")
+        \\    _ = text
+        \\    _ = raw
+        \\    _ = listing
+        \\    _ = present
+        \\    _ = wrote_text
+        \\    _ = wrote_raw
+        \\    _ = made
+        \\    _ = dropped
+        \\    return 0
+    );
+    defer compilation.deinit();
+    try compilation.check();
+    try reject(
+        \\def main(fs: Filesystem) -> int:
+        \\    _ = fs.read_text()
+        \\    return 0
+    , "E_ARITY");
+    try reject(
+        \\def main(fs: Filesystem) -> int:
+        \\    _ = fs.read_text("a", "b")
+        \\    return 0
+    , "E_ARITY");
+    try reject(
+        \\def main(fs: Filesystem) -> int:
+        \\    _ = fs.write_text("a")
+        \\    return 0
+    , "E_ARITY");
+    try reject(
+        \\def main(fs: Filesystem) -> int:
+        \\    _ = fs.exists()
+        \\    return 0
+    , "E_ARITY");
+    try reject(
+        \\def main(fs: Filesystem) -> int:
+        \\    with fs.open("a") as f:
+        \\        _ = f
+        \\        return 0
+    , "E_ARITY");
+    try reject(
+        \\def main(fs: Filesystem) -> int:
+        \\    mode = "r"
+        \\    with fs.open("a", mode) as f:
+        \\        _ = f
+        \\        return 0
+    , "E_FILE_ARGUMENT");
+    try reject(
+        \\def main(fs: Filesystem) -> int:
+        \\    value: int = fs.read_text("notes.txt")
+        \\    return value
+    , "E_TYPE");
+}
+
+// spec-case: FILE-METHOD-1
+test "FILE-METHOD-1 generic bodies reject the method spelling like the free form" {
+    try reject(
+        \\def look[T](fs: Filesystem, value: T) -> int:
+        \\    _ = fs.read_text("x")
+        \\    return 0
+        \\
+        \\def main(fs: Filesystem) -> int:
+        \\    return look(fs, 7)
+    , "E_GENERIC_BODY_UNSUPPORTED");
+}
+
+// spec-case: FILE-METHOD-1
+test "FILE-METHOD-1 a same-named function or local keeps the free form while the method stays the receiver's" {
+    try expectPrinted(
+        \\def read_text(fs: Filesystem, path: str) -> str:
+        \\    return "shadowed"
+        \\
+        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\    out.print(read_text(fs, "notes.txt"))
+        \\    out.print(fs.read_text("notes.txt"))
+        \\    return 0
+    , "shadowed\nOk('alpha\\nbeta\\n')\n");
+    try expectPrinted(
+        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\    exists = 7
+        \\    out.print(exists)
+        \\    out.print(fs.exists("notes.txt"))
+        \\    return 0
+    , "7\nTrue\n");
+}
+
+// spec-case: FILE-METHOD-1
+test "FILE-METHOD-1 with fs.open binds a direct handle and propagates through the method mark" {
+    try expectPrinted(
+        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\    with fs.open("notes.txt", "rb") as f:
+        \\        out.print(f.read())
+        \\    return 0
+    , "b'alpha\\nbeta\\n'\n");
+    try expectPrinted(
+        \\def count(fs: Filesystem) -> Result[int, str]:
+        \\    total = 0
+        \\    with fs.open("notes.txt", "r")? as f:
+        \\        for line in f.readlines():
+        \\            total = total + 1
+        \\    return Ok(total)
+        \\
+        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\    match count(fs):
+        \\        case Ok(value):
+        \\            out.print(value)
+        \\        case Err(message):
+        \\            out.print(message)
+        \\    return 0
+    , "2\n");
+    try expectTrap(
+        \\def main(fs: Filesystem) -> int:
+        \\    with fs.open("absent.txt", "r") as f:
+        \\        return len(f.read())
+    , "R_FILE");
+}

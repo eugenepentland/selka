@@ -20,6 +20,11 @@ pub const Access = enum {
             else => 2,
         };
     }
+    /// Argument count of the qualified `fs.name(...)` spelling, whose receiver is
+    /// the capability itself: one fewer than the free-function count.
+    pub fn methodArity(self: Access) usize {
+        return self.arity() - 1;
+    }
 };
 
 /// Methods of an open file binding, whose receiver must be a `with` local.

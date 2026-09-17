@@ -1,0 +1,21 @@
+def load(fs: Filesystem) -> Result[str, str]:
+    with fs.open("notes.txt", "r")? as f:
+        return Ok(f.read())
+
+
+def main(fs: Filesystem, out: Stream) -> int:
+    out.print(fs.exists("notes.txt"))
+    out.print(fs.read_text("notes.txt"))
+    out.print(fs.read_file("notes.txt"))
+    out.print(fs.write_text("copy.txt", "beta\n"))
+    out.print(fs.write_file("copy.bin", b"raw"))
+    out.print(fs.mkdir("sub"))
+    out.print(fs.listdir("sub"))
+    out.print(fs.remove("copy.txt"))
+    out.print(fs.remove("sub"))
+    match load(fs):
+        case Ok(text):
+            out.print(text)
+        case Err(message):
+            out.print(message)
+    return 0
