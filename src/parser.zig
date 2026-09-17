@@ -681,7 +681,8 @@ pub const Parser = struct {
     }
     /// Parse one optional `mutates(name, ...)` clause and normalize names to
     /// zero-based parameter positions. Absence and `mutates()` both yield the
-    /// empty footprint. A nonempty clause requires the mutation effect bit.
+    /// empty footprint. Without a ceiling the clause means unbounded effects
+    /// with this footprint; with a ceiling it requires the mutation bit.
     fn mutatesClause(self: *Parser, names: []const ?Span, bound: ?effects.Bound) diagnostic.Error![]const u16 {
         const token = self.current();
         if (token.tag != .ident or !std.mem.eql(u8, self.src.text(token.span), "mutates")) return &.{};
@@ -712,8 +713,9 @@ pub const Parser = struct {
             if (!self.take(.comma) or self.current().tag == .rparen) break;
         };
         _ = try self.expect(.rparen);
-        const allowed = if (bound) |declared| declared.allowed else 0;
-        if (allowed & effects.bit(.mutation) == 0) return self.sink.fail("E_MUTATES_EFFECT", token.span, "`mutates(...)` requires the mutation effect in the preceding effects ceiling");
+        if (bound) |declared| {
+            if (declared.allowed & effects.bit(.mutation) == 0) return self.sink.fail("E_MUTATES_EFFECT", token.span, "`mutates(...)` requires the mutation effect in the preceding effects ceiling");
+        }
         std.mem.sort(u16, positions[0..count], {}, std.sort.asc(u16));
         return self.arena.allocator().dupe(u16, positions[0..count]) catch return error.OutOfMemory;
     }

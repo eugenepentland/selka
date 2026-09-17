@@ -22,6 +22,8 @@ pub const permission_code = "E_MUTATION_PERMISSION";
 pub const overlap_code = "E_MUTATION_OVERLAP";
 /// Diagnostic code for a bounded analysis that had to widen conservatively.
 pub const limit_code = "E_MUTATION_LIMIT";
+/// Warning code for an externally observable write with no declared footprint.
+pub const missing_footprint_code = "W_MUTATES_MISSING";
 
 /// Abstract upper bound on the caller inputs a value may alias.
 ///
@@ -542,22 +544,90 @@ fn permissionMessage(allocator: std.mem.Allocator, function: typed.Function, sum
     return allocator.dupe(u8, text.written()) catch return error.OutOfMemory;
 }
 
+/// Write one parameter's source name, falling back to `p<N>` when the checked
+/// local carries no name. Positions are zero-based, matching `mutates(...)`.
+fn writeParameterName(writer: *std.Io.Writer, function: typed.Function, position: u5) std.Io.Writer.Error!void {
+    const index: usize = position;
+    if (index < function.scope.locals.len) {
+        const name = function.scope.locals[index].name;
+        if (name.len != 0) return writer.writeAll(name);
+    }
+    try writer.print("p{d}", .{position});
+}
+
+/// Build the mandatory-footprint warning, printing the inferred `mutates(...)`
+/// clause verbatim so the reader can paste it onto the declaration.
+fn missingFootprintMessage(allocator: std.mem.Allocator, function: typed.Function, summary: Summary) std.mem.Allocator.Error![]const u8 {
+    var positions = summary.mutates;
+    // An untraceable target widens to every parameter, exactly as the inferred
+    // footprint published on the signature does.
+    if (summary.mutates_unknown) {
+        var bit: u5 = 0;
+        while (bit < 16) : (bit += 1) {
+            if (bit < function.signature.parameter_count) positions |= @as(u16, 1) << @intCast(bit);
+        }
+    }
+    var text: std.Io.Writer.Allocating = .init(allocator);
+    defer text.deinit();
+    text.writer.writeAll("this function writes ") catch return error.OutOfMemory;
+    if (positions == 0) {
+        text.writer.writeAll("a caller-reachable location") catch return error.OutOfMemory;
+    } else {
+        var listed = false;
+        var position: u5 = 0;
+        while (position < 16) : (position += 1) {
+            if (positions & (@as(u16, 1) << @intCast(position)) == 0) continue;
+            if (listed) text.writer.writeAll(", ") catch return error.OutOfMemory;
+            text.writer.writeAll("`") catch return error.OutOfMemory;
+            writeParameterName(&text.writer, function, position) catch return error.OutOfMemory;
+            text.writer.print("` (parameter {d})", .{@as(u32, position) + 1}) catch return error.OutOfMemory;
+            listed = true;
+        }
+    }
+    text.writer.writeAll(" reachable from the caller; declare `mutates(") catch return error.OutOfMemory;
+    var listed = false;
+    var position: u5 = 0;
+    while (position < 16) : (position += 1) {
+        if (positions & (@as(u16, 1) << @intCast(position)) == 0) continue;
+        if (listed) text.writer.writeAll(", ") catch return error.OutOfMemory;
+        writeParameterName(&text.writer, function, position) catch return error.OutOfMemory;
+        listed = true;
+    }
+    text.writer.writeAll(")`") catch return error.OutOfMemory;
+    return allocator.dupe(u8, text.written()) catch return error.OutOfMemory;
+}
+
 fn checkDeclaredBound(allocator: std.mem.Allocator, program: typed.Program, index: usize, summary: Summary, sink: *diagnostic.Sink) std.mem.Allocator.Error!bool {
     const function = program.functions[index];
-    const bound = function.policy.effect_bound orelse return false;
     if (!summary.external) return false;
     const permitted = positionsBitset(function.signature.declared_mutates);
-    const has_permission = bound.allowed & effect_set.bit(.mutation) != 0;
-    const covered = summary.mutates & ~permitted == 0;
-    if (has_permission and covered and !summary.mutates_unknown) return false;
-    const message = try permissionMessage(allocator, function, summary, permitted, has_permission);
-    try sink.items.append(allocator, .{
-        .code = permission_code,
-        .span = summary.witness orelse function.declaration,
-        .message = message,
-        .related = .{ .span = bound.span, .message = "declared effect ceiling and mutates footprint are here" },
-    });
-    return true;
+    if (function.policy.effect_bound) |bound| {
+        const has_permission = bound.allowed & effect_set.bit(.mutation) != 0;
+        const covered = summary.mutates & ~permitted == 0;
+        const permitted_write = has_permission and covered and !summary.mutates_unknown;
+        if (!permitted_write) {
+            const message = try permissionMessage(allocator, function, summary, permitted, has_permission);
+            try sink.items.append(allocator, .{
+                .code = permission_code,
+                .span = summary.witness orelse function.declaration,
+                .message = message,
+                .related = .{ .span = bound.span, .message = "declared effect ceiling and mutates footprint are here" },
+            });
+            return true;
+        }
+        // A passing ceiling already accounts for the write; only an omitted
+        // footprint on an unbounded declaration is the new warning's business.
+    }
+    if (function.signature.declared_mutates.len == 0) {
+        const message = try missingFootprintMessage(allocator, function, summary);
+        try sink.items.append(allocator, .{
+            .code = missing_footprint_code,
+            .severity = .warning,
+            .span = summary.witness orelse function.declaration,
+            .message = message,
+        });
+    }
+    return false;
 }
 
 /// One pair of nominal record identities already assumed disjoint on a path.
