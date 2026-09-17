@@ -1075,7 +1075,7 @@ const unbounded_writer =
     \\    return 0
 ;
 
-// spec: W-MUTATES-MISSING
+// spec: W-MUTATES-MISSING-1
 test "an unbounded external write warns with the inferred mutates clause verbatim" {
     const message = (try firstMissingFootprint(unbounded_writer)).?;
     defer t.allocator.free(message);
@@ -1083,7 +1083,7 @@ test "an unbounded external write warns with the inferred mutates clause verbati
     try t.expectEqual(@as(usize, 1), try missingFootprintCount(unbounded_writer));
 }
 
-// spec: W-MUTATES-MISSING
+// spec-case: W-MUTATES-MISSING-1
 test "every inferred position is listed in the warning clause" {
     const message = (try firstMissingFootprint(
         \\def write_both(first: list[int], second: list[int]) -> None:
@@ -1098,7 +1098,7 @@ test "every inferred position is listed in the warning clause" {
     try t.expectEqualStrings("this function writes `first` (parameter 1), `second` (parameter 2) reachable from the caller; declare `mutates(first, second)`", message);
 }
 
-// spec: W-MUTATES-MISSING
+// spec-case: W-MUTATES-MISSING-1
 test "a declared mutates footprint without a ceiling is accepted and warns nothing" {
     const declared =
         \\def touch(values: list[int]) -> None mutates(values):
@@ -1114,7 +1114,7 @@ test "a declared mutates footprint without a ceiling is accepted and warns nothi
     try t.expectEqual(@as(usize, 0), try missingFootprintCount(declared));
 }
 
-// spec: W-MUTATES-MISSING
+// spec-case: W-MUTATES-MISSING-1
 test "an explicit ceiling lacking mutation still rejects a mutates clause" {
     try reject(
         \\def touch(values: list[int]) -> None effects() mutates(values):
@@ -1134,7 +1134,7 @@ test "an explicit ceiling lacking mutation still rejects a mutates clause" {
     , "E_MUTATES_EFFECT", "requires the mutation effect");
 }
 
-// spec: W-MUTATES-MISSING
+// spec-case: W-MUTATES-MISSING-1
 test "a function that writes only its own local storage is not warned" {
     const local_only =
         \\def local_edit() -> int:
@@ -1150,7 +1150,7 @@ test "a function that writes only its own local storage is not warned" {
     try t.expectEqual(@as(usize, 0), try missingFootprintCount(local_only));
 }
 
-// spec: MUTATION-OVERLAP-1
+// spec-case: MUTATION-OVERLAP-1
 test "a declared footprint without a ceiling still enforces overlap at call sites" {
     try reject(
         \\def touch(dst: list[int], src: list[int]) -> None mutates(dst):

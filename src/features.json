@@ -621,6 +621,21 @@
       "kind": "tooling",
       "summary": "`mylang list-interfaces` prints each exported callable's whole signature, with Python capability spellings, the inferred effects set, mutates parameters by name, and any declared ceiling.",
       "doc": "docs/tooling/navigation.md#reading-an-interface"
+    },
+    "capability-method-narrowing": {
+      "kind": "language",
+      "summary": "`fs.read_only()` returns a read-only `Filesystem` capability; it intersects permissions, performs no I/O, and contributes no effect.",
+      "doc": "docs/effects.md#capability-method-narrowing"
+    },
+    "mandatory-mutation-footprint-warning": {
+      "kind": "language",
+      "summary": "A function with no effect ceiling that writes caller-reachable storage without a `mutates(...)` clause is warned with the inferred footprint printed verbatim; `mutates(...)` without a ceiling means unbounded effects with that footprint.",
+      "doc": "docs/effects.md#mandatory-mutation-footprint"
+    },
+    "host-capability-foreign-calls": {
+      "kind": "tooling",
+      "summary": "Every `extern def` and `host def` takes `host: Host` as its first parameter; the checker verifies it at each call and the C ABI drops it before the foreign call, with `--allow-host` under `--restrict`.",
+      "doc": "docs/c-ffi.md#direct-c-imports"
     }
   },
   "unsupported": [

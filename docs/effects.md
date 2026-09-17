@@ -338,6 +338,43 @@ def main() -> int effects(managed_allocation, output):
     return 0
 ```
 
+## Capability method narrowing
+
+`fs.read_only()` derives a read-only `Filesystem` from an existing one by
+intersecting its permission mask. The derived capability is an ordinary typed
+value: it can be passed, returned and stored in a record or class field, but it
+performs no I/O when it is created and contributes no effect of its own. The old
+bracket spelling `restrict_resource[...]` is removed and reports
+`E_REMOVED_SPELLING` naming the replacement.
+
+```mylang
+# doc: check
+def main(fs: Filesystem) -> int:
+    read_only = fs.read_only()
+    return 0
+```
+
+## Mandatory mutation footprint
+
+A function with no effect ceiling whose body writes storage reachable from a
+caller argument is diagnosed with `W_MUTATES_MISSING` when its declaration omits
+`mutates(...)`. The warning prints the inferred clause verbatim so the fix is a
+paste, and the diagnostic is advisory for this version. Writing `mutates(...)`
+without an effect ceiling means "unbounded effects, with this footprint", and an
+explicit ceiling that lacks `mutation` still rejects `E_MUTATES_EFFECT`.
+
+```mylang
+# doc: check
+def touch(values: list[int]) -> None:
+    values[0] = 1
+
+
+def main() -> int:
+    values = [1]
+    touch(values)
+    return 0
+```
+
 ## Related pages
 
 - [Printing, files and command-line authority](io.md) — the capability values and the grants that provision them

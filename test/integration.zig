@@ -80,7 +80,7 @@ test "CLI checks host declarations and refuses to run one with no registration" 
     // program cannot start; that is a host-boundary refusal, not a guest trap.
     try invoke("run", host_program, 2, "", "HostMissingRegistration");
 }
-// spec: HOST-CAPABILITY
+// spec: HOST-CAPABILITY-1
 test "CLI threads a Host capability through an extern call and runs it natively" {
     const source =
         \\extern def abs(host: Host, x: i32) -> i32 effects(host)
@@ -92,7 +92,7 @@ test "CLI threads a Host capability through an extern call and runs it natively"
     try invoke("check", source, 0, "", "");
     try invokeOptions("run", source, &.{}, 0, "7\n", "");
 }
-// spec: HOST-CAPABILITY
+// spec-case: HOST-CAPABILITY-1
 test "CLI withholds Host under restrict and grants it with --allow-host" {
     const source =
         \\extern def abs(host: Host, x: i32) -> i32 effects(host)

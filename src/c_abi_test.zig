@@ -112,7 +112,7 @@ test "direct C imports preserve formatting and reject VM registry binding" {
     try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, forged));
 }
 
-// spec: HOST-CAPABILITY
+// spec-case: HOST-CAPABILITY-1
 test "foreign declarations require a leading Host capability parameter" {
     try reject(
         \\extern def f(x: i64) -> i64 effects(host)
