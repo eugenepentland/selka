@@ -45,6 +45,7 @@ pub const Instruction = struct {
         external_read: struct { kind: @import("external_capabilities.zig").Kind, output: typed.Type },
         acquire_buffer: typed.Type,
         print: Print,
+        stream_write: StreamWrite,
         file_access: FileAccess,
         file_method: FileMethod,
         move_local: typed.LocalId,
@@ -77,7 +78,10 @@ pub const FileAccess = struct { kind: @import("file_operations.zig").Access, mod
 /// Method on an open handle held in a local slot, with one optional operand.
 pub const FileMethod = struct { kind: @import("file_operations.zig").Method, owner: typed.LocalId, text: bool, argument: bool, output: typed.Type, shapes: typed.FileShapes };
 /// Static argument types and whether explicit `sep=`/`end=` operands follow them.
-pub const Print = struct { sink: typed.Sink = .stdout, types: []const typed.Type, separator: bool, terminator: bool };
+/// `stream` puts the receiver value at the stack bottom; `debug` writes to stderr.
+pub const Print = struct { sink: typed.Sink = .stdout, types: []const typed.Type, separator: bool, terminator: bool, stream: bool = false, debug: bool = false };
+/// `stream.write(text)`: a stream value and text operand are on the stack.
+pub const StreamWrite = struct { stream: typed.Type, text: typed.Type };
 /// Checked function signature, locals, and instruction body.
 pub const Function = struct {
     policy: typed.FunctionPolicy = .{},

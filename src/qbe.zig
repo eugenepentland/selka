@@ -91,7 +91,9 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
     }
     const entry_function = program.functions[@backingInt(program.main)];
     const entry_parameters = try a.alloc([]const u8, entry_function.signature.parameter_count);
+    const entry_parameter_names = try a.alloc([]const u8, entry_function.signature.parameter_count);
     for (entry_parameters, entry_function.scope.locals[0..entry_parameters.len]) |*parameter, local| parameter.* = layouts.identity(local.ty) catch |err| return layoutError(err);
+    for (entry_parameter_names, entry_function.scope.locals[0..entry_parameter_names.len]) |*name, local| name.* = local.name;
     const entry_argv_element = if (entry_function.signature.parameter_count != 0) entry_adapter.argvElement(entry_function.scope.locals[0].ty, program.records) else null;
     const entry_argv = if (entry_argv_element) |element| native_descriptors.symbol(a, &layouts, element) catch |err| return layoutError(err) else null;
     const descriptors = native_descriptors.generate(a, &layouts) catch |err| return layoutError(err);
@@ -111,6 +113,7 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
         .host = host,
         .text_format = text_format,
         .entry_parameters = entry_parameters,
+        .entry_parameter_names = entry_parameter_names,
         .entry_argv_element = entry_argv,
         .wire_types = wire_types,
         .codecs = codecs,
@@ -823,6 +826,7 @@ const Emitter = struct {
             .external_read, .environment_get => try @import("qbe_boundaries.zig").emit(self, op, stack),
             .begin_arena, .end_arena, .arena_escape => try arena_lower.Lower(Emitter).emit(self, op, stack),
             .print => |output| try @import("qbe_io.zig").Lower(Emitter).emit(self, output, stack),
+            .stream_write => |write| try @import("qbe_io.zig").Lower(Emitter).write(self, write, stack),
             .file_access => |call| try @import("qbe_files.zig").Lower(Emitter).access(self, call, stack),
             .file_method => |call| try @import("qbe_files.zig").Lower(Emitter).method(self, call, stack),
             .try_result => |propagate| {

@@ -81,6 +81,42 @@ and `sep=`/`end=` keywords, writes only standard error, and contributes the same
 `print` line never mixes with an `eprint` line even when both are used together.
 Byte-exact stream separation is covered by the native CLI tests.
 
+## Stream
+
+`Stream` is a capability like `Filesystem`: the entry point declares the
+standard streams it wants, and a helper may take any `Stream` name and be handed
+either one. `stream.print(values..., sep=, end=)` renders exactly like `print`
+and `stream.write(text) -> int` writes the text and returns its character count.
+Both contribute the `output` effect and write to the destination carried by the
+receiver value. Streams are granted unconditionally, so `--restrict` cannot take
+standard output away.
+
+```mylang
+# doc: check
+def main(out: Stream, err: Stream) -> int:
+    out.print("result:", 42)
+    err.print("note", sep=": ")
+    written: int = out.write("raw")
+    return written
+```
+
+`print(...)` and `eprint(...)` without a receiver stay accepted for this
+version; a later version turns them into `E_OUTPUT_CAPABILITY`.
+
+## debug
+
+`debug(values...)` writes to standard error without a capability and without
+contributing any effect, so it is safe inside a `noio` function. It renders like
+`print` and returns unit. Debug builds and `mylang run`/`mylang test` emit it; a
+`--mode ReleaseFast` build drops it in lowering.
+
+```mylang
+# doc: check
+def trace() -> int noio:
+    debug("pure function")
+    return 0
+```
+
 ## What `mylang run` prints and returns
 
 `mylang run` streams program output to standard output as it happens and does

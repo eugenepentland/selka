@@ -50,11 +50,19 @@ const Emitter = struct {
         }
         if (call.evaluation) |evaluation| try self.push(.{ .statement = evaluation.body });
     }
-    /// Values evaluate in source order, then `sep=` and finally `end=`.
+    /// Values evaluate in source order, then `sep=` and finally `end=`. A stream
+    /// receiver evaluates first and sits at the stack bottom.
     fn emitPrint(self: *Emitter, span: Span, output: @FieldType(@FieldType(typed.Node, "data"), "print")) !void {
         const types = try self.allocator.alloc(typed.Type, output.arguments.len);
         for (output.arguments, types) |argument, *ty| ty.* = self.program.nodes[@backingInt(argument)].ty;
-        try self.instruction(span, .{ .print = .{ .sink = output.sink, .types = types, .separator = output.separator != null, .terminator = output.terminator != null } });
+        try self.instruction(span, .{ .print = .{
+            .sink = output.sink,
+            .types = types,
+            .separator = output.separator != null,
+            .terminator = output.terminator != null,
+            .stream = output.stream != null,
+            .debug = output.debug,
+        } });
         if (output.terminator) |value| try self.push(.{ .expression = value });
         if (output.separator) |value| try self.push(.{ .expression = value });
         var index = output.arguments.len;
@@ -62,6 +70,16 @@ const Emitter = struct {
             index -= 1;
             try self.push(.{ .expression = output.arguments[index] });
         }
+        if (output.stream) |stream| try self.push(.{ .expression = stream });
+    }
+    /// `stream.write(text)`: push the text, then the stream receiver above it.
+    fn emitStreamWrite(self: *Emitter, span: Span, write: @FieldType(@FieldType(typed.Node, "data"), "stream_write")) !void {
+        try self.instruction(span, .{ .stream_write = .{
+            .stream = self.program.nodes[@backingInt(write.stream)].ty,
+            .text = self.program.nodes[@backingInt(write.text)].ty,
+        } });
+        try self.push(.{ .expression = write.text });
+        try self.push(.{ .expression = write.stream });
     }
     fn emitLoopExit(self: *Emitter, stmt: typed.Statement, exit: @FieldType(@FieldType(typed.Statement, "data"), "loop_exit")) !void {
         const target = self.loops.get(exit.target) orelse return error.InternalError;
@@ -287,6 +305,7 @@ const Emitter = struct {
                 try self.push(.{ .expression = acquire.capacity });
             },
             .print => |output| try self.emitPrint(node.span, output),
+            .stream_write => |write| try self.emitStreamWrite(node.span, write),
             .file_access => |call| {
                 try self.instruction(node.span, .{ .file_access = .{
                     .kind = call.kind,

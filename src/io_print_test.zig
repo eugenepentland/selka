@@ -142,3 +142,52 @@ test "IO-6 a program that never prints carries no rendering runtime" {
     defer t.allocator.free(manifest);
     try t.expect(std.mem.indexOf(u8, manifest, "native_print.h") == null);
 }
+
+/// Execute one program natively and return both standard streams. A guest that
+/// writes to stderr takes the runner's trap path, so its stdout still carries
+/// the `--print-result` line; strip that final line here.
+fn runStreams(text: []const u8) !struct { stdout: []const u8, stderr: []const u8 } {
+    var compilation = try language.Compilation.init(t.allocator, module, text);
+    defer compilation.deinit();
+    const outcome = native.run(&compilation) catch |err| {
+        @import("diagnostics_test.zig").report(compilation.diagnostics.items);
+        return err;
+    };
+    try t.expectEqualStrings("", outcome.trap.code);
+    var stdout = outcome.stdout;
+    if (outcome.failed) {
+        const body = if (stdout.len != 0 and stdout[stdout.len - 1] == '\n') stdout[0 .. stdout.len - 1] else stdout;
+        const start = if (std.mem.lastIndexOfScalar(u8, body, '\n')) |index| index + 1 else 0;
+        stdout = if (start == 0) "" else stdout[0..start];
+    }
+    return .{ .stdout = stdout, .stderr = outcome.stderr };
+}
+
+// spec: STREAM-CAPABILITY-1
+test "STREAM-CAPABILITY out.print and err.print route a Stream receiver to its fd" {
+    const both = "def main(out: Stream, err: Stream) -> int:\n    out.print(\"out\")\n    err.print(\"err\")\n    return 0\n";
+    const result = try runStreams(both);
+    try t.expectEqualStrings("out\n", result.stdout);
+    try t.expectEqualStrings("err\n", result.stderr);
+}
+
+// spec-case: STREAM-CAPABILITY-1
+test "STREAM-CAPABILITY a helper takes any Stream name and stream.write returns its count" {
+    const source = "def show(log: Stream) -> int:\n    return log.write(\"abcd\")\n\ndef main(out: Stream, err: Stream) -> int:\n    out.print(show(out))\n    err.print(show(err))\n    return 0\n";
+    const result = try runStreams(source);
+    try t.expectEqualStrings("abcd4\n", result.stdout);
+    try t.expectEqualStrings("abcd4\n", result.stderr);
+}
+
+// spec-case: STREAM-CAPABILITY-1
+test "STREAM-CAPABILITY entry Stream parameters must be named out or err" {
+    try reject("def main(log: Stream) -> int:\n    return 0\n", "E_MAIN");
+}
+
+// spec: DEBUG-LINE-1
+test "DEBUG-LINE-1 debug writes to stderr and contributes no output effect" {
+    const source = "def main() -> int noio:\n    debug(\"trace\")\n    return 0\n";
+    const result = try runStreams(source);
+    try t.expectEqualStrings("", result.stdout);
+    try t.expectEqualStrings("trace\n", result.stderr);
+}

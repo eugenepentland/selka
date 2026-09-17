@@ -75,6 +75,7 @@ pub const Node = struct {
         external_read: struct { kind: @import("external_capabilities.zig").Kind, capability: NodeId },
         acquire_buffer: struct { capacity: NodeId },
         print: Print,
+        stream_write: StreamWrite,
         file_access: FileAccess,
         file_method: FileMethod,
         arena_escape: NodeId,
@@ -100,10 +101,14 @@ pub const FileAccess = struct { kind: @import("file_operations.zig").Access, mod
 pub const FileMethod = struct { kind: @import("file_operations.zig").Method, owner: LocalId, text: bool, argument: ?NodeId, shapes: FileShapes };
 /// Nominal payload schemas a file operation needs to build its result.
 pub const FileShapes = struct { text: Type, bytes: Type, list: Type };
-/// Which standard stream one `print` or `eprint` call writes to.
+/// Which standard stream an ambient `print` writes to when no receiver is given.
 pub const Sink = enum { stdout, stderr };
 /// Rendered arguments and the optional `sep=`/`end=` text of one output call.
-pub const Print = struct { sink: Sink = .stdout, arguments: []const NodeId, separator: ?NodeId, terminator: ?NodeId };
+/// A `stream` receiver selects the fd at runtime; a `debug` call writes to stderr
+/// and contributes no effect.
+pub const Print = struct { sink: Sink = .stdout, arguments: []const NodeId, separator: ?NodeId, terminator: ?NodeId, stream: ?NodeId = null, debug: bool = false };
+/// `stream.write(text)`: the receiver stream value and the text to write.
+pub const StreamWrite = struct { stream: NodeId, text: NodeId };
 /// Resolved aggregate field index and the expression supplying its value.
 pub const FieldInit = struct { index: usize, value: NodeId };
 /// Named aggregate field with its declaration location and resolved type.

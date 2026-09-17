@@ -1199,6 +1199,35 @@ const Checker = struct {
         };
         out.data = .{ .file_method = .{ .kind = operation.kind, .owner = slot, .text = text, .argument = argument, .shapes = shapes } };
     }
+    /// `debug(...)` writes to standard error with no capability and no effect.
+    fn debugBuiltin(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
+        if (call.owner != null or call.type_arguments.len != 0) return false;
+        if (!std.mem.eql(u8, self.src.text(call.name), "debug")) return false;
+        if (self.active.contains("debug") or self.functions.contains("debug")) return false;
+        if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return false;
+        return true;
+    }
+    /// Resolve the receiver of `stream.print`/`stream.write` to its local slot, or null.
+    fn streamLocal(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) ?typed.LocalId {
+        const owner = call.owner orelse return null;
+        const slot = self.active.get(self.src.text(owner)) orelse return null;
+        if (self.locals.items[@backingInt(slot)].ty != .stream_cap) return null;
+        const name = self.src.text(call.name);
+        if (!std.mem.eql(u8, name, "write") and !std.mem.eql(u8, name, "print")) return null;
+        return slot;
+    }
+    /// Recognize `stream.print(...)`/`stream.write(...)` on a `Stream` local.
+    fn streamMethod(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?struct { stream: typed.NodeId, write: bool } {
+        const slot = self.streamLocal(call) orelse return null;
+        const write = std.mem.eql(u8, self.src.text(call.name), "write");
+        self.locals.items[@backingInt(slot)].usage.reads += 1;
+        const stream: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = call.owner.?, .ty = .stream_cap, .data = .{ .local = slot } });
+        return .{ .stream = stream, .write = write };
+    }
+    /// The destination of one `print`-shaped call: an ambient sink, a runtime
+    /// `Stream` receiver, or the `debug` stderr spelling.
+    const PrintTarget = struct { sink: typed.Sink = .stdout, stream: ?typed.NodeId = null, debug: bool = false };
     /// `print`/`eprint` are reserved unless a local binding or declared function shadows the spelling.
     fn outputBuiltin(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?typed.Sink {
         if (call.owner != null or call.type_arguments.len != 0) return null;
@@ -1223,18 +1252,27 @@ const Checker = struct {
         );
         return value;
     }
-    fn checkPrint(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), sink: typed.Sink, out: *typed.Node) Error!void {
+    fn checkPrint(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), target: PrintTarget, out: *typed.Node) Error!void {
         const split = try io_builtins.printArguments(self.src, call, self.sink);
         const arguments = try self.allocator.alloc(typed.NodeId, split.values.len);
         for (split.values, arguments) |id, *slot| slot.* = try self.checkPrintOperand(id, false);
         out.ty = .unit;
         out.data = .{ .print = .{
-            .sink = sink,
+            .sink = target.sink,
             .arguments = arguments,
             .separator = if (split.separator) |id| try self.checkPrintOperand(id, true) else null,
             .terminator = if (split.terminator) |id| try self.checkPrintOperand(id, true) else null,
+            .stream = target.stream,
+            .debug = target.debug,
         } };
         _ = node;
+    }
+    fn checkStreamWrite(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), stream: typed.NodeId, out: *typed.Node) Error!void {
+        try call_arguments.positional(call, self.sink);
+        if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "stream.write takes one text argument");
+        const text = try self.checkPrintOperand(call.arguments[0], true);
+        out.ty = .i64;
+        out.data = .{ .stream_write = .{ .stream = stream, .text = text } };
     }
     fn optionConstructor(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
         if (call.owner != null or call.type_arguments.len != 0 or !std.mem.eql(u8, self.src.text(call.name), "Some")) return false;
@@ -1886,6 +1924,18 @@ const Checker = struct {
             }
         }
     }
+    /// Queue the positional values, then `sep=` and `end=`, of a print-shaped call.
+    fn queuePrintArguments(self: *Checker, work: *std.ArrayList(Work), call: @FieldType(@FieldType(ast.Node, "data"), "call"), node: ast.Node) Error!void {
+        _ = try io_builtins.printArguments(self.src, call, self.sink);
+        // Only a keyword operand needs the text type, and only then is it materialized.
+        const text_type = if (call.argument_names.len == 0) null else try collections.preludeType(&self.catalog, "str", node.span);
+        var index = call.arguments.len;
+        while (index > 0) {
+            index -= 1;
+            if (call.argument_names.len != 0 and call.argument_names[index] != null) try self.hint(call.arguments[index], text_type.?);
+            try work.append(self.allocator, .{ .id = call.arguments[index] });
+        }
+    }
     fn queueBuiltinCall(self: *Checker, work: *std.ArrayList(Work), call_id: ast.NodeId, call: @FieldType(@FieldType(ast.Node, "data"), "call"), node: ast.Node) Error!bool {
         if (try self.queuePreludeCall(work, call_id, call)) return true;
         if (try self.floatIntrinsic(call) != null) {
@@ -1932,16 +1982,22 @@ const Checker = struct {
             }
             return true;
         }
-        if (try self.outputBuiltin(call)) |_| {
-            _ = try io_builtins.printArguments(self.src, call, self.sink);
-            // Only a keyword operand needs the text type, and only then is it materialized.
-            const text_type = if (call.argument_names.len == 0) null else try collections.preludeType(&self.catalog, "str", node.span);
-            var index = call.arguments.len;
-            while (index > 0) {
-                index -= 1;
-                if (call.argument_names.len != 0 and call.argument_names[index] != null) try self.hint(call.arguments[index], text_type.?);
-                try work.append(self.allocator, .{ .id = call.arguments[index] });
+        if (self.streamLocal(call)) |_| {
+            if (std.mem.eql(u8, self.src.text(call.name), "write")) {
+                try call_arguments.positional(call, self.sink);
+                if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "stream.write takes one text argument");
+                try work.append(self.allocator, .{ .id = call.arguments[0] });
+                return true;
             }
+            try self.queuePrintArguments(work, call, node);
+            return true;
+        }
+        if (try self.debugBuiltin(call)) {
+            try self.queuePrintArguments(work, call, node);
+            return true;
+        }
+        if (try self.outputBuiltin(call)) |_| {
+            try self.queuePrintArguments(work, call, node);
             return true;
         }
         if (try self.resultConstructor(call)) |ok| {
@@ -2565,7 +2621,12 @@ const Checker = struct {
             return;
         }
         if (try self.fileAccessBuiltin(input)) |kind| return self.checkFileAccess(node, input, kind, out);
-        if (try self.outputBuiltin(input)) |sink| return self.checkPrint(node, input, sink, out);
+        if (try self.streamMethod(input)) |method| {
+            if (method.write) return self.checkStreamWrite(node, input, method.stream, out);
+            return self.checkPrint(node, input, .{ .stream = method.stream }, out);
+        }
+        if (try self.debugBuiltin(input)) return self.checkPrint(node, input, .{ .sink = .stderr, .debug = true }, out);
+        if (try self.outputBuiltin(input)) |sink| return self.checkPrint(node, input, .{ .sink = sink }, out);
         if (self.byteConversion(input)) |conversion| return self.checkByteConversion(node, input, conversion, out);
         if (try self.resultConstructor(input)) |ok| {
             try call_arguments.positional(input, self.sink);
@@ -3069,6 +3130,7 @@ const Checker = struct {
             .buffer_operation => |operation| operation.arguments.len,
             .resource_io => |io| if (io.value != null) 1 else 0,
             .print => |output| output.arguments.len + @intFromBool(output.separator != null) + @intFromBool(output.terminator != null),
+            .stream_write => 1,
             .file_access => |call| call.arguments.len,
             .file_method => |call| @intFromBool(call.argument != null),
         };
@@ -4063,6 +4125,28 @@ fn entryParameterStart(parameters: []const ast.Parameter, checker: *Checker, sin
     return sink.fail("E_MAIN", parameters[0].ty, "entry parameters must be `args: list[str]` followed by capabilities");
 }
 
+/// Validate the capability tail of the entry signature, splitting Streams by
+/// name so `out: Stream` and `err: Stream` may both appear.
+fn validateEntryParameters(src: source.Source, checker: *Checker, sink: *diagnostic.Sink, entry: ast.Function) Error!void {
+    const first_capability = try entryParameterStart(entry.signature.parameters, checker, sink);
+    var entry_capabilities: u8 = 0;
+    var entry_streams: [2]bool = .{ false, false };
+    for (entry.signature.parameters[first_capability..]) |parameter| {
+        const parameter_ty = try checker.ty(parameter.ty);
+        if (parameter_ty.isStream()) {
+            const name = src.text(parameter.name);
+            const slot: usize = if (std.mem.eql(u8, name, "out")) 0 else if (std.mem.eql(u8, name, "err")) 1 else return sink.fail("E_MAIN", parameter.name, "entry Stream parameters must be named `out` or `err`");
+            if (entry_streams[slot]) return sink.fail("E_MAIN", parameter.name, "entry requests at most one `out` and one `err` Stream");
+            entry_streams[slot] = true;
+            continue;
+        }
+        const index = parameter_ty.capabilityIndex() orelse return sink.fail("E_MAIN", parameter.ty, "entry parameters must be `args: list[str]` followed by capabilities");
+        const bit = @as(u8, 1) << index;
+        if (entry_capabilities & bit != 0) return sink.fail("E_MAIN", parameter.name, "entry requests at most one value parameter of each capability kind");
+        entry_capabilities |= bit;
+    }
+}
+
 /// E2: flag ordinary source functions whose name span is an exported interface
 /// symbol. Concrete generic specializations are implementation details (their
 /// template is checked abstractly) and synthesized entry/lambda bodies have no
@@ -4155,15 +4239,9 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     const main = ordinary_ids[@backingInt(main_declaration)] orelse return sink.fail("E_MAIN", entry.name, "main cannot have type parameters");
     if (entry.policy.host != null or entry.policy.constant) return sink.fail("E_MAIN", entry.name, "main must have a guest function body");
     // An entry point may take `args: list[str]` first, followed by at most one
-    // capability of each kind. The list is input data, never authority.
-    var entry_capabilities: u8 = 0;
-    const first_capability = try entryParameterStart(entry.signature.parameters, &checker, sink);
-    for (entry.signature.parameters[first_capability..]) |parameter| {
-        const index = (try checker.ty(parameter.ty)).capabilityIndex() orelse return sink.fail("E_MAIN", parameter.ty, "entry parameters must be `args: list[str]` followed by capabilities");
-        const bit = @as(u8, 1) << index;
-        if (entry_capabilities & bit != 0) return sink.fail("E_MAIN", parameter.name, "entry requests at most one value parameter of each capability kind");
-        entry_capabilities |= bit;
-    }
+    // capability of each kind. Streams split by name, so `out: Stream` and
+    // `err: Stream` may both appear; any other Stream name is rejected.
+    try validateEntryParameters(src, &checker, sink, entry);
     if (!entry_adapter.supported(try checker.ty(entry.signature.return_type), checker.catalog.records)) return sink.fail("E_TYPE", entry.signature.return_type, "main must return int, None, Result<None/int,int>, or Result[int,str]");
     var checked_functions: std.ArrayList(typed.Function) = .empty;
     var i: usize = 0;

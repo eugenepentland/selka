@@ -91,8 +91,12 @@ const Analyzer = struct {
                     result = get.output;
                 },
                 .print => |output| {
-                    pops = output.types.len + @intFromBool(output.separator) + @intFromBool(output.terminator);
+                    pops = output.types.len + @intFromBool(output.separator) + @intFromBool(output.terminator) + @intFromBool(output.stream);
                     result = .unit;
+                },
+                .stream_write => {
+                    pops = 2;
+                    result = .i64;
                 },
                 .file_access => |call| {
                     pops = call.operands;

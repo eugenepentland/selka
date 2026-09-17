@@ -87,11 +87,18 @@ fn validateEntry(program: Program) Error!void {
     if (main.policy.owner != null) return error.InternalError;
     if (main.policy.restricted) return error.InternalError;
     var entry_capabilities: u8 = 0;
+    var entry_streams: [2]bool = .{ false, false };
     var first_capability: usize = 0;
     if (main.signature.parameter_count != 0) {
         if (@import("entry_adapter.zig").argvElement(main.scope.locals[0].ty, program.records) != null) first_capability = 1;
     }
     for (main.scope.locals[first_capability..main.signature.parameter_count]) |parameter| {
+        if (parameter.ty == .stream_cap) {
+            const slot: usize = if (std.mem.eql(u8, parameter.name, "out")) 0 else if (std.mem.eql(u8, parameter.name, "err")) 1 else return error.InternalError;
+            if (entry_streams[slot]) return error.InternalError;
+            entry_streams[slot] = true;
+            continue;
+        }
         const index = parameter.ty.capabilityIndex() orelse return error.InternalError;
         const bit = @as(u8, 1) << index;
         if (entry_capabilities & bit != 0) return error.InternalError;
@@ -199,6 +206,9 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
         .acquire_buffer => |ty| try validateOpAcquireBuffer(program, ty),
         .print => |output| for (output.types) |ty| {
             if (!validType(ty, program) or !@import("io_render.zig").printable(ty, program.records)) return error.InternalError;
+        },
+        .stream_write => |write| {
+            if (write.stream != .stream_cap or !validType(write.text, program)) return error.InternalError;
         },
         .file_access, .file_method => try validateOpFile(program, function, instruction.op),
         .cast_integer => |ty| {
@@ -528,9 +538,13 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
                 height -= 1;
             },
             .print => |output| {
-                const operands = output.types.len + @intFromBool(output.separator) + @intFromBool(output.terminator);
+                const operands = output.types.len + @intFromBool(output.separator) + @intFromBool(output.terminator) + @intFromBool(output.stream);
                 if (height < operands) return error.InternalError;
                 height = height - operands + 1;
+            },
+            .stream_write => {
+                if (height < 2) return error.InternalError;
+                height -= 1;
             },
             .file_access => |call| {
                 if (height < call.operands) return error.InternalError;

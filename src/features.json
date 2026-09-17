@@ -636,6 +636,16 @@
       "kind": "tooling",
       "summary": "Every `extern def` and `host def` takes `host: Host` as its first parameter; the checker verifies it at each call and the C ABI drops it before the foreign call, with `--allow-host` under `--restrict`.",
       "doc": "docs/c-ffi.md#direct-c-imports"
+    },
+    "stream-capability": {
+      "kind": "language",
+      "summary": "`out.print(...)`/`err.print(...)` and `stream.write(text)` write through a `Stream` capability and contribute the `output` effect.",
+      "doc": "docs/io.md#stream"
+    },
+    "debug-line": {
+      "kind": "language",
+      "summary": "`debug(values...)` writes to standard error without a capability and contributes no effect.",
+      "doc": "docs/io.md#debug"
     }
   },
   "unsupported": [

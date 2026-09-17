@@ -32,7 +32,7 @@ docs pages) is collected here because wave 0 must not edit those files.
 Manual probe (`zig-out/focus/mylang` is the focused-test build; `zig build`'s
 install step is gated on Guardian):
 
-```
+```console
 $ mylang list-interfaces main.my
 module interfaces v1; declarations/signature visibility checked; bodies not type checked
 module main

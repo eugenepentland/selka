@@ -43,13 +43,14 @@ pub fn arity(name: []const u8) ?usize {
 /// used only when no declared type claims the name, so an ordinary `Clock`
 /// record still wins inside its own module.
 pub fn reservedType(name: []const u8) ?typed.Type {
-    inline for (.{ "Filesystem", "Network", "Clock", "Entropy", "Environment", "Host", "File", "TextFile" }, .{
+    inline for (.{ "Filesystem", "Network", "Clock", "Entropy", "Environment", "Host", "Stream", "File", "TextFile" }, .{
         typed.Type.filesystem_cap,
         typed.Type.network_cap,
         typed.Type.clock_cap,
         typed.Type.random_cap,
         typed.Type.environment_cap,
         typed.Type.host_cap,
+        typed.Type.stream_cap,
         typed.Type.file,
         typed.Type.text_file,
     }) |surface, ty| {

@@ -61,7 +61,7 @@ fn returnContribution(program: typed.Program, function: typed.Function, value: t
         .local, .call, .invoke, .complete_resource, .acquire_resource, .acquire_buffer, .array, .record, .variant, .update => {
             if (node.ty.isAggregate()) ctx.unknown.* = true;
         },
-        .binary, .unary, .cast, .wrap, .unwrap, .length, .field, .index, .replace, .buffer_operation, .file_access, .file_method, .print, .arena_escape, .block_value, .propagate, .restrict_resource => {
+        .binary, .unary, .cast, .wrap, .unwrap, .length, .field, .index, .replace, .buffer_operation, .file_access, .file_method, .print, .stream_write, .arena_escape, .block_value, .propagate, .restrict_resource => {
             if (node.ty.isAggregate()) ctx.unknown.* = true;
         },
         .resource_io => {
@@ -302,6 +302,11 @@ fn appendBoundViolation(allocator: std.mem.Allocator, ctx: BoundContext, index: 
     }) catch return error.OutOfMemory;
 }
 
+/// Record a node's `output` effect, except a `debug` line which is effect-free.
+fn directPrint(graph: *Graph, index: usize, output: typed.Print, span: Span) void {
+    if (!output.debug) graph.direct(index, .output, span);
+}
+
 /// Infer transitive effects and reject function bodies that exceed declared effect bounds.
 pub fn check(allocator: std.mem.Allocator, program: typed.Program, exported: []const bool, sink: *diagnostic.Sink) diagnostic.Error!void {
     var graph = try Graph.init(allocator, program.functions.len);
@@ -331,7 +336,8 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, exported: []c
                 .complete_resource => graph.direct(index, typed.resourceKind(typed.completionShape(node.ty, program.records).?.resource_type, program.records).?.effect(), node.span),
                 .resource_io => |io| graph.direct(index, typed.resourceKind(function.scope.locals[@backingInt(io.owner)].ty, program.records).?.effect(), node.span),
                 .environment_get => graph.direct(index, .environment, node.span),
-                .print => graph.direct(index, .output, node.span),
+                .print => |output| directPrint(&graph, index, output, node.span),
+                .stream_write => graph.direct(index, .output, node.span),
                 .file_access, .file_method => graph.direct(index, .filesystem, node.span),
                 .external_read => |read| graph.direct(index, read.kind.effect(), node.span),
                 .cast => if (allocatingSequence(program.records, node.ty)) {
@@ -522,7 +528,8 @@ fn seedInstructionEffects(
             graph.direct(index, kind.effect(), instruction.span);
         },
         .environment_get => graph.direct(index, .environment, instruction.span),
-        .print => graph.direct(index, .output, instruction.span),
+        .print => |output| if (!output.debug) graph.direct(index, .output, instruction.span),
+        .stream_write => graph.direct(index, .output, instruction.span),
         .file_access, .file_method => graph.direct(index, .filesystem, instruction.span),
         .external_read => |read| graph.direct(index, read.kind.effect(), instruction.span),
         .cast_integer => |ty| if (allocatingSequence(program.records, ty)) {

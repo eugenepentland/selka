@@ -61,6 +61,11 @@ pub const Walker = struct {
                     if (output.terminator) |value| try self.expr(value);
                     if (output.separator) |value| try self.expr(value);
                     try self.arguments(output.arguments);
+                    if (output.stream) |value| try self.expr(value);
+                },
+                .stream_write => |write| {
+                    try self.expr(write.text);
+                    try self.expr(write.stream);
                 },
                 .arena_escape, .cast, .wrap, .unwrap, .length => |value| try self.expr(value),
                 .propagate => |p| try self.expr(p.value),

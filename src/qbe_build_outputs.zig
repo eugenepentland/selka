@@ -49,6 +49,7 @@ pub fn entry(allocator: std.mem.Allocator, manifest: std.json.Value, provider: b
     const name = v.text(v.get(manifest, "entry"));
     if (name.len == 0) return error.UnsupportedNativeEntry;
     const parameters = v.array(v.get(manifest, "entry_parameters"));
+    const parameter_names = v.array(v.get(manifest, "entry_parameter_names"));
     const argv_element = v.text(v.get(manifest, "entry_argv_element"));
     if (argv_element.len != 0 and parameters.len == 0) return error.UnsupportedNativeEntry;
     const uses_packed = parameters.len > 128;
@@ -62,6 +63,10 @@ pub fn entry(allocator: std.mem.Allocator, manifest: std.json.Value, provider: b
         if (uses_packed) try w.print("arguments[{d}]=", .{index}) else try w.print("uint64_t arg{d}=", .{index});
         if (index == 0 and argv_element.len != 0) {
             try w.print("(uint64_t)myl_qbe_argv_list(ctx,&{s});\n", .{argv_element});
+        } else if (std.mem.eql(u8, v.text(parameter), "stream_cap")) {
+            const parameter_name = if (index < parameter_names.len) v.text(parameter_names[index]) else "";
+            const sentinel: u64 = if (std.mem.eql(u8, parameter_name, "err")) 2 else 1;
+            try w.print("UINT64_C({d});\n", .{sentinel});
         } else {
             try w.print("{s};\n", .{try grant(v.text(parameter))});
         }

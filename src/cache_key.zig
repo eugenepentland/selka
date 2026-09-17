@@ -25,7 +25,7 @@ pub const Contract = struct {
         .bootstrap_language = "bootstrap-v1",
         .target = "native",
         .runtime_abi = "runtime-abi-v1",
-        .effects = "effects-v3",
+        .effects = "effects-v4",
         .flags = "",
         .compiler_identity = "",
     };
@@ -122,11 +122,11 @@ test "cache key equality compares all six fields and treats empty as a value" {
     try testing.expect(!Contract.eql(base, copy));
 }
 
-test "effects-v3 rejects old effects-v2 cache contract identities" {
+test "effects-v4 rejects old effects-v3 cache contract identities" {
     const base = Contract.default;
-    try testing.expectEqualStrings("effects-v3", base.effects);
+    try testing.expectEqualStrings("effects-v4", base.effects);
     var old = base;
-    old.effects = "effects-v2";
+    old.effects = "effects-v3";
     try testing.expect(!Contract.eql(base, old));
     const base_fingerprint = try base.fingerprint(testing.allocator);
     defer testing.allocator.free(base_fingerprint);

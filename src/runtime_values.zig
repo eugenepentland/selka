@@ -27,8 +27,10 @@ pub const Type = enum(usize) {
     file,
     /// An open UTF-8 text file; its reads produce `str` rather than `bytes`.
     text_file,
+    /// A standard output capability; its value's sentinel selects stdout or stderr.
+    stream_cap,
     _,
-    pub const record_base: usize = 18;
+    pub const record_base: usize = 19;
     /// Return the compact builtin capability index, or null for non-capabilities.
     pub fn capabilityIndex(self: Type) ?u3 {
         return switch (self) {
@@ -37,9 +39,14 @@ pub const Type = enum(usize) {
             .filesystem_cap => 2,
             .network_cap => 3,
             .environment_cap => 4,
-            .host_cap => 5,
+            .stream_cap => 5,
+            .host_cap => 6,
             else => null,
         };
+    }
+    /// Whether this capability kind is the standard output stream.
+    pub fn isStream(self: Type) bool {
+        return self == .stream_cap;
     }
     /// Return the external resource family represented by this builtin type.
     pub fn resourceKind(self: Type) ?external_resources.Kind {

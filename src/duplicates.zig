@@ -276,6 +276,11 @@ const CanonicalWriter = struct {
                     index -= 1;
                     try work.append(allocator, .{ .expression = output.arguments[index] });
                 }
+                if (output.stream) |value| try work.append(allocator, .{ .expression = value });
+            },
+            .stream_write => |write| {
+                try work.append(allocator, .{ .expression = write.text });
+                try work.append(allocator, .{ .expression = write.stream });
             },
             .arena_escape, .cast, .wrap, .unwrap => |operand| try work.append(allocator, .{ .expression = operand }),
             .record => |fields| {

@@ -14,23 +14,43 @@ const raw_call = " call $myl_qbe_print_raw(l %v{d}, l %v{d})\n";
 /// Bind output lowering to the concrete emitter without an import cycle.
 pub fn Lower(comptime E: type) type {
     return struct {
-        /// Lower one `print` call, including its `sep=` and `end=` operands.
+        /// Lower one `print` call, including its `sep=` and `end=` operands. A
+        /// `Stream` receiver at the stack bottom selects the fd at runtime; a
+        /// `debug` call always writes to stderr.
         pub fn emit(self: *E, output: Print, stack: []const typed.Type) Error!void {
-            const terminator = stack.len - @intFromBool(output.terminator);
-            const separator = terminator - @intFromBool(output.separator);
-            const base = separator - output.types.len;
-            const stderr = output.sink == .stderr;
-            const sink = try begin(E, self, if (stderr) "myl_qbe_eprint_begin" else "myl_qbe_print_begin");
+            const has_stream = output.stream;
+            const total = output.types.len + @intFromBool(output.separator) + @intFromBool(output.terminator) + @intFromBool(has_stream);
+            const base = stack.len - total;
+            const value_base = base + @intFromBool(has_stream);
+            const separator = value_base + output.types.len;
+            const terminator = separator + @intFromBool(output.separator);
+            const stderr = output.debug or output.sink == .stderr;
+            const receiver: ?usize = if (has_stream) try self.load("s", base) else null;
+            const sink = if (receiver) |stream|
+                try beginStream(E, self, stream)
+            else
+                try begin(E, self, if (stderr) "myl_qbe_eprint_begin" else "myl_qbe_print_begin");
             for (output.types, 0..) |ty, index| {
                 if (index != 0) try gap(E, self, sink, output.separator, separator);
-                try operand(E, self, sink, ty, base + index);
+                try operand(E, self, sink, ty, value_base + index);
             }
             if (output.terminator) {
                 try self.print(raw_call, .{ sink, try self.load("s", terminator) });
             } else try self.print(" call $myl_qbe_print_byte(l %v{d}, w 10)\n", .{sink});
-            try self.print(" call ${s}(l %ctx, l %v{d})\n", .{ if (stderr) "myl_qbe_eprint_finish" else "myl_qbe_print_finish", sink });
+            if (receiver) |stream| {
+                try self.print(" call $myl_qbe_stream_finish(l %ctx, l %v{d}, l %v{d})\n", .{ sink, stream });
+            } else try self.print(" call ${s}(l %ctx, l %v{d})\n", .{ if (stderr) "myl_qbe_eprint_finish" else "myl_qbe_print_finish", sink });
             try self.checkFailure("failure");
             try self.print(" storel 0, %s{d}\n", .{base});
+        }
+        /// Lower `stream.write(text)`: the receiver is below the text operand.
+        pub fn write(self: *E, _: @FieldType(@FieldType(bytecode.Instruction, "op"), "stream_write"), stack: []const typed.Type) Error!void {
+            const value = try self.load("s", stack.len - 1);
+            const stream = try self.load("s", stack.len - 2);
+            const count = self.temp();
+            try self.print(" %v{d} =l call $myl_qbe_stream_write(l %ctx, l %v{d}, l %v{d})\n", .{ count, stream, value });
+            try self.checkFailure("failure");
+            try self.store(stack.len - 2, count);
         }
         /// Lower an aggregate's conversion to text: render the operand in `slot`
         /// the way `print` writes it, then replace it with fresh text holding
@@ -50,6 +70,14 @@ pub fn Lower(comptime E: type) type {
 fn begin(comptime E: type, self: *E, entry: []const u8) Error!usize {
     const sink = self.temp();
     try self.print(" %v{d} =l call ${s}(l %ctx)\n", .{ sink, entry });
+    try self.checkFailure("failure");
+    return sink;
+}
+
+/// Open one render buffer whose final destination is the `Stream` capability.
+fn beginStream(comptime E: type, self: *E, stream: usize) Error!usize {
+    const sink = self.temp();
+    try self.print(" %v{d} =l call $myl_qbe_stream_begin(l %ctx, l %v{d})\n", .{ sink, stream });
     try self.checkFailure("failure");
     return sink;
 }
