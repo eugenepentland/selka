@@ -627,6 +627,11 @@
       "summary": "`fs.read_only()` returns a read-only `Filesystem` capability; it intersects permissions, performs no I/O, and contributes no effect.",
       "doc": "docs/effects.md#capability-method-narrowing"
     },
+    "filesystem-dir": {
+      "kind": "language",
+      "summary": "`fs.dir(path)` derives a `Filesystem` rooted at a literal path under the receiver's root; it is lazy, effect-free, and confines every acquisition to that subtree.",
+      "doc": "docs/effects.md#filesystem-dir"
+    },
     "mandatory-mutation-footprint-warning": {
       "kind": "language",
       "summary": "A function with no effect ceiling that writes caller-reachable storage without a `mutates(...)` clause is warned with the inferred footprint printed verbatim; `mutates(...)` without a ceiling means unbounded effects with that footprint.",

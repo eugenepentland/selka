@@ -375,6 +375,32 @@ def main() -> int:
     return 0
 ```
 
+## Filesystem dir
+
+`fs.dir(path)` derives a filesystem rooted at a string-literal path under the
+receiver's root. It records the scope without touching the filesystem, so it
+contributes no effect; every acquisition through the derived capability joins
+the prefix and rejects any request that could leave the subtree.
+
+```mylang
+# doc: check
+resource File: filesystem
+
+result Open:
+    ok: File,
+    err: int
+
+def main(fs: Filesystem) -> int:
+    scoped = fs.dir("data")
+    request: [1]u8 = [42u8]
+    match acquire_resource[Open](scoped, request):
+        case Open.ok(file):
+            _ = file
+            return 0
+        case Open.err(code):
+            return -code
+```
+
 ## Related pages
 
 - [Printing, files and command-line authority](io.md) — the capability values and the grants that provision them
