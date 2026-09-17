@@ -637,6 +637,11 @@
       "summary": "`env.get(\"NAME\")` returns `Option[str]`, `env.only(...)` narrows an `Environment` to literal names, and `env.names()` lists the visible names as `list[str]`.",
       "doc": "docs/io.md#environment"
     },
+    "filesystem-methods": {
+      "kind": "language",
+      "summary": "Every whole-path file helper also accepts a qualified method spelling on a `Filesystem` value (`fs.read_text(path)`), sharing the free form's arities, result types, literal-mode rule and trapping `with fs.open(...)` head; the method stays the receiver's even when a same-named function or local exists.",
+      "doc": "docs/io.md#files"
+    },
     "mandatory-mutation-footprint-warning": {
       "kind": "language",
       "summary": "A function with no effect ceiling that writes caller-reachable storage without a `mutates(...)` clause is warned with the inferred footprint printed verbatim; `mutates(...)` without a ceiling means unbounded effects with that footprint.",
