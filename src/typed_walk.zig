@@ -48,6 +48,11 @@ pub const Walker = struct {
                     try self.expr(get.name);
                     try self.expr(get.capability);
                 },
+                .environment_only => |only| {
+                    try self.expr(only.names);
+                    try self.expr(only.capability);
+                },
+                .environment_names => |capability| try self.expr(capability),
                 .complete_resource => |value| try self.expr(value),
                 .acquire_resource => |acquire| {
                     try self.expr(acquire.request);

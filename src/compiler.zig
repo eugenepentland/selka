@@ -78,6 +78,14 @@ pub const Compilation = struct {
         return .{ .arena = arena, .src = src };
     }
 
+    /// Like `init`, but mark the source as compiler-owned so it may spell reserved
+    /// internal intrinsics. Only the parser's own unit tests reach this hook.
+    pub fn initTrusted(allocator: std.mem.Allocator, path: []const u8, bytes: []const u8) std.mem.Allocator.Error!Compilation {
+        var result = try init(allocator, path, bytes);
+        result.src.trusted_intrinsics = true;
+        return result;
+    }
+
     pub fn deinit(self: *Compilation) void {
         self.arena.deinit();
     }

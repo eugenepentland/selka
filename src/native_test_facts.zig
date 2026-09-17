@@ -237,7 +237,7 @@ const FunctionFacts = struct {
                     try reasons.add("conservative-indirect-target-set");
                     for (self.address_taken) |id| try deps.add(self.program, id, .indirect);
                 },
-                .external_read, .environment_get, .acquire_resource, .complete_resource, .resource_io, .restrict_resource => {
+                .external_read, .environment_get, .environment_names, .acquire_resource, .complete_resource, .resource_io, .restrict_resource => {
                     external = true;
                     try reasons.add("external-capability-operation");
                 },

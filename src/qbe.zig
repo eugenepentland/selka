@@ -333,6 +333,8 @@ const Emitter = struct {
                 .buffer_operation,
                 .external_read,
                 .environment_get,
+                .environment_only,
+                .environment_names,
                 .acquire_resource,
                 .complete_resource,
                 .resource_io,
@@ -823,7 +825,7 @@ const Emitter = struct {
         const h = stack.len;
         switch (op) {
             .acquire_resource, .complete_resource, .resource_io, .restrict_resource => try @import("qbe_resources.zig").Lower(Emitter).emit(self, op, stack),
-            .external_read, .environment_get => try @import("qbe_boundaries.zig").emit(self, op, stack),
+            .external_read, .environment_get, .environment_only, .environment_names => try @import("qbe_boundaries.zig").emit(self, op, stack),
             .begin_arena, .end_arena, .arena_escape => try arena_lower.Lower(Emitter).emit(self, op, stack),
             .print => |output| try @import("qbe_io.zig").Lower(Emitter).emit(self, output, stack),
             .stream_write => |write| try @import("qbe_io.zig").Lower(Emitter).write(self, write, stack),

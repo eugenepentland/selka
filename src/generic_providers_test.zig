@@ -69,7 +69,7 @@ fn reject(body: []const u8, code: []const u8) !void {
         \\    return 0
     });
     defer t.allocator.free(bytes);
-    var c = try language.Compilation.init(t.allocator, "generic-provider-invalid.my", bytes);
+    var c = try language.Compilation.initTrusted(t.allocator, "generic-provider-invalid.my", bytes);
     defer c.deinit();
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);

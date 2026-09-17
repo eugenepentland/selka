@@ -4,7 +4,7 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const fixture = @import("nominal_provider_fixture.zig");
 fn reject(text: []const u8, code: []const u8) !void {
-    var compilation = try language.Compilation.init(t.allocator, "bad-nominal-provider.my", text);
+    var compilation = try language.Compilation.initTrusted(t.allocator, "bad-nominal-provider.my", text);
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqualStrings(code, compilation.diagnostics.items[0].code);

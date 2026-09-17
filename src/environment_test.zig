@@ -19,14 +19,14 @@ const declarations =
     \\
 ;
 fn reject(source: []const u8, code: []const u8) !void {
-    var c = try language.Compilation.init(t.allocator, module, source);
+    var c = try language.Compilation.initTrusted(t.allocator, module, source);
     defer c.deinit();
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
 /// Run one program against a guest environment holding `K` only when given.
 fn lookup(source: []const u8, value: ?[]const u8, arguments: []const []const u8, expected: i64) !void {
-    var c = try language.Compilation.init(t.allocator, module, source);
+    var c = try language.Compilation.initTrusted(t.allocator, module, source);
     defer c.deinit();
     var guest: std.process.Environ.Map = .init(t.allocator);
     defer guest.deinit();
@@ -58,7 +58,7 @@ const forwarded = declarations ++
     \\            return -code
 ;
 fn scenario(allocator: std.mem.Allocator) !void {
-    var c = try language.Compilation.init(allocator, module, forwarded);
+    var c = try language.Compilation.initTrusted(allocator, module, forwarded);
     defer c.deinit();
     try c.emit();
     const dump = try c.dump(allocator);
@@ -88,7 +88,7 @@ test "environment returns raw bytes and canonical zero padding" {
 test "environment reads outside an explicit allowlist are denied before the host is asked" {
     try lookup(forwarded, "ab", &.{ "--restrict", "--allow-env=OTHER" }, -2);
     try lookup(forwarded, "ab", &.{ "--restrict", "--allow-env=K,OTHER" }, 12);
-    var c = try language.Compilation.init(t.allocator, module, forwarded);
+    var c = try language.Compilation.initTrusted(t.allocator, module, forwarded);
     defer c.deinit();
     const withheld = try native.runWithOptions(&c, .{ .arguments = &.{"--restrict"} });
     try t.expectEqualStrings("CapabilityUnavailable", withheld.trap.code);
@@ -149,7 +149,7 @@ const generic_environment = declarations ++
     \\            return e
 ;
 fn genericEnvironmentScenario(allocator: std.mem.Allocator) !void {
-    var c = try language.Compilation.init(allocator, "generic-environment.my", generic_environment);
+    var c = try language.Compilation.initTrusted(allocator, "generic-environment.my", generic_environment);
     defer c.deinit();
     try c.emit();
     try t.expect(c.code.?.functions.len != 0);
@@ -159,4 +159,124 @@ test "generic environment lookup preserves bounded bytes and callback allocation
     try genericEnvironmentScenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), genericEnvironmentScenario, .{});
+}
+const python_get =
+    \\def main(env: Environment) -> i64 effects(environment):
+    \\    match env.get("K"):
+    \\        case Some(value):
+    \\            return len(value)
+    \\        case None:
+    \\            return 0
+;
+// spec: ENVIRONMENT-GET-1
+test "python env.get returns Some for present names and None for absent ones" {
+    try lookup(python_get, "ab", &.{}, 2);
+    try lookup(python_get, null, &.{}, 0);
+    try lookup(python_get, "", &.{}, 0);
+}
+// spec-case: ENVIRONMENT-GET-1
+test "python env.get rejects a dynamic name at check time" {
+    try reject(
+        \\def main(env: Environment) -> i64:
+        \\    name = "HOME"
+        \\    _ = env.get(name)
+        \\    return 0
+    , "E_ENVIRONMENT_NAME");
+}
+// spec-case: ENVIRONMENT-GET-1
+test "the raw environment_get spelling is reserved for standard-library sources" {
+    var c = try language.Compilation.init(t.allocator, "environment.my",
+        \\result Lookup:
+        \\    ok: i64,
+        \\    err: i64
+        \\
+        \\
+        \\def main(env: Environment) -> i64:
+        \\    _ = environment_get[Lookup](env, [75u8])
+        \\    return 0
+    );
+    defer c.deinit();
+    try t.expectError(error.SourceError, c.check());
+    try t.expectEqualStrings("E_INTERNAL_NAME", c.diagnostics.items[0].code);
+}
+// spec-case: ENVIRONMENT-GET-1
+test "python env.get traps when the grant allowlist denies the name" {
+    var c = try language.Compilation.initTrusted(t.allocator, module, python_get);
+    defer c.deinit();
+    var guest: std.process.Environ.Map = .init(t.allocator);
+    defer guest.deinit();
+    try guest.put("K", "ab");
+    const denied = try native.runWithOptions(&c, .{ .environment = &guest, .arguments = &.{ "--restrict", "--allow-env=OTHER" } });
+    try t.expectEqualStrings("R_CAPABILITY", denied.trap.code);
+}
+const python_only =
+    \\def main(env: Environment) -> i64 effects(environment):
+    \\    narrowed = env.only("K")
+    \\    match narrowed.get("K"):
+    \\        case Some(value):
+    \\            return len(value)
+    \\        case None:
+    \\            return 0
+;
+// spec: ENVIRONMENT-ONLY-1
+test "python env.only narrows a read to its literal names" {
+    try lookup(python_only, "ab", &.{}, 2);
+    try lookup(python_only, null, &.{}, 0);
+}
+// spec-case: ENVIRONMENT-ONLY-1
+test "python env.only refuses a name outside its scope and a dynamic name" {
+    var c = try language.Compilation.initTrusted(t.allocator, module,
+        \\def main(env: Environment) -> i64 effects(environment):
+        \\    narrowed = env.only("OTHER")
+        \\    match narrowed.get("K"):
+        \\        case Some(value):
+        \\            return len(value)
+        \\        case None:
+        \\            return 0
+    );
+    defer c.deinit();
+    var guest: std.process.Environ.Map = .init(t.allocator);
+    defer guest.deinit();
+    try guest.put("K", "ab");
+    const denied = try native.runWithOptions(&c, .{ .environment = &guest, .arguments = &.{} });
+    try t.expectEqualStrings("R_CAPABILITY", denied.trap.code);
+    try reject(
+        \\def main(env: Environment) -> i64:
+        \\    name = "K"
+        \\    _ = env.only(name)
+        \\    return 0
+    , "E_ENVIRONMENT_NAME");
+}
+const python_names =
+    \\def main(env: Environment) -> i64 effects(environment):
+    \\    names = env.names()
+    \\    if names[0] == "HOME":
+    \\        return len(names)
+    \\    return -1
+;
+// spec: ENVIRONMENT-NAMES-1
+test "python env.names reports the sorted allowlist as a list[str]" {
+    try lookup(python_names, "ab", &.{ "--restrict", "--allow-env=ZZ,HOME" }, 2);
+}
+// spec-case: ENVIRONMENT-NAMES-1
+test "python env.names lists the process environment when no allowlist is set" {
+    try lookup(
+        \\def main(env: Environment) -> i64 effects(environment):
+        \\    names = env.names()
+        \\    for name in names:
+        \\        if name == "K":
+        \\            return 1
+        \\    return 0
+    , "ab", &.{}, 1);
+}
+// spec-case: ENVIRONMENT-NAMES-1
+test "python env.names on a narrowed environment lists its scope" {
+    try lookup(
+        \\def main(env: Environment) -> i64 effects(environment):
+        \\    narrowed = env.only("K")
+        \\    names = narrowed.names()
+        \\    if names[0] == "K":
+        \\        return len(names)
+        \\    return -1
+    , "ab", &.{}, 1);
 }

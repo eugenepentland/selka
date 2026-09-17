@@ -195,9 +195,9 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
         .restrict_resource => |restrict| {
             if (restrict.ty.resourceKind() == null or restrict.permissions & ~external_resources.all_permissions != 0) return error.InternalError;
         },
-        .environment_get => |get| {
-            if (typed.environmentShape(get.output, program.records) == null or !typed.byteRequest(get.name, program.records)) return error.InternalError;
-        },
+        .environment_get => |get| try validateEnvironmentGet(program, get),
+        .environment_only => |only| try validateEnvironmentOnly(program, only),
+        .environment_names => |names| try validateEnvironmentNames(program, names),
         .complete_resource => |output| {
             if (typed.completionShape(output, program.records) == null) return error.InternalError;
         },
@@ -407,6 +407,25 @@ fn validateOpExternalRead(program: Program, read: @FieldType(@FieldType(Instruct
     if (shape.ok_type != (if (read.kind == .clock) typed.Type.i64 else typed.Type.u64) or shape.error_type != .i64) return error.InternalError;
 }
 
+/// A raw lookup carries a fixed byte name and either the declared result record
+/// or the Python `Option[str]` surface.
+fn validateEnvironmentGet(program: Program, get: @FieldType(@FieldType(Instruction, "op"), "environment_get")) Error!void {
+    if (!typed.byteRequest(get.name, program.records)) return error.InternalError;
+    if (typed.environmentShape(get.output, program.records) != null) return;
+    const option = prelude.optionShape(get.output, program.records) orelse return error.InternalError;
+    if (!option.element.isAggregate() or option.element.recordIndex() >= program.records.len) return error.InternalError;
+    if (program.records[option.element.recordIndex()].collection.kind != .string) return error.InternalError;
+}
+
+fn validateEnvironmentOnly(program: Program, only: @FieldType(@FieldType(Instruction, "op"), "environment_only")) Error!void {
+    if (only.output != .environment_cap or !typed.byteRequest(only.names, program.records)) return error.InternalError;
+}
+
+fn validateEnvironmentNames(program: Program, names: @FieldType(@FieldType(Instruction, "op"), "environment_names")) Error!void {
+    if (!names.output.isAggregate() or names.output.recordIndex() >= program.records.len) return error.InternalError;
+    if (program.records[names.output.recordIndex()].collection.kind != .list) return error.InternalError;
+}
+
 /// Check one file operation's operand count, owner slot and declared payloads.
 fn validateOpFile(program: Program, function: Function, op: @FieldType(Instruction, "op")) Error!void {
     const files = @import("file_operations.zig");
@@ -533,7 +552,7 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
                 if (height < 2) return error.InternalError;
                 height -= 1;
             },
-            .acquire_resource, .environment_get => {
+            .acquire_resource, .environment_get, .environment_only => {
                 if (height < 2) return error.InternalError;
                 height -= 1;
             },
@@ -560,6 +579,7 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
             .restrict_resource,
             .complete_resource,
             .external_read,
+            .environment_names,
             .unary_float,
             .neg_i64_checked,
             .not_bool,
