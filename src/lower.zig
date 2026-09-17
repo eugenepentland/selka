@@ -23,6 +23,9 @@ const Fixup = struct { instruction: usize, label: Label, arm: ?usize = null, pro
 const Emitter = struct {
     allocator: std.mem.Allocator,
     program: typed.Program,
+    /// A `--mode ReleaseFast` build drops `debug` nodes in lowering; Debug builds
+    /// and `run`/`test` keep them.
+    drop_debug: bool = false,
     loops: std.AutoHashMapUnmanaged(usize, struct { start: Label, end: Label }) = .empty,
     code: std.ArrayList(bc.Instruction) = .empty,
     work: std.ArrayList(Work) = .empty,
@@ -51,8 +54,15 @@ const Emitter = struct {
         if (call.evaluation) |evaluation| try self.push(.{ .statement = evaluation.body });
     }
     /// Values evaluate in source order, then `sep=` and finally `end=`. A stream
-    /// receiver evaluates first and sits at the stack bottom.
+    /// receiver evaluates first and sits at the stack bottom. A dropped `debug`
+    /// node emits nothing at all, so its arguments are not evaluated either.
     fn emitPrint(self: *Emitter, span: Span, output: @FieldType(@FieldType(typed.Node, "data"), "print")) !void {
+        if (output.debug and self.drop_debug) {
+            // The node still produces its unit value, but no operand is
+            // evaluated and no byte reaches the stream.
+            try self.instruction(span, .push_unit);
+            return;
+        }
         const types = try self.allocator.alloc(typed.Type, output.arguments.len);
         for (output.arguments, types) |argument, *ty| ty.* = self.program.nodes[@backingInt(argument)].ty;
         try self.instruction(span, .{ .print = .{
@@ -476,8 +486,13 @@ fn binaryInstruction(binary: anytype, nodes: []const typed.Node, records: []cons
 }
 /// Allocate and validate bytecode lowered from the checked typed program.
 pub fn lower(allocator: std.mem.Allocator, program: typed.Program) LowerError!bc.Program {
+    return lowerWith(allocator, program, false);
+}
+
+/// Lower with an explicit `debug` policy: a ReleaseFast build drops the nodes.
+pub fn lowerWith(allocator: std.mem.Allocator, program: typed.Program, drop_debug: bool) LowerError!bc.Program {
     const functions = try allocator.alloc(bc.Function, program.functions.len);
-    for (program.functions, 0..) |function, index| functions[index] = try lowerFunction(allocator, program, function, true);
+    for (program.functions, 0..) |function, index| functions[index] = try lowerFunction(allocator, program, function, true, drop_debug);
     const result: bc.Program = .{ .functions = functions, .main = program.main, .records = program.records };
     try bc.validate(allocator, result);
     return result;
@@ -488,16 +503,21 @@ pub fn lower(allocator: std.mem.Allocator, program: typed.Program) LowerError!bc
 /// locals so callers can resolve callee ABIs without lowering that body. The
 /// selection mask is caller-owned and must remain live through validation.
 pub fn lowerSelected(allocator: std.mem.Allocator, program: typed.Program, selected: []const bool) LowerError!bc.Program {
+    return lowerSelectedWith(allocator, program, selected, false);
+}
+
+/// Selective lowering with an explicit `debug` policy.
+pub fn lowerSelectedWith(allocator: std.mem.Allocator, program: typed.Program, selected: []const bool, drop_debug: bool) LowerError!bc.Program {
     if (selected.len != program.functions.len) return error.InternalError;
     const functions = try allocator.alloc(bc.Function, program.functions.len);
-    for (program.functions, 0..) |function, index| functions[index] = try lowerFunction(allocator, program, function, selected[index]);
+    for (program.functions, 0..) |function, index| functions[index] = try lowerFunction(allocator, program, function, selected[index], drop_debug);
     const result: bc.Program = .{ .functions = functions, .main = program.main, .records = program.records };
     bc.validateSelected(allocator, result, selected) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
     return result;
 }
 
-fn lowerFunction(allocator: std.mem.Allocator, program: typed.Program, function: typed.Function, with_body: bool) LowerError!bc.Function {
-    var emitter: Emitter = .{ .allocator = allocator, .program = program };
+fn lowerFunction(allocator: std.mem.Allocator, program: typed.Program, function: typed.Function, with_body: bool, drop_debug: bool) LowerError!bc.Function {
+    var emitter: Emitter = .{ .allocator = allocator, .program = program, .drop_debug = drop_debug };
     defer emitter.loops.deinit(allocator);
     return .{
         .policy = .{

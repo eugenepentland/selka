@@ -1,4 +1,4 @@
-//! `print`: Python rendering of every ordinary value shape, `sep=`/`end=` keywords,
+//! `out.print`: Python rendering of every ordinary value shape, `sep=`/`end=` keywords,
 //! the `output` effect that `noio` withholds, and the native backend's rejection.
 const std = @import("std");
 const t = std.testing;
@@ -33,55 +33,55 @@ fn reject(text: []const u8, code: []const u8) !void {
 
 // spec: IO-1
 test "IO-1 print renders scalars, text, bytes and containers with Python spellings" {
-    try expectOutput("def main() -> int:\n    print(42)\n    return 0\n", "42\n");
-    try expectOutput("def main() -> int:\n    print(1, 2, 3)\n    return 0\n", "1 2 3\n");
-    try expectOutput("def main() -> int:\n    print()\n    return 0\n", "\n");
-    try expectOutput("def main() -> int:\n    print(True, False, None)\n    return 0\n", "True False None\n");
-    try expectOutput("def main() -> int:\n    print(1.5)\n    print(3.0)\n    return 0\n", "1.5\n3.0\n");
-    try expectOutput("def main() -> int:\n    print(\"hi there\")\n    return 0\n", "hi there\n");
-    try expectOutput("def main() -> int:\n    print(b\"a\\n\\xff\")\n    return 0\n", "b'a\\n\\xff'\n");
-    try expectOutput("def main() -> int:\n    print([1, 2, 3])\n    return 0\n", "[1, 2, 3]\n");
-    try expectOutput("def main() -> int:\n    print([\"a\", \"b\"])\n    return 0\n", "['a', 'b']\n");
-    try expectOutput("def main() -> int:\n    counts = {\"a\": 1, \"b\": 2}\n    print(counts)\n    return 0\n", "{'a': 1, 'b': 2}\n");
+    try expectOutput("def main(out: Stream) -> int:\n    out.print(42)\n    return 0\n", "42\n");
+    try expectOutput("def main(out: Stream) -> int:\n    out.print(1, 2, 3)\n    return 0\n", "1 2 3\n");
+    try expectOutput("def main(out: Stream) -> int:\n    out.print()\n    return 0\n", "\n");
+    try expectOutput("def main(out: Stream) -> int:\n    out.print(True, False, None)\n    return 0\n", "True False None\n");
+    try expectOutput("def main(out: Stream) -> int:\n    out.print(1.5)\n    out.print(3.0)\n    return 0\n", "1.5\n3.0\n");
+    try expectOutput("def main(out: Stream) -> int:\n    out.print(\"hi there\")\n    return 0\n", "hi there\n");
+    try expectOutput("def main(out: Stream) -> int:\n    out.print(b\"a\\n\\xff\")\n    return 0\n", "b'a\\n\\xff'\n");
+    try expectOutput("def main(out: Stream) -> int:\n    out.print([1, 2, 3])\n    return 0\n", "[1, 2, 3]\n");
+    try expectOutput("def main(out: Stream) -> int:\n    out.print([\"a\", \"b\"])\n    return 0\n", "['a', 'b']\n");
+    try expectOutput("def main(out: Stream) -> int:\n    counts = {\"a\": 1, \"b\": 2}\n    out.print(counts)\n    return 0\n", "{'a': 1, 'b': 2}\n");
 }
 
 // spec: IO-2
 test "IO-2 print renders records, enums, unions and checked results by name" {
-    const record = "class Point:\n    x: int\n    y: int\n\ndef main() -> int:\n    print(Point(x=1, y=2))\n    return 0\n";
+    const record = "class Point:\n    x: int\n    y: int\n\ndef main(out: Stream) -> int:\n    out.print(Point(x=1, y=2))\n    return 0\n";
     try expectOutput(record, "Point(x=1, y=2)\n");
-    const colours = "enum Colour:\n    red,\n    green\n\n\ndef main() -> int:\n    print(Colour.green)\n    return 0\n";
+    const colours = "enum Colour:\n    red,\n    green\n\n\ndef main(out: Stream) -> int:\n    out.print(Colour.green)\n    return 0\n";
     try expectOutput(colours, "Colour.green\n");
-    const shape = "union Shape:\n    dot: i64,\n    gap\n\n\ndef main() -> int:\n    print(Shape.dot(7))\n    print(Shape.gap)\n    return 0\n";
+    const shape = "union Shape:\n    dot: i64,\n    gap\n\n\ndef main(out: Stream) -> int:\n    out.print(Shape.dot(7))\n    out.print(Shape.gap)\n    return 0\n";
     try expectOutput(shape, "Shape.dot(7)\nShape.gap\n");
-    const checked = "def pick(n: int) -> Result[int, str]:\n    if n < 0:\n        return Err(\"negative\")\n    return Ok(n)\n\ndef main() -> int:\n    print(pick(3))\n    print(pick(-1))\n    return 0\n";
+    const checked = "def pick(n: int) -> Result[int, str]:\n    if n < 0:\n        return Err(\"negative\")\n    return Ok(n)\n\ndef main(out: Stream) -> int:\n    out.print(pick(3))\n    out.print(pick(-1))\n    return 0\n";
     try expectOutput(checked, "Ok(3)\nErr('negative')\n");
-    const option = "def main() -> int:\n    found: Option[int] = Some(4)\n    missing: Option[int] = None\n    print(found, missing)\n    return 0\n";
+    const option = "def main(out: Stream) -> int:\n    found: Option[int] = Some(4)\n    missing: Option[int] = None\n    out.print(found, missing)\n    return 0\n";
     try expectOutput(option, "Some(4) None\n");
 }
 
 // spec: IO-3
 test "IO-3 print accepts sep and end keyword arguments and rejects other keywords" {
-    try expectOutput("def main() -> int:\n    print(1, 2, sep=\"-\")\n    return 0\n", "1-2\n");
-    try expectOutput("def main() -> int:\n    print(1, end=\"\")\n    print(2)\n    return 0\n", "12\n");
+    try expectOutput("def main(out: Stream) -> int:\n    out.print(1, 2, sep=\"-\")\n    return 0\n", "1-2\n");
+    try expectOutput("def main(out: Stream) -> int:\n    out.print(1, end=\"\")\n    out.print(2)\n    return 0\n", "12\n");
     // The result line follows the guest's own bytes, so a run ends with a newline.
-    try expectOutput("def main() -> int:\n    print(1, 2, sep=\"\", end=\"!\")\n    print()\n    return 0\n", "12!\n");
-    try reject("def main() -> int:\n    print(1, flush=True)\n    return 0\n", "E_IO_ARGUMENT");
-    try reject("def main() -> int:\n    print(1, sep=\"-\", sep=\",\")\n    return 0\n", "E_IO_ARGUMENT");
-    try reject("def main() -> int:\n    print(sep=\"-\", 1)\n    return 0\n", "E_CALL_ARGUMENT");
-    try reject("def main() -> int:\n    print(1, sep=2)\n    return 0\n", "E_TYPE");
+    try expectOutput("def main(out: Stream) -> int:\n    out.print(1, 2, sep=\"\", end=\"!\")\n    out.print()\n    return 0\n", "12!\n");
+    try reject("def main(out: Stream) -> int:\n    out.print(1, flush=True)\n    return 0\n", "E_IO_ARGUMENT");
+    try reject("def main(out: Stream) -> int:\n    out.print(1, sep=\"-\", sep=\",\")\n    return 0\n", "E_IO_ARGUMENT");
+    try reject("def main(out: Stream) -> int:\n    out.print(sep=\"-\", 1)\n    return 0\n", "E_CALL_ARGUMENT");
+    try reject("def main(out: Stream) -> int:\n    out.print(1, sep=2)\n    return 0\n", "E_TYPE");
 }
 
 // spec: IO-4
 test "IO-4 print contributes the output effect that noio withholds" {
-    try reject("def main() -> int noio:\n    print(1)\n    return 0\n", "E_EFFECT_BOUND");
-    try reject("def emit() -> None:\n    print(1)\n\ndef main() -> int noio:\n    emit()\n    return 0\n", "E_EFFECT_BOUND");
-    try expectOutput("def main() -> int effects(output):\n    print(1)\n    return 0\n", "1\n");
-    try expectOutput("def main() -> int noalloc:\n    print(1)\n    return 0\n", "1\n");
+    try reject("def main(out: Stream) -> int noio:\n    out.print(1)\n    return 0\n", "E_EFFECT_BOUND");
+    try reject("def emit(out: Stream) -> None:\n    out.print(1)\n\ndef main(out: Stream) -> int noio:\n    emit(out)\n    return 0\n", "E_EFFECT_BOUND");
+    try expectOutput("def main(out: Stream) -> int effects(output):\n    out.print(1)\n    return 0\n", "1\n");
+    try expectOutput("def main(out: Stream) -> int noalloc:\n    out.print(1)\n    return 0\n", "1\n");
 }
 
 // spec: IO-5
 test "IO-5 print rejects values without a Python rendering and shadowing restores the name" {
-    const capability = "def main(fs: Filesystem) -> int:\n    print(fs)\n    return 0\n";
+    const capability = "def main(fs: Filesystem, out: Stream) -> int:\n    out.print(fs)\n    return 0\n";
     try reject(capability, "E_IO_ARGUMENT");
     const shadow = "def print(value: int) -> int:\n    return value\n\ndef main() -> int:\n    return print(7)\n";
     var compilation = try language.Compilation.init(t.allocator, module, shadow);
@@ -115,18 +115,18 @@ test "IO-6 the native backend lowers print through generated per-type renderers"
         \\    green
         \\
         \\
-        \\def main() -> int:
+        \\def main(out: Stream) -> int:
         \\    rows: dict[str, list[bytes]] = {"a": [b"\\x00"]}
         \\    found: Option[Point] = Some(Point(x=1, y=2.5))
-        \\    print(rows, found, Colour.green, sep="-", end="!\\n")
-        \\    print()
+        \\    out.print(rows, found, Colour.green, sep="-", end="!\\n")
+        \\    out.print()
         \\    return 0
     ;
     var compilation = try language.Compilation.init(t.allocator, module, source);
     defer compilation.deinit();
     const manifest = try compilation.emitQbe(t.allocator);
     defer t.allocator.free(manifest);
-    for ([_][]const u8{ "myl_qbe_print_begin", "myl_qbe_print_finish", "myl_qbe_print_raw", "myl_print_dictionary", "myl_print_bytes", "myl_print_record", "myl_print_variant", "myl_print_float" }) |symbol| {
+    for ([_][]const u8{ "myl_qbe_stream_begin", "myl_qbe_stream_finish", "myl_qbe_print_raw", "myl_print_dictionary", "myl_print_bytes", "myl_print_record", "myl_print_variant", "myl_print_float" }) |symbol| {
         try t.expect(std.mem.indexOf(u8, manifest, symbol) != null);
     }
     // Case spellings and field names travel in the generated renderers.
@@ -184,10 +184,37 @@ test "STREAM-CAPABILITY entry Stream parameters must be named out or err" {
     try reject("def main(log: Stream) -> int:\n    return 0\n", "E_MAIN");
 }
 
+// spec-case: STREAM-CAPABILITY-1
+test "STREAM-CAPABILITY bare print and eprint need a Stream and name the fix" {
+    const bare = "def main() -> int:\n    print(1)\n    return 0\n";
+    var compilation = try language.Compilation.init(t.allocator, module, bare);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.check());
+    try t.expectEqualStrings("E_OUTPUT_CAPABILITY", compilation.diagnostics.items[0].code);
+    try t.expect(std.mem.indexOf(u8, compilation.diagnostics.items[0].message, "add `out: Stream`") != null);
+    try reject("def main() -> int:\n    eprint(1)\n    return 0\n", "E_OUTPUT_CAPABILITY");
+}
+
 // spec: DEBUG-LINE-1
 test "DEBUG-LINE-1 debug writes to stderr and contributes no output effect" {
     const source = "def main() -> int noio:\n    debug(\"trace\")\n    return 0\n";
     const result = try runStreams(source);
     try t.expectEqualStrings("", result.stdout);
     try t.expectEqualStrings("trace\n", result.stderr);
+}
+
+// spec-case: DEBUG-LINE-1
+test "DEBUG-LINE-1 a ReleaseFast build drops debug nodes in lowering" {
+    const source = "def main() -> int:\n    debug(\"trace\")\n    return 0\n";
+    var dropped = try language.Compilation.init(t.allocator, module, source);
+    defer dropped.deinit();
+    const dropped_manifest = try dropped.emitQbeWithOptions(t.allocator, true);
+    defer t.allocator.free(dropped_manifest);
+    try t.expect(std.mem.indexOf(u8, dropped_manifest, "myl_qbe_eprint_begin") == null);
+    try t.expect(std.mem.indexOf(u8, dropped_manifest, "native_print.h") == null);
+    var kept = try language.Compilation.init(t.allocator, module, source);
+    defer kept.deinit();
+    const kept_manifest = try kept.emitQbe(t.allocator);
+    defer t.allocator.free(kept_manifest);
+    try t.expect(std.mem.indexOf(u8, kept_manifest, "myl_qbe_eprint_begin") != null);
 }

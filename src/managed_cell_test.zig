@@ -71,9 +71,9 @@ test "Cell rejects result obligations equality and rendering" {
         \\    return 0
     , "E_CELL_EQUALITY");
     try reject(
-        \\def main() -> int:
+        \\def main(out: Stream) -> int:
         \\    cell = Cell(value=1)
-        \\    print(cell)
+        \\    out.print(cell)
         \\    return 0
     , "E_IO_ARGUMENT");
     try reject(

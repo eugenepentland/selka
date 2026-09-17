@@ -379,18 +379,18 @@ def arena_checksum(nodes: list[Node]) -> int:
     return checksum
 
 
-def main() -> int:
+def main(out: Stream) -> int:
     valid = "answer = add((1 + 2) * 3, values[4])\nreturn answer == 8\n"
     parsed = parse(valid)
     if len(parsed.errors) != 0:
         error = parsed.errors[0]
-        print(f"parser error at {error.line}:{error.column}: expected {error.expected}")
+        out.print(f"parser error at {error.line}:{error.column}: expected {error.expected}")
         return 1
-    print(f"parser: tokens={len(parsed.tokens)} nodes={len(parsed.nodes)} checksum={arena_checksum(parsed.nodes)}")
+    out.print(f"parser: tokens={len(parsed.tokens)} nodes={len(parsed.nodes)} checksum={arena_checksum(parsed.nodes)}")
 
     invalid = parse("answer = add(1, ]\n")
     if len(invalid.errors) != 1:
         return 2
     error = invalid.errors[0]
-    print(f"parser error at {error.line}:{error.column}: expected {error.expected}")
+    out.print(f"parser error at {error.line}:{error.column}: expected {error.expected}")
     return 0

@@ -8,6 +8,12 @@ const Call = @import("call_arguments.zig").Call;
 /// Diagnostic reported for malformed builtin I/O calls.
 pub const argument_code = "E_IO_ARGUMENT";
 
+/// Diagnostic reported for a bare `print`/`eprint` that names no `Stream`.
+pub const output_capability_code = "E_OUTPUT_CAPABILITY";
+
+/// Fix text carried by `E_OUTPUT_CAPABILITY`.
+pub const output_capability_message = "print needs a Stream; add `out: Stream` to this function and pass one from main";
+
 /// Builtin whose spelling is reserved unless a local or declared function shadows it.
 pub const Builtin = enum {
     print,

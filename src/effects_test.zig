@@ -978,8 +978,8 @@ test "M2 cached callers are revalidated when a callee gains a mutation" {
 // spec: EFFECT-LITERAL-1
 test "compile-time str literals contribute no managed allocation while computed strings and collections do" {
     try accept(
-        \\def f() -> None effects(output):
-        \\    print("hi")
+        \\def f(out: Stream) -> None effects(output):
+        \\    out.print("hi")
         \\
         \\
         \\def main() -> int noalloc:

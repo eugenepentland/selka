@@ -19,12 +19,18 @@ pub const Codec = struct {
         self.nodes = .empty;
     }
     /// Flatten named typed arguments in declaration order, rejecting extras.
+    /// A `Stream` parameter is injected by the adapter, so it takes no JSON value.
     pub fn arguments(self: *Codec, function: Value, values: Value) Error!void {
         const parameters = v.array(v.get(function, "parameters"));
         if (v.get(function, "return_reference") != .null) return error.UnsupportedTestType;
-        if (values == .null and parameters.len == 0) return;
-        if (values != .object or values.object.count() != parameters.len) return error.InvalidTestArguments;
+        var expected: usize = 0;
+        for (parameters) |parameter| if (!streamParameter(parameter)) {
+            expected += 1;
+        };
+        if (values == .null and expected == 0) return;
+        if (values != .object or values.object.count() != expected) return error.InvalidTestArguments;
         for (parameters) |parameter| {
+            if (streamParameter(parameter)) continue;
             if (!std.mem.eql(u8, v.text(v.get(parameter, "mode")), "value")) return error.UnsupportedTestType;
             const value = values.object.get(v.text(v.get(parameter, "name"))) orelse return error.InvalidTestArguments;
             try self.encode(v.text(v.get(parameter, "type")), value, 0);
@@ -154,6 +160,10 @@ pub const Codec = struct {
         return .{ .object = object };
     }
 };
+/// One declared parameter is an injected `Stream` rather than a JSON argument.
+fn streamParameter(parameter: Value) bool {
+    return std.mem.eql(u8, v.text(v.get(parameter, "type")), "stream_cap");
+}
 fn decimal(name: []const u8, text: []const u8) Error!u64 {
     if (name.len < 2) return error.UnsupportedTestType;
     if (name[0] != 'i' and name[0] != 'u') return error.UnsupportedTestType;

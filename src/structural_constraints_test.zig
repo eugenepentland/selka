@@ -482,21 +482,21 @@ test "named constraint operation ceilings accept subsets and reject excess" {
         \\    return total[D](D.make(4))
     , 4);
     try reject(
-        \\constraint Priced[P] = copy + op(price(policy: P) -> int effects())
+        \\constraint Priced[P] = copy + op(price(policy: P, out: Stream) -> int effects())
         \\
         \\domain D: int:
         \\    def make(n: int) -> D:
         \\        return wrap[D](n)
         \\
-        \\    def price(policy: D) -> int effects(output):
-        \\        print("x")
+        \\    def price(policy: D, out: Stream) -> int effects(output):
+        \\        out.print("x")
         \\        return unwrap(policy)
         \\
-        \\def total[P: Priced](policy: P) -> int effects():
-        \\    return P.price(policy)
+        \\def total[P: Priced](policy: P, out: Stream) -> int effects():
+        \\    return P.price(policy, out)
         \\
-        \\def main() -> int:
-        \\    return total[D](D.make(4))
+        \\def main(out: Stream) -> int:
+        \\    return total[D](D.make(4), out)
     , "E_GENERIC_ARGUMENT");
 }
 // A weaker bound may not forward to a stronger one, even when the function is never called.

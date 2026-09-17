@@ -190,20 +190,20 @@ def token_checksum(tokens: list[Token]) -> int:
     return checksum
 
 
-def main() -> int:
+def main(out: Stream) -> int:
     source = "def total(xs):\n    # add two values\n    return xs[0] + 41\nname = 'a\\'b'\n"
     result = lex(source)
     if len(result.errors) != 0:
         error = result.errors[0]
-        print(f"lexer error at {error.line}:{error.column}: {error.message}")
+        out.print(f"lexer error at {error.line}:{error.column}: {error.message}")
         return 1
-    print(f"lexer: tokens={len(result.tokens)} checksum={token_checksum(result.tokens)}")
+    out.print(f"lexer: tokens={len(result.tokens)} checksum={token_checksum(result.tokens)}")
     unterminated = lex("ok\n'open")
     unknown = lex("ok @")
     if len(unterminated.errors) != 1 or len(unknown.errors) != 1:
         return 2
     string_error = unterminated.errors[0]
     character_error = unknown.errors[0]
-    print(f"lexer error at {string_error.line}:{string_error.column}: {string_error.message}")
-    print(f"lexer error at {character_error.line}:{character_error.column}: {character_error.message}")
+    out.print(f"lexer error at {string_error.line}:{string_error.column}: {string_error.message}")
+    out.print(f"lexer error at {character_error.line}:{character_error.column}: {character_error.message}")
     return 0

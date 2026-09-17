@@ -373,8 +373,8 @@ def sum_to(n: i64) -> i64:
     return total
 
 
-def main() -> i64:
-    print(sum_to(100))
+def main(out: Stream) -> i64:
+    out.print(sum_to(100))
     return 0
 ```
 
@@ -396,8 +396,8 @@ def gcd(a: i64, b: i64) -> i64:
     return x
 
 
-def main() -> i64:
-    print(gcd(48, 18))
+def main(out: Stream) -> i64:
+    out.print(gcd(48, 18))
     return 0
 ```
 

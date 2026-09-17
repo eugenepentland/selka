@@ -61,8 +61,8 @@ test "print-result still prints the value while the status reflects it" {
     // The native runner always passes --print-result, so the value line follows
     // the program's own output; the exit status carries the same value.
     const outcome = try run(
-        \\def main() -> int:
-        \\    print("hi")
+        \\def main(out: Stream) -> int:
+        \\    out.print("hi")
         \\    return 5
     );
     try t.expect(!outcome.trapped());

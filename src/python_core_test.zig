@@ -492,10 +492,10 @@ test "a self-referential class graph prints to the depth cap and terminates" {
         \\    children: list[Node]
         \\
         \\
-        \\def main() -> int:
+        \\def main(out: Stream) -> int:
         \\    nodes: list[Node] = []
         \\    nodes.append(Node(children=nodes))
-        \\    print(nodes[0])
+        \\    out.print(nodes[0])
         \\    return 0
     , 0);
 }

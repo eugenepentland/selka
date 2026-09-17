@@ -23,6 +23,7 @@ pub fn write(w: *std.Io.Writer, units: []const Value, metadata: Value, ordinary:
     try w.writeAll("};\n");
     try methods(w, shapes, v.array(v.get(metadata, "callbacks")));
     try dispatch.render(w, units, shapes);
+    try w.writeAll("static const unsigned char *co_injected;\n");
     try w.writeAll(templates.codec_execute);
     try w.writeByte('\n');
     try w.writeAll(templates.codec_start);

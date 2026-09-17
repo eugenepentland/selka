@@ -77,10 +77,23 @@ pub fn lookup(w: *std.Io.Writer, units: []const Value, shapes: shape.Shapes) sha
                 try w.print("{d}", .{try shapes.index(v.text(parameter))});
             }
             try w.writeAll("};\n");
+            if (shapes.codecs) {
+                const names = v.array(v.get(item, "parameter_names"));
+                try w.writeAll("static const unsigned char injected[]={");
+                for (parameters, 0..) |parameter, i| {
+                    if (i != 0) try w.writeByte(',');
+                    const stream = std.mem.eql(u8, v.text(parameter), "stream_cap");
+                    const name = if (i < names.len) v.text(names[i]) else "";
+                    const sentinel: u8 = if (!stream) 0 else if (std.mem.eql(u8, name, "err")) 2 else 1;
+                    try w.print("{d}", .{sentinel});
+                }
+                try w.writeAll("};\n");
+            }
         }
         const prefix = if (shapes.codecs) "co_" else "";
-        try w.print("selected={d};{s}result_type={d};{s}argument_count={d};{s}parameter_types={s};goto invoke;}}\n", .{
-            index, prefix, try shapes.index(v.text(v.get(item, "result"))), prefix, parameters.len, prefix, if (parameters.len == 0) "NULL" else "parameters",
+        const injected = if (!shapes.codecs) "" else if (parameters.len == 0) "co_injected=NULL;" else "co_injected=injected;";
+        try w.print("selected={d};{s}result_type={d};{s}argument_count={d};{s}parameter_types={s};{s}goto invoke;}}\n", .{
+            index, prefix, try shapes.index(v.text(v.get(item, "result"))), prefix, parameters.len, prefix, if (parameters.len == 0) "NULL" else "parameters", injected,
         });
     }
     return supported;

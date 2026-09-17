@@ -191,18 +191,18 @@ callback that needs context takes it as another parameter.
 # doc: expect 40
 # doc: expect 2
 # doc: expect 42
-def announce(value: int) -> int effects(output):
-    print(value)
+def announce(value: int, out: Stream) -> int effects(output):
+    out.print(value)
     return value
 
-def sum_announced(values: list[int], report: def(int) -> int effects(output)) -> int effects(output):
+def sum_announced(values: list[int], report: def(int, Stream) -> int effects(output), out: Stream) -> int effects(output):
     total = 0
     for value in values:
-        total += report(value)
+        total += report(value, out)
     return total
 
-def main() -> int:
-    print(sum_announced([40, 2], announce))
+def main(out: Stream) -> int:
+    out.print(sum_announced([40, 2], announce, out))
     return 0
 ```
 
@@ -226,10 +226,10 @@ def set_first(values: list[int]) -> None effects(mutation) mutates(values):
     values[0] = 7
 
 
-def main() -> int effects(managed_allocation, output):
+def main(out: Stream) -> int effects(managed_allocation, output):
     values = [1]
     apply(values, set_first)
-    print(values[0])
+    out.print(values[0])
     return 0
 ```
 

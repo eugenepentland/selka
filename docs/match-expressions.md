@@ -21,8 +21,8 @@ def value(input: Read) -> i64:
             return -code
 
 
-def main() -> i64:
-    print(value(Ok(42)))
+def main(out: Stream) -> i64:
+    out.print(value(Ok(42)))
     return 0
 ```
 

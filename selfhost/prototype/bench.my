@@ -97,7 +97,7 @@ def elapsed_milliseconds(start: time.Instant, finish: time.Instant) -> int:
             return -1
 
 
-def main(clock: Clock) -> int:
+def main(clock: Clock, out: Stream) -> int:
     line_count = 4000
     source = build_source(line_count)
     match time.now(clock):
@@ -106,10 +106,10 @@ def main(clock: Clock) -> int:
             match time.now(clock):
                 case Ok(finish):
                     elapsed = elapsed_milliseconds(start, finish)
-                    print(f"bench: chars={len(source)} pieces={line_count} joins=1 tokens={len(tokens)} lex_ms={elapsed}")
+                    out.print(f"bench: chars={len(source)} pieces={line_count} joins=1 tokens={len(tokens)} lex_ms={elapsed}")
                 case Err(message):
-                    print(f"bench: chars={len(source)} pieces={line_count} joins=1 tokens={len(tokens)} clock_error={message}")
+                    out.print(f"bench: chars={len(source)} pieces={line_count} joins=1 tokens={len(tokens)} clock_error={message}")
         case Err(message):
             tokens = lex(source)
-            print(f"bench: chars={len(source)} pieces={line_count} joins=1 tokens={len(tokens)} clock_error={message}")
+            out.print(f"bench: chars={len(source)} pieces={line_count} joins=1 tokens={len(tokens)} clock_error={message}")
     return 0

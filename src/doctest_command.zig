@@ -681,7 +681,9 @@ fn spaceByte(byte: u8) bool {
 fn hasPrintCall(source: []const u8) bool {
     var cursor: usize = 0;
     while (std.mem.indexOfPos(u8, source, cursor, "print")) |at| {
-        const before_ok = at == 0 or !wordByte(source[at - 1]);
+        // A bare `print(` or a `stream.print(` method call; `sprint(` and other
+        // identifiers that merely end in `print` do not count.
+        const before_ok = at == 0 or !wordByte(source[at - 1]) or source[at - 1] == '.';
         var i = at + "print".len;
         while (i < source.len and spaceByte(source[i])) i += 1;
         if (before_ok and i < source.len and source[i] == '(') return true;

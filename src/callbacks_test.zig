@@ -70,7 +70,7 @@ test "lambdas reject missing context wrong results effects and local captures" {
     );
     try reject(
         "def apply(f: def(int) -> None effects()) -> int:\n    return 0\n\ndef main() -> int:\n    return apply(lambda value: print(value))\n",
-        "E_EFFECT_BOUND",
+        "E_OUTPUT_CAPABILITY",
     );
     var capture = try language.Compilation.init(
         t.allocator,
@@ -389,24 +389,24 @@ test "E1 pure callbacks enter output-permitting slots and the reverse direction 
     , 42);
 
     const reverse =
-        \\def impure(x: i64) -> i64 effects(output):
-        \\    print(x)
+        \\def impure(out: Stream, x: i64) -> i64 effects(output):
+        \\    out.print(x)
         \\    return x
         \\
         \\
-        \\def apply(f: def(i64) -> i64 effects(), x: i64) -> i64:
-        \\    return f(x)
+        \\def apply(f: def(Stream, i64) -> i64 effects(), out: Stream, x: i64) -> i64:
+        \\    return f(out, x)
         \\
         \\
-        \\def main() -> i64:
-        \\    return apply(impure, 1)
+        \\def main(out: Stream) -> i64:
+        \\    return apply(impure, out, 1)
     ;
     var c = try language.Compilation.init(t.allocator, "effect-reverse.my", reverse);
     defer c.deinit();
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings("E_TYPE", c.diagnostics.items[0].code);
-    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "expected def(int) -> int effects()") != null);
-    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "found def(int) -> int effects(output)") != null);
+    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "expected def(stream_cap, int) -> int effects()") != null);
+    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "found def(stream_cap, int) -> int effects(output)") != null);
     try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "def@") == null);
     try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "effects(0)") == null);
 
@@ -470,14 +470,14 @@ test "E1 generic callback parameters use the same directional relation" {
 // spec-case: CALLBACK-1
 test "E1 unused declarations and unrelated callback shapes stay rejected" {
     try reject(
-        \\def impure(x: i64) -> i64 effects(output):
-        \\    print(x)
+        \\def impure(out: Stream, x: i64) -> i64 effects(output):
+        \\    out.print(x)
         \\    return x
         \\
         \\
-        \\def unused() -> i64:
-        \\    f: def(i64) -> i64 effects() = impure
-        \\    return f(0)
+        \\def unused(out: Stream) -> i64:
+        \\    f: def(Stream, i64) -> i64 effects() = impure
+        \\    return f(out, 0)
         \\
     , "E_TYPE");
     try reject(

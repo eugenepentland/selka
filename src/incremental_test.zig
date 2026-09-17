@@ -301,27 +301,27 @@ test "an exported body edit inside its declared ceiling preserves the API finger
         \\export emit
         \\
         \\
-        \\def emit() -> i64 effects(output, managed_allocation):
-        \\    print("x")
+        \\def emit(out: Stream) -> i64 effects(output, managed_allocation):
+        \\    out.print("x")
         \\    return 0
         \\
         \\
-        \\def main() -> i64:
-        \\    return emit()
+        \\def main(out: Stream) -> i64:
+        \\    return emit(out)
     ;
     const allocation_body =
         \\module main
         \\export emit
         \\
         \\
-        \\def emit() -> i64 effects(output, managed_allocation):
+        \\def emit(out: Stream) -> i64 effects(output, managed_allocation):
         \\    items: list[i64] = []
         \\    items.append(1)
         \\    return items[0]
         \\
         \\
-        \\def main() -> i64:
-        \\    return emit()
+        \\def main(out: Stream) -> i64:
+        \\    return emit(out)
     ;
     var entries = [_]File{.{ .path = "main.my", .bytes = output_body }};
     const first = try describe(&entries, t.allocator);

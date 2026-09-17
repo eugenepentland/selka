@@ -1,19 +1,21 @@
 # Printing, files and command-line authority
 
-`print` and the file surface give application code the I/O a Python programmer
-expects. Printing needs no capability. Touching the filesystem, the clock,
-entropy or the environment does, and the entry point names each one it needs —
-but `mylang run` grants them all by default, so an ordinary program just runs.
-Pass `--restrict` when you want the command to withhold authority instead.
+`stream.print` and the file surface give application code the I/O a Python
+programmer expects. The entry point declares `out: Stream`/`err: Stream`, and the
+runtime always supplies them, so printing itself needs no host grant. Touching
+the filesystem, the clock, entropy or the environment does, and the entry point
+names each one it needs — but `mylang run` grants them all by default, so an
+ordinary program just runs. Pass `--restrict` when you want the command to
+withhold authority instead.
 
 ## print
 
 ```mylang
 # doc: expect hello 42 True None
 # doc: expect ['a', 'b'] {'k': 1} b'\x00\xff'
-def main() -> int:
-    print("hello", 42, True, None)
-    print(["a", "b"], {"k": 1}, b"\x00\xff")
+def main(out: Stream) -> int:
+    out.print("hello", 42, True, None)
+    out.print(["a", "b"], {"k": 1}, b"\x00\xff")
     return 0
 ```
 
@@ -22,8 +24,8 @@ Arguments are separated by single spaces and followed by one newline. `sep=` and
 
 ```mylang
 # doc: expect 1-2-3!
-def main() -> int:
-    print(1, 2, 3, sep="-", end="!\n")
+def main(out: Stream) -> int:
+    out.print(1, 2, 3, sep="-", end="!\n")
     return 0
 ```
 
@@ -50,11 +52,11 @@ def pick(n: int) -> Result[int, str]:
         return Err("nope")
     return Ok(n)
 
-def main() -> int:
-    print(Point(x=1, y=2), Colour.green)
+def main(out: Stream) -> int:
+    out.print(Point(x=1, y=2), Colour.green)
     found: Option[int] = Some(4)
     missing: Option[int] = None
-    print(pick(3), pick(-1), found, missing)
+    out.print(pick(3), pick(-1), found, missing)
     return 0
 ```
 
@@ -62,34 +64,45 @@ Nesting deeper than 24 levels renders as `...`, so a cyclic managed graph still
 terminates. Capabilities, open files and callback values have no rendering and
 are rejected while checking.
 
-`print` contributes the `output` effect, which `noio` withholds along with
-`filesystem` and `network`:
+`stream.print` contributes the `output` effect, which `noio` withholds along
+with `filesystem` and `network`:
 
 ```mylang
 # doc: expect-error E_EFFECT_BOUND
-def main() -> int noio:
-    print("not allowed here")
+def main(out: Stream) -> int noio:
+    out.print("not allowed here")
     return 0
 ```
 
-Write `effects(output)` to permit printing under an explicit bound. `print`
+Write `effects(output)` to permit printing under an explicit bound. `stream.print`
 runs on the QBE native backend, the only runtime.
 
-`eprint` is the standard-error spelling of `print`. It accepts the same values
-and `sep=`/`end=` keywords, writes only standard error, and contributes the same
-`output` effect. The two streams are buffered and flushed independently, so a
-`print` line never mixes with an `eprint` line even when both are used together.
-Byte-exact stream separation is covered by the native CLI tests.
+The bare `print(...)` and `eprint(...)` spellings are gone. They report
+`E_OUTPUT_CAPABILITY` with the fix "add `out: Stream` to this function and pass
+one from main"; `debug(...)` remains the only way to write without a capability.
+
+```mylang
+# doc: expect-error E_OUTPUT_CAPABILITY
+def main() -> int:
+    print("no stream")
+    return 0
+```
+
+`err.print` is the standard-error spelling. It accepts the same values and
+`sep=`/`end=` keywords, writes only standard error, and contributes the same
+`output` effect. The two streams are buffered and flushed independently, so an
+`out.print` line never mixes with an `err.print` line even when both are used
+together. Byte-exact stream separation is covered by the native CLI tests.
 
 ## Stream
 
 `Stream` is a capability like `Filesystem`: the entry point declares the
 standard streams it wants, and a helper may take any `Stream` name and be handed
-either one. `stream.print(values..., sep=, end=)` renders exactly like `print`
-and `stream.write(text) -> int` writes the text and returns its character count.
-Both contribute the `output` effect and write to the destination carried by the
-receiver value. Streams are granted unconditionally, so `--restrict` cannot take
-standard output away.
+either one. `stream.print(values..., sep=, end=)` renders Python's `print`
+spelling and `stream.write(text) -> int` writes the text and returns its
+character count. Both contribute the `output` effect and write to the destination
+carried by the receiver value. Streams are granted unconditionally, so
+`--restrict` cannot take standard output away.
 
 ```mylang
 # doc: check
@@ -100,15 +113,12 @@ def main(out: Stream, err: Stream) -> int:
     return written
 ```
 
-`print(...)` and `eprint(...)` without a receiver stay accepted for this
-version; a later version turns them into `E_OUTPUT_CAPABILITY`.
-
 ## debug
 
 `debug(values...)` writes to standard error without a capability and without
 contributing any effect, so it is safe inside a `noio` function. It renders like
-`print` and returns unit. Debug builds and `mylang run`/`mylang test` emit it; a
-`--mode ReleaseFast` build drops it in lowering.
+`stream.print` and returns unit. Debug builds and `mylang run`/`mylang test` emit
+it; a `--mode ReleaseFast` build drops it in lowering.
 
 ```mylang
 # doc: check
@@ -192,8 +202,8 @@ host-boundary diagnostic on stderr.
 
 ```mylang
 # doc: expect count 0
-def main(args: list[str]) -> int:
-    print("count", len(args))
+def main(args: list[str], out: Stream) -> int:
+    out.print("count", len(args))
     return 0
 ```
 
@@ -280,9 +290,9 @@ visible at every call site rather than hidden in a global.
 # doc: allow-read notes
 # doc: expect Ok('hello from a granted directory\n')
 # doc: expect True False
-def main(fs: Filesystem) -> int:
-    print(read_text(fs, "greeting.txt"))
-    print(exists(fs, "greeting.txt"), exists(fs, "absent.txt"))
+def main(fs: Filesystem, out: Stream) -> int:
+    out.print(read_text(fs, "greeting.txt"))
+    out.print(exists(fs, "greeting.txt"), exists(fs, "absent.txt"))
     return 0
 ```
 
@@ -307,14 +317,14 @@ def count(fs: Filesystem) -> Result[int, str]:
             total = total + 1
     return Ok(total)
 
-def main(fs: Filesystem) -> int:
+def main(fs: Filesystem, out: Stream) -> int:
     with open(fs, "greeting.txt", "rb") as f:
-        print(f.read())
+        out.print(f.read())
     match count(fs):
         case Ok(value):
-            print(value)
+            out.print(value)
         case Err(message):
-            print(message)
+            out.print(message)
     return 0
 ```
 
@@ -364,9 +374,9 @@ narrower than read authority:
 # doc: allow-read notes
 # doc: expect Err('read \'../escape\': denied: outside the granted directories, or the mode needs a write grant')
 # doc: expect Err('write \'new.txt\': denied: outside the granted directories, or the mode needs a write grant')
-def main(fs: Filesystem) -> int:
-    print(read_text(fs, "../escape"))
-    print(write_text(fs, "new.txt", "x"))
+def main(fs: Filesystem, out: Stream) -> int:
+    out.print(read_text(fs, "../escape"))
+    out.print(write_text(fs, "new.txt", "x"))
     return 0
 ```
 
