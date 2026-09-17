@@ -1,6 +1,8 @@
 /* Standard output for the native backend. The VM renders a whole `print` line
    through one writer and flushes it; this runtime buffers the same bytes and
-   writes them once, so both backends interleave output identically. */
+   writes them once, so both backends interleave output identically. An f-string
+   hole over an aggregate fills the same buffer and keeps the bytes instead of
+   writing them, so a value has one spelling printed or interpolated. */
 #include "qbe_io.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,3 +32,14 @@ static void print_finish(void *context, void *sink, FILE *stream) {
 }
 void myl_qbe_print_finish(void *context, void *sink) { print_finish(context, sink, stdout); }
 void myl_qbe_eprint_finish(void *context, void *sink) { print_finish(context, sink, stderr); }
+myl_native_text *myl_qbe_text_render(void *context, void *sink) {
+    MylPrint *out = sink;
+    myl_native_text *text = NULL;
+    if (!out) return NULL;
+    if (out->unprintable) myl_qbe_fail(context, "InternalError");
+    else if (out->failed) myl_qbe_fail_allocation(context);
+    else if (!(text = myl_native_text_from_utf8(myl_qbe_heap(context), out->bytes, out->length))) myl_qbe_fail_allocation(context);
+    free(out->bytes);
+    free(out);
+    return text;
+}

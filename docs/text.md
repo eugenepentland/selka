@@ -123,11 +123,15 @@ An `f"..."` literal interpolates each `{expression}` hole with the same conversi
 `str(value)` performs, then concatenates the literal pieces and the converted
 holes into one new `str`. A hole holds exactly one ordinary expression — a call,
 an operator, an index, a field, even a nested format string — and is checked in
-its own source position. `{{` and `}}` write single braces, ordinary escapes apply
-to the literal pieces, and `f""` is empty text. An empty hole, an unmatched or
-unterminated brace, more than one expression in a hole, a format specification
-after `:`, and a non-scalar interpolated value are all rejected, so round or pad a
-number before interpolating it. The `f` prefix is Python-surface only.
+its own source position. A hole takes any value `print` can render — a list, a
+dictionary, a record, an enum case, a result, an option or a byte string as well
+as a scalar — and renders it through the very renderer `print` calls, so one
+value has one spelling wherever it is written. `{{` and `}}` write single braces,
+ordinary escapes apply to the literal pieces, and `f""` is empty text. An empty
+hole, an unmatched or unterminated brace, more than one expression in a hole, a
+format specification after `:`, and a value with no rendering — a capability, an
+open file or a callback — are all rejected, so round or pad a number before
+interpolating it. The `f` prefix is Python-surface only.
 
 ```mylang
 # doc: expect 42
@@ -164,6 +168,8 @@ def main() -> int:
         return 10
     if f"{name.upper()}" != "ADA":
         return 11
+    if f"{values} {spot}" != "[1, 2, 3] Point(x=1, y=2)":
+        return 12
     return len(line) * 3 - 3
 ```
 

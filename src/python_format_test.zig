@@ -84,6 +84,83 @@ test "an f before anything but a quote stays an ordinary identifier" {
     , 42);
 }
 
+/// Every kind of value a hole renders, printed beside its own interpolation so
+/// the two spellings must agree byte for byte, and scored so the converted text
+/// is checked as well.
+const rendered_holes =
+    \\class Point:
+    \\    x: int
+    \\    y: int
+    \\
+    \\enum Colour:
+    \\    red,
+    \\    green
+    \\
+    \\def pick(n: int) -> Result[int, str]:
+    \\    if n < 0:
+    \\        return Err("nope")
+    \\    return Ok(n)
+    \\
+    \\def main() -> int:
+    \\    score = 0
+    \\    values = [1, 2]
+    \\    counts: dict[str, int] = {"k": 1}
+    \\    spot = Point(x=1, y=2)
+    \\    found: Option[int] = Some(4)
+    \\    raw = b"ab"
+    \\    print(values, f"{values}")
+    \\    print(counts, f"{counts}")
+    \\    print(spot, f"{spot}")
+    \\    print(Colour.green, f"{Colour.green}")
+    \\    print(pick(3), f"{pick(3)}")
+    \\    print(pick(-1), f"{pick(-1)}")
+    \\    print(found, f"{found}")
+    \\    print(raw, f"{raw}")
+    \\    if f"{values}" == "[1, 2]":
+    \\        score = score + 1
+    \\    if f"{counts}" == "{'k': 1}":
+    \\        score = score + 2
+    \\    if f"{spot} {Colour.green}" == "Point(x=1, y=2) Colour.green":
+    \\        score = score + 4
+    \\    if f"{pick(3)} {pick(-1)} {found}" == "Ok(3) Err('nope') Some(4)":
+    \\        score = score + 8
+    \\    if f"{raw}" == "b'ab'":
+    \\        score = score + 16
+    \\    return score
+;
+
+// spec-case: PY-FSTRING-1
+test "a native build spells an interpolated aggregate exactly as print writes it" {
+    var c = try language.Compilation.init(t.allocator, "format.my", rendered_holes);
+    defer c.deinit();
+    const outcome = try native.run(&c);
+    try t.expectEqualStrings("", outcome.trap.code);
+    try t.expectEqual(@as(i64, 31), outcome.value);
+    try t.expectEqualStrings(
+        \\[1, 2] [1, 2]
+        \\{'k': 1} {'k': 1}
+        \\Point(x=1, y=2) Point(x=1, y=2)
+        \\Colour.green Colour.green
+        \\Ok(3) Ok(3)
+        \\Err('nope') Err('nope')
+        \\Some(4) Some(4)
+        \\b'ab' b'ab'
+        \\
+    , outcome.stdout);
+}
+
+// spec-case: PY-FSTRING-1
+test "an aggregate hole renders through the renderers print itself calls" {
+    var c = try language.Compilation.init(t.allocator, "format.my", rendered_holes);
+    defer c.deinit();
+    const manifest = try c.emitQbe(t.allocator);
+    defer t.allocator.free(manifest);
+    try t.expect(std.mem.indexOf(u8, manifest, "myl_qbe_text_render") != null);
+    try t.expect(std.mem.indexOf(u8, manifest, "myl_print_list") != null);
+    try t.expect(std.mem.indexOf(u8, manifest, "myl_print_dictionary") != null);
+    try t.expect(std.mem.indexOf(u8, manifest, "myl_print_variant") != null);
+}
+
 // spec-case: PY-FSTRING-2
 test "renderAlloc releases its partial buffer when the allocator fails" {
     var failing = t.FailingAllocator.init(t.allocator, .{ .fail_index = 0 });

@@ -78,10 +78,15 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
         };
     }
     const arenas = arena_lower.present(program);
-    for (program.functions, units, 0..) |function, *unit, index| {
+    // A `str` conversion names only its target type, so the renderers a program
+    // needs are read back from each lowered function's typed operand stacks.
+    const states = try a.alloc([]const ?[]const typed.Type, program.functions.len);
+    @memset(states, &.{});
+    for (program.functions, units, states, 0..) |function, *unit, *stacks, index| {
         if (selected != null and !selected.?[index]) continue;
         var emitter = Emitter{ .allocator = a, .program = program, .function = function, .units = units, .layouts = &layouts, .sink = sink, .output = .init(a), .arenas = arenas };
         unit.il = try emitter.emit(unit.symbol);
+        stacks.* = emitter.states;
         unit.test_dependencies = test_dependencies.describe(a, program, index, unit.il, &layouts, emitter.states) catch |err| return layoutError(err);
     }
     const entry_function = program.functions[@backingInt(program.main)];
@@ -90,8 +95,9 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
     const entry_argv_element = if (entry_function.signature.parameter_count != 0) entry_adapter.argvElement(entry_function.scope.locals[0].ty, program.records) else null;
     const entry_argv = if (entry_argv_element) |element| native_descriptors.symbol(a, &layouts, element) catch |err| return layoutError(err) else null;
     const descriptors = native_descriptors.generate(a, &layouts) catch |err| return layoutError(err);
-    const renderers = @import("native_render.zig").generate(a, &layouts, program) catch |err| return layoutError(err);
-    // A program that never prints carries no renderers, and copies nothing.
+    const renderers = @import("native_render.zig").generate(a, &layouts, program, states) catch |err| return layoutError(err);
+    // A program that neither prints nor renders a value into text carries no
+    // renderers, and copies nothing.
     const runtime_data = if (renderers.len == 0) descriptors else try std.mem.concat(a, u8, &.{ descriptors, renderers });
     const wire_types = @import("qbe_wire.zig").describe(a, &layouts) catch |err| return layoutError(err);
     const codecs = @import("qbe_codecs.zig").describe(a, program, &layouts) catch |err| return layoutError(err);

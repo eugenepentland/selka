@@ -1,6 +1,7 @@
-//! Generated Python-style renderers for the native `print` surface. One C
-//! function per printable type, emitted only for the types a program actually
-//! prints, so rendering is descriptor-driven without a second type table.
+//! Generated Python-style renderers for the native `print` surface and for the
+//! text an f-string hole makes of an aggregate. One C function per rendered
+//! type, emitted only for the types a program actually renders, so rendering is
+//! descriptor-driven without a second type table.
 const std = @import("std");
 const bytecode = @import("bytecode.zig");
 const native = @import("native_types.zig");
@@ -17,16 +18,39 @@ pub fn symbol(allocator: std.mem.Allocator, catalog: *const native.Catalog, ty: 
     return std.fmt.allocPrint(allocator, "myl_r_{s}", .{std.fmt.bytesToHex(digest, .lower)});
 }
 
-/// Emit one renderer per type reachable from a `print` operand, in symbol order.
-pub fn generate(allocator: std.mem.Allocator, catalog: *native.Catalog, program: bytecode.Program) Error![]u8 {
+/// Whether converting `input` to the text type `target` renders through a
+/// generated renderer, as an f-string hole does for anything `print` can write.
+/// Text converts to itself and a scalar formats through the text runtime, so
+/// only an aggregate that is neither text nor a float renders here.
+pub fn rendersConversion(records: []const typed.Record, target: typed.Type, input: typed.Type) bool {
+    if (!target.isAggregate() or target.recordIndex() >= records.len) return false;
+    const record = records[target.recordIndex()];
+    if (!record.managed or record.collection.kind != .string) return false;
+    if (!input.isAggregate() or input == target) return false;
+    return !numeric_surface.isFloat(input, records);
+}
+
+/// Emit one renderer per type reachable from a `print` operand or from an
+/// aggregate's conversion to text, in symbol order. `states` carries each
+/// function's typed operand stack before every instruction, since a conversion
+/// names only its target type; a function lowered without one contributes
+/// nothing.
+pub fn generate(allocator: std.mem.Allocator, catalog: *native.Catalog, program: bytecode.Program, states: []const []const ?[]const typed.Type) Error![]u8 {
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
     const a = arena.allocator();
     var wanted: std.array_hash_map.Auto(typed.Type, void) = .empty;
-    for (program.functions) |function| {
-        for (function.scope.instructions) |instruction| {
-            if (instruction.op != .print) continue;
-            for (instruction.op.print.types) |ty| try discover(a, catalog, ty, &wanted);
+    for (program.functions, states) |function, stacks| {
+        for (function.scope.instructions, 0..) |instruction, pc| {
+            switch (instruction.op) {
+                .print => |output| for (output.types) |ty| try discover(a, catalog, ty, &wanted),
+                .cast_integer => |target| {
+                    const stack = (if (pc < stacks.len) stacks[pc] else null) orelse continue;
+                    if (stack.len == 0 or !rendersConversion(catalog.records, target, stack[stack.len - 1])) continue;
+                    try discover(a, catalog, stack[stack.len - 1], &wanted);
+                },
+                else => {},
+            }
         }
     }
     var output: std.Io.Writer.Allocating = .init(allocator);

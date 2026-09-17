@@ -17,6 +17,8 @@ const iteration_failure = "myl_qbe_fail_iteration";
 const bytes_lower = @import("qbe_bytes.zig");
 const text_lower = @import("qbe_text.zig");
 const arena_lower = @import("qbe_arena.zig");
+const io_lower = @import("qbe_io.zig");
+const render = @import("native_render.zig");
 const dictionary_write = " %v{d} =w call $myl_native_dictionary_write(l %heap, l %v{d}, l %v{d}, l %v{d})\n";
 const dictionary_length = " %v{d} =l call $myl_native_dictionary_length(l %v{d})\n";
 /// Detail-carrying bounds helper shared by indexable receivers.
@@ -27,7 +29,7 @@ const normalized_index_failure = "myl_qbe_fail_normalized_index_bounds";
 /// Bind managed lowering to the concrete emitter without dependency cycles.
 pub fn Lower(comptime E: type) type {
     return struct {
-        /// Convert a scalar to canonical immutable Unicode text.
+        /// Convert a value to canonical immutable Unicode text, or a list to bytes.
         pub fn cast(self: *E, ty: typed.Type, stack: []const typed.Type) Error!void {
             return emitCast(E, self, ty, stack);
         }
@@ -535,6 +537,9 @@ fn emitCast(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Typ
     const base = stack.len - 1;
     const input_type = stack[base];
     if (input_type == ty) return;
+    // A list, dictionary, record, variant or byte string renders through the
+    // renderer `print` uses, so one value has one spelling either way.
+    if (render.rendersConversion(self.program.records, ty, input_type)) return io_lower.Lower(E).text(self, input_type, base);
     const kind: u32 = if (input_type.integer()) |info| (if (info.signed) @as(u32, 0) else 1) else switch (input_type) {
         .bool => 2,
         .unit => 3,
