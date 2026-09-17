@@ -3,7 +3,6 @@ const syntax_code = "E_SYNTAX";
 const eDefaultArgument = "E_DEFAULT_ARGUMENT";
 const eRequirement = diagnostic.generic_requirement;
 const eGenericLimit = diagnostic.generic_limit;
-const external_resources = @import("external_resources.zig");
 const std = @import("std");
 const eIteration = "E_ITERATION";
 const effects = @import("effect_set.zig");
@@ -1247,22 +1246,7 @@ pub const Parser = struct {
         return self.append(.{ .span = .join(token.span, close.span), .data = .{ .dictionary_literal = try entries.toOwnedSlice(self.arena.allocator()) } });
     }
     fn parseRestrict(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
-        self.cursor.pos += 1;
-        _ = try self.expect(.lbracket);
-        var permissions: external_resources.Permissions = 0;
-        if (self.current().tag != .rbracket) while (true) {
-            const name = try self.expect(.ident);
-            const permission = std.meta.stringToEnum(external_resources.Permission, self.src.text(name.span)) orelse return self.sink.fail("E_PERMISSION", name.span, "permission must be read, write, or complete");
-            const bit = external_resources.permissionBit(permission);
-            if (permissions & bit != 0) return self.sink.fail("E_PERMISSION", name.span, "permission is repeated");
-            permissions |= bit;
-            if (!self.take(.comma)) break;
-        };
-        _ = try self.expect(.rbracket);
-        _ = try self.expect(.lparen);
-        const value = try self.expression(0);
-        const close = try self.expect(.rparen);
-        return self.append(.{ .span = .join(token.span, close.span), .data = .{ .restrict_resource = .{ .permissions = permissions, .value = value } } });
+        return self.sink.fail("E_REMOVED_SPELLING", token.span, "`restrict_resource[...]` was removed; use `fs.read_only()`");
     }
 
     fn parseResourceIo(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {

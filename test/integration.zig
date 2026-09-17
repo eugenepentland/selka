@@ -2801,7 +2801,8 @@ test "CLI checks bounded environment access without granting ambient process acc
     ;
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_EFFECT_BOUND]");
 }
-test "CLI exposes resource permission attenuation and rejects malformed permission sets" {
+// spec: CAPABILITY-METHOD-NARROWING-2
+test "CLI exposes fs.read_only permission attenuation and rejects the removed spelling" {
     const source = @embedFile("fixtures/attenuation.my");
     try invoke("check", source, 0, "", "");
     try invokeOptions("run", source, &.{"--restrict"}, 2, "", "--restrict is active");
@@ -2815,7 +2816,13 @@ test "CLI exposes resource permission attenuation and rejects malformed permissi
         \\    _ = restrict_resource[read, read](fs)
         \\    return 0
     ;
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_PERMISSION]");
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_REMOVED_SPELLING]");
+    const extra =
+        \\def main(fs: Filesystem) -> i64:
+        \\    _ = fs.read_only(1)
+        \\    return 0
+    ;
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, extra, 1, "", "error[E_ARITY]");
 }
 
 const clock_program =

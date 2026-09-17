@@ -58,7 +58,7 @@ const program = fixture.declarations ++ helpers ++
     \\
     \\
     \\def restricted(fs: Filesystem) -> i64 effects(filesystem):
-    \\    match acquire_resource[Open[bool]](restrict_resource[read](fs), reading()):
+    \\    match acquire_resource[Open[bool]](fs.read_only(), reading()):
     \\        case Open.ok(file):
     \\            match finish[bool](file):
     \\                case Finish.ok(done):
