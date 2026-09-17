@@ -11,7 +11,7 @@ pub fn runtimeControl(argument: []const u8) bool {
     if (std.mem.eql(u8, argument, "--allow-all")) return true;
     if (std.mem.eql(u8, argument, "--gc-stress")) return true;
     if (std.mem.eql(u8, argument, "--print-result")) return true;
-    inline for (.{ "--allow-read=", "--allow-write=", "--allow-random", "--allow-env", "--max-steps=", "--max-frames=", "--timeout=" }) |prefix| {
+    inline for (.{ "--allow-read=", "--allow-write=", "--allow-endpoint=", "--allow-random", "--allow-env", "--max-steps=", "--max-frames=", "--timeout=" }) |prefix| {
         if (std.mem.startsWith(u8, argument, prefix)) return true;
         if (std.mem.eql(u8, argument, prefix[0 .. prefix.len - 1])) return true;
     }
@@ -192,12 +192,14 @@ test "build options reject missing values unsupported targets and incompatible p
     for (invalid) |args| try std.testing.expectError(error.InvalidBuildArguments, parse(args));
 }
 
+// spec-case: NETWORK-ENDPOINT-1
 test "temporary native runs accept runtime options and reject persistent output" {
     const parsed = try parse(&.{ "main.my", "--run", "--", "--max-steps=12", "--gc-stress" });
     try std.testing.expect(parsed.run);
     try std.testing.expectEqualStrings("--", parsed.arguments[0]);
     try std.testing.expectEqualStrings("--max-steps=12", parsed.arguments[1]);
     try std.testing.expectEqual(@as(usize, 3), parsed.arguments.len);
+    try std.testing.expect(runtimeControl("--allow-endpoint=127.0.0.1:8000"));
     try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "--run", "-o", "out" }));
     try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "--run", "--library" }));
     try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--", "--gc-stress" }));
