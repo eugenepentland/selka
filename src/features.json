@@ -657,6 +657,11 @@
       "summary": "The `network` standard module wraps `connect`, `read`, `write` and `close` over the raw network resource primitives.",
       "doc": "docs/standard-library.md#network"
     },
+    "network-endpoint-grant": {
+      "kind": "tooling",
+      "summary": "`mylang run`, `run-project` and `build --run` accept repeatable `--allow-endpoint=IP:PORT` grants that provision a literal-only TCP provider for a `Network` entry point under `--restrict`; without the grant the entry point is refused.",
+      "doc": "docs/effects.md#network-host"
+    },
     "mandatory-mutation-footprint-warning": {
       "kind": "language",
       "summary": "A function with no effect ceiling that writes caller-reachable storage without a `mutates(...)` clause is warned with the inferred footprint printed verbatim; `mutates(...)` without a ceiling means unbounded effects with that footprint.",

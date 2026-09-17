@@ -154,7 +154,7 @@ pub fn ungranted(program: anytype, config: Config) ?[]const u8 {
     return null;
 }
 
-// spec: NETWORK-ENDPOINT-1
+// spec-case: NETWORK-ENDPOINT-1
 test "grant parsing accepts literal endpoints and rejects malformed or repeated ones" {
     var config: Config = .{};
     try std.testing.expect(try config.parse("--restrict"));
