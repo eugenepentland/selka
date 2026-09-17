@@ -1,8 +1,8 @@
-list str type#17
+list str type#19
   element u32 (managed)
-list bytes type#18
+list bytes type#20
   element u8 (managed)
-domain float type#19
+domain float type#21
   backing u64 (private)
 function main() -> i64
   0000  PUSH_I64 1  ; 2:12
