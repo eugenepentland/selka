@@ -150,12 +150,54 @@ pub const Parser = struct {
         const bit: u2 = if (std.mem.eql(u8, self.src.text(name), "len")) 1 else 2;
         return self.cursor.shadowing & bit != 0;
     }
+    /// Whether some registered import name extends `text` with a dot. It marks a
+    /// segment that only begins a dotted module path rather than naming one.
+    fn importPathPrefix(self: *Parser, text: []const u8) bool {
+        var iterator = self.syntax.import_aliases.keyIterator();
+        while (iterator.next()) |key| {
+            const name = key.*;
+            if (name.len > text.len and name[text.len] == '.' and std.mem.eql(u8, name[0..text.len], text)) return true;
+        }
+        return false;
+    }
+    /// Join a dotted module path and one member into a single qualified name.
+    /// `shared.units.area` and `units.area` both qualify the module; a prefix
+    /// that does not continue a registered path (`shared.field`) is left as a
+    /// field access on the base name, so a local may reuse that name.
     fn qualifiedTail(self: *Parser, first: Span) diagnostic.Error!Span {
         if (!self.module_syntax) return first;
-        if (self.current().tag != .dot or !self.syntax.import_aliases.contains(self.src.text(first))) return first;
+        if (self.current().tag != .dot) return first;
+        const first_text = self.src.text(first);
+        if (!self.syntax.import_aliases.contains(first_text) and !self.importPathPrefix(first_text)) return first;
         if (!self.sameExpressionLine()) return first;
-        self.cursor.pos += 1;
-        return .join(first, try self.declaredName());
+        var joined = first;
+        while (self.current().tag == .dot and self.sameExpressionLine()) {
+            const saved = self.cursor.pos;
+            self.cursor.pos += 1;
+            const candidate = Span.join(joined, try self.declaredName());
+            const candidate_text = self.src.text(candidate);
+            if (self.syntax.import_aliases.contains(candidate_text)) {
+                joined = candidate;
+                // A complete module name ends the qualifier; the next segment is
+                // its member, joined into the same qualified name.
+                if (self.current().tag == .dot and self.sameExpressionLine()) {
+                    self.cursor.pos += 1;
+                    return Span.join(joined, try self.declaredName());
+                }
+                return joined;
+            }
+            if (self.importPathPrefix(candidate_text)) {
+                joined = candidate;
+                continue;
+            }
+            // `joined` names the module and `candidate` adds its member.
+            if (self.syntax.import_aliases.contains(self.src.text(joined))) return candidate;
+            // `joined` only begins a module path and this segment does not
+            // continue it, so leave the dot for an ordinary field access.
+            self.cursor.pos = saved;
+            return joined;
+        }
+        return joined;
     }
     fn typeName(self: *Parser) diagnostic.Error!Span {
         try self.enter();
@@ -256,9 +298,17 @@ pub const Parser = struct {
         _ = try self.expect(.semicolon);
         while (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "import")) {
             self.cursor.pos += 1;
+            const path_start = self.current().span;
             try self.moduleName();
-            const alias = if (self.take(.kw_as)) (try self.expect(.ident)).span else self.tokens[self.cursor.pos - 1].span;
-            try self.syntax.import_aliases.put(self.arena.allocator(), self.src.text(alias), {});
+            const path = Span.join(path_start, self.tokens[self.cursor.pos - 1].span);
+            const explicit = self.take(.kw_as);
+            const alias = if (explicit) (try self.expect(.ident)).span else self.tokens[self.cursor.pos - 1].span;
+            const allocator = self.arena.allocator();
+            // The local alias (explicit, or the trailing segment) and the full
+            // dotted module path both qualify the module; no bare prefix of the
+            // path is reserved, so a local may reuse `shared` in `shared.geometry`.
+            try self.syntax.import_aliases.put(allocator, self.src.text(alias), {});
+            try self.syntax.import_aliases.put(allocator, self.src.text(path), {});
             _ = try self.expect(.semicolon);
         }
         return self.parse();
@@ -1452,7 +1502,11 @@ pub const Parser = struct {
             position += 2;
         }
         if (segments < 2) return false;
-        if (segments == 2 and self.module_syntax and self.syntax.import_aliases.contains(self.src.text(self.current().span))) return false;
+        // `m.f[T](x)` where the owner `m` is an import alias (or the whole dotted
+        // module path) is an ordinary call; `units.D.make[T](x)` keeps its member
+        // application because `units.D` is not an import qualifier.
+        const owner = Span.join(self.tokens[self.cursor.pos].span, self.tokens[position - 2].span);
+        if (self.module_syntax and self.syntax.import_aliases.contains(self.src.text(owner))) return false;
         position += 1;
         if (position >= self.tokens.len or self.tokens[position].tag != .lbracket) return false;
         var brackets: usize = 0;

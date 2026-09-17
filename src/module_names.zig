@@ -75,7 +75,7 @@ pub const Names = struct {
         var module = original.input;
         if (qualified.alias) |alias| {
             var found = false;
-            for (self.index.project.modules.items[module].imports) |imported| if (std.mem.eql(u8, alias, imported.alias)) {
+            for (self.index.project.modules.items[module].imports) |imported| if (imported.matches(alias)) {
                 module = imported.target;
                 found = true;
                 break;
@@ -92,8 +92,13 @@ pub const Names = struct {
         if (original.input >= self.index.units.len or original.input >= self.index.project.modules.items.len) return error.InternalError;
         const name = self.src.text(span);
         if (self.index.units[original.input].names.contains(name)) return true;
+        // A dotted spelling is a qualified module/type/domain reference, never a
+        // bare declaration, so it is top-level without reserving its prefix.
+        if (std.mem.indexOfScalar(u8, name, '.') != null) return true;
         const prefix = name[0 .. std.mem.indexOfAny(u8, name, " \t\r\n:.") orelse name.len];
-        for (self.index.project.modules.items[original.input].imports) |imported| if (std.mem.eql(u8, prefix, imported.alias)) return true;
+        for (self.index.project.modules.items[original.input].imports) |imported| {
+            if (imported.matches(prefix)) return true;
+        }
         return false;
     }
 };

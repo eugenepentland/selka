@@ -1550,6 +1550,143 @@ test "CLI check on a CHECK-PROJECT-ENTRY-1 module project loads the reachable gr
     try testing.expectEqualStrings("", explicit.stdout);
     try testing.expectEqualStrings("", explicit.stderr);
 }
+// spec: PROJ-7
+test "CLI build loads a module project entry without --project" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.createDir(testing.io, "app", .default_dir);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "app/main.my", .data =
+        \\module main
+        \\import helper
+        \\
+        \\def main() -> int:
+        \\    return helper.value()
+    });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
+        \\module helper
+        \\export value
+        \\
+        \\def value() -> int effects():
+        \\    return 42
+    });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "app/main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const output = try std.fs.path.join(testing.allocator, &.{ root, "program" });
+    defer testing.allocator.free(output);
+    var link_argv: std.ArrayList([]const u8) = .empty;
+    defer link_argv.deinit(testing.allocator);
+    try link_argv.appendSlice(testing.allocator, &.{ compiler_path, "build", entry, "-o", output });
+    try link_argv.appendSlice(testing.allocator, &tools);
+    const link = try std.process.run(testing.allocator, testing.io, .{ .argv = link_argv.items });
+    defer testing.allocator.free(link.stdout);
+    defer testing.allocator.free(link.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, link.term);
+    try testing.expectEqualStrings("", link.stderr);
+    const installed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ output, "--print-result" } });
+    defer testing.allocator.free(installed.stdout);
+    defer testing.allocator.free(installed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 42 }, installed.term);
+    try testing.expectEqualStrings("42\n", installed.stdout);
+}
+
+// spec-case: NATIVE-TEST-1
+test "CLI test discovers a test_ function without an explicit export" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
+        \\module main
+        \\
+        \\def test_add() -> bool:
+        \\    return 1 + 1 == 2
+        \\
+        \\def main() -> int:
+        \\    return 0
+    });
+    const path = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, ".mylang-test-cache" });
+    defer testing.allocator.free(cache);
+    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", path, "--cache-dir", cache } });
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "1 passed") != null);
+}
+
+// spec-case: NATIVE-TEST-1
+test "CLI test ignores unexported test_ helpers that cannot default" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
+        \\module main
+        \\
+        \\def test_helper(value: int) -> bool:
+        \\    return value > 0
+        \\
+        \\def test_count() -> int:
+        \\    return 1
+        \\
+        \\def test_ok() -> bool:
+        \\    return True
+        \\
+        \\def main() -> int:
+        \\    return 0
+    });
+    const path = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, ".mylang-test-cache" });
+    defer testing.allocator.free(cache);
+    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", path, "--cache-dir", cache } });
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "1 passed") != null);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "test_helper") == null);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "test_count") == null);
+}
+
+// spec-case: NATIVE-TEST-1
+test "CLI test reports an exported ill-shaped test as a failed case" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
+        \\module main
+        \\export test_bad
+        \\export test_ok
+        \\
+        \\
+        \\def test_bad() -> int effects():
+        \\    return 1
+        \\
+        \\
+        \\def test_ok() -> bool effects():
+        \\    return True
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    });
+    const path = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, ".mylang-test-cache" });
+    defer testing.allocator.free(cache);
+    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", path, "--cache-dir", cache } });
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, result.term);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "failed main::test_bad") != null);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "1 failed") != null);
+    try testing.expect(std.mem.indexOf(u8, result.stderr, "host failure") == null);
+}
+
 // spec-case: CHECK-PROJECT-ENTRY-1
 test "CLI check keeps plain single-file programs on the one-unit path" {
     try invoke("check",

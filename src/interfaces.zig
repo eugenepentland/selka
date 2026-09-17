@@ -109,7 +109,7 @@ pub const Index = struct {
         if (alias) |requested| {
             var found = false;
             for (self.project.modules.items[from].imports) |imported| {
-                if (!std.mem.eql(u8, requested, imported.alias)) continue;
+                if (!imported.matches(requested)) continue;
                 target = imported.target;
                 found = true;
                 break;
@@ -431,9 +431,11 @@ pub const Index = struct {
         }
         return output.toOwnedSlice();
     }
-    /// Render exported declarations as a canonical declared-contract manifest.
-    /// Bodies are never checked; exported signatures and explicit public
-    /// ceilings are, so a provider can be validated before production bodies run.
+    /// Render exported declarations, plus the unexported `test_` declarations
+    /// that already have the defaulting test shape, as a canonical
+    /// declared-contract manifest. Bodies are never checked; declared signatures
+    /// and explicit public ceilings are, so a provider can be validated before
+    /// production bodies run.
     pub fn renderContracts(self: *Index, allocator: std.mem.Allocator) ContractError![]u8 {
         if (self.project.problem != null) return error.IncompleteProject;
         // Intermediate tables live in the project arena; only the final JSON text
@@ -443,8 +445,15 @@ pub const Index = struct {
         for (self.project.order.items) |module| {
             var declarations: std.ArrayList(ContractDeclaration) = .empty;
             for (self.units[module].symbols.items) |symbol| {
-                if (!symbol.exported) continue;
-                try declarations.append(scratch, try self.contractDeclaration(module, symbol));
+                // `mylang test` discovers `test_` functions by name, so the
+                // discovery contract publishes them beside explicit exports.
+                const discovered_test = symbol.kind == .function and std.mem.startsWith(u8, symbol.name, "test_");
+                if (!symbol.exported and !discovered_test) continue;
+                const declaration = try self.contractDeclaration(module, symbol);
+                // An unexported `test_` name is only discovered when it already
+                // has the defaulting test shape; other helpers stay helpers.
+                if (!symbol.exported and !testShape(declaration)) continue;
+                try declarations.append(scratch, declaration);
             }
             std.mem.sort(ContractDeclaration, declarations.items, {}, declarationLess);
             try modules.append(scratch, .{
@@ -454,6 +463,12 @@ pub const Index = struct {
         }
         std.mem.sort(ContractModule, modules.items, {}, moduleLess);
         return std.json.Stringify.valueAlloc(allocator, ContractManifest{ .modules = try modules.toOwnedSlice(scratch) }, .{});
+    }
+    /// The declared shape an unexported `test_` function must already have to be
+    /// discovered without `export`: no generic parameters and a zero-argument
+    /// `bool` result, which is the one shape discovery can default.
+    fn testShape(declaration: ContractDeclaration) bool {
+        return declaration.generics.len == 0 and std.mem.eql(u8, declaration.signature, "def()->bool");
     }
     fn contractDeclaration(self: *Index, module: usize, symbol: Symbol) ContractError!ContractDeclaration {
         return switch (symbol.kind) {

@@ -119,10 +119,11 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
         // The frontend child reuses its persistent content-addressed cache by default.
         // An explicit `--cache-dir` keeps the frontend under that same root; the
         // `no_cache` sentinel disables reuse for this build.
-        // `build --run` follows `run`'s project detection: a source that opens as a
-        // module should load its imports rather than being treated as one unit.
+        // `build` follows `run`'s project detection: a source that opens as a
+        // module loads its imports rather than being treated as one unit, so the
+        // entry needs no `--project` spelling.
         var project = parsed.project;
-        if (!project and parsed.run) project = module_syntax.usesModuleSyntax(try context.read(try context.absolute(parsed.source)));
+        if (!project) project = module_syntax.usesModuleSyntax(try context.read(try context.absolute(parsed.source)));
         const compiler = try frontendCompiler(context);
         var arguments: std.ArrayList([]const u8) = .empty;
         try arguments.appendSlice(a, &.{ compiler, if (project) "emit-project-qbe" else "emit-qbe", try context.absolute(parsed.source) });

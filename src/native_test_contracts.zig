@@ -1,7 +1,9 @@
 //! Declared contract manifests for selected-provider validation.
 //!
 //! `mylang list-interfaces --contracts` publishes the exported declarations of a
-//! project after signature/visibility checking and before body checking. This
+//! project, plus each unexported `test_` declaration that already has the
+//! defaulting test shape, after signature/visibility checking and before body
+//! checking. This
 //! module maps provider file paths to module names, extracts the selected test
 //! signatures for discovery, and compares a replacement's declared contracts
 //! against every public contract it replaces. Exact identity covers names,
@@ -129,10 +131,11 @@ fn appendValue(out: *std.ArrayList(u8), allocator: std.mem.Allocator, value: std
     try out.appendSlice(allocator, "\n");
 }
 
-/// Build the test-discovery schema from declared exported functions. The shape
-/// matches the checked schema keys discovery and receipt hashing already read;
-/// `parameters` carries the canonical declared signature string so a declared
-/// signature change invalidates a receipt even before any body is checked.
+/// Build the test-discovery schema from declared functions. The shape matches the
+/// checked schema keys discovery and receipt hashing already read; `parameters`
+/// carries the canonical declared signature string so a declared signature change
+/// invalidates a receipt even before any body is checked, and `parameters_count`
+/// lets discovery reject an argument-taking case before it reaches the runner.
 pub fn testSchema(allocator: std.mem.Allocator, contracts: std.json.Value) Error!std.json.Value {
     try checkVersion(contracts);
     var functions = std.json.Array.init(allocator);
@@ -140,10 +143,12 @@ pub fn testSchema(allocator: std.mem.Allocator, contracts: std.json.Value) Error
         const module_name = text(field(module, name_key));
         for (array(field(module, declarations_key))) |declaration| {
             if (!std.mem.eql(u8, text(field(declaration, kind_key)), "function")) continue;
+            const signature = text(field(declaration, signature_key));
             var map: std.json.ObjectMap = .empty;
             try map.put(allocator, name_key, .{ .string = try std.fmt.allocPrint(allocator, "{s}::{s}", .{ module_name, text(field(declaration, name_key)) }) });
-            try map.put(allocator, "result", .{ .string = resultOf(text(field(declaration, signature_key))) });
-            try map.put(allocator, "parameters", .{ .string = text(field(declaration, signature_key)) });
+            try map.put(allocator, "result", .{ .string = resultOf(signature) });
+            try map.put(allocator, "parameters", .{ .string = signature });
+            try map.put(allocator, "parameters_count", .{ .integer = @intCast(declaredParameterCount(signature)) });
             try map.put(allocator, "return_reference", .{ .string = "unknown" });
             try functions.append(.{ .object = map });
         }
@@ -151,6 +156,34 @@ pub fn testSchema(allocator: std.mem.Allocator, contracts: std.json.Value) Error
     var root: std.json.ObjectMap = .empty;
     try root.put(allocator, functions_key, .{ .array = functions });
     return .{ .object = root };
+}
+
+/// Count the top-level parameters in a canonical `def(...)->T` signature, so a
+/// case that passes no `arguments` can be rejected before execution.
+fn declaredParameterCount(signature: []const u8) usize {
+    const open = std.mem.indexOfScalar(u8, signature, '(') orelse return 0;
+    var depth: usize = 0;
+    var count: usize = 0;
+    var present: bool = false;
+    var index = open;
+    while (index < signature.len) : (index += 1) {
+        switch (signature[index]) {
+            '(' => depth += 1,
+            ')' => {
+                if (depth == 0) return 0;
+                depth -= 1;
+                if (depth == 0) return if (present) count + 1 else 0;
+            },
+            ',' => if (depth == 1) {
+                count += 1;
+                present = true;
+            },
+            else => {
+                if (depth == 1 and !std.ascii.isWhitespace(signature[index])) present = true;
+            },
+        }
+    }
+    return 0;
 }
 
 /// Recover the declared result spelling from a canonical `def(...)->T` string by

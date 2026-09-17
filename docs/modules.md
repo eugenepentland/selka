@@ -104,13 +104,18 @@ def main() -> int:
 
 ## Dotted qualification
 
-An import binds one alias — the last segment of the dotted name, or the name
-after `as` — and every use of that module's exports is written `alias.name`. The
-same spelling covers functions, types and domain methods, so `prices.Price` is a
-type annotation and a constructor, and `prices.total` is a call or a function
-value. Qualification does not relax privacy: a name the other module did not
-export is still unreachable, and binding the same alias twice rejects with
-`E_IMPORT_ALIAS`.
+An import is qualified by its full dotted module name or by its local alias — the
+name after `as`, or the trailing segment of the dotted name when there is none.
+So `import prices` answers `prices.total`, `import catalog.prices` answers both
+`catalog.prices.total` and `prices.total`, and `import catalog.prices as p`
+answers both `p.total` and `catalog.prices.total`. A dotted path is joined only
+while it continues a registered module path, so a bare prefix that does not
+continue one (`catalog` on its own) is an ordinary name a local or parameter may
+reuse. The same spelling covers functions, types and domain methods, so
+`prices.Price` is a type annotation and a constructor, and `prices.total` is a
+call or a function value. Qualification does not relax privacy: a name the other
+module did not export is still unreachable, and binding the same alias twice
+rejects with `E_IMPORT_ALIAS`.
 
 ```mylang
 # doc: project catalog

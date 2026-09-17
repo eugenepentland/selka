@@ -159,3 +159,45 @@ test "dotted imports retain private symbol private domain and alias shadow check
         \\    return api
     , "E_SHADOWING");
 }
+
+// spec: MODULE-DOT-6
+test "unaliased dotted imports resolve the full module path and the trailing alias" {
+    const unaliased = "module main\nimport library.api\n\n";
+    try scenario(t.allocator, unaliased ++
+        \\def main() -> i64:
+        \\    return library.api.parse(library.api.Inputs(value=41))
+    , null);
+    try scenario(t.allocator, unaliased ++
+        \\def main() -> i64:
+        \\    return api.parse(api.Inputs(value=41))
+    , null);
+}
+
+// spec-case: MODULE-DOT-6
+test "a bare dotted-import prefix stays an ordinary name beside the qualified path" {
+    const unaliased = "module main\nimport library.api\n\n";
+    // A local may reuse the first segment and read its own fields.
+    try scenario(t.allocator, unaliased ++
+        \\record Holder:
+        \\    value: i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    library = Holder(value=42)
+        \\    return library.value
+    , null);
+    // A parameter may reuse it too.
+    try scenario(t.allocator, unaliased ++
+        \\def read(library: i64) -> i64:
+        \\    return library
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return read(42)
+    , null);
+    // An explicit alias still admits the full dotted module path.
+    try scenario(t.allocator, "module main\nimport library.api as api\n\n" ++
+        \\def main() -> i64:
+        \\    return library.api.parse(library.api.Inputs(value=41))
+    , null);
+}

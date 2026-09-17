@@ -72,7 +72,8 @@ def main() -> int:
 This returns `8`: `b` is the same object as `a`, and `bump` receives that object.
 Classes may hold managed fields and be held by other classes, so a self-referential
 graph is legal; printing one stops at the renderer's depth cap. A class instance has no
-value copy to warn about, so `W_DEAD_RECORD_WRITE` applies only to `record`.
+value copy to mistake for an alias, so only a `record` copy write is rejected; a
+`record` copy write that nothing reads afterwards is `E_DEAD_RECORD_WRITE`.
 
 ## Positional and named constructors
 

@@ -458,16 +458,26 @@ fn declarationHead(bytes: []const u8, token: Token) bool {
     };
 }
 
-/// Normalize a simple name or one direct-import qualification, preserving source spelling.
+/// Normalize a simple name or one direct-import qualification, preserving source
+/// spelling. A dotted module path splits at the last dot, so `shared.units.area`
+/// normalizes to alias `shared.units` and name `area`.
 pub fn qualifiedName(text: []const u8, tokens: []const Token) ?struct { alias: ?[]const u8, name: []const u8 } {
     if (tokens.len < 2 or tokens[0].tag != .ident) return null;
     const first = text[tokens[0].span.start..tokens[0].span.end];
     if (tokens.len == 2 and tokens[1].tag == .eof) return .{ .alias = null, .name = first };
-    const last: usize = if (tokens.len == 4 and tokens[1].tag == .dot) 2 else qualified: {
-        if (tokens.len != 5) return null;
-        if (tokens[1].tag != .colon or tokens[2].tag != .colon) return null;
-        break :qualified 3;
-    };
-    if (tokens[last].tag != .ident or tokens[last + 1].tag != .eof) return null;
-    return .{ .alias = first, .name = text[tokens[last].span.start..tokens[last].span.end] };
+    if (tokens.len == 5 and tokens[1].tag == .colon and tokens[2].tag == .colon) {
+        if (tokens[3].tag != .ident or tokens[4].tag != .eof) return null;
+        return .{ .alias = first, .name = text[tokens[3].span.start..tokens[3].span.end] };
+    }
+    var cursor: usize = 1;
+    var last_dot: ?usize = null;
+    while (cursor + 1 < tokens.len and tokens[cursor].tag == .dot and tokens[cursor + 1].tag == .ident) {
+        last_dot = cursor;
+        cursor += 2;
+    }
+    const dot = last_dot orelse return null;
+    if (cursor + 1 != tokens.len or tokens[cursor].tag != .eof) return null;
+    const alias_end = tokens[dot - 1].span.end;
+    const name_token = tokens[dot + 1];
+    return .{ .alias = text[tokens[0].span.start..alias_end], .name = text[name_token.span.start..name_token.span.end] };
 }

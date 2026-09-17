@@ -362,8 +362,8 @@ test "an explicit narrow callback ceiling still rejects a wider function value" 
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqualStrings("E_TYPE", compilation.diagnostics.items[0].code);
 }
-// spec: WARNING-DEAD-RECORD-WRITE-1
-test "dead record writes warn for loop and parameter copies but not fresh locals" {
+// spec: DEAD-RECORD-WRITE-1
+test "dead record writes reject loop and parameter copies but not fresh locals" {
     var loop = try language.Compilation.init(t.allocator, "dead-loop.my",
         \\record Item:
         \\    visited: bool
@@ -376,8 +376,8 @@ test "dead record writes warn for loop and parameter copies but not fresh locals
         \\    return 0
     );
     defer loop.deinit();
-    try loop.check();
-    try t.expectEqualStrings("W_DEAD_RECORD_WRITE", loop.diagnostics.items[0].code);
+    try t.expectError(error.SourceError, loop.check());
+    try t.expectEqualStrings("E_DEAD_RECORD_WRITE", loop.diagnostics.items[0].code);
     var parameter = try language.Compilation.init(t.allocator, "dead-parameter.my",
         \\record Counter:
         \\    n: int
@@ -392,8 +392,8 @@ test "dead record writes warn for loop and parameter copies but not fresh locals
         \\    return 0
     );
     defer parameter.deinit();
-    try parameter.check();
-    try t.expectEqualStrings("W_DEAD_RECORD_WRITE", parameter.diagnostics.items[0].code);
+    try t.expectError(error.SourceError, parameter.check());
+    try t.expectEqualStrings("E_DEAD_RECORD_WRITE", parameter.diagnostics.items[0].code);
     // A self-referential right-hand side reads the copy as part of the write, so
     // it still counts as a dead write when nothing observes the binding later.
     var increment = try language.Compilation.init(t.allocator, "dead-increment.my",
@@ -410,8 +410,8 @@ test "dead record writes warn for loop and parameter copies but not fresh locals
         \\    return 0
     );
     defer increment.deinit();
-    try increment.check();
-    try t.expectEqualStrings("W_DEAD_RECORD_WRITE", increment.diagnostics.items[0].code);
+    try t.expectError(error.SourceError, increment.check());
+    try t.expectEqualStrings("E_DEAD_RECORD_WRITE", increment.diagnostics.items[0].code);
     var collection = try language.Compilation.init(t.allocator, "dead-collection.my",
         \\record Node:
         \\    value: int
@@ -424,8 +424,8 @@ test "dead record writes warn for loop and parameter copies but not fresh locals
         \\    return 0
     );
     defer collection.deinit();
-    try collection.check();
-    try t.expectEqualStrings("W_DEAD_RECORD_WRITE", collection.diagnostics.items[0].code);
+    try t.expectError(error.SourceError, collection.check());
+    try t.expectEqualStrings("E_DEAD_RECORD_WRITE", collection.diagnostics.items[0].code);
     var fresh = try language.Compilation.init(t.allocator, "fresh-record.my",
         \\record Point:
         \\    x: int
@@ -440,8 +440,8 @@ test "dead record writes warn for loop and parameter copies but not fresh locals
     try fresh.check();
     try t.expectEqual(@as(usize, 0), fresh.diagnostics.items.len);
 }
-// spec-case: WARNING-DEAD-RECORD-WRITE-1
-test "reading a parameter copy after a field write suppresses the dead-write warning" {
+// spec-case: DEAD-RECORD-WRITE-1
+test "reading a parameter copy after a field write keeps the write accepted" {
     var observed = try language.Compilation.init(t.allocator, "read-after-write.my",
         \\record Counter:
         \\    n: int

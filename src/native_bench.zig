@@ -100,9 +100,9 @@ fn appendCase(allocator: std.mem.Allocator, selected: *std.ArrayList(Selection),
         .function = workload.function,
         .arguments = if (sample.arguments == .null) .{ .object = .empty } else sample.arguments,
         .expected = if (sample.explicit) sample.expected else .{ .bool = true },
-        .skip = sample.skip,
         .providers = sample.providers,
         .settings = sample.settings,
+        .declared = .{ .skip = sample.skip },
     };
     const id = if (workload.size.len == 0) workload.name else std.fmt.allocPrint(allocator, "{s}[{s}]", .{ workload.name, workload.size }) catch return error.OutOfMemory;
     var buffer: std.Io.Writer.Allocating = .init(allocator);

@@ -281,7 +281,7 @@ fn anyFailed(results: []const receipts.Result) bool {
 fn planSelectedBenches(context: fs.Context, graphs: *Graphs, benches: []Bench, pending: *std.ArrayList(Pending)) Error!void {
     for (benches, 0..) |*state, index| {
         const selection = state.plan.selection;
-        if (selection.case.skip) |reason| {
+        if (selection.case.declared.skip) |reason| {
             state.sample.status = "skipped";
             state.sample.diagnostics = reason;
             continue;
@@ -484,7 +484,14 @@ fn planSelectedCases(
     for (selected, 0..) |case, case_index| {
         const result = &results[case_index];
         result.* = .{ .name = case.name, .status = "skipped", .expected = case.expected };
-        if (case.skip) |reason| {
+        if (case.declared.skip) |reason| {
+            result.reason = reason;
+            continue;
+        }
+        // An undefaultable declared shape is one failed case, never a host
+        // failure that aborts the selection before any result is reported.
+        if (case.declared.invalid) |reason| {
+            result.status = "failed";
             result.reason = reason;
             continue;
         }
@@ -796,19 +803,19 @@ test "one prepared project graph is shared per selected provider identity" {
     };
     var graphs: Graphs = .{ .allocator = context.allocator, .session = session, .captured = captured, .production = parsed.value, .directory = "" };
     defer graphs.deinit();
-    const ordinary: cases.Case = .{ .name = "main::test_ordinary", .function = .null, .arguments = .null, .expected = .null, .skip = null, .providers = .null, .settings = .null };
+    const ordinary: cases.Case = .{ .name = "main::test_ordinary", .function = .null, .arguments = .null, .expected = .null, .providers = .null, .settings = .null };
     const ordinary_first = try graphs.get(ordinary);
     const ordinary_second = try graphs.get(ordinary);
     try std.testing.expectEqual(ordinary_first, ordinary_second);
     var first_providers: std.json.ObjectMap = .empty;
     try first_providers.put(context.allocator, "production.my", .{ .string = "module production; // one" });
-    const first_provider: cases.Case = .{ .name = "main::test_provider_one", .function = .null, .arguments = .null, .expected = .null, .skip = null, .providers = .{ .object = first_providers }, .settings = .null };
+    const first_provider: cases.Case = .{ .name = "main::test_provider_one", .function = .null, .arguments = .null, .expected = .null, .providers = .{ .object = first_providers }, .settings = .null };
     const provider_first = try graphs.get(first_provider);
     const provider_second = try graphs.get(first_provider);
     try std.testing.expectEqual(provider_first, provider_second);
     var second_providers: std.json.ObjectMap = .empty;
     try second_providers.put(context.allocator, "production.my", .{ .string = "module production; // two" });
-    const second_provider: cases.Case = .{ .name = "main::test_provider_two", .function = .null, .arguments = .null, .expected = .null, .skip = null, .providers = .{ .object = second_providers }, .settings = .null };
+    const second_provider: cases.Case = .{ .name = "main::test_provider_two", .function = .null, .arguments = .null, .expected = .null, .providers = .{ .object = second_providers }, .settings = .null };
     const provider_distinct = try graphs.get(second_provider);
     try std.testing.expect(provider_first != provider_distinct);
     const calls = try context.read(log);

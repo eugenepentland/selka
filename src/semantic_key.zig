@@ -450,7 +450,7 @@ const Builder = struct {
         const index = self.resolution orelse return null;
         if (module >= index.project.modules.items.len) return null;
         for (index.project.modules.items[module].imports) |imported| {
-            if (std.mem.eql(u8, imported.alias, alias)) return imported.target;
+            if (imported.matches(alias)) return imported.target;
         }
         return null;
     }

@@ -89,7 +89,7 @@ pub const Compilation = struct {
     /// graph a warm `mylang test` loads before selecting result receipts.
     pub fn emitNativeTestFacts(self: *Compilation, allocator: @import("std").mem.Allocator) EmitNativeError![]u8 {
         try self.check();
-        const roots = try self.exportRoots(allocator);
+        const roots = try self.testRoots(allocator);
         defer allocator.free(roots);
         const schema = try self.renderSchema(allocator, roots);
         defer allocator.free(schema);
@@ -104,7 +104,7 @@ pub const Compilation = struct {
     /// caller. `stats` receives the closure width actually lowered and emitted.
     pub fn emitQbeSelected(self: *Compilation, allocator: @import("std").mem.Allocator, names: []const []const u8, stats: *SelectedStats) EmitNativeError![]u8 {
         try self.check();
-        const roots = try self.exportRoots(allocator);
+        const roots = try self.testRoots(allocator);
         defer allocator.free(roots);
         const schema = try self.renderSchema(allocator, roots);
         defer allocator.free(schema);
@@ -166,6 +166,38 @@ pub const Compilation = struct {
             if (try self.exported(function)) try roots.append(allocator, function.id);
         }
         return roots.toOwnedSlice(allocator);
+    }
+    /// Allocate the function identities a native-test graph exposes: the public
+    /// interface roots plus every `test_`-prefixed declaration, so a test is
+    /// discovered by name without an explicit `export`. Ordinary builds keep
+    /// the export-only `exportRoots` and are unaffected.
+    pub fn testRoots(self: *Compilation, allocator: @import("std").mem.Allocator) CheckError![]typed.FunctionId {
+        try self.check();
+        var count: usize = 0;
+        for (self.program.?.functions) |function| {
+            if (try self.exported(function) or try self.discoveredTest(function)) count += 1;
+        }
+        const roots = try allocator.alloc(typed.FunctionId, count);
+        var index: usize = 0;
+        for (self.program.?.functions) |function| {
+            if (try self.exported(function) or try self.discoveredTest(function)) {
+                roots[index] = function.id;
+                index += 1;
+            }
+        }
+        return roots;
+    }
+    /// Whether a function is a `test_`-prefixed module declaration that a native
+    /// test run discovers without `export`.
+    fn discoveredTest(self: *Compilation, function: typed.Function) error{InternalError}!bool {
+        if (function.type_arguments.len != 0) return false;
+        if (@import("std").mem.eql(u8, function.name, @import("entry_adapter.zig").wrapper_name)) return false;
+        if (@import("std").mem.startsWith(u8, function.name, "lambda@")) return false;
+        const original = self.src.originalSpan(function.declaration) catch return error.InternalError;
+        if (original.input >= self.index.units.len or original.input >= self.index.project.modules.items.len) return error.InternalError;
+        const prefix_len = self.index.project.modules.items[original.input].name.len + 2;
+        if (prefix_len > function.name.len) return error.InternalError;
+        return std.mem.startsWith(u8, function.name[prefix_len..], "test_");
     }
     fn exported(self: *Compilation, function: typed.Function) error{InternalError}!bool {
         // Concrete instances are implementation details reachable through ordinary exports.

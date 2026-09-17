@@ -1,18 +1,20 @@
-//! Discover exported guest tests and validate declarative case settings.
+//! Discover declared guest tests and validate declarative case settings.
 const std = @import("std");
 const v = @import("qbe_build_value.zig");
 const expected_key = "expected";
 /// Invalid test settings never silently disable a discovered case.
-pub const Error = error{ InvalidTestCases, UnknownTestCase, MissingTestExpectation, OutOfMemory };
+pub const Error = error{ InvalidTestCases, UnknownTestCase, OutOfMemory };
 /// Borrowed schema and settings values with an owned discovery result slice.
 pub const Case = struct {
     name: []const u8,
     function: std.json.Value,
     arguments: std.json.Value,
     expected: std.json.Value,
-    skip: ?[]const u8,
     providers: std.json.Value,
     settings: std.json.Value,
+    /// A reasoned skip, or why a discovered test cannot run as declared. An
+    /// invalid case is reported as one failure rather than aborting the run.
+    declared: struct { skip: ?[]const u8 = null, invalid: ?[]const u8 = null } = .{},
 };
 /// Select exported test_ functions, validate all configuration keys, and retain skips.
 pub fn discover(allocator: std.mem.Allocator, schema: std.json.Value, cases: std.json.Value, pattern: []const u8) Error![]Case {
@@ -63,17 +65,27 @@ fn makeCase(function: std.json.Value, settings: std.json.Value) Error!Case {
     const reason = if (skip == .string and skip.string.len != 0) skip.string else null;
     const explicit = settings == .object and settings.object.contains(expected_key);
     const is_bool = std.mem.eql(u8, v.text(v.get(function, "result")), "bool");
+    const declared = v.get(function, "parameters_count");
+    const parameters: usize = if (declared == .integer and declared.integer > 0) @intCast(declared.integer) else 0;
+    const has_arguments = arguments == .object and arguments.object.count() != 0;
+    // A declared shape that cannot default is a failure of that one case, not a
+    // host failure that takes the whole selection down before it is reported.
+    var invalid: ?[]const u8 = null;
     if (reason == null) {
-        if (!explicit and !is_bool) return error.MissingTestExpectation;
+        if (parameters != 0 and !has_arguments) {
+            invalid = "test declares parameters; supply `arguments` in the cases file";
+        } else if (!explicit and !is_bool) {
+            invalid = "test result is not bool; supply `expected` in the cases file";
+        }
     }
     return .{
         .name = v.text(v.get(function, "name")),
         .function = function,
         .arguments = if (arguments == .null) .{ .object = .empty } else arguments,
         .expected = if (explicit) v.get(settings, expected_key) else .{ .bool = true },
-        .skip = reason,
         .providers = providers,
         .settings = settings,
+        .declared = .{ .skip = reason, .invalid = invalid },
     };
 }
 /// Case-sensitive shell-style wildcard matching, including bracket ranges. A
@@ -138,18 +150,20 @@ fn classContains(pattern: []const u8, character: u21) bool {
 }
 
 // spec: NATIVE-TEST-1
-test "test discovery rejects unknown configuration and missing typed expectations" {
+test "test discovery rejects unknown configuration and marks undefaultable shapes" {
     const parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator,
-        \\{"schema":{"functions":[{"name":"checks::test_number","result":"i64"}]},"unknown":{"other":{}},"skip":{"checks::test_number":{"skip":"hardware"}}}
+        \\{"schema":{"functions":[{"name":"checks::test_number","result":"i64","parameters_count":0}]},"unknown":{"other":{}},"skip":{"checks::test_number":{"skip":"hardware"}}}
     , .{});
     defer parsed.deinit();
     const schema = v.get(parsed.value, "schema");
     try std.testing.expectError(error.InvalidTestCases, discover(std.testing.allocator, schema, .{ .bool = true }, "*"));
     try std.testing.expectError(error.UnknownTestCase, discover(std.testing.allocator, schema, v.get(parsed.value, "unknown"), "none"));
-    try std.testing.expectError(error.MissingTestExpectation, discover(std.testing.allocator, schema, .null, "*"));
+    const missing = try discover(std.testing.allocator, schema, .null, "*");
+    defer std.testing.allocator.free(missing);
+    try std.testing.expectEqualStrings("test result is not bool; supply `expected` in the cases file", missing[0].declared.invalid.?);
     const skipped = try discover(std.testing.allocator, schema, v.get(parsed.value, "skip"), "checks::*");
     defer std.testing.allocator.free(skipped);
-    try std.testing.expectEqualStrings("hardware", skipped[0].skip.?);
+    try std.testing.expectEqualStrings("hardware", skipped[0].declared.skip.?);
     const empty = try discover(std.testing.allocator, schema, .null, "other::*");
     defer std.testing.allocator.free(empty);
     try std.testing.expectEqual(@as(usize, 0), empty.len);

@@ -43,7 +43,19 @@ pub const Problem = struct { code: []const u8, message: []const u8, site: Site, 
 /// Declared public name and its source location.
 pub const Export = struct { name: []const u8, span: source.Span };
 /// Imported module name, local alias, source span, and resolved target index.
-pub const Import = struct { name: []const u8, alias: []const u8, span: source.Span, target: usize = undefined };
+pub const Import = struct {
+    name: []const u8,
+    alias: []const u8,
+    span: source.Span,
+    target: usize = undefined,
+
+    /// Whether a source qualifier names this import, by its local alias or its
+    /// full dotted module path. `import a.b` therefore answers both `a.b.fn`
+    /// and `b.fn` while `import a.b as c` answers only `c.fn`.
+    pub fn matches(self: Import, requested: []const u8) bool {
+        return std.mem.eql(u8, requested, self.alias) or std.mem.eql(u8, requested, self.name);
+    }
+};
 /// Owned source and parsed dependency metadata with traversal state and content digest.
 pub const Module = struct {
     name: []const u8,

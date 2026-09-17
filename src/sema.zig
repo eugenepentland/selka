@@ -4196,6 +4196,9 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     try warnBindings(allocator, functions, sink);
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
     timingAdd(timing, "warning_derivation", warnings_start);
+    // A rejected dead copy write is an implementation error, not advice: it must
+    // stop checking before retention publishes an invalid program.
+    for (sink.items.items) |item| if (item.severity == .err) return error.SourceError;
     const retain_start = timingStart(timing);
     try publishSpecializationSession(&spec_session, &checker, allocator, checked);
     if (session) |*queries| try queries.remember(checked);
@@ -4253,12 +4256,15 @@ fn warnBindings(allocator: std.mem.Allocator, functions: []const typed.Function,
         for (function.scope.locals) |local| {
             if (local.usage.dead_write_span) |span| {
                 // Each field write reads its destination once; a read beyond that
-                // means the copied binding is observed after the write.
+                // means the copied binding is observed after the write. A copy
+                // whose only reads are the write itself can never reach the
+                // original storage, so the mistake is rejected rather than
+                // shipped with a warning.
                 if (local.origin != .local and local.usage.reads == local.usage.dead_write_reads) try sink.items.append(allocator, .{
-                    .severity = .warning,
-                    .code = "W_DEAD_RECORD_WRITE",
+                    .severity = .err,
+                    .code = "E_DEAD_RECORD_WRITE",
                     .span = span,
-                    .message = "field write to a record copy is never read; the binding holds a value copy, so the write does not reach the original value",
+                    .message = "field write to a `record` copy is never observed; `record` values are copies, so the write cannot reach the original; use `class` for reference semantics, or return the updated record",
                 });
             }
             if (local.usage.temporary or local.usage.reads != 0) continue;
