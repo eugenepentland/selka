@@ -432,6 +432,11 @@
       "summary": "A warm unchanged native-test run validates through the shared query cache, reuses closure-bound result receipts and executes zero tests without lowering, emitting or linking; durable checked facts key fully cached selections, and a miss lowers, emits and links only the selected tests' reachable closure.",
       "doc": "docs/tooling/guest-tests.md#reusing-unaffected-results"
     },
+    "signature-pure-outcome-replay": {
+      "kind": "tooling",
+      "summary": "An opt-in `mylang test --pure-skip` replays a recorded pass-or-fail outcome for an unchanged signature-pure test without executing it; a recorded failure is replayed as a failure, and the record is bound to the same closure, contract, provider and expected value as the receipt.",
+      "doc": "docs/tooling/guest-tests.md#reusing-unaffected-results"
+    },
     "selected-test-providers": {
       "kind": "tooling",
       "summary": "Native test preparation validates exported declaration contracts first and fully checks only the selected replacement provider graph; replacements must satisfy every public contract they replace, and receipts bind contract, provider and source identities.",
