@@ -112,3 +112,11 @@ the older summary is stale:
 - The migration script may be deleted once the guest-test and docs migrations
   are considered permanent. It is kept for the record and for any untracked
   corpus that still uses the old spelling.
+
+## Integration update (orchestrator)
+
+The `tests/goldens/qbe_{io,files,text}.json` embedded `case[0]` sources still
+used bare `print`; they were migrated in place to `out.print` with a `Stream`
+parameter (41 cases). The golden entry keys are stable labels, not source
+hashes, so no key moved and the recorded stdout/returncode stayed valid.
+`zig build test-qbe` is green again.
