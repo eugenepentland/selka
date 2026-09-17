@@ -57,7 +57,7 @@ fn returnContribution(program: typed.Program, function: typed.Function, value: t
         return;
     }
     switch (node.data) {
-        .integer, .boolean, .unit, .function_value, .environment_get, .environment_only, .environment_names, .external_read => {},
+        .integer, .boolean, .unit, .function_value, .environment_get, .environment_only, .environment_names, .external_read, .host_resource => {},
         .local, .call, .invoke, .complete_resource, .acquire_resource, .acquire_buffer, .array, .record, .variant, .update => {
             if (node.ty.isAggregate()) ctx.unknown.* = true;
         },
@@ -372,6 +372,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, exported: []c
                 .arena_escape => graph.direct(index, .managed_allocation, node.span),
                 .restrict_resource,
                 .dir_resource,
+                .host_resource,
                 .environment_only,
                 .function_value,
                 .integer,
@@ -567,6 +568,7 @@ fn seedInstructionEffects(
         .end_arena,
         .restrict_resource,
         .dir_resource,
+        .host_resource,
         .environment_only,
         .function_value,
         .push_i64,

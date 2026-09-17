@@ -82,6 +82,10 @@ const Analyzer = struct {
                     pops = 2;
                     result = dir.output;
                 },
+                .host_resource => |host| {
+                    pops = 2;
+                    result = host.output;
+                },
                 .resource_io => |io| {
                     pops = if (io.kind == .write) 1 else 0;
                     result = io.output;

@@ -881,6 +881,18 @@ const Checker = struct {
             try self.compatible(value, .{ .concrete = .filesystem_cap }, owner);
             return .{ .concrete = .filesystem_cap };
         }
+        if (std.mem.eql(u8, name, "host")) {
+            if (input_call.arguments.len != 1 or input_call.type_arguments.len != 0 or input_call.argument_names.len != 0) return self.sink.fail("E_ARITY", span, "host takes one endpoint argument");
+            const argument = self.program.nodes.items[@backingInt(input_call.arguments[0])];
+            const bytes = switch (argument.data) {
+                .text, .bytes => |spelling| spelling,
+                else => return self.sink.fail("E_NETWORK_HOST", argument.span, "host requires a string literal endpoint"),
+            };
+            if (bytes.len == 0 or std.mem.indexOfScalar(u8, bytes, 0) != null) return self.sink.fail("E_NETWORK_HOST", argument.span, "host endpoint must be a nonempty str without NUL");
+            const value = try self.namedValue(owner);
+            try self.compatible(value, .{ .concrete = .network_cap }, owner);
+            return .{ .concrete = .network_cap };
+        }
         const slot = self.active.get(self.src.text(owner)) orelse return null;
         const receiver = self.locals.items[slot].ty;
         if (receiver != .concrete or receiver.concrete != .environment_cap) return null;

@@ -434,6 +434,49 @@ def live(store: pool.Pool[int], handle: pool.Handle[int]) -> int:
 Creation takes a list rather than an explicit type argument, because a call cannot
 yet spell `create[int]()`. Pass an empty annotated list for an empty pool.
 
+## network
+
+```text
+# doc: not-mylang
+resource Connection: network
+
+class Chunk[const N: u64]:       result Connected:
+    bytes: [N]u8                     ok: Connection,
+    length: u64                      err: int
+    eof: bool
+
+result Read[const N: u64]:       result Written:
+    ok: Chunk[N],                    ok: u64,
+    err: int                         err: int
+
+class Failure:                   result Closed:
+    resource: Connection             ok: bool,
+    code: int                        err: Failure
+
+connect(net: Network) -> Connected effects(network)
+read[const N: u64](connection: Connection) -> Read[N] effects(network)
+write[const N: u64](connection: Connection, data: [N]u8) -> Written effects(network)
+close(connection: Connection) -> Closed effects(network)
+```
+
+`connect` acquires a `Connection` through a `Network` that has already been
+narrowed with `net.host(name)`; the narrowed capability pins the endpoint, so
+`connect` takes no request string. `read` returns a `Chunk[N]` of `N` bytes and
+`write` sends a fixed `[N]u8` array, both reporting their progress; `close`
+completes the handle. Because a resource passed to a function is transferred, each
+of `read`, `write` and `close` consumes the `Connection` it receives, so use the
+raw `read_resource`/`write_resource`/`complete_resource` builtins when one
+connection needs several operations.
+
+```mylang
+# doc: expect 0
+module main
+import network
+
+def main() -> int:
+    return 0
+```
+
 ## random
 
 ```text

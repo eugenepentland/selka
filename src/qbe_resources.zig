@@ -25,6 +25,14 @@ pub fn Lower(comptime E: type) type {
                     try self.checkFailure("failure");
                     try self.store(h - 2, value);
                 },
+                .host_resource => |host| {
+                    const authority = try self.load("s", h - 2);
+                    const name = try self.load("s", h - 1);
+                    const value = self.temp();
+                    try self.print(" %v{d} =l call $myl_qbe_host_resource(l %ctx, l %v{d}, l %v{d}, l {d})\n", .{ value, authority, name, (try self.layout(host.name)).size });
+                    try self.checkFailure("failure");
+                    try self.store(h - 2, value);
+                },
                 .acquire_resource => |acquire| {
                     const shape = typed.resultShape(acquire.output, self.program.records).?;
                     const authority = try self.load("s", h - 2);

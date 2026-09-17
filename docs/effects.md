@@ -401,6 +401,34 @@ def main(fs: Filesystem) -> int:
             return -code
 ```
 
+## Network host
+
+`net.host(name)` narrows a `Network` to the single string-literal endpoint
+`name`. Like `fs.dir`, it records the scope without touching the network, so it
+contributes no effect; every acquisition through the derived capability requests
+exactly that endpoint, so a `connect` wrapper needs no separate request string.
+An endpoint outside the active `--allow-endpoint` grant is still denied.
+
+```mylang
+# doc: check
+resource Socket: network
+
+result Connected:
+    ok: Socket,
+    err: int
+
+def main(net: Network) -> int:
+    # The narrowed capability pins the endpoint; the request below is ignored.
+    scoped = net.host("127.0.0.1:8000")
+    request: [1]u8 = [0u8]
+    match acquire_resource[Connected](scoped, request):
+        case Connected.ok(socket):
+            _ = socket
+            return 0
+        case Connected.err(code):
+            return code
+```
+
 ## Related pages
 
 - [Printing, files and command-line authority](io.md) — the capability values and the grants that provision them

@@ -2861,6 +2861,51 @@ test "CLI exposes fs.read_only permission attenuation and rejects the removed sp
     ;
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, extra, 1, "", "error[E_ARITY]");
 }
+// spec: NETWORK-HOST-1
+test "CLI narrows a Network to one literal endpoint and rejects a dynamic host" {
+    const source =
+        \\resource Socket: network
+        \\
+        \\result Open:
+        \\    ok: Socket,
+        \\    err: int
+        \\
+        \\def main(net: Network) -> int:
+        \\    scoped = net.host("127.0.0.1:8000")
+        \\    request: [1]u8 = [0u8]
+        \\    match acquire_resource[Open](scoped, request):
+        \\        case Open.ok(socket):
+        \\            _ = socket
+        \\            return 0
+        \\        case Open.err(code):
+        \\            return code
+    ;
+    try invoke("check", source, 0, "", "");
+    const dumped = try runFixture("dump-bytecode", source, &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "HOST_RESOURCE -> network_cap") != null);
+    const dynamic =
+        \\resource Socket: network
+        \\
+        \\result Open:
+        \\    ok: Socket,
+        \\    err: int
+        \\
+        \\def main(net: Network) -> int:
+        \\    endpoint = "127.0.0.1:8000"
+        \\    scoped = net.host(endpoint)
+        \\    request: [1]u8 = [0u8]
+        \\    match acquire_resource[Open](scoped, request):
+        \\        case Open.ok(socket):
+        \\            _ = socket
+        \\            return 0
+        \\        case Open.err(code):
+        \\            return code
+    ;
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, dynamic, 1, "", "error[E_NETWORK_HOST]");
+}
 
 const clock_program =
     \\result Time:

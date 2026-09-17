@@ -104,6 +104,7 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
         }),
         .restrict_resource => |restrict| try writer.print("RESTRICT_RESOURCE permissions={d} -> {s}", .{ restrict.permissions, typed.typeName(restrict.ty, program.records) }),
         .dir_resource => |dir| try writer.print("DIR_RESOURCE -> {s}", .{typed.typeName(dir.output, program.records)}),
+        .host_resource => |host| try writer.print("HOST_RESOURCE -> {s}", .{typed.typeName(host.output, program.records)}),
         .environment_get => |get| try writer.print("ENVIRONMENT_GET -> {s}", .{typed.typeName(get.output, program.records)}),
         .environment_only => |only| try writer.print("ENVIRONMENT_ONLY names={s} -> {s}", .{ typed.typeName(only.names, program.records), typed.typeName(only.output, program.records) }),
         .environment_names => |names| try writer.print("ENVIRONMENT_NAMES -> {s}", .{typed.typeName(names.output, program.records)}),

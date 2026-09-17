@@ -9,10 +9,11 @@ typedef struct Resource {
     uint64_t handle;
     unsigned kind,permissions;
 } Resource;
-/* One `fs.dir(path)` scope: the joined prefix a derived filesystem resolves
-   under. Entries own their bytes until the execution context is destroyed.
-   The sentinel carries a 1-based scope index so scope 0 keeps the historical
-   grant/restrict encoding. */
+/* One derived-capability scope. A `fs.dir(path)` entry is the joined prefix a
+   derived filesystem resolves under; a `net.host(name)` entry is the single
+   endpoint string a narrowed Network may acquire. Entries own their bytes until
+   the execution context is destroyed. The sentinel carries a 1-based scope index
+   so scope 0 keeps the historical grant/restrict encoding. */
 typedef struct { char *prefix; size_t length; } DirScope;
 #define MYL_QBE_RESOURCE_SCOPES 64
 /* Highest encoded value `scope*16 + kind*8 + permissions`; scope runs 0..64. */
@@ -128,6 +129,31 @@ uint64_t myl_qbe_dir_resource(void *context,uint64_t bits,const unsigned char *p
     ctx->cleanup=cleanup;
     return (uint64_t)(INT64_C(-16)-(int64_t)((int64_t)ctx->resource_scope_count*16+kind*8+permissions));
 }
+/* Record `name` as the only endpoint a narrowed Network may acquire and return
+   the indexed sentinel. It performs no I/O. Re-narrowing a scope is idempotent
+   for the same endpoint and otherwise traps, so a derived capability can never
+   widen. */
+uint64_t myl_qbe_host_resource(void *context,uint64_t bits,const unsigned char *name,size_t length) {
+    MylQbeContext *ctx=context;
+    unsigned kind,permissions,parent;
+    if (!authority(ctx,bits,&kind,&permissions,&parent)) return 0;
+    if (kind!=1) { myl_qbe_fail(ctx,"InvalidCapability");return 0; }
+    if (!length || length>4096 || memchr(name,0,length)) { myl_qbe_fail(ctx,"InvalidCapability");return 0; }
+    if (parent>ctx->resource_scope_count || ctx->resource_scope_count>=MYL_QBE_RESOURCE_SCOPES) { myl_qbe_fail(ctx,"InvalidCapability");return 0; }
+    if (parent) {
+        DirScope *scopes=ctx->resource_scopes;
+        if (scopes[parent-1].length!=length || memcmp(scopes[parent-1].prefix,name,length)) { myl_qbe_fail(ctx,"InvalidCapability");return 0; }
+    }
+    char *endpoint=malloc(length+1);
+    if (!endpoint) { myl_qbe_fail_allocation(ctx);return 0; }
+    memcpy(endpoint,name,length);endpoint[length]=0;
+    DirScope *entry=scope_append(ctx);
+    if (!entry) { free(endpoint);myl_qbe_fail_allocation(ctx);return 0; }
+    entry->prefix=endpoint;entry->length=length;
+    ctx->resource_scope_count++;
+    ctx->cleanup=cleanup;
+    return (uint64_t)(INT64_C(-16)-(int64_t)((int64_t)ctx->resource_scope_count*16+kind*8+permissions));
+}
 uint64_t myl_qbe_restrict_resource(void *context,uint64_t bits,unsigned mask) {
     unsigned kind,permissions,scope;
     if (!authority(context,bits,&kind,&permissions,&scope)) return 0;
@@ -142,7 +168,7 @@ int myl_qbe_resource_new(void *context,uint64_t bits,unsigned kind,const unsigne
     if (scope>ctx->resource_scope_count) { myl_qbe_fail(ctx,"InvalidCapability");return -1; }
     /* A scoped filesystem serves only relative requests inside its root; reject
        escapes before opening, even when a direct provider root would follow them. */
-    if (scope && (length<2 || request[1]!=':' || !scoped_relative(request+2,length-2,request[0]))) return 2;
+    if (scope && kind==0 && (length<2 || request[1]!=':' || !scoped_relative(request+2,length-2,request[0]))) return 2;
     const MylangResourceProvider *p=provider(ctx,kind);
     if (ctx->resource_live[kind]>=1024) return 4;
     if (!p->acquire || !p->release || !p->complete) return 1;
@@ -151,18 +177,26 @@ int myl_qbe_resource_new(void *context,uint64_t bits,unsigned kind,const unsigne
     if (scope) {
         DirScope *scopes=ctx->resource_scopes;
         const char *base=scopes[scope-1].prefix;size_t base_length=scopes[scope-1].length;
-        const unsigned char *path=request+2;size_t path_length=length-2;
-        size_t total=2+base_length+path_length+(base_length&&path_length?1:0);
-        if (total>4096) { myl_qbe_fail(ctx,"InvalidCapability");return -1; }
-        joined=malloc(total);
-        if (!joined) { myl_qbe_fail_allocation(ctx);return -1; }
-        joined[0]=request[0];joined[1]=':';
-        size_t at=2;
-        if (base_length) { memcpy(joined+at,base,base_length);at+=base_length; }
-        if (base_length&&path_length) joined[at++]='/';
-        if (path_length) memcpy(joined+at,path,path_length);
-        at+=path_length;
-        effective=joined;effective_length=at;
+        if (kind==1) {
+            /* A narrowed Network asks for exactly its scoped endpoint: the
+               guest's request bytes are ignored and the recorded endpoint is
+               always the effective request, so `connect` needs no request. */
+            (void)request;(void)length;
+            effective=(const unsigned char *)base;effective_length=base_length;
+        } else {
+            const unsigned char *path=request+2;size_t path_length=length-2;
+            size_t total=2+base_length+path_length+(base_length&&path_length?1:0);
+            if (total>4096) { myl_qbe_fail(ctx,"InvalidCapability");return -1; }
+            joined=malloc(total);
+            if (!joined) { myl_qbe_fail_allocation(ctx);return -1; }
+            joined[0]=request[0];joined[1]=':';
+            size_t at=2;
+            if (base_length) { memcpy(joined+at,base,base_length);at+=base_length; }
+            if (base_length&&path_length) joined[at++]='/';
+            if (path_length) memcpy(joined+at,path,path_length);
+            at+=path_length;
+            effective=joined;effective_length=at;
+        }
     }
     Resource *resource=calloc(1,sizeof *resource);
     unsigned char *bytes=malloc(effective_length?effective_length:1);

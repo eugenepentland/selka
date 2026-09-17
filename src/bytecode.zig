@@ -199,6 +199,10 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
             const kind = dir.output.resourceKind() orelse return error.InternalError;
             if (kind != .filesystem or !typed.byteRequest(dir.path, program.records)) return error.InternalError;
         },
+        .host_resource => |host| {
+            const kind = host.output.resourceKind() orelse return error.InternalError;
+            if (kind != .network or !typed.byteRequest(host.name, program.records)) return error.InternalError;
+        },
         .environment_get => |get| try validateEnvironmentGet(program, get),
         .environment_only => |only| try validateEnvironmentOnly(program, only),
         .environment_names => |names| try validateEnvironmentNames(program, names),
@@ -556,7 +560,7 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
                 if (height < 2) return error.InternalError;
                 height -= 1;
             },
-            .acquire_resource, .environment_get, .environment_only, .dir_resource => {
+            .acquire_resource, .environment_get, .environment_only, .dir_resource, .host_resource => {
                 if (height < 2) return error.InternalError;
                 height -= 1;
             },

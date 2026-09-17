@@ -1,0 +1,75 @@
+module network
+export Connection
+export Chunk
+export Connected
+export Read
+export Written
+export Failure
+export Closed
+export connect
+export read
+export write
+export close
+
+
+# One open stream returned by `connect`. It owns a host handle until `close`.
+resource Connection: network
+
+
+# One `read` result: up to `N` bytes, the count actually read, and the EOF flag.
+class Chunk[const N: u64]:
+    bytes: [N]u8
+    length: u64
+    eof: bool
+
+
+# Typed carrier for one acquisition attempt.
+result Connected:
+    ok: Connection,
+    err: int
+
+
+# Typed carrier for one read attempt of `N` bytes.
+result Read[const N: u64]:
+    ok: Chunk[N],
+    err: int
+
+
+# Typed carrier for one write attempt.
+result Written:
+    ok: u64,
+    err: int
+
+
+# The error payload `close` keeps so a failed completion can stay live.
+class Failure:
+    resource: Connection
+    code: int
+
+
+# Typed carrier for one completion attempt.
+result Closed:
+    ok: bool,
+    err: Failure
+
+
+# Connect through a Network already narrowed to a single endpoint. The narrowed
+# capability pins the request, so no endpoint string is passed here.
+def connect(net: Network) -> Connected effects(network):
+    request: [1]u8 = [0u8]
+    return acquire_resource[Connected](net, request)
+
+
+# Read up to `N` bytes from a live connection; EOF is reported in the chunk.
+def read[const N: u64](connection: Connection) -> Read[N] effects(network):
+    return read_resource[Read[N]](connection)
+
+
+# Write a fixed byte array and report the bytes the provider accepted.
+def write[const N: u64](connection: Connection, data: [N]u8) -> Written effects(network):
+    return write_resource[Written](connection, data)
+
+
+# Complete a connection, releasing its host handle on success.
+def close(connection: Connection) -> Closed effects(network):
+    return complete_resource[Closed](connection)
