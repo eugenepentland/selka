@@ -118,7 +118,7 @@ fn reject(source: []const u8, code: []const u8) !void {
 }
 
 const allocation_source =
-    \\class Box:
+    \\record Box:
     \\    value: [2]i64
     \\
     \\

@@ -2049,7 +2049,7 @@ test "CLI reports unused nominal template requirement errors" {
 }
 test "CLI rejects recursive nominal layouts but preserves finite nested and phantom forms" {
     try invokeOptions("check",
-        \\class Node[T]:
+        \\record Node[T]:
         \\    next: Node[T]
         \\
         \\

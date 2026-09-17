@@ -27,6 +27,7 @@ and a Python-shaped write through a record parameter compiles, runs and changes
 nothing:
 
 ```text
+# doc: not-mylang
 record Counter:
     n: int
 

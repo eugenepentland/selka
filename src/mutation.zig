@@ -101,7 +101,7 @@ pub fn typedNode(program: typed.Program, function: typed.Function, node: typed.N
         },
         .update => |update| {
             if (!node.ty.isAggregate() or node.ty.recordIndex() >= program.records.len) return null;
-            if (!program.records[node.ty.recordIndex()].isCell()) return null;
+            if (!program.records[node.ty.recordIndex()].isManagedRecord()) return null;
             const owner = rootLocal(program, update.base, 0);
             return .{ .span = node.span, .operation = .receiver_write, .input = if (owner) |slot| localInput(program, function, slot) else null, .owner = owner };
         },
@@ -120,7 +120,7 @@ pub fn instruction(program: model.Program, function: model.Function, op: @FieldT
         },
         .update_record => |update| {
             if (!update.ty.isAggregate() or update.ty.recordIndex() >= program.records.len) return null;
-            if (!program.records[update.ty.recordIndex()].isCell()) return null;
+            if (!program.records[update.ty.recordIndex()].isManagedRecord()) return null;
             return .{ .span = span, .operation = .receiver_write, .input = null };
         },
         .buffer_operation => |operation| {

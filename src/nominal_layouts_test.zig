@@ -187,11 +187,11 @@ test "nominal layout checking handles long finite declaration chains iteratively
 }
 fn cycleScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "cycle.my",
-        \\class Box[T]:
+        \\record Box[T]:
         \\    value: T
         \\
         \\
-        \\class Loop[U]:
+        \\record Loop[U]:
         \\    box: Box[Loop[U]]
     );
     defer compilation.deinit();
@@ -230,11 +230,11 @@ const Modules = struct {
             \\module model
             \\
             \\
-            \\class Box[T]:
+            \\record Box[T]:
             \\    value: T
             \\
             \\
-            \\class Loop[U]:
+            \\record Loop[U]:
             \\    box: Box[Loop[U]]
         );
         return error.NotFound;

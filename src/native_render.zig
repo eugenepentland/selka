@@ -46,6 +46,13 @@ fn lessThan(_: void, left: Item, right: Item) bool {
     return std.mem.lessThan(u8, left.name, right.name);
 }
 
+/// Whether a collection element is a managed record: its slot holds a body
+/// pointer, so the element renderer needs the loaded pointer, not the slot.
+fn managedRecordElement(catalog: *native.Catalog, ty: typed.Type) bool {
+    if (!ty.isAggregate() or ty.recordIndex() >= catalog.records.len) return false;
+    return catalog.records[ty.recordIndex()].isManagedRecord();
+}
+
 /// Add one type and every type reachable from its printed contents.
 fn discover(a: std.mem.Allocator, catalog: *native.Catalog, ty: typed.Type, wanted: *std.array_hash_map.Auto(typed.Type, void)) Error!void {
     if ((try wanted.getOrPut(a, ty)).found_existing) return;
@@ -53,6 +60,12 @@ fn discover(a: std.mem.Allocator, catalog: *native.Catalog, ty: typed.Type, want
     const record = catalog.records[ty.recordIndex()];
     if (numeric_surface.isFloat(ty, catalog.records)) return;
     if (record.managed) {
+        // A managed collection owns backing storage; a `class` is instead an
+        // inline body reached through a pointer, so discover its fields.
+        if (!record.isCollection()) {
+            for (record.fields) |field| try discover(a, catalog, field.ty, wanted);
+            return;
+        }
         switch (record.collection.kind) {
             .string, .bytes => {},
             .list => try discover(a, catalog, record.shape.buffer orelse return error.InvalidType, wanted),
@@ -79,7 +92,7 @@ fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, 
     if (!item.ty.isAggregate()) return scalar(writer, catalog.records, item);
     const record = catalog.records[item.ty.recordIndex()];
     if (numeric_surface.isFloat(item.ty, catalog.records)) return body(writer, item.name, "myl_print_float(o, v, d);");
-    if (record.managed) return collection(a, writer, catalog, item, record);
+    if (record.managed and record.isCollection()) return collection(a, writer, catalog, item, record);
     if (record.shape.variants != null) return variant(a, writer, catalog, item, record);
     if (record.shape.array) |array| {
         const layout = try catalog.layout(item.ty);
@@ -117,19 +130,25 @@ fn collection(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Cat
         .string => return body(writer, item.name, "myl_print_text(o, v, d);"),
         .bytes => return body(writer, item.name, "myl_print_bytes(o, v, d);"),
         .list => {
-            const element = try symbol(a, catalog, record.shape.buffer orelse return error.InvalidType);
-            return body(writer, item.name, try std.fmt.allocPrint(a, "myl_print_list(o, v, d, {s});", .{element}));
+            const element_ty = record.shape.buffer orelse return error.InvalidType;
+            const element = try symbol(a, catalog, element_ty);
+            const helper = if (managedRecordElement(catalog, element_ty)) "myl_print_list_ref" else "myl_print_list";
+            return body(writer, item.name, try std.fmt.allocPrint(a, "{s}(o, v, d, {s});", .{ helper, element }));
         },
         .dictionary => {
             const key = try symbol(a, catalog, record.collection.key orelse return error.InvalidType);
-            const value = try symbol(a, catalog, record.shape.buffer orelse return error.InvalidType);
-            return body(writer, item.name, try std.fmt.allocPrint(a, "myl_print_dictionary(o, v, d, {s}, {s});", .{ key, value }));
+            const value_ty = record.shape.buffer orelse return error.InvalidType;
+            const value = try symbol(a, catalog, value_ty);
+            const helper = if (managedRecordElement(catalog, value_ty)) "myl_print_dictionary_ref" else "myl_print_dictionary";
+            return body(writer, item.name, try std.fmt.allocPrint(a, "{s}(o, v, d, {s}, {s});", .{ helper, key, value }));
         },
     }
 }
 
 fn fields(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, item: Item, record: typed.Record) Error!void {
-    const layout = try catalog.layout(item.ty);
+    const managed = record.isManagedRecord();
+    const layout = if (managed) try catalog.heapLayout(item.ty) else try catalog.layout(item.ty);
+    defer if (managed) catalog.releaseLayout(layout);
     writer.print("static const MylPrintField {s}_fields[] = {{\n", .{item.name}) catch return error.OutOfMemory;
     for (record.fields, 0..) |field, index| {
         const child = try symbol(a, catalog, field.ty);

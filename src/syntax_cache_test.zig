@@ -29,7 +29,7 @@ const initial =
     \\export value
     \\
     \\
-    \\class Pair:
+    \\record Pair:
     \\    n: i64
     \\
     \\
@@ -42,7 +42,7 @@ const changed =
     \\export value
     \\
     \\
-    \\class Pair:
+    \\record Pair:
     \\    n: i64
     \\
     \\

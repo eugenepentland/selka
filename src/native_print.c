@@ -186,6 +186,19 @@ void myl_print_list(MylPrint *out, const void *value, unsigned depth, MylPrintFn
     }
     byte(out, ']');
 }
+void myl_print_list_ref(MylPrint *out, const void *value, unsigned depth, MylPrintFn element) {
+    if (myl_print_deep(out, depth)) return;
+    myl_native_list *list;
+    memcpy(&list, value, sizeof list);
+    byte(out, '[');
+    for (size_t i = 0; i < list->length; ++i) {
+        if (i) literal(out, ", ");
+        const void *item;
+        memcpy(&item, (const unsigned char *)list->storage + i * list->element->size, sizeof item);
+        element(out, item, depth + 1);
+    }
+    byte(out, ']');
+}
 void myl_print_dictionary(MylPrint *out, const void *value, unsigned depth, MylPrintFn key, MylPrintFn item) {
     if (myl_print_deep(out, depth)) return;
     myl_native_dictionary *dict;
@@ -197,6 +210,23 @@ void myl_print_dictionary(MylPrint *out, const void *value, unsigned depth, MylP
         key(out, entry, depth + 1);
         literal(out, ": ");
         item(out, entry + dict->value_offset, depth + 1);
+    }
+    byte(out, '}');
+}
+
+void myl_print_dictionary_ref(MylPrint *out, const void *value, unsigned depth, MylPrintFn key, MylPrintFn item) {
+    if (myl_print_deep(out, depth)) return;
+    myl_native_dictionary *dict;
+    memcpy(&dict, value, sizeof dict);
+    byte(out, '{');
+    for (size_t i = 0; i < dict->entries->length; ++i) {
+        const unsigned char *entry = (const unsigned char *)dict->entries->storage + i * dict->entry_type.size;
+        if (i) literal(out, ", ");
+        key(out, entry, depth + 1);
+        literal(out, ": ");
+        const void *element_value;
+        memcpy(&element_value, entry + dict->value_offset, sizeof element_value);
+        item(out, element_value, depth + 1);
     }
     byte(out, '}');
 }

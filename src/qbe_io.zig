@@ -25,7 +25,12 @@ pub fn Lower(comptime E: type) type {
             for (output.types, 0..) |ty, index| {
                 if (index != 0) try gap(E, self, sink, output.separator, separator);
                 const value = self.temp();
-                if (self.isScalar(ty)) try self.print(" %v{d} =l copy %s{d}\n", .{ value, base + index }) else try self.print(" %v{d} =l loadl %s{d}\n", .{ value, base + index });
+                // A managed record (`class`) is one word holding the body pointer;
+                // its renderer reads fields at that pointer, so it needs the loaded
+                // pointer, not the operand-slot address used by scalar/collection
+                // renderers.
+                const managed_record = ty.isAggregate() and self.program.records[ty.recordIndex()].isManagedRecord();
+                if (self.isScalar(ty) and !managed_record) try self.print(" %v{d} =l copy %s{d}\n", .{ value, base + index }) else try self.print(" %v{d} =l loadl %s{d}\n", .{ value, base + index });
                 const symbol = render.symbol(self.allocator, self.layouts, ty) catch return error.InternalError;
                 try self.print(" call ${s}(l %v{d}, l %v{d}, w 0)\n", .{ symbol, sink, value });
             }

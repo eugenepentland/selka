@@ -228,7 +228,7 @@ test "record schemas conversion checking construction update projection and dump
 // spec: CORE-5
 test "record construction nesting named order field access and immutable copies" {
     try result(
-        \\class Pair:
+        \\record Pair:
         \\    x: i64
         \\    y: i64
         \\
@@ -240,12 +240,12 @@ test "record construction nesting named order field access and immutable copies"
         \\    return a.x + b.x + b.y
     , 13);
     try result(
-        \\class Outer:
+        \\record Outer:
         \\    inner: Inner
         \\    flag: bool
         \\
         \\
-        \\class Inner:
+        \\record Inner:
         \\    value: i64
         \\
         \\
@@ -260,7 +260,7 @@ test "record construction nesting named order field access and immutable copies"
         \\    return 0
     , 7);
     try result(
-        \\class Count:
+        \\record Count:
         \\    n: i64
         \\    keep: i64
         \\
@@ -272,7 +272,7 @@ test "record construction nesting named order field access and immutable copies"
         \\    return state.n + state.keep
     , 10007);
     try result(
-        \\class Pair:
+        \\record Pair:
         \\    x: i64
         \\    y: i64
         \\

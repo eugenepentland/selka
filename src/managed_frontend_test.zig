@@ -17,7 +17,7 @@ fn evaluate(bytes: []const u8) !void {
 // spec: GC-GENERIC-3
 test "managed nominal indirection does not admit recursive by value records" {
     var compilation = try language.Compilation.init(t.allocator, "managed-invalid.my",
-        \\class Bad[T]:
+        \\record Bad[T]:
         \\    nested: Bad[T]
         \\
         \\

@@ -158,7 +158,7 @@ fn provider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: u
         \\export make
         \\
         \\
-        \\class Chunk[T, const N: u64]:
+        \\record Chunk[T, const N: u64]:
         \\    items: [N]T
         \\
         \\

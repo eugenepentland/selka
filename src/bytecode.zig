@@ -63,10 +63,8 @@ pub fn validateSelected(allocator: std.mem.Allocator, program: Program, selected
 fn validateRecords(program: Program) Error!void {
     for (program.records, 0..) |record, i| {
         if (@backingInt(record.id) != i + typed.Type.record_base) return error.InternalError;
-        if (record.managed) {
-            if (!record.isCollection()) {
-                if (!record.isCell()) return error.InternalError;
-            }
+        if (record.managed and !record.isRecord()) {
+            if (!record.isCollection()) return error.InternalError;
         }
         if (record.isCell() and (record.fields.len != 1 or !std.mem.eql(u8, record.fields[0].name, "value"))) return error.InternalError;
         try validateResourceRecord(record);

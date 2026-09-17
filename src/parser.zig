@@ -381,7 +381,8 @@ pub const Parser = struct {
                 try domains.append(self.arena.allocator(), .{ .name = name.span, .backing = backing, .codec = codec });
                 continue;
             }
-            if (self.take(.kw_class) or self.takeRecordHead()) {
+            const managed_record = self.take(.kw_class);
+            if (managed_record or self.takeRecordHead()) {
                 const name = try self.expect(.ident);
                 const type_parameters = try self.typeParameters();
                 _ = try self.expect(.indent);
@@ -396,7 +397,7 @@ pub const Parser = struct {
                     if (!self.take(.comma) and !next_field) break;
                 };
                 _ = try self.expect(.dedent);
-                try records.append(self.arena.allocator(), .{ .type_parameters = type_parameters, .name = name.span, .fields = try fields.toOwnedSlice(self.arena.allocator()) });
+                try records.append(self.arena.allocator(), .{ .managed = managed_record, .type_parameters = type_parameters, .name = name.span, .fields = try fields.toOwnedSlice(self.arena.allocator()) });
                 continue;
             }
             try functions.append(self.arena.allocator(), try self.function(null));

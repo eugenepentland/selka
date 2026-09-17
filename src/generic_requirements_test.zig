@@ -121,7 +121,7 @@ test "generic requirements preserve nominal identity and ownership obligations" 
         \\    blue
         \\
         \\
-        \\class Point:
+        \\record Point:
         \\    x: i64
         \\
         \\
@@ -133,11 +133,11 @@ test "generic requirements preserve nominal identity and ownership obligations" 
         \\    err: i64
         \\
         \\
-        \\class Pending:
+        \\record Pending:
         \\    answer: Answer
         \\
         \\
-        \\class Owned:
+        \\record Owned:
         \\    file: File
         \\
         \\

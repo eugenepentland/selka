@@ -101,7 +101,7 @@ const ShadowModules = struct {
             \\export answer
             \\
             \\
-            \\class Bucket[T]:
+            \\record Bucket[T]:
             \\    value: T
             \\
             \\

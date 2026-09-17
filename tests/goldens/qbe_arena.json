@@ -29,7 +29,7 @@
   },
   "2b343b748606899bbcc5f007f2fc6559": {
    "case": [
-    "class Holder:\n    label: str\n    samples: list[int]\n    flag: bool\n\ndef main() -> int:\n    kept = Holder(label=\"\", samples=[], flag=False)\n    older: list[int] = [5]\n    with arena() as scratch:\n        inner: list[int] = [1, 2]\n        kept = scratch.escape(Holder(label=\"deep\", samples=inner, flag=True))\n    older.append(6)\n    kept.samples.append(3)\n    return len(kept.label) + len(kept.samples) * 10 + len(older)\n",
+    "record Holder:\n    label: str\n    samples: list[int]\n    flag: bool\n\ndef main() -> int:\n    kept = Holder(label=\"\", samples=[], flag=False)\n    older: list[int] = [5]\n    with arena() as scratch:\n        inner: list[int] = [1, 2]\n        kept = scratch.escape(Holder(label=\"deep\", samples=inner, flag=True))\n    older.append(6)\n    kept.samples.append(3)\n    return len(kept.label) + len(kept.samples) * 10 + len(older)\n",
     []
    ],
    "returncode": 36,
@@ -47,7 +47,7 @@
   },
   "3414b3535e41008e519ccf3ff3b77874": {
    "case": [
-    "class Holder:\n    samples: list[int]\n\ndef stash(outer: list[Holder], inner: Holder) -> None:\n    outer[0] = inner\n\ndef main() -> int:\n    keeper: list[Holder] = [Holder(samples=[0])]\n    with arena() as scratch:\n        temp = Holder(samples=[1])\n        stash(keeper, temp)\n    return len(keeper)\n",
+    "record Holder:\n    samples: list[int]\n\ndef stash(outer: list[Holder], inner: Holder) -> None:\n    outer[0] = inner\n\ndef main() -> int:\n    keeper: list[Holder] = [Holder(samples=[0])]\n    with arena() as scratch:\n        temp = Holder(samples=[1])\n        stash(keeper, temp)\n    return len(keeper)\n",
     []
    ],
    "returncode": 1,
@@ -101,7 +101,7 @@
   },
   "892f973ceb23bee4dab8aeece253f3f3": {
    "case": [
-    "class Reading:\n    sensor: int\n    samples: list[int]\n\ndef collect(sensors: int, per_sensor: int) -> list[Reading]:\n    readings: list[Reading] = []\n    for sensor in range(sensors):\n        samples: list[int] = []\n        for index in range(per_sensor):\n            samples.append(sensor * per_sensor + index)\n        readings.append(Reading(sensor=sensor, samples=samples))\n    return readings\n\ndef main() -> int:\n    kept: list[int] = []\n    with arena() as scratch:\n        readings = collect(3, 4)\n        kept = scratch.escape(readings[2].samples)\n    total = 0\n    for sample in kept:\n        total = total + sample\n    return total\n",
+    "record Reading:\n    sensor: int\n    samples: list[int]\n\ndef collect(sensors: int, per_sensor: int) -> list[Reading]:\n    readings: list[Reading] = []\n    for sensor in range(sensors):\n        samples: list[int] = []\n        for index in range(per_sensor):\n            samples.append(sensor * per_sensor + index)\n        readings.append(Reading(sensor=sensor, samples=samples))\n    return readings\n\ndef main() -> int:\n    kept: list[int] = []\n    with arena() as scratch:\n        readings = collect(3, 4)\n        kept = scratch.escape(readings[2].samples)\n    total = 0\n    for sample in kept:\n        total = total + sample\n    return total\n",
     []
    ],
    "returncode": 38,

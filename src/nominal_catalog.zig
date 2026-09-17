@@ -292,6 +292,7 @@ const Builder = struct {
                 .record => {
                     try self.fields(node, schema, declaration);
                     schema.managed = declaration.managed;
+                    schema.shape.builtin_cell = declaration.builtin_name != null;
                 },
                 .variants, .result, .enumeration => try self.variants(node, schema, declaration),
                 .buffer => {

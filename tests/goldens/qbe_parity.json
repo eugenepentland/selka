@@ -2,7 +2,7 @@
  "entries": {
   "030f5271ee8ed005ef3c372a2bf3b23a": {
    "case": [
-    "class Box:\n    row: list[i64]\n\n\ndef main() -> i64:\n    a: list[i64] = []\n    a.append(42)\n    box = Box(row=a)\n    rows: list[list[i64]] = []\n    rows.append(box.row)\n    i = 0\n    while i < 20:\n        garbage: list[i64] = []\n        garbage.append(i)\n        i += 1\n    inner = rows[0u64]\n    return inner[0u64]\n",
+    "record Box:\n    row: list[i64]\n\n\ndef main() -> i64:\n    a: list[i64] = []\n    a.append(42)\n    box = Box(row=a)\n    rows: list[list[i64]] = []\n    rows.append(box.row)\n    i = 0\n    while i < 20:\n        garbage: list[i64] = []\n        garbage.append(i)\n        i += 1\n    inner = rows[0u64]\n    return inner[0u64]\n",
     []
    ],
    "returncode": 42,
@@ -20,7 +20,7 @@
   },
   "1081eb981286899031f37d769bbfacee": {
    "case": [
-    "class Point:\n    x: int\n    y: int\n\n\nclass Segment:\n    start: Point\n    end: Point\n    visible: bool\n\n\ndef move(point: Point, dx: int) -> Point:\n    point.x = point.x + dx\n    return point\n\n\ndef main() -> int:\n    origin = Point(y=2, x=3)\n    segment = Segment(\n        start=origin,\n        end=move(origin, 4),\n        visible=True,\n    )\n    if segment.visible:\n        return segment.start.x + segment.end.x + segment.end.y\n    return 0\n",
+    "record Point:\n    x: int\n    y: int\n\n\nrecord Segment:\n    start: Point\n    end: Point\n    visible: bool\n\n\ndef move(point: Point, dx: int) -> Point:\n    point.x = point.x + dx\n    return point\n\n\ndef main() -> int:\n    origin = Point(y=2, x=3)\n    segment = Segment(\n        start=origin,\n        end=move(origin, 4),\n        visible=True,\n    )\n    if segment.visible:\n        return segment.start.x + segment.end.x + segment.end.y\n    return 0\n",
     []
    ],
    "returncode": 12,
@@ -159,7 +159,7 @@
   },
   "4d5a96e580e0f80d556f370df3b1f5fd": {
    "case": [
-    "class Payload:\n    n: i64\n\n\nenum Color:\n    red,\n    blue\n\n\nunion Choice:\n    none,\n    value: Payload\n\n\nunion Scalar:\n    empty,\n    number: i64\n\n\ndef make[T: integer](value: T) -> Choice:\n    return Choice.value(Payload(n=i64(value)))\n\n\ndef score[T](context: T, value: Choice) -> i64:\n    _ = context\n    match value:\n        case Choice.none:\n            return 0\n        case Choice.value(payload):\n            return payload.n\n\n\ndef scalar[T](context: T, value: Scalar) -> i64:\n    _ = context\n    match value:\n        case Scalar.empty:\n            return 0\n        case Scalar.number(payload):\n            return payload\n\n\ndef table[T: integer](value: T) -> [Color]i64:\n    return {Color.red: i64(value), Color.blue: 9}\n\n\ndef main() -> i64:\n    return score[bool](True, make[u8](7u8)) + scalar[i64](0, Scalar.number(table[u16](1u16)[Color.blue]))\n",
+    "record Payload:\n    n: i64\n\n\nenum Color:\n    red,\n    blue\n\n\nunion Choice:\n    none,\n    value: Payload\n\n\nunion Scalar:\n    empty,\n    number: i64\n\n\ndef make[T: integer](value: T) -> Choice:\n    return Choice.value(Payload(n=i64(value)))\n\n\ndef score[T](context: T, value: Choice) -> i64:\n    _ = context\n    match value:\n        case Choice.none:\n            return 0\n        case Choice.value(payload):\n            return payload.n\n\n\ndef scalar[T](context: T, value: Scalar) -> i64:\n    _ = context\n    match value:\n        case Scalar.empty:\n            return 0\n        case Scalar.number(payload):\n            return payload\n\n\ndef table[T: integer](value: T) -> [Color]i64:\n    return {Color.red: i64(value), Color.blue: 9}\n\n\ndef main() -> i64:\n    return score[bool](True, make[u8](7u8)) + scalar[i64](0, Scalar.number(table[u16](1u16)[Color.blue]))\n",
     []
    ],
    "returncode": 16,
@@ -429,7 +429,7 @@
   },
   "ab77cd766f67dbadceafa4223f5d5e83": {
    "case": [
-    "class Pair:\n    values: [2]i64\n\n\ndef build(n: i64) -> Pair effects():\n    return Pair(values=[n, n + 1])\n\n\ndef apply(callback: def(i64) -> Pair effects(), n: i64) -> Pair:\n    return callback(n)\n\n\ndef identity(callback: def(i64) -> Pair effects()) -> def(i64) -> Pair effects():\n    return callback\n\n\ndef main() -> i64:\n    callback = identity(build)\n    a = apply(callback, 7)\n    b = callback(9)\n    return a.values[0] + b.values[1]\n",
+    "record Pair:\n    values: [2]i64\n\n\ndef build(n: i64) -> Pair effects():\n    return Pair(values=[n, n + 1])\n\n\ndef apply(callback: def(i64) -> Pair effects(), n: i64) -> Pair:\n    return callback(n)\n\n\ndef identity(callback: def(i64) -> Pair effects()) -> def(i64) -> Pair effects():\n    return callback\n\n\ndef main() -> i64:\n    callback = identity(build)\n    a = apply(callback, 7)\n    b = callback(9)\n    return a.values[0] + b.values[1]\n",
     []
    ],
    "returncode": 17,
@@ -510,7 +510,7 @@
   },
   "bc0431e24fee96612b5fc499dc6414c2": {
    "case": [
-    "class Samples:\n    values: [3]i64\n\n\ndef sum(values: [3]i64) -> i64:\n    index = 0\n    total = 0\n    while index < len(values):\n        total += values[index]\n        index += 1\n    return total\n\n\ndef main() -> i64:\n    original = Samples(values=[4, 7, 9])\n    changed = original\n    changed.values = replace(original.values, 1, 11)\n    return sum(original.values) + sum(changed.values)\n",
+    "record Samples:\n    values: [3]i64\n\n\ndef sum(values: [3]i64) -> i64:\n    index = 0\n    total = 0\n    while index < len(values):\n        total += values[index]\n        index += 1\n    return total\n\n\ndef main() -> i64:\n    original = Samples(values=[4, 7, 9])\n    changed = original\n    changed.values = replace(original.values, 1, 11)\n    return sum(original.values) + sum(changed.values)\n",
     []
    ],
    "returncode": 44,
@@ -582,7 +582,7 @@
   },
   "d2f3cdac97303bbf1aeab564ce578928": {
    "case": [
-    "class Sample:\n    values: [2]i64\n    tag: u8\n\n\ndef make[T: integer](x: T) -> Sample:\n    return Sample(values=[i64(x), i64(x) + 1], tag=7u8)\n\n\ndef total[T](context: T, sample: Sample) -> i64:\n    _ = context\n    return sample.values[0] + sample.values[1] + i64(len(sample.values))\n\n\ndef main() -> i64:\n    return total[bool](True, make[u8](7u8))\n",
+    "record Sample:\n    values: [2]i64\n    tag: u8\n\n\ndef make[T: integer](x: T) -> Sample:\n    return Sample(values=[i64(x), i64(x) + 1], tag=7u8)\n\n\ndef total[T](context: T, sample: Sample) -> i64:\n    _ = context\n    return sample.values[0] + sample.values[1] + i64(len(sample.values))\n\n\ndef main() -> i64:\n    return total[bool](True, make[u8](7u8))\n",
     []
    ],
    "returncode": 17,
@@ -645,7 +645,7 @@
   },
   "f50783e6a4076893935ac96771735527": {
    "case": [
-    "enum Color:\n    red,\n    green,\n    blue\n\n\nclass Point:\n    x: i64\n    y: i64\n\n\nunion Shape:\n    point: Point,\n    radius: i64,\n    empty\n\n\ndef score(shape: Shape) -> i64:\n    match shape:\n        case Shape.empty:\n            return 0\n        case Shape.radius(r):\n            return r * r\n        case Shape.point(p):\n            return p.x + p.y\n\n\ndef color_score(color: Color) -> i64:\n    match color:\n        case Color.red:\n            return 1\n        case Color.green:\n            return 2\n        case Color.blue:\n            return 3\n\n\ndef main() -> i64:\n    shapes: [3]Shape = [Shape.point(Point(x=2, y=3)), Shape.radius(4), Shape.empty]\n    return score(shapes[0]) + score(shapes[1]) + score(shapes[2]) + color_score(Color.blue)\n",
+    "enum Color:\n    red,\n    green,\n    blue\n\n\nrecord Point:\n    x: i64\n    y: i64\n\n\nunion Shape:\n    point: Point,\n    radius: i64,\n    empty\n\n\ndef score(shape: Shape) -> i64:\n    match shape:\n        case Shape.empty:\n            return 0\n        case Shape.radius(r):\n            return r * r\n        case Shape.point(p):\n            return p.x + p.y\n\n\ndef color_score(color: Color) -> i64:\n    match color:\n        case Color.red:\n            return 1\n        case Color.green:\n            return 2\n        case Color.blue:\n            return 3\n\n\ndef main() -> i64:\n    shapes: [3]Shape = [Shape.point(Point(x=2, y=3)), Shape.radius(4), Shape.empty]\n    return score(shapes[0]) + score(shapes[1]) + score(shapes[2]) + color_score(Color.blue)\n",
     []
    ],
    "returncode": 24,

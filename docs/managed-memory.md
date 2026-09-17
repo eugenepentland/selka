@@ -41,8 +41,10 @@ record Node:
     children: list[Node]
 ```
 
-Records retain value semantics. This release does not introduce reference records,
-capturing closures, or managed hash maps. Byte literals and the managed
+`record` retains value semantics, while `class` is a GC-managed reference record:
+assignment, argument passing and field reads share one object, so a field write through
+a class parameter reaches the caller's object. Capturing closures and managed hash maps
+remain absent. Byte literals and the managed
 [`bytes`](bytes.md) type keep their documented behavior. Owned resources, provider
 capabilities, and must-handle results cannot be hidden inside freely aliased
 lists. There are no interior pointers into managed storage. Host invocation, JSON encoding

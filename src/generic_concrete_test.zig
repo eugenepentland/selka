@@ -50,7 +50,7 @@ fn reject(bytes: []const u8, expected: []const u8) !void {
     try t.expectEqualStrings(expected, c.diagnostics.items[0].code);
 }
 const updates =
-    \\class Pair:
+    \\record Pair:
     \\    values: [2]i64
     \\    flag: bool
     \\

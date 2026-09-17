@@ -11,7 +11,7 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
         .make_record => |record| {
             const schema = self.program.records[record.ty.recordIndex()];
             if (schema.isCollection()) return managed_lower.Lower(@TypeOf(self.*)).construct(self, record, stack);
-            const pointer = if (schema.isCell()) try allocateCell(@TypeOf(self), self, record.ty) else try self.aggregatePointer();
+            const pointer = if (schema.isManagedRecord()) try allocateCell(@TypeOf(self), self, record.ty) else try self.aggregatePointer();
             for (0..record.fields) |i| {
                 const field_index = if (record.order.len == 0) i else record.order[i];
                 const member = try self.field(record.ty, field_index);
@@ -23,7 +23,7 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
             const source = try self.load("s", h - 1);
             const member = try self.field(stack[h - 1], index);
             var value = try self.readValue(try self.address(source, member.offset), member.ty);
-            if (self.program.records[stack[h - 1].recordIndex()].isCell() and !self.isScalar(member.ty)) {
+            if (self.program.records[stack[h - 1].recordIndex()].isManagedRecord() and !self.isScalar(member.ty)) {
                 const snapshot = try self.aggregatePointer();
                 try self.writeValue(snapshot, value, member.ty);
                 value = snapshot;
@@ -33,7 +33,7 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
         .update_record => |record| {
             const base = h - record.indices.len - 1;
             const source = try self.load("s", base);
-            const cell = self.program.records[record.ty.recordIndex()].isCell();
+            const cell = self.program.records[record.ty.recordIndex()].isManagedRecord();
             const pointer = if (cell) source else try self.aggregatePointer();
             if (!cell) try self.print(" blit %v{d}, %v{d}, {d}\n", .{ source, pointer, (try self.layout(record.ty)).size });
             for (record.indices, 0..) |index, i| {

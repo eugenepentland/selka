@@ -87,7 +87,7 @@ test "ARENA-MANAGED-2 escape copies a shared subgraph once into the enclosing re
 // spec-case: ARENA-MANAGED-2
 test "ARENA-MANAGED-2 escape preserves a cycle through a record field" {
     const source =
-        \\class Node:
+        \\record Node:
         \\    value: int
         \\    links: list[Node]
         \\
@@ -349,7 +349,7 @@ test "ARENA-MANAGED-6 stress collection inside an arena sweeps unreachable arena
 
 fn escapeScenario(allocator: std.mem.Allocator) !void {
     const source =
-        \\class Node:
+        \\record Node:
         \\    value: int
         \\    links: list[Node]
         \\

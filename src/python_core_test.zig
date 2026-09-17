@@ -365,7 +365,7 @@ test "an explicit narrow callback ceiling still rejects a wider function value" 
 // spec: WARNING-DEAD-RECORD-WRITE-1
 test "dead record writes warn for loop and parameter copies but not fresh locals" {
     var loop = try language.Compilation.init(t.allocator, "dead-loop.my",
-        \\class Item:
+        \\record Item:
         \\    visited: bool
         \\
         \\
@@ -379,7 +379,7 @@ test "dead record writes warn for loop and parameter copies but not fresh locals
     try loop.check();
     try t.expectEqualStrings("W_DEAD_RECORD_WRITE", loop.diagnostics.items[0].code);
     var parameter = try language.Compilation.init(t.allocator, "dead-parameter.my",
-        \\class Counter:
+        \\record Counter:
         \\    n: int
         \\
         \\
@@ -397,7 +397,7 @@ test "dead record writes warn for loop and parameter copies but not fresh locals
     // A self-referential right-hand side reads the copy as part of the write, so
     // it still counts as a dead write when nothing observes the binding later.
     var increment = try language.Compilation.init(t.allocator, "dead-increment.my",
-        \\class Counter:
+        \\record Counter:
         \\    n: int
         \\
         \\
@@ -413,7 +413,7 @@ test "dead record writes warn for loop and parameter copies but not fresh locals
     try increment.check();
     try t.expectEqualStrings("W_DEAD_RECORD_WRITE", increment.diagnostics.items[0].code);
     var collection = try language.Compilation.init(t.allocator, "dead-collection.my",
-        \\class Node:
+        \\record Node:
         \\    value: int
         \\
         \\
@@ -427,7 +427,7 @@ test "dead record writes warn for loop and parameter copies but not fresh locals
     try collection.check();
     try t.expectEqualStrings("W_DEAD_RECORD_WRITE", collection.diagnostics.items[0].code);
     var fresh = try language.Compilation.init(t.allocator, "fresh-record.my",
-        \\class Point:
+        \\record Point:
         \\    x: int
         \\
         \\
@@ -443,7 +443,7 @@ test "dead record writes warn for loop and parameter copies but not fresh locals
 // spec-case: WARNING-DEAD-RECORD-WRITE-1
 test "reading a parameter copy after a field write suppresses the dead-write warning" {
     var observed = try language.Compilation.init(t.allocator, "read-after-write.my",
-        \\class Counter:
+        \\record Counter:
         \\    n: int
         \\
         \\
@@ -458,6 +458,46 @@ test "reading a parameter copy after a field write suppresses the dead-write war
     defer observed.deinit();
     try observed.check();
     try t.expectEqual(@as(usize, 0), observed.diagnostics.items.len);
+}
+// spec: CLASS-MANAGED-1
+test "class is a shared managed reference while record copies" {
+    try run(
+        \\class Counter:
+        \\    n: int
+        \\
+        \\
+        \\record Pair:
+        \\    n: int
+        \\
+        \\
+        \\def bump(counter: Counter):
+        \\    counter.n = counter.n + 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    a = Counter(n=1)
+        \\    b = a
+        \\    b.n = 7
+        \\    bump(a)
+        \\    pair = Pair(n=1)
+        \\    copy = pair
+        \\    copy.n = 9
+        \\    return a.n * 10 + pair.n
+    , 81);
+}
+// spec-case: CLASS-MANAGED-1
+test "a self-referential class graph prints to the depth cap and terminates" {
+    try run(
+        \\class Node:
+        \\    children: list[Node]
+        \\
+        \\
+        \\def main() -> int:
+        \\    nodes: list[Node] = []
+        \\    nodes.append(Node(children=nodes))
+        \\    print(nodes[0])
+        \\    return 0
+    , 0);
 }
 // spec-case: DIAG-ORACLE-1
 test "DIAG-ORACLE-1 unknown local names suggest close declared bindings" {

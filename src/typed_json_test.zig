@@ -12,7 +12,7 @@ const source =
     \\    no
     \\
     \\
-    \\class Point:
+    \\record Point:
     \\    x: u64
     \\    flags: [Flag]bool
     \\
@@ -68,7 +68,7 @@ test "typed JSON materializes nominal values independently and cleans up every a
 // spec: WIRE-3
 test "typed JSON encodes independently constructed values without consuming ownership" {
     var compilation = try language.Compilation.init(t.allocator, "codec.my",
-        \\class Pair:
+        \\record Pair:
         \\    n: i16
         \\    ok: bool
         \\
@@ -127,11 +127,11 @@ test "typed JSON rejects malformed host values before emitting bytes" {
 
 test "typed JSON rejects later fields after releasing already decoded aggregates" {
     var compilation = try language.Compilation.init(t.allocator, "codec.my",
-        \\class Inner:
+        \\record Inner:
         \\    n: i64
         \\
         \\
-        \\class Outer:
+        \\record Outer:
         \\    a: Inner
         \\    b: bool
         \\
@@ -169,7 +169,7 @@ test "typed JSON failure locations survive document and checked catalog teardown
 }
 test "typed JSON encoding locates malformed nested native values without consuming them" {
     var compilation = try language.Compilation.init(t.allocator, "codec.my",
-        \\class R:
+        \\record R:
         \\    values: [2]u8
         \\
         \\

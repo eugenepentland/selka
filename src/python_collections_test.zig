@@ -72,7 +72,7 @@ test "foreach enumerate range and continue" {
 // spec: PY-COLLECTIONS-5
 test "record fields update values and list slots without changing prior copies" {
     try run(
-        \\class Point:
+        \\record Point:
         \\    x: i64
         \\
         \\

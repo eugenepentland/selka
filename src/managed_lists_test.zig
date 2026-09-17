@@ -26,9 +26,9 @@ fn rejectAll(sources: []const []const u8, code: []const u8) !void {
 }
 
 // spec: GC-SOURCE-9
-test "bytecode rejects managed metadata on an ordinary aggregate" {
+test "bytecode rejects managed metadata on a shape that cannot own storage" {
     var compilation = try language.Compilation.init(t.allocator, "forged-managed.my",
-        \\class Record:
+        \\record Record:
         \\    left: i64
         \\    right: i64
         \\
@@ -41,7 +41,10 @@ test "bytecode rejects managed metadata on an ordinary aggregate" {
     var program = compilation.code.?;
     const records = try t.allocator.dupe(@import("typed.zig").Record, program.records);
     defer t.allocator.free(records);
+    // A managed nominal record is legal now that `class` is a managed reference;
+    // an array or variant is not a record and cannot own managed storage.
     records[0].managed = true;
+    records[0].shape = .{ .array = .{ .element = .i64, .length = 2 } };
     program.records = records;
     try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, program));
 }

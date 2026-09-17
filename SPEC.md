@@ -428,6 +428,7 @@ mis-tagged and at least one executable block was found.
 - [CALLBACK-EFFECTS-1] A callback type with no `effects(...)` ceiling is unbounded, and an unannotated free function is assignable to any callback slot; an explicit narrow ceiling still rejects a function value whose declared ceiling is wider, and a call through a stored callback uses the destination ceiling.
 
 - [WARNING-DEAD-RECORD-WRITE-1] Writing a field of a plain-`record` local that was copied from a collection read, a loop iteration variable, or a by-value parameter reports `W_DEAD_RECORD_WRITE` when the copy is never read afterwards, because the write cannot reach the original storage; a field write to a definitely fresh local is not reported.
+- [CLASS-MANAGED-1] A `class` declaration is a managed reference record: construction allocates a GC-traced object, assignment, calls and field reads share that object, and a field write through any binding reaches the original; `record` remains a copied value type whose dead-write warning is unchanged.
 
 - [SEMANTIC-CALLBACK-1] Function-name values may infer callback schemas while checking bodies, so semantic body reuse stays disabled for these programs until snapshots can safely remap their inferred types. Fresh and changed-source callback execution retain identical signatures and outcomes.
 

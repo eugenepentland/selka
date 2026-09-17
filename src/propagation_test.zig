@@ -231,7 +231,7 @@ test "propagation cannot abandon pending locals parameters or unfinished express
         \\    return 0
     , "E_RESULT_PROPAGATION");
     try reject(
-        \\class Wrapper:
+        \\record Wrapper:
         \\    r: R
         \\
         \\
@@ -249,7 +249,7 @@ test "propagation cannot abandon pending locals parameters or unfinished express
         \\    return 0
     , "E_RESULT_PROPAGATION");
     try reject(
-        \\class Pair:
+        \\record Pair:
         \\    first: R
         \\    second: i64
         \\

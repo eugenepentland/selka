@@ -156,7 +156,7 @@ const module_source =
     \\export extract
     \\
     \\
-    \\class Box[T]:
+    \\record Box[T]:
     \\    value: T
     \\
     \\

@@ -5,7 +5,7 @@ const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const module = "environment.my";
 const declarations =
-    \\class Entry:
+    \\record Entry:
     \\    present: bool
     \\    bytes: [4]u8
     \\    length: u64

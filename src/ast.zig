@@ -134,8 +134,9 @@ pub const Variant = struct { name: Span, payload: ?Span };
 pub const Variants = struct { type_parameters: []const TypeParameter = &.{}, fallible: bool = false, name: Span, is_union: bool, cases: []const Variant };
 /// Source field spelling and its initializer expression.
 pub const FieldInit = struct { name: Span, value: NodeId };
-/// Parsed record name and ordered field declarations.
-pub const Record = struct { type_parameters: []const TypeParameter = &.{}, name: Span, fields: []const Parameter };
+/// Parsed record name and ordered field declarations. `class` is the managed
+/// reference spelling; `record` is the explicit copy/value spelling.
+pub const Record = struct { managed: bool = false, type_parameters: []const TypeParameter = &.{}, name: Span, fields: []const Parameter };
 /// Source parameter name, declared type, and optional literal default.
 pub const Parameter = struct { default_value: ?NodeId = null, name: Span, ty: Span };
 /// Source-spelled wire type and domain decoder/encoder names.

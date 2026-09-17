@@ -135,8 +135,13 @@ pub const Record = struct {
     pub fn isRecord(self: Record) bool {
         return !self.shape.hasRuntimeIdentity() and !self.shape.hasValueRepresentation();
     }
-    /// The builtin Cell is the sole managed record; user records retain value semantics.
+    /// The builtin Cell is the managed record with a closed one-field content policy.
     pub fn isCell(self: Record) bool {
+        return self.managed and self.isRecord() and self.shape.builtin_cell;
+    }
+    /// A managed nominal record: the builtin Cell or a user `class` declaration.
+    /// Managed records carry reference identity, so assignment and calls share them.
+    pub fn isManagedRecord(self: Record) bool {
         return self.managed and self.isRecord();
     }
     /// Managed collection operations require an element buffer, unlike Cell fields.
@@ -163,6 +168,8 @@ pub const RecordShape = struct {
     variants: ?Variants = null,
     buffer: ?Type = null,
     resource: ?external_resources.Kind = null,
+    /// The builtin Cell: a managed record with closed field and content rules.
+    builtin_cell: bool = false,
     /// Identify representations carrying a managed collection or resource identity.
     pub fn hasRuntimeIdentity(self: RecordShape) bool {
         return self.buffer != null or self.resource != null;

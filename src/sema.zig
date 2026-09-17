@@ -1458,7 +1458,11 @@ const Checker = struct {
     fn noteDeadRecordWrite(self: *Checker, slot: typed.LocalId, span: source.Span) void {
         const local = &self.locals.items[@backingInt(slot)];
         if (local.origin == .local) return;
-        if (!local.ty.isAggregate() or self.catalog.records[local.ty.recordIndex()].isCollection()) return;
+        if (!local.ty.isAggregate()) return;
+        // A managed record (`class` or Cell) is shared, so a field write reaches
+        // the original; only copied value `record`s can have dead writes.
+        if (self.catalog.records[local.ty.recordIndex()].managed) return;
+        if (self.catalog.records[local.ty.recordIndex()].isCollection()) return;
         local.usage.dead_write_reads = local.usage.reads;
         local.usage.dead_write_span = span;
     }

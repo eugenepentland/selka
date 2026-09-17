@@ -6,7 +6,7 @@ const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const typed = @import("typed.zig");
 const source =
-    \\class Wire:
+    \\record Wire:
     \\    n: i64
     \\
     \\

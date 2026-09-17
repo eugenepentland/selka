@@ -46,6 +46,34 @@ collected reference, which is what lets them leave an arena block freely; see
 [managed arenas](arenas.md) for that rule and [managed memory](managed-memory.md) for
 what sharing a managed field means.
 
+## Managed class records
+
+`class` declares the same named fields as `record` but with reference semantics.
+Construction allocates a GC-traced object, and assignment, argument passing and field
+reads all refer to that one object, so a write through any binding reaches the original.
+Use `record` when a copied value is wanted and `class` when the object has identity.
+
+```mylang
+# doc: expect 8
+class Counter:
+    n: int
+
+def bump(counter: Counter):
+    counter.n = counter.n + 1
+
+def main() -> int:
+    a = Counter(n=1)
+    b = a
+    b.n = 7
+    bump(a)
+    return a.n
+```
+
+This returns `8`: `b` is the same object as `a`, and `bump` receives that object.
+Classes may hold managed fields and be held by other classes, so a self-referential
+graph is legal; printing one stops at the renderer's depth cap. A class instance has no
+value copy to warn about, so `W_DEAD_RECORD_WRITE` applies only to `record`.
+
 ## Positional and named constructors
 
 A record is constructed by calling its type. Positional arguments bind to fields in

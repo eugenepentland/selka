@@ -5,7 +5,7 @@ const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const typed = @import("typed.zig");
 const definitions =
-    \\class Box[T]:
+    \\record Box[T]:
     \\    value: T
     \\
     \\
@@ -171,7 +171,7 @@ const Modules = struct {
             \\export twice
             \\
             \\
-            \\class Box[T]:
+            \\record Box[T]:
             \\    value: T
             \\
             \\

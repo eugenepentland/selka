@@ -360,6 +360,9 @@ const Emitter = struct {
             .resource_io,
             .file_access,
             .file_method,
+            // `print` begins a sink that can allocate its buffer, so managed
+            // operands and locals must be rooted across it.
+            .print,
             => true,
             else => false,
         };
@@ -727,7 +730,7 @@ const Emitter = struct {
     }
     /// Resolve a field to its native offset and exact type.
     pub fn field(self: *Emitter, ty: typed.Type, index: usize) GenerateError!native_types.Field {
-        if (self.program.records[ty.recordIndex()].isCell()) {
+        if (self.program.records[ty.recordIndex()].isManagedRecord()) {
             const body = self.layouts.heapLayout(ty) catch |err| return layoutError(err);
             defer self.layouts.releaseLayout(body);
             return body.fields[index];

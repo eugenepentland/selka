@@ -129,7 +129,7 @@
     },
     "python-assignments-and-value-records": {
       "kind": "language",
-      "summary": "Assignment creates a mutable function-scoped local and records keep value semantics on copy.",
+      "summary": "Assignment creates a mutable function-scoped local; `record` copies on assignment while `class` shares one managed object.",
       "doc": "docs/statements.md#assignments-and-value-records"
     },
     "canonical-prelude-types": {
@@ -244,8 +244,13 @@
     },
     "nominal-records": {
       "kind": "language",
-      "summary": "`record` declares a nominal value record of annotated fields; `class` remains the compatibility spelling.",
+      "summary": "`record` declares a nominal value record of annotated fields; `class` is the managed reference spelling.",
       "doc": "docs/records-and-unions.md#records"
+    },
+    "managed-class-records": {
+      "kind": "language",
+      "summary": "`class` declares a GC-managed reference record: assignment, calls and field reads share one object, while `record` stays a copied value type.",
+      "doc": "docs/records-and-unions.md#managed-class-records"
     },
     "tagged-unions": {
       "kind": "language",

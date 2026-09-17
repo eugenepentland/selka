@@ -15,7 +15,7 @@ const declarations =
     \\    err: i64
     \\
     \\
-    \\class Failure:
+    \\record Failure:
     \\    code: i64
     \\    resource: File
     \\
@@ -50,7 +50,7 @@ fn sandbox(box: *Sandbox) !void {
     try box.temporary.dir.writeFile(t.io, .{ .sub_path = "data.bin", .data = "\x00\xff\x07" });
 }
 const retry = declarations ++
-    \\class Authority:
+    \\record Authority:
     \\    fs: Filesystem
     \\
     \\
@@ -144,11 +144,11 @@ test "partial source acquisition propagates failure and releases acquired resour
     try t.expectEqual(@as(i64, 2000), outcome.value);
 }
 const wrappers = declarations ++ helpers ++
-    \\class Inner:
+    \\record Inner:
     \\    file: File
     \\
     \\
-    \\class Pair:
+    \\record Pair:
     \\    first: Inner
     \\    second: File
     \\
@@ -263,7 +263,7 @@ test "source frame traps release the resource moved through recursive calls" {
 }
 
 const generic_cleanup = declarations ++ helpers ++
-    \\class Owned:
+    \\record Owned:
     \\    file: File
     \\    code: i64
     \\

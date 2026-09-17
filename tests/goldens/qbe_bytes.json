@@ -38,7 +38,7 @@
   },
   "354878fe763598424e9c4bcbf85f83c1": {
    "case": [
-    "class Packet:\n    kind: str\n    payload: bytes\n\ndef main() -> int:\n    packets: list[Packet] = [Packet(kind=\"hello\", payload=b\"\\x01\"), Packet(kind=\"data\", payload=b\"\\x02\\x03\")]\n    index: dict[str, bytes] = {}\n    for packet in packets:\n        index[packet.kind] = packet.payload\n    if len(index) != 2 or index[\"data\"] != b\"\\x02\\x03\":\n        return 1\n    alias = packets[1]\n    if alias.payload != packets[1].payload:\n        return 2\n    total = 0\n    for value in index[\"data\"]:\n        total += value\n    return total + len(index[\"hello\"])\n",
+    "record Packet:\n    kind: str\n    payload: bytes\n\ndef main() -> int:\n    packets: list[Packet] = [Packet(kind=\"hello\", payload=b\"\\x01\"), Packet(kind=\"data\", payload=b\"\\x02\\x03\")]\n    index: dict[str, bytes] = {}\n    for packet in packets:\n        index[packet.kind] = packet.payload\n    if len(index) != 2 or index[\"data\"] != b\"\\x02\\x03\":\n        return 1\n    alias = packets[1]\n    if alias.payload != packets[1].payload:\n        return 2\n    total = 0\n    for value in index[\"data\"]:\n        total += value\n    return total + len(index[\"hello\"])\n",
     []
    ],
    "returncode": 6,

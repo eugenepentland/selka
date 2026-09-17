@@ -429,7 +429,10 @@ pub fn depends(value: Expression) bool {
 /// Build reusable metadata in the compilation arena; layout finiteness and execution remain separate.
 pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!Index {
     var index: Index = .{ .context = .{ .allocator = allocator, .src = src, .sink = sink, .names = module_names } };
-    for (program.types.records) |declaration| try index.add(declaration.name, declaration.type_parameters, .record);
+    for (program.types.records) |declaration| {
+        try index.add(declaration.name, declaration.type_parameters, .record);
+        index.declarations.items[index.declarations.items.len - 1].managed = declaration.managed;
+    }
     for (program.types.variants) |declaration| try index.add(declaration.name, declaration.type_parameters, if (declaration.fallible) .result else if (declaration.is_union) .variants else .enumeration);
     inline for (.{ "domains", "resources" }, .{ Kind.domain, .resource }) |category, kind| {
         for (@field(program.types, category)) |declaration| {

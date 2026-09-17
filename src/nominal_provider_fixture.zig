@@ -12,7 +12,7 @@ pub const declarations =
     \\    ok: File
     \\
     \\
-    \\class Failure[T]:
+    \\record Failure[T]:
     \\    code: i64
     \\    resource: File
     \\
@@ -22,7 +22,7 @@ pub const declarations =
     \\    ok: bool
     \\
     \\
-    \\class Chunk[T]:
+    \\record Chunk[T]:
     \\    eof: bool
     \\    bytes: [4]u8
     \\    length: u64

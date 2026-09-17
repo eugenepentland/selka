@@ -379,7 +379,7 @@ test "shared record types cross module boundaries and hidden names do not shadow
         \\export value
         \\
         \\
-        \\class X:
+        \\record X:
         \\    number: i64
         \\
         \\
@@ -1822,7 +1822,7 @@ test "cross module bodies enforce private functions private types nominal identi
         \\module units
         \\
         \\
-        \\class Recursive:
+        \\record Recursive:
         \\    next: Recursive
     , "E_RECURSIVE_RECORD");
 }

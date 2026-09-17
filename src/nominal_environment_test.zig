@@ -4,7 +4,7 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const declarations =
-    \\class Entry[T]:
+    \\record Entry[T]:
     \\    present: bool
     \\    length: u64
     \\    bytes: [4]u8

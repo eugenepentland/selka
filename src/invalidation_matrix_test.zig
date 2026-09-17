@@ -291,7 +291,7 @@ const record_base =
     \\
     \\export api
     \\
-    \\class Point:
+    \\record Point:
     \\    x: i64
     \\
     \\
@@ -313,7 +313,7 @@ const record_edited =
     \\
     \\export api
     \\
-    \\class Point:
+    \\record Point:
     \\    x: i64
     \\    y: i64
     \\
