@@ -18,8 +18,8 @@ record Segment:
     terminal: bool
 
 
-def ground(span: text.Span) -> bool:
-    return text.matches(span, b"GND")
+def ground(host: Host, span: text.Span) -> bool:
+    return text.matches(host, span, b"GND")
 
 
 def distance(a: l.Point, b: l.Point) -> int:
@@ -32,7 +32,7 @@ def distance(a: l.Point, b: l.Point) -> int:
     return x + y
 
 
-def external(net: text.Span, connections: list[p.Port]) -> bool effects(host):
+def external(host: Host, net: text.Span, connections: list[p.Port]) -> bool effects(host):
     target = p.Port(
         prefix=text.empty(),
         name=net,
@@ -40,31 +40,31 @@ def external(net: text.Span, connections: list[p.Port]) -> bool effects(host):
     )
     i = 0
     while i < len(connections):
-        if p.equal(target, connections[i]):
+        if p.equal(host, target, connections[i]):
             return True
         i += 1
     return False
 
 
-def decoupling(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin]) -> bool:
-    if not ground(pin.net) or parts[pin.part].kind != 1:
+def decoupling(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin]) -> bool:
+    if not ground(host, pin.net) or parts[pin.part].kind != 1:
         return False
     i = 0
     while i < len(pins):
         other = pins[i]
         if other.part == pin.part and other.number != pin.number:
-            display = c.displayNet(other.net, parts, pins)
-            return l.rail(display) and not ground(display) and not text.equal(display, other.net)
+            display = c.displayNet(host, other.net, parts, pins)
+            return l.rail(host, display) and not ground(host, display) and not text.equal(host, display, other.net)
         i += 1
     return False
 
 
-def blocked(a: l.Point, b: l.Point, net: text.Span, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]) -> bool:
+def blocked(host: Host, a: l.Point, b: l.Point, net: text.Span, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]) -> bool:
     i = 0
     while i < len(pins):
         pin = pins[i]
         q = points[i]
-        if not pin.nc and not text.equal(net, c.displayNet(pin.net, parts, pins)):
+        if not pin.nc and not text.equal(host, net, c.displayNet(host, pin.net, parts, pins)):
             if a.x == b.x and q.x == a.x  and ((q.y >= a.y and q.y <= b.y)  or (q.y >= b.y and q.y <= a.y)):
                 return True
             if a.y == b.y and q.y == a.y  and ((q.x >= a.x and q.x <= b.x)  or (q.x >= b.x and q.x <= a.x)):
@@ -73,19 +73,19 @@ def blocked(a: l.Point, b: l.Point, net: text.Span, parts: list[c.Part], pins: l
     return False
 
 
-def build(parts: list[c.Part], pins: list[c.Pin], points: list[l.Point], connections: list[p.Port]) -> list[Segment] effects(host, managed_allocation):
+def build(host: Host, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point], connections: list[p.Port]) -> list[Segment] effects(host, managed_allocation):
     out: list[Segment] = []
     i = 0
     while i < len(pins):
         pin = pins[i]
         point = points[i]
         if not pin.nc:
-            display = c.displayNet(pin.net, parts, pins)
-            isGround = ground(pin.net)
-            coupledGround = decoupling(pin, parts, pins)
+            display = c.displayNet(host, pin.net, parts, pins)
+            isGround = ground(host, pin.net)
+            coupledGround = decoupling(host, pin, parts, pins)
             localGround = isGround and parts[pin.part].kind != 0 and not coupledGround
-            isRail = l.rail(display) and not isGround
-            standaloneRail = isRail and parts[pin.part].kind != 0 and text.equal(pin.net, display)
+            isRail = l.rail(host, display) and not isGround
+            standaloneRail = isRail and parts[pin.part].kind != 0 and text.equal(host, pin.net, display)
             nearest = - 1
             shortest = 1000000
             count = 0
@@ -93,9 +93,9 @@ def build(parts: list[c.Part], pins: list[c.Pin], points: list[l.Point], connect
             while j < len(pins):
                 other = pins[j]
                 otherPoint = points[j]
-                otherStandalone = isRail and parts[other.part].kind != 0 and text.equal(other.net, display)
-                allowed =(not isGround  or (coupledGround and decoupling(other, parts, pins))  or (not coupledGround and parts[other.part].kind == 0)) and not otherStandalone
-                if not other.nc and allowed and text.equal(display, c.displayNet(other.net, parts, pins)):
+                otherStandalone = isRail and parts[other.part].kind != 0 and text.equal(host, other.net, display)
+                allowed =(not isGround  or (coupledGround and decoupling(host, other, parts, pins))  or (not coupledGround and parts[other.part].kind == 0)) and not otherStandalone
+                if not other.nc and allowed and text.equal(host, display, c.displayNet(host, other.net, parts, pins)):
                     count += 1
                     if j < i and distance(point, otherPoint) < shortest:
                         nearest = j
@@ -107,7 +107,7 @@ def build(parts: list[c.Part], pins: list[c.Pin], points: list[l.Point], connect
                 k = 0
                 while k < len(pins):
                     other = pins[k]
-                    if not other.nc  and ((coupledGround and decoupling(other, parts, pins))  or (not coupledGround and parts[other.part].kind == 0)) and text.equal(display, c.displayNet(other.net, parts, pins)):
+                    if not other.nc  and ((coupledGround and decoupling(host, other, parts, pins))  or (not coupledGround and parts[other.part].kind == 0)) and text.equal(host, display, c.displayNet(host, other.net, parts, pins)):
                         q = points[k]
                         if q.y < low:
                             low = q.y
@@ -146,7 +146,7 @@ def build(parts: list[c.Part], pins: list[c.Pin], points: list[l.Point], connect
                     junction=False,
                     terminal=True
                 ))
-            if nearest < 0 and count > 1 and not isGround and not isRail and external(display, connections):
+            if nearest < 0 and count > 1 and not isGround and not isRail and external(host, display, connections):
                 dx = 24
                 if point.x < 442:
                     dx = - 24
@@ -163,7 +163,7 @@ def build(parts: list[c.Part], pins: list[c.Pin], points: list[l.Point], connect
                 dx = 24
                 if parts[pin.part].kind == 0:
                     dx = 140
-                    if not external(display, connections) and not isRail and not isGround:
+                    if not external(host, display, connections) and not isRail and not isGround:
                         dx = 50
                 if point.x < 442:
                     dx = - dx
@@ -276,12 +276,12 @@ def build(parts: list[c.Part], pins: list[c.Pin], points: list[l.Point], connect
                         junction=False,
                         terminal=False
                     ))
-                elif point.x == previous.x and blocked(point, previous, display, parts, pins, points):
+                elif point.x == previous.x and blocked(host, point, previous, display, parts, pins, points):
                     offset = 16
                     lane = point.x + offset
                     lane_start = l.Point(x=lane, y=point.y)
                     lane_end = l.Point(x=lane, y=previous.y)
-                    while blocked(lane_start, lane_end, display, parts, pins, points) and offset < 160:
+                    while blocked(host, lane_start, lane_end, display, parts, pins, points) and offset < 160:
                         offset += 16
                         lane = point.x + offset
                         lane_start.x = lane

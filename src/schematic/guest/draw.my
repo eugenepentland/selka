@@ -8,71 +8,71 @@ export label
 export symbol
 
 
-def rect(x: int, y: int, w: int, h: int) effects(host, managed_allocation):
-    text.write(b"<rect class=\"chip\" x=\"")
-    text.decimal(x)
-    text.write(b"\" y=\"")
-    text.decimal(y)
-    text.write(b"\" width=\"")
-    text.decimal(w)
-    text.write(b"\" height=\"")
-    text.decimal(h)
-    text.write(b"\" rx=\"6\"/>")
+def rect(host: Host, x: int, y: int, w: int, h: int) effects(host, managed_allocation):
+    text.write(host, b"<rect class=\"chip\" x=\"")
+    text.decimal(host, x)
+    text.write(host, b"\" y=\"")
+    text.decimal(host, y)
+    text.write(host, b"\" width=\"")
+    text.decimal(host, w)
+    text.write(host, b"\" height=\"")
+    text.decimal(host, h)
+    text.write(host, b"\" rx=\"6\"/>")
     return
 
 
-def line(x1: int, y1: int, x2: int, y2: int) effects(host, managed_allocation):
-    text.write(b"<line x1=\"")
-    text.decimal(x1)
-    text.write(b"\" y1=\"")
-    text.decimal(y1)
-    text.write(b"\" x2=\"")
-    text.decimal(x2)
-    text.write(b"\" y2=\"")
-    text.decimal(y2)
-    text.write(b"\"/>")
+def line(host: Host, x1: int, y1: int, x2: int, y2: int) effects(host, managed_allocation):
+    text.write(host, b"<line x1=\"")
+    text.decimal(host, x1)
+    text.write(host, b"\" y1=\"")
+    text.decimal(host, y1)
+    text.write(host, b"\" x2=\"")
+    text.decimal(host, x2)
+    text.write(host, b"\" y2=\"")
+    text.decimal(host, y2)
+    text.write(host, b"\"/>")
     return
 
 
-def labelStart(x: int, y: int, anchor: int) effects(host, managed_allocation):
-    text.write(b"<text x=\"")
-    text.decimal(x)
-    text.write(b"\" y=\"")
-    text.decimal(y)
-    text.write(b"\" text-anchor=\"")
+def labelStart(host: Host, x: int, y: int, anchor: int) effects(host, managed_allocation):
+    text.write(host, b"<text x=\"")
+    text.decimal(host, x)
+    text.write(host, b"\" y=\"")
+    text.decimal(host, y)
+    text.write(host, b"\" text-anchor=\"")
     if anchor == 0:
-        text.write(b"start")
+        text.write(host, b"start")
     elif anchor == 1:
-        text.write(b"middle")
+        text.write(host, b"middle")
     else:
-        text.write(b"end")
-    text.write(b"\">")
+        text.write(host, b"end")
+    text.write(host, b"\">")
     return
 
 
-def labelEnd() effects(host, managed_allocation):
-    text.write(b"</text>")
+def labelEnd(host: Host) effects(host, managed_allocation):
+    text.write(host, b"</text>")
     return
 
 
-def label(x: int, y: int, anchor: int, value: text.Span) effects(host, managed_allocation):
-    labelStart(x, y, anchor)
-    text.escaped(value)
-    return labelEnd()
+def label(host: Host, x: int, y: int, anchor: int, value: text.Span) effects(host, managed_allocation):
+    labelStart(host, x, y, anchor)
+    text.escaped(host, value)
+    return labelEnd(host)
 
 
-def symbol(kind: int) effects(host, managed_allocation):
-    text.write(b"<g class=\"symbol\">")
-    line(- 20, 0, - 12, 0)
-    line(12, 0, 20, 0)
+def symbol(host: Host, kind: int) effects(host, managed_allocation):
+    text.write(host, b"<g class=\"symbol\">")
+    line(host, - 20, 0, - 12, 0)
+    line(host, 12, 0, 20, 0)
     if kind == 1:
-        line(- 3, - 6, - 3, 6)
-        line(3, - 6, 3, 6)
-        line(- 12, 0, - 3, 0)
-        line(3, 0, 12, 0)
+        line(host, - 3, - 6, - 3, 6)
+        line(host, 3, - 6, 3, 6)
+        line(host, - 12, 0, - 3, 0)
+        line(host, 3, 0, 12, 0)
     elif kind == 2:
-        text.write(b"<rect x=\"-12\" y=\"-5\" width=\"24\" height=\"10\"/>")
+        text.write(host, b"<rect x=\"-12\" y=\"-5\" width=\"24\" height=\"10\"/>")
     else:
-        text.write(b"<path d=\"M -12 0 c 0,-7 6,-7 6,0 c 0,-7 6,-7 6,0 c 0,-7 6,-7 6,0 c 0,-7 6,-7 6,0\"/>")
-    text.write(b"</g>")
+        text.write(host, b"<path d=\"M -12 0 c 0,-7 6,-7 6,0 c 0,-7 6,-7 6,0 c 0,-7 6,-7 6,0 c 0,-7 6,-7 6,0\"/>")
+    text.write(host, b"</g>")
     return

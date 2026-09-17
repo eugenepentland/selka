@@ -4,11 +4,11 @@ import sexpr
 import schematic
 import svg
 
-def main() -> Result[None, int]:
-    inputs = schematic_inputs.load()
-    circuit = sexpr.parse(inputs.circuit)?
-    pinout = sexpr.parse(inputs.pinout)?
-    interface = sexpr.parse(inputs.interface)?
-    drawing = schematic.build(circuit, pinout, interface)?
-    svg.render(drawing)
+def main(host: Host) -> Result[None, int]:
+    inputs = schematic_inputs.load(host)
+    circuit = sexpr.parse(host, inputs.circuit)?
+    pinout = sexpr.parse(host, inputs.pinout)?
+    interface = sexpr.parse(host, inputs.interface)?
+    drawing = schematic.build(host, circuit, pinout, interface)?
+    svg.render(host, drawing)
     return Ok(None)

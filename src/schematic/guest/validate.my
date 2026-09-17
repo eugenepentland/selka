@@ -8,176 +8,176 @@ export model
 export pinoutCheck
 
 
-def importForm(nodes: list[s.Node], i: int) -> bool:
-    return s.form(nodes, i, b"import")
+def importForm(host: Host, nodes: list[s.Node], i: int) -> bool:
+    return s.form(host, nodes, i, b"import")
 
 
-def defmoduleForm(nodes: list[s.Node], i: int) -> bool:
-    return s.form(nodes, i, b"defmodule")
+def defmoduleForm(host: Host, nodes: list[s.Node], i: int) -> bool:
+    return s.form(host, nodes, i, b"defmodule")
 
 
-def design_blockForm(nodes: list[s.Node], i: int) -> bool:
-    return s.form(nodes, i, b"design-block")
+def design_blockForm(host: Host, nodes: list[s.Node], i: int) -> bool:
+    return s.form(host, nodes, i, b"design-block")
 
 
-def implementsForm(nodes: list[s.Node], i: int) -> bool:
-    return s.form(nodes, i, b"implements")
+def implementsForm(host: Host, nodes: list[s.Node], i: int) -> bool:
+    return s.form(host, nodes, i, b"implements")
 
 
-def instanceForm(nodes: list[s.Node], i: int) -> bool:
-    return s.form(nodes, i, b"instance")
+def instanceForm(host: Host, nodes: list[s.Node], i: int) -> bool:
+    return s.form(host, nodes, i, b"instance")
 
 
-def pinForm(nodes: list[s.Node], i: int) -> bool:
-    return s.form(nodes, i, b"pin")
+def pinForm(host: Host, nodes: list[s.Node], i: int) -> bool:
+    return s.form(host, nodes, i, b"pin")
 
 
-def nc_okForm(nodes: list[s.Node], i: int) -> bool:
-    return s.form(nodes, i, b"nc-ok")
+def nc_okForm(host: Host, nodes: list[s.Node], i: int) -> bool:
+    return s.form(host, nodes, i, b"nc-ok")
 
 
-def pinoutForm(nodes: list[s.Node], i: int) -> bool:
-    return s.form(nodes, i, b"pinout")
+def pinoutForm(host: Host, nodes: list[s.Node], i: int) -> bool:
+    return s.form(host, nodes, i, b"pinout")
 
 
-def idForm(nodes: list[s.Node], i: int) -> bool:
-    return s.form(nodes, i, b"id")
+def idForm(host: Host, nodes: list[s.Node], i: int) -> bool:
+    return s.form(host, nodes, i, b"id")
 
 
-def decouplesForm(nodes: list[s.Node], i: int) -> bool:
-    return s.form(nodes, i, b"decouples")
+def decouplesForm(host: Host, nodes: list[s.Node], i: int) -> bool:
+    return s.form(host, nodes, i, b"decouples")
 
 
-def i_typForm(nodes: list[s.Node], i: int) -> bool:
-    return s.form(nodes, i, b"i-typ")
+def i_typForm(host: Host, nodes: list[s.Node], i: int) -> bool:
+    return s.form(host, nodes, i, b"i-typ")
 
 
-def i_maxForm(nodes: list[s.Node], i: int) -> bool:
-    return s.form(nodes, i, b"i-max")
+def i_maxForm(host: Host, nodes: list[s.Node], i: int) -> bool:
+    return s.form(host, nodes, i, b"i-max")
 
 
-def metadata(nodes: list[s.Node], i: int) -> bool:
-    if s.form(nodes, i, b"net-envelope"):
+def metadata(host: Host, nodes: list[s.Node], i: int) -> bool:
+    if s.form(host, nodes, i, b"net-envelope"):
         return True
-    if s.form(nodes, i, b"port"):
+    if s.form(host, nodes, i, b"port"):
         return True
-    if s.form(nodes, i, b"port-group"):
+    if s.form(host, nodes, i, b"port-group"):
         return True
-    if s.form(nodes, i, b"net-class"):
+    if s.form(host, nodes, i, b"net-class"):
         return True
-    if s.form(nodes, i, b"pcb-plan"):
+    if s.form(host, nodes, i, b"pcb-plan"):
         return True
-    if s.form(nodes, i, b"rough"):
+    if s.form(host, nodes, i, b"rough"):
         return True
-    if s.form(nodes, i, b"note"):
+    if s.form(host, nodes, i, b"note"):
         return True
     return False
 
 
-def fail(code: int, span: text.Span) -> int:
-    _ = io.issue(code, span.file, span.start)
+def fail(host: Host, code: int, span: text.Span) -> int:
+    _ = io.issue(host, code, span.file, span.start)
     return code
 
 
-def source(nodes: list[s.Node]) -> int effects(host, managed_allocation):
+def source(host: Host, nodes: list[s.Node]) -> int effects(host, managed_allocation):
     i = 1
     modules = 0
     blocks = 0
     while i < len(nodes):
-        if defmoduleForm(nodes, i):
+        if defmoduleForm(host, nodes, i):
             modules += 1
             params = s.at(nodes, i + 3)
             if modules != 1 or params.kind != s.Kind.list or params.next != i + 4:
-                return fail(16, s.at(nodes, i).span)
+                return fail(host, 16, s.at(nodes, i).span)
             f = i + 4
             while f < s.at(nodes, i).next:
-                if s.at(nodes, f).kind == s.Kind.string or implementsForm(nodes, f):
+                if s.at(nodes, f).kind == s.Kind.string or implementsForm(host, nodes, f):
                     pass
-                elif design_blockForm(nodes, f):
+                elif design_blockForm(host, nodes, f):
                     blocks += 1
                     if blocks != 1 or s.at(nodes, f + 2).kind != s.Kind.string:
-                        return fail(16, s.at(nodes, f).span)
+                        return fail(host, 16, s.at(nodes, f).span)
                     child = f + 3
                     while child < s.at(nodes, f).next:
-                        if not instanceForm(nodes, child) and not metadata(nodes, child):
-                            return fail(17, s.at(nodes, child).span)
+                        if not instanceForm(host, nodes, child) and not metadata(host, nodes, child):
+                            return fail(host, 17, s.at(nodes, child).span)
                         child = s.at(nodes, child).next
                 else:
-                    return fail(17, s.at(nodes, f).span)
+                    return fail(host, 17, s.at(nodes, f).span)
                 f = s.at(nodes, f).next
-        elif not importForm(nodes, i):
-            return fail(17, s.at(nodes, i).span)
+        elif not importForm(host, nodes, i):
+            return fail(host, 17, s.at(nodes, i).span)
         i = s.at(nodes, i).next
     if modules != 1 or blocks != 1:
-        return fail(16, s.at(nodes, 0).span)
+        return fail(host, 16, s.at(nodes, 0).span)
     return 0
 
 
-def pinoutCheck(nodes: list[s.Node]) -> int effects(host, managed_allocation):
-    if not pinoutForm(nodes, 1) or s.at(nodes, 1).next != len(nodes) or s.at(nodes, 3).kind != s.Kind.string:
-        return fail(18, s.at(nodes, 1).span)
+def pinoutCheck(host: Host, nodes: list[s.Node]) -> int effects(host, managed_allocation):
+    if not pinoutForm(host, nodes, 1) or s.at(nodes, 1).next != len(nodes) or s.at(nodes, 3).kind != s.Kind.string:
+        return fail(host, 18, s.at(nodes, 1).span)
     count = 0
     i = 4
     while i < s.at(nodes, 1).next:
-        number = text.number(s.at(nodes, i + 2).span)
-        if not pinForm(nodes, i) or s.at(nodes, i).next != i + 4 or number < 1 or number > 41 or s.at(nodes, i + 3).kind != s.Kind.string or not text.identifier(s.at(nodes, i + 3).span):
-            return fail(18, s.at(nodes, i).span)
+        number = text.number(host, s.at(nodes, i + 2).span)
+        if not pinForm(host, nodes, i) or s.at(nodes, i).next != i + 4 or number < 1 or number > 41 or s.at(nodes, i + 3).kind != s.Kind.string or not text.identifier(host, s.at(nodes, i + 3).span):
+            return fail(host, 18, s.at(nodes, i).span)
         j = 4
         while j < i:
-            if text.number(s.at(nodes, j + 2).span) == number:
-                return fail(18, s.at(nodes, i).span)
+            if text.number(host, s.at(nodes, j + 2).span) == number:
+                return fail(host, 18, s.at(nodes, i).span)
             j = s.at(nodes, j).next
         count += 1
         i = s.at(nodes, i).next
     if count != 41:
-        return fail(18, s.at(nodes, 1).span)
+        return fail(host, 18, s.at(nodes, 1).span)
     return 0
 
 
-def fields(nodes: list[s.Node], item: c.Part) -> int:
+def fields(host: Host, nodes: list[s.Node], item: c.Part) -> int:
     spec = s.at(nodes, item.node + 3)
     if item.kind != 0  and (spec.kind != s.Kind.list or spec.next < item.node + 6 or s.at(nodes, item.node + 5).kind != s.Kind.string):
-        return fail(19, spec.span)
+        return fail(host, 19, spec.span)
     if item.kind == 0 and spec.kind != s.Kind.atom:
-        return fail(19, spec.span)
+        return fail(host, 19, spec.span)
     f = spec.next
     while f < s.at(nodes, item.node).next:
-        if not pinForm(nodes, f) and not nc_okForm(nodes, f) and not idForm(nodes, f) and not decouplesForm(nodes, f):
-            return fail(17, s.at(nodes, f).span)
-        if nc_okForm(nodes, f) and item.kind != 0:
-            return fail(13, s.at(nodes, f).span)
-        if pinForm(nodes, f) or nc_okForm(nodes, f):
+        if not pinForm(host, nodes, f) and not nc_okForm(host, nodes, f) and not idForm(host, nodes, f) and not decouplesForm(host, nodes, f):
+            return fail(host, 17, s.at(nodes, f).span)
+        if nc_okForm(host, nodes, f) and item.kind != 0:
+            return fail(host, 13, s.at(nodes, f).span)
+        if pinForm(host, nodes, f) or nc_okForm(host, nodes, f):
             j = f + 2
             while j < s.at(nodes, f).next and s.at(nodes, j).kind == s.Kind.atom:
                 j += 1
             if j == f + 2 or s.at(nodes, j).kind != s.Kind.string:
-                return fail(13, s.at(nodes, f).span)
-            if nc_okForm(nodes, f)  and (j != f + 3 or s.at(nodes, f).next != j + 1):
-                return fail(13, s.at(nodes, f).span)
+                return fail(host, 13, s.at(nodes, f).span)
+            if nc_okForm(host, nodes, f)  and (j != f + 3 or s.at(nodes, f).next != j + 1):
+                return fail(host, 13, s.at(nodes, f).span)
             j += 1
             while j < s.at(nodes, f).next:
-                if not i_typForm(nodes, j) and not i_maxForm(nodes, j):
-                    return fail(17, s.at(nodes, j).span)
+                if not i_typForm(host, nodes, j) and not i_maxForm(host, nodes, j):
+                    return fail(host, 17, s.at(nodes, j).span)
                 j = s.at(nodes, j).next
         f = s.at(nodes, f).next
     return 0
 
 
-def model(nodes: list[s.Node], parts: list[c.Part], pins: list[c.Pin], pinout: list[s.Node]) -> int effects(host, managed_allocation):
-    schema = pinoutCheck(pinout)
+def model(host: Host, nodes: list[s.Node], parts: list[c.Part], pins: list[c.Pin], pinout: list[s.Node]) -> int effects(host, managed_allocation):
+    schema = pinoutCheck(host, pinout)
     if schema != 0:
         return schema
     chips = 0
     p = 0
     while p < len(parts):
         item = parts[p]
-        fieldError = fields(nodes, item)
+        fieldError = fields(host, nodes, item)
         if fieldError != 0:
             return fieldError
         if item.kind == 0:
             chips += 1
-            if not text.folded(item.family, s.at(pinout, 3).span):
-                return fail(19, item.family)
+            if not text.folded(host, item.family, s.at(pinout, 3).span):
+                return fail(host, 19, item.family)
         count = 0
         j = 0
         while j < len(pins):
@@ -185,8 +185,8 @@ def model(nodes: list[s.Node], parts: list[c.Part], pins: list[c.Pin], pinout: l
                 count += 1
             j += 1
         if (item.kind == 0 and count != 41)  or (item.kind != 0 and count != 2):
-            return fail(20, item.ref)
+            return fail(host, 20, item.ref)
         p += 1
     if chips != 1:
-        return fail(19, s.at(nodes, 0).span)
+        return fail(host, 19, s.at(nodes, 0).span)
     return 0

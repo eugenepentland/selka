@@ -30,20 +30,20 @@ def at(nodes: list[Node], index: int) -> Node effects():
     return nodes[index]
 
 
-def form(nodes: list[Node], index: int, name: bytes) -> bool effects(host):
+def form(host: Host, nodes: list[Node], index: int, name: bytes) -> bool effects(host):
     item = at(nodes, index)
     if item.kind != Kind.list or item.next == index + 1:
         return False
-    return text.matches(at(nodes, index + 1).span, name)
+    return text.matches(host, at(nodes, index + 1).span, name)
 
 
-def parse(document: io.Document) -> Result[list[Node], int] effects(host, managed_allocation):
+def parse(host: Host, document: io.Document) -> Result[list[Node], int] effects(host, managed_allocation):
     file = io.Document.id(document)
     nodes: list[Node] = []
     stack: list[int] = []
     depth = 0
     p = 0
-    size = io.length(file)
+    size = io.length(host, file)
     nodes.append(Node(
         kind=Kind.list,
         span=text.Span(
@@ -54,15 +54,15 @@ def parse(document: io.Document) -> Result[list[Node], int] effects(host, manage
         next=0
     ))
     while p < size:
-        c = io.byte(file, p)
+        c = io.byte(host, file, p)
         if c == 32u8 or c == 9u8 or c == 10u8 or c == 13u8:
             p += 1
         elif c == 59u8:
-            while p < size and io.byte(file, p) != 10u8:
+            while p < size and io.byte(host, file, p) != 10u8:
                 p += 1
         elif c == 41u8:
             if depth == 0:
-                _ = io.issue(1, file, p)
+                _ = io.issue(host, 1, file, p)
                 return Err(1)
             depth -= 1
             open = stack[depth]
@@ -72,12 +72,12 @@ def parse(document: io.Document) -> Result[list[Node], int] effects(host, manage
             index = len(nodes)
             start = p
             if index == 16384:
-                _ = io.issue(5, file, p)
+                _ = io.issue(host, 5, file, p)
                 return Err(5)
             kind = Kind.atom
             if c == 40u8:
                 if depth == 128:
-                    _ = io.issue(2, file, p)
+                    _ = io.issue(host, 2, file, p)
                     return Err(2)
                 if depth == len(stack):
                     stack.append(index)
@@ -91,26 +91,26 @@ def parse(document: io.Document) -> Result[list[Node], int] effects(host, manage
                 p += 1
                 closed = False
                 while p < size and not closed:
-                    ch = io.byte(file, p)
+                    ch = io.byte(host, file, p)
                     p += 1
                     if ch == 92u8:
                         if p == size:
-                            _ = io.issue(3, file, start)
+                            _ = io.issue(host, 3, file, start)
                             return Err(3)
-                        escape = io.byte(file, p)
+                        escape = io.byte(host, file, p)
                         if escape != 92u8 and escape != 34u8 and escape != 110u8 and escape != 114u8 and escape != 116u8:
-                            _ = io.issue(6, file, p)
+                            _ = io.issue(host, 6, file, p)
                             return Err(6)
                         p += 1
                     elif ch == 34u8:
                         closed = True
                 if not closed:
-                    _ = io.issue(3, file, start)
+                    _ = io.issue(host, 3, file, start)
                     return Err(3)
             else:
                 scanning = True
                 while p < size and scanning:
-                    ch = io.byte(file, p)
+                    ch = io.byte(host, file, p)
                     if ch == 40u8 or ch == 41u8 or ch == 32u8 or ch == 9u8 or ch == 10u8 or ch == 13u8 or ch == 59u8:
                         scanning = False
                     else:
@@ -129,7 +129,7 @@ def parse(document: io.Document) -> Result[list[Node], int] effects(host, manage
                 next=index + 1
             ))
     if depth != 0:
-        _ = io.issue(4, file, size)
+        _ = io.issue(host, 4, file, size)
         return Err(4)
     nodes[0].next = len(nodes)
     return Ok(nodes)

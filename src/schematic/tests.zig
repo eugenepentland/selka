@@ -95,9 +95,9 @@ test "schematic byte callbacks publish only on success and keep the first locate
         \\import io
         \\
         \\
-        \\def main() -> i64:
-        \\    _ = io.put(io.byte(0, 1))
-        \\    _ = io.put(65u8)
+        \\def main(host: Host) -> i64:
+        \\    _ = io.put(host, io.byte(host, 0, 1))
+        \\    _ = io.put(host, 65u8)
         \\    return 0
     );
     defer harness.close();
@@ -107,10 +107,10 @@ test "schematic byte callbacks publish only on success and keep the first locate
         \\import io
         \\
         \\
-        \\def main() -> i64:
-        \\    _ = io.put(65u8)
-        \\    _ = io.issue(15, 0, 9)
-        \\    _ = io.issue(20, 0, 10)
+        \\def main(host: Host) -> i64:
+        \\    _ = io.put(host, 65u8)
+        \\    _ = io.issue(host, 15, 0, 9)
+        \\    _ = io.issue(host, 20, 0, 10)
         \\    return 1
     );
     try t.expectEqualDeep(bridge.Issue{ .code = 15, .file = 0, .position = 9 }, (try harness.reject(empty)).?);
@@ -122,9 +122,9 @@ test "schematic byte callbacks reject positions and documents the host never sup
         \\import io
         \\
         \\
-        \\def main() -> i64:
-        \\    _ = io.put(65u8)
-        \\    _ = io.byte(0, 4)
+        \\def main(host: Host) -> i64:
+        \\    _ = io.put(host, 65u8)
+        \\    _ = io.byte(host, 0, 4)
         \\    return 0
     );
     defer harness.close();
@@ -134,8 +134,8 @@ test "schematic byte callbacks reject positions and documents the host never sup
         \\import io
         \\
         \\
-        \\def main() -> i64:
-        \\    _ = io.length(7)
+        \\def main(host: Host) -> i64:
+        \\    _ = io.length(host, 7)
         \\    return 0
     );
     try t.expectEqual(@as(?bridge.Issue, null), try harness.reject(empty));
@@ -145,7 +145,7 @@ test "schematic byte callbacks reject positions and documents the host never sup
         \\import io
         \\
         \\
-        \\def main() -> i64:
+        \\def main(host: Host) -> i64:
         \\    return 3
     );
     try t.expectEqual(@as(i64, 24), (try harness.reject(empty)).?.code);
@@ -167,8 +167,8 @@ test "invalid documents are rejected before the guest executable is given any by
         \\import io
         \\
         \\
-        \\def main() -> i64:
-        \\    _ = io.put(65u8)
+        \\def main(host: Host) -> i64:
+        \\    _ = io.put(host, 65u8)
         \\    return 0
     );
     defer harness.close();
@@ -200,12 +200,12 @@ test "disk initDisk rejects failed compilations and reloads bounded sources" {
     defer harness.close();
     var app: application.App = undefined;
     try t.expectError(error.SourceError, app.initDisk(harness.process(), harness.root));
-    try harness.source("main.my", "module main\n\n\ndef main() -> i64:\n    return True\n");
+    try harness.source("main.my", "module main\n\n\ndef main(host: Host) -> i64:\n    return True\n");
     try t.expectError(error.SourceError, app.initDisk(harness.process(), harness.root));
     try harness.source("io.my", "module io; broken");
     try t.expectError(error.SourceError, app.initDisk(harness.process(), harness.root));
     try harness.source("io.my", declarations);
-    try harness.source("main.my", "module main\nimport io\n\n\ndef main() -> i64:\n    _ = io.put(65u8)\n    return 0\n");
+    try harness.source("main.my", "module main\nimport io\n\n\ndef main(host: Host) -> i64:\n    _ = io.put(host, 65u8)\n    return 0\n");
     try t.expectEqualStrings("A", try harness.render(empty));
 }
 
@@ -247,11 +247,11 @@ const named_main =
     \\import io
     \\
     \\
-    \\def main() -> i64:
-    \\    inputs = io.inputs()
-    \\    _ = io.put(io.byte(io.Document.id(inputs.circuit), 0))
-    \\    _ = io.put(io.byte(io.Document.id(inputs.pinout), 0))
-    \\    _ = io.put(io.byte(io.Document.id(inputs.interface), 0))
+    \\def main(host: Host) -> i64:
+    \\    inputs = io.inputs(host)
+    \\    _ = io.put(host, io.byte(host, io.Document.id(inputs.circuit), 0))
+    \\    _ = io.put(host, io.byte(host, io.Document.id(inputs.pinout), 0))
+    \\    _ = io.put(host, io.byte(host, io.Document.id(inputs.interface), 0))
     \\    return 0
 ;
 // spec: SCHEMATIC-INPUTS-1
@@ -273,9 +273,9 @@ test "named schematic input providers reject documents the host never supplied" 
         \\import io
         \\
         \\
-        \\def main() -> i64:
-        \\    inputs = io.inputs()
-        \\    _ = io.byte(io.Document.id(inputs.interface), 0)
+        \\def main(host: Host) -> i64:
+        \\    inputs = io.inputs(host)
+        \\    _ = io.byte(host, io.Document.id(inputs.interface), 0)
         \\    return 0
     );
     var app: application.App = undefined;
@@ -291,12 +291,12 @@ const decimal_main =
     \\module main
     \\import io
     \\import text
-    \\def main() -> int:
-    \\    text.decimal(-12)
-    \\    _ = io.put(44u8)
-    \\    text.decimal(-9223372036854775808)
-    \\    _ = io.put(44u8)
-    \\    text.decimal(0)
+    \\def main(host: Host) -> int:
+    \\    text.decimal(host, -12)
+    \\    _ = io.put(host, 44u8)
+    \\    text.decimal(host, -9223372036854775808)
+    \\    _ = io.put(host, 44u8)
+    \\    text.decimal(host, 0)
     \\    return 0
 ;
 // spec: SCHEMATIC-PYTHON-1

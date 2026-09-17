@@ -10,49 +10,49 @@ import layout_routes as r
 export render
 
 
-def instanceStart(item: c.Part):
-    text.write(b"<g class=\"component\" data-ref=\"")
-    text.escaped(item.ref)
-    text.write(b"\" data-family=\"")
-    text.escaped(item.family)
-    text.write(b"\" data-value=\"")
-    text.escaped(item.value)
-    text.write(b"\"><title>")
-    text.escaped(item.ref)
-    text.write(b" — ")
-    text.escaped(item.family)
-    text.write(b" ")
-    text.escaped(item.value)
-    text.write(b"</title>")
+def instanceStart(host: Host, item: c.Part):
+    text.write(host, b"<g class=\"component\" data-ref=\"")
+    text.escaped(host, item.ref)
+    text.write(host, b"\" data-family=\"")
+    text.escaped(host, item.family)
+    text.write(host, b"\" data-value=\"")
+    text.escaped(host, item.value)
+    text.write(host, b"\"><title>")
+    text.escaped(host, item.ref)
+    text.write(host, b" — ")
+    text.escaped(host, item.family)
+    text.write(host, b" ")
+    text.escaped(host, item.value)
+    text.write(host, b"</title>")
     return
 
 
-def pinStart(pin: c.Pin, display: text.Span, point: l.Point):
-    text.write(b"<g data-pin=\"")
-    text.decimal(pin.number)
-    text.write(b"\" data-x=\"")
-    text.decimal(point.x)
-    text.write(b"\" data-y=\"")
-    text.decimal(point.y)
+def pinStart(host: Host, pin: c.Pin, display: text.Span, point: l.Point):
+    text.write(host, b"<g data-pin=\"")
+    text.decimal(host, pin.number)
+    text.write(host, b"\" data-x=\"")
+    text.decimal(host, point.x)
+    text.write(host, b"\" data-y=\"")
+    text.decimal(host, point.y)
     if pin.nc:
-        text.write(b"\" data-nc=\"true\"><title>")
-        text.escaped(pin.net)
-        text.write(b"</title>")
+        text.write(host, b"\" data-nc=\"true\"><title>")
+        text.escaped(host, pin.net)
+        text.write(host, b"</title>")
     else:
-        text.write(b"\" data-net=\"")
-        text.escaped(pin.net)
-        text.write(b"\" data-electrical-net=\"")
-        text.escaped(display)
-        text.write(b"\">")
+        text.write(host, b"\" data-net=\"")
+        text.escaped(host, pin.net)
+        text.write(host, b"\" data-electrical-net=\"")
+        text.escaped(host, display)
+        text.write(host, b"\">")
     return
 
 
-def finishGroup():
-    text.write(b"</g>")
+def finishGroup(host: Host):
+    text.write(host, b"</g>")
     return
 
 
-def displayRef(parts: list[c.Part], index: int):
+def displayRef(host: Host, parts: list[c.Part], index: int):
     item = parts[index]
     n = 0
     i = 0
@@ -61,17 +61,17 @@ def displayRef(parts: list[c.Part], index: int):
             n += 1
         i += 1
     if item.kind == 0:
-        text.write(b"U")
+        text.write(host, b"U")
     elif item.kind == 1:
-        text.write(b"C")
+        text.write(host, b"C")
     elif item.kind == 2:
-        text.write(b"R")
+        text.write(host, b"R")
     else:
-        text.write(b"L")
-    return text.decimal(n)
+        text.write(host, b"L")
+    return text.decimal(host, n)
 
 
-def passive(index: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]):
+def passive(host: Host, index: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]):
     item = parts[index]
     a = l.Point(
         x=0,
@@ -89,166 +89,166 @@ def passive(index: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.P
         i += 1
     x =(a.x + b.x) // 2
     y =(a.y + b.y) // 2
-    instanceStart(item)
-    text.write(b"<g transform=\"translate(")
-    text.decimal(x)
-    text.write(b" ")
-    text.decimal(y)
-    text.write(b")")
+    instanceStart(host, item)
+    text.write(host, b"<g transform=\"translate(")
+    text.decimal(host, x)
+    text.write(host, b" ")
+    text.decimal(host, y)
+    text.write(host, b")")
     if a.x == b.x:
-        text.write(b" rotate(90)")
-    text.write(b"\"><rect class=\"symbol-clear\" x=\"-20\" y=\"-9\" width=\"40\" height=\"18\"/>")
-    d.symbol(item.kind)
-    finishGroup()
+        text.write(host, b" rotate(90)")
+    text.write(host, b"\"><rect class=\"symbol-clear\" x=\"-20\" y=\"-9\" width=\"40\" height=\"18\"/>")
+    d.symbol(host, item.kind)
+    finishGroup(host)
     if a.x == b.x:
         top = a.y
         bottom = b.y
         if top > bottom:
             top = b.y
             bottom = a.y
-        d.line(x, top, x, y - 20)
-        d.line(x, y + 20, x, bottom)
-        d.labelStart(x + 10, y + 3, 0)
+        d.line(host, x, top, x, y - 20)
+        d.line(host, x, y + 20, x, bottom)
+        d.labelStart(host, x + 10, y + 3, 0)
     else:
         left = a.x
         right = b.x
         if left > right:
             left = b.x
             right = a.x
-        d.line(left, y, x - 20, y)
-        d.line(x + 20, y, right, y)
-        d.labelStart(x, y - 14, 1)
-    displayRef(parts, index)
-    text.write(b" ")
-    text.escaped(item.value)
-    d.labelEnd()
+        d.line(host, left, y, x - 20, y)
+        d.line(host, x + 20, y, right, y)
+        d.labelStart(host, x, y - 14, 1)
+    displayRef(host, parts, index)
+    text.write(host, b" ")
+    text.escaped(host, item.value)
+    d.labelEnd(host)
     i = 0
     while i < len(pins):
         pin = pins[i]
         if pin.part == index:
-            pinStart(pin, c.displayNet(pin.net, parts, pins), points[i])
-            finishGroup()
+            pinStart(host, pin, c.displayNet(host, pin.net, parts, pins), points[i])
+            finishGroup(host)
         i += 1
-    return finishGroup()
+    return finishGroup(host)
 
 
-def chip(index: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point], pinout: list[s.Node]):
-    instanceStart(parts[index])
-    d.rect(352, 20, 180, l.height(points) - 40)
-    d.labelStart(442, 38, 1)
-    displayRef(parts, index)
-    text.write(b" ")
-    text.escaped(parts[index].family)
-    d.labelEnd()
+def chip(host: Host, index: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point], pinout: list[s.Node]):
+    instanceStart(host, parts[index])
+    d.rect(host, 352, 20, 180, l.height(points) - 40)
+    d.labelStart(host, 442, 38, 1)
+    displayRef(host, parts, index)
+    text.write(host, b" ")
+    text.escaped(host, parts[index].family)
+    d.labelEnd(host)
     i = 0
     while i < len(pins):
         pin = pins[i]
         if pin.part == index:
             point = points[i]
-            pinStart(pin, c.displayNet(pin.net, parts, pins), points[i])
+            pinStart(host, pin, c.displayNet(host, pin.net, parts, pins), points[i])
             if not pin.nc:
                 side = - 1
                 anchor = 0
                 if point.x > 442:
                     side = 1
                     anchor = 2
-                d.line(point.x, point.y, point.x + side * 40, point.y)
-                d.label(point.x - side * 8, point.y + 4, anchor, c.label(pinout, pin.number))
-                d.labelStart(point.x + side * 3, point.y - 3, 1)
-                text.decimal(pin.number)
-                d.labelEnd()
-            finishGroup()
+                d.line(host, point.x, point.y, point.x + side * 40, point.y)
+                d.label(host, point.x - side * 8, point.y + 4, anchor, c.label(host, pinout, pin.number))
+                d.labelStart(host, point.x + side * 3, point.y - 3, 1)
+                text.decimal(host, pin.number)
+                d.labelEnd(host)
+            finishGroup(host)
         i += 1
-    return finishGroup()
+    return finishGroup(host)
 
 
-def portName(item: p.Port):
+def portName(host: Host, item: p.Port):
     if item.prefix.start != item.prefix.end:
-        text.escaped(item.prefix)
-        text.write(b"_")
-    return text.escaped(item.name)
+        text.escaped(host, item.prefix)
+        text.write(host, b"_")
+    return text.escaped(host, item.name)
 
 
-def ports(connections: list[p.Port]):
+def ports(host: Host, connections: list[p.Port]):
     i = 0
     while i < len(connections):
         item = connections[i]
-        text.write(b"<g class=\"port\" data-port=\"")
-        portName(item)
-        text.write(b"\" data-direction=\"")
-        text.escaped(item.direction)
-        text.write(b"\"><title>")
-        portName(item)
-        text.write(b"</title></g>")
+        text.write(host, b"<g class=\"port\" data-port=\"")
+        portName(host, item)
+        text.write(host, b"\" data-direction=\"")
+        text.escaped(host, item.direction)
+        text.write(host, b"\"><title>")
+        portName(host, item)
+        text.write(host, b"</title></g>")
         i += 1
     return
 
 
-def ground(net: text.Span) -> bool:
-    return text.matches(net, b"GND")
+def ground(host: Host, net: text.Span) -> bool:
+    return text.matches(host, net, b"GND")
 
 
-def routes(segments: list[r.Segment], connections: list[p.Port]):
+def routes(host: Host, segments: list[r.Segment], connections: list[p.Port]):
     i = 0
     while i < len(segments):
         item = segments[i]
-        text.write(b"<g class=\"wire\" data-net=\"")
-        text.escaped(item.net)
-        text.write(b"\">")
-        d.line(item.x1, item.y1, item.x2, item.y2)
+        text.write(host, b"<g class=\"wire\" data-net=\"")
+        text.escaped(host, item.net)
+        text.write(host, b"\">")
+        d.line(host, item.x1, item.y1, item.x2, item.y2)
         if item.terminal:
-            if ground(item.net):
-                text.write(b"<g class=\"ground\">")
-                d.line(item.x2, item.y2, item.x2, item.y2 + 6)
-                d.line(item.x2 - 7, item.y2 + 6, item.x2 + 7, item.y2 + 6)
-                d.line(item.x2 - 4, item.y2 + 9, item.x2 + 4, item.y2 + 9)
-                d.line(item.x2 - 1, item.y2 + 12, item.x2 + 1, item.y2 + 12)
-                finishGroup()
-            elif not r.external(item.net, connections) and not l.rail(item.net):
-                text.write(b"<g class=\"dangling-marker\">")
-                d.line(item.x2 - 4, item.y2 - 4, item.x2 + 4, item.y2 + 4)
-                d.line(item.x2 - 4, item.y2 + 4, item.x2 + 4, item.y2 - 4)
-                finishGroup()
+            if ground(host, item.net):
+                text.write(host, b"<g class=\"ground\">")
+                d.line(host, item.x2, item.y2, item.x2, item.y2 + 6)
+                d.line(host, item.x2 - 7, item.y2 + 6, item.x2 + 7, item.y2 + 6)
+                d.line(host, item.x2 - 4, item.y2 + 9, item.x2 + 4, item.y2 + 9)
+                d.line(host, item.x2 - 1, item.y2 + 12, item.x2 + 1, item.y2 + 12)
+                finishGroup(host)
+            elif not r.external(host, item.net, connections) and not l.rail(host, item.net):
+                text.write(host, b"<g class=\"dangling-marker\">")
+                d.line(host, item.x2 - 4, item.y2 - 4, item.x2 + 4, item.y2 + 4)
+                d.line(host, item.x2 - 4, item.y2 + 4, item.x2 + 4, item.y2 - 4)
+                finishGroup(host)
             else:
                 side = 1
                 anchor = 0
                 if item.x2 < 442:
                     side = - 1
                     anchor = 2
-                text.write(b"<g class=\"net-label\">")
-                d.label(item.x2 + side * 12, item.y2 + 4, anchor, item.net)
-                finishGroup()
-        finishGroup()
+                text.write(host, b"<g class=\"net-label\">")
+                d.label(host, item.x2 + side * 12, item.y2 + 4, anchor, item.net)
+                finishGroup(host)
+        finishGroup(host)
         i += 1
     return
 
 
-def render(drawing: schematic.Schematic) effects(host, managed_allocation):
+def render(host: Host, drawing: schematic.Schematic) effects(host, managed_allocation):
     nodes = drawing.nodes
     parts = drawing.parts
     pins = drawing.pins
     pinout = drawing.pinout
     connections = drawing.connections
-    points = l.build(parts, pins)
-    segments = r.build(parts, pins, points, connections)
-    text.write(b"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 884 ")
-    text.decimal(l.height(points))
-    text.write(b"\" width=\"884\" height=\"")
-    text.decimal(l.height(points))
-    text.write(b"\" role=\"img\"><title>")
-    text.escaped(c.title(nodes))
-    text.write(b"</title><style>svg{background:#0d1117}text{font-family:Arial,sans-serif;font-size:11px;fill:#aaa;stroke:none}line,path{stroke:#4a9;stroke-width:1.5;fill:none}.chip{fill:#16213e;stroke:#4a9eff;stroke-width:2}.symbol rect,.symbol path,.symbol line{fill:none;stroke:#8888cc;stroke-width:1.5}.component>text{font-size:9px;fill:#888}.component>text:first-of-type{font-size:9px}.component:has(.chip)>text{fill:#4a9eff;font-size:12px;font-weight:bold}[data-pin]>line{stroke:#666}[data-pin]>text{font-size:12px}[data-pin]>text:last-child{font-size:9px;fill:#666}.symbol-clear{fill:#0d1117;stroke:none}.ground line{stroke:#d6bb24}.dangling-marker line{stroke:#666}.net-label text{fill:#4a9eff;font-size:11px;font-weight:bold}[data-nc]{display:none}</style><rect width=\"100%\" height=\"100%\" fill=\"#0d1117\"/>")
-    routes(segments, connections)
+    points = l.build(host, parts, pins)
+    segments = r.build(host, parts, pins, points, connections)
+    text.write(host, b"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 884 ")
+    text.decimal(host, l.height(points))
+    text.write(host, b"\" width=\"884\" height=\"")
+    text.decimal(host, l.height(points))
+    text.write(host, b"\" role=\"img\"><title>")
+    text.escaped(host, c.title(host, nodes))
+    text.write(host, b"</title><style>svg{background:#0d1117}text{font-family:Arial,sans-serif;font-size:11px;fill:#aaa;stroke:none}line,path{stroke:#4a9;stroke-width:1.5;fill:none}.chip{fill:#16213e;stroke:#4a9eff;stroke-width:2}.symbol rect,.symbol path,.symbol line{fill:none;stroke:#8888cc;stroke-width:1.5}.component>text{font-size:9px;fill:#888}.component>text:first-of-type{font-size:9px}.component:has(.chip)>text{fill:#4a9eff;font-size:12px;font-weight:bold}[data-pin]>line{stroke:#666}[data-pin]>text{font-size:12px}[data-pin]>text:last-child{font-size:9px;fill:#666}.symbol-clear{fill:#0d1117;stroke:none}.ground line{stroke:#d6bb24}.dangling-marker line{stroke:#666}.net-label text{fill:#4a9eff;font-size:11px;font-weight:bold}[data-nc]{display:none}</style><rect width=\"100%\" height=\"100%\" fill=\"#0d1117\"/>")
+    routes(host, segments, connections)
     i = 0
     while i < len(parts):
         if parts[i].kind == 0:
-            chip(i, parts, pins, points, pinout)
+            chip(host, i, parts, pins, points, pinout)
         i += 1
     i = 0
     while i < len(parts):
         if parts[i].kind != 0:
-            passive(i, parts, pins, points)
+            passive(host, i, parts, pins, points)
         i += 1
-    ports(connections)
-    text.write(b"</svg>")
+    ports(host, connections)
+    text.write(host, b"</svg>")
     return

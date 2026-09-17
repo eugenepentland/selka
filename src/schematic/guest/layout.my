@@ -22,43 +22,43 @@ record Row:
     y: int
 
 
-def rail(span: text.Span) -> bool effects(host, managed_allocation):
-    return g.rail(span)
+def rail(host: Host, span: text.Span) -> bool effects(host, managed_allocation):
+    return g.rail(host, span)
 
 
-def pinGroup(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> int:
-    id = g.find(nets, c.displayNet(pin.net, parts, pins))
+def pinGroup(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> int:
+    id = g.find(host, nets, c.displayNet(host, pin.net, parts, pins))
     if id < 0:
         return - 1
     return nets[id].group
 
 
-def railKind(span: text.Span) -> int:
-    if text.matches(span, b"GND"):
+def railKind(host: Host, span: text.Span) -> int:
+    if text.matches(host, span, b"GND"):
         return 1
-    if g.rail(span):
+    if g.rail(host, span):
         return 2
     return 0
 
 
-def rowHeight(pin: c.Pin, pins: list[c.Pin], parts: list[c.Part]) -> int:
-    if g.rail(c.displayNet(pin.net, parts, pins)):
+def rowHeight(host: Host, pin: c.Pin, pins: list[c.Pin], parts: list[c.Part]) -> int:
+    if g.rail(host, c.displayNet(host, pin.net, parts, pins)):
         return 40
     count = 0
     hasBridge = False
     i = 0
     while i < len(pins):
         other = pins[i]
-        if parts[other.part].kind != 0 and text.equal(pin.net, other.net):
+        if parts[other.part].kind != 0 and text.equal(host, pin.net, other.net):
             count += 1
             j = 0
             while j < len(pins):
                 farPin = pins[j]
-                if farPin.part == other.part and farPin.number != other.number and not g.rail(farPin.net):
+                if farPin.part == other.part and farPin.number != other.number and not g.rail(host, farPin.net):
                     k = 0
                     while k < len(pins):
                         hub = pins[k]
-                        if parts[hub.part].kind == 0 and text.equal(hub.net, farPin.net):
+                        if parts[hub.part].kind == 0 and text.equal(host, hub.net, farPin.net):
                             hasBridge = True
                         k += 1
                 j += 1
@@ -70,7 +70,7 @@ def rowHeight(pin: c.Pin, pins: list[c.Pin], parts: list[c.Part]) -> int:
     return 56
 
 
-def collectRows(parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> list[Row]:
+def collectRows(host: Host, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> list[Row]:
     out: list[Row] = []
     number = 1
     while number <= 128:
@@ -78,7 +78,7 @@ def collectRows(parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> li
         while i < len(pins):
             pin = pins[i]
             if parts[pin.part].kind == 0 and not pin.nc and pin.number == number:
-                group = pinGroup(pin, parts, pins, nets)
+                group = pinGroup(host, pin, parts, pins, nets)
                 present = False
                 n = 0
                 while n < len(out):
@@ -91,12 +91,12 @@ def collectRows(parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> li
                         j = 0
                         while j < len(pins):
                             other = pins[j]
-                            if other.part == pin.part and not other.nc and other.number == member and pinGroup(other, parts, pins, nets) == group:
+                            if other.part == pin.part and not other.nc and other.number == member and pinGroup(host, other, parts, pins, nets) == group:
                                 out.append(Row(
                                     index=j,
                                     group=group,
-                                    height=rowHeight(other, pins, parts),
-                                    rail=railKind(c.displayNet(other.net, parts, pins)),
+                                    height=rowHeight(host, other, pins, parts),
+                                    rail=railKind(host, c.displayNet(host, other.net, parts, pins)),
                                     side=0,
                                     y=0
                                 ))
@@ -179,9 +179,9 @@ def placeRows(rows: list[Row]) -> int:
     return 0
 
 
-def nearest(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net]) -> int:
-    group = pinGroup(pin, parts, pins, nets)
-    id = g.find(nets, c.displayNet(pin.net, parts, pins))
+def nearest(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net]) -> int:
+    group = pinGroup(host, pin, parts, pins, nets)
+    id = g.find(host, nets, c.displayNet(host, pin.net, parts, pins))
     owner = - 1
     if id >= 0:
         owner = nets[id].owner
@@ -190,7 +190,7 @@ def nearest(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row],
     while i < len(rows):
         row = rows[i]
         hub = pins[row.index]
-        if text.equal(pin.net, hub.net):
+        if text.equal(host, pin.net, hub.net):
             return i
         if row.index == owner:
             fallback = i
@@ -215,41 +215,41 @@ def partPin(part: int, number: int, pins: list[c.Pin]) -> c.Pin:
     )
 
 
-def depth(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> int:
-    id = g.find(nets, c.displayNet(pin.net, parts, pins))
+def depth(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> int:
+    id = g.find(host, nets, c.displayNet(host, pin.net, parts, pins))
     if id < 0:
         return 4096
     return nets[id].distance
 
 
-def innerPin(part: int, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> c.Pin:
+def innerPin(host: Host, part: int, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> c.Pin:
     a = partPin(part, 1, pins)
     b = partPin(part, 2, pins)
-    if g.rail(a.net) and not g.rail(b.net):
+    if g.rail(host, a.net) and not g.rail(host, b.net):
         return b
-    if not g.rail(b.net) and depth(b, parts, pins, nets) < depth(a, parts, pins, nets):
+    if not g.rail(host, b.net) and depth(host, b, parts, pins, nets) < depth(host, a, parts, pins, nets):
         return b
     return a
 
 
-def bridge(part: int, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net]) -> bool:
+def bridge(host: Host, part: int, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net]) -> bool:
     a = partPin(part, 1, pins)
     b = partPin(part, 2, pins)
-    if g.rail(a.net) or g.rail(b.net):
+    if g.rail(host, a.net) or g.rail(host, b.net):
         return False
-    if depth(a, parts, pins, nets) != depth(b, parts, pins, nets):
+    if depth(host, a, parts, pins, nets) != depth(host, b, parts, pins, nets):
         return False
-    ai = nearest(a, parts, pins, rows, nets)
-    bi = nearest(b, parts, pins, rows, nets)
+    ai = nearest(host, a, parts, pins, rows, nets)
+    bi = nearest(host, b, parts, pins, rows, nets)
     return ai >= 0 and bi >= 0 and ai != bi
 
 
-def groundBranch(part: int, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> bool:
-    inner = innerPin(part, parts, pins, nets)
+def groundBranch(host: Host, part: int, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> bool:
+    inner = innerPin(host, part, parts, pins, nets)
     outer = partPin(part, 3 - inner.number, pins)
-    if railKind(outer.net) == 1:
+    if railKind(host, outer.net) == 1:
         return True
-    if railKind(outer.net) == 2:
+    if railKind(host, outer.net) == 2:
         return False
     found = False
     j = 0
@@ -258,52 +258,52 @@ def groundBranch(part: int, parts: list[c.Part], pins: list[c.Pin], nets: list[g
             a = partPin(j, 1, pins)
             b = partPin(j, 2, pins)
             other = text.empty()
-            if text.equal(a.net, outer.net):
+            if text.equal(host, a.net, outer.net):
                 other = b.net
-            if text.equal(b.net, outer.net):
+            if text.equal(host, b.net, outer.net):
                 other = a.net
-            if railKind(other) == 2:
+            if railKind(host, other) == 2:
                 return False
-            if railKind(other) == 1:
+            if railKind(host, other) == 1:
                 found = True
         j += 1
     return found
 
 
-def branch(part: int, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net], remaining: int) -> int:
+def branch(host: Host, part: int, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net], remaining: int) -> int:
     if remaining == 0:
         return 0
-    inner = innerPin(part, parts, pins, nets)
-    level = depth(inner, parts, pins, nets)
+    inner = innerPin(host, part, parts, pins, nets)
+    level = depth(host, inner, parts, pins, nets)
     offset = 0
     j = 0
     if level > 0:
-        owner = nearest(inner, parts, pins, rows, nets)
+        owner = nearest(host, inner, parts, pins, rows, nets)
         while j < len(parts):
             if parts[j].kind != 0 and j != part:
-                previous = innerPin(j, parts, pins, nets)
-                if depth(previous, parts, pins, nets) < level and nearest(previous, parts, pins, rows, nets) == owner:
+                previous = innerPin(host, j, parts, pins, nets)
+                if depth(host, previous, parts, pins, nets) < level and nearest(host, previous, parts, pins, rows, nets) == owner:
                     outer = partPin(j, 3 - previous.number, pins)
-                    if text.equal(outer.net, inner.net):
-                        offset = branch(j, parts, pins, rows, nets, remaining - 1)
+                    if text.equal(host, outer.net, inner.net):
+                        offset = branch(host, j, parts, pins, rows, nets, remaining - 1)
                         j = len(parts)
             j += 1
     count = 0
     rank = 0
     hasBridge = False
-    grounded = groundBranch(part, parts, pins, nets)
+    grounded = groundBranch(host, part, parts, pins, nets)
     j = 0
     while j < len(parts):
         if parts[j].kind != 0:
-            previous = innerPin(j, parts, pins, nets)
+            previous = innerPin(host, j, parts, pins, nets)
             a = partPin(j, 1, pins)
             b = partPin(j, 2, pins)
-            if bridge(j, parts, pins, rows, nets):
-                if text.equal(a.net, inner.net) or text.equal(b.net, inner.net):
+            if bridge(host, j, parts, pins, rows, nets):
+                if text.equal(host, a.net, inner.net) or text.equal(host, b.net, inner.net):
                     hasBridge = True
-            elif text.equal(previous.net, inner.net):
+            elif text.equal(host, previous.net, inner.net):
                 count += 1
-                otherGround = groundBranch(j, parts, pins, nets)
+                otherGround = groundBranch(host, j, parts, pins, nets)
                 if level > 0:
                     if j < part:
                         rank += 1
@@ -318,9 +318,9 @@ def branch(part: int, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], n
     return offset + rank * 40
 
 
-def endpoint(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net]) -> Point:
-    inner = innerPin(pin.part, parts, pins, nets)
-    chosen = nearest(inner, parts, pins, rows, nets)
+def endpoint(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net]) -> Point:
+    inner = innerPin(host, pin.part, parts, pins, nets)
+    chosen = nearest(host, inner, parts, pins, rows, nets)
     if chosen < 0:
         return Point(
             x=100 + pin.number * 60,
@@ -330,9 +330,9 @@ def endpoint(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row]
     edge = 352
     if row.side == 1:
         edge = 532
-    level = depth(inner, parts, pins, nets)
-    if bridge(pin.part, parts, pins, rows, nets):
-        target = nearest(pin, parts, pins, rows, nets)
+    level = depth(host, inner, parts, pins, nets)
+    if bridge(host, pin.part, parts, pins, rows, nets):
+        target = nearest(host, pin, parts, pins, rows, nets)
         other = rows[target]
         reach = 50
         if level > 0:
@@ -346,8 +346,8 @@ def endpoint(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row]
     j = 0
     while j < len(parts):
         if parts[j].kind != 0:
-            attached = innerPin(j, parts, pins, nets)
-            if text.equal(attached.net, hub.net) and not bridge(j, parts, pins, rows, nets):
+            attached = innerPin(host, j, parts, pins, nets)
+            if text.equal(host, attached.net, hub.net) and not bridge(host, j, parts, pins, rows, nets):
                 count += 1
         j += 1
     reach = 40
@@ -355,9 +355,9 @@ def endpoint(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row]
         reach = 60
     if pin.number != inner.number:
         reach = 120
-    folded = c.displayNet(inner.net, parts, pins)
-    localRail = railKind(inner.net) == 2 and not text.equal(folded, inner.net)
-    y = row.y + branch(pin.part, parts, pins, rows, nets, 128)
+    folded = c.displayNet(host, inner.net, parts, pins)
+    localRail = railKind(host, inner.net) == 2 and not text.equal(host, folded, inner.net)
+    y = row.y + branch(host, pin.part, parts, pins, rows, nets, 128)
     if localRail:
         reach = 70
         if pin.number != inner.number:
@@ -370,10 +370,10 @@ def endpoint(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row]
     )
 
 
-def build(parts: list[c.Part], pins: list[c.Pin]) -> list[Point] effects(host, managed_allocation):
-    nets = g.build(parts, pins)
+def build(host: Host, parts: list[c.Part], pins: list[c.Pin]) -> list[Point] effects(host, managed_allocation):
+    nets = g.build(host, parts, pins)
     out: list[Point] = []
-    ordered = collectRows(parts, pins, nets)
+    ordered = collectRows(host, parts, pins, nets)
     _ = placeRows(ordered)
     i = 0
     while i < len(pins):
@@ -396,7 +396,7 @@ def build(parts: list[c.Part], pins: list[c.Pin]) -> list[Point] effects(host, m
                     )
                 j += 1
         else:
-            point = endpoint(pin, parts, pins, ordered, nets)
+            point = endpoint(host, pin, parts, pins, ordered, nets)
         out.append(point)
         i += 1
     return out

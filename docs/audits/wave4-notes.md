@@ -135,3 +135,12 @@ Command results:
   `spec` check, which reports the unlinked tag `HOST-CAPABILITY` because
   `SPEC.md` cannot be edited from this worktree. This is the sanctioned
   missing-SPEC-bullet exception.
+
+## Integration update (orchestrator)
+
+The `src/schematic/guest/*` corpus was completed during integration with a
+diagnostic-driven codemod: every host-reachable function now takes `host: Host`
+first, every call passes it, the pre-existing `host` boolean in
+`circuit.displayNet` was renamed to `named_host`, and the inline guest sources in
+`src/schematic/tests.zig` were threaded too. `zig build test-schematic` passes
+13/13 and `check-project src/schematic/guest/main.my` is clean.

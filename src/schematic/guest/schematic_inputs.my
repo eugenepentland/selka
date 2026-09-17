@@ -5,5 +5,5 @@ export load
 # The schematic host supplies these three named documents.
 
 
-def load() -> io.Inputs effects(host):
-    return io.inputs()
+def load(host: Host) -> io.Inputs effects(host):
+    return io.inputs(host)

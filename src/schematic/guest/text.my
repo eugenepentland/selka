@@ -26,35 +26,35 @@ def empty() -> Span effects():
     )
 
 
-def equal(a: Span, b: Span) -> bool effects(host):
+def equal(host: Host, a: Span, b: Span) -> bool effects(host):
     if a.end - a.start != b.end - b.start:
         return False
     i = 0
     while i < a.end - a.start:
-        if io.byte(a.file, a.start + i) != io.byte(b.file, b.start + i):
+        if io.byte(host, a.file, a.start + i) != io.byte(host, b.file, b.start + i):
             return False
         i += 1
     return True
 
 
-def matches(a: Span, b: bytes) -> bool effects(host):
+def matches(host: Host, a: Span, b: bytes) -> bool effects(host):
     if a.end - a.start != len(b):
         return False
     i = 0
     while i < a.end - a.start:
-        if int(io.byte(a.file, a.start + i)) != b[i]:
+        if int(io.byte(host, a.file, a.start + i)) != b[i]:
             return False
         i += 1
     return True
 
 
-def number(a: Span) -> int effects(host):
+def number(host: Host, a: Span) -> int effects(host):
     value = 0
     i = a.start
     if i == a.end:
         return - 1
     while i < a.end:
-        c = int(io.byte(a.file, i))
+        c = int(io.byte(host, a.file, i))
         if c < 48 or c > 57:
             return - 1
         if value > 1000000:
@@ -64,21 +64,21 @@ def number(a: Span) -> int effects(host):
     return value
 
 
-def write(text: bytes) effects(host):
+def write(host: Host, text: bytes) effects(host):
     i = 0
     while i < len(text):
-        _ = io.put(u8(text[i]))
+        _ = io.put(host, u8(text[i]))
         i += 1
     return
 
 
-def escaped(a: Span) effects(host, managed_allocation):
+def escaped(host: Host, a: Span) effects(host, managed_allocation):
     i = a.start
     while i < a.end:
-        c = io.byte(a.file, i)
+        c = io.byte(host, a.file, i)
         i += 1
         if c == 92u8 and i < a.end:
-            c = io.byte(a.file, i)
+            c = io.byte(host, a.file, i)
             i += 1
             if c == 110u8:
                 c = 10u8
@@ -87,43 +87,43 @@ def escaped(a: Span) effects(host, managed_allocation):
             elif c == 116u8:
                 c = 9u8
         if c == 9u8:
-            write(b"&#9;")
+            write(host, b"&#9;")
         elif c == 10u8:
-            write(b"&#10;")
+            write(host, b"&#10;")
         elif c == 13u8:
-            write(b"&#13;")
+            write(host, b"&#13;")
         elif c == 38u8:
-            write(b"&amp;")
+            write(host, b"&amp;")
         elif c == 60u8:
-            write(b"&lt;")
+            write(host, b"&lt;")
         elif c == 62u8:
-            write(b"&gt;")
+            write(host, b"&gt;")
         elif c == 34u8:
-            write(b"&quot;")
+            write(host, b"&quot;")
         else:
-            _ = io.put(c)
+            _ = io.put(host, c)
     return
 
 
-def decimal(value: int) effects(host):
+def decimal(host: Host, value: int) effects(host):
     if value < 0:
-        _ = io.put(45u8)
+        _ = io.put(host, 45u8)
         if value <= - 10:
-            decimal(-((value + 9) // 10))
-        _ = io.put(u8(((-(value + 1) % 10 + 1) % 10) + 48))
+            decimal(host, -((value + 9) // 10))
+        _ = io.put(host, u8(((-(value + 1) % 10 + 1) % 10) + 48))
         return
     if value >= 10:
-        decimal(value // 10)
-    _ = io.put(u8(value % 10 + 48))
+        decimal(host, value // 10)
+    _ = io.put(host, u8(value % 10 + 48))
     return
 
 
-def identifier(a: Span) -> bool effects(host):
+def identifier(host: Host, a: Span) -> bool effects(host):
     if a.start == a.end or a.end - a.start > 64:
         return False
     i = a.start
     while i < a.end:
-        ch = io.byte(a.file, i)
+        ch = io.byte(host, a.file, i)
         if ch < 33u8 or ch == 92u8:
             return False
         i += 1
@@ -136,12 +136,12 @@ def lower(ch: u8) -> u8:
     return ch
 
 
-def folded(a: Span, b: Span) -> bool effects(host):
+def folded(host: Host, a: Span, b: Span) -> bool effects(host):
     if a.end - a.start != b.end - b.start:
         return False
     i = 0
     while i < a.end - a.start:
-        if lower(io.byte(a.file, a.start + i)) != lower(io.byte(b.file, b.start + i)):
+        if lower(io.byte(host, a.file, a.start + i)) != lower(io.byte(host, b.file, b.start + i)):
             return False
         i += 1
     return True

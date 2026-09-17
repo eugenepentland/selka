@@ -15,96 +15,96 @@ record Port:
     direction: text.Span
 
 
-def portForm(nodes: list[s.Node], i: int) -> bool:
-    return s.form(nodes, i, b"port")
+def portForm(host: Host, nodes: list[s.Node], i: int) -> bool:
+    return s.form(host, nodes, i, b"port")
 
 
-def port_groupForm(nodes: list[s.Node], i: int) -> bool:
-    return s.form(nodes, i, b"port-group")
+def port_groupForm(host: Host, nodes: list[s.Node], i: int) -> bool:
+    return s.form(host, nodes, i, b"port-group")
 
 
-def interfaceForm(nodes: list[s.Node], i: int) -> bool:
-    return s.form(nodes, i, b"interface")
+def interfaceForm(host: Host, nodes: list[s.Node], i: int) -> bool:
+    return s.form(host, nodes, i, b"interface")
 
 
-def signalForm(nodes: list[s.Node], i: int) -> bool:
-    return s.form(nodes, i, b"signal")
+def signalForm(host: Host, nodes: list[s.Node], i: int) -> bool:
+    return s.form(host, nodes, i, b"signal")
 
 
-def renameForm(nodes: list[s.Node], i: int) -> bool:
-    return s.form(nodes, i, b"rename")
+def renameForm(host: Host, nodes: list[s.Node], i: int) -> bool:
+    return s.form(host, nodes, i, b"rename")
 
 
-def fail(span: text.Span) -> Result[list[Port], int]:
-    _ = io.issue(21, span.file, span.start)
+def fail(host: Host, span: text.Span) -> Result[list[Port], int]:
+    _ = io.issue(host, 21, span.file, span.start)
     return Err(21)
 
 
-def direction(span: text.Span) -> bool:
-    if text.matches(span, b"in"):
+def direction(host: Host, span: text.Span) -> bool:
+    if text.matches(host, span, b"in"):
         return True
-    if text.matches(span, b"out"):
+    if text.matches(host, span, b"out"):
         return True
-    if text.matches(span, b"bidi"):
+    if text.matches(host, span, b"bidi"):
         return True
     return False
 
 
-def collect(nodes: list[s.Node], lanes: list[s.Node]) -> Result[list[Port], int] effects(host, managed_allocation):
+def collect(host: Host, nodes: list[s.Node], lanes: list[s.Node]) -> Result[list[Port], int] effects(host, managed_allocation):
     out: list[Port] = []
-    if not interfaceForm(lanes, 1) or s.at(lanes, 1).next != len(lanes):
-        return fail(s.at(lanes, 1).span)
-    b = c.body(nodes)
+    if not interfaceForm(host, lanes, 1) or s.at(lanes, 1).next != len(lanes):
+        return fail(host, s.at(lanes, 1).span)
+    b = c.body(host, nodes)
     i = b + 3
     while i < s.at(nodes, b).next:
-        if portForm(nodes, i):
+        if portForm(host, nodes, i):
             name = s.at(nodes, i + 2)
             dir = s.at(nodes, i + 3)
-            if i + 3 >= s.at(nodes, i).next or name.kind != s.Kind.string or not text.identifier(name.span) or not direction(dir.span):
-                return fail(name.span)
+            if i + 3 >= s.at(nodes, i).next or name.kind != s.Kind.string or not text.identifier(host, name.span) or not direction(host, dir.span):
+                return fail(host, name.span)
             if len(out) == 32:
-                return fail(name.span)
+                return fail(host, name.span)
             out.append(Port(
                 prefix=text.empty(),
                 name=name.span,
                 direction=dir.span
             ))
-        elif port_groupForm(nodes, i):
+        elif port_groupForm(host, nodes, i):
             prefix = s.at(nodes, i + 2).span
-            if not text.identifier(prefix) or not text.equal(s.at(nodes, i + 3).span, s.at(lanes, 3).span):
-                return fail(prefix)
+            if not text.identifier(host, prefix) or not text.equal(host, s.at(nodes, i + 3).span, s.at(lanes, 3).span):
+                return fail(host, prefix)
             rename = i + 4
             while rename < s.at(nodes, i).next:
-                if not renameForm(nodes, rename) or s.at(nodes, rename).next != rename + 4 or s.at(nodes, rename + 3).kind != s.Kind.string:
-                    return fail(s.at(nodes, rename).span)
+                if not renameForm(host, nodes, rename) or s.at(nodes, rename).next != rename + 4 or s.at(nodes, rename + 3).kind != s.Kind.string:
+                    return fail(host, s.at(nodes, rename).span)
                 found = False
                 lane = 5
                 while lane < s.at(lanes, 1).next:
-                    if text.equal(s.at(nodes, rename + 2).span, s.at(lanes, lane + 2).span):
+                    if text.equal(host, s.at(nodes, rename + 2).span, s.at(lanes, lane + 2).span):
                         found = True
                     lane = s.at(lanes, lane).next
                 if not found:
-                    return fail(s.at(nodes, rename + 2).span)
+                    return fail(host, s.at(nodes, rename + 2).span)
                 rename = s.at(nodes, rename).next
             lane = 5
             while lane < s.at(lanes, 1).next:
-                if not signalForm(lanes, lane) or s.at(lanes, lane).next < lane + 4 or not direction(s.at(lanes, lane + 3).span):
-                    return fail(s.at(lanes, lane).span)
+                if not signalForm(host, lanes, lane) or s.at(lanes, lane).next < lane + 4 or not direction(host, s.at(lanes, lane + 3).span):
+                    return fail(host, s.at(lanes, lane).span)
                 label = s.at(lanes, lane + 2).span
                 original = label
                 pre = prefix
                 renamed = False
                 rename = i + 4
                 while rename < s.at(nodes, i).next:
-                    if text.equal(s.at(nodes, rename + 2).span, original):
+                    if text.equal(host, s.at(nodes, rename + 2).span, original):
                         if renamed:
-                            return fail(s.at(nodes, rename).span)
+                            return fail(host, s.at(nodes, rename).span)
                         renamed = True
                         label = s.at(nodes, rename + 3).span
                         pre = text.empty()
                     rename = s.at(nodes, rename).next
-                if not text.identifier(label) or len(out) == 32:
-                    return fail(label)
+                if not text.identifier(host, label) or len(out) == 32:
+                    return fail(host, label)
                 out.append(Port(
                     prefix=pre,
                     name=label,
@@ -122,36 +122,36 @@ def size(item: Port) -> int:
     return n
 
 
-def byteAt(item: Port, index: int) -> u8:
+def byteAt(host: Host, item: Port, index: int) -> u8:
     n = item.prefix.end - item.prefix.start
     if n == 0:
-        return io.byte(item.name.file, item.name.start + index)
+        return io.byte(host, item.name.file, item.name.start + index)
     if index < n:
-        return io.byte(item.prefix.file, item.prefix.start + index)
+        return io.byte(host, item.prefix.file, item.prefix.start + index)
     if index == n:
         return 95u8
-    return io.byte(item.name.file, item.name.start + index - n - 1)
+    return io.byte(host, item.name.file, item.name.start + index - n - 1)
 
 
-def equal(a: Port, b: Port) -> bool effects(host):
+def equal(host: Host, a: Port, b: Port) -> bool effects(host):
     if size(a) != size(b):
         return False
     i = 0
     while i < size(a):
-        if byteAt(a, i) != byteAt(b, i):
+        if byteAt(host, a, i) != byteAt(host, b, i):
             return False
         i += 1
     return True
 
 
-def validate(connections: list[Port], pins: list[c.Pin]) -> int effects(host):
+def validate(host: Host, connections: list[Port], pins: list[c.Pin]) -> int effects(host):
     i = 0
     while i < len(connections):
         item = connections[i]
         j = 0
         while j < i:
-            if equal(item, connections[j]):
-                _ = io.issue(22, item.name.file, item.name.start)
+            if equal(host, item, connections[j]):
+                _ = io.issue(host, 22, item.name.file, item.name.start)
                 return 22
             j += 1
         found = False
@@ -159,11 +159,11 @@ def validate(connections: list[Port], pins: list[c.Pin]) -> int effects(host):
         while j < len(pins):
             pin = pins[j]
             candidate = Port(prefix=text.empty(), name=pin.net, direction=text.empty())
-            if not pin.nc and equal(item, candidate):
+            if not pin.nc and equal(host, item, candidate):
                 found = True
             j += 1
         if not found:
-            _ = io.issue(23, item.name.file, item.name.start)
+            _ = io.issue(host, 23, item.name.file, item.name.start)
             return 23
         i += 1
     return 0
