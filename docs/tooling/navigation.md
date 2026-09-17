@@ -33,3 +33,20 @@ $ python3 scripts/navigate.py --compiler zig-out/bin/mylang --entry examples/mod
     --symbol 'shared.units::Distance.make' --relation callers --limit 5
 {"version": "navigation-query-v1", "checked": true, ... "references": [{"from": "main::main", "to": "shared.units::Distance.make", "kind": "call", "location": {"path": "main.my", "start": 263, "end": 287, "line": 10, "column": 19}}], ...}
 ```
+
+## Reading an interface
+
+`mylang list-interfaces` is the declaration-only view of a project: it parses
+and resolves names but does not require bodies to type-check. Each exported
+callable prints its whole signature, with capability parameters in their Python
+spelling, the inferred `effects(...)` set when the bodies check, any
+`mutates(...)` parameters by name, and a declared ceiling when the source wrote
+one. A body that fails to check leaves the declaration listed and reports no
+body diagnostic.
+
+```console
+$ mylang list-interfaces program.my
+module interfaces v1; declarations/signature visibility checked; bodies not type checked
+module main
+  export function main def(fs:Filesystem,clock:Clock)->i64 effects()
+```

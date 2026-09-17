@@ -616,6 +616,11 @@
       "kind": "tooling",
       "summary": "A clean-versus-warm invalidation matrix proves status, diagnostics, interface manifest, QBE and reuse counts agree.",
       "doc": "docs/experiments/incremental-contract.md#correctness-clean-versus-warm"
+    },
+    "list-interfaces-signature": {
+      "kind": "tooling",
+      "summary": "`mylang list-interfaces` prints each exported callable's whole signature, with Python capability spellings, the inferred effects set, mutates parameters by name, and any declared ceiling.",
+      "doc": "docs/tooling/navigation.md#reading-an-interface"
     }
   },
   "unsupported": [
