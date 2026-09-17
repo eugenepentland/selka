@@ -859,14 +859,17 @@ const Checker = struct {
         self.seedEffect(.managed_allocation);
         return Symbolic{ .concrete = target };
     }
-    fn specialCall(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
-        if (input_call.owner) |owner| if (std.mem.eql(u8, self.src.text(input_call.name), "read_only")) {
+    /// `.read_only()`, `.only(...)` and `.names()` on a capability value.
+    fn capabilityMethodCall(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
+        const owner = input_call.owner orelse return null;
+        const name = self.src.text(input_call.name);
+        if (std.mem.eql(u8, name, "read_only")) {
             if (input_call.arguments.len != 0 or input_call.type_arguments.len != 0) return self.sink.fail("E_ARITY", span, "read_only takes no arguments");
             const value = try self.namedValue(owner);
             try self.compatible(value, .{ .concrete = .filesystem_cap }, owner);
             return .{ .concrete = .filesystem_cap };
-        };
-        if (input_call.owner) |owner| if (std.mem.eql(u8, self.src.text(input_call.name), "dir")) {
+        }
+        if (std.mem.eql(u8, name, "dir")) {
             if (input_call.arguments.len != 1 or input_call.type_arguments.len != 0 or input_call.argument_names.len != 0) return self.sink.fail("E_ARITY", span, "dir takes one path argument");
             const argument = self.program.nodes.items[@backingInt(input_call.arguments[0])];
             const bytes = switch (argument.data) {
@@ -877,7 +880,30 @@ const Checker = struct {
             const value = try self.namedValue(owner);
             try self.compatible(value, .{ .concrete = .filesystem_cap }, owner);
             return .{ .concrete = .filesystem_cap };
-        };
+        }
+        const slot = self.active.get(self.src.text(owner)) orelse return null;
+        const receiver = self.locals.items[slot].ty;
+        if (receiver != .concrete or receiver.concrete != .environment_cap) return null;
+        if (std.mem.eql(u8, name, "only")) {
+            if (input_call.type_arguments.len != 0 or input_call.arguments.len == 0) return self.sink.fail("E_ARITY", span, "env.only takes at least one literal name");
+            for (input_call.arguments) |argument| {
+                const spelling = self.program.nodes.items[@backingInt(argument)];
+                if (spelling.data != .text) return self.sink.fail("E_ENVIRONMENT_NAME", spelling.span, "environment names must be literal str values");
+            }
+            return .{ .concrete = .environment_cap };
+        }
+        if (std.mem.eql(u8, name, "names")) {
+            if (input_call.type_arguments.len != 0 or input_call.arguments.len != 0) return self.sink.fail("E_ARITY", span, "env.names takes no arguments");
+            const store = self.catalog.templates.store orelse return error.InternalError;
+            const declaration = store.index.names.get("List") orelse return error.InternalError;
+            const text: Symbolic = .{ .concrete = self.catalog.names.get("str") orelse return self.sink.fail("E_TYPE", span, "env.names requires str") };
+            const result = try self.shapes().nominal(declaration, &.{text});
+            return result;
+        }
+        return null;
+    }
+    fn specialCall(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
+        if (try self.capabilityMethodCall(input_call, span)) |value| return value;
         if (try self.textConstructor(input_call, span)) |value| return value;
         if (std.mem.eql(u8, self.src.text(input_call.name), "todo") and input_call.owner == null) {
             _ = try self.ty(input_call.type_arguments[0]);

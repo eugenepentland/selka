@@ -44,6 +44,15 @@ typedef struct {
 #define MYL_QBE_UNBOUNDED UINT64_MAX
 /* Frame slots and trace storage the runtime reserves when frames are unbounded. */
 #define MYL_QBE_FRAME_CAPACITY 1024
+/* Environment authority. The root grant is `UINT64_MAX - 2`; `env.only(...)`
+ * narrows it to a scope whose index is encoded as `UINT64_MAX - 3 - index`.
+ * Each scope borrows a NUL-separated name blob emitted by the backend. */
+#define MYL_QBE_ENVIRONMENT_ROOT (UINT64_MAX - 2)
+#define MYL_QBE_ENVIRONMENT_SCOPE_BASE (UINT64_MAX - 3)
+#define MYL_QBE_ENVIRONMENT_SCOPES 64
+#define MYL_QBE_ENVIRONMENT_NAMES 16
+#define MYL_QBE_ENVIRONMENT_NAME_LIMIT 128
+typedef struct { const unsigned char *names; size_t length; } MylQbeEnvironmentScope;
 typedef struct {
     uint64_t steps, frames, max_steps, max_frames;
     const char *trap;
@@ -78,6 +87,10 @@ typedef struct {
        a 1-based index into it. Appended after the frozen ABI prefix. */
     void *resource_scopes;
     size_t resource_scope_count, resource_scope_capacity;
+    /* Narrowed `Environment` scopes registered by `env.only(...)`. Appended after
+       the frozen ABI prefix, so generated-code offsets stay unchanged. */
+    MylQbeEnvironmentScope environment_scopes[MYL_QBE_ENVIRONMENT_SCOPES];
+    unsigned environment_scope_count;
 } MylQbeContext;
 typedef struct {
     uint64_t value, steps;
@@ -148,6 +161,15 @@ uint64_t myl_qbe_grant_external(void *, unsigned kind);
 uint64_t myl_qbe_grant_external_checked(void *, unsigned kind, const char *flag);
 int myl_qbe_external_read(void *, uint64_t authority, unsigned kind, uint64_t *output);
 int myl_qbe_environment_get(void *, uint64_t authority, const unsigned char *key, size_t length, unsigned char *output, size_t capacity, size_t *written, int *present);
+/* Python `env.get`: return a rooted UTF-8 text or NULL when absent. `*present`
+   is 1 exactly when a value was returned; a failure traps through the context. */
+void *myl_qbe_environment_text(void *, uint64_t authority, const unsigned char *key, size_t length, int *present);
+/* `env.only(...)`: register a NUL-separated literal name blob and return the
+   narrowed authority. The root authority is the only accepted input. */
+uint64_t myl_qbe_environment_only(void *, uint64_t authority, const unsigned char *names, size_t length);
+/* `env.names()`: build a sorted managed `list[str]` of the visible names, or
+   NULL after setting an allocation trap. */
+void *myl_qbe_environment_names(void *, uint64_t authority);
 int mylang_qbe_execute_gc(uint64_t (*entry)(void *), uint64_t steps, uint64_t frames, int stress, MylQbeResult *result);
 int mylang_qbe_execute(uint64_t (*entry)(void *), uint64_t steps, uint64_t frames, MylQbeResult *result);
 

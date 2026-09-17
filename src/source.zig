@@ -36,6 +36,10 @@ pub const Source = struct {
     bytes: []const u8,
     line_starts: []const usize,
     origins: []const Origin = &.{},
+    /// Mark a compiler-owned test source that may spell reserved internal
+    /// intrinsics. Guest and embedder sources never set this; only the parser's
+    /// own unit tests reach it, so the public surface stays gated.
+    trusted_intrinsics: bool = false,
 
     /// Offset and original source contributing a segment to merged source text.
     pub const Origin = struct { start: usize, original: Source };

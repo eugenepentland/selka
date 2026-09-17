@@ -2831,19 +2831,8 @@ test "CLI checks bounded environment access without granting ambient process acc
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
     for ([_][]const u8{ "ENVIRONMENT_GET", "effects {environment}" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
     const invalid =
-        \\class Entry:
-        \\    bytes: [1]u8
-        \\    length: u64
-        \\    present: bool
-        \\
-        \\
-        \\result Lookup:
-        \\    ok: Entry,
-        \\    err: i64
-        \\
-        \\
         \\def main(env: Environment) -> i64 effects():
-        \\    _ = environment_get[Lookup](env, [75u8])
+        \\    _ = env.get("K")
         \\    return 0
     ;
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_EFFECT_BOUND]");
@@ -2938,19 +2927,8 @@ test "CLI grant flags reject repeats empty values and commands that do not execu
 // spec: CAPABILITY-3
 test "CLI refuses an ungranted entry capability only while --restrict is active" {
     const environment =
-        \\class Entry:
-        \\    bytes: [8]u8
-        \\    length: u64
-        \\    present: bool
-        \\
-        \\
-        \\result Lookup:
-        \\    ok: Entry,
-        \\    err: i64
-        \\
-        \\
-        \\def main(env: Environment) -> i64:
-        \\    _ = environment_get[Lookup](env, [80u8, 65u8, 84u8, 72u8])
+        \\def main(env: Environment) -> i64 effects(environment):
+        \\    _ = env.get("PATH")
         \\    return 0
     ;
     for ([_][]const u8{ clock_program, environment }) |program| {
@@ -2993,26 +2971,16 @@ test "CLI clock entropy and environment providers honour their grants" {
     // value is unknown here, so assert the contract against its printed result.
     try testing.expectEqual(std.process.Child.Term{ .exited = resultStatus(first.stdout) }, first.term);
     const missing =
-        \\class Entry:
-        \\    bytes: [8]u8
-        \\    length: u64
-        \\    present: bool
-        \\
-        \\
-        \\result Lookup:
-        \\    ok: Entry,
-        \\    err: i64
-        \\
-        \\
-        \\def main(env: Environment) -> i64:
-        \\    match environment_get[Lookup](env, [80u8, 65u8, 84u8, 72u8]):
-        \\        case Lookup.ok(entry):
-        \\            return i64(entry.length) - i64(entry.length)
-        \\        case Lookup.err(code):
-        \\            return code
+        \\def main(env: Environment) -> i64 effects(environment):
+        \\    match env.get("PATH"):
+        \\        case Some(value):
+        \\            return len(value) - len(value)
+        \\        case None:
+        \\            return 0
     ;
-    // PATH is outside this allowlist, so the lookup is denied rather than answered.
-    try invokeOptions("run", missing, &.{ "--restrict", "--allow-env=OTHER" }, 0, "2\n", "");
+    // PATH is outside this allowlist, so the lookup is denied and the native
+    // Python surface traps instead of answering None.
+    try invokeOptions("run", missing, &.{ "--restrict", "--allow-env=OTHER" }, 1, "", "R_CAPABILITY");
 }
 
 // spec-case: CAPABILITY-4

@@ -38,7 +38,7 @@ const program = declarations ++
 ;
 /// Run the symbolic lookup against a guest environment holding `K` only when given.
 fn lookup(value: ?[]const u8, arguments: []const []const u8, expected: i64) !void {
-    var compilation = try language.Compilation.init(t.allocator, "nominal-environment.my", program);
+    var compilation = try language.Compilation.initTrusted(t.allocator, "nominal-environment.my", program);
     defer compilation.deinit();
     var guest: std.process.Environ.Map = .init(t.allocator);
     defer guest.deinit();
@@ -51,7 +51,7 @@ fn lookup(value: ?[]const u8, arguments: []const []const u8, expected: i64) !voi
     try t.expectEqual(expected, outcome.value);
 }
 fn scenario(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, "nominal-environment.my", program);
+    var compilation = try language.Compilation.initTrusted(allocator, "nominal-environment.my", program);
     defer compilation.deinit();
     try compilation.emit();
     const dump = try compilation.dump(allocator);

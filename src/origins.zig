@@ -242,6 +242,8 @@ const Context = struct {
             .complete_resource,
             .dir_resource,
             .environment_get,
+            .environment_only,
+            .environment_names,
             .external_read,
             .resource_io,
             .print,

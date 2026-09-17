@@ -250,13 +250,26 @@ containment mechanism.
 
 ## Environment
 
-Environment access needs an explicit `Environment` entry parameter. The existing
-`environment_get[Lookup](env, name)` operation returns the declared lookup record
-and distinguishes absent, empty, present, denied and capacity failures without an
-ambient environment map. `mylang run` and installed executables grant the process
-environment by default; under `--restrict`, `--allow-env[=NAME,...]` selects the
-visible names. All launch paths now report an ungranted capability with the same
-stderr line and exit 2.
+Environment access needs an explicit `Environment` entry parameter. On a
+capability value, `env.get("NAME")` returns `Option[str]`: `Some(value)` for a
+present name and `None` when the provider has no such name, decoded as UTF-8. A
+name outside the active `--allow-env` allow-list is a denied authority, which
+traps rather than answering `None`. `env.only("HOME", "PATH")` narrows an
+`Environment` to the listed literal names, and `env.names()` returns the sorted
+allow-list as `list[str]`. `mylang run` and installed executables grant the
+process environment by default; under `--restrict`, `--allow-env[=NAME,...]`
+selects the visible names. All launch paths now report an ungranted capability
+with the same stderr line and exit 2.
+
+```mylang
+# doc: check
+def main(env: Environment) -> int effects(environment):
+    home = env.get("HOME")
+    narrowed = env.only("HOME")
+    _ = home
+    _ = narrowed
+    return len(env.names())
+```
 
 ## Files
 

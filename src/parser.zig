@@ -117,6 +117,7 @@ pub const Parser = struct {
     /// `__float_sqrt` intrinsic. A matching `@stdlib/` path is not enough: the
     /// source bytes must be the exact embedded module.
     fn trustedStdlib(self: Parser) bool {
+        if (self.src.trusted_intrinsics) return true;
         const prefix = "@stdlib/";
         if (!std.mem.startsWith(u8, self.src.path, prefix)) return false;
         const embedded = @import("standard_library.zig").source(self.src.path[prefix.len..]) orelse return false;
@@ -988,7 +989,7 @@ pub const Parser = struct {
         var left: ast.NodeId = switch (token.tag) {
             .kw_restrict_resource => try self.parseRestrict(token),
             .kw_read_resource, .kw_write_resource => try self.parseResourceIo(token),
-            .kw_environment_get => try self.parseEnvironment(token),
+            .kw_environment_get => try self.parseEnvironmentGated(token),
             .kw_acquire_resource, .kw_complete_resource => try self.parseResource(token),
             .kw_clock_now, .kw_random_u64 => external: {
                 self.cursor.pos += 1;
@@ -1273,6 +1274,13 @@ pub const Parser = struct {
         } else null;
         const close = try self.expect(.rparen);
         return self.append(.{ .span = .join(token.span, close.span), .data = .{ .resource_io = .{ .kind = if (token.tag == .kw_read_resource) .read else .write, .owner = owner.span, .ty = ty, .value = value } } });
+    }
+
+    /// Reject the raw `environment_get[...]` spelling in ordinary source; only
+    /// compiler-owned standard-library bytes may reach its parser arm.
+    fn parseEnvironmentGated(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
+        if (!self.trustedStdlib()) return self.sink.fail("E_INTERNAL_NAME", token.span, "`environment_get[...]` is reserved for compiler-internal standard-library sources; use `env.get(\"NAME\")`");
+        return self.parseEnvironment(token);
     }
 
     fn parseEnvironment(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {

@@ -292,6 +292,15 @@ const Emitter = struct {
                 try self.push(.{ .expression = get.name });
                 try self.push(.{ .expression = get.capability });
             },
+            .environment_only => |only| {
+                try self.instruction(node.span, .{ .environment_only = .{ .output = node.ty, .names = self.program.nodes[@backingInt(only.names)].ty } });
+                try self.push(.{ .expression = only.names });
+                try self.push(.{ .expression = only.capability });
+            },
+            .environment_names => |capability| {
+                try self.instruction(node.span, .{ .environment_names = .{ .output = node.ty } });
+                try self.push(.{ .expression = capability });
+            },
             .complete_resource => |value| {
                 try self.instruction(node.span, .{ .complete_resource = node.ty });
                 try self.push(.{ .expression = value });

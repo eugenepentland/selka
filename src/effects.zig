@@ -57,7 +57,7 @@ fn returnContribution(program: typed.Program, function: typed.Function, value: t
         return;
     }
     switch (node.data) {
-        .integer, .boolean, .unit, .function_value, .environment_get, .external_read => {},
+        .integer, .boolean, .unit, .function_value, .environment_get, .environment_only, .environment_names, .external_read => {},
         .local, .call, .invoke, .complete_resource, .acquire_resource, .acquire_buffer, .array, .record, .variant, .update => {
             if (node.ty.isAggregate()) ctx.unknown.* = true;
         },
@@ -335,7 +335,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, exported: []c
                 .acquire_resource => graph.direct(index, typed.resourceKind(typed.resultShape(node.ty, program.records).?.ok_type, program.records).?.effect(), node.span),
                 .complete_resource => graph.direct(index, typed.resourceKind(typed.completionShape(node.ty, program.records).?.resource_type, program.records).?.effect(), node.span),
                 .resource_io => |io| graph.direct(index, typed.resourceKind(function.scope.locals[@backingInt(io.owner)].ty, program.records).?.effect(), node.span),
-                .environment_get => graph.direct(index, .environment, node.span),
+                .environment_get, .environment_names => graph.direct(index, .environment, node.span),
                 .print => |output| directPrint(&graph, index, output, node.span),
                 .stream_write => graph.direct(index, .output, node.span),
                 .file_access, .file_method => graph.direct(index, .filesystem, node.span),
@@ -372,6 +372,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, exported: []c
                 .arena_escape => graph.direct(index, .managed_allocation, node.span),
                 .restrict_resource,
                 .dir_resource,
+                .environment_only,
                 .function_value,
                 .integer,
                 .boolean,
@@ -528,7 +529,7 @@ fn seedInstructionEffects(
             const kind = typed.resourceKind(function.scope.locals[@backingInt(io.owner)].ty, program.records) orelse return error.InternalError;
             graph.direct(index, kind.effect(), instruction.span);
         },
-        .environment_get => graph.direct(index, .environment, instruction.span),
+        .environment_get, .environment_names => graph.direct(index, .environment, instruction.span),
         .print => |output| if (!output.debug) graph.direct(index, .output, instruction.span),
         .stream_write => graph.direct(index, .output, instruction.span),
         .file_access, .file_method => graph.direct(index, .filesystem, instruction.span),
@@ -566,6 +567,7 @@ fn seedInstructionEffects(
         .end_arena,
         .restrict_resource,
         .dir_resource,
+        .environment_only,
         .function_value,
         .push_i64,
         .add_i64_checked,

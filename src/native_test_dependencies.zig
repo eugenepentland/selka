@@ -90,7 +90,7 @@ const Facts = struct {
                     if (instruction.op == .function_value) try self.edge(instruction.op.function_value.function, .indirect);
                 };
             },
-            .external_read, .environment_get, .acquire_resource, .complete_resource, .resource_io, .restrict_resource, .dir_resource => {
+            .external_read, .environment_get, .environment_names, .acquire_resource, .complete_resource, .resource_io, .restrict_resource, .dir_resource => {
                 self.external = true;
                 try self.reason("external-capability-operation");
             },

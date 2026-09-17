@@ -94,6 +94,14 @@ const Analyzer = struct {
                     pops = 2;
                     result = get.output;
                 },
+                .environment_only => |only| {
+                    pops = 2;
+                    result = only.output;
+                },
+                .environment_names => |names| {
+                    pops = 1;
+                    result = names.output;
+                },
                 .print => |output| {
                     pops = output.types.len + @intFromBool(output.separator) + @intFromBool(output.terminator) + @intFromBool(output.stream);
                     result = .unit;

@@ -43,6 +43,8 @@ pub const Instruction = struct {
         restrict_resource: struct { permissions: external_resources.Permissions, ty: typed.Type },
         dir_resource: struct { output: typed.Type, path: typed.Type },
         environment_get: struct { output: typed.Type, name: typed.Type },
+        environment_only: struct { output: typed.Type, names: typed.Type },
+        environment_names: struct { output: typed.Type },
         external_read: struct { kind: @import("external_capabilities.zig").Kind, output: typed.Type },
         acquire_buffer: typed.Type,
         print: Print,

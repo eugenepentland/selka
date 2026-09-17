@@ -51,6 +51,7 @@ const bindingDeclaredHere = "binding declared here";
 const eImmutable = diagnostic.immutable;
 const eResultDiscard = diagnostic.result_discard;
 const eCellEquality = "E_CELL_EQUALITY";
+const eEnvironmentName = "E_ENVIRONMENT_NAME";
 const variantDeclaredHere = "variant declared here";
 const std = @import("std");
 const bufferOperation = "buffer_operation";
@@ -2163,6 +2164,7 @@ const Checker = struct {
                     if (self.locals.items[@backingInt(slot)].ty == .filesystem_cap and
                         (std.mem.eql(u8, self.src.text(call.name), "read_only") or std.mem.eql(u8, self.src.text(call.name), "dir"))) return true;
                 };
+                if (self.environmentMethod(call) != null) return true;
                 if (try self.cellConstructor(call) != null) {
                     if (self.expected_types.get(node.span)) |expected| if (expected.isAggregate() and self.catalog.records[expected.recordIndex()].isCell()) {
                         try self.hint(call.arguments[0], self.catalog.records[expected.recordIndex()].fields[0].ty);
@@ -2594,31 +2596,120 @@ const Checker = struct {
         out.ty = ty_value;
         out.data = .{ .cast = value };
     }
+    /// The Python `Environment` surface reached through a capability value.
+    const EnvironmentMethod = enum { get, only, names };
+    /// Recognize `env.get(...)`, `env.only(...)` and `env.names()` on a local
+    /// `Environment` binding.
+    fn environmentMethod(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) ?EnvironmentMethod {
+        const owner = call.owner orelse return null;
+        const slot = self.active.get(self.src.text(owner)) orelse return null;
+        if (self.locals.items[@backingInt(slot)].ty != .environment_cap) return null;
+        const name = self.src.text(call.name);
+        if (std.mem.eql(u8, name, "get")) return .get;
+        if (std.mem.eql(u8, name, "only")) return .only;
+        if (std.mem.eql(u8, name, "names")) return .names;
+        return null;
+    }
+    /// `env.get("NAME") -> Option[str]`: materialize the literal bytes as a fixed
+    /// `[N]u8` request and build the checked `environment_get` node with an Option
+    /// result, so the native boundary answers `Some(text)` or `None`.
+    fn checkEnvironmentGet(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), slot: typed.LocalId, owner: source.Span, out: *typed.Node) Error!void {
+        try call_arguments.positional(call, self.sink);
+        if (call.type_arguments.len != 0 or call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "env.get takes one literal name");
+        const spelling = self.syntax.nodes.items[@backingInt(call.arguments[0])];
+        if (spelling.data != .text) return self.sink.fail(eEnvironmentName, spelling.span, "environment name must be a literal str");
+        const bytes = spelling.data.text;
+        const name_type = try self.catalog.instantiateArray(self.allocator, .u8, bytes.len, spelling.span, self.sink);
+        const values = try self.byteValues(bytes, spelling.span);
+        const name: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = spelling.span, .ty = name_type, .data = .{ .array = values } });
+        try self.requireReadable(slot, owner);
+        self.locals.items[@backingInt(slot)].usage.reads += 1;
+        const capability: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = owner, .ty = .environment_cap, .data = .{ .local = slot } });
+        const element = try collections.preludeType(&self.catalog, "str", node.span);
+        out.ty = try collections.optionType(&self.catalog, element, node.span);
+        out.data = .{ .environment_get = .{ .capability = capability, .name = name } };
+    }
+    /// `env.only("HOME", "PATH") -> Environment`: register the literal names as a
+    /// NUL-separated scope blob and return a narrowed capability value. It performs
+    /// no I/O and contributes no effect.
+    fn checkEnvironmentOnly(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), slot: typed.LocalId, owner: source.Span, out: *typed.Node) Error!void {
+        try call_arguments.positional(call, self.sink);
+        if (call.type_arguments.len != 0 or call.arguments.len == 0) return self.sink.fail("E_ARITY", node.span, "env.only takes at least one literal name");
+        var blob: std.ArrayList(u8) = .empty;
+        defer blob.deinit(self.allocator);
+        for (call.arguments) |argument| {
+            const spelling = self.syntax.nodes.items[@backingInt(argument)];
+            if (spelling.data != .text) return self.sink.fail(eEnvironmentName, spelling.span, "environment names must be literal str values");
+            const name = spelling.data.text;
+            if (name.len == 0 or std.mem.indexOfScalar(u8, name, 0) != null) return self.sink.fail(eEnvironmentName, spelling.span, "environment name must be a nonempty str without NUL");
+            try blob.appendSlice(self.allocator, name);
+            try blob.append(self.allocator, 0);
+        }
+        const names_type = try self.catalog.instantiateArray(self.allocator, .u8, blob.items.len, node.span, self.sink);
+        const values = try self.byteValues(blob.items, node.span);
+        const names: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = node.span, .ty = names_type, .data = .{ .array = values } });
+        try self.requireReadable(slot, owner);
+        self.locals.items[@backingInt(slot)].usage.reads += 1;
+        const capability: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = owner, .ty = .environment_cap, .data = .{ .local = slot } });
+        out.ty = .environment_cap;
+        out.data = .{ .environment_only = .{ .capability = capability, .names = names } };
+    }
+    /// `env.names() -> list[str]`: enumerate the visible environment names as a
+    /// fresh managed list. It reads host environment state and contributes the
+    /// `environment` effect.
+    fn checkEnvironmentNames(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), slot: typed.LocalId, owner: source.Span, out: *typed.Node) Error!void {
+        try call_arguments.positional(call, self.sink);
+        if (call.type_arguments.len != 0 or call.arguments.len != 0) return self.sink.fail("E_ARITY", node.span, "env.names takes no arguments");
+        try self.requireReadable(slot, owner);
+        self.locals.items[@backingInt(slot)].usage.reads += 1;
+        const capability: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = owner, .ty = .environment_cap, .data = .{ .local = slot } });
+        const text = try collections.preludeType(&self.catalog, "str", node.span);
+        out.ty = try collections.listType(&self.catalog, text, node.span);
+        out.data = .{ .environment_names = capability };
+    }
+    /// `fs.read_only()` and `fs.dir(path)` on a local `Filesystem`. Returns false
+    /// when the call is not one of them and the ordinary call path should run.
+    fn checkCapabilityNarrowing(self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!bool {
+        const owner = input.owner orelse return false;
+        const slot = self.active.get(self.src.text(owner)) orelse return false;
+        if (self.locals.items[@backingInt(slot)].ty != .filesystem_cap) return false;
+        const name = self.src.text(input.name);
+        if (std.mem.eql(u8, name, "read_only")) {
+            if (input.type_arguments.len != 0 or input.arguments.len != 0) return self.sink.fail("E_ARITY", node.span, "read_only takes no arguments");
+            try self.requireReadable(slot, owner);
+            self.locals.items[@backingInt(slot)].usage.reads += 1;
+            const value: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+            try self.nodes.append(self.allocator, .{ .span = owner, .ty = .filesystem_cap, .data = .{ .local = slot } });
+            out.ty = .filesystem_cap;
+            out.data = .{ .restrict_resource = .{ .permissions = external_resources.permissionBit(.read), .value = value } };
+            return true;
+        }
+        if (std.mem.eql(u8, name, "dir")) {
+            try self.checkDirCall(node, input, slot, out);
+            return true;
+        }
+        return false;
+    }
+    /// Dispatch `env.get`, `env.only` and `env.names` on a local `Environment`.
+    fn checkEnvironmentDispatch(self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!bool {
+        const method = self.environmentMethod(input) orelse return false;
+        const owner = input.owner.?;
+        const slot = self.active.get(self.src.text(owner)).?;
+        switch (method) {
+            .get => try self.checkEnvironmentGet(node, input, slot, owner, out),
+            .only => try self.checkEnvironmentOnly(node, input, slot, owner, out),
+            .names => try self.checkEnvironmentNames(node, input, slot, owner, out),
+        }
+        return true;
+    }
     fn checkCall(self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
-        // `fs.read_only() -> Filesystem` is a Python-shaped narrowing method on a
-        // capability value. It reuses the permission intersection of the removed
-        // `restrict_resource[...]` spelling, so the result is an ordinary typed
-        // value, performs no I/O, and contributes no effect.
-        if (input.owner) |owner| if (self.active.get(self.src.text(owner))) |slot| {
-            if (self.locals.items[@backingInt(slot)].ty == .filesystem_cap and std.mem.eql(u8, self.src.text(input.name), "read_only")) {
-                if (input.type_arguments.len != 0 or input.arguments.len != 0) return self.sink.fail("E_ARITY", node.span, "read_only takes no arguments");
-                try self.requireReadable(slot, owner);
-                self.locals.items[@backingInt(slot)].usage.reads += 1;
-                const value: typed.NodeId = @fromBackingInt(self.nodes.items.len);
-                try self.nodes.append(self.allocator, .{ .span = owner, .ty = .filesystem_cap, .data = .{ .local = slot } });
-                out.ty = .filesystem_cap;
-                out.data = .{ .restrict_resource = .{ .permissions = external_resources.permissionBit(.read), .value = value } };
-                return;
-            }
-        };
-        // `fs.dir(path) -> Filesystem` is the Python-shaped derivation that roots
-        // a filesystem at a literal path resolved under the receiver's root. It
-        // records a scope lazily, performs no I/O, and contributes no effect.
-        if (input.owner) |owner| if (self.active.get(self.src.text(owner))) |slot| {
-            if (self.locals.items[@backingInt(slot)].ty == .filesystem_cap and std.mem.eql(u8, self.src.text(input.name), "dir")) {
-                return self.checkDirCall(node, input, slot, out);
-            }
-        };
+        if (try self.checkCapabilityNarrowing(node, input, out)) return;
+        if (try self.checkEnvironmentDispatch(node, input, out)) return;
         if (try self.cellConstructor(input)) |declaration| {
             const value = self.resolved[@backingInt(input.arguments[0])].?;
             const element = self.nodes.items[@backingInt(value)].ty;
@@ -2976,7 +3067,7 @@ const Checker = struct {
                 const name = self.resolved[@backingInt(get.name)].?;
                 try self.require(self.nodes.items[@backingInt(capability)].ty, .environment_cap, self.syntax.nodes.items[@backingInt(get.capability)].span);
                 if (!typed.byteRequest(self.nodes.items[@backingInt(name)].ty, self.catalog.records)) return self.sink.fail(
-                    "E_ENVIRONMENT_NAME",
+                    eEnvironmentName,
                     self.syntax.nodes.items[@backingInt(get.name)].span,
                     "environment name must be a fixed u8 array",
                 );
@@ -3156,13 +3247,18 @@ const Checker = struct {
         // queued sub-expression, so it leaves no temporary for the caller to pop.
         if (node.data == .call and out.data == .restrict_resource) return 0;
         if (node.data == .call and out.data == .dir_resource) return 0;
+        // `env.get` and `env.only` read their literal names straight from the
+        // syntax tree, so their receivers and arguments are not queued temporaries.
+        if (node.data == .call and out.data == .environment_get) return 0;
+        if (node.data == .call and out.data == .environment_only) return 0;
+        if (node.data == .call and out.data == .environment_names) return 0;
         if (node.data == .call and try self.numericConversion(node.data.call) != null) return node.data.call.arguments.len;
         if (node.data == .call and try self.typeConversion(node.data.call) != null) return 1;
         return switch (out.data) {
             .function_value, .unit, .integer, .boolean, .local, .block_value, .dir_resource => 0,
-            .arena_escape, .cast, .wrap, .unwrap, .length, .field, .unary, .propagate, .external_read, .complete_resource, .restrict_resource => 1,
+            .arena_escape, .cast, .wrap, .unwrap, .length, .field, .unary, .propagate, .external_read, .complete_resource, .restrict_resource, .environment_names => 1,
             .acquire_buffer => 1,
-            .acquire_resource, .environment_get => 2,
+            .acquire_resource, .environment_get, .environment_only => 2,
             .index, .binary => 2,
             .replace => 3,
             .variant => |variant| if (variant.value != null) 1 else 0,

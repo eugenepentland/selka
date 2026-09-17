@@ -250,6 +250,11 @@ const CanonicalWriter = struct {
                 try work.append(allocator, .{ .expression = get.name });
                 try work.append(allocator, .{ .expression = get.capability });
             },
+            .environment_only => |only| {
+                try work.append(allocator, .{ .expression = only.names });
+                try work.append(allocator, .{ .expression = only.capability });
+            },
+            .environment_names => |capability| try work.append(allocator, .{ .expression = capability }),
             .complete_resource => |value| try work.append(allocator, .{ .expression = value }),
             .acquire_resource => |acquire| {
                 try work.append(allocator, .{ .expression = acquire.request });
