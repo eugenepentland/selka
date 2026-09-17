@@ -72,6 +72,7 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "    --report prints work-report-v1 actual work/reuse plus a frontend-cache-v1 comparison receipt on stderr; --timings=json also adds them; --cache-dir=DIR selects their root; --no-cache disables reuse\n" ++
     "    --explain-invalidation prints an invalidation-report-v1 comparison on stderr for project-dependencies, check-project, run-project and module-syntax run; --no-cache explains against no baseline\n" ++
     "  all commands: --diagnostics=text|json (stderr JSON Lines; stdout unchanged)\n" ++
+    "  check/run/run-project: --mutation-markers enables the opt-in call-site `&` marker against `mutates(...)`\n" ++
     "  check-session: persistent check/clear/quit lines on stdin; JSON status on stdout; --inputs supported\n";
 
 /// Byte ceilings for guest execution, shared by every command that runs one.
@@ -301,6 +302,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
     }
     init.timings.begin(frontend_label, false);
     var compilation = try language.Compilation.init(allocator, parsed.path, bytes);
+    compilation.src.mutation_markers = parsed.mutation_markers;
     defer compilation.deinit();
     if (parsed.command == .fmt or parsed.command == .@"fmt-module") {
         init.timings.begin("format_inclusive", true);
@@ -573,6 +575,8 @@ const Parsed = struct {
     select_file: ?[]const u8,
     /// Internal `--drop-debug`: a ReleaseFast build omits `debug` lines.
     drop_debug: bool,
+    /// Opt-in D3 experiment: accept and enforce call-site `&` mutation markers.
+    mutation_markers: bool,
     /// `--no-cache` disables all persistent frontend reuse for this command.
     no_cache: bool,
     /// `--cache-dir` selects the cache root; null uses the default location.
@@ -607,6 +611,11 @@ fn parseArgs(allocator: std.mem.Allocator, args: []const []const u8) ArgError!Pa
         if (std.mem.eql(u8, arg, "--no-cache")) {
             if (parser.no_cache) return error.Usage;
             parser.no_cache = true;
+            continue;
+        }
+        if (std.mem.eql(u8, arg, "--mutation-markers")) {
+            if (parser.mutation_markers) return error.Usage;
+            parser.mutation_markers = true;
             continue;
         }
         if (std.mem.eql(u8, arg, "--report")) {
@@ -663,6 +672,7 @@ const ArgumentParser = struct {
     discovery: language.duplicates.Options = .{},
     reporting: Reporting = .{},
     no_cache: bool = false,
+    mutation_markers: bool = false,
     cache_dir: ?[]const u8 = null,
     select_file: ?[]const u8 = null,
     drop_debug: bool = false,
@@ -865,6 +875,7 @@ const ArgumentParser = struct {
             .reporting = self.reporting,
             .max_memory = self.max_memory,
             .no_cache = self.no_cache,
+            .mutation_markers = self.mutation_markers,
             .cache_dir = self.cache_dir,
             .select_file = self.select_file,
             .drop_debug = self.drop_debug,
@@ -1408,19 +1419,21 @@ fn renderNavigation(init: Context, compilation: *language.project_compile.Compil
 /// configuration is reported by `loadConfiguredPolicy` after the graph loads,
 /// exactly as before.
 fn projectLimits(init: Context, parsed: Parsed) !language.project.Options {
+    // The marker policy is a compiler option, not a budget; it must survive a
+    // missing or unreadable `mylang.json` so `--mutation-markers` still applies.
+    var options: language.project.Options = .{ .mutation_markers = parsed.mutation_markers };
     const discovered = project_config.discover(init.gpa, init.io, parsed.path) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
-        else => return .{},
+        else => return options,
     };
-    const config_path = discovered orelse return .{};
+    const config_path = discovered orelse return options;
     defer init.gpa.free(config_path);
     var failure: project_config.Failure = .{};
     var config = project_config.load(init.gpa, init.io, config_path, &failure) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
-        else => return .{},
+        else => return options,
     };
     defer config.deinit();
-    var options: language.project.Options = .{};
     const budgets = config.document.budgets;
     if (budgets.max_modules) |value| options.max_modules = value;
     if (budgets.max_imports) |value| options.max_imports = value;
@@ -1644,6 +1657,7 @@ fn formatProject(init: Context, project: *language.project.Project) !u8 {
     for (project.order.items) |module_id| {
         const src = project.modules.items[module_id].src;
         var compilation = try language.Compilation.init(init.gpa, src.path, src.bytes);
+        compilation.src.mutation_markers = src.mutation_markers;
         defer compilation.deinit();
         const formatted = compilation.formatModule(init.gpa) catch |err| switch (err) {
             error.SourceError => {
@@ -1825,6 +1839,8 @@ fn openFrontendCache(init: Context, parsed: Parsed) ?language.frontend_cache.Cac
     // `&build_identity` points at the immutable compile-time global, so the
     // cache's borrowed identity outlives this frame; a local copy would dangle.
     var cache = language.frontend_cache.Cache.init(init.gpa, init.io, root, &build_identity);
+    // Parsed syntax differs between marker modes, so the flag partitions entries.
+    cache.contract.flags = if (parsed.mutation_markers) "mutation-markers" else "";
     // A joined path is freshly allocated and released by deinit; the default
     // constant is static storage and must not be freed.
     cache.root_owned = root.ptr != language.frontend_cache.default_directory.ptr;
@@ -1989,18 +2005,20 @@ fn validEntryBasename(basename: []const u8) bool {
 /// needs: compiler identity, bootstrap language, target, effects-v3, runtime ABI,
 /// relevant flags and the mutation-contract version. Persistence itself is C2;
 /// this fingerprint only partitions retained bodies inside the session.
-fn semanticCacheContractValue(init: Context) !language.semantic_cache.Contract {
+fn semanticCacheContractValue(init: Context, mutation_markers: bool) !language.semantic_cache.Contract {
     const allocator = init.arena.allocator();
     var contract = language.semantic_cache.Contract.default;
     const compiler_hex = std.fmt.bytesToHex(build_identity, .lower);
     contract.compiler_identity = try allocator.dupe(u8, &compiler_hex);
-    contract.flags = "";
+    // A marker-dependent check verdict must not be reused across the flag, even
+    // when the source bytes are identical.
+    contract.flags = if (mutation_markers) "mutation-markers" else "";
     return contract;
 }
 
-fn semanticCacheContract(init: Context) ![]const u8 {
+fn semanticCacheContract(init: Context, mutation_markers: bool) ![]const u8 {
     const allocator = init.arena.allocator();
-    const contract = try semanticCacheContractValue(init);
+    const contract = try semanticCacheContractValue(init, mutation_markers);
     return contract.fingerprint(allocator);
 }
 
@@ -2020,7 +2038,7 @@ fn semanticRoot(init: Context, parsed: Parsed) ?[]const u8 {
 /// directory only disables reuse; a host command is never failed by caching.
 fn openSemanticStore(init: Context, parsed: Parsed) ?language.semantic_cache.Store {
     const root = semanticRoot(init, parsed) orelse return null;
-    const contract = semanticCacheContractValue(init) catch return null;
+    const contract = semanticCacheContractValue(init, parsed.mutation_markers) catch return null;
     var store = language.semantic_cache.Store.init(init.gpa, init.io, root, contract, language.semantic_cache.mutation_contract_version);
     store.root.owned = root.ptr != language.semantic_cache.default_store_directory.ptr;
     return store;
@@ -2039,7 +2057,7 @@ fn semanticBudget(init: Context) usize {
 /// store is attached before `begin`, which hydrates only exact key/context hits.
 fn openSemanticCache(init: Context, parsed: Parsed) !language.semantic_cache.Cache {
     if (parsed.semantic == null) return language.semantic_cache.Cache.init(init.gpa, 0);
-    const contract = try semanticCacheContract(init);
+    const contract = try semanticCacheContract(init, parsed.mutation_markers);
     var cache = language.semantic_cache.Cache.initWithContract(init.gpa, semanticBudget(init), contract);
     cache.context.persistent = parsed.semantic;
     return cache;
@@ -2060,7 +2078,7 @@ fn checkSession(init: Context, parsed: Parsed) !u8 {
         try init.text("check-session: entry must be an identifier.my file\n");
         return 2;
     }
-    const contract_fingerprint = try semanticCacheContract(init);
+    const contract_fingerprint = try semanticCacheContract(init, parsed.mutation_markers);
     var cache: SessionCache = .{
         .syntax = language.syntax_cache.Cache.init(init.gpa, .{}),
         .semantic = language.check_cache.Cache.init(init.gpa, 16 * 1024 * 1024),

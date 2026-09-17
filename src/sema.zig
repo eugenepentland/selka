@@ -14,6 +14,9 @@ const callables = @import("callables.zig");
 const callback_type_code = "E_CALLBACK_TYPE";
 const lambda_context_code = "E_LAMBDA_CONTEXT";
 const call_argument_code = "E_CALL_ARGUMENT";
+/// Stable code for a call-site `&` mutation marker that does not match the
+/// callee's declared `mutates(...)` footprint.
+const mutation_marker_code = "E_MUTATION_MARKER";
 const eResultOperation = diagnostic.result_operation;
 const eOwnedConsumed = diagnostic.owned_consumed;
 const eResultPath = diagnostic.result_path;
@@ -178,6 +181,8 @@ const Checker = struct {
     owner: ?typed.Type = null,
     /// The `with open(...)` head whose failure traps instead of yielding a result.
     trapping_open: ?source.Span = null,
+    /// Opt-in D3 experiment: enforce call-site `&` markers against `mutates(...)`.
+    mutation_markers: bool = false,
 
     fn checkFunction(self: *Checker, i: usize) Error!typed.Function {
         if (i >= self.lambda_start and i < self.lambda_start + self.syntax.lambdas.len)
@@ -2527,6 +2532,7 @@ const Checker = struct {
         const slot = try self.resolve(call.name);
         const contract = callables.signature(self.locals.items[@backingInt(slot)].ty, self.catalog.records) orelse return self.sink.fail(callback_type_code, call.name, "called local is not a function value");
         if (call.type_arguments.len != 0 or call.arguments.len != contract.parameters.len) return self.sink.fail("E_ARITY", call.name, "callback argument count must match its signature");
+        try self.checkMutationMarkers(call.arguments, call.argument_markers, contract.mutates);
         self.locals.items[@backingInt(slot)].usage.reads += 1;
         const callee: typed.NodeId = @fromBackingInt(self.nodes.items.len);
         try self.nodes.append(self.allocator, .{ .span = call.name, .ty = self.locals.items[@backingInt(slot)].ty, .data = .{ .local = slot } });
@@ -2798,42 +2804,50 @@ const Checker = struct {
         return true;
     }
     fn checkCall(self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
-        if (try self.checkCapabilityNarrowing(node, input, out)) return;
-        if (try self.checkNetworkHost(node, input, out)) return;
-        if (try self.checkEnvironmentDispatch(node, input, out)) return;
-        if (try self.cellConstructor(input)) |declaration| {
-            const value = self.resolved[@backingInt(input.arguments[0])].?;
-            const element = self.nodes.items[@backingInt(value)].ty;
-            out.ty = try nominal_catalog.instantiateLengths(&self.catalog, declaration, &.{element}, &.{}, node.span);
-            out.data = .{ .record = try self.allocator.dupe(typed.FieldInit, &.{.{ .index = 0, .value = value }}) };
-            return;
-        }
-        if (try self.checkPreludeCall(node, input, out)) return;
-        if (try self.floatIntrinsic(input)) |op| return self.checkFloatIntrinsic(node, input, op, out);
-        if (try self.numericConversion(input)) |floating| return self.checkNumericConversion(node, input, floating, out);
-        if (try self.typeConversion(input)) |ty_value| return self.checkTypeConversion(node, input, ty_value, out);
-        if (try self.optionConstructor(input)) return self.checkOptionConstructor(node, input, out);
-        if (try self.textConstructor(input, node.span)) {
-            const value = self.resolved[@backingInt(input.arguments[0])].?;
-            const input_type = self.nodes.items[@backingInt(value)].ty;
-            const aggregate_scalar = input_type.isAggregate() and (self.catalog.records[input_type.recordIndex()].collection.kind == .string or std.mem.eql(u8, self.catalog.records[input_type.recordIndex()].name, "float"));
-            const scalar = input_type.isInteger() or input_type == .bool or input_type == .unit;
-            if (!scalar and !aggregate_scalar) return self.sink.fail("E_TEXT_CONVERSION", node.span, "str conversion requires a scalar or str value");
-            out.ty = self.catalog.names.get("str") orelse return error.InternalError;
-            out.data = .{ .cast = value };
-            return;
-        }
-        if (try self.fileAccessBuiltin(input)) |kind| return self.checkFileAccessCall(node, input, kind, out);
-        if (try self.streamMethod(input)) |method| {
-            if (method.write) return self.checkStreamWrite(node, input, method.stream, out);
-            return self.checkPrint(node, input, .{ .stream = method.stream }, out);
-        }
-        if (try self.debugBuiltin(input)) return self.checkPrint(node, input, .{ .sink = .stderr, .debug = true }, out);
-        if (try self.outputBuiltin(input)) |sink| return self.checkPrint(node, input, .{ .sink = sink }, out);
-        if (self.byteConversion(input)) |conversion| return self.checkByteConversion(node, input, conversion, out);
-        if (try self.resultConstructor(input)) |ok| {
-            try call_arguments.positional(input, self.sink);
-            return self.checkResultConstructor(node, input, ok, out);
+        // A call carrying `&` markers must resolve to a declared function or a
+        // callable value: only those expose a `mutates(...)` footprint. Skipping
+        // the builtin/constructor dispatch for such a call routes it through the
+        // ordinary resolution below, where a marker on a non-declaring callee is
+        // reported instead of silently accepted.
+        const markers_present = input.argument_markers.len != 0;
+        if (!markers_present) {
+            if (try self.checkCapabilityNarrowing(node, input, out)) return;
+            if (try self.checkNetworkHost(node, input, out)) return;
+            if (try self.checkEnvironmentDispatch(node, input, out)) return;
+            if (try self.cellConstructor(input)) |declaration| {
+                const value = self.resolved[@backingInt(input.arguments[0])].?;
+                const element = self.nodes.items[@backingInt(value)].ty;
+                out.ty = try nominal_catalog.instantiateLengths(&self.catalog, declaration, &.{element}, &.{}, node.span);
+                out.data = .{ .record = try self.allocator.dupe(typed.FieldInit, &.{.{ .index = 0, .value = value }}) };
+                return;
+            }
+            if (try self.checkPreludeCall(node, input, out)) return;
+            if (try self.floatIntrinsic(input)) |op| return self.checkFloatIntrinsic(node, input, op, out);
+            if (try self.numericConversion(input)) |floating| return self.checkNumericConversion(node, input, floating, out);
+            if (try self.typeConversion(input)) |ty_value| return self.checkTypeConversion(node, input, ty_value, out);
+            if (try self.optionConstructor(input)) return self.checkOptionConstructor(node, input, out);
+            if (try self.textConstructor(input, node.span)) {
+                const value = self.resolved[@backingInt(input.arguments[0])].?;
+                const input_type = self.nodes.items[@backingInt(value)].ty;
+                const aggregate_scalar = input_type.isAggregate() and (self.catalog.records[input_type.recordIndex()].collection.kind == .string or std.mem.eql(u8, self.catalog.records[input_type.recordIndex()].name, "float"));
+                const scalar = input_type.isInteger() or input_type == .bool or input_type == .unit;
+                if (!scalar and !aggregate_scalar) return self.sink.fail("E_TEXT_CONVERSION", node.span, "str conversion requires a scalar or str value");
+                out.ty = self.catalog.names.get("str") orelse return error.InternalError;
+                out.data = .{ .cast = value };
+                return;
+            }
+            if (try self.fileAccessBuiltin(input)) |kind| return self.checkFileAccessCall(node, input, kind, out);
+            if (try self.streamMethod(input)) |method| {
+                if (method.write) return self.checkStreamWrite(node, input, method.stream, out);
+                return self.checkPrint(node, input, .{ .stream = method.stream }, out);
+            }
+            if (try self.debugBuiltin(input)) return self.checkPrint(node, input, .{ .sink = .stderr, .debug = true }, out);
+            if (try self.outputBuiltin(input)) |sink| return self.checkPrint(node, input, .{ .sink = sink }, out);
+            if (self.byteConversion(input)) |conversion| return self.checkByteConversion(node, input, conversion, out);
+            if (try self.resultConstructor(input)) |ok| {
+                try call_arguments.positional(input, self.sink);
+                return self.checkResultConstructor(node, input, ok, out);
+            }
         }
         if (input.owner == null and self.active.contains(self.src.text(input.name))) {
             try call_arguments.positional(input, self.sink);
@@ -2843,6 +2857,7 @@ const Checker = struct {
         const call = target.call;
         const function = try self.specialize(target.declaration, call, node.span);
         const signature = self.syntaxFunction(function);
+        try self.checkMutationMarkers(call.arguments, call.argument_markers, signature.signature.mutates);
         var arguments: std.ArrayList(typed.NodeId) = .empty;
         for (call.arguments, signature.signature.parameters) |arg, parameter| {
             const argument = self.syntax.nodes.items[@backingInt(arg)];
@@ -2858,6 +2873,44 @@ const Checker = struct {
             .call = call,
             .parameters = signature.signature.parameters,
         }).apply(self.allocator, &out.data.call);
+    }
+    /// Enforce the opt-in D3 call-site `&` marker against a resolved callee's
+    /// declared `mutates(...)` parameter positions. `arguments` is already in
+    /// parameter order and `markers` is aligned with it. A marker is required on
+    /// every declared position, rejected on an undeclared one, and rejected on a
+    /// target that cannot be assigned through.
+    fn checkMutationMarkers(self: *Checker, arguments: []const ast.NodeId, markers: []const bool, mutates: []const u16) Error!void {
+        if (!self.mutation_markers) return;
+        for (arguments, 0..) |argument, position| {
+            const declared = markerPositionDeclared(mutates, @intCast(position));
+            const marked = markers.len != 0 and markers[position];
+            const arg_node = self.syntax.nodes.items[@backingInt(argument)];
+            const text = self.src.text(arg_node.span);
+            if (declared and !marked) {
+                const message = try std.fmt.allocPrint(self.allocator, "argument {d} is declared writable by `mutates(...)`; add the `&` marker so the call shows the write: `&{s}`", .{ position + 1, text });
+                return self.sink.fail(mutation_marker_code, arg_node.span, message);
+            }
+            if (marked and !declared) {
+                const message = try std.fmt.allocPrint(self.allocator, "`&` marks a write, but the callee does not declare this position in `mutates(...)`; remove the marker: `{s}`", .{text});
+                return self.sink.fail(mutation_marker_code, arg_node.span, message);
+            }
+            if (marked and !self.markerTarget(arg_node)) return self.sink.fail(mutation_marker_code, arg_node.span, "`&` requires an assignable argument (a variable, field, or list slot); assign it to a local first");
+        }
+    }
+    /// Whether an argument expression names a place a callee could write to:
+    /// a variable, or a field/index chain rooted at one.
+    fn markerTarget(self: *Checker, node: ast.Node) bool {
+        return switch (node.data) {
+            .name => true,
+            .field => |field| self.markerTarget(self.syntax.nodes.items[@backingInt(field.base)]),
+            .index => |index| self.markerTarget(self.syntax.nodes.items[@backingInt(index.base)]),
+            else => false,
+        };
+    }
+    /// Whether one zero-based position appears in a normalized `mutates(...)` set.
+    fn markerPositionDeclared(positions: []const u16, position: u16) bool {
+        for (positions) |candidate| if (candidate == position) return true;
+        return false;
     }
     /// Check `fs.dir(path)`: the receiver must be a `Filesystem` and the path a
     /// single string literal that stays within the current root.
@@ -4437,6 +4490,7 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
         .ordinary_ids = ordinary_ids,
         .lambda_types = lambda_types,
         .lambda_captures = lambda_captures,
+        .mutation_markers = src.mutation_markers,
     };
     defer allocator.free(checker.managed_types);
     // C3 reuse: prepared declaration facts and fresh identity maps are

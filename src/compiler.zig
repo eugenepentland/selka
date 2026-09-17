@@ -106,7 +106,7 @@ pub const Compilation = struct {
         }
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
-        self.tokens = try lexer.lex(sink.allocator, self.src.bytes, &sink);
+        self.tokens = try lexer.lexWithMarkers(sink.allocator, self.src.bytes, self.src.mutation_markers, &sink);
         var p: parser.Parser = .{ .src = self.src, .arena = &self.arena, .tokens = self.tokens.?, .sink = &sink };
         self.syntax = try p.parse();
         if (cache) |disk| try disk.rememberSyntax(self.src, 0, self.syntax.?);
@@ -121,7 +121,7 @@ pub const Compilation = struct {
     pub fn formatModule(self: *Compilation, allocator: std.mem.Allocator) FormatError![]u8 {
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
-        const tokens = try lexer.lex(sink.allocator, self.src.bytes, &sink);
+        const tokens = try lexer.lexWithMarkers(sink.allocator, self.src.bytes, self.src.mutation_markers, &sink);
         var p: parser.Parser = .{ .src = self.src, .arena = &self.arena, .tokens = tokens, .sink = &sink };
         const syntax = try p.parseModule();
         return @import("formatter.zig").format(allocator, self.src.bytes, tokens, syntax.types);
@@ -131,7 +131,7 @@ pub const Compilation = struct {
     pub fn listDeclarations(self: *Compilation, allocator: std.mem.Allocator) declarations.Error![]u8 {
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
-        const tokens = try lexer.lex(sink.allocator, self.src.bytes, &sink);
+        const tokens = try lexer.lexWithMarkers(sink.allocator, self.src.bytes, self.src.mutation_markers, &sink);
         return declarations.render(allocator, &self.arena, self.src, tokens, &sink);
     }
 

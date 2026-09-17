@@ -268,8 +268,8 @@ fn keyword(word: []const u8) Tag {
 fn rejectRemovedWord(sink: *diagnostic.Sink, bytes: []const u8, start: usize, end: usize) diagnostic.Error!void {
     _ = try removed_names.rejectLexical(sink, .{ .start = start, .end = end }, bytes[start..end]);
 }
-fn rejectRemovedPunctuation(sink: *diagnostic.Sink, ch: u8, next: u8, start: usize, end: usize) diagnostic.Error!void {
-    if (ch == '&') _ = try removed_names.reject(sink, .{ .start = start, .end = end }, "&");
+fn rejectRemovedPunctuation(sink: *diagnostic.Sink, ch: u8, next: u8, start: usize, end: usize, allow_markers: bool) diagnostic.Error!void {
+    if (ch == '&' and !allow_markers) _ = try removed_names.reject(sink, .{ .start = start, .end = end }, "&");
     if (ch == '=' and next == '>') _ = try removed_names.reject(sink, .{ .start = start, .end = end + 1 }, "=>");
 }
 /// How a token is written in source, for diagnostics that name what was expected.
@@ -337,18 +337,26 @@ pub fn isIdentifier(word: []const u8) bool {
 }
 /// Allocate source-spanned tokens and report invalid input through the supplied diagnostic sink.
 pub fn lex(allocator: std.mem.Allocator, bytes: []const u8, sink: *diagnostic.Sink) diagnostic.Error![]Token {
-    const raw = try tokenize(allocator, bytes, .{ .start = 0, .end = bytes.len }, sink);
+    return lexWithMarkers(allocator, bytes, false, sink);
+}
+
+/// Like `lex`, but `allow_markers` admits the call-argument `&` mutation marker
+/// instead of rejecting it as a removed spelling. Every other removed spelling
+/// stays rejected in both modes.
+pub fn lexWithMarkers(allocator: std.mem.Allocator, bytes: []const u8, allow_markers: bool, sink: *diagnostic.Sink) diagnostic.Error![]Token {
+    const raw = try tokenize(allocator, bytes, .{ .start = 0, .end = bytes.len }, allow_markers, sink);
     defer allocator.free(raw);
     return @import("python_layout.zig").lower(Token, allocator, bytes, raw, sink);
 }
 
 /// Tokenize one byte range with absolute source spans and no indentation lowering.
-/// Format-string interpolations reuse the ordinary grammar through this entry point.
-pub fn lexRange(allocator: std.mem.Allocator, bytes: []const u8, span: Span, sink: *diagnostic.Sink) diagnostic.Error![]Token {
-    return tokenize(allocator, bytes, span, sink);
+/// Format-string interpolations reuse the ordinary grammar through this entry
+/// point; `allow_markers` admits the call-argument `&` mutation marker.
+pub fn lexRangeWithMarkers(allocator: std.mem.Allocator, bytes: []const u8, span: Span, allow_markers: bool, sink: *diagnostic.Sink) diagnostic.Error![]Token {
+    return tokenize(allocator, bytes, span, allow_markers, sink);
 }
 
-fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, sink: *diagnostic.Sink) diagnostic.Error![]Token {
+fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, allow_markers: bool, sink: *diagnostic.Sink) diagnostic.Error![]Token {
     var tokens: std.ArrayList(Token) = .empty;
     errdefer tokens.deinit(allocator);
     const limit = span.end;
@@ -388,7 +396,7 @@ fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, sink: *
             }
             i += 1;
             const next = if (i < limit) bytes[i] else 0;
-            try rejectRemovedPunctuation(sink, ch, next, start, i);
+            try rejectRemovedPunctuation(sink, ch, next, start, i, allow_markers);
             // `//=` is the one three-byte operator; every other augmented form is a pair.
             if (ch == '/' and next == '/' and i + 1 < limit and bytes[i + 1] == '=') {
                 i += 2;
@@ -426,6 +434,7 @@ fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, sink: *
                 '/' => .slash,
                 '%' => .percent,
                 '-' => .minus,
+                '&' => .ampersand,
                 '=' => .equal,
                 '?' => .question,
                 '<' => .lt,

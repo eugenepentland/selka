@@ -88,7 +88,7 @@ pub const Node = struct {
         length: NodeId,
         record: struct { name: Span, fields: []const FieldInit },
         field: struct { base: NodeId, name: Span },
-        call: struct { argument_names: []const ?Span = &.{}, evaluation_order: []const usize = &.{}, owner: ?Span = null, type_arguments: []const Span = &.{}, name: Span, arguments: []const NodeId },
+        call: struct { argument_names: []const ?Span = &.{}, evaluation_order: []const usize = &.{}, owner: ?Span = null, type_arguments: []const Span = &.{}, name: Span, arguments: []const NodeId, argument_markers: []const bool = &.{} },
         unary: struct { op: UnaryOp, operand: NodeId, op_span: Span },
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
     },

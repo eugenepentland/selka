@@ -475,7 +475,7 @@ fn normalizedDeclarationHash(scratch: std.mem.Allocator, src: source.Source, kin
 fn normalizeSpan(scratch: std.mem.Allocator, src: source.Source, span: source.Span) Error![]const u8 {
     if (span.start > span.end or span.end > src.bytes.len) return error.InternalError;
     var sink: diagnostic.Sink = .{ .allocator = scratch };
-    const tokens = lexer.lexRange(scratch, src.bytes, span, &sink) catch |err| switch (err) {
+    const tokens = lexer.lexRangeWithMarkers(scratch, src.bytes, span, src.mutation_markers, &sink) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => return error.InternalError,
     };
@@ -517,7 +517,7 @@ fn normalizedFunctionSpan(scratch: std.mem.Allocator, src: source.Source, syntax
     const span = try functionSpan(scratch, src, syntax, function);
     if (span.start > span.end or span.end > src.bytes.len) return error.InternalError;
     var sink: diagnostic.Sink = .{ .allocator = scratch };
-    const tokens = lexer.lexRange(scratch, src.bytes, span, &sink) catch |err| switch (err) {
+    const tokens = lexer.lexRangeWithMarkers(scratch, src.bytes, span, src.mutation_markers, &sink) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => return error.InternalError,
     };
@@ -979,7 +979,7 @@ fn mutatesClauseSpan(scratch: std.mem.Allocator, src: source.Source, syntax: ast
     if (body_span.start >= bound.span.end and body_span.start <= src.bytes.len) limit = body_span.start;
     if (bound.span.end > limit or limit > src.bytes.len) return error.InternalError;
     var sink: diagnostic.Sink = .{ .allocator = scratch };
-    const tokens = lexer.lexRange(scratch, src.bytes, .{ .start = bound.span.end, .end = limit }, &sink) catch |err| switch (err) {
+    const tokens = lexer.lexRangeWithMarkers(scratch, src.bytes, .{ .start = bound.span.end, .end = limit }, src.mutation_markers, &sink) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => return error.InternalError,
     };

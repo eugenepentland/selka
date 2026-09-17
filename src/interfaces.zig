@@ -1046,7 +1046,7 @@ fn moduleSyntax(project: *graph.Project, module_id: usize, cache: ?*SyntaxCache,
 }
 fn parseModule(project: *graph.Project, module_id: usize, sink: *diagnostic.Sink) diagnostic.Error!ast.Program {
     const module = project.modules.items[module_id];
-    const tokens = try lexer.lex(project.arena.allocator(), module.src.bytes, sink);
+    const tokens = try lexer.lexWithMarkers(project.arena.allocator(), module.src.bytes, module.src.mutation_markers, sink);
     var parse: parser.Parser = .{ .src = module.src, .arena = &project.arena, .tokens = tokens, .sink = sink };
     return parse.parseModule();
 }

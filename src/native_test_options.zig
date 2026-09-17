@@ -12,6 +12,8 @@ pub const Flags = struct {
     /// `--report` emits a work-report-v1 line for this test invocation.
     report: bool = false,
     json: bool = false,
+    /// Opt-in D3 experiment forwarded to every compiler child the test spawns.
+    mutation_markers: bool = false,
 };
 /// Sampling and whole-run bounds for one benchmark invocation.
 pub const Tuning = struct {
@@ -53,7 +55,7 @@ pub const Options = struct {
 /// Native tests require no Python interpreter.
 pub const usage = "usage: mylang test <entry.my|directory> [--filter SUBSTRING|GLOB] [--cases FILE]\n" ++
     "  --link FILE --link-library NAME --library-path DIR (repeatable)\n" ++
-    "  --cache-dir DIR --force --no-cache --report --json --qbe PATH --zig PATH\n" ++
+    "  --cache-dir DIR --force --no-cache --report --json --mutation-markers --qbe PATH --zig PATH\n" ++
     "  --mode Debug|ReleaseFast\n" ++
     "  --max-steps N --max-frames N --max-calls N --timeout-ms N\n" ++
     "  --max-memory BYTES  per-test byte ceiling (K/M/G suffixes; default 512M)\n" ++
@@ -87,6 +89,10 @@ pub fn parse(args: []const []const u8) Error!Options {
         }
         if (std.mem.eql(u8, arg, "--json")) {
             result.flags.json = true;
+            continue;
+        }
+        if (std.mem.eql(u8, arg, "--mutation-markers")) {
+            result.flags.mutation_markers = true;
             continue;
         }
         if (std.mem.eql(u8, arg, "--bench-only")) {

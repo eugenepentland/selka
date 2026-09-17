@@ -35,7 +35,7 @@ pub const Provider = struct { context: ?*anyopaque, read: *const fn (?*anyopaque
 /// Bounds on module count, import edges, individual files, and total source
 /// bytes. A `mylang.json` `budgets` object may override each field; the defaults
 /// admit a project of several thousand modules.
-pub const Options = struct { max_modules: usize = 4096, max_imports: usize = 65536, max_file_bytes: usize = 4 * 1024 * 1024, max_total_bytes: usize = 16 * 1024 * 1024 };
+pub const Options = struct { max_modules: usize = 4096, max_imports: usize = 65536, max_file_bytes: usize = 4 * 1024 * 1024, max_total_bytes: usize = 16 * 1024 * 1024, mutation_markers: bool = false };
 /// A source span paired with the module whose bytes it indexes.
 pub const Site = struct { module: usize, span: source.Span };
 /// Project diagnostic and optional related declaration/import location.
@@ -114,6 +114,7 @@ pub const Project = struct {
         self.counts.bytes += bytes.len;
         const source_path = if (@import("standard_library.zig").source(path) != null) try std.fmt.allocPrint(allocator, "@stdlib/{s}", .{path}) else path;
         self.modules.items[id].src = try source.Source.init(allocator, source_path, bytes);
+        self.modules.items[id].src.mutation_markers = options.mutation_markers;
         std.crypto.hash.sha2.Sha256.hash(bytes, &self.modules.items[id].digest, .{});
         try self.header(id, options);
         return id;
@@ -171,7 +172,7 @@ pub const Project = struct {
         const allocator = self.arena.allocator();
         const src = self.modules.items[id].src;
         var sink: diagnostic.Sink = .{ .allocator = allocator };
-        const tokens = lex.lex(allocator, src.bytes, &sink) catch |err| {
+        const tokens = lex.lexWithMarkers(allocator, src.bytes, src.mutation_markers, &sink) catch |err| {
             if (err == error.OutOfMemory) return err;
             const problem = sink.items.items[0];
             return self.fail(problem.code, problem.message, .{ .module = id, .span = problem.span }, null);

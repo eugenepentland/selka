@@ -273,7 +273,7 @@ fn hashBody(allocator: std.mem.Allocator, hash: *Sha, src: source.Source, progra
     if (start > end or end > src.bytes.len) return error.InvalidProgram;
     var sink: diagnostic.Sink = .{ .allocator = allocator };
     defer sink.deinit();
-    const tokens = lexer.lexRange(allocator, src.bytes, .{ .start = start, .end = end }, &sink) catch |err| return mapDiagnosticError(err);
+    const tokens = lexer.lexRangeWithMarkers(allocator, src.bytes, .{ .start = start, .end = end }, src.mutation_markers, &sink) catch |err| return mapDiagnosticError(err);
     defer allocator.free(tokens);
     part(hash, "declaration-region");
     for (tokens) |token| {

@@ -40,6 +40,10 @@ pub const Source = struct {
     /// intrinsics. Guest and embedder sources never set this; only the parser's
     /// own unit tests reach it, so the public surface stays gated.
     trusted_intrinsics: bool = false,
+    /// Opt-in D3 experiment: when set, the lexer accepts the call-argument `&`
+    /// mutation marker and the checker enforces it against `mutates(...)`.
+    /// False keeps `&` a removed spelling, so no existing program changes.
+    mutation_markers: bool = false,
 
     /// Offset and original source contributing a segment to merged source text.
     pub const Origin = struct { start: usize, original: Source };
@@ -85,6 +89,8 @@ pub const Source = struct {
         }
         var mapped = try init(allocator, "<project>", bytes);
         mapped.origins = origins;
+        // Every module in one project shares the compiler's lexer policy.
+        mapped.mutation_markers = inputs[0].mutation_markers;
         return mapped;
     }
 

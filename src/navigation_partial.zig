@@ -14,7 +14,7 @@ pub fn render(allocator: std.mem.Allocator, loaded: *const project.Project, iden
     var omitted: std.ArrayList([]const u8) = .empty;
     for (loaded.modules.items) |module| {
         var sink: diagnostic.Sink = .{ .allocator = scratch };
-        const tokens = lexer.lex(scratch, module.src.bytes, &sink) catch |err| {
+        const tokens = lexer.lexWithMarkers(scratch, module.src.bytes, module.src.mutation_markers, &sink) catch |err| {
             if (err == error.OutOfMemory) return error.OutOfMemory;
             try omitted.append(scratch, module.src.path);
             continue;
