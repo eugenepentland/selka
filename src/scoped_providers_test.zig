@@ -80,6 +80,38 @@ test "scoped TCP adapter connects only allowed endpoint and transfers bytes" {
     try store.complete(connection);
     try t.expectEqual(@as(usize, 0), store.statistics.live);
 }
+// spec-case: NETWORK-HOST-1
+test "a narrowed network authority exchanges bytes with exactly one endpoint" {
+    const address = try std.Io.net.IpAddress.parseLiteral("127.0.0.1:0");
+    var server = try address.listen(t.io, .{});
+    defer server.deinit(t.io);
+    const name = try std.fmt.allocPrint(t.allocator, "{f}", .{server.socket.address});
+    defer t.allocator.free(name);
+    const endpoints = [_]scoped.Endpoint{.{ .name = name, .address = server.socket.address }};
+    var context: scoped.Context = .{ .allocator = t.allocator, .io = t.io, .endpoints = &endpoints };
+    defer context.deinit();
+    var store = try resources.Store.init(t.allocator, .network, context.network(), 4);
+    defer store.deinit();
+    const authority = try store.grant();
+    // The provider still refuses an endpoint the grant never named.
+    try t.expectError(error.Denied, store.acquire(authority, "127.0.0.1:1"));
+    const connection = try store.acquire(authority, name);
+    const peer = try server.accept(t.io);
+    defer peer.close(t.io);
+    try t.expectEqual(@as(usize, 4), try store.write(connection, "ping"));
+    var inbound: [4]u8 = undefined;
+    var sent = [_][]u8{&inbound};
+    try t.expectEqual(@as(usize, 4), try peer.read(t.io, &sent));
+    try t.expectEqualStrings("ping", &inbound);
+    var writer = peer.writer(t.io, &.{});
+    try writer.interface.writeAll("ok");
+    var got: [2]u8 = undefined;
+    const result = try store.read(connection, &got);
+    try t.expectEqual(@as(usize, 2), result.length);
+    try t.expectEqualStrings("ok", got[0..result.length]);
+    try store.complete(connection);
+    try t.expectEqual(@as(usize, 0), store.statistics.live);
+}
 // spec: SCOPED-DIRECTORY-1
 test "scoped metadata and listing snapshots preserve read authority and bounded publication" {
     var temporary = t.tmpDir(.{});

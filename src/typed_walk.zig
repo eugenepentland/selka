@@ -47,6 +47,10 @@ pub const Walker = struct {
                     try self.expr(dir.path);
                     try self.expr(dir.capability);
                 },
+                .host_resource => |host| {
+                    try self.expr(host.name);
+                    try self.expr(host.capability);
+                },
                 .resource_io => |io| if (io.value) |value| try self.expr(value),
                 .environment_get => |get| {
                     try self.expr(get.name);

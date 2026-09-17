@@ -95,6 +95,7 @@ const eArenaBinding = "E_ARENA_BINDING";
 const eWithResource = "E_WITH_RESOURCE";
 const eFileArgument = "E_FILE_ARGUMENT";
 const eFilesystemDir = "E_FILESYSTEM_DIR";
+const eNetworkHost = "E_NETWORK_HOST";
 /// Reject a literal `dir()` path that could leave a scoped root, mirroring the
 /// `scopedPath` rule. An empty path names the root itself.
 fn scopedDirectoryPath(bytes: []const u8) bool {
@@ -2103,11 +2104,15 @@ const Checker = struct {
     /// queue no operands; a whole-path helper queues its value arguments, because
     /// its receiver is a `Span` with no expression node and the checker
     /// synthesizes that operand.
-    fn queueFilesystemCall(self: *Checker, work: *std.ArrayList(Work), call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
+    /// Qualified calls on a capability local whose receiver is a `Span`: the
+    /// checker synthesizes that receiver, so only the value arguments are queued
+    /// here. Returns true when the call is one of them.
+    fn queueCapabilityCall(self: *Checker, work: *std.ArrayList(Work), call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
         const owner = call.owner orelse return false;
         const slot = self.active.get(self.src.text(owner)) orelse return false;
-        if (self.locals.items[@backingInt(slot)].ty != .filesystem_cap) return false;
         const name = self.src.text(call.name);
+        if (self.locals.items[@backingInt(slot)].ty == .network_cap) return std.mem.eql(u8, name, "host");
+        if (self.locals.items[@backingInt(slot)].ty != .filesystem_cap) return false;
         if (std.mem.eql(u8, name, "read_only") or std.mem.eql(u8, name, "dir")) return true;
         if (file_operations.access(name) == null) return false;
         var index = call.arguments.len;
@@ -2211,7 +2216,7 @@ const Checker = struct {
             },
             .call => |call| {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
-                if (try self.queueFilesystemCall(work, call)) return true;
+                if (try self.queueCapabilityCall(work, call)) return true;
                 if (self.environmentMethod(call) != null) return true;
                 if (try self.cellConstructor(call) != null) {
                     if (self.expected_types.get(node.span)) |expected| if (expected.isAggregate() and self.catalog.records[expected.recordIndex()].isCell()) {
@@ -2747,6 +2752,39 @@ const Checker = struct {
         }
         return false;
     }
+    /// `net.host(name) -> Network`: narrow a local `Network` to the single
+    /// string-literal endpoint. Performs no I/O and contributes no effect.
+    fn checkNetworkHost(self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!bool {
+        const owner = input.owner orelse return false;
+        const slot = self.active.get(self.src.text(owner)) orelse return false;
+        if (self.locals.items[@backingInt(slot)].ty != .network_cap) return false;
+        if (!std.mem.eql(u8, self.src.text(input.name), "host")) return false;
+        try self.checkHostCall(node, input, slot, out);
+        return true;
+    }
+    /// Check `net.host(name)`: a `Network` receiver and one literal endpoint that
+    /// becomes the sole endpoint every acquisition through the derived value may
+    /// request. A dynamic name is `E_NETWORK_HOST`.
+    fn checkHostCall(self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), slot: typed.LocalId, out: *typed.Node) Error!void {
+        const owner = input.owner.?;
+        if (input.type_arguments.len != 0 or input.arguments.len != 1 or input.argument_names.len != 0) return self.sink.fail("E_ARITY", node.span, "host takes one endpoint argument");
+        const argument = self.syntax.nodes.items[@backingInt(input.arguments[0])];
+        const bytes = switch (argument.data) {
+            .text, .bytes => |spelling| spelling,
+            else => return self.sink.fail(eNetworkHost, argument.span, "host requires a string literal endpoint"),
+        };
+        if (bytes.len == 0 or std.mem.indexOfScalar(u8, bytes, 0) != null) return self.sink.fail(eNetworkHost, argument.span, "host endpoint must be a nonempty str without NUL");
+        try self.requireReadable(slot, owner);
+        self.locals.items[@backingInt(slot)].usage.reads += 1;
+        const capability: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = owner, .ty = .network_cap, .data = .{ .local = slot } });
+        const name_type = try self.catalog.instantiateArray(self.allocator, .u8, bytes.len, argument.span, self.sink);
+        const values = try self.byteValues(bytes, argument.span);
+        const name: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = argument.span, .ty = name_type, .data = .{ .array = values } });
+        out.ty = .network_cap;
+        out.data = .{ .host_resource = .{ .capability = capability, .name = name } };
+    }
     /// Dispatch `env.get`, `env.only` and `env.names` on a local `Environment`.
     fn checkEnvironmentDispatch(self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!bool {
         const method = self.environmentMethod(input) orelse return false;
@@ -2761,6 +2799,7 @@ const Checker = struct {
     }
     fn checkCall(self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
         if (try self.checkCapabilityNarrowing(node, input, out)) return;
+        if (try self.checkNetworkHost(node, input, out)) return;
         if (try self.checkEnvironmentDispatch(node, input, out)) return;
         if (try self.cellConstructor(input)) |declaration| {
             const value = self.resolved[@backingInt(input.arguments[0])].?;
@@ -3303,6 +3342,7 @@ const Checker = struct {
         // queueing it, so only the value arguments leave temporaries to pop.
         if (node.data == .call and out.data == .file_access and node.data.call.owner != null)
             return out.data.file_access.arguments.len - 1;
+        if (node.data == .call and out.data == .host_resource) return 0;
         // `env.get` and `env.only` read their literal names straight from the
         // syntax tree, so their receivers and arguments are not queued temporaries.
         if (node.data == .call and out.data == .environment_get) return 0;
@@ -3311,7 +3351,7 @@ const Checker = struct {
         if (node.data == .call and try self.numericConversion(node.data.call) != null) return node.data.call.arguments.len;
         if (node.data == .call and try self.typeConversion(node.data.call) != null) return 1;
         return switch (out.data) {
-            .function_value, .unit, .integer, .boolean, .local, .block_value, .dir_resource => 0,
+            .function_value, .unit, .integer, .boolean, .local, .block_value, .dir_resource, .host_resource => 0,
             .arena_escape, .cast, .wrap, .unwrap, .length, .field, .unary, .propagate, .external_read, .complete_resource, .restrict_resource, .environment_names => 1,
             .acquire_buffer => 1,
             .acquire_resource, .environment_get, .environment_only => 2,

@@ -65,3 +65,28 @@ test "standard modules compose with one another inside a single project" {
         "        return 2\n" ++
         "    return len(document) + 15\n", 42);
 }
+
+// spec: NETWORK-SURFACE-1
+test "the network module wraps acquisition and one linear I/O operation" {
+    const program_text =
+        \\module main
+        \\import network
+        \\def main(net: Network) -> int:
+        \\    scoped = net.host("127.0.0.1:8000")
+        \\    match network.connect(scoped):
+        \\        case network.Connected.ok(connection):
+        \\            payload: [4]u8 = b"ping"
+        \\            match network.write(connection, payload):
+        \\                case network.Written.ok(_):
+        \\                    return 0
+        \\                case network.Written.err(code):
+        \\                    return code
+        \\        case network.Connected.err(code):
+        \\            return code
+    ;
+    var entry: fixture.Entry = .{ .text = program_text };
+    var program: language.embedded_project.Program = undefined;
+    try program.init(t.allocator, .{ .context = &entry, .read = fixture.Entry.read });
+    defer program.deinit();
+    try t.expectEqual(@as(usize, 2), program.loaded.modules.items.len);
+}

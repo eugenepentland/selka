@@ -8,7 +8,7 @@ pub const executable_tags = [_][]const u8{ "mylang", "my" };
 /// Info-string tags that show a command or a transcript for a tooling feature.
 pub const command_tags = [_][]const u8{ "bash", "sh", "console", "text" };
 /// Source keywords that introduce a definition a standard module can export.
-pub const definition_keywords = [_][]const u8{ "def", "record", "class", "union", "enum", "type", "const" };
+pub const definition_keywords = [_][]const u8{ "def", "record", "class", "union", "enum", "type", "const", "result", "resource" };
 
 /// One fenced code block: its info string and the text between the fences.
 pub const Fence = struct { info: []const u8, body: []const u8 };
@@ -316,4 +316,12 @@ test "an export counts as documented only when the section names it as a whole w
     try testing.expect(mentions(body, "encode_upper"));
     try testing.expect(!mentions(body, "decode"));
     try testing.expect(!mentions("prefixencode", "encode"));
+}
+
+// spec-case: DOCCOV-2
+test "result and resource definitions count as documented exports" {
+    const source = "module net\nexport Connection\nexport Connected\n\n\n# One live stream.\nresource Connection: network\n\n\n# One acquisition result.\nresult Connected:\n    ok: Connection,\n    err: int\n";
+    try testing.expect(documentsExport(source, "Connection"));
+    try testing.expect(documentsExport(source, "Connected"));
+    try testing.expect(documentsExport(source, "absent") == false);
 }

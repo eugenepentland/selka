@@ -642,6 +642,16 @@
       "summary": "Every whole-path file helper also accepts a qualified method spelling on a `Filesystem` value (`fs.read_text(path)`), sharing the free form's arities, result types, literal-mode rule and trapping `with fs.open(...)` head; the method stays the receiver's even when a same-named function or local exists.",
       "doc": "docs/io.md#files"
     },
+    "network-host": {
+      "kind": "language",
+      "summary": "`net.host(name)` narrows a `Network` to one literal endpoint; it is lazy, effect-free, and every acquisition through it requests exactly that endpoint.",
+      "doc": "docs/effects.md#network-host"
+    },
+    "network-python-surface": {
+      "kind": "language",
+      "summary": "The `network` standard module wraps `connect`, `read`, `write` and `close` over the raw network resource primitives.",
+      "doc": "docs/standard-library.md#network"
+    },
     "mandatory-mutation-footprint-warning": {
       "kind": "language",
       "summary": "A function with no effect ceiling that writes caller-reachable storage without a `mutates(...)` clause is warned with the inferred footprint printed verbatim; `mutates(...)` without a ceiling means unbounded effects with that footprint.",

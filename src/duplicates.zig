@@ -246,6 +246,11 @@ const CanonicalWriter = struct {
                 try work.append(allocator, .{ .expression = dir.path });
                 try work.append(allocator, .{ .expression = dir.capability });
             },
+            .host_resource => |host| {
+                writer.writeAll("host\n") catch return error.OutOfMemory;
+                try work.append(allocator, .{ .expression = host.name });
+                try work.append(allocator, .{ .expression = host.capability });
+            },
             .environment_get => |get| {
                 try work.append(allocator, .{ .expression = get.name });
                 try work.append(allocator, .{ .expression = get.capability });

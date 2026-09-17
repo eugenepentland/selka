@@ -293,6 +293,11 @@ const Emitter = struct {
                 try self.push(.{ .expression = dir.path });
                 try self.push(.{ .expression = dir.capability });
             },
+            .host_resource => |host| {
+                try self.instruction(node.span, .{ .host_resource = .{ .output = node.ty, .name = self.program.nodes[@backingInt(host.name)].ty } });
+                try self.push(.{ .expression = host.name });
+                try self.push(.{ .expression = host.capability });
+            },
             .resource_io => |io| {
                 try self.instruction(node.span, .{ .resource_io = .{ .kind = io.kind, .owner = io.owner, .output = node.ty, .input = if (io.value) |value| self.program.nodes[@backingInt(value)].ty else null } });
                 if (io.value) |value| try self.push(.{ .expression = value });
