@@ -8,6 +8,9 @@ pub const Error = error{ OutOfMemory, InvalidManifest, UnknownFunction };
 pub const Plan = struct {
     key: [64]u8,
     cacheable: bool,
+    /// The entry test declares no capability parameter and no `mutates`
+    /// footprint; combined with `cacheable` this is the opt-in replay condition.
+    pure: bool,
     dependencies: []const []const u8,
     reasons: []const []const u8,
     /// Release the two result arrays before releasing the parsed manifest.
@@ -19,7 +22,9 @@ pub const Plan = struct {
 
 const Kind = enum { call, function_value, indirect, codec };
 const Dependency = struct { symbol: []const u8, kind: Kind };
-const Metadata = struct { implementation_hash: []const u8, dependencies: []const Dependency, cacheable: bool, reasons: []const []const u8 };
+const Metadata = struct { implementation_hash: []const u8, dependencies: []const Dependency, cacheable: bool, pure: bool = true, reasons: []const []const u8 };
+/// Manifest key for a unit's checked dependency facts.
+const facts_key = "test_dependencies";
 /// Compute a sorted transitive implementation closure, including cycles exactly once.
 /// The caller supplies runtime/tool/input/settings fingerprints through context_key.
 pub fn plan(allocator: std.mem.Allocator, manifest: std.json.Value, entry_symbol: []const u8, context_key: []const u8) Error!Plan {
@@ -52,7 +57,7 @@ pub fn plan(allocator: std.mem.Allocator, manifest: std.json.Value, entry_symbol
     while (cursor < queue.items.len) : (cursor += 1) {
         const unit = units[queue.items[cursor]];
         try closure.append(allocator, json.text(json.get(unit, "symbol")));
-        const facts = json.get(unit, "test_dependencies");
+        const facts = json.get(unit, facts_key);
         try validateFacts(facts);
         if (!json.boolean(json.get(facts, "cacheable"))) cacheable = false;
         for (json.array(json.get(facts, "reasons"))) |reason| try unique(allocator, &reasons, json.text(reason));
@@ -73,11 +78,15 @@ pub fn plan(allocator: std.mem.Allocator, manifest: std.json.Value, entry_symbol
     part(&hash, entry_symbol);
     for (closure.items) |symbol| {
         part(&hash, symbol);
-        part(&hash, json.text(json.get(json.get(units[index.get(symbol).?], "test_dependencies"), "implementation_hash")));
+        part(&hash, json.text(json.get(json.get(units[index.get(symbol).?], facts_key), "implementation_hash")));
     }
     const dependencies = try closure.toOwnedSlice(allocator);
     errdefer allocator.free(dependencies);
-    return .{ .key = std.fmt.bytesToHex(hash.finalResult(), .lower), .cacheable = cacheable, .dependencies = dependencies, .reasons = try reasons.toOwnedSlice(allocator) };
+    // Purity is a property of the test's own signature: a capability parameter
+    // or a declared `mutates` footprint keeps it off the opt-in replay path even
+    // though the whole closure may still be cacheable.
+    const entry_pure = json.boolean(json.get(json.get(units[entry], facts_key), "pure"));
+    return .{ .key = std.fmt.bytesToHex(hash.finalResult(), .lower), .cacheable = cacheable, .pure = entry_pure, .dependencies = dependencies, .reasons = try reasons.toOwnedSlice(allocator) };
 }
 fn validateFacts(facts: std.json.Value) Error!void {
     const digest = json.text(json.get(facts, "implementation_hash"));
@@ -171,4 +180,34 @@ test "plan allocation failures release every traversal buffer" {
 fn allocationPlan(allocator: std.mem.Allocator) !void {
     const units = [_]FixtureUnit{ fixture("A", 0, &.{.{ .symbol = "B", .kind = .call }}), fixture("B", 1, &.{}) };
     _ = try fixturePlan(allocator, &units, "A", "runtime");
+}
+
+// spec-case: PURE-SKIP-1
+test "plan exposes entry signature purity and treats an absent field as impure" {
+    const a = std.testing.allocator;
+    var units = [_]FixtureUnit{fixture("A", 0, &.{})};
+    const pure_bytes = try std.json.Stringify.valueAlloc(a, .{ .abi = "native-abi", .functions = units }, .{});
+    defer a.free(pure_bytes);
+    const pure_parsed = try std.json.parseFromSlice(std.json.Value, a, pure_bytes, .{});
+    defer pure_parsed.deinit();
+    const pure_plan = try plan(a, pure_parsed.value, "A", "runtime");
+    defer pure_plan.deinit(a);
+    try std.testing.expect(pure_plan.pure);
+
+    units[0].test_dependencies.pure = false;
+    const impure_bytes = try std.json.Stringify.valueAlloc(a, .{ .abi = "native-abi", .functions = units }, .{});
+    defer a.free(impure_bytes);
+    const impure_parsed = try std.json.parseFromSlice(std.json.Value, a, impure_bytes, .{});
+    defer impure_parsed.deinit();
+    const impure_plan = try plan(a, impure_parsed.value, "A", "runtime");
+    defer impure_plan.deinit(a);
+    try std.testing.expect(!impure_plan.pure);
+
+    const legacy = try std.json.parseFromSlice(std.json.Value, a,
+        \\{"abi":"native-abi","functions":[{"symbol":"A","test_dependencies":{"implementation_hash":"0000000000000000000000000000000000000000000000000000000000000000","dependencies":[],"cacheable":true,"reasons":[]}}]}
+    , .{ .allocate = .alloc_always });
+    defer legacy.deinit();
+    const legacy_plan = try plan(a, legacy.value, "A", "runtime");
+    defer legacy_plan.deinit(a);
+    try std.testing.expect(!legacy_plan.pure);
 }

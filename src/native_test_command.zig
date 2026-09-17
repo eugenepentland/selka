@@ -188,13 +188,18 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     const selected: []const cases.Case = if (opts.bench.only) &.{} else try cases.discover(context.allocator, declared_schema, config, opts.filter);
     const benches: []const bench.Selection = if (opts.bench.pattern) |pattern| try bench.discover(context.allocator, declared_schema, config, pattern) else &.{};
     const results = try context.allocator.alloc(receipts.Result, selected.len);
+    const pure = try context.allocator.alloc(bool, selected.len);
+    @memset(pure, false);
+    const replayed = try context.allocator.alloc(bool, selected.len);
+    @memset(replayed, false);
     const bench_states = try context.allocator.alloc(Bench, benches.len);
     for (benches, bench_states) |selection, *state| state.* = .{ .plan = .{ .selection = selection } };
     try context.mkdir(directory);
     var pending: std.ArrayList(Pending) = .empty;
     defer pending.deinit(context.allocator);
 
-    planSelectedCases(context, &graphs, directory, selected, results, &pending) catch |err| switch (err) {
+    const outcomes: Outcomes = .{ .results = results, .pure = pure, .replayed = replayed };
+    planSelectedCases(context, &graphs, directory, selected, outcomes, &pending) catch |err| switch (err) {
         error.ProjectConfigurationFailed => return 2,
         error.ProjectPolicyRejected => return 3,
         else => return err,
@@ -214,9 +219,12 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     if (opts.cases) |path| {
         if (!std.mem.eql(u8, config_bytes, try context.read(path))) return error.SourceChanged;
     }
-    if (!opts.flags.no_cache) for (results) |result| try receipts.write(context, directory, result);
-    if (opts.flags.report) try emitWorkReport(context, &work, results);
-    const test_status = try report(context, results, opts.flags.json);
+    if (!opts.flags.no_cache) for (results, pure) |result, is_pure| {
+        try receipts.write(context, directory, result);
+        if (opts.flags.pure_skip and is_pure) try receipts.writeOutcome(context, directory, result);
+    };
+    if (opts.flags.report) try emitWorkReport(context, &work, results, replayed);
+    const test_status = try report(context, results, replayed, opts.flags.json);
     return finish(context, opts, bench_states, &bench_context, test_status, test_failed);
 }
 
@@ -446,10 +454,16 @@ fn finish(context: fs.Context, opts: options.Options, benches: []const Bench, ct
 /// Record the native test outcome as real performed/reused work. Parser, body
 /// check, lowering, emission and link counts come from the compiler children's
 /// own `work-report-v1` lines, which `Session.observe` folded in.
-fn emitWorkReport(context: fs.Context, work: *invalidation.Work, results: []const receipts.Result) Error!void {
+fn emitWorkReport(context: fs.Context, work: *invalidation.Work, results: []const receipts.Result, replayed: []const bool) Error!void {
     var executed: usize = 0;
     var cached: usize = 0;
-    for (results) |result| {
+    for (results, replayed) |result, was_replayed| {
+        // A replayed pure outcome never ran a process, even when its recorded
+        // status is `failed`, so it counts as reused rather than executed.
+        if (was_replayed) {
+            cached += 1;
+            continue;
+        }
         if (std.mem.eql(u8, result.status, "cached")) cached += 1;
         if (std.mem.eql(u8, result.status, "passed") or std.mem.eql(u8, result.status, "failed")) executed += 1;
     }
@@ -473,16 +487,24 @@ fn durableReuseAllowed(opts: options.Options, cacheable: bool) bool {
     if (opts.flags.no_cache) return false;
     return cacheable;
 }
+// spec-case: PURE-SKIP-1
+test "force and no-cache disable durable outcome replay for a pure test" {
+    const enabled: options.Options = .{ .source = "main.my" };
+    try std.testing.expect(durableReuseAllowed(enabled, true));
+    try std.testing.expect(!durableReuseAllowed(.{ .source = "main.my", .flags = .{ .force = true } }, true));
+    try std.testing.expect(!durableReuseAllowed(.{ .source = "main.my", .flags = .{ .no_cache = true } }, true));
+    try std.testing.expect(!durableReuseAllowed(enabled, false));
+}
 fn planSelectedCases(
     context: fs.Context,
     graphs: *Graphs,
     directory: []const u8,
     selected: []const cases.Case,
-    results: []receipts.Result,
+    outcomes: Outcomes,
     pending: *std.ArrayList(Pending),
 ) Error!void {
     for (selected, 0..) |case, case_index| {
-        const result = &results[case_index];
+        const result = &outcomes.results[case_index];
         result.* = .{ .name = case.name, .status = "skipped", .expected = case.expected };
         if (case.declared.skip) |reason| {
             result.reason = reason;
@@ -513,7 +535,22 @@ fn planSelectedCases(
         result.dependencies = plan.dependencies;
         result.cacheable = plan.cacheable and session.environment.cacheable;
         result.context = .{ .reasons = plan.reasons, .identity = identity };
+        const pure_candidate = result.cacheable and plan.pure;
+        outcomes.pure[case_index] = pure_candidate;
         const path = try receipts.path(context, directory, result.key);
+        // The opt-in signature-pure path replays a recorded pass or failure by
+        // the same semantic identity, without depending on the positive-only
+        // receipt. It is checked first so a recorded failure is never mistaken
+        // for a miss and silently re-run as a pass.
+        if (pure_candidate and session.options.flags.pure_skip and durableReuseAllowed(session.options, result.cacheable)) {
+            if (receipts.outcome(context, path, result.key, case.name, case.expected, identity)) |recorded| {
+                outcomes.replayed[case_index] = true;
+                result.status = if (std.mem.eql(u8, recorded.status, "passed")) "cached" else "failed";
+                result.actual = recorded.actual;
+                result.reason = recorded.reason;
+                continue;
+            }
+        }
         if (durableReuseAllowed(session.options, result.cacheable) and receipts.hit(context, path, result.key, case.name, case.expected, identity)) {
             result.status = "cached";
             result.actual = case.expected;
@@ -700,6 +737,12 @@ test "a failed expectation reports both values and any captured guest output" {
     try std.testing.expectEqualStrings("", passed);
 }
 
+/// Per-case outcome slots bundled for planning. `pure` marks a case that is both
+/// effect-cacheable and signature-pure; `replayed` marks a case whose outcome was
+/// served from the opt-in pure record without executing. Both live beside the
+/// reported results instead of inside `receipts.Result` to preserve its wire shape.
+const Outcomes = struct { results: []receipts.Result, pure: []bool, replayed: []bool };
+
 const Pending = struct {
     graph: *Graph,
     selected: std.json.Value,
@@ -823,16 +866,20 @@ test "one prepared project graph is shared per selected provider identity" {
     try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, calls, "list-interfaces"));
 }
 
-fn report(context: fs.Context, results: []const receipts.Result, json: bool) Error!u8 {
+fn report(context: fs.Context, results: []const receipts.Result, replayed: []const bool, json: bool) Error!u8 {
     var passed: usize = 0;
     var failed: usize = 0;
     var skipped: usize = 0;
     var cached: usize = 0;
-    for (results) |result| {
-        if (std.mem.eql(u8, result.status, "passed")) passed += 1;
-        if (std.mem.eql(u8, result.status, "failed")) failed += 1;
+    var executed: usize = 0;
+    for (results, replayed) |result, was_replayed| {
+        const was_passed = std.mem.eql(u8, result.status, "passed");
+        const was_failed = std.mem.eql(u8, result.status, "failed");
+        if (was_passed) passed += 1;
+        if (was_failed) failed += 1;
         if (std.mem.eql(u8, result.status, "skipped")) skipped += 1;
         if (std.mem.eql(u8, result.status, "cached")) cached += 1;
+        if ((was_passed or was_failed) and !was_replayed) executed += 1;
         if (!json) try std.Io.File.stdout().writeStreamingAll(context.io, try std.fmt.allocPrint(context.allocator, "{s} {s}{s}{s}\n", .{
             result.status, result.name, if (result.reason.len != 0) ": " else "", result.reason,
         }));
@@ -844,7 +891,7 @@ fn report(context: fs.Context, results: []const receipts.Result, json: bool) Err
         .failed = failed,
         .skipped = skipped,
         .cached = cached,
-        .executed = passed + failed,
+        .executed = executed,
     }, .{}) else try std.fmt.allocPrint(context.allocator, "{d} passed, {d} cached, {d} failed, {d} skipped", .{ passed, cached, failed, skipped });
     try std.Io.File.stdout().writeStreamingAll(context.io, try std.fmt.allocPrint(context.allocator, "{s}\n", .{output}));
     if (failed != 0) return 1;

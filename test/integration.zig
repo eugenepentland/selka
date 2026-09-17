@@ -5614,6 +5614,164 @@ fn c4ProviderCasesChanged(allocator: std.mem.Allocator, first: []const u8, chang
 }
 
 // ---------------------------------------------------------------------------
+// PURE-SKIP: opt-in outcome replay for unchanged signature-pure tests
+// ---------------------------------------------------------------------------
+
+const pure_main =
+    \\module main
+    \\import helpers
+    \\export test_ok
+    \\export test_bad
+    \\
+    \\
+    \\def main() -> int:
+    \\    return 0
+    \\
+    \\
+    \\def test_ok() -> bool effects():
+    \\    return helpers.value() == 1
+    \\
+    \\
+    \\def test_bad() -> bool effects():
+    \\    return helpers.value() == 2
+;
+const pure_helpers =
+    \\module helpers
+    \\export value
+    \\
+    \\
+    \\def value() -> i64 effects():
+    \\    return 1
+;
+
+const PureProject = struct { root: []const u8, entry: []const u8, cache: []const u8, trace: []const u8 };
+fn pureProject(temp: *std.testing.TmpDir) !PureProject {
+    try writeProjectFile(temp, "main.my", pure_main);
+    try writeProjectFile(temp, "helpers.my", pure_helpers);
+    const root_sentinel = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root_sentinel);
+    const root = try testing.allocator.dupe(u8, root_sentinel);
+    return .{
+        .root = root,
+        .entry = try std.fs.path.join(testing.allocator, &.{ root, "main.my" }),
+        .cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" }),
+        .trace = try std.fs.path.join(testing.allocator, &.{ root, "trace.log" }),
+    };
+}
+
+// spec: PURE-SKIP-1
+test "PURE-SKIP-1 pure failure outcome replays without executing and is never masked" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const project = try pureProject(&temp);
+    defer testing.allocator.free(project.root);
+    defer testing.allocator.free(project.entry);
+    defer testing.allocator.free(project.cache);
+    defer testing.allocator.free(project.trace);
+
+    c4TraceReset(project.trace);
+    const cold = try c4Invoke(project.entry, null, project.cache, project.trace, &.{"--pure-skip"});
+    defer testing.allocator.free(cold.stdout);
+    defer testing.allocator.free(cold.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, cold.term);
+    const cold_counts = try c4Counts(cold.stdout);
+    try testing.expectEqual(@as(usize, 1), cold_counts.passed);
+    try testing.expectEqual(@as(usize, 1), cold_counts.failed);
+    try testing.expectEqual(@as(usize, 2), cold_counts.executed);
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(project.trace, " build "));
+
+    c4TraceReset(project.trace);
+    const warm = try c4Invoke(project.entry, null, project.cache, project.trace, &.{"--pure-skip"});
+    defer testing.allocator.free(warm.stdout);
+    defer testing.allocator.free(warm.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, warm.term);
+    const warm_counts = try c4Counts(warm.stdout);
+    try testing.expectEqual(@as(usize, 1), warm_counts.failed);
+    try testing.expectEqual(@as(usize, 1), warm_counts.cached);
+    try testing.expectEqual(@as(usize, 0), warm_counts.executed);
+    // The recorded outcome replays with no lowering, no native build and no run.
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(project.trace, "native-test-compile"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(project.trace, " build "));
+    const warm_work = try c4WorkLine(warm.stderr);
+    try testing.expectEqual(@as(usize, 0), try c4WorkCount(warm_work, "executed_tests", "performed"));
+    try testing.expectEqual(@as(usize, 2), try c4WorkCount(warm_work, "executed_tests", "reused"));
+    try testing.expect(std.mem.indexOf(u8, warm.stdout, "expected true, got false") != null);
+
+    // Without the flag the default path never replays a recorded failure.
+    c4TraceReset(project.trace);
+    const default_run = try c4Invoke(project.entry, null, project.cache, project.trace, &.{});
+    defer testing.allocator.free(default_run.stdout);
+    defer testing.allocator.free(default_run.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, default_run.term);
+    try testing.expectEqual(@as(usize, 1), (try c4Counts(default_run.stdout)).failed);
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(project.trace, " build "));
+}
+
+// spec-case: PURE-SKIP-1
+test "PURE-SKIP-1 a changed dependency invalidates the recorded pure outcome" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const project = try pureProject(&temp);
+    defer testing.allocator.free(project.root);
+    defer testing.allocator.free(project.entry);
+    defer testing.allocator.free(project.cache);
+    defer testing.allocator.free(project.trace);
+
+    const cold = try c4Invoke(project.entry, null, project.cache, project.trace, &.{"--pure-skip"});
+    defer testing.allocator.free(cold.stdout);
+    defer testing.allocator.free(cold.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, cold.term);
+    try testing.expectEqual(@as(usize, 1), (try c4Counts(cold.stdout)).failed);
+
+    const edited_helpers = try std.mem.replaceOwned(u8, testing.allocator, pure_helpers, "return 1", "return 2");
+    defer testing.allocator.free(edited_helpers);
+    try writeProjectFile(&temp, "helpers.my", edited_helpers);
+    c4TraceReset(project.trace);
+    const edited = try c4Invoke(project.entry, null, project.cache, project.trace, &.{"--pure-skip"});
+    defer testing.allocator.free(edited.stdout);
+    defer testing.allocator.free(edited.stderr);
+    // The old failure is not replayed: both tests re-run against the new closure.
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, edited.term);
+    const edited_counts = try c4Counts(edited.stdout);
+    try testing.expectEqual(@as(usize, 1), edited_counts.passed);
+    try testing.expectEqual(@as(usize, 1), edited_counts.failed);
+    try testing.expectEqual(@as(usize, 2), edited_counts.executed);
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(project.trace, " build "));
+}
+
+// spec-case: PURE-SKIP-1
+test "PURE-SKIP-1 no-cache and force disable pure outcome replay" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const project = try pureProject(&temp);
+    defer testing.allocator.free(project.root);
+    defer testing.allocator.free(project.entry);
+    defer testing.allocator.free(project.cache);
+    defer testing.allocator.free(project.trace);
+
+    const cold = try c4Invoke(project.entry, null, project.cache, project.trace, &.{"--pure-skip"});
+    defer testing.allocator.free(cold.stdout);
+    defer testing.allocator.free(cold.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, cold.term);
+
+    c4TraceReset(project.trace);
+    const fresh = try c4Invoke(project.entry, null, project.cache, project.trace, &.{ "--pure-skip", "--no-cache" });
+    defer testing.allocator.free(fresh.stdout);
+    defer testing.allocator.free(fresh.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, fresh.term);
+    try testing.expectEqual(@as(usize, 2), (try c4Counts(fresh.stdout)).executed);
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(project.trace, " build "));
+
+    c4TraceReset(project.trace);
+    const forced = try c4Invoke(project.entry, null, project.cache, project.trace, &.{ "--pure-skip", "--force" });
+    defer testing.allocator.free(forced.stdout);
+    defer testing.allocator.free(forced.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, forced.term);
+    try testing.expectEqual(@as(usize, 2), (try c4Counts(forced.stdout)).executed);
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(project.trace, " build "));
+}
+
+// ---------------------------------------------------------------------------
 // Guest performance benchmarks: candidate, approval and immutable enforcement
 // ---------------------------------------------------------------------------
 

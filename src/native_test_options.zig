@@ -12,6 +12,10 @@ pub const Flags = struct {
     /// `--report` emits a work-report-v1 line for this test invocation.
     report: bool = false,
     json: bool = false,
+    /// `--pure-skip` opts into replaying a recorded pass-or-fail outcome for an
+    /// unchanged signature-pure test; off by default so recorded failures do not
+    /// change the default result.
+    pure_skip: bool = false,
 };
 /// Sampling and whole-run bounds for one benchmark invocation.
 pub const Tuning = struct {
@@ -53,7 +57,7 @@ pub const Options = struct {
 /// Native tests require no Python interpreter.
 pub const usage = "usage: mylang test <entry.my|directory> [--filter SUBSTRING|GLOB] [--cases FILE]\n" ++
     "  --link FILE --link-library NAME --library-path DIR (repeatable)\n" ++
-    "  --cache-dir DIR --force --no-cache --report --json --qbe PATH --zig PATH\n" ++
+    "  --cache-dir DIR --force --no-cache --report --json --pure-skip --qbe PATH --zig PATH\n" ++
     "  --mode Debug|ReleaseFast\n" ++
     "  --max-steps N --max-frames N --max-calls N --timeout-ms N\n" ++
     "  --max-memory BYTES  per-test byte ceiling (K/M/G suffixes; default 512M)\n" ++
@@ -87,6 +91,10 @@ pub fn parse(args: []const []const u8) Error!Options {
         }
         if (std.mem.eql(u8, arg, "--json")) {
             result.flags.json = true;
+            continue;
+        }
+        if (std.mem.eql(u8, arg, "--pure-skip")) {
+            result.flags.pure_skip = true;
             continue;
         }
         if (std.mem.eql(u8, arg, "--bench-only")) {
@@ -223,4 +231,12 @@ test "a test run accepts a suffixed byte ceiling and an explicit fan-out width" 
     for ([_][]const []const u8{ &.{ "x", "--max-memory=12x" }, &.{ "x", "--max-memory" }, &.{ "x", "--jobs=0" }, &.{ "x", "--jobs=all" } }) |args| {
         try std.testing.expectError(error.InvalidTestArguments, parse(args));
     }
+}
+
+// spec-case: PURE-SKIP-1
+test "pure-skip is an explicit opt-in switch" {
+    const enabled = try parse(&.{ "main.my", "--pure-skip" });
+    try std.testing.expect(enabled.flags.pure_skip);
+    try std.testing.expect(!(try parse(&.{"main.my"})).flags.pure_skip);
+    try std.testing.expectError(error.InvalidTestArguments, parse(&.{ "main.my", "--pure-skipp" }));
 }

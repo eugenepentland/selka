@@ -16,6 +16,10 @@ pub const Metadata = struct {
     implementation_hash: []const u8,
     dependencies: []const Dependency,
     cacheable: bool,
+    /// No capability parameter and no declared `mutates(...)` footprint, so an
+    /// unchanged result may be replayed without a positive receipt when the
+    /// opt-in pure-path flag is set. Always implies `cacheable` is required too.
+    pure: bool,
     reasons: []const []const u8,
 };
 /// Record checked call edges and the canonical type inputs actually used by a unit.
@@ -47,8 +51,22 @@ pub fn describe(allocator: std.mem.Allocator, program: bytecode.Program, index: 
         .implementation_hash = try allocator.dupe(u8, &std.fmt.bytesToHex(hash.finalResult(), .lower)),
         .dependencies = try builder.dependencies.toOwnedSlice(allocator),
         .cacheable = cacheable,
+        .pure = signaturePure(function.signature, function.scope.locals),
         .reasons = try builder.reasons.toOwnedSlice(allocator),
     };
+}
+/// Whether a checked function's declared signature is pure: it exposes no
+/// capability parameter and declares no `mutates(...)` footprint. This is a
+/// strictly stronger condition than the effect-based `cacheable` fact and gates
+/// the opt-in outcome-replay path, so a capability the test never reads still
+/// keeps the test off that path.
+pub fn signaturePure(signature: typed.FunctionSignature, locals: []const typed.Local) bool {
+    if (signature.declared_mutates.len != 0) return false;
+    const parameters = @min(signature.parameter_count, locals.len);
+    for (locals[0..parameters]) |parameter| {
+        if (parameter.ty.capabilityIndex() != null) return false;
+    }
+    return true;
 }
 const TypeFact = struct { identity: []const u8, digest: [32]u8 };
 fn typeLess(_: void, a: TypeFact, b: TypeFact) bool {
@@ -266,4 +284,16 @@ test "an exported declared ceiling does not suppress body-change invalidation" {
     try std.testing.expectEqualStrings(first.implementation_hash, same.implementation_hash);
     const changed = try describe(a, .{ .functions = &functions }, 0, second_il, &catalog, &.{});
     try std.testing.expect(!std.mem.eql(u8, first.implementation_hash, changed.implementation_hash));
+}
+
+// spec-case: PURE-SKIP-1
+test "signature purity excludes capability parameters and declared mutates" {
+    const span = @import("source.zig").Span{ .start = 0, .end = 0 };
+    const value_locals = [_]typed.Local{.{ .name = "x", .declaration = span, .ty = .i64, .mutable = false }};
+    const capability_locals = [_]typed.Local{.{ .name = "fs", .declaration = span, .ty = .filesystem_cap, .mutable = false }};
+    const plain: typed.FunctionSignature = .{ .return_type = .bool, .parameter_count = 1 };
+    const mutating: typed.FunctionSignature = .{ .return_type = .bool, .parameter_count = 1, .declared_mutates = &[_]u16{0} };
+    try std.testing.expect(signaturePure(plain, &value_locals));
+    try std.testing.expect(!signaturePure(plain, &capability_locals));
+    try std.testing.expect(!signaturePure(mutating, &value_locals));
 }

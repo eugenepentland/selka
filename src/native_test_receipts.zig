@@ -75,9 +75,52 @@ pub fn invalidate(context: fs.Context, filename: []const u8) Error!void {
         else => return err,
     };
 }
+/// One recorded pass-or-fail outcome replayed by the opt-in signature-pure path.
+/// A failure keeps its recorded message so a replay never masks it as a pass.
+pub const Outcome = struct {
+    status: []const u8,
+    actual: std.json.Value = .null,
+    reason: []const u8 = "",
+};
+/// Read a recorded pass-or-fail outcome, accepting it only when the integrity
+/// envelope verifies and the semantic key, name, contract, provider and expected
+/// value still match. A positive-only receipt is a miss for a failure, which is
+/// exactly the gap the pure path fills; a corrupt or mismatched entry is a miss.
+pub fn outcome(context: fs.Context, filename: []const u8, key: []const u8, name: []const u8, expected: std.json.Value, identity: Identity) ?Outcome {
+    const bytes = context.read(filename) catch return null;
+    const parsed = std.json.parseFromSlice(std.json.Value, context.allocator, bytes, .{}) catch return null;
+    const payload = v.text(v.get(parsed.value, "payload"));
+    const digest = fs.hash(context.allocator, payload) catch return null;
+    if (!std.mem.eql(u8, digest, v.text(v.get(parsed.value, "sha256")))) return null;
+    const item = std.json.parseFromSlice(std.json.Value, context.allocator, payload, .{}) catch return null;
+    if (!std.mem.eql(u8, v.text(v.get(item.value, "key")), key)) return null;
+    if (!std.mem.eql(u8, v.text(v.get(item.value, "name")), name)) return null;
+    if (!std.mem.eql(u8, v.text(v.get(item.value, "contract")), identity.contract)) return null;
+    if (!std.mem.eql(u8, v.text(v.get(item.value, "provider")), identity.provider)) return null;
+    if (!same(v.get(item.value, "expected"), expected)) return null;
+    const status = v.text(v.get(item.value, "status"));
+    if (std.mem.eql(u8, status, "passed")) {
+        if (!same(v.get(item.value, "actual"), expected)) return null;
+        return .{ .status = "passed", .actual = expected };
+    }
+    if (!std.mem.eql(u8, status, "failed")) return null;
+    return .{ .status = "failed", .actual = v.get(item.value, "actual"), .reason = v.text(v.get(item.value, "reason")) };
+}
 /// Publish only successful deterministic executions, after source integrity checks.
 pub fn write(context: fs.Context, directory: []const u8, result: Result) Error!void {
     if (!result.cacheable or !std.mem.eql(u8, result.status, "passed")) return;
+    try publish(context, directory, result);
+}
+/// Publish a pure outcome, pass or fail, so an opt-in replay can report the
+/// recorded result without executing. Only `--pure-skip` calls this, and only
+/// for a case that is both signature-pure and effect-cacheable.
+pub fn writeOutcome(context: fs.Context, directory: []const u8, result: Result) Error!void {
+    if (!result.cacheable) return;
+    if (!std.mem.eql(u8, result.status, "passed") and !std.mem.eql(u8, result.status, "failed")) return;
+    try publish(context, directory, result);
+}
+/// Write one checksummed outcome envelope at the content-addressed result path.
+fn publish(context: fs.Context, directory: []const u8, result: Result) Error!void {
     const payload = try std.json.Stringify.valueAlloc(context.allocator, result, .{});
     const bytes = try std.json.Stringify.valueAlloc(context.allocator, .{ .payload = payload, .sha256 = try fs.hash(context.allocator, payload) }, .{});
     try context.atomic(try path(context, directory, result.key), bytes);
@@ -139,4 +182,53 @@ test "receipt identity binds its semantic key contract and provider, not the who
     try std.testing.expect(!hit(context, filename, "other-key", result.name, result.expected, identity));
     try std.testing.expect(!hit(context, filename, result.key, result.name, result.expected, .{ .contract = "contract-b", .provider = identity.provider, .source = identity.source }));
     try std.testing.expect(!hit(context, filename, result.key, result.name, result.expected, .{ .contract = identity.contract, .provider = "provider-b", .source = identity.source }));
+}
+
+// spec: PURE-SKIP-1
+test "a recorded pure failure replays with its message and rejects changed identity" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(context.io, ".", context.allocator);
+    const identity: Identity = .{ .contract = "contract-a", .provider = "provider-a", .source = "snapshot-a" };
+    const failure: Result = .{
+        .name = "test_bad",
+        .status = "failed",
+        .actual = .{ .bool = false },
+        .expected = .{ .bool = true },
+        .reason = "expected true, got false",
+        .key = "pure-key",
+        .cacheable = true,
+        .context = .{ .identity = identity },
+    };
+    const filename = try path(context, directory, failure.key);
+    try std.testing.expect(outcome(context, filename, failure.key, failure.name, failure.expected, identity) == null);
+    try writeOutcome(context, directory, failure);
+    const recorded = outcome(context, filename, failure.key, failure.name, failure.expected, identity).?;
+    try std.testing.expectEqualStrings("failed", recorded.status);
+    try std.testing.expectEqualStrings("expected true, got false", recorded.reason);
+    try std.testing.expect(!recorded.actual.bool);
+    // A changed key, name, contract, provider or expected value is a miss.
+    try std.testing.expect(outcome(context, filename, "other-key", failure.name, failure.expected, identity) == null);
+    try std.testing.expect(outcome(context, filename, failure.key, "other-name", failure.expected, identity) == null);
+    try std.testing.expect(outcome(context, filename, failure.key, failure.name, failure.expected, .{ .contract = "contract-b", .provider = identity.provider, .source = identity.source }) == null);
+    try std.testing.expect(outcome(context, filename, failure.key, failure.name, failure.expected, .{ .contract = identity.contract, .provider = "provider-b", .source = identity.source }) == null);
+    try std.testing.expect(outcome(context, filename, failure.key, failure.name, .{ .bool = false }, identity) == null);
+    // A recorded pass still reads as a pass and is never confused with a failure.
+    const pass: Result = .{
+        .name = "test_ok",
+        .status = "passed",
+        .actual = .{ .bool = true },
+        .expected = .{ .bool = true },
+        .key = "pass-key",
+        .cacheable = true,
+        .context = .{ .identity = identity },
+    };
+    try writeOutcome(context, directory, pass);
+    const passed = outcome(context, try path(context, directory, pass.key), pass.key, pass.name, pass.expected, identity).?;
+    try std.testing.expectEqualStrings("passed", passed.status);
+    try std.testing.expect(passed.actual.bool);
 }

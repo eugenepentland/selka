@@ -257,6 +257,7 @@ const FunctionFacts = struct {
             .implementation_hash = std.fmt.allocPrint(self.allocator, "{s}", .{std.fmt.bytesToHex(hash.finalResult(), .lower)}) catch return error.OutOfMemory,
             .dependencies = deps.items.toOwnedSlice(self.allocator) catch return error.OutOfMemory,
             .cacheable = function.policy.host == null and external_effects == 0 and !external,
+            .pure = dependencies.signaturePure(function.signature, function.scope.locals),
             .reasons = reasons.items.toOwnedSlice(self.allocator) catch return error.OutOfMemory,
         };
     }

@@ -24,6 +24,7 @@ const ReducedFacts = struct {
     implementation_hash: []const u8 = "",
     dependencies: []const ReducedDependency = &.{},
     cacheable: bool = false,
+    pure: bool = false,
     reasons: []const []const u8 = &.{},
 };
 const ReducedFunction = struct {
@@ -103,6 +104,7 @@ pub fn reduce(allocator: std.mem.Allocator, full: std.json.Value) Error![]u8 {
                 .implementation_hash = v.text(v.get(facts, hash_key)),
                 .dependencies = dependencies,
                 .cacheable = v.boolean(v.get(facts, "cacheable")),
+                .pure = v.boolean(v.get(facts, "pure")),
                 .reasons = reasons,
             },
         };
