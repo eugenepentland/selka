@@ -10,13 +10,18 @@ const callables = @import("callables.zig");
 const lower = @import("lower.zig");
 const bytecode_model = @import("bytecode_model.zig");
 const effect_engine = @import("effects.zig");
+fn firstError(items: []const language.diagnostic.Diagnostic) ?language.diagnostic.Diagnostic {
+    for (items) |item| if (item.severity == .err) return item;
+    return null;
+}
 fn reject(source: []const u8, code: []const u8, text: []const u8) !void {
     var c = try language.Compilation.init(t.allocator, fixture_path, source);
     defer c.deinit();
     try t.expectError(error.SourceError, c.check());
-    try t.expectEqualStrings(code, c.diagnostics.items[0].code);
-    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, text) != null);
-    if (std.mem.eql(u8, code, "E_EFFECT_BOUND")) try t.expect(c.diagnostics.items[0].related != null);
+    const diag = firstError(c.diagnostics.items) orelse return error.TestUnexpectedResult;
+    try t.expectEqualStrings(code, diag.code);
+    try t.expect(std.mem.indexOf(u8, diag.message, text) != null);
+    if (std.mem.eql(u8, code, "E_EFFECT_BOUND")) try t.expect(diag.related != null);
 }
 fn result(source: []const u8, expected: i64) !void {
     var c = try language.Compilation.init(t.allocator, fixture_path, source);
@@ -1029,6 +1034,136 @@ test "unannotated helpers accept shared collection arguments while declared muta
         \\
         \\
         \\def main() -> int:
+        \\    return 0
+    , "E_MUTATION_OVERLAP", "may alias");
+}
+
+const missing_footprint_code = @import("origins.zig").missing_footprint_code;
+
+fn firstMissingFootprint(source: []const u8) !?[]const u8 {
+    var c = try language.Compilation.init(t.allocator, fixture_path, source);
+    defer c.deinit();
+    try c.check();
+    for (c.diagnostics.items) |item| {
+        if (std.mem.eql(u8, item.code, missing_footprint_code)) {
+            const message = try t.allocator.dupe(u8, item.message);
+            return message;
+        }
+    }
+    return null;
+}
+
+fn missingFootprintCount(source: []const u8) !usize {
+    var c = try language.Compilation.init(t.allocator, fixture_path, source);
+    defer c.deinit();
+    try c.check();
+    var count: usize = 0;
+    for (c.diagnostics.items) |item| {
+        if (std.mem.eql(u8, item.code, missing_footprint_code)) count += 1;
+    }
+    return count;
+}
+
+const unbounded_writer =
+    \\def touch(values: list[int]) -> None:
+    \\    values[0] = 1
+    \\
+    \\
+    \\def main() -> int:
+    \\    values = [1]
+    \\    touch(values)
+    \\    return 0
+;
+
+// spec: W-MUTATES-MISSING
+test "an unbounded external write warns with the inferred mutates clause verbatim" {
+    const message = (try firstMissingFootprint(unbounded_writer)).?;
+    defer t.allocator.free(message);
+    try t.expectEqualStrings("this function writes `values` (parameter 1) reachable from the caller; declare `mutates(values)`", message);
+    try t.expectEqual(@as(usize, 1), try missingFootprintCount(unbounded_writer));
+}
+
+// spec: W-MUTATES-MISSING
+test "every inferred position is listed in the warning clause" {
+    const message = (try firstMissingFootprint(
+        \\def write_both(first: list[int], second: list[int]) -> None:
+        \\    first[0] = 1
+        \\    second[0] = 2
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    )).?;
+    defer t.allocator.free(message);
+    try t.expectEqualStrings("this function writes `first` (parameter 1), `second` (parameter 2) reachable from the caller; declare `mutates(first, second)`", message);
+}
+
+// spec: W-MUTATES-MISSING
+test "a declared mutates footprint without a ceiling is accepted and warns nothing" {
+    const declared =
+        \\def touch(values: list[int]) -> None mutates(values):
+        \\    values[0] = 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1]
+        \\    touch(values)
+        \\    return 0
+    ;
+    try accept(declared);
+    try t.expectEqual(@as(usize, 0), try missingFootprintCount(declared));
+}
+
+// spec: W-MUTATES-MISSING
+test "an explicit ceiling lacking mutation still rejects a mutates clause" {
+    try reject(
+        \\def touch(values: list[int]) -> None effects() mutates(values):
+        \\    values[0] = 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    , "E_MUTATES_EFFECT", "requires the mutation effect");
+    try reject(
+        \\def touch(values: list[int]) -> None effects(output) mutates(values):
+        \\    _ = values
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    , "E_MUTATES_EFFECT", "requires the mutation effect");
+}
+
+// spec: W-MUTATES-MISSING
+test "a function that writes only its own local storage is not warned" {
+    const local_only =
+        \\def local_edit() -> int:
+        \\    values = [1]
+        \\    values[0] = 2
+        \\    return values[0]
+        \\
+        \\
+        \\def main() -> int:
+        \\    return local_edit() - 2
+    ;
+    try accept(local_only);
+    try t.expectEqual(@as(usize, 0), try missingFootprintCount(local_only));
+}
+
+// spec: MUTATION-OVERLAP-1
+test "a declared footprint without a ceiling still enforces overlap at call sites" {
+    try reject(
+        \\def touch(dst: list[int], src: list[int]) -> None mutates(dst):
+        \\    dst[0] = src[0]
+        \\
+        \\
+        \\def forward(first: list[int], second: list[int]) -> None mutates(first):
+        \\    touch(first, second)
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1]
+        \\    forward(values, values)
         \\    return 0
     , "E_MUTATION_OVERLAP", "may alias");
 }

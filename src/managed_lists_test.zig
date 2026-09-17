@@ -14,11 +14,17 @@ fn execute(text: []const u8) !native.Run {
     };
 }
 
+fn firstError(items: []const language.diagnostic.Diagnostic) ?language.diagnostic.Diagnostic {
+    for (items) |item| if (item.severity == .err) return item;
+    return null;
+}
+
 fn reject(text: []const u8, expected: []const u8) !void {
     var compilation = try language.Compilation.init(t.allocator, "invalid-managed.my", text);
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());
-    try t.expectEqualStrings(expected, compilation.diagnostics.items[0].code);
+    const diag = firstError(compilation.diagnostics.items) orelse return error.TestUnexpectedResult;
+    try t.expectEqualStrings(expected, diag.code);
 }
 
 fn rejectAll(sources: []const []const u8, code: []const u8) !void {
