@@ -2955,6 +2955,132 @@ test "CLI narrows a Network to one literal endpoint and rejects a dynamic host" 
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, dynamic, 1, "", "error[E_NETWORK_HOST]");
 }
 
+/// A project guest whose `main` takes a `Network`, narrows it to one literal
+/// endpoint and reports the acquisition code. Used by the grant tests.
+const network_connect_guest =
+    \\module main
+    \\import network
+    \\
+    \\
+    \\def main(net: Network) -> int effects(network):
+    \\    scoped = net.host("127.0.0.1:9")
+    \\    match network.connect(scoped):
+    \\        case network.Connected.ok(connection):
+    \\            _ = connection
+    \\            return 0
+    \\        case network.Connected.err(code):
+    \\            return code
+;
+
+/// Read until `buffer` fills or the peer closes; the bounded loop keeps the
+/// loopback test body free of control flow.
+fn readExact(io: std.Io, stream: std.Io.net.Stream, buffer: []u8) !usize {
+    var total: usize = 0;
+    while (total < buffer.len) {
+        var slices = [_][]u8{buffer[total..]};
+        const width = try stream.read(io, &slices);
+        if (width == 0) break;
+        total += width;
+    }
+    return total;
+}
+
+/// Accept the guest's write connection, assert the payload, answer it and close.
+fn acceptPayload(io: std.Io, server: *std.Io.net.Server) !void {
+    const peer = try server.accept(io);
+    defer peer.close(io);
+    var buffer: [4]u8 = undefined;
+    const width = try readExact(io, peer, &buffer);
+    try testing.expectEqualStrings("ping", buffer[0..width]);
+    var writer = peer.writer(io, &.{});
+    try writer.interface.writeAll("PONG");
+}
+
+/// Accept the guest's read connection and answer it with the echo payload.
+fn acceptBanner(io: std.Io, server: *std.Io.net.Server) !void {
+    const peer = try server.accept(io);
+    defer peer.close(io);
+    var writer = peer.writer(io, &.{});
+    try writer.interface.writeAll("PONG");
+}
+
+// spec: NETWORK-ENDPOINT-1
+test "CLI grants a narrowed endpoint and the network module exchanges bytes over loopback" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const address = try std.Io.net.IpAddress.parseLiteral("127.0.0.1:0");
+    var server = try address.listen(testing.io, .{});
+    defer server.deinit(testing.io);
+    const name = try std.fmt.allocPrint(testing.allocator, "{f}", .{server.socket.address});
+    defer testing.allocator.free(name);
+    const source = try std.fmt.allocPrint(testing.allocator,
+        \\module main
+        \\import network
+        \\
+        \\
+        \\def main(net: Network) -> int effects(network):
+        \\    scoped = net.host("{s}")
+        \\    match network.connect(scoped):
+        \\        case network.Connected.ok(first):
+        \\            payload: [4]u8 = b"ping"
+        \\            match network.write(first, payload):
+        \\                case network.Written.ok(sent):
+        \\                    _ = sent
+        \\                case network.Written.err(code):
+        \\                    return 0 - code
+        \\        case network.Connected.err(code):
+        \\            return 0 - code
+        \\    match network.connect(scoped):
+        \\        case network.Connected.ok(second):
+        \\            match network.read[4](second):
+        \\                case network.Read.ok(chunk):
+        \\                    return int(chunk.bytes[0]) + int(chunk.bytes[1]) + int(chunk.bytes[2]) + int(chunk.bytes[3]) + int(chunk.length)
+        \\                case network.Read.err(code):
+        \\                    return 0 - code
+        \\        case network.Connected.err(code):
+        \\            return 0 - code
+        \\
+    , .{name});
+    defer testing.allocator.free(source);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = source });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const grant = try std.fmt.allocPrint(testing.allocator, "--allow-endpoint={s}", .{name});
+    defer testing.allocator.free(grant);
+    const output = try temporary.dir.createFile(testing.io, "stdout", .{});
+    defer output.close(testing.io);
+    const failure = try temporary.dir.createFile(testing.io, "stderr", .{});
+    defer failure.close(testing.io);
+    const argv = [_][]const u8{ compiler_path, "run", entry, "--print-result", tools[0], tools[1], "--restrict", grant };
+    var child = try std.process.spawn(testing.io, .{ .argv = &argv, .stdin = .ignore, .stdout = .{ .file = output }, .stderr = .{ .file = failure } });
+    defer child.kill(testing.io);
+    // The guest opens two connections: send `ping` on the first (summed bytes:
+    // P+O+N+G + length 4 = 312) and read `PONG` on the second.
+    try acceptPayload(testing.io, &server);
+    try acceptBanner(testing.io, &server);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 312 & 0xff }, try child.wait(testing.io));
+    const printed = try temporary.dir.readFileAlloc(testing.io, "stdout", testing.allocator, .limited(4096));
+    defer testing.allocator.free(printed);
+    try testing.expectEqualStrings("312\n", printed);
+}
+
+// spec-case: NETWORK-ENDPOINT-1
+test "CLI denies a Network entry point and an endpoint outside the grant under restrict" {
+    try invokeProjectOptions("run", network_connect_guest, &.{"--restrict"}, 2, "", "--allow-endpoint=IP:PORT");
+    try invokeProjectOptions("run", network_connect_guest, &.{ "--restrict", "--allow-endpoint=127.0.0.1:8000" }, 2, "2\n", "");
+}
+
+// spec-case: NETWORK-ENDPOINT-1
+test "CLI rejects malformed repeated and empty endpoint grants" {
+    for ([_][]const []const u8{
+        &.{"--allow-endpoint="},
+        &.{"--allow-endpoint=localhost:9"},
+        &.{"--allow-endpoint=[::1]:9"},
+        &.{"--allow-endpoint=127.0.0.1:0"},
+        &.{ "--allow-endpoint=127.0.0.1:9", "--allow-endpoint=127.0.0.1:9" },
+    }) |options| try invokeProjectOptions("run", network_connect_guest, options, 2, "", "usage:");
+}
+
 // spec-case: FILE-METHOD-1
 test "CLI checks and lowers the qualified whole-path helper methods" {
     const source = @embedFile("fixtures/file-methods.my");

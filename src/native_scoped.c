@@ -3,11 +3,14 @@
    authority, and bounded copied metadata and listing snapshots. */
 #define _POSIX_C_SOURCE 200809L
 #include "native_scoped.h"
+#include <arpa/inet.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <netinet/in.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #define TRANSFER_LIMIT (64u * 1024u)
@@ -268,6 +271,97 @@ static MylangResourceWrite write_handle(void *context, uint64_t id, const uint8_
     result.length = (size_t)width;
     return result;
 }
+/* Parse one literal `IP:PORT` into a numeric address. No name resolution or
+   redirect following occurs, so the grant and the connect name the same peer. */
+static int endpoint_address(const char *name, struct sockaddr_in *address) {
+    const char *colon = strrchr(name, ':');
+    if (!colon || colon == name) return 0;
+    char host[64];
+    size_t width = (size_t)(colon - name);
+    if (width >= sizeof host) return 0;
+    memcpy(host, name, width);
+    host[width] = 0;
+    unsigned long port = strtoul(colon + 1, NULL, 10);
+    if (!port || port > 65535) return 0;
+    struct sockaddr_in parsed;
+    memset(&parsed, 0, sizeof parsed);
+    parsed.sin_family = AF_INET;
+    parsed.sin_port = htons((unsigned short)port);
+    if (inet_pton(AF_INET, host, &parsed.sin_addr) != 1) return 0;
+    *address = parsed;
+    return 1;
+}
+/* An allowlist entry is matched verbatim; `*` names every literal peer. */
+static int endpoint_allowed(const MylangScoped *scoped, const char *name, size_t length) {
+    for (size_t i = 0; i < scoped->endpoint_count; ++i) {
+        const MylangScopedEndpoint *entry = &scoped->endpoints[i];
+        if (entry->length == 1 && entry->name[0] == '*') return 1;
+        if (entry->length == length && !memcmp(entry->name, name, length)) return 1;
+    }
+    return 0;
+}
+static int dial(const char *name) {
+    struct sockaddr_in address;
+    if (!endpoint_address(name, &address)) return -1;
+    int handle = socket(AF_INET, SOCK_STREAM, 0);
+    if (handle < 0) return -1;
+    if (connect(handle, (struct sockaddr *)&address, sizeof address)) { close(handle); return -1; }
+    return handle;
+}
+/* A narrowed Network substitutes its scoped endpoint for the guest request, so
+   acquire sees exactly the literals the command line granted. */
+static MylangResourceResult acquire_network(void *context, const uint8_t *request, size_t length, unsigned permissions) {
+    MylangScoped *scoped = context;
+    MylangResourceResult result = {MYLANG_PROVIDER_DENIED, 0};
+    if (!scoped->endpoint_count) { result.status = MYLANG_PROVIDER_UNAVAILABLE; return result; }
+    if (!(permissions & (1u | 2u))) return result;
+    char name[128];
+    if (length >= sizeof name) return result;
+    memcpy(name, request, length);
+    name[length] = 0;
+    if (!endpoint_allowed(scoped, name, length)) return result;
+    size_t slot = free_slot(scoped);
+    if (slot == SIZE_MAX) { result.status = MYLANG_PROVIDER_DENIED; return result; }
+    int handle = dial(name);
+    if (handle < 0) { result.status = MYLANG_PROVIDER_FAILED; return result; }
+    scoped->handles[slot] = (MylangScopedHandle){handle, NULL, 0, 0, 0};
+    result.status = MYLANG_PROVIDER_OK;
+    result.handle = slot;
+    return result;
+}
+/* Record one literal endpoint (or `*`) before the first acquisition. */
+int mylang_scoped_endpoint(MylangScoped *scoped, const char *name) {
+    size_t length = strlen(name);
+    if (!length || length > 4096 || scoped->endpoint_count >= MYLANG_SCOPED_ENDPOINTS) return 0;
+    if (!(length == 1 && name[0] == '*')) {
+        struct sockaddr_in address;
+        if (!endpoint_address(name, &address)) return 0;
+    }
+    for (size_t i = 0; i < scoped->endpoint_count; ++i) {
+        const MylangScopedEndpoint *entry = &scoped->endpoints[i];
+        if (entry->length == length && !memcmp(entry->name, name, length)) return 0;
+    }
+    char *copy = malloc(length + 1);
+    if (!copy) return 0;
+    memcpy(copy, name, length);
+    copy[length] = 0;
+    scoped->endpoints[scoped->endpoint_count].name = copy;
+    scoped->endpoints[scoped->endpoint_count].length = length;
+    scoped->endpoint_count++;
+    return 1;
+}
+MylangResourceProvider mylang_scoped_network_provider(MylangScoped *scoped, unsigned permissions) {
+    (void)mylang_host_charge;
+    MylangResourceProvider provider = {0};
+    provider.context = scoped;
+    provider.permissions = permissions;
+    provider.acquire = acquire_network;
+    provider.complete = complete;
+    provider.release = release;
+    provider.read = read_handle;
+    provider.write = write_handle;
+    return provider;
+}
 void mylang_scoped_init(MylangScoped *scoped) {
     memset(scoped, 0, sizeof *scoped);
     for (size_t i = 0; i < MYLANG_SCOPED_HANDLES; ++i) scoped->handles[i].fd = -1;
@@ -290,6 +384,8 @@ void mylang_scoped_close(MylangScoped *scoped) {
         if (scoped->handles[i].fd >= 0 || scoped->handles[i].snapshot) shut(&scoped->handles[i]);
     for (size_t i = 0; i < scoped->count; ++i) close(scoped->roots[i].fd);
     scoped->count = 0;
+    for (size_t i = 0; i < scoped->endpoint_count; ++i) free(scoped->endpoints[i].name);
+    scoped->endpoint_count = 0;
 }
 MylangResourceProvider mylang_scoped_provider(MylangScoped *scoped, unsigned permissions) {
     (void)mylang_host_charge;

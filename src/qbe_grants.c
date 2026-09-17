@@ -95,6 +95,7 @@ static int accept(MylangGrants *grants, const char *argument, int *matched) {
     if (!strcmp(argument, "--restrict")) return !grants->restricted && (grants->restricted = 1);
     if (!strncmp(argument, "--allow-read=", 13)) return directory(grants, argument + 13, 0);
     if (!strncmp(argument, "--allow-write=", 14)) return directory(grants, argument + 14, 1);
+    if (!strncmp(argument, "--allow-endpoint=", 17)) return mylang_scoped_endpoint(&grants->scoped, argument + 17);
     if (!strcmp(argument, "--allow-clock")) return !grants->clock && (grants->clock = 1);
     if (!strcmp(argument, "--allow-host")) return !grants->host && (grants->host = 1);
     const char *seed = optional(argument, "--allow-random", &grants->entropy);
@@ -110,10 +111,10 @@ static int accept(MylangGrants *grants, const char *argument, int *matched) {
         return 1;
     }
     if (!strcmp(argument, "--allow-all")) {
-        if (grants->clock || grants->host || grants->entropy || grants->environment || grants->count) return 0;
+        if (grants->clock || grants->host || grants->entropy || grants->environment || grants->count || grants->scoped.endpoint_count) return 0;
         grants->clock = grants->entropy = grants->environment = grants->host = 1;
         grants->names = "";
-        return directory(grants, ".", 1);
+        return directory(grants, ".", 1) && mylang_scoped_endpoint(&grants->scoped, "*");
     }
     *matched = !strncmp(argument, "--allow-", 8) || !strncmp(argument, "--restrict", 10);
     return !*matched;
@@ -153,7 +154,7 @@ static int provision(MylangGrants *grants, MylangNativeProviders *providers, int
     int open = !grants->restricted;
     const MylangResourceProvider absent = {0};
     providers->filesystem = grants->scoped.count ? mylang_scoped_provider(&grants->scoped, writable(grants) ? 7u : 5u) : absent;
-    providers->network = absent;
+    providers->network = grants->scoped.endpoint_count ? mylang_scoped_network_provider(&grants->scoped, 7u) : absent;
     providers->clock_now = open || grants->clock ? clock_now : NULL;
     providers->random_context = NULL;
     providers->random_u64 = NULL;
