@@ -138,6 +138,7 @@ fn argv(context: fs.Context, shared: Fanout, source: []const u8) Error![]const [
     try list.appendSlice(a, &.{ "--max-memory", try decimal(a, opts.limits.max_memory orelse budget.test_default) });
     if (opts.flags.force) try list.append(a, "--force");
     if (opts.flags.no_cache) try list.append(a, "--no-cache");
+    if (opts.flags.mutation_markers) try list.append(a, "--mutation-markers");
     if (opts.bench.pattern) |pattern| {
         try list.appendSlice(a, &.{ "--bench", pattern, "--bench-profile", opts.bench.profile });
         if (opts.bench.only) try list.append(a, "--bench-only");

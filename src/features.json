@@ -452,6 +452,11 @@
       "summary": "effects(mutation) with mutates(...) permits only declared caller-owned managed writes; deep origins, return aliasing and conservative overlap rejection are checked through calls, generics and callbacks.",
       "doc": "docs/effects.md#mutation-contracts"
     },
+    "mutation-markers": {
+      "kind": "tooling",
+      "summary": "Opt-in `--mutation-markers` flag: a call-site `&` marks an argument passed to a callee parameter declared in `mutates(...)`, and a marker on an undeclared position, a non-assignable argument, or a missing marker is a located `E_MUTATION_MARKER` with a concrete replacement; off by default, so `&` remains a removed spelling.",
+      "doc": "docs/effects.md#mutation-contracts"
+    },
     "per-function-body-reuse": {
       "kind": "tooling",
       "summary": "Ordinary checked bodies reuse per function with stable declaration identities and dependency digests, so an unrelated generic, alias, constant or callback no longer disables reuse.",

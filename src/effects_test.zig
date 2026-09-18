@@ -10,6 +10,8 @@ const callables = @import("callables.zig");
 const lower = @import("lower.zig");
 const bytecode_model = @import("bytecode_model.zig");
 const effect_engine = @import("effects.zig");
+/// Stable code for the call-site `&` marker diagnostic exercised below.
+const marker_code = "E_MUTATION_MARKER";
 fn firstError(items: []const language.diagnostic.Diagnostic) ?language.diagnostic.Diagnostic {
     for (items) |item| if (item.severity == .err) return item;
     return null;
@@ -33,6 +35,26 @@ fn accept(source: []const u8) !void {
     defer c.deinit();
     try c.check();
     try c.emit();
+}
+/// Check and lower one source with the opt-in `&` marker flag on, returning the
+/// number of checked functions so callers still carry an explicit assertion.
+fn acceptMarkers(source: []const u8) !usize {
+    var c = try language.Compilation.init(t.allocator, fixture_path, source);
+    defer c.deinit();
+    c.src.mutation_markers = true;
+    try c.check();
+    try c.emit();
+    return c.program.?.functions.len;
+}
+/// Check one source with the marker flag on and return its first error. The
+/// message is copied out because the compilation arena is released here.
+fn markerError(source: []const u8) !struct { code: []const u8, message: []u8 } {
+    var c = try language.Compilation.init(t.allocator, fixture_path, source);
+    defer c.deinit();
+    c.src.mutation_markers = true;
+    try t.expectError(error.SourceError, c.check());
+    const diag = firstError(c.diagnostics.items) orelse return error.TestUnexpectedResult;
+    return .{ .code = diag.code, .message = try t.allocator.dupe(u8, diag.message) };
 }
 
 const allocate_body = "def allocate() -> int:\n    items: list[int] = []\n    return len(items)\n\n";
@@ -272,6 +294,155 @@ test "M1 mutates errors are declaration-site diagnostics" {
         \\def main() -> int effects():
         \\    return 0
     , "E_MUTATES_EFFECT", "mutation effect");
+}
+
+const marker_direct_valid =
+    \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
+    \\    values[0] = 1
+    \\
+    \\
+    \\def main() -> int effects(managed_allocation):
+    \\    values = [7]
+    \\    touch(&values)
+    \\    return 0
+;
+
+const marker_keyword_valid =
+    \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
+    \\    values[0] = 1
+    \\
+    \\
+    \\def main() -> int effects(managed_allocation):
+    \\    values = [7]
+    \\    touch(values=&values)
+    \\    return 0
+;
+
+const marker_missing =
+    \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
+    \\    values[0] = 1
+    \\
+    \\
+    \\def main() -> int effects(managed_allocation):
+    \\    values = [7]
+    \\    touch(values)
+    \\    return 0
+;
+
+const marker_extra =
+    \\def combine(left: list[int], right: list[int]) -> None effects(mutation) mutates(left):
+    \\    left[0] = right[0]
+    \\
+    \\
+    \\def main() -> int effects(managed_allocation):
+    \\    left = [1]
+    \\    right = [2]
+    \\    combine(&left, &right)
+    \\    return 0
+;
+
+const marker_non_lvalue =
+    \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
+    \\    values[0] = 1
+    \\
+    \\
+    \\def main() -> int effects(managed_allocation):
+    \\    touch(&[1, 2, 3])
+    \\    return 0
+;
+
+const marker_indirect_valid =
+    \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
+    \\    values[0] = 1
+    \\
+    \\
+    \\def apply(f: def(values: list[int]) -> None effects(mutation) mutates(values), values: list[int]) -> None effects(mutation) mutates(values):
+    \\    f(&values)
+    \\
+    \\
+    \\def main() -> int effects(managed_allocation):
+    \\    values = [7]
+    \\    apply(touch, &values)
+    \\    return 0
+;
+
+const marker_indirect_missing =
+    \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
+    \\    values[0] = 1
+    \\
+    \\
+    \\def apply(f: def(values: list[int]) -> None effects(mutation) mutates(values), values: list[int]) -> None effects(mutation) mutates(values):
+    \\    f(values)
+    \\
+    \\
+    \\def main() -> int effects(managed_allocation):
+    \\    values = [7]
+    \\    apply(touch, &values)
+    \\    return 0
+;
+
+const marker_indirect_extra =
+    \\def peek(values: list[int]) -> int effects():
+    \\    return values[0]
+    \\
+    \\
+    \\def apply(f: def(values: list[int]) -> int effects(), values: list[int]) -> int effects():
+    \\    return f(&values)
+    \\
+    \\
+    \\def main() -> int effects(managed_allocation):
+    \\    values = [1]
+    \\    return apply(peek, &values)
+;
+
+// spec: MUTATION-MARKER-1
+test "M4 a call-site marker on a declared mutates position is accepted" {
+    try t.expect(try acceptMarkers(marker_direct_valid) >= 2);
+}
+
+// spec-case: MUTATION-MARKER-1
+test "M4 a keyword argument keeps its marker through parameter binding" {
+    try t.expect(try acceptMarkers(marker_keyword_valid) >= 2);
+}
+
+// spec-case: MUTATION-MARKER-1
+test "M4 a missing marker on a declared mutates position is rejected" {
+    const diag = try markerError(marker_missing);
+    defer t.allocator.free(diag.message);
+    try t.expectEqualStrings(marker_code, diag.code);
+    try t.expect(std.mem.indexOf(u8, diag.message, "add the `&` marker") != null);
+}
+
+// spec-case: MUTATION-MARKER-1
+test "M4 a marker on an undeclared position is rejected" {
+    const diag = try markerError(marker_extra);
+    defer t.allocator.free(diag.message);
+    try t.expectEqualStrings(marker_code, diag.code);
+    try t.expect(std.mem.indexOf(u8, diag.message, "does not declare") != null);
+}
+
+// spec-case: MUTATION-MARKER-1
+test "M4 a marker on a non-lvalue is rejected" {
+    const diag = try markerError(marker_non_lvalue);
+    defer t.allocator.free(diag.message);
+    try t.expectEqualStrings(marker_code, diag.code);
+    try t.expect(std.mem.indexOf(u8, diag.message, "assignable") != null);
+}
+
+// spec-case: MUTATION-MARKER-1
+test "M4 a callable-value call enforces the callback mutates footprint" {
+    try t.expect(try acceptMarkers(marker_indirect_valid) >= 3);
+    const missing = try markerError(marker_indirect_missing);
+    defer t.allocator.free(missing.message);
+    try t.expectEqualStrings(marker_code, missing.code);
+    const extra = try markerError(marker_indirect_extra);
+    defer t.allocator.free(extra.message);
+    try t.expectEqualStrings(marker_code, extra.code);
+}
+
+// spec-case: MUTATION-MARKER-1
+test "M4 with the flag off a marker stays a removed spelling" {
+    try reject(marker_direct_valid, "E_REMOVED_SPELLING", "&");
 }
 
 test "M1 definitely fresh local construction does not require mutation permission" {

@@ -1213,7 +1213,7 @@ pub const Parser = struct {
 
     /// Parse one interpolation as an ordinary expression over its own token range.
     fn formatHole(self: *Parser, span: Span) diagnostic.Error!ast.NodeId {
-        const tokens = try lex.lexRange(self.arena.allocator(), self.src.bytes, span, self.sink);
+        const tokens = try lex.lexRangeWithMarkers(self.arena.allocator(), self.src.bytes, span, self.src.mutation_markers, self.sink);
         const outer = self.tokens;
         const position = self.cursor.pos;
         const delimiters = self.cursor.delimiters;
@@ -1482,23 +1482,34 @@ pub const Parser = struct {
         }
         return false;
     }
-    const Arguments = struct { values: []const ast.NodeId, names: []const ?Span };
+    const Arguments = struct { values: []const ast.NodeId, names: []const ?Span, markers: []const bool = &.{} };
     fn callArguments(self: *Parser) diagnostic.Error!Arguments {
         var values: std.ArrayList(ast.NodeId) = .empty;
         var names: std.ArrayList(?Span) = .empty;
+        var markers: std.ArrayList(bool) = .empty;
+        var marker_seen = false;
         var keyword_seen = false;
         if (self.current().tag != .rparen) while (true) {
+            var marked = self.take(.ampersand);
             const named = self.current().tag == .ident or self.current().tag == .kw_len or self.current().tag == .kw_replace;
             const keyword = named and self.tokens[self.cursor.pos + 1].tag == .equal;
             const name = if (keyword) self.current().span else null;
             if (keyword) self.cursor.pos += 2;
+            // A keyword argument may spell the marker after `=`: `f(x=&y)`.
+            if (self.take(.ampersand)) marked = true;
+            marker_seen = marker_seen or marked;
             if (keyword_seen and !keyword) return self.sink.fail("E_CALL_ARGUMENT", self.current().span, "positional arguments must precede keyword arguments");
             keyword_seen = keyword_seen or keyword;
             try names.append(self.arena.allocator(), name);
+            try markers.append(self.arena.allocator(), marked);
             try values.append(self.arena.allocator(), try self.expression(0));
             if (!self.take(.comma) or self.current().tag == .rparen) break;
         };
-        return .{ .values = try values.toOwnedSlice(self.arena.allocator()), .names = if (keyword_seen) try names.toOwnedSlice(self.arena.allocator()) else &.{} };
+        return .{
+            .values = try values.toOwnedSlice(self.arena.allocator()),
+            .names = if (keyword_seen) try names.toOwnedSlice(self.arena.allocator()) else &.{},
+            .markers = if (marker_seen) try markers.toOwnedSlice(self.arena.allocator()) else &.{},
+        };
     }
     /// Recognize `Owner.name[T](…)`, a member call carrying explicit type arguments.
     /// The applied-constructor lookahead cannot claim it, because `Owner.name` names a
@@ -1568,6 +1579,7 @@ pub const Parser = struct {
                 .name = member,
                 .arguments = arguments.values,
                 .argument_names = arguments.names,
+                .argument_markers = arguments.markers,
             } } });
         }
         if (token.tag == .ident and self.appliedConstructorAhead()) {
@@ -1575,7 +1587,7 @@ pub const Parser = struct {
             _ = try self.expect(.lparen);
             const arguments = try self.callArguments();
             const close = try self.expect(.rparen);
-            return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{ .name = name, .arguments = arguments.values, .argument_names = arguments.names } } });
+            return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{ .name = name, .arguments = arguments.values, .argument_names = arguments.names, .argument_markers = arguments.markers } } });
         }
         self.cursor.pos += 1;
         var owner: ?Span = null;
@@ -1589,7 +1601,7 @@ pub const Parser = struct {
         if (callable_name and self.sameExpressionLine() and self.take(.lparen)) {
             const arguments = try self.callArguments();
             const close = try self.expect(.rparen);
-            return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{ .owner = owner, .name = name, .arguments = arguments.values, .argument_names = arguments.names } } });
+            return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{ .owner = owner, .name = name, .arguments = arguments.values, .argument_names = arguments.names, .argument_markers = arguments.markers } } });
         }
         return self.append(.{ .span = name, .data = switch (token.tag) {
             .integer => .{ .integer = token.span },

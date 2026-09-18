@@ -134,6 +134,7 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
         }
         // A ReleaseFast `build` drops `debug` lines in lowering; `run` keeps them.
         if (!parsed.run and std.mem.eql(u8, parsed.mode, "ReleaseFast")) try arguments.append(a, "--drop-debug");
+        if (mutationMarkers(parsed.link_arguments)) try arguments.append(a, "--mutation-markers");
         if (selectFile(parsed.link_arguments)) |path| {
             try arguments.append(a, try std.fmt.allocPrint(a, "--select-file={s}", .{path}));
             // Forward the work-report request for selective test builds so native-test
@@ -196,6 +197,14 @@ fn selectFile(args: []const []const u8) ?[]const u8 {
 fn manifestFile(args: []const []const u8) ?[]const u8 {
     for (args) |argument| if (std.mem.startsWith(u8, argument, "--manifest-file=")) return argument["--manifest-file=".len..];
     return null;
+}
+
+/// Whether the original build arguments opted into call-site mutation markers.
+/// The flag is accepted by the build parser but intentionally not stored in
+/// `Options`, whose field count is frozen by the type-size ratchet.
+fn mutationMarkers(args: []const []const u8) bool {
+    for (args) |argument| if (std.mem.eql(u8, argument, "--mutation-markers")) return true;
+    return false;
 }
 
 /// The argument vector for one built program and the options it was given.

@@ -4323,6 +4323,15 @@ test "CLI nested record alias rejects under effects and runs with a mutation foo
     try invoke("run", permitted, 0, "7\n", "");
 }
 
+// spec-case: MUTATION-MARKER-1
+test "CLI mutation markers gate the call-site & spelling" {
+    // Default mode keeps `&` a removed spelling, so the fixture is rejected.
+    try invokeOptions("check", @embedFile("fixtures/mutation-markers.my"), &.{}, 1, "", "E_REMOVED_SPELLING");
+    // With the opt-in flag the marked call checks and runs.
+    try invokeOptions("check", @embedFile("fixtures/mutation-markers.my"), &.{"--mutation-markers"}, 0, "", "");
+    try invokeOptions("run", @embedFile("fixtures/mutation-markers.my"), &.{"--mutation-markers"}, 0, "8\n", "");
+}
+
 // --- P1: selected test providers validated against declared contracts ---
 
 const p1_production_unfinished =

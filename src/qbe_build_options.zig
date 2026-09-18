@@ -54,7 +54,7 @@ pub const usage = "usage: mylang build <file.my> (-o <output> | --run) [--projec
     "  --link FILE --link-library NAME --library-path DIR (repeatable)\n" ++
     "  --provider FILE  trusted native provider (executables only)\n" ++
     "  --qbe PATH --zig PATH --mode Debug|ReleaseFast (default ReleaseFast) --target amd64_sysv\n" ++
-    "  " ++ cache_dir_flag ++ "DIR  --no-cache  --report\n" ++
+    "  " ++ cache_dir_flag ++ "DIR  --no-cache  --report  --mutation-markers\n" ++
     "  --max-memory BYTES  byte ceiling for --run (K/M/G suffixes; default 4G)\n" ++
     "  --timeout=SECONDS  wall-clock ceiling for --run (no default; a run past it exits 1 with R_TIMEOUT)\n" ++
     "  --run instead of -o: execute temporarily; pass guest arguments after --\n";
@@ -84,6 +84,10 @@ pub fn parse(args: []const []const u8) Error!Options {
             result.cache = no_cache;
             continue;
         }
+        // `--mutation-markers` is a checker flag, not a build control. It is
+        // accepted here and forwarded to the frontend child by scanning
+        // `link_arguments`, so the frozen Options field set does not grow.
+        if (std.mem.eql(u8, argument, "--mutation-markers")) continue;
         const split = std.mem.indexOfScalar(u8, argument, '=') orelse argument.len;
         const name = argument[0..split];
         const option = std.meta.stringToEnum(Flag, name) orelse return error.InvalidBuildArguments;
