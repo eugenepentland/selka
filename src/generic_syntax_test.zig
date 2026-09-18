@@ -150,13 +150,12 @@ const named_fixture =
 const named_module_fixture =
     \\module checkout
     \\import contracts
-    \\export total
     \\
     \\
     \\constraint Local[P] = copy
     \\
     \\
-    \\def total[P: contracts.Prices](policy: P) -> int:
+    \\public def total[P: contracts.Prices](policy: P) -> int:
     \\    return 0
 ;
 /// Parse `text` expecting a source error and return the first diagnostic code.

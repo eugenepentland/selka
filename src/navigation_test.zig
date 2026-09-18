@@ -12,15 +12,13 @@ const Files = struct {
         const self: *Files = @ptrCast(@alignCast(context.?));
         const data_source =
             \\module data
-            \\export Box
-            \\export read
             \\
             \\
-            \\class Box:
+            \\public class Box:
             \\    value: i64
             \\
             \\
-            \\def read(x: Box) -> i64 effects():
+            \\public def read(x: Box) -> i64 effects():
             \\    return x.value
         ;
         const bytes = if (std.mem.eql(u8, path, "main.my")) self.main else if (std.mem.eql(u8, path, "data.my")) data_source else return error.NotFound;

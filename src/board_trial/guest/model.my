@@ -1,98 +1,74 @@
 module model
 import units
 import ids
-export Rect
-export Face
-export RegionFace
-export Layer
-export Blocks
-export Component
-export Track
-export Via
-export Feature
-export Region
-export Board
-export Slot
-export InputProblem
-export GeometryFailure
-export Failure
-export Preflight
-export Contact
-export Overlap
-export ContactResult
-export ViolationKind
-export RegionIndex
-export Violation
-export Report
-export Validation
 
 
-union Slot[T]:
+public union Slot[T]:
     none,
     some: T
 
 
-record Rect:
+public record Rect:
     x: units.Micrometres
     y: units.Micrometres
     width: units.Micrometres
     height: units.Micrometres
 
 
-enum Face:
+public enum Face:
     top,
     bottom
 
 
-enum RegionFace:
+public enum RegionFace:
     top,
     bottom,
     both
 
 
-enum Layer:
+public enum Layer:
     front,
     back,
     inner
 
 
-record Blocks:
+public record Blocks:
     component: bool
     track: bool
     via: bool
 
 
-record Component:
+public record Component:
     id: ids.ComponentId
     face: Face
     rect: Rect
 
 
-record Track:
+public record Track:
     net: ids.NetId
     layer: Layer
     rect: Rect
 
 
-record Via:
+public record Via:
     net: ids.NetId
     rect: Rect
 
 
-union Feature:
+public union Feature:
     component: Component,
     track: Track,
     via: Via
 
 
-record Region:
+public record Region:
     rect: Rect
     face: RegionFace
     blocks: Blocks
     allow_nets: [4]Slot[ids.NetId]
 
 
-record Board:
+public record Board:
     outline: Rect
     components: [4]Slot[ids.ComponentId]
     nets: [4]Slot[ids.NetId]
@@ -100,7 +76,7 @@ record Board:
     features: [8]Slot[Feature]
 
 
-enum InputProblem:
+public enum InputProblem:
     invalid_bounds,
     invalid_id,
     duplicate_component,
@@ -111,57 +87,57 @@ enum InputProblem:
     missing_net
 
 
-enum GeometryFailure:
+public enum GeometryFailure:
     invalid_bounds,
     unavailable
 
 
-union Failure:
+public union Failure:
     input: InputProblem,
     geometry: GeometryFailure
 
 
-result Preflight:
+public result Preflight:
     ok: bool,
     err: Failure
 
 
-enum Contact:
+public enum Contact:
     clear,
     intersection
 
 
-result Overlap:
+public result Overlap:
     ok: Contact,
     err: GeometryFailure
 
 
-result ContactResult:
+public result ContactResult:
     ok: Contact,
     err: Failure
 
 
-enum ViolationKind:
+public enum ViolationKind:
     outside_board,
     keepout
 
 
-union RegionIndex:
+public union RegionIndex:
     board,
     keepout: u64
 
 
-record Violation:
+public record Violation:
     feature: u64
     kind: ViolationKind
     region: RegionIndex
 
 
-record Report:
+public record Report:
     violations: u64
     first: Slot[Violation]
 
 
-result Validation:
+public result Validation:
     ok: Report,
     err: Failure

@@ -17,7 +17,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='guest-laws-') as directory:
         root = Path(directory)
         entry, config, output = (root / name for name in ('main.my', 'laws.json', 'report.json'))
-        entry.write_text('module main\nexport test_law\n\n\n'
+        entry.write_text('module main\n\n\n\n'
                          'def main() -> i64:\n    return 0\n\n\n'
                          'def test_law(n: i64) -> bool:\n    return n + n >= n\n')
         config.write_text(json.dumps({'main::test_law': {'n': [-30, -2]}}))

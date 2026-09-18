@@ -82,7 +82,6 @@ pub const Manifest = struct {
         errdefer output.deinit();
         const writer = &output.writer;
         try writer.print("# generated input manifest v1 sha256={s}\nmodule {s}\n", .{ std.fmt.bytesToHex(self.digest, .lower), self.parsed.value.module });
-        for (self.parsed.value.values) |entry| try writer.print("export {s}\n", .{entry.name});
         for (self.parsed.value.values, 0..) |entry, index| {
             const boolean = std.mem.eql(u8, entry.type, "bool");
             const suffix = if (boolean or std.mem.eql(u8, entry.type, "i64")) "" else entry.type;
@@ -91,7 +90,7 @@ pub const Manifest = struct {
             // The canonical layout has one blank line after the header directive
             // group and two between top-level declarations.
             if (index == 0) try writer.print("\n", .{}) else try writer.print("\n\n", .{});
-            try writer.print("def {s}() -> {s} effects():\n    return {s}{s}\n", .{ entry.name, entry.type, value, suffix });
+            try writer.print("public def {s}() -> {s} effects():\n    return {s}{s}\n", .{ entry.name, entry.type, value, suffix });
         }
         return output.toOwnedSlice();
     }

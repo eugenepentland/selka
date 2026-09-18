@@ -95,13 +95,12 @@ fn sameOptional(a: ?[]const u8, b: ?[]const u8) bool {
 const base_main =
     \\module main
     \\
-    \\export api
     \\
     \\def helper(n: i64) -> i64:
     \\    return n + 1
     \\
     \\
-    \\def api(n: i64) -> i64 effects():
+    \\public def api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
@@ -112,14 +111,13 @@ const base_main =
 const whitespace_outside =
     \\module main
     \\
-    \\export api
     \\
     \\def helper(n: i64) -> i64:
     \\    return n + 1
     \\
     \\
     \\
-    \\def api(n: i64) -> i64 effects():
+    \\public def api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
@@ -130,13 +128,12 @@ const whitespace_outside =
 const whitespace_inside =
     \\module main
     \\
-    \\export api
     \\
     \\def helper(n: i64) -> i64:
     \\    return  n + 1
     \\
     \\
-    \\def api(n: i64) -> i64 effects():
+    \\public def api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
@@ -147,14 +144,13 @@ const whitespace_inside =
 const comment_outside =
     \\module main
     \\
-    \\export api
     \\
     \\def helper(n: i64) -> i64:
     \\    return n + 1
     \\
     \\
     \\# a comment between declarations
-    \\def api(n: i64) -> i64 effects():
+    \\public def api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
@@ -165,14 +161,13 @@ const comment_outside =
 const comment_inside =
     \\module main
     \\
-    \\export api
     \\
     \\def helper(n: i64) -> i64:
     \\    # a comment inside the helper body
     \\    return n + 1
     \\
     \\
-    \\def api(n: i64) -> i64 effects():
+    \\public def api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
@@ -183,13 +178,12 @@ const comment_inside =
 const private_body =
     \\module main
     \\
-    \\export api
     \\
     \\def helper(n: i64) -> i64:
     \\    return n + 2
     \\
     \\
-    \\def api(n: i64) -> i64 effects():
+    \\public def api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
@@ -200,13 +194,12 @@ const private_body =
 const rejected_signature =
     \\module main
     \\
-    \\export api
     \\
     \\def helper(n: i64) -> i64:
     \\    return n + 1
     \\
     \\
-    \\def api(n: bool) -> i64:
+    \\public def api(n: bool) -> i64:
     \\    return helper(n)
     \\
     \\
@@ -217,13 +210,12 @@ const rejected_signature =
 const exported_signature =
     \\module main
     \\
-    \\export api
     \\
     \\def helper(n: i64) -> i64:
     \\    return n + 1
     \\
     \\
-    \\def api(n: i64, scale: i64) -> i64 effects():
+    \\public def api(n: i64, scale: i64) -> i64 effects():
     \\    return helper(n) * scale
     \\
     \\
@@ -234,13 +226,12 @@ const exported_signature =
 const effect_bound =
     \\module main
     \\
-    \\export api
     \\
     \\def helper(n: i64) -> i64:
     \\    return n + 1
     \\
     \\
-    \\def api(n: i64) -> i64 effects(clock):
+    \\public def api(n: i64) -> i64 effects(clock):
     \\    return helper(n)
     \\
     \\
@@ -251,7 +242,6 @@ const effect_bound =
 const constant_base =
     \\module main
     \\
-    \\export api
     \\
     \\const STEP: i64 = 1
     \\
@@ -259,7 +249,7 @@ const constant_base =
     \\    return n + STEP
     \\
     \\
-    \\def api(n: i64) -> i64 effects():
+    \\public def api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
@@ -270,7 +260,6 @@ const constant_base =
 const constant_edited =
     \\module main
     \\
-    \\export api
     \\
     \\const STEP: i64 = 2
     \\
@@ -278,7 +267,7 @@ const constant_edited =
     \\    return n + STEP
     \\
     \\
-    \\def api(n: i64) -> i64 effects():
+    \\public def api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
@@ -289,7 +278,6 @@ const constant_edited =
 const record_base =
     \\module main
     \\
-    \\export api
     \\
     \\record Point:
     \\    x: i64
@@ -300,7 +288,7 @@ const record_base =
     \\    return p.x + 1
     \\
     \\
-    \\def api(n: i64) -> i64 effects():
+    \\public def api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
@@ -311,7 +299,6 @@ const record_base =
 const record_edited =
     \\module main
     \\
-    \\export api
     \\
     \\record Point:
     \\    x: i64
@@ -323,7 +310,7 @@ const record_edited =
     \\    return p.x + p.y
     \\
     \\
-    \\def api(n: i64) -> i64 effects():
+    \\public def api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
@@ -334,10 +321,8 @@ const record_edited =
 const union_base =
     \\module main
     \\
-    \\export api
-    \\export Choice
     \\
-    \\enum Choice:
+    \\public enum Choice:
     \\    first,
     \\    second
     \\
@@ -350,7 +335,7 @@ const union_base =
     \\            return 2
     \\
     \\
-    \\def api(c: Choice) -> i64 effects():
+    \\public def api(c: Choice) -> i64 effects():
     \\    return helper(c)
     \\
     \\
@@ -361,10 +346,8 @@ const union_base =
 const union_edited =
     \\module main
     \\
-    \\export api
-    \\export Choice
     \\
-    \\enum Choice:
+    \\public enum Choice:
     \\    first,
     \\    second,
     \\    third
@@ -380,7 +363,7 @@ const union_edited =
     \\            return 3
     \\
     \\
-    \\def api(c: Choice) -> i64 effects():
+    \\public def api(c: Choice) -> i64 effects():
     \\    return helper(c)
     \\
     \\
@@ -390,10 +373,9 @@ const union_edited =
 
 const import_base_data =
     \\module data
-    \\export value
     \\
     \\
-    \\def value() -> i64 effects():
+    \\public def value() -> i64 effects():
     \\    return 42
 ;
 
@@ -408,10 +390,9 @@ const import_base_main =
 
 const import_extra =
     \\module extra
-    \\export one
     \\
     \\
-    \\def one() -> i64 effects():
+    \\public def one() -> i64 effects():
     \\    return 1
 ;
 
@@ -428,13 +409,12 @@ const import_edited_main =
 const generic_base =
     \\module main
     \\
-    \\export api
     \\
     \\def id[T](n: T) -> T:
     \\    return n
     \\
     \\
-    \\def api(n: i64) -> i64 effects():
+    \\public def api(n: i64) -> i64 effects():
     \\    return id[i64](n)
     \\
     \\
@@ -445,14 +425,13 @@ const generic_base =
 const generic_edited =
     \\module main
     \\
-    \\export api
     \\
     \\def id[T](n: T) -> T:
     \\    value = n
     \\    return value
     \\
     \\
-    \\def api(n: i64) -> i64 effects():
+    \\public def api(n: i64) -> i64 effects():
     \\    return id[i64](n)
     \\
     \\
@@ -463,13 +442,12 @@ const generic_edited =
 const specialization_base =
     \\module main
     \\
-    \\export api
     \\
     \\def size[const N: u64]() -> u64:
     \\    return N
     \\
     \\
-    \\def api() -> i64 effects():
+    \\public def api() -> i64 effects():
     \\    return i64(size[2]())
     \\
     \\
@@ -480,13 +458,12 @@ const specialization_base =
 const specialization_edited =
     \\module main
     \\
-    \\export api
     \\
     \\def size[const N: u64]() -> u64:
     \\    return N
     \\
     \\
-    \\def api() -> i64 effects():
+    \\public def api() -> i64 effects():
     \\    return i64(size[3]())
     \\
     \\

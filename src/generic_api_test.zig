@@ -5,21 +5,18 @@ const language = @import("compiler.zig");
 const File = @import("embedded_project.zig").File;
 const library =
     \\module lib
-    \\export Box
-    \\export Answer
-    \\export echo
     \\
     \\
-    \\class Box[T]:
+    \\public class Box[T]:
     \\    value: T
     \\
     \\
-    \\result Answer[T]:
+    \\public result Answer[T]:
     \\    ok: T,
     \\    err: i64
     \\
     \\
-    \\def echo[T: equality](x: [2]T) -> [2]T effects():
+    \\public def echo[T: equality](x: [2]T) -> [2]T effects():
     \\    return x
     \\
     \\
@@ -29,10 +26,9 @@ const library =
 const entry =
     \\module main
     \\import lib as api
-    \\export run
     \\
     \\
-    \\def run(x: i64) -> i64 effects():
+    \\public def run(x: i64) -> i64 effects():
     \\    return x
     \\
     \\
@@ -117,10 +113,9 @@ test "public generic identities survive whitespace while source receipts change"
 test "public generic schema refuses invalid uncalled bodies" {
     try t.expectError(error.SourceError, inspect(t.allocator,
         \\module lib
-        \\export bad
         \\
         \\
-        \\def bad[T](x: T) -> bool:
+        \\public def bad[T](x: T) -> bool:
         \\    return x == x
     ));
 }
@@ -128,20 +123,17 @@ test "public generic schema refuses invalid uncalled bodies" {
 test "public generic schemas retain structural field operation and codec constraints" {
     const bytes = try inspect(t.allocator,
         \\module lib
-        \\export field
-        \\export action
-        \\export coded
         \\
         \\
-        \\def field[T: copy + field(value: i64)](x: T) -> i64 effects():
+        \\public def field[T: copy + field(value: i64)](x: T) -> i64 effects():
         \\    return x.value
         \\
         \\
-        \\def action[T: copy + op(score(value: T) -> i64 effects())](x: T) -> i64 effects():
+        \\public def action[T: copy + op(score(value: T) -> i64 effects())](x: T) -> i64 effects():
         \\    return T.score(x)
         \\
         \\
-        \\def coded[T: copy + codec](x: T) -> T effects():
+        \\public def coded[T: copy + codec](x: T) -> T effects():
         \\    return x
     );
     defer t.allocator.free(bytes);
@@ -165,24 +157,21 @@ test "public generic schemas retain structural field operation and codec constra
         \\    pass
         \\
         \\
-        \\export f
         \\
         \\
-        \\def f[T: copy + field(value: Secret)](x: T) -> i64:
+        \\public def f[T: copy + field(value: Secret)](x: T) -> i64:
         \\    return 0
     ));
 }
 
 const named_contracts =
     \\module contracts
-    \\export HasValue
-    \\export Prices
     \\
     \\
-    \\constraint Prices[Provider] = copy + op(price(policy: Provider, subtotal: i64) -> i64 effects())
+    \\public constraint Prices[Provider] = copy + op(price(policy: Provider, subtotal: i64) -> i64 effects())
     \\
     \\
-    \\constraint HasValue[T] = copy + field(value: i64)
+    \\public constraint HasValue[T] = copy + field(value: i64)
     \\
     \\
     \\constraint Hidden[H] = copy + op(secret(item: H) -> i64 effects())
@@ -190,24 +179,21 @@ const named_contracts =
 const named_library =
     \\module lib
     \\import contracts
-    \\export total
-    \\export value_of
     \\
     \\
-    \\def total[P: contracts.Prices](policy: P, subtotal: i64) -> i64 effects():
+    \\public def total[P: contracts.Prices](policy: P, subtotal: i64) -> i64 effects():
     \\    return P.price(policy, subtotal)
     \\
     \\
-    \\def value_of[T: contracts.HasValue](item: T) -> i64 effects():
+    \\public def value_of[T: contracts.HasValue](item: T) -> i64 effects():
     \\    return item.value
 ;
 const named_entry =
     \\module main
     \\import lib as api
-    \\export run
     \\
     \\
-    \\def run(x: i64) -> i64 effects():
+    \\public def run(x: i64) -> i64 effects():
     \\    return x
     \\
     \\
@@ -323,17 +309,13 @@ fn templateParameter(parsed: std.json.Value, name: []const u8) !std.json.ObjectM
 test "public generic schema retains default copy for functions and nominal templates" {
     const bytes = try inspect(t.allocator,
         \\module lib
-        \\export Box
-        \\export identity
-        \\export stored
-        \\export coded
-        \\record Box[T]:
+        \\public record Box[T]:
         \\    value: T
-        \\def identity[T](value: T) -> T effects():
+        \\public def identity[T](value: T) -> T effects():
         \\    return value
-        \\def stored[T: storable]() -> int effects():
+        \\public def stored[T: storable]() -> int effects():
         \\    return 0
-        \\def coded[T: codec]() -> int effects():
+        \\public def coded[T: codec]() -> int effects():
         \\    return 0
     );
     defer t.allocator.free(bytes);
@@ -366,21 +348,18 @@ fn subjectSchemaScenario(allocator: std.mem.Allocator) !void {
     var files: NamedFiles = .{
         .types =
         \\module types
-        \\export T
-        \\record T:
+        \\public record T:
         \\    value: int
         ,
         .contracts =
         \\module contracts
         \\import types
-        \\export Mixed
-        \\constraint Mixed[T] = copy + op(use(subject: T, concrete: types.T, nested: list[def(T, types.T) -> [2]T effects()]) -> def(T) -> types.T effects() effects())
+        \\public constraint Mixed[T] = copy + op(use(subject: T, concrete: types.T, nested: list[def(T, types.T) -> [2]T effects()]) -> def(T) -> types.T effects() effects())
         ,
         .library =
         \\module lib
         \\import contracts
-        \\export use
-        \\def use[P: contracts.Mixed](p: P) -> int effects():
+        \\public def use[P: contracts.Mixed](p: P) -> int effects():
         \\    return 0
         ,
     };

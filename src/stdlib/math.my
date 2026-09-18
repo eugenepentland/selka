@@ -1,28 +1,4 @@
 module math
-export pi
-export e
-export nan
-export infinity
-export is_nan
-export is_inf
-export is_finite
-export fabs
-export sign
-export trunc
-export floor
-export ceil
-export round
-export sqrt
-export pow
-export fmin
-export fmax
-export min
-export max
-export clamp
-export abs
-export gcd
-export lcm
-export isqrt
 
 
 # Largest finite binary64 value; anything above it is positive infinity.
@@ -31,42 +7,42 @@ def max_finite() -> float:
 
 
 # Ratio of a circle's circumference to its diameter, rounded to binary64.
-def pi() -> float effects():
+public def pi() -> float effects():
     return 3.141592653589793
 
 
 # Base of the natural logarithm, rounded to binary64.
-def e() -> float effects():
+public def e() -> float effects():
     return 2.718281828459045
 
 
 # The canonical quiet not-a-number.
-def nan() -> float effects():
+public def nan() -> float effects():
     return 0.0 / 0.0
 
 
 # Positive infinity.
-def infinity() -> float effects():
+public def infinity() -> float effects():
     return 1.0 / 0.0
 
 
 # Whether a value is not-a-number, which is the only value unequal to itself.
-def is_nan(value: float) -> bool effects():
+public def is_nan(value: float) -> bool effects():
     return value != value
 
 
 # Whether a value is one of the two infinities.
-def is_inf(value: float) -> bool effects():
+public def is_inf(value: float) -> bool effects():
     return value > max_finite() or value < 0.0 - max_finite()
 
 
 # Whether a value is neither infinite nor not-a-number.
-def is_finite(value: float) -> bool effects():
+public def is_finite(value: float) -> bool effects():
     return not is_nan(value) and not is_inf(value)
 
 
 # Magnitude of a floating value, mapping both zeros to positive zero.
-def fabs(value: float) -> float effects():
+public def fabs(value: float) -> float effects():
     if value == 0.0:
         return 0.0
     if value < 0.0:
@@ -75,7 +51,7 @@ def fabs(value: float) -> float effects():
 
 
 # Sign of a floating value as -1, 0 or 1; not-a-number reports 0.
-def sign(value: float) -> int effects():
+public def sign(value: float) -> int effects():
     if value > 0.0:
         return 1
     if value < 0.0:
@@ -84,7 +60,7 @@ def sign(value: float) -> int effects():
 
 
 # Integral part of a value, rounding toward zero.
-def trunc(value: float) -> float effects():
+public def trunc(value: float) -> float effects():
     if is_nan(value) or is_inf(value):
         return value
     if value >= 9223372036854775808.0 or value < 0.0 - 9223372036854775808.0:
@@ -93,7 +69,7 @@ def trunc(value: float) -> float effects():
 
 
 # Largest integral value that is not greater than the argument.
-def floor(value: float) -> float effects():
+public def floor(value: float) -> float effects():
     whole = trunc(value)
     if whole > value:
         return whole - 1.0
@@ -101,7 +77,7 @@ def floor(value: float) -> float effects():
 
 
 # Smallest integral value that is not less than the argument.
-def ceil(value: float) -> float effects():
+public def ceil(value: float) -> float effects():
     whole = trunc(value)
     if whole < value:
         return whole + 1.0
@@ -109,7 +85,7 @@ def ceil(value: float) -> float effects():
 
 
 # Nearest integral value, with halves rounded away from zero.
-def round(value: float) -> float effects():
+public def round(value: float) -> float effects():
     if is_nan(value) or is_inf(value):
         return value
     whole = trunc(value)
@@ -124,7 +100,7 @@ def round(value: float) -> float effects():
 # Square root, correctly rounded by the binary64 intrinsic. This module
 # declares `sqrt`, which shadows the prelude helper, so it reaches the
 # compiler-internal intrinsic spelling directly.
-def sqrt(value: float) -> float effects():
+public def sqrt(value: float) -> float effects():
     if is_nan(value) or value == 0.0:
         return value
     if value < 0.0:
@@ -157,7 +133,7 @@ def saturated(exponent: int) -> int:
 
 
 # Base raised to an integer exponent; magnitudes above 4096 saturate by parity.
-def pow(base: float, exponent: int) -> float effects():
+public def pow(base: float, exponent: int) -> float effects():
     if exponent == 0:
         return 1.0
     magnitude = positive_power(base, saturated(exponent))
@@ -167,7 +143,7 @@ def pow(base: float, exponent: int) -> float effects():
 
 
 # Smaller of two floating values; a not-a-number operand propagates.
-def fmin(a: float, b: float) -> float effects():
+public def fmin(a: float, b: float) -> float effects():
     if is_nan(a) or is_nan(b):
         return nan()
     if a <= b:
@@ -176,7 +152,7 @@ def fmin(a: float, b: float) -> float effects():
 
 
 # Larger of two floating values; a not-a-number operand propagates.
-def fmax(a: float, b: float) -> float effects():
+public def fmax(a: float, b: float) -> float effects():
     if is_nan(a) or is_nan(b):
         return nan()
     if a >= b:
@@ -185,21 +161,21 @@ def fmax(a: float, b: float) -> float effects():
 
 
 # Smaller of two integers of any width, compared without subtraction.
-def min[T: integer](a: T, b: T) -> T noalloc:
+public def min[T: integer](a: T, b: T) -> T noalloc:
     if a <= b:
         return a
     return b
 
 
 # Larger of two integers of any width, compared without subtraction.
-def max[T: integer](a: T, b: T) -> T noalloc:
+public def max[T: integer](a: T, b: T) -> T noalloc:
     if a >= b:
         return a
     return b
 
 
 # Value restricted to an inclusive integer range; an inverted range yields low.
-def clamp[T: integer](value: T, low: T, high: T) -> T noalloc:
+public def clamp[T: integer](value: T, low: T, high: T) -> T noalloc:
     if high < low:
         return low
     if value < low:
@@ -210,7 +186,7 @@ def clamp[T: integer](value: T, low: T, high: T) -> T noalloc:
 
 
 # Magnitude of an integer; the most negative value has no positive counterpart.
-def abs(value: int) -> Result[int, str] effects(managed_allocation):
+public def abs(value: int) -> Result[int, str] effects(managed_allocation):
     if value == 0 - 9223372036854775807 - 1:
         return Err("absolute value of -9223372036854775808 is not representable")
     if value < 0:
@@ -219,7 +195,7 @@ def abs(value: int) -> Result[int, str] effects(managed_allocation):
 
 
 # Greatest common divisor, reported as a nonnegative integer.
-def gcd(a: int, b: int) -> Result[int, str] effects(managed_allocation):
+public def gcd(a: int, b: int) -> Result[int, str] effects(managed_allocation):
     left = a
     right = b
     while right != 0:
@@ -230,7 +206,7 @@ def gcd(a: int, b: int) -> Result[int, str] effects(managed_allocation):
 
 
 # Least common multiple of two integers, reported as a nonnegative integer.
-def lcm(a: int, b: int) -> Result[int, str] effects(managed_allocation):
+public def lcm(a: int, b: int) -> Result[int, str] effects(managed_allocation):
     if a == 0 or b == 0:
         return Ok(0)
     left = abs(a)?
@@ -243,7 +219,7 @@ def lcm(a: int, b: int) -> Result[int, str] effects(managed_allocation):
 
 
 # Integer square root: the largest whole number whose square is not larger.
-def isqrt(value: int) -> Result[int, str] effects(managed_allocation):
+public def isqrt(value: int) -> Result[int, str] effects(managed_allocation):
     if value < 0:
         return Err("integer square root of a negative value is undefined")
     if value < 2:

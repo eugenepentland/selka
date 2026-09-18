@@ -1,12 +1,7 @@
 module arithmetic
-export test_int_precedence
-export test_division_rounding
-export test_comparisons_and_short_circuit
-export test_float_arithmetic
-export test_float_rounding
 
 
-def test_int_precedence() -> bool effects():
+public def test_int_precedence() -> bool effects():
     total = 1 + 2 * 3 - 4
     if total != 3:
         return False
@@ -17,7 +12,7 @@ def test_int_precedence() -> bool effects():
     return 2 * 3 * 4 == 24 and 100 - 58 == 42
 
 
-def test_division_rounding() -> bool effects():
+public def test_division_rounding() -> bool effects():
     if -7 // 2 != -4 or -7 % 2 != 1:
         return False
     if divtrunc(-7, 2) != -3 or remtrunc(-7, 2) != -1:
@@ -27,7 +22,7 @@ def test_division_rounding() -> bool effects():
     return divtrunc(85, -2) == -42 and remtrunc(85, -2) == 1
 
 
-def test_comparisons_and_short_circuit() -> bool effects():
+public def test_comparisons_and_short_circuit() -> bool effects():
     if not (3 < 4 and 4 <= 4 and 5 > 4 and 4 >= 4 and 3 == 3 and 3 != 4):
         return False
     if False and divtrunc(1, 0) == 0:
@@ -37,7 +32,7 @@ def test_comparisons_and_short_circuit() -> bool effects():
     return False
 
 
-def test_float_arithmetic() -> bool effects():
+public def test_float_arithmetic() -> bool effects():
     half = 7.5
     if half + 0.5 != 8.0 or half / 2.0 != 3.75:
         return False
@@ -46,7 +41,7 @@ def test_float_arithmetic() -> bool effects():
     return abs(-2.5) == 2.5 and sqrt(9.0) == 3.0
 
 
-def test_float_rounding() -> bool effects():
+public def test_float_rounding() -> bool effects():
     if 7.5 // 2.0 != 3.0:
         return False
     if floor(3.7) != 3.0 or ceil(3.2) != 4.0 or trunc(-3.7) != -3.0:

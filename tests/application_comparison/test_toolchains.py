@@ -17,7 +17,7 @@ class ToolchainTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             work = Path(temporary)
             (work / 'main.my').write_text('module main\nimport value\n\n\ndef main() -> i64:\n    return value.number()\n')
-            (work / 'value.my').write_text('module value\nexport number\n\n\ndef number() -> i64:\n    return 42\n')
+            (work / 'value.my').write_text('module value\n\n\n\npublic def number() -> i64:\n    return 42\n')
             (work / 'main.py').write_text('from value import number\nprint(number())\n')
             (work / 'value.py').write_text('def number():\n    return 42\n')
             (work / 'value.zig').write_text('pub fn number() i64 { return 42; }\n')

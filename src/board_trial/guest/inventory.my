@@ -1,12 +1,9 @@
 module inventory
 import model as m
 import ids
-export has
-export checkComponents
-export checkNets
 
 
-def has[T: equality](slots: [4]m.Slot[T], needle: T, end: u64) -> bool effects():
+public def has[T: equality](slots: [4]m.Slot[T], needle: T, end: u64) -> bool effects():
     i = 0u64
     while i < end:
         match slots[i]:
@@ -19,7 +16,7 @@ def has[T: equality](slots: [4]m.Slot[T], needle: T, end: u64) -> bool effects()
     return False
 
 
-def checkComponents(slots: [4]m.Slot[ids.ComponentId]) -> m.Preflight effects():
+public def checkComponents(slots: [4]m.Slot[ids.ComponentId]) -> m.Preflight effects():
     i = 0u64
     while i < u64(len(slots)):
         match slots[i]:
@@ -34,7 +31,7 @@ def checkComponents(slots: [4]m.Slot[ids.ComponentId]) -> m.Preflight effects():
     return Ok(True)
 
 
-def checkNets(slots: [4]m.Slot[ids.NetId]) -> m.Preflight effects():
+public def checkNets(slots: [4]m.Slot[ids.NetId]) -> m.Preflight effects():
     i = 0u64
     while i < u64(len(slots)):
         match slots[i]:

@@ -14,6 +14,12 @@ that binary first. `--filter GLOB` restricts the scan
 to matching repository-relative document paths, `--verbose` prints every command,
 diagnostic and skip reason, and `--report PATH` writes a `doc-examples-v1` JSON report.
 
+is the machine's cores capped by what its free memory affords, the same rule
+`mylang test <dir>` fans out under. Statuses are collected and only reported once
+every unit has finished, so the tallies, the failure lines and the summary read
+exactly as they did when units ran one at a time; only `--verbose` progress
+lines interleave, each written whole.
+
 ## What is scanned
 
 `README.md`, `SPEC.md` and every `*.md` under `docs/`, recursively, except
@@ -70,9 +76,8 @@ Grouped blocks become one project checked or run through `run-project`:
 # doc: file helper.my
 # doc: expect 42
 module helper
-export answer
 
-def answer() -> int effects():
+public def answer() -> int effects():
     return 42
 ```
 

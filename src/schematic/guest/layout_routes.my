@@ -3,12 +3,9 @@ import layout as l
 import circuit as c
 import text
 import ports as p
-export Segment
-export build
-export external
 
 
-record Segment:
+public record Segment:
     x1: int
     y1: int
     x2: int
@@ -32,7 +29,7 @@ def distance(a: l.Point, b: l.Point) -> int:
     return x + y
 
 
-def external(host: Host, net: text.Span, connections: list[p.Port]) -> bool effects(host):
+public def external(host: Host, net: text.Span, connections: list[p.Port]) -> bool effects(host):
     target = p.Port(
         prefix=text.empty(),
         name=net,
@@ -73,7 +70,7 @@ def blocked(host: Host, a: l.Point, b: l.Point, net: text.Span, parts: list[c.Pa
     return False
 
 
-def build(host: Host, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point], connections: list[p.Port]) -> list[Segment] effects(host, managed_allocation):
+public def build(host: Host, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point], connections: list[p.Port]) -> list[Segment] effects(host, managed_allocation):
     out: list[Segment] = []
     i = 0
     while i < len(pins):

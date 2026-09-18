@@ -1,12 +1,11 @@
 module geometry
 import model as m
-export contact
 
 
 host def overlap(host: Host, a: m.Rect, b: m.Rect) -> m.Overlap effects(host)
 
 
-def contact(host: Host, a: m.Rect, b: m.Rect) -> m.ContactResult effects(host):
+public def contact(host: Host, a: m.Rect, b: m.Rect) -> m.ContactResult effects(host):
     match overlap(host, a, b):
         case m.Overlap.ok(value):
             return Ok(value)

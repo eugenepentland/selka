@@ -46,18 +46,16 @@ test "semantic project body reuse relocates module spans and invalidates changed
         },
         .{ .path = "data.my", .bytes =
         \\module data
-        \\export value
         \\
         \\
-        \\def value() -> i64 effects():
+        \\public def value() -> i64 effects():
         \\    return 41
         },
         .{ .path = "other.my", .bytes =
         \\module other
-        \\export value
         \\
         \\
-        \\def value() -> i64 effects():
+        \\public def value() -> i64 effects():
         \\    return 43
         },
     };
@@ -67,20 +65,18 @@ test "semantic project body reuse relocates module spans and invalidates changed
     try agree(&files, &cache);
     entries[1].bytes =
         \\module data
-        \\export value
         \\
         \\
-        \\def value() -> i64 effects():
+        \\public def value() -> i64 effects():
         \\    return 42
     ;
     try agree(&files, &cache);
     try t.expectEqual(@as(usize, 1), cache.statistics.reused);
     entries[1].bytes =
         \\module data
-        \\export value
         \\
         \\
-        \\def value() -> bool effects():
+        \\public def value() -> bool effects():
         \\    return True
     ;
     try agree(&files, &cache);
@@ -119,10 +115,9 @@ test "dotted imported function values keep callback type catalogs fresh across c
         },
         .{ .path = "data.my", .bytes =
         \\module data
-        \\export value
         \\
         \\
-        \\def value() -> i64 effects():
+        \\public def value() -> i64 effects():
         \\    return 41
         },
     };
@@ -132,10 +127,9 @@ test "dotted imported function values keep callback type catalogs fresh across c
     try agree(&files, &cache);
     entries[1].bytes =
         \\module data
-        \\export value
         \\
         \\
-        \\def value() -> i64 effects():
+        \\public def value() -> i64 effects():
         \\    return 42
     ;
     try agree(&files, &cache);
@@ -177,15 +171,13 @@ test "module insert and reorder with an unused generic preserve ordinary body re
     ;
     const a =
         \\module a
-        \\export first
-        \\export second
         \\
         \\
-        \\def first() -> i64 effects():
+        \\public def first() -> i64 effects():
         \\    return 1
         \\
         \\
-        \\def second() -> i64 effects():
+        \\public def second() -> i64 effects():
         \\    return 7
         \\
         \\
@@ -235,28 +227,24 @@ test "same bare name in two modules resolves to distinct identities" {
         },
         .{ .path = "a.my", .bytes =
         \\module a
-        \\export helper
-        \\export run
         \\
         \\
-        \\def helper() -> i64 effects():
+        \\public def helper() -> i64 effects():
         \\    return 1
         \\
         \\
-        \\def run() -> i64 effects():
+        \\public def run() -> i64 effects():
         \\    return helper()
         },
         .{ .path = "b.my", .bytes =
         \\module b
-        \\export helper
-        \\export run
         \\
         \\
-        \\def helper() -> i64 effects():
+        \\public def helper() -> i64 effects():
         \\    return 2
         \\
         \\
-        \\def run() -> i64 effects():
+        \\public def run() -> i64 effects():
         \\    return helper()
         },
     };
@@ -268,15 +256,13 @@ test "same bare name in two modules resolves to distinct identities" {
 
     entries[1].bytes =
         \\module a
-        \\export helper
-        \\export run
         \\
         \\
-        \\def helper() -> i64 effects():
+        \\public def helper() -> i64 effects():
         \\    return 11
         \\
         \\
-        \\def run() -> i64 effects():
+        \\public def run() -> i64 effects():
         \\    return helper()
     ;
     const before = cache.statistics.reused;
@@ -293,19 +279,17 @@ test "same bare name in two modules resolves to distinct identities" {
 test "adding an unrelated import directive does not invalidate ordinary bodies" {
     const a_base =
         \\module a
-        \\export helper
         \\
         \\
-        \\def helper() -> i64 effects():
+        \\public def helper() -> i64 effects():
         \\    return 1
     ;
     const a_imported =
         \\module a
         \\import b
-        \\export helper
         \\
         \\
-        \\def helper() -> i64 effects():
+        \\public def helper() -> i64 effects():
         \\    return 1
     ;
     var base = [_]File{

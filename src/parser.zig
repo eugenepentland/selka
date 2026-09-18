@@ -1,5 +1,6 @@
 //! Recursive descent for statements; precedence climbing for expressions.
 const syntax_code = "E_SYNTAX";
+const eExportRemoved = "E_EXPORT_REMOVED";
 const eInternalName = "E_INTERNAL_NAME";
 const eDefaultArgument = "E_DEFAULT_ARGUMENT";
 const eRequirement = diagnostic.generic_requirement;
@@ -460,10 +461,13 @@ pub const Parser = struct {
             const declare_public = try self.takePublic();
             if (self.module_syntax and self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "export")) {
                 self.cursor.pos += 1;
+                const first_name = try self.declaredName();
+                // The bare `export NAME` directive is removed: a local declaration
+                // publishes itself with `public`. Only a re-export, which names an
+                // imported declaration through its module qualifier
+                // (`export shared.units.Distance`), is still a directive.
+                if (!self.take(.dot)) return self.sink.fail(eExportRemoved, first_name, "plain `export NAME` is removed; mark the declaration `public` instead");
                 _ = try self.declaredName();
-                // A re-export names an imported declaration through its module
-                // qualifier (`export shared.units.Distance`); the directive still
-                // declares nothing locally, so only the dotted spelling is consumed.
                 while (self.take(.dot)) _ = try self.declaredName();
                 _ = try self.expect(.semicolon);
                 continue;

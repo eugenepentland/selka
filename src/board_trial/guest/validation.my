@@ -4,7 +4,6 @@ import bounds
 import checks
 import policy
 import geometry
-export validate
 
 
 def add(report: m.Report, position: u64, kind: m.ViolationKind, region: m.RegionIndex) -> m.Report:
@@ -39,7 +38,7 @@ def inspect(host: Host, board: m.Board, item: m.Feature, position: u64, previous
     return Ok(report)
 
 
-def validate(host: Host, board: m.Board) -> m.Validation effects(host):
+public def validate(host: Host, board: m.Board) -> m.Validation effects(host):
     _ = checks.preflight(board)?
     empty: m.Slot[m.Violation] = m.Slot.none
     report = m.Report(violations=0u64, first=empty)

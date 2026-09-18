@@ -151,20 +151,17 @@ test "nominal bodies release shape catalogs and VM storage after every allocatio
 }
 const module_source =
     \\module model
-    \\export Box
-    \\export pack
-    \\export extract
     \\
     \\
-    \\record Box[T]:
+    \\public record Box[T]:
     \\    value: T
     \\
     \\
-    \\def pack[T](x: T) -> Box[T] effects():
+    \\public def pack[T](x: T) -> Box[T] effects():
     \\    return Box[T](value=x)
     \\
     \\
-    \\def extract[T](box: Box[T]) -> T effects():
+    \\public def extract[T](box: Box[T]) -> T effects():
     \\    return box.value
 ;
 const Modules = struct {

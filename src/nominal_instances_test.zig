@@ -166,16 +166,13 @@ const Modules = struct {
         );
         if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8,
             \\module model
-            \\export Box
-            \\export Empty
-            \\export twice
             \\
             \\
-            \\record Box[T]:
+            \\public record Box[T]:
             \\    value: T
             \\
             \\
-            \\class Empty[T]:
+            \\public class Empty[T]:
             \\    pass
             \\
             \\
@@ -183,7 +180,7 @@ const Modules = struct {
             \\    value: i64
             \\
             \\
-            \\def twice(x: Box[i64]) -> Box[i64] effects():
+            \\public def twice(x: Box[i64]) -> Box[i64] effects():
             \\    y = x
             \\    y.value = x.value * 2
             \\    return y

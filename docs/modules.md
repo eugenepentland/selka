@@ -68,11 +68,11 @@ root by turning the dotted name into a path: `import units` reads `units.my`, an
 dependency order; `mylang run-project` is the explicit project-entry alias.
 Nothing is exported implicitly: a declaration is visible to importers only when
 it carries the `public` modifier, and an exported signature that mentions a
-private type rejects rather than leaking it. The separate `export NAME`
-directive is still accepted and means the same thing. Exported functions do not
-need to spell an effect ceiling: the checker freezes each body's inferred effect
-set as the published interface contract, and an explicit `noalloc`, `noio` or
-`effects(...)` is an opt-in narrowing enforced as an upper bound.
+private type rejects rather than leaking it. The bare `export NAME` directive is
+gone. Exported functions do not need to spell an effect ceiling: the checker
+freezes each body's inferred effect set as the published interface contract, and
+an explicit `noalloc`, `noio` or `effects(...)` is an opt-in narrowing enforced
+as an upper bound.
 
 ```mylang
 # doc: project measure
@@ -147,13 +147,12 @@ on. The modifier names no other declaration, so a file keeps its public surface
 where each declaration is written and a rename can never leave a stale directive
 behind.
 
-The separate `export NAME` directive is still accepted: it may appear anywhere
-among the top-level declarations after the module header and its imports, before
-or after the declaration it names, so an existing file keeps working during the
-migration. Directives are collected in source order and keep their own
-locations, so a duplicate or unknown export reports at the directive that caused
-it, and naming a declaration that is already `public` reports
-`E_DUPLICATE_EXPORT`. An `export` inside a function or type body rejects.
+The bare `export NAME` directive was removed: it now rejects with
+`E_EXPORT_REMOVED`, which points at the declaration spelling to use instead. The
+only remaining export directive is the dotted re-export `export module.Name`,
+which publishes an imported declaration (see below); it may appear anywhere among
+the top-level declarations after the module header and its imports, and a
+duplicate or unknown re-export still reports at the directive that caused it.
 
 ```mylang
 # doc: project report

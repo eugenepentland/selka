@@ -1,0 +1,99 @@
+module sexpr.parser
+import sexpr.tokenizer as tk
+
+public union Node:
+    atom: str,
+    text: str,
+    items: list[Node]
+
+public record ParseError:
+    message: str
+    offset: int
+    line: int
+
+class State:
+    src: bytes
+    tokens: list[tk.Token]
+    pos: int
+
+def current(s: State) -> tk.Token:
+    return s.tokens[s.pos]
+
+def bump(s: State) -> tk.Token mutates(s):
+    tok = s.tokens[s.pos]
+    if tok.kind != tk.Kind.eof:
+        s.pos = s.pos + 1
+    return tok
+
+def fail(tok: tk.Token, message: str) -> ParseError:
+    return ParseError(message=message, offset=tok.start, line=tok.line)
+
+def parse_node(s: State) -> Result[Node, ParseError] mutates(s):
+    tok = bump(s)
+    match tok.kind:
+        case tk.Kind.atom:
+            return Ok(Node.atom(tk.lexeme(s.src, tok)))
+        case tk.Kind.text:
+            return Ok(Node.text(tk.lexeme(s.src, tok)))
+        case tk.Kind.lparen:
+            items: list[Node] = []
+            while True:
+                if current(s).kind == tk.Kind.rparen:
+                    _ = bump(s)
+                    return Ok(Node.items(items))
+                if current(s).kind == tk.Kind.eof:
+                    return Err(fail(current(s), "unclosed list"))
+                node = parse_node(s)?
+                items.append(node)
+        case tk.Kind.rparen:
+            return Err(fail(tok, "unexpected ')'"))
+        case tk.Kind.eof:
+            return Err(fail(tok, "unexpected end of input"))
+
+public def parse(src: bytes) -> Result[Node, ParseError]:
+    tokens: list[tk.Token] = []
+    match tk.tokenize(src):
+        case Ok(ts):
+            tokens = ts
+        case Err(e):
+            return Err(ParseError(message=e.message, offset=e.offset, line=e.line))
+    s = State(src=src, tokens=tokens, pos=0)
+    node = parse_node(s)?
+    if current(s).kind != tk.Kind.eof:
+        return Err(fail(current(s), "trailing input"))
+    return Ok(node)
+
+public def head(node: Node) -> str:
+    match node:
+        case Node.items(xs):
+            if len(xs) == 0:
+                return ""
+            return head(xs[0])
+        case Node.atom(a):
+            return a
+        case Node.text(t):
+            return t
+
+public def children(node: Node, name: str) -> list[Node]:
+    out: list[Node] = []
+    match node:
+        case Node.items(xs):
+            for x in xs:
+                match x:
+                    case Node.items(_):
+                        if head(x) == name:
+                            out.append(x)
+                    case _:
+                        pass
+        case _:
+            pass
+    return out
+
+public def render(node: Node) -> str:
+    match node:
+        case Node.atom(a):
+            return a
+        case Node.text(t):
+            return '"' + t + '"'
+        case Node.items(xs):
+            return "(" + " ".join([render(x) for x in xs]) + ")"

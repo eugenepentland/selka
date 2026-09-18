@@ -1,10 +1,7 @@
 module text
-export test_indexing_and_slicing
-export test_methods
-export test_interpolation_and_conversion
 
 
-def test_indexing_and_slicing() -> bool effects(managed_allocation):
+public def test_indexing_and_slicing() -> bool effects(managed_allocation):
     greeting = "héllo"
     if len(greeting) != 5 or greeting[1] != "é" or greeting[-1] != "o":
         return False
@@ -15,7 +12,7 @@ def test_indexing_and_slicing() -> bool effects(managed_allocation):
     return len(parts) == 2 and "-".join(parts) == "héllo-world"
 
 
-def test_methods() -> bool effects(managed_allocation):
+public def test_methods() -> bool effects(managed_allocation):
     padded = "  ready  "
     if padded.strip() != "ready" or padded.lstrip() != "ready  " or padded.rstrip() != "  ready":
         return False
@@ -37,7 +34,7 @@ def test_methods() -> bool effects(managed_allocation):
     return "ell" in "hello" and "z" not in "hello"
 
 
-def test_interpolation_and_conversion() -> bool effects(managed_allocation):
+public def test_interpolation_and_conversion() -> bool effects(managed_allocation):
     name = "ada"
     count = 3
     label = f"{name} has {count} items"

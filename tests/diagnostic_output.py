@@ -92,7 +92,7 @@ def export_placement(compiler, root):
 def modules(compiler, root):
     entry, helper = root / 'main.my', root / 'helper.my'
     entry.write_text('module main\nimport helper\n\n\ndef main() -> i64:\n    return helper.work[bool](9)\n')
-    bad = ('module helper\nexport work\n\n\nresult R:\n    ok: i64,\n    err: i64\n\n\n'
+    bad = ('module helper\n\n\n\nresult R:\n    ok: i64,\n    err: i64\n\n\n'
            'def work[T](input: i64) -> i64:\n    pending: R = Ok(input)\n    return input\n')
     helper.write_text(bad)
     _, messages = invoke(compiler, 'check-project', entry, status=1)
@@ -129,7 +129,7 @@ def modules(compiler, root):
     assert messages[0]['kind'] == 'message' and 'manifest' in messages[0]['message']
     _, messages = invoke(compiler, 'input-module', manifest, status=2)
     assert messages and all(item['kind'] == 'message' for item in messages if item.get('diagnostic', {}).get('severity') != 'warning')
-    entry.write_text('module main\nexport missing\n\n\ndef main() -> i64:\n    return 0\n')
+    entry.write_text('module main\n\n\n\ndef main() -> i64:\n    return 0\n')
     _, messages = invoke(compiler, 'list-interfaces', entry, status=1)
     assert messages[0]['kind'] == 'diagnostic' and messages[0]['diagnostic']['location']['path'] == 'main.my'
 

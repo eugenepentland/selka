@@ -11,14 +11,13 @@ const kinds_module =
     \\
     \\# leading comment
     \\# second line
-    \\type Count = i64
+    \\public type Count = i64
     \\
     \\
     \\# reusable contract
     \\constraint Prices[P] = copy
     \\
     \\
-    \\export Count
     \\
     \\
     \\const LIMIT: Count = 3
@@ -54,10 +53,9 @@ const kinds_module =
     \\host def measure(host: Host, x: i64) -> i64 effects(host)
     \\
     \\
-    \\export main
     \\
     \\
-    \\def main() -> i64:
+    \\public def main() -> i64:
     \\    return LIMIT
 ;
 
@@ -80,7 +78,7 @@ const Wire = struct {
 /// `comment` defaults to `text`: a declaration with no leading comment reports its own start.
 const Expected = struct { kind: []const u8, name: []const u8, exported: bool, text: []const u8, comment: ?[]const u8 = null };
 const expected_declarations = [_]Expected{
-    .{ .kind = "alias", .name = "Count", .exported = true, .text = "type Count = i64", .comment = "# leading comment" },
+    .{ .kind = "alias", .name = "Count", .exported = true, .text = "public type Count = i64", .comment = "# leading comment" },
     .{ .kind = "constraint", .name = "Prices", .exported = false, .text = "constraint Prices[P] = copy", .comment = "# reusable contract" },
     .{ .kind = "const", .name = "LIMIT", .exported = false, .text = "const LIMIT: Count = 3" },
     .{ .kind = "struct", .name = "Job", .exported = false, .text =
@@ -110,7 +108,7 @@ const expected_declarations = [_]Expected{
     .{ .kind = "resource", .name = "Handle", .exported = false, .text = "resource Handle: filesystem" },
     .{ .kind = "host_fn", .name = "measure", .exported = false, .text = "host def measure(host: Host, x: i64) -> i64 effects(host)" },
     .{ .kind = "fn", .name = "main", .exported = true, .text =
-    \\def main() -> i64:
+    \\public def main() -> i64:
     \\    return LIMIT
     },
 };
@@ -137,9 +135,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
     try t.expectEqualStrings("import math", kinds_module[wire.imports[0].bytes.start..wire.imports[0].bytes.end]);
     try t.expectEqualStrings("shared.units", wire.imports[1].name);
     try t.expectEqualStrings("units", wire.imports[1].alias.?);
-    try t.expectEqual(@as(usize, 2), wire.exports.len);
-    try t.expectEqualStrings("Count", wire.exports[0].name);
-    try t.expectEqualStrings("export main", kinds_module[wire.exports[1].bytes.start..wire.exports[1].bytes.end]);
+    try t.expectEqual(@as(usize, 0), wire.exports.len);
     try t.expectEqual(expected_declarations.len, wire.declarations.len);
     for (wire.declarations, expected_declarations) |listed, expected| {
         try t.expectEqualStrings(expected.kind, listed.kind);
@@ -178,16 +174,15 @@ test "declaration listing parses without checking and rejects unresolved exports
         \\
         \\def main() -> i64:
         \\    return 0
-        , .code = "E_UNKNOWN_EXPORT" },
+        , .code = "E_EXPORT_REMOVED" },
         .{ .text =
         \\module m
-        \\export main
         \\export main
         \\
         \\
         \\def main() -> i64:
         \\    return 0
-        , .code = "E_DUPLICATE_EXPORT" },
+        , .code = "E_EXPORT_REMOVED" },
         .{ .text =
         \\def main() -> i64:
         \\    return 1 +
@@ -338,7 +333,7 @@ test "a public modifier marks the declaration exported without an export directi
 }
 
 // spec: PUBLIC-DECL-3
-test "a public declaration and an export directive for it are a duplicate export" {
+test "a bare export directive is removed and rejects with the migration diagnostic" {
     const text =
         \\module clash
         \\
@@ -349,5 +344,8 @@ test "a public declaration and an export directive for it are a duplicate export
         \\
         \\export helper
     ;
-    try t.expectError(error.SourceError, list(t.allocator, "clash.my", text));
+    var compilation = try language.Compilation.init(t.allocator, "clash.my", text);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.listDeclarations(t.allocator));
+    try t.expectEqualStrings("E_EXPORT_REMOVED", compilation.diagnostics.items[0].code);
 }

@@ -154,15 +154,13 @@ fn provider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: u
     );
     if (std.mem.eql(u8, path, "shapes.my")) return allocator.dupe(u8,
         \\module shapes
-        \\export Chunk
-        \\export make
         \\
         \\
-        \\record Chunk[T, const N: u64]:
+        \\public record Chunk[T, const N: u64]:
         \\    items: [N]T
         \\
         \\
-        \\def make[T, const N: u64](items: [N]T) -> Chunk[T, N] effects():
+        \\public def make[T, const N: u64](items: [N]T) -> Chunk[T, N] effects():
         \\    return Chunk[T, N](items=items)
     );
     return error.NotFound;

@@ -216,6 +216,9 @@ pub const Project = struct {
             const exported_name = try scanner.name();
             const alias = if (exported_name.text.len == exported_name.last.len) null else exported_name.text[0 .. exported_name.text.len - exported_name.last.len - 1];
             _ = try scanner.expect(.semicolon);
+            // A bare `export NAME` is removed; a local declaration publishes
+            // itself with `public`. Only the dotted re-export remains a directive.
+            if (alias == null) return self.fail("E_EXPORT_REMOVED", "plain `export NAME` is removed; mark the declaration `public` instead", .{ .module = id, .span = exported_name.span }, null);
             if (alias) |qualifier| {
                 var imported_qualifier = false;
                 for (self.modules.items[id].imports) |imported| {

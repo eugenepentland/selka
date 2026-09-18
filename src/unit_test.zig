@@ -56,10 +56,9 @@ fn publicUnit(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _:
     if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
     return allocator.dupe(u8,
         \\module main
-        \\export finish
         \\
         \\
-        \\def finish() effects():
+        \\public def finish() effects():
         \\    pass
         \\
         \\

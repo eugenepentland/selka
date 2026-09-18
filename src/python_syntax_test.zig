@@ -515,27 +515,23 @@ fn parsedMinChars(allocator: std.mem.Allocator, text: []const u8) !?usize {
 test "undocumented-export reports missing short and name-restating docstrings" {
     const body =
         \\module main
-        \\export bare
-        \\export terse
-        \\export compute_value
-        \\export area
         \\
         \\
-        \\def bare(x: int) -> int:
+        \\public def bare(x: int) -> int:
         \\    return x
         \\
         \\
-        \\def terse(x: int) -> int:
+        \\public def terse(x: int) -> int:
         \\    "short"
         \\    return x
         \\
         \\
-        \\def compute_value(x: int) -> int:
+        \\public def compute_value(x: int) -> int:
         \\    "compute value"
         \\    return x
         \\
         \\
-        \\def area(x: int) -> int:
+        \\public def area(x: int) -> int:
         \\    "The rectangle's area in square units."
         \\    return x
         \\

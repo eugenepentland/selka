@@ -38,19 +38,49 @@ pub const Fences = struct {
     }
 };
 
-/// Walk the `export NAME` declarations of a guest module source.
+/// Walk the published declarations of a guest module source. A standard module
+/// publishes a declaration with the `public` modifier; a legacy `export NAME`
+/// directive is still recognized so the walker keeps reading older fixtures.
 pub const Exports = struct {
     rest: []const u8,
-    /// The next exported name, or null at the end of the source.
+    /// The next published name, or null at the end of the source.
     pub fn next(self: *Exports) ?[]const u8 {
         while (line(&self.rest)) |text| {
-            if (!std.mem.startsWith(u8, text, "export ")) continue;
-            const name = std.mem.trim(u8, text[7..], " \t;");
-            if (name.len != 0) return name;
+            if (std.mem.startsWith(u8, text, "export ")) {
+                const name = std.mem.trim(u8, text[7..], " \t;");
+                if (name.len != 0) return name;
+                continue;
+            }
+            if (publishedName(text)) |name| return name;
         }
         return null;
     }
 };
+
+/// The name a `public` definition line publishes, or null when the line is not
+/// one. Only a published definition is an export the documentation must cover.
+fn publishedName(text: []const u8) ?[]const u8 {
+    if (!std.mem.startsWith(u8, text, "public ")) return null;
+    return definitionName(text);
+}
+
+/// The name a definition line declares, looking through an optional leading
+/// `public` modifier. Null when the line is not a definition.
+fn definitionName(text: []const u8) ?[]const u8 {
+    var rest = text;
+    if (std.mem.startsWith(u8, rest, "public ")) rest = rest["public ".len..];
+    for (definition_keywords) |keyword| {
+        if (!std.mem.startsWith(u8, rest, keyword)) continue;
+        var after = rest[keyword.len..];
+        if (after.len == 0 or (after[0] != ' ' and after[0] != '\t')) continue;
+        after = std.mem.trimStart(u8, after, " \t");
+        var end: usize = 0;
+        while (end < after.len and wordly(after[end])) end += 1;
+        if (end == 0) return null;
+        return after[0..end];
+    }
+    return null;
+}
 
 /// Start walking the fenced code blocks of `text`.
 pub fn fences(text: []const u8) Fences {
@@ -231,16 +261,8 @@ fn directive(text: []const u8) ?[]const u8 {
 }
 
 fn defines(text: []const u8, name: []const u8) bool {
-    for (definition_keywords) |keyword| {
-        if (!std.mem.startsWith(u8, text, keyword)) continue;
-        var rest = text[keyword.len..];
-        if (rest.len == 0 or (rest[0] != ' ' and rest[0] != '\t')) continue;
-        rest = std.mem.trimStart(u8, rest, " \t");
-        if (!std.mem.startsWith(u8, rest, name)) continue;
-        const after = rest[name.len..];
-        if (after.len == 0 or !wordly(after[0])) return true;
-    }
-    return false;
+    const declared = definitionName(text) orelse return false;
+    return std.mem.eql(u8, declared, name);
 }
 
 const testing = std.testing;
@@ -296,7 +318,7 @@ test "a skipped or prose-tagged block is not an executed example" {
     try testing.expect(!hasDirective("def main() -> int:\n# doc: skip late\n    return 1\n", "skip"));
 }
 
-const module = "module hex\nexport encode\nexport decode\n\n\n# Lowercase hexadecimal text.\ndef encode(data: bytes) -> str:\n    return data.hex()\n\n\ndef decode(text: str) -> bytes:\n    return text\n";
+const module = "module hex\n\n\n# Lowercase hexadecimal text.\npublic def encode(data: bytes) -> str:\n    return data.hex()\n\n\npublic def decode(text: str) -> bytes:\n    return text\n";
 
 // spec: DOCCOV-2
 test "standard exports are read from source and need a doc comment directly above" {
@@ -320,7 +342,7 @@ test "an export counts as documented only when the section names it as a whole w
 
 // spec-case: DOCCOV-2
 test "result and resource definitions count as documented exports" {
-    const source = "module net\nexport Connection\nexport Connected\n\n\n# One live stream.\nresource Connection: network\n\n\n# One acquisition result.\nresult Connected:\n    ok: Connection,\n    err: int\n";
+    const source = "module net\n\n\n# One live stream.\npublic resource Connection: network\n\n\n# One acquisition result.\npublic result Connected:\n    ok: Connection,\n    err: int\n";
     try testing.expect(documentsExport(source, "Connection"));
     try testing.expect(documentsExport(source, "Connected"));
     try testing.expect(documentsExport(source, "absent") == false);

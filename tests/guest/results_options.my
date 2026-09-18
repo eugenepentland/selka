@@ -1,8 +1,4 @@
 module results_options
-export test_options
-export test_results
-export test_propagation
-export test_parsing_and_conversion
 
 
 def lookup(values: list[int], index: int) -> Option[int]:
@@ -38,7 +34,7 @@ def report(total: int, parts: int) -> int:
             return len(message)
 
 
-def test_options() -> bool effects(managed_allocation):
+public def test_options() -> bool effects(managed_allocation):
     values = [10, 20, 30]
     if describe(lookup(values, 1)) != 20 or describe(lookup(values, 9)) != -1:
         return False
@@ -46,7 +42,7 @@ def test_options() -> bool effects(managed_allocation):
     return describe(blank) == -1
 
 
-def test_results() -> bool effects(managed_allocation):
+public def test_results() -> bool effects(managed_allocation):
     match divide(21, 3):
         case Ok(value):
             if value != 7:
@@ -60,11 +56,11 @@ def test_results() -> bool effects(managed_allocation):
             return message == "division by zero"
 
 
-def test_propagation() -> bool effects(managed_allocation):
+public def test_propagation() -> bool effects(managed_allocation):
     return report(40, 2) == 21 and report(40, 0) == 16
 
 
-def test_parsing_and_conversion() -> bool effects(managed_allocation):
+public def test_parsing_and_conversion() -> bool effects(managed_allocation):
     if describe(int("22")) != 22 or describe(int(" 42 ")) != 42:
         return False
     if describe(int("0x10")) != -1 or describe(int("")) != -1:

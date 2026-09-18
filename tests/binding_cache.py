@@ -16,10 +16,10 @@ spec.loader.exec_module(driver)
 
 
 ENTRY_SOURCE = """module main
-export Point
 
 
-class Point:
+
+public class Point:
     n: i64
 
 
@@ -28,10 +28,10 @@ def main() -> i64:
 """
 
 SHAPE_SOURCE = """module main
-export Point
 
 
-class Point:
+
+public class Point:
     n: i64
     flag: bool
 

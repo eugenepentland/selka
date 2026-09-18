@@ -3,9 +3,6 @@ import io
 import text
 import sexpr as s
 import circuit as c
-export source
-export model
-export pinoutCheck
 
 
 def importForm(host: Host, nodes: list[s.Node], i: int) -> bool:
@@ -79,7 +76,7 @@ def fail(host: Host, code: int, span: text.Span) -> int:
     return code
 
 
-def source(host: Host, nodes: list[s.Node]) -> int effects(host, managed_allocation):
+public def source(host: Host, nodes: list[s.Node]) -> int effects(host, managed_allocation):
     i = 1
     modules = 0
     blocks = 0
@@ -113,7 +110,7 @@ def source(host: Host, nodes: list[s.Node]) -> int effects(host, managed_allocat
     return 0
 
 
-def pinoutCheck(host: Host, nodes: list[s.Node]) -> int effects(host, managed_allocation):
+public def pinoutCheck(host: Host, nodes: list[s.Node]) -> int effects(host, managed_allocation):
     if not pinoutForm(host, nodes, 1) or s.at(nodes, 1).next != len(nodes) or s.at(nodes, 3).kind != s.Kind.string:
         return fail(host, 18, s.at(nodes, 1).span)
     count = 0
@@ -163,7 +160,7 @@ def fields(host: Host, nodes: list[s.Node], item: c.Part) -> int:
     return 0
 
 
-def model(host: Host, nodes: list[s.Node], parts: list[c.Part], pins: list[c.Pin], pinout: list[s.Node]) -> int effects(host, managed_allocation):
+public def model(host: Host, nodes: list[s.Node], parts: list[c.Part], pins: list[c.Pin], pinout: list[s.Node]) -> int effects(host, managed_allocation):
     schema = pinoutCheck(host, pinout)
     if schema != 0:
         return schema

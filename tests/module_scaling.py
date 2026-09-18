@@ -20,11 +20,11 @@ def chain(directory, count):
     for i in range(count):
         name = 'main' if i == 0 else f'm{i}'
         imports = f'import m{i + 1} as next\n' if i + 1 < count else ''
-        exports = '' if i == 0 else 'export value\n'
+        visibility = '' if i == 0 else 'public '
         function = 'main' if i == 0 else 'value'
         expression = 'next.value() + 1' if imports else '1'
         (directory / f'{name}.my').write_text(
-            f'module {name}\n{imports}{exports}def {function}() -> i64:\n'
+            f'module {name}\n{imports}{visibility}def {function}() -> i64:\n'
             f'    return {expression}\n', encoding='utf-8')
     return directory / 'main.my'
 

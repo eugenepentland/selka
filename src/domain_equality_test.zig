@@ -5,7 +5,7 @@ const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const typed = @import("typed.zig");
 const declarations =
-    \\domain Id: u64:
+    \\public domain Id: u64:
     \\    def make(n: u64) -> Id effects():
     \\        return wrap[Id](n)
     \\
@@ -98,14 +98,13 @@ const Modules = struct {
         if (std.mem.eql(u8, path, "bridge.my")) return allocator.dupe(u8,
             \\module bridge
             \\import left as alias
-            \\export make
             \\
             \\
-            \\def make(n: u64) -> alias.Id effects():
+            \\public def make(n: u64) -> alias.Id effects():
             \\    return alias.Id.make(n)
         );
-        if (std.mem.eql(u8, path, "left.my")) return allocator.dupe(u8, "module left\nexport Id\n" ++ declarations);
-        if (std.mem.eql(u8, path, "right.my")) return allocator.dupe(u8, "module right\nexport Id\n" ++ declarations);
+        if (std.mem.eql(u8, path, "left.my")) return allocator.dupe(u8, "module left\n" ++ declarations);
+        if (std.mem.eql(u8, path, "right.my")) return allocator.dupe(u8, "module right\n" ++ declarations);
         return error.NotFound;
     }
 };

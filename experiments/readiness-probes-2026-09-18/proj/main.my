@@ -1,0 +1,18 @@
+module main
+import sexpr.parser as sp
+
+def main(args: list[str], fs: Filesystem, out: Stream) -> int:
+    src = b""
+    match read_file(fs, args[0]):
+        case Ok(data):
+            src = data
+        case Err(problem):
+            out.print("read failed", problem)
+            return 2
+    match sp.parse(src):
+        case Ok(node):
+            out.print(len(sp.children(node, "footprint")))
+            return 0
+        case Err(e):
+            out.print("error", e.message, "line", e.line)
+            return 1

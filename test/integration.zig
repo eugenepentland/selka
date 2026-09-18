@@ -804,9 +804,8 @@ test "build --run detects module projects and installed binaries receive the sam
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
         \\module helper
         \\
-        \\export render
         \\
-        \\def render(args: list[str]) -> str effects(managed_allocation):
+        \\public def render(args: list[str]) -> str effects(managed_allocation):
         \\    out = ""
         \\    for value in args:
         \\        out = out + "[" + value + "]"
@@ -1496,10 +1495,9 @@ test "CLI module interfaces parse bodies and check exported signature visibility
     try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
         \\module input
         \\import units
-        \\export Sample
         \\
         \\
-        \\class Sample:
+        \\public class Sample:
         \\    distance: units.Distance
         \\
         \\
@@ -1508,10 +1506,9 @@ test "CLI module interfaces parse bodies and check exported signature visibility
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "units.my", .data =
         \\module units
-        \\export Distance
         \\
         \\
-        \\domain Distance: i64:
+        \\public domain Distance: i64:
         \\    def make(x: i64) -> Distance effects():
         \\        return wrap[Distance](x)
     });
@@ -1536,21 +1533,20 @@ test "CLI module interfaces parse bodies and check exported signature visibility
     defer testing.allocator.free(hidden.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, hidden.term);
     try testing.expectEqualStrings("", hidden.stdout);
-    for ([_][]const u8{ "E_PRIVATE_SYMBOL", "input.my:7:", "units.my:4:" }) |part| try testing.expect(std.mem.indexOf(u8, hidden.stderr, part) != null);
+    for ([_][]const u8{ "E_PRIVATE_SYMBOL", "input.my:6:", "units.my:4:" }) |part| try testing.expect(std.mem.indexOf(u8, hidden.stderr, part) != null);
     try invoke("list-interfaces",
         \\module input
         \\def broken(
     , 1, "", "E_SYNTAX");
     try invoke("list-interfaces",
         \\module input
-        \\export f
         \\
         \\
         \\class Secret:
         \\    pass
         \\
         \\
-        \\def f() -> Secret:
+        \\public def f() -> Secret:
         \\    return Secret()
     , 1, "", "E_PRIVATE_INTERFACE");
     try invokeOptions("list-interfaces", "module input", &.{"--check"}, 2, "", "usage:");
@@ -1561,10 +1557,9 @@ test "CLI list-interfaces renders capability parameters with their Python spelli
     defer temp.cleanup();
     try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
         \\module input
-        \\export main
         \\
         \\
-        \\def main(fs: Filesystem, clock: Clock) -> int:
+        \\public def main(fs: Filesystem, clock: Clock) -> int:
         \\    return 0
     });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
@@ -1622,10 +1617,9 @@ test "CLI check on a CHECK-PROJECT-ENTRY-1 module project loads the reachable gr
     });
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data =
         \\module helper
-        \\export value
         \\
         \\
-        \\def value() -> int effects():
+        \\public def value() -> int effects():
         \\    return 42
     });
     const path = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
@@ -1657,9 +1651,8 @@ test "CLI build loads a module project entry without --project" {
     });
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
         \\module helper
-        \\export value
         \\
-        \\def value() -> int effects():
+        \\public def value() -> int effects():
         \\    return 42
     });
     const entry = try temporary.dir.realPathFileAlloc(testing.io, "app/main.my", testing.allocator);
@@ -1750,15 +1743,13 @@ test "CLI test reports an exported ill-shaped test as a failed case" {
     defer temporary.cleanup();
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
         \\module main
-        \\export test_bad
-        \\export test_ok
         \\
         \\
-        \\def test_bad() -> int effects():
+        \\public def test_bad() -> int effects():
         \\    return 1
         \\
         \\
-        \\def test_ok() -> bool effects():
+        \\public def test_ok() -> bool effects():
         \\    return True
         \\
         \\
@@ -1811,10 +1802,9 @@ test "CLI checks and runs module programs with private boundaries and cross-file
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data =
         \\module helper
-        \\export value
         \\
         \\
-        \\def value() -> i64 effects():
+        \\public def value() -> i64 effects():
         \\    return 42
     });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
@@ -1837,17 +1827,16 @@ test "CLI checks and runs module programs with private boundaries and cross-file
     }
     try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data =
         \\module helper
-        \\export value
         \\
         \\
-        \\def value() -> i64 effects():
+        \\public def value() -> i64 effects():
         \\    return divtrunc(1, 0)
     });
     const trap = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run-project", path, "--print-result" } ++ tools) });
     defer testing.allocator.free(trap.stdout);
     defer testing.allocator.free(trap.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, trap.term);
-    for ([_][]const u8{ "R_DIVISION_BY_ZERO", "helper.my:6:", "input.my:6:" }) |part| try testing.expect(std.mem.indexOf(u8, trap.stderr, part) != null);
+    for ([_][]const u8{ "R_DIVISION_BY_ZERO", "helper.my:5:", "input.my:6:" }) |part| try testing.expect(std.mem.indexOf(u8, trap.stderr, part) != null);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data =
         \\module helper
         \\
@@ -1888,10 +1877,9 @@ test "CLI checkProjectPolicy distinguishes language failures policy failures and
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "core.my", .data =
         \\module core
-        \\export value
         \\
         \\
-        \\def value() -> i64 effects():
+        \\public def value() -> i64 effects():
         \\    return 7
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "rules file.json", .data = "{\"version\":1,\"default_action\":\"deny\",\"rules\":[]}" });
@@ -1928,10 +1916,9 @@ test "CLI checkProjectPolicy distinguishes language failures policy failures and
     try testing.expect(std.mem.indexOf(u8, config_error.stderr, "UnsupportedPolicyVersion") != null);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "core.my", .data =
         \\module core
-        \\export value
         \\
         \\
-        \\def value() -> i64:
+        \\public def value() -> i64:
         \\    return True
     });
     const invalid = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-policy", path, option } });
@@ -1966,11 +1953,9 @@ test "CLI checkProjectPolicy distinguishes language failures policy failures and
 test "CLI lint reports L_ findings and blocks only under --gate" {
     const source =
         \\module input
-        \\export compute
-        \\export test_compute
         \\
         \\
-        \\def compute(value: int) -> int:
+        \\public def compute(value: int) -> int:
         \\    "Compute the input plus one."
         \\    return helper(value)
         \\
@@ -1983,7 +1968,7 @@ test "CLI lint reports L_ findings and blocks only under --gate" {
         \\    return value - 1
         \\
         \\
-        \\def test_compute() -> bool effects():
+        \\public def test_compute() -> bool effects():
         \\    return compute(1) == 2
         \\
         \\
@@ -2166,10 +2151,9 @@ test "CLI tests-for lists direct and transitive tests and rejects an unknown nam
 test "CLI lint undocumented-export reports under agent and blocks under strict" {
     const source =
         \\module input
-        \\export compute
         \\
         \\
-        \\def compute(value: int) -> int:
+        \\public def compute(value: int) -> int:
         \\    return value + 1
         \\
         \\
@@ -2184,10 +2168,9 @@ test "CLI lint undocumented-export reports under agent and blocks under strict" 
     try invokeOptions("lint", source, &.{ "--gate", "--profile=strict" }, 3, "lint: 1 finding(s): 1 blocking, 0 report, 0 waived, 0 accepted\n", "L_UNDOCUMENTED_EXPORT");
     const documented =
         \\module input
-        \\export compute
         \\
         \\
-        \\def compute(value: int) -> int:
+        \\public def compute(value: int) -> int:
         \\    "Compute the input plus one."
         \\    return value + 1
         \\
@@ -2209,10 +2192,9 @@ test "CLI api-diff records a baseline and classifies body and interface changes"
     defer testing.allocator.free(root);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data =
         \\module app
-        \\export compute
         \\
         \\
-        \\def compute(value: int) -> int:
+        \\public def compute(value: int) -> int:
         \\    return value + 1
         \\
         \\
@@ -2233,10 +2215,9 @@ test "CLI api-diff records a baseline and classifies body and interface changes"
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, write.term);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data =
         \\module app
-        \\export compute
         \\
         \\
-        \\def compute(value: int) -> int:
+        \\public def compute(value: int) -> int:
         \\    return value + 2
         \\
         \\
@@ -2250,10 +2231,9 @@ test "CLI api-diff records a baseline and classifies body and interface changes"
     try testing.expect(std.mem.indexOf(u8, body.stdout, "compatible=1") != null);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data =
         \\module app
-        \\export compute
         \\
         \\
-        \\def compute(value: int, extra: int) -> int:
+        \\public def compute(value: int, extra: int) -> int:
         \\    return value + extra
         \\
         \\
@@ -2520,10 +2500,9 @@ test "CLI module quality reports preserve export roots and advisory thresholds" 
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "api.my", .data =
         \\module api
-        \\export entry
         \\
         \\
-        \\def entry() -> i64 effects():
+        \\public def entry() -> i64 effects():
         \\    return hidden()
         \\
         \\
@@ -2568,7 +2547,6 @@ test "CLI module formatting is syntax only and canonical for every reachable mod
     const draft =
         \\module input
         \\import absent as a
-        \\export Missing
         \\
         \\def f(x: a.T) -> a.T:
         \\    return x
@@ -2644,10 +2622,9 @@ test "CLI schema inputs load fresh generated modules and reject malformed manife
     const source =
         \\module input
         \\import config
-        \\export read
         \\
         \\
-        \\def read() -> i64 effects():
+        \\public def read() -> i64 effects():
         \\    return config.value()
         \\
         \\
@@ -2875,7 +2852,7 @@ test "CLI project-dependencies buildIndex emits checked graph identity and rejec
         \\
         \\def main() -> i64:
         \\    return 0
-    , 1, "", "error[");
+    , 1, "", "error[E_EXPORT_REMOVED]");
 }
 // spec: FEATURE-REPORT-1
 test "CLI features identify installed compiler without source input" {
@@ -2934,12 +2911,11 @@ const listing_module =
     \\module input
     \\import math
     \\import shared.units as units
-    \\export Count
     \\
     \\
     \\# leading comment
     \\# second line
-    \\type Count = i64
+    \\public type Count = i64
     \\
     \\
     \\const LIMIT: Count = 3 # trailing note
@@ -2952,10 +2928,9 @@ const listing_module =
     \\host def measure(host: Host, x: i64) -> i64 effects(host)
     \\
     \\
-    \\export main
     \\
     \\
-    \\def main() -> i64:
+    \\public def main() -> i64:
     \\    return LIMIT
 ;
 const Listing = struct {
@@ -3031,7 +3006,7 @@ test "CLI declaration listing separates parse failures from checking and usage f
         \\
         \\def main() -> i64:
         \\    return 0
-    , &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_UNKNOWN_EXPORT\"");
+    , &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_EXPORT_REMOVED\"");
     try invokeOptions("list-declarations",
         \\def main() -> i64:
         \\    return 0
@@ -3961,9 +3936,8 @@ test "CLI project checks reuse syntax and verdicts and invalidate only changed m
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
         \\module helper
         \\
-        \\export answer
         \\
-        \\def answer() -> i64 effects():
+        \\public def answer() -> i64 effects():
         \\    return 7
     });
     const entry = try temp.dir.realPathFileAlloc(testing.io, "app/main.my", testing.allocator);
@@ -3990,9 +3964,8 @@ test "CLI project checks reuse syntax and verdicts and invalidate only changed m
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
         \\module helper
         \\
-        \\export answer
         \\
-        \\def answer() -> i64 effects():
+        \\public def answer() -> i64 effects():
         \\    return 8
     });
     const edited = try projectCacheCheck(entry, cache_argument, 0);
@@ -4006,9 +3979,8 @@ test "CLI project checks reuse syntax and verdicts and invalidate only changed m
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
         \\module helper
         \\
-        \\export answer
         \\
-        \\def answer() -> i64:
+        \\public def answer() -> i64:
         \\    return True
     });
     const broken = try projectCacheCheck(entry, cache_argument, 1);
@@ -4018,9 +3990,8 @@ test "CLI project checks reuse syntax and verdicts and invalidate only changed m
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
         \\module helper
         \\
-        \\export answer
         \\
-        \\def answer() -> i64 effects():
+        \\public def answer() -> i64 effects():
         \\    return 8
     });
 
@@ -4050,9 +4021,8 @@ test "CLI invalidation reports actual query work and marks unexecuted stages ski
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
         \\module helper
-        \\export answer
         \\
-        \\def answer() -> i64 effects():
+        \\public def answer() -> i64 effects():
         \\    return 40
     });
     const entry = try temp.dir.realPathFileAlloc(testing.io, "app/main.my", testing.allocator);
@@ -4075,9 +4045,8 @@ test "CLI invalidation reports actual query work and marks unexecuted stages ski
 
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
         \\module helper
-        \\export answer
         \\
-        \\def answer() -> i64 effects():
+        \\public def answer() -> i64 effects():
         \\    return 41
     });
     var check_args: std.ArrayList([]const u8) = .empty;
@@ -4109,9 +4078,8 @@ test "CLI invalidation reports actual query work and marks unexecuted stages ski
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "runapp/helper.my", .data =
         \\module helper
-        \\export answer
         \\
-        \\def answer() -> i64 effects():
+        \\public def answer() -> i64 effects():
         \\    return 42
     });
     const run_entry = try temp.dir.realPathFileAlloc(testing.io, "runapp/main.my", testing.allocator);
@@ -4130,9 +4098,8 @@ test "CLI invalidation reports actual query work and marks unexecuted stages ski
 
     try temp.dir.writeFile(testing.io, .{ .sub_path = "runapp/helper.my", .data =
         \\module helper
-        \\export answer
         \\
-        \\def answer() -> i64 effects():
+        \\public def answer() -> i64 effects():
         \\    return 43
     });
     const second = try std.process.run(testing.allocator, testing.io, .{ .argv = run_args.items });
@@ -4269,26 +4236,23 @@ test "run build --run and installed executables accept more than 256 guest argum
 }
 const named_constraint_contracts =
     \\module contracts
-    \\export Prices
     \\
     \\
-    \\constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
+    \\public constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
 ;
 const named_constraint_checkout =
     \\module checkout
     \\import contracts
-    \\export total
     \\
     \\
-    \\def total[P: contracts.Prices](policy: P, subtotal: int) -> int effects():
+    \\public def total[P: contracts.Prices](policy: P, subtotal: int) -> int effects():
     \\    return P.price(policy, subtotal) + 500
 ;
 const named_constraint_fakes =
     \\module fakes
-    \\export FixedPrices
     \\
     \\
-    \\domain FixedPrices: int:
+    \\public domain FixedPrices: int:
     \\    def make(amount: int) -> FixedPrices effects():
     \\        return wrap[FixedPrices](amount)
     \\
@@ -4300,7 +4264,6 @@ const named_constraint_fake_tests =
     \\module fake_tests
     \\import checkout
     \\import fakes
-    \\export test_checkout
     \\
     \\
     \\def main() -> int:
@@ -4308,16 +4271,15 @@ const named_constraint_fake_tests =
     \\    return 0
     \\
     \\
-    \\def test_checkout() -> bool effects():
+    \\public def test_checkout() -> bool effects():
     \\    return checkout.total(fakes.FixedPrices.make(1750), 2000) == 2250
 ;
 const named_constraint_production_invalid =
     \\module production
     \\import contracts
-    \\export DiscountPrices
     \\
     \\
-    \\domain DiscountPrices: int:
+    \\public domain DiscountPrices: int:
     \\    def make(discount: int) -> DiscountPrices effects():
     \\        return wrap[DiscountPrices](discount)
     \\
@@ -4614,17 +4576,16 @@ test "loadConfiguredPolicy policy applies to native test preparation ProjectConf
     try writeProjectFile(&temp, "tests.my",
         \\module tests
         \\import helper
-        \\export test_policy
         \\
         \\
         \\def main() -> int:
         \\    return 0
         \\
         \\
-        \\def test_policy() -> bool effects():
+        \\public def test_policy() -> bool effects():
         \\    return helper.value() == 7
     );
-    try writeProjectFile(&temp, "helper.my", "module helper\nexport value\ndef value() -> int effects():\n    return 7\n");
+    try writeProjectFile(&temp, "helper.my", "module helper\npublic def value() -> int effects():\n    return 7\n");
     try writeProjectFile(&temp, "mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
     try writeProjectFile(&temp, "policy.json", policy_allow);
     const entry = try temp.dir.realPathFileAlloc(testing.io, "tests.my", testing.allocator);
@@ -4695,17 +4656,16 @@ test "loadConfiguredPolicy policy discovery above the native test entry enforces
     try writeProjectFile(&temp, "nested/tests.my",
         \\module tests
         \\import helper
-        \\export test_policy
         \\
         \\
         \\def main() -> int:
         \\    return 0
         \\
         \\
-        \\def test_policy() -> bool effects():
+        \\public def test_policy() -> bool effects():
         \\    return helper.value() == 7
     );
-    try writeProjectFile(&temp, "nested/helper.my", "module helper\nexport value\ndef value() -> int effects():\n    return 7\n");
+    try writeProjectFile(&temp, "nested/helper.my", "module helper\npublic def value() -> int effects():\n    return 7\n");
     try writeProjectFile(&temp, "mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
     try writeProjectFile(&temp, "policy.json", policy_deny);
     const entry = try temp.dir.realPathFileAlloc(testing.io, "nested/tests.my", testing.allocator);
@@ -4824,10 +4784,9 @@ test "CLI mutation markers gate the call-site & spelling" {
 
 const p1_production_unfinished =
     \\module production
-    \\export Stub
     \\
     \\
-    \\domain Stub: int:
+    \\public domain Stub: int:
     \\    def make(discount: int) -> Stub effects():
     \\        return wrap[Stub](discount)
     \\
@@ -4836,10 +4795,9 @@ const p1_production_unfinished =
 ;
 const p1_production_bad_interface =
     \\module mismatched
-    \\export Stub
     \\
     \\
-    \\domain Stub: int:
+    \\public domain Stub: int:
     \\    def make(discount: int) -> Stub effects():
     \\        return wrap[Stub](discount)
     \\
@@ -4849,21 +4807,20 @@ const p1_production_bad_interface =
 const p1_main =
     \\module main
     \\import production
-    \\export test_checkout
     \\
     \\
     \\def main() -> int:
     \\    return 0
     \\
     \\
-    \\def test_checkout() -> bool effects():
+    \\public def test_checkout() -> bool effects():
     \\    policy = production.Stub.make(250)
     \\    return production.Stub.price(policy, 2000) == 1750
 ;
 fn p1Fake(perm: []const u8, body: []const u8) ![]const u8 {
     return std.fmt.allocPrint(
         testing.allocator,
-        "module production\nexport Stub\n\n\ndomain Stub: int:\n" ++
+        "module production\n\n\npublic domain Stub: int:\n" ++
             "    def make(discount: int) -> Stub effects():\n        return wrap[Stub](discount)\n\n" ++
             "    def price(policy: Stub, subtotal: int) -> int {s}:\n        {s}\n        return subtotal - unwrap(policy)\n",
         .{ perm, body },
@@ -5050,10 +5007,9 @@ test "P1 ignores an unselected production body type error while its declarations
     defer temp.cleanup();
     const production_body_error =
         \\module production
-        \\export Stub
         \\
         \\
-        \\domain Stub: int:
+        \\public domain Stub: int:
         \\    def make(discount: int) -> Stub effects():
         \\        return wrap[Stub](discount)
         \\
@@ -5116,34 +5072,26 @@ fn r3WriteCases(dir: *std.testing.TmpDir, name: []const u8, qualified: []const u
 
 const r3_alias_main =
     \\module main
-    \\export Truth
-    \\export Count
-    \\export Counts
-    \\export Pair
-    \\export Chosen
-    \\export size
-    \\export pick
-    \\export test_alias
     \\
     \\
-    \\type Truth = bool
-    \\type Count = int
-    \\type Counts = [2]Count
-    \\class Pair[T]:
+    \\public type Truth = bool
+    \\public type Count = int
+    \\public type Counts = [2]Count
+    \\public class Pair[T]:
     \\    left: T
     \\    right: T
-    \\type Chosen = Pair[Count]
+    \\public type Chosen = Pair[Count]
     \\
     \\
-    \\def size(values: Counts) -> Count effects():
+    \\public def size(values: Counts) -> Count effects():
     \\    return values[0] + values[1]
     \\
     \\
-    \\def pick(value: Chosen) -> Count effects():
+    \\public def pick(value: Chosen) -> Count effects():
     \\    return value.left
     \\
     \\
-    \\def test_alias() -> Truth effects():
+    \\public def test_alias() -> Truth effects():
     \\    return True
     \\
     \\
@@ -5196,10 +5144,9 @@ test "R3 canonical descriptors expand transparent aliases for discovery and nest
 const r3_scalar_main =
     \\module main
     \\import reading
-    \\export test_reading
     \\
     \\
-    \\def test_reading() -> bool effects():
+    \\public def test_reading() -> bool effects():
     \\    return reading.sample() == 42
     \\
     \\
@@ -5208,19 +5155,17 @@ const r3_scalar_main =
 ;
 const r3_scalar_production =
     \\module reading
-    \\export sample
     \\
     \\
-    \\def sample() -> int effects():
+    \\public def sample() -> int effects():
     \\    return todo[int]()
 ;
 const r3_nominal_main =
     \\module main
     \\import reading
-    \\export test_reading
     \\
     \\
-    \\def test_reading() -> bool effects():
+    \\public def test_reading() -> bool effects():
     \\    return True
     \\
     \\
@@ -5229,36 +5174,31 @@ const r3_nominal_main =
 ;
 const r3_nominal_production =
     \\module reading
-    \\export D
-    \\export sample
     \\
     \\
-    \\domain D: i64:
+    \\public domain D: i64:
     \\    def make(x: i64) -> D effects():
     \\        return wrap[D](x)
     \\
     \\
-    \\def sample() -> D effects():
+    \\public def sample() -> D effects():
     \\    return todo[D]()
 ;
 const r3_nominal_fake =
     \\module reading
-    \\export D
-    \\export E
-    \\export sample
     \\
     \\
-    \\domain D: i64:
+    \\public domain D: i64:
     \\    def make(x: i64) -> D effects():
     \\        return wrap[D](x)
     \\
     \\
-    \\domain E: i64:
+    \\public domain E: i64:
     \\    def make(x: i64) -> E effects():
     \\        return wrap[E](x)
     \\
     \\
-    \\def sample() -> E effects():
+    \\public def sample() -> E effects():
     \\    return E.make(1)
 ;
 
@@ -5278,10 +5218,9 @@ test "R3 canonical descriptors compare provider scalar and nominal contracts" {
 
     const equivalent =
         \\module reading
-        \\export sample
         \\
         \\
-        \\def sample() -> i64 effects():
+        \\public def sample() -> i64 effects():
         \\    return 42
     ;
     try r3WriteCases(&temp, "cases.json", "main::test_reading", "reading.my", equivalent);
@@ -5293,17 +5232,15 @@ test "R3 canonical descriptors compare provider scalar and nominal contracts" {
 
     const scalar_variants = [_][]const u8{
         \\module reading
-        \\export sample
         \\
         \\
-        \\def sample() -> u8 effects():
+        \\public def sample() -> u8 effects():
         \\    return 42
         ,
         \\module reading
-        \\export sample
         \\
         \\
-        \\def sample() -> str effects():
+        \\public def sample() -> str effects():
         \\    return "x"
         ,
     };
@@ -5392,46 +5329,40 @@ test "C3s concrete specialization reuse survives fresh processes with selective 
 
     const library_render40 =
         \\module lib
-        \\export render
-        \\export label
         \\
         \\
-        \\def render[T: integer](value: T) -> i64 effects():
+        \\public def render[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return 40
         \\
         \\
-        \\def label[T: integer](value: T) -> i64 effects():
+        \\public def label[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return 7
     ;
     const library_render41 =
         \\module lib
-        \\export render
-        \\export label
         \\
         \\
-        \\def render[T: integer](value: T) -> i64 effects():
+        \\public def render[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return 41
         \\
         \\
-        \\def label[T: integer](value: T) -> i64 effects():
+        \\public def label[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return 7
     ;
     const library_label8 =
         \\module lib
-        \\export render
-        \\export label
         \\
         \\
-        \\def render[T: integer](value: T) -> i64 effects():
+        \\public def render[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return 41
         \\
         \\
-        \\def label[T: integer](value: T) -> i64 effects():
+        \\public def label[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return 8
     ;
@@ -5536,27 +5467,25 @@ test "C3s provider body changes stay visible through reused specializations" {
     defer testing.allocator.free(cache_argument);
     const base_library =
         \\module lib
-        \\export render
         \\
         \\
         \\def helper(n: i64) -> i64 effects():
         \\    return n + 1
         \\
         \\
-        \\def render[T: integer](value: T) -> i64 effects():
+        \\public def render[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return helper(40)
     ;
     const edited_library =
         \\module lib
-        \\export render
         \\
         \\
         \\def helper(n: i64) -> i64 effects():
         \\    return n + 2
         \\
         \\
-        \\def render[T: integer](value: T) -> i64 effects():
+        \\public def render[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return helper(40)
     ;
@@ -5758,32 +5687,28 @@ test "C3s reused specialization warnings relocate and defaults stay equivalent" 
 const c4_main =
     \\module main
     \\import helpers
-    \\export test_a
-    \\export test_b
     \\
     \\
     \\def main() -> int:
     \\    return 0
     \\
     \\
-    \\def test_a(x: i64) -> bool effects():
+    \\public def test_a(x: i64) -> bool effects():
     \\    return helpers.a() == x
     \\
     \\
-    \\def test_b() -> bool effects():
+    \\public def test_b() -> bool effects():
     \\    return helpers.b() == 2
 ;
 const c4_helpers =
     \\module helpers
-    \\export a
-    \\export b
     \\
     \\
-    \\def a() -> i64 effects():
+    \\public def a() -> i64 effects():
     \\    return 1
     \\
     \\
-    \\def b() -> i64 effects():
+    \\public def b() -> i64 effects():
     \\    return 2
 ;
 const c4_cases =
@@ -6189,37 +6114,33 @@ fn c4DirHasFiles(base: []const u8, leaf: []const u8) bool {
 
 const c4_first =
     \\module first
-    \\export value
     \\
     \\
-    \\def value() -> i64 effects():
+    \\public def value() -> i64 effects():
     \\    return 1
 ;
 const c4_second =
     \\module second
-    \\export value
     \\
     \\
-    \\def value() -> i64 effects():
+    \\public def value() -> i64 effects():
     \\    return 2
 ;
 const c4_provider_main =
     \\module main
     \\import first
     \\import second
-    \\export test_one
-    \\export test_two
     \\
     \\
     \\def main() -> int:
     \\    return 0
     \\
     \\
-    \\def test_one() -> bool effects():
+    \\public def test_one() -> bool effects():
     \\    return first.value() + second.value() == 3
     \\
     \\
-    \\def test_two() -> bool effects():
+    \\public def test_two() -> bool effects():
     \\    return second.value() + first.value() == 3
 ;
 
@@ -6243,27 +6164,24 @@ fn c4ProviderCasesChanged(allocator: std.mem.Allocator, first: []const u8, chang
 const pure_main =
     \\module main
     \\import helpers
-    \\export test_ok
-    \\export test_bad
     \\
     \\
     \\def main() -> int:
     \\    return 0
     \\
     \\
-    \\def test_ok() -> bool effects():
+    \\public def test_ok() -> bool effects():
     \\    return helpers.value() == 1
     \\
     \\
-    \\def test_bad() -> bool effects():
+    \\public def test_bad() -> bool effects():
     \\    return helpers.value() == 2
 ;
 const pure_helpers =
     \\module helpers
-    \\export value
     \\
     \\
-    \\def value() -> i64 effects():
+    \\public def value() -> i64 effects():
     \\    return 1
 ;
 
@@ -6400,15 +6318,13 @@ test "PURE-SKIP-1 no-cache and force disable pure outcome replay" {
 
 const bench_program =
     \\module main
-    \\export test_small
-    \\export bench_loop
     \\
     \\
-    \\def test_small() -> bool effects():
+    \\public def test_small() -> bool effects():
     \\    return bench_loop(3) == 3
     \\
     \\
-    \\def bench_loop(limit: int) -> int effects():
+    \\public def bench_loop(limit: int) -> int effects():
     \\    total: int = 0
     \\    index: int = 0
     \\    while index < limit:
@@ -6516,15 +6432,13 @@ test "guest benchmarks write a candidate and enforce an approved baseline immuta
 
 const bench_failure_program =
     \\module main
-    \\export bench_wrong
-    \\export bench_trap
     \\
     \\
-    \\def bench_wrong() -> int effects():
+    \\public def bench_wrong() -> int effects():
     \\    return 2
     \\
     \\
-    \\def bench_trap(divisor: int) -> int effects():
+    \\public def bench_trap(divisor: int) -> int effects():
     \\    return 10 // divisor
     \\
     \\
@@ -6569,10 +6483,9 @@ fn failureStatus(report: std.json.Value, id: []const u8) []const u8 {
 
 const bench_dir_program =
     \\module main
-    \\export bench_ok
     \\
     \\
-    \\def bench_ok() -> bool effects():
+    \\public def bench_ok() -> bool effects():
     \\    return 1 + 1 == 2
     \\
     \\
@@ -6612,22 +6525,19 @@ fn guestTestRun(allocator: std.mem.Allocator, entry: []const u8, extra: []const 
 
 const guest_output_program =
     \\module main
-    \\export test_chatty
-    \\export test_failing
-    \\export test_assert
     \\
     \\
-    \\def test_chatty(out: Stream) -> bool effects(output, managed_allocation):
+    \\public def test_chatty(out: Stream) -> bool effects(output, managed_allocation):
     \\    out.print("debug-marker")
     \\    return True
     \\
     \\
-    \\def test_failing(out: Stream) -> bool effects(output, managed_allocation):
+    \\public def test_failing(out: Stream) -> bool effects(output, managed_allocation):
     \\    out.print("debug-marker")
     \\    return False
     \\
     \\
-    \\def test_assert(out: Stream) -> bool effects(output, managed_allocation):
+    \\public def test_assert(out: Stream) -> bool effects(output, managed_allocation):
     \\    out.print("debug-marker")
     \\    assert 1 == 2, "one equals two"
     \\    return True
@@ -6668,10 +6578,9 @@ test "guest print output stays off the test protocol and shows on failure" {
 
 const guest_typed_program =
     \\module main
-    \\export test_value
     \\
     \\
-    \\def test_value() -> int effects():
+    \\public def test_value() -> int effects():
     \\    return 3
     \\
     \\
@@ -6699,18 +6608,16 @@ test "a typed expectation failure names both actual and expected values" {
 
 const library_entry_program =
     \\module inventory
-    \\export test_count
     \\
     \\
-    \\def test_count() -> bool effects():
+    \\public def test_count() -> bool effects():
     \\    return 3 == 3
 ;
 
 const bare_test_entry_program =
-    \\export test_bare
     \\
     \\
-    \\def test_bare() -> bool effects():
+    \\public def test_bare() -> bool effects():
     \\    return True
 ;
 
@@ -6738,10 +6645,9 @@ test "library modules and bare *_test.my files are valid guest test entries" {
 const directory_project_main =
     \\module main
     \\import helper
-    \\export test_main
     \\
     \\
-    \\def test_main() -> bool effects():
+    \\public def test_main() -> bool effects():
     \\    return helper.value() == 7
     \\
     \\
@@ -6751,19 +6657,17 @@ const directory_project_main =
 
 const directory_project_helper =
     \\module helper
-    \\export value
     \\
     \\
-    \\def value() -> int effects():
+    \\public def value() -> int effects():
     \\    return 7
 ;
 
 const directory_project_test =
     \\module library_test
-    \\export test_alone
     \\
     \\
-    \\def test_alone() -> bool effects():
+    \\public def test_alone() -> bool effects():
     \\    return True
 ;
 
@@ -6796,10 +6700,9 @@ test "CLI list-interfaces prints a tests column from the shared reachability ind
     defer temp.cleanup();
     try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
         \\module input
-        \\export parse
         \\
         \\
-        \\def parse(value: int) -> int:
+        \\public def parse(value: int) -> int:
         \\    return value
         \\
         \\

@@ -66,8 +66,7 @@ Repro `schema_qualified_subject` uses three files:
 ```mylang notest
 # types.my
 module types
-export T
-record T:
+public record T:
     value: int
 ```
 
@@ -75,16 +74,14 @@ record T:
 # contracts.my
 module contracts
 import types
-export C
-constraint C[T] = copy + op(use(subject: T, value: types.T) -> int effects())
+public constraint C[T] = copy + op(use(subject: T, value: types.T) -> int effects())
 ```
 
 ```mylang notest
 # main.my
 module main
 import contracts
-export use
-def use[P: contracts.C](p: P) -> int:
+public def use[P: contracts.C](p: P) -> int:
     return 0
 def main() -> int:
     return 0
@@ -119,8 +116,7 @@ Repro `schema_default_copy`:
 
 ```mylang notest
 module main
-export identity
-def identity[T](x: T) -> T:
+public def identity[T](x: T) -> T:
     return x
 def main() -> int:
     return 0

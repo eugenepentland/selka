@@ -1193,9 +1193,8 @@ test "doctest grouping folds project fences and plan picks run or check" {
         "# doc: project greeting\n" ++
         "# doc: file helper.my\n" ++
         "module helper\n" ++
-        "export answer\n" ++
         "\n" ++
-        "def answer() -> int:\n" ++
+        "public def answer() -> int:\n" ++
         "    return 42\n" ++
         "```\n" ++
         "```mylang\n" ++

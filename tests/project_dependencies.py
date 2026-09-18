@@ -30,7 +30,7 @@ def main():
         root = Path(temporary)
         (root / 'main.my').write_text('module main\nimport leaf as renamed\nimport config.values as v\n\ndef main() -> i64:\n    return renamed.value() + v.count()\n')
         leaf = root / 'leaf.my'
-        leaf.write_text('module leaf\nexport value\n\ndef value() -> i64:\n    return 4\n')
+        leaf.write_text('module leaf\n\n\npublic def value() -> i64:\n    return 4\n')
         manifest = root / 'inputs.json'
         manifest.write_text(json.dumps({'version': 1, 'module': 'config.values', 'values': [{'name': 'count', 'type': 'i64', 'value': '7'}]}))
 
@@ -64,7 +64,7 @@ def main():
         assert report()['manifests'][0]['sha256'] != first['manifests'][0]['sha256']
         leaf.write_text(leaf.read_text().replace('return 4', 'return 5'))
         assert next(s for s in report()['inputs'] if s['module'] == 'leaf')['sha256'] != sources['leaf']['sha256']
-        for text in ('module leaf\nexport value\n\ndef value() -> i64:\n    return True\n', 'module leaf\nimport missing\n'):
+        for text in ('module leaf\n\n\npublic def value() -> i64:\n    return True\n', 'module leaf\nimport missing\n'):
             leaf.write_text(text)
             result = invoke()
             assert result.returncode != 0 and not result.stdout and b'E_' in result.stderr, result

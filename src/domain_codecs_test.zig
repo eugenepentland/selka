@@ -6,16 +6,16 @@ const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const typed = @import("typed.zig");
 const source =
-    \\record Wire:
+    \\public record Wire:
     \\    n: i64
     \\
     \\
-    \\result Decoded:
+    \\public result Decoded:
     \\    ok: Positive,
     \\    err: i64
     \\
     \\
-    \\domain Positive: i64:
+    \\public domain Positive: i64:
     \\    codec Wire:
     \\        decode: from_wire,
     \\        encode: to_wire
@@ -168,7 +168,7 @@ const Provider = struct {
             \\        case d.Decoded.err(e):
             \\            return e
         );
-        if (std.mem.eql(u8, path, "data.my")) return allocator.dupe(u8, "module data\nexport Wire\nexport Decoded\nexport Positive\n" ++ source);
+        if (std.mem.eql(u8, path, "data.my")) return allocator.dupe(u8, "module data\n" ++ source);
         return error.NotFound;
     }
 };

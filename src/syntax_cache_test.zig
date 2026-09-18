@@ -26,27 +26,25 @@ const Files = struct {
 };
 const initial =
     \\module data
-    \\export value
     \\
     \\
     \\record Pair:
     \\    n: i64
     \\
     \\
-    \\def value() -> i64 effects():
+    \\public def value() -> i64 effects():
     \\    x = Pair(n=7)
     \\    return x.n
 ;
 const changed =
     \\module data
-    \\export value
     \\
     \\
     \\record Pair:
     \\    n: i64
     \\
     \\
-    \\def value() -> i64 effects():
+    \\public def value() -> i64 effects():
     \\    x = Pair(n=9)
     \\    return x.n
 ;
@@ -110,10 +108,9 @@ test "cached syntax never suppresses fresh interface or semantic errors" {
     _ = try execute(t.allocator, &files, &cache, false);
     files.data =
         \\module data
-        \\export value
         \\
         \\
-        \\def value() -> bool effects():
+        \\public def value() -> bool effects():
         \\    return True
     ;
     try t.expectError(error.SourceError, execute(t.allocator, &files, &cache, false));
@@ -134,7 +131,7 @@ test "cached syntax never suppresses fresh interface or semantic errors" {
 test "failed parseModule and moduleSyntax results are never remembered" {
     var cache = Cache.init(t.allocator, .{});
     defer cache.deinit();
-    var files: Files = .{ .data = "module data;export value;fn value()->i64{return +;}" };
+    var files: Files = .{ .data = "module data;public def value()->i64{return +;}" };
     try t.expectError(error.SourceError, execute(t.allocator, &files, &cache, false));
     try t.expectError(error.SourceError, execute(t.allocator, &files, &cache, false));
     try t.expectEqual(@as(usize, 0), cache.statistics.stored);
@@ -153,10 +150,9 @@ test "cached quoted byte arrays survive source relocation and cache eviction" {
     defer cache.deinit();
     var files: Files = .{ .data =
         \\module data
-        \\export value
         \\
         \\
-        \\def value() -> i64 effects(managed_allocation):
+        \\public def value() -> i64 effects(managed_allocation):
         \\    s = b"a\x00b"
         \\    return i64(s[2])
     };

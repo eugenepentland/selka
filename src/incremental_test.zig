@@ -64,10 +64,9 @@ test "module and declaration identities ignore body edits and interface fingerpr
         },
         .{ .path = "data.my", .bytes =
         \\module data
-        \\export value
         \\
         \\
-        \\def value() -> i64 effects():
+        \\public def value() -> i64 effects():
         \\    return 41
         },
     };
@@ -79,10 +78,9 @@ test "module and declaration identities ignore body edits and interface fingerpr
 
     entries[1].bytes =
         \\module data
-        \\export value
         \\
         \\
-        \\def value() -> i64 effects():
+        \\public def value() -> i64 effects():
         \\    # a comment in the body
         \\    return 41
     ;
@@ -94,10 +92,9 @@ test "module and declaration identities ignore body edits and interface fingerpr
 
     entries[1].bytes =
         \\module data
-        \\export value
         \\
         \\
-        \\def value(step: i64) -> i64 effects():
+        \\public def value(step: i64) -> i64 effects():
         \\    return 41 + step
     ;
     const third = try describe(&entries, t.allocator);
@@ -298,10 +295,9 @@ test "effect-bound edits change the function interface hash" {
 test "an exported body edit inside its declared ceiling preserves the API fingerprint and still changes the body hash" {
     const output_body =
         \\module main
-        \\export emit
         \\
         \\
-        \\def emit(out: Stream) -> i64 effects(output, managed_allocation):
+        \\public def emit(out: Stream) -> i64 effects(output, managed_allocation):
         \\    out.print("x")
         \\    return 0
         \\
@@ -311,10 +307,9 @@ test "an exported body edit inside its declared ceiling preserves the API finger
     ;
     const allocation_body =
         \\module main
-        \\export emit
         \\
         \\
-        \\def emit(out: Stream) -> i64 effects(output, managed_allocation):
+        \\public def emit(out: Stream) -> i64 effects(output, managed_allocation):
         \\    items: list[i64] = []
         \\    items.append(1)
         \\    return items[0]
@@ -346,10 +341,9 @@ test "an exported body edit inside its declared ceiling preserves the API finger
 test "declared mutation positions and normalized clause spellings change function and project fingerprints" {
     const mutates_a =
         \\module main
-        \\export change
         \\
         \\
-        \\def change(a: list[int], b: list[int]) -> None effects(mutation) mutates(a):
+        \\public def change(a: list[int], b: list[int]) -> None effects(mutation) mutates(a):
         \\    pass
         \\
         \\
@@ -358,10 +352,9 @@ test "declared mutation positions and normalized clause spellings change functio
     ;
     const mutates_b =
         \\module main
-        \\export change
         \\
         \\
-        \\def change(a: list[int], b: list[int]) -> None effects(mutation) mutates(b):
+        \\public def change(a: list[int], b: list[int]) -> None effects(mutation) mutates(b):
         \\    pass
         \\
         \\
@@ -383,10 +376,9 @@ test "declared mutation positions and normalized clause spellings change functio
     // binders are not part of the contract identity.
     const ordered =
         \\module main
-        \\export change
         \\
         \\
-        \\def change(a: list[int], b: list[int]) -> None effects(mutation) mutates(a, b):
+        \\public def change(a: list[int], b: list[int]) -> None effects(mutation) mutates(a, b):
         \\    pass
         \\
         \\
@@ -395,10 +387,9 @@ test "declared mutation positions and normalized clause spellings change functio
     ;
     const reordered =
         \\module main
-        \\export change
         \\
         \\
-        \\def change(a: list[int], b: list[int]) -> None effects(mutation) mutates(b, a, b):
+        \\public def change(a: list[int], b: list[int]) -> None effects(mutation) mutates(b, a, b):
         \\    pass
         \\
         \\
@@ -420,10 +411,9 @@ test "declared mutation positions and normalized clause spellings change functio
     // footprint and neither contributes a clause region to the declaration hash.
     const empty =
         \\module main
-        \\export change
         \\
         \\
-        \\def change(a: list[int], b: list[int]) -> None effects(mutation) mutates():
+        \\public def change(a: list[int], b: list[int]) -> None effects(mutation) mutates():
         \\    pass
         \\
         \\
@@ -432,10 +422,9 @@ test "declared mutation positions and normalized clause spellings change functio
     ;
     const omitted =
         \\module main
-        \\export change
         \\
         \\
-        \\def change(a: list[int], b: list[int]) -> None effects(mutation):
+        \\public def change(a: list[int], b: list[int]) -> None effects(mutation):
         \\    pass
         \\
         \\
@@ -458,10 +447,9 @@ test "declared mutation positions and normalized clause spellings change functio
     // participate there.
     const generic_a =
         \\module main
-        \\export pick
         \\
         \\
-        \\def pick[T](value: T, a: list[int], b: list[int]) -> list[int] effects(mutation) mutates(a):
+        \\public def pick[T](value: T, a: list[int], b: list[int]) -> list[int] effects(mutation) mutates(a):
         \\    return a
         \\
         \\
@@ -470,10 +458,9 @@ test "declared mutation positions and normalized clause spellings change functio
     ;
     const generic_b =
         \\module main
-        \\export pick
         \\
         \\
-        \\def pick[T](value: T, a: list[int], b: list[int]) -> list[int] effects(mutation) mutates(b):
+        \\public def pick[T](value: T, a: list[int], b: list[int]) -> list[int] effects(mutation) mutates(b):
         \\    return a
         \\
         \\
@@ -495,10 +482,9 @@ test "declared mutation positions and normalized clause spellings change functio
 test "exported return-origin bound is the declared unknown default and excludes inferred bodies" {
     const returns_param =
         \\module main
-        \\export pick
         \\
         \\
-        \\def pick(a: list[int], b: list[int]) -> list[int] effects(managed_allocation):
+        \\public def pick(a: list[int], b: list[int]) -> list[int] effects(managed_allocation):
         \\    return a
         \\
         \\
@@ -507,10 +493,9 @@ test "exported return-origin bound is the declared unknown default and excludes 
     ;
     const returns_fresh =
         \\module main
-        \\export pick
         \\
         \\
-        \\def pick(a: list[int], b: list[int]) -> list[int] effects(managed_allocation):
+        \\public def pick(a: list[int], b: list[int]) -> list[int] effects(managed_allocation):
         \\    return [1]
         \\
         \\
@@ -685,10 +670,9 @@ test "typeIdentity distinguishes a nominal type from a generic template of the s
 test "project interface follows exported constants and effect ceilings but not comments" {
     const consts_41 =
         \\module main
-        \\export K
         \\
         \\
-        \\const K: i64 = 41
+        \\public const K: i64 = 41
         \\
         \\
         \\def main() -> i64:
@@ -696,10 +680,9 @@ test "project interface follows exported constants and effect ceilings but not c
     ;
     const consts_42 =
         \\module main
-        \\export K
         \\
         \\
-        \\const K: i64 = 42
+        \\public const K: i64 = 42
         \\
         \\
         \\def main() -> i64:
@@ -715,10 +698,9 @@ test "project interface follows exported constants and effect ceilings but not c
 
     const effect_clock =
         \\module main
-        \\export tick
         \\
         \\
-        \\def tick() -> i64 effects(clock):
+        \\public def tick() -> i64 effects(clock):
         \\    return 1
         \\
         \\
@@ -727,10 +709,9 @@ test "project interface follows exported constants and effect ceilings but not c
     ;
     const effect_random =
         \\module main
-        \\export tick
         \\
         \\
-        \\def tick() -> i64 effects(random):
+        \\public def tick() -> i64 effects(random):
         \\    return 1
         \\
         \\
@@ -747,10 +728,9 @@ test "project interface follows exported constants and effect ceilings but not c
 
     const generic =
         \\module main
-        \\export id
         \\
         \\
-        \\def id[T](n: T) -> T effects():
+        \\public def id[T](n: T) -> T effects():
         \\    return n
         \\
         \\
@@ -760,10 +740,9 @@ test "project interface follows exported constants and effect ceilings but not c
     const generic_comment =
         \\module main
         \\# unrelated comment before the generic
-        \\export id
         \\
         \\
-        \\def id[T](n: T) -> T effects():
+        \\public def id[T](n: T) -> T effects():
         \\    return n
         \\
         \\
@@ -783,10 +762,9 @@ test "project interface follows exported constants and effect ceilings but not c
 test "default argument values change the declaration interface" {
     const default_41 =
         \\module main
-        \\export value
         \\
         \\
-        \\def value(n: i64 = 41) -> i64 effects():
+        \\public def value(n: i64 = 41) -> i64 effects():
         \\    return n
         \\
         \\
@@ -795,10 +773,9 @@ test "default argument values change the declaration interface" {
     ;
     const default_42 =
         \\module main
-        \\export value
         \\
         \\
-        \\def value(n: i64 = 42) -> i64 effects():
+        \\public def value(n: i64 = 42) -> i64 effects():
         \\    return n
         \\
         \\
@@ -821,10 +798,9 @@ test "default argument values change the declaration interface" {
 test "keyword parameter names and generic requirements stay in the public contract" {
     const named_step =
         \\module main
-        \\export value
         \\
         \\
-        \\def value(step: i64 = 1) -> i64 effects():
+        \\public def value(step: i64 = 1) -> i64 effects():
         \\    return step
         \\
         \\
@@ -833,10 +809,9 @@ test "keyword parameter names and generic requirements stay in the public contra
     ;
     const named_n =
         \\module main
-        \\export value
         \\
         \\
-        \\def value(n: i64 = 1) -> i64 effects():
+        \\public def value(n: i64 = 1) -> i64 effects():
         \\    return n
         \\
         \\
@@ -856,10 +831,9 @@ test "keyword parameter names and generic requirements stay in the public contra
 
     const unconstrained =
         \\module main
-        \\export identity
         \\
         \\
-        \\def identity[T](x: T) -> T effects():
+        \\public def identity[T](x: T) -> T effects():
         \\    return x
         \\
         \\
@@ -868,10 +842,9 @@ test "keyword parameter names and generic requirements stay in the public contra
     ;
     const constrained =
         \\module main
-        \\export identity
         \\
         \\
-        \\def identity[T: copy](x: T) -> T effects():
+        \\public def identity[T: copy](x: T) -> T effects():
         \\    return x
         \\
         \\
@@ -895,16 +868,14 @@ test "keyword parameter names and generic requirements stay in the public contra
 test "specialization key follows the concrete provider shape and target contract" {
     const payload_one =
         \\module main
-        \\export HasValue
-        \\export value_of
-        \\constraint HasValue[T] = copy + field(value: i64)
+        \\public constraint HasValue[T] = copy + field(value: i64)
         \\
         \\
         \\record Payload:
         \\    value: i64
         \\
         \\
-        \\def value_of[T: HasValue](item: T) -> i64 effects():
+        \\public def value_of[T: HasValue](item: T) -> i64 effects():
         \\    return item.value
         \\
         \\
@@ -913,9 +884,7 @@ test "specialization key follows the concrete provider shape and target contract
     ;
     const payload_padded =
         \\module main
-        \\export HasValue
-        \\export value_of
-        \\constraint HasValue[T] = copy + field(value: i64)
+        \\public constraint HasValue[T] = copy + field(value: i64)
         \\
         \\
         \\record Payload:
@@ -923,7 +892,7 @@ test "specialization key follows the concrete provider shape and target contract
         \\    value: i64
         \\
         \\
-        \\def value_of[T: HasValue](item: T) -> i64 effects():
+        \\public def value_of[T: HasValue](item: T) -> i64 effects():
         \\    return item.value
         \\
         \\
@@ -973,11 +942,10 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
 test "a declaration attribute participates in the interface fingerprint but the body does not" {
     const marked =
         \\module main
-        \\export value
         \\
         \\
         \\@deprecated("use value_v2")
-        \\def value() -> i64 effects():
+        \\public def value() -> i64 effects():
         \\    return 41
         \\
         \\
@@ -986,10 +954,9 @@ test "a declaration attribute participates in the interface fingerprint but the 
     ;
     const plain =
         \\module main
-        \\export value
         \\
         \\
-        \\def value() -> i64 effects():
+        \\public def value() -> i64 effects():
         \\    return 41
         \\
         \\
@@ -998,11 +965,10 @@ test "a declaration attribute participates in the interface fingerprint but the 
     ;
     const edited_body =
         \\module main
-        \\export value
         \\
         \\
         \\@deprecated("use value_v2")
-        \\def value() -> i64 effects():
+        \\public def value() -> i64 effects():
         \\    return 42
         \\
         \\

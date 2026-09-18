@@ -2,13 +2,9 @@ module layout_graph
 import circuit as c
 import text
 import io
-export Net
-export build
-export find
-export rail
 
 
-record Net:
+public record Net:
     span: text.Span
     group: int
     owner: int
@@ -20,13 +16,13 @@ record Edge:
     b: int
 
 
-def rail(host: Host, span: text.Span) -> bool effects(host, managed_allocation):
+public def rail(host: Host, span: text.Span) -> bool effects(host, managed_allocation):
     if text.matches(host, span, b"GND"):
         return True
     return span.end - span.start >= 2 and io.byte(host, span.file, span.start) == 86u8 and io.byte(host, span.file, span.start + 1) == 95u8
 
 
-def find(host: Host, nets: list[Net], span: text.Span) -> int effects(host):
+public def find(host: Host, nets: list[Net], span: text.Span) -> int effects(host):
     i = 0
     while i < len(nets):
         if text.equal(host, nets[i].span, span):
@@ -35,7 +31,7 @@ def find(host: Host, nets: list[Net], span: text.Span) -> int effects(host):
     return - 1
 
 
-def build(host: Host, parts: list[c.Part], pins: list[c.Pin]) -> list[Net] effects(host, managed_allocation):
+public def build(host: Host, parts: list[c.Part], pins: list[c.Pin]) -> list[Net] effects(host, managed_allocation):
     nets: list[Net] = []
     edges: list[Edge] = []
     i = 0

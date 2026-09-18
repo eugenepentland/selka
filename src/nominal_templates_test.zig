@@ -436,25 +436,22 @@ const Modules = struct {
         );
         if (std.mem.eql(u8, path, "left.my")) return allocator.dupe(u8, if (self.strict)
             \\module left
-            \\export Box
             \\
             \\
-            \\class Box[U: equality]:
+            \\public class Box[U: equality]:
             \\    value: U
         else
             \\module left
-            \\export Box
             \\
             \\
-            \\class Box[U]:
+            \\public class Box[U]:
             \\    value: U
         );
         if (std.mem.eql(u8, path, "right.my")) return allocator.dupe(u8,
             \\module right
-            \\export Box
             \\
             \\
-            \\class Box[U]:
+            \\public class Box[U]:
             \\    value: U
         );
         return error.NotFound;

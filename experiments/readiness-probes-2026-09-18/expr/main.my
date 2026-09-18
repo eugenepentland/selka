@@ -1,0 +1,236 @@
+module main
+
+# Probe 2: token-based precedence-climbing expression parser.
+
+enum TokKind:
+    number,
+    name,
+    op,
+    lparen,
+    rparen,
+    eof
+
+record Token:
+    kind: TokKind
+    text: str
+    offset: int
+
+record LexError:
+    message: str
+    offset: int
+
+def lex(src: str) -> Result[list[Token], LexError]:
+    tokens: list[Token] = []
+    i = 0
+    n = len(src)
+    while i < n:
+        ch = src[i]
+        if ch.isspace():
+            i = i + 1
+        elif ch.isdigit():
+            start = i
+            while i < n and src[i].isdigit():
+                i = i + 1
+            tokens.append(Token(kind=TokKind.number, text=src[start:i], offset=start))
+        elif ch.isalpha() or ch == "_":
+            start = i
+            while i < n and (src[i].isalpha() or src[i].isdigit() or src[i] == "_"):
+                i = i + 1
+            tokens.append(Token(kind=TokKind.name, text=src[start:i], offset=start))
+        elif ch in "+-*/^":
+            tokens.append(Token(kind=TokKind.op, text=ch, offset=i))
+            i = i + 1
+        elif ch == "(":
+            tokens.append(Token(kind=TokKind.lparen, text=ch, offset=i))
+            i = i + 1
+        elif ch == ")":
+            tokens.append(Token(kind=TokKind.rparen, text=ch, offset=i))
+            i = i + 1
+        else:
+            return Err(LexError(message=f"unexpected character {ch}", offset=i))
+    tokens.append(Token(kind=TokKind.eof, text="", offset=n))
+    return Ok(tokens)
+
+class Binary:
+    op: str
+    left: Expr
+    right: Expr
+
+class Unary:
+    op: str
+    operand: Expr
+
+union Expr:
+    number: int,
+    name: str,
+    binary: Binary,
+    unary: Unary
+
+record ParseError:
+    message: str
+    offset: int
+
+class Parser:
+    tokens: list[Token]
+    pos: int
+
+def current(p: Parser) -> Token:
+    return p.tokens[p.pos]
+
+def bump(p: Parser) -> Token mutates(p):
+    tok = p.tokens[p.pos]
+    if tok.kind != TokKind.eof:
+        p.pos = p.pos + 1
+    return tok
+
+def precedence(op: str) -> int:
+    if op == "+" or op == "-":
+        return 1
+    if op == "*" or op == "/":
+        return 2
+    if op == "^":
+        return 3
+    return 0
+
+def parse_primary(p: Parser) -> Result[Expr, ParseError] mutates(p):
+    tok = bump(p)
+    match tok.kind:
+        case TokKind.number:
+            match int(tok.text):
+                case Some(value):
+                    return Ok(Expr.number(value))
+                case None:
+                    return Err(ParseError(message="bad number", offset=tok.offset))
+        case TokKind.name:
+            return Ok(Expr.name(tok.text))
+        case TokKind.lparen:
+            inner = parse_expr(p, 0)?
+            closing = bump(p)
+            if closing.kind != TokKind.rparen:
+                return Err(ParseError(message="expected ')'", offset=closing.offset))
+            return Ok(inner)
+        case TokKind.op:
+            if tok.text == "-":
+                operand = parse_expr(p, 3)?
+                return Ok(Expr.unary(Unary(op="-", operand=operand)))
+            return Err(ParseError(message=f"unexpected operator {tok.text}", offset=tok.offset))
+        case _:
+            return Err(ParseError(message="expected an expression", offset=tok.offset))
+
+def parse_expr(p: Parser, min_prec: int) -> Result[Expr, ParseError] mutates(p):
+    left = parse_primary(p)?
+    while True:
+        tok = current(p)
+        if tok.kind != TokKind.op:
+            break
+        prec = precedence(tok.text)
+        if prec < min_prec or prec == 0:
+            break
+        _ = bump(p)
+        next_min = prec + 1
+        if tok.text == "^":
+            next_min = prec
+        right = parse_expr(p, next_min)?
+        left = Expr.binary(Binary(op=tok.text, left=left, right=right))
+    return Ok(left)
+
+def parse(src: str) -> Result[Expr, ParseError]:
+    tokens: list[Token] = []
+    match lex(src):
+        case Ok(ts):
+            tokens = ts
+        case Err(e):
+            return Err(ParseError(message=e.message, offset=e.offset))
+    p = Parser(tokens=tokens, pos=0)
+    expr = parse_expr(p, 0)?
+    if current(p).kind != TokKind.eof:
+        return Err(ParseError(message="trailing tokens", offset=current(p).offset))
+    return Ok(expr)
+
+def power(base: int, exp: int) -> int:
+    result = 1
+    i = 0
+    while i < exp:
+        result = result * base
+        i = i + 1
+    return result
+
+def evaluate(expr: Expr, env: dict[str, int]) -> Result[int, str]:
+    match expr:
+        case Expr.number(v):
+            return Ok(v)
+        case Expr.name(id):
+            if id in env:
+                return Ok(env[id])
+            return Err(f"unknown name {id}")
+        case Expr.unary(u):
+            v = evaluate(u.operand, env)?
+            return Ok(0 - v)
+        case Expr.binary(b):
+            l = evaluate(b.left, env)?
+            r = evaluate(b.right, env)?
+            if b.op == "+":
+                return Ok(l + r)
+            if b.op == "-":
+                return Ok(l - r)
+            if b.op == "*":
+                return Ok(l * r)
+            if b.op == "/":
+                if r == 0:
+                    return Err("division by zero")
+                return Ok(l // r)
+            return Ok(power(l, r))
+
+def show(expr: Expr) -> str:
+    match expr:
+        case Expr.number(v):
+            return str(v)
+        case Expr.name(id):
+            return id
+        case Expr.unary(u):
+            return "(-" + show(u.operand) + ")"
+        case Expr.binary(b):
+            return "(" + show(b.left) + " " + b.op + " " + show(b.right) + ")"
+
+def eval_text(src: str, env: dict[str, int]) -> Result[int, str]:
+    match parse(src):
+        case Ok(expr):
+            return evaluate(expr, env)
+        case Err(e):
+            return Err(f"{e.message} at {e.offset}")
+
+public def test_precedence() -> bool:
+    match parse("1 + 2 * 3 ^ 2 ^ 1 - -4"):
+        case Ok(expr):
+            return show(expr) == "((1 + (2 * (3 ^ (2 ^ 1)))) - (-4))"
+        case Err(e):
+            return False
+
+def is_ok(actual: Result[int, str], expected: int) -> bool:
+    match actual:
+        case Ok(v):
+            return v == expected
+        case Err(e):
+            return False
+
+def is_err(actual: Result[int, str], expected: str) -> bool:
+    match actual:
+        case Ok(v):
+            return False
+        case Err(e):
+            return e == expected
+
+public def test_eval() -> bool:
+    env: dict[str, int] = {"x": 5}
+    return is_ok(eval_text("(x + 1) * 7", env), 42)
+
+public def test_errors() -> bool:
+    env: dict[str, int] = {}
+    ok = is_err(eval_text("1 +", env), "expected an expression at 3")
+    ok = ok and is_err(eval_text("(1", env), "expected ')' at 2")
+    ok = ok and is_err(eval_text("1 $ 2", env), "unexpected character $ at 2")
+    ok = ok and is_err(eval_text("y", env), "unknown name y")
+    return ok
+
+def main() -> int:
+    return 0

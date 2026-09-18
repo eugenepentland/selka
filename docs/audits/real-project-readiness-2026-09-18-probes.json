@@ -1,0 +1,44 @@
+{
+  "audit": "docs/audits/real-project-readiness-2026-09-18.md",
+  "compiler": "zig-out/bin/mylang built from 23058a99 plus the uncommitted export->public migration",
+  "input": "experiments/readiness-probes-2026-09-18/gen_big.py -> big.kicad_pcb, 1287988 bytes, 247008 nodes",
+  "reference": "CPython 3.14, experiments/readiness-probes-2026-09-18/sexpr_char_reference.py",
+  "timings": [
+    {"id": "T01", "program": "sexpr-str char-level parser over str", "command": "mylang build perf_main.my -o parse_bin && ./parse_bin big.kicad_pcb", "seconds": 3.65, "note": "same source with list[str]+join for string literals: 3.72 s, 150 MB RSS"},
+    {"id": "T02", "program": "CPython char-level reference", "command": "python3 sexpr_char_reference.py big.kicad_pcb", "seconds": 0.31},
+    {"id": "T03", "program": "sexpr-bytes char-level parser over bytes", "command": "mylang build sexpr-bytes/main.my -o binb && ./binb big.kicad_pcb", "seconds": 0.48, "rss_kb": 82420},
+    {"id": "T04", "program": "proj token-list parser over bytes", "command": "mylang build proj/main.my --project -o tokbin && ./tokbin big.kicad_pcb", "seconds": 0.33, "rss_kb": 93468},
+    {"id": "T05", "program": "CPython token-list reference", "command": "inline script in the session transcript, same algorithm as proj", "seconds": 0.264},
+    {"id": "M01", "program": "micro index", "command": "./micro_bin big.kicad_pcb index", "seconds": 0.32, "python_seconds": 0.021},
+    {"id": "M02", "program": "micro iter", "command": "./micro_bin big.kicad_pcb iter", "seconds": 0.38},
+    {"id": "M03", "program": "micro append 200000 single chars", "command": "./micro_bin big.kicad_pcb append", "seconds": 3.76, "python_seconds": 0.354},
+    {"id": "M04", "program": "micro 8-char slice compare per offset", "command": "./micro_bin big.kicad_pcb slice", "seconds": 0.42},
+    {"id": "L01", "program": "proj check", "command": "mylang check proj/main.my", "seconds": 0.036},
+    {"id": "L02", "program": "proj test cold", "command": "mylang test proj", "seconds": 1.24, "result": "4 passed across 2 programs"},
+    {"id": "L03", "program": "proj test unchanged rerun", "command": "mylang test proj", "seconds": 0.51, "result": "4 passed, 0 cached"},
+    {"id": "L04", "program": "proj test after tokenizer message edit", "command": "mylang test proj", "seconds": 0.57},
+    {"id": "L05", "program": "proj test with filter", "command": "mylang test proj --filter unclosed", "seconds": 0.53},
+    {"id": "L06", "program": "schematic guest check, 14 modules, 2186 lines, warm", "command": "mylang check src/schematic/guest/main.my", "seconds": 0.013}
+  ],
+  "repairs": [
+    {"id": "R01", "probe": "sexpr-str", "code": "E_SYNTAX expected a dedent", "cause": "union variants written one per line without commas", "finding": "3.7"},
+    {"id": "R02", "probe": "sexpr-str", "code": "E_EFFECT_BOUND x3", "cause": "copied '-> bool effects():' from examples/testing/main.my", "finding": "3.1"},
+    {"id": "R03", "probe": "sexpr-str", "code": "W_MUTATES_MISSING x6", "cause": "class Cursor advanced by every parse function", "finding": "3.6"},
+    {"id": "R04", "probe": "sexpr-str perf main", "code": "E_TYPE expected str, found Result[str, str] (printed twice)", "cause": "read_text returns a Result", "finding": "3.7"},
+    {"id": "R05", "probe": "sexpr-str perf main", "code": "E_OUTPUT_CAPABILITY", "cause": "bare print as CLAUDE.md and python-syntax.md describe", "finding": "3.1"},
+    {"id": "R06", "probe": "expr", "code": "E_RECURSIVE_RECORD", "cause": "record Binary holds Expr, union Expr holds Binary", "repair": "class Binary / class Unary", "finding": "3.3"},
+    {"id": "R07", "probe": "expr", "code": "E_EXPLICIT_DISCARD_REQUIRED", "cause": "bump(p) as a statement", "repair": "_ = bump(p)", "finding": "3.7"},
+    {"id": "R08", "probe": "expr", "code": "E_RESULT_INFERENCE x2, then E_TYPE aggregate equality", "cause": "result == Err(...) in tests", "repair": "is_ok/is_err helper functions", "finding": "3.4"},
+    {"id": "R09", "probe": "proj", "code": "E_MODULE_NAME / E_MODULE_READ, host failure: NativeToolFailed", "cause": "tests/parser_test.my under a multi-module project", "repair": "parser_test.my at the project root", "finding": "3.5"},
+    {"id": "R10", "probe": "tfail", "code": "R_ASSERT without message under test; message on stdout under run", "cause": "f-string assert message", "finding": "3.7"},
+    {"id": "R11", "probe": "one-liners", "codes": ["E_SYNTAX case \"(\"", "E_SYNTAX ternary", "E_TRY_RETURN int(t)? in Result fn", "E_CONSTANT_EXPRESSION const dict", "E_TEXT_OPERATOR \"a\" < \"b\"", "E_TEXT_CONVERSION str(record)", "E_TYPE v == None", "E_TYPE P(1,2) == P(1,2)", "E_TYPE class == class", "E_TYPE union == union"], "finding": "3.4, 3.7"},
+    {"id": "R12", "probe": "proj", "code": "fmt: E_SYNTAX expected def on a module file; fmt-module drops the space before mutates(", "finding": "3.7"},
+    {"id": "R13", "probe": "proj", "code": "L_UNTESTED_EXPORT on parse although three tests call it from parser_test", "finding": "3.7"},
+    {"id": "R14", "probe": "mo.my", "code": "none", "note": "E_MUTATION_OVERLAP no longer fires on merge(a, b) with two same-typed lists", "finding": "3.8"}
+  ],
+  "eda_survey": {
+    "root": "/home/epentland/ai/canopy/eda", "zig_lines_src": 546081, "mylang_mentions": 0,
+    "port_target": ["src/sexpr/paren_span.zig 88", "src/sexpr/tokenizer.zig 668", "src/sexpr/ast.zig 152", "src/sexpr/parser.zig 456", "src/sexpr/printer.zig 426", "src/leak_tests/sexpr.zig 226"],
+    "second_candidate": "src/gerber_verify.zig 916 lines, 9 tests"
+  }
+}

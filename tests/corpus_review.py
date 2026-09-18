@@ -67,7 +67,7 @@ def packet(data, size):
 
 def packet_inputs(data, size):
     values = ', '.join(str(n) + 'u8' for n in data)
-    return ('module inputs\nexport bytes\nexport size\n\n\n'
+    return ('module inputs\n\n\n\n\n'
             f'def bytes() -> [9]u8:\n    return [{values}]\n\n\n'
             f'def size() -> u64:\n    return {size}u64\n')
 

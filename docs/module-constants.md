@@ -25,8 +25,7 @@ Constants use the existing module export/privacy rules:
 
 ```my
 module settings;
-export ANSWER;
-const ANSWER: i64 = 42;
+public const ANSWER: i64 = 42;
 ```
 
 Importers read `settings::ANSWER`. Generic functions may read concrete constants;

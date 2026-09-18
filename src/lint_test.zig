@@ -513,10 +513,9 @@ test "lint attaches the transitive tests that reach a finding as a related note"
     defer t.allocator.free(root);
     try writeFixture(&temp,
         \\module main
-        \\export outer
         \\
         \\
-        \\def outer() -> int:
+        \\public def outer() -> int:
         \\    return 1
         \\
         \\

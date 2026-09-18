@@ -1,9 +1,8 @@
 module schematic_inputs
 import io
-export load
 
 # The schematic host supplies these three named documents.
 
 
-def load(host: Host) -> io.Inputs effects(host):
+public def load(host: Host) -> io.Inputs effects(host):
     return io.inputs(host)

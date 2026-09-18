@@ -1,26 +1,21 @@
 module sexpr
 import io
 import text
-export Kind
-export Node
-export parse
-export form
-export at
 
 
-enum Kind:
+public enum Kind:
     list,
     atom,
     string
 
 
-record Node:
+public record Node:
     kind: Kind
     span: text.Span
     next: int
 
 
-def at(nodes: list[Node], index: int) -> Node effects():
+public def at(nodes: list[Node], index: int) -> Node effects():
     if index < 0 or index >= len(nodes):
         return Node(
             kind=Kind.atom,
@@ -30,14 +25,14 @@ def at(nodes: list[Node], index: int) -> Node effects():
     return nodes[index]
 
 
-def form(host: Host, nodes: list[Node], index: int, name: bytes) -> bool effects(host):
+public def form(host: Host, nodes: list[Node], index: int, name: bytes) -> bool effects(host):
     item = at(nodes, index)
     if item.kind != Kind.list or item.next == index + 1:
         return False
     return text.matches(host, at(nodes, index + 1).span, name)
 
 
-def parse(host: Host, document: io.Document) -> Result[list[Node], int] effects(host, managed_allocation):
+public def parse(host: Host, document: io.Document) -> Result[list[Node], int] effects(host, managed_allocation):
     file = io.Document.id(document)
     nodes: list[Node] = []
     stack: list[int] = []

@@ -13,25 +13,25 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 from workers import Limits, Pool, canonical, schema_identity
 
 SOURCE = b'''module main
-export Stats
-export analyze
-export loop
-export nodata
-export clock
-export Time
 
 
-class Stats:
+
+
+
+
+
+
+public class Stats:
     sum: i64
     squares: i64
 
 
-result Time:
+public result Time:
     ok: i64,
     err: i64
 
 
-def analyze(values: [4]i64) -> Stats:
+public def analyze(values: [4]i64) -> Stats:
     sum = 0
     squares = 0
     i = 0u64
@@ -43,7 +43,7 @@ def analyze(values: [4]i64) -> Stats:
     return Stats(sum=sum, squares=squares)
 
 
-def loop(n: i64) -> i64:
+public def loop(n: i64) -> i64:
     i = n
     while True:
         i += 1
@@ -52,11 +52,11 @@ def loop(n: i64) -> i64:
     return i
 
 
-def nodata():
+public def nodata():
     pass
 
 
-def clock(c: clock_cap) -> Time:
+public def clock(c: clock_cap) -> Time:
     return clock_now[Time](c)
 
 

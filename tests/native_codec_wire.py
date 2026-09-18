@@ -4,26 +4,26 @@ from native_codec_dispatch import DATA
 
 MAIN = '''module main
 import data
-export echo
-export Bundle
-export Choice
-export nested
 
 
-class Bundle:
+
+
+
+
+public class Bundle:
     items: [2]data.Positive
 
 
-union Choice:
+public union Choice:
     none,
     bundle: Bundle
 
 
-def nested(x: Choice) -> Choice:
+public def nested(x: Choice) -> Choice:
     return x
 
 
-def echo(x: data.Positive) -> data.Positive:
+public def echo(x: data.Positive) -> data.Positive:
     return x
 
 

@@ -3,13 +3,9 @@ import io
 import text
 import sexpr as s
 import circuit as c
-export Port
-export collect
-export validate
-export equal
 
 
-record Port:
+public record Port:
     prefix: text.Span
     name: text.Span
     direction: text.Span
@@ -50,7 +46,7 @@ def direction(host: Host, span: text.Span) -> bool:
     return False
 
 
-def collect(host: Host, nodes: list[s.Node], lanes: list[s.Node]) -> Result[list[Port], int] effects(host, managed_allocation):
+public def collect(host: Host, nodes: list[s.Node], lanes: list[s.Node]) -> Result[list[Port], int] effects(host, managed_allocation):
     out: list[Port] = []
     if not interfaceForm(host, lanes, 1) or s.at(lanes, 1).next != len(lanes):
         return fail(host, s.at(lanes, 1).span)
@@ -133,7 +129,7 @@ def byteAt(host: Host, item: Port, index: int) -> u8:
     return io.byte(host, item.name.file, item.name.start + index - n - 1)
 
 
-def equal(host: Host, a: Port, b: Port) -> bool effects(host):
+public def equal(host: Host, a: Port, b: Port) -> bool effects(host):
     if size(a) != size(b):
         return False
     i = 0
@@ -144,7 +140,7 @@ def equal(host: Host, a: Port, b: Port) -> bool effects(host):
     return True
 
 
-def validate(host: Host, connections: list[Port], pins: list[c.Pin]) -> int effects(host):
+public def validate(host: Host, connections: list[Port], pins: list[c.Pin]) -> int effects(host):
     i = 0
     while i < len(connections):
         item = connections[i]

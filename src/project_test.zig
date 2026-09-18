@@ -203,28 +203,24 @@ fn schemaScenario(allocator: std.mem.Allocator) !void {
         },
         .{ .path = "data.my", .bytes =
         \\module data
-        \\export Point
-        \\export Choice
-        \\export Identity
-        \\export select
         \\
         \\
-        \\class Point:
+        \\public class Point:
         \\    x: u64
         \\    y: [2]bool
         \\
         \\
-        \\union Choice:
+        \\public union Choice:
         \\    empty,
         \\    point: Point
         \\
         \\
-        \\domain Identity: i16:
+        \\public domain Identity: i16:
         \\    private def raw(x: i16) -> Identity:
         \\        return wrap[Identity](x)
         \\
         \\
-        \\def select(x: Choice) -> Choice effects():
+        \\public def select(x: Choice) -> Choice effects():
         \\    return x
         \\
         \\
@@ -266,10 +262,9 @@ fn schemaReceiptScenario(allocator: std.mem.Allocator) !void {
         },
         .{ .path = "data.my", .bytes =
         \\module data
-        \\export Item
         \\
         \\
-        \\class Item:
+        \\public class Item:
         \\    n: u64
         },
     } };
@@ -322,28 +317,26 @@ test "project discovery respects newline imports exports and multiline declarati
         .{ .path = "main.my", .bytes =
         \\module main
         \\import helper as h
-        \\export main
+        \\export h.value
         \\
         \\
-        \\def main() -> i64 effects():
+        \\public def main() -> i64 effects():
         \\    return h.value()
         },
         .{ .path = "helper.my", .bytes =
         \\module helper
-        \\export value
         \\
         \\
-        \\type Number = i64
+        \\public type Number = i64
         \\
         \\
         \\const ANSWER: Number = 42
         \\
         \\
-        \\def value() -> Number effects():
+        \\public def value() -> Number effects():
         \\    return ANSWER
         \\
         \\
-        \\export Number
         },
     } };
     var project = p.Project.init(t.allocator);
@@ -352,5 +345,7 @@ test "project discovery respects newline imports exports and multiline declarati
     try t.expectEqual(@as(usize, 2), files.reads);
     try t.expectEqual(@as(usize, 1), project.modules.items[0].imports.len);
     try t.expectEqual(@as(usize, 1), project.modules.items[0].exports.len);
-    try t.expectEqual(@as(usize, 2), project.modules.items[1].exports.len);
+    try t.expectEqualStrings("value", project.modules.items[0].exports[0].name);
+    try t.expectEqualStrings("h", project.modules.items[0].exports[0].alias.?);
+    try t.expectEqual(@as(usize, 0), project.modules.items[1].exports.len);
 }

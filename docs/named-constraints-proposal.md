@@ -220,18 +220,16 @@ Do not turn constraints into nominal type-catalog entries to obtain name lookup.
 ```mylang
 # doc: skip proposed named-constraint syntax; contracts.my
 module contracts
-export Prices
 
-constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
+public constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
 ```
 
 ```mylang
 # doc: skip proposed named-constraint syntax; checkout.my
 module checkout
 import contracts
-export total
 
-def total[P: contracts.Prices](policy: P, subtotal: int) -> int effects():
+public def total[P: contracts.Prices](policy: P, subtotal: int) -> int effects():
     return P.price(policy, subtotal) + 500
 ```
 

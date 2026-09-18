@@ -375,7 +375,7 @@ test "a library test entry gains a stub main and a program entry is untouched" {
     defer temporary_dir.cleanup();
     const root = try temporary_dir.dir.realPathFileAlloc(context.io, ".", context.allocator);
     const library = try std.fs.path.join(context.allocator, &.{ root, "inventory.my" });
-    try context.write(library, "module inventory\nexport test_value\ndef test_value() -> bool effects():\n    return True\n");
+    try context.write(library, "module inventory\npublic def test_value() -> bool effects():\n    return True\n");
     const captured = try capture(context, library);
     const prepared = try withTestEntry(context, captured);
     const index = find(prepared.files, "inventory.my").?;
@@ -386,7 +386,7 @@ test "a library test entry gains a stub main and a program entry is untouched" {
     const mirror_root = try mirror.dir.realPathFileAlloc(context.io, ".", context.allocator);
     try verify(context, try materialize(context, prepared, mirror_root));
     const bare = try std.fs.path.join(context.allocator, &.{ root, "bare_test.my" });
-    try context.write(bare, "export test_x\ndef test_x() -> bool effects():\n    return True\n");
+    try context.write(bare, "public def test_x() -> bool effects():\n    return True\n");
     const patched_bare = try withTestEntry(context, try capture(context, bare));
     const bare_index = find(patched_bare.files, "bare_test.my").?;
     try std.testing.expect(std.mem.startsWith(u8, patched_bare.files[bare_index].data, "module bare_test\n"));

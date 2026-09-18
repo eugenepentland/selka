@@ -3,7 +3,6 @@ import model as m
 import ids
 import inventory
 import bounds
-export preflight
 
 
 def region(board: m.Board, item: m.Region) -> m.Preflight:
@@ -39,7 +38,7 @@ def feature(board: m.Board, item: m.Feature) -> m.Preflight:
     return Ok(True)
 
 
-def preflight(board: m.Board) -> m.Preflight effects():
+public def preflight(board: m.Board) -> m.Preflight effects():
     if not bounds.valid(board.outline):
         return Err(m.Failure.input(m.InputProblem.invalid_bounds))
     _ = inventory.checkComponents(board.components)?

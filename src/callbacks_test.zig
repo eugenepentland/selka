@@ -175,11 +175,9 @@ const module_source =
 ;
 const helpers_source =
     \\module helpers
-    \\export sort_by
-    \\export transform
     \\
     \\
-    \\def sort_by(a: [4]i64, less: def(i64, i64) -> bool effects()) -> [4]i64 effects():
+    \\public def sort_by(a: [4]i64, less: def(i64, i64) -> bool effects()) -> [4]i64 effects():
     \\    v = a
     \\    i = 0
     \\    while i < 4:
@@ -194,7 +192,7 @@ const helpers_source =
     \\    return v
     \\
     \\
-    \\def transform(a: [4]i64, f: def(i64) -> i64 effects()) -> [4]i64 effects():
+    \\public def transform(a: [4]i64, f: def(i64) -> i64 effects()) -> [4]i64 effects():
     \\    v = a
     \\    i = 0
     \\    while i < 4:

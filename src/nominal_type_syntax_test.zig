@@ -201,11 +201,9 @@ const Modules = struct {
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, self.main);
         if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8,
             \\module model
-            \\export Slot
-            \\export Id
             \\
             \\
-            \\union Slot[T]:
+            \\public union Slot[T]:
             \\    none,
             \\    some: T
             \\
@@ -214,7 +212,7 @@ const Modules = struct {
             \\    value: T
             \\
             \\
-            \\domain Id: i64:
+            \\public domain Id: i64:
             \\    pass
         );
         return error.NotFound;
@@ -226,15 +224,13 @@ const Modules = struct {
 const public_module =
     \\module main
     \\import model as m
-    \\export Box
-    \\export echo
     \\
     \\
-    \\class Box[T]:
+    \\public class Box[T]:
     \\    value: m.Slot[[2]T]
     \\
     \\
-    \\def echo[T](x: Box[T]) -> Box[T] effects():
+    \\public def echo[T](x: Box[T]) -> Box[T] effects():
     \\    return x
     \\
     \\
@@ -278,83 +274,73 @@ test "nominal template interfaces enforce privacy arity kind and parameter scope
     try interfaceReject(
         \\module main
         \\import model as m
-        \\export Outer
         \\
         \\
-        \\class Outer:
+        \\public class Outer:
         \\    slot: m.Hidden[i64]
     , "E_PRIVATE_SYMBOL");
     try interfaceReject(
         \\module main
         \\import model as m
-        \\export Outer
         \\
         \\
         \\class Secret:
         \\    pass
         \\
         \\
-        \\class Outer:
+        \\public class Outer:
         \\    slot: m.Slot[Secret]
     , "E_PRIVATE_INTERFACE");
     try interfaceReject(
         \\module main
         \\import model as m
-        \\export Outer
         \\
         \\
-        \\class Outer:
+        \\public class Outer:
         \\    slot: m.Slot[i64, bool]
     , "E_GENERIC_ARITY");
     try interfaceReject(
         \\module main
         \\import model as m
-        \\export Outer
         \\
         \\
-        \\class Outer:
+        \\public class Outer:
         \\    slot: m.Slot
     , "E_GENERIC_ARITY");
     try interfaceReject(
         \\module main
-        \\export Plain
-        \\export Outer
         \\
         \\
-        \\class Plain:
+        \\public class Plain:
         \\    pass
         \\
         \\
-        \\class Outer:
+        \\public class Outer:
         \\    value: Plain[i64]
     , "E_GENERIC_ARITY");
     try interfaceReject(
         \\module main
-        \\export Outer
         \\
         \\
-        \\class Outer[T]:
+        \\public class Outer[T]:
         \\    value: T[i64]
     , "E_TYPE_APPLICATION");
     try interfaceReject(
         \\module main
-        \\export Outer
         \\
         \\
-        \\class Outer[T]:
+        \\public class Outer[T]:
         \\    value: Missing[T]
     , "E_UNKNOWN_SYMBOL");
     try interfaceReject(
         \\module main
-        \\export helper
-        \\export Outer
         \\
         \\
-        \\def helper() -> i64:
+        \\public def helper() -> i64:
         \\    return 0
         \\
         \\
-        \\class Outer:
+        \\public class Outer:
         \\    value: helper[i64]
     , "E_SYMBOL_KIND");
     try interfaceReject(

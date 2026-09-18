@@ -369,7 +369,7 @@
     },
     "flexible-top-level-export-placement": {
       "kind": "language",
-      "summary": "`export` may appear anywhere at the top level, before or after the declaration it names.",
+      "summary": "A dotted `export module.Name` re-export may appear anywhere at the top level among the declarations.",
       "doc": "docs/modules.md#export-placement"
     },
     "re-exports": {

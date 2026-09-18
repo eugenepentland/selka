@@ -14,10 +14,9 @@ Header order is `module`, then imports. Explicit exports may precede, follow, or
 # doc: skip fragment: the imported `shared.units` module is not shown
 module main
 import shared.units
-export Measurement
 
 
-record Measurement:
+public record Measurement:
     distance: units.Distance
 ```
 

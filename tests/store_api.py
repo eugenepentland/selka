@@ -21,10 +21,10 @@ def main() -> i64:
     return helper.twice(21)
 '''
 HELPER = b'''module helper
-export twice
 
 
-def twice(value: i64) -> i64:
+
+public def twice(value: i64) -> i64:
     return value + value
 
 

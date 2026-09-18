@@ -1,24 +1,14 @@
 module text
 import io
-export Span
-export equal
-export matches
-export number
-export write
-export escaped
-export decimal
-export empty
-export identifier
-export folded
 
 
-record Span:
+public record Span:
     file: int
     start: int
     end: int
 
 
-def empty() -> Span effects():
+public def empty() -> Span effects():
     return Span(
         file=0,
         start=0,
@@ -26,7 +16,7 @@ def empty() -> Span effects():
     )
 
 
-def equal(host: Host, a: Span, b: Span) -> bool effects(host):
+public def equal(host: Host, a: Span, b: Span) -> bool effects(host):
     if a.end - a.start != b.end - b.start:
         return False
     i = 0
@@ -37,7 +27,7 @@ def equal(host: Host, a: Span, b: Span) -> bool effects(host):
     return True
 
 
-def matches(host: Host, a: Span, b: bytes) -> bool effects(host):
+public def matches(host: Host, a: Span, b: bytes) -> bool effects(host):
     if a.end - a.start != len(b):
         return False
     i = 0
@@ -48,7 +38,7 @@ def matches(host: Host, a: Span, b: bytes) -> bool effects(host):
     return True
 
 
-def number(host: Host, a: Span) -> int effects(host):
+public def number(host: Host, a: Span) -> int effects(host):
     value = 0
     i = a.start
     if i == a.end:
@@ -64,7 +54,7 @@ def number(host: Host, a: Span) -> int effects(host):
     return value
 
 
-def write(host: Host, text: bytes) effects(host):
+public def write(host: Host, text: bytes) effects(host):
     i = 0
     while i < len(text):
         _ = io.put(host, u8(text[i]))
@@ -72,7 +62,7 @@ def write(host: Host, text: bytes) effects(host):
     return
 
 
-def escaped(host: Host, a: Span) effects(host, managed_allocation):
+public def escaped(host: Host, a: Span) effects(host, managed_allocation):
     i = a.start
     while i < a.end:
         c = io.byte(host, a.file, i)
@@ -105,7 +95,7 @@ def escaped(host: Host, a: Span) effects(host, managed_allocation):
     return
 
 
-def decimal(host: Host, value: int) effects(host):
+public def decimal(host: Host, value: int) effects(host):
     if value < 0:
         _ = io.put(host, 45u8)
         if value <= - 10:
@@ -118,7 +108,7 @@ def decimal(host: Host, value: int) effects(host):
     return
 
 
-def identifier(host: Host, a: Span) -> bool effects(host):
+public def identifier(host: Host, a: Span) -> bool effects(host):
     if a.start == a.end or a.end - a.start > 64:
         return False
     i = a.start
@@ -136,7 +126,7 @@ def lower(ch: u8) -> u8:
     return ch
 
 
-def folded(host: Host, a: Span, b: Span) -> bool effects(host):
+public def folded(host: Host, a: Span, b: Span) -> bool effects(host):
     if a.end - a.start != b.end - b.start:
         return False
     i = 0

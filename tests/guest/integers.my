@@ -1,13 +1,7 @@
 module integers
-export test_width_conversions
-export test_extremes
-export test_wrapping_arithmetic
-export test_saturating_arithmetic
-export test_bitwise_and_shifts
-export test_checked_division
 
 
-def test_width_conversions() -> bool effects():
+public def test_width_conversions() -> bool effects():
     byte: u8 = 255u8
     signed_byte: i8 = -128i8
     half: u16 = 65535u16
@@ -21,7 +15,7 @@ def test_width_conversions() -> bool effects():
     return int(widened) == 255 and int(narrowed) == 200
 
 
-def test_extremes() -> bool effects():
+public def test_extremes() -> bool effects():
     signed_max = 9223372036854775807
     signed_min = -9223372036854775807 - 1
     unsigned: u64 = 18446744073709551615u64
@@ -32,7 +26,7 @@ def test_extremes() -> bool effects():
     return int(signed_max - 9223372036854775765) == 42
 
 
-def test_wrapping_arithmetic() -> bool effects():
+public def test_wrapping_arithmetic() -> bool effects():
     level: u8 = 250u8
     if wrapping_add(level, 10u8) != 4u8:
         return False
@@ -45,7 +39,7 @@ def test_wrapping_arithmetic() -> bool effects():
     return wrapping_sub(-9223372036854775807 - 1, 1) == 9223372036854775807
 
 
-def test_saturating_arithmetic() -> bool effects():
+public def test_saturating_arithmetic() -> bool effects():
     level: u8 = 250u8
     if saturating_add(level, 10u8) != 255u8:
         return False
@@ -58,7 +52,7 @@ def test_saturating_arithmetic() -> bool effects():
     return saturating_sub(-9223372036854775807 - 1, 5) == -9223372036854775807 - 1
 
 
-def test_bitwise_and_shifts() -> bool effects():
+public def test_bitwise_and_shifts() -> bool effects():
     flags: u8 = 12u8
     if bit_and(flags, 10u8) != 8u8:
         return False
@@ -73,7 +67,7 @@ def test_bitwise_and_shifts() -> bool effects():
     return shift_right(-16i32, 2i32) == -4i32
 
 
-def test_checked_division() -> bool effects():
+public def test_checked_division() -> bool effects():
     if divtrunc(-85, 2) != -42 or remtrunc(-85, 2) != -1:
         return False
     if -85 // 2 != -43 or -85 % 2 != 1:

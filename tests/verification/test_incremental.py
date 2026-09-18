@@ -162,7 +162,7 @@ class Incremental(unittest.TestCase):
             self.skipTest("supply --compiler to exercise actual compiler receipt")
         import subprocess
         (self.root / "main.my").write_text("module main\nimport leaf\n\n\ndef main() -> i64:\n    return leaf.value()\n")
-        (self.root / "leaf.my").write_text("module leaf\nexport value\n\n\ndef value() -> i64:\n    return 0\n")
+        (self.root / "leaf.my").write_text("module leaf\n\n\n\npublic def value() -> i64:\n    return 0\n")
         process = subprocess.run([str(COMPILER), "project-dependencies", str(self.root / "main.my")], capture_output=True, check=True)
         (self.root / "graph.json").write_bytes(process.stdout)
         self.data["steps"][0]["module_graph"] = "graph.json"
@@ -170,11 +170,11 @@ class Incremental(unittest.TestCase):
         first = self.run_jobs()
         self.assertTrue(first["inventory"]["a"]["complete"])
         self.assertEqual(self.run_jobs()["steps"][0]["status"], "cached")
-        (self.root / "leaf.my").write_text("module leaf\nexport value\n\n\ndef value() -> i64:\n    return 1\n")
+        (self.root / "leaf.my").write_text("module leaf\n\n\n\npublic def value() -> i64:\n    return 1\n")
         stale = self.run_jobs(previous=first, mode="affected")
         self.assertEqual(stale["selected"], ["a", "b"])
         self.assertFalse(stale["inventory"]["a"]["complete"])
-        (self.root / "leaf.my").write_text("module leaf\nexport value\n\n\ndef value() -> i64:\n    return 0\n")
+        (self.root / "leaf.my").write_text("module leaf\n\n\n\npublic def value() -> i64:\n    return 0\n")
         self.data["steps"][0]["commands"] = [[sys.executable, "-c", "from pathlib import Path; Path('leaf.my').write_text('mutated during verification')"]]
         mutated = self.run_jobs()
         self.assertFalse(mutated["steps"][0]["passed"])

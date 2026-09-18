@@ -151,16 +151,14 @@ test "module declaration discovery and formatting accept newline terminated dire
     const bytes =
         \\module example
         \\import dependency as dep
-        \\export Value
         \\
         \\
-        \\type Value = i64
+        \\public type Value = i64
         \\
         \\
-        \\export main
         \\
         \\
-        \\def main() -> i64:
+        \\public def main() -> i64:
         \\    return 42
     ;
     var compilation = try language.Compilation.init(t.allocator, "example.my", bytes);

@@ -2,13 +2,9 @@ module layout
 import circuit as c
 import text
 import layout_graph as g
-export Point
-export build
-export height
-export rail
 
 
-record Point:
+public record Point:
     x: int
     y: int
 
@@ -22,7 +18,7 @@ record Row:
     y: int
 
 
-def rail(host: Host, span: text.Span) -> bool effects(host, managed_allocation):
+public def rail(host: Host, span: text.Span) -> bool effects(host, managed_allocation):
     return g.rail(host, span)
 
 
@@ -107,7 +103,7 @@ def collectRows(host: Host, parts: list[c.Part], pins: list[c.Pin], nets: list[g
     return out
 
 
-def height(points: list[Point]) -> int effects():
+public def height(points: list[Point]) -> int effects():
     bottom = 160
     i = 0
     while i < len(points):
@@ -370,7 +366,7 @@ def endpoint(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], row
     )
 
 
-def build(host: Host, parts: list[c.Part], pins: list[c.Pin]) -> list[Point] effects(host, managed_allocation):
+public def build(host: Host, parts: list[c.Part], pins: list[c.Pin]) -> list[Point] effects(host, managed_allocation):
     nets = g.build(host, parts, pins)
     out: list[Point] = []
     ordered = collectRows(host, parts, pins, nets)

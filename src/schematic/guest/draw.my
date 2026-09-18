@@ -1,14 +1,8 @@
 module draw
 import text
-export rect
-export line
-export labelStart
-export labelEnd
-export label
-export symbol
 
 
-def rect(host: Host, x: int, y: int, w: int, h: int) effects(host, managed_allocation):
+public def rect(host: Host, x: int, y: int, w: int, h: int) effects(host, managed_allocation):
     text.write(host, b"<rect class=\"chip\" x=\"")
     text.decimal(host, x)
     text.write(host, b"\" y=\"")
@@ -21,7 +15,7 @@ def rect(host: Host, x: int, y: int, w: int, h: int) effects(host, managed_alloc
     return
 
 
-def line(host: Host, x1: int, y1: int, x2: int, y2: int) effects(host, managed_allocation):
+public def line(host: Host, x1: int, y1: int, x2: int, y2: int) effects(host, managed_allocation):
     text.write(host, b"<line x1=\"")
     text.decimal(host, x1)
     text.write(host, b"\" y1=\"")
@@ -34,7 +28,7 @@ def line(host: Host, x1: int, y1: int, x2: int, y2: int) effects(host, managed_a
     return
 
 
-def labelStart(host: Host, x: int, y: int, anchor: int) effects(host, managed_allocation):
+public def labelStart(host: Host, x: int, y: int, anchor: int) effects(host, managed_allocation):
     text.write(host, b"<text x=\"")
     text.decimal(host, x)
     text.write(host, b"\" y=\"")
@@ -50,18 +44,18 @@ def labelStart(host: Host, x: int, y: int, anchor: int) effects(host, managed_al
     return
 
 
-def labelEnd(host: Host) effects(host, managed_allocation):
+public def labelEnd(host: Host) effects(host, managed_allocation):
     text.write(host, b"</text>")
     return
 
 
-def label(host: Host, x: int, y: int, anchor: int, value: text.Span) effects(host, managed_allocation):
+public def label(host: Host, x: int, y: int, anchor: int, value: text.Span) effects(host, managed_allocation):
     labelStart(host, x, y, anchor)
     text.escaped(host, value)
     return labelEnd(host)
 
 
-def symbol(host: Host, kind: int) effects(host, managed_allocation):
+public def symbol(host: Host, kind: int) effects(host, managed_allocation):
     text.write(host, b"<g class=\"symbol\">")
     line(host, - 20, 0, - 12, 0)
     line(host, 12, 0, 20, 0)

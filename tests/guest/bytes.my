@@ -1,10 +1,7 @@
 module bytes
-export test_indexing_and_slicing
-export test_search_and_split
-export test_conversion
 
 
-def test_indexing_and_slicing() -> bool effects(managed_allocation):
+public def test_indexing_and_slicing() -> bool effects(managed_allocation):
     header = b"my"
     body = b"lang"
     whole = header + body
@@ -18,7 +15,7 @@ def test_indexing_and_slicing() -> bool effects(managed_allocation):
     return total == 109 + 121 + 108 + 97 + 110 + 103
 
 
-def test_search_and_split() -> bool effects(managed_allocation):
+public def test_search_and_split() -> bool effects(managed_allocation):
     record = b"name,age,city"
     if not record.startswith(b"name") or not record.endswith(b"city"):
         return False
@@ -32,7 +29,7 @@ def test_search_and_split() -> bool effects(managed_allocation):
     return b",".join(fields) == record
 
 
-def test_conversion() -> bool effects(managed_allocation):
+public def test_conversion() -> bool effects(managed_allocation):
     values: list[int] = [72, 105]
     greeting = bytes(values)
     if greeting != b"Hi" or greeting.to_list() != values:

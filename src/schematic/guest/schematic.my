@@ -3,11 +3,9 @@ import sexpr
 import circuit
 import validate
 import ports
-export Schematic
-export build
 
 
-record Schematic:
+public record Schematic:
     nodes: list[sexpr.Node]
     parts: list[circuit.Part]
     pins: list[circuit.Pin]
@@ -15,7 +13,7 @@ record Schematic:
     connections: list[ports.Port]
 
 
-def build(host: Host, nodes: list[sexpr.Node], pinout: list[sexpr.Node], interface: list[sexpr.Node]) -> Result[Schematic, int] effects(host, managed_allocation):
+public def build(host: Host, nodes: list[sexpr.Node], pinout: list[sexpr.Node], interface: list[sexpr.Node]) -> Result[Schematic, int] effects(host, managed_allocation):
     source_error = validate.source(host, nodes)
     if source_error != 0:
         return Err(source_error)

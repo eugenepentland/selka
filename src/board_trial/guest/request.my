@@ -3,7 +3,6 @@ import model as m
 import ids
 import units
 import wire
-export board
 # Decode the host's fixed request layout into the board the validator expects.
 
 
@@ -103,7 +102,7 @@ def features(host: Host) -> [8]m.Slot[m.Feature]:
     ]
 
 
-def board(host: Host) -> m.Board effects(host):
+public def board(host: Host) -> m.Board effects(host):
     return m.Board(
         outline=rect(host, wire.OUTLINE),
         components=components(host),

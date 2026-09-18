@@ -7,7 +7,6 @@ import text
 import draw as d
 import layout as l
 import layout_routes as r
-export render
 
 
 def instanceStart(host: Host, item: c.Part):
@@ -223,7 +222,7 @@ def routes(host: Host, segments: list[r.Segment], connections: list[p.Port]):
     return
 
 
-def render(host: Host, drawing: schematic.Schematic) effects(host, managed_allocation):
+public def render(host: Host, drawing: schematic.Schematic) effects(host, managed_allocation):
     nodes = drawing.nodes
     parts = drawing.parts
     pins = drawing.pins

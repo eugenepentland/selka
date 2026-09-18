@@ -174,11 +174,10 @@ test "module formatter canonicalizes headers, directives and unresolved drafts" 
     try expectCanonicalModule(t.allocator,
         \\module app.main
         \\import contracts.missing as c
-        \\export Prices
         \\
         \\
         \\
-        \\constraint Prices[P] = copy+op(price(policy: P, subtotal: int) -> int effects())
+        \\public constraint Prices[P] = copy+op(price(policy: P, subtotal: int) -> int effects())
         \\
         \\
         \\
@@ -187,9 +186,8 @@ test "module formatter canonicalizes headers, directives and unresolved drafts" 
     ,
         \\module app.main
         \\import contracts.missing as c
-        \\export Prices
         \\
-        \\constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
+        \\public constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
         \\
         \\
         \\def total[P: c.Prices](policy: P, subtotal: int) -> int effects():

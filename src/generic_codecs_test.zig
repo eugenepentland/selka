@@ -4,16 +4,16 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const domain =
-    \\record Wire:
+    \\public record Wire:
     \\    n: i64
     \\
     \\
-    \\result Decoded:
+    \\public result Decoded:
     \\    ok: Positive,
     \\    err: i64
     \\
     \\
-    \\domain Positive: i64:
+    \\public domain Positive: i64:
     \\    codec Wire:
     \\        decode: from_wire,
     \\        encode: to_wire
@@ -93,7 +93,7 @@ const Modules = struct {
             \\def main() -> i64:
             \\    return f[bool](False)
         );
-        if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8, "module model\nexport Wire\nexport Decoded\nexport Positive\n" ++ domain);
+        if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8, "module model\n" ++ domain);
         return error.NotFound;
     }
 };

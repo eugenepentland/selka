@@ -115,10 +115,9 @@ const Modules = struct {
         );
         if (std.mem.eql(u8, path, "helper.my")) return allocator.dupe(u8,
             \\module helper
-            \\export first
             \\
             \\
-            \\def first[T, const N: u64](x: [N]T) -> T effects():
+            \\public def first[T, const N: u64](x: [N]T) -> T effects():
             \\    return x[0]
         );
         return error.NotFound;

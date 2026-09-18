@@ -260,9 +260,9 @@ test "a directory selects project roots and test-file entries, not every module"
     const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
     try context.mkdir(try std.fs.path.join(context.allocator, &.{ root, "nested" }));
     try context.mkdir(try std.fs.path.join(context.allocator, &.{ root, ".zig-cache" }));
-    try context.write(try std.fs.path.join(context.allocator, &.{ root, "second_test.my" }), "export test_x\ndef test_x() -> bool effects():\n    return True\n");
+    try context.write(try std.fs.path.join(context.allocator, &.{ root, "second_test.my" }), "public def test_x() -> bool effects():\n    return True\n");
     try context.write(try std.fs.path.join(context.allocator, &.{ root, "first.my" }), "module first\nimport library\ndef main() -> int:\n    return 0\n");
-    try context.write(try std.fs.path.join(context.allocator, &.{ root, "library.my" }), "module library\nexport value\ndef value() -> int effects():\n    return 1\n");
+    try context.write(try std.fs.path.join(context.allocator, &.{ root, "library.my" }), "module library\npublic def value() -> int effects():\n    return 1\n");
     try context.write(try std.fs.path.join(context.allocator, &.{ root, "notes.txt" }), "prose");
     try context.write(try std.fs.path.join(context.allocator, &.{ root, "nested", "third.my" }), "module third\ndef main() -> int:\n    return 0\n");
     try context.write(try std.fs.path.join(context.allocator, &.{ root, ".zig-cache", "stale.my" }), "module stale\ndef main() -> int:\n    return 0\n");

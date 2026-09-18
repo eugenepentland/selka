@@ -128,7 +128,7 @@ fn provider(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8
         \\    value: shapes.Count = 42
         \\    return value
     else if (std.mem.eql(u8, path, "shapes.my"))
-        if (hidden) "module shapes\ntype Count = i64\n" else "module shapes\nexport Count\ntype Count = i64\n"
+        if (hidden) "module shapes\ntype Count = i64\n" else "module shapes\npublic type Count = i64\n"
     else
         return error.NotFound;
     return allocator.dupe(u8, text);
@@ -147,14 +147,13 @@ fn privateTarget(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8,
     if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
     return allocator.dupe(u8,
         \\module main
-        \\export Public
         \\
         \\
         \\class Secret:
         \\    value: i64
         \\
         \\
-        \\type Public = Secret
+        \\public type Public = Secret
         \\
         \\
         \\def main() -> i64:
@@ -170,27 +169,22 @@ fn schemaAliases(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8,
     if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
     return allocator.dupe(u8,
         \\module main
-        \\export Count
-        \\export Pair
-        \\export Chosen
-        \\export Array
-        \\export Other
         \\
         \\
-        \\type Count = i64
+        \\public type Count = i64
         \\
         \\
-        \\class Pair[T]:
+        \\public class Pair[T]:
         \\    value: T
         \\
         \\
-        \\type Chosen = Pair[Count]
+        \\public type Chosen = Pair[Count]
         \\
         \\
-        \\type Other = Chosen
+        \\public type Other = Chosen
         \\
         \\
-        \\type Array = [2]Count
+        \\public type Array = [2]Count
         \\
         \\
         \\type Hidden = bool

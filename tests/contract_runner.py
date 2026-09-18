@@ -9,7 +9,7 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts/test_contract.py"
 
-IO_SOURCE = 'module io\nexport length\nexport byte\nexport put\n\n\nhost def length() -> i64 effects(host)\n\n\nhost def byte(index: i64) -> u8 effects(host)\n\n\nhost def put(value: u8) -> i64 effects(host)\n'
+IO_SOURCE = 'module io\n\n\n\n\n\npublic host def length() -> i64 effects(host)\n\n\npublic host def byte(index: i64) -> u8 effects(host)\n\n\npublic host def put(value: u8) -> i64 effects(host)\n'
 
 MAIN_SOURCE = 'module main\nimport io\n\n\ndef main() -> i64:\n    index = 0\n    while index < io.length():\n        _ = io.put(io.byte(index))\n        index += 1\n    return 0\n'
 

@@ -1,8 +1,4 @@
 module generics
-export test_generic_functions
-export test_generic_records
-export test_generic_results
-export test_structural_contracts
 
 
 record Box[T]:
@@ -45,7 +41,7 @@ def field_value[T: copy + field(value: int)](item: T) -> int:
     return item.value
 
 
-def test_generic_functions() -> bool effects(managed_allocation):
+public def test_generic_functions() -> bool effects(managed_allocation):
     if identity[int](7) != 7 or identity[str]("ay") != "ay":
         return False
     if total[u8](4u8) != 10u8 or total[int](5) != 15:
@@ -53,7 +49,7 @@ def test_generic_functions() -> bool effects(managed_allocation):
     return contains[int]([1, 2, 3], 2) and not contains[int]([1, 2, 3], 9)
 
 
-def test_generic_records() -> bool effects(managed_allocation):
+public def test_generic_records() -> bool effects(managed_allocation):
     box = Box[int](value=9)
     changed = box
     changed.value = 11
@@ -61,13 +57,13 @@ def test_generic_records() -> bool effects(managed_allocation):
     return box.value == 9 and changed.value == 11 and words.value == "hello"
 
 
-def test_structural_contracts() -> bool effects():
+public def test_structural_contracts() -> bool effects():
     if field_value[Reading](Reading(value=2)) != 2:
         return False
     return field_value[TaggedReading](TaggedReading(tag=True, value=3)) == 3
 
 
-def test_generic_results() -> bool effects(managed_allocation):
+public def test_generic_results() -> bool effects(managed_allocation):
     numbers: list[int] = [4, 5, 6]
     empty: list[int] = []
     match head[int](numbers):

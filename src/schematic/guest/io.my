@@ -1,15 +1,8 @@
 module io
-export Document
-export Inputs
-export inputs
-export length
-export byte
-export put
-export issue
 # Document identities come from the host; application code uses their roles.
 
 
-domain Document: int:
+public domain Document: int:
     def circuit(host: Host) -> Document effects(host):
         return wrap[Document](circuit_input(host))
     def pinout(host: Host) -> Document effects(host):
@@ -20,13 +13,13 @@ domain Document: int:
         return unwrap(document)
 
 
-record Inputs:
+public record Inputs:
     circuit: Document
     pinout: Document
     interface: Document
 
 
-def inputs(host: Host) -> Inputs effects(host):
+public def inputs(host: Host) -> Inputs effects(host):
     return Inputs(
         circuit=Document.circuit(host),
         pinout=Document.pinout(host),
@@ -35,7 +28,7 @@ def inputs(host: Host) -> Inputs effects(host):
 host def circuit_input(host: Host) -> int effects(host)
 host def pinout_input(host: Host) -> int effects(host)
 host def interface_input(host: Host) -> int effects(host)
-host def length(host: Host, file: int) -> int effects(host)
-host def byte(host: Host, file: int, position: int) -> u8 effects(host)
-host def put(host: Host, value: u8) -> int effects(host)
-host def issue(host: Host, code: int, file: int, position: int) -> int effects(host)
+public host def length(host: Host, file: int) -> int effects(host)
+public host def byte(host: Host, file: int, position: int) -> u8 effects(host)
+public host def put(host: Host, value: u8) -> int effects(host)
+public host def issue(host: Host, code: int, file: int, position: int) -> int effects(host)

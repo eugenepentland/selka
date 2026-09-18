@@ -23,20 +23,16 @@ pub const probes = [_]Probe{
         .files = &.{
             .{ .name = "a.my", .body =
             \\module a
-            \\export ID
-            \\export Has
-            \\record ID:
+            \\public record ID:
             \\    value: int
-            \\constraint Has[T] = copy + field(value: ID)
+            \\public constraint Has[T] = copy + field(value: ID)
             \\
             },
             .{ .name = "b.my", .body =
             \\module b
-            \\export ID
-            \\export Has
-            \\record ID:
+            \\public record ID:
             \\    value: int
-            \\constraint Has[T] = copy + field(value: ID)
+            \\public constraint Has[T] = copy + field(value: ID)
             \\
             },
             .{ .name = "main.my", .body =
@@ -61,20 +57,16 @@ pub const probes = [_]Probe{
         .files = &.{
             .{ .name = "a.my", .body =
             \\module a
-            \\export ID
-            \\export Has
-            \\record ID:
+            \\public record ID:
             \\    value: int
-            \\constraint Has[T] = copy + field(value: ID)
+            \\public constraint Has[T] = copy + field(value: ID)
             \\
             },
             .{ .name = "b.my", .body =
             \\module b
-            \\export ID
-            \\export Has
-            \\record ID:
+            \\public record ID:
             \\    value: int
-            \\constraint Has[T] = copy + field(value: ID)
+            \\public constraint Has[T] = copy + field(value: ID)
             \\
             },
             .{ .name = "main.my", .body =
@@ -99,11 +91,9 @@ pub const probes = [_]Probe{
         .files = &.{
             .{ .name = "contracts.my", .body =
             \\module contracts
-            \\export Token
-            \\export Use
-            \\record Token:
+            \\public record Token:
             \\    value: int
-            \\constraint Use[S] = copy + op(use(s: S, token: Token) -> int effects())
+            \\public constraint Use[S] = copy + op(use(s: S, token: Token) -> int effects())
             \\
             },
             .{ .name = "main.my", .body =
@@ -130,11 +120,9 @@ pub const probes = [_]Probe{
         .files = &.{
             .{ .name = "contracts.my", .body =
             \\module contracts
-            \\export Token
-            \\export Use
-            \\record Token:
+            \\public record Token:
             \\    value: int
-            \\constraint Use[S] = copy + op(use(s: S, token: Token) -> int effects())
+            \\public constraint Use[S] = copy + op(use(s: S, token: Token) -> int effects())
             \\
             },
             .{ .name = "main.my", .body =
@@ -242,21 +230,19 @@ pub const probes = [_]Probe{
         .files = &.{
             .{ .name = "contracts.my", .body =
             \\module contracts
-            \\export C
             \\record One:
             \\    a: int
             \\record Two:
             \\    a: int
             \\record Three:
             \\    a: int
-            \\constraint C[T] = copy
+            \\public constraint C[T] = copy
             \\
             },
             .{ .name = "main.my", .body =
             \\module main
             \\import contracts
-            \\export f
-            \\def f[T: contracts.C](x: T) -> T effects():
+            \\public def f[T: contracts.C](x: T) -> T effects():
             \\    return x
             \\def main() -> int:
             \\    return 0
@@ -272,17 +258,15 @@ pub const probes = [_]Probe{
         .files = &.{
             .{ .name = "contracts.my", .body =
             \\module contracts
-            \\export C
             \\record One:
             \\    a: int
-            \\constraint C[T] = copy
+            \\public constraint C[T] = copy
             \\
             },
             .{ .name = "main.my", .body =
             \\module main
             \\import contracts
-            \\export f
-            \\def f[T: contracts.C](x: T) -> T effects():
+            \\public def f[T: contracts.C](x: T) -> T effects():
             \\    return x
             \\def main() -> int:
             \\    return 0

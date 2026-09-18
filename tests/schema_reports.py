@@ -40,7 +40,7 @@ def main():
         (root / 'left.my').write_text('module left\nimport shared\n')
         (root / 'right.my').write_text('module right\nimport shared\n')
         shared = root / 'shared.my'
-        shared.write_text('module shared\nexport Item\n\nclass Item:\n    value: u64\n\ndef hidden() -> i64:\n    return 7\n')
+        shared.write_text('module shared\n\n\npublic class Item:\n    value: u64\n\ndef hidden() -> i64:\n    return 7\n')
 
         def run(path=entry, flags=('--schema-report',), expected=0):
             result = subprocess.run([str(compiler), 'schema-project', str(path), *flags], capture_output=True, text=True, timeout=30)

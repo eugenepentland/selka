@@ -10,12 +10,12 @@ import tempfile
 import time
 
 IO = '''module io
-export length
-export byte
-export put
-host def length() -> int effects(host)
-host def byte(index: int) -> u8 effects(host)
-host def put(value: u8) -> int effects(host)
+
+
+
+public host def length() -> int effects(host)
+public host def byte(index: int) -> u8 effects(host)
+public host def put(value: u8) -> int effects(host)
 '''
 
 GUEST = '''module main

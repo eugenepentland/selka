@@ -2,7 +2,6 @@ module observe
 import model as m
 import io
 import wire
-export publish
 # Encode one validator outcome for the host: a status byte, then either the
 # report (count, optional first violation) or the single failure ordinal.
 
@@ -84,7 +83,7 @@ def failure(host: Host, value: m.Failure) -> i64:
             return io.put(host, unavailable(cause))
 
 
-def publish(host: Host, outcome: m.Validation) -> i64 effects(host):
+public def publish(host: Host, outcome: m.Validation) -> i64 effects(host):
     match outcome:
         case m.Validation.ok(value):
             return report(host, value)

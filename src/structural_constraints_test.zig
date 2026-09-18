@@ -305,11 +305,9 @@ const module_files = [_]language.embedded_project.File{
     },
     .{ .path = "api.my", .bytes =
     \\module api
-    \\export D
-    \\export apply
     \\
     \\
-    \\domain D: i64:
+    \\public domain D: i64:
     \\    def make(n: i64) -> D effects():
     \\        return wrap[D](n)
     \\
@@ -317,7 +315,7 @@ const module_files = [_]language.embedded_project.File{
     \\        return unwrap(v)
     \\
     \\
-    \\def apply[T: copy + op(score(v: T) -> i64 effects())](v: T) -> i64 effects():
+    \\public def apply[T: copy + op(score(v: T) -> i64 effects())](v: T) -> i64 effects():
     \\    return T.score(v)
     },
 };

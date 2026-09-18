@@ -196,15 +196,13 @@ test "an imported generic variant takes its arguments from the expected type acr
     ;
     const model_module =
         \\module model
-        \\export Box
-        \\export Slot
         \\
         \\
-        \\class Box:
+        \\public class Box:
         \\    value: i64
         \\
         \\
-        \\union Slot[T]:
+        \\public union Slot[T]:
         \\    none,
         \\    some: T
     ;

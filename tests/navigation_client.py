@@ -15,7 +15,7 @@ import navigate
 
 COMPILER = None
 MAIN = 'module main\nimport lib\n\n\ndef main() -> i64:\n    return lib.twice(2)\n'
-LIB = ('module lib\nexport twice\n\n\n'
+LIB = ('module lib\n\n\n\n'
        'def add(x: i64) -> i64:\n    return x + 1\n\n\n'
        'def twice(x: i64) -> i64:\n    return add(add(x))\n')
 
@@ -120,7 +120,7 @@ class NavigationTests(unittest.TestCase):
 
     def test_parse_error_partial_index_never_reuses_old_semantic_edges(self):
         self.load()
-        (self.root / 'lib.my').write_text('module lib\nexport twice\n\n\n'
+        (self.root / 'lib.my').write_text('module lib\n\n\n\n'
                                           'def twice(x: i64) -> i64:\n    return x +\n')
         partial, reused = self.load()
         self.assertFalse(reused)

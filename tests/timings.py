@@ -83,7 +83,7 @@ def main():
             expected += check_phases
             expected += phases + ['total']
             records(timed, 'compiler', expected)
-        (root / 'io.my').write_text('module io\nexport length\nexport byte\nexport put\n\n\nhost def length() -> i64 effects(host)\nhost def byte(index: i64) -> u8 effects(host)\nhost def put(value: u8) -> i64 effects(host)\n')
+        (root / 'io.my').write_text('module io\n\n\n\n\n\npublic host def length() -> i64 effects(host)\npublic host def byte(index: i64) -> u8 effects(host)\npublic host def put(value: u8) -> i64 effects(host)\n')
         project.write_text('module main\nimport io\n\n\ndef main() -> i64:\n    i = 0\n    while i < io.length():\n        _ = io.put(io.byte(i))\n        i += 1\n    return 0\n')
         payload = b'\x00\xff\xc0\x80{broken}'
         normal = command(runner, '--project', str(root), data=payload)

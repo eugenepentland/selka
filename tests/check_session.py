@@ -16,7 +16,7 @@ def main():
         root = Path(directory)
         entry, data = root / 'main.my', root / 'data.my'
         entry.write_text('module main\nimport data\n\n\ndef main() -> i64:\n    return data.value()\n')
-        valid = 'module data\nexport value\n\n\ndef value() -> i64:\n    unused = 3\n    return 7\n'
+        valid = 'module data\n\n\n\npublic def value() -> i64:\n    unused = 3\n    return 7\n'
         data.write_text(valid)
         with tempfile.TemporaryFile() as diagnostics:
             process = subprocess.Popen([compiler, 'check-session', str(entry)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=diagnostics)
@@ -53,7 +53,7 @@ def main():
                     data.write_text(valid.replace('return 7', 'return True'))
                     assert request('check', 1)['reuse'] == {'hits': 1, 'misses': 1}
                     assert request('check', 1)['reuse'] == {'hits': 2, 'misses': 0}
-                    data.write_text(valid.replace('export value\n', ''))
+                    data.write_text(valid.replace('public def value', 'def value'))
                     request('check', 1)
                     data.unlink()
                     request('check', 1)

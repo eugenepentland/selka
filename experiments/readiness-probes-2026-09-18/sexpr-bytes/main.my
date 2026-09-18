@@ -1,0 +1,144 @@
+module main
+
+record Pos:
+    offset: int
+    line: int
+    col: int
+
+record ParseError:
+    message: str
+    pos: Pos
+
+union Node:
+    atom: str,
+    text: str,
+    items: list[Node]
+
+class Cursor:
+    src: bytes
+    pos: int
+    line: int
+    col: int
+
+def here(c: Cursor) -> Pos:
+    return Pos(offset=c.pos, line=c.line, col=c.col)
+
+def peek(c: Cursor) -> int:
+    if c.pos >= len(c.src):
+        return -1
+    return c.src[c.pos]
+
+def is_space(b: int) -> bool:
+    return b == 32 or b == 10 or b == 13 or b == 9
+
+def advance(c: Cursor) -> None mutates(c):
+    b = c.src[c.pos]
+    c.pos = c.pos + 1
+    if b == 10:
+        c.line = c.line + 1
+        c.col = 1
+    else:
+        c.col = c.col + 1
+
+def skip_ws(c: Cursor) -> None mutates(c):
+    while c.pos < len(c.src):
+        b = peek(c)
+        if is_space(b):
+            advance(c)
+        elif b == 35:
+            while c.pos < len(c.src) and peek(c) != 10:
+                advance(c)
+        else:
+            break
+
+def fail(c: Cursor, message: str) -> ParseError:
+    return ParseError(message=message, pos=here(c))
+
+def text_of(raw: bytes) -> str:
+    match raw.decode():
+        case Ok(s):
+            return s
+        case Err(e):
+            return ""
+
+def parse_string(c: Cursor) -> Result[Node, ParseError] mutates(c):
+    advance(c)
+    start = c.pos
+    while True:
+        if c.pos >= len(c.src):
+            return Err(fail(c, "unterminated string"))
+        b = peek(c)
+        if b == 34:
+            raw = c.src[start:c.pos]
+            advance(c)
+            return Ok(Node.text(text_of(raw)))
+        if b == 92:
+            advance(c)
+        advance(c)
+
+def parse_atom(c: Cursor) -> Result[Node, ParseError] mutates(c):
+    start = c.pos
+    while c.pos < len(c.src):
+        b = peek(c)
+        if is_space(b) or b == 40 or b == 41:
+            break
+        advance(c)
+    if start == c.pos:
+        return Err(fail(c, "expected atom"))
+    return Ok(Node.atom(text_of(c.src[start:c.pos])))
+
+def parse_node(c: Cursor) -> Result[Node, ParseError] mutates(c):
+    skip_ws(c)
+    b = peek(c)
+    if b == -1:
+        return Err(fail(c, "unexpected end of input"))
+    if b == 40:
+        return parse_list(c)
+    if b == 34:
+        return parse_string(c)
+    if b == 41:
+        return Err(fail(c, "unexpected ')'"))
+    return parse_atom(c)
+
+def parse_list(c: Cursor) -> Result[Node, ParseError] mutates(c):
+    advance(c)
+    items: list[Node] = []
+    while True:
+        skip_ws(c)
+        if peek(c) == 41:
+            advance(c)
+            return Ok(Node.items(items))
+        if peek(c) == -1:
+            return Err(fail(c, "unclosed list"))
+        node = parse_node(c)?
+        items.append(node)
+
+def parse(src: bytes) -> Result[Node, ParseError]:
+    c = Cursor(src=src, pos=0, line=1, col=1)
+    node = parse_node(c)?
+    skip_ws(c)
+    if c.pos != len(c.src):
+        return Err(fail(c, "trailing input"))
+    return Ok(node)
+
+def count_nodes(node: Node) -> int:
+    match node:
+        case Node.items(xs):
+            total = 1
+            for x in xs:
+                total = total + count_nodes(x)
+            return total
+        case _:
+            return 1
+
+def main(args: list[str], fs: Filesystem, out: Stream) -> int:
+    src = b""
+    with open(fs, args[0], "rb") as f:
+        src = f.read()
+    match parse(src):
+        case Ok(node):
+            out.print(count_nodes(node))
+            return 0
+        case Err(e):
+            out.print("error", e.message, e.pos.line, e.pos.col)
+            return 1

@@ -26,14 +26,11 @@ const Modules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (std.mem.eql(u8, path, "values.my")) return allocator.dupe(u8,
             \\module values
-            \\export answer
-            \\export maybe
-            \\export items
-            \\def answer() -> Result[int, int] effects():
+            \\public def answer() -> Result[int, int] effects():
             \\    return Ok(42)
-            \\def maybe() -> Option[int] effects():
+            \\public def maybe() -> Option[int] effects():
             \\    return Some(1)
-            \\def items() -> list[int] effects(managed_allocation):
+            \\public def items() -> list[int] effects(managed_allocation):
             \\    return [1, 2]
         );
         if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
@@ -208,14 +205,12 @@ const PythonModules = struct {
         );
         if (std.mem.eql(u8, path, "helpers.my")) return allocator.dupe(u8,
             \\module helpers
-            \\export answer
-            \\export Kind
-            \\enum Kind:
+            \\public enum Kind:
             \\    atom,
             \\    group
             \\
             \\
-            \\def answer(values: list[int], key: str, number: float) -> Result[dict[str, int], int] effects(managed_allocation):
+            \\public def answer(values: list[int], key: str, number: float) -> Result[dict[str, int], int] effects(managed_allocation):
             \\    if number != 1.5:
             \\        return Err(2)
             \\    return Ok({key: values[0]})

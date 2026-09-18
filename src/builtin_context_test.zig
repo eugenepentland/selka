@@ -63,10 +63,9 @@ const Modules = struct {
         );
         if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8,
             \\module model
-            \\export answer
             \\
             \\
-            \\def answer(values: list[i64]) -> Result[i64, i64] effects():
+            \\public def answer(values: list[i64]) -> Result[i64, i64] effects():
             \\    return Ok(values[0])
         );
         return error.NotFound;
@@ -98,14 +97,13 @@ const ShadowModules = struct {
         );
         if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8,
             \\module model
-            \\export answer
             \\
             \\
             \\record Bucket[T]:
             \\    value: T
             \\
             \\
-            \\def answer() -> i64 effects():
+            \\public def answer() -> i64 effects():
             \\    value = Bucket[i64](value=21)
             \\    return value.value
         );

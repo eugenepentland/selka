@@ -17,11 +17,11 @@ const factories =
     \\
 ;
 const helpers =
-    \\def pair[T](a: T, b: T) -> [2]T effects():
+    \\public def pair[T](a: T, b: T) -> [2]T effects():
     \\    return [a, b]
     \\
     \\
-    \\def contains[T: equality](a: [2]T, n: T) -> bool effects():
+    \\public def contains[T: equality](a: [2]T, n: T) -> bool effects():
     \\    i = 0
     \\    while i < len(a):
     \\        if a[i] == n:
@@ -181,13 +181,12 @@ const Modules = struct {
             \\        return 1
             \\    return 0
         );
-        if (std.mem.eql(u8, path, "collection.my")) return allocator.dupe(u8, "module collection;export pair;export contains;" ++ helpers);
+        if (std.mem.eql(u8, path, "collection.my")) return allocator.dupe(u8, "module collection;" ++ helpers);
         if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8,
             \\module model
-            \\export Id
             \\
             \\
-            \\domain Id: i64:
+            \\public domain Id: i64:
             \\    def make(n: i64) -> Id effects():
             \\        return wrap[Id](n)
         );

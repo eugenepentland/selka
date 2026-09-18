@@ -4,27 +4,27 @@ from pathlib import Path
 # EXPORT_REJECTION and REJECTION each own a whole line: a caller substitutes an
 # `export` directive and a record declaration, or an empty string for neither.
 DATA = '''module data
-export Wire
-export Positive
-export Decoded
+
+
+
 EXPORT_REJECTION
 
 def unused[T: copy](x: T) -> T:
     return x
 
 
-class Wire:
+public class Wire:
     n: i64
 
 
 REJECTION
 
-result Decoded:
+public result Decoded:
     ok: Positive,
     err: ERROR_TYPE
 
 
-domain Positive: i64:
+public domain Positive: i64:
     codec Wire:
         decode: from_wire,
         encode: to_wire

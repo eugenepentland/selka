@@ -5,7 +5,7 @@ import unittest
 from experiments.application_comparison.isolation import Limits, run
 
 ROOT = Path(__file__).resolve().parents[2]
-IO = ('module io\nexport length\nexport byte\nexport put\n\n\n'
+IO = ('module io\n\n\n\n\n\n'
       'host def length() -> i64 effects(host)\n\n\n'
       'host def byte(index: i64) -> u8 effects(host)\n\n\n'
       'host def put(value: u8) -> i64 effects(host)\n')
@@ -54,7 +54,7 @@ class ByteIoHostTests(unittest.TestCase):
     def test_guest_raw_io_and_source_reload_without_tool_rebuild(self):
         with tempfile.TemporaryDirectory() as temporary:
             work = Path(temporary)
-            (work / 'io.my').write_text('module io;export length;export byte;export put;host fn length()->i64 effects(host);host fn byte(index:i64)->u8 effects(host);host fn put(value:u8)->i64 effects(host);')
+            (work / 'io.my').write_text('module io;;;;host fn length()->i64 effects(host);host fn byte(index:i64)->u8 effects(host);host fn put(value:u8)->i64 effects(host);')
             (work / 'main.my').write_text('module main;import io;fn main()->i64{let mut i=0;while i<io::length(){discard io::put(io::byte(i));i+=1;}return 0;}')
             tools = {'byte_io': ROOT / 'zig-out/bin/mylang-io'}
             command = ['/tools/byte_io', '--project', '/work']

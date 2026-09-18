@@ -2,18 +2,9 @@ module circuit
 import io
 import text
 import sexpr as s
-export Part
-export Pin
-export collectParts
-export collectPins
-export body
-export title
-export label
-export group
-export displayNet
 
 
-record Part:
+public record Part:
     node: int
     ref: text.Span
     family: text.Span
@@ -21,7 +12,7 @@ record Part:
     kind: int
 
 
-record Pin:
+public record Pin:
     part: int
     number: int
     net: text.Span
@@ -52,7 +43,7 @@ def groupForm(host: Host, nodes: list[s.Node], index: int) -> bool:
     return s.form(host, nodes, index, b"group")
 
 
-def body(host: Host, nodes: list[s.Node]) -> int effects(host, managed_allocation):
+public def body(host: Host, nodes: list[s.Node]) -> int effects(host, managed_allocation):
     i = 1
     while i < len(nodes):
         if blockForm(host, nodes, i):
@@ -64,7 +55,7 @@ def body(host: Host, nodes: list[s.Node]) -> int effects(host, managed_allocatio
     return - 1
 
 
-def title(host: Host, nodes: list[s.Node]) -> text.Span effects(host, managed_allocation):
+public def title(host: Host, nodes: list[s.Node]) -> text.Span effects(host, managed_allocation):
     b = body(host, nodes)
     if b < 0:
         return text.empty()
@@ -83,7 +74,7 @@ def kind(host: Host, family: text.Span) -> int:
     return 0
 
 
-def collectParts(host: Host, nodes: list[s.Node]) -> Result[list[Part], int] effects(host, managed_allocation):
+public def collectParts(host: Host, nodes: list[s.Node]) -> Result[list[Part], int] effects(host, managed_allocation):
     out: list[Part] = []
     b = body(host, nodes)
     if b < 0:
@@ -125,7 +116,7 @@ def collectParts(host: Host, nodes: list[s.Node]) -> Result[list[Part], int] eff
     return Ok(out)
 
 
-def label(host: Host, pinout: list[s.Node], number: int) -> text.Span effects(host, managed_allocation):
+public def label(host: Host, pinout: list[s.Node], number: int) -> text.Span effects(host, managed_allocation):
     i = 1
     while i < len(pinout):
         if pinForm(host, pinout, i) and text.number(host, s.at(pinout, i + 2).span) == number:
@@ -134,7 +125,7 @@ def label(host: Host, pinout: list[s.Node], number: int) -> text.Span effects(ho
     return text.empty()
 
 
-def collectPins(host: Host, nodes: list[s.Node], parts: list[Part], pinout: list[s.Node]) -> Result[list[Pin], int] effects(host, managed_allocation):
+public def collectPins(host: Host, nodes: list[s.Node], parts: list[Part], pinout: list[s.Node]) -> Result[list[Pin], int] effects(host, managed_allocation):
     out: list[Pin] = []
     part = 0
     while part < len(parts):
@@ -185,7 +176,7 @@ def collectPins(host: Host, nodes: list[s.Node], parts: list[Part], pinout: list
     return Ok(out)
 
 
-def group(host: Host, nodes: list[s.Node], reference: text.Span) -> text.Span effects(host, managed_allocation):
+public def group(host: Host, nodes: list[s.Node], reference: text.Span) -> text.Span effects(host, managed_allocation):
     i = 1
     while i < len(nodes):
         if groupForm(host, nodes, i):
@@ -199,7 +190,7 @@ def group(host: Host, nodes: list[s.Node], reference: text.Span) -> text.Span ef
 # Netlisp per-pad supply branches fold only when the named host pad and trunk exist.
 
 
-def displayNet(host: Host, net: text.Span, parts: list[Part], pins: list[Pin]) -> text.Span effects(host):
+public def displayNet(host: Host, net: text.Span, parts: list[Part], pins: list[Pin]) -> text.Span effects(host):
     last = - 1
     previous = - 1
     i = net.start

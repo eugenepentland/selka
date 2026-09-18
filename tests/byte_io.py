@@ -16,7 +16,7 @@ def main():
     runner = parser.parse_args().runner.resolve()
     with tempfile.TemporaryDirectory(prefix='byte-io-test-') as temporary:
         root = Path(temporary)
-        (root / 'io.my').write_text('module io\nexport length\nexport byte\nexport put\n\n\n'
+        (root / 'io.my').write_text('module io\n\n\n\n\n\n'
             'host def length() -> i64 effects(host)\n\n\n'
             'host def byte(index: i64) -> u8 effects(host)\n\n\n'
             'host def put(value: u8) -> i64 effects(host)\n')
@@ -48,7 +48,7 @@ def main():
         oversized = run(RETURN_ZERO, b'x' * (2 * 1024 * 1024 + 1))
         assert oversized.returncode != 0 and oversized.stdout == b'', oversized
         (root / 'io.my').write_text(
-            'module io\nexport length\nexport byte\nexport put\nexport Block\nexport read_block\nexport write_block\n\n\n'
+            'module io\n\n\n\n\n\n\n\n\n'
             'class Block:\n    bytes: [256]u8\n    count: i64\n\n\n'
             'host def length() -> i64 effects(host)\n\n\n'
             'host def byte(index: i64) -> u8 effects(host)\n\n\n'
@@ -90,7 +90,7 @@ def scoped_checks(runner):
         outside = root / 'outside'
         outside.write_bytes(b'outside')
         (data / 'link').symlink_to(outside)
-        (root / 'io.my').write_text('module io\nexport length\nexport byte\nexport put\n\n\n'
+        (root / 'io.my').write_text('module io\n\n\n\n\n\n'
             'host def length() -> i64 effects(host)\n\n\n'
             'host def byte(index: i64) -> u8 effects(host)\n\n\n'
             'host def put(value: u8) -> i64 effects(host)\n')

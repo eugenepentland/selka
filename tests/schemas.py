@@ -16,53 +16,53 @@ def main():
         entry = root / 'main.my'
         entry.write_text('module main\nimport data\nimport other\n\ndef main() -> i64:\n    return 0\n')
         other = root / 'other.my'
-        other.write_text('module other\nexport Point\n\nclass Point:\n    x: bool\n')
+        other.write_text('module other\n\n\npublic class Point:\n    x: bool\n')
         data = root / 'data.my'
         source = '''module data
-export Point
-export Status
-export Choice
-export Outcome
-export Identity
-export Node
-export File
-export copy
-export sample
 
-class Point:
+
+
+
+
+
+
+
+
+
+public class Point:
     x: u64
     y: [2]bool
     table: [Status]u16
 
-enum Status:
+public enum Status:
     ready,
     failed
 
-union Choice:
+public union Choice:
     empty,
     point: Point
 
-result Outcome:
+public result Outcome:
     ok: Choice,
     err: Status
 
-domain Identity: i8:
+public domain Identity: i8:
     private def raw(x: i8) -> Identity:
         return wrap[Identity](x)
 
-class Node:
+public class Node:
     next: Identity
 
-resource File: filesystem
+public resource File: filesystem
 
-def copy(x: Point) -> Point:
+public def copy(x: Point) -> Point:
     return x
 
 result Time:
     ok: i64,
     err: i64
 
-def sample(clock: clock_cap) -> i64:
+public def sample(clock: clock_cap) -> i64:
     match clock_now[Time](clock):
         case Time.ok(x):
             return x
@@ -129,7 +129,7 @@ class Hidden:
         assert 'E_TYPE' in run(1)
         data.write_text(source.replace('    x: u64\n    y:', '    x: u64\n    x:'))
         assert 'duplicate' in run(1).lower()
-        data.write_text(source.replace('export Point\n', ''))
+        data.write_text(source.replace('public class Point:', 'class Point:'))
         assert 'E_PRIVATE_INTERFACE' in run(1)
         data.write_text(source)
         run(2, '--evaluation-request')
@@ -161,7 +161,7 @@ class Hidden:
             ('decode: from_wire', 'decode: missing', 'E_CODEC_FUNCTION'),
             ('codec Wire', 'codec i64', 'E_CODEC_SIGNATURE'),
             ('encode: to_wire', 'decode: from_wire', 'E_DUPLICATE_CODEC_KEY'),
-            ('export Wire\n', '', 'E_PRIVATE_INTERFACE'),
+            ('public record Wire:', 'record Wire:', 'E_PRIVATE_INTERFACE'),
         ):
             data.write_text(codec_source.replace(old, new))
             diagnostic = run(1)

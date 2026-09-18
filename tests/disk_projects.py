@@ -38,7 +38,7 @@ def rejected(result, code):
 
 def letter_module(body):
     """The helper module the edits replace, with one statement for its body."""
-    return 'module helper\nexport letter\n\n\ndef letter() -> u8:\n    ' + body + '\n'
+    return 'module helper\n\n\n\npublic def letter() -> u8:\n    ' + body + '\n'
 
 
 def module_edits(binary, directory):
@@ -53,8 +53,8 @@ def module_edits(binary, directory):
     for path in inputs:
         path.write_bytes(b"")
     assert success(run(binary, project, inputs, directory)) == b"A"
-    helper.write_text('module helper\nimport added\nexport letter\n\n\ndef letter() -> u8:\n    return added.letter()\n')
-    (project / "added.my").write_text('module added\nexport letter\n\n\ndef letter() -> u8:\n    return 66u8\n')
+    helper.write_text('module helper\nimport added\n\n\n\npublic def letter() -> u8:\n    return added.letter()\n')
+    (project / "added.my").write_text('module added\n\n\n\npublic def letter() -> u8:\n    return 66u8\n')
     assert success(run(binary, project, inputs, directory)) == b"B"
     (project / "added.my").unlink()
     rejected(run(binary, project, inputs, directory), "E_MODULE_READ")

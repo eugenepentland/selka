@@ -31,10 +31,9 @@ const Files = struct {
 };
 const units =
     \\module units
-    \\export Distance
     \\
     \\
-    \\domain Distance: i64:
+    \\public domain Distance: i64:
     \\    private def raw(x: i64) -> Distance:
     \\        return wrap[Distance](x)
     \\
@@ -48,15 +47,13 @@ const units =
 const entry =
     \\module main
     \\import units
-    \\export Sample
-    \\export echo
     \\
     \\
-    \\class Sample:
+    \\public class Sample:
     \\    distance: units.Distance
     \\
     \\
-    \\def echo(x: [2]units.Distance) -> [2]units.Distance effects():
+    \\public def echo(x: [2]units.Distance) -> [2]units.Distance effects():
     \\    return x
     \\
     \\
@@ -100,15 +97,13 @@ test "module interfaces resolve nominal identities and exported domain methods w
 test "default interface listing renders the whole signature with Python capability spellings" {
     const body =
         \\module main
-        \\export main
-        \\export bump
         \\
         \\
-        \\def main(fs: Filesystem, clock: Clock) -> int:
+        \\public def main(fs: Filesystem, clock: Clock) -> int:
         \\    return 0
         \\
         \\
-        \\def bump(values: list[int]) -> int effects(mutation) mutates(values):
+        \\public def bump(values: list[int]) -> int effects(mutation) mutates(values):
         \\    values[0] = values[0] + 1
         \\    return values[0]
     ;
@@ -148,16 +143,14 @@ fn reject(body: []const u8, code: []const u8) !void {
 test "list-interfaces prints a declaration's first docstring line" {
     const body =
         \\module main
-        \\export area
-        \\export Point
         \\
         \\
-        \\record Point:
+        \\public record Point:
         \\    """A point in the plane."""
         \\    x: int
         \\
         \\
-        \\def area(width: int, height: int) -> int:
+        \\public def area(width: int, height: int) -> int:
         \\    """The rectangle's area.
         \\
         \\    Long detail that the listing drops.
@@ -180,15 +173,12 @@ test "module interfaces reject duplicate exports missing symbols and private typ
     try reject(
         \\module main
         \\export Missing
-    , "E_UNKNOWN_EXPORT");
+    , "E_EXPORT_REMOVED");
     try reject(
         \\module main
-        \\export X
-        \\export X
-        \\
-        \\
-        \\class X:
-        \\    pass
+        \\import units
+        \\export units.Missing
+        \\export units.Missing
     , "E_DUPLICATE_EXPORT");
     try reject(
         \\module main
@@ -211,46 +201,42 @@ test "module interfaces reject duplicate exports missing symbols and private typ
     , "E_DUPLICATE_SYMBOL");
     try reject(
         \\module main
-        \\export f
         \\
         \\
         \\class Secret:
         \\    pass
         \\
         \\
-        \\def f(x: Secret) -> i64:
+        \\public def f(x: Secret) -> i64:
         \\    return 0
     , "E_PRIVATE_INTERFACE");
     try reject(
         \\module main
-        \\export Box
         \\
         \\
         \\class Secret:
         \\    pass
         \\
         \\
-        \\class Box:
+        \\public class Box:
         \\    value: [2]Secret
     , "E_PRIVATE_INTERFACE");
     try reject(
         \\module main
-        \\export Box
         \\
         \\
         \\class Secret:
         \\    pass
         \\
         \\
-        \\union Box:
+        \\public union Box:
         \\    value: Secret
     , "E_PRIVATE_INTERFACE");
     try reject(
         \\module main
-        \\export f
         \\
         \\
-        \\def f(x: Missing) -> i64:
+        \\public def f(x: Missing) -> i64:
         \\    return 0
     , "E_UNKNOWN_SYMBOL");
     try reject(
@@ -322,15 +308,13 @@ test "module grammar parses qualified variant match constructors and free calls"
         .{ .path = "main.my", .bytes = text },
         .{ .path = units_path, .bytes =
         \\module units
-        \\export Choice
-        \\export helper
         \\
         \\
-        \\enum Choice:
+        \\public enum Choice:
         \\    a
         \\
         \\
-        \\def helper() -> i64 effects():
+        \\public def helper() -> i64 effects():
         \\    return 1
         },
     } };
@@ -386,10 +370,9 @@ fn checkedScenario(allocator: std.mem.Allocator) !void {
         },
         .{ .path = units_path, .bytes =
         \\module units
-        \\export Distance
         \\
         \\
-        \\domain Distance: i64:
+        \\public domain Distance: i64:
         \\    private def raw(x: i64) -> Distance:
         \\        return wrap[Distance](x)
         \\
@@ -442,12 +425,9 @@ test "shared record types cross module boundaries and hidden names do not shadow
         },
         .{ .path = units_path, .bytes =
         \\module units
-        \\export X
-        \\export make
-        \\export value
         \\
         \\
-        \\record X:
+        \\public record X:
         \\    number: i64
         \\
         \\
@@ -455,11 +435,11 @@ test "shared record types cross module boundaries and hidden names do not shadow
         \\    return 99
         \\
         \\
-        \\def make(n: i64) -> X effects():
+        \\public def make(n: i64) -> X effects():
         \\    return X(number=n)
         \\
         \\
-        \\def value(x: X) -> i64 effects():
+        \\public def value(x: X) -> i64 effects():
         \\    return x.number
         \\
         \\
@@ -559,15 +539,13 @@ fn discoveryScenario(allocator: std.mem.Allocator) !void {
         },
         .{ .path = "shared.my", .bytes =
         \\module shared
-        \\export Box
-        \\export number
         \\
         \\
-        \\class Box:
+        \\public class Box:
         \\    n: i64
         \\
         \\
-        \\def number(x: Box) -> i64 effects():
+        \\public def number(x: Box) -> i64 effects():
         \\    return x.n
         },
     } };
@@ -605,16 +583,13 @@ fn qualityScenario(allocator: std.mem.Allocator) !void {
         },
         .{ .path = "api.my", .bytes =
         \\module api
-        \\export used
-        \\export unused
-        \\export D
         \\
         \\
-        \\def used() -> i64 effects():
+        \\public def used() -> i64 effects():
         \\    return 7
         \\
         \\
-        \\def unused() -> i64 effects():
+        \\public def unused() -> i64 effects():
         \\    return helper()
         \\
         \\
@@ -634,7 +609,7 @@ fn qualityScenario(allocator: std.mem.Allocator) !void {
         \\    return cycle_a()
         \\
         \\
-        \\domain D: i64:
+        \\public domain D: i64:
         \\    private def raw(x: i64) -> D:
         \\        return wrap[D](x)
         \\
@@ -690,10 +665,9 @@ fn nativeModuleScenario(allocator: std.mem.Allocator) !void {
         },
         .{ .path = "helper.my", .bytes =
         \\module helper
-        \\export twice
         \\
         \\
-        \\def twice(x: i64) -> i64 effects():
+        \\public def twice(x: i64) -> i64 effects():
         \\    return x * 2
         },
     } };
@@ -785,10 +759,9 @@ test "public type selection rejects private and unknown nominal types" {
 test "schema rendering rejects an exported declaration missing its checked type" {
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes =
         \\module main
-        \\export Visible
         \\
         \\
-        \\class Visible:
+        \\public class Visible:
         \\    n: i64
         \\
         \\
@@ -808,15 +781,13 @@ test "schema rendering rejects an exported declaration missing its checked type"
 test "public schema renders normalized mutates metadata and callback contracts" {
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes =
         \\module main
-        \\export touch
-        \\export apply
         \\
         \\
-        \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
+        \\public def touch(values: list[int]) -> None effects(mutation) mutates(values):
         \\    values[0] = 1
         \\
         \\
-        \\def apply(f: def(values: list[int]) -> None effects(mutation) mutates(values)) -> None effects():
+        \\public def apply(f: def(values: list[int]) -> None effects(mutation) mutates(values)) -> None effects():
         \\    _ = f
         \\
         \\
@@ -838,22 +809,20 @@ test "public schema renders normalized mutates metadata and callback contracts" 
 test "generic syntax module interfaces retain scoped type names without hiding private concrete types" {
     try reject(
         \\module main
-        \\export f
         \\
         \\
         \\class Secret:
         \\    pass
         \\
         \\
-        \\def f[T](x: T, y: [2]Secret) -> T:
+        \\public def f[T](x: T, y: [2]Secret) -> T:
         \\    return x
     , "E_PRIVATE_INTERFACE");
     const text =
         \\module main
-        \\export echo
         \\
         \\
-        \\def echo[T: copy](x: [2]T) -> [2]T effects():
+        \\public def echo[T: copy](x: [2]T) -> [2]T effects():
         \\    return x
         \\
         \\
@@ -879,10 +848,9 @@ test "generic syntax module interfaces retain scoped type names without hiding p
 test "generic requirements checkGenericRequirements validates exported and uncalled private templates" {
     try reject(
         \\module main
-        \\export f
         \\
         \\
-        \\def f[T: unknown](x: T) -> T:
+        \\public def f[T: unknown](x: T) -> T:
         \\    return x
     , "E_GENERIC_REQUIREMENT");
     try reject(
@@ -901,14 +869,12 @@ test "generic requirements checkGenericRequirements validates exported and uncal
 fn namedConstraintIndexScenario(allocator: std.mem.Allocator) !void {
     const text =
         \\module main
-        \\export Prices
-        \\export total
         \\
         \\
-        \\constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
+        \\public constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
         \\
         \\
-        \\def total[P: Prices](policy: P, subtotal: int) -> int effects():
+        \\public def total[P: Prices](policy: P, subtotal: int) -> int effects():
         \\    return P.price(policy, subtotal)
     ;
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = text }} };
@@ -938,18 +904,16 @@ fn namedConstraintImportScenario(allocator: std.mem.Allocator) !void {
         .{ .path = "main.my", .bytes =
         \\module main
         \\import contracts
-        \\export total
         \\
         \\
-        \\def total[P: contracts.Prices](policy: P, subtotal: int) -> int effects():
+        \\public def total[P: contracts.Prices](policy: P, subtotal: int) -> int effects():
         \\    return P.price(policy, subtotal)
         },
         .{ .path = contracts_module, .bytes =
         \\module contracts
-        \\export Prices
         \\
         \\
-        \\constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
+        \\public constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
         },
     } };
     var project = graph.Project.init(allocator);
@@ -978,46 +942,42 @@ test "named constraints index export render and accept function bounds" {
 test "named constraints reject nominal bounds and wrong kinds" {
     try reject(
         \\module main
-        \\export Box
         \\
         \\
         \\constraint Prices[P] = copy
         \\
         \\
-        \\class Box[T: Prices]:
+        \\public class Box[T: Prices]:
         \\    pass
     , "E_GENERIC_REQUIREMENT");
     try reject(
         \\module main
-        \\export Box
         \\
         \\
         \\constraint Prices[P] = copy
         \\
         \\
-        \\union Box[T: Prices]:
+        \\public union Box[T: Prices]:
         \\    item: T
     , "E_GENERIC_REQUIREMENT");
     try reject(
         \\module main
-        \\export f
         \\
         \\
         \\constraint Prices[P] = copy
         \\
         \\
-        \\def f(x: Prices) -> int:
+        \\public def f(x: Prices) -> int:
         \\    return 0
     , "E_SYMBOL_KIND");
     try reject(
         \\module main
-        \\export f
         \\
         \\
         \\constraint Prices[P] = copy
         \\
         \\
-        \\def f(x: Prices[int]) -> int:
+        \\public def f(x: Prices[int]) -> int:
         \\    return 0
     , "E_SYMBOL_KIND");
 }
@@ -1026,33 +986,30 @@ test "named constraints reject nominal bounds and wrong kinds" {
 test "named constraints enforce private interface exposure and unknown names" {
     try reject(
         \\module main
-        \\export f
         \\
         \\
         \\constraint Prices[P] = copy
         \\
         \\
-        \\def f[T: Prices](x: T) -> T:
+        \\public def f[T: Prices](x: T) -> T:
         \\    return x
     , "E_PRIVATE_INTERFACE");
     try reject(
         \\module main
-        \\export f
         \\
         \\
-        \\def f[T: unknown](x: T) -> T:
+        \\public def f[T: unknown](x: T) -> T:
         \\    return x
     , "E_GENERIC_REQUIREMENT");
     try reject(
         \\module main
-        \\export Prices
         \\
         \\
         \\class Secret:
         \\    pass
         \\
         \\
-        \\constraint Prices[P] = copy + op(price(policy: P, secret: Secret) -> int effects())
+        \\public constraint Prices[P] = copy + op(price(policy: P, secret: Secret) -> int effects())
     , "E_PRIVATE_INTERFACE");
 }
 
@@ -1074,7 +1031,6 @@ test "named constraints participate in duplicate declaration checks" {
 test "named constraints reject subject shadowing declarations imports and builtins" {
     try reject(
         \\module main
-        \\export f
         \\
         \\
         \\class P:
@@ -1084,7 +1040,7 @@ test "named constraints reject subject shadowing declarations imports and builti
         \\constraint Prices[P] = copy
         \\
         \\
-        \\def f(x: i64) -> int:
+        \\public def f(x: i64) -> int:
         \\    return 0
     , "E_SHADOWING");
     try reject(
@@ -1130,10 +1086,9 @@ test "named constraints constraintIdentity reports unmapped sources as internal 
 fn expectNamedConstraintLocatedErrors() !void {
     try reject(
         \\module main
-        \\export f
         \\
         \\
-        \\def f[T: unknown](x: T) -> T:
+        \\public def f[T: unknown](x: T) -> T:
         \\    return x
     , "E_GENERIC_REQUIREMENT");
     try reject(
@@ -1180,15 +1135,13 @@ test "named constraints accept an imported exported bound when the defining modu
     try acceptNamedConstraintModule(
         \\module main
         \\import contracts
-        \\export f
-        \\export g
         \\
         \\
-        \\def f[T: contracts.C](x: T) -> T effects():
+        \\public def f[T: contracts.C](x: T) -> T effects():
         \\    return x
         \\
         \\
-        \\def g[T: contracts.C](x: T) -> T effects():
+        \\public def g[T: contracts.C](x: T) -> T effects():
         \\    return x
         \\
         \\
@@ -1196,7 +1149,6 @@ test "named constraints accept an imported exported bound when the defining modu
         \\    return 0
     ,
         \\module contracts
-        \\export C
         \\
         \\
         \\record One:
@@ -1211,7 +1163,7 @@ test "named constraints accept an imported exported bound when the defining modu
         \\    a: int
         \\
         \\
-        \\constraint C[T] = copy
+        \\public constraint C[T] = copy
     );
 }
 
@@ -1220,10 +1172,9 @@ test "named constraints accept an imported exported bound when the defining modu
     try acceptNamedConstraintModule(
         \\module main
         \\import contracts
-        \\export f
         \\
         \\
-        \\def f[T: contracts.C](x: T) -> T effects():
+        \\public def f[T: contracts.C](x: T) -> T effects():
         \\    return x
         \\
         \\
@@ -1231,14 +1182,13 @@ test "named constraints accept an imported exported bound when the defining modu
         \\    return 0
     ,
         \\module contracts
-        \\export C
         \\
         \\
         \\record One:
         \\    a: int
         \\
         \\
-        \\constraint C[T] = copy
+        \\public constraint C[T] = copy
     );
 }
 
@@ -1247,10 +1197,9 @@ test "named constraints reject an unexported constraint imported from another mo
     try rejectNamedConstraintModule(
         \\module main
         \\import contracts
-        \\export f
         \\
         \\
-        \\def f[T: contracts.C](x: T) -> T:
+        \\public def f[T: contracts.C](x: T) -> T:
         \\    return x
         \\
         \\
@@ -1268,13 +1217,12 @@ test "named constraints reject an unexported constraint imported from another mo
 test "named constraints reject a same-module unexported constraint exposed by an exported generic" {
     try reject(
         \\module main
-        \\export f
         \\
         \\
         \\constraint C[T] = copy
         \\
         \\
-        \\def f[T: C](x: T) -> T:
+        \\public def f[T: C](x: T) -> T:
         \\    return x
     , "E_PRIVATE_INTERFACE");
 }
@@ -1294,10 +1242,9 @@ test "named constraints supply copy from an imported constraint to a structural 
         \\    return 0
     ,
         \\module contracts
-        \\export C
         \\
         \\
-        \\constraint C[T] = copy
+        \\public constraint C[T] = copy
     );
 }
 
@@ -1398,10 +1345,9 @@ test "generic calls preserve imported declaration identity and private boundarie
     ;
     const dependency =
         \\module units
-        \\export identity
         \\
         \\
-        \\def identity[U](x: U) -> U effects():
+        \\public def identity[U](x: U) -> U effects():
         \\    return x
     ;
     try acceptChecked(main, dependency);
@@ -1420,10 +1366,9 @@ test "generic calls preserve imported declaration identity and private boundarie
     ;
     const domain_dependency =
         \\module units
-        \\export D
         \\
         \\
-        \\domain D: i64:
+        \\public domain D: i64:
         \\    private def hidden[T](x: T) -> T:
         \\        return x
         \\
@@ -1440,10 +1385,9 @@ test "generic calls preserve imported declaration identity and private boundarie
     , "E_PRIVATE_SYMBOL");
     try rejectChecked(main,
         \\module units
-        \\export identity
         \\
         \\
-        \\def identity[U: integer](x: U) -> U effects():
+        \\public def identity[U: integer](x: U) -> U effects():
         \\    return x
     , "E_GENERIC_ARGUMENT");
 }
@@ -1464,10 +1408,9 @@ fn genericCallsScenario(allocator: std.mem.Allocator) !void {
         },
         .{ .path = units_path, .bytes =
         \\module units
-        \\export identity
         \\
         \\
-        \\def identity[U](x: U) -> U effects():
+        \\public def identity[U](x: U) -> U effects():
         \\    _ = helper(1)
         \\    return x
         \\
@@ -1508,10 +1451,9 @@ test "generic calls requirement diagnostics link caller and imported declaration
         },
         .{ .path = units_path, .bytes =
         \\module units
-        \\export identity
         \\
         \\
-        \\def identity[U: integer](x: U) -> U effects():
+        \\public def identity[U: integer](x: U) -> U effects():
         \\    return x
         },
     } };
@@ -1562,37 +1504,31 @@ fn genericExecutionScenario(allocator: std.mem.Allocator) !void {
         },
         .{ .path = units_path, .bytes =
         \\module units
-        \\export run
-        \\export id
-        \\export set
-        \\export head
-        \\export view
-        \\export Box
         \\
         \\
-        \\class Box:
+        \\public class Box:
         \\    value: i64
         \\
         \\
-        \\def view[T](v: [1]T) -> [1]T effects():
+        \\public def view[T](v: [1]T) -> [1]T effects():
         \\    return v
         \\
         \\
-        \\def head[T](v: [1]T) -> T effects():
+        \\public def head[T](v: [1]T) -> T effects():
         \\    seen = view[T](v)
         \\    return seen[0]
         \\
         \\
-        \\def set[T](x: T, y: T) -> T effects():
+        \\public def set[T](x: T, y: T) -> T effects():
         \\    _ = x
         \\    return y
         \\
         \\
-        \\def id[T](x: T) -> T effects():
+        \\public def id[T](x: T) -> T effects():
         \\    return x
         \\
         \\
-        \\def run() -> i64 effects():
+        \\public def run() -> i64 effects():
         \\    if id[bool](True):
         \\        return id[i64](5)
         \\    return 0
@@ -1639,32 +1575,20 @@ test "exports after declarations retain interface validation and scope boundarie
         \\module units
         \\
         \\
-        \\def value() -> i64 effects():
+        \\public def value() -> i64 effects():
         \\    return 42
         \\
         \\
-        \\export value
     );
     try reject(
         \\module main
-        \\
-        \\
-        \\class Value:
-        \\    n: i64
-        \\
-        \\
         \\export Missing
-    , "E_UNKNOWN_EXPORT");
+    , "E_EXPORT_REMOVED");
     try reject(
         \\module main
-        \\export Value
-        \\
-        \\
-        \\class Value:
-        \\    n: i64
-        \\
-        \\
-        \\export Value
+        \\import units
+        \\export units.value
+        \\export units.value
     , "E_DUPLICATE_EXPORT");
     try reject(
         \\module main
@@ -1674,11 +1598,10 @@ test "exports after declarations retain interface validation and scope boundarie
         \\    pass
         \\
         \\
-        \\def value(x: Secret) -> i64:
+        \\public def value(x: Secret) -> i64:
         \\    return 0
         \\
         \\
-        \\export value
     , "E_PRIVATE_INTERFACE");
     try reject(
         \\module main
@@ -1710,54 +1633,52 @@ test "exports after declarations retain interface validation and scope boundarie
 fn scatteredExports(allocator: std.mem.Allocator) !void {
     const body =
         \\module main
-        \\export Value
         \\
         \\
-        \\class Value:
+        \\public class Value:
         \\    n: i64
         \\
         \\
-        \\export value
         \\
         \\
-        \\def value() -> i64 effects():
+        \\public def value() -> i64 effects():
         \\    export = 42
         \\    return export
         \\
         \\
-        \\type Number = i64
+        \\public type Number = i64
         \\
         \\
-        \\export Number
         \\
         \\
-        \\const answer: Number = 42
+        \\public const answer: Number = 42
         \\
         \\
-        \\export answer
         \\
         \\
-        \\def main() -> i64 effects():
+        \\public def main() -> i64 effects():
         \\    return value() - answer
         \\
         \\
-        \\export main
     ;
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = body }} };
     var project = graph.Project.init(allocator);
     defer project.deinit();
     try project.load(files.provider(), "main", .{});
     const names = [_][]const u8{ "Value", "value", "Number", "answer", "main" };
-    const module = project.modules.items[0];
-    try t.expectEqual(names.len, module.exports.len);
-    var last: usize = 0;
-    for (module.exports, names) |exported, name| {
-        try t.expectEqualStrings(name, exported.name);
-        try t.expectEqualStrings(name, module.src.text(exported.span));
-        try t.expect(exported.span.start > last);
-        last = exported.span.start;
-    }
     var index = try interfaces.build(&project);
+    const unit = index.units[0];
+    try t.expectEqual(names.len, unit.syntax.types.public_declarations.len);
+    for (unit.syntax.types.public_declarations, names) |span, name| {
+        try t.expectEqualStrings(name, project.modules.items[0].src.text(span));
+    }
+    var last: usize = 0;
+    for (names) |name| {
+        const id = unit.names.get(name).?;
+        try t.expect(unit.symbols.items[id].exported);
+        try t.expect(unit.symbols.items[id].span.start > last);
+        last = unit.symbols.items[id].span.start;
+    }
     var compilation = try project_compile_module.Compilation.init(&index);
     try compilation.emit();
     try t.expectEqual(@as(i64, 0), (try native.run(&compilation)).value);
@@ -1769,44 +1690,38 @@ test "scattered exports preserve source order and spans through compilation and 
     try t.checkAllAllocationFailures(stable.allocator(), scatteredExports, .{});
 }
 
-test "late duplicate export diagnostics locate both original directives" {
+test "late duplicate re-export diagnostics locate both original directives" {
     const body =
         \\module main
-        \\export value
+        \\import units
+        \\export units.value
         \\
         \\
-        \\def value() -> i64:
-        \\    return 0
-        \\
-        \\
-        \\export value
+        \\export units.value
     ;
-    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = body }} };
+    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = body }, .{ .path = units_path, .bytes = units } } };
     var project = graph.Project.init(t.allocator);
     defer project.deinit();
     try t.expectError(error.SourceError, project.load(files.provider(), "main", .{}));
     const failure = project.problem.?;
     try t.expectEqualStrings("E_DUPLICATE_EXPORT", failure.code);
-    try t.expectEqual(std.mem.lastIndexOf(u8, body, "value").?, failure.site.span.start);
-    try t.expectEqual(std.mem.indexOf(u8, body, "value").?, failure.related.?.span.start);
+    try t.expectEqual(std.mem.lastIndexOf(u8, body, "units.value").?, failure.site.span.start);
+    try t.expectEqual(std.mem.indexOf(u8, body, "units.value").?, failure.related.?.span.start);
 }
 
 const facade_units =
     \\module shared.units
-    \\export Distance
-    \\export make
-    \\export metres
     \\
     \\
-    \\record Distance:
+    \\public record Distance:
     \\    value: i64
     \\
     \\
-    \\def make(value: i64) -> Distance effects():
+    \\public def make(value: i64) -> Distance effects():
     \\    return Distance(value=value)
     \\
     \\
-    \\def metres(distance: Distance) -> i64 effects():
+    \\public def metres(distance: Distance) -> i64 effects():
     \\    return distance.value
     \\
     \\
@@ -1928,15 +1843,13 @@ test "cross module bodies enforce private functions private types nominal identi
         \\    return units.take(X())
     ,
         \\module units
-        \\export X
-        \\export take
         \\
         \\
-        \\class X:
+        \\public class X:
         \\    pass
         \\
         \\
-        \\def take(x: X) -> i64 effects():
+        \\public def take(x: X) -> i64 effects():
         \\    return 0
     , "E_TYPE");
     try rejectChecked(
@@ -2006,10 +1919,9 @@ test "generic calls concrete helpers retain imported identity and private domain
     ;
     try acceptChecked(caller,
         \\module units
-        \\export helper
         \\
         \\
-        \\def helper(x: i64) -> i64 effects():
+        \\public def helper(x: i64) -> i64 effects():
         \\    return leaf(x)
         \\
         \\
@@ -2038,10 +1950,9 @@ test "generic calls concrete helpers retain imported identity and private domain
     ;
     try acceptChecked(domain_caller,
         \\module units
-        \\export D
         \\
         \\
-        \\domain D: i64:
+        \\public domain D: i64:
         \\    def helper(x: i64) -> i64 effects():
         \\        return D.leaf(x)
         \\
@@ -2050,10 +1961,9 @@ test "generic calls concrete helpers retain imported identity and private domain
     );
     try rejectChecked(domain_caller,
         \\module units
-        \\export D
         \\
         \\
-        \\domain D: i64:
+        \\public domain D: i64:
         \\    def helper(x: i64) -> i64:
         \\        return E.leaf(x)
         \\
@@ -2067,19 +1977,17 @@ test "generic calls concrete helpers retain imported identity and private domain
 test "interface closure includes domain backing and enum table keys" {
     try reject(
         \\module main
-        \\export D
         \\
         \\
         \\domain Hidden: i64:
         \\    pass
         \\
         \\
-        \\domain D: Hidden:
+        \\public domain D: Hidden:
         \\    pass
     , "E_PRIVATE_INTERFACE");
     try reject(
         \\module main
-        \\export Table
         \\
         \\
         \\enum Key:
@@ -2087,14 +1995,14 @@ test "interface closure includes domain backing and enum table keys" {
         \\    b
         \\
         \\
-        \\class Table:
+        \\public class Table:
         \\    values: [Key]i64
     , "E_PRIVATE_INTERFACE");
     try reject(
         \\module main
         \\export units
         \\import units
-    , "E_SYNTAX");
+    , "E_EXPORT_REMOVED");
 }
 
 // spec: ERGONOMIC-INTEGRATION-1
@@ -2108,10 +2016,9 @@ test "cross module effect and recoverable result obligations are enforced" {
         \\    return units.allocate()
     ,
         \\module units
-        \\export allocate
         \\
         \\
-        \\def allocate() -> i64 effects(managed_allocation):
+        \\public def allocate() -> i64 effects(managed_allocation):
         \\    values: list[i64] = []
         \\    values.append(1)
         \\    return values[0u64]
@@ -2126,16 +2033,14 @@ test "cross module effect and recoverable result obligations are enforced" {
         \\    return 0
     ,
         \\module units
-        \\export R
-        \\export fallible
         \\
         \\
-        \\result R:
+        \\public result R:
         \\    ok: i64,
         \\    err: i64
         \\
         \\
-        \\def fallible() -> R effects():
+        \\public def fallible() -> R effects():
         \\    return Ok(7)
     , "E_RESULT_UNHANDLED");
 }
@@ -2160,10 +2065,9 @@ test "exported functions publish their inferred ceiling while explicit ceilings 
     // A pure export checks without an author ceiling and publishes effects=.
     const pure =
         \\module main
-        \\export value
         \\
         \\
-        \\def value(x: i64) -> i64:
+        \\public def value(x: i64) -> i64:
         \\    return x + 1
         \\
         \\
@@ -2186,10 +2090,9 @@ test "exported functions publish their inferred ceiling while explicit ceilings 
     // An allocating export publishes the derived managed_allocation ceiling.
     const allocating =
         \\module main
-        \\export value
         \\
         \\
-        \\def value() -> i64:
+        \\public def value() -> i64:
         \\    items: list[i64] = []
         \\    items.append(7)
         \\    return items[0]
@@ -2214,10 +2117,9 @@ test "exported functions publish their inferred ceiling while explicit ceilings 
     // An exported generic template and a public domain operation also check and publish.
     const generic =
         \\module main
-        \\export identity
         \\
         \\
-        \\def identity[T](x: T) -> T:
+        \\public def identity[T](x: T) -> T:
         \\    return x
         \\
         \\
@@ -2239,10 +2141,9 @@ test "exported functions publish their inferred ceiling while explicit ceilings 
 
     const domain =
         \\module main
-        \\export Distance
         \\
         \\
-        \\domain Distance: i64:
+        \\public domain Distance: i64:
         \\    private def raw(x: i64) -> Distance:
         \\        return wrap[Distance](x)
         \\
@@ -2269,10 +2170,9 @@ test "exported functions publish their inferred ceiling while explicit ceilings 
     // An explicit ceiling is still an opt-in narrowing and still rejects excess.
     const narrowed =
         \\module main
-        \\export value
         \\
         \\
-        \\def value() -> i64 noalloc:
+        \\public def value() -> i64 noalloc:
         \\    items: list[i64] = []
         \\    items.append(7)
         \\    return items[0]
@@ -2307,10 +2207,9 @@ fn contractTestMarker(allocator: std.mem.Allocator, contracts: []const u8, name:
 test "@test declarations publish a discovery marker in the contract manifest" {
     const body =
         \\module main
-        \\export helper
         \\
         \\
-        \\def helper(x: i64) -> i64 effects():
+        \\public def helper(x: i64) -> i64 effects():
         \\    return x
         \\
         \\

@@ -323,9 +323,8 @@ def generate_ordinary_modules(root, modules, functions, token=1):
     root.mkdir(parents=True, exist_ok=True)
     _write(root / "conf.my", [
         "module conf",
-        "export STEP",
         "",
-        f"const STEP: int = {token}",
+        f"public const STEP: int = {token}",
         "",
     ])
     for module in range(modules):
@@ -334,11 +333,8 @@ def generate_ordinary_modules(root, modules, functions, token=1):
         if module > 0:
             body.append(f"import m{module - 1:03d}")
         body += [
-            "export base",
-            "export value",
-            "export ping",
             "",
-            "def base(x: int) -> int effects():",
+            "public def base(x: int) -> int effects():",
             "    return x + conf.STEP",
             "",
         ]
@@ -352,7 +348,7 @@ def generate_ordinary_modules(root, modules, functions, token=1):
             ]
             previous = current
         body += [
-            "def value(seed: int) -> int effects():",
+            "public def value(seed: int) -> int effects():",
         ]
         if module > 0:
             body.append(f"    return {previous}(seed) + m{module - 1:03d}.value(seed)")
@@ -360,7 +356,7 @@ def generate_ordinary_modules(root, modules, functions, token=1):
             body.append(f"    return {previous}(seed)")
         body += [
             "",
-            "def ping(seed: int = 0) -> int effects():",
+            "public def ping(seed: int = 0) -> int effects():",
             f"    return {previous}(seed)",
             "",
         ]
@@ -374,9 +370,8 @@ def generate_ordinary_modules(root, modules, functions, token=1):
         "def main() -> int effects():",
         "    return " + " + ".join(f"m{module:03d}.value(0)" for module in range(modules)) + " + m000.ping() + conf.STEP",
         "",
-        "export test_ordinary",
         "",
-        "def test_ordinary() -> bool effects():",
+        "public def test_ordinary() -> bool effects():",
         "    return m000.value(1) >= 0",
         "",
     ]
@@ -399,22 +394,16 @@ def _provider_lines(name, functions, token=1, union_variant="branch", effect="ef
     lines = [
         f"module {name}",
         "import conf",
-        "export Policy",
-        "export Row",
-        "export Kind",
-        "export Node",
-        "export classify",
-        "export summarize",
         "",
-        "record Row:",
+        "public record Row:",
         "    index: int",
         "    weight: int",
         "",
-        "enum Kind:",
+        "public enum Kind:",
         "    light,",
         "    heavy",
         "",
-        "union Node:",
+        "public union Node:",
         "    leaf: int,",
     ]
     if union_variant == "branch":
@@ -428,7 +417,7 @@ def _provider_lines(name, functions, token=1, union_variant="branch", effect="ef
         lines.append("    empty")
     lines += [
         "",
-        f"def classify(row: Row) -> Kind {effect}:",
+        f"public def classify(row: Row) -> Kind {effect}:",
         "    if row.weight > 10:",
         "        return Kind.heavy",
         "    return Kind.light",
@@ -436,7 +425,7 @@ def _provider_lines(name, functions, token=1, union_variant="branch", effect="ef
         f"def classify_chain(row: Row) -> Kind {effect}:",
         "    return classify(row)",
         "",
-        "def summarize(rows: list[Row]) -> int effects():",
+        "public def summarize(rows: list[Row]) -> int effects():",
         "    total = 0",
         "    for row in rows:",
         "        total = total + row.weight * conf.SCALE",
@@ -477,7 +466,7 @@ def _provider_lines(name, functions, token=1, union_variant="branch", effect="ef
             ]
         previous = current
     lines += [
-        "domain Policy: int:",
+        "public domain Policy: int:",
         "    def make(seed: int) -> Policy effects():",
         "        return wrap[Policy](seed)",
         "",
@@ -497,16 +486,14 @@ def generate_managed(root, providers, functions, token=1):
     root.mkdir(parents=True, exist_ok=True)
     _write(root / "conf.my", [
         "module conf",
-        "export SCALE",
         "",
-        f"const SCALE: int = {token}",
+        f"public const SCALE: int = {token}",
         "",
     ])
     _write(root / "contracts.my", [
         "module contracts",
-        "export Prices",
         "",
-        "constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects()) + op(tag(policy: P) -> int effects())",
+        "public constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects()) + op(tag(policy: P) -> int effects())",
         "",
     ])
     names = [f"provider{index:03d}" for index in range(providers)]
@@ -515,13 +502,11 @@ def generate_managed(root, providers, functions, token=1):
     _write(root / "pricing.my", [
         "module pricing",
         "import contracts",
-        "export apply",
-        "export bundle",
         "",
-        "def apply[P: contracts.Prices](policy: P, subtotal: int) -> int effects():",
+        "public def apply[P: contracts.Prices](policy: P, subtotal: int) -> int effects():",
         "    return P.price(policy, subtotal) + P.tag(policy)",
         "",
-        "def bundle[P: contracts.Prices](policy: P, subtotal: int) -> int effects():",
+        "public def bundle[P: contracts.Prices](policy: P, subtotal: int) -> int effects():",
         "    return apply[P](policy, subtotal) + 1",
         "",
     ])
@@ -543,9 +528,8 @@ def generate_managed(root, providers, functions, token=1):
         f"    _ = {names[0]}.summarize(rows)",
         "    return total(2000)",
         "",
-        "export test_managed",
         "",
-        "def test_managed() -> bool effects():",
+        "public def test_managed() -> bool effects():",
         "    return total(2000) > 0",
         "",
     ]
@@ -574,7 +558,7 @@ def apply_ordinary_edit(paths, kind, token):
         return path
     if kind == "constant_edit":
         path = paths["constant"]
-        path.write_text("module conf\nexport STEP\n\nconst STEP: int = %d\n" % token)
+        path.write_text("module conf\n\n\npublic const STEP: int = %d\n" % token)
         return path
     if kind == "signature_edit":
         path = paths["signature"]
@@ -594,7 +578,7 @@ def apply_managed_edit(paths, kind, token, providers):
         return path
     if kind == "constant_edit":
         path = paths["constant"]
-        path.write_text("module conf\nexport SCALE\n\nconst SCALE: int = %d\n" % token)
+        path.write_text("module conf\n\n\npublic const SCALE: int = %d\n" % token)
         return path
     if kind == "union_edit":
         path = paths["managed_provider"]
@@ -1351,8 +1335,8 @@ def probe_bounded_failures(compiler, scratch):
     total_root.mkdir(parents=True)
     for index in range(6):
         padding = "\n".join(f"# pad {index:07d}" for _ in range(250000))
-        _write(total_root / f"m{index}.my", [f"module m{index}", "export value", "", padding, "",
-                                             "def value() -> int effects():", "    return 0"])
+        _write(total_root / f"m{index}.my", [f"module m{index}", "", padding, "",
+                                             "public def value() -> int effects():", "    return 0"])
     entry_lines = ["module main"] + [f"import m{index}" for index in range(6)]
     entry_lines += ["", "def main() -> int effects():",
                     "    return " + " + ".join(f"m{index}.value()" for index in range(6))]

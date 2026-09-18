@@ -1,37 +1,23 @@
 module wire
 import io
-export SLOT
-export REGION
-export FEATURE
-export OUTLINE
-export COMPONENTS
-export NETS
-export REGIONS
-export FEATURES
-export REQUEST
-export unsigned
-export signed
-export flag
-export code
-export emitUnsigned
 # One fixed request layout, so every field sits at a position this module names.
 # A slot is a presence byte and eight little-endian octets; a rectangle is four
 # signed eight-octet fields; a region adds a face, three block flags and four
 # admitted-net slots; a feature adds a family byte and one face or layer byte.
 
 
-const SLOT: i64 = 9
-const REGION: i64 = 73
-const FEATURE: i64 = 43
-const OUTLINE: i64 = 0
-const COMPONENTS: i64 = 32
-const NETS: i64 = 68
-const REGIONS: i64 = 104
-const FEATURES: i64 = 396
-const REQUEST: i64 = 740
+public const SLOT: i64 = 9
+public const REGION: i64 = 73
+public const FEATURE: i64 = 43
+public const OUTLINE: i64 = 0
+public const COMPONENTS: i64 = 32
+public const NETS: i64 = 68
+public const REGIONS: i64 = 104
+public const FEATURES: i64 = 396
+public const REQUEST: i64 = 740
 
 
-def unsigned(host: Host, position: i64) -> u64 effects(host):
+public def unsigned(host: Host, position: i64) -> u64 effects(host):
     value = 0u64
     shift = 0u64
     i = 0i64
@@ -42,7 +28,7 @@ def unsigned(host: Host, position: i64) -> u64 effects(host):
     return value
 
 
-def signed(host: Host, position: i64) -> i64 effects(host):
+public def signed(host: Host, position: i64) -> i64 effects(host):
     value = i64(io.byte(host, position + 7))
     if value >= 128:
         value = value - 256
@@ -53,15 +39,15 @@ def signed(host: Host, position: i64) -> i64 effects(host):
     return value
 
 
-def code(host: Host, position: i64) -> u8 effects(host):
+public def code(host: Host, position: i64) -> u8 effects(host):
     return io.byte(host, position)
 
 
-def flag(host: Host, position: i64) -> bool effects(host):
+public def flag(host: Host, position: i64) -> bool effects(host):
     return io.byte(host, position) != 0u8
 
 
-def emitUnsigned(host: Host, value: u64) -> i64 effects(host):
+public def emitUnsigned(host: Host, value: u64) -> i64 effects(host):
     shift = 0u64
     i = 0i64
     while i < 8:

@@ -19,7 +19,7 @@ def main():
         library = root / 'library'
         library.mkdir()
         lib = library / 'numbers.my'
-        source = 'module numbers\nexport answer\n\ndef answer() -> i64:\n    return 42\n'
+        source = 'module numbers\n\n\npublic def answer() -> i64:\n    return 42\n'
         lib.write_text(source)
         config, lock, receipt = (root / name for name in ('packages.json', 'lock.json', 'receipt.json'))
         config.write_text(json.dumps({'packages': [{'name': 'numbers', 'root': 'library'}]}))
