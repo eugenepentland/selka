@@ -11,3 +11,13 @@ __pycache__/
 .guardian/cache/
 experiments/application_comparison/baselines/*/zig/.guardian/cache/
 qbe_runtime.o
+
+# Local agent/tooling scratch and caches (not project content).
+.claude/
+.dsh-global-cache/
+.tmp/
+.zig-global/
+env.my
+qualified_unresolved.my
+zz-attr-tmp/
+zz-probe.out.qbe-manifest.json
