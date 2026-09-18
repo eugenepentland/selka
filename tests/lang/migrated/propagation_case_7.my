@@ -14,5 +14,5 @@ public def program() -> i64:
     match f(Ok(3)):
         case R.ok(n):
             return n
-        case R.err(ignored):
+        case R.err(_):
             return 0

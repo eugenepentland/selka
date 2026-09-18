@@ -195,8 +195,9 @@ pub fn build(b: *std.Build) void {
         std.process.exit(2);
     }
     const unit_shards = if (test_filters.len == 0) requested_shards else 1;
-    // The CLI root is both smaller and coarser than the unit root — 150 tests
-    // against 1236 — so it takes half the shards; more would mostly idle.
+    // The CLI root is both smaller and coarser than the unit root, so it takes
+    // half the shards; a wider fan-out oversubscribes the core budget and made
+    // the whole gate slower even though it shortened the slowest CLI shard.
     const cli_shards = if (test_filters.len == 0) @max(1, requested_shards / 2) else 1;
     // The guest-running hosts live under src/<host>/, so they cannot reach
     // src/memory_budget.zig by path; they import it as a module instead. The

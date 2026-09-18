@@ -1,7 +1,7 @@
 module managed_cell_case_2
 
 
-def push(cell: Cell[list[int]]) -> None:
+def push(cell: Cell[list[int]]) -> None effects(mutation, managed_allocation) mutates(cell):
     cell.value.append(7)
 
 

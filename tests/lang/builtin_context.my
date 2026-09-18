@@ -35,7 +35,7 @@ class Holder:
     values: list[i64]
 
 
-def choose_holder(value: Holder, other: list[i64]) -> i64:
+def choose_holder(value: Holder, other: list[i64]) -> i64 effects(mutation, managed_allocation) mutates(value):
     _ = other
     xs = value.values
     xs.append(42)

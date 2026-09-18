@@ -1,7 +1,7 @@
 module managed_values_case_10
 
 
-def next(xs: list[i64]) -> i64:
+def next(xs: list[i64]) -> i64 effects(mutation, managed_allocation) mutates(xs):
     xs.append(1)
     return 42
 

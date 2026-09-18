@@ -92,3 +92,26 @@ Diagnostics, caches, projects and compiler internals; trap expectations until
 manifest; and any test that asserts on `compilation.statistics`, reuse counts or
 emitted-unit facts rather than a single guest value. The remaining Zig tests are
 sharded as before.
+
+## Migration decisions (2026-09-18)
+
+Wave 1 stops at 124 moved tests. The cold unit root measured **319 s** after the
+move against the plan's 300–351 s baseline: removing 124 value tests did not pay
+for itself, because the cold wall is set by the remaining ~600 guest executables
+and a few fixed slow tests. No further value tests move on this rationale.
+
+Trap tests stay in Zig. `mylang test` treats a trap as a failure and never
+reuses a trap result, so `expect_trap` would exist for roughly 60 tests alone,
+and sharding already hides their serial cost. Reopen only if a runner feature
+earns its keep for other work; this is a decision, not a pending item.
+
+Effect and provider tests stay in Zig. A directory run rejects `--cases`, so
+each entry would need a sibling manifest and its own build step, and the unit
+root's remaining fixtures are Zig callbacks rather than data. Reopen if a
+non-unit caller needs provider substitutions.
+
+`tests/lang` cases that exercise `mutation` or `output` effects re-execute on
+every run. `[NATIVE-TEST-2]` says externally effectful executions are not
+reused, so this is the intended behavior, not a caching regression. The
+migrated sources are warning-clean, so a warning never explains a missing
+receipt.

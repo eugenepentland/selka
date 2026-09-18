@@ -17,17 +17,17 @@ class ReceiverPoint:
     x: i64
 
 
-def logged_receiver(log: list[i64], rows: list[ReceiverPoint]) -> list[ReceiverPoint]:
+def logged_receiver(log: list[i64], rows: list[ReceiverPoint]) -> list[ReceiverPoint] effects(mutation, managed_allocation) mutates(log):
     log.append(1)
     return rows
 
 
-def log_index(log: list[i64]) -> i64:
+def log_index(log: list[i64]) -> i64 effects(mutation, managed_allocation) mutates(log):
     log.append(2)
     return 0
 
 
-def emit_value(log: list[i64]) -> i64:
+def emit_value(log: list[i64]) -> i64 effects(mutation, managed_allocation) mutates(log):
     log.append(3)
     return 42
 
@@ -36,7 +36,7 @@ class Cell[T]:
     value: T
 
 
-def set_cell[T](cells: list[Cell[T]], value: T):
+def set_cell[T](cells: list[Cell[T]], value: T) effects(mutation) mutates(cells):
     cells[0].value = value
 
 
@@ -45,7 +45,7 @@ class WritebackPoint:
     y: i64
 
 
-def writeback(rows: list[WritebackPoint]) -> i64:
+def writeback(rows: list[WritebackPoint]) -> i64 effects(mutation) mutates(rows):
     rows[0].y = 2
     return 40
 

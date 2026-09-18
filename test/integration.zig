@@ -6397,6 +6397,9 @@ fn benchRunDirectory(allocator: std.mem.Allocator, entry: []const u8, cache: []c
     var args: std.ArrayList([]const u8) = .empty;
     try args.appendSlice(allocator, &.{ compiler_path, "test", entry, "--json" });
     try args.appendSlice(allocator, extra);
+    // The directory run has no cases file, but sampling is a command flag, not a
+    // case setting; without it a sequencing test pays the full default warmup.
+    try args.appendSlice(allocator, &bench_sampling);
     return benchSpawn(allocator, &args, cache);
 }
 
@@ -6439,7 +6442,7 @@ test "guest benchmarks write a candidate and enforce an approved baseline immuta
     const pass_policy = try std.fs.path.join(a, &.{ root, "pass.json" });
     const ceiling_policy = try std.fs.path.join(a, &.{ root, "ceiling.json" });
     const cache = try std.fs.path.join(a, &.{ root, "cache" });
-    const candidate_run = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "ReleaseFast", "--bench-output", candidate }));
+    const candidate_run = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "Debug", "--bench-output", candidate }));
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, candidate_run.term);
     const report = (try std.json.parseFromSlice(std.json.Value, a, try readFile(a, candidate), .{})).value;
     try testing.expectEqualStrings("bench-report-v1", report.object.get("version").?.string);
@@ -6453,9 +6456,9 @@ test "guest benchmarks write a candidate and enforce an approved baseline immuta
     const approved_json = (try std.json.parseFromSlice(std.json.Value, a, approved, .{})).value;
     try testing.expectEqualStrings("bench-baseline-v1", approved_json.object.get("version").?.string);
     try testing.expectEqualStrings("testrev", approved_json.object.get("provenance").?.object.get("revision").?.string);
-    const passing = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "ReleaseFast", "--bench-baseline", baseline, "--bench-policy", pass_policy }));
+    const passing = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "Debug", "--bench-baseline", baseline, "--bench-policy", pass_policy }));
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, passing.term);
-    const failing = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "ReleaseFast", "--bench-baseline", baseline, "--bench-policy", ceiling_policy }));
+    const failing = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "Debug", "--bench-baseline", baseline, "--bench-policy", ceiling_policy }));
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, failing.term);
     // A failed check leaves the approved baseline byte-for-byte unchanged.
     try testing.expectEqualStrings(approved, try readFile(a, baseline));
@@ -6494,7 +6497,7 @@ test "a wrong benchmark result or trap fails the run and reports no measurement"
     const cases = try std.fs.path.join(a, &.{ root, "cases.json" });
     const candidate = try std.fs.path.join(a, &.{ root, "candidate.json" });
     const cache = try std.fs.path.join(a, &.{ root, "cache" });
-    const run = try benchRun(a, entry, cases, cache, &.{ "--bench", "*", "--mode", "ReleaseFast", "--bench-output", candidate });
+    const run = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "Debug", "--bench-output", candidate }));
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, run.term);
     const report = (try std.json.parseFromSlice(std.json.Value, a, try readFile(a, candidate), .{})).value;
     try testing.expect(!report.object.get("complete").?.bool);
@@ -6536,7 +6539,7 @@ test "a directory benchmark run measures sequentially and stays green without te
     try writeProjectFile(&temporary, "suite/one/main.my", bench_dir_program);
     try writeProjectFile(&temporary, "suite/two/main.my", bench_dir_program);
     const cache = try std.fs.path.join(a, &.{ root, "cache" });
-    const run = try benchRunDirectory(a, suite, cache, &.{ "--bench", "*", "--mode", "ReleaseFast" });
+    const run = try benchRunDirectory(a, suite, cache, &.{ "--bench", "*", "--mode", "Debug" });
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, run.term);
 }
 

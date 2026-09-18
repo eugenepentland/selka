@@ -137,10 +137,10 @@ public def test_integer_list_text_and_hexadecimal_conversions_round_trip() -> bo
         case Ok(value):
             if value != "hé":
                 return False
-        case Err(message):
+        case Err(_):
             return False
     match bytes_decoded(b"\xff\xfe"):
-        case Ok(value):
+        case Ok(_):
             return False
         case Err(message):
             if len(message) == 0:
@@ -149,12 +149,12 @@ public def test_integer_list_text_and_hexadecimal_conversions_round_trip() -> bo
         case Ok(value):
             if value != raw:
                 return False
-        case Err(message):
+        case Err(_):
             return False
     match bytes_parsed("00g1"):
-        case Ok(value):
+        case Ok(_):
             return False
-        case Err(message):
+        case Err(_):
             return True
 
 
