@@ -104,7 +104,7 @@
     },
     "collection-membership-and-value-equality": {
       "kind": "language",
-      "summary": "`in`, `not in`, `==` and `!=` compare managed collection contents rather than identities.",
+      "summary": "`in`, `not in`, `==` and `!=` compare managed collection contents rather than identities; records, fixed arrays, unions, `Result` and `Option` compare structurally with cycle detection, and a managed `class` compares by reference identity.",
       "doc": "docs/managed-memory.md#membership-and-value-equality"
     },
     "managed-arenas": {
@@ -734,7 +734,7 @@
     },
     "mandatory-mutation-footprint-warning": {
       "kind": "language",
-      "summary": "A function with no effect ceiling that writes caller-reachable storage without a `mutates(...)` clause is warned with the inferred footprint printed verbatim; `mutates(...)` without a ceiling means unbounded effects with that footprint.",
+      "summary": "A function with no effect ceiling that writes caller-reachable storage without a `mutates(...)` clause is warned with the inferred footprint printed verbatim, except for reference-typed `class` parameters, which are exempt because writing through the reference is their purpose; `mutates(...)` without a ceiling means unbounded effects with that footprint.",
       "doc": "docs/effects.md#mandatory-mutation-footprint"
     },
     "host-capability-foreign-calls": {

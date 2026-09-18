@@ -33,7 +33,15 @@ pub fn capture(context: fs.Context, entry: []const u8) Error!Snapshot {
 /// Ignore a configured build-cache subtree in addition to conventional generated directories.
 pub fn captureExcluding(context: fs.Context, entry: []const u8, excluded: ?[]const u8) Error!Snapshot {
     const absolute = try context.absolute(entry);
-    const root = std.fs.path.dirname(absolute) orelse return error.InvalidTestSnapshot;
+    var root: []const u8 = std.fs.path.dirname(absolute) orelse return error.InvalidTestSnapshot;
+    var name: []const u8 = std.fs.path.basename(absolute);
+    // A standalone test under a subdirectory resolves imports and its module
+    // name from the enclosing project root, so its snapshot captures the whole
+    // project and names it `tests.<stem>` rather than dropping the directory.
+    if (project_config.testEntryLocation(context.allocator, context.io, absolute) catch return error.InvalidTestSnapshot) |location| {
+        root = location.root;
+        name = location.relative;
+    }
     var directory = try std.Io.Dir.cwd().openDir(context.io, root, .{ .iterate = true, .follow_symlinks = false });
     defer directory.close(context.io);
     var walker = try directory.walk(context.allocator);
@@ -58,7 +66,6 @@ pub fn captureExcluding(context: fs.Context, entry: []const u8, excluded: ?[]con
         try files.append(context.allocator, .{ .path = path, .data = bytes, .hash = try fs.hash(context.allocator, bytes) });
     }
     std.mem.sort(File, files.items, {}, less);
-    const name = std.fs.path.basename(absolute);
     if (find(files.items, name) == null) return error.InvalidTestSnapshot;
     const support = try captureSupport(context, absolute);
     return .{
@@ -199,7 +206,7 @@ pub fn withTestEntry(context: fs.Context, snapshot: Snapshot) Error!Snapshot {
     if (!hasModuleHeader(original)) {
         const stem = snapshot.entry[0 .. snapshot.entry.len - ".my".len];
         try patched.appendSlice(context.allocator, "module ");
-        try patched.appendSlice(context.allocator, stem);
+        for (stem) |byte| try patched.append(context.allocator, if (byte == std.fs.path.sep) '.' else byte);
         try patched.append(context.allocator, '\n');
     }
     try patched.appendSlice(context.allocator, original);
@@ -221,18 +228,7 @@ pub fn withTestEntry(context: fs.Context, snapshot: Snapshot) Error!Snapshot {
 /// Whether a source declares a top-level `def main`, the entry point a project
 /// check requires. Library modules and `*_test.my` files generally do not.
 pub fn declaresMain(source: []const u8) bool {
-    var lines = std.mem.splitScalar(u8, source, '\n');
-    while (lines.next()) |raw| {
-        const line = std.mem.trimStart(u8, raw, " \t");
-        if (!std.mem.startsWith(u8, line, "def")) continue;
-        const after_def = line["def".len..];
-        if (after_def.len == 0 or (after_def[0] != ' ' and after_def[0] != '\t')) continue;
-        const name = std.mem.trimStart(u8, after_def, " \t");
-        if (!std.mem.startsWith(u8, name, "main")) continue;
-        const after_name = name["main".len..];
-        if (after_name.len == 0 or after_name[0] == '(' or after_name[0] == ' ' or after_name[0] == '\t') return true;
-    }
-    return false;
+    return project_config.declaresMain(source);
 }
 
 /// Whether a source opens with a `module` declaration rather than a bare body.
@@ -421,4 +417,67 @@ test "source snapshots exclude generated sources and configured cache subtrees" 
     const excluded = try captureExcluding(context, entry, custom);
     try std.testing.expectEqualStrings(before.identity, excluded.identity);
     try verify(context, excluded);
+}
+
+// spec-case: NATIVE-TEST-9
+test "a subdirectory test entry captures its whole project and gains a dotted module header" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary_dir = std.testing.tmpDir(.{});
+    defer temporary_dir.cleanup();
+    const root = try temporary_dir.dir.realPathFileAlloc(context.io, ".", context.allocator);
+    const program = try std.fs.path.join(context.allocator, &.{ root, "main.my" });
+    const dependency = try std.fs.path.join(context.allocator, &.{ root, "sexpr/parser.my" });
+    const test_entry = try std.fs.path.join(context.allocator, &.{ root, "tests/parser_test.my" });
+    try context.mkdir(std.fs.path.dirname(dependency).?);
+    try context.mkdir(std.fs.path.dirname(test_entry).?);
+    try context.write(program, "module main\nimport sexpr.parser as sp\ndef main() -> int:\n    return 0\n");
+    try context.write(dependency, "module sexpr.parser\npublic def value() -> int:\n    return 42\n");
+    try context.write(test_entry, "import sexpr.parser as sp\npublic def test_value() -> bool:\n    return True\n");
+    const captured = try capture(context, test_entry);
+    try std.testing.expectEqualStrings(root, captured.root);
+    try std.testing.expectEqualStrings("tests/parser_test.my", captured.entry);
+    try std.testing.expect(find(captured.files, "sexpr/parser.my") != null);
+    const prepared = try withTestEntry(context, captured);
+    const index = find(prepared.files, "tests/parser_test.my").?;
+    try std.testing.expect(std.mem.startsWith(u8, prepared.files[index].data, "module tests.parser_test\n"));
+}
+
+// spec-case: NATIVE-TEST-9
+test "testEntryLocation resolves a subdirectory test against its project root" {
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const io = std.testing.io;
+    const root = try temporary.dir.realPathFileAlloc(io, ".", std.testing.allocator);
+    defer std.testing.allocator.free(root);
+    try temporary.dir.writeFile(io, .{ .sub_path = "main.my", .data = "module main\ndef main() -> int:\n    return 0\n" });
+    try temporary.dir.createDir(io, "tests", .default_dir);
+    try temporary.dir.writeFile(io, .{ .sub_path = "tests/parser_test.my", .data = "public def test_value() -> bool:\n    return True\n" });
+    const entry = try std.fs.path.join(std.testing.allocator, &.{ root, "tests/parser_test.my" });
+    defer std.testing.allocator.free(entry);
+    const location = (try project_config.testEntryLocation(std.testing.allocator, io, entry)).?;
+    defer std.testing.allocator.free(location.root);
+    defer std.testing.allocator.free(location.relative);
+    defer std.testing.allocator.free(location.name);
+    try std.testing.expectEqualStrings(root, location.root);
+    try std.testing.expectEqualStrings("tests/parser_test.my", location.relative);
+    try std.testing.expectEqualStrings("tests.parser_test", location.name);
+}
+
+// spec-case: NATIVE-TEST-9
+test "testEntryLocation propagates allocation failure" {
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const io = std.testing.io;
+    const root = try temporary.dir.realPathFileAlloc(io, ".", std.testing.allocator);
+    defer std.testing.allocator.free(root);
+    try temporary.dir.writeFile(io, .{ .sub_path = "main.my", .data = "module main\ndef main() -> int:\n    return 0\n" });
+    try temporary.dir.createDir(io, "tests", .default_dir);
+    try temporary.dir.writeFile(io, .{ .sub_path = "tests/parser_test.my", .data = "public def test_value() -> bool:\n    return True\n" });
+    const entry = try std.fs.path.join(std.testing.allocator, &.{ root, "tests/parser_test.my" });
+    defer std.testing.allocator.free(entry);
+    var failing = std.testing.FailingAllocator.init(std.testing.allocator, .{ .fail_index = 0 });
+    try std.testing.expectError(error.OutOfMemory, project_config.testEntryLocation(failing.allocator(), io, entry));
 }

@@ -44,6 +44,16 @@ private copy with a stub `def main() -> int: return 0` appended, so the exported
 requirement for ordinary `run`. A bare `*_test.my` file without a `module`
 declaration also gains a matching header in the private copy.
 
+A standalone `*_test.my` may sit in a subdirectory of the project. The runner
+resolves its `import`s and its module name from the enclosing project root: the
+nearest ancestor holding `mylang.json`, or the nearest ancestor holding a
+non-test `.my` source. `tests/parser_test.my` is therefore module
+`tests.parser_test`, and `import sexpr.parser` reads `sexpr/parser.my` from the
+project root. A file with no `module` header gains the dotted header
+automatically; a file that writes one must spell the dotted path. A child
+compiler's located diagnostic is reported on its own, with exit status 1 rather
+than the generic host-failure line.
+
 ### Failure text
 
 A failed expectation reports both sides of the comparison as

@@ -290,13 +290,13 @@ fn sequenceType(program: Program, ty: typed.Type) bool {
 }
 
 fn validateCollectionBinary(program: Program, binary: @FieldType(@FieldType(Instruction, "op"), "binary_integer")) Error!void {
-    if (validType(binary.ty, program) and binary.ty.isAggregate() and program.records[binary.ty.recordIndex()].managed) {
-        const concatenate = binary.op == .add and sequenceType(program, binary.ty);
+    if (validType(binary.ty, program) and binary.ty.isAggregate()) {
+        const concatenate = program.records[binary.ty.recordIndex()].managed and binary.op == .add and sequenceType(program, binary.ty);
         if (!concatenate and binary.op != .eq and binary.op != .ne) return error.InternalError;
-    } else {
-        if (!binary.ty.isInteger() or binary.op == .logical_and or binary.op == .logical_or) return error.InternalError;
-        try validateFloatBinary(binary.ty, binary.op);
+        return;
     }
+    if (!binary.ty.isInteger() or binary.op == .logical_and or binary.op == .logical_or) return error.InternalError;
+    try validateFloatBinary(binary.ty, binary.op);
 }
 
 fn validateManagedOperation(program: Program, local: typed.Local, operation: BufferOperation) Error!void {

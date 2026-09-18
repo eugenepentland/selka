@@ -981,7 +981,15 @@ const Checker = struct {
     fn hintBinary(self: *Checker, node: ast.Node) Error!void {
         const binary = node.data.binary;
         const expected = self.obviousNumericType(binary.left) orelse self.obviousNumericType(binary.right) orelse self.expected_types.get(node.span) orelse return;
-        if (!expected.isInteger() and !numeric_surface.isFloat(expected, self.catalog.records)) return;
+        if (!expected.isInteger() and !numeric_surface.isFloat(expected, self.catalog.records)) {
+            // `==`/`!=` operands share one aggregate type, so a typed side gives a
+            // contextual constructor on the other side its type (`v == None`,
+            // `r == Ok(3)`); any other aggregate operator is unaffected.
+            if (binary.op != .eq and binary.op != .ne) return;
+            if (self.obviousNumericType(binary.left)) |left| try self.hint(binary.right, left);
+            if (self.obviousNumericType(binary.right)) |right| try self.hint(binary.left, right);
+            return;
+        }
         try self.hint(binary.left, expected);
         try self.hint(binary.right, expected);
     }

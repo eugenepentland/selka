@@ -618,6 +618,19 @@ fn missingFootprintMessage(allocator: std.mem.Allocator, function: typed.Functio
     return allocator.dupe(u8, text.written()) catch return error.OutOfMemory;
 }
 
+/// Whether parameter `position` is a reference-typed `class` (or the builtin
+/// `Cell`). Writing through such a parameter is the reason it is passed by
+/// reference, so the mandatory-footprint warning exempts it.
+fn isClassParameter(program: typed.Program, function: typed.Function, position: u5) bool {
+    const index: usize = position;
+    if (index >= function.scope.locals.len) return false;
+    const parameter = function.scope.locals[index].ty;
+    if (!parameter.isAggregate()) return false;
+    const record_index = parameter.recordIndex();
+    if (record_index >= program.records.len) return false;
+    return program.records[record_index].isManagedRecord();
+}
+
 fn checkDeclaredBound(allocator: std.mem.Allocator, program: typed.Program, index: usize, summary: Summary, sink: *diagnostic.Sink) std.mem.Allocator.Error!bool {
     const function = program.functions[index];
     if (!summary.external) return false;
@@ -640,13 +653,29 @@ fn checkDeclaredBound(allocator: std.mem.Allocator, program: typed.Program, inde
         // footprint on an unbounded declaration is the new warning's business.
     }
     if (function.signature.declared_mutates.len == 0) {
-        const message = try missingFootprintMessage(allocator, function, summary);
-        try sink.items.append(allocator, .{
-            .code = missing_footprint_code,
-            .severity = .warning,
-            .span = summary.witness orelse function.declaration,
-            .message = message,
-        });
+        // A `class` parameter is written through a reference by design, so it needs
+        // no `mutates(...)` clause. Warn unless every named position is a class
+        // parameter; an untraceable or unnamed caller-reachable location still warns.
+        var warn = summary.mutates_unknown or summary.mutates == 0;
+        if (!warn) {
+            var position: u5 = 0;
+            while (position < 16) : (position += 1) {
+                if (summary.mutates & (@as(u16, 1) << @intCast(position)) == 0) continue;
+                if (!isClassParameter(program, function, position)) {
+                    warn = true;
+                    break;
+                }
+            }
+        }
+        if (warn) {
+            const message = try missingFootprintMessage(allocator, function, summary);
+            try sink.items.append(allocator, .{
+                .code = missing_footprint_code,
+                .severity = .warning,
+                .span = summary.witness orelse function.declaration,
+                .message = message,
+            });
+        }
     }
     return false;
 }

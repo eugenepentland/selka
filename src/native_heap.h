@@ -65,6 +65,15 @@ typedef struct {
     unsigned region_depth;
     int suspended;
     myl_native_arena_statistics arena;
+    /* Immortal one-scalar texts for the ASCII range: `text[i]` on a scalar below
+     * 128 returns the shared object here instead of allocating a fresh copy. The
+     * table is filled lazily, and the collector marks every entry directly rather
+     * than through the root stack, because the generated code restores that stack
+     * to a per-frame mark and would otherwise drop a lazily pushed root. A slot
+     * stays NULL if its allocation was refused, and the caller falls back to an
+     * ordinary copy. */
+    void *text_scalars[128];
+    int text_scalars_ready;
 } myl_native_heap;
 /* Address space granted to a guest process on top of its managed byte budget:
  * program text, the C library's own arenas and the test harness that loads it.

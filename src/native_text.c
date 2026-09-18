@@ -70,10 +70,42 @@ static size_t endpoint(size_t length, int64_t value) {
     uint64_t distance=(uint64_t)(-(value+1))+1;
     return distance>length ? 0 : length-(size_t)distance;
 }
+/* Return the shared immortal one-scalar text for an ASCII code point, building
+ * the table on first use. NULL means the slot could not be allocated and the
+ * caller must fall back to a fresh copy. */
+static myl_native_text *ascii_scalar(myl_native_heap *heap, unsigned point) {
+    if (!heap->text_scalars_ready) {
+        /* Mark the table ready first: a refused allocation leaves the remaining
+         * slots NULL, so a later call retries only those and never rebuilds the
+         * ones already stored here. The collector marks the table itself, so no
+         * root-stack entry is involved and a frame restore cannot drop it. */
+        heap->text_scalars_ready=1;
+        /* The table outlives every arena, so build it at the ordinary tracing
+         * depth: an index performed inside `with arena()` must not leave the table
+         * pointing at objects the block's bulk release will free. */
+        unsigned depth=heap->region_depth;
+        heap->region_depth=0;
+        for (unsigned code=0; code<128; code++) {
+            myl_native_text *text=myl_native_list_new(heap,&myl_native_text_point,1);
+            if (!text) { heap->region_depth=depth; return NULL; }
+            ((uint32_t *)text->storage)[0]=code;
+            text->length=1;
+            heap->text_scalars[code]=text;
+        }
+        heap->region_depth=depth;
+    }
+    return heap->text_scalars[point];
+}
 myl_native_text *myl_native_text_at(myl_native_heap *heap, myl_native_text *input, int64_t index) {
     if (index<0 && (uint64_t)(-(index+1))+1>input->length) return NULL;
     if (index>=0 && (uint64_t)index>=input->length) return NULL;
-    return myl_native_text_copy(heap,input,endpoint(input->length,index),1);
+    size_t at=endpoint(input->length,index);
+    uint32_t point=((const uint32_t *)input->storage)[at];
+    if (point<128) {
+        myl_native_text *scalar=ascii_scalar(heap,point);
+        if (scalar) return scalar;
+    }
+    return myl_native_text_copy(heap,input,at,1);
 }
 myl_native_text *myl_native_text_slice(myl_native_heap *heap, myl_native_text *input, int64_t start, int64_t end) {
     size_t first=endpoint(input->length,start), last=endpoint(input->length,end);

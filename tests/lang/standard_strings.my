@@ -1,0 +1,68 @@
+module standard_strings
+
+import strings
+
+
+def is_ord(text: str, expected: int) -> bool:
+    match strings.ord(text):
+        case Ok(value):
+            return value == expected
+        case Err(_):
+            return False
+
+
+def is_chr_err(result: Result[str, strings.Error]) -> bool:
+    match result:
+        case Ok(_):
+            return False
+        case Err(_):
+            return True
+
+
+def round_trips(code: int) -> bool:
+    match strings.chr(code):
+        case Ok(text):
+            if len(text) != 1:
+                return False
+            return is_ord(text, code)
+        case Err(_):
+            return False
+
+
+# spec: STDLIB-TEXT-SCALAR-1
+public def test_ord_reads_unicode_scalar_values() -> bool:
+    if not is_ord("A", 65):
+        return False
+    if not is_ord("é", 233):
+        return False
+    if not is_ord("€", 8364):
+        return False
+    if not is_ord("😀", 128512):
+        return False
+    match strings.ord(""):
+        case Ok(_):
+            return False
+        case Err(_):
+            return True
+
+
+# spec-case: STDLIB-TEXT-SCALAR-1
+public def test_chr_builds_one_character_and_round_trips() -> bool:
+    codes: list[int] = [0, 65, 233, 8364, 128512, 1114111]
+    for code in codes:
+        if not round_trips(code):
+            return False
+    return True
+
+
+# spec-case: STDLIB-TEXT-SCALAR-1
+public def test_chr_rejects_surrogates_and_out_of_range_code_points() -> bool:
+    if not is_chr_err(strings.chr(55296)):
+        return False
+    if not is_chr_err(strings.chr(1114112)):
+        return False
+    return is_chr_err(strings.chr(0 - 1))
+
+
+def main() -> int:
+    return 0
