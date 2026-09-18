@@ -258,10 +258,13 @@ Generic functions and classes use square brackets, for example
 Unconstrained parameters default to copyable values. Additional operations on an
 abstract type require the existing explicit generic contracts.
 
-`print(values...)` writes its arguments separated by spaces with a trailing
-newline, and accepts `sep=` and `end=`. `mylang run` streams that output as it
-happens; the entry point's `int` result becomes the process exit status
-(truncated to a byte) and is printed to stdout only with `--print-result`.
+`stream.print(values..., sep=, end=)` writes its arguments separated by spaces
+with a trailing newline. The entry point declares the stream it writes to, for
+example `def main(out: Stream) -> int`, then calls `out.print(...)`; the runtime
+supplies both `out` and `err`. Bare `print(...)` is rejected with
+`E_OUTPUT_CAPABILITY`. `mylang run` streams that output as it happens; the entry
+point's `int` result becomes the process exit status (truncated to a byte) and is
+printed to stdout only with `--print-result`.
 
 Files are Python-shaped over explicit authority. The entry point asks for a
 `Filesystem` capability by parameter type and every file call takes that
@@ -317,6 +320,8 @@ In particular:
   name definitely assigned after the loop; predeclare it before the loop if it is read
   afterward.
 - Integers have fixed width, conditions require booleans, and records are values.
+  Records, fixed arrays, unions, `Result` and `Option` compare structurally with
+  `==`/`!=`; a `class` compares by reference identity.
 - Binary64 arithmetic follows IEEE behavior, including infinities/NaNs on floating
   division by zero. It does not raise Python exceptions.
 - Lists are homogeneous; ranges currently accept one or two arguments and slices

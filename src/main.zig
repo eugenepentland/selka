@@ -178,7 +178,12 @@ fn dispatch(process: std.process.Init) !u8 {
     }
     if (args.len >= 2 and std.mem.eql(u8, args[1], "build")) return @import("qbe_build.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "emit-runtime")) return @import("qbe_build.zig").emitRuntime(process, args[2..]);
-    if (args.len >= 2 and std.mem.eql(u8, args[1], "test")) return @import("native_test_command.zig").run(process, args[2..]);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "test")) return @import("native_test_command.zig").run(process, args[2..]) catch |err| switch (err) {
+        // `run` already rendered the child compiler's located diagnostic; exit 1
+        // rather than wrapping it in the generic "host failure" line.
+        error.SourceRejected => 1,
+        else => |problem| return problem,
+    };
     if (args.len >= 2 and std.mem.eql(u8, args[1], "bench-promote")) return @import("native_bench_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "doc-coverage")) return @import("doc_coverage_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "doctest")) return @import("doctest_command.zig").run(process, args[2..]);
@@ -1353,6 +1358,31 @@ fn apiDiffError(init: Context, err: language.api_diff.Error) !u8 {
     }
 }
 
+/// Entry module name and import root for one project command. A standalone
+/// `*_test.my` under a subdirectory resolves both from its enclosing project
+/// root, so `tests/parser_test.my` is module `tests.parser_test`; `owned` holds
+/// the slices to release once the command has loaded its graph.
+const EntryLocation = struct {
+    root: []const u8,
+    name: []const u8,
+    owned: ?project_config.TestEntry = null,
+    fn deinit(self: EntryLocation, allocator: std.mem.Allocator) void {
+        if (self.owned) |location| {
+            allocator.free(location.root);
+            allocator.free(location.relative);
+            allocator.free(location.name);
+        }
+    }
+};
+
+fn entryLocation(init: Context, path: []const u8) !EntryLocation {
+    if (try project_config.testEntryLocation(init.gpa, init.io, path)) |location| {
+        return .{ .root = location.root, .name = location.name, .owned = location };
+    }
+    const basename = std.fs.path.basename(path);
+    return .{ .root = std.fs.path.dirname(path) orelse ".", .name = basename[0 .. basename.len - 3] };
+}
+
 fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_cache.Cache, verdict: ?*language.check_cache.Cache, functions: ?*language.semantic_cache.Cache) !u8 {
     const frontend = parsed.frontend;
     const frontend_start = if (parsed.reporting.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
@@ -1363,11 +1393,13 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         return 2;
     }
     init.timings.begin("source_load_parse", false);
-    var files: ModuleFiles = .{ .io = init.io, .root = std.fs.path.dirname(path) orelse "." };
-    files.inputs = (try prepareInputs(init, parsed, basename)) orelse return 2;
+    const location = try entryLocation(init, path);
+    defer location.deinit(init.gpa);
+    var files: ModuleFiles = .{ .io = init.io, .root = location.root };
+    files.inputs = (try prepareInputs(init, parsed, location.name)) orelse return 2;
     var project = language.project.Project.init(init.gpa);
     defer project.deinit();
-    if (try loadModules(init, &project, &files, basename, try projectLimits(init, parsed))) |status| return status;
+    if (try loadModules(init, &project, &files, location.name, try projectLimits(init, parsed))) |status| return status;
     init.timings.counts.modules = project.modules.items.len;
     init.timings.counts.source_bytes = project.counts.bytes;
     init.timings.end();
@@ -1508,7 +1540,8 @@ fn runProjectProgram(init: Context, compilation: *language.project_compile.Compi
         else => return err,
     };
     defer init.gpa.free(manifest);
-    try reportProject(init, compilation);
+    // The caller already reported this compilation's diagnostics once, before
+    // lowering; reporting here printed every warning a second time.
     if (try projectWarningsDenied(init, compilation, configured)) return 1;
     return runNative(init, parsed, manifest);
 }
@@ -1691,8 +1724,8 @@ fn projectLimits(init: Context, parsed: Parsed) !language.project.Options {
     return options;
 }
 
-fn loadModules(init: Context, project: *language.project.Project, files: *ModuleFiles, basename: []const u8, options: language.project.Options) !?u8 {
-    project.load(.{ .context = files, .read = ModuleFiles.read }, basename[0 .. basename.len - 3], options) catch |err| switch (err) {
+fn loadModules(init: Context, project: *language.project.Project, files: *ModuleFiles, entry_name: []const u8, options: language.project.Options) !?u8 {
+    project.load(.{ .context = files, .read = ModuleFiles.read }, entry_name, options) catch |err| switch (err) {
         error.SourceError => {
             const message = try diagnostic_output.renderProject(init.gpa, project, init.diagnostics);
             defer init.gpa.free(message);
@@ -1977,7 +2010,7 @@ fn checkProjectPolicy(init: Context, parsed: Parsed, project: *language.project.
     return if (policy_report.denied == 0) 0 else 3;
 }
 
-fn prepareInputs(init: Context, parsed: Parsed, basename: []const u8) !?[]GeneratedInput {
+fn prepareInputs(init: Context, parsed: Parsed, entry_name: []const u8) !?[]GeneratedInput {
     const input_allocator = init.arena.allocator();
     var generated_inputs: std.ArrayList(GeneratedInput) = .empty;
     defer generated_inputs.deinit(input_allocator);
@@ -1997,7 +2030,7 @@ fn prepareInputs(init: Context, parsed: Parsed, basename: []const u8) !?[]Genera
         var manifest = (try parseInputManifest(init, manifest_path, bytes)) orelse return null;
         defer manifest.deinit();
         const module = manifest.parsed.value.module;
-        if (std.mem.eql(u8, module, basename[0 .. basename.len - 3])) {
+        if (std.mem.eql(u8, module, entry_name)) {
             try init.text("input manifest must supply an imported module, not the entry module\n");
             return null;
         }

@@ -10,7 +10,7 @@ const execute = @import("native_test_execute.zig");
 const invalidation = @import("invalidation.zig");
 /// Test setup, changed inputs, malformed compiler output and tool failures.
 pub const Error = fs.Error || snapshot.Error || execute.Error || std.json.ParseError(std.json.Scanner) ||
-    error{ ProjectConfigurationFailed, ProjectPolicyRejected, InvalidNativeTestSession };
+    error{ ProjectConfigurationFailed, ProjectPolicyRejected, SourceRejected, InvalidNativeTestSession };
 /// One freshly checked project or provider variant.
 pub const Project = struct {
     source: []const u8,
@@ -121,6 +121,9 @@ pub const Session = struct {
     }
     fn mapExit(code: u8) Error {
         return switch (code) {
+            // The child already rendered its located source diagnostic; surface
+            // it as a diagnostic-only failure instead of a generic host failure.
+            1 => error.SourceRejected,
             2 => error.ProjectConfigurationFailed,
             3 => error.ProjectPolicyRejected,
             else => error.NativeToolFailed,
@@ -382,7 +385,25 @@ pub const Compile = struct {
         self.allocator.destroy(self);
     }
 
+    /// Wait for a child that ended before replying and translate its status.
+    /// `Child.wait` nulls its own id, so a later `reap` sees it was reaped.
+    fn mapExitStatus(self: *Compile) Error {
+        if (self.child.id == null) return error.NativeToolFailed;
+        if (self.child.stdin) |stdin| {
+            stdin.close(self.io);
+            self.child.stdin = null;
+        }
+        const term = self.child.wait(self.io) catch return error.NativeToolFailed;
+        return switch (fs.exitCode(term)) {
+            1 => error.SourceRejected,
+            2 => error.ProjectConfigurationFailed,
+            3 => error.ProjectPolicyRejected,
+            else => error.NativeToolFailed,
+        };
+    }
+
     fn reap(self: *Compile) void {
+        if (self.child.id == null) return;
         // Signal EOF for an abandoned session, then let `wait` own the cleanup:
         // clearing the handle prevents it from closing the same descriptor twice.
         if (self.child.stdin) |stdin| {
@@ -394,10 +415,23 @@ pub const Compile = struct {
 
     fn exchange(self: *Compile, line: []const u8) Error!Selected {
         try self.writeLine(line);
-        const raw = self.readLine() orelse return error.NativeToolFailed;
+        const raw = self.readLine() orelse {
+            // The child can exit before its first reply when the project load
+            // itself fails (a source error, the usual case) or a tool is missing.
+            // Its status distinguishes a located diagnostic from a host failure.
+            return self.mapExitStatus();
+        };
         const parsed = std.json.parseFromSlice(Reply, self.allocator, raw, .{}) catch return error.InvalidNativeTestSession;
         defer parsed.deinit();
-        if (parsed.value.status != 0) return error.NativeToolFailed;
+        // The persistent child reports the same statuses as a one-shot check; a
+        // source rejection must stay a diagnostic-only failure rather than a
+        // generic host failure, and the child's stderr is forwarded on teardown.
+        if (parsed.value.status != 0) return switch (parsed.value.status) {
+            1 => error.SourceRejected,
+            2 => error.ProjectConfigurationFailed,
+            3 => error.ProjectPolicyRejected,
+            else => error.NativeToolFailed,
+        };
         return .{ .lowered = parsed.value.lowered_functions, .emitted = parsed.value.emitted_fragments };
     }
 
@@ -446,4 +480,9 @@ fn invalidSessionReply() Error!void {
 /// Best-effort session teardown: name the ignored cause rather than swallowing it.
 fn ignoreSessionFailure(err: anyerror) void {
     _ = @errorName(err);
+}
+
+// spec-case: NATIVE-TEST-9
+test "a child compiler source rejection is not a host failure" {
+    try std.testing.expectEqual(@as(Error, error.SourceRejected), Session.mapExit(1));
 }

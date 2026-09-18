@@ -358,10 +358,13 @@ def main(fs: Filesystem) -> int:
 
 A function with no effect ceiling whose body writes storage reachable from a
 caller argument is diagnosed with `W_MUTATES_MISSING` when its declaration omits
-`mutates(...)`. The warning prints the inferred clause verbatim so the fix is a
-paste, and the diagnostic is advisory for this version. Writing `mutates(...)`
-without an effect ceiling means "unbounded effects, with this footprint", and an
-explicit ceiling that lacks `mutation` still rejects `E_MUTATES_EFFECT`.
+`mutates(...)`. Reference-typed `class` parameters are exempt: writing through the
+reference is the reason the parameter is passed, so only by-value inputs such as a
+`list`, array or `record` position require the clause. The warning prints the
+inferred clause verbatim so the fix is a paste, and the diagnostic is advisory for
+this version. Writing `mutates(...)` without an effect ceiling means "unbounded
+effects, with this footprint", and an explicit ceiling that lacks `mutation` still
+rejects `E_MUTATES_EFFECT`.
 
 ```mylang
 # doc: check

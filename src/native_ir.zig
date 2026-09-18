@@ -37,8 +37,7 @@ const Analyzer = struct {
         if (!ty.isInteger()) {
             if (!ty.isAggregate() or ty.recordIndex() >= self.program.records.len) return error.UnsupportedOperation;
             const record = self.program.records[ty.recordIndex()];
-            if (!record.managed) return error.UnsupportedOperation;
-            const concatenation = op == .add and (record.collection.kind == .string or record.collection.kind == .bytes);
+            const concatenation = record.managed and op == .add and (record.collection.kind == .string or record.collection.kind == .bytes);
             if (op != .eq and op != .ne and !concatenation) return error.UnsupportedOperation;
         }
     }

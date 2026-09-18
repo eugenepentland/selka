@@ -133,6 +133,10 @@ void myl_native_heap_collect(myl_native_heap *heap) {
     heap->collections++;
     for (myl_native_root *root = heap->roots; root; root = root->previous)
         trace(heap, root->type, root->address);
+    /* The immortal one-scalar ASCII table is rooted here, not on the root stack:
+     * generated frames restore that stack to a per-frame mark, which would drop a
+     * lazily pushed entry. */
+    for (size_t i = 0; i < 128; i++) if (heap->text_scalars[i]) mark(heap, heap->text_scalars[i]);
     while (heap->pending) {
         myl_native_object *object = heap->pending;
         heap->pending = object->pending;

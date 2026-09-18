@@ -1218,6 +1218,25 @@ test "a function that writes only its own local storage is not warned" {
     try t.expectEqual(@as(usize, 0), try missingFootprintCount(local_only));
 }
 
+// spec-case: W-MUTATES-MISSING-1
+test "writing a reference-typed class parameter does not require a mutates clause" {
+    const class_writer =
+        \\class Cursor:
+        \\    pos: int
+        \\
+        \\
+        \\def bump(cursor: Cursor) -> int:
+        \\    cursor.pos = cursor.pos + 1
+        \\    return cursor.pos
+        \\
+        \\
+        \\def main() -> int:
+        \\    return bump(Cursor(pos=0)) - 1
+    ;
+    try accept(class_writer);
+    try t.expectEqual(@as(usize, 0), try missingFootprintCount(class_writer));
+}
+
 // spec-case: MUTATION-OVERLAP-1
 test "a declared footprint without a ceiling still enforces overlap at call sites" {
     try reject(

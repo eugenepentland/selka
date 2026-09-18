@@ -52,6 +52,28 @@ fn managedConstantModes(temporary: *testing.TmpDir, data: []const u8, expected: 
     try expectConstantProcess(&.{ output, "--gc-stress" }, expected);
 }
 
+// A module-entry `run` prints the check phase's diagnostics and the project
+// runner must not print the same warnings again before executing.
+test "CLI run reports each frontend warning once" {
+    const outcome = try runProjectFixture("run",
+        \\module main
+        \\
+        \\
+        \\def touch(values: list[int]) -> None:
+        \\    values[0] = 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1]
+        \\    touch(values)
+        \\    return 0
+    , &.{});
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    try testing.expectEqual(@as(usize, 1), std.mem.count(u8, outcome.stderr, "W_MUTATES_MISSING"));
+}
+
 // spec-case: CONSTANT-2
 test "CLI managed constants import run build installed and invalidate warm caches" {
     var temporary = testing.tmpDir(.{});

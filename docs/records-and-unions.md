@@ -260,6 +260,41 @@ This returns `26`. Construction resolves through the declared type identity, so 
 binding that shadows the type name keeps ordinary member resolution, and a name that is
 not a declared case stays an ordinary call.
 
+## Recursive payloads
+
+A `record` is laid out by value, so its fields must close in finite space: a record field
+that reaches the record again is rejected with `E_RECURSIVE_RECORD`. A recursive tree
+node — an AST's binary node, for instance — therefore has to be a `class`, whose reference
+payload keeps the layout finite. Declare the class before the union so the union's payload
+names an already-declared type; the class may name the union it is eventually a case of.
+
+```mylang
+# doc: expect 42
+class Binary:
+    left: Expr
+    right: Expr
+
+union Expr:
+    number: int,
+    binary: Binary
+
+def total(expr: Expr) -> int:
+    match expr:
+        case Expr.number(n):
+            return n
+        case Expr.binary(node):
+            return total(node.left) + total(node.right)
+
+def main() -> int:
+    tree: Expr = Expr.binary(Binary(left=Expr.number(20), right=Expr.number(22)))
+    return total(tree)
+```
+
+This returns `42`. The same shape with `record Binary` instead of `class Binary` is
+rejected: `E_RECURSIVE_RECORD: type fields must form a finite by-value layout`. A
+recursive union that reaches itself only through a `list[...]` payload — the
+`sexpr`/node-list shape — needs no `class`, because the list is already a reference.
+
 ## Fixed arrays and enum tables
 
 A fixed array `[N]T` and an enum-indexed table `[Kind]T` are value types with no

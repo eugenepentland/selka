@@ -99,15 +99,19 @@ substitute(text: str, needle: str, insertion: str) -> Result[str, Error]
 to_int(text: str) -> Option[int]     to_float(text: str) -> Option[float]
 format_int(value: int, base: int) -> Result[str, Error]
 format_float(value: float, decimals: int) -> Result[str, Error]
+ord(text: str) -> Result[int, Error]
+chr(code: int) -> Result[str, Error]
 ```
 
 `str` already provides `+`, `==`, `in`, indexing, slicing, iteration,
 `split(separator)`, `separator.join(parts)` and `encode()`. This module adds what
 it lacks. `upper` and `lower` map ASCII only. `substitute` is spelled that way
-because `replace` is a reserved word. The fallible builders return `Error`:
-`Invalid` marks an argument outside the operation's accepted range, `Overflow`
-marks a value that does not fit the rendering, and `message(error)` returns the
-human-readable reason.
+because `replace` is a reserved word. `ord` reads the Unicode scalar value of a
+single-character text and `chr` builds that text from a scalar value; both reject
+a length other than one, and `chr` rejects surrogates and code points past
+`0x10FFFF`. The fallible builders return `Error`: `Invalid` marks an argument
+outside the operation's accepted range, `Overflow` marks a value that does not fit
+the rendering, and `message(error)` returns the human-readable reason.
 
 ```mylang
 # doc: expect 42

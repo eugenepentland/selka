@@ -149,7 +149,7 @@ test "generic requirements preserve nominal identity and ownership obligations" 
     const records = compilation.program.?.records;
     const cases = [_]struct { name: []const u8, copy: bool = false, equality: bool = false }{
         .{ .name = "Distance", .copy = true, .equality = true },
-        .{ .name = "Point", .copy = true },
+        .{ .name = "Point", .copy = true, .equality = true },
         .{ .name = "Color", .copy = true, .equality = true },
         .{ .name = "File" },
         .{ .name = "Answer" },

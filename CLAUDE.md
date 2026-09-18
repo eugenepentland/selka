@@ -133,9 +133,12 @@ use a ```mylang block; `kind: "tooling"` features may use a ```bash or ```consol
 - **File access needs a capability parameter on the entry point.** Write
   `def main(fs: Filesystem) -> int` and thread `fs` through; there is no ambient
   filesystem. `Network`, `Clock`, `Entropy` and `Environment` work the same way.
-- **`print` contributes the `output` effect.** An unbounded `def main() -> int` may
-  print, but under an explicit bound (`noio`) it is rejected — write `effects(output)`
-  on any function in the chain that prints.
+- **Printing goes through a `Stream` parameter.** Write `def main(out: Stream) -> int`
+  and call `out.print(...)`; `err: Stream` is standard error. The runtime supplies both
+  streams, so printing itself needs no host grant. `stream.print` contributes the
+  `output` effect, which an explicit `noio` bound withholds — write `effects(output)` on
+  any function in the chain that prints. Bare `print(...)` is rejected with
+  `E_OUTPUT_CAPABILITY`. See `docs/io.md`.
 - **`mylang run` grants every capability** unless you pass `--restrict` — it builds the
   program natively and runs it in a child process. A binary from `mylang build` grants
   every capability too; `--restrict` after `--` denies them.

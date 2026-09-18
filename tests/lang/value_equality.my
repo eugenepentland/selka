@@ -1,0 +1,104 @@
+module value_equality
+
+
+record Point:
+    x: int
+    y: int
+
+
+union Shape:
+    empty,
+    radius: int,
+    point: Point
+
+
+record Bag:
+    items: list[int]
+    name: str
+
+
+class Node:
+    value: int
+    next: Option[Node]
+
+
+def make_ok() -> Result[int, str]:
+    return Ok(3)
+
+
+def make_err() -> Result[int, str]:
+    return Err("x")
+
+
+# spec: VALUE-EQUALITY-1
+public def test_record_array_and_nested_equality_is_structural() -> bool:
+    if Point(x=1, y=2) != Point(x=1, y=2):
+        return False
+    if Point(x=1, y=2) == Point(x=1, y=3):
+        return False
+    left: [3]int = [1, 2, 3]
+    right: [3]int = [1, 2, 3]
+    if left != right:
+        return False
+    if Bag(items=[1, 2], name="a") != Bag(items=[1, 2], name="a"):
+        return False
+    if Bag(items=[1, 2], name="a") == Bag(items=[1, 3], name="a"):
+        return False
+    return True
+
+
+# spec-case: VALUE-EQUALITY-1
+public def test_union_result_and_option_equality_is_structural() -> bool:
+    if Shape.radius(4) != Shape.radius(4):
+        return False
+    if Shape.radius(4) == Shape.point(Point(x=4, y=0)):
+        return False
+    if Shape.empty != Shape.empty:
+        return False
+    if make_ok() != make_ok():
+        return False
+    if make_ok() == make_err():
+        return False
+    value: Result[int, str] = make_ok()
+    if value != Ok(3):
+        return False
+    some: Option[int] = Some(4)
+    if some != Some(4):
+        return False
+    if some == None:
+        return False
+    if some != some:
+        return False
+    return True
+
+
+# spec-case: VALUE-EQUALITY-1
+public def test_class_equality_is_reference_identity() -> bool:
+    first = Node(value=1, next=None)
+    second = Node(value=1, next=None)
+    if first == second:
+        return False
+    if first != first:
+        return False
+    second.next = Some(first)
+    expected: Option[Node] = Some(first)
+    if second.next != expected:
+        return False
+    return True
+
+
+# spec-case: VALUE-EQUALITY-1
+public def test_cyclic_class_equality_terminates() -> bool:
+    node = Node(value=1, next=None)
+    node.next = Some(node)
+    other = Node(value=1, next=None)
+    other.next = Some(other)
+    if node != node:
+        return False
+    if node == other:
+        return False
+    return True
+
+
+def main() -> int:
+    return 0

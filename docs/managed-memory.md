@@ -292,10 +292,15 @@ def main() -> int:
 equal element, a dictionary for a key, a string for a substring, and a byte
 string for a single octet or a contiguous subsequence. The needle is evaluated
 before the container, and each is evaluated exactly once. `==` and `!=` compare
-contents rather than identities, recursing through nested lists, dictionaries and
-records with cycle detection so a self-referential graph still terminates;
-dictionary equality ignores insertion order. There is no identity comparison
-operator, so two separately built lists holding equal elements are equal.
+contents rather than identities, recursing through nested lists, dictionaries,
+plain records, fixed arrays, unions, `Result` and `Option` values with cycle
+detection so a self-referential graph still terminates; dictionary equality
+ignores insertion order. A managed `class` is the one exception: it compares by
+reference identity, so two separately built instances with equal fields are not
+equal, while a value is always equal to itself. A type that reaches a callback,
+`Cell` or resource has no equality at all and is rejected with `E_TYPE`. There is
+no identity comparison operator, so two separately built lists holding equal
+elements are equal.
 
 ```mylang
 # doc: expect 42
@@ -323,6 +328,39 @@ def main() -> int:
     if "zz" in "hello":
         return 8
     return len(left) * 14
+```
+
+Aggregates compare the same way. Records, fixed arrays, unions, `Result` and
+`Option` compare structurally; a class compares by reference identity:
+
+```mylang
+# doc: expect 42
+record Point:
+    x: int
+    y: int
+
+
+union Shape:
+    empty,
+    radius: int,
+    point: Point
+
+
+class Node:
+    value: int
+
+
+def main() -> int:
+    if Point(x=1, y=2) != Point(x=1, y=2):
+        return 1
+    if Shape.radius(4) == Shape.point(Point(x=4, y=0)):
+        return 2
+    if Node(value=1) == Node(value=1):
+        return 3
+    first = Node(value=1)
+    if first != first:
+        return 4
+    return 42
 ```
 
 ## List comprehensions

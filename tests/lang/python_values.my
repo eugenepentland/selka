@@ -100,5 +100,28 @@ public def test_python_values_collection_float_equality_and_membership_preserve_
     return True
 
 
+def read_scalar(text: str, index: int) -> str:
+    return text[index]
+
+
+# spec-case: PY-TEXT-1
+public def test_ascii_scalar_indexing_survives_frame_restores_and_collections() -> bool:
+    text = "abcdefghijklmnopqrstuvwxyz0123456789"
+    kept: list[str] = []
+    index = 0
+    while index < 512:
+        kept.append(read_scalar(text, index % len(text)))
+        index = index + 1
+    if kept[0] != "a":
+        return False
+    if kept[25] != "z":
+        return False
+    if kept[36] != "a":
+        return False
+    if kept[511] != "h":
+        return False
+    return True
+
+
 def main() -> int:
     return 0

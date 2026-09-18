@@ -155,6 +155,116 @@ pub fn discover(allocator: std.mem.Allocator, io: std.Io, entry_path: []const u8
     }
 }
 
+/// A standalone `*_test.my` entry's resolved project location: `root` is the
+/// absolute enclosing project directory, `relative` is the entry path beneath
+/// it (`tests/parser_test.my`), and `name` is the dotted module name
+/// (`tests.parser_test`). Every slice is owned by the caller's allocator.
+pub const TestEntry = struct { root: []const u8, relative: []const u8, name: []const u8 };
+
+/// Resolve a standalone `*_test.my` entry against its enclosing project: the
+/// nearest ancestor holding `mylang.json`, else the nearest ancestor holding a
+/// non-test `.my` source, else the entry's own directory. Returns null when the
+/// entry is not a `*_test.my` or sits under a path that cannot spell a dotted
+/// module name. The caller owns the slices of a non-null result. The projection
+/// the test runner materializes has a stub `main` appended, so this decision
+/// rests only on the `*_test.my` convention, never on the file's own contents.
+pub fn testEntryLocation(allocator: std.mem.Allocator, io: std.Io, entry_path: []const u8) Error!?TestEntry {
+    const absolute = try absoluteEntry(allocator, io, entry_path);
+    defer allocator.free(absolute);
+    if (!std.mem.endsWith(u8, std.fs.path.basename(absolute), "_test.my")) return null;
+    const entry_directory = std.fs.path.dirname(absolute) orelse return null;
+    const root = (try nearestProjectRoot(allocator, io, entry_directory)) orelse try allocator.dupe(u8, entry_directory);
+    if (!std.mem.startsWith(u8, absolute, root) or absolute.len <= root.len + 1 or absolute[root.len] != std.fs.path.sep) {
+        allocator.free(root);
+        return null;
+    }
+    const relative = allocator.dupe(u8, absolute[root.len + 1 ..]) catch |err| {
+        allocator.free(root);
+        return err;
+    };
+    const stem = relative[0 .. relative.len - ".my".len];
+    if (!validModuleName(stem)) {
+        allocator.free(relative);
+        allocator.free(root);
+        return null;
+    }
+    const name = allocator.dupe(u8, stem) catch |err| {
+        allocator.free(relative);
+        allocator.free(root);
+        return err;
+    };
+    for (name) |*byte| {
+        if (byte.* == std.fs.path.sep) byte.* = '.';
+    }
+    return .{ .root = root, .relative = relative, .name = name };
+}
+
+/// Walk from `start` toward the filesystem root for the enclosing project root.
+fn nearestProjectRoot(allocator: std.mem.Allocator, io: std.Io, start: []const u8) Error!?[]const u8 {
+    var directory = start;
+    while (true) {
+        const candidate = try std.fs.path.join(allocator, &.{ directory, config_name });
+        const configured = exists(io, candidate);
+        allocator.free(candidate);
+        if (configured) {
+            const found = try allocator.dupe(u8, directory);
+            return found;
+        }
+        if (hasProjectSource(io, directory)) {
+            const found = try allocator.dupe(u8, directory);
+            return found;
+        }
+        const parent = std.fs.path.dirname(directory) orelse return null;
+        if (std.mem.eql(u8, parent, directory)) return null;
+        directory = parent;
+    }
+}
+
+/// Whether `directory` directly holds a `.my` source that is not a test entry,
+/// the evidence that it is a project root rather than a test-only subdirectory.
+fn hasProjectSource(io: std.Io, directory: []const u8) bool {
+    var dir = std.Io.Dir.cwd().openDir(io, directory, .{ .iterate = true, .follow_symlinks = false }) catch return false;
+    defer dir.close(io);
+    var iterator = dir.iterate();
+    while (iterator.next(io) catch return false) |item| {
+        if (item.kind != .file) continue;
+        if (!std.mem.endsWith(u8, item.name, ".my")) continue;
+        if (std.mem.endsWith(u8, item.name, "_test.my")) continue;
+        return true;
+    }
+    return false;
+}
+
+/// Whether a directory path spells a valid dotted module name when separators
+/// are read as dots.
+fn validModuleName(stem: []const u8) bool {
+    if (stem.len == 0) return false;
+    var parts = std.mem.splitScalar(u8, stem, std.fs.path.sep);
+    while (parts.next()) |part| {
+        if (part.len == 0) return false;
+        if (!std.ascii.isAlphabetic(part[0]) and part[0] != '_') return false;
+        for (part[1..]) |byte| if (!std.ascii.isAlphanumeric(byte) and byte != '_') return false;
+    }
+    return true;
+}
+
+/// Whether a source declares a top-level `def main`, the entry point a project
+/// check requires. Library modules and `*_test.my` files generally do not.
+pub fn declaresMain(source: []const u8) bool {
+    var lines = std.mem.splitScalar(u8, source, '\n');
+    while (lines.next()) |raw| {
+        const line = std.mem.trimStart(u8, raw, " \t");
+        if (!std.mem.startsWith(u8, line, "def")) continue;
+        const after_def = line["def".len..];
+        if (after_def.len == 0 or (after_def[0] != ' ' and after_def[0] != '\t')) continue;
+        const name = std.mem.trimStart(u8, after_def, " \t");
+        if (!std.mem.startsWith(u8, name, "main")) continue;
+        const after_name = name["main".len..];
+        if (after_name.len == 0 or after_name[0] == '(' or after_name[0] == ' ' or after_name[0] == '\t') return true;
+    }
+    return false;
+}
+
 /// Read and validate one discovered `mylang.json`, resolving and reading its
 /// required policy bytes when present. On failure `failure` names the offending
 /// file and, for JSON shape errors, its location.

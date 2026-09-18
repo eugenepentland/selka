@@ -302,3 +302,62 @@ public def format_float(value: float, decimals: int) -> Result[str, Error] effec
     if value < 0.0 and scaled != 0:
         return Ok("-" + whole + "." + fraction)
     return Ok(whole + "." + fraction)
+
+
+# Unicode scalar value of a single-character text, or `Err` for any other length.
+public def ord(text: str) -> Result[int, Error] effects(managed_allocation):
+    if len(text) != 1:
+        return Err(Error.Invalid("ord requires exactly one character"))
+    encoded = text.encode()
+    first = encoded[0]
+    if first < 128:
+        return Ok(first)
+    if first < 224:
+        width = 2
+        mask = 31
+    elif first < 240:
+        width = 3
+        mask = 15
+    else:
+        width = 4
+        mask = 7
+    if len(encoded) != width:
+        return Err(Error.Invalid("ord requires exactly one character"))
+    value = bit_and(first, mask)
+    index = 1
+    while index < width:
+        value = value * 64 + bit_and(encoded[index], 63)
+        index = index + 1
+    return Ok(value)
+
+
+# One-character text for a Unicode scalar value. Surrogates and code points past
+# `0x10FFFF` are rejected rather than encoded as replacement bytes.
+public def chr(code: int) -> Result[str, Error] effects(managed_allocation):
+    if code < 0:
+        return Err(Error.Invalid("chr requires a non-negative code point"))
+    if code > 1114111:
+        return Err(Error.Overflow("chr requires a code point at most 0x10FFFF"))
+    if code >= 55296 and code <= 57343:
+        return Err(Error.Invalid("chr rejects surrogate code points"))
+    values: list[int] = []
+    if code < 128:
+        values.append(code)
+    elif code < 2048:
+        values.append(192 + code // 64)
+        values.append(128 + code % 64)
+    elif code < 65536:
+        values.append(224 + code // 4096)
+        values.append(128 + (code // 64) % 64)
+        values.append(128 + code % 64)
+    else:
+        values.append(240 + code // 262144)
+        values.append(128 + (code // 4096) % 64)
+        values.append(128 + (code // 64) % 64)
+        values.append(128 + code % 64)
+    match bytes(values).decode():
+        case Ok(text):
+            return Ok(text)
+        case Err(_):
+            return Err(Error.Invalid("chr could not encode the code point"))
+

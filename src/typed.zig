@@ -265,12 +265,45 @@ pub fn wrappingCase(records: []const Record, container: Type, payload: Type) ?us
     return null;
 }
 /// Equality supported by concrete expressions and generic equality requirements.
+/// Scalars, enums and domains compare directly; records, fixed arrays, unions,
+/// results and options compare structurally; a managed `class` compares by
+/// reference. A type that reaches a callback, a Cell or a resource does not
+/// support equality and neither does one that nests such a field. The visited
+/// stack bounds reference recursion, and it is sound to accept a type already on
+/// it: the runtime traverses references with cycle-safe identity.
 pub fn supportsEquality(ty: Type, records: []const Record) bool {
+    var visited: [64]usize = undefined;
+    return equalitySupport(ty, records, &visited, 0);
+}
+
+fn equalitySupport(ty: Type, records: []const Record, visited: *[64]usize, depth: usize) bool {
     if (ty.isInteger() or ty == .bool) return true;
     if (!ty.isAggregate()) return false;
-    const record = records[ty.recordIndex()];
+    const index = ty.recordIndex();
+    if (index >= records.len) return false;
+    for (visited[0..depth]) |seen| if (seen == index) return true;
+    const record = records[index];
     if (record.contract.callback != null) return false;
-    return record.isEnum() or record.shape.domain != null;
+    if (record.shape.builtin_cell or record.shape.resource != null) return false;
+    if (record.isEnum() or record.shape.domain != null) return true;
+    if (depth == visited.len) return false;
+    visited[depth] = index;
+    const next = depth + 1;
+    if (record.isCollection()) {
+        if (record.collection.kind == .string or record.collection.kind == .bytes) return true;
+        if (record.shape.buffer) |element| if (!equalitySupport(element, records, visited, next)) return false;
+        if (record.collection.key) |key| if (!equalitySupport(key, records, visited, next)) return false;
+        return true;
+    }
+    if (record.shape.array) |array| return equalitySupport(array.element, records, visited, next);
+    if (record.shape.variants) |variants| {
+        for (variants.cases) |case| {
+            if (case.payload) |payload| if (!equalitySupport(payload, records, visited, next)) return false;
+        }
+        return true;
+    }
+    for (record.fields) |field| if (!equalitySupport(field.ty, records, visited, next)) return false;
+    return true;
 }
 /// Determine whether a type carries ownership that forbids implicit copying.
 pub fn moveOnly(ty: Type, records: []const Record) bool {

@@ -30,6 +30,13 @@ fn expectValue(allocator: std.mem.Allocator, source: []const u8, expected: i64) 
     try t.expectEqual(expected, (try native.run(&compilation)).value);
 }
 
+fn reject(source: []const u8, code: []const u8) !void {
+    var compilation = try language.Compilation.init(t.allocator, "equality.my", source);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.check());
+    try t.expectEqualStrings(code, compilation.diagnostics.items[0].code);
+}
+
 fn allocationFailures(allocator: std.mem.Allocator) !void {
     try expectValue(allocator, comparison, 1);
 }
@@ -254,4 +261,24 @@ test "domain equality loops complete and traps name the failing frame" {
     const outcome = try native.run(&trapped);
     try t.expectEqualStrings("R_DIVISION_BY_ZERO", outcome.trap.code);
     try t.expectEqualStrings("left", outcome.trap.frames[0].function);
+}
+
+// spec-case: VALUE-EQUALITY-1
+test "value equality rejects an aggregate that reaches a callback field" {
+    try reject(
+        \\record Holder:
+        \\    action: def(int) -> int effects()
+        \\
+        \\
+        \\def identity(value: int) -> int effects():
+        \\    return value
+        \\
+        \\
+        \\def main() -> int:
+        \\    first = Holder(action=identity)
+        \\    second = Holder(action=identity)
+        \\    if first == second:
+        \\        return 1
+        \\    return 0
+    , "E_TYPE");
 }

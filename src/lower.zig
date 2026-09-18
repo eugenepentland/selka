@@ -476,7 +476,10 @@ fn binaryInstruction(binary: anytype, nodes: []const typed.Node, records: []cons
     const operand_type = nodes[@backingInt(binary.left)].ty;
     if (operand_type.isAggregate() and records[operand_type.recordIndex()].managed) return .{ .span = binary.op_span, .op = .{ .binary_integer = .{ .ty = operand_type, .op = binary.op } } };
     if (operand_type.isAggregate() and records[operand_type.recordIndex()].shape.domain != null) return .{ .span = binary.op_span, .op = .{ .cmp_domain = .{ .ty = operand_type, .predicate = if (binary.op == .eq) .eq else .ne } } };
-    if (operand_type.isAggregate()) return .{ .span = binary.op_span, .op = .{ .cmp_enum = .{ .ty = operand_type, .predicate = if (binary.op == .eq) .eq else .ne } } };
+    // A payload-free enum compares its tag; a record, fixed array, union, Result or
+    // Option compares structurally through the shared native equality runtime.
+    if (operand_type.isAggregate() and records[operand_type.recordIndex()].isEnum()) return .{ .span = binary.op_span, .op = .{ .cmp_enum = .{ .ty = operand_type, .predicate = if (binary.op == .eq) .eq else .ne } } };
+    if (operand_type.isAggregate()) return .{ .span = binary.op_span, .op = .{ .binary_integer = .{ .ty = operand_type, .op = binary.op } } };
     if (operand_type.isInteger() and operand_type != .i64)
         return .{ .span = binary.op_span, .op = .{ .binary_integer = .{ .ty = operand_type, .op = binary.op } } };
     return .{ .span = binary.op_span, .op = switch (binary.op) {
