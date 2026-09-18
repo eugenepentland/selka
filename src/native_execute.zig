@@ -174,16 +174,22 @@ fn divide(text: []const u8) Error!struct { output: []const u8, value: i64 } {
 
 /// Recover the trap code, its source position and the reported frames from stderr.
 fn parse(allocator: std.mem.Allocator, text: []const u8) Error!Trap {
-    var lines = std.mem.splitScalar(u8, text, '\n');
-    const first = lines.first();
     const detail = trap_detail.parse(allocator, text) orelse trap_detail.Detail{};
     var frames: std.ArrayList(Frame) = .empty;
+    var diagnostic: []const u8 = "";
+    var lines = std.mem.splitScalar(u8, text, '\n');
     while (lines.next()) |line| {
-        if (!std.mem.startsWith(u8, line, "  in ")) continue;
-        const split = std.mem.lastIndexOf(u8, line, " at ") orelse continue;
-        const place = position(line[split + 4 ..]) orelse continue;
-        try frames.append(allocator, .{ .function = line[5..split], .path = place.path, .line = place.line, .column = place.column });
+        if (std.mem.startsWith(u8, line, "  in ")) {
+            const split = std.mem.lastIndexOf(u8, line, " at ") orelse continue;
+            const place = position(line[split + 4 ..]) orelse continue;
+            try frames.append(allocator, .{ .function = line[5..split], .path = place.path, .line = place.line, .column = place.column });
+            continue;
+        }
+        // A failure-path assert message may precede the located diagnostic on
+        // stderr, so find the diagnostic line instead of taking the first one.
+        if (diagnostic.len == 0 and (std.mem.indexOf(u8, line, ": error[") != null or std.mem.startsWith(u8, line, "mylang: --restrict is active"))) diagnostic = line;
     }
+    const first = if (diagnostic.len == 0) std.mem.sliceTo(text, '\n') else diagnostic;
     if (std.mem.startsWith(u8, first, "mylang: --restrict is active")) return .{ .code = "CapabilityUnavailable", .frames = frames.items, .detail = detail };
     if (std.mem.indexOf(u8, first, ": error[")) |marker| {
         const rest = first[marker + 8 ..];

@@ -4,6 +4,12 @@ const inputs_prefix = "--inputs=";
 const policy_prefix = "--policy=";
 const cache_directory_prefix = "--cache-dir=";
 const select_file_prefix = "--select-file=";
+/// `lint --profile=NAME` prefix.
+const lint_profile_prefix = "--profile=";
+/// `lint --against=REF` prefix.
+const lint_against_prefix = "--against=";
+/// `api-diff --write=FILE` prefix.
+const api_write_prefix = "--write=";
 /// Wall-clock ceiling forwarded to the guest runtime, which parses the same flag.
 const timeout_prefix = "--timeout=";
 /// Shared internal session failure name for an over-long request line.
@@ -11,6 +17,8 @@ const request_too_long = "RequestTooLong";
 /// Phase label and default cache-directory leaf, shared so the literal is not
 /// repeated across the timer and the persistent-cache path join.
 const frontend_label = "frontend";
+/// Located `mylang.json` failure rendering shared by every loading command.
+const config_error_format = "{s}:{d}:{d}: error[E_PROJECT_CONFIG]: {s}\n";
 const std = @import("std");
 const language = @import("mylang");
 const invalidation = @import("invalidation.zig");
@@ -65,6 +73,9 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "--max-work=N\n  report-quality/report-project-quality: --max-function-lines=N " ++
     "--max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a " ++
     "signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  " ++
+    "lint: --gate --accept --json --profile=agent|strict|safety --against=REF (blocking findings exit 3)\n  " ++
+    "tests-for: <entry.my> <qualified-name> lists the tests that reach a declaration\n  " ++
+    "api-diff: <entry.my> --write=FILE | --against=FILE [--json] (classified interface changes)\n  " ++
     "fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: " ++
     "--check (otherwise writes formatted source to " ++
     "stdout)\n" ++
@@ -262,6 +273,9 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .@"check-project",
         .@"run-project",
         .@"check-policy",
+        .lint,
+        .@"tests-for",
+        .@"api-diff",
         .@"discover-project-duplicates",
         .@"report-project-quality",
         .@"fmt-project",
@@ -289,7 +303,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
     }
     // A single-unit program has no import edges, but a configured project still
     // owns the same required configuration contract; validate it before checking.
-    validateUnitConfiguredPolicy(init, parsed) catch |err| return policyFailureStatus(err);
+    const unit_deny_warnings = validateUnitConfiguredPolicy(init, parsed) catch |err| return policyFailureStatus(err);
     if (parsed.command == .run and parsed.reporting.explain_invalidation) {
         try std.Io.File.stderr().writeStreamingAll(init.io, usage);
         return 2;
@@ -375,6 +389,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
     init.timings.end();
     const check_ns = if (parsed.reporting.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
     if (parsed.command != .@"emit-qbe") try report(init, &compilation);
+    if (unit_deny_warnings and deniesOneShotWarnings(parsed.command) and hasWarning(compilation.diagnostics.items)) return 1;
     switch (parsed.command) {
         .@"index-project",
         .@"project-dependencies",
@@ -393,6 +408,9 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .@"check-project",
         .@"run-project",
         .@"check-policy",
+        .lint,
+        .@"tests-for",
+        .@"api-diff",
         .@"discover-project-duplicates",
         .@"report-project-quality",
         => unreachable,
@@ -540,6 +558,9 @@ const Command = enum {
     @"report-project-quality",
     @"discover-project-duplicates",
     @"check-policy",
+    lint,
+    @"tests-for",
+    @"api-diff",
     @"check-project",
     @"run-project",
     @"list-interfaces",
@@ -572,6 +593,14 @@ const Parsed = struct {
     runtime: []const []const u8,
     discovery: language.duplicates.Options,
     reporting: Reporting,
+    /// `lint` switches; ignored by every other command.
+    lint: language.lint.Options,
+    /// `tests-for` subject: the qualified declaration name to query.
+    subject: ?[]const u8,
+    /// `api-diff` baseline to compare against, or the path to write.
+    api_against: ?[]const u8,
+    api_write: ?[]const u8,
+    api_json: bool,
     max_memory: ?u64,
     /// Internal selective native emission input; one qualified function per line.
     select_file: ?[]const u8,
@@ -673,6 +702,11 @@ const ArgumentParser = struct {
     max_memory: ?u64 = null,
     discovery: language.duplicates.Options = .{},
     reporting: Reporting = .{},
+    lint: language.lint.Options = .{},
+    subject: ?[]const u8 = null,
+    api_against: ?[]const u8 = null,
+    api_write: ?[]const u8 = null,
+    api_json: bool = false,
     no_cache: bool = false,
     mutation_markers: bool = false,
     cache_dir: ?[]const u8 = null,
@@ -691,7 +725,17 @@ const ArgumentParser = struct {
         return true;
     }
 
+    /// A `tests-for` subject is its second positional argument; the first is
+    /// the entry file. Any other command rejects a second positional.
+    fn subjectOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (self.command != .@"tests-for" or self.subject != null) return false;
+        if (self.path == null or std.mem.startsWith(u8, arg, "-")) return false;
+        self.subject = arg;
+        return true;
+    }
+
     fn surfaceOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (try self.subjectOption(arg)) return true;
         if (std.mem.eql(u8, arg, "--contracts")) {
             if (self.command != .@"list-interfaces" or self.contracts) return error.Usage;
             self.contracts = true;
@@ -830,6 +874,8 @@ const ArgumentParser = struct {
     }
 
     fn discoveryOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (try self.lintOption(arg)) return true;
+        if (try self.apiDiffOption(arg)) return true;
         if (std.mem.startsWith(u8, arg, "--min-nodes=")) {
             if ((self.command != .@"discover-duplicates" and self.command != .@"discover-project-duplicates") or self.saw_min) return error.Usage;
             self.saw_min = true;
@@ -855,10 +901,52 @@ const ArgumentParser = struct {
         } else return false;
         return true;
     }
+
+    /// `lint` switches: `--gate`, `--accept`, `--json`, `--profile=NAME` and
+    /// `--against=REF`. Only `lint` accepts them; a repeat is a usage error.
+    fn lintOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (self.command != .lint) return false;
+        if (std.mem.eql(u8, arg, "--gate")) {
+            if (self.lint.gate) return error.Usage;
+            self.lint.gate = true;
+        } else if (std.mem.eql(u8, arg, "--accept")) {
+            if (self.lint.accept) return error.Usage;
+            self.lint.accept = true;
+        } else if (std.mem.eql(u8, arg, "--json")) {
+            if (self.lint.json) return error.Usage;
+            self.lint.json = true;
+        } else if (std.mem.startsWith(u8, arg, lint_profile_prefix)) {
+            if (self.lint.profile != null or arg.len == lint_profile_prefix.len) return error.Usage;
+            self.lint.profile = std.meta.stringToEnum(language.lint_config.Profile, arg[lint_profile_prefix.len..]) orelse return error.Usage;
+        } else if (std.mem.startsWith(u8, arg, lint_against_prefix)) {
+            if (self.lint.against != null or arg.len == lint_against_prefix.len) return error.Usage;
+            self.lint.against = arg[lint_against_prefix.len..];
+        } else return false;
+        return true;
+    }
+    /// `api-diff` switches: exactly one of `--write=FILE` or `--against=FILE`,
+    /// plus an optional `--json`.
+    fn apiDiffOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (self.command != .@"api-diff") return false;
+        if (std.mem.startsWith(u8, arg, api_write_prefix)) {
+            if (self.api_write != null or arg.len == api_write_prefix.len) return error.Usage;
+            self.api_write = arg[api_write_prefix.len..];
+        } else if (std.mem.startsWith(u8, arg, lint_against_prefix)) {
+            if (self.api_against != null or arg.len == lint_against_prefix.len) return error.Usage;
+            self.api_against = arg[lint_against_prefix.len..];
+        } else if (std.mem.eql(u8, arg, "--json")) {
+            if (self.api_json) return error.Usage;
+            self.api_json = true;
+        } else return false;
+        return true;
+    }
+
     fn finish(self: *ArgumentParser) ArgError!Parsed {
         if (self.saw_work and !self.discovery.approximate) return error.Usage;
         if (self.command == .@"fmt-project" and !self.format_check) return error.Usage;
         if (self.command == .@"check-policy" and self.policy == null) return error.Usage;
+        if (self.command == .@"tests-for" and self.subject == null) return error.Usage;
+        if (self.command == .@"api-diff" and (self.api_against == null) == (self.api_write == null)) return error.Usage;
         return .{
             .schema_report = self.schema_report,
             .inputs = self.inputs,
@@ -875,6 +963,11 @@ const ArgumentParser = struct {
             .runtime = self.runtime.items,
             .discovery = self.discovery,
             .reporting = self.reporting,
+            .lint = self.lint,
+            .subject = self.subject,
+            .api_against = self.api_against,
+            .api_write = self.api_write,
+            .api_json = self.api_json,
             .max_memory = self.max_memory,
             .no_cache = self.no_cache,
             .mutation_markers = self.mutation_markers,
@@ -982,18 +1075,20 @@ const ConfiguredPolicy = struct {
 /// Validate a discovered `mylang.json` for a single-unit command. A unit has no
 /// import edges, so the policy itself is trivially satisfied; this still rejects
 /// a missing or malformed configuration or policy instead of skipping it.
-fn validateUnitConfiguredPolicy(init: Context, parsed: Parsed) !void {
+/// Returns whether the project asks for `lint.warnings: "deny"`, which makes a
+/// `W_*` diagnostic rejecting in the inner loop.
+fn validateUnitConfiguredPolicy(init: Context, parsed: Parsed) !bool {
     const config_path = project_config.discover(init.gpa, init.io, parsed.path) catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         try init.text("mylang: cannot inspect the entry directory for mylang.json\n");
         return error.HostConfiguration;
-    } orelse return;
+    } orelse return false;
     defer init.gpa.free(config_path);
     var failure: project_config.Failure = .{};
     var config = project_config.load(init.gpa, init.io, config_path, &failure) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => {
-            const message = try std.fmt.allocPrint(init.gpa, "{s}:{d}:{d}: error[E_PROJECT_CONFIG]: {s}\n", .{
+            const message = try std.fmt.allocPrint(init.gpa, config_error_format, .{
                 failure.path, failure.location.line, failure.location.column, failure.detail,
             });
             defer init.gpa.free(message);
@@ -1002,7 +1097,10 @@ fn validateUnitConfiguredPolicy(init: Context, parsed: Parsed) !void {
         },
     };
     defer config.deinit();
-    const policy_file = config.policy orelse return;
+    const policy_file = config.policy orelse {
+        const denied = try configWarningsDeny(init, &config);
+        return denied;
+    };
     var policy = language.import_policy.Policy.parse(init.gpa, policy_file.bytes) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => {
@@ -1015,6 +1113,62 @@ fn validateUnitConfiguredPolicy(init: Context, parsed: Parsed) !void {
         },
     };
     policy.deinit();
+    const denied = try configWarningsDeny(init, &config);
+    return denied;
+}
+
+/// Whether a loaded configuration sets `lint.warnings: "deny"`. A malformed
+/// `lint` object leaves enforcement off here; `mylang lint` is what reports it.
+fn configWarningsDeny(init: Context, config: *const project_config.Config) !bool {
+    if (!config.document.lint) return false;
+    var failure: language.lint_config.Failure = .{};
+    var parsed_lint = language.lint_config.parseConfig(init.gpa, config.bytes, &failure) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return false,
+    };
+    defer parsed_lint.deinit(init.gpa);
+    return parsed_lint.warnings == .deny;
+}
+
+/// Commands whose inner loop a `warnings: "deny"` project makes rejecting.
+fn deniesOneShotWarnings(command: Command) bool {
+    return command == .check or command == .run;
+}
+
+/// Finish a `check-project` run: refuse an opted-in `warnings: "deny"` project
+/// whose checked program has a warning, otherwise remember the green verdict.
+/// The diagnostics were already printed by the caller.
+fn finishCheckProject(
+    init: Context,
+    project: *language.project.Project,
+    compilation: *language.project_compile.Compilation,
+    verdict: ?*language.check_cache.Cache,
+    frontend: ?*language.frontend_cache.Cache,
+    configured: *const ConfiguredPolicy,
+) !u8 {
+    if (try projectWarningsDenied(init, compilation, configured)) return 1;
+    try rememberFrontendVerdict(init, .@"check-project", project, compilation, frontend);
+    return rememberCheck(verdict, project, compilation);
+}
+
+/// Whether an opted-in `warnings: "deny"` project makes this checked program
+/// rejecting. The caller has already reported the diagnostics.
+fn projectWarningsDenied(init: Context, compilation: *language.project_compile.Compilation, configured: *const ConfiguredPolicy) !bool {
+    const denied = try configuredWarningsDeny(init, configured);
+    if (!denied) return false;
+    return hasWarning(compilation.diagnostics.items.items);
+}
+
+/// Extract the effective warnings policy from a loaded project configuration.
+fn configuredWarningsDeny(init: Context, configured: *const ConfiguredPolicy) !bool {
+    const config = if (configured.config) |*value| value else return false;
+    return configWarningsDeny(init, config);
+}
+
+/// Whether any collected diagnostic is a warning.
+fn hasWarning(items: []const language.diagnostic.Diagnostic) bool {
+    for (items) |item| if (item.severity == .warning) return true;
+    return false;
 }
 
 /// Map the required-policy gate's sentinel errors back to host statuses. Any
@@ -1045,7 +1199,7 @@ fn loadConfiguredPolicy(init: Context, parsed: Parsed, project: *const language.
     var config = project_config.load(init.gpa, init.io, config_path, &failure) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => {
-            const message = try std.fmt.allocPrint(init.gpa, "{s}:{d}:{d}: error[E_PROJECT_CONFIG]: {s}\n", .{
+            const message = try std.fmt.allocPrint(init.gpa, config_error_format, .{
                 failure.path, failure.location.line, failure.location.column, failure.detail,
             });
             defer init.gpa.free(message);
@@ -1056,9 +1210,14 @@ fn loadConfiguredPolicy(init: Context, parsed: Parsed, project: *const language.
     var config_transferred = false;
     errdefer if (!config_transferred) config.deinit();
     if (!config.hasPolicy()) {
-        setPolicyIdentity(frontend, verdict, null);
+        // A lint-only configuration still changes acceptance, so its identity
+        // must reach the verdict caches; otherwise a green cached under one
+        // rule mode could replay under another.
+        var identity: [64]u8 = undefined;
+        const has_identity = config.cacheIdentity(&identity);
+        setPolicyIdentity(frontend, verdict, if (has_identity) identity[0..] else null);
         config_transferred = true;
-        return .{ .config = config };
+        return .{ .config = config, .identity = if (has_identity) identity else null };
     }
 
     var policy = language.import_policy.Policy.parse(init.gpa, config.policy.?.bytes) catch |err| switch (err) {
@@ -1108,6 +1267,90 @@ fn configuredPolicyReceipt(allocator: std.mem.Allocator, configured: *const Conf
     if (!config.hasPolicy()) return null;
     const receipt = try config.receipt(allocator);
     return .{ .config_sha256 = receipt.config_sha256, .policy_sha256 = receipt.policy_sha256 };
+}
+
+/// Run `mylang lint` over the checked project. Compiler warnings are reported
+/// first so one run shows both families; lint findings follow on stderr and the
+/// one-line summary on stdout.
+fn lintProject(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation, configured: *const ConfiguredPolicy) !u8 {
+    try reportProject(init, compilation);
+    var parsed_lint: ?language.lint_config.Config = null;
+    defer if (parsed_lint) |*value| value.deinit(init.gpa);
+    if (configured.config) |*config| {
+        if (config.document.lint) {
+            var failure: language.lint_config.Failure = .{};
+            parsed_lint = language.lint_config.parseConfig(init.gpa, config.bytes, &failure) catch |err| switch (err) {
+                error.OutOfMemory => return error.OutOfMemory,
+                else => {
+                    const message = try std.fmt.allocPrint(init.gpa, config_error_format, .{
+                        config.path, failure.line, failure.column, failure.detail,
+                    });
+                    defer init.gpa.free(message);
+                    try init.text(message);
+                    return 2;
+                },
+            };
+        }
+    }
+    const settings: ?*const language.lint_config.Config = if (parsed_lint) |*value| value else null;
+    return language.lint.run(.{
+        .memory = init.gpa,
+        .io = init.io,
+        .compilation = compilation,
+        .config = settings,
+        .entry_path = parsed.path,
+        .options = parsed.lint,
+        .diagnostics = init.diagnostics,
+    });
+}
+
+/// Print the discovered tests that reach one qualified declaration.
+fn testsFor(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation) !u8 {
+    const subject = parsed.subject orelse return 2;
+    const rendered = (language.navigation.renderTestsFor(init.gpa, compilation, subject) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return error.InternalError,
+    }) orelse {
+        try init.text("tests-for: no checked declaration has that qualified name\n");
+        return 2;
+    };
+    defer init.gpa.free(rendered);
+    try std.Io.File.stdout().writeStreamingAll(init.io, rendered);
+    return 0;
+}
+
+/// `api-diff`: write a baseline snapshot, or classify the current project
+/// against one. A malformed or unreadable baseline is a usage failure (2).
+fn apiDiff(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation) !u8 {
+    if (parsed.api_write) |path| {
+        const bytes = language.api_diff.snapshot(init.gpa, compilation) catch |err| return apiDiffError(init, err);
+        defer init.gpa.free(bytes);
+        std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = path, .data = bytes }) catch return 2;
+        return 0;
+    }
+    const against = parsed.api_against orelse return 2;
+    const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, against, init.gpa, .limited(64 * 1024 * 1024)) catch return 2;
+    defer init.gpa.free(bytes);
+    const baseline = language.api_diff.parseBaseline(init.gpa, bytes) catch |err| return apiDiffError(init, err);
+    defer language.api_diff.freeEntries(init.gpa, baseline);
+    const diff_report = language.api_diff.compare(init.gpa, baseline, compilation) catch |err| return apiDiffError(init, err);
+    defer language.api_diff.freeChanges(init.gpa, diff_report);
+    const rendered = language.api_diff.render(init.gpa, diff_report, parsed.api_json) catch |err| return apiDiffError(init, err);
+    defer init.gpa.free(rendered);
+    try std.Io.File.stdout().writeStreamingAll(init.io, rendered);
+    return 0;
+}
+
+/// Map an api-diff failure to a status: allocation propagates, everything else
+/// is a usage or baseline failure.
+fn apiDiffError(init: Context, err: language.api_diff.Error) !u8 {
+    switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => {
+            try init.text("api-diff: cannot read or classify the baseline\n");
+            return 2;
+        },
+    }
 }
 
 fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_cache.Cache, verdict: ?*language.check_cache.Cache, functions: ?*language.semantic_cache.Cache) !u8 {
@@ -1164,7 +1407,13 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         // The internal native-test compile session keeps this one checked
         // compilation alive and serves facts plus selective lowering from it, so
         // a provider graph is never checked again just to emit its closure.
-        if (parsed.command == .@"native-test-compile") return nativeTestCompileSession(init, &compilation);
+        switch (parsed.command) {
+            .lint => return lintProject(init, parsed, &compilation, &configured),
+            .@"tests-for" => return testsFor(init, parsed, &compilation),
+            .@"api-diff" => return apiDiff(init, parsed, &compilation),
+            .@"native-test-compile" => return nativeTestCompileSession(init, &compilation),
+            else => {},
+        }
         const executed = executedStages(parsed.command);
         // A selective `emit-project-qbe --select-file` lowers only its closure in
         // the emission helper; the whole-project receipt pass must not lower first.
@@ -1198,17 +1447,14 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         if (requested_output) |output| break :result output;
         try reportProject(init, &compilation);
         if (parsed.command == .@"project-dependencies") break :result try init.gpa.dupe(u8, dependency_receipt.?);
-        if (parsed.command == .@"check-project") {
-            try rememberFrontendVerdict(init, parsed.command, &project, &compilation, frontend);
-            return rememberCheck(verdict, &project, &compilation);
-        }
+        if (parsed.command == .@"check-project") return finishCheckProject(init, &project, &compilation, verdict, frontend, &configured);
         if (parsed.command == .@"discover-project-duplicates") return discoverProject(init, parsed, &project, &compilation, frontend_start);
         if (parsed.command == .@"check-policy") return checkProjectPolicy(init, parsed, &project);
         init.timings.begin(lowering_phase, false);
         try compilation.emit();
         if (compilation.code) |code| recordLoweredCount(init, code.functions.len);
         init.timings.end();
-        return runProjectProgram(init, &compilation, parsed);
+        return runProjectProgram(init, &compilation, parsed, &configured);
     } else try project.render(init.gpa);
     defer init.gpa.free(output);
     try std.Io.File.stdout().writeStreamingAll(init.io, output);
@@ -1252,7 +1498,7 @@ fn flushOutput(stdout: *std.Io.File.Writer) void {
 }
 
 /// Build the checked project with the native backend and run its entry point.
-fn runProjectProgram(init: Context, compilation: *language.project_compile.Compilation, parsed: Parsed) !u8 {
+fn runProjectProgram(init: Context, compilation: *language.project_compile.Compilation, parsed: Parsed, configured: *const ConfiguredPolicy) !u8 {
     if (grants.ungranted(compilation.code.?, parsed.grants)) |flag| return reportUngranted(init, flag);
     const manifest = emitMeasuredNative(init, compilation, false) catch |err| switch (err) {
         error.SourceError => {
@@ -1263,6 +1509,7 @@ fn runProjectProgram(init: Context, compilation: *language.project_compile.Compi
     };
     defer init.gpa.free(manifest);
     try reportProject(init, compilation);
+    if (try projectWarningsDenied(init, compilation, configured)) return 1;
     return runNative(init, parsed, manifest);
 }
 

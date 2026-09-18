@@ -1,0 +1,13 @@
+# oracle: mylang-only
+record Counter:
+    n: int
+
+def bump(c: Counter):
+    c.n += 1
+
+def main() -> int:
+    c = Counter(0)
+    bump(c)
+    bump(c)
+    print("n =", c.n)
+    return c.n

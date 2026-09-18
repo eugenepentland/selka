@@ -40,13 +40,40 @@ $ python3 scripts/navigate.py --compiler zig-out/bin/mylang --entry examples/mod
 and resolves names but does not require bodies to type-check. Each exported
 callable prints its whole signature, with capability parameters in their Python
 spelling, the inferred `effects(...)` set when the bodies check, any
-`mutates(...)` parameters by name, and a declared ceiling when the source wrote
-one. A body that fails to check leaves the declaration listed and reports no
-body diagnostic.
+`mutates(...)` parameters by name, a declared ceiling when the source wrote
+one, and a `tests(N)` column: the number of discovered tests that reach the
+callable, directly or transitively, from the same index `tests-for` reads. A
+body that fails to check leaves the declaration listed and reports no body
+diagnostic, and the `tests` column is omitted when no bodies were checked.
 
 ```console
 $ mylang list-interfaces program.my
 module interfaces v1; declarations/signature visibility checked; bodies not type checked
 module main
-  export function main def(fs:Filesystem,clock:Clock)->i64 effects()
+  export function parse def(value:i64)->i64 effects() tests(2)
+  export function main def(fs:Filesystem,clock:Clock)->i64 effects() tests(0)
 ```
+
+## Which tests reach a declaration
+
+`mylang tests-for <entry.my> <qualified-name>` answers the maintainer question
+"what breaks if I change this?" It loads and checks the project, then walks the
+resolved call graph from every discovered test:
+
+```console
+$ mylang tests-for src/app/main.my app::parse
+tests-for app::parse
+  direct (1): app::test_parse
+  reached-by (2): app::test_parse app::test_end_to_end
+```
+
+`direct` names the tests whose body calls the declaration itself; `reached-by`
+adds every test that reaches it only through another call. The distinction is
+what makes the answer actionable: a test that reaches `parse` only through
+`main` proves little about `parse`, so extend a `direct` test when one exists.
+An unknown qualified name prints a message and exits 2; a declaration no test
+reaches prints empty lists and exits 0.
+
+The same index backs two other surfaces: `mylang lint` attaches the reachable
+tests to any finding that names a declaration, and `mylang list-interfaces`
+prints the count as a `tests(N)` column.

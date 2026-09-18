@@ -67,27 +67,25 @@ root by turning the dotted name into a path: `import units` reads `units.my`, an
 `mylang check-project` take the entry file and load the reachable graph once, in
 dependency order; `mylang run-project` is the explicit project-entry alias.
 Nothing is exported implicitly: a declaration is visible to importers only when
-an `export` directive names it, and an exported signature that mentions a
-private type rejects rather than leaking it. Exported functions do not need to
-spell an effect ceiling: the checker freezes each body's inferred effect set as
-the published interface contract, and an explicit `noalloc`, `noio` or
+it carries the `public` modifier, and an exported signature that mentions a
+private type rejects rather than leaking it. The separate `export NAME`
+directive is still accepted and means the same thing. Exported functions do not
+need to spell an effect ceiling: the checker freezes each body's inferred effect
+set as the published interface contract, and an explicit `noalloc`, `noio` or
 `effects(...)` is an opt-in narrowing enforced as an upper bound.
 
 ```mylang
 # doc: project measure
 # doc: file units.my
 module units
-export Distance
-export make
-export metres
 
-record Distance:
+public record Distance:
     value: int
 
-def make(value: int) -> Distance effects():
+public def make(value: int) -> Distance effects():
     return Distance(value=value)
 
-def metres(distance: Distance) -> int effects():
+public def metres(distance: Distance) -> int effects():
     return distance.value
 ```
 
@@ -121,13 +119,11 @@ rejects with `E_IMPORT_ALIAS`.
 # doc: project catalog
 # doc: file prices.my
 module prices
-export Price
-export total
 
-record Price:
+public record Price:
     cents: int
 
-def total(first: Price, second: Price) -> Price effects():
+public def total(first: Price, second: Price) -> Price effects():
     return Price(cents=first.cents + second.cents)
 ```
 
@@ -145,26 +141,30 @@ def main() -> int:
 
 ## Export placement
 
-`export NAME` may appear anywhere among the top-level declarations, after the
-module header and its imports. It may precede the declaration it names, follow
-it, or sit in a group of directives away from all of them, which lets a file
-either keep its public surface together at the top or annotate each declaration
-where it is written. Directives are collected in source order and keep their own
-locations, so a duplicate or unknown export still reports at the directive that
-caused it. An `export` inside a function or type body rejects.
+A declaration is published by writing `public` in front of it: `public def
+name(...)`, `public record Name`, `public enum Name`, `public type Name`, and so
+on. The modifier names no other declaration, so a file keeps its public surface
+where each declaration is written and a rename can never leave a stale directive
+behind.
+
+The separate `export NAME` directive is still accepted: it may appear anywhere
+among the top-level declarations after the module header and its imports, before
+or after the declaration it names, so an existing file keeps working during the
+migration. Directives are collected in source order and keep their own
+locations, so a duplicate or unknown export reports at the directive that caused
+it, and naming a declaration that is already `public` reports
+`E_DUPLICATE_EXPORT`. An `export` inside a function or type body rejects.
 
 ```mylang
 # doc: project report
 # doc: file totals.my
 module totals
 
-def base() -> int effects():
+public def base() -> int effects():
     return 40
 
-export base
-export bonus
 
-def bonus() -> int effects():
+public def bonus() -> int effects():
     return 2
 ```
 
@@ -177,6 +177,58 @@ import totals
 
 def main() -> int:
     return totals.base() + totals.bonus()
+```
+
+## Re-exports
+
+A directive may also publish an imported declaration: `export units.Distance`
+names the import qualifier and the declaration inside it, and the facade module
+publishes that declaration under the final name. Importers then name it exactly
+as if the facade had declared it, which lets one module be the public surface of
+a package whose real declarations live in a submodule. The target must already
+be exported by the module that declares it, and a qualifier that is not imported
+rejects with the located `E_UNKNOWN_EXPORT`.
+
+The facade adds only a public name. A reference through it resolves to the
+declaring module's identity, so the declaration keeps one implementation, one
+contract and one schema entry, and the project fingerprint reports the facade
+name.
+
+```mylang
+# doc: project published
+# doc: file units.my
+module units
+
+public record Distance:
+    value: int
+
+public def make(value: int) -> Distance effects():
+    return Distance(value=value)
+
+public def metres(distance: Distance) -> int effects():
+    return distance.value
+```
+
+```mylang
+# doc: project published
+# doc: file facade.my
+module facade
+import units
+export units.Distance
+export units.make
+export units.metres
+```
+
+```mylang
+# doc: project published
+# doc: file main.my
+# doc: expect 42
+module main
+import facade
+
+def main() -> int:
+    distance: facade.Distance = facade.make(42)
+    return facade.metres(distance)
 ```
 
 ## Limits

@@ -1,19 +1,16 @@
 module quantity
-export Count
-export InvalidQuantity
-export Parsed
 
 
-enum InvalidQuantity:
+public enum InvalidQuantity:
     outside_range
 
 
-result Parsed:
+public result Parsed:
     ok: Count,
     err: InvalidQuantity
 
 
-domain Count: u16:
+public domain Count: u16:
     def parse(value: int) -> Parsed effects():
         if value < 0 or value > 99:
             return Err(InvalidQuantity.outside_range)

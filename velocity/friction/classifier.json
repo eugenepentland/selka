@@ -1,0 +1,30 @@
+{
+  "version": "friction-classifier-v1",
+  "note": "diagnostic code plus a source regex maps to an idiom name; the first matching row wins; no match is 'unclassified'",
+  "rules": [
+    {"code": "E_SYNTAX", "regex": "\\bif\\b.*\\belse\\b", "idiom": "ternary"},
+    {"code": "E_SYNTAX", "regex": "^\\s*[A-Za-z_][A-Za-z_0-9]*\\s*,\\s*[A-Za-z_].*=|return\\s+[^,\\n]+,", "idiom": "tuple"},
+    {"code": "E_SYNTAX", "regex": "\\bis\\s+(not\\s+)?None\\b", "idiom": "is-none"},
+    {"code": "E_SYNTAX", "regex": "^\\s*\"\"\"|^\\s*'''", "idiom": "docstring"},
+    {"code": "E_BYTE_LITERAL", "regex": "\"\"\"", "idiom": "docstring"},
+    {"code": "E_SYNTAX", "regex": "^[A-Z_][A-Z_0-9]*\\s*=", "idiom": "module-constant"},
+    {"code": "E_SYNTAX", "regex": "def\\s+\\w+\\(self", "idiom": "method"},
+    {"code": "E_FORMAT_STRING", "regex": ":\\.?\\d*[fdxs<>^]", "idiom": "format-spec"},
+    {"code": "E_EXPRESSION", "regex": "\\*\\*", "idiom": "power"},
+    {"code": "E_REMOVED_SPELLING", "regex": "[&|^~]|<<|>>", "idiom": "bit-operator"},
+    {"code": "E_TOKEN", "regex": "[|^~]|<<|>>", "idiom": "bit-operator"},
+    {"code": "E_UNKNOWN_TYPE", "regex": "\\bset\\[", "idiom": "set"},
+    {"code": "E_SYNTAX", "regex": "\\{[^:}]+(,[^:}]+)*\\}", "idiom": "set-literal"},
+    {"code": "E_SYNTAX", "regex": "\\bfor\\b.*\\bfor\\b", "idiom": "nested-comprehension"},
+    {"code": "E_SYNTAX", "regex": "\\b(any|all|sum|min|max|sorted)\\(.*\\bfor\\b", "idiom": "generator-argument"},
+    {"code": "E_COLLECTION_METHOD", "regex": "\\w+\\.\\w+\\.\\w+\\(", "idiom": "dotted-module-call"},
+    {"code": "E_UNKNOWN_TYPE", "regex": "\\.(unwrap_or|is_none|is_some|splitlines)\\(", "idiom": "option-result-method"},
+    {"code": "E_SYNTAX", "regex": "\\b(try|except|raise)\\b", "idiom": "exceptions"},
+    {"code": "E_SYNTAX", "regex": "\\bdel\\b", "idiom": "del"},
+    {"code": "E_RESULT_UNHANDLED", "regex": ".", "idiom": "unhandled-result"},
+    {"code": "E_EFFECT_BOUND", "regex": ".", "idiom": "effect-ceiling"},
+    {"code": "E_ARENA_ESCAPE", "regex": ".", "idiom": "arena-escape"},
+    {"code": "E_MODULE_NAME", "regex": ".", "idiom": "module-header"},
+    {"code": "E_PRIVATE_SYMBOL", "regex": ".", "idiom": "missing-export"}
+  ]
+}

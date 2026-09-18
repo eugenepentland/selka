@@ -1,0 +1,8 @@
+# oracle: cpython
+def main() -> int:
+    s = "  Hello, World  "
+    t = s.strip().lower().replace("world", "there")
+    parts = t.split(", ")
+    if t.startswith("hello") and parts[1] == "there" and t.title() == "Hello, There":
+        return 42
+    return len(t)

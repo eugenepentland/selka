@@ -58,6 +58,16 @@ pub const navigation = @import("navigation.zig");
 pub const navigation_partial = @import("navigation_partial.zig");
 pub const quality = @import("quality.zig");
 pub const duplicates = @import("duplicates.zig");
+/// `mylang lint` driver, rule registry and profiles.
+pub const lint = @import("lint.zig");
+/// Strict `lint` object inside `mylang.json`.
+pub const lint_config = @import("lint_config.zig");
+/// Shared declaration-span-to-diff mapping for the commit-time rules.
+pub const declaration_diff = @import("declaration_diff.zig");
+/// `mylang test --affected` selection over the resolved call graph.
+pub const affected_tests = @import("affected_tests.zig");
+/// `mylang api-diff` baseline comparison and classification.
+pub const api_diff = @import("api_diff.zig");
 const disassemble = @import("disassemble.zig");
 
 /// Owns one source unit and all parsed, checked, and lowered data in its arena.

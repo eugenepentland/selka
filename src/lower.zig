@@ -111,6 +111,27 @@ const Emitter = struct {
         try self.push(.{ .statement = scope.body });
         try self.instruction(span, .{ .begin_arena = scope.slot });
     }
+    /// A valued assert renders its message to standard error only when the
+    /// condition is false, then traps through the same `assert_true` op a
+    /// static-message assert uses. The status message stays empty, so the trap
+    /// record is the bare `R_ASSERT` and the printed line names the values.
+    fn emitValuedAssert(self: *Emitter, span: Span, check: @FieldType(@FieldType(typed.Statement, "data"), "assertion"), message: typed.NodeId) !void {
+        const condition_span = self.program.nodes[@backingInt(check.condition)].span;
+        const fail = try self.label();
+        const done = try self.label();
+        const types = try self.allocator.alloc(typed.Type, 1);
+        types[0] = self.program.nodes[@backingInt(message)].ty;
+        try self.push(.{ .mark = done });
+        try self.instruction(condition_span, .{ .assert_true = "" });
+        try self.instruction(condition_span, .{ .push_bool = false });
+        try self.instruction(span, .pop);
+        try self.instruction(span, .{ .print = .{ .sink = .stderr, .types = types, .separator = false, .terminator = false, .stream = false, .debug = true } });
+        try self.push(.{ .expression = message });
+        try self.push(.{ .mark = fail });
+        try self.push(.{ .jump = .{ .target = done, .span = span } });
+        try self.push(.{ .jump = .{ .target = fail, .conditional = true, .span = condition_span } });
+        try self.push(.{ .expression = check.condition });
+    }
     fn emitStatement(self: *Emitter, id: typed.StatementId) !void {
         const stmt = self.program.statements[@backingInt(id)];
         switch (stmt.data) {
@@ -128,6 +149,10 @@ const Emitter = struct {
                 try self.push(.{ .expression = value });
             },
             .assertion => |check| {
+                if (check.message_value) |message| {
+                    try self.emitValuedAssert(stmt.span, check, message);
+                    return;
+                }
                 try self.instruction(self.program.nodes[@backingInt(check.condition)].span, .{ .assert_true = check.message });
                 try self.push(.{ .expression = check.condition });
             },

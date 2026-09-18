@@ -576,6 +576,9 @@ const Builder = struct {
         const digest = self.exportDigest(span);
         frame(hash, "export");
         hash.update(&digest);
+        // A `public` modifier publishes the declaration without an export
+        // directive line, so frame the visibility itself as well.
+        frame(hash, if (ast.isPublicDeclaration(self.program, span)) "public" else "private");
     }
 
     fn exportDigest(self: *Builder, span: source.Span) [32]u8 {

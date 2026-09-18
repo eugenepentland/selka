@@ -201,3 +201,70 @@ test "a bare dotted-import prefix stays an ordinary name beside the qualified pa
         \\    return library.api.parse(library.api.Inputs(value=41))
     , null);
 }
+
+/// What one checked module pair reports about unused imports.
+const ImportReport = struct { unused: usize, unused_message: []const u8, unused_binding: usize };
+
+/// Check one embedded project and summarize its import warnings. The message is
+/// copied because the compilation that owns it is released before returning.
+fn checkImports(main: []const u8) !ImportReport {
+    const other = "module library.other\n\n\npublic def value() -> i64 effects():\n    return 1\n";
+    var files: Files = .{ .entries = &.{
+        .{ .path = "main.my", .bytes = main },
+        .{ .path = "library/api.my", .bytes = api },
+        .{ .path = "library/other.my", .bytes = other },
+    } };
+    var project = language.project.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(.{ .context = &files, .read = Files.read }, "main", .{});
+    var index = try language.interfaces.build(&project);
+    var compilation = try language.project_compile.Compilation.init(&index);
+    try compilation.check();
+    var report: ImportReport = .{ .unused = 0, .unused_message = "", .unused_binding = 0 };
+    for (compilation.diagnostics.items.items) |item| {
+        if (std.mem.eql(u8, item.code, "W_UNUSED_IMPORT")) {
+            report.unused += 1;
+            report.unused_message = try t.allocator.dupe(u8, item.message);
+        }
+        if (std.mem.eql(u8, item.code, "W_UNUSED_BINDING")) report.unused_binding += 1;
+    }
+    return report;
+}
+
+// spec: UNUSED-IMPORT-1
+test "an import no resolved reference goes through reports W_UNUSED_IMPORT" {
+    const main =
+        \\module main
+        \\import library.api
+        \\import library.other
+        \\
+        \\
+        \\def main() -> i64:
+        \\    note = "library.other.value()"
+        \\    return library.api.parse(library.api.Inputs(value=41))
+    ;
+    const report = try checkImports(main);
+    defer t.allocator.free(report.unused_message);
+    try t.expectEqual(@as(usize, 1), report.unused);
+    try t.expectEqualStrings("import `library.other` is never referenced in this module; remove it or use it", report.unused_message);
+    // The alias spelling inside a string literal is not a reference.
+    try t.expect(report.unused_binding >= 1);
+}
+
+// spec-case: UNUSED-IMPORT-1
+test "an import a signature or a call resolves through is not unused" {
+    const main =
+        \\module main
+        \\import library.api
+        \\
+        \\
+        \\def read(input: library.api.Inputs) -> i64:
+        \\    return input.value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return read(library.api.Inputs(value=41))
+    ;
+    const report = try checkImports(main);
+    try t.expectEqual(@as(usize, 0), report.unused);
+}

@@ -1,0 +1,10 @@
+# oracle: cpython
+def main() -> int:
+    x = 3
+    match x:
+        case 1:
+            return 0
+        case 3:
+            return 42
+        case _:
+            return 1

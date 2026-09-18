@@ -1,0 +1,12 @@
+# oracle: mylang-only
+def find(xs: list[int], v: int) -> Option[int]:
+    for i, x in enumerate(xs):
+        if x == v:
+            return Some(i)
+    return None
+
+def main() -> int:
+    r = find([1, 2, 3], 3)
+    if r == None:
+        return 0
+    return 42

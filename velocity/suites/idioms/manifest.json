@@ -1,0 +1,998 @@
+{
+ "version": "idiom-suite-v1",
+ "measured_on": "2026-09-17",
+ "binary": "commit 237871a6",
+ "oracle_rule": "cpython: run with runpy, call main(), compare exit & 0xFF and stdout; rejected-by-design: valid Python the language rejects on purpose, counts only toward C3; mylang-only: uses Option/Result/record/union, no CPython oracle, needs an expect directive",
+ "probes": [
+  {
+   "name": "a01_ternary.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a02_chained_cmp.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a03_tuple_swap.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a04_tuple_return.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a05_is_none.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a06_eq_none.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a07_option_unwrap.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a08_aug_subscript.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a09_aug_str_list.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a10_chained_assign.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a11_truthiness.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a12_docstring.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a13_nested_def.my",
+   "oracle": "rejected-by-design",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a14_lambda_capture.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a15_lambda_nocapture.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a16_fstring_spec.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a17_percent_format.my",
+   "oracle": "rejected-by-design",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a18_str_format.my",
+   "oracle": "rejected-by-design",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a19_str_repeat.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a20_dict_items.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a21_set.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a22_set_literal.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a23_optional_annot.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a24_optional_typing.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a25_nested_list.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a26_sort_key.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a27_sorted_key.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a28_sorted_reverse.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a29_max_two_args.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a30_range_step.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a31_slice_neg.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a32_join_map.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a33_round2.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a34_power.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a35_div.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a36_module_global.my",
+   "oracle": "rejected-by-design",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a37_const.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a38_class_methods.my",
+   "oracle": "rejected-by-design",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a39_dataclass.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a40_try_except.my",
+   "oracle": "rejected-by-design",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a41_import_os.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a42_open_python.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a43_len_dict.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a44_enumerate_start.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a45_record_default.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a46_record_eq.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a47_print_record.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a48_for_else.my",
+   "oracle": "rejected-by-design",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a49_match_literal.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a50_match_str.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a51_del.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a52_pop_insert.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a53_multiline_str.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a54_bitops.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a55_chr_ord_hex.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a56_divmod_pow.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a57_assert_fstring.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a58_main_guard.my",
+   "oracle": "rejected-by-design",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a59_reassign_annot.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a60_overflow.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a61_result_unwrap.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a62_option_or.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a63_dict_get_option.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a64_split_noargs.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a65_str_cmp.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a66_nested_comp.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a67_dict_comp.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a68_genexp.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a69_print_end.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a70_int_from_float.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a71_type_alias.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a72_type_alias_kw.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a73_while_else_walrus.my",
+   "oracle": "rejected-by-design",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a74_str_in_list.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a75_list_of_records_mutate.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a76_record_in_dict.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a77_dict_record_key.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a78_multiple_return_record.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a79_str_methods.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a80_none_return_call.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "c01_option_q.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "c02_result_err_convert.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "c03_main_result_str.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "c04_option_default.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "c05_option_field.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "c06_result_record_err.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "c07_if_let_style.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "c08_match_expr.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "d01_loop_record_copy.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "d02_alias_record_copy.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "d03_record_param_mutate.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "d04_dict_items_keys.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "d05_round_half.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": false,
+    "silent_wrong": true
+   }
+  },
+  {
+   "name": "d06_record_field_in_dict_loop.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "d07_str_index_assign.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "d08_int_float_mix.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "d09_shadow_builtin.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "d10_unused_result.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e01_step_budget.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e02_bitops_each.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e03_shift.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e04_generic.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e05_str_concat_perf.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e06_list_of_lists_build.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e07_recursion_depth.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e08_format_float.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e09_walk_dict_sorted.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e10_while_assign_after_loop.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e11_if_no_else_bind.my",
+   "oracle": "cpython",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e12_none_default_param.my",
+   "oracle": "mylang-only",
+   "baseline": {
+    "mylang_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  }
+ ]
+}

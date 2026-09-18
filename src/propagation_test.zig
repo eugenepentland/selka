@@ -197,6 +197,129 @@ test "try unwraps success and remaps errors between nominal result types by name
     , 7);
 }
 
+// spec: TRY-CONVERT-1
+test "try wraps a mismatched error into the matching case of the enclosing error union" {
+    try result(
+        \\union AppError:
+        \\    Detail: str,
+        \\    Missing: i64
+        \\
+        \\
+        \\result Inner:
+        \\    ok: i64,
+        \\    err: str
+        \\
+        \\
+        \\result Outer:
+        \\    ok: bool,
+        \\    err: AppError
+        \\
+        \\
+        \\def inner(flag: bool) -> Inner:
+        \\    if flag:
+        \\        return Err("bad")
+        \\    return Ok(5)
+        \\
+        \\
+        \\def outer(flag: bool) -> Outer:
+        \\    return Ok(inner(flag)? > 3)
+        \\
+        \\
+        \\def handle(value: Outer) -> i64:
+        \\    match value:
+        \\        case Outer.ok(flag):
+        \\            if flag:
+        \\                return 1
+        \\            return 0
+        \\        case Outer.err(error):
+        \\            match error:
+        \\                case AppError.Detail(text):
+        \\                    if text == "bad":
+        \\                        return 7
+        \\                    return 8
+        \\                case AppError.Missing(code):
+        \\                    return 100 + code
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return handle(outer(False)) + handle(outer(True))
+    , 8);
+    try result(
+        \\union Detail:
+        \\    Malformed: str,
+        \\    Code: i64
+        \\
+        \\
+        \\union Wrapped:
+        \\    Nested: Detail
+        \\
+        \\
+        \\result Inner:
+        \\    ok: i64,
+        \\    err: Detail
+        \\
+        \\
+        \\result Outer:
+        \\    ok: bool,
+        \\    err: Wrapped
+        \\
+        \\
+        \\def inner(kind: i64) -> Inner:
+        \\    if kind == 0:
+        \\        return Ok(5)
+        \\    if kind == 1:
+        \\        return Err(Detail.Malformed("bad"))
+        \\    return Err(Detail.Code(9))
+        \\
+        \\
+        \\def outer(kind: i64) -> Outer:
+        \\    return Ok(inner(kind)? > 3)
+        \\
+        \\
+        \\def handle(value: Outer) -> i64:
+        \\    match value:
+        \\        case Outer.ok(flag):
+        \\            if flag:
+        \\                return 1
+        \\            return 0
+        \\        case Outer.err(error):
+        \\            match error:
+        \\                case Wrapped.Nested(detail):
+        \\                    match detail:
+        \\                        case Detail.Malformed(text):
+        \\                            if text == "bad":
+        \\                                return 7
+        \\                            return 8
+        \\                        case Detail.Code(code):
+        \\                            return 20 + code
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return handle(outer(0)) + handle(outer(1)) + handle(outer(2))
+    , 37);
+}
+
+// spec-case: TRY-CONVERT-1
+test "try rejects an error type that is not a case payload of the enclosing error union" {
+    try reject(
+        \\union Other:
+        \\    Text: str
+        \\
+        \\
+        \\result Wrapped:
+        \\    ok: i64,
+        \\    err: Other
+        \\
+        \\
+        \\def f(r: R) -> Wrapped:
+        \\    return Ok(r?)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_TYPE");
+}
+
 test "propagation cannot abandon pending locals parameters or unfinished expression results" {
     try reject(
         \\def f(r: R, other: R) -> R:

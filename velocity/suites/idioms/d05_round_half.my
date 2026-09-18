@@ -1,0 +1,4 @@
+# oracle: cpython
+def main() -> int:
+    print(round(2.5), round(0.5), round(-2.5))
+    return 0

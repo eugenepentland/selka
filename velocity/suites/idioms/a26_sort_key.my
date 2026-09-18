@@ -1,0 +1,9 @@
+# oracle: mylang-only
+record P:
+    name: str
+    score: int
+
+def main() -> int:
+    ps = [P("a", 3), P("b", 1), P("c", 2)]
+    ps.sort(key=lambda p: p.score)
+    return ps[0].score * 42

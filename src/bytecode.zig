@@ -486,7 +486,7 @@ fn validateOpTryResult(program: Program, function: Function, propagate: @FieldTy
     if (propagate.output != function.signature.return_type or propagate.error_target >= function.scope.instructions.len) return error.InternalError;
     if (typed.resultShape(propagate.input, program.records)) |input| {
         const output = typed.resultShape(propagate.output, program.records) orelse return error.InternalError;
-        if (input.error_type != output.error_type) return error.InternalError;
+        if (input.error_type != output.error_type and typed.wrappingCase(program.records, output.error_type, input.error_type) == null) return error.InternalError;
         return;
     }
     if (prelude.optionShape(propagate.input, program.records)) |input| {

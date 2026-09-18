@@ -1,0 +1,9 @@
+# oracle: mylang-only
+record P:
+    x: int
+
+def main() -> int:
+    d: dict[str, P] = {}
+    d["a"] = P(1)
+    d["a"].x = 42
+    return d["a"].x

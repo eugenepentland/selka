@@ -847,7 +847,7 @@ const Checker = struct {
         var i = initializers.len;
         while (i > 0) {
             i -= 1;
-            try work.append(self.allocator, .{ .id = initializers[i].value });
+            try work.append(self.allocator, .{ .id = initializers[i].value, .default_value = initializers[i].default });
         }
     }
     fn require(self: *Checker, actual: typed.Type, expected: typed.Type, span: source.Span) Error!void {
@@ -2231,6 +2231,14 @@ const Checker = struct {
                     return true;
                 }
                 if (try self.queueBuiltinCall(work, id, call, node)) return true;
+                if (try self.recordUpdateCall(call)) {
+                    var update_index = call.arguments.len;
+                    while (update_index > 0) {
+                        update_index -= 1;
+                        try work.append(self.allocator, .{ .id = call.arguments[update_index] });
+                    }
+                    return true;
+                }
                 if (call.owner == null and self.active.contains(self.src.text(call.name))) {
                     var index = call.arguments.len;
                     while (index > 0) {
@@ -2803,6 +2811,27 @@ const Checker = struct {
         }
         return true;
     }
+    /// Whether an unqualified `replace(value, field=…)` call is the functional
+    /// record update rather than the positional three-argument list intrinsic.
+    /// A declared, imported or local name called `replace` keeps its own meaning.
+    fn recordUpdateCall(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
+        if (call.owner != null or call.argument_names.len == 0 or call.argument_markers.len != 0) return false;
+        if (!std.mem.eql(u8, self.src.text(call.name), "replace")) return false;
+        if (self.active.contains(self.src.text(call.name))) return false;
+        return !try self.topLevel(call.name);
+    }
+    /// Check `replace(record, field=value, …)` into the existing checked update
+    /// node: the base is an aggregate record and only the named fields change.
+    fn checkRecordUpdate(self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
+        const base = self.resolved[@backingInt(input.arguments[0])].?;
+        const record_type = self.nodes.items[@backingInt(base)].ty;
+        if (!record_type.isAggregate() or !self.catalog.records[record_type.recordIndex()].isRecord())
+            return self.sink.fail("E_TYPE", input.name, "replace(...) needs a record value; the positional form replaces a list index");
+        const initializers = try self.allocator.alloc(ast.FieldInit, input.arguments.len - 1);
+        for (input.arguments[1..], 0..) |value, index| initializers[index] = .{ .name = input.argument_names[index + 1].?, .value = value };
+        out.ty = record_type;
+        out.data = .{ .update = .{ .base = base, .fields = try self.fields(record_type, initializers, false, node.span) } };
+    }
     fn checkCall(self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
         // A call carrying `&` markers must resolve to a declared function or a
         // callable value: only those expose a `mutates(...)` footprint. Skipping
@@ -2849,6 +2878,7 @@ const Checker = struct {
                 return self.checkResultConstructor(node, input, ok, out);
             }
         }
+        if (try self.recordUpdateCall(input)) return self.checkRecordUpdate(node, input, out);
         if (input.owner == null and self.active.contains(self.src.text(input.name))) {
             try call_arguments.positional(input, self.sink);
             return self.indirectCall(node, input, out);
@@ -2857,6 +2887,7 @@ const Checker = struct {
         const call = target.call;
         const function = try self.specialize(target.declaration, call, node.span);
         const signature = self.syntaxFunction(function);
+        try self.warnDeprecated(function, input);
         try self.checkMutationMarkers(call.arguments, call.argument_markers, signature.signature.mutates);
         var arguments: std.ArrayList(typed.NodeId) = .empty;
         for (call.arguments, signature.signature.parameters) |arg, parameter| {
@@ -2873,6 +2904,30 @@ const Checker = struct {
             .call = call,
             .parameters = signature.signature.parameters,
         }).apply(self.allocator, &out.data.call);
+    }
+    /// Append a `W_DEPRECATED` warning when a call resolves to a `@deprecated`
+    /// declaration in another module. The attribute lives on the AST, not on
+    /// `typed.Function`, so the callee's declaration header is consulted here.
+    fn warnDeprecated(self: *Checker, function: typed.FunctionId, input: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!void {
+        if (self.catalog.module_names == null) return;
+        const callee = self.syntaxFunction(function);
+        const attributes = ast.attributesOf(self.syntax, callee.name);
+        var deprecated = false;
+        var reason: ?source.Span = null;
+        for (attributes) |attribute| {
+            if (attribute.kind != .deprecated) continue;
+            deprecated = true;
+            reason = attribute.argument;
+        }
+        if (!deprecated) return;
+        const callee_original = self.src.originalSpan(callee.name) catch return;
+        const call_original = self.src.originalSpan(input.name) catch return;
+        if (callee_original.input == call_original.input) return;
+        const message = try std.fmt.allocPrint(self.allocator, "{s} is deprecated: {s}", .{
+            self.src.text(callee.name),
+            if (reason) |span| literalText(self.src.bytes, span) else "no reason given",
+        });
+        try self.sink.items.append(self.allocator, .{ .severity = .warning, .code = "W_DEPRECATED", .span = input.name, .message = message });
     }
     /// Enforce the opt-in D3 call-site `&` marker against a resolved callee's
     /// declared `mutates(...)` parameter positions. `arguments` is already in
@@ -3239,7 +3294,9 @@ const Checker = struct {
                 var element: typed.Type = undefined;
                 if (typed.resultShape(input_ty, self.catalog.records)) |input| {
                     const output = typed.resultShape(self.return_type, self.catalog.records) orelse return self.sink.fail("E_TRY_RETURN", node.span, "try requires a function returning a declared result type");
-                    try self.require(input.error_type, output.error_type, node.span);
+                    // The error converts implicitly when the enclosing union carries it as a case payload.
+                    if (input.error_type != output.error_type and typed.wrappingCase(self.catalog.records, output.error_type, input.error_type) == null)
+                        try self.require(input.error_type, output.error_type, node.span);
                     element = input.ok_type;
                 } else if (prelude.optionShape(input_ty, self.catalog.records)) |input| {
                     const output = prelude.optionShape(self.return_type, self.catalog.records) orelse return self.sink.fail("E_TRY_RETURN", node.span, "try requires a function returning an Option type");
@@ -4108,10 +4165,18 @@ const Checker = struct {
         return .{ .ret = value };
     }
     /// `assert` traps instead of returning, so it needs no result type and no effect.
+    /// A rendered message is checked as `str` here but evaluated only on failure,
+    /// which is why the effect pass exempts its expression from the ceiling.
     fn statementAssert(self: *Checker, claim: ast.Assertion) Error!@FieldType(typed.Statement, "data") {
         const condition = try self.expressionExpected(claim.condition, .bool);
         try self.require(self.nodes.items[@backingInt(condition)].ty, .bool, self.syntax.nodes.items[@backingInt(claim.condition)].span);
-        return .{ .assertion = .{ .condition = condition, .message = claim.message } };
+        const message_value = if (claim.value) |value| message: {
+            const str_type = self.catalog.names.get("str") orelse return error.InternalError;
+            const checked = try self.expressionExpected(value, str_type);
+            try self.require(self.nodes.items[@backingInt(checked)].ty, str_type, self.syntax.nodes.items[@backingInt(value)].span);
+            break :message checked;
+        } else null;
+        return .{ .assertion = .{ .condition = condition, .message = claim.message, .message_value = message_value } };
     }
     fn statementBinding(self: *Checker, _: ast.Statement, b: @FieldType(@FieldType(ast.Statement, "data"), "binding"), _: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         const name = self.src.text(b.name);
@@ -4590,6 +4655,7 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     timingAdd(timing, "domain_codec_validation", codecs_start);
     const warnings_start = timingStart(timing);
     try warnBindings(allocator, functions, sink);
+    try warnImports(module_names, sink);
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
     timingAdd(timing, "warning_derivation", warnings_start);
     // A rejected dead copy write is an implementation error, not advice: it must
@@ -4639,6 +4705,13 @@ fn constructsRecord(self: *Checker, node: ast.Node) Error!bool {
 
 const functionName = @import("function_identity.zig").localName;
 
+/// Remove the matching quotes around one string-literal spelling.
+fn literalText(bytes: []const u8, span: source.Span) []const u8 {
+    const text = bytes[span.start..span.end];
+    if (text.len >= 2 and (text[0] == '"' or text[0] == '\'')) return text[1 .. text.len - 1];
+    return text;
+}
+
 fn checkHostType(allocator: std.mem.Allocator, catalog: []const typed.Record, ty: typed.Type, span: source.Span, sink: *diagnostic.Sink) Error!void {
     @import("data_type.zig").check(allocator, catalog, ty, true) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
@@ -4669,6 +4742,31 @@ fn warnBindings(allocator: std.mem.Allocator, functions: []const typed.Function,
                 .code = "W_UNUSED_BINDING",
                 .span = local.declaration,
                 .message = "binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed",
+            });
+        }
+    }
+}
+
+/// One module-level warning for every direct import no reference resolved
+/// through. The evidence is the interface index's resolved-import flags, so a
+/// local binding that merely spells the alias cannot make an unused import look
+/// used; a cached body that was replayed rather than re-resolved is recovered
+/// from its own qualified names first.
+fn warnImports(module_names: ?*Names, sink: *diagnostic.Sink) Error!void {
+    const names = module_names orelse return;
+    const index = names.index;
+    index.recoverImportUsage(sink.allocator);
+    for (index.project.order.items) |module| {
+        const imports = index.project.modules.items[module].imports;
+        for (imports, 0..) |imported, import_index| {
+            if (index.importUsed(module, import_index)) continue;
+            const span = names.src.mappedSpan(module, imported.span) catch continue;
+            const message = try std.fmt.allocPrint(sink.allocator, "import `{s}` is never referenced in this module; remove it or use it", .{imported.name});
+            try sink.items.append(sink.allocator, .{
+                .severity = .warning,
+                .code = "W_UNUSED_IMPORT",
+                .span = span,
+                .message = message,
             });
         }
     }

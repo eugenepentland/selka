@@ -68,7 +68,7 @@ test "malformed source and range errors are normal located diagnostics" {
         \\def main() -> bool:
         \\    return 1
         , .code = "E_TYPE" },
-        .{ .text = "def main() -> i64:\n    return @\n", .code = "E_TOKEN" },
+        .{ .text = "def main() -> i64:\n    return $\n", .code = "E_TOKEN" },
     };
     for (cases) |case| {
         var compilation = try language.Compilation.init(testing.allocator, "bad.my", case.text);

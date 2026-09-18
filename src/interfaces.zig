@@ -1,6 +1,14 @@
 //! Module declaration identities and export boundaries, before body type checking.
 const std = @import("std");
 const eGenericArity = "E_GENERIC_ARITY";
+/// Error code for an export directive that names no visible declaration.
+const eUnknownExport = "E_UNKNOWN_EXPORT";
+/// Error code for a name absent from the resolved module.
+const eUnknownSymbol = "E_UNKNOWN_SYMBOL";
+/// Error code for a qualifier that names no direct import alias.
+const eUnknownImport = "E_UNKNOWN_IMPORT";
+/// Error code for a declaration of the wrong kind for the reference.
+const eSymbolKind = "E_SYMBOL_KIND";
 /// Format one module-qualified declaration name as `module::symbol`.
 const qualified_name_format = "{s}::{s}";
 const graph = @import("project.zig");
@@ -14,6 +22,7 @@ const generic_requirements = @import("generic_requirements.zig");
 const structural_declarations = @import("structural_declarations.zig");
 const effect_set = @import("effect_set.zig");
 const prelude = @import("prelude.zig");
+const tests_index = @import("tests_index.zig");
 const SyntaxCache = @import("syntax_cache.zig").Cache;
 const FrontendCache = @import("frontend_cache.zig").Cache;
 /// One exported declaration's canonical declared contract for provider validation.
@@ -28,6 +37,9 @@ pub const ContractDeclaration = struct {
     /// `effects=<names>;mutates=<positions>;origin=<tag>`; empty for non-callables.
     permissions: []const u8 = "",
     shape: []const u8 = "",
+    /// Present only for a declaration carrying `@test`, so test discovery can
+    /// admit a name that does not use the `test_` prefix.
+    @"test": ?bool = null,
 };
 /// One module's exported declared-contract table.
 pub const ContractModule = struct { name: []const u8, declarations: []const ContractDeclaration };
@@ -39,10 +51,15 @@ pub const ContractError = diagnostic.Error || error{IncompleteProject};
 pub const Kind = enum { type, function, constraint };
 /// Identify a declaration by its module and local symbol index.
 pub const Identity = struct { module: usize, symbol: usize };
-/// Store declaration visibility and optional domain-owner restrictions.
-pub const Symbol = struct { name: []const u8, kind: Kind, span: source.Span, exported: bool = false, owner: ?[]const u8 = null, restricted: bool = false };
-/// Store parsed module declarations and their local name index.
-pub const Unit = struct { syntax: ast.Program, symbols: std.ArrayList(Symbol) = .empty, names: std.StringHashMapUnmanaged(usize) = .empty };
+/// Store declaration visibility and optional domain-owner restrictions. A
+/// re-export facade carries `re_export` pointing at the defining declaration in
+/// its own module; every consumer resolves through that identity.
+pub const Symbol = struct { name: []const u8, kind: Kind, span: source.Span, exported: bool = false, owner: ?[]const u8 = null, restricted: bool = false, re_export: ?Identity = null };
+/// Store parsed module declarations and their local name index. `import_used`
+/// carries one flag per direct import in this module's own order; the resolver
+/// sets it when a reference actually resolves through that import, which is the
+/// exact evidence `W_UNUSED_IMPORT` reads.
+pub const Unit = struct { syntax: ast.Program, symbols: std.ArrayList(Symbol) = .empty, names: std.StringHashMapUnmanaged(usize) = .empty, import_used: []bool = &.{} };
 /// One named bound resolution plus the caller-local span that exposed it.
 const BoundResolution = struct { identity: Identity, span: source.Span };
 /// A resolved constraint identity and the declaring syntax that describes it.
@@ -108,27 +125,114 @@ pub const Index = struct {
         const site: graph.Site = .{ .module = from, .span = span };
         if (alias) |requested| {
             var found = false;
-            for (self.project.modules.items[from].imports) |imported| {
+            for (self.project.modules.items[from].imports, 0..) |imported, import_index| {
                 if (!imported.matches(requested)) continue;
                 target = imported.target;
                 found = true;
+                if (import_index < self.units[from].import_used.len) self.units[from].import_used[import_index] = true;
                 break;
             }
-            if (!found) return self.project.fail("E_UNKNOWN_IMPORT", "name does not identify a direct import alias", site, null);
+            if (!found) return self.project.fail(eUnknownImport, "name does not identify a direct import alias", site, null);
         }
         const symbol_id = self.units[target].names.get(name) orelse {
             const message = if (kind == .function)
                 try self.functionMissMessage(from, target, name)
             else
                 "declaration is not present in the resolved module";
-            return self.project.fail("E_UNKNOWN_SYMBOL", message, site, null);
+            return self.project.fail(eUnknownSymbol, message, site, null);
         };
         const symbol = self.units[target].symbols.items[symbol_id];
         const declaration: graph.Site = .{ .module = target, .span = symbol.span };
         if (target != from and !symbol.exported) return self.project.fail("E_PRIVATE_SYMBOL", "declaration is private to its module", site, declaration);
         if (symbol.restricted and !sameOwner(target == from, owner, symbol.owner.?)) return self.project.fail("E_PRIVATE_FUNCTION", "private domain function requires the same declaring domain", site, declaration);
-        if (symbol.kind != kind) return self.project.fail("E_SYMBOL_KIND", "declaration has the wrong kind for this reference", site, declaration);
+        if (symbol.kind != kind) return self.project.fail(eSymbolKind, "declaration has the wrong kind for this reference", site, declaration);
+        // A facade re-export resolves to the declaration that defines it, so the
+        // caller sees the defining module's identity and the facade is only a name.
+        if (symbol.re_export) |identity| return identity;
         return .{ .module = target, .symbol = symbol_id };
+    }
+    /// Whether a module's direct import at `import_index` was resolved at least
+    /// once, which is the exact evidence `W_UNUSED_IMPORT` reports against.
+    pub fn importUsed(self: *const Index, module: usize, import_index: usize) bool {
+        if (module >= self.units.len) return false;
+        const used = self.units[module].import_used;
+        return import_index < used.len and used[import_index];
+    }
+    /// Recover import usage for declarations whose checked bodies the semantic
+    /// cache replayed. `resolve` observes a fresh reference exactly; a replayed
+    /// body is never re-resolved, so this pass reads each module's own token
+    /// stream past its header and marks an import the way the resolver does: a
+    /// dotted qualified name whose qualifier matches the import's alias or full
+    /// dotted path. A local binding cannot shadow an import alias
+    /// (`E_SHADOWING`), and comments and string literals are single tokens, so a
+    /// match is a resolved qualified reference rather than a bare identifier.
+    pub fn recoverImportUsage(self: *Index, backing: std.mem.Allocator) void {
+        if (self.project.problem != null) return;
+        var arena = std.heap.ArenaAllocator.init(backing);
+        defer arena.deinit();
+        const scratch = arena.allocator();
+        for (self.project.order.items) |module_id| {
+            const module = self.project.modules.items[module_id];
+            if (module.imports.len == 0) continue;
+            var sink: diagnostic.Sink = .{ .allocator = scratch };
+            const tokens = lexer.lex(scratch, module.src.bytes, &sink) catch continue;
+            var index: usize = 0;
+            while (index < tokens.len) : (index += 1) {
+                if (tokens[index].tag != .ident) continue;
+                if (tokens[index].span.start < module.header.body_start) continue;
+                var last = index;
+                var cursor = index + 1;
+                while (cursor + 1 < tokens.len and tokens[cursor].tag == .dot and tokens[cursor + 1].tag == .ident) {
+                    last = cursor + 1;
+                    cursor += 2;
+                }
+                if (last == index) continue;
+                const qualifier = module.src.bytes[tokens[index].span.start..tokens[last - 2].span.end];
+                for (module.imports, 0..) |imported, import_index| {
+                    if (!imported.matches(qualifier)) continue;
+                    if (import_index < self.units[module_id].import_used.len) self.units[module_id].import_used[import_index] = true;
+                    break;
+                }
+                index = last;
+            }
+        }
+    }
+    /// Resolve the target of a `export alias.Name` re-export directive. The
+    /// directive does not say whether it names a type, function or constraint,
+    /// so each kind is probed in turn; a kind mismatch is retried and only a
+    /// missing or private target is reported, as `E_UNKNOWN_EXPORT`/the privacy
+    /// code at the directive.
+    fn resolveExported(self: *Index, module: usize, alias: []const u8, name: []const u8, span: source.Span) diagnostic.Error!Identity {
+        const kinds = [_]Kind{ .type, .function, .constraint };
+        for (kinds) |kind| {
+            if (self.resolve(.{ .from = module, .alias = alias, .name = name, .kind = kind, .owner = null, .span = span })) |resolved| {
+                return resolved;
+            } else |err| {
+                if (err != error.SourceError) return err;
+                const problem = self.project.problem orelse return error.InternalError;
+                if (std.mem.eql(u8, problem.code, eSymbolKind)) {
+                    self.project.problem = null;
+                    continue;
+                }
+                if (std.mem.eql(u8, problem.code, eUnknownSymbol) or std.mem.eql(u8, problem.code, eUnknownImport)) {
+                    return self.project.fail(eUnknownExport, "re-export names no exported imported declaration", .{ .module = module, .span = span }, null);
+                }
+                return err;
+            }
+        }
+        return self.project.fail(eUnknownExport, "re-export names no exported imported declaration", .{ .module = module, .span = span }, null);
+    }
+    /// Publish a re-exported declaration in the facade module under its local
+    /// name. The new symbol's span stays in the facade source (the directive),
+    /// so diagnostics locate the facade while `re_export` carries the defining
+    /// identity every consumer resolves through.
+    fn addFacade(self: *Index, module: usize, name: []const u8, span: source.Span, target: Identity) diagnostic.Error!void {
+        const allocator = self.project.arena.allocator();
+        const unit = &self.units[module];
+        if (unit.names.get(name)) |previous| return self.project.fail("E_DUPLICATE_SYMBOL", "module declaration name is already bound", .{ .module = module, .span = span }, .{ .module = module, .span = unit.symbols.items[previous].span });
+        const target_symbol = self.units[target.module].symbols.items[target.symbol];
+        try unit.names.put(allocator, name, unit.symbols.items.len);
+        try unit.symbols.append(allocator, .{ .name = name, .kind = target_symbol.kind, .span = span, .exported = true, .re_export = target });
     }
     /// Message for an unresolved function, naming close visible declarations.
     fn functionMissMessage(self: *Index, from: usize, target: usize, name: []const u8) std.mem.Allocator.Error![]const u8 {
@@ -167,7 +271,7 @@ pub const Index = struct {
         }) catch |err| {
             if (err != error.SourceError) return err;
             const problem = self.project.problem orelse return error.InternalError;
-            if (std.mem.eql(u8, problem.code, "E_UNKNOWN_SYMBOL")) return sink.fail(
+            if (std.mem.eql(u8, problem.code, eUnknownSymbol)) return sink.fail(
                 diagnostic.generic_requirement,
                 reference.name,
                 "unknown requirement; expected copy, equality, integer, codec, storable, or a declared constraint",
@@ -424,34 +528,45 @@ pub const Index = struct {
         if (self.project.problem != null) return error.IncompleteProject;
         var output: std.Io.Writer.Allocating = .init(allocator);
         errdefer output.deinit();
+        // The `tests` column reads the same reachability index `tests-for`
+        // answers from; it is absent when no checked program is attached.
+        var tests: ?tests_index.Index = try self.buildTestsIndex(allocator);
+        defer {
+            if (tests) |*index| index.deinit();
+        }
         output.writer.writeAll("module interfaces v1; declarations/signature visibility checked; bodies not type checked\n") catch return error.OutOfMemory;
         for (self.project.order.items) |module| {
             output.writer.print("module {s}\n", .{self.project.modules.items[module].name}) catch return error.OutOfMemory;
             for (self.units[module].symbols.items) |symbol| {
                 if (!symbol.exported) continue;
                 if (symbol.kind == .function) {
-                    try self.renderFunctionLine(&output.writer, module, symbol);
+                    try self.renderFunctionLine(&output.writer, module, symbol, if (tests) |*index| index else null);
                     continue;
                 }
-                output.writer.print("  export {s} {s}\n", .{ @tagName(symbol.kind), symbol.name }) catch return error.OutOfMemory;
+                output.writer.print("  export {s} {s}", .{ @tagName(symbol.kind), symbol.name }) catch return error.OutOfMemory;
+                try self.appendDocstringLine(&output.writer, module, symbol);
+                output.writer.writeAll("\n") catch return error.OutOfMemory;
             }
         }
         return output.toOwnedSlice();
     }
     /// Render one exported function as `export function NAME def(...) effects(...)
-    /// [mutates(names)] [ceiling(...)]`. The ceiling is the already-inferred mask
-    /// when a checked program is attached, or the unbounded mask otherwise, which
-    /// is what an omitted declaration promises.
-    fn renderFunctionLine(self: *Index, writer: *std.Io.Writer, module: usize, symbol: Symbol) ContractError!void {
+    /// [mutates(names)] [ceiling(...)] [tests(N)] [# first docstring line]`. The
+    /// ceiling is the already-inferred mask when a checked program is attached,
+    /// or the unbounded mask otherwise, which is what an omitted declaration
+    /// promises. `tests` carries the shared reachability index, or null when no
+    /// checked program is attached.
+    fn renderFunctionLine(self: *Index, writer: *std.Io.Writer, module: usize, symbol: Symbol, tests: ?*const tests_index.Index) ContractError!void {
         const allocator = self.project.arena.allocator();
-        const function = self.findFunction(self.units[module], symbol.span) orelse return error.InternalError;
-        const signature = try self.contractSignatureText(module, function.signature);
-        writer.print("  export function {s} {s} effects(", .{ symbol.name, signature }) catch return error.OutOfMemory;
+        const origin = self.declarationSource(module, symbol);
+        const function = self.findFunction(self.units[origin.module], origin.symbol.span) orelse return error.InternalError;
+        const signature = try self.contractSignatureText(origin.module, function.signature);
+        writer.print("  export function {s} {s} effects(", .{ origin.display, signature }) catch return error.OutOfMemory;
         var inferred: std.ArrayList(u8) = .empty;
-        try appendEffectNames(&inferred, allocator, self.publishedEffects(module, symbol));
+        try appendEffectNames(&inferred, allocator, self.publishedEffects(origin.module, origin.symbol));
         writer.writeAll(inferred.items) catch return error.OutOfMemory;
         writer.writeAll(")") catch return error.OutOfMemory;
-        const mutates = try self.mutatesNamesText(module, function.signature);
+        const mutates = try self.mutatesNamesText(origin.module, function.signature);
         if (mutates.len != 0) writer.print(" mutates({s})", .{mutates}) catch return error.OutOfMemory;
         if (function.policy.effect_bound) |bound| {
             writer.writeAll(" ceiling(") catch return error.OutOfMemory;
@@ -460,7 +575,68 @@ pub const Index = struct {
             writer.writeAll(ceiling.items) catch return error.OutOfMemory;
             writer.writeAll(")") catch return error.OutOfMemory;
         }
+        if (tests) |index| {
+            if (try self.programFunction(origin.module, origin.symbol.name)) |id| {
+                const answer = index.answer(id);
+                writer.print(" tests({d})", .{answer.reached.len}) catch return error.OutOfMemory;
+            }
+        }
+        try self.appendDocstringLine(writer, origin.module, origin.symbol);
         writer.writeAll("\n") catch return error.OutOfMemory;
+    }
+    /// The checked function identity of one module-qualified declaration, or
+    /// null when the attached program carries no such name.
+    fn programFunction(self: *Index, module: usize, name: []const u8) ContractError!?typed.FunctionId {
+        const program = self.program orelse return null;
+        const qualified = try std.fmt.allocPrint(self.project.arena.allocator(), "{s}::{s}", .{ self.project.modules.items[module].name, name });
+        for (program.functions, 0..) |function, index| {
+            if (std.mem.eql(u8, function.name, qualified)) return @fromBackingInt(@intCast(index));
+        }
+        return null;
+    }
+    /// Build the shared tests index for the attached checked program, or null
+    /// when no bodies were checked.
+    fn buildTestsIndex(self: *Index, allocator: std.mem.Allocator) ContractError!?tests_index.Index {
+        const program = self.program orelse return null;
+        const scratch = self.project.arena.allocator();
+        const modules = try self.moduleSyntax(scratch);
+        const call_graph = try tests_index.callGraph(scratch, program);
+        const discovered = try tests_index.discoveredTests(scratch, program, modules);
+        const built = try tests_index.build(allocator, program, call_graph, discovered);
+        return built;
+    }
+    /// The parsed syntax and source of every module, the inputs the shared
+    /// tests index needs to discover `@test` declarations.
+    pub fn moduleSyntax(self: *Index, allocator: std.mem.Allocator) std.mem.Allocator.Error![]tests_index.ModuleSyntax {
+        const modules = try allocator.alloc(tests_index.ModuleSyntax, self.project.order.items.len);
+        for (self.project.order.items, 0..) |module, slot| {
+            modules[slot] = .{
+                .name = self.project.modules.items[module].name,
+                .src = self.project.modules.items[module].src,
+                .syntax = self.units[module].syntax,
+            };
+        }
+        return modules;
+    }
+    /// Append ` # <first docstring line>` for one declaration, or nothing when it
+    /// has no docstring. The line is what a reader sees in the listing.
+    fn appendDocstringLine(self: *Index, writer: *std.Io.Writer, module: usize, symbol: Symbol) ContractError!void {
+        const doc = ast.docstringOf(self.units[module].syntax, symbol.span) orelse return;
+        const line = firstDocLine(doc.text);
+        if (line.len == 0) return;
+        writer.print(" # {s}", .{line}) catch return error.OutOfMemory;
+    }
+    /// The unit, symbol and published name an interface entry reads its
+    /// declaration from. For a re-export facade the declaration lives in the
+    /// defining module while the published name stays the facade's local name.
+    const DeclarationSource = struct { module: usize, symbol: Symbol, display: []const u8 };
+    fn declarationSource(self: *Index, module: usize, symbol: Symbol) DeclarationSource {
+        if (symbol.re_export) |target| return .{
+            .module = target.module,
+            .symbol = self.units[target.module].symbols.items[target.symbol],
+            .display = symbol.name,
+        };
+        return .{ .module = module, .symbol = symbol, .display = symbol.name };
     }
     /// Render one declared `mutates` footprint by source parameter name, falling
     /// back to the numeric position only if the declaration is malformed.
@@ -493,14 +669,18 @@ pub const Index = struct {
         for (self.project.order.items) |module| {
             var declarations: std.ArrayList(ContractDeclaration) = .empty;
             for (self.units[module].symbols.items) |symbol| {
-                // `mylang test` discovers `test_` functions by name, so the
-                // discovery contract publishes them beside explicit exports.
-                const discovered_test = symbol.kind == .function and std.mem.startsWith(u8, symbol.name, "test_");
+                // `mylang test` discovers `test_` functions by name and `@test`
+                // declarations by attribute, so the discovery contract publishes
+                // them beside explicit exports.
+                const discovered_test = symbol.kind == .function and (std.mem.startsWith(u8, symbol.name, "test_") or self.isTestDeclaration(module, symbol));
                 if (!symbol.exported and !discovered_test) continue;
                 const declaration = try self.contractDeclaration(module, symbol);
                 // An unexported `test_` name is only discovered when it already
-                // has the defaulting test shape; other helpers stay helpers.
-                if (!symbol.exported and !testShape(declaration)) continue;
+                // has the defaulting test shape; `@test` names its intent, so it
+                // needs no shape default.
+                if (!symbol.exported) {
+                    if (!testShape(declaration) and declaration.@"test" != true) continue;
+                }
                 try declarations.append(scratch, declaration);
             }
             std.mem.sort(ContractDeclaration, declarations.items, {}, declarationLess);
@@ -510,7 +690,13 @@ pub const Index = struct {
             });
         }
         std.mem.sort(ContractModule, modules.items, {}, moduleLess);
-        return std.json.Stringify.valueAlloc(allocator, ContractManifest{ .modules = try modules.toOwnedSlice(scratch) }, .{});
+        return std.json.Stringify.valueAlloc(allocator, ContractManifest{ .modules = try modules.toOwnedSlice(scratch) }, .{ .emit_null_optional_fields = false });
+    }
+    /// Whether one symbol's declaration carries `@test`.
+    fn isTestDeclaration(self: *Index, module: usize, symbol: Symbol) bool {
+        const origin = self.declarationSource(module, symbol);
+        const function = self.findFunction(self.units[origin.module], origin.symbol.span) orelse return false;
+        return ast.hasAttribute(self.units[origin.module].syntax, function.name, .@"test");
     }
     /// The declared shape an unexported `test_` function must already have to be
     /// discovered without `export`: no generic parameters and a zero-argument
@@ -519,11 +705,14 @@ pub const Index = struct {
         return declaration.generics.len == 0 and std.mem.eql(u8, declaration.signature, "def()->bool");
     }
     fn contractDeclaration(self: *Index, module: usize, symbol: Symbol) ContractError!ContractDeclaration {
-        return switch (symbol.kind) {
-            .function => self.contractFunction(module, symbol),
-            .type => self.contractType(module, symbol),
-            .constraint => self.contractConstraint(module, symbol),
+        const origin = self.declarationSource(module, symbol);
+        var declaration = switch (origin.symbol.kind) {
+            .function => try self.contractFunction(origin.module, origin.symbol),
+            .type => try self.contractType(origin.module, origin.symbol),
+            .constraint => try self.contractConstraint(origin.module, origin.symbol),
         };
+        declaration.name = origin.display;
+        return declaration;
     }
     fn findFunction(self: *Index, unit: Unit, span: source.Span) ?ast.Function {
         _ = self;
@@ -544,6 +733,7 @@ pub const Index = struct {
         out.generics = try self.contractGenericsText(module, function.signature.type_parameters);
         out.signature = try self.contractSignatureText(module, function.signature);
         out.permissions = try permissionsText(self.project.arena.allocator(), mask, function.signature.mutates, "unknown");
+        if (ast.hasAttribute(self.units[module].syntax, function.name, .@"test")) out.@"test" = true;
         return out;
     }
     /// Ceiling the interface publishes for one exported function. An explicit
@@ -941,6 +1131,12 @@ fn appendEffectNames(out: *std.ArrayList(u8), allocator: std.mem.Allocator, mask
 fn boundSpan(reference: ast.BoundReference) source.Span {
     return if (reference.alias) |alias| source.Span.join(alias, reference.name) else reference.name;
 }
+/// The first non-empty line of a docstring with surrounding whitespace trimmed.
+fn firstDocLine(text: []const u8) []const u8 {
+    const trimmed = std.mem.trim(u8, text, " \t\r\n");
+    const end = std.mem.indexOfScalar(u8, trimmed, '\n') orelse return trimmed;
+    return std.mem.trimEnd(u8, trimmed[0..end], " \t\r");
+}
 fn parameterCopy(src: source.Source, parameter: ast.TypeParameter) bool {
     if (parameter.default_copy) return true;
     for (parameter.requirements) |span| {
@@ -986,6 +1182,11 @@ pub fn buildWithCacheTimed(
             timing.?.add(if (replayed) "syntax_replay" else "syntax_parse", elapsed, false);
         }
         index.units[module_id] = .{ .syntax = syntax };
+        if (module.imports.len != 0) {
+            const used = try allocator.alloc(bool, module.imports.len);
+            @memset(used, false);
+            index.units[module_id].import_used = used;
+        }
         inline for (.{ "records", "domains", "variants", "resources" }) |field| {
             for (@field(syntax.types, field)) |declaration| try index.add(module_id, declaration.name, .type, null, false);
         }
@@ -993,7 +1194,20 @@ pub fn buildWithCacheTimed(
         for (syntax.types.constraints) |constraint| try index.add(module_id, constraint.name, .constraint, null, false);
         for (syntax.functions) |function| try index.add(module_id, function.name, .function, function.policy.owner, function.policy.restricted);
         for (module.exports) |exported| {
-            const id = index.units[module_id].names.get(exported.name) orelse return project.fail("E_UNKNOWN_EXPORT", "export names no local declaration", .{ .module = module_id, .span = exported.span }, null);
+            if (exported.alias) |alias| {
+                const target = try index.resolveExported(module_id, alias, exported.name, exported.span);
+                try index.addFacade(module_id, exported.name, exported.span, target);
+                continue;
+            }
+            const id = index.units[module_id].names.get(exported.name) orelse return project.fail(eUnknownExport, "export names no local declaration", .{ .module = module_id, .span = exported.span }, null);
+            if (ast.isPublicDeclaration(syntax, index.units[module_id].symbols.items[id].span)) return project.fail("E_DUPLICATE_EXPORT", "declaration is already public", .{ .module = module_id, .span = exported.span }, null);
+            index.units[module_id].symbols.items[id].exported = true;
+        }
+        // A declaration marked `public` publishes itself, exactly as an `export`
+        // directive naming it would; the directive form stays accepted so an
+        // existing source keeps its meaning.
+        for (syntax.types.public_declarations) |span| {
+            const id = index.units[module_id].names.get(module.src.text(span)) orelse return project.fail(eUnknownExport, "public declaration names no local declaration", .{ .module = module_id, .span = span }, null);
             index.units[module_id].symbols.items[id].exported = true;
         }
         for (index.units[module_id].symbols.items) |*symbol| {

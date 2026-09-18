@@ -123,8 +123,10 @@ pub const Comprehension = struct {
     /// loop, from a half-open integer `range(...)`; a unit start means the implicit zero.
     pub const Source = union(enum) { iterable: NodeId, range: struct { start: NodeId, end: NodeId } };
 };
-/// Checked condition with the trap message its failure reports.
-pub const Assertion = struct { condition: NodeId, message: []const u8, literal: ?Span = null };
+/// Checked condition with the trap message its failure reports. `literal` is the
+/// quoted message's span; `value` is a non-literal message expression, evaluated
+/// only when the condition is false.
+pub const Assertion = struct { condition: NodeId, message: []const u8, literal: ?Span = null, value: ?NodeId = null };
 /// Expression match case with an optional payload binding and its yielded value.
 /// Source case spelling, optional payload binding, and arm body.
 pub const MatchArm = struct { ty: Span, name: Span, binding: ?Span, discard_payload: bool, body: StatementId };
@@ -132,8 +134,10 @@ pub const MatchArm = struct { ty: Span, name: Span, binding: ?Span, discard_payl
 pub const Variant = struct { name: Span, payload: ?Span };
 /// Parsed enum, union, or result declaration with its closed case list.
 pub const Variants = struct { type_parameters: []const TypeParameter = &.{}, fallible: bool = false, name: Span, is_union: bool, cases: []const Variant };
-/// Source field spelling and its initializer expression.
-pub const FieldInit = struct { name: Span, value: NodeId };
+/// Source field spelling and its initializer expression. `default` marks an
+/// initializer the constructor filled from the field's declared default, so a
+/// cached literal still contributes a temporary at its construction site.
+pub const FieldInit = struct { name: Span, value: NodeId, default: bool = false };
 /// Parsed record name and ordered field declarations. `class` is the managed
 /// reference spelling; `record` is the explicit copy/value spelling.
 pub const Record = struct { managed: bool = false, type_parameters: []const TypeParameter = &.{}, name: Span, fields: []const Parameter };
@@ -206,7 +210,64 @@ pub const Program = struct {
     statements: std.ArrayList(Statement),
     functions: []const Function,
     lambdas: []const Lambda = &.{},
+    /// Fixed-vocabulary attributes attached to declarations, keyed by name span.
+    attributes: []const DeclarationAttributes = &.{},
+    /// Leading string statements, keyed by the declaration they document.
+    docstrings: []const DeclarationDoc = &.{},
 };
+
+/// Whether the declaration whose name has this span carries the `public` modifier.
+pub fn isPublicDeclaration(program: Program, declaration: Span) bool {
+    for (program.types.public_declarations) |span| {
+        if (span.start == declaration.start and span.end == declaration.end) return true;
+    }
+    return false;
+}
+
+/// The declaration key a module-level docstring is stored under: the empty span,
+/// which no declaration name can occupy.
+pub const module_docstring_span = Span{ .start = 0, .end = 0 };
+/// One leading string statement: its declaration key, quote-stripped source
+/// text, and the literal's own span for diagnostics.
+pub const DeclarationDoc = struct { declaration: Span, text: []const u8, span: Span };
+
+/// One fixed-vocabulary attribute kind the parser accepts above a declaration.
+pub const AttributeKind = enum { deprecated, @"test", allow };
+/// One `@name(...)` clause attached to a declaration.
+pub const Attribute = struct {
+    kind: AttributeKind,
+    /// The whole `@name(...)` clause.
+    span: Span,
+    /// The `@deprecated` reason or the `@allow` rule name.
+    argument: ?Span = null,
+    /// The `@allow` `reason="..."` payload.
+    reason: ?Span = null,
+};
+/// One declaration's attribute list, keyed by the declaration name span.
+pub const DeclarationAttributes = struct { declaration: Span, attributes: []const Attribute };
+
+/// The attributes attached to the declaration whose name has this span.
+pub fn attributesOf(program: Program, declaration: Span) []const Attribute {
+    for (program.attributes) |entry| {
+        if (entry.declaration.start == declaration.start and entry.declaration.end == declaration.end) return entry.attributes;
+    }
+    return &.{};
+}
+
+/// Whether the declaration whose name has this span carries the given attribute.
+pub fn hasAttribute(program: Program, declaration: Span, kind: AttributeKind) bool {
+    for (attributesOf(program, declaration)) |attribute| if (attribute.kind == kind) return true;
+    return false;
+}
+
+/// The docstring recorded for the declaration whose name has this span, if any.
+pub fn docstringOf(program: Program, declaration: Span) ?DeclarationDoc {
+    for (program.docstrings) |entry| {
+        if (entry.declaration.start == declaration.start and entry.declaration.end == declaration.end) return entry;
+    }
+    return null;
+}
+
 /// Expression-bodied anonymous function with contextually typed parameters and result.
 pub const Lambda = struct { span: Span, parameters: []const Span, body: NodeId };
 /// Source type declarations collected separately from function bodies and expression tables.
@@ -217,6 +278,9 @@ pub const TypeDeclarations = struct {
     expressions: TypeExpressions = .{},
     records: []const Record = &.{},
     constraints: []const Constraint = &.{},
+    /// Name spans of declarations written with the `public` modifier, which
+    /// publishes a declaration instead of a separate `export NAME` directive.
+    public_declarations: []const Span = &.{},
 };
 
 /// Parsed nominal application; the base name and each type argument retain exact source spans.

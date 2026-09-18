@@ -1,0 +1,5 @@
+# oracle: cpython
+def main() -> int:
+    grid = [[1, 2], [3, 4]]
+    flat = [x for row in grid for x in row]
+    return sum(flat) * 4 + 2

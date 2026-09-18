@@ -79,9 +79,8 @@ example below is the guest project they would govern.
 # doc: project import-policy-example
 # doc: file helper.my
 module helper
-export value
 
-def value() -> int effects():
+public def value() -> int effects():
     return 42
 ```
 
@@ -94,3 +93,22 @@ import helper
 def main() -> int:
     return helper.value() - 42
 ```
+
+## Unused-import warnings
+
+`import_policy` governs direction; a separate compiler warning governs use.
+Every direct import whose alias or dotted name no reference in its module
+resolves through is reported as `W_UNUSED_IMPORT` at the imported name:
+
+```console
+$ mylang check-project src/main.my
+src/main.my:2:8: warning[W_UNUSED_IMPORT]: import `helper` is never referenced in this module; remove it or use it
+```
+
+The derivation is exact rather than textual: it reads the references the checker
+resolved, so a binding that reuses the first segment of a dotted path stays an
+ordinary value, and an alias mentioned only inside a string literal or a comment
+is not a reference. `W_UNUSED_IMPORT` is a `W_*` code, so a project that sets
+`lint.warnings: "deny"` refuses the check exactly as it does for
+`W_UNUSED_BINDING`, while `import_policy` keeps evaluating every resolved direct
+import whether or not it is used.

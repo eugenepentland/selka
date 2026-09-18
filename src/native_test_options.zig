@@ -18,6 +18,9 @@ pub const Flags = struct {
     pure_skip: bool = false,
     /// Opt-in D3 experiment forwarded to every compiler child the test spawns.
     mutation_markers: bool = false,
+    /// `--affected` selects only tests that reach a declaration changed since
+    /// `--against REF`; the reference itself lives on `Options.against`.
+    affected: bool = false,
 };
 /// Sampling and whole-run bounds for one benchmark invocation.
 pub const Tuning = struct {
@@ -55,9 +58,12 @@ pub const Options = struct {
     jobs: ?usize = null,
     limits: execute.Limits = .{},
     bench: BenchOptions = .{},
+    /// `--against REF` reference revision for `--affected`; null without it.
+    against: ?[]const u8 = null,
 };
 /// Native tests require no Python interpreter.
 pub const usage = "usage: mylang test <entry.my|directory> [--filter SUBSTRING|GLOB] [--cases FILE]\n" ++
+    "  --affected --against REF  run only tests reaching a declaration changed since REF\n" ++
     "  --link FILE --link-library NAME --library-path DIR (repeatable)\n" ++
     "  --cache-dir DIR --force --no-cache --report --json --pure-skip --mutation-markers --qbe PATH --zig PATH\n" ++
     "  --mode Debug|ReleaseFast\n" ++
@@ -107,6 +113,10 @@ pub fn parse(args: []const []const u8) Error!Options {
             result.bench.only = true;
             continue;
         }
+        if (std.mem.eql(u8, arg, "--affected")) {
+            result.flags.affected = true;
+            continue;
+        }
         const split = std.mem.indexOfScalar(u8, arg, '=') orelse arg.len;
         const flag = std.meta.stringToEnum(Flag, arg[0..split]) orelse return error.InvalidTestArguments;
         const value = if (split < arg.len) arg[split + 1 ..] else value: {
@@ -122,6 +132,9 @@ pub fn parse(args: []const []const u8) Error!Options {
     if (!std.mem.eql(u8, result.mode, "Debug") and !std.mem.eql(u8, result.mode, "ReleaseFast")) return error.InvalidTestArguments;
     const wanted = result.bench.only or result.bench.output != null or result.bench.baseline != null or result.bench.policy != null;
     if (wanted and result.bench.pattern == null) return error.InvalidTestArguments;
+    // `--affected` and `--against REF` only make sense together: one selects the
+    // derivation, the other names the revision it compares against.
+    if (result.flags.affected != (result.against != null)) return error.InvalidTestArguments;
     return result;
 }
 const Flag = enum {
@@ -130,6 +143,7 @@ const Flag = enum {
     @"--library-path",
     @"--filter",
     @"--cases",
+    @"--against",
     @"--cache-dir",
     @"--qbe",
     @"--zig",
@@ -155,6 +169,7 @@ fn assign(result: *Options, flag: Flag, value: []const u8) Error!void {
         .@"--link", .@"--link-library", .@"--library-path" => {},
         .@"--filter" => result.filter = value,
         .@"--cases" => result.cases = value,
+        .@"--against" => result.against = value,
         .@"--cache-dir" => result.cache = value,
         .@"--qbe" => result.qbe = value,
         .@"--zig" => result.zig = value,
@@ -245,4 +260,16 @@ test "pure-skip is an explicit opt-in switch" {
     try std.testing.expect(enabled.flags.pure_skip);
     try std.testing.expect(!(try parse(&.{"main.my"})).flags.pure_skip);
     try std.testing.expectError(error.InvalidTestArguments, parse(&.{ "main.my", "--pure-skipp" }));
+}
+
+// spec-case: AFFECTED-TEST-1
+test "affected selection needs both switches and a reference" {
+    const selected = try parse(&.{ "main.my", "--affected", "--against", "HEAD" });
+    try std.testing.expect(selected.flags.affected);
+    try std.testing.expectEqualStrings("HEAD", selected.against.?);
+    const joined = try parse(&.{ "main.my", "--affected", "--against=origin/main" });
+    try std.testing.expectEqualStrings("origin/main", joined.against.?);
+    try std.testing.expect(!(try parse(&.{"main.my"})).flags.affected);
+    try std.testing.expectError(error.InvalidTestArguments, parse(&.{ "main.my", "--against", "HEAD" }));
+    try std.testing.expectError(error.InvalidTestArguments, parse(&.{ "main.my", "--affected" }));
 }

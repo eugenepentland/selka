@@ -93,5 +93,21 @@ pub fn build(index: *interfaces.Index) BuildError!Merged {
         for (unit.syntax.lambdas) |lambda| try lambdas.append(allocator, try map.value(allocator, ast.Lambda, lambda));
     }
     merged.lambdas = try lambdas.toOwnedSlice(allocator);
+    // Declaration attributes are keyed by each module's own name span, so they
+    // must be relocated with the same map as the functions they describe.
+    var attributes: std.ArrayList(ast.DeclarationAttributes) = .empty;
+    for (index.units, 0..) |unit, module| {
+        const map: Remap = .{ .src = src, .module = module };
+        for (unit.syntax.attributes) |entry| try attributes.append(allocator, try map.value(allocator, ast.DeclarationAttributes, entry));
+    }
+    merged.attributes = try attributes.toOwnedSlice(allocator);
+    // Leading docstrings carry no expression or statement identity; they only
+    // need the same span relocation as the declarations that own them.
+    var docstrings: std.ArrayList(ast.DeclarationDoc) = .empty;
+    for (index.units, 0..) |unit, module| {
+        const map: Remap = .{ .src = src, .module = module };
+        for (unit.syntax.docstrings) |entry| try docstrings.append(allocator, try map.value(allocator, ast.DeclarationDoc, entry));
+    }
+    merged.docstrings = try docstrings.toOwnedSlice(allocator);
     return .{ .src = src, .syntax = merged, .modules = ranges, .function_modules = try function_modules.toOwnedSlice(allocator) };
 }

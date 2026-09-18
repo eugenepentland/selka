@@ -23,23 +23,19 @@ value survives a JSON client whose native numbers cannot represent it.
 ```mylang
 # doc: check
 module main
-export Status
-export Sample
-export sequence_of
-export test_sequence
 
-enum Status:
+public enum Status:
     ready,
     failed
 
-record Sample:
+public record Sample:
     sequence: u64
     status: Status
 
-def sequence_of(sample: Sample) -> u64 effects():
+public def sequence_of(sample: Sample) -> u64 effects():
     return sample.sequence
 
-def test_sequence(sample: Sample) -> u64 effects():
+public def test_sequence(sample: Sample) -> u64 effects():
     return sequence_of(sample)
 
 def main() -> int:

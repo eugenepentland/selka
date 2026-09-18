@@ -26,7 +26,7 @@ def expect_float(text: str, wanted: float) -> bool:
             return False
 
 
-def expect_text(produced: Result[str, str], wanted: str) -> bool:
+def expect_text(produced: Result[str, strings.Error], wanted: str) -> bool:
     match produced:
         case Ok(text):
             return text == wanted
@@ -34,7 +34,7 @@ def expect_text(produced: Result[str, str], wanted: str) -> bool:
             return False
 
 
-def rejects_text(produced: Result[str, str]) -> bool:
+def rejects_text(produced: Result[str, strings.Error]) -> bool:
     match produced:
         case Ok(_):
             return False

@@ -1,0 +1,5 @@
+# oracle: cpython
+def main() -> int:
+    with open("/etc/hostname") as f:
+        data = f.read()
+    return 42

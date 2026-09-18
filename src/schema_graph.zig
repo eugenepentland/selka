@@ -156,6 +156,10 @@ pub fn render(allocator: std.mem.Allocator, index: *interfaces.Index, program: t
     for (index.units, 0..) |unit, module| {
         for (unit.symbols.items) |symbol| {
             if (!symbol.exported or symbol.kind != .type) continue;
+            // A re-export facade publishes its target under the facade name in
+            // interfaces and contracts, but the schema names the defining
+            // declaration, which its own module already contributes as a root.
+            if (symbol.re_export != null) continue;
             const name = try std.fmt.allocPrint(scratch, "{s}::{s}", .{ index.project.modules.items[module].name, symbol.name });
             const ty = nominal.get(name) orelse {
                 // A public template is a type constructor, not a concrete schema root.

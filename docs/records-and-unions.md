@@ -80,11 +80,10 @@ value copy to mistake for an alias, so only a `record` copy write is rejected; a
 A record is constructed by calling its type. Positional arguments bind to fields in
 declaration order, named arguments bind by field name in any order, and the two may be
 mixed as long as every positional argument precedes the first named one. Construction is
-complete: every field must be supplied, and a missing one is rejected with
-`E_INCOMPLETE_CONSTRUCTION` naming the field and its declaration. Record fields do not
-take default values — writing `green: int = 2` in a `record` body is a syntax error — so
-a defaulted field has to become a defaulted parameter on a constructor function you
-write yourself. An empty record declares `pass` and is constructed with no arguments.
+complete: every field must be supplied unless its declaration carries a default, and a
+missing one without a default is rejected with `E_INCOMPLETE_CONSTRUCTION` naming the
+field and its declaration. An empty record declares `pass` and is constructed with no
+arguments.
 
 ```mylang
 # doc: expect 321
@@ -105,7 +104,56 @@ def main() -> int:
 ```
 
 This returns `321`. The same positional-then-keyword rules apply to ordinary function
-calls, which do accept trailing defaults.
+calls, which also accept trailing defaults.
+
+## Field defaults and functional update
+
+A field may declare an immutable scalar default after `=`, exactly the literals a
+function parameter accepts: an integer, Boolean, `None`, string or byte literal, or a
+negated integer literal. A constructor call that omits such a field materializes the
+declared default, so `Config(verbose=True)` fills in `retries`. Required fields must
+precede defaulted ones, as in a parameter list, and a required field after a defaulted
+one is rejected with `E_DEFAULT_ARGUMENT`. Enum-keyed table literals are unaffected:
+every key is still required.
+
+```mylang
+# doc: expect 12
+record Config:
+    retries: int = 3
+    verbose: bool = False
+    label: str = "auto"
+
+def main() -> int:
+    base = Config(verbose=True)
+    fixed = Config(7)
+    if base.verbose and len(base.label) == 4:
+        return base.retries + fixed.retries + 2
+    return 0
+```
+
+This returns `12`: `base.retries` is the declared `3`, `fixed.retries` is the
+positional `7`, and `base.label` defaults to `"auto"`.
+
+`replace(record, field=value, …)` is the functional update: it returns a copy of the
+record with only the named fields changed and every other field preserved, leaving the
+base value untouched. The base is evaluated before the values, the result is a fresh
+record value, a field name that does not exist is `E_UNKNOWN_FIELD`, and a repeated one
+is `E_DUPLICATE_FIELD`. The positional three-argument `replace(list, index, value)`
+intrinsic is unchanged; the named form is recognized by its first argument separator.
+
+```mylang
+# doc: expect 7
+record Settings:
+    retries: int = 3
+    verbose: bool = False
+
+def main() -> int:
+    base = Settings(verbose=True)
+    changed = replace(base, retries=5)
+    return changed.retries + 2
+```
+
+This returns `7`. `changed` keeps `verbose` from `base` and `base.retries` is still `3`.
 
 ## Tagged unions
 

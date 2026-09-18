@@ -53,3 +53,38 @@ test "assert checks a Boolean condition under any effect bound and inside loops"
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings("E_TYPE", c.diagnostics.items[0].code);
 }
+
+// spec: PY-ASSERT-3
+test "a valued assert renders its message to stderr only when the condition is false" {
+    var passing = try language.Compilation.init(t.allocator, unit, "def half(value: int) -> int:\n" ++
+        "    assert value % 2 == 0, f\"half needs an even value, got {value}\"\n" ++
+        "    return value // 2\n\n" ++
+        "def main() -> int:\n" ++
+        "    return half(84)\n");
+    defer passing.deinit();
+    try t.expectEqual(@as(i64, 42), (try native.run(&passing)).value);
+
+    var failed = try language.Compilation.init(t.allocator, unit, "def main() -> int:\n" ++
+        "    n = 3\n" ++
+        "    assert n > 5, f\"n was {n}\"\n" ++
+        "    return 0\n");
+    defer failed.deinit();
+    const run = try native.run(&failed);
+    try t.expect(run.trapped());
+    try t.expectEqualStrings("R_ASSERT", run.trap.code);
+    try t.expect(std.mem.indexOf(u8, run.stderr, "n was 3") != null);
+
+    // A passing assertion never evaluates its message: an out-of-bounds index
+    // inside the rendered text would trap if the expression ran.
+    var lazy = try language.Compilation.init(t.allocator, unit, "def main() -> int:\n" ++
+        "    values = [1, 2]\n" ++
+        "    assert 1 < 2, f\"{values[5]}\"\n" ++
+        "    return 7\n");
+    defer lazy.deinit();
+    try t.expectEqual(@as(i64, 7), (try native.run(&lazy)).value);
+
+    var mistyped = try language.Compilation.init(t.allocator, unit, "def main() -> int:\n    assert 1 > 0, 5\n    return 0\n");
+    defer mistyped.deinit();
+    try t.expectError(error.SourceError, mistyped.check());
+    try t.expectEqualStrings("E_TYPE", mistyped.diagnostics.items[0].code);
+}

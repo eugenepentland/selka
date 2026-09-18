@@ -1,0 +1,6 @@
+# oracle: cpython
+def main() -> int:
+    seen = {1, 2, 2}
+    if 2 in seen:
+        return 42
+    return 0

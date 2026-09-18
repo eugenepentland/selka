@@ -1,6 +1,5 @@
 module summary
 
-export render
 
 def line_count(source: str) -> int:
     if len(source) == 0:
@@ -15,5 +14,5 @@ def line_count(source: str) -> int:
         count -= 1
     return count
 
-def render(source: str) -> str effects(managed_allocation):
+public def render(source: str) -> str effects(managed_allocation):
     return "{\"lines\":" + str(line_count(source)) + ",\"characters\":" + str(len(source)) + "}"

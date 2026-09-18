@@ -116,7 +116,8 @@ pub const StreamWrite = struct { stream: NodeId, text: NodeId };
 /// Resolved aggregate field index and the expression supplying its value.
 pub const FieldInit = struct { index: usize, value: NodeId };
 /// Named aggregate field with its declaration location and resolved type.
-pub const Field = struct { name: []const u8, declaration: Span, ty: Type };
+/// `default_value` is the backing node id of a declared record-field default.
+pub const Field = struct { name: []const u8, declaration: Span, ty: Type, default_value: ?usize = null };
 /// Named closed variant case and its optional resolved payload type.
 pub const Variant = struct { name: []const u8, declaration: Span, payload: ?Type };
 /// Closed case set distinguishing enums, unions, and fallible results.
@@ -252,6 +253,16 @@ pub fn resultShape(ty: Type, records: []const Record) ?ResultShape {
         if (std.mem.eql(u8, case.name, "err")) err = tag;
     }
     return .{ .ok_type = variants.cases[ok orelse return null].payload.?, .error_type = variants.cases[err orelse return null].payload.?, .ok_tag = ok.?, .error_tag = err.? };
+}
+/// The case of the union `container` whose payload is exactly `payload`, if any.
+pub fn wrappingCase(records: []const Record, container: Type, payload: Type) ?usize {
+    if (!container.isAggregate() or container.recordIndex() >= records.len) return null;
+    const variants = records[container.recordIndex()].shape.variants orelse return null;
+    if (!variants.is_union) return null;
+    for (variants.cases, 0..) |case, tag| {
+        if (case.payload) |declared| if (declared == payload) return tag;
+    }
+    return null;
 }
 /// Equality supported by concrete expressions and generic equality requirements.
 pub fn supportsEquality(ty: Type, records: []const Record) bool {
@@ -422,8 +433,9 @@ pub const Statement = struct {
         assign: Store,
     },
 };
-/// Checked condition with the trap message its failure reports.
-pub const Assertion = struct { condition: NodeId, message: []const u8 };
+/// Checked condition with its static message and optional rendered message
+/// expression, which is evaluated only when the condition is false.
+pub const Assertion = struct { condition: NodeId, message: []const u8, message_value: ?NodeId = null };
 /// Resolved case tag, optional payload local, and checked arm body.
 pub const MatchArm = struct { tag: usize, slot: ?LocalId, body: StatementId };
 /// Local type, declaration, usage counts, and tracked ownership/borrow state.

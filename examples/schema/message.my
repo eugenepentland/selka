@@ -1,19 +1,16 @@
 module message
-export Status
-export Header
-export Message
 
 
-enum Status:
+public enum Status:
     ready,
     failed
 
 
-record Header:
+public record Header:
     sequence: u64
     status: Status
 
 
-union Message:
+public union Message:
     heartbeat,
     reading: Header

@@ -22,6 +22,7 @@ pub const Error = error{
     InvalidBudget,
     InvalidImportPolicy,
     InvalidJson,
+    InvalidLint,
     InvalidVersion,
     MissingConfig,
     MissingImportPolicy,
@@ -63,6 +64,9 @@ pub const Document = struct {
     import_policy: ?[]const u8 = null,
     /// Per-project source-loading limits; all fields absent uses the defaults.
     budgets: Budgets = .{},
+    /// Whether a `lint` object was present; its contents are parsed by the
+    /// `mylang` module's lint driver, which owns those types.
+    lint: bool = false,
 };
 
 /// One resolved policy file: absolute path, exact bytes and content digest.
@@ -104,14 +108,15 @@ pub const Config = struct {
     }
 
     /// Combine the exact configuration and policy bytes into the cache identity
-    /// used for successful-verdict reuse. Returns false when no policy is
-    /// configured, because configuration alone cannot change acceptance.
+    /// used for successful-verdict reuse. Returns false when neither a policy
+    /// nor a `lint` object is configured, because configuration alone cannot
+    /// change acceptance.
     pub fn cacheIdentity(self: *const Config, out: *[64]u8) bool {
-        const policy = self.policy orelse return false;
+        if (self.policy == null and !self.document.lint) return false;
         var hash = std.crypto.hash.sha2.Sha256.init(.{});
-        hash.update("project-config-cache-identity-v1");
+        hash.update("project-config-cache-identity-v2");
         hash.update(&self.digest);
-        hash.update(&policy.digest);
+        if (self.policy) |policy| hash.update(&policy.digest);
         var digest: [32]u8 = undefined;
         hash.final(&digest);
         out.* = std.fmt.bytesToHex(digest, .lower);
@@ -273,6 +278,7 @@ fn parseDocument(allocator: std.mem.Allocator, bytes: []const u8, failure: *Fail
     var policy_seen = false;
     var budgets: Budgets = .{};
     var budgets_seen = false;
+    var lint_seen = false;
 
     while (true) {
         const key_token = try readToken(allocator, &scanner, failure);
@@ -283,9 +289,9 @@ fn parseDocument(allocator: std.mem.Allocator, bytes: []const u8, failure: *Fail
         defer freeToken(allocator, value);
         if (std.mem.eql(u8, key, "version")) {
             if (version != null) return fail(failure, &diagnostics, "duplicate version field", error.DuplicateField);
-            const text = numberText(value) orelse return fail(failure, &diagnostics, "version must be the integer 1", error.InvalidVersion);
-            const parsed = std.fmt.parseUnsigned(u32, text, 10) catch return fail(failure, &diagnostics, "version must be the integer 1", error.InvalidVersion);
-            if (parsed != 1) return fail(failure, &diagnostics, "unsupported mylang.json version; expected 1", error.UnsupportedVersion);
+            const text = numberText(value) orelse return fail(failure, &diagnostics, "version must be the integer 1 or 2", error.InvalidVersion);
+            const parsed = std.fmt.parseUnsigned(u32, text, 10) catch return fail(failure, &diagnostics, "version must be the integer 1 or 2", error.InvalidVersion);
+            if (parsed != 1 and parsed != 2) return fail(failure, &diagnostics, "unsupported mylang.json version; expected 1 or 2", error.UnsupportedVersion);
             version = parsed;
         } else if (std.mem.eql(u8, key, "import_policy")) {
             if (policy_seen) return fail(failure, &diagnostics, "duplicate import_policy field", error.DuplicateField);
@@ -299,6 +305,11 @@ fn parseDocument(allocator: std.mem.Allocator, bytes: []const u8, failure: *Fail
             budgets_seen = true;
             if (!isObjectBegin(value)) return fail(failure, &diagnostics, "budgets must be a JSON object", error.InvalidBudget);
             budgets = try parseBudgets(allocator, &scanner, failure);
+        } else if (std.mem.eql(u8, key, "lint")) {
+            if (lint_seen) return fail(failure, &diagnostics, "duplicate lint field", error.DuplicateField);
+            if (!isObjectBegin(value)) return fail(failure, &diagnostics, "lint must be a JSON object", error.InvalidLint);
+            lint_seen = true;
+            try skipValue(allocator, &scanner, failure, &diagnostics);
         } else {
             return fail(failure, &diagnostics, "unknown field in mylang.json", error.UnknownField);
         }
@@ -307,7 +318,8 @@ fn parseDocument(allocator: std.mem.Allocator, bytes: []const u8, failure: *Fail
     const trailing = try readToken(allocator, &scanner, failure);
     if (!isEndOfDocument(trailing)) return fail(failure, &diagnostics, "trailing content after the configuration object", error.InvalidJson);
     if (version == null) return fail(failure, &diagnostics, "mylang.json must carry version: 1", error.MissingVersion);
-    return .{ .version = version.?, .import_policy = import_policy, .budgets = budgets };
+    if (lint_seen and version.? != 2) return fail(failure, &diagnostics, "lint requires mylang.json version 2", error.InvalidLint);
+    return .{ .version = version.?, .import_policy = import_policy, .budgets = budgets, .lint = lint_seen };
 }
 
 /// Read the body of a `budgets` object after its opening brace. Every key is
@@ -343,6 +355,25 @@ fn parseBudgets(allocator: std.mem.Allocator, scanner: *std.json.Scanner, failur
         if (!matched) return fail(failure, scanner.diagnostics.?, "unknown field in budgets", error.UnknownField);
     }
     return budgets;
+}
+
+/// Consume the rest of a JSON value whose opening object or array token was
+/// already read, including nested containers and scalar leaves. The `lint`
+/// object's contents belong to the lint driver, which parses them itself.
+// twin-drift-ok: this root-module file cannot import the `mylang` module's
+// lint_config.zig, so the strict-JSON skip is deliberately duplicated there.
+fn skipValue(allocator: std.mem.Allocator, scanner: *std.json.Scanner, failure: *Failure, diagnostics: *const std.json.Scanner.Diagnostics) Error!void {
+    var depth: usize = 1;
+    while (depth != 0) {
+        const token = try readToken(allocator, scanner, failure);
+        defer freeToken(allocator, token);
+        switch (token) {
+            .object_begin, .array_begin => depth += 1,
+            .object_end, .array_end => depth -= 1,
+            .end_of_document => return fail(failure, diagnostics, "unterminated lint object in mylang.json", error.InvalidJson),
+            else => {},
+        }
+    }
 }
 
 fn freeToken(allocator: std.mem.Allocator, token: std.json.Scanner.Token) void {

@@ -1,0 +1,7 @@
+# oracle: cpython
+def main() -> int:
+    c = chr(65)
+    o = ord("A")
+    h = hex(255)
+    print(c, o, h)
+    return 42

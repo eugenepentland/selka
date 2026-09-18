@@ -10,6 +10,7 @@ const planner = @import("native_test_plan.zig");
 const receipts = @import("native_test_receipts.zig");
 const contracts = @import("native_test_contracts.zig");
 const fanout = @import("native_test_directory.zig");
+const language = @import("mylang");
 const graph_store = @import("native_test_graph.zig");
 const invalidation = @import("invalidation.zig");
 const budget = @import("memory_budget");
@@ -185,7 +186,40 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     const config_bytes = if (opts.cases) |path| try context.read(path) else "null";
     const config = (try std.json.parseFromSlice(std.json.Value, context.allocator, config_bytes, .{ .allocate = .alloc_always })).value;
     const declared_schema = try contracts.testSchema(context.allocator, production);
-    const selected: []const cases.Case = if (opts.bench.only) &.{} else try cases.discover(context.allocator, declared_schema, config, opts.filter);
+    var selected: []const cases.Case = if (opts.bench.only) &.{} else try cases.discover(context.allocator, declared_schema, config, opts.filter);
+    // `--affected` narrows the discovered set to the tests that reach a
+    // declaration changed since its reference. It is a selection, never a
+    // verdict: an empty derivation still flows through the ordinary report and
+    // exits 3, and a derivation that cannot be made runs the whole set.
+    if (opts.flags.affected) {
+        const source_absolute = try context.absolute(opts.source);
+        const git_root = std.fs.path.dirname(source_absolute) orelse ".";
+        const names = try context.allocator.alloc([]const u8, selected.len);
+        for (selected, names) |case, *name| name.* = case.name;
+        const selection = language.affected_tests.select(.{
+            .memory = context.allocator,
+            .io = context.io,
+            .load_root = captured.root,
+            .git_root = git_root,
+            .entry = captured.entry,
+            .reference = opts.against.?,
+            .discovered = names,
+        }) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.GitFailed => {
+                try std.Io.File.stderr().writeStreamingAll(context.io, "mylang test: --against names a revision git cannot resolve\n");
+                return 2;
+            },
+            error.InvalidEntry => {
+                try std.Io.File.stderr().writeStreamingAll(context.io, options.usage);
+                return 2;
+            },
+        };
+        var kept: std.ArrayList(cases.Case) = .empty;
+        for (selected, selection.keep) |case, keep| if (keep) try kept.append(context.allocator, case);
+        selected = kept.items;
+        try reportAffected(context, selection, opts.against.?);
+    }
     const benches: []const bench.Selection = if (opts.bench.pattern) |pattern| try bench.discover(context.allocator, declared_schema, config, pattern) else &.{};
     const results = try context.allocator.alloc(receipts.Result, selected.len);
     const pure = try context.allocator.alloc(bool, selected.len);
@@ -864,6 +898,23 @@ test "one prepared project graph is shared per selected provider identity" {
     const calls = try context.read(log);
     try std.testing.expectEqual(@as(usize, 3), std.mem.count(u8, calls, "native-test-compile"));
     try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, calls, "list-interfaces"));
+}
+
+/// Print the `--affected` selection: how many tests it kept, and every
+/// discovered test it dropped as unchanged since the reference. The text goes
+/// to stderr so `--json`'s stdout report stays machine-readable.
+fn reportAffected(context: fs.Context, selection: language.affected_tests.Selection, reference: []const u8) Error!void {
+    const stderr = std.Io.File.stderr();
+    var kept: usize = 0;
+    for (selection.keep) |keep| kept += @intFromBool(keep);
+    const summary = if (selection.derived)
+        try std.fmt.allocPrint(context.allocator, "affected: {d} selected, {d} skipped against {s}\n", .{ kept, selection.skipped.len, reference })
+    else
+        try std.fmt.allocPrint(context.allocator, "affected: project could not be checked; running all {d} discovered tests\n", .{kept});
+    try stderr.writeStreamingAll(context.io, summary);
+    for (selection.skipped) |name| {
+        try stderr.writeStreamingAll(context.io, try std.fmt.allocPrint(context.allocator, "skipped {s}: no changed declaration is reachable\n", .{name}));
+    }
 }
 
 fn report(context: fs.Context, results: []const receipts.Result, replayed: []const bool, json: bool) Error!u8 {

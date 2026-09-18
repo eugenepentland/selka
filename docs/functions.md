@@ -237,3 +237,77 @@ The binder name is only a label: it does not become a keyword argument and it is
 excluded from callable identity. An implementation may write fewer inputs than the
 destination footprint permits, and a call through a stored or returned callback
 uses the destination's footprint just as it uses the destination's effect ceiling.
+
+## Attributes
+
+A declaration may carry a fixed-vocabulary attribute on the line directly above
+it. `@deprecated("reason")` marks a callable that callers should stop using:
+a call from another module reports `W_DEPRECATED` with the reason, and the
+attribute is part of the declaration's interface fingerprint. `@test` makes a
+function a discovered test regardless of its name or `export` flag, so
+`mylang test` and the `mylang lint` test rules see the same set. `@allow("rule",
+reason="...")` waives one lint rule for findings on that declaration, replacing
+the `# lint: allow` comment; a missing `reason=` is still `L_WAIVER_REASON` and
+always blocks. The vocabulary is fixed: any other `@name` is
+`E_UNKNOWN_ATTRIBUTE`, and repeating one kind on a declaration is
+`E_DUPLICATE_ATTRIBUTE`. Attributes attach to function declarations and
+round-trip through `fmt`.
+
+```mylang
+# doc: expect 9
+@deprecated("use square_v2; removed after api_version 3")
+def square(x: int) -> int effects():
+    return x * x
+
+
+@test
+def square_of_three() -> bool effects():
+    return square(3) == 9
+
+
+@allow("dead-private", reason="kept for the doctest example")
+def helper() -> int effects():
+    return 1
+
+
+def main(out: Stream) -> int:
+    out.print(square(3))
+    return 0
+```
+
+The call inside `square_of_three` and `main` is same-module, so `@deprecated`
+reports nothing here; a caller in another module would see the warning.
+
+## Docstrings
+
+A string literal that is the first statement of a module or of a function body is
+that declaration's docstring. Write it with the ordinary `"..."` or `'...'`
+spelling, or with a triple-quoted `"""..."""` that spans lines; either way it is
+inert, so it contributes no value, no binding and no effect, and the statements
+after it behave exactly as they would without it. A string later in a body is not
+a docstring and stays an ordinary standalone expression. A record, union, enum or
+domain may document itself the same way, with the string as the first line of its
+body.
+
+`list-interfaces` prints a declaration's first docstring line after its
+signature. `mylang lint`'s `undocumented-export` rule reports an exported
+function, record, union or domain whose docstring is missing, is shorter than
+`min_chars` non-whitespace characters (12 by default, configurable as the
+top-level `lint.min_chars` key in `mylang.json`), or merely restates the
+declaration's own name; it reports under the `agent` profile and blocks under
+`strict` and `safety`.
+
+```mylang
+# doc: expect 14
+def area(width: int, height: int) -> int effects():
+    """The rectangle's area in square units.
+
+    A docstring is inert, so this text never reaches the program.
+    """
+    return width * height
+
+
+def main() -> int effects():
+    return area(2, 7)
+```
+

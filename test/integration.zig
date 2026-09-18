@@ -1962,6 +1962,492 @@ test "CLI checkProjectPolicy distinguishes language failures policy failures and
         \\    return 0
     , &.{ "--policy=a", "--policy=b" }, 2, "", "usage:");
 }
+// spec: LINT-1
+test "CLI lint reports L_ findings and blocks only under --gate" {
+    const source =
+        \\module input
+        \\export compute
+        \\export test_compute
+        \\
+        \\
+        \\def compute(value: int) -> int:
+        \\    "Compute the input plus one."
+        \\    return helper(value)
+        \\
+        \\
+        \\def helper(value: int) -> int:
+        \\    return value + 1
+        \\
+        \\
+        \\def unused_helper(value: int) -> int:
+        \\    return value - 1
+        \\
+        \\
+        \\def test_compute() -> bool effects():
+        \\    return compute(1) == 2
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    try invoke("lint", source, 0, "lint: 1 finding(s): 0 blocking, 1 report, 0 waived, 0 accepted\n", "warning[L_DEAD_PRIVATE]");
+    try invokeOptions("lint", source, &.{"--gate"}, 3, "lint: 1 finding(s): 1 blocking, 0 report, 0 waived, 0 accepted\n", "error[L_DEAD_PRIVATE]");
+    try invokeOptions("lint", source, &.{ "--gate", "--json" }, 3, "lint: 1 finding(s): 1 blocking, 0 report, 0 waived, 0 accepted\n", "\"code\":\"L_DEAD_PRIVATE\"");
+    try invokeOptions("lint", source, &.{"--nope"}, 2, "", "usage:");
+}
+// spec-case: LINT-1
+test "CLI lint test hygiene rules flag fake tests and leave expression tests alone" {
+    const source =
+        \\module input
+        \\
+        \\
+        \\def square(value: int) -> int:
+        \\    return value * value
+        \\
+        \\
+        \\def test_expression() -> bool effects():
+        \\    return square(3) == 9
+        \\
+        \\
+        \\def test_fake() -> bool effects():
+        \\    return True
+        \\
+        \\
+        \\def test_conditional() -> bool effects():
+        \\    if 1 == 1:
+        \\        assert 1 == 1
+        \\        return True
+        \\    return False
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    try invokeOptions("lint", source, &.{"--gate"}, 3, "lint: 2 finding(s): 2 blocking, 0 report, 0 waived, 0 accepted\n", "L_TEST_NO_ASSERTION");
+    try invokeOptions("lint", source, &.{ "--gate", "--json" }, 3, "lint: 2 finding(s): 2 blocking, 0 report, 0 waived, 0 accepted\n", "L_TEST_CONDITIONAL");
+}
+// spec-case: LINT-1
+test "CLI lint advisory budget rules report only and never block under gate" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":2,\"lint\":{\"rules\":{\"function-length\":{\"max\":1}}}}" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data =
+        \\module app
+        \\
+        \\
+        \\def value(input: int) -> int:
+        \\    if input > 0:
+        \\        return input
+        \\    return 0
+        \\
+        \\
+        \\def main() -> int:
+        \\    return value(1)
+    });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "app.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "lint", path, "--gate" } });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    try testing.expect(std.mem.indexOf(u8, outcome.stdout, "0 blocking") != null);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, "L_FUNCTION_LENGTH") != null);
+}
+// spec-case: LINT-2
+test "CLI warnings deny makes a checker warning rejecting in check and check-project" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data =
+        \\module app
+        \\
+        \\
+        \\def main() -> int:
+        \\    unused: int = 1
+        \\    return 0
+    });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "app.my", testing.allocator);
+    defer testing.allocator.free(path);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":2,\"lint\":{\"warnings\":\"deny\"}}" });
+    const denied = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", path } });
+    defer testing.allocator.free(denied.stdout);
+    defer testing.allocator.free(denied.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, denied.term);
+    try testing.expect(std.mem.indexOf(u8, denied.stderr, "W_UNUSED_BINDING") != null);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":2,\"lint\":{\"warnings\":\"report\"}}" });
+    const reported = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", path } });
+    defer testing.allocator.free(reported.stdout);
+    defer testing.allocator.free(reported.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, reported.term);
+    try testing.expect(std.mem.indexOf(u8, reported.stderr, "W_UNUSED_BINDING") != null);
+}
+// spec-case: UNUSED-IMPORT-1
+test "CLI check-project reports an import no reference resolves through" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data =
+        \\module helper
+        \\
+        \\
+        \\public def value() -> int:
+        \\    return 42
+    });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "unused_mod.my", .data =
+        \\module unused_mod
+        \\
+        \\
+        \\public def thing() -> int:
+        \\    return 1
+    });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
+        \\module main
+        \\import helper
+        \\import unused_mod
+        \\
+        \\
+        \\def main() -> int:
+        \\    note = "unused_mod.thing()"
+        \\    return helper.value() - 42
+    });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const reported = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-project", path } });
+    defer testing.allocator.free(reported.stdout);
+    defer testing.allocator.free(reported.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, reported.term);
+    try testing.expect(std.mem.indexOf(u8, reported.stderr, "W_UNUSED_IMPORT") != null);
+    // The import the checker resolved through is not reported, and the alias
+    // spelled inside a string literal is not a reference.
+    try testing.expect(std.mem.indexOf(u8, reported.stderr, "`unused_mod`") != null);
+    try testing.expect(std.mem.indexOf(u8, reported.stderr, "`helper`") == null);
+    // A configured `warnings: "deny"` makes the warning rejecting, as for any
+    // other `W_*` code.
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":2,\"lint\":{\"warnings\":\"deny\"}}" });
+    const denied = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-project", path } });
+    defer testing.allocator.free(denied.stdout);
+    defer testing.allocator.free(denied.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, denied.term);
+}
+// spec-case: TESTS-FOR-1
+test "CLI tests-for lists direct and transitive tests and rejects an unknown name" {
+    const source =
+        \\module input
+        \\
+        \\
+        \\def parse(value: int) -> int:
+        \\    return helper(value)
+        \\
+        \\
+        \\def helper(value: int) -> int:
+        \\    return value
+        \\
+        \\
+        \\def test_parse() -> bool effects():
+        \\    return parse(1) == 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    try invokeOptions("tests-for", source, &.{"input::helper"}, 0,
+        \\tests-for input::helper
+        \\  direct (0):
+        \\  reached-by (1): input::test_parse
+        \\
+    , "");
+    try invokeOptions("tests-for", source, &.{"input::parse"}, 0,
+        \\tests-for input::parse
+        \\  direct (1): input::test_parse
+        \\  reached-by (1): input::test_parse
+        \\
+    , "");
+    try invokeOptions("tests-for", source, &.{"input::missing"}, 2, "", "no checked declaration");
+}
+// spec-case: LINT-1
+test "CLI lint undocumented-export reports under agent and blocks under strict" {
+    const source =
+        \\module input
+        \\export compute
+        \\
+        \\
+        \\def compute(value: int) -> int:
+        \\    return value + 1
+        \\
+        \\
+        \\def test_compute() -> bool effects():
+        \\    return compute(1) == 2
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    try invoke("lint", source, 0, "lint: 1 finding(s): 0 blocking, 1 report, 0 waived, 0 accepted\n", "L_UNDOCUMENTED_EXPORT");
+    try invokeOptions("lint", source, &.{ "--gate", "--profile=strict" }, 3, "lint: 1 finding(s): 1 blocking, 0 report, 0 waived, 0 accepted\n", "L_UNDOCUMENTED_EXPORT");
+    const documented =
+        \\module input
+        \\export compute
+        \\
+        \\
+        \\def compute(value: int) -> int:
+        \\    "Compute the input plus one."
+        \\    return value + 1
+        \\
+        \\
+        \\def test_compute() -> bool effects():
+        \\    return compute(1) == 2
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    try invokeOptions("lint", documented, &.{ "--gate", "--profile=strict" }, 0, "lint: 0 finding(s): 0 blocking, 0 report, 0 waived, 0 accepted\n", "");
+}
+// spec-case: API-DIFF-1
+test "CLI api-diff records a baseline and classifies body and interface changes" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data =
+        \\module app
+        \\export compute
+        \\
+        \\
+        \\def compute(value: int) -> int:
+        \\    return value + 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "app.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const baseline = try std.fs.path.join(testing.allocator, &.{ root, "baseline.txt" });
+    defer testing.allocator.free(baseline);
+    const write_option = try std.fmt.allocPrint(testing.allocator, "--write={s}", .{baseline});
+    defer testing.allocator.free(write_option);
+    const against_option = try std.fmt.allocPrint(testing.allocator, "--against={s}", .{baseline});
+    defer testing.allocator.free(against_option);
+    const write = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "api-diff", path, write_option } });
+    defer testing.allocator.free(write.stdout);
+    defer testing.allocator.free(write.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, write.term);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data =
+        \\module app
+        \\export compute
+        \\
+        \\
+        \\def compute(value: int) -> int:
+        \\    return value + 2
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    });
+    const body = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "api-diff", path, against_option } });
+    defer testing.allocator.free(body.stdout);
+    defer testing.allocator.free(body.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, body.term);
+    try testing.expect(std.mem.indexOf(u8, body.stdout, "compatible=1") != null);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data =
+        \\module app
+        \\export compute
+        \\
+        \\
+        \\def compute(value: int, extra: int) -> int:
+        \\    return value + extra
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    });
+    const signature = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "api-diff", path, against_option, "--json" } });
+    defer testing.allocator.free(signature.stdout);
+    defer testing.allocator.free(signature.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, signature.term);
+    try testing.expect(std.mem.indexOf(u8, signature.stdout, "\"breaking\":[\"app::compute\"]") != null);
+    const missing = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "api-diff", path, "--against=absent.txt" } });
+    defer testing.allocator.free(missing.stdout);
+    defer testing.allocator.free(missing.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, missing.term);
+}
+/// Run one git subcommand in `root`, asserting a zero exit. `std.process.run`
+/// ignores the child's stdin, so git cannot disturb the test harness protocol.
+fn gitIn(allocator: std.mem.Allocator, root: []const u8, args: []const []const u8) !void {
+    var argv: std.ArrayList([]const u8) = .empty;
+    defer argv.deinit(allocator);
+    try argv.appendSlice(allocator, &.{ "git", "-C", root });
+    try argv.appendSlice(allocator, args);
+    const result = try std.process.run(allocator, testing.io, .{ .argv = argv.items });
+    defer allocator.free(result.stdout);
+    defer allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+}
+
+// spec-case: CHANGE-WITHOUT-TEST-1
+test "CLI lint change-without-test blocks a changed helper only under gate and against" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
+        \\module main
+        \\
+        \\
+        \\def helper(value: int) -> int:
+        \\    return value + 1
+        \\
+        \\
+        \\def test_helper() -> bool effects():
+        \\    return helper(1) == 2
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    });
+    try gitIn(testing.allocator, root, &.{ "init", "-q" });
+    try gitIn(testing.allocator, root, &.{ "add", "main.my" });
+    try gitIn(testing.allocator, root, &.{ "-c", "user.email=test@example.com", "-c", "user.name=test", "commit", "-q", "-m", "init" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
+        \\module main
+        \\
+        \\
+        \\def helper(value: int) -> int:
+        \\    return value + 2
+        \\
+        \\
+        \\def test_helper() -> bool effects():
+        \\    return helper(1) == 2
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    });
+    const path = try std.fs.path.join(testing.allocator, &.{ root, "main.my" });
+    defer testing.allocator.free(path);
+    const flagged = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "lint", path, "--gate", "--against=HEAD" } });
+    defer testing.allocator.free(flagged.stdout);
+    defer testing.allocator.free(flagged.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, flagged.term);
+    try testing.expect(std.mem.indexOf(u8, flagged.stderr, "L_CHANGE_WITHOUT_TEST") != null);
+    const silent = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "lint", path, "--gate" } });
+    defer testing.allocator.free(silent.stdout);
+    defer testing.allocator.free(silent.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, silent.term);
+}
+// spec: AFFECTED-TEST-1
+test "CLI test affected selects tests that reach a changed declaration" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const before =
+        \\module app
+        \\
+        \\
+        \\def helper(value: int) -> int:
+        \\    return value + 1
+        \\
+        \\
+        \\def test_helper() -> bool effects():
+        \\    return helper(1) == 2
+        \\
+        \\
+        \\def test_unrelated() -> bool effects():
+        \\    return 3 == 3
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    const after =
+        \\module app
+        \\
+        \\
+        \\def helper(value: int) -> int:
+        \\    return value + 2
+        \\
+        \\
+        \\def test_helper() -> bool effects():
+        \\    return helper(1) == 3
+        \\
+        \\
+        \\def test_unrelated() -> bool effects():
+        \\    return 3 == 3
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data = before });
+    try gitIn(testing.allocator, root, &.{ "init", "-q" });
+    try gitIn(testing.allocator, root, &.{ "add", "app.my" });
+    try gitIn(testing.allocator, root, &.{ "-c", "user.email=test@example.com", "-c", "user.name=test", "commit", "-q", "-m", "init" });
+    const path = try std.fs.path.join(testing.allocator, &.{ root, "app.my" });
+    defer testing.allocator.free(path);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
+    defer testing.allocator.free(cache);
+    // An unchanged tree derives nothing: the selection is empty and exits 3,
+    // exactly as a filter that matches nothing does.
+    const empty = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", path, "--affected", "--against=HEAD", "--cache-dir", cache } });
+    defer testing.allocator.free(empty.stdout);
+    defer testing.allocator.free(empty.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, empty.term);
+    try testing.expect(std.mem.indexOf(u8, empty.stderr, "affected: 0 selected, 2 skipped against HEAD") != null);
+    // Editing the helper selects only the test that reaches it.
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data = after });
+    const selected = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", path, "--affected", "--against=HEAD", "--cache-dir", cache } });
+    defer testing.allocator.free(selected.stdout);
+    defer testing.allocator.free(selected.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, selected.term);
+    try testing.expect(std.mem.indexOf(u8, selected.stderr, "affected: 1 selected, 1 skipped against HEAD") != null);
+    try testing.expect(std.mem.indexOf(u8, selected.stderr, "skipped app::test_unrelated") != null);
+    // The two switches are only meaningful together, and a bad reference is a
+    // host failure rather than an empty selection.
+    const without = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", path, "--against=HEAD", "--cache-dir", cache } });
+    defer testing.allocator.free(without.stdout);
+    defer testing.allocator.free(without.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, without.term);
+    const alone = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", path, "--affected", "--cache-dir", cache } });
+    defer testing.allocator.free(alone.stdout);
+    defer testing.allocator.free(alone.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, alone.term);
+    const unresolvable = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", path, "--affected", "--against=no-such-revision", "--cache-dir", cache } });
+    defer testing.allocator.free(unresolvable.stdout);
+    defer testing.allocator.free(unresolvable.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, unresolvable.term);
+    try testing.expect(std.mem.indexOf(u8, unresolvable.stderr, "git cannot resolve") != null);
+}
+// spec-case: LINT-3
+test "CLI lint accept records a baseline that gate then accepts" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data =
+        \\module app
+        \\
+        \\
+        \\def helper() -> int:
+        \\    return 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "app.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const before = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "lint", path, "--gate" } });
+    defer testing.allocator.free(before.stdout);
+    defer testing.allocator.free(before.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, before.term);
+    const accept = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "lint", path, "--accept" } });
+    defer testing.allocator.free(accept.stdout);
+    defer testing.allocator.free(accept.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, accept.term);
+    const after = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "lint", path, "--gate" } });
+    defer testing.allocator.free(after.stdout);
+    defer testing.allocator.free(after.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, after.term);
+    try testing.expect(std.mem.indexOf(u8, after.stdout, "1 accepted") != null);
+}
 test "CLI discovers cross module duplicates with options and rejects invalid dependencies" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
@@ -2050,7 +2536,9 @@ test "CLI module quality reports preserve export roots and advisory thresholds" 
     defer testing.allocator.free(result.stdout);
     defer testing.allocator.free(result.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
-    try testing.expectEqualStrings("", result.stderr);
+    // `import api` exists only to pull `api.my` into the reachable graph, so the
+    // unused-import warning names it and nothing else is written to stderr.
+    try testing.expectEqualStrings("input.my:2:8: warning[W_UNUSED_IMPORT]: import `api` is never referenced in this module; remove it or use it\n  import api\n         ^\n", result.stderr);
     for ([_][]const u8{ "quality-modules-v1", "api.my:5:", "api::entry; private=false; reachable-from-main=false", "module-exported=true reachable-from-exports=true", "module-exported=false reachable-from-exports=true", "function-lines 2 exceeds configured 1", "calls api::hidden at api.my:6:", "Runtime coverage and assertions: not measured" }) |part| try testing.expect(std.mem.indexOf(u8, result.stdout, part) != null);
     try testing.expect(std.mem.indexOf(u8, result.stdout, "no call path from main or exported interfaces") == null);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "api.my", .data =
@@ -6300,4 +6788,34 @@ test "a directory run discovers project roots instead of every module" {
     try testing.expect(std.mem.indexOf(u8, run.stdout, "main::test_main") != null);
     try testing.expect(std.mem.indexOf(u8, run.stdout, "library_test::test_alone") != null);
     try testing.expect(std.mem.indexOf(u8, run.stderr, "E_MODULE_NAME") == null);
+}
+
+// spec-case: LINT-5
+test "CLI list-interfaces prints a tests column from the shared reachability index" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
+        \\module input
+        \\export parse
+        \\
+        \\
+        \\def parse(value: int) -> int:
+        \\    return value
+        \\
+        \\
+        \\def test_parse() -> bool effects():
+        \\    return parse(1) == 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "list-interfaces", path } });
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "export function parse") != null);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "tests(1)") != null);
 }

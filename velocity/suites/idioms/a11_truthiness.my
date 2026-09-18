@@ -1,0 +1,6 @@
+# oracle: cpython
+def main() -> int:
+    xs: list[int] = []
+    if not xs:
+        return 42
+    return 0

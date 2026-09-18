@@ -76,6 +76,7 @@ pub const Parser = struct {
         } = .{},
         lambdas: std.ArrayList(ast.Lambda) = .empty,
         import_aliases: std.StringHashMapUnmanaged(void) = .empty,
+        docstrings: std.ArrayList(ast.DeclarationDoc) = .empty,
     } = .{},
     fn current(self: *Parser) lex.Token {
         return self.tokens[self.cursor.pos];
@@ -150,6 +151,32 @@ pub const Parser = struct {
     fn declaresFunction(self: Parser, name: Span) bool {
         const bit: u2 = if (std.mem.eql(u8, self.src.text(name), "len")) 1 else 2;
         return self.cursor.shadowing & bit != 0;
+    }
+    /// Whether `replace(...)` is called with a keyword argument,
+    /// `replace(record, field=value)`, the functional record update rather than
+    /// the positional three-argument list intrinsic. Only the first argument
+    /// separator decides: the update form always names its first changed field.
+    fn recordUpdateAhead(self: Parser) bool {
+        var at = self.cursor.pos + 1;
+        if (at >= self.tokens.len or self.tokens[at].tag != .lparen) return false;
+        at += 1;
+        var depth: usize = 1;
+        while (at < self.tokens.len) : (at += 1) {
+            switch (self.tokens[at].tag) {
+                .lparen, .lbracket => depth += 1,
+                .rparen, .rbracket => {
+                    depth -= 1;
+                    if (depth == 0) return false;
+                },
+                .comma => if (depth == 1) {
+                    if (at + 2 >= self.tokens.len) return false;
+                    const name = self.tokens[at + 1].tag;
+                    return (name == .ident or name == .kw_len or name == .kw_replace) and self.tokens[at + 2].tag == .equal;
+                },
+                else => {},
+            }
+        }
+        return false;
     }
     /// Whether some registered import name extends `text` with a dot. It marks a
     /// segment that only begins a dotted module path rather than naming one.
@@ -339,26 +366,114 @@ pub const Parser = struct {
         _ = try self.expect(.ident);
         while (self.take(.dot)) _ = try self.expect(.ident);
     }
+    /// The fixed attribute vocabulary: only these three names are accepted.
+    fn attributeKind(text: []const u8) ?ast.AttributeKind {
+        if (std.mem.eql(u8, text, "deprecated")) return .deprecated;
+        if (std.mem.eql(u8, text, "test")) return .@"test";
+        if (std.mem.eql(u8, text, "allow")) return .allow;
+        return null;
+    }
+    /// Whether the next declaration token starts a function head, the only
+    /// declaration kind attributes attach to in this round.
+    fn atFunctionHead(self: *Parser) bool {
+        var at = self.cursor.pos;
+        if (self.tokens[at].tag == .ident and std.mem.eql(u8, self.src.text(self.tokens[at].span), "public")) at += 1;
+        return switch (self.tokens[at].tag) {
+            .kw_def, .kw_private, .kw_conversion => true,
+            .ident => std.mem.eql(u8, self.src.text(self.tokens[at].span), "extern") or std.mem.eql(u8, self.src.text(self.tokens[at].span), "host"),
+            else => false,
+        };
+    }
+    /// Parse the `@name(...)` clauses that precede one declaration, rejecting an
+    /// unknown name and a repeated kind.
+    fn attributes(self: *Parser) diagnostic.Error![]const ast.Attribute {
+        const allocator = self.arena.allocator();
+        var list: std.ArrayList(ast.Attribute) = .empty;
+        while (self.current().tag == .at) {
+            const at_token = self.current();
+            self.cursor.pos += 1;
+            const name = try self.expect(.ident);
+            const clause: Span = .join(at_token.span, name.span);
+            const kind = attributeKind(self.src.text(name.span)) orelse
+                return self.sink.fail("E_UNKNOWN_ATTRIBUTE", clause, "unknown attribute; expected @deprecated, @test or @allow");
+            for (list.items) |existing| if (existing.kind == kind)
+                return self.sink.fail("E_DUPLICATE_ATTRIBUTE", clause, "attribute is repeated on one declaration");
+            var attribute: ast.Attribute = .{ .kind = kind, .span = clause };
+            switch (kind) {
+                .@"test" => {},
+                .deprecated => {
+                    _ = try self.expect(.lparen);
+                    attribute.argument = (try self.expect(.bytes)).span;
+                    attribute.span = .join(at_token.span, (try self.expect(.rparen)).span);
+                },
+                .allow => {
+                    _ = try self.expect(.lparen);
+                    attribute.argument = (try self.expect(.bytes)).span;
+                    if (self.take(.comma)) {
+                        const key = try self.expect(.ident);
+                        if (!std.mem.eql(u8, self.src.text(key.span), "reason")) return self.sink.fail(syntax_code, key.span, "the only @allow argument is reason=\"...\"");
+                        _ = try self.expect(.equal);
+                        attribute.reason = (try self.expect(.bytes)).span;
+                    }
+                    attribute.span = .join(at_token.span, (try self.expect(.rparen)).span);
+                },
+            }
+            try list.append(allocator, attribute);
+        }
+        return list.toOwnedSlice(allocator);
+    }
+    /// Record the name of a declaration carrying the `public` modifier. Keeping
+    /// the recording here holds the top-level dispatch below the complexity cap.
+    fn markPublic(self: *Parser, names: *std.ArrayList(Span), declared: bool, name: Span) std.mem.Allocator.Error!void {
+        if (declared) try names.append(self.arena.allocator(), name);
+    }
+    /// Consume an optional leading `public` modifier and reject it directly
+    /// before an `export` directive, the one spelling it cannot publish.
+    fn takePublic(self: *Parser) diagnostic.Error!bool {
+        const head_token = self.current();
+        const declared = head_token.tag == .ident and std.mem.eql(u8, self.src.text(head_token.span), "public");
+        if (declared) self.cursor.pos += 1;
+        if (declared and self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "export"))
+            return self.sink.fail(syntax_code, self.current().span, "`public` marks a declaration, not an export directive");
+        return declared;
+    }
     /// Parse a complete source program, retaining syntax and diagnostics in the supplied allocator.
     pub fn parse(self: *Parser) diagnostic.Error!ast.Program {
         self.indexShadowingDeclarations();
+        // A leading string statement documents the module itself. The module has
+        // no declaration name, so it is keyed on the empty sentinel span.
+        try self.recordDocstring(ast.module_docstring_span);
         var functions: std.ArrayList(ast.Function) = .empty;
         var records: std.ArrayList(ast.Record) = .empty;
         var domains: std.ArrayList(ast.Domain) = .empty;
         var resources: std.ArrayList(ast.Domain) = .empty;
         var variants: std.ArrayList(ast.Variants) = .empty;
         var constraints: std.ArrayList(ast.Constraint) = .empty;
+        var attribute_table: std.ArrayList(ast.DeclarationAttributes) = .empty;
+        var public_names: std.ArrayList(Span) = .empty;
         while (self.current().tag != .eof) {
+            const pending = try self.attributes();
+            if (pending.len != 0 and !self.atFunctionHead()) return self.sink.fail("E_ATTRIBUTE_TARGET", pending[0].span, "attributes attach to a function declaration");
+            // A leading `public` publishes the declaration that follows, so a
+            // module marks visibility on the declaration itself. It is not a way
+            // to spell the separate `export NAME` directive.
+            const declare_public = try self.takePublic();
             if (self.module_syntax and self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "export")) {
                 self.cursor.pos += 1;
                 _ = try self.declaredName();
+                // A re-export names an imported declaration through its module
+                // qualifier (`export shared.units.Distance`); the directive still
+                // declares nothing locally, so only the dotted spelling is consumed.
+                while (self.take(.dot)) _ = try self.declaredName();
                 _ = try self.expect(.semicolon);
                 continue;
             }
             if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "constraint")) {
                 const head = self.current().span;
                 self.cursor.pos += 1;
-                try constraints.append(self.arena.allocator(), try self.constraintDeclaration(head));
+                const constraint = try self.constraintDeclaration(head);
+                try self.markPublic(&public_names, declare_public, constraint.name);
+                try constraints.append(self.arena.allocator(), constraint);
                 continue;
             }
             if (self.take(.kw_type)) {
@@ -366,6 +481,7 @@ pub const Parser = struct {
                 _ = try self.expect(.equal);
                 const target = try self.typeName();
                 _ = try self.expect(.semicolon);
+                try self.markPublic(&public_names, declare_public, name);
                 try self.syntax.types.aliases.append(self.arena.allocator(), .{ .name = name, .target = target });
                 continue;
             }
@@ -383,6 +499,7 @@ pub const Parser = struct {
                 const literal = self.syntax.nodes.items[@backingInt(value)].data;
                 // Managed literal getters allocate on read; scalar getters remain pure.
                 const allowed = if (literal == .text or literal == .bytes) effects.bit(.managed_allocation) else 0;
+                try self.markPublic(&public_names, declare_public, name);
                 try functions.append(self.arena.allocator(), .{ .policy = .{ .constant = true, .effect_bound = .{ .allowed = allowed, .span = name } }, .signature = .{ .parameters = &.{}, .return_type = ty }, .name = name, .body = body });
                 continue;
             }
@@ -392,6 +509,7 @@ pub const Parser = struct {
                 _ = try self.expect(.colon);
                 const kind = try self.expect(.ident);
                 _ = try self.expect(.semicolon);
+                try self.markPublic(&public_names, declare_public, name.span);
                 try resources.append(self.arena.allocator(), .{ .name = name.span, .backing = kind.span });
                 continue;
             }
@@ -402,6 +520,7 @@ pub const Parser = struct {
                 const name = try self.expect(.ident);
                 const type_parameters = try self.typeParameters();
                 _ = try self.expect(.indent);
+                try self.recordDocstring(name.span);
                 var cases: std.ArrayList(ast.Variant) = .empty;
                 if (self.current().tag != .dedent) while (true) {
                     const tag = try self.expect(.ident);
@@ -410,6 +529,7 @@ pub const Parser = struct {
                     if (!self.take(.comma)) break;
                 };
                 _ = try self.expect(.dedent);
+                try self.markPublic(&public_names, declare_public, name.span);
                 try variants.append(self.arena.allocator(), .{ .type_parameters = type_parameters, .name = name.span, .fallible = fallible, .is_union = is_union, .cases = try cases.toOwnedSlice(self.arena.allocator()) });
                 continue;
             }
@@ -418,6 +538,7 @@ pub const Parser = struct {
                 _ = try self.expect(.colon);
                 const backing = try self.typeName();
                 _ = try self.expect(.indent);
+                try self.recordDocstring(name.span);
                 var codec: ?ast.Codec = null;
                 // `pass` spells an empty suite here as it does in a record.
                 if (self.take(.kw_pass)) _ = try self.expect(.semicolon);
@@ -429,6 +550,7 @@ pub const Parser = struct {
                     } else try functions.append(self.arena.allocator(), try self.function(name.span));
                 }
                 _ = try self.expect(.dedent);
+                try self.markPublic(&public_names, declare_public, name.span);
                 try domains.append(self.arena.allocator(), .{ .name = name.span, .backing = backing, .codec = codec });
                 continue;
             }
@@ -437,21 +559,17 @@ pub const Parser = struct {
                 const name = try self.expect(.ident);
                 const type_parameters = try self.typeParameters();
                 _ = try self.expect(.indent);
-                var fields: std.ArrayList(ast.Parameter) = .empty;
-                const empty_record = self.take(.kw_pass);
-                if (empty_record) _ = try self.expect(.semicolon);
-                if (!empty_record and self.current().tag != .dedent) while (true) {
-                    const field = try self.declaredName();
-                    _ = try self.expect(.colon);
-                    try fields.append(self.arena.allocator(), .{ .name = field, .ty = try self.typeName() });
-                    const next_field = self.current().tag != .dedent and lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos);
-                    if (!self.take(.comma) and !next_field) break;
-                };
+                try self.recordDocstring(name.span);
+                const fields = try self.recordFields();
                 _ = try self.expect(.dedent);
-                try records.append(self.arena.allocator(), .{ .managed = managed_record, .type_parameters = type_parameters, .name = name.span, .fields = try fields.toOwnedSlice(self.arena.allocator()) });
+                try self.markPublic(&public_names, declare_public, name.span);
+                try records.append(self.arena.allocator(), .{ .managed = managed_record, .type_parameters = type_parameters, .name = name.span, .fields = fields });
                 continue;
             }
-            try functions.append(self.arena.allocator(), try self.function(null));
+            const declared_function = try self.function(null);
+            try self.markPublic(&public_names, declare_public, declared_function.name);
+            try functions.append(self.arena.allocator(), declared_function);
+            if (pending.len != 0) try attribute_table.append(self.arena.allocator(), .{ .declaration = declared_function.name, .attributes = pending });
         }
         return .{
             .types = .{
@@ -466,12 +584,15 @@ pub const Parser = struct {
                 },
                 .records = try records.toOwnedSlice(self.arena.allocator()),
                 .constraints = try constraints.toOwnedSlice(self.arena.allocator()),
+                .public_declarations = try public_names.toOwnedSlice(self.arena.allocator()),
             },
 
             .nodes = self.syntax.nodes,
             .statements = self.syntax.statements,
             .functions = try functions.toOwnedSlice(self.arena.allocator()),
             .lambdas = try self.syntax.lambdas.toOwnedSlice(self.arena.allocator()),
+            .attributes = try attribute_table.toOwnedSlice(self.arena.allocator()),
+            .docstrings = try self.syntax.docstrings.toOwnedSlice(self.arena.allocator()),
         };
     }
     fn function(self: *Parser, owner: ?Span) diagnostic.Error!ast.Function {
@@ -509,7 +630,7 @@ pub const Parser = struct {
                 "an extern or host declaration must take `host: Host` as its first parameter",
             );
         }
-        const body = if (host != null) try self.addStatement(.{ .span = (try self.expect(.semicolon)).span, .data = .{ .block = &.{} } }) else try self.block();
+        const body = if (host != null) try self.addStatement(.{ .span = (try self.expect(.semicolon)).span, .data = .{ .block = &.{} } }) else try self.block(name.span);
         return .{
             .policy = .{
                 .host = host,
@@ -554,6 +675,28 @@ pub const Parser = struct {
         };
         if (!literal) return self.sink.fail(eDefaultArgument, node.span, "defaults must be immutable scalar literals");
         return value;
+    }
+    /// One record body's ordered field declarations, each with the optional
+    /// immutable scalar default it declares after `=`. `pass` spells an empty
+    /// body; a required field after a defaulted one is rejected here exactly as
+    /// it is in a function parameter list.
+    fn recordFields(self: *Parser) diagnostic.Error![]const ast.Parameter {
+        var fields: std.ArrayList(ast.Parameter) = .empty;
+        var default_field = false;
+        const empty_record = self.take(.kw_pass);
+        if (empty_record) _ = try self.expect(.semicolon);
+        if (!empty_record and self.current().tag != .dedent) while (true) {
+            const field = try self.declaredName();
+            _ = try self.expect(.colon);
+            const ty = try self.typeName();
+            const default_value = if (self.take(.equal)) try self.defaultArgument() else null;
+            if (default_field and default_value == null) return self.sink.fail(eDefaultArgument, field, "required fields must precede fields with defaults");
+            default_field = default_field or default_value != null;
+            try fields.append(self.arena.allocator(), .{ .default_value = default_value, .name = field, .ty = ty });
+            const next_field = self.current().tag != .dedent and lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos);
+            if (!self.take(.comma) and !next_field) break;
+        };
+        return fields.toOwnedSlice(self.arena.allocator());
     }
     fn typeParameters(self: *Parser) diagnostic.Error![]const ast.TypeParameter {
         if (!self.take(.lbracket)) return &.{};
@@ -762,10 +905,32 @@ pub const Parser = struct {
         try self.syntax.statements.append(self.arena.allocator(), stmt);
         return id;
     }
-    fn block(self: *Parser) diagnostic.Error!ast.StatementId {
+    /// A string literal's source text with its single or triple quotes removed.
+    fn docstringText(self: *Parser, span: Span) []const u8 {
+        const raw = self.src.text(span);
+        const delimiters = byte_literal.quoteDelimiters(raw);
+        if (raw.len < delimiters * 2) return "";
+        return raw[delimiters .. raw.len - delimiters];
+    }
+    /// Consume the current token as `declaration`'s leading docstring when it is
+    /// a string literal. The statement never enters the body, so it is inert.
+    fn recordDocstring(self: *Parser, declaration: Span) diagnostic.Error!void {
+        const token = self.current();
+        if (token.tag != .bytes) return;
+        self.cursor.pos += 1;
+        try self.syntax.docstrings.append(self.arena.allocator(), .{
+            .declaration = declaration,
+            .text = self.docstringText(token.span),
+            .span = token.span,
+        });
+    }
+    fn block(self: *Parser, owner: ?Span) diagnostic.Error!ast.StatementId {
         try self.enter();
         defer self.cursor.depth -= 1;
         const open = try self.expect(.indent);
+        // A function body's first string statement documents the function; any
+        // other block keeps the ordinary discarded-expression reading.
+        if (owner) |declaration| try self.recordDocstring(declaration);
         var statements: std.ArrayList(ast.StatementId) = .empty;
         while (self.current().tag != .dedent) {
             if (self.current().tag == .eof) return self.sink.fail(syntax_code, self.current().span, "block is not closed before the end of the file");
@@ -790,7 +955,7 @@ pub const Parser = struct {
             break :resource null;
         } else try self.conditionExpression();
         const name: ?Span = if (self.take(.kw_as)) (try self.expect(.ident)).span else null;
-        const body = try self.block();
+        const body = try self.block(null);
         return self.addStatement(.{
             .span = .join(first, self.syntax.statements.items[@backingInt(body)].span),
             .data = .{ .with_scope = .{ .resource = resource, .name = name, .body = body } },
@@ -811,7 +976,7 @@ pub const Parser = struct {
             if (self.current().tag != .dedent) while (true) {
                 _ = try self.expect(.kw_case);
                 const pattern = try self.matchPattern();
-                const body = try self.block();
+                const body = try self.block(null);
                 try arms.append(self.arena.allocator(), .{ .ty = pattern.ty, .name = pattern.name, .binding = pattern.binding, .discard_payload = pattern.discard_payload, .body = body });
                 if (self.current().tag != .kw_case) break;
             };
@@ -820,10 +985,10 @@ pub const Parser = struct {
         }
         if (self.take(.kw_if) or self.take(.kw_elif)) {
             const condition = try self.conditionExpression();
-            const then_body = try self.block();
+            const then_body = try self.block(null);
             const else_body = if (self.current().tag == .kw_elif)
                 try self.statement()
-            else if (self.take(.kw_else)) try self.block() else null;
+            else if (self.take(.kw_else)) try self.block(null) else null;
             const last = else_body orelse then_body;
             return self.addStatement(.{ .span = .join(first.span, self.syntax.statements.items[@backingInt(last)].span), .data = .{ .branch = .{
                 .condition = condition,
@@ -834,7 +999,7 @@ pub const Parser = struct {
         if (self.take(.kw_for)) return self.forStatement(first);
         if (self.take(.kw_while)) {
             const condition = try self.conditionExpression();
-            const body = try self.block();
+            const body = try self.block(null);
             return self.addStatement(.{ .span = .join(first.span, self.syntax.statements.items[@backingInt(body)].span), .data = .{ .loop = .{ .condition = condition, .body = body } } });
         }
         var implicit_discard = false;
@@ -848,12 +1013,21 @@ pub const Parser = struct {
                 const condition = try self.expression(0);
                 var message = self.src.text(self.syntax.nodes.items[@backingInt(condition)].span);
                 var literal: ?Span = null;
+                var value: ?ast.NodeId = null;
                 if (self.take(.comma)) {
-                    const quoted = try self.expect(.bytes);
-                    literal = quoted.span;
-                    message = try byte_literal.decode(self.arena.allocator(), self.src, quoted.span, self.sink);
+                    // A quoted message keeps its decoded literal, which the native
+                    // trap carries directly; any other expression is rendered to
+                    // standard error on the failure path only.
+                    if (self.current().tag == .bytes) {
+                        const quoted = try self.expect(.bytes);
+                        literal = quoted.span;
+                        message = try byte_literal.decode(self.arena.allocator(), self.src, quoted.span, self.sink);
+                    } else {
+                        value = try self.expression(0);
+                        message = "";
+                    }
                 }
-                break :check .{ .assertion = .{ .condition = condition, .message = message, .literal = literal } };
+                break :check .{ .assertion = .{ .condition = condition, .message = message, .literal = literal, .value = value } };
             },
             .kw_break, .kw_continue => exit: {
                 self.cursor.pos += 1;
@@ -933,7 +1107,7 @@ pub const Parser = struct {
                 // The same form when the receiver is a postfix expression.
             } else if (second_name != null) return self.sink.fail(eIteration, node.span, "two iteration names require enumerate or zip");
         }
-        const body = try self.block();
+        const body = try self.block(null);
         const span: Span = .join(first.span, self.syntax.statements.items[@backingInt(body)].span);
         if (start) |range_start| {
             if (second_name != null) return self.sink.fail(eIteration, span, "range requires one iteration name");
@@ -1030,7 +1204,7 @@ pub const Parser = struct {
                 const close = try self.expect(.rbracket);
                 break :list try self.append(.{ .span = .join(token.span, close.span), .data = .{ .list_literal = try values.toOwnedSlice(self.arena.allocator()) } });
             },
-            .kw_len, .kw_replace => if (self.declaresFunction(token.span)) try self.parseLeaf(token) else try self.parseBuiltin(token),
+            .kw_len, .kw_replace => if (self.declaresFunction(token.span) or (token.tag == .kw_replace and self.recordUpdateAhead())) try self.parseLeaf(token) else try self.parseBuiltin(token),
             .kw_unwrap => try self.parseBuiltin(token),
             .kw_todo => try self.parseHole(token),
             .kw_codec_encode, .kw_codec_decode => try self.parseCodecOperation(token),

@@ -1,6 +1,5 @@
 module amount
-export total
 
 
-def total() -> int effects():
+public def total() -> int effects():
     return 42

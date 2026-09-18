@@ -91,6 +91,9 @@ test {
     _ = @import("invalidation_matrix_test.zig");
     _ = @import("semantic_project_test.zig");
     _ = @import("import_policy_test.zig");
+    _ = @import("lint_config_test.zig");
+    _ = @import("lint_test.zig");
+    _ = @import("lint_store_test.zig");
     _ = @import("source_map_test.zig");
     _ = @import("project_test.zig");
     _ = @import("interfaces_test.zig");
@@ -98,7 +101,10 @@ test {
     _ = @import("duplicates_test.zig");
     _ = @import("near_duplicates_test.zig");
     _ = @import("quality_test.zig");
+    _ = @import("affected_tests_test.zig");
     _ = @import("navigation_test.zig");
+    _ = @import("ref_diff.zig");
+    _ = @import("api_diff.zig");
     _ = @import("generic_api_test.zig");
     _ = @import("syntax_cache_large_test.zig");
     _ = @import("structural_constraints_test.zig");

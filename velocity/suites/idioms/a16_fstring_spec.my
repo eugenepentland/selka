@@ -1,0 +1,6 @@
+# oracle: cpython
+def main() -> int:
+    x = 3.14159
+    s = f"{x:.2f}"
+    print(s)
+    return 42

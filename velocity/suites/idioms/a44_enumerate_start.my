@@ -1,0 +1,6 @@
+# oracle: cpython
+def main() -> int:
+    t = 0
+    for i, x in enumerate([10, 20], start=1):
+        t += i
+    return t * 14

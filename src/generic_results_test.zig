@@ -278,3 +278,53 @@ test "generic option propagation unwraps Some forwards None and rejects a result
         \\    return value?
     , "E_TRY_RETURN");
 }
+
+// spec: GENERIC-BODY-2
+test "generic try converts a narrower error into a wrapping union case" {
+    try run(
+        \\union AppError:
+        \\    Detail: str,
+        \\    Missing: i64
+        \\
+        \\
+        \\result Inner:
+        \\    ok: i64,
+        \\    err: str
+        \\
+        \\
+        \\result Outer:
+        \\    ok: bool,
+        \\    err: AppError
+        \\
+        \\
+        \\def inner(flag: bool) -> Inner:
+        \\    if flag:
+        \\        return Err("bad")
+        \\    return Ok(5)
+        \\
+        \\
+        \\def outer[T](flag: bool, seed: T) -> Outer:
+        \\    _ = seed
+        \\    return Ok(inner(flag)? > 3)
+        \\
+        \\
+        \\def handle(value: Outer) -> i64:
+        \\    match value:
+        \\        case Outer.ok(flag):
+        \\            if flag:
+        \\                return 1
+        \\            return 0
+        \\        case Outer.err(error):
+        \\            match error:
+        \\                case AppError.Detail(text):
+        \\                    if text == "bad":
+        \\                        return 7
+        \\                    return 8
+        \\                case AppError.Missing(code):
+        \\                    return 100 + code
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return handle(outer[i64](True, 0)) + handle(outer[i64](False, 0))
+    , 8);
+}

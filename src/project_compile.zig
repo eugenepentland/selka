@@ -39,6 +39,7 @@ pub const EmitError = error{
 };
 
 const std = @import("std");
+const ast = @import("ast.zig");
 const interfaces = @import("interfaces.zig");
 const syntax = @import("project_syntax.zig");
 const source = @import("source.zig");
@@ -192,14 +193,15 @@ pub const Compilation = struct {
         }
         return roots;
     }
-    /// Whether a function is a `test_`-prefixed module declaration that a native
-    /// test run discovers without `export`.
+    /// Whether a function is a discovered test: a `test_`-prefixed module
+    /// declaration, or any declaration carrying `@test`, without `export`.
     fn discoveredTest(self: *Compilation, function: typed.Function) error{InternalError}!bool {
         if (function.type_arguments.len != 0) return false;
         if (@import("std").mem.eql(u8, function.name, @import("entry_adapter.zig").wrapper_name)) return false;
         if (@import("std").mem.startsWith(u8, function.name, "lambda@")) return false;
         const original = self.src.originalSpan(function.declaration) catch return error.InternalError;
         if (original.input >= self.index.units.len or original.input >= self.index.project.modules.items.len) return error.InternalError;
+        if (ast.hasAttribute(self.index.units[original.input].syntax, original.span, .@"test")) return true;
         const prefix_len = self.index.project.modules.items[original.input].name.len + 2;
         if (prefix_len > function.name.len) return error.InternalError;
         return std.mem.startsWith(u8, function.name[prefix_len..], "test_");

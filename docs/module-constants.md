@@ -4,7 +4,7 @@ Declare a module constant with an explicit scalar type:
 
 ```my
 const SCALE: i64 = 6;
-const ANSWER: i64 = SCALE * FACTOR;
+public const ANSWER: i64 = SCALE * FACTOR;
 const FACTOR: i64 = 7;
 const MASK: u8 = u8(255);
 ```

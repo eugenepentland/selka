@@ -7,6 +7,7 @@ const receipt = @import("source_receipt.zig");
 const walk = @import("typed_walk.zig");
 const uses_type = "uses_type";
 const effect_set = @import("effect_set.zig");
+const tests_index = @import("tests_index.zig");
 /// Analysis limits prevent an inspection request from producing unbounded graphs.
 pub const Limits = struct { symbols: usize = 50000, references: usize = 250000 };
 /// Allocation, malformed internal locations, and bounded index exhaustion are distinct.
@@ -262,4 +263,43 @@ fn excerptEnd(bytes: []const u8, start: usize, end: usize) usize {
     var stop = @min(end, start + 16384);
     while (stop < end and bytes[stop] & 0xc0 == 0x80) stop -= 1;
     return stop;
+}
+
+/// Find the checked function with one exact qualified name.
+fn findFunction(program: typed.Program, subject: []const u8) ?typed.FunctionId {
+    for (program.functions, 0..) |function, index| {
+        if (std.mem.eql(u8, function.name, subject)) return @fromBackingInt(@intCast(index));
+    }
+    return null;
+}
+
+/// Render the `tests-for` answer for one qualified declaration: the discovered
+/// tests that call it directly and every test that reaches it transitively.
+/// Returns null when no checked function carries that name.
+pub fn renderTestsFor(allocator: std.mem.Allocator, compilation: *pc.Compilation, subject: []const u8) Error!?[]u8 {
+    const program = compilation.program.?;
+    const target = findFunction(program, subject) orelse return null;
+    // The reachability walk lives in `tests_index.zig` so lint's related notes
+    // and `list-interfaces`'s tests column answer identically.
+    var scratch_arena = std.heap.ArenaAllocator.init(allocator);
+    defer scratch_arena.deinit();
+    const scratch = scratch_arena.allocator();
+    const modules = try compilation.index.moduleSyntax(scratch);
+    const graph = try tests_index.callGraph(scratch, program);
+    const discovered = try tests_index.discoveredTests(scratch, program, modules);
+    var index = try tests_index.build(allocator, program, graph, discovered);
+    defer index.deinit();
+    const answer = index.answer(target);
+
+    var out: std.Io.Writer.Allocating = .init(allocator);
+    errdefer out.deinit();
+    const writer = &out.writer;
+    writer.print("tests-for {s}\n", .{subject}) catch return error.OutOfMemory;
+    writer.print("  direct ({d}):", .{answer.direct.len}) catch return error.OutOfMemory;
+    for (answer.direct) |name| writer.print(" {s}", .{name}) catch return error.OutOfMemory;
+    writer.print("\n  reached-by ({d}):", .{answer.reached.len}) catch return error.OutOfMemory;
+    for (answer.reached) |name| writer.print(" {s}", .{name}) catch return error.OutOfMemory;
+    writer.writeAll("\n") catch return error.OutOfMemory;
+    const owned = try out.toOwnedSlice();
+    return owned;
 }

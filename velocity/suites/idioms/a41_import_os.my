@@ -1,0 +1,7 @@
+# oracle: cpython
+import os
+import sys
+
+def main() -> int:
+    print(sys.argv)
+    return 42

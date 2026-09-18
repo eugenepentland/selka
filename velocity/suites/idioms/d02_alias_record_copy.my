@@ -1,0 +1,10 @@
+# oracle: mylang-only
+record Node:
+    value: int
+
+def main() -> int:
+    nodes = [Node(1)]
+    node = nodes[0]
+    node.value = 42
+    print("nodes[0].value =", nodes[0].value)
+    return nodes[0].value

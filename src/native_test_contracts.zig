@@ -150,6 +150,10 @@ pub fn testSchema(allocator: std.mem.Allocator, contracts: std.json.Value) Error
             try map.put(allocator, "parameters", .{ .string = signature });
             try map.put(allocator, "parameters_count", .{ .integer = @intCast(declaredParameterCount(signature)) });
             try map.put(allocator, "return_reference", .{ .string = "unknown" });
+            // Emit the marker only for a declaration that carries `@test`, so a
+            // fixture that never spells the attribute stays byte-identical.
+            const marked = field(declaration, "test");
+            if (marked == .bool and marked.bool) try map.put(allocator, "test", .{ .bool = true });
             try functions.append(.{ .object = map });
         }
     }

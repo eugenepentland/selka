@@ -1,6 +1,6 @@
 # guardian-snapshot v2
 8 src/ast.zig|FunctionPolicy
-12 src/native_test_options.zig|Options
+13 src/native_test_options.zig|Options
 10 src/native_test_receipts.zig|Result
 10 src/native_test_session.zig|Session
 11 src/native_types.zig|Layout

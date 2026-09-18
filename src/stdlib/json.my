@@ -1,6 +1,8 @@
 module json
 import strings
 export Json
+export Error
+export message
 export max_depth
 export null_value
 export boolean
@@ -32,6 +34,18 @@ union Json:
     text: str,
     array: list[Json],
     object: dict[str, Json]
+
+
+# One rejected document, carrying the human-readable reason it was refused.
+union Error:
+    Malformed: str
+
+
+# The human-readable reason carried by a rejected document; match on the case.
+def message(error: Error) -> str:
+    match error:
+        case Error.Malformed(detail):
+            return detail
 
 
 # One position inside the UTF-8 form of a document; the cell is shared by copies.
@@ -289,13 +303,13 @@ def skip_whitespace(scanner: Scanner):
     return
 
 
-# A message naming the byte offset the scanner stopped at.
-def fail(scanner: Scanner, message: str) -> str:
+# A reason naming the byte offset the scanner stopped at.
+def fail(scanner: Scanner, reason: str) -> str:
     match strings.format_int(scanner.position[0], 10):
         case Ok(rendered):
-            return message + " at byte " + rendered
+            return reason + " at byte " + rendered
         case Err(_):
-            return message
+            return reason
 
 
 # Whether a byte is an ASCII decimal digit.
@@ -600,12 +614,12 @@ def read_value(scanner: Scanner, depth: int) -> Result[Json, str]:
 
 
 # One complete RFC 8259 document, rejecting anything after the top-level value.
-def loads(source: str) -> Result[Json, str] effects(managed_allocation):
+def loads(source: str) -> Result[Json, Error] effects(managed_allocation):
     scanner = scanner_of(source.encode())
     value = read_value(scanner, 1)?
     skip_whitespace(scanner)
     if not at_end(scanner):
-        return Err(fail(scanner, "trailing characters after a JSON value"))
+        return Err(Error.Malformed(fail(scanner, "trailing characters after a JSON value")))
     return Ok(value)
 
 

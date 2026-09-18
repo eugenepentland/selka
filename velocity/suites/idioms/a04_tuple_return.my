@@ -1,0 +1,7 @@
+# oracle: cpython
+def divmod2(a: int, b: int) -> tuple[int, int]:
+    return a // b, a % b
+
+def main() -> int:
+    q, r = divmod2(85, 2)
+    return q

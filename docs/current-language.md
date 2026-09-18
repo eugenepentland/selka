@@ -89,7 +89,7 @@ section.
 Language surface:
 
 - [The language](python-syntax.md) — the syntax, end to end
-- [Statements and bindings](statements.md), [functions and calls](functions.md)
+- [Statements and bindings](statements.md), [functions and calls](functions.md), [docstrings](functions.md#docstrings)
 - [Records, unions and enums](records-and-unions.md), [results and options](results-and-options.md)
 - [Text and strings](text.md), [managed byte strings](bytes.md)
 - [Managed application collections](managed-memory.md), [managed arenas](arenas.md)
@@ -97,7 +97,8 @@ Language surface:
 - [Explicit integer operations](integer-operations.md), [binary64 floating point](floating-point.md)
 - [Modules, imports and exports](modules.md), [immutable constants](module-constants.md), [transparent type aliases](type-aliases.md)
 - [Capabilities and effects](effects.md), [printing, files and command-line authority](io.md)
-- [Integer range iteration](range-iteration.md), [structured loop exits](structured-loop-exits.md), [value-producing matches](match-expressions.md)
+- [Integer range iteration](range-iteration.md), [structured loop exits](structured-loop-exits.md), [matching a variant](match-expressions.md)
+- [Nominal scalar domains and private members](domains.md)
 - [Standard library](standard-library.md), [time and randomness](standard-time-random.md)
 - [Typed JSON boundaries](typed-json.md), [typed holes](typed-holes.md)
 - [Bounded source evaluation in constants](source-evaluation.md), [checking independent function faults](diagnostic-recovery.md)

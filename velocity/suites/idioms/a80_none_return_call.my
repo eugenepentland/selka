@@ -1,0 +1,8 @@
+# oracle: cpython
+def log(msg: str):
+    print(msg)
+
+def main() -> int:
+    log("hi")
+    x = log("there")
+    return 42

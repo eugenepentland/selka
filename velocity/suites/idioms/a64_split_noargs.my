@@ -1,0 +1,4 @@
+# oracle: cpython
+def main() -> int:
+    parts = "a  b\tc".split()
+    return len(parts) * 14

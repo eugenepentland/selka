@@ -1,0 +1,4 @@
+# oracle: cpython
+def main() -> int:
+    xs = sorted([3, 1, 2], reverse=True)
+    return xs[0] * 14

@@ -5,20 +5,17 @@ Projects opt in by adding the following exports and declarations to `io.my`:
 
 ```my
 # doc: skip fragment: declarations appended to an existing host io.my module
-export Block
-export read_block
-export write_block
 
 
-record Block:
+public record Block:
     bytes: [256]u8
     count: i64
 
 
-host def read_block(host: Host, offset: i64) -> Block effects(host)
+public host def read_block(host: Host, offset: i64) -> Block effects(host)
 
 
-host def write_block(host: Host, block: Block) -> i64 effects(host)
+public host def write_block(host: Host, block: Block) -> i64 effects(host)
 ```
 
 Keep the existing `length`, `byte`, and `put` declarations. The host validates

@@ -40,8 +40,11 @@ pub const Options = struct { max_modules: usize = 4096, max_imports: usize = 655
 pub const Site = struct { module: usize, span: source.Span };
 /// Project diagnostic and optional related declaration/import location.
 pub const Problem = struct { code: []const u8, message: []const u8, site: Site, related: ?Site = null };
-/// Declared public name and its source location.
-pub const Export = struct { name: []const u8, span: source.Span };
+/// Declared public name and its source location. A re-export directive
+/// (`export shared.units.Distance`) records `name` as the final member and
+/// `alias` as the imported module qualifier; a plain `export Name` leaves
+/// `alias` null.
+pub const Export = struct { name: []const u8, span: source.Span, alias: ?[]const u8 = null };
 /// Imported module name, local alias, source span, and resolved target index.
 pub const Import = struct {
     name: []const u8,
@@ -210,12 +213,22 @@ pub const Project = struct {
                 continue;
             }
             scanner.pos += 1;
-            const token = try scanner.expect(.ident);
-            const name = src.text(token.span);
+            const exported_name = try scanner.name();
+            const alias = if (exported_name.text.len == exported_name.last.len) null else exported_name.text[0 .. exported_name.text.len - exported_name.last.len - 1];
             _ = try scanner.expect(.semicolon);
-            if (exported_names.get(name)) |previous| return self.fail("E_DUPLICATE_EXPORT", "declaration is already exported", .{ .module = id, .span = token.span }, .{ .module = id, .span = previous });
-            try exported_names.put(allocator, name, token.span);
-            try exports.append(allocator, .{ .name = name, .span = token.span });
+            if (alias) |qualifier| {
+                var imported_qualifier = false;
+                for (self.modules.items[id].imports) |imported| {
+                    if (imported.matches(qualifier)) {
+                        imported_qualifier = true;
+                        break;
+                    }
+                }
+                if (!imported_qualifier) return self.fail("E_UNKNOWN_EXPORT", "re-export names no imported module", .{ .module = id, .span = exported_name.span }, null);
+            }
+            if (exported_names.get(exported_name.last)) |previous| return self.fail("E_DUPLICATE_EXPORT", "declaration is already exported", .{ .module = id, .span = exported_name.span }, .{ .module = id, .span = previous });
+            try exported_names.put(allocator, exported_name.last, exported_name.span);
+            try exports.append(allocator, .{ .name = exported_name.last, .span = exported_name.span, .alias = alias });
         }
         self.modules.items[id].exports = try exports.toOwnedSlice(allocator);
     }
@@ -254,12 +267,20 @@ const Scanner = struct {
     // Discovery skips bodies without parsing them. Only declaration boundaries
     // can introduce exports; identifiers named export inside declarations cannot.
     fn skipDeclaration(self: *Scanner) void {
-        const token = self.tokens[self.pos];
-        const braced = switch (token.tag) {
+        // A `public` modifier precedes the declaration head, so look through it
+        // to decide whether the declaration has a braced body.
+        var head = self.pos;
+        if (head < self.tokens.len and self.tokens[head].tag == .ident and std.mem.eql(u8, self.project.modules.items[self.id].src.text(self.tokens[head].span), "public")) head += 1;
+        const braced = switch (self.tokens[head].tag) {
             .kw_def, .kw_class, .kw_enum, .kw_union, .kw_domain, .kw_private, .kw_conversion => true,
-            else => self.isWord("result"),
+            .ident => self.isWordAt(head, "result") or self.isWordAt(head, "record"),
+            else => false,
         };
         self.pos = lex.declarationEnd(self.project.modules.items[self.id].src.bytes, self.tokens, self.pos, braced);
+    }
+    fn isWordAt(self: Scanner, at: usize, text: []const u8) bool {
+        const token = self.tokens[at];
+        return token.tag == .ident and std.mem.eql(u8, self.project.modules.items[self.id].src.text(token.span), text);
     }
     fn take(self: *Scanner, tag: lex.Tag) bool {
         if (self.tokens[self.pos].tag != tag) return false;

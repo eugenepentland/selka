@@ -1,9 +1,8 @@
 module main
 import shared.units
-export Measurement
 
 
-record Measurement:
+public record Measurement:
     distance: units.Distance
 
 

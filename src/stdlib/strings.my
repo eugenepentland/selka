@@ -15,6 +15,8 @@ export strip
 export lstrip
 export rstrip
 export lines
+export Error
+export message
 export repeat
 export pad_left
 export pad_right
@@ -30,6 +32,21 @@ export format_float
 # The ten decimal digits, in value order.
 def digits() -> str effects(managed_allocation):
     return "0123456789"
+
+
+# One rejected string operation, carrying the human-readable reason.
+union Error:
+    Invalid: str,
+    Overflow: str
+
+
+# The human-readable reason carried by a rejected string operation.
+def message(error: Error) -> str:
+    match error:
+        case Error.Invalid(detail):
+            return detail
+        case Error.Overflow(detail):
+            return detail
 
 
 # The thirty-six digits used by bases up to 36, in value order.
@@ -139,9 +156,9 @@ def lines(text: str) -> list[str] effects(managed_allocation):
 
 
 # Text repeated a nonnegative number of times.
-def repeat(text: str, times: int) -> Result[str, str] effects(managed_allocation):
+def repeat(text: str, times: int) -> Result[str, Error] effects(managed_allocation):
     if times < 0:
-        return Err("repeat count must not be negative")
+        return Err(Error.Invalid("repeat count must not be negative"))
     out = ""
     remaining = times
     while remaining > 0:
@@ -151,18 +168,18 @@ def repeat(text: str, times: int) -> Result[str, str] effects(managed_allocation
 
 
 # Text padded on the left with a single fill character up to a width.
-def pad_left(text: str, width: int, fill: str) -> Result[str, str] effects(managed_allocation):
+def pad_left(text: str, width: int, fill: str) -> Result[str, Error] effects(managed_allocation):
     if len(fill) != 1:
-        return Err("pad fill must be exactly one character")
+        return Err(Error.Invalid("pad fill must be exactly one character"))
     if len(text) >= width:
         return Ok(text)
     return Ok(repeat(fill, width - len(text))? + text)
 
 
 # Text padded on the right with a single fill character up to a width.
-def pad_right(text: str, width: int, fill: str) -> Result[str, str] effects(managed_allocation):
+def pad_right(text: str, width: int, fill: str) -> Result[str, Error] effects(managed_allocation):
     if len(fill) != 1:
-        return Err("pad fill must be exactly one character")
+        return Err(Error.Invalid("pad fill must be exactly one character"))
     if len(text) >= width:
         return Ok(text)
     return Ok(text + repeat(fill, width - len(text))?)
@@ -179,9 +196,9 @@ def lower(text: str) -> str effects(managed_allocation):
 
 
 # Every nonoverlapping occurrence of a nonempty needle replaced by a substitute.
-def substitute(text: str, needle: str, insertion: str) -> Result[str, str] effects(managed_allocation):
+def substitute(text: str, needle: str, insertion: str) -> Result[str, Error] effects(managed_allocation):
     if len(needle) == 0:
-        return Err("replacement needle must not be empty")
+        return Err(Error.Invalid("replacement needle must not be empty"))
     return Ok(text.replace(needle, insertion))
 
 
@@ -266,9 +283,9 @@ def to_float(text: str) -> Option[float] effects(managed_allocation):
 
 
 # Integer rendered in a base between 2 and 36 using lowercase digits.
-def format_int(value: int, base: int) -> Result[str, str] effects(managed_allocation):
+def format_int(value: int, base: int) -> Result[str, Error] effects(managed_allocation):
     if base < 2 or base > 36:
-        return Err("integer base must be between 2 and 36")
+        return Err(Error.Invalid("integer base must be between 2 and 36"))
     if value == 0:
         return Ok("0")
     magnitude = 0u64
@@ -287,9 +304,9 @@ def format_int(value: int, base: int) -> Result[str, str] effects(managed_alloca
 
 
 # Float rendered with a fixed number of decimals, rounding halves away from zero.
-def format_float(value: float, decimals: int) -> Result[str, str] effects(managed_allocation):
+def format_float(value: float, decimals: int) -> Result[str, Error] effects(managed_allocation):
     if decimals < 0 or decimals > 17:
-        return Err("decimal count must be between 0 and 17")
+        return Err(Error.Invalid("decimal count must be between 0 and 17"))
     if math.is_nan(value):
         return Ok("nan")
     if math.is_inf(value):
@@ -299,7 +316,7 @@ def format_float(value: float, decimals: int) -> Result[str, str] effects(manage
     magnitude = math.fabs(value)
     shifted = math.round(magnitude * math.pow(10.0, decimals))
     if shifted >= 9223372036854775808.0:
-        return Err("value is too large to render with fixed decimals")
+        return Err(Error.Overflow("value is too large to render with fixed decimals"))
     scaled = int(shifted)
     body = format_int(scaled, 10)?
     if decimals == 0:

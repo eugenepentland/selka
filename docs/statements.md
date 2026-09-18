@@ -76,12 +76,17 @@ def main() -> int:
 `assert condition` checks a Boolean expression and traps with `R_ASSERT` when it
 is false, reporting the expression's own source text as the message and the
 location of that expression. `assert condition, "message"` reports the string
-literal instead; the message is a literal rather than an expression, and the
-native backend carries it into the located `R_ASSERT` diagnostic. Assertions
+literal instead; the native backend carries it into the located `R_ASSERT`
+diagnostic. The message may also be any `str` expression, including an f-string:
+it is evaluated only when the condition is false, and its rendered text is
+written to standard error immediately before the trap, so a passing assertion
+pays nothing and a failed one names the values it saw. Assertions themselves
 are permitted under every effect bound, including `noalloc` and `noio`, and
 inside generic function bodies, because checking a condition contributes no
-effect of its own. They are not removed in any build, so use them for invariants
-a caller cannot violate and a `Result` for errors it can.
+effect of its own. A literal message stays free of effects; an allocating
+message is an ordinary expression, so under `noalloc` or `effects()` it is
+rejected with `E_EFFECT_BOUND`. Use assertions for invariants a caller cannot
+violate and a `Result` for errors it can.
 
 ```mylang
 # doc: expect 42
@@ -92,6 +97,18 @@ def scaled(value: int, factor: int) -> int noalloc:
 
 def main() -> int:
     return scaled(21, 2)
+```
+
+An f-string message renders through the same formatter `print` uses:
+
+```mylang
+# doc: expect 42
+def half(value: int) -> int:
+    assert value % 2 == 0, f"half needs an even value, got {value}"
+    return value // 2
+
+def main() -> int:
+    return half(84)
 ```
 
 A failing assertion prints the message, the offending line and the call stack,

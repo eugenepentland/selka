@@ -1,15 +1,13 @@
 module catalog
 import money
-export Product
-export price
 
 
-enum Product:
+public enum Product:
     book,
     cable,
     adapter
 
 
-def price(product: Product) -> money.Cents effects():
+public def price(product: Product) -> money.Cents effects():
     prices: [Product]u64 = {Product.book: 2000u64, Product.cable: 500u64, Product.adapter: 750u64}
     return money.Cents.make(prices[product])

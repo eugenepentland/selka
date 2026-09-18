@@ -1,6 +1,4 @@
 module main
-export test_square
-export test_sum
 
 
 def square(value: int) -> int:
@@ -11,11 +9,11 @@ def sum(left: int, right: int) -> int:
     return left + right
 
 
-def test_square() -> bool effects():
+public def test_square() -> bool effects():
     return square(7) == 49
 
 
-def test_sum() -> bool effects():
+public def test_sum() -> bool effects():
     return sum(20, 22) == 42
 
 

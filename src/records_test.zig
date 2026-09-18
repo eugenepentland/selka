@@ -281,3 +281,75 @@ test "record construction nesting named order field access and immutable copies"
         \\    return -Pair(x=4, y=2).x + 10
     , 6);
 }
+
+// spec: RECORD-DEFAULT-1
+test "record field defaults fill omitted fields in positional and named construction" {
+    try result(
+        \\record Config:
+        \\    retries: int = 3
+        \\    verbose: bool = False
+        \\    label: str = "auto"
+        \\
+        \\
+        \\def main() -> i64:
+        \\    positional = Config(7)
+        \\    named = Config(label="x")
+        \\    return positional.retries + named.retries + 3
+    , 13);
+    try reject(
+        \\record Bad:
+        \\    a: int = 1
+        \\    b: int
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_DEFAULT_ARGUMENT");
+}
+
+// spec: RECORD-UPDATE-1
+test "functional record update copies only named fields and leaves the base alone" {
+    try result(
+        \\record Config:
+        \\    retries: int = 3
+        \\    verbose: bool = False
+        \\
+        \\
+        \\def main() -> i64:
+        \\    base = Config(verbose=True)
+        \\    changed = replace(base, retries=5)
+        \\    if base.retries == 3 and changed.retries == 5 and changed.verbose:
+        \\        return 9
+        \\    return 0
+    , 9);
+    try result(
+        \\def main() -> i64:
+        \\    values: [3]int = [1, 2, 3]
+        \\    changed = replace(values, 1, 9)
+        \\    return changed[0] + changed[1] + changed[2]
+    , 13);
+    try result(
+        \\def replace(a: int, b: int = 0) -> int:
+        \\    return a + b
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return replace(1, b=2)
+    , 3);
+    try reject(
+        \\record P:
+        \\    x: int
+        \\
+        \\
+        \\def main() -> i64:
+        \\    p = P(x=1)
+        \\    q = replace(p, y=2)
+        \\    return q.x
+    , "E_UNKNOWN_FIELD");
+    try reject(
+        \\def main() -> i64:
+        \\    n = 3
+        \\    q = replace(n, x=2)
+        \\    return q
+    , "E_TYPE");
+}

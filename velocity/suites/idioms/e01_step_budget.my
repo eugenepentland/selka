@@ -1,0 +1,8 @@
+# oracle: cpython
+def main() -> int:
+    total = 0
+    i = 0
+    while i < 2000000:
+        total = (total + i) % 1000003
+        i += 1
+    return total % 100

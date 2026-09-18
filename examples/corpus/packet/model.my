@@ -1,22 +1,17 @@
 module model
-export Reading
-export Message
-export Error
-export Decoded
-export error_code
 
 
-record Reading:
+public record Reading:
     sequence: u8
     value: u32
 
 
-union Message:
+public union Message:
     heartbeat: u8,
     reading: Reading
 
 
-enum Error:
+public enum Error:
     frame_length,
     version,
     kind,
@@ -24,11 +19,11 @@ enum Error:
     checksum
 
 
-result Decoded:
+public result Decoded:
     ok: Message,
     err: Error
 
 
-def error_code(error: Error) -> int effects():
+public def error_code(error: Error) -> int effects():
     codes: [Error]int = {Error.frame_length: -1, Error.version: -2, Error.kind: -3, Error.payload_length: -4, Error.checksum: -5}
     return codes[error]

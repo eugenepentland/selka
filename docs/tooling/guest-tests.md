@@ -157,6 +157,36 @@ passed main::test_sum
 1 passed, 1 cached, 0 failed, 0 skipped
 ```
 
+## Affected selection
+
+`mylang test --affected --against REF` narrows a run to the tests that reach a
+declaration whose own source lines changed since `REF`. It reads the changed
+lines from `git diff` in the entry file's own repository, checks the project, and
+walks the resolved call graph from each discovered test; a test runs only when a
+changed declaration is reachable from it. The derivation is a selection, never a
+verdict: the selected count and every skipped test are printed on stderr, so
+`--json`'s stdout report stays machine-readable, and an empty derivation exits 3
+exactly as a filter that matches nothing does. `--filter` still applies first,
+`lint --gate` and CI run the whole set, `--against` without `--affected` (or the
+reverse) is a usage error, and a `REF` that `git` cannot resolve is a host
+failure. A project that cannot be checked for another reason runs the whole
+discovered set rather than silently skipping tests.
+
+```console
+$ mylang test app/main.my --affected --against HEAD
+affected: 1 selected, 1 skipped against HEAD
+skipped main::test_unrelated: no changed declaration is reachable
+passed main::test_total
+1 passed, 0 cached, 0 failed, 0 skipped
+$ mylang test app/main.my --affected --against HEAD   # nothing changed since HEAD
+affected: 0 selected, 2 skipped against HEAD
+skipped main::test_total: no changed declaration is reachable
+skipped main::test_unrelated: no changed declaration is reachable
+0 passed, 0 cached, 0 failed, 0 skipped
+$ echo $?
+3
+```
+
 ## Isolated source provider fixtures
 
 A case may carry a `providers` object mapping existing dependency `.my` paths to

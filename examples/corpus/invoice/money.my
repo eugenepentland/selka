@@ -1,8 +1,7 @@
 module money
-export Cents
 
 
-domain Cents: int:
+public domain Cents: int:
     def make(value: u64) -> Cents effects():
         return wrap[Cents](int(value))
 

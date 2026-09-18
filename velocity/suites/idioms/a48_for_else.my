@@ -1,0 +1,8 @@
+# oracle: rejected-by-design
+def main() -> int:
+    for x in [1, 2, 3]:
+        if x == 5:
+            break
+    else:
+        return 42
+    return 0

@@ -1,0 +1,9 @@
+# oracle: mylang-only
+def risky(x: int) -> Result[int, str]:
+    if x < 0:
+        return Err("negative")
+    return Ok(x)
+
+def main() -> int:
+    risky(1)
+    return 42

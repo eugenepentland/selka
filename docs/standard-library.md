@@ -80,6 +80,9 @@ which preserves the sign and the overflow or underflow outcome.
 # doc: not-mylang
 digits() -> str                      letters() -> str
 whitespace() -> str
+union Error:
+    Invalid: str, Overflow: str
+message(error: Error) -> str
 is_digit(text: str) -> bool          is_alpha(text: str) -> bool
 is_alnum(text: str) -> bool          is_space(text: str) -> bool
 starts_with(text: str, prefix: str) -> bool
@@ -89,19 +92,22 @@ count(text: str, needle: str) -> int
 strip(text: str) -> str              lstrip(text: str) -> str
 rstrip(text: str) -> str             lines(text: str) -> list[str]
 upper(text: str) -> str              lower(text: str) -> str
-repeat(text: str, times: int) -> Result[str, str]
-pad_left(text: str, width: int, fill: str) -> Result[str, str]
-pad_right(text: str, width: int, fill: str) -> Result[str, str]
-substitute(text: str, needle: str, insertion: str) -> Result[str, str]
+repeat(text: str, times: int) -> Result[str, Error]
+pad_left(text: str, width: int, fill: str) -> Result[str, Error]
+pad_right(text: str, width: int, fill: str) -> Result[str, Error]
+substitute(text: str, needle: str, insertion: str) -> Result[str, Error]
 to_int(text: str) -> Option[int]     to_float(text: str) -> Option[float]
-format_int(value: int, base: int) -> Result[str, str]
-format_float(value: float, decimals: int) -> Result[str, str]
+format_int(value: int, base: int) -> Result[str, Error]
+format_float(value: float, decimals: int) -> Result[str, Error]
 ```
 
 `str` already provides `+`, `==`, `in`, indexing, slicing, iteration,
 `split(separator)`, `separator.join(parts)` and `encode()`. This module adds what
 it lacks. `upper` and `lower` map ASCII only. `substitute` is spelled that way
-because `replace` is a reserved word.
+because `replace` is a reserved word. The fallible builders return `Error`:
+`Invalid` marks an argument outside the operation's accepted range, `Overflow`
+marks a value that does not fit the rendering, and `message(error)` returns the
+human-readable reason.
 
 ```mylang
 # doc: expect 42
@@ -300,7 +306,11 @@ union Json:
     null, boolean: bool, integer: int, number: float,
     text: str, array: list[Json], object: dict[str, Json]
 
-loads(source: str) -> Result[Json, str]
+union Error:
+    Malformed: str
+
+loads(source: str) -> Result[Json, Error]
+message(error: Error) -> str
 dumps(value: Json) -> str
 max_depth() -> int                   type_name(value: Json) -> str
 null_value() -> Json                 boolean(value: bool) -> Json
@@ -323,6 +333,12 @@ reproduces it. A number without a fraction or exponent that fits the signed rang
 becomes `integer`; anything else becomes `number`. Each error message names the
 byte offset where the scanner stopped.
 
+A refusal is an `Error` value whose `Malformed` case carries the human-readable
+reason; `message` returns that reason. Match on the case to branch on the
+category rather than the text. Because the payload is a plain `str`, a module
+that wraps `json.Error` in its own error union converts a propagated failure
+with `?` and no hand-written translation.
+
 ```mylang
 # doc: expect 42
 module main
@@ -332,8 +348,8 @@ def main() -> int:
     match json.loads("{\"rows\":[{\"n\":40},{\"n\":2}]}"):
         case Ok(document):
             return total(document)
-        case Err(message):
-            return 0 - len(message)
+        case Err(error):
+            return 0 - len(json.message(error))
 
 def total(document: json.Json) -> int:
     match json.get(document, "rows"):
@@ -613,8 +629,53 @@ parameters the host supplies, and every other module is pure. Runtime byte budge
 bound backing and bookkeeping allocation. Text indexes count Unicode scalar
 values, there is no Unicode normalization, and case mapping is ASCII only.
 
-Error messages are ordinary text meant for a human reader. Do not match on them;
-match on the `Result` variant and, where a module offers one, on a typed accessor.
+Error messages are ordinary text meant for a human reader; a module that can fail
+carries them in an error union so the category is matchable and the text is only
+printed. See [Error unions](#error-unions).
+
+## Error unions
+
+A standard module whose operations can fail exports an error union named `Error`
+and returns `Result[T, Module.Error]` from every exported fallible operation
+instead of `Result[T, str]`. Each case carries a `str` payload, and the exported
+`message(error)` helper returns the human-readable reason a caller would
+otherwise have matched as bare text. Match on the case to branch on the
+category; the text is for people and may change between releases. Adding a case
+to a published error union is a breaking interface change, because a caller that
+matches exhaustively stops compiling.
+
+The `json` and `strings` modules follow this contract today; `math`, `time`,
+`random`, `base64` and `hex` still return `Result[T, str]`.
+
+`?` converts automatically at such a boundary: when the propagated result's
+error type is the payload type of a case of the enclosing function's error
+union, the error wraps in that case with no hand-written translation helper.
+
+```mylang
+# doc: expect 42
+module main
+import json
+
+union AppError:
+    Json: json.Error
+
+
+def size(source: str) -> Result[int, AppError]:
+    document = json.loads(source)?
+    return Ok(len(json.dumps(document)))
+
+
+def main() -> int:
+    match size("{bad}"):
+        case Ok(_):
+            return 1
+        case Err(error):
+            match error:
+                case AppError.Json(detail):
+                    if len(json.message(detail)) > 0:
+                        return 42
+                    return 2
+```
 
 ## Limits
 

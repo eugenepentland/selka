@@ -163,6 +163,7 @@ pub const Cache = struct {
             .statements = syntax.statements.items,
             .functions = syntax.functions,
             .lambdas = syntax.lambdas,
+            .docstrings = syntax.docstrings,
         }) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => return,
@@ -433,6 +434,7 @@ const StoredSyntax = struct {
     statements: []ast.Statement,
     functions: []const ast.Function,
     lambdas: []const ast.Lambda,
+    docstrings: []const ast.DeclarationDoc = &.{},
 };
 
 fn decodeSyntax(allocator: std.mem.Allocator, payload: []const u8) !ast.Program {
@@ -445,5 +447,6 @@ fn decodeSyntax(allocator: std.mem.Allocator, payload: []const u8) !ast.Program 
         .statements = std.ArrayList(ast.Statement).fromOwnedSlice(stored.statements),
         .functions = stored.functions,
         .lambdas = stored.lambdas,
+        .docstrings = stored.docstrings,
     };
 }

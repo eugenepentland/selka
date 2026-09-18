@@ -26,7 +26,9 @@ pub const Array = struct { syntax: ast.ArrayType, length: ?usize, length_paramet
 /// Ordered type arguments retain their nominal base identity and diagnostic sites.
 pub const Application = struct { syntax: ast.TypeApplication, declaration: usize, arguments: []const Expression };
 /// Named record field or closed variant case, including payload-free cases.
-pub const Field = struct { name: Span, ty: ?Expression, builtin_name: ?[]const u8 = null };
+/// `default_value` is the backing node id of a record field's declared default,
+/// or null for a case and for a required field.
+pub const Field = struct { name: Span, ty: ?Expression, builtin_name: ?[]const u8 = null, default_value: ?usize = null };
 /// Declaration category determines equality and owner/result obligations independently of spelling.
 pub const Kind = enum { record, variants, result, enumeration, domain, buffer, resource };
 /// Template metadata is arena-owned and has no executable placeholder type ID.
@@ -277,7 +279,14 @@ pub const Index = struct {
             );
             try names.put(ctx.allocator, ctx.src.text(input.name), input.name);
             const span: ?Span = if (@hasField(@TypeOf(input), "ty")) input.ty else input.payload;
-            out.* = .{ .name = input.name, .ty = if (span) |at| try self.expression(at, declaration.parameters) else null };
+            out.* = .{
+                .name = input.name,
+                .ty = if (span) |at| try self.expression(at, declaration.parameters) else null,
+                .default_value = if (@hasField(@TypeOf(input), "default_value"))
+                    (if (input.default_value) |value| @backingInt(value) else null)
+                else
+                    null,
+            };
         }
         if (declaration.kind != .record and inputs.len == 0) return ctx.sink.fail("E_EMPTY_VARIANTS", name, "closed enum and union types require at least one variant");
         if (declaration.kind == .result) {

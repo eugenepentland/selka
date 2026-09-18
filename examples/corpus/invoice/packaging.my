@@ -1,9 +1,8 @@
 module packaging
-export fee
 
 
 # Independent packaging tariff; changes are reviewed separately from delivery.
-def fee(items: int) -> int effects():
+public def fee(items: int) -> int effects():
     cents = 100
     if items > 10:
         cents += 100

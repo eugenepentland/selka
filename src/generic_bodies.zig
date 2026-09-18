@@ -1340,7 +1340,12 @@ const Checker = struct {
         const value = try self.expression(operand);
         if (try self.shapes().matchResult(value, span)) |input| {
             const output = try self.resultShape(self.result, span, eTryReturn);
-            try self.same(input.error_type, output.error_type, span);
+            // The error converts implicitly when the enclosing union carries it
+            // as a case payload, exactly as the concrete path's `typed.wrappingCase`
+            // rule allows. Distinct type parameters still stay distinct.
+            if (!symbolic.same(input.error_type, output.error_type, self.catalog) and
+                !try self.wrappingErrorCase(output.error_type, input.error_type, span))
+                try self.same(input.error_type, output.error_type, span);
             try self.requireHandled(0, span);
             if (temporaries != 0) return self.sink.fail("E_RESULT_PROPAGATION", span, "propagation could drop an already evaluated result temporary");
             return input.ok_type;
@@ -1353,6 +1358,23 @@ const Checker = struct {
             return input.element;
         }
         return self.sink.fail("E_TRY_TYPE", span, "try requires a declared result or option");
+    }
+    /// Whether `container` is a symbolic union that carries `payload` as one
+    /// case payload: the symbolic form of the concrete path's
+    /// `typed.wrappingCase`, so `?` can convert a narrower error into the
+    /// enclosing union inside an uninstantiated template body.
+    fn wrappingErrorCase(self: *Checker, container: Symbolic, payload: Symbolic, span: source.Span) Error!bool {
+        if (container == .concrete and payload == .concrete) {
+            return typed.wrappingCase(self.catalog.records, container.concrete, payload.concrete) != null;
+        }
+        const kind = self.shapes().kind(container) orelse return false;
+        if (kind != .variants) return false;
+        const shape = try self.shapes().schema(container, span);
+        for (shape.fields) |field| {
+            const declared = field.ty orelse continue;
+            if (symbolic.same(declared, payload, self.catalog)) return true;
+        }
+        return false;
     }
     fn enumMember(self: *Checker, field: @FieldType(@FieldType(ast.Node, "data"), "field"), span: source.Span) Error!?Symbolic {
         const base = self.program.nodes.items[@backingInt(field.base)];

@@ -1,0 +1,145 @@
+//! Shared "which discovered tests reach this declaration" index over one
+//! checked program. `mylang tests-for`, the related notes `mylang lint` puts on
+//! a finding, and the `tests` column of `mylang list-interfaces` all read this
+//! one walk, so the three never disagree about what a test is or what reaches.
+const std = @import("std");
+const ast = @import("ast.zig");
+const entry_adapter = @import("entry_adapter.zig");
+const source = @import("source.zig");
+const typed = @import("typed.zig");
+const walk = @import("typed_walk.zig");
+
+/// Building an index allocates; there is no other failure mode.
+pub const Error = std.mem.Allocator.Error;
+
+/// One module's parsed syntax and source, the inputs test discovery needs.
+pub const ModuleSyntax = struct { name: []const u8, src: source.Source, syntax: ast.Program };
+
+/// Direct and transitive discovered tests that reach one declaration, in
+/// discovery order. Names are the checked program's module-qualified names.
+pub const Answer = struct {
+    direct: []const []const u8 = &.{},
+    reached: []const []const u8 = &.{},
+};
+
+/// Per-declaration reachability, owned by its arena until `deinit`.
+pub const Index = struct {
+    arena: std.heap.ArenaAllocator,
+    /// Tests whose body calls each function directly, by function index.
+    direct: [][]const []const u8,
+    /// Every test that reaches each function, directly or transitively.
+    reached: [][]const []const u8,
+
+    /// Release every table and list built for this index.
+    pub fn deinit(self: *Index) void {
+        self.arena.deinit();
+    }
+
+    /// The direct and transitive tests that reach `target`. An identity from
+    /// another program yields empty lists rather than an out-of-bounds read.
+    pub fn answer(self: *const Index, target: typed.FunctionId) Answer {
+        const index = @backingInt(target);
+        if (index >= self.direct.len) return .{};
+        return .{ .direct = self.direct[index], .reached = self.reached[index] };
+    }
+};
+
+/// Discover the test functions of a checked program: a `test_`-prefixed local
+/// name, or any declaration carrying `@test`, without a generic parameter list.
+pub fn discoveredTests(memory: std.mem.Allocator, program: typed.Program, modules: []const ModuleSyntax) Error![]typed.FunctionId {
+    var tests: std.ArrayList(typed.FunctionId) = .empty;
+    defer tests.deinit(memory);
+    for (program.functions) |function| {
+        if (function.type_arguments.len != 0) continue;
+        if (std.mem.eql(u8, function.name, entry_adapter.wrapper_name)) continue;
+        if (std.mem.startsWith(u8, function.name, "lambda@")) continue;
+        const local = localName(function.name);
+        if (!std.mem.startsWith(u8, local, "test_") and !hasTestAttribute(modules, function.name)) continue;
+        try tests.append(memory, function.id);
+    }
+    return tests.toOwnedSlice(memory);
+}
+
+/// Resolve each function's direct `.call` targets by walking its checked body.
+/// Function-value `invoke` sites are not resolved call edges and are excluded,
+/// exactly as the quality call graph excludes them.
+pub fn callGraph(memory: std.mem.Allocator, program: typed.Program) Error![][]const typed.FunctionId {
+    const graph = try memory.alloc([]const typed.FunctionId, program.functions.len);
+    for (program.functions, 0..) |function, index| {
+        var calls: std.ArrayList(typed.FunctionId) = .empty;
+        defer calls.deinit(memory);
+        var walker = try walk.Walker.init(memory, program, function.scope.body);
+        defer walker.deinit();
+        while (try walker.next()) |item| switch (item) {
+            .expression => |id| switch (program.nodes[@backingInt(id)].data) {
+                .call => |call| try calls.append(memory, call.function),
+                else => {},
+            },
+            .statement => {},
+        };
+        graph[index] = try calls.toOwnedSlice(memory);
+    }
+    return graph;
+}
+
+/// Invert a call graph and a test set into per-function direct and transitive
+/// test answers, in test discovery order.
+pub fn build(memory: std.mem.Allocator, program: typed.Program, call_graph: []const []const typed.FunctionId, tests: []const typed.FunctionId) Error!Index {
+    var arena = std.heap.ArenaAllocator.init(memory);
+    errdefer arena.deinit();
+    const scratch = arena.allocator();
+    const direct_lists = try scratch.alloc(std.ArrayList([]const u8), program.functions.len);
+    const reached_lists = try scratch.alloc(std.ArrayList([]const u8), program.functions.len);
+    for (direct_lists) |*list| list.* = .empty;
+    for (reached_lists) |*list| list.* = .empty;
+    const visited = try scratch.alloc(bool, program.functions.len);
+    var pending: std.ArrayList(typed.FunctionId) = .empty;
+    for (tests) |test_id| {
+        const test_index = @backingInt(test_id);
+        if (test_index >= program.functions.len) continue;
+        const name = program.functions[test_index].name;
+        @memset(visited, false);
+        pending.clearRetainingCapacity();
+        visited[test_index] = true;
+        try pending.append(scratch, test_id);
+        while (pending.pop()) |current| {
+            try reached_lists[@backingInt(current)].append(scratch, name);
+            for (call_graph[@backingInt(current)]) |callee| {
+                const target = @backingInt(callee);
+                if (target >= visited.len or visited[target]) continue;
+                visited[target] = true;
+                try pending.append(scratch, callee);
+            }
+        }
+        for (call_graph[test_index]) |callee| try direct_lists[@backingInt(callee)].append(scratch, name);
+    }
+    const direct = try scratch.alloc([]const []const u8, program.functions.len);
+    const reached = try scratch.alloc([]const []const u8, program.functions.len);
+    for (direct, reached, direct_lists, reached_lists) |*kept, *everything, direct_list, reached_list| {
+        kept.* = direct_list.items;
+        everything.* = reached_list.items;
+    }
+    return .{ .arena = arena, .direct = direct, .reached = reached };
+}
+
+/// Local (unqualified) part of a `module::name` function identity.
+fn localName(qualified: []const u8) []const u8 {
+    const at = std.mem.indexOf(u8, qualified, "::") orelse return qualified;
+    return qualified[at + 2 ..];
+}
+
+/// Whether the function whose checked identity is `qualified` carries `@test`
+/// in the module syntax that declares it.
+fn hasTestAttribute(modules: []const ModuleSyntax, qualified: []const u8) bool {
+    const at = std.mem.indexOf(u8, qualified, "::") orelse return false;
+    const module_name = qualified[0..at];
+    const local = qualified[at + 2 ..];
+    for (modules) |module| {
+        if (!std.mem.eql(u8, module.name, module_name)) continue;
+        for (module.syntax.functions) |function| {
+            if (!std.mem.eql(u8, module.src.text(function.name), local)) continue;
+            return ast.hasAttribute(module.syntax, function.name, .@"test");
+        }
+    }
+    return false;
+}

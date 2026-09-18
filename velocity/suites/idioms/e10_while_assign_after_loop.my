@@ -1,0 +1,6 @@
+# oracle: cpython
+def main() -> int:
+    xs = [1, 2, 3]
+    for x in xs:
+        last = x
+    return last

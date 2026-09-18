@@ -1,0 +1,11 @@
+# oracle: mylang-only
+record P:
+    x: int
+    tags: list[str]
+
+def main() -> int:
+    p = P(1, ["a"])
+    print(p)
+    print(str(p))
+    print(f"{p}")
+    return 42

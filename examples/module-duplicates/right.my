@@ -1,8 +1,7 @@
 module right
-export quote
 
 
-def quote(count: int) -> int effects():
+public def quote(count: int) -> int effects():
     subtotal = count * 2
     return subtotal + 3
 

@@ -67,8 +67,15 @@ const Wire = struct {
     module: ?[]const u8,
     header: ?Range,
     imports: []const struct { name: []const u8, alias: ?[]const u8, bytes: Range },
-    exports: []const struct { name: []const u8, bytes: Range },
-    declarations: []const struct { kind: []const u8, name: []const u8, exported: bool, bytes: Range, comment_start: usize },
+    exports: []const struct { name: []const u8, bytes: Range, alias: ?[]const u8 = null },
+    declarations: []const struct {
+        kind: []const u8,
+        name: []const u8,
+        exported: bool,
+        bytes: Range,
+        comment_start: usize,
+        attributes: []const struct { name: []const u8, argument: ?[]const u8 = null, reason: ?[]const u8 = null } = &.{},
+    },
 };
 /// `comment` defaults to `text`: a declaration with no leading comment reports its own start.
 const Expected = struct { kind: []const u8, name: []const u8, exported: bool, text: []const u8, comment: ?[]const u8 = null };
@@ -227,4 +234,120 @@ test "single-file listings report no module header and preserve declaration orde
         try t.expect(listed.comment_start <= listed.bytes.start);
         previous = listed.bytes.end;
     }
+}
+
+/// A re-export directive is reported with its module qualifier, and it marks no
+/// local declaration because it publishes an imported one instead.
+fn reexportListing(allocator: std.mem.Allocator) !void {
+    const text =
+        \\module facade
+        \\import shared.units
+        \\export shared.units.Distance
+        \\export shared.units.make
+        \\
+        \\
+        \\def local() -> i64:
+        \\    return 0
+    ;
+    const listing = try list(allocator, "facade.my", text);
+    defer allocator.free(listing);
+    const parsed = try std.json.parseFromSlice(Wire, allocator, listing, .{});
+    defer parsed.deinit();
+    const wire = parsed.value;
+    try t.expectEqual(@as(usize, 2), wire.exports.len);
+    try t.expectEqualStrings("Distance", wire.exports[0].name);
+    try t.expectEqualStrings(wire.imports[0].name, wire.exports[0].alias.?);
+    try t.expectEqualStrings("make", wire.exports[1].name);
+    try t.expectEqualStrings(wire.imports[0].name, wire.exports[1].alias.?);
+    try t.expectEqual(@as(usize, 1), wire.declarations.len);
+    try t.expectEqualStrings("local", wire.declarations[0].name);
+    try t.expect(!wire.declarations[0].exported);
+}
+
+// spec-case: REEXPORT-2
+test "declaration listing reports a re-export directive with its qualifier" {
+    try reexportListing(t.allocator);
+}
+
+// spec-case: ATTR-1
+test "declaration listing reports attributes inside the declaration byte range" {
+    const text =
+        \\module attrs
+        \\
+        \\
+        \\# keep for the next release
+        \\@deprecated("use square_v2")
+        \\def square(x: i64) -> i64:
+        \\    return x * x
+        \\
+        \\
+        \\@test
+        \\def checks() -> bool:
+        \\    return True
+        \\
+        \\
+        \\@allow("dead-private", reason="kept")
+        \\def helper() -> i64:
+        \\    return 1
+    ;
+    const listing = try list(t.allocator, "attrs.my", text);
+    defer t.allocator.free(listing);
+    const parsed = try std.json.parseFromSlice(Wire, t.allocator, listing, .{});
+    defer parsed.deinit();
+    const wire = parsed.value;
+    try t.expectEqual(@as(usize, 3), wire.declarations.len);
+    try t.expectEqualStrings("square", wire.declarations[0].name);
+    try t.expectEqualStrings("@deprecated", text[wire.declarations[0].bytes.start .. wire.declarations[0].bytes.start + "@deprecated".len]);
+    try t.expectEqual(std.mem.indexOf(u8, text, "# keep").?, wire.declarations[0].comment_start);
+    try t.expectEqual(@as(usize, 1), wire.declarations[0].attributes.len);
+    try t.expectEqualStrings("deprecated", wire.declarations[0].attributes[0].name);
+    try t.expectEqualStrings("use square_v2", wire.declarations[0].attributes[0].argument.?);
+    try t.expectEqualStrings("checks", wire.declarations[1].name);
+    try t.expectEqualStrings("test", wire.declarations[1].attributes[0].name);
+    try t.expect(wire.declarations[1].attributes[0].argument == null);
+    try t.expectEqualStrings("allow", wire.declarations[2].attributes[0].name);
+    try t.expectEqualStrings("dead-private", wire.declarations[2].attributes[0].argument.?);
+    try t.expectEqualStrings("kept", wire.declarations[2].attributes[0].reason.?);
+}
+
+// spec: PUBLIC-DECL-2
+test "a public modifier marks the declaration exported without an export directive" {
+    const text =
+        \\module published
+        \\
+        \\
+        \\public def helper() -> i64:
+        \\    return 1
+        \\
+        \\
+        \\def hidden() -> i64:
+        \\    return 2
+    ;
+    const listing = try list(t.allocator, "published.my", text);
+    defer t.allocator.free(listing);
+    const parsed = try std.json.parseFromSlice(Wire, t.allocator, listing, .{});
+    defer parsed.deinit();
+    const wire = parsed.value;
+    try t.expectEqual(@as(usize, 0), wire.exports.len);
+    try t.expectEqual(@as(usize, 2), wire.declarations.len);
+    try t.expectEqualStrings("helper", wire.declarations[0].name);
+    try t.expect(wire.declarations[0].exported);
+    try t.expect(std.mem.startsWith(u8, text[wire.declarations[0].bytes.start..wire.declarations[0].bytes.end], "public def helper() -> i64:"));
+    try t.expectEqualStrings("hidden", wire.declarations[1].name);
+    try t.expect(!wire.declarations[1].exported);
+}
+
+// spec: PUBLIC-DECL-3
+test "a public declaration and an export directive for it are a duplicate export" {
+    const text =
+        \\module clash
+        \\
+        \\
+        \\public def helper() -> i64:
+        \\    return 1
+        \\
+        \\
+        \\export helper
+    ;
+    try t.expectError(error.SourceError, list(t.allocator, "clash.my", text));
 }

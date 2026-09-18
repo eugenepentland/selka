@@ -1,0 +1,4 @@
+# oracle: cpython
+def main() -> int:
+    a = 6 | 1
+    return a

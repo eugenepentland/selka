@@ -7,6 +7,9 @@ const lexer = @import("lexer.zig");
 const parser = @import("parser.zig");
 const diagnostic = @import("diagnostic.zig");
 const source = @import("source.zig");
+const ast = @import("ast.zig");
+const graph = @import("project.zig");
+const interfaces = @import("interfaces.zig");
 
 const program =
     \\# Python records remain value records.
@@ -411,4 +414,153 @@ test "Python match cases retain contextual pattern names square types and discar
 // spec-case: PYTHON-1
 test "Python layout lower frees partial token allocations on every allocator failure" {
     try t.checkAllAllocationFailures(t.allocator, lowerAllocations, .{});
+}
+
+// spec-case: ATTR-1
+test "the parser rejects unknown repeated and misplaced attributes" {
+    try scopeReject("@unknown\ndef main() -> int:\n    return 0\n", "E_UNKNOWN_ATTRIBUTE");
+    try scopeReject("@test\n@test\ndef main() -> bool:\n    return True\n", "E_DUPLICATE_ATTRIBUTE");
+    try scopeReject("@test\nclass C:\n    x: int\n", "E_ATTRIBUTE_TARGET");
+    var valid = try language.Compilation.init(t.allocator, "attrs.my",
+        \\@test
+        \\def checks() -> bool:
+        \\    return True
+        \\
+        \\
+        \\@allow("dead-private", reason="kept")
+        \\def helper() -> int:
+        \\    return 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    );
+    defer valid.deinit();
+    try valid.parse();
+    try t.expectEqual(@as(usize, 2), valid.syntax.?.attributes.len);
+}
+
+/// One in-memory module source for the project-level DOC-2 scenario.
+const DocFile = struct { path: []const u8, bytes: []const u8 };
+/// Read a fixed module table without touching the filesystem.
+const DocFiles = struct {
+    entries: []const DocFile,
+    fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) graph.ReadError![]u8 {
+        const self: *DocFiles = @ptrCast(@alignCast(context.?));
+        for (self.entries) |file| if (std.mem.eql(u8, file.path, path)) {
+            if (file.bytes.len > limit) return error.TooLarge;
+            return allocator.dupe(u8, file.bytes);
+        };
+        return error.NotFound;
+    }
+    fn provider(self: *DocFiles) graph.Provider {
+        return .{ .context = self, .read = read };
+    }
+};
+
+/// The registered lint rule with this name.
+fn ruleNamed(name: []const u8) *const language.lint.Rule {
+    for (&language.lint.rules) |*rule| if (std.mem.eql(u8, rule.name, name)) return rule;
+    return &language.lint.rules[0];
+}
+
+// spec: DOC-1
+test "leading string statements are inert module and function docstrings" {
+    const documented =
+        \\"""Module documentation for the program."""
+        \\def area(width: int, height: int) -> int effects():
+        \\    """The rectangle's area.
+        \\
+        \\    A # hash and a blank line stay in the literal.
+        \\    """
+        \\    return width * height
+        \\
+        \\
+        \\def main() -> int effects():
+        \\    return area(2, 7)
+    ;
+    var c = try language.Compilation.init(t.allocator, "docstrings.my", documented);
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 14), (try native.run(&c)).value);
+    const module_doc = ast.docstringOf(c.syntax.?, ast.module_docstring_span) orelse return error.TestUnexpectedResult;
+    try t.expectEqualStrings("Module documentation for the program.", module_doc.text);
+    const area_doc = ast.docstringOf(c.syntax.?, c.syntax.?.functions[0].name) orelse return error.TestUnexpectedResult;
+    try t.expectEqualStrings("The rectangle's area.\n\n    A # hash and a blank line stay in the literal.\n    ", area_doc.text);
+    const listing = try c.listDeclarations(t.allocator);
+    defer t.allocator.free(listing);
+    try t.expect(std.mem.indexOf(u8, listing, "\"name\":\"area\"") != null);
+    try t.expect(std.mem.indexOf(u8, listing, "\"name\":\"main\"") != null);
+
+    // A string after the first statement is not a docstring: it stays the
+    // ordinary standalone expression, which the checker rejects as non-unit.
+    const later = "def main() -> int effects():\n    value = 1\n    \"not a docstring\"\n    return value\n";
+    var d = try language.Compilation.init(t.allocator, "later.my", later);
+    defer d.deinit();
+    try d.parse();
+    try t.expect(ast.docstringOf(d.syntax.?, d.syntax.?.functions[0].name) == null);
+    try t.expectEqual(@as(usize, 0), d.syntax.?.docstrings.len);
+    try t.expectError(error.SourceError, d.check());
+    try t.expectEqualStrings("E_EXPLICIT_DISCARD_REQUIRED", d.diagnostics.items[0].code);
+}
+
+/// Parse one `min_chars` value out of a version 2 `mylang.json` document.
+fn parsedMinChars(allocator: std.mem.Allocator, text: []const u8) !?usize {
+    var failure: language.lint_config.Failure = .{};
+    var config = try language.lint_config.parseConfig(allocator, text, &failure);
+    defer config.deinit(allocator);
+    return config.min_chars;
+}
+
+// spec: DOC-2
+test "undocumented-export reports missing short and name-restating docstrings" {
+    const body =
+        \\module main
+        \\export bare
+        \\export terse
+        \\export compute_value
+        \\export area
+        \\
+        \\
+        \\def bare(x: int) -> int:
+        \\    return x
+        \\
+        \\
+        \\def terse(x: int) -> int:
+        \\    "short"
+        \\    return x
+        \\
+        \\
+        \\def compute_value(x: int) -> int:
+        \\    "compute value"
+        \\    return x
+        \\
+        \\
+        \\def area(x: int) -> int:
+        \\    "The rectangle's area in square units."
+        \\    return x
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    var files: DocFiles = .{ .entries = &.{.{ .path = "main.my", .bytes = body }} };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var scratch = std.heap.ArenaAllocator.init(t.allocator);
+    defer scratch.deinit();
+    var findings: std.ArrayList(language.lint.Finding) = .empty;
+    try language.lint.appendUndocumentedExports(scratch.allocator(), &index, 12, &findings);
+    try t.expectEqual(@as(usize, 3), findings.items.len);
+    try t.expectEqualStrings("L_UNDOCUMENTED_EXPORT", findings.items[0].code);
+    try t.expect(std.mem.indexOf(u8, findings.items[0].message, "bare has no docstring") != null);
+    try t.expect(std.mem.indexOf(u8, findings.items[1].message, "terse docstring has 5 non-whitespace characters (min 12)") != null);
+    try t.expect(std.mem.indexOf(u8, findings.items[2].message, "compute_value docstring merely restates the declaration name") != null);
+    const rule = ruleNamed("undocumented-export");
+    try t.expectEqual(language.lint_config.Mode.report, rule.modes.agent);
+    try t.expectEqual(language.lint_config.Mode.block, rule.modes.strict);
+    try t.expectEqual(language.lint_config.Mode.block, rule.modes.safety);
+    // A shorter configured floor accepts the five-character docstring.
+    try t.expectEqual(@as(?usize, 5), try parsedMinChars(t.allocator, "{\"version\":2,\"lint\":{\"min_chars\":5}}"));
 }

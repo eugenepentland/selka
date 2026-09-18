@@ -268,3 +268,73 @@ test "formatter keeps the mutates clause separated from the effect ceiling" {
     ;
     try expectCanonical(t.allocator, "def replace_first(values: list[int], replacement: int) -> None effects(mutation)  mutates(values):\n    values[0] = replacement\n", expected);
 }
+
+// spec: ATTR-1
+test "formatter round-trips declaration attributes beside their definition" {
+    try expectCanonical(t.allocator,
+        \\@deprecated(  "use square_v2" )
+        \\def square(x: int) -> int:
+        \\    return x*x
+        \\@test
+        \\def square_of_three() -> bool:
+        \\    return square(3)==9
+        \\@allow( "dead-private" , reason = "kept" )
+        \\def helper() -> int:
+        \\    return 1
+    ,
+        \\@deprecated("use square_v2")
+        \\def square(x: int) -> int:
+        \\    return x * x
+        \\
+        \\
+        \\@test
+        \\def square_of_three() -> bool:
+        \\    return square(3) == 9
+        \\
+        \\
+        \\@allow("dead-private", reason="kept")
+        \\def helper() -> int:
+        \\    return 1
+        \\
+    );
+}
+
+// spec-case: TOOL-5
+test "formatter round-trips triple-quoted docstrings with newlines and hashes" {
+    try expectCanonical(t.allocator,
+        \\def area(width: int, height: int) -> int:
+        \\    """The rectangle's area.
+        \\
+        \\    # a hash stays literal
+        \\    """
+        \\    return width * height
+        \\
+        \\
+        \\def tail() -> int:
+        \\    """First line
+        \\    second line ends here"""
+        \\    return 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    return area(2, 7) + tail()
+    ,
+        \\def area(width: int, height: int) -> int:
+        \\    """The rectangle's area.
+        \\
+        \\    # a hash stays literal
+        \\    """
+        \\    return width * height
+        \\
+        \\
+        \\def tail() -> int:
+        \\    """First line
+        \\    second line ends here"""
+        \\    return 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    return area(2, 7) + tail()
+        \\
+    );
+}

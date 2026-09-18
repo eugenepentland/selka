@@ -1,0 +1,20 @@
+# oracle: mylang-only
+record Stack[T]:
+    items: list[T]
+
+def push[T](s: Stack[T], v: T):
+    s.items.append(v)
+
+def top[T](s: Stack[T]) -> Option[T]:
+    if len(s.items) == 0:
+        return None
+    return Some(s.items[len(s.items) - 1])
+
+def main() -> int:
+    s = Stack[int](items=[])
+    push(s, 42)
+    match top(s):
+        case Some(v):
+            return v
+        case None:
+            return 0

@@ -2,6 +2,31 @@
   "language_version": "0.1.0",
   "primary_backend": "qbe",
   "implemented": {
+    "lint-command": {
+      "kind": "tooling",
+      "summary": "`mylang lint` reports `L_*` findings over a checked project, with profiles, waiver comments, related notes naming the tests that reach a declaration, section-9 advisory report rules, and a report/block split that only `--gate` enforces.",
+      "doc": "docs/tooling/lint.md#mylang-lint"
+    },
+    "tests-for-index": {
+      "kind": "tooling",
+      "summary": "One tests-reachability index backs `mylang tests-for`, the related notes on `mylang lint` findings, and the `tests(N)` column of `mylang list-interfaces`.",
+      "doc": "docs/tooling/navigation.md#which-tests-reach-a-declaration"
+    },
+    "unused-import-warning": {
+      "kind": "tooling",
+      "summary": "A direct `import` no reference in its module resolves through is reported as the deny-able `W_UNUSED_IMPORT` warning beside `W_UNUSED_BINDING`.",
+      "doc": "docs/tooling/import-policy.md#unused-import-warnings"
+    },
+    "affected-test-selection": {
+      "kind": "tooling",
+      "summary": "`mylang test --affected --against REF` runs only the tests that reach a declaration changed since `REF`, printing the selected and skipped counts and exiting 3 on an empty derivation.",
+      "doc": "docs/tooling/guest-tests.md#affected-selection"
+    },
+    "api-diff": {
+      "kind": "tooling",
+      "summary": "`mylang api-diff` records declaration identity/fingerprint baselines and classifies later changes as additive, compatible or breaking.",
+      "doc": "docs/tooling/api-diff.md#mylang-api-diff"
+    },
     "direct-c-scalar-imports-qbe": {
       "kind": "tooling",
       "summary": "`extern def` declarations call fixed-arity C scalar functions directly from QBE native builds.",
@@ -42,6 +67,16 @@
       "summary": "`mylang test --bench` measures exported `bench_` workloads against versioned baselines and reviewed policy limits.",
       "doc": "docs/tooling/guest-tests.md#performance-benchmarks"
     },
+    "attributes": {
+      "kind": "language",
+      "summary": "@deprecated, @test and @allow attach a fixed attribute vocabulary to declarations; @test drives discovery and @deprecated warns across modules.",
+      "doc": "docs/functions.md#attributes"
+    },
+    "docstrings": {
+      "kind": "language",
+      "summary": "A leading string-literal statement is a module/function docstring, surfaced by list-interfaces and checked by L_UNDOCUMENTED_EXPORT.",
+      "doc": "docs/functions.md#docstrings"
+    },
     "keyword-arguments-and-immutable-defaults": {
       "kind": "language",
       "summary": "Calls accept positional and keyword arguments with trailing immutable scalar defaults.",
@@ -51,6 +86,16 @@
       "kind": "language",
       "summary": "A record is constructed by calling its type with positional or named fields.",
       "doc": "docs/records-and-unions.md#positional-and-named-constructors"
+    },
+    "record-field-defaults": {
+      "kind": "language",
+      "summary": "Record fields may declare scalar defaults omitted at construction.",
+      "doc": "docs/records-and-unions.md#field-defaults-and-functional-update"
+    },
+    "functional-record-update": {
+      "kind": "language",
+      "summary": "`replace(record, field=value, \u2026)` returns a copy with only the named fields changed.",
+      "doc": "docs/records-and-unions.md#field-defaults-and-functional-update"
     },
     "collection-membership-and-value-equality": {
       "kind": "language",
@@ -90,6 +135,11 @@
     "assert-statements": {
       "kind": "language",
       "summary": "`assert condition` and `assert condition, \"message\"` trap `R_ASSERT` under every effect bound.",
+      "doc": "docs/statements.md#assert-statements"
+    },
+    "assert-messages-with-values": {
+      "kind": "language",
+      "summary": "assert accepts an f-string message and renders it only on failure, before the trap.",
       "doc": "docs/statements.md#assert-statements"
     },
     "python-string-methods": {
@@ -312,10 +362,20 @@
       "summary": "Scoped directory providers answer bounded metadata and directory listings.",
       "doc": "docs/tooling/byte-runner.md#filesystem-metadata-and-listings"
     },
+    "public-declarations": {
+      "kind": "language",
+      "summary": "A leading `public` modifier publishes a top-level declaration, replacing the separate `export NAME` directive for local declarations.",
+      "doc": "docs/modules.md#export-placement"
+    },
     "flexible-top-level-export-placement": {
       "kind": "language",
       "summary": "`export` may appear anywhere at the top level, before or after the declaration it names.",
       "doc": "docs/modules.md#export-placement"
+    },
+    "re-exports": {
+      "kind": "language",
+      "summary": "An export directive may re-export an imported declaration so a package publishes one facade module.",
+      "doc": "docs/modules.md#re-exports"
     },
     "source-navigation": {
       "kind": "tooling",
@@ -686,6 +746,16 @@
       "kind": "language",
       "summary": "`debug(values...)` writes to standard error without a capability and contributes no effect.",
       "doc": "docs/io.md#debug"
+    },
+    "error-conversion": {
+      "kind": "language",
+      "summary": "`?` wraps a propagated result's error into the case of the enclosing function's error union whose payload is that error type.",
+      "doc": "docs/results-and-options.md#postfix-error-propagation"
+    },
+    "standard-error-unions": {
+      "kind": "language",
+      "summary": "A standard module whose operations can fail exports an error union with one `str` payload per case and a `message(error)` helper instead of returning `Result[_, str]`.",
+      "doc": "docs/standard-library.md#error-unions"
     }
   },
   "unsupported": [
@@ -737,7 +807,7 @@
     },
     "legacy-syntax": {
       "date": "2026-09-13",
-      "note": "the brace dialect: fn/let/let mut/struct/new, `T { … }` record literals, `::` qualification, `::<T>` turbofish, `cast<T>(x)`, `//` comments, `{ }` scope blocks, match expressions, `true`/`false`/`unit`, `else if` and `a..b` ranges. Indentation, `def`/`class`, `T(f=v)`, `alias.name`, `f[T](x)`, `T(x)`, `#` comments, `match`/`case`, `True`/`False`/`None`, `elif` and `range(a, b)` are the surface."
+      "note": "the brace dialect: fn/let/let mut/struct/new, `T { \u2026 }` record literals, `::` qualification, `::<T>` turbofish, `cast<T>(x)`, `//` comments, `{ }` scope blocks, match expressions, `true`/`false`/`unit`, `else if` and `a..b` ranges. Indentation, `def`/`class`, `T(f=v)`, `alias.name`, `f[T](x)`, `T(x)`, `#` comments, `match`/`case`, `True`/`False`/`None`, `elif` and `range(a, b)` are the surface."
     },
     "value-producing-matches": {
       "date": "2026-09-13",

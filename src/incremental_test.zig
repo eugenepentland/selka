@@ -968,3 +968,58 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
     const report = try describe(&entries, allocator);
     incremental.deinit(report, allocator);
 }
+
+// spec: ATTR-3
+test "a declaration attribute participates in the interface fingerprint but the body does not" {
+    const marked =
+        \\module main
+        \\export value
+        \\
+        \\
+        \\@deprecated("use value_v2")
+        \\def value() -> i64 effects():
+        \\    return 41
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    const plain =
+        \\module main
+        \\export value
+        \\
+        \\
+        \\def value() -> i64 effects():
+        \\    return 41
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    const edited_body =
+        \\module main
+        \\export value
+        \\
+        \\
+        \\@deprecated("use value_v2")
+        \\def value() -> i64 effects():
+        \\    return 42
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    const marked_hash = try functionInterfaceHash(t.allocator, marked, "value");
+    defer t.allocator.free(marked_hash);
+    const plain_hash = try functionInterfaceHash(t.allocator, plain, "value");
+    defer t.allocator.free(plain_hash);
+    const edited_hash = try functionInterfaceHash(t.allocator, edited_body, "value");
+    defer t.allocator.free(edited_hash);
+    try t.expect(!std.mem.eql(u8, marked_hash, plain_hash));
+    const marked_project = try projectInterfaceHash(t.allocator, marked);
+    defer t.allocator.free(marked_project);
+    const plain_project = try projectInterfaceHash(t.allocator, plain);
+    defer t.allocator.free(plain_project);
+    try t.expect(!std.mem.eql(u8, marked_project, plain_project));
+    try t.expectEqualStrings(marked_hash, edited_hash);
+}

@@ -1,9 +1,8 @@
 module production
 import contracts
-export DiscountPrices
 
 
-domain DiscountPrices: int:
+public domain DiscountPrices: int:
     def make(discount: int) -> DiscountPrices effects():
         return wrap[DiscountPrices](discount)
 

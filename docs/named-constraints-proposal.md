@@ -1,7 +1,10 @@
 # Named constraints: implementation brief
 
-Status: proposed feature, not implemented. Requested on 2026-09-15. Reviewed
-against checkout `06454cf`; inspect the current implementation before editing.
+Status: implemented and shipped as the `named-constraints` feature (see the SPEC
+section for `NAMED-CONSTRAINT-*` and `src/features.json`); the historical brief
+below records the design as requested on 2026-09-15 and is kept for context. It
+was reviewed against checkout `06454cf`, which predates the implementation;
+verify each claim against the current compiler before relying on it.
 
 ## Objective
 

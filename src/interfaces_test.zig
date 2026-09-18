@@ -1,6 +1,8 @@
 //! Module interface and export privacy tests covering qualified names, semantic checking, execution, and allocation failures.
 const project_compile_module = @import("project_compile.zig");
 const units_path = "units.my";
+/// Local name a facade publishes and resolves through in these scenarios.
+const distance_name = "Distance";
 const contracts_module = "contracts.my";
 const duplicates_module = @import("duplicates.zig");
 const std = @import("std");
@@ -69,10 +71,10 @@ fn scenario(allocator: std.mem.Allocator) !void {
     try project.load(files.provider(), "main", .{});
     var index = try interfaces.build(&project);
     const span = project.modules.items[0].header.declaration;
-    const distance = try index.resolve(.{ .from = 0, .alias = "units", .name = "Distance", .kind = .type, .owner = null, .span = span });
+    const distance = try index.resolve(.{ .from = 0, .alias = "units", .name = distance_name, .kind = .type, .owner = null, .span = span });
     try t.expectEqual(@as(usize, 1), distance.module);
     _ = try index.resolve(.{ .from = 0, .alias = "units", .name = "Distance.make", .kind = .function, .owner = null, .span = span });
-    _ = try index.resolve(.{ .from = 1, .alias = null, .name = "Distance.raw", .kind = .function, .owner = "Distance", .span = span });
+    _ = try index.resolve(.{ .from = 1, .alias = null, .name = "Distance.raw", .kind = .function, .owner = distance_name, .span = span });
     _ = try index.resolve(.{ .from = 1, .alias = null, .name = "hidden", .kind = .function, .owner = null, .span = span });
     const text = try index.render(allocator);
     defer allocator.free(text);
@@ -141,6 +143,37 @@ fn reject(body: []const u8, code: []const u8) !void {
     try t.expectEqualStrings(code, project.problem.?.code);
     const message = try project.renderProblem(t.allocator);
     defer t.allocator.free(message);
+}
+// spec-case: DOC-1
+test "list-interfaces prints a declaration's first docstring line" {
+    const body =
+        \\module main
+        \\export area
+        \\export Point
+        \\
+        \\
+        \\record Point:
+        \\    """A point in the plane."""
+        \\    x: int
+        \\
+        \\
+        \\def area(width: int, height: int) -> int:
+        \\    """The rectangle's area.
+        \\
+        \\    Long detail that the listing drops.
+        \\    """
+        \\    return width * height
+    ;
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = body }} };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    const text = try index.render(t.allocator);
+    defer t.allocator.free(text);
+    try t.expect(std.mem.indexOf(u8, text, "export type Point # A point in the plane.") != null);
+    try t.expect(std.mem.indexOf(u8, text, "# The rectangle's area.") != null);
+    try t.expect(std.mem.indexOf(u8, text, "Long detail") == null);
 }
 // spec: PROJ-3
 test "module interfaces reject duplicate exports missing symbols and private type leaks" {
@@ -1758,6 +1791,97 @@ test "late duplicate export diagnostics locate both original directives" {
     try t.expectEqual(std.mem.indexOf(u8, body, "value").?, failure.related.?.span.start);
 }
 
+const facade_units =
+    \\module shared.units
+    \\export Distance
+    \\export make
+    \\export metres
+    \\
+    \\
+    \\record Distance:
+    \\    value: i64
+    \\
+    \\
+    \\def make(value: i64) -> Distance effects():
+    \\    return Distance(value=value)
+    \\
+    \\
+    \\def metres(distance: Distance) -> i64 effects():
+    \\    return distance.value
+    \\
+    \\
+    \\def secret() -> i64 effects():
+    \\    return 1
+;
+const facade_module =
+    \\module facade
+    \\import shared.units
+    \\export shared.units.Distance
+    \\export shared.units.make
+    \\export shared.units.metres
+;
+const facade_entry =
+    \\module main
+    \\import facade
+    \\
+    \\
+    \\def main() -> i64:
+    \\    distance: facade.Distance = facade.make(42)
+    \\    return facade.metres(distance)
+;
+/// A facade module publishes imported declarations under its own local names,
+/// and a third module names, constructs and calls them through the facade.
+fn facadeScenario(allocator: std.mem.Allocator) !void {
+    var files: Files = .{ .entries = &.{
+        .{ .path = "main.my", .bytes = facade_entry },
+        .{ .path = "facade.my", .bytes = facade_module },
+        .{ .path = "shared/units.my", .bytes = facade_units },
+    } };
+    var project = graph.Project.init(allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    const units_id = project.names.get("shared.units").?;
+    const facade_id = project.names.get("facade").?;
+    const main_id = project.names.get("main").?;
+    const site = project.modules.items[facade_id].header.declaration;
+    const distance = try index.resolve(.{ .from = main_id, .alias = "facade", .name = distance_name, .kind = .type, .owner = null, .span = site });
+    try t.expectEqual(units_id, distance.module);
+    try t.expectEqualStrings(distance_name, index.units[distance.module].symbols.items[distance.symbol].name);
+    const make = try index.resolve(.{ .from = main_id, .alias = "facade", .name = "make", .kind = .function, .owner = null, .span = site });
+    try t.expectEqual(units_id, make.module);
+    const text = try index.render(allocator);
+    defer allocator.free(text);
+    try t.expect(std.mem.indexOf(u8, text, "module facade\n  export type Distance\n") != null);
+    try t.expect(std.mem.indexOf(u8, text, "  export function make def(value:i64)->shared.units::Distance") != null);
+    var compilation = try project_compile_module.Compilation.init(&index);
+    try compilation.emit();
+    const result = try native.run(&compilation);
+    try t.expectEqual(@as(i64, 42), result.value);
+}
+// spec: REEXPORT-1
+test "re-export facade publishes an imported declaration and a third module resolves through it" {
+    try facadeScenario(t.allocator);
+}
+// spec: REEXPORT-2
+test "re-export rejects an unimported qualifier an unknown target and a private declaration" {
+    try reject(
+        \\module main
+        \\import units
+        \\export missing.Distance
+    , "E_UNKNOWN_EXPORT");
+    try reject(
+        \\module main
+        \\import units
+        \\export units.Missing
+    , "E_UNKNOWN_EXPORT");
+    try reject(
+        \\module main
+        \\import units
+        \\export units.hidden
+    , "E_PRIVATE_SYMBOL");
+}
+
 test "cross module bodies enforce private functions private types nominal identity and local shadowing" {
     try rejectChecked(
         \\module main
@@ -2163,4 +2287,93 @@ test "exported functions publish their inferred ceiling while explicit ceilings 
     try project_narrow.load(files_narrow.provider(), "main", .{});
     var index_narrow = try interfaces.build(&project_narrow);
     try t.expect((try projectDiagnostic(&index_narrow, "E_EFFECT_BOUND")) != null);
+}
+
+/// Whether the named contract declaration carries the `@test` discovery marker.
+fn contractTestMarker(allocator: std.mem.Allocator, contracts: []const u8, name: []const u8) !bool {
+    const parsed = try std.json.parseFromSlice(std.json.Value, allocator, contracts, .{});
+    defer parsed.deinit();
+    for (parsed.value.object.get("modules").?.array.items) |module| {
+        for (module.object.get("declarations").?.array.items) |declaration| {
+            if (!std.mem.eql(u8, declaration.object.get("name").?.string, name)) continue;
+            const marker = declaration.object.get("test") orelse return false;
+            return marker == .bool and marker.bool;
+        }
+    }
+    return false;
+}
+
+// spec: ATTR-2
+test "@test declarations publish a discovery marker in the contract manifest" {
+    const body =
+        \\module main
+        \\export helper
+        \\
+        \\
+        \\def helper(x: i64) -> i64 effects():
+        \\    return x
+        \\
+        \\
+        \\@test
+        \\def takes_param(x: i64) -> i64 effects():
+        \\    return x
+        \\
+        \\
+        \\@test
+        \\def checks() -> bool effects():
+        \\    return True
+    ;
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = body }} };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    const contracts = try index.renderContracts(t.allocator);
+    defer t.allocator.free(contracts);
+    try t.expect(try contractTestMarker(t.allocator, contracts, "checks"));
+    try t.expect(try contractTestMarker(t.allocator, contracts, "takes_param"));
+    try t.expect(!try contractTestMarker(t.allocator, contracts, "helper"));
+}
+
+// spec: PUBLIC-DECL-1
+test "a public declaration crosses the module boundary while an unmarked one stays private" {
+    const dependency =
+        \\module units
+        \\
+        \\
+        \\public def answer() -> i64:
+        \\    return 42
+        \\
+        \\
+        \\public record Reading:
+        \\    value: i64
+        \\
+        \\
+        \\def hidden() -> i64:
+        \\    return 7
+    ;
+    const main =
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def main() -> i64:
+        \\    reading: units.Reading = units.Reading(value=units.answer())
+        \\    return reading.value
+    ;
+    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = main }, .{ .path = units_path, .bytes = dependency } } };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try project_compile_module.Compilation.init(&index);
+    try compilation.check();
+    try rejectChecked(
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return units.hidden()
+    , dependency, "E_PRIVATE_SYMBOL");
 }

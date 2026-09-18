@@ -32,14 +32,43 @@ const Bytes = struct { start: usize, end: usize };
 /// Imported module name, explicit alias and the bytes of its import statement.
 const Import = struct { name: []const u8, alias: ?[]const u8, bytes: Bytes };
 /// Exported name with the bytes of its export statement and its name location.
+/// A re-export (`export shared.units.Distance`) records `name` as the final
+/// member and `alias` as the imported module qualifier; a plain directive
+/// leaves `alias` null.
 const Exported = struct {
     name: []const u8,
     bytes: Bytes,
     span: source.Span,
+    alias: ?[]const u8 = null,
 
-    /// Keep the declarations-v1 export record to its name and statement bytes.
+    /// Keep the declarations-v1 export record to its name and statement bytes;
+    /// a re-export adds its module qualifier so the listing reports the facade.
     pub fn jsonStringify(self: Exported, writer: anytype) !void {
+        if (self.alias) |alias| {
+            try writer.write(.{ .name = self.name, .bytes = self.bytes, .alias = alias });
+            return;
+        }
         try writer.write(.{ .name = self.name, .bytes = self.bytes });
+    }
+};
+/// One listed attribute with its optional string payloads.
+const ListedAttribute = struct {
+    name: []const u8,
+    argument: ?[]const u8 = null,
+    reason: ?[]const u8 = null,
+
+    /// Emit only the payloads this attribute actually carries, so a listing
+    /// without attributes keeps its existing field set.
+    pub fn jsonStringify(self: ListedAttribute, writer: anytype) !void {
+        if (self.argument) |argument| {
+            if (self.reason) |reason| {
+                try writer.write(.{ .name = self.name, .argument = argument, .reason = reason });
+                return;
+            }
+            try writer.write(.{ .name = self.name, .argument = argument });
+            return;
+        }
+        try writer.write(.{ .name = self.name });
     }
 };
 /// One listed declaration with its attached comment start and declaration bytes.
@@ -49,7 +78,37 @@ const Listed = struct {
     exported: bool,
     bytes: Bytes,
     comment_start: usize,
+    attributes: []const ListedAttribute = &.{},
+
+    /// Report the attribute list only when the declaration carries one.
+    pub fn jsonStringify(self: Listed, writer: anytype) !void {
+        if (self.attributes.len != 0) {
+            try writer.write(.{ .kind = self.kind, .name = self.name, .exported = self.exported, .bytes = self.bytes, .comment_start = self.comment_start, .attributes = self.attributes });
+            return;
+        }
+        try writer.write(.{ .kind = self.kind, .name = self.name, .exported = self.exported, .bytes = self.bytes, .comment_start = self.comment_start });
+    }
 };
+
+/// Strip the quote characters around one string-literal span for reporting.
+fn literalText(bytes: []const u8, span: source.Span) []const u8 {
+    const text = bytes[span.start..span.end];
+    if (text.len >= 2 and (text[0] == '"' or text[0] == '\'')) return text[1 .. text.len - 1];
+    return text;
+}
+
+/// Project one declaration's parser attributes into the listing shape.
+fn listAttributes(work: std.mem.Allocator, src: source.Source, syntax: ast.Program, declaration: source.Span) std.mem.Allocator.Error![]const ListedAttribute {
+    const attributes = ast.attributesOf(syntax, declaration);
+    if (attributes.len == 0) return &.{};
+    const listed = try work.alloc(ListedAttribute, attributes.len);
+    for (attributes, listed) |attribute, *out| out.* = .{
+        .name = @tagName(attribute.kind),
+        .argument = if (attribute.argument) |argument| literalText(src.bytes, argument) else null,
+        .reason = if (attribute.reason) |reason| literalText(src.bytes, reason) else null,
+    };
+    return listed;
+}
 
 /// Parse one file and allocate its declarations-v1 listing with the caller's allocator.
 pub fn render(allocator: std.mem.Allocator, arena: *std.heap.ArenaAllocator, src: source.Source, tokens: []const lex.Token, sink: *diagnostic.Sink) Error![]u8 {
@@ -67,21 +126,27 @@ pub fn render(allocator: std.mem.Allocator, arena: *std.heap.ArenaAllocator, src
     const declaration = if (module_file) try scan.moduleHeader() else null;
     const module_name = if (declaration) |header| src.text(header.name) else null;
     if (module_file) try scan.imports(work, &imports, src);
+    // A leading string statement is the module's docstring, not a declaration.
+    if (scan.tokens[scan.pos].tag == .bytes) scan.pos += 1;
     while (scan.tokens[scan.pos].tag != .eof) {
         if (module_file and scan.word(scan.pos, "export")) {
             try exports.append(work, try scan.exportStatement(src));
             continue;
         }
         const start = scan.tokens[scan.pos].span.start;
+        // Attributes are part of the declaration's byte range; consume the whole
+        // clause so the scan head is entered at the declaration token itself.
+        while (scan.tokens[scan.pos].tag == .at) scan.pos = lex.declarationEnd(scan.src.bytes, scan.tokens, scan.pos, false);
         const head = try scan.head();
         try tally.check(head.kind, head.name);
         const end = try scan.body(head.braced);
         try listed.append(work, .{
             .kind = @tagName(head.kind),
             .name = src.text(head.name),
-            .exported = false,
+            .exported = ast.isPublicDeclaration(syntax, head.name),
             .bytes = .{ .start = start, .end = end.end },
             .comment_start = commentStart(src.bytes, start),
+            .attributes = try listAttributes(work, src, syntax, head.name),
         });
     }
     try tally.finish();
@@ -97,6 +162,8 @@ pub fn render(allocator: std.mem.Allocator, arena: *std.heap.ArenaAllocator, src
 }
 
 /// Mark exported declarations, rejecting duplicate and unresolved export directives.
+/// A re-export names an imported declaration instead of a local one, so it is
+/// reported with its qualifier and marks no local listing flag.
 fn resolveExports(work: std.mem.Allocator, listed: []Listed, exports: []const Exported, sink: *diagnostic.Sink) Error!void {
     var by_name: std.StringHashMapUnmanaged(usize) = .empty;
     for (listed, 0..) |item, index| {
@@ -107,7 +174,9 @@ fn resolveExports(work: std.mem.Allocator, listed: []Listed, exports: []const Ex
     for (exports) |exported| {
         if (seen.get(exported.name)) |previous| return sink.failRelated("E_DUPLICATE_EXPORT", exported.span, "declaration is already exported", .{ .span = previous, .message = "earlier export directive" });
         try seen.put(work, exported.name, exported.span);
+        if (exported.alias != null) continue;
         const index = by_name.get(exported.name) orelse return sink.fail("E_UNKNOWN_EXPORT", exported.span, "export names no local declaration");
+        if (listed[index].exported) return sink.fail("E_DUPLICATE_EXPORT", exported.span, "declaration is already public");
         listed[index].exported = true;
     }
 }
@@ -189,13 +258,22 @@ const Scan = struct {
             });
         }
     }
-    /// Consume one `export NAME;` directive and return its record.
+    /// Consume one `export NAME;` or `export module.NAME;` directive and return
+    /// its record. The final member is the published local name; an earlier
+    /// segment is the imported module qualifier of a re-export.
     fn exportStatement(self: *Scan, src: source.Source) error{InternalError}!Exported {
         const start = self.tokens[self.pos].span.start;
         self.pos += 1;
-        const name = try self.declaredName();
+        const first = try self.declaredName();
+        var last = first;
+        var qualifier_end: ?usize = null;
+        while (self.take(.dot)) {
+            qualifier_end = last.end;
+            last = try self.declaredName();
+        }
         const end = try self.expect(.semicolon);
-        return .{ .name = src.text(name), .span = name, .bytes = .{ .start = start, .end = end.end } };
+        const alias = if (qualifier_end) |at| src.text(.{ .start = first.start, .end = at }) else null;
+        return .{ .name = src.text(last), .span = .join(first, last), .bytes = .{ .start = start, .end = end.end }, .alias = alias };
     }
     /// Accept a declared name that collides with an intrinsic keyword, as the parser does.
     fn declaredName(self: *Scan) error{InternalError}!source.Span {
@@ -206,6 +284,7 @@ const Scan = struct {
     }
     /// Read the leading keywords and name of the next top-level declaration.
     fn head(self: *Scan) error{InternalError}!Head {
+        if (self.word(self.pos, "public")) self.pos += 1;
         if (self.simple()) |form| {
             self.pos += 1;
             return .{ .kind = form.kind, .name = try self.declaredName(), .braced = form.braced };

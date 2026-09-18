@@ -202,7 +202,7 @@ const Builder = struct {
         const fields_out = try allocator.alloc(typed.Field, declaration.fields.len);
         for (declaration.fields, fields_out, node.edges, 0..) |field, *out, edge, i| {
             const name = field.builtin_name orelse self.context.src.text(field.name);
-            out.* = .{ .name = name, .declaration = field.name, .ty = try self.runtimeType(edge.target) };
+            out.* = .{ .name = name, .declaration = field.name, .ty = try self.runtimeType(edge.target), .default_value = field.default_value };
             try self.catalog.field_names.items[schema.id.recordIndex()].put(allocator, name, i);
         }
         schema.fields = fields_out;
@@ -230,7 +230,7 @@ const Builder = struct {
         if (shape.key) |key_id| {
             const declaration = self.index.declarations.items[self.graph.nodes.items[@backingInt(key_id)].key.base.named];
             const fields_out = try self.context.allocator.alloc(typed.Field, declaration.fields.len);
-            for (declaration.fields, fields_out) |field, *out| out.* = .{ .name = self.context.src.text(field.name), .declaration = field.name, .ty = element };
+            for (declaration.fields, fields_out) |field, *out| out.* = .{ .name = self.context.src.text(field.name), .declaration = field.name, .ty = element, .default_value = field.default_value };
             schema.fields = fields_out;
         }
         try self.catalog.arrays.shapes.put(self.context.allocator, schema.shape.array.?, schema.id);

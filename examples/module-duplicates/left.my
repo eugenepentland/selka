@@ -1,7 +1,6 @@
 module left
-export price
 
 
-def price(quantity: int) -> int effects():
+public def price(quantity: int) -> int effects():
     subtotal = quantity * 2
     return subtotal + 3

@@ -36,10 +36,17 @@ pub fn discover(allocator: std.mem.Allocator, schema: std.json.Value, cases: std
     errdefer selected.deinit(allocator);
     for (functions) |function| {
         const name = v.text(v.get(function, "name"));
-        if (!testName(name) or !matches(pattern, name)) continue;
+        if (!discovered(function) or !matches(pattern, name)) continue;
         try selected.append(allocator, try makeCase(function, v.get(cases, name)));
     }
     return selected.toOwnedSlice(allocator);
+}
+/// A function is a discovered test when its name uses the `test_` prefix or the
+/// contract schema carries the `@test` marker.
+fn discovered(function: std.json.Value) bool {
+    const marked = v.get(function, "test");
+    if (marked == .bool and marked.bool) return true;
+    return testName(v.text(v.get(function, "name")));
 }
 fn testName(name: []const u8) bool {
     const start = if (std.mem.lastIndexOf(u8, name, "::")) |i| i + 2 else 0;
@@ -208,4 +215,17 @@ test "case settings reject misspelled expectation controls" {
     , .{});
     defer parsed.deinit();
     try std.testing.expectError(error.InvalidTestCases, discover(std.testing.allocator, v.get(parsed.value, "schema"), v.get(parsed.value, "cases"), "*"));
+}
+
+// spec-case: ATTR-2
+test "a schema test marker discovers a function without the test_ prefix" {
+    const parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator,
+        \\{"schema":{"functions":[{"name":"main::checks","result":"bool","test":true},{"name":"main::helper","result":"bool"}]}}
+    , .{});
+    defer parsed.deinit();
+    const selected = try discover(std.testing.allocator, v.get(parsed.value, "schema"), .null, "*");
+    defer std.testing.allocator.free(selected);
+    try std.testing.expectEqual(@as(usize, 1), selected.len);
+    try std.testing.expectEqualStrings("main::checks", selected[0].name);
+    try std.testing.expect(selected[0].expected.bool);
 }

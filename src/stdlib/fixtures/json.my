@@ -6,8 +6,8 @@ def roundtrip(source: str) -> str:
     match json.loads(source):
         case Ok(value):
             return json.dumps(value)
-        case Err(message):
-            return "!" + message
+        case Err(error):
+            return "!" + json.message(error)
 
 
 def rejects(source: str) -> bool:

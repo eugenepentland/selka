@@ -1,0 +1,6 @@
+# oracle: cpython
+def main() -> int:
+    a = 1
+    b = 41
+    a, b = b, a
+    return a + b

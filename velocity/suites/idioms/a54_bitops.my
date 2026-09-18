@@ -1,0 +1,5 @@
+# oracle: cpython
+def main() -> int:
+    x = 0b1010 & 0xFF | 1 << 4
+    y = ~0
+    return (x ^ 0) + y + 17

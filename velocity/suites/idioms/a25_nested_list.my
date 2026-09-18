@@ -1,0 +1,5 @@
+# oracle: cpython
+def main() -> int:
+    grid: list[list[int]] = [[1, 2], [3, 4]]
+    grid[1][1] = 40
+    return grid[1][1] + grid[0][1]

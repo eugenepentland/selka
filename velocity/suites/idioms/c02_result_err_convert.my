@@ -1,0 +1,18 @@
+# oracle: mylang-only
+def parse(s: str) -> Result[int, str]:
+    match int(s):
+        case Some(v):
+            return Ok(v)
+        case None:
+            return Err("not a number: " + s)
+
+def load() -> Result[int, int]:
+    v = parse("42")?
+    return Ok(v)
+
+def main() -> int:
+    match load():
+        case Ok(v):
+            return v
+        case Err(e):
+            return e

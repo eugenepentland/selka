@@ -948,6 +948,10 @@ fn aliasSpan(alias: ast.TypeAlias) source.Span {
 }
 
 fn baseFunctionSpan(syntax: ast.Program, function: ast.Function) source.Span {
+    var start = function.name.start;
+    // Attributes are part of the declaration header: adding, removing or editing
+    // one changes the interface fingerprint through this span.
+    for (ast.attributesOf(syntax, function.name)) |attribute| start = @min(start, attribute.span.start);
     var end = @max(function.name.end, typeParametersEnd(function.signature.type_parameters));
     end = @max(end, function.signature.return_type.end);
     for (function.signature.parameters) |parameter| {
@@ -957,7 +961,7 @@ fn baseFunctionSpan(syntax: ast.Program, function: ast.Function) source.Span {
         if (parameter.default_value) |value| end = @max(end, syntax.nodes.items[@backingInt(value)].span.end);
     }
     if (function.policy.effect_bound) |bound| end = @max(end, bound.span.end);
-    return .{ .start = function.name.start, .end = end };
+    return .{ .start = start, .end = end };
 }
 
 /// The declaration region hashed into the public interface. For a nonempty

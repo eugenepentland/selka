@@ -1,0 +1,11 @@
+# oracle: mylang-only
+def greet(name: str, title: Option[str] = None) -> str:
+    match title:
+        case Some(t):
+            return t + " " + name
+        case None:
+            return name
+
+def main() -> int:
+    print(greet("x"))
+    return 0

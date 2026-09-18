@@ -443,7 +443,9 @@ fn collectTopStarts(allocator: std.mem.Allocator, bytes: []const u8, tokens: []c
     var depth: usize = 0;
     var previous_end: ?usize = null;
     var after_semicolon = false;
+    var skip_until: usize = 0;
     for (0..tokens.len) |i| {
+        if (i < skip_until) continue;
         const tag = tokens[i].tag;
         if (tag == .dedent) {
             level -|= 1;
@@ -454,6 +456,13 @@ fn collectTopStarts(allocator: std.mem.Allocator, bytes: []const u8, tokens: []c
             continue;
         }
         if (tag == .eof) break;
+        // An attribute clause is part of the declaration below it; skip the whole
+        // clause so it neither opens a blank-line group nor is mistaken for one.
+        if (tag == .at) {
+            skip_until = lex.declarationEnd(bytes, tokens, i, false);
+            if (skip_until <= i) skip_until = i + 1;
+            continue;
+        }
         if (tag == .semicolon) {
             after_semicolon = true;
             continue;

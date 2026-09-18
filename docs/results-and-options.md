@@ -46,9 +46,11 @@ host failures, none of which turn into an `Err`.
 
 `expression?` unwraps a successful `Result` into its payload and, on failure, returns the
 error from the enclosing function immediately. The enclosing function must itself return
-a compatible `Result` — the error payloads are matched by case, and there is no implicit
-conversion between unrelated error types, so a function whose errors are `str` cannot
-propagate an `int` error without translating it first. `?` on a value that is not a
+a compatible `Result` — the error payloads are matched by case, and an error of an
+unrelated type is rejected, so a function whose errors are `int` cannot propagate a `str`
+error. The one implicit conversion is the wrapping case: when the enclosing error union
+carries the propagated error type as a case payload, the error converts into that case
+and no hand-written translation helper is needed. `?` on a value that is not a
 result is rejected, as is `?` in a function that returns a plain value. The early return
 releases the scope it leaves the way an ordinary `return` does, including closing an open
 file or ending an arena block.
@@ -79,6 +81,54 @@ This returns `37`: `21` from the successful path, and `16` — the length of the
 message — from the failing one. `average` never mentions the error case, which is the
 point of the form. `with open(fs, path, mode)? as f:` is the same operator at a `with`
 head; see [printing, files and command-line authority](io.md).
+
+When the enclosing error union has a case whose payload is exactly the propagated error
+type, that case is the conversion. The wrapped error keeps its own identity inside the
+payload, so a caller can recover the category and the detail:
+
+```mylang
+# doc: expect 20
+result Inner:
+    ok: int,
+    err: str
+
+
+union AppError:
+    Detail: str,
+    Missing: int
+
+
+def load(flag: bool) -> Inner:
+    if flag:
+        return Err("no value")
+    return Ok(20)
+
+
+def convert(flag: bool) -> Result[int, AppError]:
+    value = load(flag)?
+    return Ok(value)
+
+
+def rate(flag: bool) -> int:
+    match convert(flag):
+        case Ok(value):
+            return value - 8
+        case Err(error):
+            match error:
+                case AppError.Detail(text):
+                    return len(text)
+                case AppError.Missing(code):
+                    return code
+
+
+def main() -> int:
+    return rate(False) + rate(True)
+```
+
+`convert(True)` propagates `Err("no value")` without a translation helper: the `str`
+becomes the payload of `AppError.Detail`, so `rate(True)` returns `8` and the program
+prints `20`. A propagated error type that is not a case payload of the enclosing union
+still fails with `E_TYPE`.
 
 ## Option constructors
 

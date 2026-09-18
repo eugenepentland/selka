@@ -3,6 +3,7 @@ const std = @import("std");
 const Span = @import("source.zig").Span;
 const diagnostic = @import("diagnostic.zig");
 const removed_names = @import("removed_names.zig");
+const byte_literal = @import("byte_literal.zig");
 /// Lexical token categories, including keywords, punctuation, literals, and end of input.
 pub const Tag = enum {
     eof,
@@ -94,6 +95,7 @@ pub const Tag = enum {
     kw_for,
     kw_in,
     kw_type,
+    at,
     lparen,
     rparen,
     lbracket,
@@ -287,6 +289,7 @@ pub fn spelling(comptime tag: Tag) []const u8 {
         .kw_none => "None",
         .kw_true => "True",
         .kw_false => "False",
+        .at => "@",
         .lparen => "(",
         .rparen => ")",
         .lbracket => "[",
@@ -356,6 +359,14 @@ pub fn lexRangeWithMarkers(allocator: std.mem.Allocator, bytes: []const u8, span
     return tokenize(allocator, bytes, span, allow_markers, sink);
 }
 
+/// Scan one quoted literal at `start` and return the index past its closing
+/// quotes. A triple-quoted spelling is one token; `byte_prefix` marks `b"..."`,
+/// whose quote sits one byte after the prefix.
+fn quotedEnd(bytes: []const u8, start: usize, limit: usize, byte_prefix: bool, sink: *diagnostic.Sink) diagnostic.Error!usize {
+    if (byte_literal.tripleStart(bytes, start, limit)) return byte_literal.tripleEnd(bytes, start, sink);
+    return byte_literal.end(bytes, start + @as(usize, @intFromBool(byte_prefix)), sink);
+}
+
 fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, allow_markers: bool, sink: *diagnostic.Sink) diagnostic.Error![]Token {
     var tokens: std.ArrayList(Token) = .empty;
     errdefer tokens.deinit(allocator);
@@ -377,11 +388,13 @@ fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, allow_m
             const bytes_prefix = ch == 'b' and quotes;
             const format_prefix = ch == 'f' and quotes;
             if (format_prefix) {
-                i = try @import("byte_literal.zig").end(bytes, start + 1, sink);
+                i = try byte_literal.end(bytes, start + 1, sink);
                 break :blk .format;
             }
+            // A triple-quoted literal is one token so a docstring may span lines;
+            // it stays an ordinary `.bytes` token for every later stage.
             if (ch == '"' or ch == '\'' or bytes_prefix) {
-                i = try @import("byte_literal.zig").end(bytes, start + @as(usize, @intFromBool(ch == 'b')), sink);
+                i = try quotedEnd(bytes, start, limit, ch == 'b', sink);
                 break :blk .bytes;
             }
             if (std.ascii.isAlphabetic(ch) or ch == '_') {
@@ -419,6 +432,7 @@ fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, allow_m
                 break :blk p;
             }
             break :blk switch (ch) {
+                '@' => .at,
                 '(' => .lparen,
                 ')' => .rparen,
                 '[' => .lbracket,
@@ -457,10 +471,10 @@ pub fn implicitTerminator(bytes: []const u8, tokens: []const Token, position: us
 }
 fn declarationHead(bytes: []const u8, token: Token) bool {
     return switch (token.tag) {
-        .kw_def, .kw_class, .kw_enum, .kw_union, .kw_domain, .kw_type, .kw_const, .kw_private, .kw_conversion => true,
+        .kw_def, .kw_class, .kw_enum, .kw_union, .kw_domain, .kw_type, .kw_const, .kw_private, .kw_conversion, .at => true,
         .ident => value: {
             const text = bytes[token.span.start..token.span.end];
-            inline for (.{ "export", "resource", "result", "host", "extern", "record", "constraint" }) |word| if (std.mem.eql(u8, text, word)) break :value true;
+            inline for (.{ "export", "public", "resource", "result", "host", "extern", "record", "constraint" }) |word| if (std.mem.eql(u8, text, word)) break :value true;
             break :value false;
         },
         else => false,

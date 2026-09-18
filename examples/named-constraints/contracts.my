@@ -1,5 +1,4 @@
 module contracts
-export Prices
 
 
-constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
+public constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())

@@ -1,13 +1,10 @@
 module io
-export length
-export byte
-export put
 
 
-host def length(host: Host) -> int effects(host)
+public host def length(host: Host) -> int effects(host)
 
 
-host def byte(host: Host, index: int) -> u8 effects(host)
+public host def byte(host: Host, index: int) -> u8 effects(host)
 
 
-host def put(host: Host, value: u8) -> int effects(host)
+public host def put(host: Host, value: u8) -> int effects(host)

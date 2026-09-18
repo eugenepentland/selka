@@ -139,6 +139,12 @@ fn argv(context: fs.Context, shared: Fanout, source: []const u8) Error![]const [
     if (opts.flags.force) try list.append(a, "--force");
     if (opts.flags.no_cache) try list.append(a, "--no-cache");
     if (opts.flags.mutation_markers) try list.append(a, "--mutation-markers");
+    // Each child derives its own program's affected selection against the same
+    // reference, so a directory run narrows every project independently.
+    if (opts.flags.affected) {
+        try list.append(a, "--affected");
+        if (opts.against) |reference| try list.appendSlice(a, &.{ "--against", reference });
+    }
     if (opts.bench.pattern) |pattern| {
         try list.appendSlice(a, &.{ "--bench", pattern, "--bench-profile", opts.bench.profile });
         if (opts.bench.only) try list.append(a, "--bench-only");

@@ -1,0 +1,5 @@
+# oracle: cpython
+def main() -> int:
+    list = [1, 2]
+    str = "x"
+    return len(list) + len(str) * 40

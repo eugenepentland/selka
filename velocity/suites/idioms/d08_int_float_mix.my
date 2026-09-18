@@ -1,0 +1,10 @@
+# oracle: cpython
+def main() -> int:
+    x = 3
+    y = 1.5
+    z = x * y
+    w = x + y
+    print(z, w)
+    avg = sum([1, 2, 3]) / 3
+    print(avg)
+    return 0

@@ -697,6 +697,10 @@ const Emitter = struct {
         try self.print(" %v{d} =l add %v{d}, {d}\n", .{ result, base, offset });
         return result;
     }
+    /// Store one variant case tag at the start of a record pointer.
+    pub fn writeTag(self: *Emitter, tag: usize, pointer: usize) GenerateError!void {
+        try self.print(" storew {d}, %v{d}\n", .{ tag, pointer });
+    }
     /// Shared lowering primitive for target operation emitters.
     pub fn readValue(self: *Emitter, pointer: usize, ty: typed.Type) GenerateError!usize {
         if (!scalar(ty, self.program.records)) return pointer;
@@ -843,10 +847,19 @@ const Emitter = struct {
                     try self.print(" %v{d} =l loaduw %v{d}\n %v{d} =l ceql %v{d}, {d}\n", .{ tag, source, success, tag, input.ok_tag });
                     try self.print(" jnz %v{d}, @tryok{d}, @tryerror{d}\n@tryerror{d}\n", .{ success, tag, tag, tag });
                     const pointer = try self.aggregatePointer();
-                    try self.print(" storew {d}, %v{d}\n", .{ output.error_tag, pointer });
+                    try self.writeTag(output.error_tag, pointer);
+                    const slot = try self.address(pointer, (try self.layout(propagate.output)).payload_offset);
                     const payload = try self.readValue(try self.address(source, input_offset), input.error_type);
-                    try self.writeValue(try self.address(pointer, (try self.layout(propagate.output)).payload_offset), payload, output.error_type);
-                    for (stack[0 .. h - 1], 0..) |ty, slot| try self.dropOperand(slot, ty);
+                    if (input.error_type == output.error_type) {
+                        try self.writeValue(slot, payload, input.error_type);
+                    } else {
+                        // The error type is a case payload of the enclosing error union, so
+                        // wrap the whole incoming error value in that case.
+                        const error_tag = typed.wrappingCase(self.program.records, output.error_type, input.error_type) orelse return error.InternalError;
+                        try self.writeTag(error_tag, slot);
+                        try self.writeValue(try self.address(slot, (try self.layout(output.error_type)).payload_offset), payload, input.error_type);
+                    }
+                    for (stack[0 .. h - 1], 0..) |ty, slot_index| try self.dropOperand(slot_index, ty);
                     try self.store(0, pointer);
                     try self.print(" jmp @i{d}\n@tryok{d}\n", .{ propagate.error_target, tag });
                     try self.store(h - 1, try self.readValue(try self.address(source, input_offset), input.ok_type));
@@ -857,7 +870,7 @@ const Emitter = struct {
                     try self.print(" %v{d} =l loaduw %v{d}\n %v{d} =l ceql %v{d}, {d}\n", .{ tag, source, success, tag, input.some });
                     try self.print(" jnz %v{d}, @tryok{d}, @tryerror{d}\n@tryerror{d}\n", .{ success, tag, tag, tag });
                     const pointer = try self.aggregatePointer();
-                    try self.print(" storew {d}, %v{d}\n", .{ output.none, pointer });
+                    try self.writeTag(output.none, pointer);
                     for (stack[0 .. h - 1], 0..) |ty, slot| try self.dropOperand(slot, ty);
                     try self.store(0, pointer);
                     try self.print(" jmp @i{d}\n@tryok{d}\n", .{ propagate.error_target, tag });

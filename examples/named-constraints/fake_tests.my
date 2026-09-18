@@ -1,7 +1,6 @@
 module fake_tests
 import checkout
 import fakes
-export test_checkout
 
 
 def main() -> int:
@@ -9,5 +8,5 @@ def main() -> int:
     return 0
 
 
-def test_checkout() -> bool effects():
+public def test_checkout() -> bool effects():
     return checkout.total(fakes.FixedPrices.make(1750), 2000) == 2250

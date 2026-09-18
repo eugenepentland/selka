@@ -1,0 +1,4 @@
+# oracle: cpython
+def main() -> int:
+    d = {x: x * x for x in range(4)}
+    return d[3] * 4 + 6

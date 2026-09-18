@@ -1,19 +1,16 @@
 module data
-export Wire
-export Decoded
-export Positive
 
 
-record Wire:
+public record Wire:
     n: int
 
 
-result Decoded:
+public result Decoded:
     ok: Positive,
     err: int
 
 
-domain Positive: int:
+public domain Positive: int:
     codec Wire:
         decode: from_wire,
         encode: to_wire

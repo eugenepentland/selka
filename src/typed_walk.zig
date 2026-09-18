@@ -131,7 +131,10 @@ pub const Walker = struct {
                     }
                 },
                 .ret, .discard => |value| try self.expr(value),
-                .assertion => |check| try self.expr(check.condition),
+                .assertion => |check| {
+                    if (check.message_value) |value| try self.expr(value);
+                    try self.expr(check.condition);
+                },
                 .loop_exit => {},
                 .initialize, .assign => |s| try self.expr(s.value),
                 .branch => |b| {

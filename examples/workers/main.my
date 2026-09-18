@@ -1,14 +1,12 @@
 module main
-export Stats
-export analyze
 
 
-record Stats:
+public record Stats:
     sum: int
     squares: int
 
 
-def analyze(values: [4]int) -> Stats effects():
+public def analyze(values: [4]int) -> Stats effects():
     sum = 0
     squares = 0
     i = 0u64

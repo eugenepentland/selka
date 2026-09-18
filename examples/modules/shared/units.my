@@ -1,8 +1,7 @@
 module shared.units
-export Distance
 
 
-domain Distance: int:
+public domain Distance: int:
     private def raw(value: int) -> Distance:
         return wrap[Distance](value)
 

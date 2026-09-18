@@ -1,8 +1,7 @@
 module fakes
-export FixedPrices
 
 
-domain FixedPrices: int:
+public domain FixedPrices: int:
     def make(amount: int) -> FixedPrices effects():
         return wrap[FixedPrices](amount)
 

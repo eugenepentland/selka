@@ -48,3 +48,38 @@ test "standard json keeps parsed values rooted under collection stress" {
         "        case None:\n" ++
         "            return 0\n", 42);
 }
+
+// spec: STDLIB-ERROR-UNION-1
+test "standard json error unions carry a matchable category and a message helper" {
+    try fixture.run(t.allocator,
+        \\module main
+        \\import json
+        \\
+        \\
+        \\union AppError:
+        \\    Json: json.Error
+        \\
+        \\
+        \\def size(source: str) -> Result[int, AppError]:
+        \\    document = json.loads(source)?
+        \\    return Ok(len(json.dumps(document)))
+        \\
+        \\
+        \\def main() -> int:
+        \\    match size("{}"):
+        \\        case Ok(count):
+        \\            if count != 2:
+        \\                return 1
+        \\        case Err(_):
+        \\            return 2
+        \\    match size("{bad}"):
+        \\        case Ok(_):
+        \\            return 3
+        \\        case Err(error):
+        \\            match error:
+        \\                case AppError.Json(detail):
+        \\                    if len(json.message(detail)) == 0:
+        \\                        return 4
+        \\                    return 42
+    , 42);
+}

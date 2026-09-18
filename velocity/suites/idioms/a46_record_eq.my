@@ -1,0 +1,9 @@
+# oracle: mylang-only
+record P:
+    x: int
+    y: int
+
+def main() -> int:
+    if P(1, 2) == P(1, 2):
+        return 42
+    return 0

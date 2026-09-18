@@ -297,3 +297,41 @@ test "navigation excerpts preserve original module qualified calls" {
     }
     try t.expect(linked_found);
 }
+
+// spec: TESTS-FOR-1
+test "renderTestsFor reports direct and transitive tests for a declaration" {
+    var files: Files = .{ .main =
+        \\module main
+        \\
+        \\
+        \\def parse(value: i64) -> i64:
+        \\    return helper(value)
+        \\
+        \\
+        \\def helper(value: i64) -> i64:
+        \\    return value
+        \\
+        \\
+        \\def test_parse() -> bool effects():
+        \\    return parse(1) == 1
+        \\
+        \\
+        \\def test_end_to_end() -> bool effects():
+        \\    return helper(2) == 2
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(.{ .context = &files, .read = Files.read }, "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try pc.Compilation.init(&index);
+    try compilation.check();
+    const rendered = (try navigation.renderTestsFor(t.allocator, &compilation, "main::helper")).?;
+    defer t.allocator.free(rendered);
+    try t.expect(std.mem.indexOf(u8, rendered, "direct (1): main::test_end_to_end") != null);
+    try t.expect(std.mem.indexOf(u8, rendered, "reached-by (2): main::test_parse main::test_end_to_end") != null);
+    try t.expectEqual(@as(?[]u8, null), try navigation.renderTestsFor(t.allocator, &compilation, "main::missing"));
+}

@@ -1,11 +1,9 @@
 module inputs
-export bytes
-export size
 
 
-def bytes() -> [9]u8 effects():
+public def bytes() -> [9]u8 effects():
     return [1u8, 2u8, 4u8, 7u8, 0u8, 0u8, 1u8, 44u8, 59u8]
 
 
-def size() -> u64 effects():
+public def size() -> u64 effects():
     return 9u64
