@@ -1,0 +1,5 @@
+module compiler_case_15
+
+
+public def program() -> i64:
+    return 8

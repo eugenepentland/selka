@@ -1,0 +1,327 @@
+module python_collections
+
+
+class Box:
+    items: list[i64]
+
+
+def make_box() -> Box:
+    return Box(items=[40])
+
+
+record Point:
+    x: i64
+
+
+class ReceiverPoint:
+    x: i64
+
+
+def logged_receiver(log: list[i64], rows: list[ReceiverPoint]) -> list[ReceiverPoint]:
+    log.append(1)
+    return rows
+
+
+def log_index(log: list[i64]) -> i64:
+    log.append(2)
+    return 0
+
+
+def emit_value(log: list[i64]) -> i64:
+    log.append(3)
+    return 42
+
+
+class Cell[T]:
+    value: T
+
+
+def set_cell[T](cells: list[Cell[T]], value: T):
+    cells[0].value = value
+
+
+class WritebackPoint:
+    x: i64
+    y: i64
+
+
+def writeback(rows: list[WritebackPoint]) -> i64:
+    rows[0].y = 2
+    return 40
+
+
+def range_total() -> i64:
+    sum = 0
+    for i in range(7):
+        sum += i
+    return sum
+
+
+const RANGE_TOTAL: i64 = range_total()
+
+
+def duplicate[T: copy + storable](value: T) -> list[T]:
+    values: list[T] = [value]
+    values.append(value)
+    copy = values[:]
+    for item in copy:
+        _ = item
+    return copy
+
+
+def first_key[K, V](counts: dict[K, V], fallback: K) -> K:
+    for key, value in counts.items():
+        _ = value
+        return key
+    return fallback
+
+
+# spec: PY-COLLECTIONS-1
+public def test_inferred_literal_indexing_negative_indices_and_append() -> bool:
+    items = [40, 1]
+    items.append(2)
+    return items[0] + items[-1] == 42
+
+
+# spec: PY-COLLECTIONS-4
+public def test_contextual_nested_lists_and_receiver_fields() -> bool:
+    b = make_box()
+    b.items.append(2)
+    rows: list[list[i64]] = [b.items, []]
+    return rows[0][0] + rows[0][-1] == 42
+
+
+# spec: PY-COLLECTIONS-2
+public def test_slice_copies_clamps_and_length_uses_signed_index_type() -> bool:
+    items = [1, 40, 2, 8]
+    copy = items[-3:99]
+    copy[0] = 0
+    middle = items[1:3]
+    return middle[0] + len(middle) == 42
+
+
+# spec: PY-COLLECTIONS-3
+public def test_foreach_enumerate_range_and_continue() -> bool:
+    items = [10, 20, 9]
+    sum = 0
+    for i, x in enumerate(items):
+        sum += i + x
+    for i in range(3):
+        if i == 0:
+            continue
+        sum += i
+    return sum - 3 == 42
+
+
+# spec: PY-COLLECTIONS-5
+public def test_record_fields_update_values_and_list_slots_without_changing_prior_copies() -> bool:
+    point = Point(x=1)
+    point.x = 2
+    rows = [point]
+    before = rows[0]
+    rows[0].x = 40
+    return before.x + rows[0].x == 42
+
+
+# spec: PY-COLLECTIONS-7
+public def test_field_receiver_index_and_right_side_run_once_in_order_under_collection_stress() -> bool:
+    log: list[i64] = []
+    rows = [ReceiverPoint(x=0)]
+    logged_receiver(log, rows)[log_index(log)].x = emit_value(log)
+    if len(log) != 3:
+        return False
+    if log[0] != 3 or log[1] != 1 or log[2] != 2:
+        return False
+    return rows[0].x == 42
+
+
+# spec: PY-COLLECTIONS-9
+public def test_generic_record_slot_updates_and_list_aliases_remain_copyable() -> bool:
+    cells: list[Cell[i64]] = [Cell[i64](value=1)]
+    set_cell(cells, 42)
+    return cells[0].value == 42
+
+
+# spec: PY-COLLECTIONS-10
+public def test_slice_negative_clamp_empty_and_copy_alias_semantics() -> bool:
+    items = [40, 2, 8]
+    copy = items[-99:-1]
+    copy[0] = 1
+    if len(items[99:]) != 0 or len(items[2:1]) != 0:
+        return False
+    return items[0] + copy[-1] == 42
+
+
+# spec: PY-COLLECTIONS-14
+public def test_slice_step_selects_every_nth_element_of_a_list_and_of_text_in_both_directions() -> bool:
+    items = [1, 2, 3, 4, 5, 6]
+    text = "abcdef"
+    if len(items[0:6:2]) != 3 or items[0:6:2][1] != 3:
+        return False
+    if len(items[::-1]) != 6 or items[::-1][0] != 6:
+        return False
+    if len(items[5:0:-2]) != 3 or items[5:0:-2][1] != 4:
+        return False
+    if len(items[99:0:-1]) != 5 or len(items[0:6:99]) != 1:
+        return False
+    if text[1:5:2] != "bd" or len(text[::-2]) != 3:
+        return False
+    if text[4:0:-3] != "eb" or len(text[2:2:1]) != 0:
+        return False
+    return items[-1:0:-2][0] * 7 == 42
+
+
+# spec: PY-AUGASSIGN-1
+public def test_augmented_assignment_applies_each_binding_types_own_operator_rules() -> bool:
+    n = 5
+    n *= 8
+    n += 2
+    m = 17
+    m //= 2
+    if m != 8:
+        return False
+    m %= 5
+    if m != 3:
+        return False
+    ratio = 1.0
+    ratio += 2.5
+    ratio *= 2.0
+    if int(ratio) != 7:
+        return False
+    ratio -= 0.5
+    if int(ratio) != 6:
+        return False
+    label = "a"
+    label += "b"
+    if label != "ab":
+        return False
+    return n == 42
+
+
+# spec: PY-AUGASSIGN-2
+public def test_augmented_assignment_writes_a_list_slot_and_a_dictionary_entry_in_place() -> bool:
+    xs = [1, 2]
+    xs[0] += 5
+    xs[1] *= 3
+    xs[-1] -= 6
+    counts = {"a": 1}
+    counts["a"] += 41
+    label = {"k": "a"}
+    label["k"] += "b"
+    if xs[0] != 6 or xs[1] != 0:
+        return False
+    if label["k"] != "ab":
+        return False
+    return counts["a"] == 42
+
+
+# spec: PY-COLLECTIONS-15
+public def test_list_methods_mutate_in_place_with_python_shaped_bounds() -> bool:
+    xs = [3, 1, 2]
+    xs.sort()
+    if xs[0] != 1 or xs[2] != 3:
+        return False
+    xs.reverse()
+    if xs[0] != 3 or xs[2] != 1:
+        return False
+    xs.insert(0, 9)
+    if xs[0] != 9 or len(xs) != 4:
+        return False
+    xs.remove(9)
+    if xs[0] != 3 or len(xs) != 3:
+        return False
+    xs.extend([7, 8])
+    if len(xs) != 5 or xs[4] != 8:
+        return False
+    last = xs.pop()
+    if last != 8 or len(xs) != 4:
+        return False
+    middle = xs.pop(1)
+    if middle != 2 or len(xs) != 3:
+        return False
+    xs.clear()
+    if len(xs) != 0:
+        return False
+    return True
+
+
+# spec: PY-COLLECTIONS-16
+public def test_list_index_and_copy_are_read_forms_with_first_occurrence_order() -> bool:
+    xs = [10, 20, 30, 20]
+    if xs.index(20) != 1:
+        return False
+    ys = xs.copy()
+    ys.append(99)
+    if len(xs) != 4 or len(ys) != 5:
+        return False
+    return ys[4] + xs[0] - 67 == 42
+
+
+# spec: PY-COLLECTIONS-17
+public def test_dictionary_pop_update_and_setdefault_keep_insertion_order() -> bool:
+    d = {"a": 1, "b": 2}
+    if d.pop("a") != 1:
+        return False
+    if d.pop("z", 7) != 7:
+        return False
+    d.update({"b": 20, "c": 3})
+    if d["b"] != 20 or d["c"] != 3:
+        return False
+    if d.setdefault("d", 4) != 4:
+        return False
+    if d.setdefault("d", 9) != 4:
+        return False
+    if len(d) != 3:
+        return False
+    return True
+
+
+# spec: PY-COLLECTIONS-18
+public def test_list_extends_in_place_and_items_binds_key_then_value_in_insertion_order() -> bool:
+    xs = [1]
+    alias = xs
+    xs += [2, 3]
+    if len(xs) != 3 or len(alias) != 3:
+        return False
+    d = {10: 100, 20: 200}
+    total = 0
+    for key, value in d.items():
+        total += key + value
+    if total != 330:
+        return False
+    return True
+
+
+# spec-case: PY-COLLECTIONS-18
+public def test_generic_bodies_bind_items_key_then_value_in_insertion_order() -> bool:
+    counts = {10: 100, 20: 200}
+    return first_key(counts, 0) == 10
+
+
+# spec: PY-COLLECTIONS-11
+public def test_outer_annotated_postfix_expressions_do_not_contaminate_literal_element_inference() -> bool:
+    value: i64 = [42][0]
+    row: list[i64] = [[value]][0]
+    return row[0] == 42
+
+
+# spec: PY-COLLECTIONS-12
+public def test_range_end_syntax_agrees_in_constant_and_runtime_evaluation() -> bool:
+    return RANGE_TOTAL * 2 == 42
+
+
+# spec: PY-COLLECTIONS-13
+public def test_field_writeback_preserves_sibling_changes_made_by_its_right_hand_side() -> bool:
+    rows = [WritebackPoint(x=0, y=0)]
+    rows[0].x = writeback(rows)
+    return rows[0].x + rows[0].y == 42
+
+
+# spec: PY-COLLECTIONS-6
+public def test_generic_lists_preserve_literal_foreach_slice_and_write_element_types() -> bool:
+    xs = duplicate(21)
+    return xs[0] + xs[1] == 42
+
+
+def main() -> int:
+    return 0

@@ -1,0 +1,17 @@
+module managed_cell
+
+
+import managed_cell_case_1 as c1
+import managed_cell_case_2 as c2
+
+
+# spec: MANAGED-CELL-1
+public def test_cell_construction_reads_and_replacement_shar_1() -> bool:
+    return c1.program() == 42
+
+# spec-case: MANAGED-CELL-1
+public def test_cell_construction_reads_and_replacement_shar_2() -> bool:
+    return c2.program() == 7
+
+def main() -> int:
+    return 0

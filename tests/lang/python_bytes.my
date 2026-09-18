@@ -1,0 +1,162 @@
+module python_bytes
+
+
+def bytes_widen(value: bytes) -> bytes:
+    return value + value
+
+
+class BytesPacket:
+    tag: str
+    body: bytes
+
+
+def bytes_pair[T:copy+storable](value: T) -> list[T]:
+    values: list[T] = [value]
+    values.append(value)
+    return values
+
+
+def bytes_decoded(raw: bytes) -> Result[str, str]:
+    return raw.decode()
+
+
+def bytes_parsed(digits: str) -> Result[bytes, str]:
+    return bytes.fromhex(digits)
+
+
+# spec: PY-BYTES-1
+public def test_byte_literals_index_slice_concatenate_compare_and_iterate() -> bool:
+    raw = b"hi\x00\xff"
+    if len(raw) != 4:
+        return False
+    if raw[0] != 104 or raw[-1] != 255 or raw[2] != 0:
+        return False
+    if raw[1:3] != b"i\x00":
+        return False
+    if raw[-99:99] != raw or raw[3:1] != b"":
+        return False
+    if b"hi" + b"\x00\xff" != raw:
+        return False
+    if raw == b"hi" or not (raw != b"hi"):
+        return False
+    total = 0
+    for value in raw:
+        total += value
+    for index, value in enumerate(raw):
+        total += index
+    return total - 428 == 42
+
+
+# spec-case: PY-BYTES-1
+public def test_membership_accepts_a_byte_scalar_or_a_contiguous_subsequence() -> bool:
+    raw = b"alpha"
+    if 108 not in raw:
+        return False
+    if 200 in raw:
+        return False
+    if b"lph" not in raw:
+        return False
+    if b"lhp" in raw:
+        return False
+    if b"" not in raw:
+        return False
+    if 97 not in raw or b"pha" not in raw:
+        return False
+    return True
+
+
+# spec-case: PY-BYTES-1
+public def test_byte_strings_alias_through_helpers_and_survive_collection_stress() -> bool:
+    seed = b"\x01"
+    grown = seed
+    for step in range(6):
+        grown = bytes_widen(grown)
+    holder: list[bytes] = []
+    for step in range(20):
+        holder.append(bytes_widen(seed))
+    if len(seed) != 1:
+        return False
+    if len(holder[19]) != 2:
+        return False
+    return len(grown) - 22 == 42
+
+
+# spec: PY-BYTES-3
+public def test_split_join_prefix_suffix_search_and_container_storage() -> bool:
+    line = b"a,bb,,c"
+    parts = line.split(b",")
+    if len(parts) != 4 or parts[2] != b"":
+        return False
+    if b",".join(parts) != line:
+        return False
+    if not line.startswith(b"a,") or not line.endswith(b",c"):
+        return False
+    if line.startswith(b"b") or line.endswith(b"b"):
+        return False
+    if line.find(b"bb") != 2 or line.find(b"zz") != -1:
+        return False
+    packets: list[BytesPacket] = [BytesPacket(tag="first", body=parts[1])]
+    index: dict[str, bytes] = {}
+    for packet in packets:
+        index[packet.tag] = packet.body
+    if index["first"] != b"bb":
+        return False
+    optional: Option[bytes] = Some(line)
+    match optional:
+        case Some(value):
+            if value != line:
+                return False
+        case None:
+            return False
+    return 35 + len(index["first"]) + len(parts) + len(packets) == 42
+
+
+# spec-case: PY-BYTES-3
+public def test_generic_bodies_preserve_managed_byte_string_identities() -> bool:
+    both = bytes_pair(b"ab")
+    if both[0] != both[1] or both[1] != b"ab":
+        return False
+    return len(both[0]) + 40 == 42
+
+
+# spec: PY-BYTES-2
+public def test_integer_list_text_and_hexadecimal_conversions_round_trip() -> bool:
+    values: list[int] = [0, 65, 255]
+    raw = bytes(values)
+    if raw != b"\x00A\xff":
+        return False
+    back = raw.to_list()
+    if len(back) != 3 or back[2] != 255:
+        return False
+    if raw.hex() != "0041ff":
+        return False
+    encoded = "hé".encode()
+    if len(encoded) != 3:
+        return False
+    match bytes_decoded(encoded):
+        case Ok(value):
+            if value != "hé":
+                return False
+        case Err(message):
+            return False
+    match bytes_decoded(b"\xff\xfe"):
+        case Ok(value):
+            return False
+        case Err(message):
+            if len(message) == 0:
+                return False
+    match bytes_parsed("0041ff"):
+        case Ok(value):
+            if value != raw:
+                return False
+        case Err(message):
+            return False
+    match bytes_parsed("00g1"):
+        case Ok(value):
+            return False
+        case Err(message):
+            return True
+
+
+def main() -> int:
+    return 0

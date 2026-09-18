@@ -1,0 +1,9 @@
+module compiler_case_13
+
+
+public def program() -> i64:
+    n = 7
+    result: i64 = n
+    amount = 3
+    result = result * amount
+    return result

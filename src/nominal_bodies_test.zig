@@ -65,10 +65,6 @@ const basic = definitions ++
     \\def main() -> i64:
     \\    return extract[i64](alter[i64](pack[i64](3), choose[i64](slot[i64](7), 0)))
 ;
-// spec: NOMINAL-BODY-1
-test "nominal bodies construct project update match and forward symbolic arguments" {
-    try run(t.allocator, basic, 7);
-}
 test "nominal bodies reject invalid uncalled field payload and identity operations" {
     try reject(definitions ++
         \\def wrong[T](x: T) -> Box[T]:
@@ -137,9 +133,6 @@ const arrays = definitions ++
     \\    b = boxed[i64](8)
     \\    return a[0] + b.value[1]
 ;
-test "nominal bodies reuse concrete array identities created by earlier function specialization" {
-    try run(t.allocator, arrays, 9);
-}
 fn allocations(allocator: std.mem.Allocator) !void {
     try run(allocator, basic, 7);
     try run(allocator, results, 12);

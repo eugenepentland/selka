@@ -1,0 +1,10 @@
+module compiler_case_1
+
+
+public def program() -> i64:
+    total = 0
+    i = 0
+    while i < 100:
+        total += i
+        i += 1
+    return total

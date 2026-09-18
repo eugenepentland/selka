@@ -4,32 +4,6 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 
-const ordered =
-    \\def mark(log: list[int], value: int) -> int:
-    \\    log.append(value)
-    \\    return value
-    \\
-    \\def combine(a: int, b: int = 2) -> int:
-    \\    return a * 10 + b
-    \\
-    \\def main() -> int:
-    \\    log: list[int] = []
-    \\    answer = combine(b=mark(log, 2), a=mark(log, 4))
-    \\    return answer + log[0] * 100 + log[1] * 1000
-;
-fn execute(allocator: std.mem.Allocator, text: []const u8, expected: i64) !void {
-    var c = try language.Compilation.init(allocator, "calls.my", text);
-    defer c.deinit();
-    try t.expectEqual(expected, (try native.run(&c)).value);
-}
-// spec: PYTHON-CALL-1
-test "Python keyword calls evaluate effects in source order before parameter binding" {
-    try execute(t.allocator, ordered, 4242);
-    try execute(t.allocator, "def add(a: int, b: int = 2) -> int:\n    return a + b\n\ndef main() -> int:\n    return add(a=40)\n", 42);
-    try execute(t.allocator, "def add(a: int, b: int = 2) -> int:\n    return a + b\n\ndef main() -> int:\n    return add(a=40) + add(a=1)\n", 45);
-    try execute(t.allocator, "def pick[T](first: T, second: T) -> T:\n    _ = second\n    return first\n\ndef main() -> int:\n    return pick(second=2, first=42)\n", 42);
-}
-
 // spec: PYTHON-CALL-2
 test "Python calls reject unknown duplicate missing and misplaced arguments and invalid defaults" {
     const header = "def add(a: int, b: int = 2) -> int:\n    return a + b\n\ndef main() -> int:\n    return ";
@@ -56,28 +30,6 @@ test "Python defaults reject mutable expressions and mismatched scalar types" {
     }
 }
 
-// spec: PYTHON-CALL-3
-test "Python empty and positional record constructors resolve alongside keyword functions" {
-    const text =
-        \\class Empty:
-        \\    pass
-        \\
-        \\class Box[T]:
-        \\    value: T
-        \\
-        \\def make[T](value: T) -> Box[T]:
-        \\    return Box[T](value=value)
-        \\
-        \\def main() -> int:
-        \\    _ = Empty()
-        \\    first = Box[int](40)
-        \\    second = make(value=2)
-        \\    return first.value + second.value
-        \\
-    ;
-    try execute(t.allocator, text, 42);
-}
-
 // spec: PYTHON-CALL-5
 test "Python default changes invalidate checked caller reuse" {
     var cache = language.semantic_cache.Cache.init(t.allocator, 8 * 1024 * 1024);
@@ -99,27 +51,4 @@ test "Python keyword scalar and reference calls emit native source with identica
     var c = try language.Compilation.init(t.allocator, "native-calls.my", text);
     defer c.deinit();
     try t.expectEqual(@as(i64, 2442), (try native.run(&c)).value);
-}
-
-// spec: PYTHON-CALL-4
-test "Python keyword call temporaries remain rooted under GC stress and are reclaimed" {
-    const text =
-        \\def make(value: int) -> list[int]:
-        \\    xs: list[int] = []
-        \\    xs.append(value)
-        \\    return xs
-        \\
-        \\def use(first: list[int], second: list[int]) -> int:
-        \\    return first[0] * 10 + second[0]
-        \\
-        \\def main() -> int:
-        \\    answer = use(second=make(2), first=make(4))
-        \\    _ = make(0)
-        \\    return answer
-        \\
-    ;
-    var c = try language.Compilation.init(t.allocator, "roots.my", text);
-    defer c.deinit();
-    const result = try native.runWithOptions(&c, .{ .gc_stress = true });
-    try t.expectEqual(@as(i64, 42), result.value);
 }

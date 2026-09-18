@@ -1,0 +1,9 @@
+module managed_values_case_9
+
+
+public def program() -> i64:
+    text: str = b"hé🙂"
+    part: str = b"é🙂"
+    if part in text:
+        return 42
+    return 0

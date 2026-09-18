@@ -1,0 +1,18 @@
+module propagation_case_7
+
+
+result R:
+    ok: i64,
+    err: i64
+
+
+def f(r: R) -> R:
+    return Ok(2 * r? + 1)
+
+
+public def program() -> i64:
+    match f(Ok(3)):
+        case R.ok(n):
+            return n
+        case R.err(ignored):
+            return 0

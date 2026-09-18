@@ -1,0 +1,22 @@
+module surface_statements_case_5
+
+
+result R:
+    ok: i64,
+    err: i64
+
+
+def first() -> R:
+    return Err(42)
+
+
+def next() -> R:
+    return Ok(first()? + 1)
+
+
+public def program() -> i64:
+    match next():
+        case R.ok(n):
+            return n
+        case R.err(e):
+            return e

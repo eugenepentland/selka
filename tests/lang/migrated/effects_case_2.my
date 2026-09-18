@@ -1,0 +1,21 @@
+module effects_case_2
+
+
+record Box:
+    values: list[int]
+
+
+def write_text(pieces: list[str], box: Box) -> None effects(mutation, managed_allocation) mutates(pieces):
+    pieces.append("x")
+    _ = box
+
+
+def use(pieces: list[str], box: Box) -> None effects(mutation, managed_allocation) mutates(pieces):
+    write_text(pieces, box)
+
+
+public def program() -> int:
+    pieces: list[str] = []
+    box = Box(values=[1])
+    use(pieces, box)
+    return 0

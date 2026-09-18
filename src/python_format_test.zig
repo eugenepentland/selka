@@ -18,44 +18,6 @@ fn reject(source: []const u8, code: []const u8) !void {
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
 
-// spec: PY-FSTRING-1
-test "format strings interpolate expressions and render every value" {
-    try execute(
-        \\def label(count: int, items: list[int]) -> str:
-        \\    return f"total {count} of {len(items)} items"
-        \\
-        \\def main() -> int:
-        \\    score = 0
-        \\    if label(7, [1, 2, 3]) == "total 7 of 3 items":
-        \\        score = score + 1
-        \\    if f"{1 + 1}" == "2":
-        \\        score = score + 2
-        \\    if f"{True} {None} {1.5}" == "True None 1.5":
-        \\        score = score + 4
-        \\    name = "x"
-        \\    if f"a\t{name}b" == "a\tx" + "b":
-        \\        score = score + 8
-        \\    if f"{f'{name}'}" == "x":
-        \\        score = score + 16
-        \\    return score
-    , 31);
-}
-
-// spec: PY-FSTRING-2
-test "doubled braces are literal and an empty format string is empty text" {
-    try execute(
-        \\def main() -> int:
-        \\    score = 0
-        \\    if f"{{literal}}" == "{literal}":
-        \\        score = score + 1
-        \\    if f"" == "":
-        \\        score = score + 2
-        \\    if f"no holes" == "no holes":
-        \\        score = score + 4
-        \\    return score
-    , 7);
-}
-
 // spec-case: PY-FSTRING-2
 test "malformed format strings and unconvertible values are rejected" {
     const header = "def main() -> int:\n    x = 1\n    _ = ";
@@ -73,15 +35,6 @@ test "malformed format strings and unconvertible values are rejected" {
         defer t.allocator.free(text);
         try reject(text, case.code);
     }
-}
-
-// spec-case: PY-FSTRING-1
-test "an f before anything but a quote stays an ordinary identifier" {
-    try execute(
-        \\def main() -> i64:
-        \\    f = 42
-        \\    return f
-    , 42);
 }
 
 /// Every kind of value a hole renders, printed beside its own interpolation so

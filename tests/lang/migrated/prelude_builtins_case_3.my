@@ -1,0 +1,6 @@
+module prelude_builtins_case_3
+
+
+public def program() -> int:
+    sorted = 4
+    return sorted + 1

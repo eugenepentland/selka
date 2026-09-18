@@ -33,7 +33,8 @@ pub const embed_prelude =
     \\    uint64_t steps=options && options->max_steps ? options->max_steps : MYL_QBE_UNBOUNDED;
     \\    uint64_t frames=options && options->max_frames ? options->max_frames : MYL_QBE_UNBOUNDED;
     \\    MylQbeResult result;
-    \\    int status=mylang_qbe_execute_config(entry,steps,frames,0,options ? options->providers : NULL,myl_qbe_host_begin,&result);
+    \\    int stress=options && options->stress ? 1 : 0;
+    \\    int status=mylang_qbe_execute_config(entry,steps,frames,stress,options ? options->providers : NULL,myl_qbe_host_begin,&result);
     \\    if (status && result.code && strncmp(result.code,"R_",2)) status=2;
     \\    out->status=status;out->steps=result.steps;out->code=result.code;
     \\    if (!status) memcpy(&out->value,&result.value,sizeof out->value);

@@ -1,0 +1,16 @@
+module python_surface_case_3
+
+
+union Json:
+    number: float,
+    raw: bytes
+
+def size(value: Json) -> int:
+    match value:
+        case Json.number(number):
+            return int(number)
+        case Json.raw(raw):
+            return len(raw)
+
+public def program() -> int:
+    return size(Json.number(40.0)) + size(Json.raw(b"ab"))

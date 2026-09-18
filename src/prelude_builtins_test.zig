@@ -170,14 +170,6 @@ test "reversed, list and zip iterate or materialise without a new runtime" {
     try reject("def main() -> int:\n    return len(zip([1], [2]))\n", "E_PRELUDE_TYPE");
 }
 
-// spec: PRELUDE-SHADOW-1
-test "a declared function or binding keeps its own prelude name" {
-    try run("def sum(xs: list[int]) -> int:\n    return 7\n\n\ndef main() -> int:\n    return sum([1, 2, 3])\n", 7);
-    try run("def main() -> int:\n    max = 5\n    return max + 1\n", 6);
-    try run("def main() -> int:\n    sorted = 4\n    return sorted + 1\n", 5);
-    try run("def list() -> int:\n    return 9\n\n\ndef main() -> int:\n    return list()\n", 9);
-}
-
 // spec: PRELUDE-SHADOW-2
 test "declared len and replace functions shadow their prelude operations" {
     try run("def len(value: int) -> int:\n    return value + 1\n\ndef main() -> int:\n    return len(41)\n", 42);

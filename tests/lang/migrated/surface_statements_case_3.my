@@ -1,0 +1,23 @@
+module surface_statements_case_3
+
+
+type Done = None
+
+
+def nothing() -> Done:
+    return
+
+
+def explicit():
+    return None
+
+
+def identity[T](value: T) -> T:
+    return value
+
+
+public def program() -> i64:
+    nothing()
+    explicit()
+    identity[None](None)
+    return 42

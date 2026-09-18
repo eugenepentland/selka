@@ -1,0 +1,12 @@
+module compiler_case_4
+
+
+public def program() -> i64:
+    x = 0
+    if True:
+        x = 4
+    else:
+        x = 9
+    if False:
+        return 6
+    return x

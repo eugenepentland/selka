@@ -145,6 +145,7 @@ fn argv(context: fs.Context, shared: Fanout, source: []const u8) Error![]const [
         try list.append(a, "--affected");
         if (opts.against) |reference| try list.appendSlice(a, &.{ "--against", reference });
     }
+    if (opts.flags.gc_stress) try list.append(a, "--gc-stress");
     if (opts.bench.pattern) |pattern| {
         try list.appendSlice(a, &.{ "--bench", pattern, "--bench-profile", opts.bench.profile });
         if (opts.bench.only) try list.append(a, "--bench-only");
@@ -177,8 +178,8 @@ fn summarize(context: fs.Context, opts: options.Options, count: usize, outcomes:
         totals.skipped += @intCast(v.number(v.get(parsed, "skipped")));
         for (v.array(v.get(parsed, "tests"))) |row| try rows.append(a, row);
     }
-    try publish(context, opts.flags.json, count, totals, rows.items);
-    if (opts.flags.report) try reportWork(context, totals);
+    try publish(context, opts.flags.output.json, count, totals, rows.items);
+    if (opts.flags.output.report) try reportWork(context, totals);
     // A benchmark run's children already fold their own correctness and
     // performance gates into one status, so the parent takes the most severe
     // child status instead of recomputing it from the test-case counts.

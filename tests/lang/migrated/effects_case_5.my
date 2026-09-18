@@ -1,0 +1,10 @@
+module effects_case_5
+
+
+def total(values: list[int]) -> int effects():
+    return len(values)
+
+
+public def program() -> int:
+    values = [1, 2, 3]
+    return total(values) - 3

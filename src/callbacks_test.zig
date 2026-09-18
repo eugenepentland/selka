@@ -13,54 +13,6 @@ fn run(source: []const u8, expected: i64) !void {
     };
     try t.expectEqual(expected, outcome.value);
 }
-// spec: CALLBACK-1
-test "callbacks infer function values and invoke passed exact signatures" {
-    try run(
-        \\def inc(x: i64) -> i64 effects():
-        \\    return x + 1
-        \\
-        \\
-        \\def main() -> i64:
-        \\    f = inc
-        \\    return f(4)
-    , 5);
-    try run(
-        \\def inc(x: i64) -> i64 effects():
-        \\    return x + 1
-        \\
-        \\
-        \\def apply(f: def(i64) -> i64 effects(), x: i64) -> i64:
-        \\    return f(x)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    return apply(inc, 8)
-    , 9);
-}
-
-// spec: PY-LAMBDA-1
-test "expression lambdas use an expected callback signature and invoke correctly" {
-    try run(
-        \\def apply(f: def(int) -> int effects(), value: int) -> int:
-        \\    return f(value)
-        \\
-        \\
-        \\def main() -> int:
-        \\    return apply(lambda value: value + 2, 40)
-    , 42);
-    try run(
-        \\const OFFSET: int = 2
-        \\
-        \\
-        \\def apply(f: def(int) -> int effects(), value: int) -> int:
-        \\    return f(value)
-        \\
-        \\
-        \\def main() -> int:
-        \\    return apply(lambda value: value + OFFSET, 40)
-    , 42);
-}
-
 // spec: PY-LAMBDA-2
 test "lambdas reject missing context wrong results effects and local captures" {
     try reject("def main() -> int:\n    f = lambda value: value\n    return 0\n", "E_LAMBDA_CONTEXT");
@@ -285,49 +237,6 @@ fn invokeInstruction(instructions: []language.bytecode.Instruction) !*language.b
     unreachable;
 }
 
-test "callbacks retain values through records arrays and ordinary generic forwarding" {
-    try run(
-        \\type F = def(i64) -> i64 effects()
-        \\
-        \\
-        \\class Box[T]:
-        \\    value: T
-        \\
-        \\
-        \\def inc(x: i64) -> i64 effects():
-        \\    return x + 1
-        \\
-        \\
-        \\def get[T](b: Box[T]) -> T:
-        \\    return b.value
-        \\
-        \\
-        \\def repeat[T](f: F, x: i64, tag: T) -> i64:
-        \\    _ = tag
-        \\    return f(f(x))
-        \\
-        \\
-        \\def main() -> i64:
-        \\    b = Box[F](value=inc)
-        \\    all: [1]F = [get[F](b)]
-        \\    f = all[0]
-        \\    return repeat[bool](f, 5, True)
-    , 7);
-    try run(
-        \\def inc(x: i64) -> i64 effects():
-        \\    return x + 1
-        \\
-        \\
-        \\def choose() -> def(i64) -> i64 effects():
-        \\    return inc
-        \\
-        \\
-        \\def main() -> i64:
-        \\    f = choose()
-        \\    return f(8)
-    , 9);
-}
-
 test "callbacks reject malformed invoke metadata and dispatch dynamically selected targets" {
     const source =
         \\def f(x: i64) -> i64 effects():
@@ -422,47 +331,6 @@ test "E1 pure callbacks enter output-permitting slots and the reverse direction 
         \\def main() -> i64:
         \\    return apply(pure, 41)
     , "E_EFFECT_BOUND");
-}
-
-// spec-case: CALLBACK-1
-test "E1 stored and returned callbacks retain the destination effect contract" {
-    try run(
-        \\type Sink = def(i64) -> i64 effects(output)
-        \\
-        \\
-        \\def pure(x: i64) -> i64 effects():
-        \\    return x + 1
-        \\
-        \\
-        \\def stash() -> Sink:
-        \\    return pure
-        \\
-        \\
-        \\def invoke(f: Sink, x: i64) -> i64:
-        \\    return f(x)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    stored = pure
-        \\    returned = stash()
-        \\    return invoke(stored, 10) + invoke(returned, 31)
-    , 43);
-}
-
-// spec-case: CALLBACK-1
-test "E1 generic callback parameters use the same directional relation" {
-    try run(
-        \\def pure(x: i64) -> i64 effects():
-        \\    return x + 1
-        \\
-        \\
-        \\def apply[T](f: def(T) -> T effects(output), value: T) -> T:
-        \\    return f(value)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    return apply[int](pure, 41)
-    , 42);
 }
 
 // spec-case: CALLBACK-1

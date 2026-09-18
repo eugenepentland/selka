@@ -1,0 +1,10 @@
+module compiler_case_7
+
+
+public def program() -> i64:
+    i = 0
+    while i < 5000:
+        local = i
+        _ = local * 2
+        i += 1
+    return i

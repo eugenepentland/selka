@@ -1,0 +1,15 @@
+module surface_collections_case_1
+
+
+def add[T](values: list[T], value: T):
+    values.append(value)
+
+
+def first[T](values: list[T]) -> T:
+    return values[0]
+
+
+public def program() -> i64:
+    values: list[i64] = []
+    add(values, 42)
+    return first(values)

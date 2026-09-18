@@ -1,0 +1,10 @@
+module python_surface_case_2
+
+
+class Buffer:
+    len: int
+    replace: int
+
+public def program() -> int:
+    held = Buffer(len=20, replace=22)
+    return held.len + held.replace

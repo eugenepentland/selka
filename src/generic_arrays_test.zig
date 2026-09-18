@@ -244,35 +244,6 @@ test "generic array membership reuses code across nominal IDs without mixing dom
     , "E_TYPE");
 }
 
-test "generic arrays nest substitute across calls and match concrete helper shapes" {
-    try value(t.allocator, helpers ++
-        \\def matrix[T](x: T) -> [2][2]T:
-        \\    return pair[[2]T](pair[T](x, x), pair[T](x, x))
-        \\
-        \\
-        \\def concrete(a: [2]i64) -> i64:
-        \\    return a[0] + a[1]
-        \\
-        \\
-        \\def caller[T](x: T) -> i64:
-        \\    _ = matrix[T](x)
-        \\    return concrete(pair[i64](3, 4))
-        \\
-        \\
-        \\def main() -> i64:
-        \\    a = matrix[i64](9)
-        \\    return a[1][0] + caller[bool](True)
-    , 16);
-    try value(t.allocator,
-        \\def empty[T]() -> [0]T:
-        \\    return []
-        \\
-        \\
-        \\def main() -> i64:
-        \\    return i64(len(empty[bool]()))
-    , 0);
-}
-
 test "expanding generic array recursion stops at the specialization budget" {
     try reject(
         \\def grow[T](x: T) -> i64:
@@ -296,17 +267,4 @@ test "expanding generic array recursion stops at the specialization budget" {
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqualStrings("E_GENERIC_LIMIT", compilation.diagnostics.items[0].code);
     try t.expectEqualStrings("generic array specialization exceeds 4096 distinct shapes", compilation.diagnostics.items[0].message);
-}
-
-// spec-case: CANONICAL-LEN-1
-test "generic fixed array length is signed int like every other len" {
-    try value(t.allocator,
-        \\def count[T](a: [2]T) -> int:
-        \\    n: int = len(a)
-        \\    return n
-        \\
-        \\
-        \\def main() -> int:
-        \\    return count[int]([7, 8])
-    , 2);
 }

@@ -1,0 +1,12 @@
+module managed_values_case_1
+
+
+public def program() -> i64:
+    scores: dict[str, i64] = {b"x": 1}
+    alias = scores
+    alias[b"x"] = 40
+    names = scores.keys()
+    key: str = b"x"
+    if names[0] == key:
+        return scores.get(b"x", 0) + scores.get(b"missing", 2)
+    return 0

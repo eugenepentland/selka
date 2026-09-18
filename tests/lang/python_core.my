@@ -1,0 +1,180 @@
+module python_core
+
+
+def float_add(x: float, y: float) -> float:
+    return x + y
+
+
+def operand(log: list[int], value: int) -> float:
+    log.append(value)
+    return float(value)
+
+
+def receiver(log: list[int], values: list[int]) -> list[int]:
+    log.append(2)
+    return values
+
+
+def log_index(log: list[int]) -> int:
+    log.append(3)
+    return 0
+
+
+def emit_value(log: list[int]) -> int:
+    log.append(1)
+    return 42
+
+
+enum Kind:
+    atom,
+    group
+
+
+def length(text: str = "é", scale: float = 2.5) -> int:
+    return len(text) + int(scale)
+
+
+def adjust[T](unused: T, value: float) -> float:
+    _ = unused
+    return value + 1.5
+
+
+def present[T](value: T) -> Option[T]:
+    return Some(value)
+
+
+def absent[T](value: T) -> Option[T]:
+    _ = value
+    return None
+
+
+def double(value: int) -> int:
+    return value * 2
+
+
+def apply(f: def(int) -> int, x: int) -> int:
+    return f(x)
+
+
+class Score:
+    name: str
+    points: int
+
+
+def score(item: Score) -> int:
+    return item.points
+
+
+class Counter:
+    n: int
+
+
+record Pair:
+    n: int
+
+
+def bump(counter: Counter):
+    counter.n = counter.n + 1
+
+
+# spec: PYTHON-CORE-4
+public def test_floating_literals_operators_and_comparisons_use_numeric_binary64_semantics() -> bool:
+    value = float_add(1.5, 2.5) * 10.0 + 2.0
+    if value != 42.0:
+        return False
+    zero = -0.0
+    nan = divtrunc(0.0, 0.0)
+    if zero != 0.0:
+        return False
+    if nan == nan:
+        return False
+    if not (nan != nan):
+        return False
+    return True
+
+
+# spec-case: PYTHON-CORE-4
+public def test_floating_comparisons_and_remainder_preserve_operand_evaluation_once_in_source_order() -> bool:
+    log: list[int] = []
+    if operand(log, 5) > operand(log, 2):
+        value = operand(log, 7) % operand(log, 3)
+        if value != 1.0:
+            return False
+    if len(log) != 4:
+        return False
+    return log[0] + log[1] + log[2] + log[3] + 25 == 42
+
+
+# spec-case: PY-COLLECTIONS-1
+public def test_python_indexed_assignment_evaluates_rhs_before_receiver_and_index_exactly_once() -> bool:
+    log: list[int] = []
+    values = [0]
+    receiver(log, values)[log_index(log)] = emit_value(log)
+    if len(log) != 3 or values[0] != 42:
+        return False
+    return log[0] * 100 + log[1] * 10 + log[2] == 123
+
+
+# spec-case: PYTHON-3
+public def test_python_payloadless_enum_values_use_ordinary_dotted_members() -> bool:
+    kind = Kind.atom
+    return kind == Kind.atom
+
+
+# spec-case: PYTHON-CALL-1
+public def test_python_string_and_float_defaults_remain_typed_and_independent_across_repeated_calls() -> bool:
+    return length() + length() + length(scale=33.5) == 40
+
+
+# spec-case: PYTHON-CORE-4
+public def test_python_division_remainder_numeric_conversions_and_generic_numbers() -> bool:
+    if 5 / 2 != 2.5:
+        return False
+    if -5 // 2 != -3 or -5 % 2 != 1:
+        return False
+    if 5 // -2 != -3 or 5 % -2 != -1:
+        return False
+    if -5.0 // 2.0 != -3.0 or -5.0 % 2.0 != 1.0:
+        return False
+    if int(float(-2) + 4.4e1) != 42:
+        return False
+    return int(adjust(0, 40.5)) == 42
+
+
+# spec-case: PYTHON-CORE-1
+public def test_python_contextual_option_constructors_work_in_generic_functions() -> bool:
+    empty: Option[int] = absent(0)
+    _ = empty
+    match present(42):
+        case Some(value):
+            return value == 42
+        case None:
+            return False
+
+
+# spec: CALLBACK-EFFECTS-1
+public def test_omitted_callback_ceilings_are_unbounded_and_unannotated_functions_fill_slots() -> bool:
+    return apply(double, 21) == 42
+
+
+# spec-case: CALLBACK-EFFECTS-1
+public def test_unannotated_functions_fill_the_sorted_key_callback_slot() -> bool:
+    items = [Score(name="a", points=3), Score(name="b", points=1)]
+    ordered = sorted(items, key=score)
+    return ordered[0].points * 42 == 42
+
+
+# spec: CLASS-MANAGED-1
+public def test_class_is_a_shared_managed_reference_while_record_copies() -> bool:
+    a = Counter(n=1)
+    b = a
+    b.n = 7
+    bump(a)
+    pair = Pair(n=1)
+    copy = pair
+    copy.n = 9
+    return a.n * 10 + pair.n == 81
+
+
+def main() -> int:
+    return 0

@@ -1,0 +1,19 @@
+module structural_constraints_case_8
+
+
+constraint Render[P] = copy + op(render(p: P, extra: list[P]) -> int effects())
+
+domain D: int:
+    def make(n: int) -> D:
+        return wrap[D](n)
+
+    def render(p: D, extra: list[D]) -> int effects():
+        _ = p
+        return len(extra)
+
+def count[P: Render](p: P, extra: list[P]) -> int effects():
+    return P.render(p, extra)
+
+public def program() -> int:
+    d = D.make(1)
+    return count[D](d, [d, d]) + 1

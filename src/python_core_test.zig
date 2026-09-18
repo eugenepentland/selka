@@ -110,85 +110,6 @@ test "PYTHON-CORE-2 a project with an adapted entry still emits native units" {
     try t.expect(std.mem.indexOf(u8, manifest, "language-schema-v1") != null);
     try t.expect(std.mem.indexOf(u8, manifest, "qbe-units-v1") != null);
 }
-// spec: PYTHON-CORE-4
-test "floating literals operators and comparisons use numeric binary64 semantics" {
-    try run(
-        \\def add(x: float, y: float) -> float:
-        \\    return x + y
-        \\
-        \\
-        \\def main() -> i64:
-        \\    value = add(1.5, 2.5) * 10.0 + 2.0
-        \\    if value == 42.0:
-        \\        return 42
-        \\    return 1
-    , 42);
-    try run(
-        \\def main() -> i64:
-        \\    zero = -0.0
-        \\    nan = divtrunc(0.0, 0.0)
-        \\    if zero != 0.0:
-        \\        return 1
-        \\    if nan == nan:
-        \\        return 2
-        \\    if not (nan != nan):
-        \\        return 3
-        \\    return 42
-    , 42);
-}
-// spec-case: PYTHON-CORE-4
-test "floating comparisons and remainder preserve operand evaluation once in source order" {
-    try run(
-        \\def operand(log: list[int], value: int) -> float:
-        \\    log.append(value)
-        \\    return float(value)
-        \\def main() -> int:
-        \\    log: list[int] = []
-        \\    if operand(log, 5) > operand(log, 2):
-        \\        value = operand(log, 7) % operand(log, 3)
-        \\        if value != 1.0:
-        \\            return 1
-        \\    if len(log) != 4:
-        \\        return 2
-        \\    return log[0] + log[1] + log[2] + log[3] + 25
-    , 42);
-}
-// spec-case: PY-COLLECTIONS-1
-test "Python indexed assignment evaluates RHS before receiver and index exactly once" {
-    try run(
-        \\def receiver(log: list[int], values: list[int]) -> list[int]:
-        \\    log.append(2)
-        \\    return values
-        \\def index(log: list[int]) -> int:
-        \\    log.append(3)
-        \\    return 0
-        \\def value(log: list[int]) -> int:
-        \\    log.append(1)
-        \\    return 42
-        \\def main() -> int:
-        \\    log: list[int] = []
-        \\    values = [0]
-        \\    receiver(log, values)[index(log)] = value(log)
-        \\    if len(log) != 3 or values[0] != 42:
-        \\        return 1
-        \\    return log[0] * 100 + log[1] * 10 + log[2]
-    , 123);
-}
-// spec-case: PYTHON-3
-test "Python payloadless enum values use ordinary dotted members" {
-    try run(
-        \\enum Kind:
-        \\    atom,
-        \\    group
-        \\
-        \\
-        \\def main() -> int:
-        \\    kind = Kind.atom
-        \\    if kind == Kind.atom:
-        \\        return 42
-        \\    return 1
-    , 42);
-}
 const PythonModules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
@@ -228,15 +149,6 @@ test "Python exported module signatures share builtin types and resolve enum mem
     try compilation.emit();
     try t.expectEqual(@as(i64, 42), (try native.runWithOptions(&compilation, .{ .gc_stress = true })).value);
 }
-// spec-case: PYTHON-CALL-1
-test "Python string and float defaults remain typed and independent across repeated calls" {
-    try run(
-        \\def length(text: str = "é", scale: float = 2.5) -> int:
-        \\    return len(text) + int(scale)
-        \\def main() -> int:
-        \\    return length() + length() + length(scale=33.5)
-    , 40);
-}
 // spec: PYTHON-CORE-3
 test "representable integer literals inherit parameter local and expression contexts" {
     try run(
@@ -264,79 +176,6 @@ test "representable integer literals inherit parameter local and expression cont
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqualStrings("E_INTEGER_RANGE", compilation.diagnostics.items[0].code);
-}
-// spec-case: PYTHON-CORE-4
-test "Python division remainder numeric conversions and generic numbers" {
-    try run(
-        \\def main() -> int:
-        \\    if 5 / 2 != 2.5:
-        \\        return 1
-        \\    if -5 // 2 != -3 or -5 % 2 != 1:
-        \\        return 2
-        \\    if 5 // -2 != -3 or 5 % -2 != -1:
-        \\        return 3
-        \\    if -5.0 // 2.0 != -3.0 or -5.0 % 2.0 != 1.0:
-        \\        return 4
-        \\    return int(float(-2) + 4.4e1)
-    , 42);
-    try run(
-        \\def adjust[T](unused: T, value: float) -> float:
-        \\    _ = unused
-        \\    return value + 1.5
-        \\def main() -> int:
-        \\    return int(adjust(0, 40.5))
-    , 42);
-}
-// spec-case: PYTHON-CORE-1
-test "Python contextual Option constructors work in generic functions" {
-    try run(
-        \\def present[T](value: T) -> Option[T]:
-        \\    return Some(value)
-        \\def absent[T](value: T) -> Option[T]:
-        \\    _ = value
-        \\    return None
-        \\def main() -> int:
-        \\    empty: Option[int] = absent(0)
-        \\    _ = empty
-        \\    match present(42):
-        \\        case Some(value):
-        \\            return value
-        \\        case None:
-        \\            return 1
-    , 42);
-}
-// spec: CALLBACK-EFFECTS-1
-test "omitted callback ceilings are unbounded and unannotated functions fill slots" {
-    try run(
-        \\def double(value: int) -> int:
-        \\    return value * 2
-        \\
-        \\
-        \\def apply(f: def(int) -> int, x: int) -> int:
-        \\    return f(x)
-        \\
-        \\
-        \\def main() -> int:
-        \\    return apply(double, 21)
-    , 42);
-}
-// spec-case: CALLBACK-EFFECTS-1
-test "unannotated functions fill the sorted key callback slot" {
-    try run(
-        \\class Score:
-        \\    name: str
-        \\    points: int
-        \\
-        \\
-        \\def score(item: Score) -> int:
-        \\    return item.points
-        \\
-        \\
-        \\def main() -> int:
-        \\    items = [Score(name="a", points=3), Score(name="b", points=1)]
-        \\    ordered = sorted(items, key=score)
-        \\    return ordered[0].points * 42
-    , 42);
 }
 // spec-case: CALLBACK-EFFECTS-1
 test "an explicit narrow callback ceiling still rejects a wider function value" {
@@ -453,32 +292,6 @@ test "reading a parameter copy after a field write keeps the write accepted" {
     defer observed.deinit();
     try observed.check();
     try t.expectEqual(@as(usize, 0), observed.diagnostics.items.len);
-}
-// spec: CLASS-MANAGED-1
-test "class is a shared managed reference while record copies" {
-    try run(
-        \\class Counter:
-        \\    n: int
-        \\
-        \\
-        \\record Pair:
-        \\    n: int
-        \\
-        \\
-        \\def bump(counter: Counter):
-        \\    counter.n = counter.n + 1
-        \\
-        \\
-        \\def main() -> int:
-        \\    a = Counter(n=1)
-        \\    b = a
-        \\    b.n = 7
-        \\    bump(a)
-        \\    pair = Pair(n=1)
-        \\    copy = pair
-        \\    copy.n = 9
-        \\    return a.n * 10 + pair.n
-    , 81);
 }
 // spec-case: CLASS-MANAGED-1
 test "a self-referential class graph prints to the depth cap and terminates" {

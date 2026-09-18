@@ -1,0 +1,19 @@
+module structural_constraints_case_6
+
+
+constraint Run[P] = copy + op(apply(worker: P, callback: def(P) -> int effects()) -> int effects())
+domain Worker: int:
+    def make() -> Worker:
+        return wrap[Worker](42)
+    def apply(worker: Worker, callback: def(Worker) -> int effects()) -> int effects():
+        return callback(worker)
+    def read(worker: Worker) -> int effects():
+        return unwrap(worker)
+def get[P: copy + op(apply(worker: P, callback: def(P) -> int effects()) -> int effects())](worker: P, callback: def(P) -> int effects()) -> int effects():
+    return P.apply(worker, callback)
+def forward[Q: Run](worker: Q, callback: def(Q) -> int effects()) -> int effects():
+    return get(worker, callback)
+def read_worker(worker: Worker) -> int effects():
+    return Worker.read(worker)
+public def program() -> int:
+    return forward(Worker.make(), read_worker)

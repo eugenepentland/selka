@@ -1,0 +1,13 @@
+module effects_case_1
+
+
+def touch(values: list[int]) -> None effects(mutation) mutates(values):
+    values[0] = 42
+
+
+public def program() -> int:
+    values = [1]
+    touch(values)
+    if values[0] != 42:
+        return 1
+    return 0

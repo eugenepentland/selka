@@ -1,0 +1,11 @@
+module compiler_case_2
+
+
+public def program() -> i64:
+    x = 48
+    y = 18
+    while y != 0:
+        remainder = remtrunc(x, y)
+        x = y
+        y = remainder
+    return x

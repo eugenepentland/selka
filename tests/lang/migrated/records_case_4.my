@@ -1,0 +1,10 @@
+module records_case_4
+
+
+record Pair:
+    x: i64
+    y: i64
+
+
+public def program() -> i64:
+    return -Pair(x=4, y=2).x + 10

@@ -1,0 +1,65 @@
+module python_strings
+
+
+# spec: PY-STR-1
+public def test_trimming_case_mapping_and_padding_copy_the_receiver_without_changing_it() -> bool:
+    padded = "  value  "
+    score = 0
+    if padded.strip() == "value":
+        score = score + 1
+    if padded.lstrip() == "value  ":
+        score = score + 2
+    if padded.rstrip() == "  value":
+        score = score + 4
+    if "aB".upper() == "AB" and "aB".lower() == "ab":
+        score = score + 8
+    if "7".zfill(3) == "007" and "-7".zfill(3) == "-07":
+        score = score + 16
+    if padded == "  value  ":
+        score = score + 11
+    return score == 42
+
+
+# spec: PY-STR-2
+public def test_search_replacement_and_classification_follow_python_answers() -> bool:
+    text = "a,b,a"
+    score = 0
+    if text.replace("a", "z") == "z,b,z":
+        score = score + 1
+    if text.find("b") == 2 and text.find("q") == -1:
+        score = score + 2
+    if text.count("a") == 2:
+        score = score + 4
+    if text.startswith("a,") and text.endswith(",a"):
+        score = score + 8
+    if "42".isdigit() and "ab".isalpha() and " \t".isspace():
+        score = score + 16
+    if not "".isdigit() and not "4a".isalpha():
+        score = score + 11
+    return score == 42
+
+
+# spec: PY-STR-3
+public def test_splitlines_drops_terminators_and_int_float_parse_a_whole_string() -> bool:
+    lines = "a\nb\r\nc".splitlines()
+    total = len(lines) * 10
+    match int("12"):
+        case Some(value):
+            total = total + value
+        case None:
+            total = total - 1
+    match int("12x"):
+        case Some(value):
+            total = total + value
+        case None:
+            total = total
+    match float("0.5"):
+        case Some(value):
+            total = total + int(value * 2.0)
+        case None:
+            total = total - 1
+    return total - 1 == 42
+
+
+def main() -> int:
+    return 0

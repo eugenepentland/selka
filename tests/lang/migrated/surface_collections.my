@@ -1,0 +1,22 @@
+module surface_collections
+
+
+import surface_collections_case_1 as c1
+import surface_collections_case_2 as c2
+import surface_collections_case_3 as c3
+
+
+# spec: SURFACE-COLLECTIONS-3
+public def test_generic_list_methods_retain_element_type_che() -> bool:
+    return c1.program() == 42
+
+# spec: SURFACE-COLLECTIONS-1
+public def test_list_methods_indexing_and_indexed_assignment() -> bool:
+    return c2.program() == 42
+
+# spec: SURFACE-COLLECTIONS-2
+public def test_record_constructors_without_new_support_gene() -> bool:
+    return c3.program() == 42
+
+def main() -> int:
+    return 0

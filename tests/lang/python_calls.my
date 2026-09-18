@@ -1,0 +1,82 @@
+module python_calls
+
+
+def mark(log: list[int], value: int) -> int:
+    log.append(value)
+    return value
+
+
+def combine(a: int, b: int = 2) -> int:
+    return a * 10 + b
+
+
+def add_default(a: int, b: int = 2) -> int:
+    return a + b
+
+
+def pick[T](first: T, second: T) -> T:
+    _ = second
+    return first
+
+
+class Empty:
+    pass
+
+
+class Box[T]:
+    value: T
+
+
+def make_box[T](value: T) -> Box[T]:
+    return Box[T](value=value)
+
+
+def make(value: int) -> list[int]:
+    xs: list[int] = []
+    xs.append(value)
+    return xs
+
+
+def use(first: list[int], second: list[int]) -> int:
+    return first[0] * 10 + second[0]
+
+
+# spec: PYTHON-CALL-1
+public def test_keyword_calls_evaluate_effects_in_source_order_before_parameter_binding() -> bool:
+    log: list[int] = []
+    answer = combine(b=mark(log, 2), a=mark(log, 4))
+    return answer + log[0] * 100 + log[1] * 1000 == 4242
+
+
+# spec-case: PYTHON-CALL-1
+public def test_keyword_defaults_bind_by_name() -> bool:
+    return add_default(a=40) == 42
+
+
+# spec-case: PYTHON-CALL-1
+public def test_repeated_keyword_calls_bind_independently() -> bool:
+    return add_default(a=40) + add_default(a=1) == 45
+
+
+# spec-case: PYTHON-CALL-1
+public def test_generic_keyword_arguments_bind_out_of_order() -> bool:
+    return pick(second=2, first=42) == 42
+
+
+# spec: PYTHON-CALL-3
+public def test_empty_and_positional_record_constructors_resolve_alongside_keyword_functions() -> bool:
+    _ = Empty()
+    first = Box[int](40)
+    second = make_box(value=2)
+    return first.value + second.value == 42
+
+
+# spec: PYTHON-CALL-4
+public def test_keyword_call_temporaries_remain_rooted_under_gc_stress_and_are_reclaimed() -> bool:
+    answer = use(second=make(2), first=make(4))
+    _ = make(0)
+    return answer == 42
+
+
+def main() -> int:
+    return 0

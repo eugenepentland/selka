@@ -1,0 +1,17 @@
+module generic_inference_case_2
+
+
+class Box[T]:
+    value: T
+
+
+def unbox[T](x: Box[T]) -> T:
+    return x.value
+
+
+def forward[U](x: Box[U]) -> U:
+    return unbox(x)
+
+
+public def program() -> i64:
+    return forward(Box[i64](value=9))

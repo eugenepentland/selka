@@ -43,65 +43,6 @@ fn run(text_input: []const u8, expected: i64) !void {
     const result = try native.run(&compilation);
     try t.expectEqual(expected, result.value);
 }
-test "generic inference follows arrays nominal applications const lengths and callbacks" {
-    try run(
-        \\def first[T, const N: u64](x: [N]T) -> T:
-        \\    return x[0]
-        \\
-        \\
-        \\def forward[U, const M: u64](x: [M]U) -> U:
-        \\    return first(x)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    values: [2]i64 = [7, 9]
-        \\    return forward(values)
-    , 7);
-    try run(
-        \\class Box[T]:
-        \\    value: T
-        \\
-        \\
-        \\def unbox[T](x: Box[T]) -> T:
-        \\    return x.value
-        \\
-        \\
-        \\def forward[U](x: Box[U]) -> U:
-        \\    return unbox(x)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    return forward(Box[i64](value=9))
-    , 9);
-    try run(
-        \\class Chunk[T, const N: u64]:
-        \\    items: [N]T
-        \\
-        \\
-        \\def first[T, const N: u64](x: Chunk[T, N]) -> T:
-        \\    return x.items[0]
-        \\
-        \\
-        \\def forward[U, const M: u64](x: Chunk[U, M]) -> U:
-        \\    return first(x)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    return forward(Chunk[i64, 2](items=[8, 9]))
-    , 8);
-    try run(
-        \\def inc(x: i64) -> i64 effects():
-        \\    return x + 1
-        \\
-        \\
-        \\def apply[T](f: def(T) -> T effects(), x: T) -> T:
-        \\    return f(x)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    return apply(inc, 4)
-    , 5);
-}
 const Modules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,

@@ -225,23 +225,6 @@ test "domain equality preserves opacity and rejects mixed IDs arithmetic orderin
     }
 }
 
-test "domain equality participates in generic equality contracts" {
-    try expectValue(t.allocator, declarations ++
-        \\def same[T: equality](a: T, b: T) -> bool:
-        \\    return a == b
-        \\
-        \\
-        \\def different[T: equality](a: T, b: T) -> bool:
-        \\    return a != b
-        \\
-        \\
-        \\def main() -> i64:
-        \\    if same[Id](Id.make(1u64), Id.make(1u64)) and different[Other](Other.make(1u64), Other.make(2u64)):
-        \\        return 1
-        \\    return 0
-    , 1);
-}
-
 test "domain equality loops complete and traps name the failing frame" {
     var compilation = try language.Compilation.init(t.allocator, "loop.my", declarations ++
         \\def main() -> i64:

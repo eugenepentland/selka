@@ -1,0 +1,22 @@
+module structural_constraints_case_9
+
+
+class A:
+    value: i64
+
+
+class B:
+    tag: bool
+    value: i64
+
+
+def get[T: copy + field(value: i64)](v: T) -> i64:
+    return v.value
+
+
+def forward[U: copy + field(value: i64)](v: U) -> i64:
+    return get[U](v)
+
+
+public def program() -> i64:
+    return get[A](A(value=2)) + forward[B](B(tag=True, value=3))

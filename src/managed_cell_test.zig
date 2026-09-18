@@ -24,37 +24,6 @@ fn reject(source: []const u8, code: []const u8) !void {
     try t.expectEqualStrings(code, compilation.diagnostics.items[0].code);
 }
 
-// spec: MANAGED-CELL-1
-test "Cell construction reads and replacement share mutation across aliases and calls under GC stress" {
-    try run(
-        \\def bump(cell: Cell[int]) -> None:
-        \\    cell.value = cell.value + 1
-        \\
-        \\
-        \\def main() -> int:
-        \\    cell = Cell(value=40)
-        \\    alias = cell
-        \\    bump(alias)
-        \\    bump(cell)
-        \\    return cell.value
-    , 42);
-    try run(
-        \\def push(cell: Cell[list[int]]) -> None:
-        \\    cell.value.append(7)
-        \\
-        \\
-        \\def main() -> int:
-        \\    cell = Cell[int](value=1)
-        \\    alias = cell
-        \\    alias.value = 6
-        \\    if cell.value != 6:
-        \\        return 1
-        \\    values = Cell(value=[1, 2])
-        \\    push(values)
-        \\    return values.value[2]
-    , 7);
-}
-
 // spec-case: MANAGED-CELL-1
 test "Cell rejects result obligations equality and rendering" {
     try reject(

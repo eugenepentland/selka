@@ -1,0 +1,11 @@
+module managed_values_case_3
+
+
+public def program() -> i64:
+    text: str = b"a,b,"
+    parts = text.split(b",")
+    sep: str = b","
+    joined = sep.join(parts)
+    if joined == text:
+        return len(joined)
+    return 0

@@ -1,0 +1,21 @@
+module records_case_2
+
+
+record Outer:
+    inner: Inner
+    flag: bool
+
+
+record Inner:
+    value: i64
+
+
+def id(x: Outer) -> Outer:
+    return x
+
+
+public def program() -> i64:
+    x = id(Outer(flag=True, inner=Inner(value=7)))
+    if x.flag:
+        return x.inner.value
+    return 0

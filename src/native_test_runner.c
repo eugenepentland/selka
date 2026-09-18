@@ -23,6 +23,10 @@
 
 typedef int (*Invoke)(const char *, const MylangWireNode *, size_t, MylangWireNode *, size_t, const MylangCodecOptions *, MylangCodecResult *);
 
+/* Set from the optional `--gc-stress` argument; copied into every run's
+   options so the runtime collector stress reaches the copied-value call. */
+static int stress_flag = 0;
+
 static void fail(const char *message) { fputs(message, stderr); fputc('\n', stderr); exit(2); }
 static uint64_t number(FILE *input) {
     uint64_t value;
@@ -165,6 +169,7 @@ static int finish(void) { return fflush(stdout) == 0 ? 0 : 2; }
 static int run_test(FILE *request, const char *library_path) {
     MylangCodecOptions options = {0};
     options.run.max_steps = number(request); options.run.max_frames = number(request); options.max_calls = number(request);
+    options.run.stress = (uint64_t)stress_flag;
     char *name = string(request);
     uint64_t count = number(request);
     MylangWireNode *inputs = read_nodes(request, count);
@@ -221,6 +226,7 @@ static int time_batch(Invoke invoke, const char *name, const MylangWireNode *inp
 static int run_benchmark(FILE *request, const char *library_path) {
     MylangCodecOptions options = {0};
     options.run.max_steps = number(request); options.run.max_frames = number(request); options.max_calls = number(request);
+    options.run.stress = (uint64_t)stress_flag;
     uint64_t warmup = number(request);
     uint64_t batch_count = number(request);
     uint64_t target_ns = number(request);
@@ -271,7 +277,11 @@ static int run_benchmark(FILE *request, const char *library_path) {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 3) fail("InvalidNativeTestArguments");
+    if (argc < 3 || argc > 4) fail("InvalidNativeTestArguments");
+    if (argc == 4) {
+        if (strcmp(argv[3], "--gc-stress") != 0) fail("InvalidNativeTestArguments");
+        stress_flag = 1;
+    }
     FILE *request = fopen(argv[2], "rb");
     if (!request) fail("NativeTestRequestUnavailable");
     uint64_t magic = number(request);

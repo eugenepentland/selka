@@ -63,6 +63,8 @@ pub const Executor = struct {
     temporary: []const u8,
     executable: []const u8,
     types: []const Value,
+    /// `--gc-stress` for every child call; set from the invocation's flags.
+    stress: bool = false,
     /// Compile the embedded POSIX harness once; test calls load the library in new processes.
     pub fn init(context: fs.Context, manifest: Value, library: []const u8, temporary: []const u8, zig: []const u8) Error!Executor {
         const a = context.allocator;
@@ -87,7 +89,7 @@ pub const Executor = struct {
         try codec.arguments(function, arguments);
         const path = try self.request(try testRequest(self.context.allocator, v.text(v.get(function, "name")), codec.nodes.items, limits));
         const result = std.process.run(self.context.allocator, self.context.io, .{
-            .argv = &.{ self.executable, self.library, path },
+            .argv = try self.argv(path),
             .environ_map = try self.context.bounded(limits.max_memory orelse budget.test_default),
             .stdout_limit = .limited(32 * 1024 * 1024),
             .stderr_limit = .limited(1024 * 1024),
@@ -111,7 +113,7 @@ pub const Executor = struct {
         const bytes = try benchRequest(self.context.allocator, v.text(v.get(function, "name")), codec.nodes.items, config);
         const path = try self.request(bytes);
         const result = std.process.run(self.context.allocator, self.context.io, .{
-            .argv = &.{ self.executable, self.library, path },
+            .argv = try self.argv(path),
             .environ_map = try self.context.bounded(config.limits.max_memory orelse budget.test_default),
             .stdout_limit = .limited(32 * 1024 * 1024),
             .stderr_limit = .limited(1024 * 1024),
@@ -131,6 +133,13 @@ pub const Executor = struct {
             .calibrated_iterations = parsed.calibrated_iterations,
             .raw = parsed.raw,
         };
+    }
+    /// Child argv: the runner, the library, the request, and the collector
+    /// stress switch when the invocation asked for it.
+    fn argv(self: Executor, path: []const u8) Error![]const []const u8 {
+        const a = self.context.allocator;
+        if (!self.stress) return a.dupe([]const u8, &.{ self.executable, self.library, path });
+        return a.dupe([]const u8, &.{ self.executable, self.library, path, "--gc-stress" });
     }
     /// Write one request under a fresh child directory and return its path.
     fn request(self: Executor, bytes: []const u8) Error![]const u8 {

@@ -1,0 +1,59 @@
+module nominal_bodies
+
+
+class Box[T]:
+    value: T
+
+
+union Slot[T]:
+    none,
+    some: T
+
+
+def pack[T](x: T) -> Box[T]:
+    return Box[T](value=x)
+
+
+def extract[T](box: Box[T]) -> T:
+    return box.value
+
+
+def alter[T](box: Box[T], x: T) -> Box[T]:
+    y = box
+    y.value = x
+    return y
+
+
+def slot_of[T](x: T) -> Slot[T]:
+    return Slot.some(x)
+
+
+def choose[T](x: Slot[T], fallback: T) -> T:
+    match x:
+        case Slot.none:
+            return fallback
+        case Slot.some(value):
+            return value
+
+
+def pairs[T](x: T) -> [2]T:
+    return [x, x]
+
+
+def boxed[T](x: T) -> Box[[2]T]:
+    return Box[[2]T](value=pairs[T](x))
+
+
+# spec: NOMINAL-BODY-1
+public def test_nominal_bodies_construct_project_update_match_and_forward_symbolic_arguments() -> bool:
+    return extract[i64](alter[i64](pack[i64](3), choose[i64](slot_of[i64](7), 0))) == 7
+
+
+public def test_nominal_bodies_reuse_concrete_array_identities_created_by_earlier_function_specialization() -> bool:
+    a = pairs[i64](1)
+    b = boxed[i64](8)
+    return a[0] + b.value[1] == 9
+
+
+def main() -> int:
+    return 0

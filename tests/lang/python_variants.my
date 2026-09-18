@@ -1,0 +1,86 @@
+module python_variants
+
+
+class ShapePoint:
+    x: i64
+    y: i64
+
+
+union Shape:
+    point: ShapePoint,
+    radius: i64,
+    empty
+
+
+def score(shape: Shape) -> i64:
+    match shape:
+        case Shape.empty:
+            return 0
+        case Shape.radius(r):
+            return r * r
+        case Shape.point(p):
+            return p.x + p.y
+
+
+union Link:
+    some: i64,
+    none
+
+
+class VariantNode:
+    next: Link
+
+
+def step(node: VariantNode) -> i64:
+    match node.next:
+        case Link.some(id):
+            return id
+        case Link.none:
+            return 0
+
+
+class VariantBox[T]:
+    value: T
+
+
+union VariantSlot[T]:
+    none,
+    some: T
+
+
+def hold[T](value: T) -> VariantSlot[T]:
+    return VariantSlot.some(value)
+
+
+def choose_slot[T](slot: VariantSlot[T], fallback: T) -> T:
+    match slot:
+        case VariantSlot.none:
+            return fallback
+        case VariantSlot.some(value):
+            return value
+
+
+# spec: PY-VARIANT-1
+public def test_python_payload_variant_construction_names_the_union_case_like_a_call() -> bool:
+    total = score(Shape.point(ShapePoint(x=2, y=3)))
+    total = total + score(Shape.radius(6))
+    return total + score(Shape.empty) == 41
+
+
+# spec-case: PY-VARIANT-1
+public def test_python_payload_variants_nest_flow_through_locals_and_reach_record_fields() -> bool:
+    held = Link.some(42)
+    filled = VariantNode(next=held)
+    empty = VariantNode(next=Link.none)
+    return step(filled) + step(empty) == 42
+
+
+# spec: PY-VARIANT-3
+public def test_a_generic_variant_infers_its_type_arguments_from_the_expected_type() -> bool:
+    held: VariantSlot[VariantBox[i64]] = VariantSlot.some(VariantBox[i64](value=42))
+    empty: VariantSlot[i64] = VariantSlot.none
+    return choose_slot(held, VariantBox[i64](value=0)).value + choose_slot(hold[i64](0), 0) + choose_slot(empty, 0) == 42
+
+
+def main() -> int:
+    return 0

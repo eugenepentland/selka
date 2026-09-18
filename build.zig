@@ -188,8 +188,8 @@ pub fn build(b: *std.Build) void {
     const requested_shards = b.option(
         usize,
         "test-shards",
-        "Split the unit and CLI test roots across this many parallel processes (default 8; 1 disables sharding)",
-    ) orelse 8;
+        "Split the unit and CLI test roots across this many parallel processes (default 12; 1 disables sharding)",
+    ) orelse 12;
     if (requested_shards == 0) {
         std.debug.print("error: -Dtest-shards= needs a positive count; -Dtest-shards=1 runs each root in one process\n", .{});
         std.process.exit(2);
@@ -515,6 +515,17 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&guest_tests.step);
     guardian.addAllChecks(b, guardian_exe, guest_step, .{});
     boundedChecks(guest_step);
+    const lang_step = b.step("test-lang", "Run the unit root's migrated language-level guest tests");
+    const lang_tests = bounded(b.addRunArtifact(exe), rss.suite);
+    // The collector stress the Zig root's `native_execute` tests ask for is a
+    // run-wide flag here, so every migrated program gets the same coverage.
+    lang_tests.addArgs(&.{ "test", "tests/lang", "--cache-dir", ".mylang-cache/lang-tests", "--gc-stress" });
+    lang_tests.setCwd(b.path("."));
+    lang_tests.has_side_effects = true;
+    lang_step.dependOn(&lang_tests.step);
+    test_step.dependOn(&lang_tests.step);
+    guardian.addAllChecks(b, guardian_exe, lang_step, .{});
+    boundedChecks(lang_step);
     const doctest_step = b.step("test-docs", "Execute every fenced documentation example");
     // The doctest fans its units out across a worker pool, so it is bounded like a suite.
     const doctest_run = bounded(b.addRunArtifact(exe), rss.suite);

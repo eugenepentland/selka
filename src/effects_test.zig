@@ -742,22 +742,6 @@ test "M2 direct list dict and Cell writes require mutation permission" {
 }
 
 // spec-case: MUTATION-METADATA-1
-test "M2 declared mutation permits direct writes and runs natively" {
-    try result(
-        \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
-        \\    values[0] = 42
-        \\
-        \\
-        \\def main() -> int:
-        \\    values = [1]
-        \\    touch(values)
-        \\    if values[0] != 42:
-        \\        return 1
-        \\    return 0
-    , 0);
-}
-
-// spec-case: MUTATION-METADATA-1
 test "M2 nested record aliases keep the input origin" {
     try reject(
         \\record Box:
@@ -888,21 +872,6 @@ test "M2 return wrappers keep borrowed descendant origins" {
     , "E_MUTATION_PERMISSION", "exceeds its contract");
 }
 
-test "M2 fresh containers may be built inserted into and read locally" {
-    try result(
-        \\def build() -> list[int] effects(managed_allocation):
-        \\    values: list[int] = []
-        \\    values.append(1)
-        \\    values.append(2)
-        \\    return values
-        \\
-        \\
-        \\def main() -> int:
-        \\    values = build()
-        \\    return values[0] + values[1] - 3
-    , 0);
-}
-
 // spec-case: MUTATION-METADATA-1
 test "M2 branches and loops attribute writes to the receiver origin" {
     try result(
@@ -966,22 +935,6 @@ test "M2 recursive helpers propagate mutation footprints to a fixed point" {
         \\    touch(values, 2)
         \\    return 0
     , "E_MUTATION_PERMISSION", "exceeds its contract");
-}
-
-// spec-case: MUTATION-METADATA-1
-test "M2 generic helpers carry mutation permissions to specializations" {
-    try result(
-        \\def touch[T](values: list[T], item: T) -> None effects(mutation) mutates(values):
-        \\    values[0] = item
-        \\
-        \\
-        \\def main() -> int:
-        \\    values = [1]
-        \\    touch[int](values, 5)
-        \\    if values[0] != 5:
-        \\        return 1
-        \\    return 0
-    , 0);
 }
 
 // spec-case: MUTATION-METADATA-1
@@ -1053,62 +1006,6 @@ test "M2 writable and read-only arguments that may overlap reject" {
         \\    a = [1]
         \\    b = a.copy()
         \\    touch(a, b)
-        \\    return 0
-    , 0);
-}
-
-// spec-case: MUTATION-METADATA-1
-test "M2 two writable aliases remain permitted" {
-    try result(
-        \\def write_both(x: list[int], y: list[int]) -> None effects(mutation) mutates(x, y):
-        \\    x[0] = 1
-        \\    y[0] = 2
-        \\
-        \\
-        \\def use(values: list[int]) -> None effects(mutation) mutates(values):
-        \\    write_both(values, values)
-        \\
-        \\
-        \\def main() -> int:
-        \\    values = [0, 0]
-        \\    use(values)
-        \\    return values[0] + values[1] - 3
-    , -1);
-}
-
-// spec-case: MUTATION-METADATA-1
-test "M2 read-only queries require no mutation permission" {
-    try result(
-        \\def total(values: list[int]) -> int effects():
-        \\    return len(values)
-        \\
-        \\
-        \\def main() -> int:
-        \\    values = [1, 2, 3]
-        \\    return total(values) - 3
-    , 0);
-}
-
-// spec-case: MUTATION-METADATA-1
-test "M2 disjoint managed argument types are proven independent" {
-    try result(
-        \\record Box:
-        \\    values: list[int]
-        \\
-        \\
-        \\def write_text(pieces: list[str], box: Box) -> None effects(mutation, managed_allocation) mutates(pieces):
-        \\    pieces.append("x")
-        \\    _ = box
-        \\
-        \\
-        \\def use(pieces: list[str], box: Box) -> None effects(mutation, managed_allocation) mutates(pieces):
-        \\    write_text(pieces, box)
-        \\
-        \\
-        \\def main() -> int:
-        \\    pieces: list[str] = []
-        \\    box = Box(values=[1])
-        \\    use(pieces, box)
         \\    return 0
     , 0);
 }

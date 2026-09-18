@@ -225,63 +225,6 @@ test "record schemas conversion checking construction update projection and dump
     try testing.checkAllAllocationFailures(no_resize.allocator(), allocationScenario, .{});
 }
 
-// spec: CORE-5
-test "record construction nesting named order field access and immutable copies" {
-    try result(
-        \\record Pair:
-        \\    x: i64
-        \\    y: i64
-        \\
-        \\
-        \\def main() -> i64:
-        \\    a: Pair = Pair(y=2, x=3)
-        \\    b = a
-        \\    b.x = 8
-        \\    return a.x + b.x + b.y
-    , 13);
-    try result(
-        \\record Outer:
-        \\    inner: Inner
-        \\    flag: bool
-        \\
-        \\
-        \\record Inner:
-        \\    value: i64
-        \\
-        \\
-        \\def id(x: Outer) -> Outer:
-        \\    return x
-        \\
-        \\
-        \\def main() -> i64:
-        \\    x = id(Outer(flag=True, inner=Inner(value=7)))
-        \\    if x.flag:
-        \\        return x.inner.value
-        \\    return 0
-    , 7);
-    try result(
-        \\record Count:
-        \\    n: i64
-        \\    keep: i64
-        \\
-        \\
-        \\def main() -> i64:
-        \\    state = Count(n=0, keep=7)
-        \\    while state.n < 10000:
-        \\        state.n = state.n + 1
-        \\    return state.n + state.keep
-    , 10007);
-    try result(
-        \\record Pair:
-        \\    x: i64
-        \\    y: i64
-        \\
-        \\
-        \\def main() -> i64:
-        \\    return -Pair(x=4, y=2).x + 10
-    , 6);
-}
-
 // spec: RECORD-DEFAULT-1
 test "record field defaults fill omitted fields in positional and named construction" {
     try result(

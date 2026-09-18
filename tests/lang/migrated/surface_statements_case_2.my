@@ -1,0 +1,12 @@
+module surface_statements_case_2
+
+
+class Holder[T]:
+    value: T
+
+
+public def program() -> i64:
+    holder = Holder[list[i64]](value=[])
+    values = holder.value
+    values.append(42)
+    return values[0]

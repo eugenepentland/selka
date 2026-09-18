@@ -1,0 +1,13 @@
+module python_generics_case_1
+
+
+class Pair[T]:
+    first: T
+    second: T
+
+def pick[T](values: Pair[T]) -> T:
+    return values.first
+
+public def program() -> i64:
+    boxed = Pair[i64](first=40, second=2)
+    return pick[i64](boxed) + pick(Pair[i64](first=2, second=0))

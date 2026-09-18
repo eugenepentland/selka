@@ -1,0 +1,17 @@
+module surface_collections_case_3
+
+
+class Box[T]:
+    value: T
+
+
+class Empty:
+    pass
+
+
+public def program() -> i64:
+    box = Box[i64](value=42)
+    _ = Empty()
+    if box.value == 0:
+        pass
+    return box.value

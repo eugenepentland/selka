@@ -1,0 +1,6 @@
+module prelude_builtins_case_2
+
+
+public def program() -> int:
+    max = 5
+    return max + 1

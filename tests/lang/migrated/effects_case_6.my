@@ -1,0 +1,16 @@
+module effects_case_6
+
+
+def write_both(x: list[int], y: list[int]) -> None effects(mutation) mutates(x, y):
+    x[0] = 1
+    y[0] = 2
+
+
+def use(values: list[int]) -> None effects(mutation) mutates(values):
+    write_both(values, values)
+
+
+public def program() -> int:
+    values = [0, 0]
+    use(values)
+    return values[0] + values[1] - 3

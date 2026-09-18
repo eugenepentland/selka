@@ -19,7 +19,7 @@ any other toolchain.
 
 - `zig build test-units -Dtest-filter=SUBSTRING` — runs only `src/root_test.zig` tests
   whose name contains SUBSTRING. `-Dtest-filter=arena` is 34 tests in about 1.5 s; the whole
-  root is 1236 tests in about 84 s (measured warm 2026-09-18; `zig build test` shards it). `zig build test-cli -Dtest-filter=…` does the same for
+  root is 1113 tests in about 73 s (measured warm 2026-09-18; `zig build test` shards it). `zig build test-cli -Dtest-filter=…` does the same for
   `test/integration.zig`. Neither runs Python drivers, Guardian, or the install graph:
   they depend only on their test binary plus unattached copies of `qbe` and the compiler. The filter also
   applies to `zig build test` and `test-compile`. An explicitly empty
@@ -55,7 +55,7 @@ zig build fmt-check
 `zig build test` also runs `mylang doc-coverage .` and `mylang doctest .`.
 
 `zig build test` splits its two slow Zig roots across processes: `src/root_test.zig`
-into `-Dtest-shards=N` shards (default 8) and `test/integration.zig` into `N/2`, each
+into `-Dtest-shards=N` shards (default 12) and `test/integration.zig` into `N/2`, each
 one run of the same test binary under Guardian's `--guardian-shard=K/N` with its own
 `max_rss`, so the shards run concurrently and print one `test wall` and one verdict
 each. They partition the root — every test runs exactly once, and the shards' selected

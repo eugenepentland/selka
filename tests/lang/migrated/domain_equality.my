@@ -1,0 +1,11 @@
+module domain_equality
+
+
+import domain_equality_case_1 as c1
+
+
+public def test_domain_equality_participates_in_generic_equa() -> bool:
+    return c1.program() == 1
+
+def main() -> int:
+    return 0

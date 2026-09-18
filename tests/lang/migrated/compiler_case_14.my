@@ -1,0 +1,12 @@
+module compiler_case_14
+
+
+public def program() -> i64:
+    result = 0
+    if True:
+        x = 2
+        result = x
+    if True:
+        x = 3
+        result = result + x
+    return result

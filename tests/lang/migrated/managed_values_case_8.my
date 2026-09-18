@@ -1,0 +1,9 @@
+module managed_values_case_8
+
+
+public def program() -> i64:
+    values: list[i64] = []
+    values.append(42)
+    if 42 in values:
+        return 42
+    return 0

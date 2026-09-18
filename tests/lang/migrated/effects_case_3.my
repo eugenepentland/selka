@@ -1,0 +1,13 @@
+module effects_case_3
+
+
+def build() -> list[int] effects(managed_allocation):
+    values: list[int] = []
+    values.append(1)
+    values.append(2)
+    return values
+
+
+public def program() -> int:
+    values = build()
+    return values[0] + values[1] - 3

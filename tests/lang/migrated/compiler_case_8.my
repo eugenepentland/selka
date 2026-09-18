@@ -1,0 +1,9 @@
+module compiler_case_8
+
+
+public def program() -> i64:
+    return 1 + add(add(2, 3), add(4, 5))
+
+
+def add(a: i64, b: i64) -> i64:
+    return a + b

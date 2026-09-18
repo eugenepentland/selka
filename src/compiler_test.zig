@@ -154,39 +154,6 @@ fn programResult(text: []const u8, expected: i64) !void {
     try testing.expectEqual(expected, (try native.run(&compilation)).value);
 }
 
-test "locals mutation annotations and lexical scope" {
-    try programResult(
-        \\def main() -> i64:
-        \\    n = 7
-        \\    result: i64 = n
-        \\    amount = 3
-        \\    result = result * amount
-        \\    return result
-    , 21);
-    try programResult(
-        \\def main() -> i64:
-        \\    result = 0
-        \\    if True:
-        \\        x = 2
-        \\        result = x
-        \\    if True:
-        \\        x = 3
-        \\        result = result + x
-        \\    return result
-    , 5);
-    try programResult(
-        \\def main() -> i64:
-        \\    return 8
-    , 8);
-    try programResult(
-        \\def main() -> i64:
-        \\    flag: bool = True
-        \\    flag = not flag
-        \\    equal = flag == False
-        \\    return 4
-    , 4);
-}
-
 test "unary arithmetic and directly negated minimum literal" {
     try result("-3 * 2 + 10", 4);
     try result("--8", 8);
@@ -730,72 +697,6 @@ test "allocation failures while producing source errors remain host failures and
     try testing.checkAllAllocationFailures(testing.allocator, rejectedAllocationScenario, .{});
 }
 
-test "branches and loops execute both outcomes with balanced statements" {
-    try programResult(
-        \\def main() -> i64:
-        \\    total = 0
-        \\    i = 0
-        \\    while i < 100:
-        \\        total += i
-        \\        i += 1
-        \\    return total
-    , 4950);
-    try programResult(
-        \\def main() -> i64:
-        \\    x = 48
-        \\    y = 18
-        \\    while y != 0:
-        \\        remainder = remtrunc(x, y)
-        \\        x = y
-        \\        y = remainder
-        \\    return x
-    , 6);
-    try programResult(
-        \\def main() -> i64:
-        \\    x = 3
-        \\    while False:
-        \\        x = 100
-        \\    if x < 2:
-        \\        return 8
-        \\    elif x == 3:
-        \\        return 9
-        \\    else:
-        \\        return 10
-    , 9);
-    try programResult(
-        \\def main() -> i64:
-        \\    x = 0
-        \\    if True:
-        \\        x = 4
-        \\    else:
-        \\        x = 9
-        \\    if False:
-        \\        return 6
-        \\    return x
-    , 4);
-    try programResult(
-        \\def main() -> i64:
-        \\    while True:
-        \\        return 5
-        \\    return 6
-    , 5);
-    try programResult(
-        \\def main() -> i64:
-        \\    x = 5
-        \\    x -= 2
-        \\    return x
-    , 3);
-    try programResult(
-        \\def main() -> i64:
-        \\    i = 0
-        \\    while i < 5000:
-        \\        local = i
-        \\        _ = local * 2
-        \\        i += 1
-        \\    return i
-    , 5000);
-}
-
 test "all comparisons boolean operations and logical precedence have observable results" {
     try booleanResult("1 < 2", true);
     try booleanResult("2 < 2", false);
@@ -909,73 +810,6 @@ test "explicit drops and compound assignment count as reads and skipped branches
     defer compilation.deinit();
     try compilation.check();
     try testing.expectEqual(@as(usize, 0), compilation.diagnostics.items.len);
-}
-
-test "forward mutual recursive and nested calls preserve caller operands" {
-    try programResult(
-        \\def main() -> i64:
-        \\    return 1 + add(add(2, 3), add(4, 5))
-        \\
-        \\
-        \\def add(a: i64, b: i64) -> i64:
-        \\    return a + b
-    , 15);
-    try programResult(
-        \\def fact(n: i64) -> i64:
-        \\    if n <= 1:
-        \\        return 1
-        \\    return n * fact(n - 1)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    return fact(10)
-    , 3628800);
-    try programResult(
-        \\def even(n: i64) -> bool:
-        \\    if n == 0:
-        \\        return True
-        \\    return odd(n - 1)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    if even(100) and not odd(100):
-        \\        return 7
-        \\    return 0
-        \\
-        \\
-        \\def odd(n: i64) -> bool:
-        \\    if n == 0:
-        \\        return False
-        \\    return even(n - 1)
-    , 7);
-    try programResult(
-        \\def f(n: i64) -> i64:
-        \\    x = n + 2
-        \\    _ = g(x)
-        \\    return x
-        \\
-        \\
-        \\def g(x: i64) -> bool:
-        \\    return x > 0
-        \\
-        \\
-        \\def main() -> i64:
-        \\    n = 0
-        \\    while n < 5000:
-        \\        _ = f(n)
-        \\        n += 1
-        \\    return 1 + f(2)
-    , 5);
-    try programResult(
-        \\def f(x: bool, y: i64) -> bool:
-        \\    return x and y > 0
-        \\
-        \\
-        \\def main() -> i64:
-        \\    if f(True, 2):
-        \\        return 8
-        \\    return 0
-    , 8);
 }
 
 test "runtime storage remains bounded across many calls and loop declarations" {

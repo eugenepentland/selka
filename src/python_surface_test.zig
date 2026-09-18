@@ -79,29 +79,6 @@ test "case _ must come last, must cover something, and must not drop a result pa
     try reject(exhausted, "E_WILDCARD_ARM");
 }
 
-// spec: PY-SUBSCRIPT-1
-test "a subscript index may begin with a parenthesis" {
-    try execute(
-        \\def main() -> int:
-        \\    values = [10, 20, 30]
-        \\    n = 4
-        \\    return values[(n - 1) % 3] * 5 - 8
-    , 42);
-}
-
-// spec-case: PY-RESERVED-1
-test "an intrinsic name is an ordinary field, keyword argument and member" {
-    try execute(
-        \\class Buffer:
-        \\    len: int
-        \\    replace: int
-        \\
-        \\def main() -> int:
-        \\    held = Buffer(len=20, replace=22)
-        \\    return held.len + held.replace
-    , 42);
-}
-
 // spec: PY-RESERVED-1
 test "len and replace name ordinary declarations and members" {
     try execute(
@@ -145,25 +122,6 @@ test "a while True with no break never falls through to a missing return" {
         \\def main() -> int:
         \\    return looping()
     , "E_MISSING_RETURN");
-}
-
-// spec: PY-PRELUDE-1
-test "bytes and float resolve wherever their names are written" {
-    try execute(
-        \\union Json:
-        \\    number: float,
-        \\    raw: bytes
-        \\
-        \\def size(value: Json) -> int:
-        \\    match value:
-        \\        case Json.number(number):
-        \\            return int(number)
-        \\        case Json.raw(raw):
-        \\            return len(raw)
-        \\
-        \\def main() -> int:
-        \\    return size(Json.number(40.0)) + size(Json.raw(b"ab"))
-    , 42);
 }
 
 // spec: PY-FLOAT-1

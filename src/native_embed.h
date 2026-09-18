@@ -2,12 +2,13 @@
 #define MYLANG_NATIVE_EMBED_H
 #include <stdint.h>
 #include <stddef.h>
-#define MYLANG_NATIVE_EMBED_ABI 2
+#define MYLANG_NATIVE_EMBED_ABI 3
 /* Include native_providers.h first. Build generated C with MYLANG_EMBED.
    One generated program per linked library. No guest pointer escapes this ABI. */
 typedef struct {
     uint64_t max_steps, max_frames; /* zero selects unbounded */
     const MylangNativeProviders *providers; /* NULL grants no external authority */
+    uint64_t stress; /* nonzero runs every collection under the stress collector */
 } MylangRunOptions;
 typedef struct { const char *function, *path; size_t line, column; } MylangRunFrame;
 /* Bounded typed first-trap values, appended in native ABI v2. Mirror of

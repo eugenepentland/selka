@@ -1,0 +1,18 @@
+module surface_statements_case_1
+
+
+class point:
+    Value: i64
+
+
+def predicate(first: point, value: point) -> bool:
+    return first.Value == value.Value
+
+
+public def program() -> i64:
+    flag = True
+    item = point(Value=42)
+    if flag:
+        if not False and predicate(item, point(Value=42)):
+            return 42
+    return 0

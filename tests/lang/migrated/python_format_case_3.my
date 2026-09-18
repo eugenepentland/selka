@@ -1,0 +1,20 @@
+module python_format_case_3
+
+
+def label(count: int, items: list[int]) -> str:
+    return f"total {count} of {len(items)} items"
+
+public def program() -> int:
+    score = 0
+    if label(7, [1, 2, 3]) == "total 7 of 3 items":
+        score = score + 1
+    if f"{1 + 1}" == "2":
+        score = score + 2
+    if f"{True} {None} {1.5}" == "True None 1.5":
+        score = score + 4
+    name = "x"
+    if f"a\t{name}b" == "a\tx" + "b":
+        score = score + 8
+    if f"{f'{name}'}" == "x":
+        score = score + 16
+    return score

@@ -1,0 +1,13 @@
+module records_case_1
+
+
+record Pair:
+    x: i64
+    y: i64
+
+
+public def program() -> i64:
+    a: Pair = Pair(y=2, x=3)
+    b = a
+    b.x = 8
+    return a.x + b.x + b.y

@@ -1,0 +1,9 @@
+module surface_collections_case_2
+
+
+public def program() -> i64:
+    values: list[i64] = []
+    alias = values
+    alias.append(10)
+    values[0] = 41
+    return alias[0] + len(values)

@@ -167,7 +167,7 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     var session = try sessions.Session.init(context, opts);
     defer context.remove(session.temporary);
     var work: invalidation.Work = .{ .command = "test" };
-    if (opts.flags.report) session.work = &work;
+    if (opts.flags.output.report) session.work = &work;
     const prepared = try snapshot.withTestEntry(context, session.source);
     const captured = try snapshot.materialize(context, prepared, try context.temporary(session.temporary));
     // Resolve configuration first. `list-interfaces --contracts` parses every
@@ -257,8 +257,8 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
         try receipts.write(context, directory, result);
         if (opts.flags.pure_skip and is_pure) try receipts.writeOutcome(context, directory, result);
     };
-    if (opts.flags.report) try emitWorkReport(context, &work, results, replayed);
-    const test_status = try report(context, results, replayed, opts.flags.json);
+    if (opts.flags.output.report) try emitWorkReport(context, &work, results, replayed);
+    const test_status = try report(context, results, replayed, opts.flags.output.json);
     return finish(context, opts, bench_states, &bench_context, test_status, test_failed);
 }
 

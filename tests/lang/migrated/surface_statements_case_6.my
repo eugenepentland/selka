@@ -1,0 +1,10 @@
+module surface_statements_case_6
+
+
+def add(a: i64, b: i64) -> i64:
+    return a + b
+
+
+public def program() -> i64:
+    value = add(20, 22)
+    return i64(value) + 0

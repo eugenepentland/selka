@@ -69,7 +69,7 @@ pub const Session = struct {
     /// Append the cache-policy flags shared by every compiler child.
     fn appendPolicyFlags(self: Session, argv: *std.ArrayList([]const u8)) Error!void {
         if (self.options.flags.no_cache) try argv.append(self.context.allocator, "--no-cache");
-        if (self.options.flags.report) try argv.append(self.context.allocator, "--report");
+        if (self.options.flags.output.report) try argv.append(self.context.allocator, "--report");
         if (self.options.flags.mutation_markers) try argv.append(self.context.allocator, "--mutation-markers");
     }
     /// The native object-cache directory also carries the frontend semantic and
@@ -259,6 +259,7 @@ pub const Session = struct {
         // at the work site because its own report is a qbe-build-v1 receipt.
         if (self.work) |work| work.note(.links, 1, 0);
         project.executor = try execute.Executor.init(self.context, project.manifest, library, project.directory, self.tools.zig);
+        project.executor.?.stress = self.options.flags.gc_stress;
         project.select_file = try a.dupe(u8, select_file);
         return project.executor.?;
     }
@@ -276,6 +277,7 @@ pub const Session = struct {
             .reference = v.get(function, "return_reference"),
             .mode = self.options.mode,
             .limits = self.options.limits,
+            .gc_stress = self.options.flags.gc_stress,
             .policy = self.source.support.policy_identity,
         }, .{});
         return fs.hash(self.context.allocator, bytes);

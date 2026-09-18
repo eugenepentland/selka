@@ -1,0 +1,54 @@
+module propagation_case_9
+
+
+union Detail:
+    Malformed: str,
+    Code: i64
+
+
+union Wrapped:
+    Nested: Detail
+
+
+result Inner:
+    ok: i64,
+    err: Detail
+
+
+result Outer:
+    ok: bool,
+    err: Wrapped
+
+
+def inner(kind: i64) -> Inner:
+    if kind == 0:
+        return Ok(5)
+    if kind == 1:
+        return Err(Detail.Malformed("bad"))
+    return Err(Detail.Code(9))
+
+
+def outer(kind: i64) -> Outer:
+    return Ok(inner(kind)? > 3)
+
+
+def handle(value: Outer) -> i64:
+    match value:
+        case Outer.ok(flag):
+            if flag:
+                return 1
+            return 0
+        case Outer.err(error):
+            match error:
+                case Wrapped.Nested(detail):
+                    match detail:
+                        case Detail.Malformed(text):
+                            if text == "bad":
+                                return 7
+                            return 8
+                        case Detail.Code(code):
+                            return 20 + code
+
+
+public def program() -> i64:
+    return handle(outer(0)) + handle(outer(1)) + handle(outer(2))

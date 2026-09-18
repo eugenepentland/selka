@@ -9,9 +9,6 @@ pub const Flags = struct {
     force: bool = false,
     /// `--no-cache` reads and writes no durable result, graph or query entry.
     no_cache: bool = false,
-    /// `--report` emits a work-report-v1 line for this test invocation.
-    report: bool = false,
-    json: bool = false,
     /// `--pure-skip` opts into replaying a recorded pass-or-fail outcome for an
     /// unchanged signature-pure test; off by default so recorded failures do not
     /// change the default result.
@@ -21,6 +18,17 @@ pub const Flags = struct {
     /// `--affected` selects only tests that reach a declaration changed since
     /// `--against REF`; the reference itself lives on `Options.against`.
     affected: bool = false,
+    /// `--gc-stress` runs every collected test with the runtime's stress
+    /// collector, the same coverage `native_execute` gets from its own flag.
+    gc_stress: bool = false,
+    /// Output-channel switches, grouped apart from the execution switches.
+    output: Output = .{},
+    /// Output channel selection: the work report and the JSON report.
+    pub const Output = struct {
+        /// `--report` emits a work-report-v1 line for this test invocation.
+        report: bool = false,
+        json: bool = false,
+    };
 };
 /// Sampling and whole-run bounds for one benchmark invocation.
 pub const Tuning = struct {
@@ -66,6 +74,7 @@ pub const usage = "usage: mylang test <entry.my|directory> [--filter SUBSTRING|G
     "  --affected --against REF  run only tests reaching a declaration changed since REF\n" ++
     "  --link FILE --link-library NAME --library-path DIR (repeatable)\n" ++
     "  --cache-dir DIR --force --no-cache --report --json --pure-skip --mutation-markers --qbe PATH --zig PATH\n" ++
+    "  --gc-stress  run every collected test under the runtime's stress collector\n" ++
     "  --mode Debug|ReleaseFast\n" ++
     "  --max-steps N --max-frames N --max-calls N --timeout-ms N\n" ++
     "  --max-memory BYTES  per-test byte ceiling (K/M/G suffixes; default 512M)\n" ++
@@ -94,11 +103,11 @@ pub fn parse(args: []const []const u8) Error!Options {
             continue;
         }
         if (std.mem.eql(u8, arg, "--report")) {
-            result.flags.report = true;
+            result.flags.output.report = true;
             continue;
         }
         if (std.mem.eql(u8, arg, "--json")) {
-            result.flags.json = true;
+            result.flags.output.json = true;
             continue;
         }
         if (std.mem.eql(u8, arg, "--pure-skip")) {
@@ -115,6 +124,10 @@ pub fn parse(args: []const []const u8) Error!Options {
         }
         if (std.mem.eql(u8, arg, "--affected")) {
             result.flags.affected = true;
+            continue;
+        }
+        if (std.mem.eql(u8, arg, "--gc-stress")) {
+            result.flags.gc_stress = true;
             continue;
         }
         const split = std.mem.indexOfScalar(u8, arg, '=') orelse arg.len;
@@ -203,9 +216,9 @@ fn bounded(value: []const u8, minimum: u64, maximum: u64) Error!u64 {
 }
 test "native test options validate budgets and discovery controls" {
     const opts = try parse(&.{ "main.my", "--filter=*ok", "--force", "--json", "--max-steps", "100" });
-    try std.testing.expect(opts.flags.force and opts.flags.json);
+    try std.testing.expect(opts.flags.force and opts.flags.output.json);
     const fresh = try parse(&.{ "main.my", "--no-cache", "--report" });
-    try std.testing.expect(fresh.flags.no_cache and fresh.flags.report);
+    try std.testing.expect(fresh.flags.no_cache and fresh.flags.output.report);
     try std.testing.expectEqual(@as(u64, 100), opts.limits.max_steps);
     for ([_][]const []const u8{ &.{}, &.{ "x", "--wat" }, &.{ "x", "--max-steps=0" }, &.{ "x", "--mode=Fast" }, &.{ "x", "--cases" } }) |args| {
         try std.testing.expectError(error.InvalidTestArguments, parse(args));
@@ -272,4 +285,12 @@ test "affected selection needs both switches and a reference" {
     try std.testing.expect(!(try parse(&.{"main.my"})).flags.affected);
     try std.testing.expectError(error.InvalidTestArguments, parse(&.{ "main.my", "--against", "HEAD" }));
     try std.testing.expectError(error.InvalidTestArguments, parse(&.{ "main.my", "--affected" }));
+}
+
+// spec: GUEST-TEST-GC-STRESS-1
+test "gc stress is an explicit opt-in switch" {
+    const enabled = try parse(&.{ "main.my", "--gc-stress" });
+    try std.testing.expect(enabled.flags.gc_stress);
+    try std.testing.expect(!(try parse(&.{"main.my"})).flags.gc_stress);
+    try std.testing.expectError(error.InvalidTestArguments, parse(&.{ "main.my", "--gc-stress=1" }));
 }

@@ -14,30 +14,6 @@ fn run(text: []const u8) !void {
     try t.expectEqual(@as(i64, 42), result.value);
 }
 
-// spec: BUILTIN-CONTEXT-5
-test "generic list Result and contextual constructors keep symbolic type parameters" {
-    try run(
-        \\def singleton[T](value: T) -> list[T]:
-        \\    values: list[T] = []
-        \\    values.append(value)
-        \\    return values
-        \\
-        \\
-        \\def answer[T](value: T) -> Result[T, i64]:
-        \\    return Ok(value)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    values = singleton(42)
-        \\    value = values[0]
-        \\    match answer(value):
-        \\        case Result.ok(n):
-        \\            return n
-        \\        case Result.err(e):
-        \\            return e
-    );
-}
-
 fn reject(text: []const u8, code: []const u8) !void {
     var compilation = try language.Compilation.init(t.allocator, "invalid-builtin.my", text);
     defer compilation.deinit();
@@ -161,90 +137,6 @@ test "module-local Ok and Err functions shadow contextual constructors in generi
     var compilation = try language.project_compile.Compilation.init(&index);
     try compilation.emit();
     try t.expectEqual(@as(i64, 42), (try native.run(&compilation)).value);
-}
-
-// spec: BUILTIN-CONTEXT-1
-test "builtin list and Result resolve without imports or explicit declarations" {
-    try run(
-        \\def answer() -> Result[i64, i64]:
-        \\    return Ok(42)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    values: list[i64] = []
-        \\    values.append(42)
-        \\    match answer():
-        \\        case Result.ok(n):
-        \\            return n
-        \\        case Result.err(e):
-        \\            return e
-    );
-}
-
-// spec: BUILTIN-CONTEXT-2
-test "empty lists and Ok Err inherit binding return and argument contexts" {
-    try run(
-        \\def empty() -> list[i64]:
-        \\    return []
-        \\
-        \\
-        \\def answer() -> Result[i64, i64]:
-        \\    return Ok(42)
-        \\
-        \\
-        \\def recover(value: Result[i64, i64]) -> i64:
-        \\    match value:
-        \\        case Result.ok(n):
-        \\            return n
-        \\        case Result.err(e):
-        \\            return e
-        \\
-        \\
-        \\def main() -> i64:
-        \\    values: list[i64] = []
-        \\    values.append(42)
-        \\    result: Result[i64, i64] = Err(values[0u64])
-        \\    _ = result
-        \\    return recover(Ok(42))
-    );
-}
-
-// spec: BUILTIN-CONTEXT-3
-test "record fields and nested list elements propagate empty list context" {
-    try run(
-        \\class Holder:
-        \\    values: list[i64]
-        \\
-        \\
-        \\def choose(value: Holder, other: list[i64]) -> i64:
-        \\    _ = other
-        \\    xs = value.values
-        \\    xs.append(42)
-        \\    return xs[0u64]
-        \\
-        \\
-        \\def main() -> i64:
-        \\    nested: list[list[i64]] = []
-        \\    inner: list[i64] = []
-        \\    nested.append(inner)
-        \\    return choose(Holder(values=[]), [])
-    );
-}
-
-// spec: BUILTIN-CONTEXT-4
-test "Ok unit values preserve fallible result handling" {
-    try run(
-        \\def done() -> Result[None, i64]:
-        \\    return Ok(None)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    match done():
-        \\        case Result.ok(_):
-        \\            return 42
-        \\        case Result.err(e):
-        \\            return e
-    );
 }
 
 // spec: BUILTIN-CONTEXT-7

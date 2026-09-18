@@ -1,0 +1,13 @@
+module managed_cell_case_1
+
+
+def bump(cell: Cell[int]) -> None:
+    cell.value = cell.value + 1
+
+
+public def program() -> int:
+    cell = Cell(value=40)
+    alias = cell
+    bump(alias)
+    bump(cell)
+    return cell.value

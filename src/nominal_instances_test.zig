@@ -97,26 +97,6 @@ test "nominal instances preserve argument order and nominal declaration identity
         \\    return 0
     , "E_DUPLICATE_NAME");
 }
-test "nominal instances compose with existing generic functions and fixed arrays" {
-    try run(t.allocator, definitions ++
-        \\def id[T](x: T) -> T:
-        \\    return x
-        \\
-        \\
-        \\def pair[T](x: T) -> [2]T:
-        \\    return [x, x]
-        \\
-        \\
-        \\def main() -> i64:
-        \\    boxes = pair[Box[i64]](id[Box[i64]](Box[i64](value=6)))
-        \\    return boxes[0].value + boxes[1].value
-    , 12);
-    try run(t.allocator, definitions ++
-        \\def main() -> i64:
-        \\    a: [2]Box[i64] = [Box[i64](value=3), Box[i64](value=8)]
-        \\    return a[1].value
-    , 8);
-}
 fn allocations(allocator: std.mem.Allocator) !void {
     try run(allocator, basic, 16);
 }
@@ -289,36 +269,4 @@ test "nominal instances carry domain payloads beside resource declarations" {
     defer compilation.deinit();
     try t.expectEqual(@as(i64, 13), (try native.run(&compilation)).value);
     try t.expectEqual(@as(usize, 1), filesystemResources(compilation.program.?.records));
-}
-test "nominal instances keep growing phantom arguments outside runtime storage" {
-    try run(t.allocator,
-        \\class Empty[T]:
-        \\    pass
-        \\
-        \\
-        \\class Grow[T]:
-        \\    marker: Empty[Grow[[1]T]]
-        \\
-        \\
-        \\def main() -> i64:
-        \\    _ = Grow[i64](marker=Empty[Grow[[1]i64]]())
-        \\    return 1
-    , 1);
-}
-
-// spec: NOMINAL-INSTANCE-1
-test "nominal instances construct assign nest and exhaustively match on the VM" {
-    try run(t.allocator, basic, 16);
-    try run(t.allocator, definitions ++
-        \\def plus(input: Answer[i64]) -> Answer[i64]:
-        \\    return Answer.ok(input? + 1)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    match plus(Answer.ok(4)):
-        \\        case Answer.ok(n):
-        \\            return n
-        \\        case Answer.err(_):
-        \\            return 0
-    , 5);
 }

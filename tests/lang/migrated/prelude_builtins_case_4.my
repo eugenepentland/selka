@@ -1,0 +1,9 @@
+module prelude_builtins_case_4
+
+
+def list() -> int:
+    return 9
+
+
+public def program() -> int:
+    return list()

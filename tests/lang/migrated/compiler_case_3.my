@@ -1,0 +1,13 @@
+module compiler_case_3
+
+
+public def program() -> i64:
+    x = 3
+    while False:
+        x = 100
+    if x < 2:
+        return 8
+    elif x == 3:
+        return 9
+    else:
+        return 10

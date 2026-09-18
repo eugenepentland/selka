@@ -1,0 +1,9 @@
+module managed_values_case_6
+
+
+public def program() -> i64:
+    text: str = b"hé🙂"
+    needle: str = b"é🙂"
+    if needle in text:
+        return 42
+    return 0

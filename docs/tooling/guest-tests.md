@@ -157,6 +157,27 @@ passed main::test_sum
 1 passed, 1 cached, 0 failed, 0 skipped
 ```
 
+## Collector stress
+
+`mylang test --gc-stress` runs every collected test's copied-value call with the
+runtime's stress collector, the same collector coverage the Zig root's
+`native_execute` tests get from the `--gc-stress` argument they pass to a guest.
+A directory run forwards the flag to every child, so one invocation reports one
+collector condition, and the flag is part of the execution identity a receipt
+binds: a result recorded without stress is not reused as a stressed pass, and a
+stressed pass is not reused for a later run without the flag.
+
+```console
+$ mylang test tests/lang --cache-dir /tmp/lang-cache --gc-stress
+passed integers::test_width_conversions
+...
+6 passed, 0 cached, 0 failed, 0 skipped
+$ mylang test tests/lang --cache-dir /tmp/lang-cache --gc-stress
+cached integers::test_width_conversions
+...
+0 passed, 6 cached, 0 failed, 0 skipped
+```
+
 ## Affected selection
 
 `mylang test --affected --against REF` narrows a run to the tests that reach a

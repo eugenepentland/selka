@@ -1,0 +1,9 @@
+module generic_arrays_case_2
+
+
+def empty[T]() -> [0]T:
+    return []
+
+
+public def program() -> i64:
+    return i64(len(empty[bool]()))

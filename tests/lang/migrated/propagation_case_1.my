@@ -1,0 +1,27 @@
+module propagation_case_1
+
+
+result R:
+    ok: i64,
+    err: i64
+
+
+result Outer:
+    ok: R,
+    err: i64
+
+
+def flatten(r: Outer) -> R:
+    return Ok(r??)
+
+
+def handle(r: R) -> i64:
+    match r:
+        case R.ok(n):
+            return n
+        case R.err(e):
+            return e
+
+
+public def program() -> i64:
+    return handle(flatten(Ok(Ok(1)))) + handle(flatten(Ok(Err(2)))) + handle(flatten(Err(3)))

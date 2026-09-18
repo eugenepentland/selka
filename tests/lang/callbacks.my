@@ -1,0 +1,104 @@
+module callbacks
+
+
+def inc(x: i64) -> i64 effects():
+    return x + 1
+
+
+def apply_exact(f: def(i64) -> i64 effects(), x: i64) -> i64:
+    return f(x)
+
+
+def apply_lambda(f: def(int) -> int effects(), value: int) -> int:
+    return f(value)
+
+
+def apply_generic[T](f: def(T) -> T effects(output), value: T) -> T:
+    return f(value)
+
+
+const OFFSET: int = 2
+
+
+type F = def(i64) -> i64 effects()
+
+
+class BoxCall[T]:
+    value: T
+
+
+def get_box[T](b: BoxCall[T]) -> T:
+    return b.value
+
+
+def repeat_cb[T](f: F, x: i64, tag: T) -> i64:
+    _ = tag
+    return f(f(x))
+
+
+def choose_cb() -> def(i64) -> i64 effects():
+    return inc
+
+
+def pure_cb(x: i64) -> i64 effects():
+    return x + 1
+
+
+type Sink = def(i64) -> i64 effects(output)
+
+
+def stash_sink() -> Sink:
+    return pure_cb
+
+
+def invoke_sink(f: Sink, x: i64) -> i64:
+    return f(x)
+
+
+# spec: CALLBACK-1
+public def test_callbacks_infer_function_values_and_invoke_passed_exact_signatures() -> bool:
+    f = inc
+    return f(4) == 5
+
+
+# spec-case: CALLBACK-1
+public def test_callbacks_invoke_passed_exact_signatures_through_a_parameter() -> bool:
+    return apply_exact(inc, 8) == 9
+
+
+# spec: PY-LAMBDA-1
+public def test_expression_lambdas_use_an_expected_callback_signature_and_invoke_correctly() -> bool:
+    return apply_lambda(lambda value: value + 2, 40) == 42
+
+
+# spec-case: PY-LAMBDA-1
+public def test_expression_lambdas_read_module_constants() -> bool:
+    return apply_lambda(lambda value: value + OFFSET, 40) == 42
+
+
+public def test_callbacks_retain_values_through_records_arrays_and_ordinary_generic_forwarding() -> bool:
+    b = BoxCall[F](value=inc)
+    all: [1]F = [get_box[F](b)]
+    f = all[0]
+    return repeat_cb[bool](f, 5, True) == 7
+
+
+public def test_callbacks_return_from_a_chooser_and_invoke() -> bool:
+    f = choose_cb()
+    return f(8) == 9
+
+
+# spec-case: CALLBACK-1
+public def test_stored_and_returned_callbacks_retain_the_destination_effect_contract() -> bool:
+    stored = pure_cb
+    returned = stash_sink()
+    return invoke_sink(stored, 10) + invoke_sink(returned, 31) == 43
+
+
+# spec-case: CALLBACK-1
+public def test_generic_callback_parameters_use_the_same_directional_relation() -> bool:
+    return apply_generic[int](pure_cb, 41) == 42
+
+
+def main() -> int:
+    return 0
