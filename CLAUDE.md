@@ -43,6 +43,15 @@ any other toolchain.
 - Targeted Python drivers: `zig build test-qbe-build`, `test-native-tests`, `test-byte-io`, …
   (see `zig build -l`).
 
+## Where tests live
+
+Language behaviour is tested in the language: a `public def test_*() -> bool` in
+`tests/lang/<area>.my`, run by `mylang test` (`zig build test-lang`). Diagnostics,
+traps, host fixtures, caches, formatting and allocation-failure tests are Zig tests in
+`src/root_test.zig`; CLI behaviour is `test/integration.zig`. Write new guest-behaviour
+tests on the mylang side; the rule, the inner-loop costs and the backlog of Zig tests
+still to move are in `docs/tooling/test-layout.md`.
+
 ## Full gate (run before finishing)
 
 ```

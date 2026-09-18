@@ -87,6 +87,9 @@ more than one Zig test needs a distinct name per test (for example
 
 ## What stays in `src/root_test.zig`
 
+The full rule, with the per-test backlog of Zig tests that still belong under `tests/lang`,
+is `docs/tooling/test-layout.md`. In short:
+
 Diagnostics, caches, projects and compiler internals; trap expectations until
 `cases.json` can express one; effects and providers that need a sibling
 manifest; and any test that asserts on `compilation.statistics`, reuse counts or
