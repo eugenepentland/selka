@@ -14,6 +14,8 @@ that binary first. `--filter GLOB` restricts the scan
 to matching repository-relative document paths, `--verbose` prints every command,
 diagnostic and skip reason, and `--report PATH` writes a `doc-examples-v1` JSON report.
 
+Units are independent, so they run on a bounded pool of workers that pull from
+one shared cursor — `--jobs N` or `MYLANG_JOBS` sets the width, and the default
 is the machine's cores capped by what its free memory affords, the same rule
 `mylang test <dir>` fans out under. Statuses are collected and only reported once
 every unit has finished, so the tallies, the failure lines and the summary read

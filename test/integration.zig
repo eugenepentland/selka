@@ -67,11 +67,11 @@ test "CLI managed constants import run build installed and invalidate warm cache
         \\    out.print(constants.DATA[1])
         \\    return 0
     });
-    const original = "module constants\nexport TEXT\nexport DATA\nconst TEXT: str = \"hé🙂\"\nconst DATA: bytes = b\"\\x00\\xff\"\n";
+    const original = "module constants\npublic const TEXT: str = \"hé🙂\"\npublic const DATA: bytes = b\"\\x00\\xff\"\n";
     try managedConstantModes(&temporary, original, "hé🙂\n2\n255\n");
     try managedConstantModes(&temporary, original, "hé🙂\n2\n255\n");
     // Same byte lengths, new contents: unchanged callers must observe the new IL.
-    try managedConstantModes(&temporary, "module constants\nexport TEXT\nexport DATA\nconst TEXT: str = \"hà🙃\"\nconst DATA: bytes = b\"\\x00\\xfe\"\n", "hà🙃\n2\n254\n");
+    try managedConstantModes(&temporary, "module constants\npublic const TEXT: str = \"hà🙃\"\npublic const DATA: bytes = b\"\\x00\\xfe\"\n", "hà🙃\n2\n254\n");
 }
 
 test "CLI checks host declarations and refuses to run one with no registration" {
@@ -887,6 +887,33 @@ test "build --run detects module projects and installed binaries receive the sam
     try testing.expect(std.mem.indexOf(u8, installed_invalid.stderr, "not valid UTF-8") != null);
 }
 
+/// Give a hand-built child environment the parent's Zig global cache.
+///
+/// Zig resolves that cache from `ZIG_GLOBAL_CACHE_DIR`, else `$XDG_CACHE_HOME/zig`,
+/// else `$HOME/.cache/zig`. These tests redirect `HOME` into a temp directory so a
+/// child compiler never touches the shared runtime root under `~/.cache/mylang`,
+/// but the redirect also hides Zig's cache, so every child `zig cc` rebuilds
+/// compiler-rt from empty — seconds per invocation. Naming the parent's cache
+/// explicitly keeps the `HOME` isolation and still starts the child warm.
+fn forwardZigCache(environment: *std.process.Environ.Map) !void {
+    if (testing.environ.getPosix("ZIG_GLOBAL_CACHE_DIR")) |explicit| {
+        if (explicit.len != 0) return environment.put("ZIG_GLOBAL_CACHE_DIR", explicit);
+    }
+    if (testing.environ.getPosix("XDG_CACHE_HOME")) |cache_home| {
+        if (cache_home.len != 0) return putJoined(environment, &.{ cache_home, "zig" });
+    }
+    if (testing.environ.getPosix("HOME")) |home| {
+        if (home.len != 0) return putJoined(environment, &.{ home, ".cache", "zig" });
+    }
+}
+
+/// Join `parts` into one path and store it as the child's Zig global cache.
+fn putJoined(environment: *std.process.Environ.Map, parts: []const []const u8) !void {
+    const resolved = try std.fs.path.join(testing.allocator, parts);
+    defer testing.allocator.free(resolved);
+    try environment.put("ZIG_GLOBAL_CACHE_DIR", resolved);
+}
+
 fn spawnWithEnv(argv: []const []const u8, env_map: *const std.process.Environ.Map) !std.process.RunResult {
     return std.process.run(testing.allocator, testing.io, .{ .argv = argv, .environ_map = env_map });
 }
@@ -914,10 +941,12 @@ test "boundary acceptance CLI runs through run build --run and installed paths" 
     var plain_env: std.process.Environ.Map = .init(testing.allocator);
     defer plain_env.deinit();
     try plain_env.put("HOME", home);
+    try forwardZigCache(&plain_env);
     var trace_env: std.process.Environ.Map = .init(testing.allocator);
     defer trace_env.deinit();
     try trace_env.put("HOME", home);
     try trace_env.put("MYLANG_ACCEPT_MODE", "1");
+    try forwardZigCache(&trace_env);
 
     var run_argv: std.ArrayList([]const u8) = .empty;
     defer run_argv.deinit(testing.allocator);
@@ -2518,7 +2547,7 @@ test "CLI module quality reports preserve export roots and advisory thresholds" 
     // `import api` exists only to pull `api.my` into the reachable graph, so the
     // unused-import warning names it and nothing else is written to stderr.
     try testing.expectEqualStrings("input.my:2:8: warning[W_UNUSED_IMPORT]: import `api` is never referenced in this module; remove it or use it\n  import api\n         ^\n", result.stderr);
-    for ([_][]const u8{ "quality-modules-v1", "api.my:5:", "api::entry; private=false; reachable-from-main=false", "module-exported=true reachable-from-exports=true", "module-exported=false reachable-from-exports=true", "function-lines 2 exceeds configured 1", "calls api::hidden at api.my:6:", "Runtime coverage and assertions: not measured" }) |part| try testing.expect(std.mem.indexOf(u8, result.stdout, part) != null);
+    for ([_][]const u8{ "quality-modules-v1", "api.my:4:", "api::entry; private=false; reachable-from-main=false", "module-exported=true reachable-from-exports=true", "module-exported=false reachable-from-exports=true", "function-lines 2 exceeds configured 1", "calls api::hidden at api.my:5:", "Runtime coverage and assertions: not measured" }) |part| try testing.expect(std.mem.indexOf(u8, result.stdout, part) != null);
     try testing.expect(std.mem.indexOf(u8, result.stdout, "no call path from main or exported interfaces") == null);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "api.my", .data =
         \\module api
@@ -4383,7 +4412,7 @@ fn writeProjectFile(dir: *std.testing.TmpDir, path: []const u8, data: []const u8
 const policy_allow = "{\"version\":1,\"default_action\":\"allow\",\"rules\":[]}";
 const policy_deny = "{\"version\":1,\"default_action\":\"deny\",\"rules\":[]}";
 const policy_project_main = "module main\nimport helper\ndef main() -> int:\n    return helper.value()\n";
-const policy_project_helper = "module helper\nexport value\ndef value() -> int effects():\n    return 7\n";
+const policy_project_helper = "module helper\npublic def value() -> int effects():\n    return 7\n";
 
 // spec-case: REQUIRED-PROJECT-IMPORT-POLICY-1
 test "loadConfiguredPolicy enforces mylang.json across ordinary project commands cold warm and after policy-only edits" {
@@ -4504,7 +4533,7 @@ test "configured policy never disables independent import-cycle rejection" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try writeProjectFile(&temp, "main.my", "module main\nimport helper\ndef main() -> int:\n    return helper.value()\n");
-    try writeProjectFile(&temp, "helper.my", "module helper\nimport main\nexport value\ndef value() -> int effects():\n    return 0\n");
+    try writeProjectFile(&temp, "helper.my", "module helper\nimport main\npublic def value() -> int effects():\n    return 0\n");
     try writeProjectFile(&temp, "mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
     const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
     defer testing.allocator.free(entry);
@@ -5794,6 +5823,7 @@ fn c4Invoke(entry: []const u8, cases_path: ?[]const u8, cache: []const u8, trace
     defer environment.deinit();
     try environment.put("MYLANG_TEST_TRACE", trace);
     try environment.put("HOME", std.fs.path.dirname(entry) orelse ".");
+    try forwardZigCache(&environment);
     return spawnWithEnv(args.items, &environment);
 }
 
@@ -5988,6 +6018,7 @@ test "C4 expectation argument budget environment and force invalidate the right 
     try environment.put("MYLANG_TEST_TRACE", project.trace);
     try environment.put("HOME", project.root);
     try environment.put("MYLANG_C4_CHANGED", "1");
+    try forwardZigCache(&environment);
     var env_args: std.ArrayList([]const u8) = .empty;
     defer env_args.deinit(testing.allocator);
     const cache_arg = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{project.cache});

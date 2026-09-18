@@ -5,25 +5,36 @@ const bridge = @import("host.zig");
 const application = @import("app.zig");
 const declarations =
     \\module io
-    \\export length
-    \\export byte
-    \\export put
-    \\export issue
     \\
     \\
-    \\host def length(host: Host, file: i64) -> i64 effects(host)
+    \\public host def length(host: Host, file: i64) -> i64 effects(host)
     \\
     \\
-    \\host def byte(host: Host, file: i64, position: i64) -> u8 effects(host)
+    \\public host def byte(host: Host, file: i64, position: i64) -> u8 effects(host)
     \\
     \\
-    \\host def put(host: Host, value: u8) -> i64 effects(host)
+    \\public host def put(host: Host, value: u8) -> i64 effects(host)
     \\
     \\
-    \\host def issue(host: Host, code: i64, file: i64, position: i64) -> i64 effects(host)
+    \\public host def issue(host: Host, code: i64, file: i64, position: i64) -> i64 effects(host)
 ;
 const empty: [3][]const u8 = .{ "", "", "" };
 const budget = [_][]const u8{@import("host_native").step_budget};
+/// Give the host's `zig cc` children the parent's warm global cache. This
+/// hand-built environment carries no `HOME`, so without it every guest link
+/// would start from an empty Zig cache and rebuild compiler-rt.
+fn forwardZigCache(environment: *std.process.Environ.Map, allocator: std.mem.Allocator) !void {
+    const variable = "ZIG_GLOBAL_CACHE_DIR";
+    if (t.environ.getPosix(variable)) |explicit| {
+        if (explicit.len != 0) return environment.put(variable, explicit);
+    }
+    if (t.environ.getPosix("XDG_CACHE_HOME")) |cache_home| {
+        if (cache_home.len != 0) return environment.put(variable, try std.fs.path.join(allocator, &.{ cache_home, "zig" }));
+    }
+    if (t.environ.getPosix("HOME")) |home| {
+        if (home.len != 0) return environment.put(variable, try std.fs.path.join(allocator, &.{ home, ".cache", "zig" }));
+    }
+}
 /// One host-application process standing in for `main`'s supplied resources.
 const Harness = struct {
     arena: std.heap.ArenaAllocator,
@@ -43,6 +54,7 @@ const Harness = struct {
         const compiler = try std.Io.Dir.cwd().realPathFileAlloc(t.io, @import("schematic_test_options").compiler_path, self.arena.allocator());
         try self.environment.put("MYLANG_HOST_COMPILER", compiler);
         try self.environment.put("MYLANG_MEMORY_LIMIT", "1073741824");
+        try forwardZigCache(&self.environment, self.arena.allocator());
         return self;
     }
     fn close(self: *Harness) void {

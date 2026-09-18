@@ -143,10 +143,13 @@ pub const Cache = struct {
     fn entry(self: Cache, key: []const u8, extension: []const u8) Error![]const u8 {
         return std.fmt.allocPrint(self.context.allocator, "{s}/{s}{s}", .{ self.directory, key, extension });
     }
+    /// Publish a freshly built artifact and its fingerprint. A generation directory
+    /// a concurrent sweep removed while this object was compiling is recreated and
+    /// leased again by `republish`, so publication heals instead of failing.
     fn store(self: Cache, key: []const u8, path: []const u8, candidate: []const u8) Error!Object {
         const bytes = try self.context.read(candidate);
         const digest = try objectDigest(self.context.allocator, bytes);
-        try self.context.rename(candidate, path);
+        try self.context.republish(candidate, path);
         try self.context.atomic(try self.entry(key, ".digest"), digest);
         return .{ .key = key, .path = path, .reused = false };
     }

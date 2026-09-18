@@ -72,21 +72,38 @@ def command(root: str, filt: str | None) -> list[str]:
 
 
 def parse_selected(text: str) -> int | None:
-    """The number of tests the runner reported selecting before it ran them."""
+    """The number of tests the runners reported selecting before they ran them.
+
+    Summed, not last-wins: ``full`` runs several test binaries, and its two slow
+    roots run as several shards each, so one line is one process's share. The
+    shards partition their root, so the sum is the whole run.
+    """
     matches = SELECTED.findall(text)
-    return int(matches[-1]) if matches else None
+    return sum(int(match) for match in matches) if matches else None
 
 
 def parse_result(text: str) -> dict | None:
-    """The runner's machine-readable closing verdict, when it printed one."""
+    """The runners' machine-readable closing verdicts, summed into one.
+
+    Same reason as ``parse_selected``: every test process prints its own RESULT
+    line, and the run is green only when all of them are.
+    """
     matches = RESULT.findall(text)
     if not matches:
         return None
-    try:
-        parsed = json.loads(matches[-1])
-    except json.JSONDecodeError:
-        return None
-    return parsed if isinstance(parsed, dict) else None
+    total = {"passed": 0, "failed": 0, "skipped": 0, "aborted": False, "processes": 0}
+    for match in matches:
+        try:
+            parsed = json.loads(match)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(parsed, dict):
+            continue
+        total["processes"] += 1
+        for key in ("passed", "failed", "skipped"):
+            total[key] += int(parsed.get(key, 0) or 0)
+        total["aborted"] = total["aborted"] or bool(parsed.get("aborted"))
+    return total if total["processes"] else None
 
 
 def describe(root: str, filt: str | None, selected: int | None, result: dict | None, returncode: int = 0) -> list[str]:
@@ -101,7 +118,9 @@ def describe(root: str, filt: str | None, selected: int | None, result: dict | N
         # A run can abort before failing any test (a filter that named nothing);
         # never report PASS for a nonzero exit or an aborted selection.
         verdict = "PASS" if failed == 0 and not result.get("aborted") and returncode == 0 else "FAIL"
-        lines.append("result: {} - {} passed, {} failed, {} skipped".format(verdict, passed, failed, skipped))
+        processes = result.get("processes", 1)
+        across = " across {} test process(es)".format(processes) if processes > 1 else ""
+        lines.append("result: {} - {} passed, {} failed, {} skipped{}".format(verdict, passed, failed, skipped, across))
     elif returncode != 0:
         lines.append("result: FAIL - the build or test runner exited {}".format(returncode))
     return lines

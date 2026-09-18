@@ -9,9 +9,10 @@ const Sources = std.StringArrayHashMapUnmanaged([]const u8);
 /// Every source input, the selected runtime subset, and the Zig units still to scan.
 const Selection = struct { sources: Sources, chosen: std.StringArrayHashMapUnmanaged(void) = .empty, pending: std.ArrayList([]const u8) = .empty };
 /// Build the embedded runtime asset module: the selected inputs, their content hash,
-/// and the compiler identity derived from every *production* source input and the
-/// toolchain. Test-only sources are read by their own test roots, so they neither
-/// bundle nor participate in the identity.
+/// the compiler identity derived from every *production* source input and the
+/// toolchain, and the narrower native-driver identity over just the sources that
+/// decide how emitted IL becomes an object or an executable. Test-only sources are
+/// read by their own test roots, so they neither bundle nor participate in either.
 pub fn module(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode) *std.Build.Module {
     b.dependOnDirectory(b.path("src"));
     const sources = read(b);
@@ -34,9 +35,33 @@ pub fn module(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.bui
     text.writer.writeAll("pub const identity_inputs = [_][]const u8{\n") catch @panic("OOM");
     for (identity_paths) |path| text.writer.print("    \"{s}\",\n", .{path}) catch @panic("OOM");
     text.writer.writeAll("};\n") catch @panic("OOM");
+    const driver_paths = drivers(b, identity_paths);
+    text.writer.writeAll("pub const driver_inputs = [_][]const u8{\n") catch @panic("OOM");
+    for (driver_paths) |path| text.writer.print("    \"{s}\",\n", .{path}) catch @panic("OOM");
+    text.writer.writeAll("};\n") catch @panic("OOM");
     text.writer.print("pub const content_hash = \"{s}\";\n", .{digest(b, manifest(b, sources, paths))}) catch @panic("OOM");
-    text.writer.print("pub const compiler_identity = \"{s}\";\n", .{identity(b, sources, identity_paths, optimize)}) catch @panic("OOM");
+    text.writer.print("pub const compiler_identity = \"{s}\";\n", .{identity(b, sources, identity_paths, optimize, "mylang-compiler-identity-v1")}) catch @panic("OOM");
+    text.writer.print("pub const driver_identity = \"{s}\";\n", .{identity(b, sources, driver_paths, optimize, "mylang-native-driver-identity-v1")}) catch @panic("OOM");
     return b.createModule(.{ .root_source_file = files.add("assets.zig", text.written()), .target = target, .optimize = optimize });
+}
+/// True when a source decides how already-emitted QBE IL becomes a native object
+/// or executable: the native build driver itself and the link-argument policy.
+/// Everything else about a build is already keyed separately — the IL text names
+/// each object, `content_hash` covers the bundled runtime sources, the tool
+/// stamps cover QBE and Zig — so only these files, the optimize mode and the Zig
+/// version can change an object whose IL did not change.
+fn drivesNativeBuilds(path: []const u8) bool {
+    if (std.mem.indexOfScalar(u8, path, '/') != null) return false;
+    return std.mem.startsWith(u8, path, "qbe_build") or std.mem.startsWith(u8, path, "native_link");
+}
+/// The sorted subset of production inputs that drive native builds.
+fn drivers(b: *std.Build, identity_paths: []const []const u8) []const []const u8 {
+    var chosen: std.ArrayList([]const u8) = .empty;
+    for (identity_paths) |path| {
+        if (!drivesNativeBuilds(path)) continue;
+        chosen.append(b.allocator, path) catch @panic("OOM");
+    }
+    return chosen.toOwnedSlice(b.allocator) catch @panic("OOM");
 }
 /// True when a source path is consumed only by a test root. The production
 /// compiler and runtime never import these, so they must neither bundle nor
@@ -125,11 +150,13 @@ fn manifest(b: *std.Build, sources: Sources, paths: []const []const u8) []const 
     }
     return text.written();
 }
-/// The compiler's own identity: every production source input, the Zig toolchain,
-/// and the optimize mode. Test-only edits leave this digest unchanged.
-fn identity(b: *std.Build, sources: Sources, paths: []const []const u8, optimize: std.builtin.OptimizeMode) []const u8 {
-    const summary = std.fmt.allocPrint(b.allocator, "mylang-compiler-identity-v1\n{s}\n{s}\n{s}", .{
-        @import("builtin").zig_version_string, @tagName(optimize), manifest(b, sources, paths),
+/// A build-time identity over a named subset of the production source inputs, the
+/// Zig toolchain and the optimize mode. `domain` separates the compiler's whole
+/// identity from the narrower native-driver one, so a digest computed for one can
+/// never be mistaken for the other. Test-only edits leave both unchanged.
+fn identity(b: *std.Build, sources: Sources, paths: []const []const u8, optimize: std.builtin.OptimizeMode, domain: []const u8) []const u8 {
+    const summary = std.fmt.allocPrint(b.allocator, "{s}\n{s}\n{s}\n{s}", .{
+        domain, @import("builtin").zig_version_string, @tagName(optimize), manifest(b, sources, paths),
     }) catch @panic("OOM");
     return digest(b, summary);
 }

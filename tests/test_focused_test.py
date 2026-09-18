@@ -65,8 +65,25 @@ class OutputTests(unittest.TestCase):
 
     def test_result_is_read_from_the_closing_json_line(self):
         self.assertEqual(focused.parse_result(self.VERDICT),
-                         {'passed': 34, 'failed': 0, 'skipped': 0})
+                         {'passed': 34, 'failed': 0, 'skipped': 0,
+                          'aborted': False, 'processes': 1})
         self.assertIsNone(focused.parse_result('no runner output'))
+
+    def test_sharded_run_is_summed_over_its_processes(self):
+        # `zig build test` splits its two slow roots into shards, and each shard
+        # is one process printing its own count and RESULT. Reading only the
+        # last line would report one eighth of the suite as the whole of it.
+        sharded = ('guardian/test: 12 test(s) selected [shard 0/8 of 100]\n'
+                   'guardian/test: RESULT {"passed":12,"failed":0,"skipped":0}\n'
+                   'guardian/test: 11 test(s) selected [shard 1/8 of 100]\n'
+                   'guardian/test: RESULT {"passed":10,"failed":1,"skipped":0}\n')
+        self.assertEqual(focused.parse_selected(sharded), 23)
+        self.assertEqual(focused.parse_result(sharded),
+                         {'passed': 22, 'failed': 1, 'skipped': 0,
+                          'aborted': False, 'processes': 2})
+        lines = focused.describe('full', None, 23, focused.parse_result(sharded), 1)
+        self.assertIn('result: FAIL - 22 passed, 1 failed, 0 skipped '
+                      'across 2 test process(es)', lines)
 
     def test_summary_distinguishes_a_full_request(self):
         lines = focused.describe('full', None, 1022, {'passed': 1022, 'failed': 0, 'skipped': 0})

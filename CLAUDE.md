@@ -19,12 +19,13 @@ any other toolchain.
 
 - `zig build test-units -Dtest-filter=SUBSTRING` — runs only `src/root_test.zig` tests
   whose name contains SUBSTRING. `-Dtest-filter=arena` is 34 tests in about 1.5 s; the whole
-  root is 889 tests in 25 s. `zig build test-cli -Dtest-filter=…` does the same for
+  root is 1236 tests in about 84 s (measured warm 2026-09-18; `zig build test` shards it). `zig build test-cli -Dtest-filter=…` does the same for
   `test/integration.zig`. Neither runs Python drivers, Guardian, or the install graph:
   they depend only on their test binary plus unattached copies of `qbe` and the compiler. The filter also
   applies to `zig build test` and `test-compile`. An explicitly empty
   `-Dtest-filter=` is rejected at configure time, and a filter that names nothing fails
-  rather than reporting green, so filter one root at a time.
+  rather than reporting green, so filter one root at a time. These two steps are never
+  sharded, so their selected-test count and verdict are one process's.
 - `python3 scripts/focused_test.py units arena` — the supported wrapper over the same
   targets (`units`, `cli`, `golden`). It rejects a missing/empty/whitespace filter before
   invoking Zig, prints the runner's selected-test count and PASS/FAIL verdict, saves the
@@ -52,6 +53,14 @@ zig build fmt-check
 ```
 
 `zig build test` also runs `mylang doc-coverage .` and `mylang doctest .`.
+
+`zig build test` splits its two slow Zig roots across processes: `src/root_test.zig`
+into `-Dtest-shards=N` shards (default 8) and `test/integration.zig` into `N/2`, each
+one run of the same test binary under Guardian's `--guardian-shard=K/N` with its own
+`max_rss`, so the shards run concurrently and print one `test wall` and one verdict
+each. They partition the root — every test runs exactly once, and the shards' selected
+counts sum to the unsharded count. `-Dtest-shards=1` restores one process per root, and
+`-Dtest-filter=…` falls back to it automatically. See `docs/tooling/runtime-budgets.md`.
 
 ## Memory ceilings (why a runaway guest no longer kills the machine)
 

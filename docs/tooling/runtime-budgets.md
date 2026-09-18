@@ -145,3 +145,21 @@ rejected.
 $ mylang test suite/ --jobs 4 --max-memory=256M
 8 passed, 0 cached, 0 failed, 0 skipped across 4 programs
 ```
+
+## Sharded Zig test roots
+
+The gate's two slow Zig test roots run as several processes rather than one:
+`zig build test` splits `src/root_test.zig` into `-Dtest-shards=N` shards
+(default 8) and `test/integration.zig` into `N/2`, each an independent run of
+the same test binary under `--guardian-shard=K/N`, declaring its own `max_rss`
+(1.5 GiB per unit shard, 1 GiB per CLI shard) so `zig build --maxrss` still
+bounds the whole gate. Guardian's runner gives each shard the named tests whose
+position among them is `K` modulo `N`, and the unnamed `test { }` blocks to
+shard 0 alone, so the shards partition the root and their `N test(s) selected`
+counts sum to the unsharded count.
+
+`-Dtest-shards=1` restores one process per root. `test-units` and `test-cli`
+are never sharded, and `-Dtest-filter=…` puts `test` back on their single
+whole-root runs too: the compiler has already dropped every non-matching test,
+so splitting the remainder would mostly produce empty shards. An empty shard is
+not a failure — only a root that selected nothing as a whole still fails.

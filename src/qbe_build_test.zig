@@ -324,3 +324,31 @@ test "compiler identity omits test-only sources and names production inputs" {
     try std.testing.expect(!identityNames("byte_io/tests.zig"));
     try std.testing.expect(!identityNames("test_support.zig"));
 }
+
+/// True when the generated native-driver identity names `path`.
+fn driverNames(path: []const u8) bool {
+    for (bundled.driver_inputs) |input| {
+        if (std.mem.eql(u8, input, path)) return true;
+    }
+    return false;
+}
+
+// `driver_identity` covers only what decides how already-emitted QBE IL becomes an
+// object or an executable: the native build driver and the link-argument policy.
+// A frontend or checker edit moves `compiler_identity` alone, so every cached
+// object and guest executable whose IL is unchanged survives it.
+// spec-case: QBE-DRIVER-IDENTITY-1
+test "the native driver identity names the build driver and link policy only" {
+    try std.testing.expect(driverNames("qbe_build.zig"));
+    try std.testing.expect(driverNames("qbe_build_cache.zig"));
+    try std.testing.expect(driverNames("qbe_build_io.zig"));
+    try std.testing.expect(driverNames("qbe_build_outputs.zig"));
+    try std.testing.expect(driverNames("native_link.zig"));
+    try std.testing.expect(!driverNames("qbe_build_test.zig"));
+    try std.testing.expect(!driverNames("sema.zig"));
+    try std.testing.expect(!driverNames("parser.zig"));
+    try std.testing.expect(!driverNames("main.zig"));
+    try std.testing.expect(!driverNames("compiler.zig"));
+    try std.testing.expect(!driverNames("native_format.zig"));
+    try std.testing.expect(bundled.driver_inputs.len < bundled.identity_inputs.len);
+}

@@ -47,23 +47,51 @@ $ mylang build examples/factorial.my --run --cache-dir /tmp/qbe-cache
 Everything a build compiles is content addressed under `--cache-dir`
 (`.mylang-cache/qbe` by default): one object per guest function, one for the
 generated typed-metadata unit, and one for the generated entry adapter. Their
-keys cover the compiler's own build-time identity, the runtime content hash, the
-Zig and QBE tool stamps, and the target and optimize mode, so a changed tool or
-mode never reuses an object built by another one.
+keys cover the *native driver* identity, the runtime content hash, the Zig and
+QBE tool stamps, and the target and optimize mode, so a changed tool or mode
+never reuses an object built by another one. The native driver identity is a
+build-time digest over only the sources that decide how already-emitted QBE IL
+becomes an object or an executable — the build driver (`src/qbe_build*.zig`) and
+the link-argument policy (`src/native_link*.zig`) — plus the Zig version and the
+optimize mode. Everything else is keyed separately: the IL text names the object,
+the bundled runtime sources are covered by the runtime content hash, and the
+tools by their stamps. An edit to the parser, the checker or the lowering
+therefore changes the IL of the functions it affects and nothing else; guest
+objects and executables whose IL did not move stay reusable, instead of the whole
+cache being evicted on every compiler rebuild.
 
-Objects live in one *generation* directory, `objects/<hash>`, named by the
-compiler's own build-time identity and the runtime it bundles. Opening a
-generation evicts every sibling generation: the keys a rebuilt compiler asks for
-can no longer match the old entries, so nothing is lost by removing them, and
-the cache never accumulates one set of objects per compiler build. Tool stamps,
-mode and target stay in each object's key but not in the generation, so every
-process of one compiler build shares one generation — whichever path it resolved
-its tools from, whichever mode it asked for — and concurrent builds never evict
-each other. `mylang run` keeps its programs the same way under `run/<hash>`, and
-the Zig test suites keep the guest executables they build under `exe/<hash>`. A
-cache root therefore only ever holds the generation of the compiler that last
-built with it. Eviction is best effort: a cache that cannot be swept still
-serves the generation it keeps.
+Objects live in one *generation* directory, `objects/<hash>`, named by the native
+driver identity and the runtime the compiler bundles. Opening a generation evicts
+every sibling generation: the keys a new driver asks for can no longer match the
+old entries, so nothing is lost by removing them, and the cache never accumulates
+one set of objects per build driver. Tool stamps, mode and target stay in each
+object's key but not in the generation, so every process of one compiler build
+shares one generation — whichever path it resolved its tools from, whichever mode
+it asked for — and concurrent builds never evict each other. `mylang run` keeps
+its programs the same way under `run/<hash>`, and the Zig test suites keep the
+guest executables they build under `exe/<hash>`. Eviction is best effort: a cache
+that cannot be swept still serves the generation it keeps.
+
+Generations are leased, because one cache root is shared by processes whose
+driver identities differ — the compiler and the host applications each open their
+own generation, concurrently, during a single `zig build test`. A process that
+opens a generation for use creates `.lease` inside it and holds a *shared*
+advisory lock on that file for the rest of its life; a sweeper takes a
+*non-blocking exclusive* lock on each sibling's lease before evicting it and
+skips every generation it cannot lock. A generation another process is still
+compiling or linking into is therefore never deleted underneath it, which is what
+used to surface as `ld.lld: error: cannot open .../<obj>.o: No such file or
+directory` or a `FileNotFound` while publishing. Leasing is advisory and needs no
+clock: an entry with no lease file is swept as before, a filesystem that cannot
+lock behaves exactly as it did, and the kernel drops a dead process's lease, so an
+interrupted build never pins a generation.
+
+Publication heals a lost race rather than failing the build. A rename into a
+generation directory that reports the destination missing recreates and re-leases
+that directory and retries once, and a link whose cached input objects are gone
+from disk rebuilds them into the restored generation and retries the link once. A
+link that fails with every input still present is the program's own link error
+and is reported unchanged.
 
 Every object, archive and executable is built without debug information: C and
 assembly compiles pass `-g0`, the Zig runtime unit is built with `-fstrip`, and

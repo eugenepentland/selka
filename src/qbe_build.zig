@@ -68,24 +68,43 @@ pub fn prepare(context: fs.Context, parsed: options.Options) Error!Prepared {
     try context.mkdir(directory);
     const assets = try materializeRuntime(context, parsed, directory);
     const temporary = try context.temporary(directory);
-    const environment = try std.json.Stringify.valueAlloc(a, .{
-        .version = "zig-qbe-build-v2",
-        .abi = native_abi,
-        .compiler = bundled.compiler_identity,
-        .runtime = bundled.content_hash,
+    const environment = try environmentJson(a, .{
         .zig = try context.stamp(zig),
         .qbe = try context.stamp(qbe),
         .zig_version = zig_version,
         .mode = parsed.mode,
         .target = parsed.target,
-    }, .{});
-    // Objects live in this compiler's generation; opening it evicts every other.
+    });
+    // Objects live in this driver's generation; opening it evicts every other
+    // one no process still leases.
     const objects = try generation(context, directory, "objects", generation_identity);
     return .{
         .cache = .{ .context = context, .directory = objects, .temporary = temporary, .assets = assets, .environment = environment, .zig = zig, .qbe = qbe, .mode = parsed.mode },
         .zig_version = zig_version,
         .root = directory,
     };
+}
+/// The per-invocation half of an object's build environment: the resolved tool
+/// stamps and the requested build mode and target.
+const Environment = struct { zig: []const u8, qbe: []const u8, zig_version: []const u8, mode: []const u8, target: []const u8 };
+/// Encode everything besides a unit's own IL that decides the object bytes. It
+/// names the *native driver* identity rather than the whole compiler: objects are
+/// already content addressed by the IL the frontend emitted, the runtime sources
+/// are covered by `runtime`, the tools by their stamps and the link flags by the
+/// cache contract, so an edit to a compiler source that cannot change how IL
+/// becomes an object must not evict every cached object and executable.
+fn environmentJson(allocator: std.mem.Allocator, per_build: Environment) Error![]const u8 {
+    return std.json.Stringify.valueAlloc(allocator, .{
+        .version = "zig-qbe-build-v2",
+        .abi = native_abi,
+        .driver = bundled.driver_identity,
+        .runtime = bundled.content_hash,
+        .zig = per_build.zig,
+        .qbe = per_build.qbe,
+        .zig_version = per_build.zig_version,
+        .mode = per_build.mode,
+        .target = per_build.target,
+    }, .{});
 }
 /// Validate one emitted manifest and link it into `output`, reporting whether the file changed.
 pub fn assemble(cache: cache_api.Cache, parsed: options.Options, manifest: std.json.Value, output: []const u8) Error!bool {
@@ -254,26 +273,33 @@ fn nativeCacheDirectory(parsed: options.Options) []const u8 {
 pub fn cacheRoot(context: fs.Context, parsed: options.Options) fs.Error![]const u8 {
     return context.absolute(nativeCacheDirectory(parsed));
 }
-/// The generation every cache family is keyed by: the compiler's own build-time
-/// identity and the runtime it bundles. Tool stamps, mode and target stay in each
-/// entry's key but not here, so every process of one compiler build — whichever
-/// path it resolved its tools from, whichever mode it asked for — shares one
-/// generation and never evicts a concurrent sibling's entries; only a rebuilt
-/// compiler or a changed runtime opens a new generation and sweeps the old one.
-pub const generation_identity = "zig-qbe-build-v2\x00" ++ native_abi ++ "\x00" ++ bundled.compiler_identity ++ "\x00" ++ bundled.content_hash;
+/// The generation every cache family is keyed by: the *native driver* identity —
+/// the build-driver and link-policy sources, the Zig version and the optimize mode
+/// — and the runtime the compiler bundles. An ordinary compiler edit no longer
+/// opens a generation, because it cannot change how already-emitted IL becomes an
+/// object or an executable; only an edit to the driver itself, a changed runtime
+/// or a new native ABI does. Tool stamps, mode and target stay in each entry's key
+/// but not here, so every process of one compiler build — whichever path it
+/// resolved its tools from, whichever mode it asked for — shares one generation.
+pub const generation_identity = "zig-qbe-build-v2\x00" ++ native_abi ++ "\x00" ++ bundled.driver_identity ++ "\x00" ++ bundled.content_hash;
 /// One directory under `<root>/<family>` for everything one generation produces,
-/// named by the hash of `identity`. Creating a generation evicts every sibling: a
-/// rebuilt compiler can no longer hit those entries by their keys, so a cache root
-/// holds at most one live generation per family rather than every generation ever
-/// built. An existing generation is returned without a sweep, so a warm build pays
-/// one `stat`.
+/// named by the hash of `identity`. Opening a generation leases it for the rest of
+/// this process, then evicts every sibling no other process leases: a new driver
+/// can no longer hit those entries by their keys, so a cache root holds at most one
+/// live generation per family plus whatever concurrent builds still hold. An
+/// existing generation is leased and returned without a sweep, so a warm build pays
+/// one `stat` and one lock.
 pub fn generation(context: fs.Context, root: []const u8, family: []const u8, identity: []const u8) fs.Error![]const u8 {
     const a = context.allocator;
     const parent = try std.fs.path.join(a, &.{ root, family });
     const current = try fs.hash(a, identity);
     const path = try std.fs.path.join(a, &.{ parent, current });
-    if (context.exists(path)) return path;
+    if (context.exists(path)) {
+        context.lease(path);
+        return path;
+    }
     try context.mkdir(path);
+    context.lease(path);
     context.sweep(parent, current);
     return path;
 }
@@ -482,12 +508,9 @@ const State = struct {
         if (try installedRuntime(self.context, self.cache.mode, "format", ".o")) |found| return found;
         return self.cache.object("format", "native_format.zig", .zig_file);
     }
-    fn link(self: *State, parsed: options.Options, output: []const u8) !bool {
+    /// The full link command for one candidate executable or shared library.
+    fn linkCommand(self: *State, parsed: options.Options, candidate: []const u8) ![]const []const u8 {
         const a = self.context.allocator;
-        const temporary = try self.context.temporary(std.fs.path.dirname(output).?);
-        defer self.context.remove(temporary);
-        const candidate = try std.fs.path.join(a, &.{ temporary, "program" });
-        if (parsed.provider) |provider_source| try self.provider(provider_source);
         var args: std.ArrayList([]const u8) = .empty;
         try args.appendSlice(a, try self.cache.flags());
         if (parsed.library) try args.appendSlice(a, &library_link_arguments);
@@ -497,7 +520,43 @@ const State = struct {
         // `-s` drops the symbol table and any DWARF an object or an installed archive
         // still carries: traps and their frames read the runtime's own tables.
         try args.appendSlice(a, &.{ self.runtime.path, "-lm", "-Wl,--gc-sections", "-s", "-o", candidate });
-        try self.context.command(args.items, null);
+        return args.items;
+    }
+    /// Whether every object this link names is still on disk. A concurrent sweep
+    /// that evicted this generation leaves cache hits pointing at removed files,
+    /// which the linker reports only as `cannot open ...: No such file or directory`.
+    fn inputsPresent(self: *State) bool {
+        for (self.objects.items) |path| if (!self.context.exists(path)) return false;
+        return self.context.exists(self.runtime.path);
+    }
+    /// Recreate this generation and rebuild every object it lost, discarding the
+    /// records of the removed ones so the report counts what was really compiled.
+    fn recompile(self: *State, parsed: options.Options) !void {
+        try self.context.restore(self.cache.directory);
+        self.objects.clearRetainingCapacity();
+        self.records.clearRetainingCapacity();
+        self.reused = 0;
+        try self.compile(parsed);
+        if (parsed.provider) |provider_source| try self.provider(provider_source);
+    }
+    /// Link, rebuilding a cached input a concurrent sweep removed and retrying
+    /// once. A failure with every input present is the program's own link error
+    /// and is reported unchanged.
+    fn linkOnce(self: *State, parsed: options.Options, candidate: []const u8) !void {
+        if (!self.inputsPresent()) try self.recompile(parsed);
+        self.context.command(try self.linkCommand(parsed, candidate), null) catch |err| {
+            if (self.inputsPresent()) return err;
+            try self.recompile(parsed);
+            try self.context.command(try self.linkCommand(parsed, candidate), null);
+        };
+    }
+    fn link(self: *State, parsed: options.Options, output: []const u8) !bool {
+        const a = self.context.allocator;
+        const temporary = try self.context.temporary(std.fs.path.dirname(output).?);
+        defer self.context.remove(temporary);
+        const candidate = try std.fs.path.join(a, &.{ temporary, "program" });
+        if (parsed.provider) |provider_source| try self.provider(provider_source);
+        try self.linkOnce(parsed, candidate);
         if (parsed.run) return self.context.publish(candidate, output);
         const report = try std.json.Stringify.valueAlloc(a, .{ .version = "qbe-manifest-v1", .abi = native_abi, .entry = v.text(v.get(self.manifest, "entry")), .functions = self.records.items, .runtime_object = self.runtime.path }, .{});
         const sidecar = try std.fmt.allocPrint(a, "{s}.qbe-manifest.json", .{output});
@@ -569,6 +628,7 @@ fn bundles(name: []const u8) bool {
 test "bundled build inputs carry only the native runtime, not compiler tests or guest fixtures" {
     try std.testing.expectEqual(@as(usize, 64), bundled.content_hash.len);
     try std.testing.expectEqual(@as(usize, 64), bundled.compiler_identity.len);
+    try std.testing.expectEqual(@as(usize, 64), bundled.driver_identity.len);
     for (bundled.files) |asset| {
         try std.testing.expect(!std.mem.endsWith(u8, asset.path, "_test.zig"));
         try std.testing.expect(!std.mem.endsWith(u8, asset.path, ".my") or std.mem.startsWith(u8, asset.path, "stdlib/"));
@@ -616,16 +676,54 @@ test "a new build generation evicts its siblings and an existing one is reused u
     const executables = try generation(context, root, "exe", "toolchain one");
     try std.testing.expect(context.exists(executables));
     try std.testing.expect(!std.mem.eql(u8, first, executables));
+    // Two generations an earlier process abandoned, one per family, hold no lease.
+    const abandoned = try std.fs.path.join(context.allocator, &.{ root, "objects", "abandoned" });
+    const untouched = try std.fs.path.join(context.allocator, &.{ root, "exe", "abandoned" });
+    try context.mkdir(abandoned);
+    try context.mkdir(untouched);
     // A changed environment opens a new generation and removes the old one, in its family only.
     const second = try generation(context, root, "objects", "toolchain two");
     try std.testing.expect(!std.mem.eql(u8, first, second));
     try std.testing.expect(context.exists(second));
-    try std.testing.expect(!context.exists(first));
-    try std.testing.expect(!context.exists(marker));
+    try std.testing.expect(!context.exists(abandoned));
+    try std.testing.expect(context.exists(untouched));
+    // This process still leases the generation it opened, so the sweep spared it.
+    try std.testing.expectEqualStrings("one", try context.read(marker));
     try std.testing.expect(context.exists(executables));
-    // The live identity is the compiler build and its runtime, nothing per process.
-    try std.testing.expect(std.mem.indexOf(u8, generation_identity, bundled.compiler_identity) != null);
+    // The live identity is the native driver and the bundled runtime, nothing per process.
+    try std.testing.expect(std.mem.indexOf(u8, generation_identity, bundled.driver_identity) != null);
     try std.testing.expect(std.mem.indexOf(u8, generation_identity, bundled.content_hash) != null);
+    try std.testing.expect(std.mem.indexOf(u8, generation_identity, bundled.compiler_identity) == null);
+}
+// spec-case: NATIVE-PUBLISH-REPAIR-1
+test "a link failure with every input still present is reported, never retried" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const cache: cache_api.Cache = .{ .context = context, .directory = "objects", .temporary = "work", .assets = "/assets", .environment = "env", .zig = "/bin/false", .qbe = "/bin/false", .mode = "Debug" };
+    var state = State{ .context = context, .cache = cache, .manifest = .null };
+    state.runtime = .{ .key = "runtime", .path = "/bin/sh", .reused = true };
+    // No object went missing, so the linker's own refusal is the answer and the
+    // self-healing retry — which would recompile every unit — must not run.
+    try std.testing.expect(state.inputsPresent());
+    try std.testing.expectError(error.NativeToolFailed, state.linkOnce(.{}, "/dev/null/program"));
+}
+// spec: QBE-DRIVER-IDENTITY-1
+test "the object environment names the native driver, never the whole compiler" {
+    const a = std.testing.allocator;
+    const text = try environmentJson(a, .{ .zig = "zig-stamp", .qbe = "qbe-stamp", .zig_version = bundled.zig_version, .mode = "Debug", .target = "native" });
+    defer a.free(text);
+    try std.testing.expect(!std.mem.eql(u8, bundled.driver_identity, bundled.compiler_identity));
+    try std.testing.expect(std.mem.indexOf(u8, text, bundled.driver_identity) != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, bundled.content_hash) != null);
+    // An edit to a compiler source that is not a build driver moves only
+    // `compiler_identity`, which this environment does not name, so every cached
+    // object and executable whose IL is unchanged still keys the same.
+    try std.testing.expect(std.mem.indexOf(u8, text, bundled.compiler_identity) == null);
+    const same = try environmentJson(a, .{ .zig = "zig-stamp", .qbe = "qbe-stamp", .zig_version = bundled.zig_version, .mode = "Debug", .target = "native" });
+    defer a.free(same);
+    try std.testing.expectEqualStrings(text, same);
 }
 // spec-case: QBE-3
 test "a default build shares the runtime root while an explicit cache-dir keeps it local" {

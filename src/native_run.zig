@@ -178,10 +178,12 @@ fn position(text: []const u8) ?Place {
 
 /// Everything besides the program itself that decides an executable's bytes,
 /// captured without running a tool: a warm run must not pay for a toolchain
-/// probe it is about to skip.
+/// probe it is about to skip. It names the native driver identity rather than the
+/// whole compiler, matching the object cache: the program is already named by the
+/// QBE units it was built from, so an unrelated compiler edit must not rebuild it.
 fn buildEnvironment(context: fs.Context, settings: options.Options) Error![]const u8 {
     return std.json.Stringify.valueAlloc(context.allocator, .{
-        .compiler = bundled.compiler_identity,
+        .driver = bundled.driver_identity,
         .runtime = bundled.content_hash,
         .zig = try context.stamp(try context.executable(settings.zig)),
         .qbe = try context.stamp(try context.executable(settings.qbe)),

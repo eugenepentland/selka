@@ -38,6 +38,15 @@ const rss = struct {
     /// the focused native-test root 13M. The unit root additionally builds and
     /// runs every guest program its suites execute, and peaks near 1.1G.
     const suite: u64 = 2048 * mib;
+    /// One shard of the unit root. A shard builds and runs only its slice of
+    /// the guest programs, so its peak sits well under the whole root's 1.1G:
+    /// observed 77M-336M across eight warm shards. The ceiling keeps the cold
+    /// margin the whole root needs while letting eight shards share a
+    /// `--maxrss` budget the whole root's 2G ceiling would not stretch to.
+    const shard_unit: u64 = 1536 * mib;
+    /// One shard of the CLI root, which builds far fewer guests. Observed
+    /// 91M-139M across four warm shards; the ceiling is a concurrency budget.
+    const shard_cli: u64 = 1024 * mib;
     /// Python drivers that drive the compiler but build no native programs.
     const driver: u64 = 1024 * mib;
     /// Drivers that compile and link native programs, the QBE parity and
@@ -78,6 +87,11 @@ var install_exe_focus: ?*std.Build.Step = null;
 /// build needs; harmless on steps that build no guest.
 fn bounded(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
     step.step.max_rss = bytes;
+    // Name Zig's global cache explicitly: a test that redirects `HOME` for a child
+    // compiler would otherwise send its `zig cc` invocations to an empty cache.
+    if (std.zig.resolveGlobalCacheDir(step.step.owner.allocator, &step.step.owner.graph.environ_map)) |zig_cache| {
+        step.setEnvironmentVariable("ZIG_GLOBAL_CACHE_DIR", zig_cache);
+    } else |_| {}
     if (tool_qbe.len != 0) {
         step.setEnvironmentVariable("MYLANG_QBE", tool_qbe);
         step.setEnvironmentVariable("MYLANG_ZIG", tool_zig);
@@ -92,6 +106,11 @@ fn bounded(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
 /// Guardian.
 fn focused(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
     step.step.max_rss = bytes;
+    // Name Zig's global cache explicitly: a test that redirects `HOME` for a child
+    // compiler would otherwise send its `zig cc` invocations to an empty cache.
+    if (std.zig.resolveGlobalCacheDir(step.step.owner.allocator, &step.step.owner.graph.environ_map)) |zig_cache| {
+        step.setEnvironmentVariable("ZIG_GLOBAL_CACHE_DIR", zig_cache);
+    } else |_| {}
     // A test command must execute and report its selection; otherwise a warm
     // cache reuses the previous verdict and hides the selected-test count.
     step.has_side_effects = true;
@@ -109,6 +128,32 @@ fn focused(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
 /// silently passing with only the unnamed `test { }` blocks it cannot filter.
 fn forwardFilters(b: *std.Build, step: *std.Build.Step.Run, filters: []const []const u8) void {
     for (filters) |filter| step.addArg(b.fmt("--guardian-filter={s}", .{filter}));
+}
+/// The runs that cover one test root: `count` shards of the same test binary,
+/// each executing the slice of the root's named tests that `--guardian-shard=`
+/// assigns it, or the caller's single whole-root run when `count` is 1. The
+/// shards partition the root — Guardian's runner gives the unnamed `test { }`
+/// blocks to shard 0 alone — so together they run every test exactly once, and
+/// the build runner schedules them concurrently against its `--maxrss` budget.
+fn shardRuns(
+    b: *std.Build,
+    compile: *std.Build.Step.Compile,
+    bytes: u64,
+    count: usize,
+    whole: *std.Build.Step.Run,
+) []const *std.Build.Step {
+    if (count <= 1) return b.allocator.dupe(*std.Build.Step, &.{&whole.step}) catch @panic("out of memory");
+    const steps = b.allocator.alloc(*std.Build.Step, count) catch @panic("out of memory");
+    for (steps, 0..) |*step, index| {
+        const run = focused(b.addRunArtifact(compile), bytes);
+        guardian.announceShard(run, index, count);
+        step.* = &run.step;
+    }
+    return steps;
+}
+/// Make `step` wait on every run that covers a test root.
+fn dependOnAll(step: *std.Build.Step, runs: []const *std.Build.Step) void {
+    for (runs) |run| step.dependOn(run);
 }
 /// Guardian's `addAllChecks` returns nothing, so bound the check steps it has
 /// just appended to `step`, which are the run steps naming its executable.
@@ -133,6 +178,26 @@ pub fn build(b: *std.Build) void {
         }
         break :blk b.dupeStrings(&.{needle});
     } else &.{};
+    // `-Dtest-shards=N` splits the two slow test roots across N processes the
+    // build runner schedules in parallel; `-Dtest-shards=1` is one process per
+    // root, which is what the gate did before sharding existed. A filter is
+    // incompatible with it by construction: the compiler has already dropped
+    // every non-matching test, so splitting the handful that remain eight ways
+    // yields empty shards and counts nobody can read. A filtered run therefore
+    // falls back to the single whole-root runs `test-units`/`test-cli` use.
+    const requested_shards = b.option(
+        usize,
+        "test-shards",
+        "Split the unit and CLI test roots across this many parallel processes (default 8; 1 disables sharding)",
+    ) orelse 8;
+    if (requested_shards == 0) {
+        std.debug.print("error: -Dtest-shards= needs a positive count; -Dtest-shards=1 runs each root in one process\n", .{});
+        std.process.exit(2);
+    }
+    const unit_shards = if (test_filters.len == 0) requested_shards else 1;
+    // The CLI root is both smaller and coarser than the unit root — 150 tests
+    // against 1236 — so it takes half the shards; more would mostly idle.
+    const cli_shards = if (test_filters.len == 0) @max(1, requested_shards / 2) else 1;
     // The guest-running hosts live under src/<host>/, so they cannot reach
     // src/memory_budget.zig by path; they import it as a module instead. The
     // compiler itself reaches the same file directly from its own root module.
@@ -312,7 +377,12 @@ pub fn build(b: *std.Build) void {
     boundedChecks(test_step);
     const run_unit = focused(b.addRunArtifact(unit), rss.suite);
     forwardFilters(b, run_unit, test_filters);
-    test_step.dependOn(&run_unit.step);
+    // The gate runs each slow root as several concurrent shards; `test-units`
+    // and `test-cli` keep the single whole-root run, so `-Dtest-filter` behaves
+    // exactly as documented and its selected-test count means what it says.
+    const unit_runs = shardRuns(b, unit, rss.shard_unit, unit_shards, run_unit);
+    const cli_runs = shardRuns(b, integration, rss.shard_cli, cli_shards, run_integration);
+    dependOnAll(test_step, unit_runs);
     // The fast inner loops: no Python drivers, no Guardian and no full install graph,
     // so `-Dtest-filter` returns in seconds.
     b.step("test-units", "Run only src/root_test.zig, honouring -Dtest-filter").dependOn(&run_unit.step);
@@ -323,7 +393,7 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_byte_io_unit.step);
     guardian.addAllChecks(b, guardian_exe, byte_io_step, .{});
     boundedChecks(byte_io_step);
-    test_step.dependOn(&run_integration.step);
+    dependOnAll(test_step, cli_runs);
     const run_board_unit = bounded(b.addRunArtifact(board_unit), rss.suite);
     test_step.dependOn(&run_board_unit.step);
     const schematic_step = b.step("test-schematic", "Verify guest SVG generation against Netlisp connectivity and source mutations");
@@ -331,8 +401,8 @@ pub fn build(b: *std.Build) void {
     const audit_runtime = b.step("test-runtime-audit", "Run every Zig test root for isolated runtime probes");
     guardian.addAllChecks(b, guardian_exe, audit_runtime, .{});
     boundedChecks(audit_runtime);
-    audit_runtime.dependOn(&run_unit.step);
-    audit_runtime.dependOn(&run_integration.step);
+    dependOnAll(audit_runtime, unit_runs);
+    dependOnAll(audit_runtime, cli_runs);
     audit_runtime.dependOn(&run_board_unit.step);
     audit_runtime.dependOn(&run_byte_io_unit.step);
     audit_runtime.dependOn(&run_schematic_unit.step);
@@ -446,7 +516,8 @@ pub fn build(b: *std.Build) void {
     guardian.addAllChecks(b, guardian_exe, guest_step, .{});
     boundedChecks(guest_step);
     const doctest_step = b.step("test-docs", "Execute every fenced documentation example");
-    const doctest_run = bounded(b.addRunArtifact(exe), rss.parity);
+    // The doctest fans its units out across a worker pool, so it is bounded like a suite.
+    const doctest_run = bounded(b.addRunArtifact(exe), rss.suite);
     doctest_run.addArgs(&.{ "doctest", "." });
     doctest_run.setCwd(b.path("."));
     doctest_run.has_side_effects = true;

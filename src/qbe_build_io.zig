@@ -5,6 +5,51 @@ const Sha = std.crypto.hash.sha2.Sha256;
 /// directory keeps at most one shared staging folder instead of one
 /// `.pending-<hex>` sibling per build.
 const staging_name = ".pending";
+/// The advisory lease file every generation directory carries. A process that
+/// opens a generation for use holds a *shared* lock on it for the rest of its
+/// life; a sweeper takes a non-blocking *exclusive* lock before evicting a
+/// sibling and skips whatever it cannot take, so a generation another process is
+/// still compiling or linking into is never deleted underneath it. Locks are
+/// released by the kernel when a process dies, so an abandoned lease never
+/// pins a generation forever, and no wall clock is involved.
+pub const lease_name = ".lease";
+/// Generation leases this process already holds, identified by a hash of their
+/// path. A POSIX advisory lock lives on the open file description, so a lease
+/// descriptor is deliberately never closed; recording the paths keeps a
+/// long-lived host that rebuilds its guest on every reload from opening a fresh
+/// descriptor for a generation it is already leasing.
+const Leases = struct {
+    var mutex: std.Io.Mutex = .init;
+    var keys: std.ArrayList(u64) = .empty;
+    /// Reserve `path` for this process, reporting whether a lock must still be taken.
+    /// A table that cannot grow still leases correctly, it merely stops deduplicating.
+    fn claim(io: std.Io, path: []const u8) bool {
+        const key = std.hash.Wyhash.hash(0, path);
+        mutex.lockUncancelable(io);
+        defer mutex.unlock(io);
+        for (keys.items) |held| if (held == key) return false;
+        // A lease outlives every build context and the arena that named it, so the
+        // table belongs to the process, not to a build. // allocator-ok
+        keys.append(std.heap.page_allocator, key) catch return true;
+        return true;
+    }
+    /// Forget `path`, so a directory recreated after a sweep is leased again.
+    fn release(io: std.Io, path: []const u8) void {
+        const key = std.hash.Wyhash.hash(0, path);
+        mutex.lockUncancelable(io);
+        defer mutex.unlock(io);
+        for (keys.items, 0..) |held, index| {
+            if (held != key) continue;
+            _ = keys.swapRemove(index);
+            return;
+        }
+    }
+};
+/// One sibling generation's eviction claim: the exclusive lease handle to hold
+/// while the tree is deleted, or none when the entry carries no lease file at all
+/// (a loose file, or a generation from a compiler that predates leasing). `held`
+/// means another process still leases it and it must be left alone.
+const Claim = struct { file: ?std.Io.File, held: bool };
 /// Native filesystem, process, and allocation failures preserve their diagnostics.
 pub const Error = std.Io.Dir.RealPathFileAllocError || std.Io.Dir.ReadFileAllocError ||
     std.Io.Dir.WriteFileError || std.Io.Dir.CreateDirPathError || std.Io.Dir.RenameError ||
@@ -138,12 +183,50 @@ pub const Context = struct {
         if (!std.mem.eql(u8, std.fs.path.basename(staging), staging_name)) return;
         std.Io.Dir.cwd().deleteDir(self.io, staging) catch return;
     }
-    /// Remove every entry of `parent` except the one named `keep` and the shared
-    /// staging folder. Eviction is best effort, like `remove`: a cache that cannot
-    /// be swept still serves the generation it keeps, and a stale entry a
-    /// concurrent sweep already removed is simply found gone. Names are collected
-    /// before anything is deleted, so the sweep never mutates a directory it is
-    /// still iterating.
+    /// Take this process's shared lease on a generation directory it is about to
+    /// use, so a concurrent sweeper in another process skips it. Leasing is best
+    /// effort: a filesystem that cannot lock simply returns to the previous
+    /// behaviour, where a sweep may evict a directory still in use.
+    pub fn lease(self: Context, directory: []const u8) void {
+        const path = std.fs.path.join(self.allocator, &.{ directory, lease_name }) catch return;
+        if (!Leases.claim(self.io, path)) return;
+        const file = std.Io.Dir.cwd().createFile(self.io, path, .{ .truncate = false, .read = true }) catch {
+            Leases.release(self.io, path);
+            return;
+        };
+        // The descriptor is intentionally never closed: an advisory lock lives on
+        // the open file description, so closing it would drop the lease. // allocator-ok
+        const taken = file.tryLock(self.io, .shared) catch false;
+        if (!taken) {
+            file.close(self.io);
+            Leases.release(self.io, path);
+        }
+    }
+    /// Recreate a generation directory a concurrent sweep removed and lease it
+    /// again, so the retry that follows publishes somewhere a sweeper will skip.
+    pub fn restore(self: Context, directory: []const u8) Error!void {
+        const path = std.fs.path.join(self.allocator, &.{ directory, lease_name }) catch return error.OutOfMemory;
+        Leases.release(self.io, path);
+        try self.mkdir(directory);
+        self.lease(directory);
+    }
+    /// Try to take the exclusive lease on a sibling about to be evicted. An entry
+    /// with no lease file yields no handle and is swept anyway; a leased one is
+    /// reported `held` and left alone.
+    fn claim(self: Context, parent: std.Io.Dir, name: []const u8) Claim {
+        const path = std.fs.path.join(self.allocator, &.{ name, lease_name }) catch return .{ .file = null, .held = true };
+        const file = parent.openFile(self.io, path, .{ .mode = .read_write }) catch return .{ .file = null, .held = false };
+        const taken = file.tryLock(self.io, .exclusive) catch false;
+        if (taken) return .{ .file = file, .held = false };
+        file.close(self.io);
+        return .{ .file = null, .held = true };
+    }
+    /// Remove every entry of `parent` except the one named `keep`, the shared
+    /// staging folder, and any generation another process still leases. Eviction
+    /// is best effort, like `remove`: a cache that cannot be swept still serves
+    /// the generation it keeps, and a stale entry a concurrent sweep already
+    /// removed is simply found gone. Names are collected before anything is
+    /// deleted, so the sweep never mutates a directory it is still iterating.
     pub fn sweep(self: Context, parent: []const u8, keep: []const u8) void {
         var directory = std.Io.Dir.cwd().openDir(self.io, parent, .{ .iterate = true, .follow_symlinks = false }) catch return;
         defer directory.close(self.io);
@@ -153,7 +236,18 @@ pub const Context = struct {
             if (std.mem.eql(u8, entry.name, keep) or std.mem.eql(u8, entry.name, staging_name)) continue;
             names.append(self.allocator, self.allocator.dupe(u8, entry.name) catch return) catch return;
         }
-        for (names.items) |name| directory.deleteTree(self.io, name) catch continue;
+        for (names.items) |name| {
+            const claimed = self.claim(directory, name);
+            if (claimed.held) continue;
+            self.evict(directory, name, claimed.file);
+        }
+    }
+    /// Delete one unleased sibling and release the exclusive lease taken for it.
+    /// The lease is held across the delete so a builder cannot adopt the
+    /// generation midway; a delete that fails leaves the entry for a later sweep.
+    fn evict(self: Context, parent: std.Io.Dir, name: []const u8, held: ?std.Io.File) void {
+        defer if (held) |file| file.close(self.io);
+        parent.deleteTree(self.io, name) catch return;
     }
     /// Rename within a filesystem for atomic publication.
     pub fn rename(self: Context, from: []const u8, to: []const u8) Error!void {
@@ -167,11 +261,24 @@ pub const Context = struct {
         try self.write(candidate, bytes);
         try self.rename(candidate, path);
     }
-    /// Preserve an unchanged executable's inode and modification time.
+    /// Preserve an unchanged executable's inode and modification time. A
+    /// destination directory a concurrent sweep removed between opening the
+    /// generation and publishing into it is recreated and the rename retried
+    /// once, so a lost race costs one `mkdir` rather than the whole build.
     pub fn publish(self: Context, candidate: []const u8, output: []const u8) Error!bool {
         if (self.runnable(output) and self.unchanged(candidate, output)) return false;
-        try self.rename(candidate, output);
+        try self.republish(candidate, output);
         return true;
+    }
+    /// Rename into place, recreating a vanished destination directory once.
+    pub fn republish(self: Context, candidate: []const u8, output: []const u8) Error!void {
+        self.rename(candidate, output) catch |err| switch (err) {
+            error.FileNotFound => {
+                try self.restore(std.fs.path.dirname(output) orelse return err);
+                try self.rename(candidate, output);
+            },
+            else => return err,
+        };
     }
     /// Compare lengths before bytes: a relinked program that really changed is
     /// never read twice, and an unchanged one costs one comparison, not two digests.
@@ -400,4 +507,58 @@ test "sweeping a cache family removes every entry but the kept generation and th
     // A missing family is not an error: there is nothing to evict.
     context.sweep(try std.fs.path.join(context.allocator, &.{ parent, "absent" }), "current");
     try std.testing.expect(context.exists(kept));
+}
+/// Join a path under a context's build arena, for the tests below.
+fn at(context: Context, parts: []const []const u8) []const u8 {
+    return std.fs.path.join(context.allocator, parts) catch @panic("OOM");
+}
+// spec: NATIVE-GENERATION-LEASE-1
+test "a sweep skips a leased generation and still evicts an unleased one" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const parent = try temporary.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    const kept = at(context, &.{ parent, "current" });
+    const leased = at(context, &.{ parent, "leased" });
+    const idle = at(context, &.{ parent, "idle" });
+    try context.mkdir(kept);
+    try context.mkdir(leased);
+    try context.mkdir(idle);
+    try context.write(at(context, &.{ leased, "unit.o" }), "live");
+    try context.write(at(context, &.{ idle, "unit.o" }), "stale");
+    // One builder still holds `leased`; `idle` carries a lease file nobody locks.
+    context.lease(leased);
+    try context.write(at(context, &.{ idle, lease_name }), "");
+    context.sweep(parent, "current");
+    try std.testing.expect(context.exists(at(context, &.{ leased, "unit.o" })));
+    try std.testing.expect(context.exists(at(context, &.{ leased, lease_name })));
+    try std.testing.expect(!context.exists(idle));
+    try std.testing.expect(context.exists(kept));
+}
+// spec: NATIVE-PUBLISH-REPAIR-1
+test "publication recreates and re-leases a generation a concurrent sweep removed" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const parent = try temporary.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    const home = at(context, &.{ parent, "generation" });
+    try context.mkdir(home);
+    context.lease(home);
+    const work = try context.temporary(parent);
+    const candidate = at(context, &.{ work, "unit.o" });
+    try context.write(candidate, "object bytes");
+    // A racing sweeper removes the whole generation between compile and publish.
+    try std.Io.Dir.cwd().deleteTree(std.testing.io, home);
+    try std.testing.expect(!context.exists(home));
+    try context.republish(candidate, at(context, &.{ home, "unit.o" }));
+    try std.testing.expectEqualStrings("object bytes", try context.read(at(context, &.{ home, "unit.o" })));
+    // The recreated generation is leased again, so the next sweeper skips it.
+    try std.testing.expect(context.exists(at(context, &.{ home, lease_name })));
+    context.remove(work);
 }

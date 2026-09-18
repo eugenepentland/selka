@@ -1,5 +1,6 @@
-//! `mylang doctest [<repo-root>] [--filter GLOB] [--report PATH] [--verbose]`:
-//! run every fenced `mylang` documentation example through this compiler.
+//! `mylang doctest [<repo-root>] [--filter GLOB] [--report PATH] [--jobs N]
+//! [--verbose]`: run every fenced `mylang` documentation example through this
+//! compiler.
 //!
 //! This is the Zig replacement for the old Python `tests/docs_examples.py`
 //! runner. It walks `README.md`, `SPEC.md` and `docs/**/*.md` (excluding
@@ -10,8 +11,10 @@
 //! `run-project` with `--diagnostics=json`. It reports per-document tallies,
 //! mis-tagged prose fences and failures, and exits non-zero when any example
 //! failed, any prose fence still looks like guest source, or no executable
-//! block was found.
+//! block was found. Units are independent, so they run on a bounded pool of
+//! workers sized the way `mylang test <dir>` sizes its fan-out.
 const std = @import("std");
+const budget = @import("memory_budget");
 
 /// Fence info strings whose blocks are executable examples.
 const executable_tags = [_][]const u8{ "mylang", "my" };
@@ -34,6 +37,8 @@ const legacy_prefix = "docs/legacy/";
 const filter_prefix = "--filter=";
 /// `--report` option prefix, shared by its spaced and `=` spellings.
 const report_prefix = "--report=";
+/// `--jobs` option prefix, shared by its spaced and `=` spellings.
+const jobs_prefix = "--jobs=";
 /// Directive and message spelling that exempts a fence from the mis-tag lint.
 const not_mylang = "not-mylang";
 /// JSON key for the mis-tag tally.
@@ -41,13 +46,14 @@ const mistagged_key = "mistagged";
 
 /// Usage and directive summary for `mylang doctest --help` and bad arguments.
 const usage =
-    "usage: mylang doctest [<repo-root>] [--filter GLOB] [--report PATH] [--verbose]\n" ++
+    "usage: mylang doctest [<repo-root>] [--filter GLOB] [--report PATH] [--jobs N] [--verbose]\n" ++
     "  Runs every fenced ```mylang / ```my example in README.md, SPEC.md and\n" ++
     "  docs/**/*.md (except docs/legacy/) through this compiler. Leading `# doc:`\n" ++
     "  directives pin expected output, expected diagnostic codes, projects, files,\n" ++
     "  skips and capability grants. --filter GLOB limits the scan to matching\n" ++
     "  repository-relative pages, --report PATH writes a doc-examples-v1 JSON\n" ++
-    "  report, and --verbose prints each command and diagnostic. Exits 1 when any\n" ++
+    "  report, and --verbose prints each command and diagnostic. --jobs N bounds the\n" ++
+    "  worker pool, which otherwise follows cores and free memory. Exits 1 when any\n" ++
     "  example fails, a prose fence looks like guest source, or no executable\n" ++
     "  example was found.\n";
 
@@ -137,16 +143,19 @@ const Options = struct {
     root: []const u8 = ".",
     filter: ?[]const u8 = null,
     report: ?[]const u8 = null,
+    jobs: ?usize = null,
     verbose: bool = false,
 };
 
-/// Runtime context one unit needs to be executed.
+/// Runtime context one unit needs to be executed. Copied into every worker, so
+/// the lock it carries is the one standard-output stream they share.
 const Session = struct {
     allocator: std.mem.Allocator,
     io: std.Io,
     verbose: bool,
     compiler: []const u8,
     fixtures: []const u8,
+    output: *std.Io.Mutex,
 };
 
 /// Parse the subcommand arguments, rejecting unknown options and extra roots.
@@ -172,6 +181,13 @@ fn parseOptions(args: []const []const u8) error{Usage}!Options {
         } else if (std.mem.startsWith(u8, arg, report_prefix)) {
             if (options.report != null or arg.len == report_prefix.len) return error.Usage;
             options.report = arg[report_prefix.len..];
+        } else if (std.mem.eql(u8, arg, "--jobs")) {
+            if (options.jobs != null or index + 1 >= args.len) return error.Usage;
+            index += 1;
+            options.jobs = budget.jobs(args[index]) catch return error.Usage;
+        } else if (std.mem.startsWith(u8, arg, jobs_prefix)) {
+            if (options.jobs != null) return error.Usage;
+            options.jobs = budget.jobs(arg[jobs_prefix.len..]) catch return error.Usage;
         } else if (std.mem.startsWith(u8, arg, "-")) {
             return error.Usage;
         } else if (root_seen) {
@@ -182,6 +198,31 @@ fn parseOptions(args: []const []const u8) error{Usage}!Options {
         }
     }
     return options;
+}
+
+/// The pool width asked for: `--jobs` first, then `MYLANG_JOBS`, then none,
+/// which leaves the default derived from cores and free memory. Malformed text
+/// is a usage error here exactly as it is for `mylang test`.
+fn resolveJobs(flag: ?usize, environ: *const std.process.Environ.Map) budget.Error!?usize {
+    if (flag) |value| return value;
+    const text = environ.get(budget.jobs_variable) orelse return null;
+    if (text.len == 0) return null;
+    const value = try budget.jobs(text);
+    return value;
+}
+
+/// Workers the unit pool keeps busy: the requested width when there is one,
+/// otherwise the machine's cores capped by how many per-child ceilings its free
+/// memory holds — the same rule and the same ceiling `mylang test <dir>` fans
+/// out under, so a doctest run cannot outweigh a guest test run.
+fn width(io: std.Io, requested: ?usize, units: usize) usize {
+    return budget.workers(.{
+        .jobs = requested,
+        .programs = units,
+        .cores = std.Thread.getCpuCount() catch 1,
+        .free = budget.available(io),
+        .ceiling = budget.test_default,
+    });
 }
 
 /// Run the whole command after the `--help` shortcut has been handled.
@@ -211,13 +252,15 @@ fn runCommand(process: std.process.Init, args: []const []const u8) !u8 {
     const blocks = try scan.executable.toOwnedSlice(allocator);
     const suspects = try scan.suspects.toOwnedSlice(allocator);
     const units = try group(allocator, blocks);
+    const requested = resolveJobs(options.jobs, process.environ_map) catch {
+        try writeErr(process.io, usage);
+        return 2;
+    };
     const workspace = try makeWorkspace(allocator, process.io, root);
     defer removeTree(process.io, workspace);
-    const session: Session = .{ .allocator = allocator, .io = process.io, .verbose = options.verbose, .compiler = compiler, .fixtures = fixtures };
-    for (units, 0..) |unit, index| {
-        const unit_dir = try std.fmt.allocPrint(allocator, "{s}/unit{d:0>3}", .{ workspace, index });
-        try execute(session, unit, index, units.len, unit_dir);
-    }
+    var output: std.Io.Mutex = .init;
+    const session: Session = .{ .allocator = allocator, .io = process.io, .verbose = options.verbose, .compiler = compiler, .fixtures = fixtures, .output = &output };
+    try runUnits(session, units, workspace, width(process.io, requested, units.len));
     var table: std.StringHashMapUnmanaged(Counts) = .empty;
     try tabulate(allocator, units, suspects, scan.counts, &table);
     var out: std.ArrayList(u8) = .empty;
@@ -793,6 +836,68 @@ fn commandFor(action: Action, project: bool) []const u8 {
     };
 }
 
+/// Shared state a bounded pool of workers pulls its next unit from. Every unit
+/// owns its directory, its child process and its own status, and the session's
+/// arena is threadsafe, so the cursor and the output lock are the only things
+/// the workers contend over.
+const Pool = struct {
+    session: Session,
+    units: []*Unit,
+    workspace: []const u8,
+    next: std.atomic.Value(usize) = .init(0),
+    failure: ?anyerror = null,
+};
+
+/// Execute every unit across a bounded pool. The dispatching thread is one of
+/// the workers, so a machine that refuses more concurrency still makes
+/// progress. Statuses land on the units themselves and nothing is reported
+/// here, so the summary the caller renders afterwards keeps its serial order
+/// however the units finish.
+fn runUnits(session: Session, units: []*Unit, workspace: []const u8, workers: usize) !void {
+    var pool: Pool = .{ .session = session, .units = units, .workspace = workspace };
+    var tasks: std.Io.Group = .init;
+    defer tasks.cancel(session.io);
+    var spawned: usize = 1;
+    while (spawned < workers) : (spawned += 1) {
+        tasks.concurrent(session.io, worker, .{&pool}) catch break;
+    }
+    worker(&pool);
+    try tasks.await(session.io);
+    if (pool.failure) |err| return err;
+}
+
+/// Take units off the shared cursor until it is exhausted. An example that
+/// fails its check is a unit status, not an error, so it never reaches here;
+/// a host failure is recorded once and retires this worker while the units the
+/// other workers hold run to completion.
+fn worker(pool: *Pool) void {
+    while (true) {
+        const index = pool.next.fetchAdd(1, .monotonic);
+        if (index >= pool.units.len) return;
+        claim(pool, index) catch |err| {
+            pool.session.output.lockUncancelable(pool.session.io);
+            defer pool.session.output.unlock(pool.session.io);
+            if (pool.failure == null) pool.failure = err;
+            return;
+        };
+    }
+}
+
+/// Execute one unit in the private directory its index names.
+fn claim(pool: *Pool, index: usize) !void {
+    const unit_dir = try std.fmt.allocPrint(pool.session.allocator, "{s}/unit{d:0>3}", .{ pool.workspace, index });
+    try execute(pool.session, pool.units[index], index, pool.units.len, unit_dir);
+}
+
+/// Write one already-terminated line to standard output under the shared lock,
+/// so verbose progress from concurrent workers interleaves by line, never by
+/// byte.
+fn emit(session: Session, line: []const u8) !void {
+    session.output.lockUncancelable(session.io);
+    defer session.output.unlock(session.io);
+    try writeOut(session.io, line);
+}
+
 fn execute(session: Session, unit: *Unit, index: usize, total: usize, unit_dir: []const u8) !void {
     const decided = try plan(session.allocator, unit);
     switch (decided.action) {
@@ -809,7 +914,7 @@ fn execute(session: Session, unit: *Unit, index: usize, total: usize, unit_dir: 
         else => {},
     }
     if (session.verbose) {
-        try writeOut(session.io, try std.fmt.allocPrint(session.allocator, "[{d}/{d}] {s}\n", .{ index + 1, total, unit.label }));
+        try emit(session, try std.fmt.allocPrint(session.allocator, "[{d}/{d}] {s}\n", .{ index + 1, total, unit.label }));
     }
     const written = try write(session.allocator, session.io, unit, unit_dir);
     const project = unit.members.items.len > 1 or moduleLine(written.entry_source) != null;
@@ -825,9 +930,7 @@ fn execute(session: Session, unit: *Unit, index: usize, total: usize, unit_dir: 
     };
     unit.command = invocation.argv;
     if (session.verbose and invocation.stderr.len > 0) {
-        try writeOut(session.io, "  ! ");
-        try writeOut(session.io, try std.fmt.allocPrint(session.allocator, "{s}", .{std.mem.trim(u8, invocation.stderr, " \t\r\n")}));
-        try writeOut(session.io, "\n");
+        try emit(session, try std.fmt.allocPrint(session.allocator, "  ! {s}\n", .{std.mem.trim(u8, invocation.stderr, " \t\r\n")}));
     }
     try record(session.allocator, unit, decided, invocation, written.has_main);
 }
@@ -1138,6 +1241,25 @@ fn executableBlocks(allocator: std.mem.Allocator, found: []const Fence) ![]const
 
 const testing = std.testing;
 
+/// Eight independent skip units — more units than the pool width the concurrency
+/// test bounds itself to, so at least one worker has to take several of them.
+const pool_document =
+    "```mylang\n# doc: skip reason-1\ndef main() -> int:\n    return 0\n```\n" ++
+    "```mylang\n# doc: skip reason-2\ndef main() -> int:\n    return 0\n```\n" ++
+    "```mylang\n# doc: skip reason-3\ndef main() -> int:\n    return 0\n```\n" ++
+    "```mylang\n# doc: skip reason-4\ndef main() -> int:\n    return 0\n```\n" ++
+    "```mylang\n# doc: skip reason-5\ndef main() -> int:\n    return 0\n```\n" ++
+    "```mylang\n# doc: skip reason-6\ndef main() -> int:\n    return 0\n```\n" ++
+    "```mylang\n# doc: skip reason-7\ndef main() -> int:\n    return 0\n```\n" ++
+    "```mylang\n# doc: skip reason-8\ndef main() -> int:\n    return 0\n```\n";
+
+/// The summary those eight units must render, whatever order they finish in.
+const pool_report =
+    "  docs/pool.md: 0 run, 0 checked, 8 skipped, 0 mis-tagged, 0 failed\n" ++
+    "      skip: reason-1\n      skip: reason-2\n      skip: reason-3\n      skip: reason-4\n" ++
+    "      skip: reason-5\n      skip: reason-6\n      skip: reason-7\n      skip: reason-8\n" ++
+    "Doc examples: 1 files scanned, 8 blocks found, 0 run, 0 checked, 8 skipped, 0 mis-tagged, 0 failed\n";
+
 // spec: DOCTEST-1
 test "doctest a fence carries its info tag, flags and directives and strips them from the source" {
     const text =
@@ -1273,4 +1395,57 @@ test "doctest a run fails on an error diagnostic but tolerates a warning" {
     try testing.expect(try diagnosedError(a, err));
     try testing.expect(!(try diagnosedError(a, warn)));
     try testing.expect(!(try diagnosedError(a, "")));
+}
+
+// spec: DOCTEST-2
+test "doctest a bounded worker pool reports every unit exactly once in document order" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    const found = try fences(allocator, "docs/pool.md", pool_document);
+    const units = try group(allocator, try executableBlocks(allocator, found));
+    try testing.expectEqual(@as(usize, 8), units.len);
+    var output: std.Io.Mutex = .init;
+    const session: Session = .{
+        .allocator = allocator,
+        .io = testing.io,
+        .verbose = false,
+        .compiler = "",
+        .fixtures = "",
+        .output = &output,
+    };
+    // Two workers for eight units, so the shared cursor, not the loop index,
+    // decides who runs what; the report still has to come out in unit order.
+    try runUnits(session, units, "workspace", 2);
+    var counts: std.StringHashMapUnmanaged(usize) = .empty;
+    try counts.put(allocator, "docs/pool.md", found.len);
+    var table: std.StringHashMapUnmanaged(Counts) = .empty;
+    try tabulate(allocator, units, &.{}, counts, &table);
+    var out: std.ArrayList(u8) = .empty;
+    const totals = try report(allocator, &out, &table, units, &.{});
+    try testing.expectEqual(@as(usize, 8), totals.skipped);
+    try testing.expectEqual(@as(usize, 0), totals.failed);
+    try testing.expectEqualStrings(pool_report, out.items);
+}
+
+// spec-case: DOCTEST-2
+test "doctest the pool width follows --jobs, then MYLANG_JOBS, then the machine" {
+    try testing.expectEqual(@as(?usize, 4), (try parseOptions(&.{ "--jobs", "4" })).jobs);
+    try testing.expectEqual(@as(?usize, 4), (try parseOptions(&.{"--jobs=4"})).jobs);
+    try testing.expectEqual(@as(?usize, null), (try parseOptions(&.{})).jobs);
+    try testing.expectError(error.Usage, parseOptions(&.{"--jobs=0"}));
+    try testing.expectError(error.Usage, parseOptions(&.{"--jobs=all"}));
+    try testing.expectError(error.Usage, parseOptions(&.{"--jobs"}));
+    var environ: std.process.Environ.Map = .init(testing.allocator);
+    defer environ.deinit();
+    try testing.expectEqual(@as(?usize, null), try resolveJobs(null, &environ));
+    try environ.put(budget.jobs_variable, "3");
+    try testing.expectEqual(@as(?usize, 3), try resolveJobs(null, &environ));
+    try testing.expectEqual(@as(?usize, 5), try resolveJobs(5, &environ));
+    try environ.put(budget.jobs_variable, "none");
+    try testing.expectError(error.InvalidMemoryLimit, resolveJobs(null, &environ));
+    // A width is never zero and never exceeds the units there are to run.
+    try testing.expectEqual(@as(usize, 2), width(testing.io, 2, 8));
+    try testing.expectEqual(@as(usize, 8), width(testing.io, 99, 8));
+    try testing.expect(width(testing.io, null, 168) >= 1);
 }
