@@ -1,5 +1,12 @@
 # Phase 3 decisions: the two Wave 5 items gated on loop evidence
 
+> **Phase 4 update.** Both items below are now implemented as opt-in experiments:
+> the D3 marker behind `--mutation-markers` (`docs/audits/phase4-markers-notes.md`)
+> and signature-pure outcome replay behind `mylang test --pure-skip`
+> (`docs/audits/phase4-pure-notes.md`). The analysis below is retained as the
+> reason each stays opt-in until the velocity loop has data; the decisions
+> themselves are still the loop's to make.
+
 This note records why the last two Wave 5 items are not implemented in this
 phase, what the current state is, and the experiment that would settle each.
 Both are decisions the plan itself defers until the velocity loop has data.
