@@ -1,0 +1,14 @@
+module python_syntax___record_is_the_canonical_declaration_head_wit_2
+
+class LegacyPoint:
+    x: int
+    y: int
+
+
+def main() -> int:
+    point = LegacyPoint(x=20, y=22)
+    return point.x + point.y
+
+# spec-case: PY-RECORD-1
+public def test_record_is_the_canonical_declaration_head_wit_2() -> bool:
+    return main() == 42

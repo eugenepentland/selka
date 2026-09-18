@@ -1,0 +1,17 @@
+module python_syntax___match_merges_definite_assignment_across_cont
+
+enum Choice:
+    first,
+    second
+
+def main() -> int:
+    match Choice.first:
+        case Choice.first:
+            answer = 42
+        case Choice.second:
+            answer = 0
+    return answer
+
+# spec: PY-SCOPE-3
+public def test_match_merges_definite_assignment_across_cont_1() -> bool:
+    return main() == 42

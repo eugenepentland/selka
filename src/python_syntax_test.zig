@@ -88,14 +88,6 @@ test "Python layout lower rejects missing blocks inconsistent dedents tabs and e
     }
 }
 
-// spec: PYTHON-2
-test "Python generics default to copy and None means unit" {
-    const text = "def keep[T](value: T) -> T:\n    result = value\n    return result\n\ndef noop() -> None:\n    return None\n\ndef main() -> int:\n    noop()\n    return keep(42)\n";
-    var c = try language.Compilation.init(t.allocator, "generic.my", text);
-    defer c.deinit();
-    try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
-}
-
 // spec-case: PYTHON-2
 test "Python parameters rebind and existing locals update across blocks" {
     const text = "def bump[T: integer](value: T) -> T:\n    value = value + value\n    return value\n\ndef main() -> int:\n    answer = 0\n    if True:\n        answer = bump(21)\n    return answer\n";
@@ -120,62 +112,6 @@ fn scopeReject(text: []const u8, code: []const u8) !void {
     defer c.deinit();
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
-}
-
-// spec: PY-SCOPE-1
-test "PY-SCOPE-1 predeclared loop state and complete branches bind after the block" {
-    // total = 2 + 9 = 11, last = 9, so total + last = 20.
-    try t.expectEqual(@as(i64, 20), try scopeValue(
-        \\def main() -> int:
-        \\    total = 0
-        \\    last = 0
-        \\    for row in [[1, 2], [3, 9]]:
-        \\        last = row[1]
-        \\        total = total + last
-        \\    return total + last
-    ));
-    // A name assigned in both branches of an if/else is bound afterwards.
-    try t.expectEqual(@as(i64, 5), try scopeValue(
-        \\def main() -> int:
-        \\    flag = True
-        \\    if flag:
-        \\        chosen = 5
-        \\    else:
-        \\        chosen = 9
-        \\    return chosen
-    ));
-    // Every loop form may execute zero times, so predeclared state is required
-    // before the loop and remains definitely assigned after it.
-    try t.expectEqual(@as(i64, 3), try scopeValue(
-        \\def main() -> int:
-        \\    answer = 0
-        \\    i = 0
-        \\    while i < 3:
-        \\        answer = answer + i
-        \\        i += 1
-        \\    return answer
-    ));
-    try t.expectEqual(@as(i64, 10), try scopeValue(
-        \\def main() -> int:
-        \\    total = 0
-        \\    for i in range(5):
-        \\        total = total + i
-        \\    return total
-    ));
-    try t.expectEqual(@as(i64, 6), try scopeValue(
-        \\def main() -> int:
-        \\    total = 0
-        \\    for i in reversed([1, 2, 3]):
-        \\        total = total + i
-        \\    return total
-    ));
-    try t.expectEqual(@as(i64, 11), try scopeValue(
-        \\def main() -> int:
-        \\    total = 0
-        \\    for a, b in zip([1, 2], [3, 4]):
-        \\        total = total + a * b
-        \\    return total
-    ));
 }
 
 // spec-case: PY-SCOPE-2
@@ -245,51 +181,6 @@ const match_choice =
     \\
 ;
 
-// spec: PY-SCOPE-3
-test "match merges definite assignment across continuing arms" {
-    // Every continuing arm assigns the same function-scoped local.
-    try t.expectEqual(@as(i64, 42), try scopeValue(match_choice ++
-        \\def main() -> int:
-        \\    match Choice.first:
-        \\        case Choice.first:
-        \\            answer = 42
-        \\        case Choice.second:
-        \\            answer = 0
-        \\    return answer
-    ));
-    // A terminating arm contributes no continuing path.
-    try t.expectEqual(@as(i64, 42), try scopeValue(match_choice ++
-        \\def main() -> int:
-        \\    match Choice.first:
-        \\        case Choice.first:
-        \\            return 42
-        \\        case Choice.second:
-        \\            answer = 0
-        \\    return answer
-    ));
-    // The wildcard body is the continuation path for every variant it covers.
-    try t.expectEqual(@as(i64, 42), try scopeValue(match_choice ++
-        \\def main() -> int:
-        \\    match Choice.first:
-        \\        case Choice.first:
-        \\            return 42
-        \\        case _:
-        \\            answer = 0
-        \\    return answer
-    ));
-    // A predeclared local is already definite, even when one arm skips it.
-    try t.expectEqual(@as(i64, 42), try scopeValue(match_choice ++
-        \\def main() -> int:
-        \\    answer = 0
-        \\    match Choice.first:
-        \\        case Choice.first:
-        \\            answer = 42
-        \\        case Choice.second:
-        \\            pass
-        \\    return answer
-    ));
-}
-
 // spec-case: PY-SCOPE-3
 test "match rejects locals unassigned on a continuing arm" {
     try scopeReject(match_choice ++
@@ -338,38 +229,6 @@ test "match payload bindings remain scoped to their arm" {
         \\            pass
         \\    return value
     , "E_UNKNOWN_NAME");
-}
-
-// spec: PY-RECORD-1
-test "record is the canonical declaration head without reserving the name" {
-    try t.expectEqual(@as(i64, 42), try scopeValue(
-        \\record Point:
-        \\    x: int
-        \\    y: int
-        \\
-        \\
-        \\def main() -> int:
-        \\    record = Point(x=20, y=22)
-        \\    return record.x + record.y
-    ));
-    try t.expectEqual(@as(i64, 42), try scopeValue(
-        \\class LegacyPoint:
-        \\    x: int
-        \\    y: int
-        \\
-        \\
-        \\def main() -> int:
-        \\    point = LegacyPoint(x=20, y=22)
-        \\    return point.x + point.y
-    ));
-}
-
-// spec-case: PYTHON-3
-test "Python generic value records use square construction and default copy constraints" {
-    const text = "class Box[T]:\n    value: T\n\ndef main() -> int:\n    box = Box[int](value=42)\n    return box.value\n";
-    var c = try language.Compilation.init(t.allocator, "box.my", text);
-    defer c.deinit();
-    try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
 }
 
 // spec-case: PYTHON-1

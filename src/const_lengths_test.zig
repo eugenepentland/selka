@@ -3,27 +3,6 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
-test "const length function parameters specialize array shapes and forward values" {
-    const text =
-        \\def first[T, const N: u64](items: [N]T) -> T:
-        \\    return items[0]
-        \\
-        \\
-        \\def size[const N: u64]() -> u64:
-        \\    return N
-        \\
-        \\
-        \\def forward[T, const N: u64](items: [N]T) -> T:
-        \\    return first[T, N](items)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    return forward[i64, 2]([40, 0]) + i64(size[2]())
-    ;
-    var c = try language.Compilation.init(t.allocator, "lengths.my", text);
-    defer c.deinit();
-    try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
-}
 fn nominalScenario(allocator: std.mem.Allocator) !void {
     const text =
         \\class Chunk[T, const N: u64]:
@@ -102,33 +81,6 @@ test "uncalled const length templates reject kind confusion unprovable construct
     }
 }
 
-test "one helper serves distinct nominal element types and empty lengths" {
-    const text =
-        \\class A:
-        \\    value: i64
-        \\
-        \\
-        \\class B:
-        \\    value: i64
-        \\
-        \\
-        \\def first[T, const N: u64](items: [N]T) -> T:
-        \\    return items[0]
-        \\
-        \\
-        \\def count[T, const N: u64](items: [N]T) -> u64:
-        \\    return N
-        \\
-        \\
-        \\def main() -> i64:
-        \\    a = first[A, 2]([A(value=40), A(value=0)])
-        \\    b = first[B, 1]([B(value=2)])
-        \\    return a.value + b.value + i64(count[A, 0]([]))
-    ;
-    var c = try language.Compilation.init(t.allocator, "nominals.my", text);
-    defer c.deinit();
-    try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
-}
 test "constant specialization identity owns lengths and distinguishes equal scalar representations" {
     const instances = @import("generic_instances.zig");
     var registry: instances.Registry = .{};

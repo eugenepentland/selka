@@ -1,0 +1,13 @@
+module python_syntax___py_scope_1_predeclared_loop_state_and_comple_2
+
+def main() -> int:
+    flag = True
+    if flag:
+        chosen = 5
+    else:
+        chosen = 9
+    return chosen
+
+# spec-case: PY-SCOPE-1
+public def test_py_scope_1_predeclared_loop_state_and_comple_2() -> bool:
+    return main() == 5

@@ -1,0 +1,16 @@
+module python_syntax___python_generics_default_to_copy_and_none_mea
+
+def keep[T](value: T) -> T:
+    result = value
+    return result
+
+def noop() -> None:
+    return None
+
+def main() -> int:
+    noop()
+    return keep(42)
+
+# spec: PYTHON-2
+public def test_python_generics_default_to_copy_and_none_mea() -> bool:
+    return main() == 42

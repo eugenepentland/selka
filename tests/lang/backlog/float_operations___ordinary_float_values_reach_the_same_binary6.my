@@ -1,0 +1,17 @@
+module float_operations___ordinary_float_values_reach_the_same_binary6
+
+def main() -> int:
+    if 0.1 + 0.2 == 0.3:
+        return 1
+    if 1.0 / 0.0 <= 1.7976931348623157e308:
+        return 2
+    nan = 0.0 / 0.0
+    if nan == nan:
+        return 3
+    if 0.0 - 0.0 != 0.0:
+        return 4
+    return int(21.0 * 2.0)
+
+# spec-case: FLOAT-DOMAIN-1
+public def test_ordinary_float_values_reach_the_same_binary6() -> bool:
+    return main() == 42

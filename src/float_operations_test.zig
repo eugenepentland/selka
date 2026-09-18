@@ -45,23 +45,6 @@ test "float intrinsics evaluate at runtime and reject raw operands" {
     try intrinsicScenario(t.allocator);
 }
 
-// spec-case: FLOAT-DOMAIN-1
-test "ordinary float values reach the same binary64 semantics without a nominal domain" {
-    var c = try language.Compilation.init(t.allocator, "float.my", "def main() -> int:\n" ++
-        "    if 0.1 + 0.2 == 0.3:\n" ++
-        "        return 1\n" ++
-        "    if 1.0 / 0.0 <= 1.7976931348623157e308:\n" ++
-        "        return 2\n" ++
-        "    nan = 0.0 / 0.0\n" ++
-        "    if nan == nan:\n" ++
-        "        return 3\n" ++
-        "    if 0.0 - 0.0 != 0.0:\n" ++
-        "        return 4\n" ++
-        "    return int(21.0 * 2.0)\n");
-    defer c.deinit();
-    try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
-}
-
 // spec: FLOAT-INTRINSIC-FLOAT-1
 test "a float-in float-out intrinsic takes a float operand and answers a float" {
     var c = try language.Compilation.init(t.allocator, "float.my",

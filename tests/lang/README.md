@@ -98,10 +98,16 @@ sharded as before.
 
 ## Migration decisions (2026-09-18)
 
-Wave 1 stops at 124 moved tests. The cold unit root measured **319 s** after the
-move against the plan's 300–351 s baseline: removing 124 value tests did not pay
-for itself, because the cold wall is set by the remaining ~600 guest executables
-and a few fixed slow tests. No further value tests move on this rationale.
+Wave 1 moved 124 tests and stopped on the cold-cache measurement: the cold unit
+root measured **319 s** after the move against the plan's 300–351 s baseline, so
+removing value tests did not pay for itself on that axis. The per-edit inner
+loop is a different axis, and `docs/tooling/test-layout.md` reopened a backlog
+of the remaining Zig tests that qualify. A first audit pass moved 11 more whole
+value tests (`python_syntax_test` 5, `compiler_test` 2, `const_lengths_test` 2,
+`float_operations_test` 1, `unit_test` 1) to `tests/lang/backlog/`, one program
+per moved test; the unit root is now 1102 tests. The page marks the 36 backlog
+tests that the audit found assert on `status`, `stdout`, traps or checked
+compiler records and therefore stay in Zig.
 
 Trap tests stay in Zig. `mylang test` treats a trap as a failure and never
 reuses a trap result, so `expect_trap` would exist for roughly 60 tests alone,

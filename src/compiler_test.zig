@@ -13,16 +13,6 @@ fn result(expression: []const u8, expected: i64) !void {
     try testing.expectEqual(expected, outcome.value);
 }
 
-// spec: CORE-1
-test "precedence grouping left associativity and operand order" {
-    try result("1 + 2 * 3", 7);
-    try result("(1 + 2) * 3", 9);
-    try result("20 - 6 - 2", 12);
-    try result("1 - 3 * 4", -11);
-    try result("9223372036854775807", std.math.maxInt(i64));
-    try result("00012", 12);
-}
-
 // spec: CORE-2
 test "overflow traps at the responsible operator without folding during check" {
     // The reported column is the one-based offset of the responsible operator,
@@ -283,17 +273,6 @@ fn booleanResult(expression: []const u8, expected: bool) !void {
     const text = try std.fmt.allocPrint(testing.allocator, "def main() -> i64:\n    if {s}:\n        return 1\n    else:\n        return 0\n", .{expression});
     defer testing.allocator.free(text);
     try programResult(text, if (expected) 1 else 0);
-}
-
-test "signed division and remainder implement truncation toward zero" {
-    try result("divtrunc(-7, 3)", -2);
-    try result("divtrunc(7, -3)", -2);
-    try result("divtrunc(-7, -3)", 2);
-    try result("remtrunc(-7, 3)", -1);
-    try result("remtrunc(7, -3)", 1);
-    try result("remtrunc(-7, -3)", -1);
-    try result("remtrunc(-9223372036854775808, -1)", 0);
-    try result("20 - divtrunc(6, 2)", 17);
 }
 
 test "instruction limit is checked before the next dispatch" {

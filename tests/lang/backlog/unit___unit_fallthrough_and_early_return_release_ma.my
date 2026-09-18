@@ -1,0 +1,34 @@
+module unit___unit_fallthrough_and_early_return_release_ma
+
+result A:
+    ok: list[i64],
+    err: i64
+
+
+def consume(values: list[i64], early: bool):
+    _ = len(values)
+    if early:
+        return
+
+
+def produce() -> A:
+    values: list[i64] = []
+    values.append(1)
+    values.append(2)
+    return Ok(values)
+
+
+def main() -> i64:
+    i = 0
+    while i < 2:
+        match produce():
+            case A.ok(values):
+                consume(values, i == 0)
+            case A.err(code):
+                return code
+        i += 1
+    return 42
+
+# spec: UNIT-4
+public def test_unit_fallthrough_and_early_return_release_ma() -> bool:
+    return main() == 42

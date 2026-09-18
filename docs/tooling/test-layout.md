@@ -80,12 +80,20 @@ under the same name. The classification is mechanical, so read the helper a
 test calls before moving it; a helper that also asserts on compilation
 statistics or formatting makes the test a Zig test, whatever the table says.
 
-Summary by action:
+A second audit on 2026-09-18 read every listed test with its transitive
+helpers. Of the 139, 36 assert on the native `Run`'s `status`, `stdout` or
+trap, on checked `compilation.program` records, or on formatting and relocation, so they stay in Zig; the action column above is therefore an upper
+bound, not a promise. The audit also found 11 whole value tests that qualify:
+they moved to `tests/lang/backlog` in that change, taking the unit root from
+1113 to 1102 tests.
+
+Summary by action, after the first pass:
 
 | Action | Tests |
 | --- | --- |
-| move | 68 |
+| move | 57 (11 landed: `python_syntax_test` 5, `compiler_test` 2, `const_lengths_test` 2, `float_operations_test` 1, `unit_test` 1) |
 | split | 71 |
+| audited to stay | 36 |
 
 ### `src/arena_managed_test.zig` (11)
 

@@ -1,0 +1,26 @@
+module const_lengths___one_helper_serves_distinct_nominal_element_t
+
+class A:
+    value: i64
+
+
+class B:
+    value: i64
+
+
+def first[T, const N: u64](items: [N]T) -> T:
+    return items[0]
+
+
+def count[T, const N: u64](items: [N]T) -> u64:
+    _ = items
+    return N
+
+
+def main() -> i64:
+    a = first[A, 2]([A(value=40), A(value=0)])
+    b = first[B, 1]([B(value=2)])
+    return a.value + b.value + i64(count[A, 0]([]))
+
+public def test_one_helper_serves_distinct_nominal_element_t() -> bool:
+    return main() == 42

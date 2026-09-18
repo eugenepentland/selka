@@ -1,0 +1,11 @@
+module python_syntax___py_scope_1_predeclared_loop_state_and_comple_5
+
+def main() -> int:
+    total = 0
+    for i in reversed([1, 2, 3]):
+        total = total + i
+    return total
+
+# spec-case: PY-SCOPE-1
+public def test_py_scope_1_predeclared_loop_state_and_comple_5() -> bool:
+    return main() == 6

@@ -1,0 +1,8 @@
+module compiler___precedence_grouping_left_associativity_and_o_3
+
+# spec-case: CORE-1
+public def test_precedence_grouping_left_associativity_and_o_3() -> bool:
+    return 20 - 6 - 2 == 12
+
+def main() -> int:
+    return 0
