@@ -7,4 +7,5 @@ pub const Interface = struct {
     /// Emit per-instruction step-budget accounting with its position markers. A
     /// build that can never be given a runtime step ceiling turns this off.
     step_checks: bool = true,
+    frame_checks: bool = true,
 };

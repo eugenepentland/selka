@@ -108,6 +108,7 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
         .arenas = arenas,
         .selected = selected,
         .step_checks = interface.step_checks,
+        .frame_checks = interface.frame_checks,
         .pure = &.{},
     };
     try emitPass(pass);
@@ -410,6 +411,7 @@ const frame_callees = [_][]const u8{
     "myl_qbe_root_restore",
     "myl_qbe_heap",
     "myl_qbe_require_step_accounting",
+    "myl_qbe_require_frame_accounting",
     "myl_qbe_frame_release",
 };
 
@@ -433,6 +435,8 @@ const EmitPass = struct {
     arenas: bool,
     selected: ?[]const bool,
     step_checks: bool,
+    /// Whether generated code enforces the `--max-frames` ceiling itself.
+    frame_checks: bool,
     pure: []const bool,
 };
 
@@ -451,6 +455,7 @@ fn emitPass(pass: EmitPass) GenerateError!void {
             .scratch = .init(pass.allocator),
             .arenas = pass.arenas,
             .step_checks = pass.step_checks,
+            .frame_checks = pass.frame_checks,
             .entry = index == @backingInt(pass.program.main),
             .pure = pass.pure,
         };
@@ -627,6 +632,10 @@ const Emitter = struct {
     /// Emit the per-instruction position marker and step-budget check. A build
     /// that cannot be given a runtime ceiling drops both (see `QBE-STEP-ACCOUNTING-1`).
     step_checks: bool = true,
+    /// Emit the per-call depth ceiling and its counter. A build that was not given
+    /// a frame ceiling omits both and refuses one at run time instead, exactly as
+    /// instruction-budget accounting does.
+    frame_checks: bool = true,
     /// True for the function the runtime calls first, the only place the
     /// missing-accounting guard has to run.
     entry: bool = false,
@@ -738,7 +747,7 @@ const Emitter = struct {
         try self.enterFrame(name);
         // A build without instruction-budget accounting cannot honor a runtime
         // step ceiling; refuse it once, before any guest instruction runs.
-        if (!self.step_checks and self.entry) try self.print(" call $myl_qbe_require_step_accounting(l %ctx)\n", .{});
+        if (self.entry) try self.requireAccounting();
         try arena_lower.Lower(Emitter).mark(self);
         if (self.heap_frame) {
             try self.print(" %frame_memory =l call $myl_qbe_frame_allocate(l %ctx, l {d})\n", .{frame_bytes});
@@ -840,7 +849,7 @@ const Emitter = struct {
         const function_slot = self.temp();
         const position_slot = self.temp();
         const next = self.temp();
-        try self.print(
+        if (self.frame_checks) try self.print(
             " %v{d} =l add %ctx, 8\n %v{d} =l loadl %v{d}\n %v{d} =l add %ctx, 56\n %v{d} =l loadl %v{d}\n %v{d} =l ceql %v{d}, %v{d}\n" ++
                 " jnz %v{d}, @limitfail{d}, @frameadmit{d}\n@limitfail{d}\n call $myl_qbe_fail_frame(l %ctx)\n jmp @entry_failure\n@frameadmit{d}\n",
             .{ self.frame_frames, frames, self.frame_frames, limit_slot, limit, limit_slot, at_limit, frames, limit, at_limit, limit_fail, admit, limit_fail, admit },
@@ -854,22 +863,34 @@ const Emitter = struct {
             " %v{d} =l add %ctx, 48\n %v{d} =l loadl %v{d}\n storel %v{d}, %v{d}\n %v{d} =l add %v{d}, 8\n storel extern ${s}_meta, %v{d}\n",
             .{ self.frame_active, previous, self.frame_active, previous, self.record, function_slot, self.record, name, function_slot },
         );
-        try self.print(
+        if (self.frame_checks) try self.print(
             " %v{d} =l add %v{d}, 16\n storel 0, %v{d}\n storel %v{d}, %v{d}\n %v{d} =l add %v{d}, 1\n storel %v{d}, %v{d}\n",
             .{ position_slot, self.record, position_slot, self.record, self.frame_active, next, frames, next, self.frame_frames },
+        ) else try self.print(
+            " %v{d} =l add %v{d}, 16\n storel 0, %v{d}\n storel %v{d}, %v{d}\n",
+            .{ position_slot, self.record, position_slot, self.record, self.frame_active },
         );
         try self.print(" %position =l add %v{d}, 16\n", .{self.record});
         self.linked = true;
     }
     /// Unlink this function's frame record and drop the frame count.
+    /// Refuse, once at the entry point, any runtime ceiling this build omitted
+    /// accounting for, so a mismatch is reported instead of silently ignored.
+    fn requireAccounting(self: *Emitter) GenerateError!void {
+        if (!self.step_checks) try self.print(" call $myl_qbe_require_step_accounting(l %ctx)\n", .{});
+        if (!self.frame_checks) try self.print(" call $myl_qbe_require_frame_accounting(l %ctx)\n", .{});
+    }
     fn leaveFrame(self: *Emitter) GenerateError!void {
         if (!self.linked) return;
         const previous = self.temp();
         const frames = self.temp();
         const next = self.temp();
-        try self.print(
+        if (self.frame_checks) try self.print(
             " %v{d} =l loadl %v{d}\n storel %v{d}, %v{d}\n %v{d} =l loadl %v{d}\n %v{d} =l sub %v{d}, 1\n storel %v{d}, %v{d}\n",
             .{ previous, self.record, previous, self.frame_active, frames, self.frame_frames, next, frames, next, self.frame_frames },
+        ) else try self.print(
+            " %v{d} =l loadl %v{d}\n storel %v{d}, %v{d}\n",
+            .{ previous, self.record, previous, self.frame_active },
         );
     }
     fn emitInstructions(self: *Emitter) GenerateError!void {

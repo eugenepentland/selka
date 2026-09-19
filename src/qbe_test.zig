@@ -193,7 +193,7 @@ test "a build with no requested ceiling emits no step check but keeps the positi
         \\    return total
     );
     defer c.deinit();
-    const manifest = try c.emitQbeWithOptions(a, false, false);
+    const manifest = try c.emitQbeWithOptions(a, false, false, true);
     defer a.free(manifest);
     var parsed = try std.json.parseFromSlice(Manifest, a, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer parsed.deinit();
@@ -205,6 +205,44 @@ test "a build with no requested ceiling emits no step check but keeps the positi
     try std.testing.expect(std.mem.indexOf(u8, il, "%position") != null);
     // The runtime has to refuse a ceiling this build cannot honor, exactly once.
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, il, "myl_qbe_require_step_accounting"));
+}
+// spec: QBE-FRAME-ACCOUNTING-1
+test "a build without a frame ceiling omits depth accounting and refuses one at run time" {
+    const a = std.testing.allocator;
+    const source =
+        \\def helper(x: i64) -> i64:
+        \\    return x + 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return helper(41)
+    ;
+    var without = try language.Compilation.init(a, "qbe.my", source);
+    defer without.deinit();
+    const bare = try without.emitQbeWithOptions(a, false, true, false);
+    defer a.free(bare);
+    var parsed = try std.json.parseFromSlice(Manifest, a, bare, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+    defer parsed.deinit();
+    const body = named(parsed.value, "helper").?.il;
+    // No depth counter and no ceiling test: the bound that remains is the
+    // execution-stack floor, which is not a budget.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "%ctx, 56"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "%ctx, 8"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body, "myl_qbe_fail_frame"));
+    // The record itself stays: a trap trace is built from it.
+    try std.testing.expect(std.mem.indexOf(u8, body, "%position") != null);
+    const entry = named(parsed.value, "main").?.il;
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, entry, "myl_qbe_require_frame_accounting"));
+
+    var with = try language.Compilation.init(a, "qbe.my", source);
+    defer with.deinit();
+    const accounted = try with.emitQbeWithOptions(a, false, true, true);
+    defer a.free(accounted);
+    var full = try std.json.parseFromSlice(Manifest, a, accounted, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+    defer full.deinit();
+    const guarded = named(full.value, "helper").?.il;
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, guarded, "%ctx, 56"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, named(full.value, "main").?.il, "myl_qbe_require_frame_accounting"));
 }
 // spec: QBE-PROLOGUE-1
 test "generated code tests traps directly and omits root machinery it never uses" {
@@ -287,7 +325,7 @@ test "a build without a ceiling stores a position only where a diagnostic reads 
         \\    return 7
     );
     defer plain.deinit();
-    const elided = try plain.emitQbeWithOptions(a, false, false);
+    const elided = try plain.emitQbeWithOptions(a, false, false, true);
     defer a.free(elided);
     var parsed = try std.json.parseFromSlice(Manifest, a, elided, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer parsed.deinit();
@@ -304,7 +342,7 @@ test "a build without a ceiling stores a position only where a diagnostic reads 
         \\    return 0
     );
     defer calls.deinit();
-    const observable = try calls.emitQbeWithOptions(a, false, false);
+    const observable = try calls.emitQbeWithOptions(a, false, false, true);
     defer a.free(observable);
     var kept = try std.json.parseFromSlice(Manifest, a, observable, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer kept.deinit();
@@ -319,7 +357,7 @@ test "a requested ceiling keeps the exact per-instruction step check" {
         \\    return 7
     );
     defer c.deinit();
-    const manifest = try c.emitQbeWithOptions(a, false, true);
+    const manifest = try c.emitQbeWithOptions(a, false, true, true);
     defer a.free(manifest);
     try std.testing.expect(std.mem.indexOf(u8, manifest, "@step_limit") != null);
     try std.testing.expect(std.mem.indexOf(u8, manifest, "%maxsteps") != null);

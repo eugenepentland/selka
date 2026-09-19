@@ -208,7 +208,7 @@ test "DEBUG-LINE-1 a ReleaseFast build drops debug nodes in lowering" {
     const source = "def main() -> int:\n    debug(\"trace\")\n    return 0\n";
     var dropped = try language.Compilation.init(t.allocator, module, source);
     defer dropped.deinit();
-    const dropped_manifest = try dropped.emitQbeWithOptions(t.allocator, true, true);
+    const dropped_manifest = try dropped.emitQbeWithOptions(t.allocator, true, true, true);
     defer t.allocator.free(dropped_manifest);
     try t.expect(std.mem.indexOf(u8, dropped_manifest, "myl_qbe_eprint_begin") == null);
     try t.expect(std.mem.indexOf(u8, dropped_manifest, "native_print.h") == null);

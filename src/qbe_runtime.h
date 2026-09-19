@@ -133,6 +133,8 @@ void myl_qbe_step_at(void *context, uint64_t position);
 /* Generated entry code calls this when its build omitted step accounting, so a
  * runtime step ceiling fails loudly instead of being silently ignored. */
 void myl_qbe_require_step_accounting(void *context);
+/// Refuse a runtime frame ceiling this build omitted accounting for.
+void myl_qbe_require_frame_accounting(void *context);
 void *myl_qbe_root_mark(void *context);
 void myl_qbe_root_restore(void *context, void *mark);
 /* Build a managed list[str] from the guest arguments the runtime filtered.

@@ -43,6 +43,7 @@ static const char *describe(const char *code) {
     if (!strcmp(code, memory_budget_code)) return "memory budget exhausted";
     if (!strcmp(code, "R_STEP_LIMIT")) return "instruction budget exhausted; raise it with --max-steps=N";
     if (!strcmp(code, "R_NO_STEP_ACCOUNTING")) return "this build omits instruction-budget accounting";
+    if (!strcmp(code, "R_NO_FRAME_ACCOUNTING")) return "this build omits call-depth accounting";
     if (!strcmp(code, "R_FRAME_LIMIT")) return "call-depth budget exhausted; raise it with --max-frames=N";
     return strncmp(code, "R_", 2) ? "QBE runtime failure" : "native execution failed";
 }
@@ -569,6 +570,14 @@ void myl_qbe_require_step_accounting(void *context) {
     Context *ctx = context;
     if (ctx->max_steps == MYL_QBE_UNBOUNDED) return;
     fail_detail(ctx, "R_NO_STEP_ACCOUNTING", "run it under `mylang run --max-steps=N`, or rebuild it with --mode Debug", 0, 0, 0, 0, 0, 0);
+}
+/* A build that omitted call-depth accounting cannot honor a runtime frame
+   ceiling. The generated entry point calls this once, before any guest
+   instruction runs, so the mismatch is reported instead of silently ignored. */
+void myl_qbe_require_frame_accounting(void *context) {
+    Context *ctx = context;
+    if (ctx->frame_limit == MYL_QBE_UNBOUNDED) return;
+    fail_detail(ctx, "R_NO_FRAME_ACCOUNTING", "run it under `mylang run --max-frames=N`, or rebuild it with --mode Debug", 0, 0, 0, 0, 0, 0);
 }
 void myl_qbe_enter_at_sized(void *context, const MylQbeFunction *function, uint64_t bytes) {
     Context *ctx=context;
