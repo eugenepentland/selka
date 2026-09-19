@@ -22,6 +22,11 @@ int myl_qbe_bytes_decode(void *context, myl_native_bytes *input, void **output) 
     myl_native_text *text = myl_native_bytes_decode(myl_qbe_heap(context), input, &status);
     return settle(context, text, status, 0, output);
 }
+int myl_qbe_bytes_decode_range(void *context, myl_native_bytes *input, int64_t start, int64_t end, void **output) {
+    int status = MYL_BYTES_OK;
+    myl_native_text *text = myl_native_bytes_decode_range(myl_qbe_heap(context), input, start, end, &status);
+    return settle(context, text, status, 0, output);
+}
 int myl_qbe_bytes_from_hex(void *context, myl_native_text *input, void **output) {
     int status = MYL_BYTES_OK;
     myl_native_bytes *value = myl_native_bytes_from_hex(myl_qbe_heap(context), input, &status);

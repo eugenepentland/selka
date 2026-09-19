@@ -29,9 +29,18 @@ int myl_native_text_valid_utf8(const unsigned char *bytes, size_t length) {
 }
 /* One scalar per byte for the ASCII range, which is the whole of most source
    text: check for a high bit and widen in two flat passes instead of running
-   the branchy UTF-8 decoder twice (once to count, once to fill). */
+   the branchy UTF-8 decoder twice (once to count, once to fill). The high-bit
+   scan goes a word at a time — it is the only part of an ASCII conversion that
+   touches every input byte, and the byte loop it replaces measured as the bulk
+   of `myl_native_text_from_utf8_checked` on the census. */
 static int ascii(const unsigned char *bytes, size_t length) {
-    for (size_t i=0; i<length; ++i) if (bytes[i]&0x80u) return 0;
+    size_t i=0;
+    for (; i+sizeof(uint64_t)<=length; i+=sizeof(uint64_t)) {
+        uint64_t word;
+        memcpy(&word,bytes+i,sizeof word);
+        if (word&UINT64_C(0x8080808080808080)) return 0;
+    }
+    for (; i<length; ++i) if (bytes[i]&0x80u) return 0;
     return 1;
 }
 /* One validating pass that both checks and fills. ASCII (the whole of most

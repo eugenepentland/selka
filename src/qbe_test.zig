@@ -378,6 +378,45 @@ test "a build without a ceiling stores a position only where a diagnostic reads 
     try std.testing.expect(std.mem.count(u8, named(kept.value, "main").?.il, "%position") > 0);
     try std.testing.expect(std.mem.count(u8, named(kept.value, "helper").?.il, "%position") > 0);
 }
+// spec: QBE-DECODE-RANGE-1
+test "a slice decoded in place lowers to one range decoder" {
+    var fused = try emitted(std.testing.allocator,
+        \\def lexeme(src: bytes, start: i64, end: i64) -> str:
+        \\    match src[start:end].decode():
+        \\        case Ok(text):
+        \\            return text
+        \\        case Err(_):
+        \\            return ""
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return len(lexeme(b"abc", 0, 2))
+    );
+    defer fused.deinit();
+    const body = named(fused.value, "lexeme").?.il;
+    try std.testing.expect(std.mem.indexOf(u8, body, "myl_qbe_bytes_decode_range") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_bytes_slice"));
+    // A temporary read anywhere else keeps the slice: the second reader would
+    // otherwise observe a byte string the fused form never builds.
+    var kept = try emitted(std.testing.allocator,
+        \\def late(src: bytes, start: i64, end: i64) -> str:
+        \\    part = src[start:end]
+        \\    if len(part) == 0:
+        \\        return ""
+        \\    match part.decode():
+        \\        case Ok(text):
+        \\            return text
+        \\        case Err(_):
+        \\            return ""
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return len(late(b"abc", 0, 2))
+    );
+    defer kept.deinit();
+    try std.testing.expect(std.mem.count(u8, named(kept.value, "late").?.il, "myl_native_bytes_slice") != 0);
+    try std.testing.expect(std.mem.indexOf(u8, named(kept.value, "late").?.il, "myl_qbe_bytes_decode_range") == null);
+}
 // spec: QBE-STICKY-1
 test "a body that cannot leave a sticky trap carries no test for one" {
     var parsed = try emitted(std.testing.allocator,

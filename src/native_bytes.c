@@ -201,3 +201,14 @@ myl_native_text *myl_native_bytes_decode(myl_native_heap *heap, myl_native_bytes
     *status=result ? MYL_BYTES_OK:(invalid ? MYL_BYTES_INVALID:MYL_BYTES_MEMORY);
     return result;
 }
+myl_native_text *myl_native_bytes_decode_range(myl_native_heap *heap, myl_native_bytes *input, int64_t start, int64_t end, int *status) {
+    int invalid=0;
+    size_t first=endpoint(input->length,start), last=endpoint(input->length,end);
+    size_t count=last>first ? last-first : 0;
+    myl_native_root root;
+    myl_native_root_push(heap,&root,&input,&pointer_type);
+    myl_native_text *result=myl_native_text_from_utf8_checked(heap,(const unsigned char *)input->storage+first,count,&invalid);
+    myl_native_root_pop(heap,&root);
+    *status=result ? MYL_BYTES_OK:(invalid ? MYL_BYTES_INVALID:MYL_BYTES_MEMORY);
+    return result;
+}

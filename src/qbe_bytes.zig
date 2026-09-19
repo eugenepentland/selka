@@ -100,6 +100,16 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
         .slice => {
             const start = try self.load("s", base);
             const end = try self.load("s", base + 1);
+            // `src[a:b].decode()` needs neither the intermediate byte string nor
+            // the copy into it: record the range for the decode two instructions
+            // later and leave a null byte string in the slot it would have
+            // filled, so the store that follows and any root push over it see a
+            // value the collector can trace.
+            if (self.fusibleSlice(self.pc)) |_| {
+                try self.print(" storel 0, %s{d}\n", .{base});
+                self.fuseDecode(self.pc + 2, input, start, end);
+                return;
+            }
             try self.print(" %v{d} =l call $myl_native_bytes_slice(l %heap, l %v{d}, l %v{d}, l %v{d})\n", .{ result, input, start, end });
             try self.require(result, allocation_failure);
             try self.store(base, result);
@@ -123,7 +133,9 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try self.store(base, result);
         },
         .decode => {
-            try self.print(" %v{d} =w call $myl_qbe_bytes_decode(l %ctx, l %v{d}, l %scratch)\n", .{ result, input });
+            if (self.fusedDecode(self.pc)) |fused| {
+                try self.print(" %v{d} =w call $myl_qbe_bytes_decode_range(l %ctx, l %v{d}, l %v{d}, l %v{d}, l %scratch)\n", .{ result, fused.input, fused.start, fused.end });
+            } else try self.print(" %v{d} =w call $myl_qbe_bytes_decode(l %ctx, l %v{d}, l %scratch)\n", .{ result, input });
             try self.checkFailure("failure");
             return emitPayloadResult(E, self, op.output, result, base);
         },

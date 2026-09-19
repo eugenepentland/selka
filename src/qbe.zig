@@ -438,6 +438,38 @@ fn stickyTrap(text: []const u8) bool {
     return sticky;
 }
 
+/// Whether one instruction names a local slot at all, as a value it reads or
+/// writes or as the receiver an operation is bound to. Used to prove that a
+/// temporary has no reader other than the pair a fusion replaces.
+fn mentionsLocal(op: @FieldType(bytecode.Instruction, "op"), slot: typed.LocalId) bool {
+    switch (op) {
+        .begin_arena, .end_arena, .move_local, .drop_local, .load_local, .store_local => |other| return other == slot,
+        .buffer_operation => |operation| return operation.owner == slot,
+        .resource_io => |operation| return operation.owner == slot,
+        .file_method => |method| return method.owner == slot,
+        .switch_variant => |dispatch| for (dispatch.arms) |arm| {
+            if (arm.slot) |bound| if (bound == slot) return true;
+        },
+        else => {},
+    }
+    return false;
+}
+
+/// A `bytes` slice whose only reader is the `.decode` two instructions later:
+/// the range decoder is called there instead, so the intermediate byte string
+/// is never built. Holds the receiver and endpoints as SSA references taken
+/// while the slice is lowered, because the slots they came from are overwritten
+/// by the slice's own result.
+const FusedDecode = struct {
+    /// pc of the decode that consumes the slice.
+    pc: usize,
+    /// SSA reference to the byte-string receiver.
+    input: usize,
+    /// SSA references to the clamped range endpoints.
+    start: usize,
+    end: usize,
+};
+
 /// The prologue call that computes the shared heap pointer.
 const heap_call = " %heap =l call $myl_qbe_heap(l %ctx)";
 
@@ -733,6 +765,9 @@ const Emitter = struct {
     /// Whether this leaf's own frame is small enough that its caller's floor test
     /// already covers it, so the prologue can skip its own.
     small_leaf: bool = false,
+    /// The slice a later `.decode` will consume directly, recorded while its
+    /// receiver and endpoints are still SSA references (see `fusibleSlice`).
+    fused: ?FusedDecode = null,
 
     /// Shared lowering primitive for target operation emitters.
     pub fn reject(self: *Emitter, pc: usize) GenerateError {
@@ -766,9 +801,61 @@ const Emitter = struct {
             .jump => |target| if (target == pc) return true,
             .jump_if_false => |target| if (target == pc) return true,
             .try_result => |propagate| if (propagate.error_target == pc) return true,
+            .switch_variant => |dispatch| for (dispatch.arms) |arm| if (arm.target == pc) return true,
             else => {},
         };
         return false;
+    }
+    /// The temporary local a `bytes` slice at `pc` feeds, when its only reader
+    /// is the `.decode` two instructions later. `x[a:b].decode()` lowers to
+    /// exactly that: the slice pushes a byte string, the next instruction stores
+    /// it into a fresh temporary, and the decode reads that temporary back. The
+    /// pattern is only claimed when nothing else names the temporary — another
+    /// reader would observe a slice the fused form never builds — and when no
+    /// branch enters either later instruction, so only the slice can have
+    /// produced the value.
+    pub fn fusibleSlice(self: *Emitter, pc: usize) ?usize {
+        const code = self.function.scope.instructions;
+        if (pc + 2 >= code.len) return null;
+        if (self.states[pc + 1] == null or self.states[pc + 2] == null) return null;
+        const local = switch (code[pc + 1].op) {
+            .store_local => |slot| slot,
+            else => return null,
+        };
+        const index = @backingInt(local);
+        // A parameter's own slot is written by the prologue, not only by the
+        // store this pattern names.
+        if (index < self.function.signature.parameter_count) return null;
+        switch (code[pc + 2].op) {
+            .buffer_operation => |operation| {
+                if (operation.kind != .decode or operation.owner != local) return null;
+            },
+            else => return null,
+        }
+        if (self.isBranchTarget(pc + 1) or self.isBranchTarget(pc + 2)) return null;
+        for (code, 0..) |instruction, at| {
+            if (at == pc + 1 or at == pc + 2) continue;
+            if (mentionsLocal(instruction.op, local)) return null;
+        }
+        return index;
+    }
+    /// Record the slice a later decode consumes directly.
+    pub fn fuseDecode(self: *Emitter, pc: usize, input: usize, start: usize, end: usize) void {
+        self.fused = .{ .pc = pc, .input = input, .start = start, .end = end };
+    }
+    /// The fused decode this instruction performs, if any, consumed once.
+    pub fn fusedDecode(self: *Emitter, pc: usize) ?FusedDecode {
+        const pending = self.fused orelse return null;
+        if (pending.pc != pc) return null;
+        self.fused = null;
+        return pending;
+    }
+    /// Drop a recorded fusion whose decode never ran, so it can never apply to a
+    /// later instruction.
+    fn expireFusedDecode(self: *Emitter, pc: usize) void {
+        if (self.fused) |pending| {
+            if (pc > pending.pc) self.fused = null;
+        }
     }
     /// The 64-bit signed integer literal this program counter's top-of-stack
     /// operand was just pushed with, or null when that operand is not provably
@@ -1037,6 +1124,7 @@ const Emitter = struct {
             try self.print("@i{d}\n storel {d}, %position\n", .{ pc, pc });
             if (self.step_checks) try self.step();
             self.pc = pc;
+            self.expireFusedDecode(pc);
             // An instruction whose own body can leave `ctx->trap` set and still
             // fall through is lowered aside so the test after it can be skipped
             // when it cannot: a body naming only `myl_qbe_fail_*` helpers — every

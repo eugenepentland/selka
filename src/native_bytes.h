@@ -28,4 +28,7 @@ myl_native_bytes *myl_native_bytes_from_hex(myl_native_heap *, myl_native_text *
 myl_native_bytes *myl_native_bytes_encode(myl_native_heap *, myl_native_text *);
 /* Reports MYL_BYTES_INVALID for byte sequences that are not valid UTF-8. */
 myl_native_text *myl_native_bytes_decode(myl_native_heap *, myl_native_bytes *, int *status);
+/* Decode one clamped range directly, so `s[a:b].decode()` never builds the
+ * intermediate byte string. Same status contract as `myl_native_bytes_decode`. */
+myl_native_text *myl_native_bytes_decode_range(myl_native_heap *, myl_native_bytes *, int64_t, int64_t, int *status);
 #endif

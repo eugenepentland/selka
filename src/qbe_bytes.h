@@ -5,6 +5,9 @@
 /* Checked byte conversions: 0 publishes a success payload, 1 an error message
    and -1 a sticky trap the caller detects with myl_qbe_failed. */
 int myl_qbe_bytes_decode(void *context, myl_native_bytes *input, void **output);
+/* The fused `s[a:b].decode()` form: validate and widen one clamped range
+   without building the intermediate byte string. */
+int myl_qbe_bytes_decode_range(void *context, myl_native_bytes *input, int64_t start, int64_t end, void **output);
 int myl_qbe_bytes_from_hex(void *context, myl_native_text *input, void **output);
 /* NULL after an R_BYTE_RANGE trap or an exhausted allocation budget. */
 myl_native_bytes *myl_qbe_bytes_from_list(void *context, myl_native_list *list);

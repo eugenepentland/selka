@@ -158,5 +158,36 @@ public def test_integer_list_text_and_hexadecimal_conversions_round_trip() -> bo
             return True
 
 
+# spec-case: QBE-DECODE-RANGE-1
+public def test_a_decoded_slice_keeps_clamping_and_invalid_utf8() -> bool:
+    raw = b"a\xc3\xa9z"
+    match raw[1:3].decode():
+        case Ok(text):
+            if text != "é":
+                return False
+        case Err(_):
+            return False
+    match raw[-99:99].decode():
+        case Ok(text):
+            if len(text) != 3:
+                return False
+        case Err(_):
+            return False
+    match raw[3:1].decode():
+        case Ok(text):
+            if len(text) != 0:
+                return False
+        case Err(_):
+            return False
+    broken = b"a\xffz"
+    match broken[1:2].decode():
+        case Ok(_):
+            return False
+        case Err(message):
+            if len(message) == 0:
+                return False
+    return True
+
+
 def main() -> int:
     return 0
