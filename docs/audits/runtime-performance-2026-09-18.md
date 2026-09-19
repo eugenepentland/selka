@@ -531,6 +531,45 @@ functions that contain no `.call`/`.invoke` and no op whose C helper can fail on
 own; then gate, gc-stress, goldens and the audit. Each half is independently
 measurable, and the build-policy half is the larger of the two.
 
+## What closing the remaining gap would actually take
+
+Nine rounds of this goal produced two verified landings (frame accounting -5.0 %
+of instructions, bounded-leaf floor guard -1.74 %) worth about **1 % of the
+reported wall-clock ratio**, and four candidates measured at zero and reverted.
+The reason is now measured rather than asserted: instructions have decoupled from
+the metric. Subtracting the harness's own fork/exec (0.952 ms on both sides),
+census is 16.1 ms of mylang compute against 1.24 ms of Zig's — **~13x**, not the
+7.8x headline — and the tokenizer alone is 12.2 ms against Zig's 0.59 ms. What
+remains in that 16.1 ms is the *volume and cost of operations per input byte*, not
+any structure that can be deleted:
+
+- `advance` runs ~30 instructions per call against Zig's ~6, and it is called
+  about once per byte. Of those, ~11 are the frame protocol, ~4 the bounds and
+  index operations, and the rest is the per-field load/store traffic.
+- QBE reloads `lx.src`, `lx.pos` and the source length around every store into the
+  frame record, because it cannot prove a stack-derived pointer does not alias a
+  heap object. That is the single clearest mechanical inefficiency found, and it is
+  an aliasing-information problem, not a missing optimisation pass.
+
+Two pieces of work would address it, in increasing order of size and risk:
+
+1. **Alias information for frame records.** QBE's alias analysis treats any two
+   pointers as potentially aliasing. Teaching it that an `alloc8`-derived address
+   cannot alias a load or store through another pointer would let it keep lexer
+   fields in registers across the record writes. Bounded, lives in `vendor/qbe`,
+   but it changes code generation for every guest and needs the whole gate plus a
+   differential trap-trace check to land.
+2. **Register-resident lexer state in the lowering.** Keep a class's hot fields in
+   SSA temporaries across a basic block, reloading only where a call or an aliasing
+   write forces it. This is the real fix and it is a pass, not a peephole: it needs
+   escape/alias reasoning over the guest's own operations, and it would touch every
+   managed lowering.
+
+Neither is a profile lever, and neither fits in a goal round: (1) is a day's work
+with a real chance of a few percent, (2) is a project. Everything in the original
+six-wave plan has been landed or measured and disproved, so this section is the
+honest successor to it.
+
 ## 1. The answer in one table
 
 The gap is **instruction count, not efficiency**: mylang retires more
