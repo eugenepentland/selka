@@ -31,30 +31,53 @@ myl_native_list *myl_native_list_new(myl_native_heap *heap, const myl_native_typ
     myl_native_root_pop(heap, &root);
     return list;
 }
+/* Copy one element whose size is only known at run time. Most element types are
+   a word or a small record, and a plain `memcpy` call for those dominates every
+   list operation; the switch lets the compiler emit the moves inline for the
+   sizes the language actually uses and keeps the call only for the rest. */
+static inline __attribute__((always_inline)) void copy_element(void *destination, const void *source, size_t size) {
+    switch (size) {
+    case 1: *(unsigned char *)destination=*(const unsigned char *)source; return;
+    case 2: memcpy(destination,source,2); return;
+    case 4: memcpy(destination,source,4); return;
+    case 8: memcpy(destination,source,8); return;
+    case 16: memcpy(destination,source,16); return;
+    case 24: memcpy(destination,source,24); return;
+    case 32: memcpy(destination,source,32); return;
+    case 40: memcpy(destination,source,40); return;
+    case 56: memcpy(destination,source,56); return;
+    case 64: memcpy(destination,source,64); return;
+    default: memcpy(destination,source,size); return;
+    }
+}
 int myl_native_list_append(myl_native_heap *heap, myl_native_list *list, const void *value) {
     if (list->generation == UINT64_MAX) return 0;
+    /* Room already reserved: nothing here can allocate, so nothing can collect
+       and neither the list nor the value needs a root record for this call. */
+    if (list->length < list->capacity) {
+        copy_element((unsigned char *)list->storage + list->length * list->element->size, value, list->element->size);
+        list->length++;
+        list->generation++;
+        return 1;
+    }
     myl_native_root owner_root, value_root;
     myl_native_root_push(heap, &owner_root, &list, &pointer_type);
     myl_native_root_push(heap, &value_root, (void *)value, list->element);
-    if (list->length == list->capacity) {
-        size_t capacity = list->capacity < 4 ? 4 : list->capacity;
-        if (list->capacity >= 4) {
-            if (capacity > SIZE_MAX / 2) goto failure;
-            capacity *= 2;
-        }
-        /* Grown backing joins the list's own arena, so an append performed inside
-           a younger arena never leaves an older list with storage that is about
-           to be bulk released. */
-        void *storage = myl_native_heap_alloc_at(heap, list->element, capacity, myl_native_object_region(list));
-        if (!storage) goto failure;
-        if (list->length) memcpy(storage, list->storage, list->length * list->element->size);
-        /* value may point into old backing; copy before unlinking that backing. */
-        memcpy((unsigned char *)storage + list->length * list->element->size, value, list->element->size);
-        list->storage = storage;
-        list->capacity = capacity;
-    } else {
-        memcpy((unsigned char *)list->storage + list->length * list->element->size, value, list->element->size);
+    size_t capacity = list->capacity < 4 ? 4 : list->capacity;
+    if (list->capacity >= 4) {
+        if (capacity > SIZE_MAX / 2) goto failure;
+        capacity *= 2;
     }
+    /* Grown backing joins the list's own arena, so an append performed inside
+       a younger arena never leaves an older list with storage that is about
+       to be bulk released. */
+    void *storage = myl_native_heap_alloc_at(heap, list->element, capacity, myl_native_object_region(list));
+    if (!storage) goto failure;
+    if (list->length) memcpy(storage, list->storage, list->length * list->element->size);
+    /* value may point into old backing; copy before unlinking that backing. */
+    copy_element((unsigned char *)storage + list->length * list->element->size, value, list->element->size);
+    list->storage = storage;
+    list->capacity = capacity;
     list->length++;
     list->generation++;
     myl_native_root_pop(heap, &value_root);
@@ -67,19 +90,19 @@ failure:
 }
 int myl_native_list_get(const myl_native_list *list, size_t index, void *output) {
     if (index >= list->length) return 0;
-    memmove(output, (const unsigned char *)list->storage + index * list->element->size, list->element->size);
+    copy_element(output, (const unsigned char *)list->storage + index * list->element->size, list->element->size);
     return 1;
 }
 int myl_native_list_set(myl_native_list *list, size_t index, const void *value) {
     if (index >= list->length) return 0;
-    memmove((unsigned char *)list->storage + index * list->element->size, value, list->element->size);
+    copy_element((unsigned char *)list->storage + index * list->element->size, value, list->element->size);
     return 1;
 }
 int myl_native_list_pop(myl_native_list *list, void *output) {
     if (!list->length || list->generation == UINT64_MAX) return 0;
     list->length--;
     unsigned char *slot = (unsigned char *)list->storage + list->length * list->element->size;
-    memmove(output, slot, list->element->size);
+    copy_element(output, slot, list->element->size);
     memset(slot, 0, list->element->size);
     list->generation++;
     return 1;

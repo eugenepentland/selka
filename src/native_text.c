@@ -43,16 +43,31 @@ static int ascii(const unsigned char *bytes, size_t length) {
     for (; i<length; ++i) if (bytes[i]&0x80u) return 0;
     return 1;
 }
+/* End of the ASCII run starting at `offset`: whole words first, then the bytes
+   of the word that held the high bit and any trailing bytes too short for one.
+   The fallback below runs this over input that is ASCII except for a few bytes,
+   which is what source text with a stray non-ASCII character looks like. */
+static size_t ascii_run(const unsigned char *bytes, size_t length, size_t offset) {
+    size_t i=offset;
+    for (; i+sizeof(uint64_t)<=length; i+=sizeof(uint64_t)) {
+        uint64_t word;
+        memcpy(&word,bytes+i,sizeof word);
+        if (word&UINT64_C(0x8080808080808080)) break;
+    }
+    while (i<length && bytes[i]<0x80u) i++;
+    return i;
+}
 /* One validating pass that both checks and fills. ASCII (the whole of most
    source text) is a high-bit scan plus a widening pass; every other input runs
    the branchy decoder once to validate and count and once more to fill, so no
    caller needs a separate prior validation pass. `*invalid` names the failure:
-   1 for malformed input, 0 for a refused allocation. */
+   1 for malformed input, 0 for a refused allocation. Inside the fallback the
+   ASCII runs are still skipped a word at a time, so text that is ASCII but for
+   one multi-byte character does not pay the per-byte decoder for all of it. */
 myl_native_text *myl_native_text_from_utf8_checked(myl_native_heap *heap, const unsigned char *bytes, size_t length, int *invalid) {
     *invalid=0;
-    size_t count=0, offset=0;
+    size_t count=0, offset=0, run=0;
     uint32_t point;
-    int status;
     if (ascii(bytes,length)) {
         myl_native_text *result=myl_native_list_new(heap,&myl_native_text_point,length);
         if (!result) return NULL;
@@ -61,12 +76,29 @@ myl_native_text *myl_native_text_from_utf8_checked(myl_native_heap *heap, const 
         result->length=length;
         return result;
     }
-    while ((status=decode(bytes,length,&offset,&point))>0) count++;
-    if (status<0) { *invalid=1; return NULL; }
+    for (;;) {
+        run=ascii_run(bytes,length,offset);
+        count+=run-offset;
+        offset=run;
+        if (offset==length) break;
+        if (decode(bytes,length,&offset,&point)<0) { *invalid=1; return NULL; }
+        count++;
+    }
     myl_native_text *result=myl_native_list_new(heap,&myl_native_text_point,count);
     if (!result) return NULL;
+    uint32_t *points=(uint32_t *)result->storage;
     offset=0;
-    for (size_t i=0; i<count; ++i) { decode(bytes,length,&offset,&point); ((uint32_t *)result->storage)[i]=point; }
+    size_t written=0;
+    for (;;) {
+        run=ascii_run(bytes,length,offset);
+        const size_t ascii=run-offset;
+        for (size_t i=0; i<ascii; ++i) points[written+i]=bytes[offset+i];
+        written+=ascii;
+        offset=run;
+        if (offset==length) break;
+        decode(bytes,length,&offset,&point);
+        points[written++]=point;
+    }
     result->length=count;
     return result;
 }
