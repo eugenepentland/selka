@@ -34,6 +34,34 @@ that whole figure is the ceiling for a pass, most of it ABI copies value
 semantics requires (§4). The next real lever is object count and collection
 pacing, not copies (§5).
 
+## 0. Wall clock against Zig, after the three landings
+
+31 interleaved rounds per task, parent and children pinned to CPU 6, median wall
+time, all eight tasks in one batch. The process-launch control was 0.52 ms for
+`/bin/true`, quieter than the 0.66 ms the audit's batch saw.
+
+| workload | mylang | Zig ReleaseFast | ratio | ratio of minima |
+|---|---:|---:|---:|---:|
+| census 927 KB | 8.80 ms | 2.05 ms | **4.30×** | 4.75× |
+| render 927 KB | 13.70 ms | 2.60 ms | **5.26×** | 5.44× |
+| census 7.42 MB | 79.49 ms | 13.64 ms | **5.83×** | 5.92× |
+| render 7.42 MB | 121.65 ms | 18.98 ms | **6.41×** | 6.46× |
+
+Wall is a friendlier ratio than the counters for this program: the counter batch
+above reads 5.79×/7.46×/6.14×/7.77× on instructions and 5.47×/6.65×/6.72×/7.96×
+on cycles, because mylang's extra work is largely memory traffic with poor IPC
+while Zig's loops retire more per cycle.
+
+**Do not read the audit's baseline ratios as a like-for-like improvement.** Its
+batch had the same workload at 15.15 / 24.80 / 130.06 / 203.74 ms and 5.50× /
+6.51× / 6.82× / 7.81×, but mylang's census fell from 15.15 ms to 8.80 ms, far more
+than the 6% of instructions the landings removed: the machine differed. The
+attributable result is the in-batch one — 6–15% fewer instructions and 8–15% fewer
+cycles — and everything below is quoted from matched batches only.
+
+Reaching ≤2× from here needs 53% less time on the 927 KB census, 62% on the 927 KB
+render, and 66–69% on the two 7.42 MB workloads.
+
 ## 1. Bulk raw-text output — landed
 
 `myl_print_text` walked a raw `str` one scalar at a time: a call to
