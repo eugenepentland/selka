@@ -367,6 +367,50 @@ inlined or lazily-framed callee must not silently change the depth count; and th
 dead instructions after an inlined scalar cast (position store, trap load, branch after
 a `copy`), which the tokenizer pays on every byte.
 
+### Ready to implement: lazy linking (the other half)
+
+With accounting gone, a ReleaseFast census binary now spends eleven instructions
+per call on what is left of the protocol: `alloc8` (1), the stack-floor guard (4),
+the link (`prev` load+store, function `lea`+store, active store — 5) and the
+`%position` address (1). Lazy linking removes the five link stores from the hot path
+for functions that can trap but call nothing, so it is worth about **5 % of
+instructions** — the largest single item left.
+
+**Eligibility must be an allow-list, not a deny-list**, because a deny-list that
+misses one op silently mis-attributes a trace. A function qualifies only when every
+instruction is one of: `push_i64`/`push_integer`/`push_bool`/`push_unit`,
+`move_local`/`drop_local`/`load_local`/`store_local`, `get_field`, `update_record`,
+`array_length`, `get_index` on a list/bytes/static-array receiver, `binary_integer`
+for the integer operations, the five `*_i64_checked` forms, `cast_integer` between
+scalars, `cmp_i64`/`cmp_bool`/`not_bool`, `jump`/`jump_if_false`/`ret`, `pop`,
+`acknowledge`, `function_value`. Everything else keeps the eager record — in
+particular `neg_*` and the float operations, whose helpers (`myl_qbe_int_neg`,
+`myl_qbe_float_binary`) call `fail()` themselves and so build the trace *inside* the
+call, and `get_index` on `str`/`dictionary`, `binary_integer` `add` on `str`/`bytes`,
+and `cast_integer` to an aggregate, which allocate or fail through their own helpers.
+`advance` qualifies, which is the point.
+
+**Eight call sites must all be covered** — a lazy function that links on some trap
+paths and not others has wrong traces, so this is all-or-nothing. Three are already
+standalone prints and become `self.trap(...)`: both `myl_qbe_fail_overflow_op` calls
+(`overflowTrap` and the general path of `checkedAddSub`), `myl_qbe_fail_division`,
+and `myl_qbe_fail_assert`-style sites if any are added later. Five are combined with
+their branch in one format string and must be split at the label first:
+`myl_qbe_fail_cast` (`qbe_scalar.zig`), `myl_qbe_fail_index_bounds` and
+`myl_qbe_fail_pop_bounds` (`qbe_managed.zig`, the first name-parameterised) and
+`myl_qbe_fail_equality` (`qbe_managed.zig`), and `myl_qbe_fail_array_bounds`
+(`qbe_aggregate.zig`).
+
+The prologue's own two failures (`@limitfail`, `@floorfail`) must **not** link: the
+record is not valid yet, and `active_frame` is still the caller's, which is exactly
+what those traps should report. `linkFrame()` needs the function's metadata symbol,
+so `enterFrame` must stash it.
+
+Measured and rejected on the way: dropping the record's dead `position`
+initialisation is worth nothing — QBE already eliminates the store (232.59 M vs
+232.57 M instructions, within noise), so it was reverted rather than carried with a
+spec-tag obligation.
+
 ### Landed: frame accounting is build policy (QBE-FRAME-ACCOUNTING-1/2)
 
 The hook was real, and the reason it did nothing at first is worth recording:
