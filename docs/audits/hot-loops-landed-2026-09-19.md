@@ -176,34 +176,63 @@ branch enters either instruction; the emitter leaves a null byte string in the
 slot the slice would have filled, so the store that follows and any root push
 over that slot still see a traceable value. Everything else keeps the slice.
 
-The second item was the UTF-8 conversion: `myl_native_text_from_utf8_checked`
-scanned for a high bit one byte at a time, the only part of an ASCII conversion
-that touches every input byte (`ascii()` in `src/native_text.c`), while the
-widening loop beside it was already vectorised by LLVM. It now scans a word at a
-time with the usual SWAR mask.
+The second item was the UTF-8 conversion, which took two passes. The first was
+its high-bit scan: `ascii()` in `src/native_text.c` looked one byte at a time,
+the only part of an ASCII conversion that touches every input byte, while the
+widening loop beside it was already vectorised by LLVM; it now scans a word at a
+time with the usual SWAR mask. The second was the fallback itself: any input with
+one high-bit byte sent the whole buffer through the branchy per-byte decoder
+twice. On this census 585 of the 5,145 quoted strings contain a high-bit byte and
+they hold 69 % of the string bytes, yet their code-point count is within 0.5 % of
+their byte count — so the fallback was decoding nearly all-ASCII text one byte at
+a time. Both fallback passes now skip ASCII runs a word at a time and call the
+decoder only around a multi-byte sequence, validating the same bytes in the same
+order. That one is worth **−5.5 % of the census**, more than the whole of stage 1.
 
-| census variant | instructions | ÷ Zig | Δ baseline | cycles | ÷ Zig | Δ baseline |
+The third item was the aggregate path, and it is largely a copy cost: a managed
+`list` element is copied on every `append`, `get`, `set` and `pop`, and those
+copies went through a `memcpy` call. `copy_element` switches on the element size
+so the compiler inlines the word, record and node-sized moves the language
+actually uses — `Token` is 40 bytes, `Node` 56, a `Span` 24, and the switch covers
+all three. The same change made `myl_native_list_append` take a fast path when the
+list already has room: nothing can allocate there, so nothing can collect, and
+neither root record the call used to push is needed.
+
+What is left of the aggregate traffic is the `%agg{pc}` scratch itself: 164
+pointer reads of a per-pc aggregate slot and 130 `blit`s (4,140 bytes of copies in
+the whole program, executed once per node or token). Making those cheaper needs
+the constructor to write into its destination instead of a scratch the next
+instruction copies out of, and the copy that dominates is the `match` arm binding
+the payload into a local before the append — eliding it is payload forwarding, not
+a local rewrite, and the two blits it would remove measure under a percent.
+
+| census variant | instructions | ÷ Zig | Δ round | cycles | ÷ Zig | Δ round |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| committed `70447f37` | 160,674,150 | 7.01× | — | 52,333,467 | 6.16× | — |
-| + slice decoded in place | 146,036,508 | 6.37× | −9.1 % | 44,963,314 | 5.29× | −14.1 % |
-| + word-at-a-time ASCII scan | 144,708,147 | 6.31× | −9.9 % | 44,965,649 | 5.30× | −14.1 % |
-| Zig `ReleaseFast` | 22,934,682 | 1.00× | | 8,491,984 | 1.00× | |
+| committed `5b2da1d3` | 144,608,940 | 6.31× | — | 45,575,638 | 5.62× | — |
+| + mixed-text decode | 136,770,600 | 5.97× | −5.4 % | 44,438,255 | 5.48× | −2.5 % |
+| + list fast path | 133,908,591 | 5.84× | −7.4 % | 43,246,745 | 5.33× | −5.1 % |
+| + inlined element copies | 133,267,929 | 5.81× | −7.8 % | 43,506,192 | 5.37× | −4.5 % |
+| Zig `ReleaseFast` | 22,924,822 | 1.00× | | 8,106,429 | 1.00× | |
 
 Against the session's starting point (`d14ea1a3`: 228.6 M / 65.1 M) the census
-now sits at **−36.7 % instructions and −31.0 % cycles**, or 6.31× / 5.30× Zig.
+now sits at **−41.7 % instructions and −33.2 % cycles**, or 5.81× / 5.37× Zig.
 
 The instruction profile after the fusion moved as the allocation histogram
 predicted: `myl_native_heap_alloc_at` fell from 11.6 % to 2.3 % of instructions
 and the copy helpers (`memmove`, `memcpy`) from 8.4 % combined to 1.5 % and out of
-the top list, while the two tokenizer loops rose to 24.8 % and 23.9 % — they are
+the top list, while the two tokenizer loops rose to 26.3 % and 23.5 % — they are
 now half the program, and what is left in them is the per-byte work §3 describes.
+After the runtime work the next symbols are `parse_node` 5.1 %, `parse_list`
+4.9 %, `is_atom_continue` 3.6 %, then the collector: `trace` 3.4 %, `cfree`
+2.5 %, `heap_collect` 1.6 %.
 
 Still open from §4's list, in the order they now measure: the tokenizer loops
-themselves (≈49 % of instructions, where each byte reloads `len(lx.src)` three
+themselves (≈50 % of instructions, where each byte reloads `len(lx.src)` three
 times and the byte itself twice — the loads are separated by branches, which is
-what QBE's block-local load elimination cannot cross), `Token`/`Span`/`Result`
-aggregates blitted through `%agg{pc}` (the `memmove`/`memcpy` remainder), and the
-frame record each remaining call pays.
+what QBE's block-local load elimination cannot cross, and the only fix is proving
+that a named class instance and a managed list cannot alias each other), then
+the aggregate traffic that survives the small-copy inlining, and the frame record
+each remaining call pays.
 
 ## 5. Where the scan loop stands against the 1.5× floor
 
