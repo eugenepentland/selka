@@ -134,6 +134,32 @@ test "IO-6 the native backend lowers print through generated per-type renderers"
     try t.expect(std.mem.indexOf(u8, manifest, "\\\"Some\\\"") != null);
 }
 
+// spec: QBE-BULK-TEXT-1
+test "QBE-BULK-TEXT-1 raw top-level text is encoded into the line buffer in one pass" {
+    // Empty text writes nothing and still ends the line.
+    try expectOutput("def main(out: Stream) -> int:\n    out.print(\"\")\n    return 0\n", "\n");
+    // ASCII past the buffer's first 64-byte capacity, so the reserve path runs.
+    const long: [70]u8 = @splat('a');
+    try expectOutput("def main(out: Stream) -> int:\n    out.print(\"" ++ long ++ "\")\n    return 0\n", long ++ "\n");
+    // Two-, three- and four-byte scalars widen exactly as the per-scalar encoder
+    // did, and a line that grows across several values keeps every byte.
+    const wide = "h\u{00e9}\u{2192}\u{1F600}";
+    try expectOutput("def main(out: Stream) -> int:\n    out.print(\"h\\u00e9\\u2192\\U0001F600\")\n    return 0\n", wide ++ "\n");
+    try expectOutput("def main(out: Stream) -> int:\n    out.print(\"" ++ long ++ "\", \"h\\u00e9\\u2192\\U0001F600\", sep=\"\")\n    return 0\n", long ++ wide ++ "\n");
+    // Top-level text is raw: quotes, backslashes, tabs, newlines and NUL scalars
+    // reach the stream unchanged.
+    try expectOutput("def main(out: Stream) -> int:\n    out.print(\"a'b\\\\c\\td\\ne\\0f\")\n    return 0\n", "a'b\\c\td\ne\x00f\n");
+    // Inside a container the same text is still repr-quoted and escaped.
+    try expectOutput("def main(out: Stream) -> int:\n    out.print([\"a'b\", \"c\\nd\"])\n    return 0\n", "['a\\'b', 'c\\nd']\n");
+    // Text built at run time — joined, sliced and replaced, so heap strings
+    // rather than literal images — takes the same path.
+    const built = "def main(out: Stream) -> int:\n    text = \"-\".join([\"a\", \"b\", \"c\"])\n    out.print(text[1:4])\n    out.print(text.replace(\"-\", \"\\u00e9\"))\n    return 0\n";
+    try expectOutput(built, "-b-\na\u{00e9}b\u{00e9}c\n");
+    // `stream.write` is the other raw-text caller and returns the scalar count.
+    const write = "def show(log: Stream) -> int:\n    return log.write(\"h\\u00e9\\u2192\\U0001F600\")\n\ndef main(out: Stream) -> int:\n    out.print(show(out))\n    return 0\n";
+    try expectOutput(write, wide ++ "4\n");
+}
+
 // spec-case: IO-6
 test "IO-6 a program that never prints carries no rendering runtime" {
     var compilation = try language.Compilation.init(t.allocator, module, "def main() -> int:\n    return 7\n");

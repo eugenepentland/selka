@@ -7,19 +7,25 @@
 #include <stdlib.h>
 #include <string.h>
 #define FLOAT_FRAME 64u
+/* Make room for `length` more bytes, doubling the buffer until they fit. A line
+   that cannot grow is marked failed and keeps the bytes it already holds. */
+static int reserve(MylPrint *out, size_t length) {
+    if (length > SIZE_MAX - out->length) { out->failed = 1; return 0; }
+    if (length <= out->capacity - out->length) return 1;
+    size_t capacity = out->capacity ? out->capacity : 64;
+    while (capacity - out->length < length) {
+        if (capacity > SIZE_MAX / 2) { out->failed = 1; return 0; }
+        capacity *= 2;
+    }
+    unsigned char *grown = realloc(out->bytes, capacity);
+    if (!grown) { out->failed = 1; return 0; }
+    out->bytes = grown;
+    out->capacity = capacity;
+    return 1;
+}
 void myl_print_raw(MylPrint *out, const void *bytes, size_t length) {
     if (out->failed || !length) return;
-    if (length > out->capacity - out->length) {
-        size_t capacity = out->capacity ? out->capacity : 64;
-        while (capacity - out->length < length) {
-            if (capacity > SIZE_MAX / 2) { out->failed = 1; return; }
-            capacity *= 2;
-        }
-        unsigned char *grown = realloc(out->bytes, capacity);
-        if (!grown) { out->failed = 1; return; }
-        out->bytes = grown;
-        out->capacity = capacity;
-    }
+    if (!reserve(out, length)) return;
     memcpy(out->bytes + out->length, bytes, length);
     out->length += length;
 }
@@ -141,20 +147,31 @@ void myl_print_text(MylPrint *out, const void *value, unsigned depth) {
     if (myl_print_deep(out, depth)) return;
     myl_native_text *text;
     memcpy(&text, value, sizeof text);
-    int quoted = depth != 0;
-    if (quoted) byte(out, '\'');
+    if (!depth) {
+        /* Raw top-level text needs no quoting or escaping, so the whole value is
+           encoded straight into the line buffer: one pass to size the UTF-8, one
+           reserve and one fill, instead of a call, a capacity test and a branch
+           per scalar. Nested text still walks the escaping loop below. */
+        if (out->failed) return;
+        size_t count = myl_native_text_utf8(text, NULL, 0);
+        if (!count || !reserve(out, count)) return;
+        myl_native_text_utf8(text, out->bytes + out->length, count);
+        out->length += count;
+        return;
+    }
+    byte(out, '\'');
     const uint32_t *points = text->storage;
     for (size_t i = 0; i < text->length; ++i) {
         uint32_t point = points[i];
-        if (quoted && (point == '\'' || point == '\\')) byte(out, '\\');
-        if (quoted && escaped(point)) {
+        if (point == '\'' || point == '\\') byte(out, '\\');
+        if (escaped(point)) {
             byte(out, '\\');
             byte(out, (unsigned char)escaped(point));
             continue;
         }
         encode(out, point);
     }
-    if (quoted) byte(out, '\'');
+    byte(out, '\'');
 }
 void myl_print_bytes(MylPrint *out, const void *value, unsigned depth) {
     if (myl_print_deep(out, depth)) return;
