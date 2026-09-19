@@ -1,0 +1,22 @@
+module c_parse
+
+# Audit driver: read + tokenize + parse, no tree walk. The difference from
+# b_tokens is the parser's own cost.
+import sexpr.parser as parser
+
+
+def main(args: list[str], fs: Filesystem, out: Stream, err: Stream) -> int:
+    source = b""
+    match read_file(fs, args[0]):
+        case Ok(data):
+            source = data
+        case Err(problem):
+            err.print("read failed", problem)
+            return 2
+    match parser.parse(source):
+        case Ok(nodes):
+            out.print(f"roots={len(nodes)}")
+            return 0
+        case Err(problem):
+            err.print("parse failed", problem.message)
+            return 1

@@ -1,0 +1,27 @@
+module g_append
+
+# Decode and retain 19_155 slices in a managed list: isolates allocation, list
+# growth and collector pressure (the shape the tokenizer has).
+const LIMIT: int = 19155
+
+
+def main(args: list[str], fs: Filesystem, out: Stream, err: Stream) -> int:
+    source = b""
+    match read_file(fs, args[0]):
+        case Ok(data):
+            source = data
+        case Err(problem):
+            err.print("read failed", problem)
+            return 2
+    values: list[str] = []
+    index = 0
+    while index < LIMIT:
+        start = index * 8
+        match source[start:start + 8].decode():
+            case Ok(text):
+                values.append(text)
+            case Err(_):
+                values.append("")
+        index = index + 1
+    out.print(f"appended={len(values)}")
+    return 0

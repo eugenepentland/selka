@@ -23,9 +23,17 @@ typedef unsigned __int128 UnsignedWide;
 typedef MylQbeContext Context;
 static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64_t frames, int stress, const struct MylangNativeProvidersTag *providers, void (*initialize)(void *), int guest_argc, char **guest_argv, MylQbeResult *result);
 _Static_assert(offsetof(Context, steps) == 0, "QBE context steps ABI");
+_Static_assert(offsetof(Context, frames) == 8, "QBE context frame count ABI");
 _Static_assert(offsetof(Context, max_steps) == 16, "QBE context step limit ABI");
+_Static_assert(offsetof(Context, trap) == 32, "QBE context trap ABI");
 _Static_assert(offsetof(Context, active_frame) == 48, "QBE context active frame ABI");
-_Static_assert(offsetof(MylQbeActiveFrame, position) == 8, "QBE frame position ABI");
+_Static_assert(offsetof(Context, frame_limit) == 56, "QBE context frame limit ABI");
+_Static_assert(offsetof(Context, frame_floor) == 64, "QBE context frame floor ABI");
+_Static_assert(offsetof(MylQbeActiveFrame, function) == 8, "QBE frame function ABI");
+_Static_assert(offsetof(MylQbeActiveFrame, position) == 16, "QBE frame position ABI");
+/* Generated code now links the root chain itself, so this offset is an ABI:
+   mirror any change here in `heap_roots_offset` in src/qbe.zig. */
+_Static_assert(offsetof(myl_native_heap, roots) == 16, "QBE heap roots ABI");
 /* Stable trap for a guest that outgrew its byte ceiling. It is a runtime trap
    like any other R_ code, so it exits 1 rather than reporting a host defect. */
 static const char *const memory_budget_code = "R_MEMORY_BUDGET";
@@ -34,6 +42,7 @@ static const char *const memory_budget_code = "R_MEMORY_BUDGET";
 static const char *describe(const char *code) {
     if (!strcmp(code, memory_budget_code)) return "memory budget exhausted";
     if (!strcmp(code, "R_STEP_LIMIT")) return "instruction budget exhausted; raise it with --max-steps=N";
+    if (!strcmp(code, "R_NO_STEP_ACCOUNTING")) return "this build omits instruction-budget accounting";
     if (!strcmp(code, "R_FRAME_LIMIT")) return "call-depth budget exhausted; raise it with --max-frames=N";
     return strncmp(code, "R_", 2) ? "QBE runtime failure" : "native execution failed";
 }
@@ -146,21 +155,63 @@ static size_t detail_json(const MylQbeTrapDetail *detail, char *out, size_t size
     if (!append(out, size, &used, "}")) return 0;
     return used;
 }
+/* Deepest inline-splice nesting one trap walk descends before it stops trusting
+   the table and reports the frame it has. A real chain is bounded by the
+   inliner's callee size budget and the trace keeps only sixteen frames, so only
+   a malformed table can reach this. */
+#define MYL_QBE_INLINE_DEPTH 32
+/* The inline splice of `function` whose caller pc range contains `position`, or
+   NULL when the pc is the function's own instruction. Splices never overlap. */
+static const MylQbeInlineFrame *inline_at(const MylQbeFunction *function, uint64_t position) {
+    if (!function->inlines) return NULL;
+    for (uint64_t i = 0; i < function->inline_count; ++i) {
+        const MylQbeInlineFrame *candidate = &function->inlines[i];
+        if (position >= candidate->start && position < candidate->end) return candidate;
+    }
+    return NULL;
+}
+/* Append one logical frame when the trace has room. `logical` counts every frame
+   the un-inlined call chain would have produced, so `omitted_frames` reports the
+   depth the pre-inlining compiler reported. */
+static void trace_emit(Context *ctx, const MylQbeFunction *function, uint64_t position, uint64_t *logical) {
+    ++*logical;
+    if (!function || position >= function->count || ctx->trace_count >= 16) return;
+    MylQbeLocation at = function->locations[position];
+    ctx->trace[ctx->trace_count++] = (MylQbeTrace){function->name, at.path, at.line, at.column};
+}
+/* Emit the frames one native-stack record stands for, innermost first: when the
+   record's pc falls inside an inlined callee, the callee's own chain comes first
+   and this function follows at the pc holding the call site. The enclosing frame
+   is reported directly rather than re-entered, so a splice whose callee body
+   begins at the call pc cannot loop; `depth` bounds a malformed table. */
+static void trace_frame(Context *ctx, const MylQbeFunction *function, uint64_t position, unsigned depth, uint64_t *logical) {
+    if (!function || position >= function->count) {
+        ++*logical;
+        return;
+    }
+    const MylQbeInlineFrame *record = depth < MYL_QBE_INLINE_DEPTH ? inline_at(function, position) : NULL;
+    if (!record || !record->callee) {
+        trace_emit(ctx, function, position, logical);
+        return;
+    }
+    trace_frame(ctx, record->callee, record->callee_start + (position - record->start), depth + 1, logical);
+    trace_emit(ctx, function, record->call_position, logical);
+}
 static uint64_t fail(void *context, const char *code) {
     Context *ctx = context;
     if (!ctx->trap) {
         ctx->trap = code;
-        /* Only the slots the runtime actually tracked are walked; with unbounded
-           frames the logical depth may exceed the bounded trace storage. */
-        uint64_t depth = ctx->frames < ctx->max_frames ? ctx->frames : ctx->max_frames;
-        for (uint64_t i = depth; i && ctx->trace_count < 16; --i) {
-            if (!ctx->frame_data) break;
-            MylQbeActiveFrame frame = ctx->frame_data[i-1];
-            if (!frame.function || frame.position >= frame.function->count) continue;
-            MylQbeLocation at = frame.function->locations[frame.position];
-            ctx->trace[ctx->trace_count++] = (MylQbeTrace){frame.function->name, at.path, at.line, at.column};
+        /* Generated frames link through `prev` in the native stack, so the trace
+           is the chain from the innermost active record. Each record expands to
+           the callee frames the inliner spliced into it, innermost first. Frames
+           without function metadata (the direct C entry points) are skipped, and
+           only the first sixteen frames are kept; `omitted_frames` reports the
+           logical depth beyond them. */
+        uint64_t logical = 0;
+        for (const MylQbeActiveFrame *frame = ctx->active_frame; frame; frame = frame->prev) {
+            trace_frame(ctx, frame->function, frame->position, 0, &logical);
         }
-        ctx->omitted_frames = ctx->frames > ctx->trace_count ? ctx->frames-ctx->trace_count : 0;
+        ctx->omitted_frames = logical > ctx->trace_count ? logical-ctx->trace_count : 0;
     }
     return 0;
 }
@@ -300,6 +351,10 @@ void myl_qbe_fail_overflow_op(void *context, uint64_t binary_op, int64_t left, i
         MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT | MYL_QBE_TRAP_PRESENT_WIDTH,
         0, 0, left, right, width);
 }
+void myl_qbe_fail_cast(void *context, int64_t value, uint64_t width) {
+    fail_detail(context, "R_OVERFLOW", "cast",
+        MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_WIDTH, 0, 0, value, 0, width);
+}
 myl_native_heap *myl_qbe_heap(void *context) {
     return &((Context *)context)->heap;
 }
@@ -308,6 +363,9 @@ void myl_qbe_fail_step(void *context) {
 }
 void myl_qbe_fail_overflow(void *context) {
     fail(context, "R_OVERFLOW");
+}
+void myl_qbe_fail_frame(void *context) {
+    fail(context, "R_FRAME_LIMIT");
 }
 static Wide decode(uint64_t value, uint64_t is_signed) {
     int64_t signed_value;
@@ -412,11 +470,13 @@ static uint64_t float_environment(void *context) {
     if (float_bits(normal * half) != UINT64_C(0x0008000000000000) || float_bits(tiny * one) != 1) return fail(context, "R_FLOAT_ENVIRONMENT");
     return 1;
 }
+/* QBE-FLOAT-ENV-1: the environment is verified once at context start-up (see
+   execute_config_args) and again after every C FFI boundary, so the value
+   helpers below no longer re-check it on each call. */
 void myl_qbe_float_check(void *context) {
     (void)float_environment(context);
 }
 uint64_t myl_qbe_float_binary(void *context, uint64_t op, uint64_t left, uint64_t right) {
-    if (!float_environment(context)) return 0;
     double a = float_value(left), b = float_value(right);
     switch (op) {
         case 26: return float_bits(a + b);
@@ -430,7 +490,6 @@ uint64_t myl_qbe_float_binary(void *context, uint64_t op, uint64_t left, uint64_
     }
 }
 uint64_t myl_qbe_float_unary(void *context, uint64_t op, uint64_t input) {
-    if (!float_environment(context)) return 0;
     double a = float_value(input);
     switch (op) {
         case 2: return float_bits(sqrt(a));
@@ -502,6 +561,14 @@ void myl_qbe_step(void *context) {
     Context *ctx = context;
     if (ctx->steps == ctx->max_steps) { fail(context, "R_STEP_LIMIT"); return; }
     ++ctx->steps;
+}
+/* A build that omitted instruction-budget accounting cannot honor a runtime step
+   ceiling. The generated entry point calls this once, before any guest
+   instruction runs, so the mismatch is reported instead of silently ignored. */
+void myl_qbe_require_step_accounting(void *context) {
+    Context *ctx = context;
+    if (ctx->max_steps == MYL_QBE_UNBOUNDED) return;
+    fail_detail(ctx, "R_NO_STEP_ACCOUNTING", "run it under `mylang run --max-steps=N`, or rebuild it with --mode Debug", 0, 0, 0, 0, 0, 0);
 }
 void myl_qbe_enter_at_sized(void *context, const MylQbeFunction *function, uint64_t bytes) {
     Context *ctx=context;
@@ -640,6 +707,13 @@ static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64
     context->heap.stress = stress;
     context->frame_data = calloc((size_t)capacity, sizeof(MylQbeActiveFrame));
     if (!context->frame_data) context->trap = "OutOfMemory";
+    /* QBE-FLOAT-ENV-1: verify the process floating-point environment exactly
+       once, before any guest or host code runs. The per-operation checks are
+       gone, so this is what preserves R_FLOAT_ENVIRONMENT for a process that
+       starts with a non-default rounding mode; a C FFI call re-checks after it
+       returns (see qbe_c_abi.zig). The probe costs one fegetround plus two
+       multiplies, so a build that never uses floats only pays it once. */
+    if (!context->trap) (void)float_environment(context);
     if (!context->trap && initialize) initialize(context);
     if (!context->trap) result->value = myl_qbe_on_stack(entry,context);
     if (!context->trap && context->frames != 0) context->trap = "R_INTERNAL";

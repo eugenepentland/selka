@@ -854,3 +854,33 @@ test "located source diagnostics include EOF explicit drops and previous declara
     try testing.expectEqualStrings("E_EXPLICIT_DISCARD_REQUIRED", discard.diagnostics.items[0].code);
     try testing.expectEqualStrings("1 + 2", discard.src.text(discard.diagnostics.items[0].span));
 }
+// spec: GC-PACING-1
+test "the pausing collector reclaims garbage and still enforces the byte budget" {
+    var reclaiming = try language.Compilation.init(testing.allocator, "pacing.my",
+        \\def main() -> i64:
+        \\    n = 0
+        \\    while n < 50000:
+        \\        garbage = [n, n + 1, n + 2, n + 3]
+        \\        n += 1
+        \\    return n
+    );
+    defer reclaiming.deinit();
+    // Every list is unreachable and the loop allocates several times the ceiling;
+    // only collection keeps the run inside the budget.
+    const reclaimed = try native.runWithOptions(&reclaiming, .{ .max_memory = 1 << 20 });
+    try testing.expectEqual(@as(i64, 50000), reclaimed.value);
+    var bounded = try language.Compilation.init(testing.allocator, "pacing.my",
+        \\def main() -> i64:
+        \\    values: list[i64] = []
+        \\    n = 0
+        \\    while n < 400000:
+        \\        values.append(n)
+        \\        n += 1
+        \\    return len(values)
+    );
+    defer bounded.deinit();
+    // A live list that outgrows the ceiling still traps, so the budget binds on
+    // every allocation and not only when a collection would have run.
+    const refused = try native.runWithOptions(&bounded, .{ .max_memory = 1 << 20 });
+    try testing.expectEqualStrings("R_MEMORY_BUDGET", refused.trap.code);
+}

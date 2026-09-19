@@ -41,6 +41,13 @@ pub fn lower(src: source.Source, catalog: Catalog, call: Call, span: source.Span
     const owner = call.owner orelse return null;
     if (call.type_arguments.len != 0) return null;
     if (!try namesCase(src, catalog, owner, call.name, sink)) return null;
+    if (try caseFielded(src, catalog, owner, call.name, sink)) return .{ .span = span, .data = .{ .variant = .{
+        .ty = owner,
+        .name = call.name,
+        .values = call.arguments,
+        .value_names = call.argument_names,
+        .fielded = true,
+    } } };
     try @import("call_arguments.zig").positional(call, sink);
     if (call.arguments.len != 1) return sink.fail(
         "E_ARITY",
@@ -48,6 +55,29 @@ pub fn lower(src: source.Source, catalog: Catalog, call: Call, span: source.Span
         "variant construction takes exactly one payload; an empty case is written without parentheses",
     );
     return .{ .span = span, .data = .{ .variant = .{ .ty = owner, .name = call.name, .value = call.arguments[0] } } };
+}
+
+/// Report whether the named case declares named fields rather than one payload.
+/// A parenthesized case's payload is a synthesized record, so construction and
+/// patterns bind one name per field.
+pub fn caseFielded(
+    src: source.Source,
+    catalog: Catalog,
+    owner: source.Span,
+    name: source.Span,
+    sink: *diagnostic.Sink,
+) diagnostic.Error!bool {
+    if (try catalog.variantType(src, owner, sink)) |ty| {
+        for (catalog.records[ty.recordIndex()].shape.variants.?.cases) |declared| {
+            if (std.mem.eql(u8, declared.name, src.text(name))) return declared.fielded;
+        }
+        return false;
+    }
+    const store = catalog.templates.store orelse return false;
+    const id = try templateDeclaration(src, catalog, owner, sink) orelse return false;
+    for (store.index.declarations.items[id].fields) |field| if (std.mem.eql(u8, src.text(field.name), src.text(name)))
+        return field.ty != null and field.ty.? == .named and store.index.isSynthetic(field.ty.?.named);
+    return false;
 }
 
 /// Report whether `owner.name` selects a declared case of a concrete or generic variant type.

@@ -260,6 +260,60 @@ This returns `26`. Construction resolves through the declared type identity, so 
 binding that shadows the type name keeps ordinary member resolution, and a name that is
 not a declared case stays an ordinary call.
 
+## Named variant case fields
+
+A case may declare parenthesized named fields, `case(f1: T1, f2: T2 = default)`. The
+fields follow the record rules: a required field may not follow a defaulted one, and a
+default is one of the immutable scalar literals a parameter accepts. `Type.case(v1, v2)`
+binds positionally, `Type.case(f1=v1)` by name, and the two mix as long as every
+positional argument precedes the first named one; a field left out because it declared a
+default is filled with that literal. A `case: T` payload and a payload-free `case` keep
+their existing spelling and meaning, so existing declarations are unaffected.
+
+A pattern binds exactly one name per declared field — `case Type.case(p1, p2)` — with `_`
+discarding that field; a single-payload case still takes one binding and a payload-free
+case takes none. A missing or extra field argument, an unknown field name, a duplicate
+field, a required field after a defaulted one, and a pattern whose binding count differs
+from the field count are all located diagnostics. A field whose type carries a handling
+obligation keeps it, so `case _` over a case with a `Result` field still reports
+`E_RESULT_DISCARD` and needs its own arm.
+
+```mylang
+# doc: expect 10
+record Span:
+    line: int
+    col: int
+
+
+union Node:
+    form(items: list[Node], span: Span),
+    atom(text: str, span: Span),
+    decimal(value: float, span: Span, literal: Option[str] = None)
+
+
+def width(node: Node) -> int:
+    match node:
+        case Node.form(items, _):
+            return len(items)
+        case Node.atom(text, _):
+            return len(text)
+        case Node.decimal(_, _, literal):
+            match literal:
+                case Some(_):
+                    return 1
+                case None:
+                    return 2
+
+
+def main() -> int:
+    home = Span(line=1, col=1)
+    tree = Node.form([Node.atom("x", home), Node.decimal(0.0000001, home, Some("100nF"))], home)
+    return width(tree) + width(Node.atom("abc", home)) * 2 + width(Node.decimal(1.5, home))
+```
+
+This returns `10`. The case's payload stays a single value, so named fields do not change
+how a union is laid out, compared, copied, or passed across a module boundary.
+
 ## Recursive payloads
 
 A `record` is laid out by value, so its fields must close in finite space: a record field

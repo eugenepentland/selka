@@ -225,6 +225,35 @@ test "record schemas conversion checking construction update projection and dump
     try testing.checkAllAllocationFailures(no_resize.allocator(), allocationScenario, .{});
 }
 
+// spec: EQUALITY-CONTEXT-1
+test "equality carries a field access type into a contextual constructor" {
+    try result(
+        \\union Kind:
+        \\    atom: str,
+        \\    flag
+        \\
+        \\
+        \\record Hold:
+        \\    opt: Option[str]
+        \\    kind: Kind
+        \\
+        \\
+        \\def check(hold: Hold) -> bool:
+        \\    return hold.opt == Some("x") and hold.opt != None and hold.kind == Kind.atom("x")
+        \\
+        \\
+        \\def main() -> i64:
+        \\    if check(Hold(opt=Some("x"), kind=Kind.atom("x"))):
+        \\        return 7
+        \\    return 1
+    , 7);
+    try reject(
+        \\def main() -> i64:
+        \\    value = Some("x") == Some("x")
+        \\    return 1
+    , "E_OPTION_INFERENCE");
+}
+
 // spec: RECORD-DEFAULT-1
 test "record field defaults fill omitted fields in positional and named construction" {
     try result(

@@ -42,6 +42,20 @@ $ mylang build examples/factorial.my --run --cache-dir /tmp/qbe-cache
 120
 ```
 
+An instruction step ceiling is compile-time policy. A `Debug` build, a shared
+library, and a `run` that named `--max-steps=N` carry exact per-instruction
+accounting, so the ceiling stops the program at the instruction it names. A
+`ReleaseFast` executable that was never asked for a ceiling carries none: it
+emits no step check, which is what makes the default `mylang run` and
+`mylang build --mode ReleaseFast` output small and fast. The per-instruction
+position marker is kept only where a diagnostic can read it — an instruction that
+can fail, an `assert`, or a call site — because that is what trap traces and
+`assert` messages read.
+Because such a binary cannot honor a ceiling, giving it `--max-steps=` at runtime
+reports `R_NO_STEP_ACCOUNTING` and names how to get a bounded run, rather than
+silently ignoring the flag. `--max-frames`, `--timeout` and `--max-memory` are
+enforced by the runtime and are unaffected.
+
 ## Object cache and link
 
 Everything a build compiles is content addressed under `--cache-dir`

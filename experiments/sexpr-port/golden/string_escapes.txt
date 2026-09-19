@@ -1,0 +1,8 @@
+(strings
+  "plain"
+  "escaped \"quote\""
+  "back\\slash"
+  "tab\there"
+  "new\nline"
+  "brace { and } bracket [ ]"
+  "percent 10% and amp &")

@@ -178,20 +178,23 @@ pub const Compilation = struct {
     /// Lower with an explicit `debug` policy: a ReleaseFast build drops the nodes.
     pub fn emitWithOptions(self: *Compilation, drop_debug: bool) EmitError!void {
         try self.check();
-        if (self.code == null) self.code = try lower.lowerWith(self.arena.allocator(), self.program.?, drop_debug);
+        if (self.code == null) {
+            const lowered = try lower.lowerWith(self.arena.allocator(), self.program.?, drop_debug);
+            self.code = try @import("bytecode_inline.zig").inlineProgram(self.arena.allocator(), lowered);
+        }
     }
 
     /// Allocate independently compilable scalar QBE units after full checking.
     pub fn emitQbe(self: *Compilation, allocator: std.mem.Allocator) EmitNativeError![]u8 {
-        return self.emitQbeWithOptions(allocator, false);
+        return self.emitQbeWithOptions(allocator, false, true);
     }
 
-    /// Emit QBE units under an explicit `debug` policy.
-    pub fn emitQbeWithOptions(self: *Compilation, allocator: std.mem.Allocator, drop_debug: bool) EmitNativeError![]u8 {
+    /// Emit QBE units under an explicit `debug` policy and step-accounting choice.
+    pub fn emitQbeWithOptions(self: *Compilation, allocator: std.mem.Allocator, drop_debug: bool, step_checks: bool) EmitNativeError![]u8 {
         try self.emitWithOptions(drop_debug);
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
-        return @import("qbe.zig").generate(allocator, self.code.?, self.src, &sink);
+        return @import("qbe.zig").generateWithInterface(allocator, self.code.?, self.src, &sink, .{ .step_checks = step_checks });
     }
 
     /// Allocate a source-annotated disassembly of the lowered program.

@@ -40,10 +40,11 @@ pub const Sources = struct {
         inline for (.{ "records", "variants" }) |category| for (@field(program.types, category)) |declaration| {
             if (declaration.type_parameters.len == 0) continue;
             const parameters = try requirements.resolve(allocator, src, declaration.type_parameters, sink);
-            const fields = if (@hasField(@TypeOf(declaration), "fields")) declaration.fields else declaration.cases;
-            for (fields) |field| {
-                const span: ?source.Span = if (@hasField(@TypeOf(field), "ty")) field.ty else field.payload;
-                if (span) |at| try self.scopes.append(allocator, .{ .span = at, .parameters = parameters, .nominal = true });
+            if (comptime std.mem.eql(u8, category, "records")) {
+                for (declaration.fields) |field| try self.scopes.append(allocator, .{ .span = field.ty, .parameters = parameters, .nominal = true });
+            } else for (declaration.cases) |case| {
+                if (case.payload) |at| try self.scopes.append(allocator, .{ .span = at, .parameters = parameters, .nominal = true });
+                for (case.fields) |field| try self.scopes.append(allocator, .{ .span = field.ty, .parameters = parameters, .nominal = true });
             }
         };
         std.mem.sort(Scope, self.scopes.items, {}, less);

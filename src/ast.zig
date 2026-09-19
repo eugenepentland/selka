@@ -81,7 +81,19 @@ pub const Node = struct {
         arena_escape: struct { arena: Span, value: NodeId },
         cast: TypedValue,
         wrap: TypedValue,
-        variant: struct { ty: Span, name: Span, value: ?NodeId },
+        variant: struct {
+            ty: Span,
+            name: Span,
+            /// The single payload of a `case: T` construction.
+            value: ?NodeId = null,
+            /// A parenthesized case's field arguments in source order, with the
+            /// keyword name of each named argument (null for a positional one).
+            values: []const NodeId = &.{},
+            value_names: []const ?Span = &.{},
+            /// Whether this node constructs a parenthesized named-field case,
+            /// which stays true even when the call supplies no arguments.
+            fielded: bool = false,
+        },
         unwrap: NodeId,
         index: struct { base: NodeId, index: NodeId },
         replace: struct { base: NodeId, index: NodeId, value: NodeId },
@@ -127,11 +139,13 @@ pub const Comprehension = struct {
 /// quoted message's span; `value` is a non-literal message expression, evaluated
 /// only when the condition is false.
 pub const Assertion = struct { condition: NodeId, message: []const u8, literal: ?Span = null, value: ?NodeId = null };
-/// Expression match case with an optional payload binding and its yielded value.
-/// Source case spelling, optional payload binding, and arm body.
-pub const MatchArm = struct { ty: Span, name: Span, binding: ?Span, discard_payload: bool, body: StatementId };
-/// Source-spelled case name and optional payload type.
-pub const Variant = struct { name: Span, payload: ?Span };
+/// Expression match case with its payload bindings and its yielded value.
+/// `bindings` is empty for a payload-free pattern, holds one entry per named
+/// field of a parenthesized case, and a null entry discards that field.
+pub const MatchArm = struct { ty: Span, name: Span, bindings: []const ?Span = &.{}, body: StatementId };
+/// Source-spelled case name, its optional single payload type, and the named
+/// fields a parenthesized case declares. `payload` and `fields` are exclusive.
+pub const Variant = struct { name: Span, payload: ?Span, fields: []const Parameter = &.{} };
 /// Parsed enum, union, or result declaration with its closed case list.
 pub const Variants = struct { type_parameters: []const TypeParameter = &.{}, fallible: bool = false, name: Span, is_union: bool, cases: []const Variant };
 /// Source field spelling and its initializer expression. `default` marks an

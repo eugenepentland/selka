@@ -1406,6 +1406,16 @@ const Checker = struct {
         const owner = invocation.owner orelse return null;
         if (invocation.type_arguments.len != 0 or self.active.contains(self.src.text(owner))) return null;
         if (!try variant_calls.namesCase(self.src, self.catalog, owner, invocation.name, self.sink)) return null;
+        if (try variant_calls.caseFielded(self.src, self.catalog, owner, invocation.name, self.sink)) {
+            const built = try self.variantValue(.{
+                .ty = owner,
+                .name = invocation.name,
+                .values = invocation.arguments,
+                .value_names = invocation.argument_names,
+                .fielded = true,
+            }, span);
+            return built;
+        }
         if (invocation.arguments.len != 1) return self.sink.fail("E_ARITY", invocation.name, "variant construction takes exactly one payload");
         const built = try self.variantValue(.{ .ty = owner, .name = invocation.name, .value = invocation.arguments[0] }, span);
         return built;
@@ -1415,9 +1425,41 @@ const Checker = struct {
         const shape = try self.shapes().requireVariants(result, span);
         const tag = try self.shapes().memberIndex(shape, variant.name);
         const payload = shape.fields[tag].ty;
+        if (variant.fielded) {
+            const field = payload orelse return self.sink.fail("E_VARIANT_PAYLOAD", span, "this case carries no payload");
+            const record = try self.shapes().schema(field, span);
+            if (record.kind != .record) return error.InternalError;
+            try self.recordFields(field, try self.caseInitializers(record, variant.values, variant.value_names, span), true, span);
+            return result;
+        }
         if ((payload != null) != (variant.value != null)) return self.sink.fail("E_VARIANT_PAYLOAD", span, "construction must supply exactly the declared payload");
         if (variant.value) |value| try self.compatible(try self.expressionExpected(value, payload.?), payload.?, span);
         return result;
+    }
+    /// Bind a parenthesized case's positional and named field arguments to the
+    /// payload record's declared fields, filling every omitted default.
+    // twin-drift-ok: the concrete checker resolves field identity through the type
+    // catalog while this symbolic checker resolves it through the function-local
+    // shape arena; the binding rules themselves are identical.
+    fn caseInitializers(self: *Checker, record: symbolic.Schema, values: []const ast.NodeId, names: []const ?source.Span, span: source.Span) Error![]const ast.FieldInit {
+        if (values.len > record.fields.len) return self.sink.fail("E_ARITY", span, "too many field arguments for this variant case");
+        var initializers: std.ArrayList(ast.FieldInit) = .empty;
+        const supplied = try self.allocator.alloc(bool, record.fields.len);
+        defer self.allocator.free(supplied);
+        @memset(supplied, false);
+        for (values, 0..) |value, source_index| {
+            const keyword = if (names.len == 0) null else names[source_index];
+            const index = if (keyword) |name| try self.shapes().memberIndex(record, name) else source_index;
+            if (supplied[index]) return self.sink.fail("E_DUPLICATE_FIELD", keyword orelse span, "field is initialized more than once");
+            supplied[index] = true;
+            try initializers.append(self.allocator, .{ .name = if (keyword) |name| name else record.fields[index].span, .value = value });
+        }
+        for (record.fields, 0..) |field, index| {
+            if (supplied[index]) continue;
+            const default = field.default_value orelse continue;
+            try initializers.append(self.allocator, .{ .name = field.span, .value = @fromBackingInt(default), .default = true });
+        }
+        return initializers.toOwnedSlice(self.allocator);
     }
     fn patternTag(self: *Checker, value: Symbolic, variants: symbolic.Schema, type_span: source.Span, name: source.Span) Error!usize {
         if (type_span.start != type_span.end) {
@@ -1445,11 +1487,30 @@ const Checker = struct {
             if (seen[tag]) return self.sink.fail("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm");
             seen[tag] = true;
             const payload = variants.fields[tag].ty;
-            if (arm.discard_payload and payload != null and (try self.requiresHandling(payload.?))) return self.sink.fail(eResultDiscard, arm.name, "nested result payload requires explicit handling");
-            if ((payload != null) != (arm.binding != null or arm.discard_payload)) return self.sink.fail("E_PATTERN_PAYLOAD", arm.name, "payload cases require a binding or discard; empty cases take neither");
             const before = self.locals.items.len;
             defer self.endScope(before);
-            if (arm.binding) |binding| try self.bind(binding, payload.?, false);
+            if (payload != null and variants.fields[tag].fielded) {
+                const shape = try self.shapes().schema(payload.?, arm.name);
+                if (arm.bindings.len != shape.fields.len) return self.sink.fail("E_PATTERN_PAYLOAD", arm.name, "a named-field case pattern binds exactly one name per field, using `_` to discard one");
+                var all_discard = true;
+                for (arm.bindings) |binding| if (binding != null) {
+                    all_discard = false;
+                    break;
+                };
+                if (all_discard) {
+                    if (try self.requiresHandling(payload.?)) return self.sink.fail(eResultDiscard, arm.name, "nested result payload requires explicit handling");
+                } else for (arm.bindings, shape.fields) |binding, field| {
+                    const field_type = field.ty orelse return error.InternalError;
+                    if (binding) |at| {
+                        try self.bind(at, field_type, false);
+                    } else if (try self.requiresHandling(field_type)) return self.sink.fail(eResultDiscard, arm.name, "discarding a result-bearing field requires a binding and explicit handling");
+                }
+            } else {
+                const discards_payload = arm.bindings.len == 1 and arm.bindings[0] == null;
+                if (discards_payload and payload != null and (try self.requiresHandling(payload.?))) return self.sink.fail(eResultDiscard, arm.name, "nested result payload requires explicit handling");
+                if (arm.bindings.len > 1 or (payload != null) != (arm.bindings.len == 1)) return self.sink.fail("E_PATTERN_PAYLOAD", arm.name, "payload cases require a binding or discard; empty cases take neither");
+                if (arm.bindings.len == 1) if (arm.bindings[0]) |binding| try self.bind(binding, payload.?, false);
+            }
             const returns = try self.statement(arm.body);
             if (!returns) {
                 try self.requireHandled(before, arm.name);

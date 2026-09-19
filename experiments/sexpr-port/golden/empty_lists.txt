@@ -1,0 +1,7 @@
+()
+(empty)
+(holds ())
+(pair () ())
+(trio () () ())
+(deeply
+  (empty (still (empty (inner ())))))

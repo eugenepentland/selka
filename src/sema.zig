@@ -23,6 +23,8 @@ const eResultPath = diagnostic.result_path;
 const eShadowing = diagnostic.shadowing;
 const eIterationShadow = "iteration binding shadows an active declaration";
 const eWildcardArm = "E_WILDCARD_ARM";
+const eVariantPayload = "E_VARIANT_PAYLOAD";
+const ePatternPayload = "E_PATTERN_PAYLOAD";
 const eConversionBody = "E_CONVERSION_BODY";
 const eByteConversion = "E_BYTES_CONVERSION";
 const sem_copy = @import("semantic_copy.zig");
@@ -32,7 +34,7 @@ const sem_entry = @import("semantic_entry.zig");
 /// Managed collection methods whose only argument has the receiver's own sequence type.
 /// Recognize `case _`, the contextual arm that stands for every remaining variant.
 fn wildcard(src: source.Source, arm: anytype) bool {
-    if (arm.ty.start != arm.ty.end or arm.binding != null or arm.discard_payload) return false;
+    if (arm.ty.start != arm.ty.end or arm.bindings.len != 0) return false;
     return std.mem.eql(u8, src.text(arm.name), "_");
 }
 
@@ -971,23 +973,40 @@ const Checker = struct {
     fn numericBuilder(self: *Checker, span: source.Span) numeric_surface.Builder {
         return .{ .arena = self.allocator, .nodes = &self.nodes, .span = span, .float_type = self.catalog.names.get("float").? };
     }
-    fn obviousNumericType(self: *Checker, id: ast.NodeId) ?typed.Type {
+    fn obviousType(self: *Checker, id: ast.NodeId) ?typed.Type {
         const node = self.syntax.nodes.items[@backingInt(id)];
         if (self.expected_types.get(node.span)) |expected| return expected;
         if (node.data == .name) if (self.active.get(self.src.text(node.data.name))) |slot| return self.locals.items[@backingInt(slot)].ty;
+        // A field access over an obviously typed base is itself obvious, so
+        // `node.literal == ...` and `node.kind == Kind.atom("x")` can hint the
+        // constructor on the other operand the way a plain binding does.
+        if (node.data == .field) if (self.obviousFieldType(node.data.field.base, node.data.field.name)) |field_ty| return field_ty;
         if (node.data == .integer and float_syntax.isLiteral(self.src.text(node.data.integer))) return self.catalog.names.get("float");
         return null;
     }
+    /// Field type of `base.name` when both the base type and the field are
+    /// already known, without diagnosing a miss: this runs in the hint pass,
+    /// before the operands themselves are checked.
+    fn obviousFieldType(self: *Checker, base_id: ast.NodeId, name: source.Span) ?typed.Type {
+        const base = self.obviousType(base_id) orelse return null;
+        if (!base.isAggregate()) return null;
+        const index = base.recordIndex();
+        if (index >= self.catalog.records.len) return null;
+        const slot = self.catalog.field_names.items[index].get(self.src.text(name)) orelse return null;
+        const declared = self.catalog.records[index].fields;
+        if (slot >= declared.len) return null;
+        return declared[slot].ty;
+    }
     fn hintBinary(self: *Checker, node: ast.Node) Error!void {
         const binary = node.data.binary;
-        const expected = self.obviousNumericType(binary.left) orelse self.obviousNumericType(binary.right) orelse self.expected_types.get(node.span) orelse return;
+        const expected = self.obviousType(binary.left) orelse self.obviousType(binary.right) orelse self.expected_types.get(node.span) orelse return;
         if (!expected.isInteger() and !numeric_surface.isFloat(expected, self.catalog.records)) {
             // `==`/`!=` operands share one aggregate type, so a typed side gives a
             // contextual constructor on the other side its type (`v == None`,
             // `r == Ok(3)`); any other aggregate operator is unaffected.
             if (binary.op != .eq and binary.op != .ne) return;
-            if (self.obviousNumericType(binary.left)) |left| try self.hint(binary.right, left);
-            if (self.obviousNumericType(binary.right)) |right| try self.hint(binary.left, right);
+            if (self.obviousType(binary.left)) |left| try self.hint(binary.right, left);
+            if (self.obviousType(binary.right)) |right| try self.hint(binary.left, right);
             return;
         }
         try self.hint(binary.left, expected);
@@ -2103,6 +2122,27 @@ const Checker = struct {
         return self.ty(variant.ty);
     }
     fn queueVariant(self: *Checker, work: *std.ArrayList(Work), id: ast.NodeId, variant: @FieldType(@FieldType(ast.Node, "data"), "variant")) Error!bool {
+        const span = self.syntax.nodes.items[@backingInt(id)].span;
+        if (variant.fielded) {
+            const variant_type = try self.variantType(variant, span);
+            const tag = try self.catalog.variant(variant_type, self.src, variant.name, self.sink);
+            const case = self.catalog.records[variant_type.recordIndex()].shape.variants.?.cases[tag];
+            const payload = case.payload orelse return self.sink.failRelated(
+                eVariantPayload,
+                span,
+                "this case carries no payload, so it is constructed without parentheses",
+                .{ .span = case.declaration, .message = variantDeclaredHere },
+            );
+            const record = try self.catalog.record(payload, span, self.sink);
+            const initializers = try self.caseInitializers(record, variant.values, variant.value_names, span);
+            for (initializers) |initializer| {
+                const index = try self.catalog.field(record.id, self.src, initializer.name, self.sink);
+                try self.hint(initializer.value, record.fields[index].ty);
+            }
+            try work.append(self.allocator, .{ .id = id, .emit = true });
+            try self.queueFields(work, initializers);
+            return true;
+        }
         if (variant.value) |value| {
             const variant_type = try self.variantType(variant, self.syntax.nodes.items[@backingInt(id)].span);
             const tag = try self.catalog.variant(variant_type, self.src, variant.name, self.sink);
@@ -2112,6 +2152,30 @@ const Checker = struct {
             return true;
         }
         return false;
+    }
+    /// Bind a parenthesized case's positional and named field arguments to the
+    /// payload record's declared fields, appending one initializer per omitted
+    /// defaulted field. Arity, unknown, duplicate and missing-field diagnostics
+    /// come from the shared record-construction path.
+    fn caseInitializers(self: *Checker, record: typed.Record, values: []const ast.NodeId, names: []const ?source.Span, span: source.Span) Error![]const ast.FieldInit {
+        if (values.len > record.fields.len) return self.sink.fail("E_ARITY", span, "too many field arguments for this variant case");
+        var initializers: std.ArrayList(ast.FieldInit) = .empty;
+        const supplied = try self.allocator.alloc(bool, record.fields.len);
+        defer self.allocator.free(supplied);
+        @memset(supplied, false);
+        for (values, 0..) |value, source_index| {
+            const keyword = if (names.len == 0) null else names[source_index];
+            const index = if (keyword) |name| try self.catalog.field(record.id, self.src, name, self.sink) else source_index;
+            if (supplied[index]) return self.sink.fail("E_DUPLICATE_FIELD", keyword orelse span, "field is initialized more than once");
+            supplied[index] = true;
+            try initializers.append(self.allocator, .{ .name = if (keyword) |name| name else record.fields[index].declaration, .value = value });
+        }
+        for (record.fields, 0..) |field, index| {
+            if (supplied[index]) continue;
+            const default = field.default_value orelse continue;
+            try initializers.append(self.allocator, .{ .name = field.declaration, .value = @fromBackingInt(default), .default = true });
+        }
+        return initializers.toOwnedSlice(self.allocator);
     }
     /// Queue a qualified call on a local `Filesystem`. `read_only()` and `dir()`
     /// queue no operands; a whole-path helper queues its value arguments, because
@@ -2584,8 +2648,17 @@ const Checker = struct {
         if (!self.active.contains(self.src.text(name))) {
             const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = self.sink, .catalog = self.catalog };
             if (try constants.lookup(name)) |index| {
-                out.ty = try constants.literalType(index) orelse (try constants.evaluate(index)).typeOf();
-                out.data = .{ .call = .{ .function = self.ordinary_ids[index] orelse return error.InternalError, .arguments = &.{} } };
+                // A str/bytes literal constant still needs its getter call, but a
+                // scalar constant is a compile-time value: fold it to a literal at
+                // each use so no guest call remains.
+                if (try constants.literalType(index)) |literal_ty| {
+                    out.ty = literal_ty;
+                    out.data = .{ .call = .{ .function = self.ordinary_ids[index] orelse return error.InternalError, .arguments = &.{} } };
+                    return;
+                }
+                const value = try constants.evaluate(index);
+                out.ty = value.typeOf();
+                out.data = if (value == .bool) .{ .boolean = value.bool } else .{ .integer = if (value == .i64) value.i64 else value.integer.value };
                 return;
             }
         }
@@ -3324,18 +3397,35 @@ const Checker = struct {
                 out.ty = try self.variantType(variant, node.span);
                 const tag = try self.catalog.variant(out.ty, self.src, variant.name, self.sink);
                 const schema = (try self.catalog.variants(out.ty, node.span, self.sink)).cases[tag];
-                const value = if (variant.value) |input| self.resolved[@backingInt(input)].? else null;
-                if ((schema.payload != null) != (value != null)) return self.sink.failRelated(
-                    "E_VARIANT_PAYLOAD",
-                    node.span,
-                    "construction must supply exactly the payload declared for this variant",
-                    .{
-                        .span = schema.declaration,
-                        .message = variantDeclaredHere,
-                    },
-                );
-                if (value) |input| try self.require(self.nodes.items[@backingInt(input)].ty, schema.payload.?, self.syntax.nodes.items[@backingInt(variant.value.?)].span);
-                out.data = .{ .variant = .{ .tag = tag, .value = value } };
+                if (variant.fielded) {
+                    const payload = schema.payload orelse return self.sink.failRelated(
+                        eVariantPayload,
+                        node.span,
+                        "this case carries no payload, so it is constructed without parentheses",
+                        .{ .span = schema.declaration, .message = variantDeclaredHere },
+                    );
+                    const record = try self.catalog.record(payload, node.span, self.sink);
+                    const initializers = try self.caseInitializers(record, variant.values, variant.value_names, node.span);
+                    const checked = try self.fields(payload, initializers, true, node.span);
+                    // The payload record is the variant's single value, so every
+                    // downstream lowering and equality path is unchanged.
+                    const record_node: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+                    try self.nodes.append(self.allocator, .{ .span = node.span, .ty = payload, .data = .{ .record = checked } });
+                    out.data = .{ .variant = .{ .tag = tag, .value = record_node } };
+                } else {
+                    const value = if (variant.value) |input| self.resolved[@backingInt(input)].? else null;
+                    if ((schema.payload != null) != (value != null)) return self.sink.failRelated(
+                        eVariantPayload,
+                        node.span,
+                        "construction must supply exactly the payload declared for this variant",
+                        .{
+                            .span = schema.declaration,
+                            .message = variantDeclaredHere,
+                        },
+                    );
+                    if (value) |input| try self.require(self.nodes.items[@backingInt(input)].ty, schema.payload.?, self.syntax.nodes.items[@backingInt(variant.value.?)].span);
+                    out.data = .{ .variant = .{ .tag = tag, .value = value } };
+                }
             },
             .index => |access| try self.checkValueIndex(node, access, &out),
             .replace => |replace| {
@@ -3475,7 +3565,9 @@ const Checker = struct {
             .acquire_resource, .environment_get, .environment_only => 2,
             .index, .binary => 2,
             .replace => 3,
-            .variant => |variant| if (variant.value != null) 1 else 0,
+            .variant => |variant| if (node.data == .variant and node.data.variant.fielded)
+                (if (variant.value) |record_node| self.nodes.items[@backingInt(record_node)].data.record.len else 0)
+            else if (variant.value != null) 1 else 0,
             .array => |values| values.len,
             .record => |initializers| initializers.len,
             .update => |update| update.fields.len + 1,
@@ -3756,6 +3848,126 @@ const Checker = struct {
         }
         if (covered == 0) return self.sink.fail(eWildcardArm, shape.name, "every variant already has an arm, so `case _` is unreachable");
     }
+    /// Per-arm payload locals: the slot the lowering binds the payload into, the
+    /// field-projection prologue that initializes visible bindings, and the names
+    /// to remove from scope after the arm.
+    const ArmBindings = struct {
+        slot: ?typed.LocalId = null,
+        prologue: []const typed.StatementId = &.{},
+        names: []const []const u8 = &.{},
+        fielded: bool = false,
+    };
+    fn bindArmPayload(self: *Checker, case_schema: typed.Variant, arm: ast.MatchArm) Error!ArmBindings {
+        if (case_schema.fielded) return self.bindFieldedPayload(case_schema, arm);
+        const payload = case_schema.payload;
+        if (arm.bindings.len > 1) return self.sink.failRelated(
+            ePatternPayload,
+            arm.name,
+            "a single-payload case binds one name",
+            .{ .span = case_schema.declaration, .message = variantDeclaredHere },
+        );
+        const discards_payload = arm.bindings.len == 1 and arm.bindings[0] == null;
+        if (discards_payload and payload != null and self.requiresHandling(payload.?)) return self.sink.fail(eResultDiscard, arm.name, "nested result payload requires a binding and explicit handling");
+        if ((payload != null) != (arm.bindings.len == 1)) return self.sink.failRelated(
+            ePatternPayload,
+            arm.name,
+            "payload variants require a binding or (discard); empty variants take neither",
+            .{ .span = case_schema.declaration, .message = variantDeclaredHere },
+        );
+        if (arm.bindings.len == 0) return .{};
+        const binding = arm.bindings[0] orelse return .{};
+        const name = self.src.text(binding);
+        if (try self.topLevel(binding) or self.active.contains(name)) return self.sink.fail(eShadowing, binding, "payload binding shadows an active binding or top-level name");
+        const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
+        try self.locals.append(self.allocator, .{
+            .ownership = .{ .initialized = true, .transfer_available = self.transfers(payload.?) },
+            .name = name,
+            .declaration = binding,
+            .ty = payload.?,
+            .mutable = false,
+        });
+        try self.active.put(self.allocator, name, slot);
+        return .{ .slot = slot, .names = try self.allocator.dupe([]const u8, &.{name}) };
+    }
+    /// Bind one name per named field. The lowering still stores the payload
+    /// record in a hidden slot; every visible binding is a `.field` projection
+    /// of it, so typed IR, bytecode and native lowering stay single-slot.
+    fn bindFieldedPayload(self: *Checker, case_schema: typed.Variant, arm: ast.MatchArm) Error!ArmBindings {
+        const payload = case_schema.payload orelse return error.InternalError;
+        const record = try self.catalog.record(payload, arm.name, self.sink);
+        if (arm.bindings.len != record.fields.len) return self.sink.failRelated(
+            ePatternPayload,
+            arm.name,
+            "a named-field case pattern binds exactly one name per field, using `_` to discard one",
+            .{ .span = case_schema.declaration, .message = variantDeclaredHere },
+        );
+        var all_discard = true;
+        for (arm.bindings) |binding| if (binding != null) {
+            all_discard = false;
+            break;
+        };
+        // A pattern that discards every field behaves exactly like `case _` over
+        // the whole payload, including its cleanup.
+        if (all_discard) {
+            if (self.requiresHandling(payload)) return self.sink.fail(eResultDiscard, arm.name, "nested result payload requires a binding and explicit handling");
+            return .{};
+        }
+        const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
+        try self.locals.append(self.allocator, .{
+            .ownership = .{ .initialized = true },
+            .usage = .{ .reads = 1, .temporary = true },
+            .name = "",
+            .declaration = arm.name,
+            .ty = payload,
+            .mutable = false,
+        });
+        var prologue: std.ArrayList(typed.StatementId) = .empty;
+        var names: std.ArrayList([]const u8) = .empty;
+        for (arm.bindings, record.fields, 0..) |binding, field_info, index| {
+            const binding_span = binding orelse {
+                if (self.requiresHandling(field_info.ty)) return self.sink.failRelated(
+                    eResultDiscard,
+                    arm.name,
+                    "discarding this field would drop a result-bearing payload; bind it and handle the result",
+                    .{ .span = field_info.declaration, .message = "result-bearing field declared here" },
+                );
+                continue;
+            };
+            const name = self.src.text(binding_span);
+            if (try self.topLevel(binding_span) or self.active.contains(name)) return self.sink.fail(eShadowing, binding_span, "payload binding shadows an active binding or top-level name");
+            const binding_slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
+            try self.locals.append(self.allocator, .{
+                .ownership = .{ .initialized = true, .transfer_available = self.transfers(field_info.ty) },
+                .name = name,
+                .declaration = binding_span,
+                .ty = field_info.ty,
+                .mutable = false,
+            });
+            try self.active.put(self.allocator, name, binding_slot);
+            try names.append(self.allocator, name);
+            const base: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+            try self.nodes.append(self.allocator, .{ .span = arm.name, .ty = payload, .data = .{ .local = slot } });
+            const projected: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+            try self.nodes.append(self.allocator, .{ .span = binding_span, .ty = field_info.ty, .data = .{ .field = .{ .base = base, .index = index } } });
+            try prologue.append(self.allocator, @fromBackingInt(self.statements.items.len));
+            try self.statements.append(self.allocator, .{ .span = binding_span, .terminates = false, .data = .{ .initialize = .{ .slot = binding_slot, .value = projected } } });
+        }
+        return .{ .slot = slot, .prologue = try prologue.toOwnedSlice(self.allocator), .names = try names.toOwnedSlice(self.allocator), .fielded = true };
+    }
+    fn armCleanup(self: *Checker, bindings: ArmBindings, payload: ?typed.Type, first_local: usize) Error![]const typed.LocalId {
+        var cleanup: std.ArrayList(typed.LocalId) = .empty;
+        if (bindings.fielded) {
+            // A managed payload keeps its trace slot cleared; a move-only payload
+            // is owned by the per-field bindings instead, so it is never dropped
+            // twice.
+            if (bindings.slot) |hidden| if (!typed.moveOnly(payload.?, self.catalog.records) and try self.managedBearing(payload.?)) try cleanup.append(self.allocator, hidden);
+            for (self.locals.items[first_local..], first_local..) |local, index| {
+                if (bindings.slot != null and @as(usize, @backingInt(bindings.slot.?)) == index) continue;
+                if (try self.needsLocalCleanup(local.ty)) try cleanup.append(self.allocator, @fromBackingInt(index));
+            }
+        } else if (bindings.slot) |payload_slot| if (try self.needsLocalCleanup(payload.?)) try cleanup.append(self.allocator, payload_slot);
+        return cleanup.toOwnedSlice(self.allocator);
+    }
     fn statementMatch(self: *Checker, stmt: ast.Statement, match: @FieldType(@FieldType(ast.Statement, "data"), "match"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         const value = try self.expression(match.value);
         const value_type = self.nodes.items[@backingInt(value)].ty;
@@ -3786,54 +3998,31 @@ const Checker = struct {
             const tag = try self.patternTag(value_type, arm.ty, arm.name);
             if (seen[tag]) |previous| return self.sink.failRelated("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm", .{ .span = previous, .message = "previous arm" });
             seen[tag] = arm.name;
-            const payload = variants.cases[tag].payload;
-            if (arm.discard_payload and payload != null and self.requiresHandling(payload.?)) return self.sink.fail(eResultDiscard, arm.name, "nested result payload requires a binding and explicit handling");
-            if ((payload != null) != (arm.binding != null or arm.discard_payload)) return self.sink.failRelated(
-                "E_PATTERN_PAYLOAD",
-                arm.name,
-                "payload variants require a binding or (discard); empty variants take neither",
-                .{
-                    .span = variants.cases[tag].declaration,
-                    .message = variantDeclaredHere,
-                },
-            );
+            const case_schema = variants.cases[tag];
             const first_local = self.locals.items.len;
-            var payload_name: ?[]const u8 = null;
-            defer if (payload_name) |name| {
+            const arm_bindings = try self.bindArmPayload(case_schema, arm);
+            defer for (arm_bindings.names) |name| {
                 _ = self.active.remove(name);
             };
-            var slot: ?typed.LocalId = null;
-            if (arm.binding) |binding| {
-                const name = self.src.text(binding);
-                if (try self.topLevel(binding) or self.active.contains(name)) return self.sink.fail(eShadowing, binding, "payload binding shadows an active binding or top-level name");
-                slot = @fromBackingInt(self.locals.items.len);
-                try self.locals.append(self.allocator, .{
-                    .ownership = .{
-                        .initialized = true,
-                        .transfer_available = self.transfers(payload.?),
-                    },
-                    .name = name,
-                    .declaration = binding,
-                    .ty = payload.?,
-                    .mutable = false,
-                });
-                try self.active.put(self.allocator, name, slot.?);
-                payload_name = name;
-            }
             var body = try self.statement(arm.body);
+            // The field-projection prologue must run on every path into the arm,
+            // including one whose body returns immediately; cleanup is only needed
+            // when the body can fall through.
+            const cleanup: []const typed.LocalId = if (body.terminates) &.{} else try self.armCleanup(arm_bindings, case_schema.payload, first_local);
+            if (arm_bindings.prologue.len != 0 or cleanup.len != 0) {
+                const children = try self.allocator.alloc(typed.StatementId, arm_bindings.prologue.len + 1);
+                @memcpy(children[0..arm_bindings.prologue.len], arm_bindings.prologue);
+                children[arm_bindings.prologue.len] = body.id;
+                body.id = @fromBackingInt(self.statements.items.len);
+                try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = body.terminates, .owned_cleanup = cleanup, .data = .{ .block = children } });
+            }
             if (!body.terminates) {
                 try self.mergeMatchInit(&continuation_init);
                 try self.requireHandled(first_local, stmt.span);
-                if (slot) |payload_slot| if (try self.needsLocalCleanup(payload.?)) {
-                    const children = try self.allocator.dupe(typed.StatementId, &.{body.id});
-                    const cleanup_slots = try self.allocator.dupe(typed.LocalId, &.{payload_slot});
-                    body.id = @fromBackingInt(self.statements.items.len);
-                    try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = false, .owned_cleanup = cleanup_slots, .data = .{ .block = children } });
-                };
                 if (continuation) |state| try self.samePending(state, stmt.span, eResultPath) else continuation = try self.pendingState(before.len);
             }
             flow.terminates = flow.terminates and body.terminates;
-            try arms.append(self.allocator, .{ .tag = tag, .slot = slot, .body = body.id });
+            try arms.append(self.allocator, .{ .tag = tag, .slot = arm_bindings.slot, .body = body.id });
         }
         for (seen, variants.cases) |covered, variant| if (covered == null) {
             const message = try std.fmt.allocPrint(self.allocator, "match does not handle variant `{s}`; every variant requires an explicit arm", .{variant.name});

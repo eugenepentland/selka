@@ -225,3 +225,106 @@ test "no implicit width or boolean conversions and unknown suffixes are rejected
         try testing.expectEqualStrings(case.code, compilation.diagnostics.items[0].code);
     }
 }
+
+// spec: QBE-INTOPS-1
+test "inlined multiplication keeps every width and traps past its bounds" {
+    try evaluate("i64(100i8 * 1i8)", 100);
+    try evaluate("i64(-64i8 * 2i8)", -128);
+    try evaluate("i64(15u8 * 17u8)", 255);
+    try evaluate("i64(46340i32 * 46340i32)", 2147395600);
+    try evaluate("i64(65535u32 * 65535u32)", 4294836225);
+    try evaluate("3037000499 * 3037000499", 9223372030926249001);
+    try evaluate("-9223372036854775808 * 1", -9223372036854775808);
+    try evaluate("i64(divtrunc(4294967295u64 * 4294967295u64, 4294967295u64))", 4294967295);
+    const cases = [_][]const u8{
+        "127i8 * 2i8",
+        "-128i8 * -1i8",
+        "16u8 * 16u8",
+        "2147483647i32 * 2i32",
+        "-2147483648i32 * -1i32",
+        "65536u32 * 65536u32",
+        "9223372036854775807 * 2",
+        "-9223372036854775808 * -1",
+        "3037000500 * 3037000500",
+        "18446744073709551615u64 * 2u64",
+        "18446744073709551615u64 * 18446744073709551615u64",
+    };
+    for (cases) |expr| try trapped(expr, "R_OVERFLOW");
+}
+
+test "inlined division and remainder trap zero and narrow overflow only" {
+    try evaluate("i64(divtrunc(-7i16, 3i16))", -2);
+    try evaluate("i64(remtrunc(-7i32, 3i32))", -1);
+    try evaluate("(-7) // 3", -3);
+    try evaluate("(-7) % 3", 2);
+    try evaluate("7 // (-3)", -3);
+    try evaluate("7 % (-3)", -2);
+    try evaluate("(-7) // (-3)", 2);
+    try evaluate("(-7) % (-3)", -1);
+    try evaluate("i64(17u8 // 5u8)", 3);
+    try evaluate("i64(17u8 % 5u8)", 2);
+    try evaluate("i64(-128i8 % -1i8)", 0);
+    try evaluate("i64(-32768i16 % -1i16)", 0);
+    try evaluate("i64(-2147483648i32 % -1i32)", 0);
+    try evaluate("-9223372036854775808 % -1", 0);
+    try evaluate("i64(remtrunc(-9223372036854775808, -1))", 0);
+    try evaluate("i64(18446744073709551615u64 // 2u64)", 9223372036854775807);
+    const cases = [_]struct { expression: []const u8, code: []const u8 }{
+        .{ .expression = "-128i8 // -1i8", .code = "R_OVERFLOW" },
+        .{ .expression = "-32768i16 // -1i16", .code = "R_OVERFLOW" },
+        .{ .expression = "-2147483648i32 // -1i32", .code = "R_OVERFLOW" },
+        .{ .expression = "-9223372036854775808 // -1", .code = "R_OVERFLOW" },
+        .{ .expression = "divtrunc(-9223372036854775808, -1)", .code = "R_OVERFLOW" },
+        .{ .expression = "10 // 0", .code = "R_DIVISION_BY_ZERO" },
+        .{ .expression = "10 % 0", .code = "R_DIVISION_BY_ZERO" },
+        .{ .expression = "divtrunc(10, 0)", .code = "R_DIVISION_BY_ZERO" },
+        .{ .expression = "remtrunc(10, 0)", .code = "R_DIVISION_BY_ZERO" },
+        .{ .expression = "1u8 // 0u8", .code = "R_DIVISION_BY_ZERO" },
+        .{ .expression = "1u16 % 0u16", .code = "R_DIVISION_BY_ZERO" },
+        .{ .expression = "1i32 // 0i32", .code = "R_DIVISION_BY_ZERO" },
+        .{ .expression = "1u64 % 0u64", .code = "R_DIVISION_BY_ZERO" },
+    };
+    for (cases) |case| try trapped(case.expression, case.code);
+}
+
+test "inlined shifts wrap within the width and reject out of range counts" {
+    try evaluate("i64(shift_left(1i8, 7i8))", -128);
+    try evaluate("i64(shift_left(1u8, 7u8))", 128);
+    try evaluate("i64(shift_left(1i16, 15i16))", -32768);
+    try evaluate("i64(shift_left(1i32, 31i32))", -2147483648);
+    try evaluate("shift_left(1, 63)", -9223372036854775808);
+    try evaluate("i64(shift_right(-128i8, 7i8))", -1);
+    try evaluate("i64(shift_right(-8i8, 2i8))", -2);
+    try evaluate("i64(shift_right(255u8, 4u8))", 15);
+    try evaluate("shift_right(-1, 63)", -1);
+    try evaluate("i64(divtrunc(shift_left(1u64, 63u64), 2u64))", 4611686018427387904);
+    const cases = [_][]const u8{
+        "shift_left(1i8, 8i8)",
+        "shift_right(1i8, 8i8)",
+        "shift_left(1u8, 8u8)",
+        "shift_left(1i16, 16i16)",
+        "shift_left(1u32, 32u32)",
+        "shift_left(1, 64)",
+        "shift_left(1u64, 64u64)",
+        "shift_right(1i8, -1i8)",
+    };
+    for (cases) |expr| try trapped(expr, "R_INVALID_SHIFT");
+}
+
+test "inlined negation traps only at each signed width's minimum" {
+    try evaluate("i64(-(-127i8))", 127);
+    try evaluate("i64(-(-32767i16))", 32767);
+    try evaluate("i64(-(-2147483647i32))", 2147483647);
+    try evaluate("i64(-0u8)", 0);
+    const cases = [_][]const u8{
+        "-(-128i8)",
+        "-(-32768i16)",
+        "-(-2147483648i32)",
+        "-(-9223372036854775807 - 1)",
+        "-1u8",
+        "-1u16",
+        "-1u32",
+        "-1u64",
+    };
+    for (cases) |expr| try trapped(expr, "R_OVERFLOW");
+}

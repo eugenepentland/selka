@@ -1,0 +1,22 @@
+module b_tokens
+
+# Audit driver: read + tokenize. The difference from a_read is the tokenizer's
+# own cost, including decoding every token's text into a managed str.
+import sexpr.tokenizer as tk
+
+
+def main(args: list[str], fs: Filesystem, out: Stream, err: Stream) -> int:
+    source = b""
+    match read_file(fs, args[0]):
+        case Ok(data):
+            source = data
+        case Err(problem):
+            err.print("read failed", problem)
+            return 2
+    match tk.tokenize(source):
+        case Ok(tokens):
+            out.print(f"tokens={len(tokens)}")
+            return 0
+        case Err(problem):
+            err.print("tokenize failed", problem)
+            return 1

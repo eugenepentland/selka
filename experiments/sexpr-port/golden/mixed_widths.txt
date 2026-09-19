@@ -1,0 +1,7 @@
+(mixed
+  tiny
+  (medium-child here)
+  "a fairly long quoted string value that pushes width"
+  (deep
+    (nested (structure (that (keeps going)))))
+  short)

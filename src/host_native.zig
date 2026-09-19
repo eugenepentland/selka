@@ -73,10 +73,13 @@ pub const Program = struct {
         const source = try self.file("provider.c");
         try self.write(source, request.provider);
         const entry = try std.fs.path.join(self.allocator, &.{ try files.absolute(request.project), "main.my" });
+        // Every invocation runs the guest under `step_budget`, so the guest must
+        // carry the accounting that enforces it.
         const status = try qbe_build.run(process, &.{
-            entry,   "--project",                                     "--provider",  source,
-            "-o",    self.path,                                       "--cache-dir", cache,
-            "--qbe", located(self.io, request.qbe, "qbe", tools.qbe), "--zig",       located(self.io, request.zig, "zig", tools.zig),
+            entry,                                           "--project", "--provider",                                    source,
+            "-o",                                            self.path,   "--cache-dir",                                   cache,
+            "--step-accounting",                             "--qbe",     located(self.io, request.qbe, "qbe", tools.qbe), "--zig",
+            located(self.io, request.zig, "zig", tools.zig),
         });
         if (status != 0) return error.NativeToolFailed;
     }

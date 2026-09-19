@@ -9,6 +9,12 @@ pub const Predicate = enum { eq, ne, lt, le, gt, ge };
 pub const Equality = enum { eq, ne };
 /// Destination and optional payload local for one variant case.
 pub const SwitchArm = struct { target: usize, slot: ?typed.LocalId };
+/// Which inlined callee one spliced instruction came from. `callee` is the
+/// directly spliced function, `callee_pc` its local program counter and
+/// `call_position` the pc in the function that owns the instruction whose
+/// location entry is the call site. The emitter groups consecutive instructions
+/// sharing a callee and call site into one inline-frame record.
+pub const InlineOrigin = struct { callee: typed.FunctionId, callee_pc: usize, call_position: usize };
 /// Source-located operation in the checked instruction stream.
 pub const Instruction = struct {
     span: Span,
@@ -76,6 +82,9 @@ pub const Instruction = struct {
         call: typed.FunctionId,
         ret,
     },
+    /// Set exactly on an instruction spliced from an inlined callee, so the
+    /// native emitter can rebuild the callee's frames for a trap trace.
+    inline_origin: ?InlineOrigin = null,
 };
 /// Whole-path file helper; operands are the capability, the path and any input.
 pub const FileAccess = struct { kind: @import("file_operations.zig").Access, mode: u8, text: bool, operands: usize, output: typed.Type, shapes: typed.FileShapes };

@@ -1,0 +1,150 @@
+module tests.tokenizer_test
+
+# Guest tests for sexpr.tokenizer, mirroring the tricky cases in
+# eda/src/sexpr/tokenizer.zig's `test` blocks: SI scales, mm vs mil, atoms that
+# merely start with digits, `m`/`mm`/`mil` boundaries, comments, unterminated
+# strings, unexpected characters, and line/col spans.
+
+import sexpr.tokenizer as tk
+
+
+def text_at(tokens: list[tk.Token], index: int) -> str:
+    return tokens[index].text
+
+
+def kind_at(tokens: list[tk.Token], index: int) -> tk.Kind:
+    return tokens[index].kind
+
+
+def token_count(src: bytes) -> int:
+    match tk.tokenize(src):
+        case Ok(tokens):
+            return len(tokens)
+        case Err(_):
+            return -1
+
+
+public def test_parens_atoms_string() -> bool:
+    match tk.tokenize(b"(footprint \"QFN9\" pad-1)"):
+        case Ok(tokens):
+            return len(tokens) == 6 and kind_at(tokens, 0) == tk.Kind.lparen and text_at(tokens, 1) == "footprint" and kind_at(tokens, 2) == tk.Kind.string and text_at(tokens, 2) == "QFN9" and text_at(tokens, 3) == "pad-1" and kind_at(tokens, 4) == tk.Kind.rparen and kind_at(tokens, 5) == tk.Kind.eof
+        case Err(_):
+            return False
+
+
+# A raw slice between the quotes: escapes are left intact, as in Zig.
+public def test_string_keeps_escapes() -> bool:
+    match tk.tokenize(b"\"a\\\"b\""):
+        case Ok(tokens):
+            return text_at(tokens, 0) == "a\\\"b" and kind_at(tokens, 0) == tk.Kind.string
+        case Err(_):
+            return False
+
+
+# SI scales: the token text keeps the verbatim suffix for the parser.
+public def test_si_scales() -> bool:
+    match tk.tokenize(b"220k 100nF 3.3V 10mA 10%"):
+        case Ok(tokens):
+            return kind_at(tokens, 0) == tk.Kind.si_val and text_at(tokens, 0) == "220k" and kind_at(tokens, 1) == tk.Kind.si_val and text_at(tokens, 1) == "100nF" and kind_at(tokens, 2) == tk.Kind.si_val and text_at(tokens, 2) == "3.3V" and kind_at(tokens, 3) == tk.Kind.si_val and text_at(tokens, 3) == "10mA" and kind_at(tokens, 4) == tk.Kind.si_val and text_at(tokens, 4) == "10%"
+        case Err(_):
+            return False
+
+
+# Bare `m` is not a scale; k/M/G/u/n/p are.
+public def test_si_bare_scales() -> bool:
+    match tk.tokenize(b"4.7M 1G 10u 100n 22p 10R 1uH 0.5A"):
+        case Ok(tokens):
+            return kind_at(tokens, 0) == tk.Kind.si_val and text_at(tokens, 0) == "4.7M" and text_at(tokens, 1) == "1G" and text_at(tokens, 2) == "10u" and text_at(tokens, 3) == "100n" and text_at(tokens, 4) == "22p" and text_at(tokens, 5) == "10R" and text_at(tokens, 6) == "1uH" and text_at(tokens, 7) == "0.5A"
+        case Err(_):
+            return False
+
+
+# mm and mil lex as unit_val with the suffix stripped from the text.
+public def test_mm_and_mil() -> bool:
+    match tk.tokenize(b"1.0mm 10mil"):
+        case Ok(tokens):
+            return kind_at(tokens, 0) == tk.Kind.unit_val and text_at(tokens, 0) == "1.0" and kind_at(tokens, 1) == tk.Kind.unit_val and text_at(tokens, 1) == "10"
+        case Err(_):
+            return False
+
+
+# Bare `3m` is an atom; `mm` and `mil` alone are atoms; a longer identifier that
+# merely starts with a scaled number falls back to an atom.
+public def test_bare_m_and_atom_fallbacks() -> bool:
+    match tk.tokenize(b"3m mm mil 100kHz 5V3 204928-0301.stp 12.5abc"):
+        case Ok(tokens):
+            return kind_at(tokens, 0) == tk.Kind.atom and text_at(tokens, 0) == "3m" and text_at(tokens, 1) == "mm" and text_at(tokens, 2) == "mil" and kind_at(tokens, 3) == tk.Kind.atom and text_at(tokens, 3) == "100kHz" and text_at(tokens, 4) == "5V3" and kind_at(tokens, 5) == tk.Kind.atom and text_at(tokens, 5) == "204928-0301.stp" and kind_at(tokens, 6) == tk.Kind.atom and text_at(tokens, 6) == "12.5abc"
+        case Err(_):
+            return False
+
+
+# Plain ints/floats, including a negative int, keep their own kinds.
+public def test_plain_numbers() -> bool:
+    match tk.tokenize(b"42 3.3 -5"):
+        case Ok(tokens):
+            return kind_at(tokens, 0) == tk.Kind.int_val and text_at(tokens, 0) == "42" and kind_at(tokens, 1) == tk.Kind.float_val and text_at(tokens, 1) == "3.3" and kind_at(tokens, 2) == tk.Kind.int_val and text_at(tokens, 2) == "-5"
+        case Err(_):
+            return False
+
+
+# A standalone `%` is an operator atom; `%`-closed literals are si_val.
+public def test_percent_literal_vs_operator() -> bool:
+    match tk.tokenize(b"(tolerance 10% 0.1%) (% a b)"):
+        case Ok(tokens):
+            return kind_at(tokens, 2) == tk.Kind.si_val and text_at(tokens, 2) == "10%" and text_at(tokens, 3) == "0.1%" and kind_at(tokens, 6) == tk.Kind.atom and text_at(tokens, 6) == "%" and text_at(tokens, 7) == "a"
+        case Err(_):
+            return False
+
+
+public def test_operators() -> bool:
+    match tk.tokenize(b"(+ a (* b c)) >= <= == !="):
+        case Ok(tokens):
+            return kind_at(tokens, 1) == tk.Kind.atom and text_at(tokens, 1) == "+" and text_at(tokens, 4) == "*" and text_at(tokens, 9) == ">=" and text_at(tokens, 10) == "<=" and text_at(tokens, 11) == "==" and text_at(tokens, 12) == "!="
+        case Err(_):
+            return False
+
+
+public def test_comments() -> bool:
+    match tk.tokenize(b"; comment\n(hello) ; trailing"):
+        case Ok(tokens):
+            return kind_at(tokens, 0) == tk.Kind.lparen and text_at(tokens, 1) == "hello" and kind_at(tokens, 2) == tk.Kind.rparen and kind_at(tokens, 3) == tk.Kind.eof
+        case Err(_):
+            return False
+
+
+public def test_unterminated_string() -> bool:
+    match tk.tokenize(b"(a \"oops"):
+        case Ok(_):
+            return False
+        case Err(problem):
+            return problem.message == "unterminated string" and problem.line == 1 and problem.offset == 3
+
+
+public def test_unexpected_character() -> bool:
+    match tk.tokenize(b"ab ?"):
+        case Ok(_):
+            return False
+        case Err(problem):
+            return problem.message == "unexpected character" and problem.line == 1 and problem.offset == 3
+
+
+# `b` sits on line 2 at col 3; spans use 1-based lines/cols and byte offsets.
+public def test_span_line_and_col() -> bool:
+    match tk.tokenize(b"(a\n  b)"):
+        case Ok(tokens):
+            return tokens[0].span.line == 1 and tokens[0].span.col == 1 and tokens[1].span.line == 1 and tokens[1].span.col == 2 and tokens[2].span.line == 2 and tokens[2].span.col == 3 and tokens[2].span.offset == 5 and text_at(tokens, 2) == "b"
+        case Err(_):
+            return False
+
+
+# The empty source still yields exactly one eof token spanning the end.
+public def test_empty_source() -> bool:
+    match tk.tokenize(b""):
+        case Ok(tokens):
+            return len(tokens) == 1 and kind_at(tokens, 0) == tk.Kind.eof and text_at(tokens, 0) == ""
+        case Err(_):
+            return False
+
+
+public def test_token_count_helper() -> bool:
+    return token_count(b"(a b)") == 5 and token_count(b"(a \"unterminated") == -1

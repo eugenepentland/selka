@@ -1,0 +1,18 @@
+module l_calls2
+
+# A two-argument call in a loop, the shape of the tokenizer's helpers.
+const ROUNDS: int = 1000000
+
+
+def add(left: int, right: int) -> int:
+    return left + right
+
+
+def main(args: list[str], fs: Filesystem, out: Stream, err: Stream) -> int:
+    total = 0
+    index = 0
+    while index < ROUNDS:
+        total = add(total, 1)
+        index = index + 1
+    out.print(f"calls={ROUNDS} total={total}")
+    return 0

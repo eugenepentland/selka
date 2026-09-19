@@ -1,0 +1,152 @@
+const std = @import("std");
+
+/// Source location for error reporting.
+pub const Span = struct {
+    line: u32,
+    col: u32,
+    /// Byte offset into source.
+    offset: u32,
+
+    pub const zero = Span{ .line = 1, .col = 1, .offset = 0 };
+};
+
+/// AST node for S-expressions.
+pub const Node = struct {
+    tag: Tag,
+    span: Span,
+    /// The verbatim source spelling of a numeric literal that carried a unit
+    /// or scale suffix (`100nF`, `4.7k`, `33R`, `10uH`, `10%`), or null for
+    /// every other node. The `tag` still holds the plain f64, so arithmetic is
+    /// unchanged; this is only what a *renderer* writes back when the number
+    /// is used as a part value. Without it `(pullup "SDA" 100nF …)` reached the
+    /// BOM as `0.0000001`, having lost the F that says which quantity it is.
+    literal: ?[]const u8 = null,
+
+    pub const Tag = union(enum) {
+        list: []const Node,
+        atom: []const u8,
+        string: []const u8,
+        int: i64,
+        float: f64,
+        /// Unit-suffixed value, stored in mm.
+        unit_val: f64,
+    };
+
+    pub fn list(span: Span, children: []const Node) Node {
+        return .{ .tag = .{ .list = children }, .span = span };
+    }
+
+    pub fn atom(span: Span, name: []const u8) Node {
+        return .{ .tag = .{ .atom = name }, .span = span };
+    }
+
+    pub fn string(span: Span, value: []const u8) Node {
+        return .{ .tag = .{ .string = value }, .span = span };
+    }
+
+    pub fn int(span: Span, value: i64) Node {
+        return .{ .tag = .{ .int = value }, .span = span };
+    }
+
+    pub fn float(span: Span, value: f64) Node {
+        return .{ .tag = .{ .float = value }, .span = span };
+    }
+
+    /// A numeric literal that keeps its source spelling: the same `.float`
+    /// node plus the `literal` text a value renderer prefers.
+    pub fn suffixedFloat(span: Span, value: f64, text: []const u8) Node {
+        return .{ .tag = .{ .float = value }, .span = span, .literal = text };
+    }
+
+    pub fn unitVal(span: Span, mm_value: f64) Node {
+        return .{ .tag = .{ .unit_val = mm_value }, .span = span };
+    }
+
+    /// Check if this node is a list whose first element is the given atom.
+    pub fn isForm(self: Node, name: []const u8) bool {
+        switch (self.tag) {
+            .list => |children| {
+                if (children.len == 0) return false;
+                switch (children[0].tag) {
+                    .atom => |a| return std.mem.eql(u8, a, name),
+                    else => return false,
+                }
+            },
+            else => return false,
+        }
+    }
+
+    /// Get list children, or null if not a list.
+    pub fn asList(self: Node) ?[]const Node {
+        return switch (self.tag) {
+            .list => |children| children,
+            else => null,
+        };
+    }
+
+    /// Get atom value, or null if not an atom.
+    pub fn asAtom(self: Node) ?[]const u8 {
+        return switch (self.tag) {
+            .atom => |a| a,
+            else => null,
+        };
+    }
+
+    /// Get string value, or null if not a string.
+    pub fn asString(self: Node) ?[]const u8 {
+        return switch (self.tag) {
+            .string => |s| s,
+            else => null,
+        };
+    }
+
+    /// Get the literal text of a node — a quoted string or a bare atom —
+    /// without evaluating it. Returns null for lists, numbers, etc. Strings
+    /// and atoms are mutually exclusive tags, so the lookup order is irrelevant.
+    pub fn asText(self: Node) ?[]const u8 {
+        return self.asString() orelse self.asAtom();
+    }
+
+    /// Like `asText`, but also renders an integer node (`1` → "1"), so a pin or
+    /// pad number written bare (`(pin 1 …)`), quoted (`"1"`), or alphanumeric
+    /// (`A1`) all resolve to the same string. Allocates only for the int case;
+    /// null for lists / floats / unit values.
+    pub fn tokenText(self: Node, arena: std.mem.Allocator) ?[]const u8 {
+        return switch (self.tag) {
+            .atom => |a| a,
+            .string => |s| s,
+            .int => |v| std.fmt.allocPrint(arena, "{d}", .{v}) catch null,
+            else => null,
+        };
+    }
+
+    /// The source spelling of a suffixed numeric literal (`100nF`), else the
+    /// node's own text (a string or atom). Null for a plain number, a list, or
+    /// a dimension — callers that must still render one fall back themselves.
+    /// This is the single reader of `literal`, so the precedence between a
+    /// unit-bearing number and a quoted value cannot drift between callers.
+    pub fn valueText(self: Node) ?[]const u8 {
+        if (self.literal) |text| return text;
+        return self.asText();
+    }
+
+    /// Get numeric value as f64 (works for int, float, and unit_val).
+    pub fn asNumber(self: Node) ?f64 {
+        return switch (self.tag) {
+            .int => |i| @floatFromInt(i),
+            .float => |f| f,
+            .unit_val => |u| u,
+            else => null,
+        };
+    }
+};
+
+// spec: sexpr/ast - Constructs typed AST nodes for list, atom, string, int, float, and unit values
+test "node constructors" {
+    const n = Node.atom(Span.zero, "hello");
+    try std.testing.expectEqualStrings("hello", n.asAtom().?);
+    try std.testing.expect(n.asNumber() == null);
+
+    const n2 = Node.int(Span.zero, 42);
+    try std.testing.expectEqual(@as(f64, 42.0), n2.asNumber().?);
+}

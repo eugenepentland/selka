@@ -82,5 +82,82 @@ public def test_a_generic_variant_infers_its_type_arguments_from_the_expected_ty
     return choose_slot(held, VariantBox[i64](value=0)).value + choose_slot(hold[i64](0), 0) + choose_slot(empty, 0) == 42
 
 
+class VariantSpan:
+    start: i64
+    end: i64
+
+
+union VariantSyntax:
+    form(items: list[VariantSyntax], span: VariantSpan),
+    atom(text: str, span: VariantSpan, literal: Option[str] = None),
+    blank
+
+
+def variant_syntax_size(node: VariantSyntax) -> i64:
+    match node:
+        case VariantSyntax.blank:
+            return 0
+        case VariantSyntax.atom(text, span, literal):
+            width = span.end - span.start + len(text)
+            match literal:
+                case None:
+                    return width
+                case Some(_found):
+                    return width + 1
+        case VariantSyntax.form(items, span):
+            total = span.end - span.start
+            for item in items:
+                total = total + variant_syntax_size(item)
+            return total
+
+
+def variant_atom_text(node: VariantSyntax) -> str:
+    match node:
+        case VariantSyntax.blank:
+            return ""
+        case VariantSyntax.form(_, _):
+            return ""
+        case VariantSyntax.atom(text, _, _):
+            return text
+
+
+union VariantPair[T]:
+    pair(left: T, right: T, label: str = "p"),
+    empty
+
+
+def variant_pair_sum(pair: VariantPair[i64]) -> i64:
+    match pair:
+        case VariantPair.empty:
+            return 0
+        case VariantPair.pair(left, right, label):
+            return left + right + len(label)
+
+
+def variant_pair_make[T](left: T, right: T) -> VariantPair[T]:
+    return VariantPair.pair(left, right)
+
+
+# spec-case: PY-VARIANT-4
+public def test_a_parenthesized_case_constructs_positionally_by_name_and_with_defaults() -> bool:
+    span = VariantSpan(start=1, end=4)
+    positional = VariantSyntax.atom("abc", span)
+    named = VariantSyntax.atom(text="abc", span=span, literal=Some("x"))
+    grouped = VariantSyntax.form(items=[positional, named], span=span)
+    return variant_syntax_size(positional) == 6 and variant_syntax_size(named) == 7 and variant_syntax_size(grouped) == 16
+
+
+# spec-case: PY-VARIANT-4
+public def test_a_named_field_pattern_binds_one_name_per_field_and_discards_with_underscore() -> bool:
+    span = VariantSpan(start=0, end=2)
+    return variant_atom_text(VariantSyntax.atom("hi", span)) == "hi" and variant_atom_text(VariantSyntax.blank) == ""
+
+
+# spec-case: PY-VARIANT-4
+public def test_a_generic_parenthesized_case_specializes_with_the_union_arguments() -> bool:
+    pair = variant_pair_make[i64](20, 21)
+    return variant_pair_sum(pair) == 42 and variant_pair_sum(VariantPair.empty) == 0
+
+
 def main() -> int:
     return 0

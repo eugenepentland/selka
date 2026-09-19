@@ -149,3 +149,119 @@ test "an imported generic variant takes its arguments from the expected type acr
     };
     try executeProject(&entries, 42);
 }
+
+fn runValue(text: []const u8, expected: i64) !void {
+    var c = try language.Compilation.init(t.allocator, "variant_run.my", text);
+    defer c.deinit();
+    try t.expectEqual(expected, (try native.run(&c)).value);
+}
+
+// spec: PY-VARIANT-4
+test "a parenthesized case construction reports arity, unknown, duplicate and missing fields" {
+    const header =
+        \\union Node:
+        \\    atom(text: str, count: i64),
+        \\    blank
+        \\
+        \\def main() -> i64:
+        \\    _ =
+    ;
+    const cases = [_]struct { tail: []const u8, code: []const u8 }{
+        .{ .tail = "Node.atom(\"x\", 1, 2)\n    return 0\n", .code = "E_ARITY" },
+        .{ .tail = "Node.atom(\"x\", z=1)\n    return 0\n", .code = "E_UNKNOWN_FIELD" },
+        .{ .tail = "Node.atom(\"x\", text=\"y\")\n    return 0\n", .code = "E_DUPLICATE_FIELD" },
+        .{ .tail = "Node.atom(\"x\")\n    return 0\n", .code = "E_INCOMPLETE_CONSTRUCTION" },
+        .{ .tail = "Node.atom\n    return 0\n", .code = "E_VARIANT_PAYLOAD" },
+    };
+    for (cases) |case| {
+        const text = try std.mem.concat(t.allocator, u8, &.{ header, case.tail });
+        defer t.allocator.free(text);
+        try reject(text, case.code);
+    }
+}
+
+// spec-case: PY-VARIANT-4
+test "a parenthesized case constructs positionally, by name and with defaults, and reads each field" {
+    try runValue(
+        \\union Node:
+        \\    atom(text: str, count: i64 = 2),
+        \\    blank
+        \\
+        \\
+        \\def measure(node: Node) -> i64:
+        \\    match node:
+        \\        case Node.blank:
+        \\            return 0
+        \\        case Node.atom(text, count):
+        \\            return len(text) * 100 + count
+        \\
+        \\
+        \\def label(node: Node) -> str:
+        \\    match node:
+        \\        case Node.blank:
+        \\            return ""
+        \\        case Node.atom(text, _):
+        \\            return text
+        \\
+        \\
+        \\def main() -> i64:
+        \\    positional = Node.atom("ab", 5)
+        \\    named = Node.atom(text="c", count=7)
+        \\    defaulted = Node.atom("de")
+        \\    return measure(positional) + measure(named) + measure(defaulted) + len(label(defaulted))
+    , 516);
+}
+
+// spec-case: PY-VARIANT-4
+test "named-field patterns bind one name per field and report mismatches and dropped results" {
+    try reject(
+        \\union N:
+        \\    atom(x: i64, y: i64),
+        \\    blank
+        \\
+        \\def f(n: N) -> i64:
+        \\    match n:
+        \\        case N.blank:
+        \\            return 0
+        \\        case N.atom(x):
+        \\            return x
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_PATTERN_PAYLOAD");
+    try reject(
+        \\union N:
+        \\    atom(x: Result[i64, str], y: i64),
+        \\    blank
+        \\
+        \\def f(n: N) -> i64:
+        \\    match n:
+        \\        case N.blank:
+        \\            return 0
+        \\        case N.atom(_, y):
+        \\            return y
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_RESULT_DISCARD");
+}
+
+// spec-case: PY-VARIANT-4
+test "a parenthesized case declaration reports empty fields and rejects result cases" {
+    try reject(
+        \\union N:
+        \\    atom(),
+        \\    blank
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_CASE_FIELDS");
+    try reject(
+        \\result R:
+        \\    ok(x: i64, y: i64),
+        \\    err: str
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_RESULT_SCHEMA");
+}

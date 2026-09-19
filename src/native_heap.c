@@ -54,13 +54,6 @@ int myl_native_budget_guard(size_t budget) {
     ceiling.rlim_cur = wanted;
     return setrlimit(RLIMIT_AS, &ceiling) == 0;
 }
-struct myl_native_object {
-    struct myl_native_object *next, *pending;
-    const myl_native_type *element;
-    size_t count, bytes;
-    unsigned marked, region;
-    max_align_t payload_alignment;
-};
 unsigned myl_native_object_region(const void *payload) {
     return payload ? ((const myl_native_object *)payload - 1)->region : 0;
 }
@@ -74,6 +67,7 @@ void myl_native_region_end(myl_native_heap *heap) {
     myl_native_object **link = &heap->objects;
     while (*link) {
         myl_native_object *object = *link;
+        if (object->immortal) { link = &object->next; continue; }
         if (object->region < dying) { link = &object->next; continue; }
         *link = object->next;
         heap->bytes -= object->bytes;
@@ -87,6 +81,9 @@ static void trace(myl_native_heap *, const myl_native_type *, const void *);
 static void mark(myl_native_heap *heap, void *payload) {
     if (!payload) return;
     myl_native_object *object = (myl_native_object *)payload - 1;
+    /* Immortal payloads live in the image, not the heap: they can never be
+     * collected, so re-tracing one would only queue static storage. */
+    if (object->immortal) return;
     if (object->marked) return;
     object->marked = 1;
     object->pending = heap->pending;
@@ -115,7 +112,7 @@ void myl_native_heap_init(myl_native_heap *heap, size_t limit) {
     memset(heap, 0, sizeof(*heap));
     heap->limit = limit;
     heap->next_pool_identity = 1;
-    heap->next_collection = 65536;
+    heap->next_collection = 1u << 20;
 }
 void myl_native_root_push(myl_native_heap *heap, myl_native_root *root,
                           void *address, const myl_native_type *type) {
@@ -148,7 +145,11 @@ void myl_native_heap_collect(myl_native_heap *heap) {
     myl_native_object **link = &heap->objects;
     while (*link) {
         myl_native_object *object = *link;
-        if (object->marked) {
+        /* Static literals are never allocated by the heap and must never be
+         * swept, even if one is reachable and therefore queued. */
+        if (object->immortal) {
+            link = &object->next;
+        } else if (object->marked) {
             object->marked = 0;
             link = &object->next;
         } else {
@@ -158,7 +159,12 @@ void myl_native_heap_collect(myl_native_heap *heap) {
             free(object);
         }
     }
-    heap->next_collection = heap->bytes > (SIZE_MAX-65536)/2 ? SIZE_MAX : heap->bytes*2+65536;
+    /* Marking cost is paid once per collection over the whole live set, so the
+     * pause interval grows faster than the live set and keeps a fixed floor:
+     * a steady workload then re-marks a few times instead of every time it
+     * doubles. Collection timing is unobservable (no destructors, no counter a
+     * program can read) and `--gc-stress` bypasses this trigger entirely. */
+    heap->next_collection = heap->bytes > (SIZE_MAX-(4u<<20))/3 ? SIZE_MAX : heap->bytes*3+(4u<<20);
 }
 void *myl_native_heap_alloc(myl_native_heap *heap, const myl_native_type *element, size_t count) {
     return myl_native_heap_alloc_at(heap, element, count, heap->region_depth);
@@ -195,7 +201,7 @@ void myl_native_heap_destroy(myl_native_heap *heap) {
     myl_native_object *object = heap->objects;
     while (object) {
         myl_native_object *next = object->next;
-        free(object);
+        if (!object->immortal) free(object);
         object = next;
     }
     memset(heap, 0, sizeof(*heap));
@@ -204,6 +210,7 @@ void myl_native_heap_destroy(myl_native_heap *heap) {
 void myl_native_heap_release(myl_native_heap *heap, void *payload) {
     if (!payload) return;
     myl_native_object *object = (myl_native_object *)payload - 1;
+    if (object->immortal) return;
     myl_native_object **link = &heap->objects;
     while (*link && *link != object) link = &(*link)->next;
     if (!*link) return;

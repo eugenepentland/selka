@@ -267,7 +267,7 @@ test "Python match cases retain contextual pattern names square types and discar
     const arms = syntax.statements.items[@backingInt(body[0])].data.match.arms;
     try t.expectEqualStrings("Ok", src.text(arms[0].name));
     try t.expectEqual(arms[0].ty.start, arms[0].ty.end);
-    try t.expect(arms[1].discard_payload);
+    try t.expect(arms[1].bindings.len == 1 and arms[1].bindings[0] == null);
 }
 
 // spec-case: PYTHON-1

@@ -193,11 +193,11 @@ myl_native_bytes *myl_native_bytes_encode(myl_native_heap *heap, myl_native_text
     return result;
 }
 myl_native_text *myl_native_bytes_decode(myl_native_heap *heap, myl_native_bytes *input, int *status) {
-    if (!myl_native_text_valid_utf8(input->storage,input->length)) { *status=MYL_BYTES_INVALID;return NULL; }
+    int invalid=0;
     myl_native_root root;
     myl_native_root_push(heap,&root,&input,&pointer_type);
-    myl_native_text *result=myl_native_text_from_utf8(heap,input->storage,input->length);
+    myl_native_text *result=myl_native_text_from_utf8_checked(heap,input->storage,input->length,&invalid);
     myl_native_root_pop(heap,&root);
-    *status=result ? MYL_BYTES_OK:MYL_BYTES_MEMORY;
+    *status=result ? MYL_BYTES_OK:(invalid ? MYL_BYTES_INVALID:MYL_BYTES_MEMORY);
     return result;
 }

@@ -23,6 +23,10 @@ so read the ratios and re-run the commands for your own absolute figures: the
 numbers are indicative, not a promise. The loop benchmark below is shown in full;
 the other rows use the same `run5` pattern with the work named in the table.
 
+The [18 September 2026 runtime audit](audits/runtime-performance-2026-09-18.md)
+measures where a native build still spends 30–90× Zig's instruction count on a
+byte-loop workload and lays out the six-wave plan to close it.
+
 ## What is fast without trying
 
 Python-shaped managed code compiled by this backend is fast enough that a program

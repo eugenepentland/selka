@@ -9,9 +9,30 @@ struct MylangNativeProvidersTag;
  * Context prefix is an ABI contract for inline budget checks. */
 typedef struct { const char *path; uint64_t line, column; } MylQbeLocation;
 /* `messages` has one entry per pc, `""` for a pc that is not an assertion. It is
- * the `operation` text a failing `assert` reports; `count` bounds both tables. */
-typedef struct { const char *name; const MylQbeLocation *locations; uint64_t count; const char *const *messages; } MylQbeFunction;
-typedef struct { const MylQbeFunction *function; uint64_t position, native_bytes; } MylQbeActiveFrame;
+ * the `operation` text a failing `assert` reports; `count` bounds both tables.
+ * `inlines`/`inline_count` describe the callee bodies spliced into this function
+ * by the inliner, so a trap trace can replay the frames a native call would have
+ * pushed. Both are appended so metadata without inlining still initializes. */
+struct MylQbeInlineFrameTag;
+typedef struct { const char *name; const MylQbeLocation *locations; uint64_t count; const char *const *messages; const struct MylQbeInlineFrameTag *inlines; uint64_t inline_count; } MylQbeFunction;
+/* One inlined splice: the callee's metadata, the caller pc range `[start,end)`
+ * the callee body occupies, the callee-local pc that range starts at, and the
+ * caller pc whose location entry is the call site. */
+typedef struct MylQbeInlineFrameTag {
+    const MylQbeFunction *callee;
+    uint64_t start, end, callee_start, call_position;
+} MylQbeInlineFrame;
+/* One guest activation. Generated code allocates the record in its own native
+ * stack frame and links it through `prev` into `ctx->active_frame`; the runtime
+ * walks that chain for trap traces, so no frame array is involved. Generated
+ * code writes `prev` (+0), `function` (+8) and `position` (+16); `native_bytes`
+ * remains for the direct `myl_qbe_enter_at_sized` C entry point. */
+typedef struct MylQbeActiveFrame {
+    struct MylQbeActiveFrame *prev;
+    const MylQbeFunction *function;
+    uint64_t position;
+    uint64_t native_bytes;
+} MylQbeActiveFrame;
 typedef struct { const char *function, *path; uint64_t line, column; } MylQbeTrace;
 /* Bounded typed values captured at the first failing operation. `present` is a
  * bitmask over the MYL_QBE_TRAP_PRESENT_* bits; an absent field is zero and is
@@ -57,6 +78,12 @@ typedef struct {
     uint64_t steps, frames, max_steps, max_frames;
     const char *trap;
     MylQbeActiveFrame *frame_data, *active_frame;
+    /* Generated code reads these two at frozen offsets 56 and 64: the logical
+       depth ceiling and the lowest native-stack address a frame record may use.
+       Both are widened out of the appended tail so the generated prologue can
+       test them without a runtime call. */
+    uint64_t frame_limit;
+    uintptr_t frame_floor;
     MylQbeTrace trace[16];
     uint64_t trace_count, omitted_frames;
     myl_native_heap heap;
@@ -74,13 +101,8 @@ typedef struct {
     char **guest_argv;
     int reported;
     MylQbeTrapDetail trap_detail;
-    /* Logical call-depth ceiling; MYL_QBE_UNBOUNDED means uncapped. Appended
-       after the ABI-prefix fields so `steps`/`max_steps`/`active_frame` offsets
-       stay frozen for generated code. */
-    uint64_t frame_limit;
-    /* Shared slot for frames deeper than the bounded trace capacity. Generated
-       code stores each instruction's position through `active_frame`, so it must
-       always name writable storage. */
+    /* Shared slot for the direct `myl_qbe_enter` C entry point (the C-model
+       frame array), which generated code no longer uses. */
     MylQbeActiveFrame scratch_frame;
     /* Bounded `fs.dir(path)` scope registry: each entry owns the joined prefix
        path a derived Filesystem resolves under, and the resource sentinel carries
@@ -108,6 +130,9 @@ void myl_qbe_frame_release(void *, void *);
 void myl_qbe_enter_at_sized(void *, const MylQbeFunction *, uint64_t bytes);
 void myl_qbe_enter_at(void *context, const MylQbeFunction *function);
 void myl_qbe_step_at(void *context, uint64_t position);
+/* Generated entry code calls this when its build omitted step accounting, so a
+ * runtime step ceiling fails loudly instead of being silently ignored. */
+void myl_qbe_require_step_accounting(void *context);
 void *myl_qbe_root_mark(void *context);
 void myl_qbe_root_restore(void *context, void *mark);
 /* Build a managed list[str] from the guest arguments the runtime filtered.
@@ -141,11 +166,17 @@ void myl_qbe_fail_array_bounds(void *context, int64_t index, uint64_t length);
 /* `binary_op` is the typed.BinaryOp ordinal (0=add, 1=sub, 2=mul, 3=div, ...). */
 void myl_qbe_fail_division(void *context, uint64_t binary_op, int64_t left, int64_t right);
 void myl_qbe_fail_overflow_op(void *context, uint64_t binary_op, int64_t left, int64_t right, uint64_t width);
+/* Cold path of an inlined checked integer cast: the value's raw bits and the
+ * target width, producing the same detail `myl_qbe_int_cast` reports. */
+void myl_qbe_fail_cast(void *context, int64_t value, uint64_t width);
 myl_native_heap *myl_qbe_heap(void *context);
 uint64_t myl_qbe_failed(void *context);
 void myl_qbe_float_check(void *context);
 void myl_qbe_fail_step(void *context);
 void myl_qbe_fail_overflow(void *context);
+/* Cold path of the generated frame prologue: the logical depth ceiling or the
+ * execution-stack floor was reached. */
+void myl_qbe_fail_frame(void *context);
 int mylang_qbe_execute_config(uint64_t (*entry)(void *), uint64_t steps, uint64_t frames, int stress, const struct MylangNativeProvidersTag *, void (*initialize)(void *), MylQbeResult *result);
 int mylang_qbe_execute_providers(uint64_t (*entry)(void *), uint64_t steps, uint64_t frames, int stress, const struct MylangNativeProvidersTag *, MylQbeResult *result);
 void myl_qbe_fail(void *, const char *);

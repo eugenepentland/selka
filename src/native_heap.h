@@ -28,6 +28,21 @@ typedef struct myl_native_root {
     void *address;
     const myl_native_type *type;
 } myl_native_root;
+/* One managed allocation's header, laid out immediately before its payload so
+ * the collector reaches it as `(myl_native_object *)payload - 1`. `marked` is a
+ * collector write. `immortal` marks storage that lives outside the heap, such as
+ * a frozen `str`/`bytes` literal: the collector never frees it and never
+ * re-traces it. `region` is the arena depth that owns the payload; a literal
+ * keeps 0 so arena ownership checks treat it as ordinary heap-owned storage that
+ * any scope may reference. `payload_alignment` forces the header's size to a
+ * multiple of `max_align_t` so the payload stays suitably aligned. */
+struct myl_native_object {
+    struct myl_native_object *next, *pending;
+    const myl_native_type *element;
+    size_t count, bytes;
+    unsigned marked, immortal, region;
+    max_align_t payload_alignment;
+};
 typedef struct myl_native_object myl_native_object;
 typedef struct myl_native_drop_link {
     struct myl_native_drop_link *next;

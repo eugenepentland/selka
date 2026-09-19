@@ -152,7 +152,12 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
             try arguments.append(a, try std.fmt.allocPrint(a, "--cache-dir={s}", .{parsed.cache}));
         }
         // A ReleaseFast `build` drops `debug` lines in lowering; `run` keeps them.
-        if (!parsed.run and std.mem.eql(u8, parsed.mode, "ReleaseFast")) try arguments.append(a, "--drop-debug");
+        if (!parsed.run and std.mem.eql(u8, parsed.mode, release_fast)) try arguments.append(a, "--drop-debug");
+        // A ReleaseFast executable was not asked for an instruction ceiling, so it
+        // drops step-budget accounting. A library always keeps it: the embed API
+        // and the guest-test runner always run under a finite budget.
+        const fast_executable = !parsed.library and !stepAccounting(parsed.link_arguments) and std.mem.eql(u8, parsed.mode, release_fast);
+        if (fast_executable) try arguments.append(a, "--drop-step-checks");
         if (mutationMarkers(parsed.link_arguments)) try arguments.append(a, "--mutation-markers");
         if (selectFile(parsed.link_arguments)) |path| {
             try arguments.append(a, try std.fmt.allocPrint(a, "--select-file={s}", .{path}));
@@ -216,6 +221,27 @@ fn selectFile(args: []const []const u8) ?[]const u8 {
 fn manifestFile(args: []const []const u8) ?[]const u8 {
     for (args) |argument| if (std.mem.startsWith(u8, argument, "--manifest-file=")) return argument["--manifest-file=".len..];
     return null;
+}
+
+/// Whether the build arguments ask for instruction step accounting, either by
+/// naming a ceiling directly or with the explicit `--step-accounting` a host
+/// application passes because it always runs its guest under `--max-steps=`.
+fn stepAccounting(args: []const []const u8) bool {
+    for (args) |argument| {
+        if (std.mem.eql(u8, argument, "--")) break;
+        if (std.mem.startsWith(u8, argument, "--max-steps")) return true;
+        if (std.mem.eql(u8, argument, "--step-accounting")) return true;
+    }
+    return false;
+}
+
+// spec-case: QBE-STEP-ACCOUNTING-1
+test "a build argument naming a step ceiling keeps its accounting" {
+    try std.testing.expect(stepAccounting(&.{ "main.my", "--max-steps=100" }));
+    try std.testing.expect(stepAccounting(&.{ "main.my", "--step-accounting", "-o", "out" }));
+    try std.testing.expect(!stepAccounting(&.{ "main.my", "-o", "out" }));
+    // A ceiling after `--` belongs to the guest, not to this build.
+    try std.testing.expect(!stepAccounting(&.{ "main.my", "--", "--max-steps=1" }));
 }
 
 /// Whether the original build arguments opted into call-site mutation markers.
@@ -582,6 +608,8 @@ const State = struct {
 /// internally so a guest object's non-PIC relocations resolve without symbol
 /// interposition.
 const library_link_arguments = [_][]const u8{ "-shared", "-Wl,-Bsymbolic" };
+/// The default optimize mode; only non-Debug builds can drop accounting.
+const release_fast = "ReleaseFast";
 fn less(_: void, left: std.json.Value, right: std.json.Value) bool {
     return std.mem.lessThan(u8, v.text(v.get(left, "symbol")), v.text(v.get(right, "symbol")));
 }

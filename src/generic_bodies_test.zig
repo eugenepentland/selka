@@ -380,3 +380,30 @@ test "DIAG-ORACLE-1 surface type text uses source punctuation and spelling" {
     defer t.allocator.free(dictionary);
     try t.expectEqualStrings("dict[str, list[int]]", dictionary);
 }
+// spec-case: PY-VARIANT-4
+test "a generic body constructs and destructures a parenthesized case with a default" {
+    var compilation = try language.Compilation.init(t.allocator, "case_fields.my",
+        \\union Slot[T]:
+        \\    pair(left: T, right: T, label: str = "p"),
+        \\    none
+        \\
+        \\
+        \\def build[T](a: T, b: T) -> Slot[T]:
+        \\    return Slot.pair(a, b)
+        \\
+        \\
+        \\def sum(slot: Slot[i64]) -> i64:
+        \\    match slot:
+        \\        case Slot.none:
+        \\            return 0
+        \\        case Slot.pair(left, right, label):
+        \\            return left + right + i64(len(label))
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
+    defer compilation.deinit();
+    try compilation.check();
+    try t.expectEqual(@as(usize, 0), compilation.diagnostics.items.len);
+}

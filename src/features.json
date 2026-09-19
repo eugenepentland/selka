@@ -122,6 +122,11 @@
       "summary": "`Shape.radius(4)` builds a payload variant and `case Shape.radius(r)` takes it apart.",
       "doc": "docs/records-and-unions.md#payload-variant-construction"
     },
+    "python-named-variant-case-fields": {
+      "kind": "language",
+      "summary": "`union Node: form(items: list[Node], span: Span)` declares named case fields, constructed positionally or by keyword with record-style defaults and matched with one binding per field.",
+      "doc": "docs/records-and-unions.md#named-variant-case-fields"
+    },
     "python-contextual-array-and-table-literals": {
       "kind": "language",
       "summary": "A list literal becomes a fixed `[N]T` array and a dict literal an enum-indexed `[Kind]T` table when the context demands one.",

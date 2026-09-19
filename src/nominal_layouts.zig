@@ -163,7 +163,12 @@ pub const Graph = struct {
             },
             .builtin => |ty| self.intern(.{ .base = .{ .builtin = ty }, .arguments = &.{} }, span),
             .parameter => |index| arguments[index],
-            .named => |id| self.intern(.{ .base = .{ .named = id }, .arguments = &.{} }, span),
+            .named => |id| self.intern(.{
+                .base = .{ .named = id },
+                // A synthesized case-payload record stands for the enclosing
+                // union's own arguments, so its fields substitute like the union's.
+                .arguments = if (self.templates.isSynthetic(id)) arguments else &.{},
+            }, span),
             .application => |application| application: {
                 var resolved: [16]Id = undefined;
                 for (application.arguments, 0..) |argument, i| resolved[i] = try self.resolve(argument, arguments, application.syntax.arguments[i]);

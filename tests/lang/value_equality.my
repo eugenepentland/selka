@@ -100,5 +100,18 @@ public def test_cyclic_class_equality_terminates() -> bool:
     return True
 
 
+# spec-case: EQUALITY-CONTEXT-1
+public def test_equality_through_a_field_supplies_the_option_type() -> bool:
+    first = Node(value=1, next=None)
+    second = Node(value=2, next=Some(first))
+    if second.next == None:
+        return False
+    if first.next != None:
+        return False
+    if second.next != Some(first):
+        return False
+    return True
+
+
 def main() -> int:
     return 0

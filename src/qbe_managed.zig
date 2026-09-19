@@ -21,8 +21,27 @@ const io_lower = @import("qbe_io.zig");
 const render = @import("native_render.zig");
 const dictionary_write = " %v{d} =w call $myl_native_dictionary_write(l %heap, l %v{d}, l %v{d}, l %v{d})\n";
 const dictionary_length = " %v{d} =l call $myl_native_dictionary_length(l %v{d})\n";
+/// Byte offset of `storage` in a native list header (`native_collections.h`):
+/// two size words, the generation, the element descriptor, then the pointer.
+const list_storage_offset = 32;
 /// Detail-carrying bounds helper shared by indexable receivers.
 const index_failure = "myl_qbe_fail_index_bounds";
+/// The `make_record` operation shape this unit lowers.
+const MakeRecord = @FieldType(@FieldType(bytecode.Instruction, "op"), "make_record");
+/// Marker line the metadata unit scans for the C definition of one frozen
+/// literal. QBE ignores it as a comment; the payload follows as element bytes in
+/// lowercase hex. Format: `# myl-lit <symbol> <element> <width> <count> [hex]`.
+const literal_marker = "# myl-lit ";
+/// A frozen `str`/`bytes` literal: the global data symbol the metadata unit
+/// defines, the element descriptor it stores in the list header, its scalar
+/// width, its element count and the digest that names it.
+const Frozen = struct {
+    name: [72]u8,
+    element: []const u8,
+    width: usize,
+    count: usize,
+    digest: [32]u8,
+};
 /// List element access normalizes a negative index in the checked frontend; the
 /// runtime helper subtracts the length back to recover the original index.
 const normalized_index_failure = "myl_qbe_fail_normalized_index_bounds";
@@ -38,7 +57,7 @@ pub fn Lower(comptime E: type) type {
             return emitOperation(E, self, op, stack);
         }
         /// Construct a managed string, list, or dictionary.
-        pub fn construct(self: *E, op: @FieldType(@FieldType(bytecode.Instruction, "op"), "make_record"), stack: []const typed.Type) Error!void {
+        pub fn construct(self: *E, op: MakeRecord, stack: []const typed.Type) Error!void {
             return emitConstruct(E, self, op, stack);
         }
         /// Read the initialized collection element count.
@@ -236,7 +255,7 @@ fn receiverLength(comptime E: type, self: *E, receiver: usize) Error!usize {
     return length;
 }
 /// Construct immutable text, an ordinary managed list, or an ordered dictionary.
-fn emitConstruct(comptime E: type, self: *E, record: @FieldType(@FieldType(bytecode.Instruction, "op"), "make_record"), stack: []const typed.Type) Error!void {
+fn emitConstruct(comptime E: type, self: *E, record: MakeRecord, stack: []const typed.Type) Error!void {
     const schema = self.program.records[record.ty.recordIndex()];
     const base = stack.len - record.fields;
     const result = self.temp();
@@ -255,6 +274,12 @@ fn emitConstruct(comptime E: type, self: *E, record: @FieldType(@FieldType(bytec
         }
     } else {
         const element: typed.Type = if (schema.collection.kind == .string) .u32 else schema.shape.buffer.?;
+        // A `str`/`bytes` literal whose every element is a constant push is
+        // immutable for the life of the image, so it lives as one shared data
+        // object instead of one allocation per evaluation.
+        if (schema.collection.kind == .string or schema.collection.kind == .bytes) {
+            if (try frozenLiteral(E, self, record, element)) |frozen| return emitFrozen(E, self, frozen, base);
+        }
         try self.print(" %v{d} =l call $myl_native_list_new(l %heap, l ${s}, l {d})\n", .{ result, try self.descriptor(element), record.fields });
         try self.require(result, allocation_failure);
         for (0..record.fields) |i| {
@@ -265,6 +290,58 @@ fn emitConstruct(comptime E: type, self: *E, record: @FieldType(@FieldType(bytec
         }
     }
     try self.store(base, result);
+}
+/// Describe a constant `str`/`bytes` literal as one frozen data object, or null
+/// when any operand is not a constant push of the element type. The data symbol
+/// hashes the element descriptor and the native payload, so equal literals share
+/// one object across the whole image.
+fn frozenLiteral(comptime E: type, self: *E, record: MakeRecord, element: typed.Type) Error!?Frozen {
+    const count = record.fields;
+    if (record.order.len != 0 or self.pc < count) return null;
+    const first = self.pc - count;
+    for (0..count) |i| switch (self.function.scope.instructions[first + i].op) {
+        .push_integer => |number| if (number.ty != element) return null,
+        else => return null,
+    };
+    var frozen: Frozen = .{
+        .name = undefined,
+        .element = try self.descriptor(element),
+        .width = (try self.layout(element)).size,
+        .count = count,
+        .digest = undefined,
+    };
+    var hasher = std.crypto.hash.sha2.Sha256.init(.{});
+    hasher.update(frozen.element);
+    hasher.update(&[_]u8{0});
+    var scratch: [8]u8 = undefined;
+    for (0..count) |i| hasher.update(elementBytes(frozen.width, pushedValue(E, self, first + i), &scratch));
+    hasher.final(&frozen.digest);
+    _ = std.fmt.bufPrint(&frozen.name, "myl_lit_{s}", .{std.fmt.bytesToHex(frozen.digest, .lower)}) catch return error.InternalError;
+    return frozen;
+}
+/// Lower one frozen literal as a load of its shared data pointer plus the
+/// metadata marker that names its image bytes.
+fn emitFrozen(comptime E: type, self: *E, frozen: Frozen, base: usize) Error!void {
+    const result = self.temp();
+    try self.print(" %v{d} =l loadl ${s}\n", .{ result, frozen.name[0..] });
+    try self.print("{s}{s} {s} {d} {d} ", .{ literal_marker, frozen.name[0..], frozen.element, frozen.width, frozen.count });
+    const first = self.pc - frozen.count;
+    var scratch: [8]u8 = undefined;
+    for (0..frozen.count) |i| for (elementBytes(frozen.width, pushedValue(E, self, first + i), &scratch)) |byte| try self.print("{x:0>2}", .{byte});
+    try self.print("\n", .{});
+    try self.store(base, result);
+}
+/// The constant carried by one already-validated `push_integer`.
+fn pushedValue(comptime E: type, self: *E, at: usize) i128 {
+    return switch (self.function.scope.instructions[at].op) {
+        .push_integer => |number| number.value,
+        else => 0,
+    };
+}
+/// The low `width` bytes of one scalar in native little-endian order.
+fn elementBytes(width: usize, value: i128, scratch: *[8]u8) []const u8 {
+    std.mem.writeInt(u64, scratch, @truncate(@as(u128, @bitCast(value))), .little);
+    return scratch[0..width];
 }
 /// Read Unicode scalar count, list length, or dictionary entry count.
 fn emitLength(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Type) Error!void {
@@ -278,17 +355,20 @@ fn emitLength(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.T
     }
     try self.store(base, result);
 }
-fn normalizedIndex(comptime E: type, self: *E, owner: usize, index_value: usize, ty: typed.Type) Error!usize {
+/// Normalize one signed index the way Python does: a negative index counts back
+/// from the end of the receiver. The adjustment is derived branchlessly from the
+/// sign mask (`raw >> 63` is all ones exactly when `raw` is negative), so the
+/// common non-negative read carries no branch, label or phi. An index still
+/// below `-length` stays negative and the caller's unsigned bounds check rejects
+/// it, exactly as the branching form did.
+fn normalizedIndex(comptime E: type, self: *E, index_value: usize, length: usize, ty: typed.Type) Error!usize {
     if (!ty.integer().?.signed) return index_value;
-    const size = self.temp();
-    const negative = self.temp();
-    const offset = self.temp();
+    const mask = self.temp();
+    const adjust = self.temp();
     const chosen = self.temp();
-    const label = self.temp();
     try self.print(
-        " %v{d} =l loadl %v{d}\n %v{d} =l csltl %v{d}, 0\n jnz %v{d}, @negative{d}, @positive{d}\n@negative{d}\n %v{d} =l add %v{d}, %v{d}\n" ++
-            " jmp @index{d}\n@positive{d}\n jmp @index{d}\n@index{d}\n %v{d} =l phi @negative{d} %v{d}, @positive{d} %v{d}\n",
-        .{ size, owner, negative, index_value, negative, label, label, label, offset, size, index_value, label, label, label, label, chosen, label, offset, label, index_value },
+        " %v{d} =l sar %v{d}, 63\n %v{d} =l and %v{d}, %v{d}\n %v{d} =l add %v{d}, %v{d}\n",
+        .{ mask, index_value, adjust, mask, length, chosen, index_value, adjust },
     );
     return chosen;
 }
@@ -319,8 +399,8 @@ fn emitIndex(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Ty
         }
     } else {
         const raw_index = try self.load("s", base + 1);
-        const at = try normalizedIndex(E, self, input, raw_index, stack[base + 1]);
         const length = try receiverLength(E, self, input);
+        const at = try normalizedIndex(E, self, raw_index, length, stack[base + 1]);
         if (replacing) {
             const value = try operandPointer(E, self, schema.shape.buffer.?, base + 2);
             try arena_lower.Lower(E).barrier(self, input, schema.shape.buffer.?, value);
@@ -328,11 +408,46 @@ fn emitIndex(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Ty
             try requireIndexBounds(E, self, result, raw_index, length, index_failure);
             try self.store(base, input);
         } else {
-            try self.print(" %v{d} =w call $myl_native_list_get(l %v{d}, l %v{d}, l %agg{d})\n", .{ result, input, at, self.pc });
-            try requireIndexBounds(E, self, result, raw_index, length, index_failure);
-            try self.store(base, try self.readValue(try self.aggregatePointer(), schema.shape.buffer.?));
+            try inlineIndexRead(E, self, .{ .input = input, .at = at, .raw_index = raw_index, .length = length, .element = schema.shape.buffer.?, .slot = base });
         }
     }
+}
+/// One inline element read: the receiver, the normalized index, the caller's
+/// original index and the receiver length for the trap, and where the value goes.
+const IndexRead = struct { input: usize, at: usize, raw_index: usize, length: usize, element: typed.Type, slot: usize };
+/// Read one element of a byte string or list straight from its backing storage
+/// after an unsigned bounds check, in place of a `myl_native_list_get` call.
+/// The cold path raises the same detail-carrying bounds trap, with the caller's
+/// original index and the receiver length.
+fn inlineIndexRead(comptime E: type, self: *E, read: IndexRead) Error!void {
+    const valid = self.temp();
+    try self.print(" %v{d} =l cultl %v{d}, %v{d}\n", .{ valid, read.at, read.length });
+    try requireIndexBounds(E, self, valid, read.raw_index, read.length, index_failure);
+    const address = try elementAddress(E, self, read.input, read.at, read.element);
+    if (self.isScalar(read.element)) {
+        try self.store(read.slot, try self.readValue(address, read.element));
+    } else {
+        const pointer = try self.aggregatePointer();
+        try self.print(" blit %v{d}, %v{d}, {d}\n", .{ address, pointer, (try self.layout(read.element)).size });
+        try self.store(read.slot, pointer);
+    }
+}
+/// Address of element `index` in a native list-like receiver's backing storage.
+/// `storage` is the word at `list_storage_offset` in the header; the stride is
+/// the element layout's, so byte strings, lists and inline records share it.
+fn elementAddress(comptime E: type, self: *E, list: usize, index: usize, element: typed.Type) Error!usize {
+    const header = self.temp();
+    const storage = self.temp();
+    const offset = self.temp();
+    const address = self.temp();
+    try self.print(" %v{d} =l add %v{d}, {d}\n %v{d} =l loadl %v{d}\n", .{ header, list, list_storage_offset, storage, header });
+    const stride = (try self.layout(element)).size;
+    if (stride == 1) {
+        try self.print(" %v{d} =l add %v{d}, %v{d}\n", .{ address, storage, index });
+    } else {
+        try self.print(" %v{d} =l mul %v{d}, {d}\n %v{d} =l add %v{d}, %v{d}\n", .{ offset, index, stride, address, storage, offset });
+    }
+    return address;
 }
 /// Lower string concatenation and exact Unicode equality.
 fn emitBinary(comptime E: type, self: *E, op: @FieldType(@FieldType(bytecode.Instruction, "op"), "binary_integer"), stack: []const typed.Type) Error!void {
@@ -511,10 +626,11 @@ fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: [
 }
 
 fn textAt(comptime E: type, self: *E, input: usize, at: usize, ty: typed.Type, result: usize, base: usize) Error!void {
-    const normalized = try normalizedIndex(E, self, input, at, ty);
     const size = self.temp();
+    try self.print(" %v{d} =l loadl %v{d}\n", .{ size, input });
+    const normalized = try normalizedIndex(E, self, at, size, ty);
     const valid = self.temp();
-    try self.print(" %v{d} =l loadl %v{d}\n %v{d} =l cultl %v{d}, %v{d}\n", .{ size, input, valid, normalized, size });
+    try self.print(" %v{d} =l cultl %v{d}, %v{d}\n", .{ valid, normalized, size });
     try requireIndexBounds(E, self, valid, at, size, "myl_qbe_fail_text_bounds_detail");
     try self.print(" %v{d} =l call $myl_native_text_at(l %heap, l %v{d}, l %v{d})\n", .{ result, input, normalized });
     try checkedPointer(E, self, result, base);

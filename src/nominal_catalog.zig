@@ -177,7 +177,7 @@ const Builder = struct {
                 .contract = .{ .public_arguments = self.publicArguments(node) },
             });
             identity.ty = ty;
-            if (node.key.base == .named and node.key.arguments.len == 0) try self.catalog.names.put(allocator, identity.name.?, ty);
+            if (node.key.base == .named and node.key.arguments.len == 0 and !self.index.isSynthetic(node.key.base.named)) try self.catalog.names.put(allocator, identity.name.?, ty);
         }
         const indexed = self.catalog.field_names.items.len;
         try self.catalog.field_names.resize(allocator, storage.items.len);
@@ -213,7 +213,7 @@ const Builder = struct {
         var edge: usize = 0;
         for (declaration.fields, cases, 0..) |field, *out, i| {
             const name = field.builtin_name orelse self.context.src.text(field.name);
-            out.* = .{ .name = name, .declaration = field.name, .payload = null };
+            out.* = .{ .name = name, .declaration = field.name, .payload = null, .fielded = field.ty != null and field.ty.? == .named and self.index.isSynthetic(field.ty.?.named) };
             if (field.ty != null) {
                 out.payload = try self.runtimeType(node.edges[edge].target);
                 edge += 1;
@@ -292,7 +292,9 @@ const Builder = struct {
                 .record => {
                     try self.fields(node, schema, declaration);
                     schema.managed = declaration.managed;
-                    schema.shape.builtin_cell = declaration.builtin_name != null;
+                    // A synthesized case-payload record borrows `builtin_name` for
+                    // its display name but is an ordinary record, not the builtin Cell.
+                    schema.shape.builtin_cell = declaration.builtin_name != null and !self.index.isSynthetic(id);
                 },
                 .variants, .result, .enumeration => try self.variants(node, schema, declaration),
                 .buffer => {
@@ -331,7 +333,8 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     const sources = try @import("nominal_sources.zig").collect(allocator, src, program, index, graph, sink);
     catalog.arrays.templates = sources.array_templates;
     catalog.templates.applications = sources.nominal_templates;
-    for (index.declarations.items) |declaration| {
+    for (index.declarations.items, 0..) |declaration, id| {
+        if (index.isSynthetic(id)) continue;
         const name = declaration.builtin_name orelse if (names) |module| try module.declaration(declaration.name) else src.text(declaration.name);
         if (declaration.parameters.len != 0) try catalog.templates.names.put(allocator, name, declaration.name);
     }

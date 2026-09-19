@@ -62,7 +62,11 @@ pub const Context = struct {
             },
             .builtin => |ty| .{ .concrete = ty },
             .parameter => |id| arguments[id],
-            .named => |declaration| .{ .concrete = store.runtime(store.graph.index.get(.{ .base = .{ .named = declaration }, .arguments = &.{} }).?) orelse return error.InternalError },
+            .named => |declaration| named_result: {
+                if (store.index.isSynthetic(declaration)) break :named_result try self.nominal(declaration, arguments);
+                const node = store.graph.index.get(.{ .base = .{ .named = declaration }, .arguments = &.{} }) orelse return error.InternalError;
+                break :named_result .{ .concrete = store.runtime(node) orelse return error.InternalError };
+            },
             .application => |application| result: {
                 var values: [16]Value = undefined;
                 for (application.arguments, 0..) |argument, i| values[i] = try self.expression(argument, arguments, depth + 1, span);
@@ -219,12 +223,15 @@ pub const Context = struct {
         if (value == .nominal) {
             const nominal_value = value.nominal;
             if (nominal_value.schema) |cached| return cached.*;
-            const declaration = self.catalog.templates.store.?.index.declarations.items[nominal_value.declaration];
+            const store = self.catalog.templates.store.?;
+            const declaration = store.index.declarations.items[nominal_value.declaration];
             const fields = try self.arena.allocator().alloc(symbolic.Field, declaration.fields.len);
             for (declaration.fields, fields) |field, *out| out.* = .{
                 .name = field.builtin_name orelse self.src.text(field.name),
                 .span = field.name,
                 .ty = if (field.ty) |ty| try self.expression(ty, nominal_value.arguments, 0, field.name) else null,
+                .default_value = field.default_value,
+                .fielded = field.ty != null and field.ty.? == .named and store.index.isSynthetic(field.ty.?.named),
             };
             const resolved = try self.arena.allocator().create(Schema);
             resolved.* = .{ .kind = declaration.kind, .fields = fields };
@@ -244,12 +251,12 @@ pub const Context = struct {
         const record = self.catalog.records[value.concrete.recordIndex()];
         if (record.shape.variants) |variants| {
             const fields = try self.arena.allocator().alloc(symbolic.Field, variants.cases.len);
-            for (variants.cases, fields) |field, *out| out.* = .{ .name = field.name, .span = field.declaration, .ty = if (field.payload) |ty| .{ .concrete = ty } else null };
+            for (variants.cases, fields) |field, *out| out.* = .{ .name = field.name, .span = field.declaration, .ty = if (field.payload) |ty| .{ .concrete = ty } else null, .fielded = field.fielded };
             return .{ .kind = if (variants.fallible) .result else if (variants.is_union) .variants else .enumeration, .fields = fields };
         }
         if (!record.isRecord() and record.tableKey() == null) return self.sink.fail("E_TYPE", span, "operation requires a record or variant value");
         const fields = try self.arena.allocator().alloc(symbolic.Field, record.fields.len);
-        for (record.fields, fields) |field, *out| out.* = .{ .name = field.name, .span = field.declaration, .ty = .{ .concrete = field.ty } };
+        for (record.fields, fields) |field, *out| out.* = .{ .name = field.name, .span = field.declaration, .ty = .{ .concrete = field.ty }, .default_value = field.default_value };
         return .{ .kind = .record, .fields = fields, .key = record.tableKey() };
     }
     /// Require a record, permitting enum-indexed tables only for complete construction.

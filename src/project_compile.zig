@@ -75,17 +75,17 @@ pub const Compilation = struct {
     }
     /// Allocate independently compilable scalar QBE units after full project checking.
     pub fn emitQbe(self: *Compilation, allocator: @import("std").mem.Allocator) EmitNativeError![]u8 {
-        return self.emitQbeWithOptions(allocator, false);
+        return self.emitQbeWithOptions(allocator, false, true);
     }
 
-    /// Emit QBE units under an explicit `debug` policy.
-    pub fn emitQbeWithOptions(self: *Compilation, allocator: @import("std").mem.Allocator, drop_debug: bool) EmitNativeError![]u8 {
+    /// Emit QBE units under an explicit `debug` policy and step-accounting choice.
+    pub fn emitQbeWithOptions(self: *Compilation, allocator: @import("std").mem.Allocator, drop_debug: bool, step_checks: bool) EmitNativeError![]u8 {
         try self.emitWithOptions(drop_debug);
         const roots = try self.exportRoots(allocator);
         defer allocator.free(roots);
         const schema = try self.renderSchema(allocator, roots);
         defer allocator.free(schema);
-        return @import("qbe.zig").generateWithInterface(allocator, self.code.?, self.src, &self.diagnostics, .{ .roots = roots, .schema = schema });
+        return @import("qbe.zig").generateWithInterface(allocator, self.code.?, self.src, &self.diagnostics, .{ .roots = roots, .schema = schema, .step_checks = step_checks });
     }
 
     /// Emit checked native-test dependency facts without lowering or QBE emission.
@@ -126,8 +126,12 @@ pub const Compilation = struct {
             error.OutOfMemory => return error.OutOfMemory,
             else => return error.InternalError,
         };
+        const inlined = @import("bytecode_inline.zig").inlineProgram(self.index.project.arena.allocator(), code) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => return error.InternalError,
+        };
         stats.* = .{ .lowered_functions = count, .emitted_fragments = count };
-        return @import("qbe.zig").generateSelectedWithInterface(allocator, code, self.src, &self.diagnostics, .{ .roots = roots, .schema = schema }, selected) catch |err| switch (err) {
+        return @import("qbe.zig").generateSelectedWithInterface(allocator, inlined, self.src, &self.diagnostics, .{ .roots = roots, .schema = schema }, selected) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             error.SourceError => return error.SourceError,
             error.WriteFailed => return error.WriteFailed,
@@ -249,6 +253,9 @@ pub const Compilation = struct {
     /// Lower with an explicit `debug` policy: a ReleaseFast build drops the nodes.
     pub fn emitWithOptions(self: *Compilation, drop_debug: bool) EmitError!void {
         try self.check();
-        if (self.code == null) self.code = try @import("lower.zig").lowerWith(self.index.project.arena.allocator(), self.program.?, drop_debug);
+        if (self.code == null) {
+            const lowered = try @import("lower.zig").lowerWith(self.index.project.arena.allocator(), self.program.?, drop_debug);
+            self.code = try @import("bytecode_inline.zig").inlineProgram(self.index.project.arena.allocator(), lowered);
+        }
     }
 };

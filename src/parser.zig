@@ -528,8 +528,14 @@ pub const Parser = struct {
                 var cases: std.ArrayList(ast.Variant) = .empty;
                 if (self.current().tag != .dedent) while (true) {
                     const tag = try self.expect(.ident);
-                    const payload = if (is_union and self.take(.colon)) try self.typeName() else null;
-                    try cases.append(self.arena.allocator(), .{ .name = tag.span, .payload = payload });
+                    var fields: []const ast.Parameter = &.{};
+                    var payload: ?Span = null;
+                    if (is_union and self.take(.lparen)) {
+                        fields = try self.caseFields();
+                    } else if (is_union and self.take(.colon)) {
+                        payload = try self.typeName();
+                    }
+                    try cases.append(self.arena.allocator(), .{ .name = tag.span, .payload = payload, .fields = fields });
                     if (!self.take(.comma)) break;
                 };
                 _ = try self.expect(.dedent);
@@ -700,6 +706,26 @@ pub const Parser = struct {
             const next_field = self.current().tag != .dedent and lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos);
             if (!self.take(.comma) and !next_field) break;
         };
+        return fields.toOwnedSlice(self.arena.allocator());
+    }
+    /// One parenthesized case's ordered named fields, with the same default rule
+    /// as a record body: at least one field, a required field may not follow a
+    /// defaulted one, and a default is an immutable scalar literal.
+    fn caseFields(self: *Parser) diagnostic.Error![]const ast.Parameter {
+        var fields: std.ArrayList(ast.Parameter) = .empty;
+        var default_field = false;
+        if (self.current().tag == .rparen) return self.sink.fail("E_CASE_FIELDS", self.current().span, "a parenthesized case declares at least one named field");
+        while (true) {
+            const field = try self.declaredName();
+            _ = try self.expect(.colon);
+            const ty = try self.typeName();
+            const default_value = if (self.take(.equal)) try self.defaultArgument() else null;
+            if (default_field and default_value == null) return self.sink.fail(eDefaultArgument, field, "required fields must precede fields with defaults");
+            default_field = default_field or default_value != null;
+            try fields.append(self.arena.allocator(), .{ .default_value = default_value, .name = field, .ty = ty });
+            if (!self.take(.comma) or self.current().tag == .rparen) break;
+        }
+        _ = try self.expect(.rparen);
         return fields.toOwnedSlice(self.arena.allocator());
     }
     fn typeParameters(self: *Parser) diagnostic.Error![]const ast.TypeParameter {
@@ -981,7 +1007,7 @@ pub const Parser = struct {
                 _ = try self.expect(.kw_case);
                 const pattern = try self.matchPattern();
                 const body = try self.block(null);
-                try arms.append(self.arena.allocator(), .{ .ty = pattern.ty, .name = pattern.name, .binding = pattern.binding, .discard_payload = pattern.discard_payload, .body = body });
+                try arms.append(self.arena.allocator(), .{ .ty = pattern.ty, .name = pattern.name, .bindings = pattern.bindings, .body = body });
                 if (self.current().tag != .kw_case) break;
             };
             const close = try self.expect(.dedent);
@@ -1614,7 +1640,7 @@ pub const Parser = struct {
             .arguments = try arguments.toOwnedSlice(self.arena.allocator()),
         } } });
     }
-    const Pattern = struct { ty: Span, name: Span, binding: ?Span = null, discard_payload: bool = false };
+    const Pattern = struct { ty: Span, name: Span, bindings: []const ?Span = &.{} };
     fn matchPattern(self: *Parser) diagnostic.Error!Pattern {
         const head = self.current();
         const first = if (self.take(.kw_none)) head.span else try self.nominalTypeName();
@@ -1628,9 +1654,14 @@ pub const Parser = struct {
             pattern.name = (try self.expect(.ident)).span;
         }
         if (self.take(.lparen)) {
-            const binding = (try self.expect(.ident)).span;
-            if (std.mem.eql(u8, self.src.text(binding), "_")) pattern.discard_payload = true else pattern.binding = binding;
+            var bindings: std.ArrayList(?Span) = .empty;
+            if (self.current().tag != .rparen) while (true) {
+                const binding = (try self.expect(.ident)).span;
+                try bindings.append(self.arena.allocator(), if (std.mem.eql(u8, self.src.text(binding), "_")) null else binding);
+                if (!self.take(.comma) or self.current().tag == .rparen) break;
+            };
             _ = try self.expect(.rparen);
+            pattern.bindings = try bindings.toOwnedSlice(self.arena.allocator());
         }
         return pattern;
     }

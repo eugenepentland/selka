@@ -483,7 +483,10 @@ pub const Index = struct {
         for (unit.syntax.types.variants) |variant| {
             try self.checkNominalParameters(module, variant.type_parameters);
             if (!unit.symbols.items[unit.names.get(project.modules.items[module].src.text(variant.name)).?].exported) continue;
-            for (variant.cases) |case| if (case.payload) |payload| try self.genericSignatureType(module, payload, variant.type_parameters);
+            for (variant.cases) |case| {
+                if (case.payload) |payload| try self.genericSignatureType(module, payload, variant.type_parameters);
+                for (case.fields) |field| try self.genericSignatureType(module, field.ty, variant.type_parameters);
+            }
         }
         for (unit.syntax.types.expressions.aliases) |alias| {
             if (unit.symbols.items[unit.names.get(project.modules.items[module].src.text(alias.name)).?].exported) try self.signatureType(module, alias.target);
@@ -863,6 +866,18 @@ pub const Index = struct {
                 if (case.payload) |payload| {
                     try shape.appendSlice(allocator, ":");
                     try shape.appendSlice(allocator, try self.contractTypeText(module, payload, variant.type_parameters));
+                } else if (case.fields.len != 0) {
+                    // A parenthesized case is part of the exported contract: its
+                    // named fields, their types and whether each has a default.
+                    try shape.appendSlice(allocator, "(");
+                    for (case.fields, 0..) |field, field_index| {
+                        if (field_index != 0) try shape.appendSlice(allocator, ",");
+                        try shape.appendSlice(allocator, self.project.modules.items[module].src.text(field.name));
+                        try shape.appendSlice(allocator, ":");
+                        try shape.appendSlice(allocator, try self.contractTypeText(module, field.ty, variant.type_parameters));
+                        if (field.default_value != null) try shape.appendSlice(allocator, "=default");
+                    }
+                    try shape.appendSlice(allocator, ")");
                 }
             }
             try shape.appendSlice(allocator, "}");

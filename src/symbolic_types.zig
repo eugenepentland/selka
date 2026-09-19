@@ -17,7 +17,9 @@ pub const Callback = struct {
 /// Symbolic applications keep declaration identity and ordered arguments, with lazy stored-member caches.
 pub const Nominal = struct { declaration: usize, arguments: []const Value, schema: ?*Schema = null, properties: ?Properties = null };
 /// A declared field or variant payload after substitution into the caller's parameter scope.
-pub const Field = struct { name: []const u8, span: @import("source.zig").Span, ty: ?Value };
+/// `default_value` is the backing node id of a declared field default; `fielded`
+/// marks a variant case whose payload is a synthesized named-field record.
+pub const Field = struct { name: []const u8, span: @import("source.zig").Span, ty: ?Value, default_value: ?usize = null, fielded: bool = false };
 /// Shared view of concrete and parameterized record/variant members.
 pub const Schema = struct { kind: @import("nominal_templates.zig").Kind, fields: []const Field, key: ?typed.Type = null };
 /// Stored-value contracts are independent of nominal argument identity.

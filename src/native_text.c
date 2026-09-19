@@ -27,18 +27,43 @@ int myl_native_text_valid_utf8(const unsigned char *bytes, size_t length) {
     while ((status=decode(bytes,length,&offset,&point))>0) {}
     return status==0;
 }
-myl_native_text *myl_native_text_from_utf8(myl_native_heap *heap, const unsigned char *bytes, size_t length) {
+/* One scalar per byte for the ASCII range, which is the whole of most source
+   text: check for a high bit and widen in two flat passes instead of running
+   the branchy UTF-8 decoder twice (once to count, once to fill). */
+static int ascii(const unsigned char *bytes, size_t length) {
+    for (size_t i=0; i<length; ++i) if (bytes[i]&0x80u) return 0;
+    return 1;
+}
+/* One validating pass that both checks and fills. ASCII (the whole of most
+   source text) is a high-bit scan plus a widening pass; every other input runs
+   the branchy decoder once to validate and count and once more to fill, so no
+   caller needs a separate prior validation pass. `*invalid` names the failure:
+   1 for malformed input, 0 for a refused allocation. */
+myl_native_text *myl_native_text_from_utf8_checked(myl_native_heap *heap, const unsigned char *bytes, size_t length, int *invalid) {
+    *invalid=0;
     size_t count=0, offset=0;
     uint32_t point;
     int status;
+    if (ascii(bytes,length)) {
+        myl_native_text *result=myl_native_list_new(heap,&myl_native_text_point,length);
+        if (!result) return NULL;
+        uint32_t *points=(uint32_t *)result->storage;
+        for (size_t i=0; i<length; ++i) points[i]=bytes[i];
+        result->length=length;
+        return result;
+    }
     while ((status=decode(bytes,length,&offset,&point))>0) count++;
-    if (status<0) return NULL;
+    if (status<0) { *invalid=1; return NULL; }
     myl_native_text *result=myl_native_list_new(heap,&myl_native_text_point,count);
     if (!result) return NULL;
     offset=0;
     for (size_t i=0; i<count; ++i) { decode(bytes,length,&offset,&point); ((uint32_t *)result->storage)[i]=point; }
     result->length=count;
     return result;
+}
+myl_native_text *myl_native_text_from_utf8(myl_native_heap *heap, const unsigned char *bytes, size_t length) {
+    int invalid=0;
+    return myl_native_text_from_utf8_checked(heap,bytes,length,&invalid);
 }
 myl_native_text *myl_native_text_copy(myl_native_heap *heap, myl_native_text *input, size_t start, size_t count) {
     myl_native_root root;

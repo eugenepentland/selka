@@ -1,0 +1,1173 @@
+(import
+  sma-j-p-h-st-em1
+  erm6-20-01-5-l-dv-a-k-tr
+  m3swa2-63drc-switch
+  neg5-charge-pump
+  pma3-14ln-lna
+  bcuda-splitter-adp2
+  lm5164-buck
+  bcuda-lt3045-ldo
+  sts40-temperature-sensor
+  cap-0402-broadband
+  cap-0805-50v
+  cap-0402-50v
+  9774020243r
+  fiducial-0p75-2p25
+  testpoint
+  cap-0402
+  res-0402)
+(design-block
+  "Remora RF Front-End Module"
+  (revision
+    "A1"
+    (date "2026-09-10")
+    (change
+      "A1"
+      "Initial release: four antenna/cal-switched LNA channels on a common calibration divider, powered from an 802.3af PoE port.")
+    (change
+      "A1"
+      "Isolated PD adopted before release (user decision 2026-09-08). The non-isolated TPS2378 hot-swap front end and its 36-57 V V_POE rail were replaced by a TPS23757 PD interface plus current-mode flyback into a standard PoE transformer, so system GND became the galvanically isolated SECONDARY return instead of the PD return. That front end now lives on the base board.")
+    (change
+      "A1"
+      "Calibration fan-out changed from ONE SCA-4-10+ four-way divider to THREE ADP-2-20+ two-way splitters in a binary tree (user decision 2026-09-09). cal_root's two outputs feed cal_a and cal_b, whose four outputs feed the four switches, so all four legs are the same two hops and leg matching becomes a placement property rather than four meanders. The cal legs route on the BOTTOM copper through vias and the CAL_IN SMA sits on the RIGHT (output) edge beside the four RF_OUT SMAs. Level plan: total fan-out loss 7.4-8.0 dB, leg-to-leg unbalance 0.6 dB / 6 degrees at the top of the band, worst-pair isolation 15 dB minimum, sum-port VSWR a flat ~2:1, and the divider no longer sets the board's 1000 MHz ceiling.")
+    (change
+      "A1"
+      "TWO-BOARD SPLIT (user decision 2026-09-10). The single `remora` PCBA became a mezzanine PAIR and this file is its RF half, renamed from src/boards/remora/remora.sexp to src/boards/remora-rf/remora-rf.sexp. Removed from this board and re-homed on `remora-base`: the poe sub-block (TPS23757 isolated flyback), the ARJM11D7 PoE magjack and its chassis network, the W55RP20 MCU, the USB-C receptacle with its two USBLC6 arrays and VBUS-sense inverter, the three status LEDs, the TPSM84338 +3.3 V buck with its EN divider and TP_3V3D, and the two I2C pull-ups. Added: a Samtec ERM6-020 Edge Rate terminal (J1) and its 10 uF connector-side reservoir. V_12V_ISO stops being a rail this board PRODUCES and becomes the rail it RECEIVES: the 12 V arrives already regulated on J1 pins 1-4, under the same name the base board uses so the interface contract needs no alias, and the whole PoE front end that used to make it is on the base. V_3V3D is gone with the buck that made it; the STS40 now runs from the base's always-on V_3V3_ID over pin 7. The four cal-select lines gained a name each side of their population jumper (CAL_SEL_n crosses the connector, CAL_SEL_n_SW is the switch side). The ethernet-100ohm, usb-90ohm and poe-hv net classes, both isolation keepouts and the poe/external-differential route waves left with the parts they governed. Rails, RF chain, cal tree and every RF net class are unchanged. Reason (user): 'power/control on one PCB and then RF on the other … so just 12V going through the connector to the RF board. That could let us slim down the length of the whole system so the trace doesn't need to be as long.'"))
+  (hierarchical-ids)
+  (board-role board)
+  (section
+    "ERM6 Module Link"
+    "Samtec ERM6-020 terminal: +12 V in, always-on +3.3 V sensor rail, four cal-selects and the I2C bus"
+    (category connector)
+    (instance
+      "J1"
+      erm6-20-01-5-l-dv-a-k-tr
+      (pin 1 2 3 4 "V_12V_ISO")
+      (pin 7 "V_3V3_ID")
+      (pin 11 "CAL_SEL_1")
+      (pin 15 "CAL_SEL_2")
+      (pin 19 "CAL_SEL_3")
+      (pin 23 "CAL_SEL_4")
+      (pin 27 "I2C_SDA")
+      (pin 31 "I2C_SCL")
+      (pin
+        5
+        6
+        8
+        9
+        10
+        12
+        13
+        14
+        16
+        17
+        18
+        20
+        21
+        22
+        24
+        25
+        26
+        28
+        29
+        30
+        32
+        33
+        34
+        35
+        36
+        37
+        38
+        39
+        40
+        "GND")
+      (id e16e4788))
+    (instance
+      "C_12V_INPUT_BULK"
+      (cap-0805-50v "10uF" x7r "10%" "50V")
+      (pin 1 "V_12V_ISO")
+      (pin 2 "GND")
+      (decouples rail)
+      (id a4d58696))
+    (note
+      "Remora RF A1 / Base A1 ERM6-ERF6 interface, 40 contacts, pin N mates pin N. V_12V_ISO uses pins 1/2/3/4 (0.218 A typical / 0.322 A maximum, about 81 mA per contact); V_3V3_ID arrives on pin 7 at up to 2 mA for the STS40; CAL_SEL_1..4 are pins 11/15/19/23; I2C_SDA/I2C_SCL are pins 27/31 with their pull-ups on the base board so the bus idles defined when this board is unmated; the other twenty-nine contacts are GND, and every signal contact has a ground contact beneath it and a ground column either side. MATCHED-SET REQUIREMENT: this connector map is a contract between the two boards and is checked by the (interface \"remora-b2b\" …) block in src/systems/remora/system.sexp. Do not re-purpose a contact without revising BOTH boards and the interface control document. NOTHING AT PoE POTENTIAL CROSSES: the isolation barrier lives on the base board upstream of its 12 V secondary, so every contact here is a low-voltage secondary-side node and this board carries no primary copper, no creepage rule and no barrier keepout at all. Continuity-test all 40 contacts before powered bring-up, and confirm pin-1 alignment and mated height on a first article."))
+  (port
+    "V_12V_ISO"
+    in
+    power
+    (nominal 12.0)
+    (rated 11.4 12.6)
+    (current 0.218 0.322))
+  (port
+    "V_3V3_ID"
+    in
+    power
+    (nominal 3.3)
+    (rated 1.08 3.6)
+    (current 0.002 0.002))
+  (section
+    "Power Tree"
+    "J1 +12 V → LM5164 7.5 V → two LT3045 low-noise RF rails → −5 V charge pump"
+    (category power)
+    (hosts "buck_7v5" "ldo_6v0" "ldo_5v11" "neg5")
+    (instance
+      "C_7v5_bulk1"
+      (cap-0805-50v "4.7uF" x7r "10%" "50V")
+      (pin 1 "V_7V5")
+      (pin 2 "GND")
+      (decouples rail)
+      (id f694eaf1))
+    (instance
+      "C_7v5_bulk2"
+      (cap-0805-50v "4.7uF" x7r "10%" "50V")
+      (pin 1 "V_7V5")
+      (pin 2 "GND")
+      (decouples rail)
+      (id bb0dba8b))
+    (instance
+      "C_7v5_hf"
+      (cap-0402-50v "100nF" x7r "10%" "50V")
+      (pin 1 "V_7V5")
+      (pin 2 "GND")
+      (decouples rail)
+      (id a6a19dae))
+    (note
+      "Single-input power tree. V_12V_ISO arrives already regulated on J1 pins 1-4 from the base board's isolated PoE flyback (11.80-12.30 V measured at the base's secondary; the buck's (vin 12) case is sized for a wider 11.4-12.6 V and bounds it) → LM5164 synchronous buck → V_7V5 → two LT3045 LDOs → the negative charge pump. The 7.5 V intermediate rail exists so the two RF rails are LT3045s rather than switchers: their output noise is inside the 50-1000 MHz receive band and an LDO removes it, at a cost in dissipation that has to be looked at squarely: at the rail's 7.721 V ceiling and the 6.04 V LDO's 5.974 V floor, ldo_6v0 burns (7.721-5.974) x 0.360 = 0.63 W, and ldo_5v11 burns (7.721-5.054) x 0.081 = 0.22 W. 0.63 W in an LT3045 DFN on a poured ground plane is roughly a 28 degC junction rise and is inside the part, but it is the single largest heat source on this board. The lever, if it is ever wanted, is the intermediate rail: dropping the buck from 7.4766 V to about 7.0 V would still leave 0.3 V of LT3045 dropout margin at the 6.77 V low corner and would return about 0.19 W. It is deliberately NOT taken on A1 — the extra headroom buys tolerance against a buck respin, a hotter ambient and the LDO's own dropout spread, and the system's PoE budget has room. Budget at maximum load: V_6V0 0.360 A, V_5V11 0.081 A, V_NEG5 0.036 A, summing to 0.447 A (3.34 W) on V_7V5; at the buck module's conservatively declared 0.88 efficiency for its (vin 12) case that is 3.80 W over the connector, i.e. 0.315 A at 12.063 V and 0.322 A at the 11.80 V floor, which is what the (port \"V_12V_ISO\" …) declaration hands the base board's budget. Sequencing: there is no enable and no power-good anywhere in this tree. The buck's own 9.64 V UVLO (turn-off 9.00 V, worst-case turn-on corner 10.13 V against the base secondary's 11.80 V regulated floor) holds V_7V5 off until the 12 V feed is genuinely in regulation, and each LT3045's EN_UV is tied to V_7V5 so the RF rails simply track the intermediate rail. Nothing on this board can start before the base has finished its PoE handshake, because the 12 V does not exist until it has. Test points are fitted on every rail including V_12V_ISO, which is an ordinary low-voltage node on the isolated side. LAYOUT: give each regulator its own tight input loop; neither LDO borrows the shared V_7V5 reservoir (C_7v5_bulk1/2, C_7v5_hf) as its local loop — that reservoir is a rail-level store for the three converters together. Keep the whole power tree at the connector end of the board, away from the amplifier field, and keep the switching node of the 7.5 V buck under a continuous In1 ground plane with no RF net crossing it on any layer."))
+  (sub-block
+    "buck_7v5"
+    (lm5164-buck (vout 7.5) (vin 12))
+    (bridge "" (rename VIN V_12V_ISO) (rename VOUT V_7V5) GND)
+    (id c2ecaf12))
+  (sub-block
+    "ldo_6v0"
+    (bcuda-lt3045-ldo (vout 6.04))
+    (bridge
+      ""
+      (rename VIN V_7V5)
+      (rename VOUT V_6V0)
+      (rename EN_UV V_7V5)
+      GND)
+    (id c5d67408))
+  (sub-block
+    "ldo_5v11"
+    (bcuda-lt3045-ldo (vout 5.11))
+    (bridge
+      ""
+      (rename VIN V_7V5)
+      (rename VOUT V_5V11)
+      (rename EN_UV V_7V5)
+      GND)
+    (id a8ccbbf6))
+  (sub-block
+    "neg5"
+    (neg5-charge-pump)
+    (bridge "" (rename VDD V_5V11) (rename VEE V_NEG5) GND)
+    (id e178f66e))
+  (instance "TP_12V" testpoint (pin 1 "V_12V_ISO") (id b0d43c3b))
+  (instance "TP_7V5" testpoint (pin 1 "V_7V5") (id e460ff38))
+  (instance "TP_6V0" testpoint (pin 1 "V_6V0") (id b3cae997))
+  (instance "TP_5V11" testpoint (pin 1 "V_5V11") (id c6b94cfa))
+  (instance "TP_NEG5" testpoint (pin 1 "V_NEG5") (id db7640e5))
+  (instance "TP_3V3_ID" testpoint (pin 1 "V_3V3_ID") (id aa4f2b1e))
+  (section
+    "Board Temperature & I2C"
+    "STS40 on the base's I2C bus over J1, powered from the always-on V_3V3_ID branch"
+    (category sensor)
+    (hosts "temp")
+    (note
+      "STS40-CD1B-R3 at fixed 7-bit address 0x46, on the base board W55RP20's I2C0 bus (GPIO0 = SDA, GPIO1 = SCL) across J1 pins 27 and 31, and powered from V_3V3_ID on pin 7. The 4.7k pull-ups are on the BASE board, referenced to V_3V3_ID, so the bus is defined and un-ACKed when no RF board is mated — this board fits none. Place the sensor in the amplifier field, between the channel-2 and channel-3 LNAs, not next to the power tree: the number that matters is the temperature the amplifiers see, because PMA3-14LN+ gain and noise figure both drift with it and the calibration table is only valid at the temperature it was taken at. Firmware: wait 1 ms after power-up, probe 0x46, use 0xFD/0xF6/0xE0 for high/medium/low-repeatability measurements, use command 0x89 to read the factory-programmed serial as an RF-board identity check, and validate each 16-bit word with CRC-8 polynomial 0x31 / init 0xFF."))
+  (sub-block
+    "temp"
+    (sts40-temperature-sensor)
+    (bridge
+      ""
+      (rename VDD V_3V3_ID)
+      (rename SDA I2C_SDA)
+      (rename SCL I2C_SCL)
+      GND)
+    (id dce97a37))
+  (section
+    "Cal Input Fan-Out"
+    "CAL_IN SMA → broadband DC block → 3× ADP-2-20+ 2-way 0° splitter tree → 4× DC block"
+    (category connector)
+    (hosts "cal_root" "cal_a" "cal_b")
+    (instance
+      "cal_in"
+      sma-j-p-h-st-em1
+      (pin 1 "CAL_IN")
+      (pin 2 3 "GND")
+      (id fb72ddad))
+    (instance
+      "C_dc_cal_in"
+      (cap-0402-broadband "100nF" ultra-broadband-ceramic "10%" "16V")
+      (pin 1 "CAL_IN")
+      (pin 2 "CAL_SUM")
+      (id e311b8c6))
+    (instance
+      "C_dc_cal1"
+      (cap-0402-broadband "100nF" ultra-broadband-ceramic "10%" "16V")
+      (pin 1 "CAL_1")
+      (pin 2 "CAL_1_BLK")
+      (id ca456598))
+    (instance
+      "C_dc_cal2"
+      (cap-0402-broadband "100nF" ultra-broadband-ceramic "10%" "16V")
+      (pin 1 "CAL_2")
+      (pin 2 "CAL_2_BLK")
+      (id ab3fb2f2))
+    (instance
+      "C_dc_cal3"
+      (cap-0402-broadband "100nF" ultra-broadband-ceramic "10%" "16V")
+      (pin 1 "CAL_3")
+      (pin 2 "CAL_3_BLK")
+      (id c56c9e4a))
+    (instance
+      "C_dc_cal4"
+      (cap-0402-broadband "100nF" ultra-broadband-ceramic "10%" "16V")
+      (pin 1 "CAL_4")
+      (pin 2 "CAL_4_BLK")
+      (id accc3e9e))
+    (note
+      "Single calibration input fanned to all four channels by a BINARY TREE of three ADP-2-20+ 2-way 0-degree splitters (20-2000 MHz, case CD542): cal_root's SUM takes CAL_IN, its two outputs feed the SUM ports of cal_a and cal_b, and those four outputs feed the four switches. Every leg is the same two hops, which is the whole point: leg matching becomes a placement property instead of four meanders. LEVEL PLAN: 3.7 dB typical of total loss per stage (3.5 typ / 3.8 max below 200 MHz, 3.7 typ / 4.0 max from 200-1000 MHz) gives 7.4 dB typical and 7.6-8.0 dB worst case for the tree, plus 0.1 dB in each of the two DC blocks a cal path crosses. Antenna path gain is about +21.7 dB with a 1.7 dB noise figure; the cal path is about +14.2 dB, i.e. 7.5 dB lower, so a cal tone must be driven about 7.5 dB harder than an equivalent antenna signal. LIMITS at CAL_IN: keep the tone at or below +7 dBm for specified linearity (the PMA3-14LN+ reaches its +22 dBm output P1dB at about +7.7 dBm here) and never above +20 dBm, which is the amplifier's +12 dBm continuous absolute-maximum input referred back through the tree, the switch and the blocks. The M3SWA2's 24 dBm per-output-port ceiling (+31.6 dBm at CAL_IN) and the root splitter's own 1 W rating (+30.1 dBm at CAL_IN) are both above that, so the amplifier is the binding limit on every port. ISOLATION: 18 dB typ / 15 dB MIN between the two legs that share a second-stage splitter (1-2 and 3-4) and about 25/22 dB across the branches; the 15 dB minimum is flat across the whole band and is 3 dB worse than the four-way part it replaces below 400 MHz. UNBALANCE: <= 0.3 dB / 3.0 deg between legs sharing a second-stage part and <= 0.6 dB / 6.0 deg across the branches over 200-1000 MHz — roughly half the four-way's 0.9 dB / 11 deg at the top of the band. PORT MATCH is the budget that got worse: the ADP-2-20+ publishes no VSWR specification at all and its typical data shows the SUM port at a flat 1.97-2.01:1 (9.5 dB return loss) across the band, against the four-way's 1.04-1.13:1 below 300 MHz, so a calibration source without its own output pad or isolator sees a 2:1 load everywhere rather than only at the top of the band. The calibration measures the resulting ripple out because every channel shares the same sum path. AMBIENT: the ADP-2-20+'s -40 to +85 degC operating case range is still the tightest temperature limit on the board and bounds the product's ambient envelope. LAYOUT: match the two first-stage links (root PORT2 to cal_a SUM, root PORT1 to cal_b SUM - the outputs are swapped relative to the obvious order because the packages are on the BOTTOM face, where the mirrored land makes PORT2 the northern output) to each other and the four second-stage legs to each other — the two `(match-group …)` declarations below do exactly that — because any length difference is a fixed phase error the array calibration will absorb as a real antenna phase and then apply to live signals. The whole tree - the three packages, the five DC blocks and every leg - is on B.Cu, so a first-stage link carries NO via and a second-stage leg carries exactly ONE, the barrel up into the switch's RF_OUT2 pad (see the rf-cal route wave); keep the via count and the bend count identical on all four, not just the length."))
+  (sub-block
+    "cal_root"
+    (bcuda-splitter-adp2)
+    (bridge
+      ""
+      (rename SUM CAL_SUM)
+      (rename PORT2 CAL_A)
+      (rename PORT1 CAL_B)
+      GND)
+    (id b6118269))
+  (sub-block
+    "cal_a"
+    (bcuda-splitter-adp2)
+    (bridge
+      ""
+      (rename SUM CAL_A)
+      (rename PORT2 CAL_1)
+      (rename PORT1 CAL_2)
+      GND)
+    (id d0c9c869))
+  (sub-block
+    "cal_b"
+    (bcuda-splitter-adp2)
+    (bridge
+      ""
+      (rename SUM CAL_B)
+      (rename PORT2 CAL_3)
+      (rename PORT1 CAL_4)
+      GND)
+    (id d9c3f363))
+  (section
+    "RF Channel 1"
+    "ANT_IN_1 / CAL_1 → M3SWA2 SPDT → PMA3-14LN+ → RF_OUT_1"
+    (category analog)
+    (hosts "sw_1" "lna_1")
+    (instance
+      "ant1"
+      sma-j-p-h-st-em1
+      (pin 1 "ANT_IN_1")
+      (pin 2 3 "GND")
+      (id fe397e2f))
+    (instance
+      "C_dc_ant1"
+      (cap-0402-broadband "100nF" ultra-broadband-ceramic "10%" "16V")
+      (pin 1 "ANT_IN_1")
+      (pin 2 "ANT_1_BLK")
+      (id da905e23))
+    (instance
+      "R_cal_sel1"
+      (res-0402 "0R" jumper "0.063W" "50V" "1A" "0.05ohm")
+      (pin 1 "CAL_SEL_1")
+      (pin 2 "CAL_SEL_1_SW")
+      (id e775002e))
+    (instance
+      "R_cs_pd1"
+      (res-0402 "10k" "1%" "0.063W" "50V")
+      (pin 1 "CAL_SEL_1_SW")
+      (pin 2 "GND")
+      (id c453a50c))
+    (instance
+      "out1"
+      sma-j-p-h-st-em1
+      (pin 1 "RF_OUT_1")
+      (pin 2 3 "GND")
+      (id a9f10ae4))
+    (note
+      "Channel 1. ANT_IN_1 (front-panel SMA) through C_dc_ant1 to the switch's RF_OUT1; CAL_1_BLK from the divider fan-out to RF_OUT2; the switch common SW_1_COM feeds the PMA3-14LN+, whose output drives RF_OUT_1 directly (the amplifier module carries DC blocks on both of its own RF ports). SW_1_COM needs no board-level DC block because the amplifier module's input block already holds the switch common at 0 V DC, satisfying the M3SWA2's requirement that every RF port be blocked or at 0 V. R_cal_sel1 is a 0R population jumper into the switch module's own 100R CTRL resistor; R_cs_pd1 is a 10k pull-down so CAL_SEL_1_SW is LOW = antenna before firmware runs. Layout: keep ANT_1_BLK, CAL_1_BLK and SW_1_COM as short 50-ohm CPWG with continuous ground and a via fence at every launch and package ground pad; the length from the antenna SMA to the amplifier input is the only part of this board that directly costs noise figure."))
+  (sub-block
+    "sw_1"
+    (m3swa2-63drc-switch)
+    (bridge
+      ""
+      (rename RF_IN SW_1_COM)
+      (rename RF_OUT1 ANT_1_BLK)
+      (rename RF_OUT2 CAL_1_BLK)
+      (rename CTRL CAL_SEL_1_SW)
+      (rename VDD V_5V11)
+      (rename VEE V_NEG5)
+      GND)
+    (id d1d1aa11))
+  (sub-block
+    "lna_1"
+    (pma3-14ln-lna)
+    (bridge
+      ""
+      (rename RF_IN SW_1_COM)
+      (rename RF_OUT RF_OUT_1)
+      (rename VDD V_6V0)
+      GND)
+    (id df217dcf))
+  (section
+    "RF Channel 2"
+    "ANT_IN_2 / CAL_2 → M3SWA2 SPDT → PMA3-14LN+ → RF_OUT_2"
+    (category analog)
+    (hosts "sw_2" "lna_2")
+    (instance
+      "ant2"
+      sma-j-p-h-st-em1
+      (pin 1 "ANT_IN_2")
+      (pin 2 3 "GND")
+      (id b32472dd))
+    (instance
+      "C_dc_ant2"
+      (cap-0402-broadband "100nF" ultra-broadband-ceramic "10%" "16V")
+      (pin 1 "ANT_IN_2")
+      (pin 2 "ANT_2_BLK")
+      (id ef2db4d0))
+    (instance
+      "R_cal_sel2"
+      (res-0402 "0R" jumper "0.063W" "50V" "1A" "0.05ohm")
+      (pin 1 "CAL_SEL_2")
+      (pin 2 "CAL_SEL_2_SW")
+      (id d873a291))
+    (instance
+      "R_cs_pd2"
+      (res-0402 "10k" "1%" "0.063W" "50V")
+      (pin 1 "CAL_SEL_2_SW")
+      (pin 2 "GND")
+      (id da181415))
+    (instance
+      "out2"
+      sma-j-p-h-st-em1
+      (pin 1 "RF_OUT_2")
+      (pin 2 3 "GND")
+      (id a2434412))
+    (note
+      "Channel 2, identical in construction to channel 1: ANT_IN_2 through C_dc_ant2 to switch RF_OUT1, CAL_2_BLK to RF_OUT2, common SW_2_COM into the amplifier, RF_OUT_2 to the front panel. CAL_SEL_2_SW comes from the base board’s W55RP20 GPIO16 (package pin 30) over J1 pin 15 and the 0R jumper R_cal_sel2, with R_cs_pd2 (10k) holding it low at power-up. Place the four channels as four identical mirrored cells so their ANT-to-LNA path lengths match; unequal channel delay shows up directly as an array phase error."))
+  (sub-block
+    "sw_2"
+    (m3swa2-63drc-switch)
+    (bridge
+      ""
+      (rename RF_IN SW_2_COM)
+      (rename RF_OUT1 ANT_2_BLK)
+      (rename RF_OUT2 CAL_2_BLK)
+      (rename CTRL CAL_SEL_2_SW)
+      (rename VDD V_5V11)
+      (rename VEE V_NEG5)
+      GND)
+    (id a521e7c8))
+  (sub-block
+    "lna_2"
+    (pma3-14ln-lna)
+    (bridge
+      ""
+      (rename RF_IN SW_2_COM)
+      (rename RF_OUT RF_OUT_2)
+      (rename VDD V_6V0)
+      GND)
+    (id aaeefb12))
+  (section
+    "RF Channel 3"
+    "ANT_IN_3 / CAL_3 → M3SWA2 SPDT → PMA3-14LN+ → RF_OUT_3"
+    (category analog)
+    (hosts "sw_3" "lna_3")
+    (instance
+      "ant3"
+      sma-j-p-h-st-em1
+      (pin 1 "ANT_IN_3")
+      (pin 2 3 "GND")
+      (id ae261768))
+    (instance
+      "C_dc_ant3"
+      (cap-0402-broadband "100nF" ultra-broadband-ceramic "10%" "16V")
+      (pin 1 "ANT_IN_3")
+      (pin 2 "ANT_3_BLK")
+      (id d718d34b))
+    (instance
+      "R_cal_sel3"
+      (res-0402 "0R" jumper "0.063W" "50V" "1A" "0.05ohm")
+      (pin 1 "CAL_SEL_3")
+      (pin 2 "CAL_SEL_3_SW")
+      (id f1e5c1f1))
+    (instance
+      "R_cs_pd3"
+      (res-0402 "10k" "1%" "0.063W" "50V")
+      (pin 1 "CAL_SEL_3_SW")
+      (pin 2 "GND")
+      (id ccbde132))
+    (instance
+      "out3"
+      sma-j-p-h-st-em1
+      (pin 1 "RF_OUT_3")
+      (pin 2 3 "GND")
+      (id fd024467))
+    (note
+      "Channel 3, identical in construction to channel 1. CAL_SEL_3_SW comes from the base board’s W55RP20 GPIO28 (package pin 48) over J1 pin 19 and the 0R jumper R_cal_sel3, with R_cs_pd3 (10k) holding it low at power-up."))
+  (sub-block
+    "sw_3"
+    (m3swa2-63drc-switch)
+    (bridge
+      ""
+      (rename RF_IN SW_3_COM)
+      (rename RF_OUT1 ANT_3_BLK)
+      (rename RF_OUT2 CAL_3_BLK)
+      (rename CTRL CAL_SEL_3_SW)
+      (rename VDD V_5V11)
+      (rename VEE V_NEG5)
+      GND)
+    (id fac94943))
+  (sub-block
+    "lna_3"
+    (pma3-14ln-lna)
+    (bridge
+      ""
+      (rename RF_IN SW_3_COM)
+      (rename RF_OUT RF_OUT_3)
+      (rename VDD V_6V0)
+      GND)
+    (id fda08a73))
+  (section
+    "RF Channel 4"
+    "ANT_IN_4 / CAL_4 → M3SWA2 SPDT → PMA3-14LN+ → RF_OUT_4"
+    (category analog)
+    (hosts "sw_4" "lna_4")
+    (instance
+      "ant4"
+      sma-j-p-h-st-em1
+      (pin 1 "ANT_IN_4")
+      (pin 2 3 "GND")
+      (id b4f2c699))
+    (instance
+      "C_dc_ant4"
+      (cap-0402-broadband "100nF" ultra-broadband-ceramic "10%" "16V")
+      (pin 1 "ANT_IN_4")
+      (pin 2 "ANT_4_BLK")
+      (id bd5f3ae5))
+    (instance
+      "R_cal_sel4"
+      (res-0402 "0R" jumper "0.063W" "50V" "1A" "0.05ohm")
+      (pin 1 "CAL_SEL_4")
+      (pin 2 "CAL_SEL_4_SW")
+      (id c3532b2e))
+    (instance
+      "R_cs_pd4"
+      (res-0402 "10k" "1%" "0.063W" "50V")
+      (pin 1 "CAL_SEL_4_SW")
+      (pin 2 "GND")
+      (id c1ad1b02))
+    (instance
+      "out4"
+      sma-j-p-h-st-em1
+      (pin 1 "RF_OUT_4")
+      (pin 2 3 "GND")
+      (id a810c4dc))
+    (note
+      "Channel 4, identical in construction to channel 1. CAL_SEL_4_SW comes from the base board’s W55RP20 GPIO15 over J1 pin 23 and the 0R jumper R_cal_sel4, with R_cs_pd4 (10k) holding it low at power-up."))
+  (sub-block
+    "sw_4"
+    (m3swa2-63drc-switch)
+    (bridge
+      ""
+      (rename RF_IN SW_4_COM)
+      (rename RF_OUT1 ANT_4_BLK)
+      (rename RF_OUT2 CAL_4_BLK)
+      (rename CTRL CAL_SEL_4_SW)
+      (rename VDD V_5V11)
+      (rename VEE V_NEG5)
+      GND)
+    (id d91818bd))
+  (sub-block
+    "lna_4"
+    (pma3-14ln-lna)
+    (bridge
+      ""
+      (rename RF_IN SW_4_COM)
+      (rename RF_OUT RF_OUT_4)
+      (rename VDD V_6V0)
+      GND)
+    (id febd4e9d))
+  (note
+    "R_cal_sel1"
+    "Cal select: GPIO18/GPIO16/GPIO28/GPIO15 drive CAL_SEL_1..4 across J1 and through 0R population jumpers into each M3SWA2's own 100R CTRL resistor. LOW = antenna (RF_OUT1), HIGH = calibration (RF_OUT2). Each line carries a board-level 10k pull-down, so reset, boot and unprogrammed-flash states all select the antenna path. At the M3SWA2's 5 mA worst-case CTRL input current the module's 100R resistor drops 0.5 V, leaving 2.8 V from a 3.3 V GPIO against the 2.3 V minimum VIH; the 10k pull-down adds 0.33 mA of GPIO load and no drop. Firmware should change one channel at a time and allow the switch's specified settling before taking a calibration sample.")
+  (section
+    "Mounting Holes"
+    "4× Würth WA-SMSI 9774020243R — M2 SMT standoff, chassis GND"
+    (category connector)
+    (instance "MK1" 9774020243r (pin 1 "GND") (id d7e12277))
+    (instance "MK2" 9774020243r (pin 1 "GND") (id a93fca2a))
+    (instance "MK3" 9774020243r (pin 1 "GND") (id e3977f70))
+    (instance "MK4" 9774020243r (pin 1 "GND") (id f9dbfe55))
+    (note
+      "Würth 9774020243R M2 internal-thread SMT steel spacer used as a mounting hole; the single SMT pad bonds the barrel to GND. FOUR, one at each corner. They are not only stiffness for the nine torqued SMA nuts: on a two-board mezzanine stack they are the mechanical REGISTRATION between this board and remora-base, which carries the same four positions and the same part. Confirm placement and keepout against the M2 screw head, and confirm that the four positions, the board outline and the J1 pose are identical on both boards before either is fabricated."))
+  (section
+    "Fiducials"
+    "Pick-and-place vision alignment marks (0.75 mm Cu / 2.25 mm mask)"
+    (diagram hidden)
+    (instance "FID1" fiducial-0p75-2p25 (id e72f7eda))
+    (instance "FID2" fiducial-0p75-2p25 (id ea35ceb2))
+    (instance "FID3" fiducial-0p75-2p25 (id ed34ce66))
+    (note
+      "FID1/FID2/FID3 are the TOP-side primary alignment marks: place near three corners forming a non-collinear (L-shaped) triangle, 3-5 mm in from the board edge. This board is single-sided assembly, so no bottom-side marks are fitted; add a mirrored pair if a respin moves parts to the back face. Positions are a layout action; the schematic only pins the three instances and their identities."))
+  (diagram-layout
+    (anchor "ERM6 Module Link")
+    (place "Power Tree" (below "ERM6 Module Link"))
+    (place "buck_7v5" (right-of "Power Tree"))
+    (place "ldo_6v0" (below "Power Tree"))
+    (place "ldo_5v11" (right-of "ldo_6v0"))
+    (place "neg5" (below "ldo_5v11"))
+    (place "Mounting Holes" (below "ldo_6v0"))
+    (place "Board Temperature & I2C" (above "ERM6 Module Link"))
+    (place "temp" (right-of "Board Temperature & I2C"))
+    (place "Cal Input Fan-Out" (right-of "Board Temperature & I2C"))
+    (place "cal_root" (right-of "Cal Input Fan-Out"))
+    (place "cal_a" (right-of "cal_root"))
+    (place "cal_b" (below "cal_a"))
+    (place "RF Channel 1" (right-of "temp"))
+    (place "sw_1" (right-of "RF Channel 1"))
+    (place "lna_1" (right-of "sw_1"))
+    (place "RF Channel 2" (below "RF Channel 1"))
+    (place "sw_2" (right-of "RF Channel 2"))
+    (place "lna_2" (right-of "sw_2"))
+    (place "RF Channel 3" (below "RF Channel 2"))
+    (place "sw_3" (right-of "RF Channel 3"))
+    (place "lna_3" (right-of "sw_3"))
+    (place "RF Channel 4" (below "RF Channel 3"))
+    (place "sw_4" (right-of "RF Channel 4"))
+    (place "lna_4" (right-of "sw_4"))
+    (group
+      "Front Panel"
+      "Cal Input Fan-Out"
+      "RF Channel 1"
+      "RF Channel 2"
+      "RF Channel 3"
+      "RF Channel 4")
+    (group "Board-to-Board" "ERM6 Module Link")
+    (group "Power" "Power Tree" "buck_7v5" "ldo_6v0" "ldo_5v11" "neg5")
+    (group "Control" "Board Temperature & I2C" "temp")
+    (group
+      "RF Chain"
+      "cal_root"
+      "cal_a"
+      "cal_b"
+      "sw_1"
+      "lna_1"
+      "sw_2"
+      "lna_2"
+      "sw_3"
+      "lna_3"
+      "sw_4"
+      "lna_4")
+    (group "Mechanical" "Mounting Holes" "Fiducials"))
+  (board
+    (part-number "REMORA-RF-A1")
+    (size 90.0 85.0)
+    (corner-radius 3.0)
+    (perimeter-fence
+      (via 0.4 0.2)
+      (spacing 1.0)
+      (edge-offset 0.5)
+      (mask-width 1.0)
+      (keepout 0.3 (blocks tracks vias) (allow-nets "GND"))
+      (net "GND"))
+    (left "ant1" "ant2" "ant3" "ant4")
+    (right "out1" "out2" "cal_in" "out3" "out4")
+    (corners "MK1" "MK2" "MK3" "MK4"))
+  (stackup
+    "JLC04161H-7628"
+    (plane 2 "GND")
+    (plane 3 "GND")
+    (pour top "GND")
+    (pour bottom "GND"))
+  (design-rules
+    (clearance 0.127)
+    (track-width 0.127)
+    (via 0.4 0.2)
+    (via-plating 0.02)
+    (min-drill 0.2)
+    (copper-edge 0.2)
+    (hole-to-hole 0.2)
+    (min-annular 0.1)
+    (mask-margin 0.05)
+    (mask-web 0.1)
+    (mask-relief-corner-radius 0)
+    (pour-min-width 0.127)
+    (min-width 0.127)
+    (ground-via-max 1.0))
+  (net-class
+    "rf"
+    (impedance 50 (layer 1))
+    (ground-gap 0.1524)
+    (clearance 0.127)
+    (priority 7)
+    (max-freq 1G)
+    (min-bend-radius 3)
+    (fence
+      (pitch 0.8)
+      (layers 2)
+      (mask-layers 1)
+      (offset 0.227)
+      (via 0.4 0.2)
+      (net "GND"))
+    (nets
+      "ANT_IN_1"
+      "ANT_IN_2"
+      "ANT_IN_3"
+      "ANT_IN_4"
+      "ANT_1_BLK"
+      "ANT_2_BLK"
+      "ANT_3_BLK"
+      "ANT_4_BLK"
+      "SW_1_COM"
+      "SW_2_COM"
+      "SW_3_COM"
+      "SW_4_COM"
+      "RF_OUT_1"
+      "RF_OUT_2"
+      "RF_OUT_3"
+      "RF_OUT_4"))
+  (net-class
+    "rf-cal"
+    (impedance 50 (layer 1))
+    (ground-gap 0.1524)
+    (clearance 0.127)
+    (priority 6)
+    (max-freq 1G)
+    (min-bend-radius 3)
+    (match-group
+      "cal-stage1"
+      (tolerance 0.5)
+      (path "a" (from "cal_root/U1" 4) (to "cal_a/U1" 1))
+      (path "b" (from "cal_root/U1" 3) (to "cal_b/U1" 1)))
+    (fence
+      (pitch 0.8)
+      (layers 2)
+      (mask-layers 1)
+      (offset 0.227)
+      (via 0.4 0.2)
+      (net "GND"))
+    (nets "CAL_IN" "CAL_SUM" "CAL_A" "CAL_B"))
+  (net-class
+    "rf-cal-legs"
+    (impedance 50 (layer 1))
+    (ground-gap 0.1524)
+    (clearance 0.127)
+    (priority 6)
+    (max-freq 1G)
+    (min-bend-radius 3)
+    (match-group
+      "cal-stage2"
+      (tolerance 0.5)
+      (path "leg1" (from "cal_a/U1" 4) (to "sw_1/U1" 4))
+      (path "leg2" (from "cal_a/U1" 3) (to "sw_2/U1" 4))
+      (path "leg3" (from "cal_b/U1" 4) (to "sw_3/U1" 4))
+      (path "leg4" (from "cal_b/U1" 3) (to "sw_4/U1" 4)))
+    (fence
+      (pitch 0.8)
+      (layers 2)
+      (mask-layers 1)
+      (offset 0.227)
+      (via 0.4 0.2)
+      (net "GND"))
+    (nets
+      "CAL_1"
+      "CAL_2"
+      "CAL_3"
+      "CAL_4"
+      "CAL_1_BLK"
+      "CAL_2_BLK"
+      "CAL_3_BLK"
+      "CAL_4_BLK"))
+  (net-class
+    "current-aware-power"
+    (width 0.2532)
+    (power-branch-width 0.127)
+    (clearance 0.127)
+    (priority 4)
+    (pad-escape-width 0.1524)
+    (pad-escape-max-length 0.75)
+    (taper-length 0.35)
+    (nets "V_12V_ISO" "V_7V5" "V_6V0" "V_5V11" "V_NEG5"))
+  (net-class
+    "control"
+    (priority 2)
+    (nets
+      "CAL_SEL_1"
+      "CAL_SEL_2"
+      "CAL_SEL_3"
+      "CAL_SEL_4"
+      "I2C_SDA"
+      "I2C_SCL"
+      "V_3V3_ID"))
+  (module-policy
+    (placement-class "V_12V_ISO" input_rail)
+    (placement-class "V_7V5" input_rail)
+    (placement-class "CAL_IN" rf)
+    (placement-class "CAL_SUM" rf)
+    (placement-class "CAL_A" rf)
+    (placement-class "CAL_B" rf)
+    (placement-class "ANT_IN_1" rf)
+    (placement-class "ANT_IN_2" rf)
+    (placement-class "ANT_IN_3" rf)
+    (placement-class "ANT_IN_4" rf)
+    (placement-class "RF_OUT_1" rf)
+    (placement-class "RF_OUT_2" rf)
+    (placement-class "RF_OUT_3" rf)
+    (placement-class "RF_OUT_4" rf))
+  (pcb-plan
+    (place
+      (wave
+        "edge-hardware"
+        (sections "ERM6 Module Link" "Mounting Holes" "Fiducials")
+        (reason
+          "the ERM6 mezzanine terminal, four M2 standoffs and three fiducials are the board's registration frame — the terminal because its pose must match the base board's socket exactly, the standoffs because they are what hold the two boards in that relationship. The nine SMA launches are pinned by the (board (left …) (right …)) edge lists and are placed with them"))
+      (wave
+        "rf-channels"
+        (sub-blocks
+          "sw_1"
+          "lna_1"
+          "sw_2"
+          "lna_2"
+          "sw_3"
+          "lna_3"
+          "sw_4"
+          "lna_4"
+          "cal_root"
+          "cal_a"
+          "cal_b")
+        (reason
+          "four identical antenna-to-output cells on the four launch axes, plus the three-part splitter tree: cal_root on the board centreline behind the cal_in launch, cal_a and cal_b in mirror-image poses above and below it, so both matching stages are symmetric before a single track is drawn. The three ADP-2-20+ packages sit on the BOTTOM face at rot 0 and their legs run on B.Cu with them — see the outline section: mirroring the land onto B.Cu reverses its handedness, so PORT2 is the northern output and PORT1 the southern one on all three parts and the two output legs of each splitter never cross"))
+      (wave
+        "power-tree"
+        (sub-blocks "buck_7v5" "ldo_6v0" "ldo_5v11" "neg5")
+        (reason
+          "the buck beside J1 where the 12 V arrives, then each regulator beside the load it feeds: the 6.04 V LDO among the amplifiers, the 5.11 V LDO and the charge pump among the switches"))
+      (wave
+        "control"
+        (sub-blocks "temp")
+        (reason
+          "the temperature sensor goes out among the amplifiers where the board is hottest and where the number is worth measuring, not beside the power tree"))
+      (wave
+        "rest"
+        (rest)
+        (reason
+          "DC blocks, cal-select jumpers and pull-downs, bulk capacitors and test points, each beside the part it serves")))
+    (route
+      (max-route-seconds 1200)
+      (wave
+        "rf"
+        (net-classes "rf")
+        (preferred-layers "F.Cu")
+        (allowed-layers "F.Cu")
+        (max-vias 0)
+        (reason
+          "50 ohm grounded CPWG over the continuous In1 GND plane; no RF signal vias, and the antenna-to-amplifier segment is the board's noise-figure budget"))
+      (wave
+        "rf-cal"
+        (net-classes "rf-cal")
+        (preferred-layers "B.Cu")
+        (allowed-layers "F.Cu" "B.Cu")
+        (max-vias 1)
+        (reason
+          "STAGE 1 of the splitter tree — cal_root's two outputs into the two second-stage SUM ports — plus the CAL_IN launch. All three ADP-2-20+ packages and all five calibration DC blocks sit on the BOTTOM face (the outline section carries the pin-map reason and the PORT1/PORT2 swap it forced), so both first-stage links are pad-to-pad B.Cu runs with ZERO barrels, and so is CAL_SUM. The one barrel this wave still budgets is CAL_IN's, immediately behind the edge launch, because the SMA land is on F.Cu and its DC block is now on the bottom. Zero on both members of the match group, and the SAME zero on both, because any difference in barrel count is a fixed length difference the match cannot see"))
+      (wave
+        "rf-cal-legs"
+        (net-classes "rf-cal-legs")
+        (preferred-layers "B.Cu")
+        (allowed-layers "F.Cu" "B.Cu")
+        (max-vias 1)
+        (reason
+          "STAGE 2 — the four legs from the second-stage splitters to the switch RF_OUT2 pads, and the one 50 ohm class on this board that MUST change layers. The four channel lanes run edge to edge on F.Cu, so a leg can only reach its switch on B.Cu and come up at the pad: B.Cu is the PREFERRED face, not the fallback. With the splitters and the DC blocks on the bottom face the budget is now ONE barrel per net rather than two — the single hop up at the switch's RF_OUT2 pad — and every leg carries that same one, so the match group compares like with like (each barrel adds one board thickness to the measured length, so an odd leg out would be mismatched by construction). It routes immediately after stage 1 and after the channels, so the lanes it crosses already exist and the maze sees where it may surface"))
+      (wave
+        "power-handling"
+        (net-classes "current-aware-power")
+        (allowed-layers "F.Cu" "B.Cu")
+        (reason
+          "IPC-2221 10 C-rise widths are derived for the 35 um outer foil; the 15.2 um inner foil would need materially wider traces, so both inner layers stay poured GND planes rather than narrow power-route layers"))
+      (wave "rest" (rest))))
+  (verifies
+    (req (id dc25429f) 3c0495ca)
+    "All three RF ports of sw_1 are DC-blocked, and the board's authored envelopes pin each at 0.0-0.0 V. RF_OUT1 = ANT_1_BLK sits behind the board-level broadband block C_dc_ant1; RF_OUT2 = CAL_1_BLK sits behind C_dc_cal1 in the cal fan-out; RF_IN = SW_1_COM is held at 0 V DC by the pma3-14ln-lna module's own series input DC block, which is why no board-level capacitor is fitted on the switch common. Satisfies M3SWA2-63DRC_.pdf p.3, All RF-ports must be DC blocked or held at 0V DC.")
+  (verifies
+    (req (id dc25429f) ed2798eb)
+    "Defined in hardware and documented. CTRL LOW connects RF_IN to RF_OUT1, which this board wires to the ANTENNA branch; HIGH selects RF_OUT2, the calibration branch. CAL_SEL_1_SW carries the board-level 10k pull-down R_cs_pd1 to GND in addition to the module's own 100R series CTRL resistor, so the power-up, reset, bootloader and unprogrammed-flash state is LOW = antenna regardless of how the RP2040 configures its pad. The firmware contract, the GPIO map and the polarity are recorded in the cal-select note on R_cal_sel1.")
+  (verifies
+    (req (id dc25429f) d1194c49)
+    "Bounded by the board's published level plan (Cal Input Fan-Out note). The PMA3-14LN+ behind this switch is the binding limit at +12 dBm continuous input, which refers back through the switch and blocks to +12.6 dBm at ANT_IN_1 and, through the ADP-2-20+ splitter tree as well, to +20.2 dBm at CAL_IN — both well under the 27 dBm RF-IN and 24 dBm per-output-port absolute maxima. The switch's own input P1dB corners are clear too: 24.4 dBm over 0.1-1 GHz and 16.7 dBm over 10-100 MHz, against the +0 dBm (ANT_IN_1) and +7 dBm (CAL_IN) recommended operating ceilings that same note publishes.")
+  (verifies
+    (req (id dc25429f) 97cd07bf)
+    "The absorptive architecture is exactly what this board depends on: the unselected output stays internally terminated in 50 ohm, so moving channel 1 to calibration never presents an open to the antenna, and a channel left on antenna never leaves its divider leg unterminated to spoil the splitter tree’s port isolation. Switching happens once per calibration step at firmware timescales, hundreds of milliseconds apart, so the 9.3 ns ON / 8.5 ns OFF transitions and the 25 mV video-leakage transient settle orders of magnitude before a sample is taken; the cal-select note requires that settling. Levels stay far below the absolute maxima, so no hot-switching derating applies.")
+  (verifies
+    (req (id d75dbd41) 3c0495ca)
+    "All three RF ports of sw_2 are DC-blocked, and the board's authored envelopes pin each at 0.0-0.0 V. RF_OUT1 = ANT_2_BLK sits behind the board-level broadband block C_dc_ant2; RF_OUT2 = CAL_2_BLK sits behind C_dc_cal2 in the cal fan-out; RF_IN = SW_2_COM is held at 0 V DC by the pma3-14ln-lna module's own series input DC block, which is why no board-level capacitor is fitted on the switch common. Satisfies M3SWA2-63DRC_.pdf p.3, All RF-ports must be DC blocked or held at 0V DC.")
+  (verifies
+    (req (id d75dbd41) ed2798eb)
+    "Defined in hardware and documented. CTRL LOW connects RF_IN to RF_OUT1, which this board wires to the ANTENNA branch; HIGH selects RF_OUT2, the calibration branch. CAL_SEL_2_SW carries the board-level 10k pull-down R_cs_pd2 to GND in addition to the module's own 100R series CTRL resistor, so the power-up, reset, bootloader and unprogrammed-flash state is LOW = antenna regardless of how the RP2040 configures its pad. The firmware contract, the GPIO map and the polarity are recorded in the cal-select note on R_cal_sel1.")
+  (verifies
+    (req (id d75dbd41) d1194c49)
+    "Bounded by the board's published level plan (Cal Input Fan-Out note). The PMA3-14LN+ behind this switch is the binding limit at +12 dBm continuous input, which refers back through the switch and blocks to +12.6 dBm at ANT_IN_2 and, through the ADP-2-20+ splitter tree as well, to +20.2 dBm at CAL_IN — both well under the 27 dBm RF-IN and 24 dBm per-output-port absolute maxima. The switch's own input P1dB corners are clear too: 24.4 dBm over 0.1-1 GHz and 16.7 dBm over 10-100 MHz, against the +0 dBm (ANT_IN_2) and +7 dBm (CAL_IN) recommended operating ceilings that same note publishes.")
+  (verifies
+    (req (id d75dbd41) 97cd07bf)
+    "The absorptive architecture is exactly what this board depends on: the unselected output stays internally terminated in 50 ohm, so moving channel 2 to calibration never presents an open to the antenna, and a channel left on antenna never leaves its divider leg unterminated to spoil the splitter tree’s port isolation. Switching happens once per calibration step at firmware timescales, hundreds of milliseconds apart, so the 9.3 ns ON / 8.5 ns OFF transitions and the 25 mV video-leakage transient settle orders of magnitude before a sample is taken; the cal-select note requires that settling. Levels stay far below the absolute maxima, so no hot-switching derating applies.")
+  (verifies
+    (req (id d0ff86af) 3c0495ca)
+    "All three RF ports of sw_3 are DC-blocked, and the board's authored envelopes pin each at 0.0-0.0 V. RF_OUT1 = ANT_3_BLK sits behind the board-level broadband block C_dc_ant3; RF_OUT2 = CAL_3_BLK sits behind C_dc_cal3 in the cal fan-out; RF_IN = SW_3_COM is held at 0 V DC by the pma3-14ln-lna module's own series input DC block, which is why no board-level capacitor is fitted on the switch common. Satisfies M3SWA2-63DRC_.pdf p.3, All RF-ports must be DC blocked or held at 0V DC.")
+  (verifies
+    (req (id d0ff86af) ed2798eb)
+    "Defined in hardware and documented. CTRL LOW connects RF_IN to RF_OUT1, which this board wires to the ANTENNA branch; HIGH selects RF_OUT2, the calibration branch. CAL_SEL_3_SW carries the board-level 10k pull-down R_cs_pd3 to GND in addition to the module's own 100R series CTRL resistor, so the power-up, reset, bootloader and unprogrammed-flash state is LOW = antenna regardless of how the RP2040 configures its pad. The firmware contract, the GPIO map and the polarity are recorded in the cal-select note on R_cal_sel1.")
+  (verifies
+    (req (id d0ff86af) d1194c49)
+    "Bounded by the board's published level plan (Cal Input Fan-Out note). The PMA3-14LN+ behind this switch is the binding limit at +12 dBm continuous input, which refers back through the switch and blocks to +12.6 dBm at ANT_IN_3 and, through the ADP-2-20+ splitter tree as well, to +20.2 dBm at CAL_IN — both well under the 27 dBm RF-IN and 24 dBm per-output-port absolute maxima. The switch's own input P1dB corners are clear too: 24.4 dBm over 0.1-1 GHz and 16.7 dBm over 10-100 MHz, against the +0 dBm (ANT_IN_3) and +7 dBm (CAL_IN) recommended operating ceilings that same note publishes.")
+  (verifies
+    (req (id d0ff86af) 97cd07bf)
+    "The absorptive architecture is exactly what this board depends on: the unselected output stays internally terminated in 50 ohm, so moving channel 3 to calibration never presents an open to the antenna, and a channel left on antenna never leaves its divider leg unterminated to spoil the splitter tree’s port isolation. Switching happens once per calibration step at firmware timescales, hundreds of milliseconds apart, so the 9.3 ns ON / 8.5 ns OFF transitions and the 25 mV video-leakage transient settle orders of magnitude before a sample is taken; the cal-select note requires that settling. Levels stay far below the absolute maxima, so no hot-switching derating applies.")
+  (verifies
+    (req (id da3e54db) 3c0495ca)
+    "All three RF ports of sw_4 are DC-blocked, and the board's authored envelopes pin each at 0.0-0.0 V. RF_OUT1 = ANT_4_BLK sits behind the board-level broadband block C_dc_ant4; RF_OUT2 = CAL_4_BLK sits behind C_dc_cal4 in the cal fan-out; RF_IN = SW_4_COM is held at 0 V DC by the pma3-14ln-lna module's own series input DC block, which is why no board-level capacitor is fitted on the switch common. Satisfies M3SWA2-63DRC_.pdf p.3, All RF-ports must be DC blocked or held at 0V DC.")
+  (verifies
+    (req (id da3e54db) ed2798eb)
+    "Defined in hardware and documented. CTRL LOW connects RF_IN to RF_OUT1, which this board wires to the ANTENNA branch; HIGH selects RF_OUT2, the calibration branch. CAL_SEL_4_SW carries the board-level 10k pull-down R_cs_pd4 to GND in addition to the module's own 100R series CTRL resistor, so the power-up, reset, bootloader and unprogrammed-flash state is LOW = antenna regardless of how the RP2040 configures its pad. The firmware contract, the GPIO map and the polarity are recorded in the cal-select note on R_cal_sel1.")
+  (verifies
+    (req (id da3e54db) d1194c49)
+    "Bounded by the board's published level plan (Cal Input Fan-Out note). The PMA3-14LN+ behind this switch is the binding limit at +12 dBm continuous input, which refers back through the switch and blocks to +12.6 dBm at ANT_IN_4 and, through the ADP-2-20+ splitter tree as well, to +20.2 dBm at CAL_IN — both well under the 27 dBm RF-IN and 24 dBm per-output-port absolute maxima. The switch's own input P1dB corners are clear too: 24.4 dBm over 0.1-1 GHz and 16.7 dBm over 10-100 MHz, against the +0 dBm (ANT_IN_4) and +7 dBm (CAL_IN) recommended operating ceilings that same note publishes.")
+  (verifies
+    (req (id da3e54db) 97cd07bf)
+    "The absorptive architecture is exactly what this board depends on: the unselected output stays internally terminated in 50 ohm, so moving channel 4 to calibration never presents an open to the antenna, and a channel left on antenna never leaves its divider leg unterminated to spoil the splitter tree’s port isolation. Switching happens once per calibration step at firmware timescales, hundreds of milliseconds apart, so the 9.3 ns ON / 8.5 ns OFF transitions and the 25 mV video-leakage transient settle orders of magnitude before a sample is taken; the cal-select note requires that settling. Levels stay far below the absolute maxima, so no hot-switching derating applies.")
+  (verifies
+    (req (id b544ac15) 616b33a9)
+    "Budgeted. The Power Tree note carries 67 mA typical and 90 mA maximum per amplifier on V_6V0 — 0.268 A / 0.360 A for the four together — and sizes ldo_6v0 (an LT3045 rated 500 mA) and the V_7V5 rail from that figure. V_6V0 is regulated to 6.0 V within +/-1.1 percent (5.974-6.106 V), inside the 5.75-6.25 V operating window, so the 0.0115 mA/mV supply-current slope adds at most 0.8 mA per device against the 90 mA column, and the -23.1 uA/degC coefficient only reduces the draw as the board warms. These are operating figures, not maxima, and they are exactly what the rail is sized for.")
+  (verifies
+    (req (id b544ac15) 4607822b)
+    "Held below +12 dBm continuous by the board's published operating limits. Channel 1's amplifier sees the antenna through one broadband DC block and the M3SWA2 (about 0.6 dB total), or the calibration tone through a further 7.4-8.0 dB of ADP-2-20+ splitter-tree loss, so the +12 dBm continuous absolute maximum corresponds to +12.6 dBm at ANT_IN_1 and +20.2 dBm at CAL_IN. The Cal Input Fan-Out note publishes recommended ceilings a full 12 dB below those (+0 dBm and +7 dBm) because linearity binds first. VDD is 5.974-6.106 V against the +8 V DC maximum; dissipation and junction temperature are screened in the thermal sign-off below.")
+  (verifies
+    (req (id b544ac15) b97c61fb)
+    "The board's level plan uses exactly these numbers. Gain 22.4 dB typ at 50 MHz (20.0 dB minimum across the band) gives an antenna-path gain of about +21.7 dB after the 0.6 dB of block and switch loss ahead of it, and about +14.2 dB on the calibration path after the splitter tree. The +22.0 dBm P1dB at 50 MHz puts the linear input ceiling at about -0.4 dBm, i.e. about 0 dBm at ANT_IN_1 and about +7 dBm at CAL_IN, which is what the board publishes as its specified-performance limit — 12 dB below the +12 dBm damage limit, so a user meets compression long before damage. OIP3 +31.2 dBm at 50 MHz leaves 31 dB of third-order headroom at that operating point.")
+  (verifies
+    (req (id b544ac15) 9268a0d8)
+    "At the 6.106 V rail ceiling and the 90 mA maximum draw the device dissipates 0.550 W against the 1.2 W total-dissipation limit — a 2.2x margin. With the published 53.9 degC/W junction-to-ground-lead resistance that is a 29 degC junction rise above the paddle, so at the +85 degC ground-lead ceiling Tj reaches about 114 degC, inside the +150 degC limit. The whole thermal path is the paddle, and this board's four-layer stackup places an uninterrupted GND plane on In1 directly beneath every amplifier land, with the solid via field the channel layout notes require. The board also measures the amplifier field rather than assuming it: the STS40 is deliberately placed out among the amplifiers, in a lane between two channel cells, and not by the power tree. The exact pose is a layout-wave action - the two-board split retired the single-board floor plan the old coordinate belonged to - but the placement RULE is a requirement of this sign-off, not a preference, because a sensor by the regulators would report a temperature no amplifier ever sees.")
+  (verifies
+    (req (id d914565d) 616b33a9)
+    "Budgeted. The Power Tree note carries 67 mA typical and 90 mA maximum per amplifier on V_6V0 — 0.268 A / 0.360 A for the four together — and sizes ldo_6v0 (an LT3045 rated 500 mA) and the V_7V5 rail from that figure. V_6V0 is regulated to 6.0 V within +/-1.1 percent (5.974-6.106 V), inside the 5.75-6.25 V operating window, so the 0.0115 mA/mV supply-current slope adds at most 0.8 mA per device against the 90 mA column, and the -23.1 uA/degC coefficient only reduces the draw as the board warms. These are operating figures, not maxima, and they are exactly what the rail is sized for.")
+  (verifies
+    (req (id d914565d) 4607822b)
+    "Held below +12 dBm continuous by the board's published operating limits. Channel 2's amplifier sees the antenna through one broadband DC block and the M3SWA2 (about 0.6 dB total), or the calibration tone through a further 7.4-8.0 dB of ADP-2-20+ splitter-tree loss, so the +12 dBm continuous absolute maximum corresponds to +12.6 dBm at ANT_IN_2 and +20.2 dBm at CAL_IN. The Cal Input Fan-Out note publishes recommended ceilings a full 12 dB below those (+0 dBm and +7 dBm) because linearity binds first. VDD is 5.974-6.106 V against the +8 V DC maximum; dissipation and junction temperature are screened in the thermal sign-off below.")
+  (verifies
+    (req (id d914565d) b97c61fb)
+    "The board's level plan uses exactly these numbers. Gain 22.4 dB typ at 50 MHz (20.0 dB minimum across the band) gives an antenna-path gain of about +21.7 dB after the 0.6 dB of block and switch loss ahead of it, and about +14.2 dB on the calibration path after the splitter tree. The +22.0 dBm P1dB at 50 MHz puts the linear input ceiling at about -0.4 dBm, i.e. about 0 dBm at ANT_IN_2 and about +7 dBm at CAL_IN, which is what the board publishes as its specified-performance limit — 12 dB below the +12 dBm damage limit, so a user meets compression long before damage. OIP3 +31.2 dBm at 50 MHz leaves 31 dB of third-order headroom at that operating point.")
+  (verifies
+    (req (id d914565d) 9268a0d8)
+    "At the 6.106 V rail ceiling and the 90 mA maximum draw the device dissipates 0.550 W against the 1.2 W total-dissipation limit — a 2.2x margin. With the published 53.9 degC/W junction-to-ground-lead resistance that is a 29 degC junction rise above the paddle, so at the +85 degC ground-lead ceiling Tj reaches about 114 degC, inside the +150 degC limit. The whole thermal path is the paddle, and this board's four-layer stackup places an uninterrupted GND plane on In1 directly beneath every amplifier land, with the solid via field the channel layout notes require. The board also measures the amplifier field rather than assuming it: the STS40 is deliberately placed out among the amplifiers, in a lane between two channel cells, and not by the power tree. The exact pose is a layout-wave action - the two-board split retired the single-board floor plan the old coordinate belonged to - but the placement RULE is a requirement of this sign-off, not a preference, because a sensor by the regulators would report a temperature no amplifier ever sees.")
+  (verifies
+    (req (id e2546bc6) 616b33a9)
+    "Budgeted. The Power Tree note carries 67 mA typical and 90 mA maximum per amplifier on V_6V0 — 0.268 A / 0.360 A for the four together — and sizes ldo_6v0 (an LT3045 rated 500 mA) and the V_7V5 rail from that figure. V_6V0 is regulated to 6.0 V within +/-1.1 percent (5.974-6.106 V), inside the 5.75-6.25 V operating window, so the 0.0115 mA/mV supply-current slope adds at most 0.8 mA per device against the 90 mA column, and the -23.1 uA/degC coefficient only reduces the draw as the board warms. These are operating figures, not maxima, and they are exactly what the rail is sized for.")
+  (verifies
+    (req (id e2546bc6) 4607822b)
+    "Held below +12 dBm continuous by the board's published operating limits. Channel 3's amplifier sees the antenna through one broadband DC block and the M3SWA2 (about 0.6 dB total), or the calibration tone through a further 7.4-8.0 dB of ADP-2-20+ splitter-tree loss, so the +12 dBm continuous absolute maximum corresponds to +12.6 dBm at ANT_IN_3 and +20.2 dBm at CAL_IN. The Cal Input Fan-Out note publishes recommended ceilings a full 12 dB below those (+0 dBm and +7 dBm) because linearity binds first. VDD is 5.974-6.106 V against the +8 V DC maximum; dissipation and junction temperature are screened in the thermal sign-off below.")
+  (verifies
+    (req (id e2546bc6) b97c61fb)
+    "The board's level plan uses exactly these numbers. Gain 22.4 dB typ at 50 MHz (20.0 dB minimum across the band) gives an antenna-path gain of about +21.7 dB after the 0.6 dB of block and switch loss ahead of it, and about +14.2 dB on the calibration path after the splitter tree. The +22.0 dBm P1dB at 50 MHz puts the linear input ceiling at about -0.4 dBm, i.e. about 0 dBm at ANT_IN_3 and about +7 dBm at CAL_IN, which is what the board publishes as its specified-performance limit — 12 dB below the +12 dBm damage limit, so a user meets compression long before damage. OIP3 +31.2 dBm at 50 MHz leaves 31 dB of third-order headroom at that operating point.")
+  (verifies
+    (req (id e2546bc6) 9268a0d8)
+    "At the 6.106 V rail ceiling and the 90 mA maximum draw the device dissipates 0.550 W against the 1.2 W total-dissipation limit — a 2.2x margin. With the published 53.9 degC/W junction-to-ground-lead resistance that is a 29 degC junction rise above the paddle, so at the +85 degC ground-lead ceiling Tj reaches about 114 degC, inside the +150 degC limit. The whole thermal path is the paddle, and this board's four-layer stackup places an uninterrupted GND plane on In1 directly beneath every amplifier land, with the solid via field the channel layout notes require. The board also measures the amplifier field rather than assuming it: the STS40 is deliberately placed out among the amplifiers, in a lane between two channel cells, and not by the power tree. The exact pose is a layout-wave action - the two-board split retired the single-board floor plan the old coordinate belonged to - but the placement RULE is a requirement of this sign-off, not a preference, because a sensor by the regulators would report a temperature no amplifier ever sees.")
+  (verifies
+    (req (id c4d80aba) 616b33a9)
+    "Budgeted. The Power Tree note carries 67 mA typical and 90 mA maximum per amplifier on V_6V0 — 0.268 A / 0.360 A for the four together — and sizes ldo_6v0 (an LT3045 rated 500 mA) and the V_7V5 rail from that figure. V_6V0 is regulated to 6.0 V within +/-1.1 percent (5.974-6.106 V), inside the 5.75-6.25 V operating window, so the 0.0115 mA/mV supply-current slope adds at most 0.8 mA per device against the 90 mA column, and the -23.1 uA/degC coefficient only reduces the draw as the board warms. These are operating figures, not maxima, and they are exactly what the rail is sized for.")
+  (verifies
+    (req (id c4d80aba) 4607822b)
+    "Held below +12 dBm continuous by the board's published operating limits. Channel 4's amplifier sees the antenna through one broadband DC block and the M3SWA2 (about 0.6 dB total), or the calibration tone through a further 7.4-8.0 dB of ADP-2-20+ splitter-tree loss, so the +12 dBm continuous absolute maximum corresponds to +12.6 dBm at ANT_IN_4 and +20.2 dBm at CAL_IN. The Cal Input Fan-Out note publishes recommended ceilings a full 12 dB below those (+0 dBm and +7 dBm) because linearity binds first. VDD is 5.974-6.106 V against the +8 V DC maximum; dissipation and junction temperature are screened in the thermal sign-off below.")
+  (verifies
+    (req (id c4d80aba) b97c61fb)
+    "The board's level plan uses exactly these numbers. Gain 22.4 dB typ at 50 MHz (20.0 dB minimum across the band) gives an antenna-path gain of about +21.7 dB after the 0.6 dB of block and switch loss ahead of it, and about +14.2 dB on the calibration path after the splitter tree. The +22.0 dBm P1dB at 50 MHz puts the linear input ceiling at about -0.4 dBm, i.e. about 0 dBm at ANT_IN_4 and about +7 dBm at CAL_IN, which is what the board publishes as its specified-performance limit — 12 dB below the +12 dBm damage limit, so a user meets compression long before damage. OIP3 +31.2 dBm at 50 MHz leaves 31 dB of third-order headroom at that operating point.")
+  (verifies
+    (req (id c4d80aba) 9268a0d8)
+    "At the 6.106 V rail ceiling and the 90 mA maximum draw the device dissipates 0.550 W against the 1.2 W total-dissipation limit — a 2.2x margin. With the published 53.9 degC/W junction-to-ground-lead resistance that is a 29 degC junction rise above the paddle, so at the +85 degC ground-lead ceiling Tj reaches about 114 degC, inside the +150 degC limit. The whole thermal path is the paddle, and this board's four-layer stackup places an uninterrupted GND plane on In1 directly beneath every amplifier land, with the solid via field the channel layout notes require. The board also measures the amplifier field rather than assuming it: the STS40 is deliberately placed out among the amplifiers, in a lane between two channel cells, and not by the power tree. The exact pose is a layout-wave action - the two-board split retired the single-board floor plan the old coordinate belonged to - but the placement RULE is a requirement of this sign-off, not a preference, because a sensor by the regulators would report a temperature no amplifier ever sees.")
+  (verifies
+    (req (id f8f8bef5) 1243edc9)
+    "ldo_6v0 VIN is V_7V5, the LM5164 buck output, declared at 7.4766 V nominal (7.232-7.721 V over its +/-3.27 % envelope) — inside the 2-20 V range LT3045.pdf p.3 requires for guaranteed regulation, and more than 1 V above the 6.0 V output even at the worst dropout corner.")
+  (verifies
+    (req (id f8f8bef5) 0d6e68d2)
+    "V_7V5's declared envelope tops out at 7.721 V — the LM5164's 7.4766 V nominal at the +3.27 % corner — 2.85x below the +/-22 V absolute maximum on IN. The rail cannot exceed it: the buck's own feedback network fixes its output, its input is the current-limited PD rail, and nothing on this board can drive V_7V5 negative.")
+  (verifies
+    (req (id f8f8bef5) 2d86a9c1)
+    "The bcuda-lt3045-ldo module fits the precision 0.1 percent SET resistor from SET to GND that programs the 6.04 V output as 100 uA x R_SET, and states the resulting node potential in its own SET net-envelope. No external voltage source drives SET.")
+  (verifies
+    (req (id f8f8bef5) cb0821f7)
+    "CSET is the module's 470 nF C_SET — 47x below the 22 uF ceiling that bounds transient current through the SET-to-OUTS protection clamp during a fault.")
+  (verifies
+    (req (id f8f8bef5) a55f787c)
+    "None of PG, PGFB, ILIM, SET, OUTS or OUT can be driven below GND. Every one of them is either internal to the module or the positive V_6V0 rail itself. The only negative potential on this board is V_NEG5, produced by the neg5 charge pump downstream of V_5V11; it shares no node with either LDO, and the rail is loaded by resistive RF bias networks with no inductance that could ring it below ground.")
+  (verifies
+    (req (id e248941a) 1243edc9)
+    "ldo_5v11 VIN is V_7V5, the LM5164 buck output, declared at 7.4766 V nominal (7.232-7.721 V over its +/-3.27 % envelope) — inside the 2-20 V range LT3045.pdf p.3 requires for guaranteed regulation, and more than 1 V above the 5.11 V output even at the worst dropout corner.")
+  (verifies
+    (req (id e248941a) 0d6e68d2)
+    "V_7V5's declared envelope tops out at 7.721 V — the LM5164's 7.4766 V nominal at the +3.27 % corner — 2.85x below the +/-22 V absolute maximum on IN. The rail cannot exceed it: the buck's own feedback network fixes its output, its input is the current-limited PD rail, and nothing on this board can drive V_7V5 negative.")
+  (verifies
+    (req (id e248941a) 2d86a9c1)
+    "The bcuda-lt3045-ldo module fits the precision 0.1 percent SET resistor from SET to GND that programs the 5.11 V output as 100 uA x R_SET, and states the resulting node potential in its own SET net-envelope. No external voltage source drives SET.")
+  (verifies
+    (req (id e248941a) cb0821f7)
+    "CSET is the module's 470 nF C_SET — 47x below the 22 uF ceiling that bounds transient current through the SET-to-OUTS protection clamp during a fault.")
+  (verifies
+    (req (id e248941a) a55f787c)
+    "None of PG, PGFB, ILIM, SET, OUTS or OUT can be driven below GND. Every one of them is either internal to the module or the positive V_5V11 rail itself. The only negative potential on this board is V_NEG5, produced by the neg5 charge pump downstream of V_5V11; it shares no node with either LDO, and the rail is loaded by resistive RF bias networks with no inductance that could ring it below ground.")
+  (verifies
+    (req (id af5eead8) cdb43bb2)
+    "R_i2c_sda and R_i2c_scl (4.7k, 1 percent) pull both lines up on the HOST side of the bus, which since the two-board split means on remora-base, referenced to that board's always-on V_3V3_ID branch. 4.7k rather than the reference circuit's 10k because the bus carries a single peripheral and now also crosses one mated connector, so the faster rise is worth the 0.70 mA sink at 3.3 V — well inside every driver on the bus. Keeping the pull-ups on the base is deliberate: with no RF board mated the bus idles high and un-ACKed, which is an unambiguous 'not present' rather than a floating line.")
+  (verifies
+    (req (id af5eead8) ef9eba81)
+    "Firmware contract recorded in the Board Temperature & I2C note: wait at least 1 ms after power-up before addressing the sensor. No hardware sequencing hazard sits behind it — the sensor runs from V_3V3_ID, the base board's always-on branch of the same V_3V3D rail the MCU boots from, so the supply is up before the master that would address it and the MCU's own boot time is far longer than 1 ms.")
+  (verifies
+    (req (id af5eead8) 4c8aee92)
+    "Recorded in the same note: fixed 7-bit address 0x46 for the CD1B option, with CRC-8 (polynomial 0x31, init 0xFF) validation required on every returned 16-bit word. The sensor is the only device on this bus, so no address collision is possible.")
+  (verifies
+    (req (id af5eead8) 01a3a55f)
+    "Layout requirement carried in the module's own placement note and reinforced by this board's placement intent: keep copper out from under the sensor except its four pin pads so conducted board heat cannot corrupt the reading. That is exactly why the part is placed in the amplifier field rather than near the power tree. Since the two-board split there is no power plane on this board to sit on either: both inner layers are GND, and the V_3V3D plane the single-board design carried on In2 left with the MCU.")
+  (verifies
+    (req (id af5eead8) 913e4971)
+    "The pull-up rail IS the sensor's own supply: on remora-base R_i2c_sda / R_i2c_scl go to V_3V3_ID, and V_3V3_ID is the same net that arrives here on connector pin 7 as the sensor's VDD, so the 0.3 x VDD / 0.7 x VDD thresholds (0.99 V / 2.31 V at 3.3 V) are referenced to the identical rail even though the resistors are on the other board. The W55RP20 master drives at least 2.62 V high against the 2.31 V VIH and at most 0.5 V low against the 0.99 V VIL, and 4.7k is far above the 390 Ohm minimum pull-up.")
+  (verifies
+    (req (id af5eead8) 3ffb83cf)
+    "The fitted part is the STS40-CD1B-R3 ordering option, which answers at 0x46 only; there is no address strap to get wrong. Firmware must not use the datasheet Figure 1 example's 0x44. The sensor is alone on this bus — it is the only I2C device anywhere in the two-board system — so unlike the Barracuda base board there is no second address to deconflict.")
+  (verifies
+    (req (id b900243d) be1987e9)
+    "cal_root (U47) is the TREE ROOT: its SUM port is the whole calibration input and its two outputs are the first-stage links CAL_A and CAL_B. The board's level plan is written from the two-stage cascade, not from one part's headline number. The Cal Input Fan-Out block above quotes 3.7 dB of total loss per stage typical (3.5 typ / 3.8 max over 20-200 MHz, 3.7 typ / 4.0 max over 200-1000 MHz), 7.4 dB typical and 7.6-8.0 dB worst case for the pair, plus 0.1 dB in each of the two DC blocks a cal path crosses, and it carries those numbers through to the +14.2 dB cal-path gain and to every level ceiling stated for CAL_IN. The 15 dB MINIMUM port-to-port isolation is used - never the 18 dB typical, and never a low-band figure, because this part publishes the same 18/15 in all three sub-bands. The 50-1000 MHz band this board is specified over sits entirely inside the part's 20-2000 MHz window with margin at both ends, which is a change from the SCA-4-10+ arrangement where the divider's own 1000 MHz limit WAS the board's ceiling; the ceiling is now held by the amplifier stage's bias network and by the (max-freq 1G) net classes instead. As the root it carries the FULL injected tone, so its 3.7 dB is the first of the two stages every one of the four legs pays and its 15 dB isolation is what separates the two BRANCHES (legs 1/2 against legs 3/4) - the cross-branch isolation of about 25 dB typ / 22 dB min quoted in the fan-out note is this part's 15 dB plus the two second-stage splits on either side of it.")
+  (verifies
+    (req (id b900243d) 37c25361)
+    "cal_root (U47) is the TREE ROOT: its SUM port is the whole calibration input and its two outputs are the first-stage links CAL_A and CAL_B. Unbalance is the budget this part was chosen FOR and the board spends it deliberately. Per stage the datasheet allows 0.2 dB / 2.0 degrees below 200 MHz and 0.3 dB / 3.0 degrees over 200-1000 MHz; the board's note adds the stages honestly - at most the second stage alone (0.3 dB / 3.0 deg) between two legs that share a splitter, at most both stages (0.6 dB / 6.0 deg over 200-1000 MHz, 0.4 dB / 4.0 deg below 200) between legs in different branches - and states that this roughly halves the SCA-4-10+'s 0.9 dB / 11 degrees at the top of the band. The array calibration absorbs what is left, which is the entire purpose of injecting a known tone, but only if the COPPER adds nothing: that is enforced by the two (match-group ...) declarations, cal-stage1 on the rf-cal class and cal-stage2 on the rf-cal-legs class, each at a 0.5 mm tolerance - under a tenth of a degree at 1000 MHz in a 50-ohm CPWG on FR-4 - and by the rf-cal-legs route wave's hard (max-vias 2) budget, which makes every leg carry the same number of barrels so the measured lengths compare like with like. This part's own unbalance is the one that shows up as a 2-channels-against-2-channels step, because it splits the branches rather than the pairs; the cal-stage1 match group exists to make sure the copper does not add to it.")
+  (verifies
+    (req (id b900243d) 40dac42a)
+    "cal_root (U47) is the TREE ROOT: its SUM port is the whole calibration input and its two outputs are the first-stage links CAL_A and CAL_B. This is the instance the requirement really bites on, and the board states the number rather than discovering it. The sum port's flat 1.97-2.01:1 (9.5 dB return loss at the 900 MHz worst point) is what an external calibration source sees through C_dc_cal_in and one 50-ohm CPWG launch - a 2:1 load ACROSS THE WHOLE BAND, where the SCA-4-10+ it replaces was 1.04-1.13:1 below 300 MHz and only degraded to 1.74:1 at 1000 MHz. That regression is written into the Cal Input Fan-Out note, into src/systems/remora/docs/interface-control.md as the published CAL_IN port specification, and into the bring-up procedure, so an integrator sizes the source's output pad or isolator for it up front. It costs the measurement nothing: the injected tone is a measured reference and every channel shares the same sum path, so a common mismatch ripple divides out of the channel-to-channel calibration. The board adds no matching pad of its own - a resistive pad would cost real dB on a path that is already 7.4 dB down, and an isolator does not exist in this size or price class at 50-1000 MHz.")
+  (verifies
+    (req (id b900243d) 7fe61bb3)
+    "cal_root (U47) is the TREE ROOT: its SUM port is the whole calibration input and its two outputs are the first-stage links CAL_A and CAL_B. The board keeps applied power far below both ratings and proves it in the level budget rather than asserting it. The published CAL_IN operating ceiling is +7 dBm and the absolute do-not-exceed figure is +20 dBm, both set by the PMA3-14LN+ downstream, not by this part. The -40 to +85 degC operating case range is the tightest ambient limit on this board and therefore bounds the product's ambient envelope; the STS40 out in the amplifier field is the instrument that shows whether an installation respects it. As the root this part sees the whole injected tone: 5 mW in normal use and 105 mW in the worst tolerated abuse case, i.e. 9.5x below its 1 W input rating even then. Internal dissipation is far tighter as a ratio but is still not close - the part dissipates only its own ~0.7 dB of insertion loss, about 16 mW at that +20.2 dBm ceiling, against the 0.125 W limit. The requirement's warning about combiner use and reflective terminations does not apply: every port faces a matched load (the CAL_IN launch on one side, two second-stage sum ports on the other) and the part is never driven as a combiner.")
+  (verifies
+    (req (id b900243d) c8687c73)
+    "cal_root (U47) is the TREE ROOT: its SUM port is the whole calibration input and its two outputs are the first-stage links CAL_A and CAL_B. Recorded as an assembly and first-article check. The CD542 package is port-numbered, not IN/OUT, and its map is not symmetric: pad 1 is SUM, pad 3 PORT1, pad 4 PORT2, pad 6 GROUND and pads 2/5 are unused, with pads 1/2/3 along one lead row and 6/5/4 along the other, so SUM and PORT1 are at opposite ends of the same row and GROUND sits directly across from SUM. A 180-degree rotation on THIS instance would put the calibration input CAL_SUM onto a ground pad and ground the CAL_A branch, killing channels 1 and 2 outright while channels 3 and 4 lose their tone silently through the leakage path. Three identical packages in a row makes this MORE likely than it was with a single divider, not less, because a placement machine that gets the reel orientation wrong gets all three wrong together and the symptom then looks like a dead cal path rather than a rotated part. This board therefore requires the index/pin-1 mark to be shown on the assembly drawing for all three splitters, and continuity from CAL_SUM to cal_root pad 1, from cal_root pad 3 to cal_a pad 1 and from cal_root pad 4 to cal_b pad 1, plus each CAL_n to its own second-stage pad, to be verified on the first article before any calibration measurement is trusted. The bcuda-splitter-adp2 module owns the pin map itself; what the board owns is the check.")
+  (verifies
+    (req (id b900243d) 4bfdc367)
+    "cal_root (U47) is the TREE ROOT: its SUM port is the whole calibration input and its two outputs are the first-stage links CAL_A and CAL_B. The board accepts the module's deviation knowingly. bcuda-splitter-adp2 ties pads 2 and 5 to the same GND net as pad 6 - the second of the two treatments this requirement names - rather than leaving them on isolated lands as PL-035 draws them, for solder anchoring on a 5.59 mm-tall 0.20 g package that has no through-hole lead of its own. That choice is recorded in the module's own note, and this sign-off is the board saying it read it. What the requirement actually forbids is satisfied absolutely: no signal reaches pad 2 or pad 5 on this instance or on either of its siblings, because the module's only nets are SUM, PORT1, PORT2 and GND and pads 2/5/6 are all on GND with nothing else attached. The residual risk - that a future lot proves those leads internally connected to something live - is bounded here by the fact that every port of the tree is DC-blocked on both sides anyway, so even an internal connection to a winding tap could not put a potential on GND that C_dc_cal_in and C_dc_cal1..4 do not already block. If Mini-Circuits ever publishes an internal connection for those leads, the line to change is the module's (pin 2 5 6 \"GND\") and nothing on this board.")
+  (verifies
+    (req (id b900243d) dfd05cfa)
+    "cal_root (U47) is the TREE ROOT: its SUM port is the whole calibration input and its two outputs are the first-stage links CAL_A and CAL_B. Every port of the splitter tree that can meet a DC source is externally blocked, which is exactly the treatment this requirement demands, and the board treats the part as DC-CONTINUOUS rather than merely unrated: core-and-wire means a wound transformer, so the working assumption is a low-resistance winding path from every port to every other port and to the ground pad. C_dc_cal_in blocks the tree's sum port from the front-panel CAL_IN SMA; C_dc_cal1 through C_dc_cal4 block each of the four second-stage outputs from its M3SWA2 RF_OUT2 pin. Those five capacitors are the SAME capacitors that satisfy the M3SWA2's own rule that every RF port be DC blocked or held at 0 V, and the direction matters in both senses: without them a mis-wired cal source would reach all four switch pins at once through the tree's windings, and a switch supply fault would reach the front panel. The board's authored net-envelopes pin CAL_SUM, CAL_A, CAL_B and CAL_1..4 at 0.0-0.0 V for that reason, and the PMA3-14LN+ bias tee sits two further DC blocks down each channel. No part of the tree is ever used as a DC path, a bias tee or a DC return. This instance's own three ports are CAL_SUM (blocked at the SMA by C_dc_cal_in) and the two first-stage links CAL_A and CAL_B, which deliberately carry NO series block: both of their ends are passive splitter ports, so there is no DC source anywhere on that copper and a block there would only add 0.1 dB and a second unmatched discontinuity to each link.")
+  (verifies
+    (req (id b900243d) 1a747b81)
+    "cal_root (U47) is the TREE ROOT: its SUM port is the whole calibration input and its two outputs are the first-stage links CAL_A and CAL_B. Carried into this board's layout requirements, and re-solved rather than copied. All three ports of every splitter belong to a 50-ohm impedance-controlled net class - rf-cal for the first-stage links, rf-cal-legs for the four second-stage legs - which SOLVES its width from this board's own JLC04161H-7628 four-layer stackup and 0.1524 mm ground gap (0.3231 mm at the artwork) instead of reusing PL-035's 0.065 in trace, which is drawn for RO4350B on a 0.030 in dielectric with half-ounce copper: that re-solve is the requirement's own instruction. Both classes carry the same two-row 0.8 mm ground-via fence at 0.227 mm offset that reproduces PL-035's dense via field, In1 is an uninterrupted GND plane directly under every top-side port, and the (design-rules (ground-via-max 1.0)) rule is what forces pad 6 to reach that plane through its own via rather than only through a pour - PL-035's five 0.020 in ground PTHs, expressed as a checked budget on this board's 0.2 mm process minimum. The stamped bcuda-splitter-adp2 \"remora-A1\" module row carries that geometry inside the package outline; the board continues the same 50-ohm line at the module boundary. Length matching is declared, not hoped for: cal-stage1 over the two first-stage links and cal-stage2 over the four legs, both at 0.5 mm, with the leg wave held to exactly two vias per net so the four legs' via counts cannot differ. For the root the additional board-level obligation is POSITION: it belongs on the board centreline between the channel-2 and channel-3 lanes, so its two first-stage links leave north and south as a mirror-image pair and cal-stage1 is satisfiable by geometry before a track is drawn.")
+  (verifies
+    (req (id b0286133) be1987e9)
+    "cal_a (U39) is the SECOND-STAGE splitter for channels 1 and 2: its SUM port is CAL_A, its outputs CAL_1 and CAL_2. The board's level plan is written from the two-stage cascade, not from one part's headline number. The Cal Input Fan-Out block above quotes 3.7 dB of total loss per stage typical (3.5 typ / 3.8 max over 20-200 MHz, 3.7 typ / 4.0 max over 200-1000 MHz), 7.4 dB typical and 7.6-8.0 dB worst case for the pair, plus 0.1 dB in each of the two DC blocks a cal path crosses, and it carries those numbers through to the +14.2 dB cal-path gain and to every level ceiling stated for CAL_IN. The 15 dB MINIMUM port-to-port isolation is used - never the 18 dB typical, and never a low-band figure, because this part publishes the same 18/15 in all three sub-bands. The 50-1000 MHz band this board is specified over sits entirely inside the part's 20-2000 MHz window with margin at both ends, which is a change from the SCA-4-10+ arrangement where the divider's own 1000 MHz limit WAS the board's ceiling; the ceiling is now held by the amplifier stage's bias network and by the (max-freq 1G) net classes instead. As a second-stage part it sees 3.8 dB less than the root, and its own 18 dB typ / 15 dB min port-to-port isolation is the WORST pair isolation on the whole board - it is what separates the two channels that share it, and the fan-out note quotes exactly that 15 dB rather than the cross-branch figure.")
+  (verifies
+    (req (id b0286133) 37c25361)
+    "cal_a (U39) is the SECOND-STAGE splitter for channels 1 and 2: its SUM port is CAL_A, its outputs CAL_1 and CAL_2. Unbalance is the budget this part was chosen FOR and the board spends it deliberately. Per stage the datasheet allows 0.2 dB / 2.0 degrees below 200 MHz and 0.3 dB / 3.0 degrees over 200-1000 MHz; the board's note adds the stages honestly - at most the second stage alone (0.3 dB / 3.0 deg) between two legs that share a splitter, at most both stages (0.6 dB / 6.0 deg over 200-1000 MHz, 0.4 dB / 4.0 deg below 200) between legs in different branches - and states that this roughly halves the SCA-4-10+'s 0.9 dB / 11 degrees at the top of the band. The array calibration absorbs what is left, which is the entire purpose of injecting a known tone, but only if the COPPER adds nothing: that is enforced by the two (match-group ...) declarations, cal-stage1 on the rf-cal class and cal-stage2 on the rf-cal-legs class, each at a 0.5 mm tolerance - under a tenth of a degree at 1000 MHz in a 50-ohm CPWG on FR-4 - and by the rf-cal-legs route wave's hard (max-vias 2) budget, which makes every leg carry the same number of barrels so the measured lengths compare like with like. This part's own unbalance shows up between the two channels that share it, which is the tightest pairing on the board and the one the cal-stage2 match group protects directly.")
+  (verifies
+    (req (id b0286133) 40dac42a)
+    "cal_a (U39) is the SECOND-STAGE splitter for channels 1 and 2: its SUM port is CAL_A, its outputs CAL_1 and CAL_2. The interstage joint is where this requirement lands on a second-stage part: cal_root's output port (1.55-1.64:1) drives this part's sum port (1.97-2.01:1), which is worth up to +/-0.67 dB of amplitude ripple over and above the two parts' individual total-loss figures. The board budgets it rather than ignoring it - the fan-out note states the figure and the level plan's 7.4-8.0 dB design range is quoted as a RANGE for exactly this reason - and it is common-mode to the two legs this part feeds, so it appears in the calibration as a level offset that the measurement removes, not as a channel-to-channel error. This part's own two output ports face M3SWA2 RF_OUT2 pins that are absorptive and internally terminated in both switch states, so there is no re-reflection path between the legs beyond the published 15 dB isolation.")
+  (verifies
+    (req (id b0286133) 7fe61bb3)
+    "cal_a (U39) is the SECOND-STAGE splitter for channels 1 and 2: its SUM port is CAL_A, its outputs CAL_1 and CAL_2. The board keeps applied power far below both ratings and proves it in the level budget rather than asserting it. The published CAL_IN operating ceiling is +7 dBm and the absolute do-not-exceed figure is +20 dBm, both set by the PMA3-14LN+ downstream, not by this part. The -40 to +85 degC operating case range is the tightest ambient limit on this board and therefore bounds the product's ambient envelope; the STS40 out in the amplifier field is the instrument that shows whether an installation respects it. As a second-stage part this instance sees 3.8 dB less than the root - at most 44 mW in the worst tolerated abuse case against a 1 W rating, 23x of margin - and dissipates about 7 mW against the 0.125 W internal limit. Its two outputs face absorptive, internally terminated M3SWA2 ports rather than open or shorted lines, so the dissipation limit the requirement warns about (reached long before the input limit when an output is badly terminated) is not approached in any switch state.")
+  (verifies
+    (req (id b0286133) c8687c73)
+    "cal_a (U39) is the SECOND-STAGE splitter for channels 1 and 2: its SUM port is CAL_A, its outputs CAL_1 and CAL_2. Recorded as an assembly and first-article check. The CD542 package is port-numbered, not IN/OUT, and its map is not symmetric: pad 1 is SUM, pad 3 PORT1, pad 4 PORT2, pad 6 GROUND and pads 2/5 are unused, with pads 1/2/3 along one lead row and 6/5/4 along the other, so SUM and PORT1 are at opposite ends of the same row and GROUND sits directly across from SUM. A 180-degree rotation on THIS instance would put the CAL_A link onto a ground pad and ground the channel-1 leg, so channel 1 goes dead and channel 2 sees only leakage. Three identical packages in a row makes this MORE likely than it was with a single divider, not less, because a placement machine that gets the reel orientation wrong gets all three wrong together and the symptom then looks like a dead cal path rather than a rotated part. This board therefore requires the index/pin-1 mark to be shown on the assembly drawing for all three splitters, and continuity from CAL_SUM to cal_root pad 1, from cal_root pad 3 to cal_a pad 1 and from cal_root pad 4 to cal_b pad 1, plus each CAL_n to its own second-stage pad, to be verified on the first article before any calibration measurement is trusted. The bcuda-splitter-adp2 module owns the pin map itself; what the board owns is the check.")
+  (verifies
+    (req (id b0286133) 4bfdc367)
+    "cal_a (U39) is the SECOND-STAGE splitter for channels 1 and 2: its SUM port is CAL_A, its outputs CAL_1 and CAL_2. The board accepts the module's deviation knowingly. bcuda-splitter-adp2 ties pads 2 and 5 to the same GND net as pad 6 - the second of the two treatments this requirement names - rather than leaving them on isolated lands as PL-035 draws them, for solder anchoring on a 5.59 mm-tall 0.20 g package that has no through-hole lead of its own. That choice is recorded in the module's own note, and this sign-off is the board saying it read it. What the requirement actually forbids is satisfied absolutely: no signal reaches pad 2 or pad 5 on this instance or on either of its siblings, because the module's only nets are SUM, PORT1, PORT2 and GND and pads 2/5/6 are all on GND with nothing else attached. The residual risk - that a future lot proves those leads internally connected to something live - is bounded here by the fact that every port of the tree is DC-blocked on both sides anyway, so even an internal connection to a winding tap could not put a potential on GND that C_dc_cal_in and C_dc_cal1..4 do not already block. If Mini-Circuits ever publishes an internal connection for those leads, the line to change is the module's (pin 2 5 6 \"GND\") and nothing on this board.")
+  (verifies
+    (req (id b0286133) dfd05cfa)
+    "cal_a (U39) is the SECOND-STAGE splitter for channels 1 and 2: its SUM port is CAL_A, its outputs CAL_1 and CAL_2. Every port of the splitter tree that can meet a DC source is externally blocked, which is exactly the treatment this requirement demands, and the board treats the part as DC-CONTINUOUS rather than merely unrated: core-and-wire means a wound transformer, so the working assumption is a low-resistance winding path from every port to every other port and to the ground pad. C_dc_cal_in blocks the tree's sum port from the front-panel CAL_IN SMA; C_dc_cal1 through C_dc_cal4 block each of the four second-stage outputs from its M3SWA2 RF_OUT2 pin. Those five capacitors are the SAME capacitors that satisfy the M3SWA2's own rule that every RF port be DC blocked or held at 0 V, and the direction matters in both senses: without them a mis-wired cal source would reach all four switch pins at once through the tree's windings, and a switch supply fault would reach the front panel. The board's authored net-envelopes pin CAL_SUM, CAL_A, CAL_B and CAL_1..4 at 0.0-0.0 V for that reason, and the PMA3-14LN+ bias tee sits two further DC blocks down each channel. No part of the tree is ever used as a DC path, a bias tee or a DC return. This instance's sum port faces cal_root's output across an unblocked link, which is correct and deliberate - two splitter ports facing each other have no DC source between them - and each of its two outputs meets its own broadband block before reaching a switch pin.")
+  (verifies
+    (req (id b0286133) 1a747b81)
+    "cal_a (U39) is the SECOND-STAGE splitter for channels 1 and 2: its SUM port is CAL_A, its outputs CAL_1 and CAL_2. Carried into this board's layout requirements, and re-solved rather than copied. All three ports of every splitter belong to a 50-ohm impedance-controlled net class - rf-cal for the first-stage links, rf-cal-legs for the four second-stage legs - which SOLVES its width from this board's own JLC04161H-7628 four-layer stackup and 0.1524 mm ground gap (0.3231 mm at the artwork) instead of reusing PL-035's 0.065 in trace, which is drawn for RO4350B on a 0.030 in dielectric with half-ounce copper: that re-solve is the requirement's own instruction. Both classes carry the same two-row 0.8 mm ground-via fence at 0.227 mm offset that reproduces PL-035's dense via field, In1 is an uninterrupted GND plane directly under every top-side port, and the (design-rules (ground-via-max 1.0)) rule is what forces pad 6 to reach that plane through its own via rather than only through a pour - PL-035's five 0.020 in ground PTHs, expressed as a checked budget on this board's 0.2 mm process minimum. The stamped bcuda-splitter-adp2 \"remora-A1\" module row carries that geometry inside the package outline; the board continues the same 50-ohm line at the module boundary. Length matching is declared, not hoped for: cal-stage1 over the two first-stage links and cal-stage2 over the four legs, both at 0.5 mm, with the leg wave held to exactly two vias per net so the four legs' via counts cannot differ. For a second-stage part the additional board-level obligation is SYMMETRY: cal_a and cal_b must sit in mirror-image poses about the root's centreline, so that the four legs are two congruent pairs and cal-stage2 is satisfiable without meander. That is the whole reason the four-way divider was replaced.")
+  (verifies
+    (req (id c7ba69fa) be1987e9)
+    "cal_b (U48) is the SECOND-STAGE splitter for channels 3 and 4: its SUM port is CAL_B, its outputs CAL_3 and CAL_4. The board's level plan is written from the two-stage cascade, not from one part's headline number. The Cal Input Fan-Out block above quotes 3.7 dB of total loss per stage typical (3.5 typ / 3.8 max over 20-200 MHz, 3.7 typ / 4.0 max over 200-1000 MHz), 7.4 dB typical and 7.6-8.0 dB worst case for the pair, plus 0.1 dB in each of the two DC blocks a cal path crosses, and it carries those numbers through to the +14.2 dB cal-path gain and to every level ceiling stated for CAL_IN. The 15 dB MINIMUM port-to-port isolation is used - never the 18 dB typical, and never a low-band figure, because this part publishes the same 18/15 in all three sub-bands. The 50-1000 MHz band this board is specified over sits entirely inside the part's 20-2000 MHz window with margin at both ends, which is a change from the SCA-4-10+ arrangement where the divider's own 1000 MHz limit WAS the board's ceiling; the ceiling is now held by the amplifier stage's bias network and by the (max-freq 1G) net classes instead. As a second-stage part it sees 3.8 dB less than the root, and its own 18 dB typ / 15 dB min port-to-port isolation is the WORST pair isolation on the whole board - it is what separates the two channels that share it, and the fan-out note quotes exactly that 15 dB rather than the cross-branch figure.")
+  (verifies
+    (req (id c7ba69fa) 37c25361)
+    "cal_b (U48) is the SECOND-STAGE splitter for channels 3 and 4: its SUM port is CAL_B, its outputs CAL_3 and CAL_4. Unbalance is the budget this part was chosen FOR and the board spends it deliberately. Per stage the datasheet allows 0.2 dB / 2.0 degrees below 200 MHz and 0.3 dB / 3.0 degrees over 200-1000 MHz; the board's note adds the stages honestly - at most the second stage alone (0.3 dB / 3.0 deg) between two legs that share a splitter, at most both stages (0.6 dB / 6.0 deg over 200-1000 MHz, 0.4 dB / 4.0 deg below 200) between legs in different branches - and states that this roughly halves the SCA-4-10+'s 0.9 dB / 11 degrees at the top of the band. The array calibration absorbs what is left, which is the entire purpose of injecting a known tone, but only if the COPPER adds nothing: that is enforced by the two (match-group ...) declarations, cal-stage1 on the rf-cal class and cal-stage2 on the rf-cal-legs class, each at a 0.5 mm tolerance - under a tenth of a degree at 1000 MHz in a 50-ohm CPWG on FR-4 - and by the rf-cal-legs route wave's hard (max-vias 2) budget, which makes every leg carry the same number of barrels so the measured lengths compare like with like. This part's own unbalance shows up between the two channels that share it, which is the tightest pairing on the board and the one the cal-stage2 match group protects directly.")
+  (verifies
+    (req (id c7ba69fa) 40dac42a)
+    "cal_b (U48) is the SECOND-STAGE splitter for channels 3 and 4: its SUM port is CAL_B, its outputs CAL_3 and CAL_4. The interstage joint is where this requirement lands on a second-stage part: cal_root's output port (1.55-1.64:1) drives this part's sum port (1.97-2.01:1), which is worth up to +/-0.67 dB of amplitude ripple over and above the two parts' individual total-loss figures. The board budgets it rather than ignoring it - the fan-out note states the figure and the level plan's 7.4-8.0 dB design range is quoted as a RANGE for exactly this reason - and it is common-mode to the two legs this part feeds, so it appears in the calibration as a level offset that the measurement removes, not as a channel-to-channel error. This part's own two output ports face M3SWA2 RF_OUT2 pins that are absorptive and internally terminated in both switch states, so there is no re-reflection path between the legs beyond the published 15 dB isolation.")
+  (verifies
+    (req (id c7ba69fa) 7fe61bb3)
+    "cal_b (U48) is the SECOND-STAGE splitter for channels 3 and 4: its SUM port is CAL_B, its outputs CAL_3 and CAL_4. The board keeps applied power far below both ratings and proves it in the level budget rather than asserting it. The published CAL_IN operating ceiling is +7 dBm and the absolute do-not-exceed figure is +20 dBm, both set by the PMA3-14LN+ downstream, not by this part. The -40 to +85 degC operating case range is the tightest ambient limit on this board and therefore bounds the product's ambient envelope; the STS40 out in the amplifier field is the instrument that shows whether an installation respects it. As a second-stage part this instance sees 3.8 dB less than the root - at most 44 mW in the worst tolerated abuse case against a 1 W rating, 23x of margin - and dissipates about 7 mW against the 0.125 W internal limit. Its two outputs face absorptive, internally terminated M3SWA2 ports rather than open or shorted lines, so the dissipation limit the requirement warns about (reached long before the input limit when an output is badly terminated) is not approached in any switch state.")
+  (verifies
+    (req (id c7ba69fa) c8687c73)
+    "cal_b (U48) is the SECOND-STAGE splitter for channels 3 and 4: its SUM port is CAL_B, its outputs CAL_3 and CAL_4. Recorded as an assembly and first-article check. The CD542 package is port-numbered, not IN/OUT, and its map is not symmetric: pad 1 is SUM, pad 3 PORT1, pad 4 PORT2, pad 6 GROUND and pads 2/5 are unused, with pads 1/2/3 along one lead row and 6/5/4 along the other, so SUM and PORT1 are at opposite ends of the same row and GROUND sits directly across from SUM. A 180-degree rotation on THIS instance would put the CAL_B link onto a ground pad and ground the channel-3 leg, so channel 3 goes dead and channel 4 sees only leakage. Three identical packages in a row makes this MORE likely than it was with a single divider, not less, because a placement machine that gets the reel orientation wrong gets all three wrong together and the symptom then looks like a dead cal path rather than a rotated part. This board therefore requires the index/pin-1 mark to be shown on the assembly drawing for all three splitters, and continuity from CAL_SUM to cal_root pad 1, from cal_root pad 3 to cal_a pad 1 and from cal_root pad 4 to cal_b pad 1, plus each CAL_n to its own second-stage pad, to be verified on the first article before any calibration measurement is trusted. The bcuda-splitter-adp2 module owns the pin map itself; what the board owns is the check.")
+  (verifies
+    (req (id c7ba69fa) 4bfdc367)
+    "cal_b (U48) is the SECOND-STAGE splitter for channels 3 and 4: its SUM port is CAL_B, its outputs CAL_3 and CAL_4. The board accepts the module's deviation knowingly. bcuda-splitter-adp2 ties pads 2 and 5 to the same GND net as pad 6 - the second of the two treatments this requirement names - rather than leaving them on isolated lands as PL-035 draws them, for solder anchoring on a 5.59 mm-tall 0.20 g package that has no through-hole lead of its own. That choice is recorded in the module's own note, and this sign-off is the board saying it read it. What the requirement actually forbids is satisfied absolutely: no signal reaches pad 2 or pad 5 on this instance or on either of its siblings, because the module's only nets are SUM, PORT1, PORT2 and GND and pads 2/5/6 are all on GND with nothing else attached. The residual risk - that a future lot proves those leads internally connected to something live - is bounded here by the fact that every port of the tree is DC-blocked on both sides anyway, so even an internal connection to a winding tap could not put a potential on GND that C_dc_cal_in and C_dc_cal1..4 do not already block. If Mini-Circuits ever publishes an internal connection for those leads, the line to change is the module's (pin 2 5 6 \"GND\") and nothing on this board.")
+  (verifies
+    (req (id c7ba69fa) dfd05cfa)
+    "cal_b (U48) is the SECOND-STAGE splitter for channels 3 and 4: its SUM port is CAL_B, its outputs CAL_3 and CAL_4. Every port of the splitter tree that can meet a DC source is externally blocked, which is exactly the treatment this requirement demands, and the board treats the part as DC-CONTINUOUS rather than merely unrated: core-and-wire means a wound transformer, so the working assumption is a low-resistance winding path from every port to every other port and to the ground pad. C_dc_cal_in blocks the tree's sum port from the front-panel CAL_IN SMA; C_dc_cal1 through C_dc_cal4 block each of the four second-stage outputs from its M3SWA2 RF_OUT2 pin. Those five capacitors are the SAME capacitors that satisfy the M3SWA2's own rule that every RF port be DC blocked or held at 0 V, and the direction matters in both senses: without them a mis-wired cal source would reach all four switch pins at once through the tree's windings, and a switch supply fault would reach the front panel. The board's authored net-envelopes pin CAL_SUM, CAL_A, CAL_B and CAL_1..4 at 0.0-0.0 V for that reason, and the PMA3-14LN+ bias tee sits two further DC blocks down each channel. No part of the tree is ever used as a DC path, a bias tee or a DC return. This instance's sum port faces cal_root's output across an unblocked link, which is correct and deliberate - two splitter ports facing each other have no DC source between them - and each of its two outputs meets its own broadband block before reaching a switch pin.")
+  (verifies
+    (req (id c7ba69fa) 1a747b81)
+    "cal_b (U48) is the SECOND-STAGE splitter for channels 3 and 4: its SUM port is CAL_B, its outputs CAL_3 and CAL_4. Carried into this board's layout requirements, and re-solved rather than copied. All three ports of every splitter belong to a 50-ohm impedance-controlled net class - rf-cal for the first-stage links, rf-cal-legs for the four second-stage legs - which SOLVES its width from this board's own JLC04161H-7628 four-layer stackup and 0.1524 mm ground gap (0.3231 mm at the artwork) instead of reusing PL-035's 0.065 in trace, which is drawn for RO4350B on a 0.030 in dielectric with half-ounce copper: that re-solve is the requirement's own instruction. Both classes carry the same two-row 0.8 mm ground-via fence at 0.227 mm offset that reproduces PL-035's dense via field, In1 is an uninterrupted GND plane directly under every top-side port, and the (design-rules (ground-via-max 1.0)) rule is what forces pad 6 to reach that plane through its own via rather than only through a pour - PL-035's five 0.020 in ground PTHs, expressed as a checked budget on this board's 0.2 mm process minimum. The stamped bcuda-splitter-adp2 \"remora-A1\" module row carries that geometry inside the package outline; the board continues the same 50-ohm line at the module boundary. Length matching is declared, not hoped for: cal-stage1 over the two first-stage links and cal-stage2 over the four legs, both at 0.5 mm, with the leg wave held to exactly two vias per net so the four legs' via counts cannot differ. For a second-stage part the additional board-level obligation is SYMMETRY: cal_a and cal_b must sit in mirror-image poses about the root's centreline, so that the four legs are two congruent pairs and cal-stage2 is satisfiable without meander. That is the whole reason the four-way divider was replaced.")
+  (verifies
+    (req (id a752c742) 619c47b9)
+    "The EN/UVLO pin is never left floating and is never driven by board copper: this board leaves the module's EN port UNBRIDGED, so the pin is held entirely by the module's own 470k/86.6k divider from V_12V_ISO. That is the second of the two arrangements the LM5164 datasheet offers for this pin, and it is the right one here because there is no gating signal to consume — the PD detection, classification and inrush ramp all happen on the PRIMARY side of the flyback transformer, where nothing on this side of the barrier can disturb them, and the 12 V secondary does not exist at all until that handshake is finished. The divider puts 1.77 V on the pin at the secondary's 11.4 V regulated floor, 1.87 V at 12.0 V and 2.18 V at the module's 14 V envelope ceiling, all above the 1.55 V worst-case rising threshold and 46x below the 100 V pin rating; it programs turn-on at 9.64 V nominal (worst-case corner 10.13 V, which is 1.27 V below the 11.4 V floor, so the buck is always allowed to start once the secondary regulates) and turn-off at 9.00 V nominal (worst-case corner 8.53 V), giving 0.64 V of hysteresis against chatter as the rail sags. No board glue is fitted and none is needed; bridging EN to V_12V_ISO instead would be inside ratings but would discard the input undervoltage lockout, so it is deliberately not done.")
+  (verifies
+    (req (id a752c742) 50e3e804)
+    "The regulator is not fed through long wires or a high-impedance path: its supply is the isolated flyback's own secondary output a few centimetres away on the same board, behind that module's secondary rectifier and output filter capacitance, and the board adds the three-part V_7V5 reservoir on the far side of the buck rather than a long thin feed on the near side. The input inductance this requirement warns about is therefore board copper, not a cable. The flyback's secondary bulk — which it must carry to hold 11.4-12.6 V through the switching cycle and through the load steps the three downstream regulators present — is the real-ESR bulk in parallel with the buck module's two 2.2 uF ceramics that damps them, so no additional bulk is fitted at the buck input. LAYOUT CONDITION on this sign-off: the buck's VIN pins must stay within 5 cm of the flyback's secondary output capacitor, and both must sit on the SECONDARY side of the isolation barrier with the V_12V_ISO run never crossing the primary keepout.")
+  (net-envelope
+    "CAL_SEL_1"
+    (rated 0.0 3.6)
+    "Base-board W55RP20 GPIO18 output arriving on J1 pin 11, 3.3 V LVCMOS, bounded by that board's declared V_3V3D ceiling; loaded here only by the 0R jumper R_cal_sel1 into the switch module's own 100R CTRL resistor, and through it by the 10k pull-down R_cs_pd1")
+  (net-envelope
+    "CAL_SEL_2"
+    (rated 0.0 3.6)
+    "Base-board W55RP20 GPIO16 (package pin 30) arriving on J1 pin 15; same 3.3 V LVCMOS bound and same loading as channel 1")
+  (net-envelope
+    "CAL_SEL_3"
+    (rated 0.0 3.6)
+    "Base-board W55RP20 GPIO28 (package pin 48) arriving on J1 pin 19; same 3.3 V LVCMOS bound and same loading as channel 1")
+  (net-envelope
+    "CAL_SEL_4"
+    (rated 0.0 3.6)
+    "Base-board W55RP20 GPIO15 arriving on J1 pin 23; same 3.3 V LVCMOS bound and same loading as channel 1")
+  (net-envelope
+    "CAL_SEL_1_SW"
+    (rated 0.0 3.6)
+    "Switch side of the channel-1 0R jumper: the same 3.3 V logic node, driven through zero ohms, held at 0 V by the 10k pull-down R_cs_pd1 whenever the base board is unmated, unpowered or not driving. Well inside the m3swa2-63drc-switch CTRL port's declared 0.0-5.0 V window")
+  (net-envelope
+    "CAL_SEL_2_SW"
+    (rated 0.0 3.6)
+    "Switch side of the channel-2 0R jumper; same 3.3 V logic node as CAL_SEL_2, inside the CTRL port's 0.0-5.0 V window, pulled down by R_cs_pd2")
+  (net-envelope
+    "CAL_SEL_3_SW"
+    (rated 0.0 3.6)
+    "Switch side of the channel-3 0R jumper; same 3.3 V logic node as CAL_SEL_3, inside the CTRL port's 0.0-5.0 V window, pulled down by R_cs_pd3")
+  (net-envelope
+    "CAL_SEL_4_SW"
+    (rated 0.0 3.6)
+    "Switch side of the channel-4 0R jumper; same 3.3 V logic node as CAL_SEL_4, inside the CTRL port's 0.0-5.0 V window, pulled down by R_cs_pd4")
+  (net-envelope
+    "I2C_SDA"
+    (rated 0.0 3.6)
+    "Open-drain bus arriving on J1 pin 27. The 4.7k pull-up is on the BASE board, referenced to that board's V_3V3_ID branch (declared ceiling 3.6 V); a driver pulling it down reaches at most 0.5 V (W55RP20 v1.0.2 Table 22 VOL p32). With no base board mated the net is undriven and unloaded except by the STS40's own high-impedance pin")
+  (net-envelope
+    "I2C_SCL"
+    (rated 0.0 3.6)
+    "Open-drain bus arriving on J1 pin 31; same base-side 4.7k pull-up to V_3V3_ID, same 3.6 V ceiling and same 0.5 V VOL bound as I2C_SDA")
+  (net-envelope
+    "ANT_IN_1"
+    (rated 0.0 0.0)
+    "Connector side of C_dc_ant1. The antenna interface is specified as a 50-ohm DC-free source; C_dc_ant1 exists precisely to keep any out-of-spec externally applied DC off the switch, and its 16 V rating bounds the tolerable abuse case")
+  (net-envelope
+    "ANT_IN_2"
+    (rated 0.0 0.0)
+    "Connector side of C_dc_ant2; same DC-free antenna interface and same 16 V block rating as channel 1")
+  (net-envelope
+    "ANT_IN_3"
+    (rated 0.0 0.0)
+    "Connector side of C_dc_ant3; same DC-free antenna interface and same 16 V block rating as channel 1")
+  (net-envelope
+    "ANT_IN_4"
+    (rated 0.0 0.0)
+    "Connector side of C_dc_ant4; same DC-free antenna interface and same 16 V block rating as channel 1")
+  (net-envelope
+    "ANT_1_BLK"
+    (rated 0.0 0.0)
+    "M3SWA2 RF_OUT1 on channel 1, behind C_dc_ant1; the series broadband capacitor supplies the datasheet-required RF-port DC block and nothing on this segment sources DC")
+  (net-envelope
+    "ANT_2_BLK"
+    (rated 0.0 0.0)
+    "M3SWA2 RF_OUT1 on channel 2, behind C_dc_ant2; no DC source on the segment")
+  (net-envelope
+    "ANT_3_BLK"
+    (rated 0.0 0.0)
+    "M3SWA2 RF_OUT1 on channel 3, behind C_dc_ant3; no DC source on the segment")
+  (net-envelope
+    "ANT_4_BLK"
+    (rated 0.0 0.0)
+    "M3SWA2 RF_OUT1 on channel 4, behind C_dc_ant4; no DC source on the segment")
+  (net-envelope
+    "SW_1_COM"
+    (rated 0.0 0.0)
+    "M3SWA2 RF_IN (common) on channel 1 into the amplifier's own input DC block; the amplifier module's series input capacitor is what holds this port at 0 V DC, which is why no board-level block is fitted here")
+  (net-envelope
+    "SW_2_COM"
+    (rated 0.0 0.0)
+    "M3SWA2 RF_IN (common) on channel 2; held at 0 V DC by the amplifier module's input block")
+  (net-envelope
+    "SW_3_COM"
+    (rated 0.0 0.0)
+    "M3SWA2 RF_IN (common) on channel 3; held at 0 V DC by the amplifier module's input block")
+  (net-envelope
+    "SW_4_COM"
+    (rated 0.0 0.0)
+    "M3SWA2 RF_IN (common) on channel 4; held at 0 V DC by the amplifier module's input block")
+  (net-envelope
+    "RF_OUT_1"
+    (rated 0.0 0.0)
+    "Channel 1 amplifier output to the front-panel SMA. The PMA3-14LN+ is biased through its RF-OUT pad, so the module's own output DC block is what isolates the 6 V bias from this segment and from anything the user connects")
+  (net-envelope
+    "RF_OUT_2"
+    (rated 0.0 0.0)
+    "Channel 2 amplifier output to the front-panel SMA, behind the amplifier module's output DC block")
+  (net-envelope
+    "RF_OUT_3"
+    (rated 0.0 0.0)
+    "Channel 3 amplifier output to the front-panel SMA, behind the amplifier module's output DC block")
+  (net-envelope
+    "RF_OUT_4"
+    (rated 0.0 0.0)
+    "Channel 4 amplifier output to the front-panel SMA, behind the amplifier module's output DC block")
+  (net-envelope
+    "CAL_IN"
+    (rated 0.0 0.0)
+    "Connector side of C_dc_cal_in, on the RIGHT (output) board edge between the channel-2 and channel-3 output launches. The calibration interface is specified as a 50-ohm DC-free AC source; the block keeps any out-of-spec applied DC off the splitter tree and, through its DC-continuous windings, off all four switches at once")
+  (net-envelope
+    "CAL_SUM"
+    (rated 0.0 0.0)
+    "Tree root's SUM port behind C_dc_cal_in. The ADP-2-20+ is core-and-wire (a wound transformer) and carries no bias of its own; nothing on this board can put DC on the segment, and C_dc_cal_in is what stops an out-of-spec external source from doing so")
+  (net-envelope
+    "CAL_A"
+    (rated 0.0 0.0)
+    "First-stage link: cal_root PORT1 to cal_a SUM. Both ends are passive splitter ports and no DC source of any kind touches this copper, which is why the link carries no series block of its own")
+  (net-envelope
+    "CAL_B"
+    (rated 0.0 0.0)
+    "First-stage link: cal_root PORT2 to cal_b SUM; DC-free by the same argument as CAL_A")
+  (net-envelope
+    "CAL_1"
+    (rated 0.0 0.0)
+    "Second-stage splitter output feeding channel 1, ahead of C_dc_cal1; DC-free by the same argument as CAL_SUM")
+  (net-envelope
+    "CAL_2"
+    (rated 0.0 0.0)
+    "Second-stage splitter output feeding channel 2, ahead of C_dc_cal2; DC-free by the same argument as CAL_SUM")
+  (net-envelope
+    "CAL_3"
+    (rated 0.0 0.0)
+    "Second-stage splitter output feeding channel 3, ahead of C_dc_cal3; DC-free by the same argument as CAL_SUM")
+  (net-envelope
+    "CAL_4"
+    (rated 0.0 0.0)
+    "Second-stage splitter output feeding channel 4, ahead of C_dc_cal4; DC-free by the same argument as CAL_SUM")
+  (net-envelope
+    "CAL_1_BLK"
+    (rated 0.0 0.0)
+    "M3SWA2 RF_OUT2 on channel 1, behind C_dc_cal1; the series broadband capacitor supplies the datasheet-required RF-port DC block")
+  (net-envelope
+    "CAL_2_BLK"
+    (rated 0.0 0.0)
+    "M3SWA2 RF_OUT2 on channel 2, behind C_dc_cal2")
+  (net-envelope
+    "CAL_3_BLK"
+    (rated 0.0 0.0)
+    "M3SWA2 RF_OUT2 on channel 3, behind C_dc_cal3")
+  (net-envelope
+    "CAL_4_BLK"
+    (rated 0.0 0.0)
+    "M3SWA2 RF_OUT2 on channel 4, behind C_dc_cal4"))

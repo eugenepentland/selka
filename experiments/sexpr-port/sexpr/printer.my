@@ -1,0 +1,277 @@
+module sexpr.printer
+
+# Pretty-printer for the S-expression AST: renders a tree back to canonical
+# source text, the inverse of sexpr.parser, ported from
+# eda/src/sexpr/printer.zig (426 lines).
+#
+# Ported faithfully:
+#   * top-level nodes are separated by exactly one '\n', with no trailing
+#     newline (Zig's `print`; this replaced the old one-space join).
+#   * an empty list prints "()".
+#   * `short_list_max_width` (72): a list whose direct children are all
+#     measurable and whose estimated width is <= 72 prints on one line.
+#   * otherwise the list prints "(" + first child, then one child per line,
+#     each preceded by '\n' and `indent + 2` spaces, then ")". Indentation
+#     accumulates through nesting exactly as Zig's `writeIndent` does.
+#   * `estimateWidth`'s measure, including its `depth > 3` cutoff: a child
+#     nested four levels below the point being measured makes the estimate
+#     unknowable, which forces the multi-line layout even when the text fits.
+#     The depth is counted from each `isShortList` call, so a deeply nested
+#     child of a multi-line list is re-measured from depth 0 and may still be
+#     short (see tests/fixtures `(nested (a (b (c (d)))))`).
+#   * the number rendering (Zig's `printFloat`): the shortest round-trip
+#     decimal, with ".0" appended to a whole value whose spelling has no
+#     '.', 'e' or 'n'. mylang's `str(float)` already does this, and the guard
+#     is kept so the port does not depend on that staying true.
+#   * a string node is bracketed verbatim. The tokenizer kept the raw source
+#     slice between the quotes (escapes intact) and the parser did not
+#     unescape it, so printing it verbatim round-trips; re-escaping would
+#     double `\"` to `\\\"` and break the parse -> print -> parse fixed point.
+#   * a measure node prints its normalised millimetre value followed by "mm",
+#     exactly like Zig's `.unit_val` branch (so `10mil` prints `0.254mm`).
+#
+# AST deviations from printer.zig (see CONTRACT.md):
+#   * `ast.Node` carries no `literal`, so a suffixed literal's source spelling
+#     (`100nF`, `4.7k`, `10%`) is gone by the time the printer sees it. Zig's
+#     `.float` branch writes `node.literal` when present and `printFloat` when
+#     not; with no literal to consult this port always takes the `printFloat`
+#     path, so `100nF` renders as its value `0.0000001`. This is the one Zig
+#     test expectation ("print keeps a literal's unit") that cannot be
+#     reproduced.
+#   * `estimateWidth` likewise consults `node.literal` for a float's width.
+#     With the literal unavailable this port uses Zig's own literal-less
+#     branch, the length of the `{d}` spelling. Using the fixed
+#     `fallback_float_width` there instead would mis-measure `(pad 1 smd rect
+#     (pos -1.25 1.75) (size 0.7 0.3))` as 81 columns and wrongly break the
+#     Zig test "print short nested lists inline", which expects one line. The
+#     `fallback_int_width` / `fallback_float_width` / `fallback_unit_val_width`
+#     constants are still declared and used as the guard Zig reaches when
+#     formatting a number into a fixed buffer fails; mylang's `str` cannot
+#     fail, so those guards do not trigger.
+#   * `ast.Node` carries no `span`; the printer never consults one, so this
+#     costs nothing.
+#   * printer.zig imports `../infra/fs.zig` only to feed a file-writing helper
+#     that is not part of `print`; the guest library has no filesystem, so
+#     that helper and the import are omitted entirely.
+#   * Zig appends into an allocating writer; this port appends into a
+#     `list[str]` and joins once. The output bytes are identical.
+#
+# Two Zig tests are not reproducible as guest tests: the corpus walk over
+# `projects/designs` (no filesystem or directory walk in the guest runtime)
+# and the `std.testing.Smith` fuzz harness (no fuzzer). tests/printer_test.my
+# transcribes every other expectation with the same inputs.
+
+import sexpr.ast as ast
+
+
+# ── Constants (mirrored from printer.zig) ─────────────────────────────
+
+# Zig formats an integer into a 24-byte buffer and falls back to this width
+# when that fails. Every i64 spelling fits, so the fallback is unreachable.
+const fallback_int_width: int = 12
+
+# The same guard for a float formatted into a 64-byte buffer, and for a unit
+# value. Both are unreachable here because `str` cannot fail.
+const fallback_float_width: int = 12
+const fallback_unit_val_width: int = 14
+
+# A list at or below this estimated width prints on one line.
+const short_list_max_width: int = 72
+
+
+# ── Width measurement (Zig's estimateWidth / isShortList) ─────────────
+
+# The length of `text`, or `fallback` when there is no text at all. This is
+# the mylang analogue of Zig's `bufPrint(...) catch fallback_*_width`: `str`
+# never fails, so only an empty spelling reaches the guard.
+def measured_width(text: str, fallback: int) -> int:
+    if len(text) == 0:
+        return fallback
+    return len(text)
+
+
+# Zig's estimateWidth for `.int`: the length of the `{d}` spelling.
+def int_width(value: int) -> int:
+    return measured_width(str(value), fallback_int_width)
+
+
+# Zig's estimateWidth for `.float`. Zig prefers `node.literal.len` when the
+# node carries a source spelling and otherwise formats `{d}` and takes its
+# length; the literal is absent from this AST, so the literal-less branch is
+# the reachable one. `str` appends ".0" to a whole value, and Zig's raw `{d}`
+# does not, so that suffix is stripped back off before measuring.
+def decimal_width(value: float) -> int:
+    text = str(value)
+    if text.endswith(".0"):
+        return measured_width(text[0:len(text) - 2], fallback_float_width)
+    return measured_width(text, fallback_float_width)
+
+
+# Zig's estimateWidth for a suffixed literal: the length of the source
+# spelling, which is what the printer writes back.
+def literal_width(literal: str) -> int:
+    return measured_width(literal, fallback_float_width)
+
+
+# Zig's estimateWidth for `.unit_val`: the `{d}` length plus 2 for "mm".
+def measure_width(value: float) -> int:
+    text = str(value)
+    if text.endswith(".0"):
+        return measured_width(text[0:len(text) - 2], fallback_unit_val_width) + 2
+    return measured_width(text, fallback_unit_val_width) + 2
+
+
+# The width this node would occupy on one line, or None when Zig's estimate
+# gives up: past four levels of nesting (`depth > 3`) the measure is unknown,
+# and one unknown child makes its whole parent unknown. Mirrors
+# `estimateWidth(node, depth)`; the `depth` of a direct child of the list
+# being measured is 0.
+def estimate_width(node: ast.Node, depth: int) -> Option[int]:
+    if depth > 3:
+        return None
+    match node:
+        case ast.Node.form(entries, _):
+            total = 2
+            index = 0
+            while index < len(entries):
+                if index > 0:
+                    total = total + 1
+                match estimate_width(entries[index], depth + 1):
+                    case Some(width):
+                        total = total + width
+                    case None:
+                        return None
+                index = index + 1
+            return Some(total)
+        case ast.Node.atom(text, _):
+            return Some(len(text))
+        case ast.Node.string(content, _):
+            return Some(len(content) + 2)
+        case ast.Node.integer(value, _):
+            return Some(int_width(value))
+        case ast.Node.decimal(value, _, literal):
+            match literal:
+                case Some(text):
+                    return Some(literal_width(text))
+                case None:
+                    return Some(decimal_width(value))
+        case ast.Node.measure(value, _):
+            return Some(measure_width(value))
+
+
+# Whether every child can be measured and the running total stays at or below
+# `short_list_max_width`. The total is checked after each child, as in Zig, so
+# a long list stops measuring early.
+def is_short_list(entries: list[ast.Node]) -> bool:
+    total = 2
+    index = 0
+    while index < len(entries):
+        if index > 0:
+            total = total + 1
+        match estimate_width(entries[index], 0):
+            case Some(width):
+                total = total + width
+            case None:
+                return False
+        if total > short_list_max_width:
+            return False
+        index = index + 1
+    return True
+
+
+# ── Rendering (Zig's printNode) ───────────────────────────────────────
+
+# Zig's writeIndent: one space per column of `indent`.
+def push_indent(parts: list[str], indent: int) mutates(parts):
+    printed = 0
+    while printed < indent:
+        parts.append(" ")
+        printed = printed + 1
+
+
+# The text of a number: Zig's printFloat, i.e. the shortest round-trip
+# decimal plus ".0" when the spelling has no '.', 'e' or 'n' (so a whole
+# value keeps its float/int distinction and nan/inf gain no ".0").
+def render_float(value: float) -> str:
+    text = str(value)
+    if text.find(".") == -1 and text.find("e") == -1 and text.find("n") == -1:
+        return text + ".0"
+    return text
+
+
+# Append the canonical text of `node` to `parts` at the given indentation.
+# Mirrors `printNode(writer, node, indent)`: `indent` is where this node's
+# children would be indented if it lays out over several lines.
+def push_node(parts: list[str], node: ast.Node, indent: int) mutates(parts):
+    match node:
+        case ast.Node.form(entries, _):
+            if len(entries) == 0:
+                parts.append("()")
+                return
+            if is_short_list(entries):
+                # Short enough (and shallow enough) for one line.
+                parts.append("(")
+                index = 0
+                while index < len(entries):
+                    if index > 0:
+                        parts.append(" ")
+                    push_node(parts, entries[index], indent + 2)
+                    index = index + 1
+                parts.append(")")
+                return
+            # Too wide or too deep: the first child stays on the "(" line and
+            # every later child starts an indented line of its own.
+            parts.append("(")
+            push_node(parts, entries[0], indent + 2)
+            index = 1
+            while index < len(entries):
+                parts.append("\n")
+                push_indent(parts, indent + 2)
+                push_node(parts, entries[index], indent + 2)
+                index = index + 1
+            parts.append(")")
+            return
+        case ast.Node.atom(text, _):
+            parts.append(text)
+            return
+        case ast.Node.string(content, _):
+            parts.append("\"")
+            parts.append(content)
+            parts.append("\"")
+            return
+        case ast.Node.integer(value, _):
+            parts.append(str(value))
+            return
+        case ast.Node.decimal(value, _, literal):
+            # A suffixed literal prints as it was written; re-deriving the text
+            # from the f64 would rewrite `100nF` as `0.0000001`.
+            match literal:
+                case Some(text):
+                    parts.append(text)
+                case None:
+                    parts.append(render_float(value))
+            return
+        case ast.Node.measure(value, _):
+            parts.append(render_float(value))
+            parts.append("mm")
+            return
+
+
+# Canonical text for a single node, laid out at indent 0.
+public def render_node(node: ast.Node) -> str:
+    parts: list[str] = []
+    push_node(parts, node, 0)
+    return "".join(parts)
+
+
+# Canonical text for a whole document: top-level nodes separated by exactly
+# one '\n', no trailing newline. An empty node list renders to "".
+public def render(nodes: list[ast.Node]) -> str:
+    parts: list[str] = []
+    index = 0
+    while index < len(nodes):
+        if index > 0:
+            parts.append("\n")
+        push_node(parts, nodes[index], 0)
+        index = index + 1
+    return "".join(parts)

@@ -1,5 +1,6 @@
 //! Declaration-scoped nominal template expressions, before concrete layout specialization.
 const eRequirement = "E_GENERIC_REQUIREMENT";
+const eResultSchema = "E_RESULT_SCHEMA";
 const std = @import("std");
 const ast = @import("ast.zig");
 const typed = @import("typed.zig");
@@ -57,6 +58,14 @@ pub const Index = struct {
     names: std.StringHashMapUnmanaged(usize) = .empty,
     syntax: Syntax = .{},
     budget: Budget = .{},
+    /// Declaration indices of synthesized case-payload records, which name no
+    /// source type and therefore never become spellable type names.
+    synthetic: std.AutoHashMapUnmanaged(usize, void) = .empty,
+
+    /// Whether a declaration index names a synthesized case-payload record.
+    pub fn isSynthetic(self: Index, declaration: usize) bool {
+        return self.synthetic.contains(declaration);
+    }
 
     fn add(self: *Index, name: Span, parameters: []const ast.TypeParameter, kind: Kind) Error!void {
         const ctx = self.context;
@@ -278,6 +287,10 @@ pub const Index = struct {
                 .{ .span = previous, .message = "previous declaration" },
             );
             try names.put(ctx.allocator, ctx.src.text(input.name), input.name);
+            if (@hasField(@TypeOf(input), "fields") and input.fields.len != 0) {
+                out.* = .{ .name = input.name, .ty = .{ .named = try self.caseRecord(id, input.name, input.fields) } };
+                continue;
+            }
             const span: ?Span = if (@hasField(@TypeOf(input), "ty")) input.ty else input.payload;
             out.* = .{
                 .name = input.name,
@@ -290,11 +303,44 @@ pub const Index = struct {
         }
         if (declaration.kind != .record and inputs.len == 0) return ctx.sink.fail("E_EMPTY_VARIANTS", name, "closed enum and union types require at least one variant");
         if (declaration.kind == .result) {
+            for (inputs) |input| if (@hasField(@TypeOf(input), "fields") and input.fields.len != 0)
+                return ctx.sink.fail(eResultSchema, input.name, "a result case takes one payload type, not named fields");
             const named_cases = names.contains("ok") and names.contains("err");
-            if (inputs.len != 2 or !named_cases) return ctx.sink.fail("E_RESULT_SCHEMA", name, "a result declares exactly `ok: Value` and `err: Error` payload cases");
-            for (resolved) |field| if (field.ty == null) return ctx.sink.fail("E_RESULT_SCHEMA", field.name, "result cases require explicit payload types");
+            if (inputs.len != 2 or !named_cases) return ctx.sink.fail(eResultSchema, name, "a result declares exactly `ok: Value` and `err: Error` payload cases");
+            for (resolved) |field| if (field.ty == null) return ctx.sink.fail(eResultSchema, field.name, "result cases require explicit payload types");
         }
         self.declarations.items[id].fields = resolved;
+    }
+    /// Synthesize the payload record a parenthesized case declares. The record
+    /// shares the union's own resolved type parameters, so a generic union's
+    /// case fields instantiate with the union's arguments; its display name is
+    /// `Union.case` and it is marked synthetic so it never becomes spellable.
+    fn caseRecord(self: *Index, union_id: usize, case_name: Span, inputs: []const ast.Parameter) Error!usize {
+        const ctx = self.context;
+        const parameters = self.declarations.items[union_id].parameters;
+        const resolved = try ctx.allocator.alloc(Field, inputs.len);
+        var names: std.StringHashMapUnmanaged(Span) = .empty;
+        defer names.deinit(ctx.allocator);
+        for (inputs, resolved) |input, *out| {
+            if (names.get(ctx.src.text(input.name))) |previous| return ctx.sink.failRelated("E_DUPLICATE_FIELD", input.name, "field is already declared", .{ .span = previous, .message = "previous declaration" });
+            try names.put(ctx.allocator, ctx.src.text(input.name), input.name);
+            out.* = .{
+                .name = input.name,
+                .ty = try self.expression(input.ty, parameters),
+                .default_value = if (input.default_value) |value| @backingInt(value) else null,
+            };
+        }
+        const display = try std.fmt.allocPrint(ctx.allocator, "{s}.{s}", .{ ctx.src.text(self.declarations.items[union_id].name), ctx.src.text(case_name) });
+        const id = self.declarations.items.len;
+        try self.synthetic.put(ctx.allocator, id, {});
+        try self.declarations.append(ctx.allocator, .{
+            .builtin_name = display,
+            .name = case_name,
+            .parameters = parameters,
+            .kind = .record,
+            .fields = resolved,
+        });
+        return id;
     }
     fn backing(self: *Index, name: Span, span: Span) Error!void {
         const id = try self.lookup(name);

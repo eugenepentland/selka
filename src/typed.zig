@@ -119,7 +119,9 @@ pub const FieldInit = struct { index: usize, value: NodeId };
 /// `default_value` is the backing node id of a declared record-field default.
 pub const Field = struct { name: []const u8, declaration: Span, ty: Type, default_value: ?usize = null };
 /// Named closed variant case and its optional resolved payload type.
-pub const Variant = struct { name: []const u8, declaration: Span, payload: ?Type };
+/// `fielded` marks a parenthesized case whose payload is one synthesized record
+/// of named fields, so construction and patterns bind one name per field.
+pub const Variant = struct { name: []const u8, declaration: Span, payload: ?Type, fielded: bool = false };
 /// Closed case set distinguishing enums, unions, and fallible results.
 pub const Variants = struct { fallible: bool = false, is_union: bool, cases: []const Variant };
 /// Fixed element count and type, with an optional enum key for tables.

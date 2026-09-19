@@ -88,6 +88,11 @@ pub fn parse(args: []const []const u8) Error!Options {
         // accepted here and forwarded to the frontend child by scanning
         // `link_arguments`, so the frozen Options field set does not grow.
         if (std.mem.eql(u8, argument, "--mutation-markers")) continue;
+        // `--step-accounting` is a build-policy request, not a build control: the
+        // host application that always runs its guest under `--max-steps=` asks
+        // for the accounting that enforces it. Like `--mutation-markers` it rides
+        // in `link_arguments` so the frozen Options field set does not grow.
+        if (std.mem.eql(u8, argument, "--step-accounting")) continue;
         const split = std.mem.indexOfScalar(u8, argument, '=') orelse argument.len;
         const name = argument[0..split];
         const option = std.meta.stringToEnum(Flag, name) orelse return error.InvalidBuildArguments;

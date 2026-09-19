@@ -8,6 +8,10 @@ extern const myl_native_type myl_native_text_point;
  * across the allocation. NULL once the allocation budget is exhausted. */
 myl_native_text *myl_native_text_copy(myl_native_heap *, myl_native_text *, size_t start, size_t count);
 myl_native_text *myl_native_text_from_utf8(myl_native_heap *, const unsigned char *, size_t);
+/* One validating pass: builds the same text as from_utf8, but distinguishes a
+ * malformed input (*invalid 1) from a refused allocation (*invalid 0). Both
+ * failures return NULL, so from_utf8 stays a thin caller that ignores `invalid`. */
+myl_native_text *myl_native_text_from_utf8_checked(myl_native_heap *, const unsigned char *, size_t, int *invalid);
 myl_native_text *myl_native_text_concat(myl_native_heap *, myl_native_text *, myl_native_text *);
 myl_native_text *myl_native_text_at(myl_native_heap *, myl_native_text *, int64_t);
 myl_native_text *myl_native_text_slice(myl_native_heap *, myl_native_text *, int64_t, int64_t);

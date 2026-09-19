@@ -1,0 +1,395 @@
+{
+  "guest_compile": {
+    "Debug": {
+      "cold": {
+        "median": 2.843821911024861,
+        "samples": [
+          {
+            "seconds": 2.878726264985744,
+            "frontend_seconds": 0.498574986,
+            "codegen_seconds": 2.332988565,
+            "link_seconds": 0.026643619,
+            "compiled_functions": 66,
+            "reused_functions": 0
+          },
+          {
+            "seconds": 2.843821911024861,
+            "frontend_seconds": 0.486438532,
+            "codegen_seconds": 2.30526909,
+            "link_seconds": 0.028207965,
+            "compiled_functions": 66,
+            "reused_functions": 0
+          },
+          {
+            "seconds": 2.8169339600135572,
+            "frontend_seconds": 0.470309185,
+            "codegen_seconds": 2.285192411,
+            "link_seconds": 0.030605615,
+            "compiled_functions": 66,
+            "reused_functions": 0
+          }
+        ]
+      },
+      "cold_local": {
+        "median": 2.8895049460115843,
+        "samples": [
+          {
+            "seconds": 2.9003969290060923,
+            "frontend_seconds": 0.503118839,
+            "codegen_seconds": 2.337467175,
+            "link_seconds": 0.028525392,
+            "compiled_functions": 66,
+            "reused_functions": 0
+          },
+          {
+            "seconds": 2.8895049460115843,
+            "frontend_seconds": 0.48088471,
+            "codegen_seconds": 2.354130949,
+            "link_seconds": 0.028225359,
+            "compiled_functions": 66,
+            "reused_functions": 0
+          },
+          {
+            "seconds": 2.8841202890034765,
+            "frontend_seconds": 0.497082763,
+            "codegen_seconds": 2.337494672,
+            "link_seconds": 0.029744073,
+            "compiled_functions": 66,
+            "reused_functions": 0
+          }
+        ]
+      },
+      "warm": {
+        "median": 0.7242796460050158,
+        "samples": [
+          {
+            "seconds": 0.7443950939923525,
+            "frontend_seconds": 0.486707469,
+            "codegen_seconds": 0.196967258,
+            "link_seconds": 0.032862395,
+            "compiled_functions": 0,
+            "reused_functions": 66
+          },
+          {
+            "seconds": 0.7199334669858217,
+            "frontend_seconds": 0.47756817,
+            "codegen_seconds": 0.186288415,
+            "link_seconds": 0.032713235,
+            "compiled_functions": 0,
+            "reused_functions": 66
+          },
+          {
+            "seconds": 0.7242796460050158,
+            "frontend_seconds": 0.470257836,
+            "codegen_seconds": 0.195448433,
+            "link_seconds": 0.033770777,
+            "compiled_functions": 0,
+            "reused_functions": 66
+          }
+        ]
+      },
+      "tweak": {
+        "median": 0.7697398960008286,
+        "samples": [
+          {
+            "seconds": 0.7697398960008286,
+            "frontend_seconds": 0.485941142,
+            "codegen_seconds": 0.226124206,
+            "link_seconds": 0.032380282,
+            "compiled_functions": 1,
+            "reused_functions": 65
+          },
+          {
+            "seconds": 0.7784986849874258,
+            "frontend_seconds": 0.49067662,
+            "codegen_seconds": 0.236885126,
+            "link_seconds": 0.033143961,
+            "compiled_functions": 1,
+            "reused_functions": 65
+          },
+          {
+            "seconds": 0.7552269240259193,
+            "frontend_seconds": 0.472435347,
+            "codegen_seconds": 0.219035926,
+            "link_seconds": 0.031698432,
+            "compiled_functions": 1,
+            "reused_functions": 65
+          }
+        ]
+      },
+      "final": {
+        "seconds": 0.7307298700325191,
+        "frontend_seconds": 0.47567738,
+        "codegen_seconds": 0.197563118,
+        "link_seconds": 0.032922025,
+        "compiled_functions": 0,
+        "reused_functions": 66
+      },
+      "binary": "/tmp/sexpr-bench/my-Debug-ReleaseFast/bin",
+      "source_lines": 1013
+    },
+    "ReleaseFast": {
+      "cold": {
+        "median": 2.2005795579752885,
+        "samples": [
+          {
+            "seconds": 2.1905802859691903,
+            "frontend_seconds": 0.041520231,
+            "codegen_seconds": 2.113198366,
+            "link_seconds": 0.028325842,
+            "compiled_functions": 66,
+            "reused_functions": 0
+          },
+          {
+            "seconds": 2.2005795579752885,
+            "frontend_seconds": 0.036163736,
+            "codegen_seconds": 2.12821122,
+            "link_seconds": 0.030129,
+            "compiled_functions": 66,
+            "reused_functions": 0
+          },
+          {
+            "seconds": 2.2025010919896886,
+            "frontend_seconds": 0.044458116,
+            "codegen_seconds": 2.125882242,
+            "link_seconds": 0.026279743,
+            "compiled_functions": 66,
+            "reused_functions": 0
+          }
+        ]
+      },
+      "cold_local": {
+        "median": 2.215111241035629,
+        "samples": [
+          {
+            "seconds": 2.215111241035629,
+            "frontend_seconds": 0.032553935,
+            "codegen_seconds": 2.146027307,
+            "link_seconds": 0.030667347,
+            "compiled_functions": 66,
+            "reused_functions": 0
+          },
+          {
+            "seconds": 2.2187908770283684,
+            "frontend_seconds": 0.034171515,
+            "codegen_seconds": 2.151894482,
+            "link_seconds": 0.026612513,
+            "compiled_functions": 66,
+            "reused_functions": 0
+          },
+          {
+            "seconds": 2.1417118599638343,
+            "frontend_seconds": 0.03278762,
+            "codegen_seconds": 2.074203846,
+            "link_seconds": 0.028540057,
+            "compiled_functions": 66,
+            "reused_functions": 0
+          }
+        ]
+      },
+      "warm": {
+        "median": 0.0812997700413689,
+        "samples": [
+          {
+            "seconds": 0.08105593000072986,
+            "frontend_seconds": 0.036119267,
+            "codegen_seconds": 0.009833302,
+            "link_seconds": 0.029783692,
+            "compiled_functions": 0,
+            "reused_functions": 66
+          },
+          {
+            "seconds": 0.08251139899948612,
+            "frontend_seconds": 0.036138224,
+            "codegen_seconds": 0.009808811,
+            "link_seconds": 0.032076816,
+            "compiled_functions": 0,
+            "reused_functions": 66
+          },
+          {
+            "seconds": 0.0812997700413689,
+            "frontend_seconds": 0.035877435,
+            "codegen_seconds": 0.0093734,
+            "link_seconds": 0.030528625,
+            "compiled_functions": 0,
+            "reused_functions": 66
+          }
+        ]
+      },
+      "tweak": {
+        "median": 0.10783694603014737,
+        "samples": [
+          {
+            "seconds": 0.10852941701887175,
+            "frontend_seconds": 0.038489543,
+            "codegen_seconds": 0.038098987,
+            "link_seconds": 0.026069984,
+            "compiled_functions": 1,
+            "reused_functions": 65
+          },
+          {
+            "seconds": 0.1062276919838041,
+            "frontend_seconds": 0.036317465,
+            "codegen_seconds": 0.036490001,
+            "link_seconds": 0.028031183,
+            "compiled_functions": 1,
+            "reused_functions": 65
+          },
+          {
+            "seconds": 0.10783694603014737,
+            "frontend_seconds": 0.036015501,
+            "codegen_seconds": 0.036700276,
+            "link_seconds": 0.029750302,
+            "compiled_functions": 1,
+            "reused_functions": 65
+          }
+        ]
+      },
+      "final": {
+        "seconds": 0.0932839330052957,
+        "frontend_seconds": 0.035273862,
+        "codegen_seconds": 0.01807703,
+        "link_seconds": 0.034320244,
+        "compiled_functions": 0,
+        "reused_functions": 66
+      },
+      "binary": "/tmp/sexpr-bench/my-ReleaseFast-ReleaseFast/bin",
+      "source_lines": 1013
+    },
+    "ReleaseSafe": {
+      "cold": {
+        "median": 2.1771186270052567,
+        "samples": [
+          {
+            "seconds": 2.186109933012631,
+            "frontend_seconds": 0.033190104,
+            "codegen_seconds": 2.120237812,
+            "link_seconds": 0.025667418,
+            "compiled_functions": 66,
+            "reused_functions": 0
+          },
+          {
+            "seconds": 2.106500075024087,
+            "frontend_seconds": 0.037735589,
+            "codegen_seconds": 2.033773208,
+            "link_seconds": 0.029455072,
+            "compiled_functions": 66,
+            "reused_functions": 0
+          },
+          {
+            "seconds": 2.1771186270052567,
+            "frontend_seconds": 0.040822646,
+            "codegen_seconds": 2.099937442,
+            "link_seconds": 0.030401821,
+            "compiled_functions": 66,
+            "reused_functions": 0
+          }
+        ]
+      },
+      "cold_local": {
+        "median": 2.153711764025502,
+        "samples": [
+          {
+            "seconds": 2.1481736449641176,
+            "frontend_seconds": 0.043612893,
+            "codegen_seconds": 2.069194513,
+            "link_seconds": 0.029190982,
+            "compiled_functions": 66,
+            "reused_functions": 0
+          },
+          {
+            "seconds": 2.153711764025502,
+            "frontend_seconds": 0.035279248,
+            "codegen_seconds": 2.083978434,
+            "link_seconds": 0.028648586,
+            "compiled_functions": 66,
+            "reused_functions": 0
+          },
+          {
+            "seconds": 2.1980381209868938,
+            "frontend_seconds": 0.036264527,
+            "codegen_seconds": 2.129043044,
+            "link_seconds": 0.027066613,
+            "compiled_functions": 66,
+            "reused_functions": 0
+          }
+        ]
+      },
+      "warm": {
+        "median": 0.07963800401194021,
+        "samples": [
+          {
+            "seconds": 0.07963800401194021,
+            "frontend_seconds": 0.036084718,
+            "codegen_seconds": 0.008887034,
+            "link_seconds": 0.030392208,
+            "compiled_functions": 0,
+            "reused_functions": 66
+          },
+          {
+            "seconds": 0.07746864098589867,
+            "frontend_seconds": 0.033769595,
+            "codegen_seconds": 0.008849215,
+            "link_seconds": 0.029874246,
+            "compiled_functions": 0,
+            "reused_functions": 66
+          },
+          {
+            "seconds": 0.08366509299958125,
+            "frontend_seconds": 0.03899663,
+            "codegen_seconds": 0.009250795,
+            "link_seconds": 0.031259303,
+            "compiled_functions": 0,
+            "reused_functions": 66
+          }
+        ]
+      },
+      "tweak": {
+        "median": 0.10436772397952154,
+        "samples": [
+          {
+            "seconds": 0.12767359701683745,
+            "frontend_seconds": 0.052931403,
+            "codegen_seconds": 0.042061995,
+            "link_seconds": 0.027216099,
+            "compiled_functions": 1,
+            "reused_functions": 65
+          },
+          {
+            "seconds": 0.10179998498642817,
+            "frontend_seconds": 0.03410773,
+            "codegen_seconds": 0.034859371,
+            "link_seconds": 0.027738214,
+            "compiled_functions": 1,
+            "reused_functions": 65
+          },
+          {
+            "seconds": 0.10436772397952154,
+            "frontend_seconds": 0.034832983,
+            "codegen_seconds": 0.036171866,
+            "link_seconds": 0.028128225,
+            "compiled_functions": 1,
+            "reused_functions": 65
+          }
+        ]
+      },
+      "final": {
+        "seconds": 0.07774017401970923,
+        "frontend_seconds": 0.033105781,
+        "codegen_seconds": 0.009800561,
+        "link_seconds": 0.030663732,
+        "compiled_functions": 0,
+        "reused_functions": 66
+      },
+      "binary": "/tmp/sexpr-bench/my-ReleaseSafe-ReleaseFast/bin",
+      "source_lines": 1013
+    }
+  },
+  "install_seconds": {
+    "Debug": 0.49915197398513556,
+    "ReleaseFast": 0.5389083900372498,
+    "ReleaseSafe": 0.5289186870213598,
+    "Debug (restore)": 0.6244704500422813
+  },
+  "reps": 3
+}

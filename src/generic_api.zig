@@ -299,6 +299,24 @@ fn appendUnique(allocator: std.mem.Allocator, list: *std.ArrayList([]const u8), 
     for (list.items) |existing| if (std.mem.eql(u8, existing, name)) return;
     try list.append(allocator, name);
 }
+/// Render a parenthesized case's named fields as its API payload text, so an
+/// exported generic union publishes each field and whether it has a default.
+/// A case without named fields has no such text.
+fn caseFieldsText(allocator: std.mem.Allocator, src: source.Source, fields: []const ast.Parameter) Error!?[]const u8 {
+    if (fields.len == 0) return null;
+    var out: std.ArrayList(u8) = .empty;
+    try out.appendSlice(allocator, "(");
+    for (fields, 0..) |field, index| {
+        if (index != 0) try out.appendSlice(allocator, ",");
+        try out.appendSlice(allocator, src.text(field.name));
+        try out.appendSlice(allocator, ":");
+        try out.appendSlice(allocator, src.text(field.ty));
+        if (field.default_value != null) try out.appendSlice(allocator, "=default");
+    }
+    try out.appendSlice(allocator, ")");
+    const text = try out.toOwnedSlice(allocator);
+    return text;
+}
 fn less(_: void, a: Template, b: Template) bool {
     return std.mem.lessThan(u8, a.name, b.name);
 }
@@ -341,7 +359,7 @@ pub fn collect(arena: std.mem.Allocator, index: *interfaces.Index) Error![]const
         const cases = try arena.alloc(Case, variant.cases.len);
         for (cases, variant.cases) |*case, original| case.* = .{
             .name = context.src.text(original.name),
-            .payload = if (original.payload) |payload| context.src.text(payload) else null,
+            .payload = if (original.payload) |payload| context.src.text(payload) else try caseFieldsText(arena, context.src, original.fields),
         };
         item.shape.cases = cases;
         try out.append(arena, item);

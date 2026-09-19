@@ -1040,6 +1040,7 @@ fn casesEnd(cases: []const ast.Variant) usize {
     for (cases) |case| {
         end = @max(end, case.name.end);
         if (case.payload) |payload| end = @max(end, payload.end);
+        end = @max(end, fieldsEnd(case.fields));
     }
     return end;
 }

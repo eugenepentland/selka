@@ -38,6 +38,12 @@ pub fn emit(self: anytype, name: []const u8) Error![]u8 {
         try self.print("{s} %{s}{d}", .{ abi(local.ty, self.program.records), if (contract.isFloat(local.ty, self.program.records)) "c" else "a", i });
     }
     try self.print(")\n", .{});
+    // QBE-FLOAT-ENV-1: a foreign call can change the process rounding mode or
+    // leave the SSE/x87 control word altered, so re-verify the environment
+    // before the result is used. `myl_qbe_float_check` records the sticky
+    // `R_FLOAT_ENVIRONMENT` trap, which the guest's post-`.call` checkFailure
+    // observes when this wrapper returns; the arithmetic itself is unchanged.
+    try self.print(" call $myl_qbe_float_check(l %ctx)\n", .{});
     if (result == .unit) {
         try self.print(" ret 0\n", .{});
     } else if (float_result) {

@@ -20,9 +20,20 @@ pub const GenerateError = error{ InternalError, OutOfMemory, SourceError, WriteF
 const drop_local = " call $myl_native_owned_drop(l %heap, l extern ${s}, l %l{d})\n";
 const store_scalar = " storel {d}, %s{d}\n";
 const Location = struct { path: []const u8, line: usize, column: usize };
+/// One contiguous splice of an inlined callee body into a caller: the callee's
+/// metadata symbol, the caller pc range its body occupies, the callee-local pc
+/// the range starts at, and the caller pc whose location entry is the call site.
+const InlineFrame = struct {
+    callee: []const u8,
+    start: usize,
+    end: usize,
+    callee_start: usize,
+    call_position: usize,
+};
 /// One independently linkable unit plus the per-program-counter metadata the
 /// generated C tables carry: a source location and an `assert` message, with
-/// an empty message for every pc that is not an assertion.
+/// an empty message for every pc that is not an assertion, and the inlined
+/// callee splices whose frames a trap trace must replay.
 const Unit = struct {
     test_dependencies: ?test_dependencies.Metadata = null,
     name: []const u8,
@@ -30,6 +41,7 @@ const Unit = struct {
     il: []const u8,
     locations: []const Location,
     messages: []const []const u8,
+    inlines: []const InlineFrame,
     @"export": ?@import("qbe_exports.zig").Export = null,
 };
 
@@ -74,6 +86,7 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
             .il = "",
             .locations = locations,
             .messages = messages,
+            .inlines = if (emit) try inlineFrames(a, program, function.scope.instructions) else &.{},
             .@"export" = if (emit) try @import("qbe_exports.zig").describe(a, program, index, interface.roots) else null,
         };
     }
@@ -82,13 +95,24 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
     // needs are read back from each lowered function's typed operand stacks.
     const states = try a.alloc([]const ?[]const typed.Type, program.functions.len);
     @memset(states, &.{});
-    for (program.functions, units, states, 0..) |function, *unit, *stacks, index| {
-        if (selected != null and !selected.?[index]) continue;
-        var emitter = Emitter{ .allocator = a, .program = program, .function = function, .units = units, .layouts = &layouts, .sink = sink, .output = .init(a), .arenas = arenas };
-        unit.il = try emitter.emit(unit.symbol);
-        stacks.* = emitter.states;
-        unit.test_dependencies = test_dependencies.describe(a, program, index, unit.il, &layouts, emitter.states) catch |err| return layoutError(err);
-    }
+    // Emit once with roots everywhere to learn which functions can allocate,
+    // then again with the analysis in hand: a call to a function that cannot
+    // collect needs no root push at its call site.
+    var pass: EmitPass = .{
+        .allocator = a,
+        .program = program,
+        .units = units,
+        .states = states,
+        .layouts = &layouts,
+        .sink = sink,
+        .arenas = arenas,
+        .selected = selected,
+        .step_checks = interface.step_checks,
+        .pure = &.{},
+    };
+    try emitPass(pass);
+    pass.pure = try allocateAnalysis(a, program, units);
+    try emitPass(pass);
     const entry_function = program.functions[@backingInt(program.main)];
     const entry_parameters = try a.alloc([]const u8, entry_function.signature.parameter_count);
     const entry_parameter_names = try a.alloc([]const u8, entry_function.signature.parameter_count);
@@ -146,17 +170,55 @@ fn validateSelection(allocator: std.mem.Allocator, program: bytecode.Program, se
     };
     for (program.functions, selected) |function, emit| {
         if (!emit) continue;
-        for (function.scope.instructions) |instruction| switch (instruction.op) {
-            .call => |target| if (!selected[@backingInt(target)]) return error.InternalError,
-            .function_value => |value| if (!selected[@backingInt(value.function)]) return error.InternalError,
-            .invoke => for (address_taken.items) |target| if (!selected[@backingInt(target)]) return error.InternalError,
-            else => {},
-        };
+        for (function.scope.instructions) |instruction| {
+            // An inline table names the callee's metadata, so that unit must be
+            // emitted too; a splice only exists for a pre-inline direct callee,
+            // which the selection closure already contains.
+            if (instruction.inline_origin) |origin| if (!selected[@backingInt(origin.callee)]) return error.InternalError;
+            switch (instruction.op) {
+                .call => |target| if (!selected[@backingInt(target)]) return error.InternalError,
+                .function_value => |value| if (!selected[@backingInt(value.function)]) return error.InternalError,
+                .invoke => for (address_taken.items) |target| if (!selected[@backingInt(target)]) return error.InternalError,
+                else => {},
+            }
+        }
     }
     for (program.records) |record| {
         const codec = record.contract.codec orelse continue;
         if (!selected[@backingInt(codec.decode)] or !selected[@backingInt(codec.encode)]) return error.InternalError;
     }
+}
+
+/// Group one function's per-instruction inline provenance into the contiguous
+/// splices the runtime walks. Each maximal run of spliced instructions sharing a
+/// callee and call site becomes one record naming the callee's metadata symbol,
+/// the caller pc range it occupies and the callee-local pc that range starts at.
+fn inlineFrames(allocator: std.mem.Allocator, program: bytecode.Program, code: []const bytecode.Instruction) GenerateError![]const InlineFrame {
+    var frames: std.ArrayList(InlineFrame) = .empty;
+    var index: usize = 0;
+    while (index < code.len) {
+        const origin = code[index].inline_origin orelse {
+            index += 1;
+            continue;
+        };
+        var end = index + 1;
+        while (end < code.len) : (end += 1) {
+            const next = code[end].inline_origin orelse break;
+            const previous = code[end - 1].inline_origin.?;
+            if (@backingInt(next.callee) != @backingInt(origin.callee)) break;
+            if (next.call_position != origin.call_position) break;
+            if (next.callee_pc != previous.callee_pc + 1) break;
+        }
+        try frames.append(allocator, .{
+            .callee = try symbol(allocator, program.functions[@backingInt(origin.callee)].name),
+            .start = index,
+            .end = end,
+            .callee_start = origin.callee_pc,
+            .call_position = origin.call_position,
+        });
+        index = end;
+    }
+    return frames.toOwnedSlice(allocator);
 }
 
 /// Whether one operation needs the shared Zig text runtime unit: `str(value)`
@@ -191,6 +253,355 @@ fn ownedPointer(record: typed.Record) bool {
     return record.shape.buffer != null or record.shape.resource != null;
 }
 
+/// The digits of a line that is exactly an instruction label (`@i12`), or null
+/// when the line is anything else.
+fn pcLabel(line: []const u8) ?[]const u8 {
+    if (line.len < 3 or line[0] != '@' or line[1] != 'i') return null;
+    for (line[2..]) |byte| if (!std.ascii.isDigit(byte)) return null;
+    return line[2..];
+}
+
+/// Record every `@i<digits>` token a line mentions. A definition line never
+/// mentions itself, so callers skip labels before calling this.
+fn collectLabelReferences(a: std.mem.Allocator, referenced: *std.StringHashMapUnmanaged(void), line: []const u8) GenerateError!void {
+    var rest = line;
+    while (std.mem.indexOf(u8, rest, "@i")) |at| {
+        const start = at + 2;
+        var end = start;
+        while (end < rest.len and std.ascii.isDigit(rest[end])) end += 1;
+        if (end > start) try referenced.put(a, rest[start..end], {});
+        rest = rest[start..];
+    }
+}
+
+/// Drop the instruction labels no branch names. Straight-line instructions
+/// share one block, and a block boundary forces QBE to materialize every live
+/// value, so an unreferenced label costs exactly as much as a real one.
+fn stripUnreferencedLabels(a: std.mem.Allocator, text: []const u8) GenerateError![]u8 {
+    var referenced: std.StringHashMapUnmanaged(void) = .empty;
+    defer referenced.deinit(a);
+    var lines: std.ArrayList([]const u8) = .empty;
+    defer lines.deinit(a);
+    var scan = std.mem.splitScalar(u8, text, '\n');
+    while (scan.next()) |line| try lines.append(a, line);
+    for (lines.items) |line| {
+        if (pcLabel(line) != null) continue;
+        try collectLabelReferences(a, &referenced, line);
+    }
+    var kept: std.ArrayList([]const u8) = .empty;
+    defer kept.deinit(a);
+    for (lines.items) |line| {
+        if (pcLabel(line)) |digits| if (!referenced.contains(digits)) continue;
+        try kept.append(a, line);
+    }
+    return std.mem.join(a, "\n", kept.items);
+}
+
+/// The prologue line that computes the frame position address every store uses.
+/// The record temp differs per function, so this is a prefix.
+const position_address = " %position =l add ";
+
+/// The pc of a line that stores one instruction's frame position, or null when
+/// the line is anything else. Every emitted instruction opens with one, so these
+/// lines also delimit instruction bodies for `elideUnobservablePositions`.
+fn positionStore(line: []const u8) ?[]const u8 {
+    const prefix = " storel ";
+    if (!std.mem.startsWith(u8, line, prefix)) return null;
+    const rest = line[prefix.len..];
+    const comma = std.mem.indexOf(u8, rest, ", %position") orelse return null;
+    return rest[0..comma];
+}
+
+/// Whether a line defines one of the function-level labels the epilogue owns.
+/// They end the last instruction's body: a `@failure` in the epilogue is not a
+/// reason for the instruction before it to store a position.
+fn functionLabel(line: []const u8) bool {
+    inline for (.{ "@step_limit", "@failure", "@allocation_failure", "@entry_failure" }) |label| {
+        if (std.mem.eql(u8, line, label)) return true;
+    }
+    return false;
+}
+
+/// Drop the frame-position store from instructions no diagnostic can observe.
+/// The stored pc exists so a trap trace and an `assert` message name the right
+/// instruction, so an instruction whose body cannot fail and is not a call site
+/// does not need it: the next instruction that can be observed stores its own.
+/// Bodies are delimited by the position stores themselves, which is why this
+/// pass runs before unreferenced labels are stripped.
+fn elideUnobservablePositions(a: std.mem.Allocator, text: []const u8) GenerateError![]u8 {
+    var lines: std.ArrayList([]const u8) = .empty;
+    defer lines.deinit(a);
+    var scan = std.mem.splitScalar(u8, text, '\n');
+    while (scan.next()) |line| try lines.append(a, line);
+    // A body ends at the next store or at the epilogue, so the observable
+    // instructions are known before any line is written.
+    var observable: std.ArrayList(usize) = .empty;
+    defer observable.deinit(a);
+    var index: usize = 0;
+    while (index < lines.items.len) : (index += 1) {
+        if (positionStore(lines.items[index]) == null) continue;
+        var end = index + 1;
+        while (end < lines.items.len and positionStore(lines.items[end]) == null and !functionLabel(lines.items[end])) end += 1;
+        for (lines.items[index..end]) |body| {
+            if (std.mem.indexOf(u8, body, "failure") == null) continue;
+            try observable.append(a, index);
+            break;
+        }
+    }
+    var kept: std.ArrayList([]const u8) = .empty;
+    defer kept.deinit(a);
+    for (lines.items, 0..) |line, at| {
+        if (positionStore(line) != null) {
+            if (std.mem.indexOfScalar(usize, observable.items, at) == null) continue;
+        } else if (observable.items.len == 0 and std.mem.startsWith(u8, line, position_address)) {
+            // The frame position has no other reader, so a function that stores
+            // none does not need it computed either.
+            continue;
+        }
+        try kept.append(a, line);
+    }
+    return std.mem.join(a, "\n", kept.items);
+}
+
+/// The prologue call that computes the shared heap pointer.
+const heap_call = " %heap =l call $myl_qbe_heap(l %ctx)";
+
+/// Frozen byte offset of `myl_native_heap.roots`, matched by the
+/// `_Static_assert(offsetof(myl_native_heap, roots) == 16, ...)` in
+/// `src/qbe_runtime.c`. Generated root pushes and restores read and write this
+/// field directly, so it must change only together with the header.
+const heap_roots_offset: u64 = 16;
+
+/// One live root at a safepoint: the `%root{i}` slot that receives it, the
+/// address the collector traces through it, and the descriptor naming the
+/// traced layout.
+const RootSlot = struct {
+    /// Index of the `%root{i}` slot this root occupies.
+    index: usize,
+    /// IL reference to the address the collector must trace.
+    address: []const u8,
+    /// Descriptor symbol naming the traced layout.
+    descriptor: []const u8,
+};
+
+/// Runtime callees a lowering may name that allocate nothing and can collect
+/// no garbage. A caller that only reaches these (or a `myl_qbe_fail_*` trap
+/// helper, matched by prefix) therefore needs no roots around the instruction.
+/// Everything else — a guest function, a collection constructor, a print sink,
+/// a provider — stays a safepoint.
+const pure_callees = [_][]const u8{
+    "memset",
+    "myl_native_owned_drop",
+    "myl_native_list_get",
+    "myl_qbe_int_cast",
+    "myl_qbe_int_neg",
+    "myl_qbe_int_binary",
+    "myl_qbe_float_check",
+    "myl_qbe_float_unary",
+};
+
+/// Frame and prologue plumbing that allocates nothing. It appears in a unit
+/// that has no allocating operation at all, so it must not by itself make the
+/// function look like it can collect.
+const frame_callees = [_][]const u8{
+    "myl_qbe_enter_at_sized",
+    "myl_qbe_leave",
+    "myl_qbe_root_mark",
+    "myl_qbe_root_restore",
+    "myl_qbe_heap",
+    "myl_qbe_require_step_accounting",
+    "myl_qbe_frame_release",
+};
+
+/// A call names a callee that allocates nothing and can collect nothing: one
+/// of the pure runtime helpers or a `myl_qbe_fail_*` cold trap helper.
+fn pureCalleeName(name: []const u8) bool {
+    if (std.mem.startsWith(u8, name, "myl_qbe_fail_")) return true;
+    for (pure_callees) |candidate| if (std.mem.eql(u8, name, candidate)) return true;
+    return false;
+}
+
+/// One whole-program emission pass, shared by the measurement pass and the
+/// pass that uses its result.
+const EmitPass = struct {
+    allocator: std.mem.Allocator,
+    program: bytecode.Program,
+    units: []Unit,
+    states: [][]const ?[]const typed.Type,
+    layouts: *native_types.Catalog,
+    sink: *diagnostic.Sink,
+    arenas: bool,
+    selected: ?[]const bool,
+    step_checks: bool,
+    pure: []const bool,
+};
+
+/// Lower every selected function into its unit, overwriting any previous text.
+fn emitPass(pass: EmitPass) GenerateError!void {
+    for (pass.program.functions, pass.units, pass.states, 0..) |function, *unit, *stacks, index| {
+        if (pass.selected != null and !pass.selected.?[index]) continue;
+        var emitter = Emitter{
+            .allocator = pass.allocator,
+            .program = pass.program,
+            .function = function,
+            .units = pass.units,
+            .layouts = pass.layouts,
+            .sink = pass.sink,
+            .output = .init(pass.allocator),
+            .scratch = .init(pass.allocator),
+            .arenas = pass.arenas,
+            .step_checks = pass.step_checks,
+            .entry = index == @backingInt(pass.program.main),
+            .pure = pass.pure,
+        };
+        unit.il = try emitter.emit(unit.symbol);
+        stacks.* = emitter.states;
+        unit.test_dependencies = test_dependencies.describe(pass.allocator, pass.program, index, unit.il, pass.layouts, emitter.states) catch |err| return layoutError(err);
+    }
+}
+
+/// Per function, whether it can allocate or reach a call that can, transitively.
+/// A direct `.call` to a function this leaves false cannot start a collection,
+/// so the caller omits the root protocol around it. The answer is read from the
+/// already-emitted text, so it cannot drift from the lowering it describes.
+fn allocateAnalysis(a: std.mem.Allocator, program: bytecode.Program, units: []const Unit) GenerateError![]bool {
+    const may = try a.alloc(bool, program.functions.len);
+    for (units, 0..) |unit, index| may[index] = unitAllocates(unit.il, units);
+    var changed = true;
+    while (changed) {
+        changed = false;
+        for (program.functions, 0..) |function, index| {
+            if (may[index]) continue;
+            for (function.scope.instructions) |instruction| {
+                const callee = switch (instruction.op) {
+                    .call => |id| @backingInt(id),
+                    else => continue,
+                };
+                if (may[callee]) {
+                    may[index] = true;
+                    changed = true;
+                    break;
+                }
+            }
+        }
+    }
+    // `may` is "can allocate"; the caller wants "cannot collect".
+    for (may) |*value| value.* = !value.*;
+    return may;
+}
+
+/// Whether a unit's text allocates on its own: any call other than a pure
+/// runtime callee or another unit in this program (which the graph handles).
+fn unitAllocates(text: []const u8, units: []const Unit) bool {
+    var rest = text;
+    while (std.mem.indexOf(u8, rest, "call $")) |at| {
+        rest = rest[at + "call $".len ..];
+        const stop = std.mem.indexOfAny(u8, rest, "( \n") orelse rest.len;
+        const name = rest[0..stop];
+        const runtime = pureCalleeName(name) or frameCallee(name);
+        if (!runtime and !guestSymbol(name, units)) return true;
+        rest = rest[stop..];
+    }
+    return false;
+}
+
+fn frameCallee(name: []const u8) bool {
+    for (frame_callees) |candidate| if (std.mem.eql(u8, name, candidate)) return true;
+    return false;
+}
+
+fn guestSymbol(name: []const u8, units: []const Unit) bool {
+    for (units) |unit| if (std.mem.eql(u8, unit.symbol, name)) return true;
+    return false;
+}
+
+/// Drop the root machinery and the local zero-fill from a function that never
+/// pushes a root. With no actual safepoint, no collection can observe a slot,
+/// and with no drop, nothing reads one before its first assignment, so both the
+/// root mark and its restore, and every per-local `memset`, are dead. A function
+/// that does push a root keeps all of them. An inner push is the only code that
+/// computes a `%root{i}` field address; the restore is the only code that adds
+/// `%heap` to the frozen root offset.
+fn dropUnusedRoots(a: std.mem.Allocator, text: []const u8) GenerateError![]u8 {
+    if (std.mem.indexOf(u8, text, "=l add %root") != null) return a.dupe(u8, text);
+    const drops = std.mem.indexOf(u8, text, "myl_native_owned_drop") != null;
+    var kept: std.ArrayList([]const u8) = .empty;
+    defer kept.deinit(a);
+    var scan = std.mem.splitScalar(u8, text, '\n');
+    while (scan.next()) |line| {
+        if (std.mem.startsWith(u8, line, " %root_mark =l call $myl_qbe_root_mark")) continue;
+        if (std.mem.startsWith(u8, line, " storel %root_mark, ")) continue;
+        if (std.mem.indexOf(u8, line, "=l add %heap, ") != null) continue;
+        if (!drops and isLocalZero(line)) continue;
+        try kept.append(a, line);
+    }
+    return std.mem.join(a, "\n", kept.items);
+}
+/// Match the exact `%lN` zero-fill `initializeStorage` emits for a traced local.
+fn isLocalZero(line: []const u8) bool {
+    if (!std.mem.startsWith(u8, line, " call $memset(l %l")) return false;
+    return std.mem.indexOf(u8, line, ", w 0, l ") != null;
+}
+
+/// Drop a slot definition no instruction reads. Every `%scratch`, `%arguments`,
+/// `%l{i}`, `%s{i}` and `%agg{pc}`/`%aux{pc}` temporary is declared in the entry
+/// block, and QBE cannot remove an unused `alloc8` by itself: it lowers each one
+/// to a stack adjustment and pointer move. A definition whose name appears once
+/// in the unit is read nowhere, so removing it is free.
+fn dropUnusedSlots(a: std.mem.Allocator, text: []const u8) GenerateError![]u8 {
+    var kept: std.ArrayList([]const u8) = .empty;
+    defer kept.deinit(a);
+    var scan = std.mem.splitScalar(u8, text, '\n');
+    while (scan.next()) |line| {
+        if (slotDefinition(line)) |name| if (nameCount(text, name) == 1) continue;
+        try kept.append(a, line);
+    }
+    return std.mem.join(a, "\n", kept.items);
+}
+
+/// The slot name a line defines, when it is a named `alloc8` or heap-frame slot
+/// address. `%v{d}` value temporaries are never definitions of this shape.
+fn slotDefinition(line: []const u8) ?[]const u8 {
+    if (!std.mem.startsWith(u8, line, " %")) return null;
+    const rest = line[2..];
+    const equals = std.mem.indexOf(u8, rest, " =l ") orelse return null;
+    const name = rest[0..equals];
+    if (name.len == 0 or name[0] == 'v') return null;
+    for (name) |byte| if (!std.ascii.isAlphanumeric(byte) and byte != '_') return null;
+    const tail = rest[equals..];
+    if (std.mem.indexOf(u8, tail, " alloc8 ") == null and std.mem.indexOf(u8, tail, " add %frame_memory, ") == null) return null;
+    return name;
+}
+
+/// Count whole `%name` references in the text, ignoring longer identifiers.
+fn nameCount(text: []const u8, name: []const u8) usize {
+    var count: usize = 0;
+    var index: usize = 0;
+    while (std.mem.indexOfPos(u8, text, index, name)) |at| {
+        const prefixed = at > 0 and text[at - 1] == '%';
+        const after = at + name.len;
+        const bounded = after >= text.len or (!std.ascii.isAlphanumeric(text[after]) and text[after] != '_');
+        if (prefixed and bounded) count += 1;
+        index = at + name.len;
+    }
+    return count;
+}
+
+/// Drop the `%heap` prologue call when nothing in the function reads it. QBE
+/// cannot remove a call by itself, because a call may have effects, and this one
+/// only computes `&ctx->heap`.
+fn dropUnusedHeap(a: std.mem.Allocator, text: []const u8) GenerateError![]u8 {
+    if (std.mem.count(u8, text, "%heap") != 1) return a.dupe(u8, text);
+    var kept: std.ArrayList([]const u8) = .empty;
+    defer kept.deinit(a);
+    var scan = std.mem.splitScalar(u8, text, '\n');
+    while (scan.next()) |line| {
+        if (std.mem.eql(u8, line, heap_call)) continue;
+        try kept.append(a, line);
+    }
+    return std.mem.join(a, "\n", kept.items);
+}
+
 const Emitter = struct {
     allocator: std.mem.Allocator,
     program: bytecode.Program,
@@ -200,12 +611,35 @@ const Emitter = struct {
     layouts: *native_types.Catalog,
     pc: usize = 0,
     has_roots: bool = false,
+    /// Whether any instruction is a safepoint, i.e. an operation whose lowering
+    /// can allocate and therefore collect. A rooted function with none never
+    /// pushes a root, so it needs no mark/restore either.
+    has_safepoints: bool = false,
     heap_frame: bool = false,
     arenas: bool = false,
     frame_offset: u64 = 0,
     output: std.Io.Writer.Allocating,
+    /// One instruction's lowered text, emitted here first so the emitter can
+    /// decide whether that instruction allocates before writing its root pushes.
+    scratch: std.Io.Writer.Allocating,
     states: []?[]const typed.Type = &.{},
     serial: usize = 0,
+    /// Emit the per-instruction position marker and step-budget check. A build
+    /// that cannot be given a runtime ceiling drops both (see `QBE-STEP-ACCOUNTING-1`).
+    step_checks: bool = true,
+    /// True for the function the runtime calls first, the only place the
+    /// missing-accounting guard has to run.
+    entry: bool = false,
+    /// Per program function, whether it can allocate or reach a call that can.
+    /// A `.call` to a function whose entry is false needs no root push at its
+    /// call site, because no collection can run while it executes.
+    pure: []const bool = &.{},
+    /// Temps naming the native-stack frame record, `ctx->active_frame` and
+    /// `ctx->frames` while a function with a linked record is being emitted.
+    record: usize = 0,
+    frame_active: usize = 0,
+    frame_frames: usize = 0,
+    linked: bool = false,
 
     /// Shared lowering primitive for target operation emitters.
     pub fn reject(self: *Emitter, pc: usize) GenerateError {
@@ -231,6 +665,39 @@ const Emitter = struct {
     /// Shared lowering primitive for target operation emitters.
     pub fn store(self: *Emitter, slot: usize, id: usize) GenerateError!void {
         try self.print(" storel %v{d}, %s{d}\n", .{ id, slot });
+    }
+    /// Whether any instruction can jump straight to `pc`, which is the only way
+    /// control reaches `pc` without executing its linear predecessor.
+    fn isBranchTarget(self: *Emitter, pc: usize) bool {
+        for (self.function.scope.instructions) |instruction| switch (instruction.op) {
+            .jump => |target| if (target == pc) return true,
+            .jump_if_false => |target| if (target == pc) return true,
+            .try_result => |propagate| if (propagate.error_target == pc) return true,
+            else => {},
+        };
+        return false;
+    }
+    /// The 64-bit signed integer literal this program counter's top-of-stack
+    /// operand was just pushed with, or null when that operand is not provably
+    /// the literal. Only the linear predecessor can have pushed it, and only by
+    /// falling through, so a pc any instruction can jump to is never claimed.
+    /// The stack height must grow by exactly one across the pair, which rules
+    /// out a predecessor whose slot is not the operand being read.
+    pub fn pushedLiteral(self: *Emitter, pc: usize) ?i64 {
+        if (pc == 0 or pc >= self.states.len) return null;
+        const here = self.states[pc] orelse return null;
+        const previous = self.states[pc - 1] orelse return null;
+        if (here.len != previous.len + 1) return null;
+        if (self.isBranchTarget(pc)) return null;
+        return switch (self.function.scope.instructions[pc - 1].op) {
+            .push_i64 => |value| value,
+            .push_integer => |number| {
+                const info = number.ty.integer() orelse return null;
+                if (info.bits != 64 or !info.signed) return null;
+                return std.math.cast(i64, number.value) orelse null;
+            },
+            else => null,
+        };
     }
     fn emit(self: *Emitter, name: []const u8) GenerateError![]const u8 {
         const f = self.function;
@@ -258,29 +725,49 @@ const Emitter = struct {
         } else {
             for (f.scope.locals[0..f.signature.parameter_count], 0..) |local, i| try self.print(", {s} %a{d}", .{ try self.parameterType(local), i });
         }
-        try self.print(") {{\n@entry\n", .{});
+        try self.print(") {{\n@entry\n %trap =l add %ctx, 32\n", .{});
         const return_bytes = try self.returnStorageBytes();
         if (return_bytes != 0) {
             try self.print(" %empty =l alloc8 {d}\n call $memset(l %empty, w 0, l {d})\n", .{ @max(8, return_bytes), @max(8, return_bytes) });
             if (self.heap_frame) try self.print(" %return_storage =l alloc8 {d}\n", .{@max(8, return_bytes)});
         }
-        try self.print(" call $myl_qbe_enter_at_sized(l %ctx, l extern ${s}_meta, l {d})\n", .{ name, stack_bytes });
-        try self.checkFailure("entry_failure");
+        // QBE promotes a slot to a temporary only when its `alloc8` sits in the
+        // entry block, so a native-stack frame declares its slots before the
+        // frame protocol introduces any label.
+        if (!self.heap_frame) try self.allocateStorage(capacity);
+        try self.enterFrame(name);
+        // A build without instruction-budget accounting cannot honor a runtime
+        // step ceiling; refuse it once, before any guest instruction runs.
+        if (!self.step_checks and self.entry) try self.print(" call $myl_qbe_require_step_accounting(l %ctx)\n", .{});
         try arena_lower.Lower(Emitter).mark(self);
         if (self.heap_frame) {
             try self.print(" %frame_memory =l call $myl_qbe_frame_allocate(l %ctx, l {d})\n", .{frame_bytes});
             try self.checkFailure("allocation_failure");
+            try self.allocateStorage(capacity);
         }
-        try self.initializeStorage(capacity);
-        if (self.has_roots) try self.print(" %heap =l call $myl_qbe_heap(l %ctx)\n %root_mark =l call $myl_qbe_root_mark(l %ctx)\n", .{});
-        try self.print(" %maxsteps =l add %ctx, 16\n %active =l add %ctx, 48\n %frame =l loadl %active\n %position =l add %frame, 8\n jmp @i0\n", .{});
+        try self.allocateTemporaries();
+        try self.initializeStorage();
+        if (self.has_roots) try self.print(" %heap =l call $myl_qbe_heap(l %ctx)\n", .{});
+        if (self.has_roots and self.has_safepoints) try self.print(" %root_mark =l call $myl_qbe_root_mark(l %ctx)\n", .{});
+        if (self.step_checks) try self.print(" %maxsteps =l add %ctx, 16\n", .{});
+        try self.print(" jmp @i0\n", .{});
         try self.emitInstructions();
-        try self.print("@step_limit\n call $myl_qbe_fail_step(l %ctx)\n jmp @failure\n@failure\n", .{});
+        if (self.step_checks) try self.print("@step_limit\n call $myl_qbe_fail_step(l %ctx)\n jmp @failure\n@failure\n", .{}) else try self.print("@failure\n", .{});
         try arena_lower.Lower(Emitter).restore(self);
-        if (self.has_roots) try self.print(" call $myl_qbe_root_restore(l %ctx, l %root_mark)\n", .{});
+        if (self.has_roots and self.has_safepoints) try self.restoreRoots();
         if (self.heap_frame) try self.print(" call $myl_qbe_frame_release(l %ctx, l %frame_memory)\n jmp @allocation_failure\n@allocation_failure\n", .{});
-        try self.print(" call $myl_qbe_leave(l %ctx)\n@entry_failure\n ret {s}\n}}\n", .{if (return_bytes == 0) "0" else "%empty"});
-        return self.output.toOwnedSlice();
+        try self.leaveFrame();
+        try self.print(" ret {s}\n@entry_failure\n ret {s}\n}}\n", .{ if (return_bytes == 0) "0" else "%empty", if (return_bytes == 0) "0" else "%empty" });
+        var text = try self.output.toOwnedSlice();
+        // With no step check, the only reason to store a position is a trap trace
+        // or an `assert` message, and both are emitted by a body that mentions a
+        // failure path. With a step check, every instruction can fail, so every
+        // instruction keeps its position.
+        if (!self.step_checks) text = try elideUnobservablePositions(self.allocator, text);
+        text = try dropUnusedRoots(self.allocator, text);
+        text = try dropUnusedHeap(self.allocator, text);
+        text = try dropUnusedSlots(self.allocator, text);
+        return stripUnreferencedLabels(self.allocator, text);
     }
     fn findRoots(self: *Emitter) GenerateError!void {
         const f = self.function;
@@ -288,20 +775,39 @@ const Emitter = struct {
         for (self.states) |state| if (state) |stack| {
             for (stack) |ty| self.has_roots = self.has_roots or (try self.layout(ty)).trace;
         };
+        for (f.scope.instructions, 0..) |instruction, pc| {
+            if (self.states[pc] == null) continue;
+            self.has_safepoints = self.has_safepoints or allocates(instruction.op);
+        }
     }
-    fn initializeStorage(self: *Emitter, capacity: usize) GenerateError!void {
+    /// Declare every slot this function needs. QBE's slot promotion only looks
+    /// at the entry block, so for a native-stack frame these declarations are
+    /// emitted before the frame protocol's labels; a heap-backed frame derives
+    /// its slots from `%frame_memory`, so they follow that allocation instead.
+    fn allocateStorage(self: *Emitter, capacity: usize) GenerateError!void {
         const f = self.function;
         try self.allocateSlot("scratch", 16);
         try self.allocateSlot("arguments", try self.argumentVectorBytes());
         for (f.scope.locals, 0..) |local, i| try self.allocateIndex("l", i, @max(8, (try self.layout(local.ty)).size));
+        for (0..capacity) |i| try self.allocateIndex("s", i, 8);
+        if (self.has_roots) for (0..f.scope.locals.len + capacity) |i| try self.allocateIndex("root", i, 24);
+    }
+    /// Per-pc aggregate scratch. Its address is copied into an operand slot, so
+    /// QBE never promotes it, and keeping it out of the entry block avoids a
+    /// zero-length aggregate being folded to a null load there.
+    fn allocateTemporaries(self: *Emitter) GenerateError!void {
         for (self.states, 0..) |state, pc| if (state != null and self.usesTemporary(pc)) {
             const size = try self.temporarySize(pc);
             try self.allocateIndex("agg", pc, size);
             try self.allocateIndex("aux", pc, size);
         };
-        for (0..capacity) |i| try self.allocateIndex("s", i, 8);
-        if (self.has_roots) for (0..f.scope.locals.len + capacity) |i| try self.allocateIndex("root", i, 24);
+    }
+    fn initializeStorage(self: *Emitter) GenerateError!void {
+        const f = self.function;
         for (f.scope.locals, 0..) |local, i| {
+            // A parameter is stored into its slot below, before any instruction
+            // can run, so a root push can never observe it unset.
+            if (i < f.signature.parameter_count) continue;
             if ((try self.layout(local.ty)).trace) try self.print(zero_local, .{ i, @max(8, (try self.layout(local.ty)).size) });
         }
         const packed_args = try self.packedParameters(f);
@@ -310,17 +816,83 @@ const Emitter = struct {
             if (scalar(local.ty, self.program.records)) try self.print(" storel %a{d}, %l{d}\n", .{ i, i }) else try self.print(" blit %a{d}, %l{d}, {d}\n", .{ i, i, (try self.layout(local.ty)).size });
         }
     }
+    /// Link this function's native-stack frame record and enforce the logical
+    /// depth ceiling and the execution-stack floor without a runtime call. The
+    /// record is `{prev, function, position, native_bytes}`; generated code owns
+    /// the first three words and reads `ctx->frames`/`ctx->frame_limit`/
+    /// `ctx->frame_floor` at their frozen offsets.
+    fn enterFrame(self: *Emitter, name: []const u8) GenerateError!void {
+        const admit = self.temp();
+        const stack = self.temp();
+        const limit_fail = self.temp();
+        const floor_fail = self.temp();
+        self.frame_frames = self.temp();
+        self.frame_active = self.temp();
+        self.record = self.temp();
+        const frames = self.temp();
+        const limit_slot = self.temp();
+        const limit = self.temp();
+        const at_limit = self.temp();
+        const floor_slot = self.temp();
+        const floor = self.temp();
+        const below = self.temp();
+        const previous = self.temp();
+        const function_slot = self.temp();
+        const position_slot = self.temp();
+        const next = self.temp();
+        try self.print(
+            " %v{d} =l add %ctx, 8\n %v{d} =l loadl %v{d}\n %v{d} =l add %ctx, 56\n %v{d} =l loadl %v{d}\n %v{d} =l ceql %v{d}, %v{d}\n" ++
+                " jnz %v{d}, @limitfail{d}, @frameadmit{d}\n@limitfail{d}\n call $myl_qbe_fail_frame(l %ctx)\n jmp @entry_failure\n@frameadmit{d}\n",
+            .{ self.frame_frames, frames, self.frame_frames, limit_slot, limit, limit_slot, at_limit, frames, limit, at_limit, limit_fail, admit, limit_fail, admit },
+        );
+        try self.print(
+            " %v{d} =l alloc8 32\n %v{d} =l add %ctx, 64\n %v{d} =l loadl %v{d}\n %v{d} =l cultl %v{d}, %v{d}\n" ++
+                " jnz %v{d}, @floorfail{d}, @stackadmit{d}\n@floorfail{d}\n call $myl_qbe_fail_frame(l %ctx)\n jmp @entry_failure\n@stackadmit{d}\n",
+            .{ self.record, floor_slot, floor, floor_slot, below, self.record, floor, below, floor_fail, stack, floor_fail, stack },
+        );
+        try self.print(
+            " %v{d} =l add %ctx, 48\n %v{d} =l loadl %v{d}\n storel %v{d}, %v{d}\n %v{d} =l add %v{d}, 8\n storel extern ${s}_meta, %v{d}\n",
+            .{ self.frame_active, previous, self.frame_active, previous, self.record, function_slot, self.record, name, function_slot },
+        );
+        try self.print(
+            " %v{d} =l add %v{d}, 16\n storel 0, %v{d}\n storel %v{d}, %v{d}\n %v{d} =l add %v{d}, 1\n storel %v{d}, %v{d}\n",
+            .{ position_slot, self.record, position_slot, self.record, self.frame_active, next, frames, next, self.frame_frames },
+        );
+        try self.print(" %position =l add %v{d}, 16\n", .{self.record});
+        self.linked = true;
+    }
+    /// Unlink this function's frame record and drop the frame count.
+    fn leaveFrame(self: *Emitter) GenerateError!void {
+        if (!self.linked) return;
+        const previous = self.temp();
+        const frames = self.temp();
+        const next = self.temp();
+        try self.print(
+            " %v{d} =l loadl %v{d}\n storel %v{d}, %v{d}\n %v{d} =l loadl %v{d}\n %v{d} =l sub %v{d}, 1\n storel %v{d}, %v{d}\n",
+            .{ previous, self.record, previous, self.frame_active, frames, self.frame_frames, next, frames, next, self.frame_frames },
+        );
+    }
     fn emitInstructions(self: *Emitter) GenerateError!void {
         const f = self.function;
         for (f.scope.instructions, 0..) |instruction, pc| {
             const stack = self.states[pc] orelse continue;
+            // The position marker is not budget metadata: trap traces and
+            // `assert` messages read the frame's current pc, so it is emitted
+            // even where the step check is not.
             try self.print("@i{d}\n storel {d}, %position\n", .{ pc, pc });
-            try self.step();
+            if (self.step_checks) try self.step();
             self.pc = pc;
-            const safepoint = self.has_roots and allocates(instruction.op);
-            if (safepoint) try self.roots(stack);
-            try self.emitOp(instruction.op, stack);
-            if (safepoint) try self.print(" call $myl_qbe_root_restore(l %ctx, l %root_mark)\n", .{});
+            if (self.rootedSafepoint(instruction.op)) {
+                // The opcode admits allocation, so lower it aside first and push
+                // roots only if this variant's text actually names an allocating
+                // callee; the common non-allocating case emits nothing extra.
+                const text = try self.lowerDetached(instruction.op, stack);
+                if (loweredAllocates(text)) {
+                    const pushed = try self.roots(stack);
+                    try self.print("{s}", .{text});
+                    if (pushed) try self.restoreRoots();
+                } else try self.print("{s}", .{text});
+            } else try self.emitOp(instruction.op, stack);
             switch (instruction.op) {
                 .binary_integer => |operation| {
                     if (operation.ty.integer()) |integer| {
@@ -351,11 +923,16 @@ const Emitter = struct {
                 => try self.checkFailure("failure"),
                 else => {},
             }
+            // An instruction whose successor has a body falls through into it;
+            // only a real terminator (or a successor that emits nothing) jumps.
+            const falls = pc + 1 < self.states.len and self.states[pc + 1] != null;
             switch (instruction.op) {
                 .ret, .jump, .jump_if_false, .switch_variant => {},
-                else => try self.print(" jmp @i{d}\n", .{pc + 1}),
+                else => if (!falls) try self.print(" jmp @i{d}\n", .{pc + 1}),
             }
-            if (instruction.op == .jump_if_false) try self.print("@next{d}\n jmp @i{d}\n", .{ self.serial, pc + 1 });
+            if (instruction.op == .jump_if_false) {
+                if (falls) try self.print("@next{d}\n", .{self.serial}) else try self.print("@next{d}\n jmp @i{d}\n", .{ self.serial, pc + 1 });
+            }
         }
     }
     fn allocates(op: @FieldType(bytecode.Instruction, "op")) bool {
@@ -379,6 +956,42 @@ const Emitter = struct {
             => true,
             else => false,
         };
+    }
+    /// Whether an operation whose opcode may allocate actually does. Every
+    /// allocation a lowering performs is a runtime call, so an instruction is
+    /// only a real safepoint when its text names a callee outside the pure set.
+    /// A bounds-checked byte read and an integer cast, for instance, cannot
+    /// collect even though `get_index` and `cast_integer` can allocate in
+    /// another variant, and this keeps them from pushing roots they never need.
+    fn loweredAllocates(text: []const u8) bool {
+        var rest = text;
+        while (std.mem.indexOf(u8, rest, "call $")) |at| {
+            rest = rest[at + "call $".len ..];
+            const stop = std.mem.indexOfAny(u8, rest, "( \n") orelse rest.len;
+            if (!pureCallee(rest[0..stop])) return true;
+            rest = rest[stop..];
+        }
+        return false;
+    }
+    fn pureCallee(name: []const u8) bool {
+        return pureCalleeName(name);
+    }
+    /// Whether an instruction needs the root protocol: its opcode admits
+    /// allocation, and it is not a call to a function that cannot collect.
+    fn rootedSafepoint(self: *Emitter, op: @FieldType(bytecode.Instruction, "op")) bool {
+        if (!self.has_roots or !self.has_safepoints) return false;
+        if (!allocates(op)) return false;
+        return !self.callsPureFunction(op);
+    }
+    /// Whether this instruction is a direct call to a function that can neither
+    /// allocate nor reach an allocation, so no collection can run inside it and
+    /// the caller needs no roots across it.
+    fn callsPureFunction(self: *Emitter, op: @FieldType(bytecode.Instruction, "op")) bool {
+        const id = switch (op) {
+            .call => |callee| @backingInt(callee),
+            else => return false,
+        };
+        return id < self.pure.len and self.pure[id];
     }
     fn allocateIndex(self: *Emitter, kind: []const u8, index: usize, size: u64) GenerateError!void {
         try self.allocateSlot(try std.fmt.allocPrint(self.allocator, "{s}{d}", .{ kind, index }), size);
@@ -409,7 +1022,8 @@ const Emitter = struct {
             }
             try self.print(" call $myl_qbe_frame_release(l %ctx, l %frame_memory)\n", .{});
         }
-        try self.print(" call $myl_qbe_leave(l %ctx)\n ret %v{d}\n", .{output});
+        try self.leaveFrame();
+        try self.print(" ret %v{d}\n", .{output});
     }
     fn dropOperand(self: *Emitter, slot: usize, ty: typed.Type) GenerateError!void {
         if (!(try self.layout(ty)).drop) return;
@@ -656,21 +1270,75 @@ const Emitter = struct {
     pub fn descriptor(self: *Emitter, ty: typed.Type) GenerateError![]const u8 {
         return native_descriptors.symbol(self.allocator, self.layouts, ty) catch |err| return layoutError(err);
     }
-    fn roots(self: *Emitter, stack: []const typed.Type) GenerateError!void {
+    /// Lower one operation into `scratch` and return its text, leaving the main
+    /// output alone so the caller can decide whether to emit root pushes first.
+    fn lowerDetached(self: *Emitter, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) GenerateError![]const u8 {
+        const main = self.output;
+        self.scratch.writer.end = 0;
+        self.output = self.scratch;
+        defer {
+            self.scratch = self.output;
+            self.output = main;
+        }
+        try self.emitOp(op, stack);
+        return self.output.writer.buffer[0..self.output.writer.end];
+    }
+    /// Whether this safepoint has at least one live traced local or operand.
+    /// With none there is nothing to link, and the push and its restore are
+    /// omitted, exactly as the former per-root call sequence omitted them.
+    fn liveRoots(self: *Emitter, stack: []const typed.Type) GenerateError!bool {
+        for (self.function.scope.locals) |local| if ((try self.layout(local.ty)).trace) return true;
+        for (stack) |ty| if ((try self.layout(ty)).trace) return true;
+        return false;
+    }
+    /// Push every live traced local and operand as a `myl_native_root` link
+    /// built from straight-line stores instead of a runtime call. The chain
+    /// head is loaded once from the frozen `myl_native_heap.roots` offset, and
+    /// each slot's `previous` names the link pushed before it, so the collector
+    /// walks every live root. Field order matches `struct myl_native_root`.
+    /// Returns whether any root was pushed.
+    fn roots(self: *Emitter, stack: []const typed.Type) GenerateError!bool {
+        if (!try self.liveRoots(stack)) return false;
+        const base = self.temp();
+        try self.print(" %v{d} =l add %heap, {d}\n", .{ base, heap_roots_offset });
+        const head = self.temp();
+        try self.print(" %v{d} =l loadl %v{d}\n", .{ head, base });
         var count: usize = 0;
+        var previous = try std.fmt.allocPrint(self.allocator, "%v{d}", .{head});
         for (self.function.scope.locals, 0..) |local, i| if ((try self.layout(local.ty)).trace) {
-            try self.print(" call $myl_native_root_push(l %heap, l %root{d}, l %l{d}, l extern ${s})\n", .{ count, i, try self.descriptor(local.ty) });
+            const traced = try std.fmt.allocPrint(self.allocator, "%l{d}", .{i});
+            try self.pushRoot(.{ .index = count, .address = traced, .descriptor = try self.descriptor(local.ty) }, previous, base);
+            previous = try std.fmt.allocPrint(self.allocator, "%root{d}", .{count});
             count += 1;
         };
         for (stack, 0..) |ty, i| if ((try self.layout(ty)).trace) {
-            if (scalar(ty, self.program.records)) {
-                try self.print(" call $myl_native_root_push(l %heap, l %root{d}, l %s{d}, l extern ${s})\n", .{ count, i, try self.descriptor(ty) });
-            } else {
-                const pointer = try self.load("s", i);
-                try self.print(" call $myl_native_root_push(l %heap, l %root{d}, l %v{d}, l extern ${s})\n", .{ count, pointer, try self.descriptor(ty) });
-            }
+            const traced = if (scalar(ty, self.program.records))
+                try std.fmt.allocPrint(self.allocator, "%s{d}", .{i})
+            else
+                try std.fmt.allocPrint(self.allocator, "%v{d}", .{try self.load("s", i)});
+            try self.pushRoot(.{ .index = count, .address = traced, .descriptor = try self.descriptor(ty) }, previous, base);
+            previous = try std.fmt.allocPrint(self.allocator, "%root{d}", .{count});
             count += 1;
         };
+        return true;
+    }
+    /// Fill one `myl_native_root` slot in place — `previous`, the traced
+    /// address, then the type descriptor — and link it into the heap's chain
+    /// through `base`, the address of `myl_native_heap.roots`.
+    fn pushRoot(self: *Emitter, slot: RootSlot, previous: []const u8, base: usize) GenerateError!void {
+        const at = self.temp();
+        const ty = self.temp();
+        try self.print(
+            " storel {s}, %root{d}\n %v{d} =l add %root{d}, 8\n storel {s}, %v{d}\n" ++
+                " %v{d} =l add %root{d}, 16\n storel extern ${s}, %v{d}\n storel %root{d}, %v{d}\n",
+            .{ previous, slot.index, at, slot.index, slot.address, at, ty, slot.index, slot.descriptor, ty, slot.index, base },
+        );
+    }
+    /// Restore the heap's root chain to this frame's mark with one store,
+    /// replacing the former `myl_qbe_root_restore` call.
+    fn restoreRoots(self: *Emitter) GenerateError!void {
+        const base = self.temp();
+        try self.print(" %v{d} =l add %heap, {d}\n storel %root_mark, %v{d}\n", .{ base, heap_roots_offset, base });
     }
     /// Shared lowering primitive for target operation emitters.
     pub fn require(self: *Emitter, value: usize, failure: []const u8) GenerateError!void {
@@ -689,7 +1357,7 @@ const Emitter = struct {
     /// Shared lowering primitive for target operation emitters.
     pub fn checkFailure(self: *Emitter, target: []const u8) GenerateError!void {
         const failed = self.temp();
-        try self.print(" %v{d} =l call $myl_qbe_failed(l %ctx)\n jnz %v{d}, @{s}, @ok{d}\n@ok{d}\n", .{ failed, failed, target, failed, failed });
+        try self.print(" %v{d} =l loadl %trap\n jnz %v{d}, @{s}, @ok{d}\n@ok{d}\n", .{ failed, failed, target, failed, failed });
     }
     /// Shared lowering primitive for target operation emitters.
     pub fn address(self: *Emitter, base: usize, offset: u64) GenerateError!usize {
@@ -949,13 +1617,11 @@ const Emitter = struct {
                 };
                 if (op == .cast_integer and ty.isAggregate()) return managed_lower.Lower(Emitter).cast(self, ty, stack);
                 const info = ty.integer().?;
-                const operand = try self.load("s", h - 1);
-                const v = self.temp();
                 if (op == .cast_integer) {
                     const from = stack[h - 1].integer() orelse return error.InternalError;
-                    try self.print(" %v{d} =l call $myl_qbe_int_cast(l %ctx, l {d}, l {d}, l {d}, l %v{d})\n", .{ v, @intFromBool(from.signed), @intFromBool(info.signed), info.bits, operand });
-                } else try self.print(" %v{d} =l call $myl_qbe_int_neg(l %ctx, l {d}, l {d}, l %v{d})\n", .{ v, @intFromBool(info.signed), info.bits, operand });
-                try self.store(h - 1, v);
+                    return scalar_lower.Lower(Emitter).cast(self, from, info, h);
+                }
+                return scalar_lower.Lower(Emitter).neg(self, info, h);
             },
             .unary_float => |unary| {
                 const operand = try self.load("s", h - 1);

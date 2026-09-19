@@ -4,6 +4,12 @@ const v = @import("qbe_build_value.zig");
 const host = @import("qbe_build_host.zig");
 /// One packed-argument cleanup shared by every early grant exit.
 const free_arguments = "free(arguments);";
+/// Marker the managed lowering writes into a unit's IL for each frozen
+/// `str`/`bytes` literal. QBE reads it as a comment; this unit turns it into the
+/// C data object the IL loads. The line is `# ` followed by this word and
+/// `<symbol> <element> <width> <count> [hex]`, with element bytes in lowercase
+/// hex.
+const literal_word = "myl-lit ";
 /// Metadata, allocation, and unsupported executable-entry failures.
 pub const Error = host.Error || error{UnsupportedNativeEntry};
 /// Emit typed runtime descriptors, host bridges, and source-location tables.
@@ -14,7 +20,14 @@ pub fn metadata(allocator: std.mem.Allocator, manifest: std.json.Value) Error![]
     const host_source = try host.source(allocator, v.get(manifest, "host"));
     defer allocator.free(host_source);
     try w.print("#include \"qbe_runtime.h\"\n{s}\n{s}\n", .{ v.text(v.get(manifest, "runtime_data")), host_source });
-    for (v.array(v.get(manifest, "functions"))) |unit| {
+    const functions = v.array(v.get(manifest, "functions"));
+    try literalDefinitions(w, allocator, functions);
+    // Every inline table names another unit's metadata, which may be defined
+    // later in this file, so declare them all before the first definition.
+    for (functions) |unit| {
+        try w.print("extern const MylQbeFunction {s}_meta;\n", .{v.text(v.get(unit, "symbol"))});
+    }
+    for (functions) |unit| {
         const symbol = v.text(v.get(unit, "symbol"));
         const locations = v.array(v.get(unit, "locations"));
         try w.print("static const MylQbeLocation {s}_meta_locations[] = {{\n", .{symbol});
@@ -35,11 +48,88 @@ pub fn metadata(allocator: std.mem.Allocator, manifest: std.json.Value) Error![]
         }
         if (locations.len == 0) try w.writeAll("\"\",\n");
         try w.writeAll("};\n");
+        // One record per inlined splice: the callee's metadata, the caller pc
+        // range its body occupies, the callee-local pc it starts at, and the
+        // caller pc whose location entry is the call site.
+        const inlines = v.array(v.get(unit, "inlines"));
+        if (inlines.len != 0) {
+            try w.print("static const MylQbeInlineFrame {s}_meta_inlines[] = {{\n", .{symbol});
+            for (inlines) |frame| {
+                try w.print("{{&{s}_meta,{d},{d},{d},{d}}},\n", .{
+                    v.text(v.get(frame, "callee")),
+                    v.number(v.get(frame, "start")),
+                    v.number(v.get(frame, "end")),
+                    v.number(v.get(frame, "callee_start")),
+                    v.number(v.get(frame, "call_position")),
+                });
+            }
+            try w.writeAll("};\n");
+        }
         try w.print("const MylQbeFunction {s}_meta = {{", .{symbol});
         try v.quote(w, v.text(v.get(unit, "name")));
-        try w.print(",{s}_meta_locations,{d},{s}_meta_messages}};\n", .{ symbol, locations.len, symbol });
+        try w.print(",{s}_meta_locations,{d},{s}_meta_messages,", .{ symbol, locations.len, symbol });
+        if (inlines.len != 0) try w.print("{s}_meta_inlines,{d}", .{ symbol, inlines.len }) else try w.writeAll("NULL,0");
+        try w.writeAll("};\n");
     }
     return buffer.toOwnedSlice();
+}
+/// Emit one C definition for every frozen `str`/`bytes` literal the emitted IL
+/// names. The marker carries the exact element payload, so equal literals share
+/// one data object even across units.
+fn literalDefinitions(w: *std.Io.Writer, allocator: std.mem.Allocator, units: []const std.json.Value) Error!void {
+    var seen: std.StringHashMapUnmanaged(void) = .empty;
+    defer seen.deinit(allocator);
+    var header = false;
+    for (units) |unit| {
+        const il = v.get(unit, "il");
+        if (il != .string) continue;
+        var lines = std.mem.splitScalar(u8, v.text(il), '\n');
+        while (lines.next()) |line| {
+            if (!std.mem.startsWith(u8, line, "# ") or !std.mem.startsWith(u8, line[2..], literal_word)) continue;
+            var tokens = std.mem.tokenizeScalar(u8, line[2 + literal_word.len ..], ' ');
+            const symbol = tokens.next() orelse continue;
+            const element = tokens.next() orelse continue;
+            const width_text = tokens.next() orelse continue;
+            const count_text = tokens.next() orelse continue;
+            if (seen.contains(symbol)) continue;
+            try seen.put(allocator, symbol, {});
+            const width = std.fmt.parseInt(usize, width_text, 10) catch continue;
+            const count = std.fmt.parseInt(usize, count_text, 10) catch continue;
+            if (!header) {
+                try w.writeAll("#include \"native_collections.h\"\n");
+                header = true;
+            }
+            try emitLiteral(w, symbol, element, width, count, tokens.next() orelse "");
+        }
+    }
+}
+/// Emit one static literal block: the managed header and list the collector
+/// expects around the payload, plus the element storage the literal owns. The
+/// block's list payload is published as the symbol the IL loads.
+fn emitLiteral(w: *std.Io.Writer, symbol: []const u8, element: []const u8, width: usize, count: usize, hex: []const u8) Error!void {
+    const bytes = count * width;
+    const storage = if (bytes == 0) 1 else bytes;
+    try w.print("typedef struct {{ myl_native_object header; myl_native_list value; myl_native_object storage_header; unsigned char storage[{d}]; }} {s}_block;\n", .{ storage, symbol });
+    try w.print("static {s}_block {s}_instance = {{\n", .{ symbol, symbol });
+    try w.print(" .header = {{.element = &{s}, .count = 1, .bytes = sizeof({s}_block), .immortal = 1, .region = 0}},\n", .{ element, symbol });
+    try w.print(" .value = {{.length = {d}, .capacity = {d}, .generation = 0, .element = &{s}", .{ count, count, element });
+    if (bytes == 0) try w.writeAll(", .storage = 0") else try w.print(", .storage = {s}_instance.storage", .{symbol});
+    try w.writeAll(", .region = 0},\n");
+    try w.print(" .storage_header = {{.element = &{s}, .count = {d}, .bytes = sizeof(myl_native_object) + {d}, .immortal = 1, .region = 0}},\n", .{ element, count, bytes });
+    if (bytes == 0) {
+        try w.writeAll(" .storage = {0},\n");
+    } else {
+        try w.writeAll(" .storage = {");
+        var index: usize = 0;
+        while (index + 1 < hex.len) : (index += 2) {
+            const high = std.fmt.charToDigit(hex[index], 16) catch 0;
+            const low = std.fmt.charToDigit(hex[index + 1], 16) catch 0;
+            try w.print("0x{x:0>2},", .{high * 16 + low});
+        }
+        try w.writeAll("},\n");
+    }
+    try w.writeAll("};\n");
+    try w.print("const void *const {s} = &{s}_instance.value;\n", .{ symbol, symbol });
 }
 /// Emit an executable entry that initializes host calls and grants capabilities.
 pub fn entry(allocator: std.mem.Allocator, manifest: std.json.Value, provider: bool) Error![]const u8 {
@@ -136,7 +226,7 @@ test "assert messages are emitted once per pc and linked into the function metad
     defer std.testing.allocator.free(generated);
     try std.testing.expect(std.mem.indexOf(u8, generated, "static const char *main_native_meta_messages[] = {") != null);
     try std.testing.expect(std.mem.indexOf(u8, generated, "\n\"\",\n\"x should be two\",\n};\n") != null);
-    try std.testing.expect(std.mem.indexOf(u8, generated, ",main_native_meta_locations,2,main_native_meta_messages};") != null);
+    try std.testing.expect(std.mem.indexOf(u8, generated, ",main_native_meta_locations,2,main_native_meta_messages,NULL,0};") != null);
     const without = try std.json.parseFromSlice(std.json.Value, std.testing.allocator,
         \\{"entry":"main_native","entry_parameters":[],"functions":[{"symbol":"main_native","name":"main","locations":[{"path":"a.my","line":1,"column":1}]}]}
     , .{});
@@ -144,5 +234,17 @@ test "assert messages are emitted once per pc and linked into the function metad
     const padded = try metadata(std.testing.allocator, without.value);
     defer std.testing.allocator.free(padded);
     try std.testing.expect(std.mem.indexOf(u8, padded, "static const char *main_native_meta_messages[] = {\n\"\",\n};\n") != null);
-    try std.testing.expect(std.mem.indexOf(u8, padded, ",main_native_meta_locations,1,main_native_meta_messages};") != null);
+    try std.testing.expect(std.mem.indexOf(u8, padded, ",main_native_meta_locations,1,main_native_meta_messages,NULL,0};") != null);
+}
+// spec-case: BYTECODE-INLINE-2
+test "inline records name the callee metadata and link into the function metadata" {
+    const parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator,
+        \\{"entry":"main_native","entry_parameters":[],"functions":[{"symbol":"main_native","name":"main","locations":[{"path":"a.my","line":1,"column":1}],"inlines":[{"callee":"myl_f_abc","start":1,"end":4,"callee_start":0,"call_position":0}]}]}
+    , .{});
+    defer parsed.deinit();
+    const generated = try metadata(std.testing.allocator, parsed.value);
+    defer std.testing.allocator.free(generated);
+    try std.testing.expect(std.mem.indexOf(u8, generated, "extern const MylQbeFunction main_native_meta;") != null);
+    try std.testing.expect(std.mem.indexOf(u8, generated, "static const MylQbeInlineFrame main_native_meta_inlines[] = {\n{&myl_f_abc_meta,1,4,0,0},\n};\n") != null);
+    try std.testing.expect(std.mem.indexOf(u8, generated, ",main_native_meta_messages,main_native_meta_inlines,1};") != null);
 }

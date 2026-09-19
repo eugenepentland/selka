@@ -98,6 +98,7 @@ test {
     _ = @import("project_test.zig");
     _ = @import("interfaces_test.zig");
     _ = @import("compiler_test.zig");
+    _ = @import("bytecode_inline_test.zig");
     _ = @import("duplicates_test.zig");
     _ = @import("near_duplicates_test.zig");
     _ = @import("quality_test.zig");
@@ -160,6 +161,7 @@ test {
 test {
     _ = @import("qbe_test.zig");
     _ = @import("qbe_text_test.zig");
+    _ = @import("qbe_literals_test.zig");
 }
 
 test {
