@@ -1,0 +1,202 @@
+type :myl_slice = { l, l }
+export function l $myl_f_f65050a6df54237c12e7c9b954b8f6375fc3ead4b8d97a893eee573994ea7c9f(l %ctx, l %a0) {
+@entry
+ %trap =l add %ctx, 32
+ %l0 =l alloc8 8
+ %s0 =l alloc8 8
+ %s1 =l alloc8 8
+ %s2 =l alloc8 8
+ %v6 =l alloc8 32
+ %v5 =l add %ctx, 48
+ %v14 =l loadl %v5
+ storel %v14, %v6
+ %v15 =l add %v6, 8
+ storel extern $myl_f_f65050a6df54237c12e7c9b954b8f6375fc3ead4b8d97a893eee573994ea7c9f_meta, %v15
+ %v16 =l add %v6, 16
+ storel 0, %v16
+ storel %v6, %v5
+ %position =l add %v6, 16
+ storel %a0, %l0
+ jmp @i0
+@i0
+ %v18 =l loadl %l0
+ storel %v18, %s0
+ %v19 =l loadl %s0
+ %v20 =l add %v19, 8
+ %v21 =l loadl %v20
+ storel %v21, %s0
+ %v22 =l loadl %l0
+ storel %v22, %s1
+ %v23 =l loadl %s1
+ %v24 =l add %v23, 0
+ %v25 =l loadl %v24
+ storel %v25, %s1
+ %v26 =l loadl %s1
+ %v27 =l loadl %v26
+ storel %v27, %s1
+ %v28 =l loadl %s1
+ %v29 =l loadl %s0
+ %v30 =l csltl %v29, %v28
+ storel %v30, %s0
+ %v31 =l loadl %s0
+ jnz %v31, @next32, @i50
+@next32
+ %v32 =l loadl %l0
+ storel %v32, %s0
+ %v33 =l loadl %s0
+ %v34 =l add %v33, 0
+ %v35 =l loadl %v34
+ storel %v35, %s0
+ %v36 =l loadl %l0
+ storel %v36, %s1
+ %v37 =l loadl %s1
+ %v38 =l add %v37, 8
+ %v39 =l loadl %v38
+ storel %v39, %s1
+ storel 11, %position
+ %v40 =l loadl %s0
+ %v42 =l loadl %s1
+ %v43 =l loadl %v40
+ %v44 =l sar %v42, 63
+ %v45 =l and %v44, %v43
+ %v46 =l add %v42, %v45
+ %v47 =l cultl %v46, %v43
+ jnz %v47, @success48, @failed48
+@failed48
+ call $myl_qbe_fail_index_bounds(l %ctx, l %v42, l %v43)
+ jmp @failure
+@success48
+ %v49 =l add %v40, 32
+ %v50 =l loadl %v49
+ %v52 =l add %v50, %v46
+ %v53 =l loadub %v52
+ storel %v53, %s0
+ storel 12, %position
+ %v54 =l loadl %s0
+ storel %v54, %s0
+ %v55 =l loadl %trap
+ jnz %v55, @failure, @ok55
+@ok55
+ storel 10, %s1
+ %v56 =l loadl %s1
+ %v57 =l loadl %s0
+ %v58 =l ceql %v57, %v56
+ storel %v58, %s0
+ %v59 =l loadl %s0
+ jnz %v59, @next60, @i32
+@next60
+ %v60 =l loadl %l0
+ storel %v60, %s0
+ %v61 =l loadl %l0
+ storel %v61, %s1
+ %v62 =l loadl %s1
+ %v63 =l add %v62, 16
+ %v64 =l loadl %v63
+ storel %v64, %s1
+ storel 1, %s2
+ storel 20, %position
+ %v65 =l loadl %s2
+ %v66 =l loadl %s1
+ %v67 =l add %v66, %v65
+ %v68 =l csgtl %v66, 9223372036854775806
+ jnz %v68, @overflow67, @checked67
+@overflow67
+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v66, l %v65, l 64)
+ jmp @failure
+@checked67
+ storel %v67, %s1
+ %v69 =l loadl %s0
+ %v70 =l copy %s1
+ %v71 =l add %v69, 16
+ %v72 =l loadl %s1
+ storel %v72, %v71
+ storel %v69, %s0
+ %v73 =l loadl %s0
+ storel %v73, %l0
+ storel 0, %s0
+ %v74 =l loadl %l0
+ storel %v74, %s0
+ storel 1, %s1
+ %v75 =l loadl %s0
+ %v76 =l copy %s1
+ %v77 =l add %v75, 24
+ %v78 =l loadl %s1
+ storel %v78, %v77
+ storel %v75, %s0
+ %v79 =l loadl %s0
+ storel %v79, %l0
+ storel 0, %s0
+ jmp @i41
+@i32
+ %v80 =l loadl %l0
+ storel %v80, %s0
+ %v81 =l loadl %l0
+ storel %v81, %s1
+ %v82 =l loadl %s1
+ %v83 =l add %v82, 24
+ %v84 =l loadl %v83
+ storel %v84, %s1
+ storel 1, %s2
+ storel 36, %position
+ %v85 =l loadl %s2
+ %v86 =l loadl %s1
+ %v87 =l add %v86, %v85
+ %v88 =l csgtl %v86, 9223372036854775806
+ jnz %v88, @overflow87, @checked87
+@overflow87
+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v86, l %v85, l 64)
+ jmp @failure
+@checked87
+ storel %v87, %s1
+ %v89 =l loadl %s0
+ %v90 =l copy %s1
+ %v91 =l add %v89, 24
+ %v92 =l loadl %s1
+ storel %v92, %v91
+ storel %v89, %s0
+ %v93 =l loadl %s0
+ storel %v93, %l0
+ storel 0, %s0
+@i41
+ %v94 =l loadl %l0
+ storel %v94, %s0
+ %v95 =l loadl %l0
+ storel %v95, %s1
+ %v96 =l loadl %s1
+ %v97 =l add %v96, 8
+ %v98 =l loadl %v97
+ storel %v98, %s1
+ storel 1, %s2
+ storel 45, %position
+ %v99 =l loadl %s2
+ %v100 =l loadl %s1
+ %v101 =l add %v100, %v99
+ %v102 =l csgtl %v100, 9223372036854775806
+ jnz %v102, @overflow101, @checked101
+@overflow101
+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v100, l %v99, l 64)
+ jmp @failure
+@checked101
+ storel %v101, %s1
+ %v103 =l loadl %s0
+ %v104 =l copy %s1
+ %v105 =l add %v103, 8
+ %v106 =l loadl %s1
+ storel %v106, %v105
+ storel %v103, %s0
+ %v107 =l loadl %s0
+ storel %v107, %l0
+ storel 0, %s0
+@i50
+ storel 0, %s0
+ %v108 =l loadl %s0
+ %v109 =l loadl %v6
+ storel %v109, %v5
+ ret %v108
+@failure
+ %v113 =l loadl %v6
+ storel %v113, %v5
+ ret 0
+@entry_failure
+ ret 0
+}

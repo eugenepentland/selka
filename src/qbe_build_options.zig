@@ -17,6 +17,13 @@ pub fn runtimeControl(argument: []const u8) bool {
     }
     return false;
 }
+/// Whether a build asked to keep the linked executable's symbol table, which is
+/// what lets `perf report` attribute samples to guest functions. A measurement
+/// switch: it changes no generated code and no cached object, only the link.
+pub fn keepSymbols(args: []const []const u8) bool {
+    for (args) |argument| if (std.mem.eql(u8, argument, "--keep-symbols")) return true;
+    return false;
+}
 /// The per-project object cache used when no `--cache-dir` selects another; a build
 /// left at this default may share its runtime tree with other projects, while an
 /// explicit `--cache-dir` keeps every artifact hermetically under that directory.
@@ -55,6 +62,7 @@ pub const usage = "usage: mylang build <file.my> (-o <output> | --run) [--projec
     "  --provider FILE  trusted native provider (executables only)\n" ++
     "  --qbe PATH --zig PATH --mode Debug|ReleaseFast (default ReleaseFast) --target amd64_sysv\n" ++
     "  " ++ cache_dir_flag ++ "DIR  --no-cache  --report  --mutation-markers\n" ++
+    "  --keep-symbols  keep the guest symbol table so `perf report` names functions\n" ++
     "  --max-memory BYTES  byte ceiling for --run (K/M/G suffixes; default 4G)\n" ++
     "  --timeout=SECONDS  wall-clock ceiling for --run (no default; a run past it exits 1 with R_TIMEOUT)\n" ++
     "  --run instead of -o: execute temporarily; pass guest arguments after --\n";
@@ -93,6 +101,11 @@ pub fn parse(args: []const []const u8) Error!Options {
         // for the accounting that enforces it. Like `--mutation-markers` it rides
         // in `link_arguments` so the frozen Options field set does not grow.
         if (std.mem.eql(u8, argument, "--step-accounting")) continue;
+        // `--keep-symbols` is a measurement-only link policy, not a build
+        // control. Like `--mutation-markers` and `--step-accounting` it rides in
+        // `link_arguments`, which the driver already scans, so the frozen
+        // Options field set does not grow for a profiling switch.
+        if (std.mem.eql(u8, argument, "--keep-symbols")) continue;
         const split = std.mem.indexOfScalar(u8, argument, '=') orelse argument.len;
         const name = argument[0..split];
         const option = std.meta.stringToEnum(Flag, name) orelse return error.InvalidBuildArguments;
@@ -236,6 +249,16 @@ test "a temporary native run accepts a suffixed byte ceiling and rejects malform
     try std.testing.expectEqual(@as(?u64, null), (try parse(&.{ "main.my", "--run" })).max_memory);
     try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "--run", "--max-memory=eight" }));
     try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "--run", "--max-memory" }));
+}
+
+// spec: QBE-SYMBOLS-1
+test "a profile build keeps the guest symbol table the default strips" {
+    const stripped = try parse(&.{ "main.my", "-o", "out" });
+    try std.testing.expect(!keepSymbols(stripped.link_arguments));
+    const kept = try parse(&.{ "main.my", "-o", "out", "--keep-symbols" });
+    try std.testing.expect(keepSymbols(kept.link_arguments));
+    try std.testing.expect(std.mem.indexOf(u8, usage, "--keep-symbols") != null);
+    try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--keep-symbols=yes" }));
 }
 
 test "native link controls are repeatable and reject injected compiler switches" {

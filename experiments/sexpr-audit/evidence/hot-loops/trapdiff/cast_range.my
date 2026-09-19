@@ -1,0 +1,3 @@
+def main() -> int:
+    x = 300
+    return i64(u8(x))

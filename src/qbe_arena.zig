@@ -10,7 +10,6 @@ const typed = @import("typed.zig");
 /// Failures reported while emitting native arena instructions.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 const escape_failure = "myl_qbe_fail_arena_escape";
-const zero_local = @import("qbe_format.zig").zero_local;
 const restore_region = " call $myl_qbe_region_restore(l %ctx, l %region_mark)\n";
 
 /// Whether any function in the program opens an arena scope, so an arena-free
@@ -72,7 +71,7 @@ fn emitEnd(comptime E: type, self: *E, watermark: usize) Error!void {
     while (index > scanned) {
         index -= 1;
         const value = try self.layout(locals[index].ty);
-        if (value.trace) try self.print(zero_local, .{ index, @max(8, value.size) });
+        if (value.trace) try self.zeroTracedLocal(index, locals[index].ty);
     }
     try self.print(" call $myl_qbe_region_end(l %ctx)\n", .{});
 }

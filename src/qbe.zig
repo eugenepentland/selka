@@ -366,6 +366,78 @@ fn elideUnobservablePositions(a: std.mem.Allocator, text: []const u8) GenerateEr
     return std.mem.join(a, "\n", kept.items);
 }
 
+/// Move each instruction's frame-position store off its hot path and into the
+/// cold block that raises its own trap. A body that names a call other than a
+/// `myl_qbe_fail_*` helper keeps its store at the top: a guest callee, runtime
+/// helper or provider can trap on its own, and the trace it builds reads this
+/// frame's position. A body whose only trap path is a `myl_qbe_fail_*` call gets
+/// one store in front of each such call instead, so every pc a trace can name is
+/// exactly the pc the store named before, and the loop body carries no store.
+fn sinkPositions(a: std.mem.Allocator, text: []const u8) GenerateError![]u8 {
+    var lines: std.ArrayList([]const u8) = .empty;
+    defer lines.deinit(a);
+    var scan = std.mem.splitScalar(u8, text, '\n');
+    while (scan.next()) |line| try lines.append(a, line);
+    var kept: std.ArrayList([]const u8) = .empty;
+    defer kept.deinit(a);
+    var index: usize = 0;
+    while (index < lines.items.len) {
+        const pc = positionStore(lines.items[index]) orelse {
+            try kept.append(a, lines.items[index]);
+            index += 1;
+            continue;
+        };
+        var end = index + 1;
+        while (end < lines.items.len and positionStore(lines.items[end]) == null and !functionLabel(lines.items[end])) end += 1;
+        const body = lines.items[index + 1 .. end];
+        var deferred = true;
+        for (body) |line| {
+            if (std.mem.indexOf(u8, line, "call $") == null) continue;
+            if (std.mem.indexOf(u8, line, "call $myl_qbe_fail_") != null) continue;
+            deferred = false;
+        }
+        if (!deferred) {
+            try kept.append(a, lines.items[index]);
+            try kept.appendSlice(a, body);
+        } else {
+            for (body) |line| {
+                if (std.mem.indexOf(u8, line, "call $myl_qbe_fail_") != null) {
+                    try kept.append(a, try std.fmt.allocPrint(a, " storel {s}, %position", .{pc}));
+                }
+                try kept.append(a, line);
+            }
+        }
+        index = end;
+    }
+    return std.mem.join(a, "\n", kept.items);
+}
+
+/// Whether a lowered body can leave `ctx->trap` set and fall through to the next
+/// instruction. A `myl_qbe_fail_*` helper, and any call the body follows with the
+/// `jmp @failure` that unwinds, fails the instruction outright; every other call
+/// either returns with the trap set — a guest call, `myl_qbe_int_binary`, a
+/// provider read — or is a helper that cannot set it at all.
+fn stickyTrap(text: []const u8) bool {
+    var lines = std.mem.splitScalar(u8, text, '\n');
+    // A non-fail call whose very next line may be the `jmp @failure` that makes
+    // it an outright failure rather than a returned one.
+    var awaiting = false;
+    var sticky = false;
+    while (lines.next()) |line| {
+        if (awaiting) {
+            awaiting = false;
+            if (std.mem.eql(u8, line, " jmp @failure")) continue;
+        }
+        const at = std.mem.indexOf(u8, line, "call $") orelse continue;
+        const rest = line[at + "call $".len ..];
+        const stop = std.mem.indexOfAny(u8, rest, "( \n") orelse rest.len;
+        if (std.mem.startsWith(u8, rest[0..stop], "myl_qbe_fail_")) continue;
+        sticky = true;
+        awaiting = true;
+    }
+    return sticky;
+}
+
 /// The prologue call that computes the shared heap pointer.
 const heap_call = " %heap =l call $myl_qbe_heap(l %ctx)";
 
@@ -376,13 +448,20 @@ const heap_call = " %heap =l call $myl_qbe_heap(l %ctx)";
 const heap_roots_offset: u64 = 16;
 
 /// One live root at a safepoint: the `%root{i}` slot that receives it, the
-/// address the collector traces through it, and the descriptor naming the
+/// slot or pointer the traced value is read from, and the descriptor naming the
 /// traced layout.
 const RootSlot = struct {
     /// Index of the `%root{i}` slot this root occupies.
     index: usize,
-    /// IL reference to the address the collector must trace.
-    address: []const u8,
+    /// IL reference to the slot holding the traced value (`%l{i}`, `%s{i}`) when
+    /// `copy` is set, or to the storage the collector walks directly.
+    source: []const u8,
+    /// Whether `source` names a slot that holds the traced value itself. The
+    /// push copies the slot into the record's value word and points the traced
+    /// address at that copy, so the collector never takes the slot's address and
+    /// QBE can keep it in a register. An aggregate's `source` is already the
+    /// storage address the collector must walk, so it is stored as it stands.
+    copy: bool,
     /// Descriptor symbol naming the traced layout.
     descriptor: []const u8,
 };
@@ -778,7 +857,10 @@ const Emitter = struct {
         // or an `assert` message, and both are emitted by a body that mentions a
         // failure path. With a step check, every instruction can fail, so every
         // instruction keeps its position.
-        if (!self.step_checks) text = try elideUnobservablePositions(self.allocator, text);
+        if (!self.step_checks) {
+            text = try elideUnobservablePositions(self.allocator, text);
+            text = try sinkPositions(self.allocator, text);
+        }
         text = try dropUnusedRoots(self.allocator, text);
         text = try dropUnusedHeap(self.allocator, text);
         text = try dropUnusedSlots(self.allocator, text);
@@ -805,7 +887,7 @@ const Emitter = struct {
         try self.allocateSlot("arguments", try self.argumentVectorBytes());
         for (f.scope.locals, 0..) |local, i| try self.allocateIndex("l", i, @max(8, (try self.layout(local.ty)).size));
         for (0..capacity) |i| try self.allocateIndex("s", i, 8);
-        if (self.has_roots) for (0..f.scope.locals.len + capacity) |i| try self.allocateIndex("root", i, 24);
+        if (self.has_roots) for (0..f.scope.locals.len + capacity) |i| try self.allocateIndex("root", i, 32);
     }
     /// Per-pc aggregate scratch. Its address is copied into an operand slot, so
     /// QBE never promotes it, and keeping it out of the entry block avoids a
@@ -823,7 +905,7 @@ const Emitter = struct {
             // A parameter is stored into its slot below, before any instruction
             // can run, so a root push can never observe it unset.
             if (i < f.signature.parameter_count) continue;
-            if ((try self.layout(local.ty)).trace) try self.print(zero_local, .{ i, @max(8, (try self.layout(local.ty)).size) });
+            if ((try self.layout(local.ty)).trace) try self.zeroTracedLocal(i, local.ty);
         }
         const packed_args = try self.packedParameters(f);
         for (f.scope.locals[0..f.signature.parameter_count], 0..) |local, i| {
@@ -914,6 +996,37 @@ const Emitter = struct {
             .{ previous, self.record, previous, self.frame_active },
         );
     }
+    /// Whether an instruction's own body is lowered aside for the sticky-trap
+    /// test that follows it. The set is exactly the switch arm that can emit the
+    /// test; an opcode outside it keeps the test unconditionally, so a set that
+    /// drifts only ever costs a test that cannot fail.
+    fn stickyOp(op: @FieldType(bytecode.Instruction, "op")) bool {
+        return switch (op) {
+            .call,
+            .invoke,
+            .acquire_buffer,
+            .buffer_operation,
+            .external_read,
+            .environment_get,
+            .environment_only,
+            .environment_names,
+            .acquire_resource,
+            .complete_resource,
+            .resource_io,
+            .restrict_resource,
+            .dir_resource,
+            .host_resource,
+            .mul_i64_checked,
+            .div_i64_checked,
+            .rem_i64_checked,
+            .cast_integer,
+            .neg_integer,
+            .neg_i64_checked,
+            .unary_float,
+            => true,
+            else => false,
+        };
+    }
     fn emitInstructions(self: *Emitter) GenerateError!void {
         const f = self.function;
         for (f.scope.instructions, 0..) |instruction, pc| {
@@ -924,16 +1037,25 @@ const Emitter = struct {
             try self.print("@i{d}\n storel {d}, %position\n", .{ pc, pc });
             if (self.step_checks) try self.step();
             self.pc = pc;
+            // An instruction whose own body can leave `ctx->trap` set and still
+            // fall through is lowered aside so the test after it can be skipped
+            // when it cannot: a body naming only `myl_qbe_fail_*` helpers — every
+            // one of them unwinds — never needs the sticky read.
+            var sticky_text: ?[]const u8 = null;
             if (self.rootedSafepoint(instruction.op)) {
                 // The opcode admits allocation, so lower it aside first and push
                 // roots only if this variant's text actually names an allocating
                 // callee; the common non-allocating case emits nothing extra.
                 const text = try self.lowerDetached(instruction.op, stack);
+                if (stickyOp(instruction.op)) sticky_text = text;
                 if (loweredAllocates(text)) {
                     const pushed = try self.roots(stack);
                     try self.print("{s}", .{text});
                     if (pushed) try self.restoreRoots();
                 } else try self.print("{s}", .{text});
+            } else if (stickyOp(instruction.op)) {
+                sticky_text = try self.lowerDetached(instruction.op, stack);
+                try self.print("{s}", .{sticky_text.?});
             } else try self.emitOp(instruction.op, stack);
             switch (instruction.op) {
                 .binary_integer => |operation| {
@@ -962,7 +1084,7 @@ const Emitter = struct {
                 .neg_integer,
                 .neg_i64_checked,
                 .unary_float,
-                => try self.checkFailure("failure"),
+                => if (sticky_text == null or stickyTrap(sticky_text.?)) try self.checkFailure("failure"),
                 else => {},
             }
             // An instruction whose successor has a body falls through into it;
@@ -1177,6 +1299,15 @@ const Emitter = struct {
         }
         return addFrame(incoming, outgoing);
     }
+    /// Clear a traced local slot whose value has just been released, so a root
+    /// push can never trace a stale reference. A one-word slot is cleared with a
+    /// store, which keeps it promotable; an aggregate keeps the `memset`, since
+    /// the address it takes is one the aggregate's own blits need anyway.
+    pub fn zeroTracedLocal(self: *Emitter, index: usize, ty: typed.Type) GenerateError!void {
+        const value = try self.layout(ty);
+        if (scalar(ty, self.program.records)) return self.print(" storel 0, %l{d}\n", .{index});
+        try self.print(zero_local, .{ index, @max(8, value.size) });
+    }
     fn usesTemporary(self: *Emitter, pc: usize) bool {
         return switch (self.function.scope.instructions[pc].op) {
             .make_record,
@@ -1222,7 +1353,7 @@ const Emitter = struct {
             size = try addFrame(size, temporary);
             size = try addFrame(size, temporary);
         };
-        if (self.has_roots) size = try addFrame(size, @as(u64, self.function.scope.locals.len + capacity) * 24);
+        if (self.has_roots) size = try addFrame(size, @as(u64, self.function.scope.locals.len + capacity) * 32);
         size = try addFrame(size, @max(16, (try self.layout(self.function.signature.return_type)).size));
         var outgoing: u64 = 0;
         for (self.function.scope.instructions) |instruction| {
@@ -1349,31 +1480,43 @@ const Emitter = struct {
         var previous = try std.fmt.allocPrint(self.allocator, "%v{d}", .{head});
         for (self.function.scope.locals, 0..) |local, i| if ((try self.layout(local.ty)).trace) {
             const traced = try std.fmt.allocPrint(self.allocator, "%l{d}", .{i});
-            try self.pushRoot(.{ .index = count, .address = traced, .descriptor = try self.descriptor(local.ty) }, previous, base);
+            try self.pushRoot(.{ .index = count, .source = traced, .copy = scalar(local.ty, self.program.records), .descriptor = try self.descriptor(local.ty) }, previous, base);
             previous = try std.fmt.allocPrint(self.allocator, "%root{d}", .{count});
             count += 1;
         };
         for (stack, 0..) |ty, i| if ((try self.layout(ty)).trace) {
-            const traced = if (scalar(ty, self.program.records))
+            const by_value = scalar(ty, self.program.records);
+            const traced = if (by_value)
                 try std.fmt.allocPrint(self.allocator, "%s{d}", .{i})
             else
                 try std.fmt.allocPrint(self.allocator, "%v{d}", .{try self.load("s", i)});
-            try self.pushRoot(.{ .index = count, .address = traced, .descriptor = try self.descriptor(ty) }, previous, base);
+            try self.pushRoot(.{ .index = count, .source = traced, .copy = by_value, .descriptor = try self.descriptor(ty) }, previous, base);
             previous = try std.fmt.allocPrint(self.allocator, "%root{d}", .{count});
             count += 1;
         };
         return true;
     }
     /// Fill one `myl_native_root` slot in place — `previous`, the traced
-    /// address, then the type descriptor — and link it into the heap's chain
-    /// through `base`, the address of `myl_native_heap.roots`.
+    /// address, the type descriptor, then the value word — and link it into the
+    /// heap's chain through `base`, the address of `myl_native_heap.roots`. A
+    /// scalar root is copied into the record's fourth word and the traced
+    /// address points at that copy, so the slot it came from is only ever read;
+    /// an aggregate root is already an address and is traced where it lives.
     fn pushRoot(self: *Emitter, slot: RootSlot, previous: []const u8, base: usize) GenerateError!void {
         const at = self.temp();
         const ty = self.temp();
+        try self.print(" storel {s}, %root{d}\n %v{d} =l add %root{d}, 8\n", .{ previous, slot.index, at, slot.index });
+        if (slot.copy) {
+            const value = self.temp();
+            const held = self.temp();
+            try self.print(
+                " %v{d} =l loadl {s}\n %v{d} =l add %root{d}, 24\n storel %v{d}, %v{d}\n storel %v{d}, %v{d}\n",
+                .{ value, slot.source, held, slot.index, value, held, held, at },
+            );
+        } else try self.print(" storel {s}, %v{d}\n", .{ slot.source, at });
         try self.print(
-            " storel {s}, %root{d}\n %v{d} =l add %root{d}, 8\n storel {s}, %v{d}\n" ++
-                " %v{d} =l add %root{d}, 16\n storel extern ${s}, %v{d}\n storel %root{d}, %v{d}\n",
-            .{ previous, slot.index, at, slot.index, slot.address, at, ty, slot.index, slot.descriptor, ty, slot.index, base },
+            " %v{d} =l add %root{d}, 16\n storel extern ${s}, %v{d}\n storel %root{d}, %v{d}\n",
+            .{ ty, slot.index, slot.descriptor, ty, slot.index, base },
         );
     }
     /// Restore the heap's root chain to this frame's mark with one store,
@@ -1601,7 +1744,7 @@ const Emitter = struct {
                 if (scalar(ty, self.program.records)) try self.store(h, try self.load("l", @backingInt(slot))) else {
                     try self.print(" blit %l{d}, %agg{d}, {d}\n storel %agg{d}, %s{d}\n", .{ @backingInt(slot), self.pc, (try self.layout(ty)).size, self.pc, h });
                 }
-                if (op == .move_local and (try self.layout(ty)).drop) try self.print(zero_local, .{ @backingInt(slot), @max(8, (try self.layout(ty)).size) });
+                if (op == .move_local and (try self.layout(ty)).drop) try self.zeroTracedLocal(@backingInt(slot), ty);
             },
             .store_local => |slot| {
                 const v = try self.load("s", h - 1);
@@ -1615,7 +1758,7 @@ const Emitter = struct {
                 const ty = self.function.scope.locals[@backingInt(slot)].ty;
                 if ((try self.layout(ty)).drop) {
                     try self.print(drop_local, .{ try self.descriptor(ty), @backingInt(slot) });
-                } else if ((try self.layout(ty)).trace) try self.print(zero_local, .{ @backingInt(slot), @max(8, (try self.layout(ty)).size) });
+                } else if ((try self.layout(ty)).trace) try self.zeroTracedLocal(@backingInt(slot), ty);
             },
             .pop, .acknowledge => try self.dropOperand(h - 1, stack[h - 1]),
             .wrap_domain, .unwrap_domain => {},

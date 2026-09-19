@@ -558,8 +558,13 @@ const State = struct {
         try @import("native_link.zig").append(self.context, parsed.link_arguments, &args, false);
         // Unreferenced runtime sections leave with the archive members nothing pulled.
         // `-s` drops the symbol table and any DWARF an object or an installed archive
-        // still carries: traps and their frames read the runtime's own tables.
-        try args.appendSlice(a, &.{ self.runtime.path, "-lm", "-Wl,--gc-sections", "-s", "-o", candidate });
+        // still carries: traps and their frames read the runtime's own tables. A
+        // profile build keeps it so `perf report` can name guest functions.
+        if (options.keepSymbols(parsed.link_arguments)) {
+            try args.appendSlice(a, &.{ self.runtime.path, "-lm", "-Wl,--gc-sections", "-o", candidate });
+        } else {
+            try args.appendSlice(a, &.{ self.runtime.path, "-lm", "-Wl,--gc-sections", "-s", "-o", candidate });
+        }
         return args.items;
     }
     /// Whether every object this link names is still on disk. A concurrent sweep

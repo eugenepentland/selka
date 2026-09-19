@@ -378,6 +378,60 @@ test "a build without a ceiling stores a position only where a diagnostic reads 
     try std.testing.expect(std.mem.count(u8, named(kept.value, "main").?.il, "%position") > 0);
     try std.testing.expect(std.mem.count(u8, named(kept.value, "helper").?.il, "%position") > 0);
 }
+// spec: QBE-STICKY-1
+test "a body that cannot leave a sticky trap carries no test for one" {
+    var parsed = try emitted(std.testing.allocator,
+        \\def scan(b: bytes) -> i64:
+        \\    total = 0
+        \\    index = 0
+        \\    while index < len(b):
+        \\        total = total + b[index]
+        \\        index = index + 1
+        \\    return total
+        \\
+        \\
+        \\def caller(x: i64) -> i64:
+        \\    return scan(b"abc") + x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return caller(1)
+    );
+    defer parsed.deinit();
+    // A bounds check unwinds through `myl_qbe_fail_*` and a widening cast calls
+    // nothing, so the scan loop carries no sticky read; a guest call can return
+    // with the trap set, so the entry keeps one.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, named(parsed.value, "scan").?.il, "loadl %trap"));
+    try std.testing.expect(std.mem.count(u8, named(parsed.value, "main").?.il, "loadl %trap") != 0);
+}
+// spec: QBE-POSITION-2
+test "a trap position stores on the cold path and a call site keeps its own" {
+    const a = std.testing.allocator;
+    var program = try language.Compilation.init(a, "qbe.my",
+        \\def pick(b: bytes, i: i64) -> int:
+        \\    return b[i]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return pick(b"abc", 1)
+    );
+    defer program.deinit();
+    const manifest = try program.emitQbeWithOptions(a, false, false, true);
+    defer a.free(manifest);
+    var parsed = try std.json.parseFromSlice(Manifest, a, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+    defer parsed.deinit();
+    const reader = named(parsed.value, "pick").?.il;
+    // The bounds check stores its pc in front of the cold trap call, and the
+    // byte read on the common path carries no store of its own.
+    try std.testing.expect(std.mem.indexOf(u8, reader, "%position\n call $myl_qbe_fail_index_bounds") != null);
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, reader, ", %position"));
+    // A call site keeps its store ahead of the call: a callee's trace reads this
+    // frame's position when it fails.
+    const caller = named(parsed.value, "main").?.il;
+    const position = std.mem.indexOf(u8, caller, ", %position") orelse return error.TestUnexpectedResult;
+    const site = std.mem.indexOf(u8, caller, "call $myl_f_") orelse return error.TestUnexpectedResult;
+    try std.testing.expect(position < site);
+}
 // spec-case: QBE-STEP-ACCOUNTING-1
 test "a requested ceiling keeps the exact per-instruction step check" {
     const a = std.testing.allocator;
@@ -454,7 +508,7 @@ test "roots are linked and restored with inline stores" {
     // No generated call site names the runtime root helpers any more.
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_root_push"));
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_qbe_root_restore"));
-    // The head is loaded once and each live root's 24-byte slot is filled in
+    // The head is loaded once and each live root's four-word slot is filled in
     // place — previous at +0, traced address at +8, descriptor at +16 — then
     // linked into the heap's chain and restored with one store to the mark.
     try std.testing.expect(std.mem.indexOf(u8, body, "=l add %heap, 16") != null);
@@ -463,6 +517,36 @@ test "roots are linked and restored with inline stores" {
     try std.testing.expect(std.mem.indexOf(u8, body, "=l add %root0, 16") != null);
     try std.testing.expect(std.mem.indexOf(u8, body, "storel extern $") != null);
     try std.testing.expect(std.mem.indexOf(u8, body, "storel %root_mark, ") != null);
+}
+// spec: QBE-ROOTS-2
+test "a scalar root is traced through a value copy, not the slot it came from" {
+    const a = std.testing.allocator;
+    var program = try language.Compilation.init(a, "qbe.my",
+        \\def grow(n: i64) -> list[i64]:
+        \\    return [n, n + 1]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    values = grow(1)
+        \\    return values[0]
+    );
+    defer program.deinit();
+    const manifest = try program.emitQbe(a);
+    defer a.free(manifest);
+    var parsed = try std.json.parseFromSlice(Manifest, a, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+    defer parsed.deinit();
+    const body = named(parsed.value, "main").?.il;
+    // A root record is four words and a scalar root's traced address is the
+    // fourth: the value is loaded out of its slot and copied into the record,
+    // and the slot itself is never stored into.
+    try std.testing.expect(std.mem.indexOf(u8, body, "=l alloc8 32") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "=l add %root0, 24") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "storel %l0, %v"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "storel %s0, %v"));
+    // Clearing a traced one-word local is a store, not an address-taking
+    // `memset` call.
+    try std.testing.expect(std.mem.indexOf(u8, body, "storel 0, %l0") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "memset(l %l"));
 }
 // spec: QBE-FRAMES-1
 test "a guest function links its own frame record instead of calling enter and leave" {

@@ -34,6 +34,10 @@ _Static_assert(offsetof(MylQbeActiveFrame, position) == 16, "QBE frame position 
 /* Generated code now links the root chain itself, so this offset is an ABI:
    mirror any change here in `heap_roots_offset` in src/qbe.zig. */
 _Static_assert(offsetof(myl_native_heap, roots) == 16, "QBE heap roots ABI");
+/* A root record is four words, and generated code stores the value word at
+   offset 24; mirror any change here in `pushRoot` and `allocateStorage`. */
+_Static_assert(offsetof(myl_native_root, value) == 24, "QBE root value ABI");
+_Static_assert(sizeof(myl_native_root) == 32, "QBE root record ABI");
 /* Stable trap for a guest that outgrew its byte ceiling. It is a runtime trap
    like any other R_ code, so it exits 1 rather than reporting a host defect. */
 static const char *const memory_budget_code = "R_MEMORY_BUDGET";

@@ -17,12 +17,16 @@ const Span = @import("source.zig").Span;
 /// Failures returned by the inliner.
 pub const Error = error{ OutOfMemory, InternalError };
 
-/// Largest callee body, in instructions, that may be inlined. Widened from 32 to
-/// 48 by milestone 2 so the small remaining predicates (`is_form` 42,
-/// `is_operator_char` 46, `is_atom_start` 40) join their siblings; the measured
-/// per-byte `advance` helper (76) stays a call because splicing it inflated the
-/// tokenizer's code and raised measured cycles.
+/// Largest callee body, in instructions, that may be inlined at any call site.
+/// Widened from 32 to 48 by milestone 2 so the small remaining predicates
+/// (`is_form` 42, `is_operator_char` 46, `is_atom_start` 40) join their siblings.
 const max_instructions = 48;
+/// Largest callee body that may be inlined where the call site runs inside a
+/// loop of the caller. The per-byte tokenizer step `advance` is 52 instructions:
+/// splicing it into the scan loops replaces a call with straight-line code that
+/// QBE can keep in registers, while its cold call sites — one `"` skip, one
+/// comment skip — keep the call instead of paying for a copy that runs once.
+const max_loop_instructions = 64;
 /// Largest callee local table that may be inlined.
 const max_locals = 24;
 /// Nominal nesting bound for the owned-resource test; deeper types are refused.
@@ -90,7 +94,7 @@ fn eligible(program: bytecode.Program, index: usize, code: []const bytecode.Inst
     // `constant` is an AST-only policy: constant declarations are evaluated at
     // check time, so no lowered bytecode function carries it.
     if (policy.host != null or policy.c_abi or policy.conversion) return false;
-    if (code.len == 0 or code.len > max_instructions) return false;
+    if (code.len == 0 or code.len > max_loop_instructions) return false;
     if (locals.len > max_locals) return false;
     if (function.signature.parameter_count > locals.len) return false;
     var returns = false;
@@ -200,9 +204,11 @@ fn containsArena(code: []const bytecode.Instruction) bool {
 
 /// The callee index one instruction may inline, or null when it stays a call.
 /// An owner-scoped callee is only spliced into a caller of the same owner: its
-/// `wrap`/`unwrap` operations are valid only inside that owner's scope.
-fn inlineTarget(program: bytecode.Program, states: []const State, caller: usize, instruction: bytecode.Instruction) ?usize {
-    const id = switch (instruction.op) {
+/// `wrap`/`unwrap` operations are valid only inside that owner's scope. A callee
+/// over the flat budget is only spliced where the call site repeats, which
+/// `loops` marks.
+fn inlineTarget(program: bytecode.Program, states: []const State, caller: usize, loops: []const bool, pc: usize) ?usize {
+    const id = switch (states[caller].instructions[pc].op) {
         .call => |callee| callee,
         else => return null,
     };
@@ -216,14 +222,49 @@ fn inlineTarget(program: bytecode.Program, states: []const State, caller: usize,
     if (program.functions[index].policy.owner != null and program.functions[index].policy.owner != program.functions[caller].policy.owner) return null;
     if (!states[index].eligible) return null;
     if (states[index].instructions.len == 0) return null;
+    if (states[index].instructions.len > max_instructions and !loops[pc]) return null;
     return index;
+}
+
+/// Mark every instruction inside a loop of one function's own control flow. The
+/// lowering is structured — there is no `goto` — so a loop body is the
+/// contiguous pc range ending at its backward branch, and a call site is hot
+/// exactly when it falls inside one of those ranges. Over-marking only admits a
+/// larger splice; nothing here changes what a splice means.
+fn loopBody(allocator: std.mem.Allocator, code: []const bytecode.Instruction) Error![]bool {
+    const loops = try allocator.alloc(bool, code.len);
+    @memset(loops, false);
+    for (code, 0..) |instruction, pc| {
+        const entry: ?usize = switch (instruction.op) {
+            .jump => |target| target,
+            .jump_if_false => |target| target,
+            .try_result => |propagate| propagate.error_target,
+            .switch_variant => |dispatch| blk: {
+                var lowest: ?usize = null;
+                for (dispatch.arms) |arm| {
+                    if (arm.target > pc) continue;
+                    if (lowest == null or arm.target < lowest.?) lowest = arm.target;
+                }
+                break :blk lowest;
+            },
+            else => null,
+        };
+        if (entry) |start| {
+            if (start <= pc) {
+                for (loops[start .. pc + 1]) |*flag| flag.* = true;
+            }
+        }
+    }
+    return loops;
 }
 
 /// Rewrite one caller, or return null when it has no inlinable call site.
 fn rewrite(allocator: std.mem.Allocator, program: bytecode.Program, states: []const State, caller: usize) Error!?State {
     const code = states[caller].instructions;
+    const loops = try loopBody(allocator, code);
+    defer allocator.free(loops);
     var any = false;
-    for (code) |instruction| if (inlineTarget(program, states, caller, instruction) != null) {
+    for (code, 0..) |_, pc| if (inlineTarget(program, states, caller, loops, pc) != null) {
         any = true;
         break;
     };
@@ -232,9 +273,9 @@ fn rewrite(allocator: std.mem.Allocator, program: bytecode.Program, states: []co
     // call expands to. Phase two emits the same decision, so the two must agree.
     const base = try allocator.alloc(usize, code.len);
     var cursor: usize = 0;
-    for (code, 0..) |instruction, index| {
+    for (code, 0..) |_, index| {
         base[index] = cursor;
-        if (inlineTarget(program, states, caller, instruction)) |callee| {
+        if (inlineTarget(program, states, caller, loops, index)) |callee| {
             cursor += program.functions[callee].signature.parameter_count + states[callee].instructions.len;
         } else cursor += 1;
     }
@@ -242,7 +283,7 @@ fn rewrite(allocator: std.mem.Allocator, program: bytecode.Program, states: []co
     var locals: std.ArrayList(typed.Local) = .empty;
     try locals.appendSlice(allocator, states[caller].locals);
     for (code, 0..) |instruction, index| {
-        if (inlineTarget(program, states, caller, instruction)) |callee| {
+        if (inlineTarget(program, states, caller, loops, index)) |callee| {
             const view: Callee = .{
                 .id = program.functions[callee].id,
                 .body = states[callee].instructions,

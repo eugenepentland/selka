@@ -72,6 +72,13 @@ func(Fn *fn)
 	fillalias(fn);
 	loadopt(fn);
 	filluse(fn);
+	/* One `loadopt` pass only sees the alias information computed before it, so
+	 * a load it replaces leaves every later load through the replaced value's
+	 * own address with a stale alias base. Recomputing and rerunning lets those
+	 * chained loads collapse too; the extra pass costs compile time only. */
+	fillalias(fn);
+	loadopt(fn);
+	filluse(fn);
 	fillalias(fn);
 	coalesce(fn);
 	filluse(fn);

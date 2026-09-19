@@ -129,6 +129,63 @@ fn keepsCall(source: []const u8, name: []const u8) !bool {
     return false;
 }
 
+/// A callee larger than the flat budget, called once from a loop and once from a
+/// straight-line function, so only the hot site may be spliced.
+const bulky_program =
+    \\def big(x: i64) -> i64:
+    \\    v0 = x + 1
+    \\    v1 = v0 + 1
+    \\    v2 = v1 + 1
+    \\    v3 = v2 + 1
+    \\    v4 = v3 + 1
+    \\    v5 = v4 + 1
+    \\    v6 = v5 + 1
+    \\    v7 = v6 + 1
+    \\    v8 = v7 + 1
+    \\    v9 = v8 + 1
+    \\    v10 = v9 + 1
+    \\    v11 = v10 + 1
+    \\    v12 = v11 + 1
+    \\    v13 = v12 + 1
+    \\    return v13
+    \\
+    \\
+    \\def cold(x: i64) -> i64:
+    \\    return big(x)
+    \\
+    \\
+    \\def hot(x: i64) -> i64:
+    \\    total = 0
+    \\    index = 0
+    \\    while index < 4:
+    \\        total = total + big(x)
+    \\        index = index + 1
+    \\    return total
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return cold(0) + hot(0)
+;
+
+/// Number of direct calls left in the lowered body of `caller` that name `name`.
+fn callsTo(source: []const u8, caller: []const u8, name: []const u8) !usize {
+    var compilation = try language.Compilation.init(testing.allocator, test_path, source);
+    defer compilation.deinit();
+    try compilation.emit();
+    const program = compilation.code.?;
+    var count: usize = 0;
+    for (program.functions) |function| {
+        if (!std.mem.eql(u8, function.name, caller)) continue;
+        for (function.scope.instructions) |instruction| switch (instruction.op) {
+            .call => |id| if (std.mem.eql(u8, program.functions[@backingInt(id)].name, name)) {
+                count += 1;
+            },
+            else => {},
+        };
+    }
+    return count;
+}
+
 /// The entry value of `source`, built and run through the native backend.
 fn loweredValue(source: []const u8) !i64 {
     var compilation = try language.Compilation.init(testing.allocator, test_path, source);
@@ -176,4 +233,11 @@ test "a later splice remaps an earlier splice's call site" {
     try testing.expectEqualStrings("a", outcome.trap.frames[0].function);
     try testing.expectEqualStrings("use", outcome.trap.frames[1].function);
     try testing.expectEqual(@as(u64, 3), outcome.trap.frames[1].line);
+}
+
+// spec: BYTECODE-INLINE-3
+test "a callee over the flat budget inlines only inside a loop" {
+    try testing.expectEqual(@as(usize, 1), try callsTo(bulky_program, "cold", "big"));
+    try testing.expectEqual(@as(usize, 0), try callsTo(bulky_program, "hot", "big"));
+    try testing.expectEqual(@as(i64, 70), try loweredValue(bulky_program));
 }

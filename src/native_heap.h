@@ -27,6 +27,11 @@ typedef struct myl_native_root {
     struct myl_native_root *previous;
     void *address;
     const myl_native_type *type;
+    /* Fourth word: storage for a traced scalar whose slot generated code kept in
+     * a register. A root pushed that way points `address` at this word, so the
+     * collector still reads the pointer through `address`; a root pushed from a
+     * live slot leaves this word unused. */
+    void *value;
 } myl_native_root;
 /* One managed allocation's header, laid out immediately before its payload so
  * the collector reaches it as `(myl_native_object *)payload - 1`. `marked` is a
