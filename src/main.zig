@@ -420,7 +420,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .@"report-project-quality",
         => unreachable,
         .@"emit-qbe" => {
-            const generated = emitMeasuredNative(init, &compilation, parsed.drop_debug, !parsed.drop_step_checks, parsed.saw_frames) catch |err| switch (err) {
+            const generated = emitMeasuredNative(init, &compilation, parsed.drop_debug, !parsed.drop_step_checks, parsed.saw_frames and !parsed.drop_frame_checks) catch |err| switch (err) {
                 error.SourceError => {
                     try report(init, &compilation);
                     return 1;
@@ -613,6 +613,8 @@ const Parsed = struct {
     drop_debug: bool,
     /// Internal `--drop-step-checks`: this build carries no instruction ceiling.
     drop_step_checks: bool,
+    /// Internal `--drop-frame-checks`: this build carries no call-depth ceiling.
+    drop_frame_checks: bool,
     /// True when the command was asked for a runtime instruction ceiling, so the
     /// program it compiles must carry the accounting that enforces it.
     saw_steps: bool,
@@ -726,6 +728,7 @@ const ArgumentParser = struct {
     select_file: ?[]const u8 = null,
     drop_debug: bool = false,
     drop_step_checks: bool = false,
+    drop_frame_checks: bool = false,
     saw_min: bool = false,
     saw_population: bool = false,
     saw_work: bool = false,
@@ -886,6 +889,9 @@ const ArgumentParser = struct {
         } else if (std.mem.eql(u8, arg, "--drop-step-checks")) {
             if ((self.command != .@"emit-qbe" and self.command != .@"emit-project-qbe") or self.drop_step_checks) return error.Usage;
             self.drop_step_checks = true;
+        } else if (std.mem.eql(u8, arg, "--drop-frame-checks")) {
+            if ((self.command != .@"emit-qbe" and self.command != .@"emit-project-qbe") or self.drop_frame_checks) return error.Usage;
+            self.drop_frame_checks = true;
         } else return false;
         return true;
     }
@@ -992,6 +998,7 @@ const ArgumentParser = struct {
             .select_file = self.select_file,
             .drop_debug = self.drop_debug,
             .drop_step_checks = self.drop_step_checks,
+            .drop_frame_checks = self.drop_frame_checks,
             .saw_steps = self.saw_steps,
             .saw_frames = self.saw_frames,
         };
@@ -1668,7 +1675,7 @@ fn nativeTestCompileReply(init: Context, action: []const u8, status: u8, failure
 fn emitRequestedOutput(init: Context, compilation: *language.project_compile.Compilation, parsed: Parsed) !?[]u8 {
     return switch (parsed.command) {
         .@"native-test-graph" => try emitNativeTestFacts(init, compilation),
-        .@"emit-project-qbe" => (try emitProjectNative(init, compilation, parsed.select_file, parsed.drop_debug, !parsed.drop_step_checks, true)) orelse error.SourceError,
+        .@"emit-project-qbe" => (try emitProjectNative(init, compilation, parsed.select_file, parsed.drop_debug, !parsed.drop_step_checks, parsed.saw_frames and !parsed.drop_frame_checks)) orelse error.SourceError,
         .@"schema-project" => blk: {
             try reportProject(init, compilation);
             break :blk if (parsed.schema_report)

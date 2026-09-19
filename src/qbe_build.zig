@@ -158,6 +158,11 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
         // and the guest-test runner always run under a finite budget.
         const fast_executable = !parsed.library and !stepAccounting(parsed.link_arguments) and std.mem.eql(u8, parsed.mode, release_fast);
         if (fast_executable) try arguments.append(a, "--drop-step-checks");
+        // The same reasoning for call depth: a ReleaseFast executable that was not
+        // asked for a frame ceiling carries no depth accounting, and its entry
+        // refuses one at run time. A library always keeps it.
+        const frame_accounted = frameAccounting(parsed.link_arguments);
+        if (fast_executable and !frame_accounted) try arguments.append(a, "--drop-frame-checks");
         if (mutationMarkers(parsed.link_arguments)) try arguments.append(a, "--mutation-markers");
         if (selectFile(parsed.link_arguments)) |path| {
             try arguments.append(a, try std.fmt.allocPrint(a, "--select-file={s}", .{path}));
@@ -226,6 +231,15 @@ fn manifestFile(args: []const []const u8) ?[]const u8 {
 /// Whether the build arguments ask for instruction step accounting, either by
 /// naming a ceiling directly or with the explicit `--step-accounting` a host
 /// application passes because it always runs its guest under `--max-steps=`.
+/// Whether the build was asked for a call-depth ceiling, by flag or by `--max-frames`.
+fn frameAccounting(args: []const []const u8) bool {
+    for (args) |argument| {
+        if (std.mem.eql(u8, argument, "--")) break;
+        if (std.mem.startsWith(u8, argument, "--max-frames")) return true;
+        if (std.mem.eql(u8, argument, "--frame-accounting")) return true;
+    }
+    return false;
+}
 fn stepAccounting(args: []const []const u8) bool {
     for (args) |argument| {
         if (std.mem.eql(u8, argument, "--")) break;

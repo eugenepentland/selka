@@ -1176,6 +1176,69 @@ test "CLI budget traps name the flag that raises the budget" {
     ;
     try invokeOptions("run", memory, &.{ "--max-steps=4000000000", "--max-memory=32M" }, 1, "", "error[R_MEMORY_BUDGET]: memory budget exhausted");
 }
+// spec: QBE-FRAME-ACCOUNTING-2
+test "an executable built without a frame ceiling refuses a runtime frame budget" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "depth.my", .data =
+        \\def main() -> i64:
+        \\    return 0
+    });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "depth.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const directory = std.fs.path.dirname(entry).?;
+    const output = try std.fs.path.join(testing.allocator, &.{ directory, "depth-bin" });
+    defer testing.allocator.free(output);
+    const cache = try std.fs.path.join(testing.allocator, &.{ directory, "cache" });
+    defer testing.allocator.free(cache);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
+    defer testing.allocator.free(cache_argument);
+    // The default mode is ReleaseFast and no ceiling was asked for, so the
+    // published executable carries no call-depth accounting.
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", output, cache_argument, tools[0], tools[1] }, "");
+    try expectConstantProcess(&.{output}, "");
+    // A ceiling it cannot enforce is refused instead of silently ignored.
+    const refused = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ output, "--max-frames=1" } });
+    defer testing.allocator.free(refused.stdout);
+    defer testing.allocator.free(refused.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, refused.term);
+    try testing.expectEqualStrings("", refused.stdout);
+    try testing.expect(std.mem.indexOf(u8, refused.stderr, "error[R_NO_FRAME_ACCOUNTING]") != null);
+    // A build that keeps its traces still runs without any ceiling argument.
+    try expectConstantProcess(&.{output}, "");
+}
+// spec-case: QBE-STEP-ACCOUNTING-1
+test "an executable built without a requested ceiling refuses a runtime step budget" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "budget.my", .data =
+        \\def main() -> i64:
+        \\    return 0
+    });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "budget.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const directory = std.fs.path.dirname(entry).?;
+    const output = try std.fs.path.join(testing.allocator, &.{ directory, "budget-bin" });
+    defer testing.allocator.free(output);
+    const cache = try std.fs.path.join(testing.allocator, &.{ directory, "cache" });
+    defer testing.allocator.free(cache);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
+    defer testing.allocator.free(cache_argument);
+    // The default mode is ReleaseFast and no ceiling was asked for, so the
+    // published executable carries no step accounting.
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", output, cache_argument, tools[0], tools[1] }, "");
+    try expectConstantProcess(&.{output}, "");
+    // A ceiling it cannot enforce is refused instead of silently ignored.
+    const refused = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ output, "--max-steps=1" } });
+    defer testing.allocator.free(refused.stdout);
+    defer testing.allocator.free(refused.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, refused.term);
+    try testing.expectEqualStrings("", refused.stdout);
+    try testing.expect(std.mem.indexOf(u8, refused.stderr, "error[R_NO_STEP_ACCOUNTING]") != null);
+    try testing.expect(std.mem.indexOf(u8, refused.stderr, "mylang run --max-steps=N") != null);
+    // Asking `run` for the same ceiling compiles the accounting and enforces it.
+    try invokeOptions("run", "def main() -> i64:\n    return 0\n", &.{"--max-steps=1"}, 1, "", "error[R_STEP_LIMIT]");
+}
 // spec-case: BUILD-MODE-1
 test "CLI build report states the default and explicit optimize modes" {
     var temporary = testing.tmpDir(.{});
