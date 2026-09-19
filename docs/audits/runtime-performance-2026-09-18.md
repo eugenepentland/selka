@@ -367,6 +367,32 @@ inlined or lazily-framed callee must not silently change the depth count; and th
 dead instructions after an inlined scalar cast (position store, trap load, branch after
 a `copy`), which the tokenizer pays on every byte.
 
+### Landed: frame accounting is build policy (QBE-FRAME-ACCOUNTING-1/2)
+
+The hook was real, and the reason it did nothing at first is worth recording:
+**`mylang build` never enters `main.zig`'s command dispatch.** `main.zig:179` hands
+`build` straight to `qbe_build.zig`, which spawns the frontend as a child process —
+`emit-qbe` for a single file, `emit-project-qbe` for a module graph — and passes
+`--drop-step-checks` for a ReleaseFast executable that was not asked for an
+instruction ceiling. Frames needed the identical treatment: a
+`frameAccounting(link_arguments)` helper, a `--drop-frame-checks` flag parsed like
+its step twin, and both emit paths honouring `parsed.saw_frames and
+!parsed.drop_frame_checks`.
+
+Measured on census: **245.0 M -> 232.7 M instructions (-5.0 %)** and **-4.5 %
+cycles**, output byte-identical, with the entry refusing a runtime `--max-frames`
+as `R_NO_FRAME_ACCOUNTING`. The stack-floor guard and the frame record both stay,
+so traces are untouched; only the `--max-frames` compare and the depth counter it
+feeds are gone. Gate 1332/0, gc-stress 213/0 and 79/0, goldens 17/17.
+
+A doctest failed in the gate run and was a load flake, not a regression: the
+example (`docs/statements.md:33`, value-record field assignment) reproduces 42
+both under `run` and from a published binary, and `zig build test-docs` passes
+138/0 on a re-run.
+
+Remaining half: lazy linking, worth a further ~4-5 %, which needs the twelve
+`Emitter.trap()` sites because `fail()` builds the trace eagerly.
+
 ### Lazy frames: corrected arithmetic and the hook that already exists
 
 Implementing item 3 turned up two things that change its size and its shape.
