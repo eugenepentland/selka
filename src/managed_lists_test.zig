@@ -380,3 +380,28 @@ test "a managed element declaration refuses a capability, directly or inside a r
         \\    return len(values)
     }, "E_LIST_CAPABILITY");
 }
+
+// spec: QBE-TEXT-BLOCK-1
+test "QBE-TEXT-BLOCK-1 run-time text shares one allocation with its header" {
+    const source =
+        \\def main() -> i64:
+        \\    keep: list[str] = []
+        \\    for index in range(64):
+        \\        text = "-".join(["a", "b", "c"])
+        \\        keep.append(text.replace("-", "\u00e9") + text[0:2])
+        \\    total = 0
+        \\    for item in keep:
+        \\        total = total + len(item)
+        \\    if keep[0] != "a\u00e9b\u00e9ca-":
+        \\        return 1
+        \\    if keep[63] != "a\u00e9b\u00e9ca-":
+        \\        return 2
+        \\    return total
+    ;
+    // Every allocation collects under gc-stress, so a text whose block still
+    // traced a `storage` pointer into its own allocation would corrupt or crash
+    // here rather than merely leak.
+    const result = try execute(source);
+    try t.expectEqual(@as(i64, 64 * 7), result.value);
+    try t.expectEqualStrings("", result.trap.code);
+}

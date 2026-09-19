@@ -4,6 +4,12 @@
 typedef myl_native_list myl_native_text;
 /* The one-scalar element descriptor every `str` value shares. */
 extern const myl_native_type myl_native_text_point;
+/* Fresh zeroed text of `count` scalars whose header and scalars share one
+ * allocation: the managed block is a `myl_native_list` header followed by the
+ * scalars, so a text costs one allocation instead of a list object plus a
+ * separate backing array, and the collector never walks it. NULL once the
+ * budget is exhausted or `count` cannot be represented. */
+myl_native_text *myl_native_text_new(myl_native_heap *, size_t count);
 /* Fresh text holding `count` scalars starting at `start`, with `input` rooted
  * across the allocation. NULL once the allocation budget is exhausted. */
 myl_native_text *myl_native_text_copy(myl_native_heap *, myl_native_text *, size_t start, size_t count);

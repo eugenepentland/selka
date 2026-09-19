@@ -127,6 +127,13 @@ int myl_native_root_pop(myl_native_heap *heap, myl_native_root *root);
  * allocation safepoint. Zero-filled payload is safe for precise tracing. */
 void *myl_native_heap_alloc(myl_native_heap *heap,
                             const myl_native_type *element, size_t count);
+/* Allocate one block holding `prefix` bytes of caller-owned header followed
+ * immediately by `extra` bytes of data the caller owns inline. The whole block
+ * is charged, linked and freed as one object whose payload holds no traced
+ * pointer, so the collector never walks it; a reference the caller stores into
+ * the data must point at another heap object. Returns NULL on overflow or
+ * budget exhaustion. */
+void *myl_native_heap_alloc_block(myl_native_heap *heap, size_t prefix, size_t extra);
 void myl_native_heap_collect(myl_native_heap *heap);
 /* Allocate at an explicit arena depth so collection backing joins its owner
  * rather than the innermost open arena. */

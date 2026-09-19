@@ -70,7 +70,7 @@ myl_native_text *myl_native_text_zfill(myl_native_heap *heap, myl_native_text *i
     size_t keep = (input->length && (first[0]=='+' || first[0]=='-')) ? 1 : 0;
     myl_native_root root;
     myl_native_root_push(heap,&root,&input,&pointer_type);
-    myl_native_text *result=myl_native_list_new(heap,&myl_native_text_point,target);
+    myl_native_text *result=myl_native_text_new(heap,target);
     if (result) {
         uint32_t *out=result->storage;
         const uint32_t *in=myl_native_text_points(input);
@@ -94,7 +94,7 @@ myl_native_text *myl_native_text_replace(myl_native_heap *heap, myl_native_text 
     myl_native_root_push(heap,&a,&input,&pointer_type);
     myl_native_root_push(heap,&b,&needle,&pointer_type);
     myl_native_root_push(heap,&c,&insert,&pointer_type);
-    myl_native_text *result=myl_native_list_new(heap,&myl_native_text_point,total);
+    myl_native_text *result=myl_native_text_new(heap,total);
     if (result) {
         uint32_t *out=result->storage;
         size_t at=0, cursor=0;

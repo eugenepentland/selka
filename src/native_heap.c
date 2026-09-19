@@ -169,6 +169,15 @@ void myl_native_heap_collect(myl_native_heap *heap) {
 void *myl_native_heap_alloc(myl_native_heap *heap, const myl_native_type *element, size_t count) {
     return myl_native_heap_alloc_at(heap, element, count, heap->region_depth);
 }
+/* A coallocated block's payload is raw bytes: PLAIN keeps the collector's drain
+ * loop off it, and one-byte elements make the element count the payload size. */
+static const myl_native_type block_type = {
+    .size = 1, .alignment = 1, .kind = MYL_NATIVE_PLAIN
+};
+void *myl_native_heap_alloc_block(myl_native_heap *heap, size_t prefix, size_t extra) {
+    if (prefix > SIZE_MAX - extra) return NULL;
+    return myl_native_heap_alloc_at(heap, &block_type, prefix + extra, heap->region_depth);
+}
 void *myl_native_heap_alloc_at(myl_native_heap *heap, const myl_native_type *element, size_t count, unsigned region) {
     if (!element || !element->alignment || element->alignment > alignof(max_align_t)) return NULL;
     if ((element->alignment & (element->alignment - 1)) || element->size % element->alignment) return NULL;
