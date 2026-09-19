@@ -132,7 +132,7 @@ fn emitLiteral(w: *std.Io.Writer, symbol: []const u8, element: []const u8, width
     try w.print("const void *const {s} = &{s}_instance.value;\n", .{ symbol, symbol });
 }
 /// Emit an executable entry that initializes host calls and grants capabilities.
-pub fn entry(allocator: std.mem.Allocator, manifest: std.json.Value, provider: bool) Error![]const u8 {
+pub fn entry(allocator: std.mem.Allocator, manifest: std.json.Value, provider: bool, final: bool) Error![]const u8 {
     var buffer: std.Io.Writer.Allocating = .init(allocator);
     errdefer buffer.deinit();
     const w = &buffer.writer;
@@ -171,6 +171,10 @@ pub fn entry(allocator: std.mem.Allocator, manifest: std.json.Value, provider: b
     try w.writeAll(");");
     if (uses_packed) try w.writeAll(free_arguments);
     try w.writeAll("return answer;}\nint main(int argc,char **argv){");
+    // A final run is the whole process: the OS releases the heap, so the runner
+    // skips freeing every live object first. A Debug build keeps the sweep as a
+    // heap check, and the library entry never claims to be final.
+    if (final) try w.writeAll("myl_qbe_exit_without_sweep();");
     if (provider) try w.writeAll("MylangNativeProviders providers=mylang_native_providers();");
     try w.print("return mylang_qbe_run_grants(entry_run,argc,argv,{s});}}\n", .{if (provider) "&providers" else "NULL"});
     return buffer.toOwnedSlice();
@@ -199,7 +203,7 @@ test "entry metadata builds the optional argv list before calling the guest" {
         \\{"entry":"main_native","entry_parameters":["str_list"],"entry_argv_element":"myl_t_str","functions":[{"symbol":"main_native","name":"main","locations":[]}]}
     , .{});
     defer parsed.deinit();
-    const generated = try entry(std.testing.allocator, parsed.value, false);
+    const generated = try entry(std.testing.allocator, parsed.value, false, false);
     defer std.testing.allocator.free(generated);
     try std.testing.expect(std.mem.indexOf(u8, generated, "myl_qbe_argv_list(ctx,&myl_t_str)") != null);
 }
@@ -208,7 +212,7 @@ test "entry and location metadata retain provider setup and byte-escaped source 
         \\{"entry":"main_native","entry_parameters":["clock_cap"],"functions":[{"symbol":"main_native","name":"main","locations":[{"path":"a\\b.my","line":2,"column":3}]}]}
     , .{});
     defer parsed.deinit();
-    const generated = try entry(std.testing.allocator, parsed.value, true);
+    const generated = try entry(std.testing.allocator, parsed.value, true, true);
     defer std.testing.allocator.free(generated);
     try std.testing.expect(std.mem.indexOf(u8, generated, "myl_qbe_grant_external_checked(ctx,0,\"--allow-clock\")") != null);
     try std.testing.expect(std.mem.indexOf(u8, generated, "mylang_qbe_run_grants(entry_run,argc,argv,&providers)") != null);
@@ -247,4 +251,18 @@ test "inline records name the callee metadata and link into the function metadat
     try std.testing.expect(std.mem.indexOf(u8, generated, "extern const MylQbeFunction main_native_meta;") != null);
     try std.testing.expect(std.mem.indexOf(u8, generated, "static const MylQbeInlineFrame main_native_meta_inlines[] = {\n{&myl_f_abc_meta,1,4,0,0},\n};\n") != null);
     try std.testing.expect(std.mem.indexOf(u8, generated, ",main_native_meta_messages,main_native_meta_inlines,1};") != null);
+}
+
+// spec: QBE-TEARDOWN-1
+test "QBE-TEARDOWN-1 a final run skips the exit sweep and any other run keeps it" {
+    const parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator,
+        \\{"entry":"main_native","entry_parameters":[],"functions":[{"symbol":"main_native","name":"main","locations":[]}]}
+    , .{});
+    defer parsed.deinit();
+    const last = try entry(std.testing.allocator, parsed.value, false, true);
+    defer std.testing.allocator.free(last);
+    try std.testing.expect(std.mem.indexOf(u8, last, "myl_qbe_exit_without_sweep();") != null);
+    const first = try entry(std.testing.allocator, parsed.value, false, false);
+    defer std.testing.allocator.free(first);
+    try std.testing.expect(std.mem.indexOf(u8, first, "myl_qbe_exit_without_sweep") == null);
 }

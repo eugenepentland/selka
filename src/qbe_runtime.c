@@ -21,6 +21,12 @@
 typedef __int128 Wide;
 typedef unsigned __int128 UnsignedWide;
 typedef MylQbeContext Context;
+/* Set only by an executable entry that runs one guest program and then returns
+ * from `main` (see `myl_qbe_exit_without_sweep`). The exit sweep is a heap check
+ * and a courtesy: no guest can observe the freed objects, so a process that is
+ * about to release the whole address space skips it. */
+static int exit_without_sweep;
+void myl_qbe_exit_without_sweep(void) { exit_without_sweep = 1; }
 static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64_t frames, int stress, const struct MylangNativeProvidersTag *providers, void (*initialize)(void *), int guest_argc, char **guest_argv, MylQbeResult *result);
 _Static_assert(offsetof(Context, steps) == 0, "QBE context steps ABI");
 _Static_assert(offsetof(Context, frames) == 8, "QBE context frame count ABI");
@@ -741,7 +747,7 @@ static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64
     while (context->frame_allocations) myl_qbe_frame_release(context,(NativeFrameAllocation *)context->frame_allocations+1);
     free(context->host_state);
     free(context->frame_data);
-    myl_native_heap_destroy(&context->heap);
+    if (!exit_without_sweep) myl_native_heap_destroy(&context->heap);
     int failed=context->trap != NULL;
     free(context);
     return failed;

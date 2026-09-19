@@ -83,3 +83,47 @@ fewer objects and the allocator serves fewer chunks. Peak RSS, one
   quietly leak);
 * the full gate — `zig build test`, `test-qbe`, `test-qbe-build`, `fmt-check` —
   was 58/58, 36/36, 22/22 steps and clean before each commit.
+
+## 3. No exit sweep in a final run — the change after that
+
+Every process that ran a guest freed every object that was still live before
+returning, which is work nothing can observe: the address space is about to be
+released. A ReleaseFast executable's generated entry now declares that its single
+run is the process's last, and the runner leaves the heap to the process. A Debug
+executable keeps the sweep as a heap check and a library entry never claims to be
+final, so a host that runs the guest repeatedly still reclaims each run's heap.
+
+```
+python3 measure.py --a /tmp/rt2x/block --b /tmp/rt2x/final --out teardown.json
+```
+
+| workload | instructions A → B | cycles A → B | wall median A → B |
+|---|---:|---:|---:|
+| census 927 KB | 115,963,489 → 112,349,009 (**−3.12%**) | 29,806,063 → 28,468,383 (**−4.49%**) | 22.28 → 22.42 ms (+0.61%) |
+| render 927 KB | 174,072,472 → 169,713,296 (**−2.50%**) | 45,778,892 → 44,307,863 (**−3.21%**) | 28.22 → 28.02 ms (−0.72%) |
+| census 7.42 MB | 980,865,445 → 952,164,024 (**−2.93%**) | 292,486,525 → 273,695,454 (**−6.42%**) | 101.94 → 97.19 ms (−4.66%) |
+| render 7.42 MB | 1,446,012,505 → 1,411,189,829 (**−2.41%**) | 436,302,754 → 410,921,227 (**−5.82%**) | 150.55 → 146.63 ms (−2.60%) |
+
+The saving is larger in cycles than in instructions because the sweep is a
+pointer-chasing walk over the whole live set: 2,400–7,900 instructions per
+kilobyte of inputs are freed objects the process never had to visit.
+
+## 4. Priced and not landed: aggregate copy elimination
+
+Every aggregate copy in the program was counted by temporarily emitting a counter
+call before each `blit` in the emitter and reporting it at exit, then priced by
+emitting each copy twice — the second copy is idempotent, so the instruction
+delta over the unmodified build is the exact cost of all of them.
+
+| workload | executed copies | per copy | cost |
+|---|---:|---:|---:|
+| census 927 KB | 492,214 | 8.82 instructions | 4,341,227 (**3.74%** of the run) |
+| census 7.42 MB | 3,937,684 | 8.82 | 34,726,302 (**3.54%**) |
+| render 927 KB | 563,734 | 9.28 | 5,233,308 (**3.01%**) |
+| render 7.42 MB | 4,509,844 | 9.28 | 41,862,929 (**2.90%**) |
+
+That is the ceiling for scalar replacement of aggregates, and it is the ceiling
+for *all* copies: a large share are the parameter and return-storage copies value
+semantics requires at every call, which no pass removes. The eliminable remainder
+— payload bindings and scratch round-trips — is a fraction of it, so the work is
+not the next thing to build. Method and counts: the audit landing report §4.

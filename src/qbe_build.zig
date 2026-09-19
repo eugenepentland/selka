@@ -526,7 +526,7 @@ const State = struct {
         const metadata = try self.cache.object("metadata", try outputs.metadata(a, self.manifest), .c_text);
         self.metadata_reused = metadata.reused;
         try self.add(metadata);
-        const wrapper = if (parsed.library) try @import("qbe_build_embed.zig").libraryWrapper(a, self.manifest) else try outputs.entry(a, self.manifest, parsed.provider != null);
+        const wrapper = if (parsed.library) try @import("qbe_build_embed.zig").libraryWrapper(a, self.manifest) else try outputs.entry(a, self.manifest, parsed.provider != null, std.mem.eql(u8, parsed.mode, release_fast));
         try self.add(try self.cache.object("entry", wrapper, .c_text));
         if (v.boolean(v.get(self.manifest, "text_format"))) try self.add(try self.resolveFormat());
         // Linked last, so every object above can still pull the members it needs.

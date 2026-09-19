@@ -220,4 +220,9 @@ void myl_qbe_step(void *context);
 int mylang_qbe_run(uint64_t (*entry)(void *));
 int mylang_qbe_run_providers(uint64_t (*entry)(void *), int argc, char **argv, const struct MylangNativeProvidersTag *providers);
 int mylang_qbe_run_options(uint64_t (*entry)(void *), int argc, char **argv);
+/* Declare that this process runs one guest program and then exits, so the runner
+ * may leave the managed heap to the process instead of freeing every live object
+ * first. A host that runs the guest more than once in one process must never
+ * call this: it would leave the heap of every run but the last unreclaimed. */
+void myl_qbe_exit_without_sweep(void);
 #endif
