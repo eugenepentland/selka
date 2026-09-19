@@ -9,6 +9,20 @@ existing QBE backend. Every number here was measured on this checkout with
 
 ## 0. Landed so far
 
+**The ratio understates the compute gap, and startup is not a lever.** Running the
+same harness against `/bin/true` costs **0.952 ms** (min of 40), so nearly all of the
+"process startup" both sides appear to pay is fork/exec of the harness itself.
+mylang's own runtime initialisation is about **0.115 ms** (trivial program 1.067 ms
+minus 0.952 ms) — negligible against a 17.0 ms census, and Zig's trivial binary
+measures below `/bin/true` within noise. Subtracting the shared 0.95 ms, the census
+is **16.1 ms of mylang compute against 1.24 ms of Zig's, a ratio of about 13x**, not
+7.8x. The reported 7.8x is flattered by a constant both sides pay; on the work that
+actually differs, the gap is nearly twice as large as the headline.
+
+That matters for planning: it means the objective as normally quoted is easier to
+move by attacking fixed overhead than by attacking compute — and there is no fixed
+overhead left to attack. Any real progress has to come out of the 16.1 ms.
+
 **Status after the frame-accounting and floor-guard rounds (quiet machine).**
 Census is **17.035 ms against Zig's 2.188 ms = 7.8x**, with 228.7 M instructions
 against 22.9 M. Instruction count has fallen 6.6 % since the 244.8 M measured at
