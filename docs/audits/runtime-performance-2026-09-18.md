@@ -9,6 +9,19 @@ existing QBE backend. Every number here was measured on this checkout with
 
 ## 0. Landed so far
 
+**Status after the frame-accounting and floor-guard rounds (quiet machine).**
+Census is **17.035 ms against Zig's 2.188 ms = 7.8x**, with 228.7 M instructions
+against 22.9 M. Instruction count has fallen 6.6 % since the 244.8 M measured at
+round 12 (frame accounting -5.0 %, bounded-leaf floor guard -1.74 %), and census
+wall time fell 17.228 -> 17.035 ms, **about 1 %**. That gap between instruction and
+wall movement is the important number in this section: the instructions removed were
+not on the critical path, so the objective's own metric has barely moved.
+
+The ratio itself also has more noise than its two decimal places suggest: Zig's
+census time measured 2.310 ms at round 12 and 2.188 ms here, and with a 2.2 ms
+denominator that 5 % swing moves the ratio by about 0.4x on its own. Treat anything
+inside 7.5-7.8x as one measurement, not progress or regression.
+
 **Status after the second batch and the lever search (rounds 1-24).** Census is
 **7.5x wall / 8.4x cycles / 11.0x instructions** against the frozen Zig driver:
 17.228 ms vs 2.310 ms, 73-74 M vs 8.7 M cycles, 244.8 M vs 22.9 M instructions.
