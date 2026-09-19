@@ -884,3 +884,37 @@ test "the pausing collector reclaims garbage and still enforces the byte budget"
     const refused = try native.runWithOptions(&bounded, .{ .max_memory = 1 << 20 });
     try testing.expectEqualStrings("R_MEMORY_BUDGET", refused.trap.code);
 }
+
+// spec: CLASS-WRITE-1
+test "a class field write mutates the receiver in place without copying it" {
+    const source =
+        \\class Box:
+        \\    n: int
+        \\
+        \\
+        \\def bump(b: Box, v: int):
+        \\    b.n = v
+        \\
+        \\
+        \\def main() -> int:
+        \\    box = Box(n=1)
+        \\    bump(box, 5)
+        \\    return box.n
+    ;
+    var compilation = try language.Compilation.init(testing.allocator, "class_write.my", source);
+    defer compilation.deinit();
+    try compilation.emit();
+    var writes: usize = 0;
+    for (compilation.code.?.functions) |function| {
+        if (!std.mem.eql(u8, function.name, "bump")) continue;
+        for (function.scope.instructions) |instruction| switch (instruction.op) {
+            .update_record => writes += 1,
+            else => {},
+        };
+    }
+    // One in-place update and nothing else: no copied receiver, so the body stays
+    // a handful of instructions rather than the eleven a copy-and-refresh costs.
+    try testing.expectEqual(@as(usize, 1), writes);
+    const outcome = try native.run(&compilation);
+    try testing.expectEqual(@as(i64, 5), outcome.value);
+}

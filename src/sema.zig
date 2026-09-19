@@ -114,7 +114,7 @@ fn scopedDirectoryPath(bytes: []const u8) bool {
 }
 const Pending = struct { available: bool, transfer_span: ?source.Span };
 const Work = struct { default_value: bool = false, id: ast.NodeId, emit: bool = false, checkpoint: bool = false, sorted_key: bool = false, verify: ?[]const Pending = null };
-const FieldDestination = struct { owner: typed.LocalId, index: ?typed.NodeId, value: typed.NodeId, refresh: typed.StatementId };
+const FieldDestination = struct { owner: typed.LocalId, index: ?typed.NodeId, value: typed.NodeId, refresh: ?typed.StatementId };
 /// An already-evaluated managed receiver and the source arguments of its method.
 const ManagedAccess = struct { base: typed.NodeId, kind: BufferKind, inputs: []const ast.NodeId, receiver: ?typed.LocalId = null };
 /// One list method call whose receiver and arguments are already evaluated.
@@ -1508,13 +1508,18 @@ const Checker = struct {
         if (dead_owner) |owner| self.noteDeadRecordWrite(owner, node.span);
         try self.require(self.nodes.items[@backingInt(value)].ty, expected, node.span);
         if (destination.index == null) try self.requireArenaStore(destination.owner, value);
-        const assigned = try b.local(expected);
-        const evaluate_value = try b.stmt(.{ .initialize = .{ .slot = assigned, .value = value } });
-        // The assigned value is computed before the destination is refreshed.
-        try statements.insert(self.allocator, 0, evaluate_value);
-        // Preserve unrelated fields changed through aliases while computing the RHS.
-        try statements.append(self.allocator, destination.refresh);
-        value = try b.read(assigned);
+        // The value needs its own slot only to survive the destination refresh: it
+        // must be computed before the refresh, which re-reads the binding. A managed
+        // record needs no refresh, and its update reads the binding where it stands,
+        // so the value can go straight into the update's operand.
+        if (destination.refresh) |refresh| {
+            const assigned = try b.local(expected);
+            const evaluate_value = try b.stmt(.{ .initialize = .{ .slot = assigned, .value = value } });
+            try statements.insert(self.allocator, 0, evaluate_value);
+            // Preserve unrelated fields changed through aliases while computing the RHS.
+            try statements.append(self.allocator, refresh);
+            value = try b.read(assigned);
+        }
         var i = bases.len;
         while (i > 0) {
             i -= 1;
@@ -1594,7 +1599,15 @@ const Checker = struct {
             if (!self.locals.items[@backingInt(owner)].mutable) return self.sink.fail(eImmutable, root.span, "record field assignment requires a mutable binding");
             self.locals.items[@backingInt(owner)].usage.writes += 1;
             self.locals.items[@backingInt(owner)].usage.reads += 1;
-            const saved = try b.local(self.locals.items[@backingInt(owner)].ty);
+            const owner_type = self.locals.items[@backingInt(owner)].ty;
+            // A managed record is a reference-identity cell, and `update_record`
+            // lowers to an in-place mutation that stores the same pointer back, so
+            // the binding never needs copying: the update reads the binding where it
+            // stands, after the right-hand side, which is exactly the value the
+            // refreshed copy would have held.
+            if (owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].isManagedRecord())
+                return .{ .owner = owner, .index = null, .value = try b.read(owner), .refresh = null };
+            const saved = try b.local(owner_type);
             const refresh = try b.stmt(.{ .initialize = .{ .slot = saved, .value = try b.read(owner) } });
             try statements.append(self.allocator, refresh);
             return .{ .owner = owner, .index = null, .value = try b.read(saved), .refresh = refresh };

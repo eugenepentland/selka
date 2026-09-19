@@ -319,6 +319,54 @@ per-pc store. That is worth a fraction of a percent, not the 4.5 % the fold
 promised, and it means the frame protocol is essentially irreducible while frame
 counting stays exact.
 
+### Next round: shrink the class field write, then let the inliner take `advance`
+
+Direction from review, verified against the tree before implementing.
+
+**The inliner is not the problem; the callee is too fat to qualify.** `advance` is 76
+bytecode instructions against the inliner's 48-instruction cap (`bytecode_inline.zig`),
+so it stays a call at every one of its sites and every call pays the ~19-instruction
+frame record. Shrinking `advance` under the cap lets the existing inliner remove the
+call, the frame record and the argument marshalling together.
+
+**It is fat because of the field-assignment desugaring.** `sema.zig:1495-1531` lowers
+`b.n = b.n + 1` as `b = update(b, n: <rhs>)`:
+
+- `fieldDestination` (sema.zig:1591-1600) allocates a `saved` local and initialises it
+  from the base — a copy used only to read the base back;
+- the RHS is evaluated into an `assigned` local (1511-1512);
+- `destination.refresh` (`saved = b` again) is appended *after* the RHS (1516);
+- the update chain is built as a value (1518-1525) and finally assigned back to the
+  destination (1526-1529).
+
+**The write-back is provably a no-op for a class.** `qbe_aggregate.zig:33-50` lowers
+`update_record` with `cell = isManagedRecord()` and sets `pointer = source` for managed
+records — it mutates in place, skips the blit, and stores back the *same* pointer. So
+for a class the final assign cannot change the local, and `saved`/`refresh` exist only
+to survive the RHS reassigning the base.
+
+**The change.** In the name-rooted destination case, when the destination type is a
+managed record (a `class`/cell) *and* the RHS did not write that local, skip the
+`saved` copy, the `refresh` and the final `assign`, leaving the update as a statement
+whose result is discarded. The write check is available: the checker already counts
+`locals[owner].usage.writes` (sema.zig:1595) for the destination before the RHS, so
+snapshotting it before `expressionWithTemporaries` and comparing after detects an RHS
+write. When the RHS does write the base, keep today's shape exactly.
+
+Expected effect: the review measured the current shape at ~15 instructions against ~6
+for the direct form, putting `advance` near 40 and under the cap, which should also
+shrink every class-mutating function in the port. Census then needs re-measuring; the
+review's estimate is 5-6x.
+
+Also queued from the same review, to do after that measurement rather than at the same
+time: lazy frame records for leaves that can trap but neither call nor allocate
+(allocate and link on the cold path, where the callee still knows its own metadata and
+pc) — with `--max-frames` accounting either kept as the four-instruction compare or
+made build policy the way step accounting already is (`main.zig:507`), since an
+inlined or lazily-framed callee must not silently change the depth count; and the three
+dead instructions after an inlined scalar cast (position store, trap load, branch after
+a `copy`), which the tokenizer pays on every byte.
+
 ## 1. The answer in one table
 
 The gap is **instruction count, not efficiency**: mylang retires more
