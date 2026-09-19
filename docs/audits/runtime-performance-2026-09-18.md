@@ -367,6 +367,42 @@ inlined or lazily-framed callee must not silently change the depth count; and th
 dead instructions after an inlined scalar cast (position store, trap load, branch after
 a `copy`), which the tokenizer pays on every byte.
 
+### Lazy frames: corrected arithmetic and the hook that already exists
+
+Implementing item 3 turned up two things that change its size and its shape.
+
+**Correction to the 11 % figure.** The 11.4 % of cycles that `advance`'s frame costs
+is *not* recoverable by lazy linking alone, because it decomposes as 5.3 % bound
+checks (the `--max-frames` compare and the stack-floor test) plus ~6.8 % record
+bookkeeping. A lazy record still needs the bound checks — they are what makes
+`--max-frames` exact — so lazy linking alone recovers only the bookkeeping, roughly
+**4-5 % of cycles**, not 11 %.
+
+**The full 11 % needs frame accounting to be build policy, and the hook for that
+already exists.** `main.zig:710` declares `saw_frames` and line 858 sets it when a
+build is given `--max-frames`, but nothing reads it at emission time — while its
+twin `saw_steps` *is* threaded into the emitter at `main.zig:507` and suppresses all
+step accounting in a plain build. Frames can follow the same precedent: when a build
+was not given a frame ceiling, emit no limit check and no depth counter, and have the
+executable refuse a runtime `--max-frames` loudly the way the step path does. That is
+what recovers the other 5.3 %, and with lazy linking on top the whole ~11 % comes
+back with trap traces still exact.
+
+**The constraint that shapes the implementation.** `fail()` builds the trace eagerly
+(`qbe_runtime.c:200-214` walks `ctx->active_frame` at the moment a helper is called),
+so a lazily linked record must be linked *before* the helper call, not on the shared
+`@failure` path afterwards. There are twelve such emission sites — four in
+`qbe_scalar.zig`, two in `qbe_managed.zig` (plus the name-parameterised
+`requireIndexBounds`), one each in `qbe_aggregate.zig` and `qbe_host_lower.zig`, and
+three in `qbe.zig` — so the link belongs in one `Emitter.trap()` wrapper those sites
+call instead of `print`.
+
+Order of work: thread `saw_frames` into the emitter and gate the limit check and
+counter on it; add the loud runtime refusal; then lazy linking through `trap()` for
+functions that contain no `.call`/`.invoke` and no op whose C helper can fail on its
+own; then gate, gc-stress, goldens and the audit. Each half is independently
+measurable, and the build-policy half is the larger of the two.
+
 ## 1. The answer in one table
 
 The gap is **instruction count, not efficiency**: mylang retires more
