@@ -224,11 +224,11 @@ test "a build without a frame ceiling omits depth accounting and refuses one at 
     var parsed = try std.json.parseFromSlice(Manifest, a, bare, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer parsed.deinit();
     const body = named(parsed.value, "helper").?.il;
-    // No depth counter and no ceiling test: the bound that remains is the
-    // execution-stack floor, which is not a budget.
+    // No depth counter, no ceiling test, and no floor test either: this body is a
+    // leaf, so its caller's floor test already covers its frame.
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "%ctx, 56"));
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "%ctx, 8"));
-    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body, "myl_qbe_fail_frame"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_qbe_fail_frame"));
     // The record itself stays: a trap trace is built from it.
     try std.testing.expect(std.mem.indexOf(u8, body, "%position") != null);
     const entry = named(parsed.value, "main").?.il;
@@ -243,6 +243,35 @@ test "a build without a frame ceiling omits depth accounting and refuses one at 
     const guarded = named(full.value, "helper").?.il;
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, guarded, "%ctx, 56"));
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, named(full.value, "main").?.il, "myl_qbe_require_frame_accounting"));
+}
+// spec: QBE-FLOOR-GUARD-1
+test "a leaf skips the stack-floor guard while a calling function keeps it" {
+    const a = std.testing.allocator;
+    const source =
+        \\def leaf(x: i64) -> i64:
+        \\    return x + 1
+        \\
+        \\
+        \\def rec(n: i64) -> i64:
+        \\    if n <= 0:
+        \\        return 0
+        \\    return rec(n - 1)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return rec(leaf(2))
+    ;
+    var c = try language.Compilation.init(a, "qbe.my", source);
+    defer c.deinit();
+    // Accounting is off so the floor test is the only user of the frame-failure
+    // helper: a leaf's frame is bounded at compile time and its caller proved the
+    // headroom, so the guard is redundant; a function that calls may recurse.
+    const manifest = try c.emitQbeWithOptions(a, false, true, false);
+    defer a.free(manifest);
+    var parsed = try std.json.parseFromSlice(Manifest, a, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+    defer parsed.deinit();
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, named(parsed.value, "leaf").?.il, "myl_qbe_fail_frame"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, named(parsed.value, "rec").?.il, "myl_qbe_fail_frame"));
 }
 // spec: QBE-PROLOGUE-1
 test "generated code tests traps directly and omits root machinery it never uses" {

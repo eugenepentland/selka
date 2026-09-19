@@ -18,6 +18,8 @@ const prelude = @import("prelude.zig");
 /// Failures producing independent QBE native units.
 pub const GenerateError = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 const drop_local = " call $myl_native_owned_drop(l %heap, l extern ${s}, l %l{d})\n";
+/// Headroom `qbe_stack.c` keeps between the frame floor and the guard page.
+const frame_headroom: u64 = 65536;
 const store_scalar = " storel {d}, %s{d}\n";
 const Location = struct { path: []const u8, line: usize, column: usize };
 /// One contiguous splice of an inlined callee body into a caller: the callee's
@@ -649,6 +651,9 @@ const Emitter = struct {
     frame_active: usize = 0,
     frame_frames: usize = 0,
     linked: bool = false,
+    /// Whether this leaf's own frame is small enough that its caller's floor test
+    /// already covers it, so the prologue can skip its own.
+    small_leaf: bool = false,
 
     /// Shared lowering primitive for target operation emitters.
     pub fn reject(self: *Emitter, pc: usize) GenerateError {
@@ -744,6 +749,7 @@ const Emitter = struct {
         // entry block, so a native-stack frame declares its slots before the
         // frame protocol introduces any label.
         if (!self.heap_frame) try self.allocateStorage(capacity);
+        self.small_leaf = self.frameLeaf() and frame_bytes + 32 < frame_headroom;
         try self.enterFrame(name);
         // A build without instruction-budget accounting cannot honor a runtime
         // step ceiling; refuse it once, before any guest instruction runs.
@@ -854,11 +860,16 @@ const Emitter = struct {
                 " jnz %v{d}, @limitfail{d}, @frameadmit{d}\n@limitfail{d}\n call $myl_qbe_fail_frame(l %ctx)\n jmp @entry_failure\n@frameadmit{d}\n",
             .{ self.frame_frames, frames, self.frame_frames, limit_slot, limit, limit_slot, at_limit, frames, limit, at_limit, limit_fail, admit, limit_fail, admit },
         );
-        try self.print(
+        // A leaf's own frame is bounded at compile time, and its caller already
+        // proved the frame pointer sits a whole headroom above the guard page, so a
+        // leaf that stays well inside that headroom cannot reach it. The guard is
+        // redundant there and one comparison per call goes away.
+        const guarded = !self.small_leaf;
+        if (guarded) try self.print(
             " %v{d} =l alloc8 32\n %v{d} =l add %ctx, 64\n %v{d} =l loadl %v{d}\n %v{d} =l cultl %v{d}, %v{d}\n" ++
                 " jnz %v{d}, @floorfail{d}, @stackadmit{d}\n@floorfail{d}\n call $myl_qbe_fail_frame(l %ctx)\n jmp @entry_failure\n@stackadmit{d}\n",
             .{ self.record, floor_slot, floor, floor_slot, below, self.record, floor, below, floor_fail, stack, floor_fail, stack },
-        );
+        ) else try self.print(" %v{d} =l alloc8 32\n", .{self.record});
         try self.print(
             " %v{d} =l add %ctx, 48\n %v{d} =l loadl %v{d}\n storel %v{d}, %v{d}\n %v{d} =l add %v{d}, 8\n storel extern ${s}_meta, %v{d}\n",
             .{ self.frame_active, previous, self.frame_active, previous, self.record, function_slot, self.record, name, function_slot },
@@ -879,6 +890,16 @@ const Emitter = struct {
     fn requireAccounting(self: *Emitter) GenerateError!void {
         if (!self.step_checks) try self.print(" call $myl_qbe_require_step_accounting(l %ctx)\n", .{});
         if (!self.frame_checks) try self.print(" call $myl_qbe_require_frame_accounting(l %ctx)\n", .{});
+    }
+    /// Whether this function transfers control to another guest frame. A leaf's
+    /// stack use is bounded at compile time, which is what lets its prologue skip
+    /// the floor guard: the caller already checked the headroom.
+    fn frameLeaf(self: *Emitter) bool {
+        for (self.function.scope.instructions) |instruction| switch (instruction.op) {
+            .call, .invoke => return false,
+            else => {},
+        };
+        return true;
     }
     fn leaveFrame(self: *Emitter) GenerateError!void {
         if (!self.linked) return;
