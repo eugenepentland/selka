@@ -367,6 +367,37 @@ inlined or lazily-framed callee must not silently change the depth count; and th
 dead instructions after an inlined scalar cast (position store, trap load, branch after
 a `copy`), which the tokenizer pays on every byte.
 
+### Lazy linking: implemented, verified, measured — and reverted as worthless
+
+The plan above was implemented in full: `lazy_frame` eligibility (the allow-list),
+`trap()` and `linkFrame()`, the link skipped in the prologue, and all eight trap
+sites wired (three swapped, five split at their label). It was correct — the
+three-deep nested trace and the four overflow fixtures stayed byte-identical, and a
+`// spec: QBE-FRAME-LAZY-1` test confirmed the prologue carries no metadata store
+while the trap site does. The port's own `advance` shape passes that test too, so
+the feature genuinely applied to the hottest function.
+
+**It changed the census by nothing**: 232.90 M instructions eager against 232.87 M
+lazy, across three interleaved runs. Five instructions per call on a function with
+roughly one and a half million calls should have been worth ~3 %, and was not. The
+explanation is that QBE already sinks the record's link stores into the cold path —
+the record slot is written and then read only through the failure helpers, so the
+stores cost nothing on the hot path to begin with. The ~12 % that the round-22
+counterfactual measured for `advance`'s frame came from the parts lazy linking does
+*not* remove: the `alloc8`, the stack-floor guard and the `%position` address. The
+same trap caught the dead `%position` initialisation earlier in this run: also
+already eliminated.
+
+So the two remaining per-call costs are `alloc8` (one instruction, unavoidable while
+a record exists) and the floor guard (four). Only the floor guard is a real target,
+and dropping it trades a clean stack-exhaustion trap for a segfault. Everything was
+reverted rather than carried: an unmeasurable mechanism with an allow-list to maintain
+is a cost, not a win.
+
+The general lesson from this pair of experiments: counterfactuals that remove a whole
+structure overstate what removing part of it can win, because QBE is already sinking
+or eliminating the parts that look free. Measure the *sub-part*, not the structure.
+
 ### Ready to implement: lazy linking (the other half)
 
 With accounting gone, a ReleaseFast census binary now spends eleven instructions
