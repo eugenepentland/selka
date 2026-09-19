@@ -156,6 +156,55 @@ For the record, the plan's option 2 — caching scalar fields in promotable slot
 per `(local, field)` — remains unbuilt, and this profile is the evidence that it
 should stay that way until the per-token work is done.
 
+## 4a. The per-token pass, and what it measured
+
+Following §4's own list, `lexeme`'s double allocation was the first item. On this
+census every token text cost two heap objects: `src[start:end]` copied the byte
+range into a fresh `bytes` (`myl_native_bytes_slice`) and `.decode()` then
+widened that copy into a `str`. A counter pinned the shape: 53,135 allocations
+and 15.2 MB per run, of which 11,056 were `bytes` (element size 1, 2.6 MB) and
+11,082 were the `str` points (element size 4, 3.6 MB) — 42 % of all allocations
+and 41 % of the bytes were that intermediate copy. The allocation histogram (by
+element descriptor, 72-byte `list` headers separately) is in
+`evidence/hot-loops/`.
+
+`QBE-DECODE-RANGE-1` removes it: `src[a:b].decode()` lowers to
+`myl_qbe_bytes_decode_range`, which clamps the endpoints and validates and widens
+the source range in place. The fusion fires only when the slice's value is stored
+into a temporary whose only reader is the `.decode` two instructions later and no
+branch enters either instruction; the emitter leaves a null byte string in the
+slot the slice would have filled, so the store that follows and any root push
+over that slot still see a traceable value. Everything else keeps the slice.
+
+The second item was the UTF-8 conversion: `myl_native_text_from_utf8_checked`
+scanned for a high bit one byte at a time, the only part of an ASCII conversion
+that touches every input byte (`ascii()` in `src/native_text.c`), while the
+widening loop beside it was already vectorised by LLVM. It now scans a word at a
+time with the usual SWAR mask.
+
+| census variant | instructions | ÷ Zig | Δ baseline | cycles | ÷ Zig | Δ baseline |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| committed `70447f37` | 160,674,150 | 7.01× | — | 52,333,467 | 6.16× | — |
+| + slice decoded in place | 146,036,508 | 6.37× | −9.1 % | 44,963,314 | 5.29× | −14.1 % |
+| + word-at-a-time ASCII scan | 144,708,147 | 6.31× | −9.9 % | 44,965,649 | 5.30× | −14.1 % |
+| Zig `ReleaseFast` | 22,934,682 | 1.00× | | 8,491,984 | 1.00× | |
+
+Against the session's starting point (`d14ea1a3`: 228.6 M / 65.1 M) the census
+now sits at **−36.7 % instructions and −31.0 % cycles**, or 6.31× / 5.30× Zig.
+
+The instruction profile after the fusion moved as the allocation histogram
+predicted: `myl_native_heap_alloc_at` fell from 11.6 % to 2.3 % of instructions
+and the copy helpers (`memmove`, `memcpy`) from 8.4 % combined to 1.5 % and out of
+the top list, while the two tokenizer loops rose to 24.8 % and 23.9 % — they are
+now half the program, and what is left in them is the per-byte work §3 describes.
+
+Still open from §4's list, in the order they now measure: the tokenizer loops
+themselves (≈49 % of instructions, where each byte reloads `len(lx.src)` three
+times and the byte itself twice — the loads are separated by branches, which is
+what QBE's block-local load elimination cannot cross), `Token`/`Span`/`Result`
+aggregates blitted through `%agg{pc}` (the `memmove`/`memcpy` remainder), and the
+frame record each remaining call pays.
+
 ## 5. Where the scan loop stands against the 1.5× floor
 
 The plan's §3 floor study is unchanged and was reproduced: a hand-written QBE IL
@@ -198,6 +247,11 @@ backend one.
 - **Collector stress.** `mylang test tests/lang --gc-stress` (213 passed) and
   `mylang test experiments/sexpr-port --gc-stress` (79 passed); the census prints
   byte-identical output under `--gc-stress`.
+- **Fused decode.** `tests/lang/python_bytes.my` gained an executed case for a
+  decoded slice — a multi-byte code point, clamped endpoints, a reversed range
+  and invalid UTF-8 — and `src/qbe_test.zig` pins the lowering: the fused call
+  for the in-place form, and the slice kept when the temporary has another
+  reader.
 - **Port goldens.** `experiments/sexpr-port/golden_compare.py` 17/17 byte-identical,
   `compare.py` agrees with the Python reference reader on all four fixtures.
 
