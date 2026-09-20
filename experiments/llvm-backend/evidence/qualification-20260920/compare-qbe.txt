@@ -1,0 +1,6 @@
+ok       units.sexp                   reference={'forms': 25, 'nodes': 66, 'atoms': 31, 'strings': 2, 'ints': 0, 'floats': 5, 'measures': 3, 'max_depth': 5} value_sum=220012
+ok       spi.sexp                     reference={'forms': 5, 'nodes': 23, 'atoms': 17, 'strings': 1, 'ints': 0, 'floats': 0, 'measures': 0, 'max_depth': 2} value_sum=0
+ok       lmx2595rhar.sexp             reference={'forms': 42, 'nodes': 167, 'atoms': 42, 'strings': 42, 'ints': 41, 'floats': 0, 'measures': 0, 'max_depth': 2} value_sum=861
+ok       straps-synth-lmx2595.sexp    reference={'forms': 256, 'nodes': 1031, 'atoms': 357, 'strings': 293, 'ints': 106, 'floats': 19, 'measures': 0, 'max_depth': 6} value_sum=1097.38
+
+all 4 fixtures agree with the reference reader

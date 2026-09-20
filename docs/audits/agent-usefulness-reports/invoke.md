@@ -79,7 +79,7 @@ edited to become callable.
 
 ```console
 $ mylang invoke tests/invoke/tool.my --function 'tool::scale' --input=tests/invoke/requests/scale.json
-{"version":"native-invocation-v1","status":"completed","target":{"function":"tool::scale","entry":"tests/invoke/tool.my"},"invocation":{"kind":"value","value":"42","steps":4,"output":"","diagnostics":""},"context":{"limits":{"max_steps":1000000,"max_frames":1024,"max_calls":4096,"timeout_ms":60000,"max_memory":536870912},"identities":{"source":"8966bb0cc030...","compiler":"...","schema":"c65cdcf0fadf...","abi":"mylang-qbe-native-v5"}}}
+{"version":"native-invocation-v1","status":"completed","target":{"function":"tool::scale","entry":"tests/invoke/tool.my"},"invocation":{"kind":"value","value":"42","steps":4,"output":"","diagnostics":""},"context":{"limits":{"max_steps":1000000,"max_frames":1024,"max_calls":4096,"timeout_ms":60000,"max_memory":536870912},"identities":{"source":"8966bb0cc030...","compiler":"...","schema":"c65cdcf0fadf...","abi":"mylang-qbe-native-v6"}}}
 $ echo $?
 0
 ```

@@ -1,0 +1,4 @@
+# R_LIST_BOUNDS: index past the end of a list.
+def main() -> int:
+    values = [1, 2, 3]
+    return values[7]

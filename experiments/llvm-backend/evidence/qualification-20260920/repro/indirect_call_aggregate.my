@@ -1,0 +1,15 @@
+# Minimal reproducer: an indirect call whose result is an aggregate.
+record Pair:
+    values: [2]int
+
+
+def build(n: int) -> Pair:
+    return Pair(values=[n, n + 1])
+
+
+def apply(callback: def(int) -> Pair, n: int) -> Pair:
+    return callback(n)
+
+
+def main() -> int:
+    return apply(build, 7).values[0]

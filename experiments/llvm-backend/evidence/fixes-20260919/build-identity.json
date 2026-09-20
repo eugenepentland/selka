@@ -1,0 +1,28 @@
+{
+  "head": "4919ea9f0b58528eb60aed60b91376aeb4ca3c15",
+  "files": {
+    "zig-out/bin/mylang": "5c00fca08ea09a3146dfab3795355ab5f123bd174e220c054f5d107fec6dc826",
+    "zig-out/bin/qbe": "808cce427c310c4ecdcdae6360fade2f5579548f5af3852b1c94e77b22960c5d",
+    "experiments/llvm-backend/amd64_sysv.py": "1d0252b37ec42904808f879590b9100292720c746efc3d9c85b537c001422919",
+    "experiments/llvm-backend/inventory.py": "fc112547232c614979eb24cbc100f42830719dc08ce0c1681c9f1b0c371888e6",
+    "experiments/llvm-backend/llvm_emit.py": "4c329fa77eccbd608e6f8f83c78168e6108405ef3984c40e4524a9a60468870b",
+    "experiments/llvm-backend/measure.py": "f804d50d5a6b9d648989886e6531bfcf2dafcd04b9db9183434b915a0c9af9cf",
+    "experiments/llvm-backend/qbe_llvm.py": "e4e717501e74d99ce1f2ac4b78e153860567f29f9330be839a38ceab62262f2c",
+    "experiments/llvm-backend/resolve_symbols.py": "df39f6ae0e18b0b04f9f78e9e3255cc006fd02e334199069f9acd0ae46247379",
+    "experiments/llvm-backend/runtime_signatures.py": "8317a7f01949a778c2b462f5f3b1101eb80f932e0bc278efb78da1b0c31507a0",
+    "experiments/llvm-backend/symbol_census.py": "720c0cc2acf5019936e202c806e6a2e147e9634700b9d6bd5349d51c4597b949",
+    "experiments/llvm-backend/test_adapter.py": "fab54bc47d00360979ee4b370b66080318e797728ea237237d69e3eab09113b1",
+    "experiments/llvm-backend/verify_binaries.py": "0a288dc2594f59241cc0372d52cbf3c3055a989b4011e36c8eab2f6f95b7ee00",
+    "experiments/llvm-backend/verify_semantics.py": "52bf0bccaa5e079601a2282474020cfcc8d44042a0a6b38c2ff2a73ade74e60f",
+    "experiments/llvm-backend/verify_traps.py": "151ff49b00eb74c0f7fc2bced067b6e3ddeadabedd3d8552f91b737424c4cc26",
+    "experiments/llvm-backend/verify_units.py": "eb5293554e9dfad296d30e413f9ff69da7d5c6041edcab93052fd9d5ae9362c6",
+    "src/qbe.zig": "2a3c111ecb8d9a84ebdfd8177b969b6a9f8b9b508a61d04d244a2995f191f482",
+    "src/main.zig": "20751eb2afcb072e1a8a046692cf473dbf912956b561a53b105671986006128c",
+    "src/native_heap.c": "9819dc103b69c656b3fe0d63a84cf9c8010fc68bb1610192f3ba0289fd6f6d97",
+    "src/native_heap.h": "32ede66aa45e74c51006715d1114f439f6a622159dd00a4d2fbb94315ec28d34",
+    "src/native_descriptors.zig": "5a1f9e4e472fb6af16b3d0e1f64480e8e0c0068bd089cd9d1d20817dde5d04cb",
+    "src/native_types.zig": "9a26c1f7826856bedac145e59c7281770733b14032fa4ba7baeeae8b4a87c55a"
+  },
+  "zig": "0.17.0-dev.1683+5ceec001b",
+  "flags": "ReleaseFast --keep-symbols; LLVM -O2; QBE default remains unchanged"
+}

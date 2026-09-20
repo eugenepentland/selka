@@ -1,0 +1,42 @@
+{
+  "lowering_unittests": {
+    "passed": 7,
+    "command": "python3 -m unittest discover -s experiments/llvm-backend/maxperf -p 'test_*.py' -v"
+  },
+  "c_harnesses": {
+    "arena": {
+      "status": 0,
+      "sha256": "c09cc30acfbb80eb1a4f32c9e9a1b6ef161b10ef02d989abf37cc1c8b838862f"
+    },
+    "compact": {
+      "status": 0,
+      "sha256": "0974cd7458e6272034ea2c72dcd4d8a43217bd385cb2b53b05fbd41bac0ba8b2"
+    },
+    "wrappers": {
+      "status": 0,
+      "sha256": "56c0b2009504225b2d632ca81d97d0b8116f88033b8630a4b5f0008af767f3ec"
+    },
+    "integer-diff": {
+      "status": 0,
+      "sha256": "326d8a8151747f225a6485436434b0a29222b67934a49a13ef45ced0fcbb3e8c"
+    },
+    "compact-sanitized": {
+      "status": 0,
+      "sha256": "4f08d03d5cbfbaf82bf12c611ddd5334dcec21478321e80a32816d0326c86917"
+    }
+  },
+  "sanitizers": {
+    "compact-sanitized": [
+      "address",
+      "undefined",
+      "ASAN_OPTIONS=detect_leaks=1",
+      "MYL_MAXPERF_ARENA_CHUNK_BYTES=256"
+    ]
+  },
+  "qualification": {
+    "passed": 730,
+    "total": 730
+  },
+  "artifact_hashes_match_build_qualification_measurement": true,
+  "guardian_exercised": false
+}

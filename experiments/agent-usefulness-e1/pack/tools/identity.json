@@ -1,0 +1,30 @@
+{
+ "version": "e1-tools-v1",
+ "captured_utc": "2026-09-20T19:08:08.381977+00:00",
+ "tools": {
+  "mylang": {
+   "sha256": "43c6ab3b1a80b53f60530560e100e626647b1d9485cf3901a9cee7b051436223",
+   "bytes": 127496973,
+   "source": "/home/epentland/ai/canopy/mylang/.worktrees/integration/zig-out/bin/mylang"
+  },
+  "qbe": {
+   "sha256": "684d83ac0fdf24a5587644b7c3dc648f393d913fafde5b10ca06b4f9487384e6",
+   "bytes": 851664,
+   "source": "/home/epentland/ai/canopy/mylang/.worktrees/integration/zig-out/bin/qbe"
+  },
+  "mylang-io": {
+   "sha256": "890f36d15dd83aa83c257dfa8b3fcaeb2ddb82edda1a4387f6b498a9b4844371",
+   "bytes": 78498808,
+   "source": "/home/epentland/ai/canopy/mylang/.worktrees/integration/zig-out/bin/mylang-io"
+  }
+ },
+ "compiler_identity": {
+  "compiler_sha256": "149e9d6c39a15a11d2d5704c4cc51cff7560a4087288ed9890159f36a5168c01",
+  "zig_version": "0.17.0-dev.1683+5ceec001b",
+  "architecture": "x86_64",
+  "os": "linux",
+  "abi": "gnu",
+  "optimize": "debug"
+ },
+ "identity_entry": "examples/corpus/packet/main.my"
+}

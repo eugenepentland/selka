@@ -59,8 +59,7 @@ pub const Options = struct {
     filter: []const u8 = "*",
     cases: ?[]const u8 = null,
     cache: []const u8 = ".mylang-cache/tests",
-    qbe: []const u8 = "qbe",
-    zig: []const u8 = "zig",
+    toolchain: Toolchain = .{},
     mode: []const u8 = "Debug",
     flags: Flags = .{},
     jobs: ?usize = null,
@@ -68,6 +67,20 @@ pub const Options = struct {
     bench: BenchOptions = .{},
     /// `--against REF` reference revision for `--affected`; null without it.
     against: ?[]const u8 = null,
+};
+/// The executables one native session drives, grouped so the option record
+/// stays a bag of independent choices rather than a list of tool paths.
+pub const Toolchain = struct {
+    qbe: []const u8 = "qbe",
+    zig: []const u8 = "zig",
+    /// The mylang executable this session spawns for its compiler children.
+    /// Null means this process (`/proc/self/exe`), which is what the CLI wants
+    /// and what a session must not assume: a session built by anything other
+    /// than the CLI that leaves this null spawns *itself* as the compiler, and
+    /// a test binary handed `native-test-graph` runs its tests instead of
+    /// emitting facts, so the two recurse without bound. An embedder or a test
+    /// names the compiler it means.
+    compiler: ?[]const u8 = null,
 };
 /// Native tests require no Python interpreter.
 pub const usage = "usage: mylang test <entry.my|directory> [--filter SUBSTRING|GLOB] [--cases FILE]\n" ++
@@ -184,8 +197,8 @@ fn assign(result: *Options, flag: Flag, value: []const u8) Error!void {
         .@"--cases" => result.cases = value,
         .@"--against" => result.against = value,
         .@"--cache-dir" => result.cache = value,
-        .@"--qbe" => result.qbe = value,
-        .@"--zig" => result.zig = value,
+        .@"--qbe" => result.toolchain.qbe = value,
+        .@"--zig" => result.toolchain.zig = value,
         .@"--mode" => result.mode = value,
         .@"--max-steps" => result.limits.max_steps = try number(value),
         .@"--max-frames" => result.limits.max_frames = try number(value),

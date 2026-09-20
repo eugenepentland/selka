@@ -1,0 +1,70 @@
+  docs/arenas.md: 5 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/interfaces-and-agent-development-2026-09-15.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/language-level-ssa-2026-09-19.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/language-simplicity-2026-09-12.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: removed feature
+  docs/audits/phase2-dir-notes.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/wave1-notes.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/wave2-notes.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/wave3-notes.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/wave4-notes.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/byte-io-bulk.md: 0 run, 0 checked, 2 skipped, 0 mis-tagged, 0 failed
+      skip: fragment: declarations appended to an existing host io.my module
+      skip: needs host capability: the mylang-io byte host and its io.my module
+  docs/bytes.md: 14 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/c-ffi.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/const-length-generics.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/diagnostic-recovery.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/domains.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/effects.md: 8 run, 8 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/arrays.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/callbacks.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/doc-examples.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/module-discovery.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: fragment: header excerpt whose imported modules are not shown
+  docs/experiments/module-interfaces.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: fragment: the imported `shared.units` module is not shown
+  docs/experiments/nominal-template-checks.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/resource-io.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/source-codecs.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: fragment: statements without the Positive domain and Wire declarations
+  docs/experiments/source-resources.md: 0 run, 2 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/structural-constraints.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/tables.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/unit-procedures.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/variants.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/floating-point.md: 3 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/functions.md: 9 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/generic-inference.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/generics.md: 5 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/integer-operations.md: 4 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/io.md: 7 run, 7 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/lambdas.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/managed-memory.md: 12 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/match-expressions.md: 1 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/module-constants.md: 1 run, 2 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/modules.md: 5 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/named-constraints-proposal.md: 0 run, 2 checked, 4 skipped, 0 mis-tagged, 0 failed
+      skip: proposed named-constraint syntax
+      skip: proposed named-constraint syntax
+      skip: proposed named-constraint syntax; contracts.my
+      skip: proposed named-constraint syntax; checkout.my
+  docs/performance.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/plan.md: 2 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/python-syntax.md: 9 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/range-iteration.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/records-and-unions.md: 9 run, 0 checked, 0 skipped, 0 mis-tagged, 1 failed
+  docs/results-and-options.md: 6 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/source-evaluation.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/standard-library.md: 12 run, 0 checked, 0 skipped, 0 mis-tagged, 1 failed
+  docs/standard-time-random.md: 2 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/statements.md: 5 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/structured-loop-exits.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/text.md: 4 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/tooling/import-policy.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/type-aliases.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/typed-holes.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/typed-json.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+FAILED docs/records-and-unions.md:222: expected stdout '26', saw ''
+FAILED docs/standard-library.md:600: expected stdout '42', saw ''
+Doc examples: 316 files scanned, 609 blocks found, 142 run, 34 checked, 10 skipped, 0 mis-tagged, 2 failed

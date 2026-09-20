@@ -8,9 +8,16 @@ Lane C is defined in ``velocity/goal.json`` (``lanes.C``) and
 * **C1 first-try fidelity** - the fraction of ``# oracle: cpython`` probes that
   mylang accepts, runs to completion, and whose exit status (``& 0xFF``) and
   stdout equal CPython's.
-* **C2 silent wrong answers** - a gate. Probes mylang accepts and runs to
-  completion whose stdout or status disagrees with CPython. Any C2 is a
-  correctness bug, not a fidelity gap.
+* **C2 silent wrong answers** - a gate, reported twice. The strict reading is
+  every probe mylang accepts and runs to completion whose stdout or status
+  disagrees with CPython, declared divergences included. The policy-adjusted
+  reading, ``C2_policy``, counts only the disagreements no entry in
+  ``velocity/divergences.json`` claims. ``--gate`` fails on ``C2_policy``: a
+  declared divergence is a reviewed, documented language decision and does not
+  block a package, while an undeclared silent wrong answer always does. A
+  declared divergence is never normalised away - the strict number stays in the
+  result JSON and the raw pair is preserved in the suite's
+  ``divergence-evidence.json``.
 * **C3 rejections that carry a fix** - the fraction of rejected probes (compile
   error, or a trap before any output) whose diagnostic carries the structured
   information goal.json defines: a non-null ``fix`` field or a note whose
@@ -32,6 +39,14 @@ The CPython oracle runner is shared with ``tests/idiom_probes.py`` (backlog item
 V0: lane C extends that driver rather than adding a second one), as is the
 "this run did not complete" classifier.
 
+The declared divergences live in ``velocity/divergences.json`` (a
+``divergence-policy-v1`` document; override with ``--divergences``). Each entry
+claims one or more probes by name or glob, names the documented language rule it
+diverges from and the CPython behaviour it diverges to, and carries the
+expression/value pairs ``velocity/divergence_evidence.py`` reproduces. A missing
+policy file is measured as an empty policy and said so on stderr: that is the
+conservative direction, because every disagreement then gates.
+
 Every run re-executes every selected probe; nothing is cached, so a rerun can
 never report a stale verdict. A probe that traps, times out or fails to build
 is recorded and does not abort the run.
@@ -43,6 +58,7 @@ Examples::
         --write velocity/suites/idioms/score-baseline-2026-09-20.json
     python3 velocity/score.py --baseline velocity/suites/idioms/score-baseline-2026-09-20.json
     python3 velocity/score.py --gate --probe 'a6*'
+    python3 velocity/score.py --divergences /dev/null --gate   # nothing is declared
 """
 from __future__ import annotations
 
@@ -75,12 +91,24 @@ DEFAULT_ORACLE_RULE = (
     'needs an expect directive')
 DEFAULT_MANIFEST_VERSION = 'idiom-suite-v1'
 RESULT_VERSION = 'lane-c-score-v1'
+DEFAULT_DIVERGENCE_POLICY = ROOT / 'velocity' / 'divergences.json'
+DIVERGENCE_VERSION = 'divergence-policy-v1'
 PREVIEW_CHARS = 240
 
 # Verdicts a probe can receive. A rejection is a compile error ('reject', or
 # 'reject-run' when only the run stage reported it) or a trap before any output
 # ('trap'); all three feed C3. A 'wrong' verdict is C2.
 REJECTION_VERDICTS = ('reject', 'reject-run', 'trap')
+
+# C2 is reported under two readings off one measurement. 'C2' is the strict
+# count of completed disagreements and is never reduced; 'C2_policy' is the
+# subset no declared divergence claims, and it is the number --gate uses.
+STRICT_C2_DEFINITION = (
+    'every probe mylang accepted and ran to completion whose exit status (& 0xFF) or '
+    'stdout differs from CPython, declared divergences included')
+POLICY_C2_DEFINITION = (
+    'silent wrong answers no entry in the divergence policy claims; this is the '
+    'number a package gate fails on')
 
 
 class InstrumentError(Exception):
@@ -264,6 +292,83 @@ def names_alternative_text(diagnostic: dict) -> bool:
 
 
 # --------------------------------------------------------------------------
+# The declared divergence policy
+# --------------------------------------------------------------------------
+#
+# An intentional, documented divergence and a silent wrong answer are the same
+# observation to a CPython oracle: a completed run that disagrees. They differ
+# only in whether a reviewed declaration claims the disagreement. The policy
+# file holds those claims; ``velocity/divergence_evidence.py`` reproduces their
+# values, and this scorer splits the wrong verdicts with them.
+
+def load_divergence_policy(path: Path) -> dict:
+    """Read the declared divergence list; a missing file is an empty policy.
+
+    An empty policy is the conservative reading rather than a silent pass: every
+    completed disagreement then counts as undeclared and gates. ``problem``
+    carries why the file could not be used, and the caller reports it.
+    """
+    policy = {'version': None, 'path': str(path), 'entries': [], 'problem': ''}
+    try:
+        payload = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError) as error:
+        policy['problem'] = str(error)
+        return policy
+    if not isinstance(payload.get('entries'), list):
+        policy['problem'] = 'no "entries" list'
+        return policy
+    policy['version'] = payload.get('version')
+    policy['entries'] = payload['entries']
+    if policy['version'] != DIVERGENCE_VERSION:
+        policy['problem'] = f"version {policy['version']!r}, expected {DIVERGENCE_VERSION!r}"
+    return policy
+
+
+def probe_divergence_id(entry: dict | None) -> str:
+    """A one-token label for a claimed entry, for reports and records."""
+    entry = entry or {}
+    return entry.get('id') or entry.get('title') or 'declared'
+
+
+def declared_divergence(policy: dict, probe: str) -> dict | None:
+    """The policy entry that claims a probe, or ``None`` when it is undeclared."""
+    for entry in policy.get('entries') or []:
+        for pattern in entry.get('probes') or []:
+            if fnmatch.fnmatch(probe, str(pattern)):
+                return entry
+    return None
+
+
+def divergence_accounting(records: list[dict], policy: dict) -> tuple[list[dict], list[dict], list[dict]]:
+    """Split the wrong verdicts into declared and undeclared, and list stale claims.
+
+    Stale means the policy claims a probe that this selection either did not
+    measure or measured with a verdict other than ``wrong``: the declaration no
+    longer describes the tree, and the report says so instead of leaving an
+    entry that quietly exempts nothing.
+    """
+    wrong = [record for record in records if record['verdict'] == 'wrong']
+    declared, undeclared = [], []
+    for record in wrong:
+        entry = declared_divergence(policy, record['probe'])
+        record['divergence'] = probe_divergence_id(entry) if entry else None
+        record['c2_declared'] = entry is not None
+        (declared if entry else undeclared).append(record)
+    stale = []
+    for entry in policy.get('entries') or []:
+        for pattern in entry.get('probes') or []:
+            matched = [r for r in records if fnmatch.fnmatch(r['probe'], str(pattern))]
+            if not matched:
+                stale.append({'entry': probe_divergence_id(entry), 'probe': str(pattern),
+                              'reason': 'no selected probe matches (not exercised here)'})
+            elif not any(r['verdict'] == 'wrong' for r in matched):
+                stale.append({'entry': probe_divergence_id(entry), 'probe': str(pattern),
+                              'reason': f"the selected probe measured {matched[0]['verdict']}, "
+                                        f'not a wrong answer'})
+    return declared, undeclared, stale
+
+
+# --------------------------------------------------------------------------
 # Running commands and probes
 # --------------------------------------------------------------------------
 
@@ -283,7 +388,27 @@ def _load_shared_driver():
     return module
 
 
-def run_command(argv: list[str], timeout: float) -> dict:
+def measurement_environment() -> dict:
+    """The environment probe commands run under.
+
+    The native backend drives zig as its assembler and linker, and a global cache
+    the process cannot write fails every ``mylang run`` with
+    ``manifest_create ReadOnlyFileSystem`` and ``host failure: NativeToolFailed``.
+    That failure would otherwise read as a probe rejection - it did, once:
+    ``d05_round_half.my`` measured as ``reject-run`` with a read-only cache, which
+    put a toolchain problem in the C3 denominator and hid the divergence the probe
+    exists to expose. The scorer therefore supplies a writable cache of its own
+    unless the caller names one.
+    """
+    env = dict(os.environ)
+    if not env.get('ZIG_GLOBAL_CACHE_DIR'):
+        cache = ROOT / '.mylang-cache' / 'zig-global'
+        cache.mkdir(parents=True, exist_ok=True)
+        env['ZIG_GLOBAL_CACHE_DIR'] = str(cache)
+    return env
+
+
+def run_command(argv: list[str], timeout: float, env: dict | None = None) -> dict:
     """Run one command under a wall-clock ceiling, killing its process group.
 
     ``mylang run`` builds and then executes a native child. Killing only the
@@ -294,7 +419,7 @@ def run_command(argv: list[str], timeout: float) -> dict:
     try:
         process = subprocess.Popen(
             argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
-            start_new_session=True)
+            start_new_session=True, env=env if env is not None else measurement_environment())
     except OSError as error:
         return {'status': None, 'stdout': '', 'stderr': f'{argv[0]}: {error}',
                 'timed_out': False, 'seconds': 0.0}
@@ -356,6 +481,7 @@ def probe_record(path: Path) -> dict:
         'accepts': False, 'completes': False, 'status': None,
         'code': None, 'codes': [], 'diagnostics': [],
         'c1': False, 'c2': False, 'c3': False,
+        'c2_declared': False, 'divergence': None,
         'c3_text_any': False, 'c3_text_spelling': False,
         'alternative': None, 'alternative_text_kind': None,
         'alternative_structured': False, 'alternative_text': False,
@@ -404,6 +530,12 @@ def measure_probe(path: Path, binary: Path, timeout: float, driver) -> dict:
         return record
     if ran['status'] is None:
         record['verdict'] = 'run-error'
+        record['stderr_preview'] = preview(ran['stderr'])
+        return record
+    if driver.host_failure(ran):
+        # A host failure is a broken measurement, never a guest rejection: it
+        # must not enter the C3 denominator or leave a probe looking unmeasured.
+        record['verdict'] = 'host-error'
         record['stderr_preview'] = preview(ran['stderr'])
         return record
     failed = any(d.get('severity') == 'error' for d in run_diagnostics) or driver.failed_run(ran)
@@ -543,16 +675,19 @@ def _fraction(count: int, total: int) -> float:
     return count / total if total else 0.0
 
 
-def summarize(records: list[dict]) -> dict:
-    """Compute C1, C2 and C3 from the measured probes.
+def summarize(records: list[dict], policy: dict) -> dict:
+    """Compute C1, C2 (strict and policy-adjusted) and C3 from the measured probes.
 
     ``C3`` is the structured metric goal.json defines. ``C3_text_any`` and
     ``C3_text_spelling`` are the secondary text readings and are never merged
-    into ``C3``.
+    into ``C3``. ``C2`` is the strict count of completed disagreements and is
+    never reduced by the policy; ``C2_policy`` is the subset no declared
+    divergence claims and is the number ``--gate`` uses.
     """
     cpython = [r for r in records if r['oracle'] == 'cpython']
     agreements = [r for r in cpython if r['verdict'] == 'agree']
     wrong = [r for r in records if r['verdict'] == 'wrong']
+    declared, undeclared, stale = divergence_accounting(records, policy)
     rejected = [r for r in records if r['verdict'] in REJECTION_VERDICTS]
     structured = [r for r in rejected if r['c3']]
     text = [r for r in rejected if r['c3_text_any']]
@@ -564,10 +699,18 @@ def summarize(records: list[dict]) -> dict:
         elif record['verdict'] in ('agree', 'complete'):
             key = 'OK'
         elif record['verdict'] == 'wrong':
-            key = 'OK/SILENT-WRONG'
+            key = 'OK/SILENT-WRONG' + ('/DECLARED' if record['c2_declared'] else '')
         else:
             key = record['verdict']
         histogram[key] = histogram.get(key, 0) + 1
+
+    def wrong_row(record: dict) -> dict:
+        """One per-probe wrong-answer row, with the claimed divergence if any."""
+        return {'probe': record['probe'], 'stdout': record['stdout_preview'],
+                'oracle_stdout': record['oracle_stdout_preview'],
+                'status': record['status'], 'oracle_status': record['oracle_status'],
+                'divergence': record['divergence']}
+
     return {
         'C1': {
             'value': _fraction(len(agreements), len(cpython)),
@@ -575,11 +718,19 @@ def summarize(records: list[dict]) -> dict:
             'agreed': [r['probe'] for r in agreements],
         },
         'C2': {
-            'value': len(wrong), 'gate': True,
-            'probes': [{'probe': r['probe'], 'stdout': r['stdout_preview'],
-                        'oracle_stdout': r['oracle_stdout_preview'],
-                        'status': r['status'], 'oracle_status': r['oracle_status']}
-                       for r in wrong],
+            'definition': STRICT_C2_DEFINITION,
+            'value': len(wrong), 'gate': False,
+            'probes': [wrong_row(r) for r in wrong],
+        },
+        'C2_policy': {
+            'definition': POLICY_C2_DEFINITION,
+            'value': len(undeclared), 'gate': True,
+            'probes': [wrong_row(r) for r in undeclared],
+            'declared': [wrong_row(r) for r in declared],
+            'stale': stale,
+            'policy': {'path': policy.get('path'), 'version': policy.get('version'),
+                       'problem': policy.get('problem') or None,
+                       'entries': len(policy.get('entries') or [])},
         },
         'C3': {
             'definition': 'diagnostic-v1 carries a non-null fix or a note whose role is alternative',
@@ -611,7 +762,7 @@ def summarize(records: list[dict]) -> dict:
 
 
 def result_document(records: list[dict], suite: Path, selection: str, binary: dict,
-                    elapsed: float) -> dict:
+                    elapsed: float, policy: dict) -> dict:
     """The ``lane-c-score-v1`` JSON document a run writes."""
     return {
         'version': RESULT_VERSION,
@@ -620,7 +771,7 @@ def result_document(records: list[dict], suite: Path, selection: str, binary: di
         'selection': selection,
         'binary': binary,
         'elapsed_seconds': round(elapsed, 3),
-        'metrics': summarize(records),
+        'metrics': summarize(records, policy),
         'probes': records,
     }
 
@@ -654,18 +805,35 @@ def print_report(document: dict, baseline: dict | None) -> None:
 
     c1 = metrics['C1']
     c2 = metrics['C2']
+    c2_policy = metrics['C2_policy']
     c3 = metrics['C3']
     text = metrics['C3_text_any']
     print()
     print(f"C1 first-try fidelity      {c1['value']:.3f}  "
           f"({c1['numerator']}/{c1['denominator']} oracle: cpython probes)"
           f"{format_delta(before.get('C1', {}).get('value'), c1['value'])}")
-    gate = '  *** GATE: silent wrong answers ***' if c2['value'] else ''
-    print(f"C2 silent wrong answers    {c2['value']}{gate}"
+    print(f"C2 silent wrong answers    {c2['value']}  (strict: every completed probe that "
+          f"disagrees with CPython)"
           f"{format_delta(before.get('C2', {}).get('value'), float(c2['value']), 0)}")
     for wrong in c2['probes']:
+        claimed = f"  [declared: {wrong['divergence']}]" if wrong['divergence'] else '  [UNDECLARED]'
         print(f"     {wrong['probe']}: mylang {wrong['status']} {wrong['stdout']!r} "
-              f"vs cpython {wrong['oracle_status']} {wrong['oracle_stdout']!r}")
+              f"vs cpython {wrong['oracle_status']} {wrong['oracle_stdout']!r}{claimed}")
+    gate = '  *** GATE: undeclared silent wrong answers ***' if c2_policy['value'] else ''
+    print(f"C2 undeclared (gate)       {c2_policy['value']}  "
+          f"(not claimed by the divergence policy; this is what --gate fails on)"
+          f"{format_delta(before.get('C2_policy', {}).get('value'), float(c2_policy['value']), 0)}"
+          f"{gate}")
+    policy_facts = c2_policy['policy']
+    version = policy_facts['version'] or 'unversioned'
+    print(f"     divergence policy: {display_path(Path(policy_facts['path']))} "
+          f"({version}, {policy_facts['entries']} entr"
+          f"{'y' if policy_facts['entries'] == 1 else 'ies'})")
+    if policy_facts['problem']:
+        print(f"     policy problem: {policy_facts['problem']}; every disagreement is "
+              f"counted as undeclared")
+    for stale in c2_policy['stale']:
+        print(f"     stale declaration: {stale['probe']} ({stale['entry']}): {stale['reason']}")
     print(f"C3 rejections with a fix   {c3['value']:.3f}  "
           f"({c3['numerator']}/{c3['denominator']} rejected)"
           f"{format_delta(before.get('C3', {}).get('value'), c3['value'])}")
@@ -687,13 +855,15 @@ def print_report(document: dict, baseline: dict | None) -> None:
         print(f'  {count:3d} {code}')
 
     print('\nper-probe table')
-    print(f"  {'probe':30s} {'oracle':20s} {'verdict':22s} {'code':22s} C1 C2 C3 C3t")
+    print(f"  {'probe':30s} {'oracle':20s} {'verdict':22s} {'code':22s} C1 C2 C3 C3t diverg")
     for record in document['probes']:
         print(f"  {record['probe']:30s} {record['oracle']:20s} {record['verdict']:22s} "
               f"{(record['code'] or '-'):22s} "
               f"{_mark(record['c1'])}  {_mark(record['c2'])}  {_mark(record['c3'])}  "
-              f"{_mark(record['c3_text_any'])}")
-    print('  C3 = structured fix/alternative field; C3t = secondary text heuristic')
+              f"{_mark(record['c3_text_any'])} "
+              f"{record['divergence'] or ('!' if record['c2'] else '')}")
+    print('  C3 = structured fix/alternative field; C3t = secondary text heuristic; '
+          'diverg = declared divergence id or ! for an undeclared wrong answer')
     print_histogram_legend(document, baseline)
 
 
@@ -747,13 +917,16 @@ def read_manifest_template(suite: Path) -> tuple[str, str]:
 
 
 def manifest_document(records: list[dict], suite: Path, binary: dict,
-                      measured_on: str) -> dict:
+                      measured_on: str, policy: dict) -> dict:
     """A ``manifest.json``-shaped record of a run.
 
     ``agree`` follows the existing file: ``null`` for ``mylang-only`` probes
     (there is no CPython oracle to agree with), a boolean otherwise. A
     ``rejected-by-design`` probe always reports ``false`` because there is no
-    agreement to assert, whether or not mylang accepted it.
+    agreement to assert, whether or not mylang accepted it. ``silent_wrong``
+    stays the strict reading; ``declared_divergence`` names the policy entry
+    that claims the probe, so a regenerated manifest cannot lose the exemption
+    a declaration grants.
     """
     version, oracle_rule = read_manifest_template(suite)
     probes = []
@@ -767,12 +940,15 @@ def manifest_document(records: list[dict], suite: Path, binary: dict,
                 'agree': None if tag == 'mylang-only' else bool(record['verdict'] == 'agree'),
                 'silent_wrong': bool(record['c2']),
             },
+            'declared_divergence': record['divergence'],
         })
     return {
         'version': version,
         'measured_on': measured_on,
         'binary': binary_label(binary),
         'oracle_rule': oracle_rule,
+        'divergence_policy': {'path': display_path(Path(policy['path'])),
+                              'version': policy.get('version')},
         'probes': probes,
     }
 
@@ -823,9 +999,62 @@ DETECTOR_CASES = (
                                             'handling', 'notes': []}, False, True),
 )
 
+# Fixed cases for --self-test: (name, entries, probe, expected declared id).
+DIVERGENCE_CASES = (
+    ('exact name claimed', [{'id': 'a', 'probes': ['p1.my']}], 'p1.my', 'a'),
+    ('glob claimed', [{'id': 'b', 'probes': ['d0*.my']}], 'd05_round_half.my', 'b'),
+    ('later entry claims it', [{'id': 'a', 'probes': ['x.my']},
+                               {'id': 'b', 'probes': ['p?.my']}], 'p1.my', 'b'),
+    ('unclaimed probe', [{'id': 'a', 'probes': ['x.my']}], 'p1.my', None),
+    ('empty policy declares nothing', [], 'p1.my', None),
+)
+
+
+def policy_self_test() -> int:
+    """Check the declared/undeclared split and the stale-claim report.
+
+    No compiler is needed: the records are the same shape ``probe_record``
+    produces, with only the verdict and the two C2 flags filled in.
+    """
+    failures = []
+    for name, entries, probe, wanted in DIVERGENCE_CASES:
+        policy = {'version': DIVERGENCE_VERSION, 'path': 'self-test', 'entries': entries,
+                  'problem': ''}
+        entry = declared_divergence(policy, probe)
+        observed = probe_divergence_id(entry) if entry else None
+        if observed != wanted:
+            failures.append(f'{name}: claimed {observed!r}, expected {wanted!r}')
+
+    records = [probe_record(Path('p1.my')), probe_record(Path('p2.my'))]
+    for record in records:
+        record['verdict'] = 'wrong'
+        record['c2'] = True
+    policy = {'version': DIVERGENCE_VERSION, 'path': 'self-test',
+              'entries': [{'id': 'a', 'probes': ['p1.my']}], 'problem': ''}
+    metrics = summarize(records, policy)
+    checks = (
+        ('strict C2 counts every disagreement', metrics['C2']['value'] == 2),
+        ('policy C2 counts only the unclaimed one', metrics['C2_policy']['value'] == 1),
+        ('the declared row names its entry', metrics['C2_policy']['declared'][0]['divergence'] == 'a'),
+        ('the undeclared row has no entry', metrics['C2_policy']['probes'][0]['divergence'] is None),
+        ('a declared probe is still a strict C2', bool(records[0]['c2'] and records[0]['c2_declared'])),
+    )
+    failures.extend(name for name, passed in checks if not passed)
+
+    records[0]['verdict'] = 'agree'
+    stale = summarize(records, policy)['C2_policy']['stale']
+    if not any(item['probe'] == 'p1.my' for item in stale):
+        failures.append('a claimed probe that agrees is not reported as a stale declaration')
+
+    if failures:
+        print('lane C divergence policy self-test failed: ' + '; '.join(failures), file=sys.stderr)
+        return 1
+    print(f'lane C divergence policy self-test: {len(DIVERGENCE_CASES) + len(checks) + 1} passed')
+    return 0
+
 
 def self_test() -> int:
-    """Check the C3 detectors against fixed cases; no compiler needed."""
+    """Check the C3 detectors, the divergence policy split and the CPython oracle."""
     failures = [name for name, diagnostic, structured, text in DETECTOR_CASES
                 if (names_alternative(diagnostic), names_alternative_text(diagnostic))
                 != (structured, text)]
@@ -833,6 +1062,8 @@ def self_test() -> int:
         print('lane C detector self-test failed: ' + ', '.join(failures), file=sys.stderr)
         return 1
     print(f'lane C detector self-test: {len(DETECTOR_CASES)} passed')
+    if policy_self_test() != 0:
+        return 1
     return _load_shared_driver().oracle_self_test()
 
 
@@ -858,7 +1089,13 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument('--timeout', type=float, default=60.0,
                         help='wall-clock ceiling per command, in seconds (default 60)')
     parser.add_argument('--gate', action='store_true',
-                        help='exit 1 when C2 > 0 (silent wrong answers block a package)')
+                        help='exit 1 when an UNDECLARED silent wrong answer exists (C2_policy > 0); '
+                             'a divergence declared in velocity/divergences.json is reported but '
+                             'does not fail the gate')
+    parser.add_argument('--divergences', type=Path, default=DEFAULT_DIVERGENCE_POLICY,
+                        metavar='PATH',
+                        help='declared divergence list (default velocity/divergences.json); a '
+                             'missing file declares nothing and every disagreement then gates')
     parser.add_argument('--self-test', action='store_true',
                         help='check the C3 detectors and the shared CPython oracle, then exit')
     parser.add_argument('--suite', type=Path, default=DEFAULT_SUITE, help=argparse.SUPPRESS)
@@ -866,12 +1103,19 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Measure every selected probe and report C1, C2 and C3."""
+    """Measure every selected probe and report C1, C2 (strict and policy) and C3."""
     args = parse_args(sys.argv[1:] if argv is None else argv)
     if args.self_test:
         return self_test()
     suite = args.suite.resolve()
     binary = args.binary if args.binary.is_absolute() else (Path.cwd() / args.binary).resolve()
+    policy_path = args.divergences if args.divergences.is_absolute() \
+        else (Path.cwd() / args.divergences).resolve()
+    policy = load_divergence_policy(policy_path)
+    if policy['problem']:
+        print(f"score.py: warning: divergence policy {policy_path} is unusable "
+              f"({policy['problem']}); declaring nothing, so every completed disagreement "
+              f"counts as an undeclared silent wrong answer", file=sys.stderr)
     if not binary.exists():
         print(f'score.py: no compiler at {binary}', file=sys.stderr)
         return 2
@@ -915,7 +1159,7 @@ def main(argv: list[str] | None = None) -> int:
     if facts['sha256'] != file_sha256(binary):
         print('score.py: warning: the compiler binary changed during the run; '
               'rerun for a consistent measurement', file=sys.stderr)
-    document = result_document(records, suite, args.probe, facts, elapsed)
+    document = result_document(records, suite, args.probe, facts, elapsed, policy)
 
     baseline = None
     if args.baseline:
@@ -946,15 +1190,27 @@ def main(argv: list[str] | None = None) -> int:
             print('score.py: warning: --probe is set, so the manifest describes only '
                   'the selected probes', file=sys.stderr)
         args.write_manifest.parent.mkdir(parents=True, exist_ok=True)
-        document_manifest = manifest_document(records, suite, facts, document['measured_on'])
+        document_manifest = manifest_document(records, suite, facts, document['measured_on'],
+                                              policy)
         args.write_manifest.write_text(json.dumps(document_manifest, indent=1) + '\n')
         print(f'score.py: wrote {args.write_manifest} '
               f'({len(document_manifest["probes"])} probes)', file=sys.stderr)
 
-    if args.gate and document['metrics']['C2']['value'] > 0:
-        print(f"score.py: gate failed: {document['metrics']['C2']['value']} silent wrong "
-              f"answer(s)", file=sys.stderr)
-        return 1
+    if args.gate:
+        metrics = document['metrics']
+        undeclared = metrics['C2_policy']['value']
+        declared = metrics['C2']['value'] - undeclared
+        if undeclared:
+            names = ', '.join(row['probe'] for row in metrics['C2_policy']['probes'])
+            print(f'score.py: gate failed: {undeclared} undeclared silent wrong answer(s): '
+                  f'{names}; declare one only by adding a reviewed entry to '
+                  f'{display_path(policy_path)}', file=sys.stderr)
+            return 1
+        if declared:
+            names = ', '.join(f"{row['probe']} ({row['divergence']})"
+                              for row in metrics['C2_policy']['declared'])
+            print(f'score.py: gate passed: {declared} declared divergence(s) reported and '
+                  f'exempt by {display_path(policy_path)}: {names}', file=sys.stderr)
     return 0
 
 

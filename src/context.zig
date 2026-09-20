@@ -16,6 +16,7 @@ const project = @import("project.zig");
 const pc = @import("project_compile.zig");
 const receipt = @import("source_receipt.zig");
 const navigation = @import("navigation.zig");
+const navigation_partial = @import("navigation_partial.zig");
 const fact_status = @import("fact_status.zig");
 const tests_index = @import("tests_index.zig");
 const api_diff = @import("api_diff.zig");
@@ -188,6 +189,14 @@ const Subject = struct {
     candidates: []const []const u8 = &.{},
 };
 
+/// What a lexical-candidate answer has instead of a merged compilation: the
+/// loaded project a position selector resolves against, and the names a lexer
+/// pass recovered.
+const Lexical = struct {
+    loaded: *const project.Project,
+    candidates: navigation_partial.Candidates,
+};
+
 /// The verdict and the records one run assembled, before any budget was applied.
 const Diagnosis = struct {
     status: Status = .ok,
@@ -202,6 +211,8 @@ const Session = struct {
     options: Options,
     source: Subject = .{},
     diagnosis: Diagnosis = .{},
+    /// Present only when body syntax failed before any declaration merged.
+    lexical: ?Lexical = null,
 };
 
 /// Render one answer from a loaded compilation, checked or not. A compilation
@@ -248,6 +259,12 @@ fn runPartial(allocator: std.mem.Allocator, loaded: *const project.Project, iden
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
     var session: Session = .{ .gpa = allocator, .arena = arena.allocator(), .options = options };
+    const recovered = navigation_partial.candidates(session.arena, loaded) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.NavigationLimit => return error.NavigationLimit,
+        error.InternalError, error.IncompleteProject => return error.IncompleteProject,
+    };
+    session.lexical = .{ .loaded = loaded, .candidates = recovered };
     var snapshot_project = loaded.*;
     snapshot_project.problem = null;
     const snapshot: navigation.Snapshot = .{
@@ -262,6 +279,7 @@ fn runPartial(allocator: std.mem.Allocator, loaded: *const project.Project, iden
         .status = .partial,
         .reason = options.unavailable_reason orelse "body syntax failed; only lexical top-level candidates were recovered",
     };
+    try resolve(&session);
     if (try sourcesChanged(&session, session.arena, loaded, snapshot)) {
         return .{ .bytes = try rejectedAnswer(&session), .status = .stale };
     }
@@ -276,24 +294,41 @@ fn resolve(session: *Session) Error!void {
     }
 }
 
+/// Every declaration this run can name: the checked tables when the bodies
+/// merged, and the recovered lexical candidates when they did not.
+fn allSymbols(session: *const Session) []const navigation.Symbol {
+    if (session.source.facts) |facts| return facts.symbols;
+    if (session.lexical) |*recovered| return recovered.candidates.symbols;
+    return &.{};
+}
+
+/// The one declaration this run can name with an exact qualified name.
+fn symbolWithId(session: *const Session, id: []const u8) ?*const navigation.Symbol {
+    for (allSymbols(session)) |*item| {
+        if (std.mem.eql(u8, item.id, id)) return item;
+    }
+    return null;
+}
+
 fn resolveSymbol(session: *Session, name: []const u8) Error!void {
-    const facts = session.source.facts orelse {
+    const symbols = allSymbols(session);
+    if (symbols.len == 0) {
         session.diagnosis.status = .partial;
-        session.diagnosis.reason = "no declarations were indexed; only lexical candidates were recovered";
+        session.diagnosis.reason = "no declarations were recovered; the source could not be parsed or lexed";
         return;
-    };
-    if (facts.symbol(name)) |found| {
+    }
+    if (symbolWithId(session, name)) |found| {
         session.source.symbol = found;
         return;
     }
     // A bare name is accepted only when exactly one declaration carries it: a
     // near match is reported, never silently chosen.
     var matches: std.ArrayList([]const u8) = .empty;
-    for (facts.symbols) |*item| {
+    for (symbols) |*item| {
         if (std.mem.eql(u8, item.name, name)) matches.append(session.arena, item.id) catch return error.OutOfMemory;
     }
     if (matches.items.len == 1) {
-        session.source.symbol = facts.symbol(matches.items[0]);
+        session.source.symbol = symbolWithId(session, matches.items[0]);
         return;
     }
     std.mem.sort([]const u8, matches.items, {}, stringLessThan);
@@ -327,18 +362,25 @@ fn resolveAt(session: *Session, spec: []const u8) Error!void {
         session.diagnosis.reason = "expected a one-based PATH:LINE:COLUMN position";
         return;
     };
-    const compilation = session.source.compilation orelse {
+    const loaded = if (session.source.compilation) |compilation|
+        &compilation.index.project.*
+    else if (session.lexical) |*recovered|
+        recovered.loaded
+    else {
         session.diagnosis.status = .partial;
         session.diagnosis.reason = "no source was parsed; only lexical candidates were recovered";
         return;
     };
-    const offset = offsetOf(&compilation.index.project.*, at) orelse {
+    const offset = offsetOf(loaded, at) orelse {
         session.diagnosis.status = .missing;
         session.diagnosis.reason = "that position is outside every loaded module";
         return;
     };
     const symbol = try innermostSymbol(session, at.path, offset);
-    const found = try innermostDiagnostic(compilation, at.path, offset);
+    const found = if (session.source.compilation) |compilation|
+        try innermostDiagnostic(compilation, at.path, offset)
+    else
+        null;
     if (symbol) |best| {
         session.source.symbol = best;
         session.source.diagnostic = found;
@@ -374,12 +416,13 @@ fn pathMatches(loaded: []const u8, requested: []const u8) bool {
     return std.mem.endsWith(u8, loaded, requested) and loaded[loaded.len - requested.len - 1] == '/';
 }
 
-/// The smallest declaration whose span covers the position.
+/// The smallest declaration whose span covers the position. The declarations
+/// are the ones this run can name, so a position selector resolves a lexically
+/// recovered candidate exactly as a symbol selector does.
 fn innermostSymbol(session: *Session, path: []const u8, offset: usize) Error!?*const navigation.Symbol {
-    const facts = session.source.facts orelse return null;
     var best: ?*const navigation.Symbol = null;
     var best_width: usize = unlimited;
-    for (facts.symbols) |*item| {
+    for (allSymbols(session)) |*item| {
         if (!pathMatches(item.location.path, path)) continue;
         if (!covers(session, item, offset)) continue;
         const width = spanWidth(item, session);
@@ -1061,7 +1104,7 @@ fn collectChanges(session: *Session) Error!void {
     };
     const report = api_diff.compare(session.arena, entries, compilation) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
-        else => return error.InternalError,
+        else => return error.InvalidBaseline,
     };
     for ([_][]const api_diff.Change{ report.additive, report.compatible, report.breaking }) |changes| {
         for (changes) |change| {

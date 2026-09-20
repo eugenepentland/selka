@@ -1,0 +1,4 @@
+# R_BYTE_RANGE: bytes(list[int]) with an octet outside 0..255.
+def main() -> int:
+    values: list[int] = [72, 300]
+    return len(bytes(values))

@@ -1,0 +1,23 @@
+assertion            24 comparisons  ok
+cast_float           24 comparisons  ok
+bounds               24 comparisons  ok
+cast_range           24 comparisons  ok
+div_zero             24 comparisons  ok
+frames               24 comparisons  ok
+deep                 24 comparisons  ok
+hot_inline_trap      24 comparisons  ok
+list_bounds          24 comparisons  ok
+inlined_bounds       24 comparisons  ok
+mul_chain            24 comparisons  ok
+neg_bounds           24 comparisons  ok
+okay                 24 comparisons  ok
+overflow_add         24 comparisons  ok
+overflow_mul         24 comparisons  ok
+overflow_neg         24 comparisons  ok
+overflow_sub         24 comparisons  ok
+recursion            24 comparisons  ok
+rem_zero             24 comparisons  ok
+shift_range          24 comparisons  ok
+sticky_call          24 comparisons  ok
+
+504 built-binary comparisons across 21 fixtures, including LLVM GC stress, 0 mismatches/build failures

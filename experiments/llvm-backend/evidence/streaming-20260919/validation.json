@@ -1,0 +1,41 @@
+{
+  "test-complete.log": {
+    "path": ".tmp/llvm-streaming-20260919/test-complete.log",
+    "sha256": "d90cd7b5f6af3e5264e4ad7e47cb7672073de0da218535bcc2bbbe37888e0453"
+  },
+  "build-final.log": {
+    "path": ".tmp/llvm-streaming-20260919/build-final.log",
+    "sha256": "1a264f776dc16eb700ef40bb9edbfbef8b0f1ee2622ea961c3eebeae4b246e68"
+  },
+  "builder-final.log": {
+    "path": ".tmp/llvm-streaming-20260919/builder-final.log",
+    "sha256": "f67d2c58f86cad6d7d6408a85028d7ce74aedaaf8a64c29bdbf7ae25efd7ded2"
+  },
+  "stream-tests-final.log": {
+    "path": ".tmp/llvm-streaming-20260919/stream-tests-final.log",
+    "sha256": "9df55f478d22d8f918dcce066379dc0d2716bcd8191cfebba1bb9065130fe784"
+  },
+  "port-llvm-tests.log": {
+    "path": ".tmp/llvm-streaming-20260919/port-llvm-tests.log",
+    "sha256": "96adb4adea8c08dd8c4844b9e7b94db73636feac69f45d32f21a8271a606f8d8"
+  },
+  "port-qbe-tests.log": {
+    "path": ".tmp/llvm-streaming-20260919/port-qbe-tests.log",
+    "sha256": "96adb4adea8c08dd8c4844b9e7b94db73636feac69f45d32f21a8271a606f8d8"
+  },
+  "adapter-tests.log": {
+    "path": ".tmp/llvm-streaming-20260919/adapter-tests.log",
+    "sha256": "16fffd95666a09208bb8a85bc1b1eed71205f1cf435e9e46035bf1a3f6a9d65c"
+  },
+  "full_build_steps": "60/60",
+  "full_selected_tests": 1321,
+  "port_qbe_gc_stress": 87,
+  "port_llvm_gc_stress": 87,
+  "builder_focused": "12/12",
+  "stream_focused": "17/17",
+  "adapter_tests": 10,
+  "final_valid_comparisons": 730,
+  "final_safe_comparisons": 360,
+  "malformed_comparisons": 600,
+  "scope_note": "Full suite before final indentation-only change; final source passed the 18-step build/Guardian gate, builder normal+GC stress, focused printer tests, and differential comparisons. Malformed fuzz evidence uses the prior indentation implementation; parser unchanged."
+}

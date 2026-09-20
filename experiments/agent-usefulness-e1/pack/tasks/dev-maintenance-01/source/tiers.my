@@ -1,0 +1,10 @@
+module tiers
+
+
+# Volume discount for one order quantity, in basis points.
+public def rate_bps(quantity: int) -> int:
+    if quantity >= 50:
+        return 500
+    if quantity >= 10:
+        return 200
+    return 0

@@ -1,0 +1,36 @@
+{
+ "version": "e1-preregistration-v1",
+ "written_on": "2026-09-21",
+ "status": "development pilots only; the held-out registration below is a plan, not a run",
+ "written_before": "any held-out cohort run",
+ "hypothesis": "For maintenance and incomplete-implementation tasks of the frozen pack, an arm whose prompt names the focused structured context (arm `focused-context`) is not worse than the plain arm at independent behavioural acceptance, and its wall time to accepted completion is no larger by more than the noise floor.",
+ "design": {
+  "unit": "one task attempted by one solver session; tasks are the unit of diversity, repeated attempts at one task are not independent",
+  "paired": true,
+  "pairing": "each task is attempted once per arm with identical brief, source snapshot, prompts except the arm note, compiler, cache policy, tools, and wall budget",
+  "development_pilot_task_count": 2,
+  "held_out_sample_size": {
+   "value": null,
+   "register_before_first_run": "24 tasks per arm: 12 maintenance and 12 incomplete-implementation tasks, matched within family, so a 3-task difference is detectable at the thresholds below",
+   "note": "the number is deliberately not fixed here because the development pilots must first establish outcome headroom and variance; it is registered in this file, in a commit that touches nothing else, before the first held-out run"
+  }
+ },
+ "primary_outcome": "independent behavioural acceptance within the wall budget, per attempt, as the acceptance checker's exit status and JSON verdict",
+ "secondary_outcomes": [
+  "wall time to accepted completion, with unsuccessful attempts reported separately",
+  "failed compiler and test invocations, and repeated diagnostics",
+  "tool-response bytes",
+  "unintended changes outside the task's allowed paths",
+  "cold, warm-unchanged and warm-after-edit build behaviour with reuse counters"
+ ],
+ "decision_thresholds": {
+  "useful_improvement": "paired pass-rate difference >= 3 of 24 tasks in favour of `focused-context` AND one-sided exact McNemar p <= 0.05 on the discordant pairs",
+  "correctness_loss": "reject the arm if any accepted solution fails an independent re-run of the same hidden oracle, or if its unintended-change rate is above the plain arm's by more than one task",
+  "latency": "reported as median wall time to accepted completion per arm; a latency difference alone never decides the comparison",
+  "noise_floor": "one task (1/24 = 0.042 pass rate) and 5% relative on any latency number"
+ },
+ "inconclusive_definition": "The comparison is inconclusive, and no workflow recommendation may be made, when any of these holds: fewer than 24 paired tasks per arm were run; the discordant pair count is below 6; the observed difference is smaller than the 3-task threshold; the pass rate is at the ceiling (all tasks accepted) or the floor (two or fewer accepted) in both arms, so there is no headroom to detect anything; the two arms' profile_identity or compiler identity differ; or more than one task in either arm was blocked rather than attempted. An inconclusive result is recorded as inconclusive and is not rounded into a direction.",
+ "stopping_rule": "Run the registered 24 pairs once. Do not extend a cohort because an interim difference looks promising; a larger cohort is a new preregistration.",
+ "development_pilot_rule": "Development pilots exist to show that the harness runs, that the acceptance check discriminates a correct from an incorrect tree, and to size the variance. They are reported task by task with the solver named, and they are never pooled with a held-out cohort or quoted as a productivity result.",
+ "no_productivity_claim_in_development": true
+}

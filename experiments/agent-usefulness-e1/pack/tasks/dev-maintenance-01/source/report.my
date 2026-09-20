@@ -1,0 +1,12 @@
+module report
+import orders
+import audit
+import bands
+
+
+# One report line: "<sku> <total_cents> <small_order_flag> <band>".
+public def line(sku: str, unit_price: int, quantity: int) -> str effects(managed_allocation):
+    total = orders.total_cents(unit_price, quantity)
+    flag = audit.small_order(quantity)
+    band = bands.name(quantity)
+    return f"{sku} {total} {flag} {band}"

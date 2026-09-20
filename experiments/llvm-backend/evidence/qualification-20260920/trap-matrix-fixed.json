@@ -1,0 +1,1097 @@
+{
+ "tool": "qualify_traps.py",
+ "work": "/tmp/llvm-final/rev2/traps",
+ "probes": {
+  "exit_status": {
+   "expect": null,
+   "checks": [
+    {
+     "mode": "fast",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      44,
+      ""
+     ],
+     "llvm": [
+      44,
+      ""
+     ]
+    },
+    {
+     "mode": "fast",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      44,
+      ""
+     ],
+     "llvm": [
+      44,
+      ""
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      44,
+      ""
+     ],
+     "llvm": [
+      44,
+      ""
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      44,
+      ""
+     ],
+     "llvm": [
+      44,
+      ""
+     ]
+    }
+   ],
+   "failures": []
+  },
+  "exit_status_negative": {
+   "expect": null,
+   "checks": [
+    {
+     "mode": "fast",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      255,
+      ""
+     ],
+     "llvm": [
+      255,
+      ""
+     ]
+    },
+    {
+     "mode": "fast",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      255,
+      ""
+     ],
+     "llvm": [
+      255,
+      ""
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      255,
+      ""
+     ],
+     "llvm": [
+      255,
+      ""
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      255,
+      ""
+     ],
+     "llvm": [
+      255,
+      ""
+     ]
+    }
+   ],
+   "failures": []
+  },
+  "okay": {
+   "expect": null,
+   "checks": [
+    {
+     "mode": "fast",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      0,
+      ""
+     ],
+     "llvm": [
+      0,
+      ""
+     ]
+    },
+    {
+     "mode": "fast",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      0,
+      ""
+     ],
+     "llvm": [
+      0,
+      ""
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      0,
+      ""
+     ],
+     "llvm": [
+      0,
+      ""
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      0,
+      ""
+     ],
+     "llvm": [
+      0,
+      ""
+     ]
+    }
+   ],
+   "failures": []
+  },
+  "trap_assert": {
+   "expect": "R_ASSERT",
+   "checks": [
+    {
+     "mode": "fast",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_assert.my:4:12: error[R_ASSERT]: native execution failed: value must be two\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_assert.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"value must be two\"}\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_assert.my:4:12: error[R_ASSERT]: native execution failed: value must be two\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_assert.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"value must be two\"}\n"
+     ]
+    },
+    {
+     "mode": "fast",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_assert.my:4:12: error[R_ASSERT]: native execution failed: value must be two\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_assert.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"value must be two\"}\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_assert.my:4:12: error[R_ASSERT]: native execution failed: value must be two\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_assert.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"value must be two\"}\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_assert.my:4:12: error[R_ASSERT]: native execution failed: value must be two\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_assert.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"value must be two\"}\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_assert.my:4:12: error[R_ASSERT]: native execution failed: value must be two\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_assert.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"value must be two\"}\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_assert.my:4:12: error[R_ASSERT]: native execution failed: value must be two\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_assert.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"value must be two\"}\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_assert.my:4:12: error[R_ASSERT]: native execution failed: value must be two\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_assert.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"value must be two\"}\n"
+     ]
+    }
+   ],
+   "failures": []
+  },
+  "trap_cast": {
+   "expect": "R_OVERFLOW",
+   "checks": [
+    {
+     "mode": "fast",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_cast.my:5:16: error[R_OVERFLOW]: native execution failed (cast: left 300, width 8)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_cast.my:5:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"cast\",\"left\":300,\"width\":8}\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_cast.my:5:16: error[R_OVERFLOW]: native execution failed (cast: left 300, width 8)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_cast.my:5:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"cast\",\"left\":300,\"width\":8}\n"
+     ]
+    },
+    {
+     "mode": "fast",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_cast.my:5:16: error[R_OVERFLOW]: native execution failed (cast: left 300, width 8)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_cast.my:5:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"cast\",\"left\":300,\"width\":8}\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_cast.my:5:16: error[R_OVERFLOW]: native execution failed (cast: left 300, width 8)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_cast.my:5:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"cast\",\"left\":300,\"width\":8}\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_cast.my:5:16: error[R_OVERFLOW]: native execution failed (cast: left 300, width 8)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_cast.my:5:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"cast\",\"left\":300,\"width\":8}\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_cast.my:5:16: error[R_OVERFLOW]: native execution failed (cast: left 300, width 8)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_cast.my:5:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"cast\",\"left\":300,\"width\":8}\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_cast.my:5:16: error[R_OVERFLOW]: native execution failed (cast: left 300, width 8)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_cast.my:5:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"cast\",\"left\":300,\"width\":8}\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_cast.my:5:16: error[R_OVERFLOW]: native execution failed (cast: left 300, width 8)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_cast.my:5:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"cast\",\"left\":300,\"width\":8}\n"
+     ]
+    }
+   ],
+   "failures": []
+  },
+  "trap_byte_range": {
+   "expect": "R_BYTE_RANGE",
+   "checks": [
+    {
+     "mode": "fast",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_byte_range.my:4:16: error[R_BYTE_RANGE]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_byte_range.my:4:16\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_byte_range.my:4:16: error[R_BYTE_RANGE]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_byte_range.my:4:16\n"
+     ]
+    },
+    {
+     "mode": "fast",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_byte_range.my:4:16: error[R_BYTE_RANGE]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_byte_range.my:4:16\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_byte_range.my:4:16: error[R_BYTE_RANGE]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_byte_range.my:4:16\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_byte_range.my:4:16: error[R_BYTE_RANGE]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_byte_range.my:4:16\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_byte_range.my:4:16: error[R_BYTE_RANGE]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_byte_range.my:4:16\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_byte_range.my:4:16: error[R_BYTE_RANGE]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_byte_range.my:4:16\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_byte_range.my:4:16: error[R_BYTE_RANGE]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_byte_range.my:4:16\n"
+     ]
+    }
+   ],
+   "failures": []
+  },
+  "trap_division": {
+   "expect": "R_DIVISION_BY_ZERO",
+   "checks": [
+    {
+     "mode": "fast",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "e/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_division.my:5:18: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 10, right 0)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_division.my:5:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":10,\"right\":0}\n"
+     ],
+     "llvm": [
+      1,
+      "e/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_division.my:5:18: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 10, right 0)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_division.my:5:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":10,\"right\":0}\n"
+     ]
+    },
+    {
+     "mode": "fast",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "e/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_division.my:5:18: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 10, right 0)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_division.my:5:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":10,\"right\":0}\n"
+     ],
+     "llvm": [
+      1,
+      "e/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_division.my:5:18: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 10, right 0)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_division.my:5:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":10,\"right\":0}\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "e/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_division.my:5:18: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 10, right 0)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_division.my:5:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":10,\"right\":0}\n"
+     ],
+     "llvm": [
+      1,
+      "e/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_division.my:5:18: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 10, right 0)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_division.my:5:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":10,\"right\":0}\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "e/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_division.my:5:18: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 10, right 0)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_division.my:5:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":10,\"right\":0}\n"
+     ],
+     "llvm": [
+      1,
+      "e/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_division.my:5:18: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 10, right 0)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_division.my:5:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":10,\"right\":0}\n"
+     ]
+    }
+   ],
+   "failures": []
+  },
+  "trap_file": {
+   "expect": "R_FILE",
+   "checks": [
+    {
+     "mode": "fast",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_file.my:3:10: error[R_FILE]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_file.my:3:10\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_file.my:3:10: error[R_FILE]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_file.my:3:10\n"
+     ]
+    },
+    {
+     "mode": "fast",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_file.my:3:10: error[R_FILE]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_file.my:3:10\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_file.my:3:10: error[R_FILE]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_file.my:3:10\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_file.my:3:10: error[R_FILE]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_file.my:3:10\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_file.my:3:10: error[R_FILE]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_file.my:3:10\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_file.my:3:10: error[R_FILE]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_file.my:3:10\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_file.my:3:10: error[R_FILE]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_file.my:3:10\n"
+     ]
+    }
+   ],
+   "failures": []
+  },
+  "trap_float_conversion": {
+   "expect": "R_FLOAT_CONVERSION",
+   "checks": [
+    {
+     "mode": "fast",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_float_conversion.my:4:12: error[R_FLOAT_CONVERSION]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_float_conversion.my:4:12\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_float_conversion.my:4:12: error[R_FLOAT_CONVERSION]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_float_conversion.my:4:12\n"
+     ]
+    },
+    {
+     "mode": "fast",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_float_conversion.my:4:12: error[R_FLOAT_CONVERSION]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_float_conversion.my:4:12\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_float_conversion.my:4:12: error[R_FLOAT_CONVERSION]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_float_conversion.my:4:12\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_float_conversion.my:4:12: error[R_FLOAT_CONVERSION]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_float_conversion.my:4:12\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_float_conversion.my:4:12: error[R_FLOAT_CONVERSION]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_float_conversion.my:4:12\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_float_conversion.my:4:12: error[R_FLOAT_CONVERSION]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_float_conversion.my:4:12\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_float_conversion.my:4:12: error[R_FLOAT_CONVERSION]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_float_conversion.my:4:12\n"
+     ]
+    }
+   ],
+   "failures": []
+  },
+  "trap_list_bounds": {
+   "expect": "R_LIST_BOUNDS",
+   "checks": [
+    {
+     "mode": "fast",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_list_bounds.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index 7, length 3)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_list_bounds.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":7,\"length\":3}\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_list_bounds.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index 7, length 3)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_list_bounds.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":7,\"length\":3}\n"
+     ]
+    },
+    {
+     "mode": "fast",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_list_bounds.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index 7, length 3)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_list_bounds.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":7,\"length\":3}\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_list_bounds.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index 7, length 3)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_list_bounds.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":7,\"length\":3}\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_list_bounds.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index 7, length 3)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_list_bounds.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":7,\"length\":3}\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_list_bounds.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index 7, length 3)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_list_bounds.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":7,\"length\":3}\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_list_bounds.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index 7, length 3)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_list_bounds.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":7,\"length\":3}\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_list_bounds.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index 7, length 3)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_list_bounds.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":7,\"length\":3}\n"
+     ]
+    }
+   ],
+   "failures": []
+  },
+  "trap_frame_limit": {
+   "expect": "R_FRAME_LIMIT",
+   "checks": [
+    {
+     "mode": "fast",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "d at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:5:16\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:9:12\n"
+     ],
+     "llvm": [
+      1,
+      "d at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:5:16\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:9:12\n"
+     ]
+    },
+    {
+     "mode": "fast",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "d at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:5:16\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:9:12\n"
+     ],
+     "llvm": [
+      1,
+      "d at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:5:16\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:9:12\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "d at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:5:16\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:9:12\n"
+     ],
+     "llvm": [
+      1,
+      "d at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:5:16\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:9:12\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "d at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:5:16\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:9:12\n"
+     ],
+     "llvm": [
+      1,
+      "d at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:5:16\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_frame_limit.my:9:12\n"
+     ]
+    }
+   ],
+   "failures": []
+  },
+  "trap_memory_budget": {
+   "expect": "R_MEMORY_BUDGET",
+   "checks": [
+    {
+     "mode": "fast",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_memory_budget.my:9:13: error[R_MEMORY_BUDGET]: memory budget exhausted\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_memory_budget.my:9:13\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_memory_budget.my:9:13: error[R_MEMORY_BUDGET]: memory budget exhausted\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_memory_budget.my:9:13\n"
+     ]
+    },
+    {
+     "mode": "fast",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_memory_budget.my:9:13: error[R_MEMORY_BUDGET]: memory budget exhausted\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_memory_budget.my:9:13\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_memory_budget.my:9:13: error[R_MEMORY_BUDGET]: memory budget exhausted\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_memory_budget.my:9:13\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_memory_budget.my:9:13: error[R_MEMORY_BUDGET]: memory budget exhausted\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_memory_budget.my:9:13\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_memory_budget.my:9:13: error[R_MEMORY_BUDGET]: memory budget exhausted\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_memory_budget.my:9:13\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_memory_budget.my:9:13: error[R_MEMORY_BUDGET]: memory budget exhausted\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_memory_budget.my:9:13\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_memory_budget.my:9:13: error[R_MEMORY_BUDGET]: memory budget exhausted\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_memory_budget.my:9:13\n"
+     ]
+    }
+   ],
+   "failures": []
+  },
+  "trap_output": {
+   "expect": "R_OUTPUT",
+   "checks": [
+    {
+     "mode": "fast",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_output.my:3:5: error[R_OUTPUT]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_output.my:3:5\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_output.my:3:5: error[R_OUTPUT]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_output.my:3:5\n"
+     ]
+    },
+    {
+     "mode": "fast",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_output.my:3:5: error[R_OUTPUT]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_output.my:3:5\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_output.my:3:5: error[R_OUTPUT]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_output.my:3:5\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_output.my:3:5: error[R_OUTPUT]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_output.my:3:5\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_output.my:3:5: error[R_OUTPUT]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_output.my:3:5\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_output.my:3:5: error[R_OUTPUT]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_output.my:3:5\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_output.my:3:5: error[R_OUTPUT]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_output.my:3:5\n"
+     ]
+    }
+   ],
+   "failures": []
+  },
+  "trap_overflow": {
+   "expect": "R_OVERFLOW",
+   "checks": [
+    {
+     "mode": "fast",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "ments/llvm-backend/evidence/qualification-20260920/probes/trap_overflow.my:4:18: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_overflow.my:4:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+     ],
+     "llvm": [
+      1,
+      "ments/llvm-backend/evidence/qualification-20260920/probes/trap_overflow.my:4:18: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_overflow.my:4:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+     ]
+    },
+    {
+     "mode": "fast",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "ments/llvm-backend/evidence/qualification-20260920/probes/trap_overflow.my:4:18: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_overflow.my:4:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+     ],
+     "llvm": [
+      1,
+      "ments/llvm-backend/evidence/qualification-20260920/probes/trap_overflow.my:4:18: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_overflow.my:4:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "ments/llvm-backend/evidence/qualification-20260920/probes/trap_overflow.my:4:18: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_overflow.my:4:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+     ],
+     "llvm": [
+      1,
+      "ments/llvm-backend/evidence/qualification-20260920/probes/trap_overflow.my:4:18: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_overflow.my:4:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "ments/llvm-backend/evidence/qualification-20260920/probes/trap_overflow.my:4:18: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_overflow.my:4:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+     ],
+     "llvm": [
+      1,
+      "ments/llvm-backend/evidence/qualification-20260920/probes/trap_overflow.my:4:18: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_overflow.my:4:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+     ]
+    }
+   ],
+   "failures": []
+  },
+  "trap_remainder": {
+   "expect": "R_DIVISION_BY_ZERO",
+   "checks": [
+    {
+     "mode": "fast",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_remainder.my:5:18: error[R_DIVISION_BY_ZERO]: native execution failed (floor_rem: left 10, right 0)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_remainder.my:5:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_rem\",\"left\":10,\"right\":0}\n"
+     ],
+     "llvm": [
+      1,
+      "epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_remainder.my:5:18: error[R_DIVISION_BY_ZERO]: native execution failed (floor_rem: left 10, right 0)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_remainder.my:5:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_rem\",\"left\":10,\"right\":0}\n"
+     ]
+    },
+    {
+     "mode": "fast",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_remainder.my:5:18: error[R_DIVISION_BY_ZERO]: native execution failed (floor_rem: left 10, right 0)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_remainder.my:5:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_rem\",\"left\":10,\"right\":0}\n"
+     ],
+     "llvm": [
+      1,
+      "epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_remainder.my:5:18: error[R_DIVISION_BY_ZERO]: native execution failed (floor_rem: left 10, right 0)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_remainder.my:5:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_rem\",\"left\":10,\"right\":0}\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_remainder.my:5:18: error[R_DIVISION_BY_ZERO]: native execution failed (floor_rem: left 10, right 0)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_remainder.my:5:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_rem\",\"left\":10,\"right\":0}\n"
+     ],
+     "llvm": [
+      1,
+      "epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_remainder.my:5:18: error[R_DIVISION_BY_ZERO]: native execution failed (floor_rem: left 10, right 0)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_remainder.my:5:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_rem\",\"left\":10,\"right\":0}\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_remainder.my:5:18: error[R_DIVISION_BY_ZERO]: native execution failed (floor_rem: left 10, right 0)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_remainder.my:5:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_rem\",\"left\":10,\"right\":0}\n"
+     ],
+     "llvm": [
+      1,
+      "epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_remainder.my:5:18: error[R_DIVISION_BY_ZERO]: native execution failed (floor_rem: left 10, right 0)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_remainder.my:5:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_rem\",\"left\":10,\"right\":0}\n"
+     ]
+    }
+   ],
+   "failures": []
+  },
+  "trap_shift": {
+   "expect": "R_INVALID_SHIFT",
+   "checks": [
+    {
+     "mode": "fast",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_shift.my:5:12: error[R_INVALID_SHIFT]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_shift.my:5:12\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_shift.my:5:12: error[R_INVALID_SHIFT]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_shift.my:5:12\n"
+     ]
+    },
+    {
+     "mode": "fast",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_shift.my:5:12: error[R_INVALID_SHIFT]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_shift.my:5:12\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_shift.my:5:12: error[R_INVALID_SHIFT]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_shift.my:5:12\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_shift.my:5:12: error[R_INVALID_SHIFT]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_shift.my:5:12\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_shift.my:5:12: error[R_INVALID_SHIFT]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_shift.my:5:12\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_shift.my:5:12: error[R_INVALID_SHIFT]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_shift.my:5:12\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_shift.my:5:12: error[R_INVALID_SHIFT]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_shift.my:5:12\n"
+     ]
+    }
+   ],
+   "failures": []
+  },
+  "trap_step_limit": {
+   "expect": "R_STEP_LIMIT",
+   "checks": [
+    {
+     "mode": "fast",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "d at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n"
+     ],
+     "llvm": [
+      1,
+      "d at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n"
+     ]
+    },
+    {
+     "mode": "fast",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "d at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n"
+     ],
+     "llvm": [
+      1,
+      "d at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "d at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n"
+     ],
+     "llvm": [
+      1,
+      "d at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "d at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n"
+     ],
+     "llvm": [
+      1,
+      "d at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n  in descend at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_step_limit.my:5:16\n"
+     ]
+    }
+   ],
+   "failures": []
+  },
+  "trap_text_bounds": {
+   "expect": "R_TEXT_BOUNDS",
+   "checks": [
+    {
+     "mode": "fast",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_text_bounds.my:4:13: error[R_TEXT_BOUNDS]: native execution failed (index 9, length 3)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_text_bounds.my:4:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":9,\"length\":3}\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_text_bounds.my:4:13: error[R_TEXT_BOUNDS]: native execution failed (index 9, length 3)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_text_bounds.my:4:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":9,\"length\":3}\n"
+     ]
+    },
+    {
+     "mode": "fast",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_text_bounds.my:4:13: error[R_TEXT_BOUNDS]: native execution failed (index 9, length 3)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_text_bounds.my:4:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":9,\"length\":3}\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_text_bounds.my:4:13: error[R_TEXT_BOUNDS]: native execution failed (index 9, length 3)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_text_bounds.my:4:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":9,\"length\":3}\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "plain",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_text_bounds.my:4:13: error[R_TEXT_BOUNDS]: native execution failed (index 9, length 3)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_text_bounds.my:4:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":9,\"length\":3}\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_text_bounds.my:4:13: error[R_TEXT_BOUNDS]: native execution failed (index 9, length 3)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_text_bounds.my:4:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":9,\"length\":3}\n"
+     ]
+    },
+    {
+     "mode": "debug",
+     "stage": "stress",
+     "match": true,
+     "qbe": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_text_bounds.my:4:13: error[R_TEXT_BOUNDS]: native execution failed (index 9, length 3)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_text_bounds.my:4:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":9,\"length\":3}\n"
+     ],
+     "llvm": [
+      1,
+      "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_text_bounds.my:4:13: error[R_TEXT_BOUNDS]: native execution failed (index 9, length 3)\n  in main at /home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/probes/trap_text_bounds.my:4:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":9,\"length\":3}\n"
+     ]
+    }
+   ],
+   "failures": []
+  }
+ },
+ "adapter_sources": {
+  "amd64_sysv.py": "1d0252b37ec42904808f879590b9100292720c746efc3d9c85b537c001422919",
+  "inventory.py": "fc112547232c614979eb24cbc100f42830719dc08ce0c1681c9f1b0c371888e6",
+  "llvm_emit.py": "3ccf0f73e34cccc0e83e5f460587640b62a21b9e31b31d597a9ee6abd1766a2b",
+  "measure.py": "f804d50d5a6b9d648989886e6531bfcf2dafcd04b9db9183434b915a0c9af9cf",
+  "qbe_llvm.py": "d3ab8c24eb4e1f23e88531b31adabc3340ef59d3efccc84a6bb86f8e0fc7c8b6",
+  "qualify_affected.py": "eecf6f5325e9a58707815b5f056153c578fad86c86a19ac982fb84910a6fd83b",
+  "qualify_cost.py": "1771820b695f46f14356543550bee50d59034258e6ecff13b8a1b3f35955085c",
+  "qualify_equiv.py": "574043de1065d128ab0ca5d4db071ced932d8eec125f8ebf4e53b816a95d522d",
+  "qualify_identity.py": "112c0a1aceda46e4ad250caef492cf459123b2560f1ba6411ae1b2cdafa01d4d",
+  "qualify_sweep.py": "2a53168ab7a63d5a61eaa32c579aaf09282f9e7a08031a300693bd729f5ec3e0",
+  "qualify_traps.py": "9ddcecf97e3ac7212d0e14018cbe1149253dffd4972b555431abe069bfa19372",
+  "resolve_symbols.py": "fedcc6de37e738551604a160274e2ae666ccea49c0df623eb2364a3de2f29ae0",
+  "runtime_signatures.py": "8d0c48cdc747661daacc9eb776811543c0d24ec2ff53624a5ed4bc8b20fb637c",
+  "symbol_census.py": "720c0cc2acf5019936e202c806e6a2e147e9634700b9d6bd5349d51c4597b949",
+  "test_adapter.py": "973f7d2ab36e027744b78d094aebde1e81da01bf9fe2d47c9b2aa170fa11d0de",
+  "verify_binaries.py": "0a288dc2594f59241cc0372d52cbf3c3055a989b4011e36c8eab2f6f95b7ee00",
+  "verify_semantics.py": "52bf0bccaa5e079601a2282474020cfcc8d44042a0a6b38c2ff2a73ade74e60f",
+  "verify_traps.py": "151ff49b00eb74c0f7fc2bced067b6e3ddeadabedd3d8552f91b737424c4cc26",
+  "verify_units.py": "eb5293554e9dfad296d30e413f9ff69da7d5c6041edcab93052fd9d5ae9362c6"
+ },
+ "compiler_sha256": "217838b2e1512cabd81fdcd7224b0384713596f704d7d6ddf27196906fa1f6f9",
+ "identity_start": {
+  "compiler_sha256": "217838b2e1512cabd81fdcd7224b0384713596f704d7d6ddf27196906fa1f6f9",
+  "qbe_zig_sha256": "f5fa59a0ea7339b5c334492c039d38576cb7f296f25a226460fd83aa9bb4804f",
+  "native_types_zig_sha256": "02810bf47830686d53e1ebd753ae4c33c7875194774611fe111770ed0a108000",
+  "translator": {
+   "qbe_llvm.py": "d3ab8c24eb4e1f23e88531b31adabc3340ef59d3efccc84a6bb86f8e0fc7c8b6",
+   "llvm_emit.py": "3ccf0f73e34cccc0e83e5f460587640b62a21b9e31b31d597a9ee6abd1766a2b",
+   "runtime_signatures.py": "8d0c48cdc747661daacc9eb776811543c0d24ec2ff53624a5ed4bc8b20fb637c",
+   "amd64_sysv.py": "1d0252b37ec42904808f879590b9100292720c746efc3d9c85b537c001422919"
+  }
+ },
+ "checks": 72,
+ "failures": 0,
+ "probes_run": 18,
+ "identity_end": {
+  "compiler_sha256": "217838b2e1512cabd81fdcd7224b0384713596f704d7d6ddf27196906fa1f6f9",
+  "qbe_zig_sha256": "f5fa59a0ea7339b5c334492c039d38576cb7f296f25a226460fd83aa9bb4804f",
+  "native_types_zig_sha256": "02810bf47830686d53e1ebd753ae4c33c7875194774611fe111770ed0a108000",
+  "translator": {
+   "qbe_llvm.py": "d3ab8c24eb4e1f23e88531b31adabc3340ef59d3efccc84a6bb86f8e0fc7c8b6",
+   "llvm_emit.py": "3ccf0f73e34cccc0e83e5f460587640b62a21b9e31b31d597a9ee6abd1766a2b",
+   "runtime_signatures.py": "8d0c48cdc747661daacc9eb776811543c0d24ec2ff53624a5ed4bc8b20fb637c",
+   "amd64_sysv.py": "1d0252b37ec42904808f879590b9100292720c746efc3d9c85b537c001422919"
+  }
+ }
+}

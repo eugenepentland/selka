@@ -1,0 +1,950 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs e8ae40d29018f45898a92bfa1d9cf74d7b8f44e2: 48/367 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 10 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 9 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1840 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs e8ae40d29018f45898a92bfa1d9cf74d7b8f44e2, 48 file(s) in scope
+guardian: diff-scoped vs e8ae40d29018f45898a92bfa1d9cf74d7b8f44e2: 48/367 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 10 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 9 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1840 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs e8ae40d29018f45898a92bfa1d9cf74d7b8f44e2, 48 file(s) in scope
+native heap tests passed
+doc-coverage: 153 documented features (101 language, 52 tooling) across 45 pages
+  docs/arenas.md: 1
+  docs/byte-io-bulk.md: 1
+  docs/bytes.md: 2
+  docs/c-ffi.md: 3
+  docs/const-length-generics.md: 1
+  docs/diagnostic-recovery.md: 1
+  docs/effects.md: 8
+  docs/experiments/incremental-contract.md: 4
+  docs/floating-point.md: 2
+  docs/functions.md: 8
+  docs/generic-inference.md: 1
+  docs/generics.md: 5
+  docs/integer-operations.md: 4
+  docs/io.md: 8
+  docs/lambdas.md: 1
+  docs/managed-memory.md: 10
+  docs/match-expressions.md: 1
+  docs/module-constants.md: 2
+  docs/modules.md: 5
+  docs/performance.md: 1
+  docs/python-syntax.md: 2
+  docs/range-iteration.md: 1
+  docs/records-and-unions.md: 9
+  docs/results-and-options.md: 7
+  docs/source-evaluation.md: 1
+  docs/standard-library.md: 12
+  docs/statements.md: 5
+  docs/structured-loop-exits.md: 1
+  docs/text.md: 4
+  docs/tooling/agent-tools.md: 1
+  docs/tooling/api-diff.md: 1
+  docs/tooling/byte-runner.md: 3
+  docs/tooling/caches.md: 6
+  docs/tooling/documentation-gate.md: 2
+  docs/tooling/guest-tests.md: 11
+  docs/tooling/import-policy.md: 2
+  docs/tooling/lint.md: 1
+  docs/tooling/native-build.md: 1
+  docs/tooling/navigation.md: 3
+  docs/tooling/packages.md: 1
+  docs/tooling/runtime-budgets.md: 4
+  docs/tooling/work-report.md: 3
+  docs/type-aliases.md: 1
+  docs/typed-holes.md: 1
+  docs/typed-json.md: 1
+doc-coverage: 11 standard modules, 157 exports named in docs/standard-library.md
+doc-coverage: 0 failures
+idiom classifier self-test: 8 passed
+  docs/arenas.md: 5 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/interfaces-and-agent-development-2026-09-15.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/language-level-ssa-2026-09-19.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/language-simplicity-2026-09-12.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: removed feature
+  docs/audits/phase2-dir-notes.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/wave1-notes.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/wave2-notes.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/wave3-notes.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/wave4-notes.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/byte-io-bulk.md: 0 run, 0 checked, 2 skipped, 0 mis-tagged, 0 failed
+      skip: fragment: declarations appended to an existing host io.my module
+      skip: needs host capability: the mylang-io byte host and its io.my module
+  docs/bytes.md: 10 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/c-ffi.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/const-length-generics.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/diagnostic-recovery.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/domains.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/effects.md: 8 run, 8 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/arrays.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/callbacks.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/doc-examples.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/module-discovery.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: fragment: header excerpt whose imported modules are not shown
+  docs/experiments/module-interfaces.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: fragment: the imported `shared.units` module is not shown
+  docs/experiments/nominal-template-checks.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/resource-io.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/source-codecs.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: fragment: statements without the Positive domain and Wire declarations
+  docs/experiments/source-resources.md: 0 run, 2 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/structural-constraints.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/tables.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/unit-procedures.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/variants.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/floating-point.md: 3 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/functions.md: 9 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/generic-inference.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/generics.md: 5 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/integer-operations.md: 4 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/io.md: 7 run, 7 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/lambdas.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/managed-memory.md: 12 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/match-expressions.md: 1 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/module-constants.md: 1 run, 2 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/modules.md: 5 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/named-constraints-proposal.md: 0 run, 2 checked, 4 skipped, 0 mis-tagged, 0 failed
+      skip: proposed named-constraint syntax
+      skip: proposed named-constraint syntax
+      skip: proposed named-constraint syntax; contracts.my
+      skip: proposed named-constraint syntax; checkout.my
+  docs/plan.md: 2 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/python-syntax.md: 9 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/range-iteration.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/records-and-unions.md: 10 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/results-and-options.md: 6 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/source-evaluation.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/standard-library.md: 12 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/standard-time-random.md: 2 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/statements.md: 5 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/structured-loop-exits.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/text.md: 4 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/tooling/import-policy.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/type-aliases.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/typed-holes.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/typed-json.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+Doc examples: 301 files scanned, 590 blocks found, 138 run, 34 checked, 10 skipped, 0 mis-tagged, 0 failed
+passed arithmetic::test_comparisons_and_short_circuit
+passed arithmetic::test_division_rounding
+passed arithmetic::test_float_arithmetic
+passed arithmetic::test_float_rounding
+passed arithmetic::test_int_precedence
+passed bytes::test_conversion
+passed bytes::test_indexing_and_slicing
+passed bytes::test_search_and_split
+passed callbacks::test_callbacks
+passed callbacks::test_effect_ceilings
+passed dicts::test_aliases_and_values
+passed dicts::test_insertion_order
+passed dicts::test_membership_and_get
+passed generics::test_generic_functions
+passed generics::test_generic_records
+passed generics::test_generic_results
+passed generics::test_structural_contracts
+passed integers::test_bitwise_and_shifts
+passed integers::test_checked_division
+passed integers::test_extremes
+passed integers::test_saturating_arithmetic
+passed integers::test_width_conversions
+passed integers::test_wrapping_arithmetic
+passed lists::test_comprehension_and_loops
+passed lists::test_growth_and_indexing
+passed lists::test_membership_and_iteration
+passed lists::test_slices
+passed loops::test_comprehension_filter
+passed loops::test_enumerate_and_control
+passed loops::test_range_loops
+passed loops::test_while_and_locals
+passed records::test_arrays_and_tables
+passed records::test_enums
+passed records::test_unions
+passed records::test_value_records
+passed results_options::test_options
+passed results_options::test_parsing_and_conversion
+passed results_options::test_propagation
+passed results_options::test_results
+passed text::test_indexing_and_slicing
+passed text::test_interpolation_and_conversion
+passed text::test_methods
+42 passed, 0 cached, 0 failed, 0 skipped across 11 programs
+passed compiler___precedence_grouping_left_associativity_and_o::test_precedence_grouping_left_associativity_and_o_1
+passed compiler___precedence_grouping_left_associativity_and_o_2::test_precedence_grouping_left_associativity_and_o_2
+passed compiler___precedence_grouping_left_associativity_and_o_3::test_precedence_grouping_left_associativity_and_o_3
+passed compiler___precedence_grouping_left_associativity_and_o_4::test_precedence_grouping_left_associativity_and_o_4
+passed compiler___precedence_grouping_left_associativity_and_o_5::test_precedence_grouping_left_associativity_and_o_5
+passed compiler___signed_division_and_remainder_implement_trun::test_signed_division_and_remainder_implement_trun_1
+passed compiler___signed_division_and_remainder_implement_trun_2::test_signed_division_and_remainder_implement_trun_2
+passed compiler___signed_division_and_remainder_implement_trun_3::test_signed_division_and_remainder_implement_trun_3
+passed compiler___signed_division_and_remainder_implement_trun_4::test_signed_division_and_remainder_implement_trun_4
+passed compiler___signed_division_and_remainder_implement_trun_5::test_signed_division_and_remainder_implement_trun_5
+passed compiler___signed_division_and_remainder_implement_trun_6::test_signed_division_and_remainder_implement_trun_6
+passed compiler___signed_division_and_remainder_implement_trun_7::test_signed_division_and_remainder_implement_trun_7
+passed compiler___signed_division_and_remainder_implement_trun_8::test_signed_division_and_remainder_implement_trun_8
+passed const_lengths___const_length_function_parameters_specialize::test_const_length_function_parameters_specialize
+passed const_lengths___one_helper_serves_distinct_nominal_element_t::test_one_helper_serves_distinct_nominal_element_t
+passed float_operations___ordinary_float_values_reach_the_same_binary6::test_ordinary_float_values_reach_the_same_binary6
+passed python_syntax___match_merges_definite_assignment_across_cont::test_match_merges_definite_assignment_across_cont_1
+passed python_syntax___match_merges_definite_assignment_across_cont_2::test_match_merges_definite_assignment_across_cont_2
+passed python_syntax___py_scope_1_predeclared_loop_state_and_comple::test_py_scope_1_predeclared_loop_state_and_comple_1
+passed python_syntax___py_scope_1_predeclared_loop_state_and_comple_2::test_py_scope_1_predeclared_loop_state_and_comple_2
+passed python_syntax___py_scope_1_predeclared_loop_state_and_comple_3::test_py_scope_1_predeclared_loop_state_and_comple_3
+passed python_syntax___py_scope_1_predeclared_loop_state_and_comple_4::test_py_scope_1_predeclared_loop_state_and_comple_4
+passed python_syntax___py_scope_1_predeclared_loop_state_and_comple_5::test_py_scope_1_predeclared_loop_state_and_comple_5
+passed python_syntax___py_scope_1_predeclared_loop_state_and_comple_6::test_py_scope_1_predeclared_loop_state_and_comple_6
+passed python_syntax___python_generic_value_records_use_square_cons::test_python_generic_value_records_use_square_cons
+passed python_syntax___python_generics_default_to_copy_and_none_mea::test_python_generics_default_to_copy_and_none_mea
+passed python_syntax___record_is_the_canonical_declaration_head_wit::test_record_is_the_canonical_declaration_head_wit_1
+passed python_syntax___record_is_the_canonical_declaration_head_wit_2::test_record_is_the_canonical_declaration_head_wit_2
+passed unit___unit_fallthrough_and_early_return_release_ma::test_unit_fallthrough_and_early_return_release_ma
+passed builtin_context::test_builtin_list_and_result_resolve_without_imports_or_explicit_declarations
+passed builtin_context::test_empty_lists_and_ok_err_inherit_binding_return_and_argument_contexts
+passed builtin_context::test_generic_list_result_and_contextual_constructors_keep_symbolic_type_parameters
+passed builtin_context::test_ok_unit_values_preserve_fallible_result_handling
+passed builtin_context::test_record_fields_and_nested_list_elements_propagate_empty_list_context
+passed callbacks::test_callbacks_infer_function_values_and_invoke_passed_exact_signatures
+passed callbacks::test_callbacks_invoke_passed_exact_signatures_through_a_parameter
+passed callbacks::test_callbacks_retain_values_through_records_arrays_and_ordinary_generic_forwarding
+passed callbacks::test_callbacks_return_from_a_chooser_and_invoke
+passed callbacks::test_expression_lambdas_read_module_constants
+passed callbacks::test_expression_lambdas_use_an_expected_callback_signature_and_invoke_correctly
+passed callbacks::test_generic_callback_parameters_use_the_same_directional_relation
+passed callbacks::test_stored_and_returned_callbacks_retain_the_destination_effect_contract
+passed float_environment::test_float_arithmetic_keeps_exact_bits
+passed compiler::test_branches_and_loops_execute_both_outcomes_wit_1
+passed compiler::test_branches_and_loops_execute_both_outcomes_wit_2
+passed compiler::test_branches_and_loops_execute_both_outcomes_wit_3
+passed compiler::test_branches_and_loops_execute_both_outcomes_wit_4
+passed compiler::test_branches_and_loops_execute_both_outcomes_wit_5
+passed compiler::test_branches_and_loops_execute_both_outcomes_wit_6
+passed compiler::test_branches_and_loops_execute_both_outcomes_wit_7
+passed compiler::test_forward_mutual_recursive_and_nested_calls_pr_1
+passed compiler::test_forward_mutual_recursive_and_nested_calls_pr_2
+passed compiler::test_forward_mutual_recursive_and_nested_calls_pr_3
+passed compiler::test_forward_mutual_recursive_and_nested_calls_pr_4
+passed compiler::test_forward_mutual_recursive_and_nested_calls_pr_5
+passed compiler::test_locals_mutation_annotations_and_lexical_scop_1
+passed compiler::test_locals_mutation_annotations_and_lexical_scop_2
+passed compiler::test_locals_mutation_annotations_and_lexical_scop_3
+passed compiler::test_locals_mutation_annotations_and_lexical_scop_4
+passed domain_equality::test_domain_equality_participates_in_generic_equa
+passed effects::test_m2_declared_mutation_permits_direct_writes_a
+passed effects::test_m2_disjoint_managed_argument_types_are_prove
+passed effects::test_m2_fresh_containers_may_be_built_inserted_in
+passed effects::test_m2_generic_helpers_carry_mutation_permission
+passed effects::test_m2_read_only_queries_require_no_mutation_per
+passed effects::test_m2_two_writable_aliases_remain_permitted
+passed generic_arrays::test_generic_arrays_nest_substitute_across_calls_1
+passed generic_arrays::test_generic_arrays_nest_substitute_across_calls_2
+passed generic_arrays::test_generic_fixed_array_length_is_signed_int_lik
+passed generic_inference::test_generic_inference_follows_arrays_nominal_app_1
+passed generic_inference::test_generic_inference_follows_arrays_nominal_app_2
+passed generic_inference::test_generic_inference_follows_arrays_nominal_app_3
+passed generic_inference::test_generic_inference_follows_arrays_nominal_app_4
+passed generic_results::test_generic_try_converts_a_narrower_error_into_a
+passed managed_cell::test_cell_construction_reads_and_replacement_shar_1
+passed managed_cell::test_cell_construction_reads_and_replacement_shar_2
+passed managed_values::test_managed_dictionary_source_literals_indexing_1
+passed managed_values::test_managed_dictionary_source_literals_indexing_2
+passed managed_values::test_managed_dictionary_source_literals_indexing_3
+passed managed_values::test_managed_equality_source_compares_values_rath_1
+passed managed_values::test_managed_equality_source_compares_values_rath_2
+passed managed_values::test_managed_equality_source_compares_values_rath_3
+passed managed_values::test_managed_membership_source_searches_list_valu_1
+passed managed_values::test_managed_membership_source_searches_list_valu_2
+passed managed_values::test_managed_membership_source_searches_list_valu_3
+passed managed_values::test_managed_str_conversion_source_evaluates_argu
+passed managed_values::test_managed_text_source_literals_concat_equality
+passed prelude_builtins::test_a_declared_function_or_binding_keeps_its_own_1
+passed prelude_builtins::test_a_declared_function_or_binding_keeps_its_own_2
+passed prelude_builtins::test_a_declared_function_or_binding_keeps_its_own_3
+passed prelude_builtins::test_a_declared_function_or_binding_keeps_its_own_4
+passed propagation::test_nested_results_can_be_propagated_repeatedly_1
+passed propagation::test_nested_results_can_be_propagated_repeatedly_2
+passed propagation::test_nested_results_can_be_propagated_repeatedly_3
+passed propagation::test_option_propagation_unwraps_some_and_forwards_1
+passed propagation::test_option_propagation_unwraps_some_and_forwards_2
+passed propagation::test_try_unwraps_success_and_remaps_errors_betwee_1
+passed propagation::test_try_unwraps_success_and_remaps_errors_betwee_2
+passed propagation::test_try_wraps_a_mismatched_error_into_the_matchi_1
+passed propagation::test_try_wraps_a_mismatched_error_into_the_matchi_2
+passed python_format::test_an_f_before_anything_but_a_quote_stays_an_or
+passed python_format::test_doubled_braces_are_literal_and_an_empty_form
+passed python_format::test_format_strings_interpolate_expressions_and_r
+passed python_generics::test_explicit_and_inferred_type_arguments_reach_t
+passed python_generics::test_square_type_arguments_select_a_generic_funct
+passed python_surface::test_a_subscript_index_may_begin_with_a_parenthes
+passed python_surface::test_an_intrinsic_name_is_an_ordinary_field_keywo
+passed python_surface::test_bytes_and_float_resolve_wherever_their_names
+passed records::test_record_construction_nesting_named_order_fiel_1
+passed records::test_record_construction_nesting_named_order_fiel_2
+passed records::test_record_construction_nesting_named_order_fiel_3
+passed records::test_record_construction_nesting_named_order_fiel_4
+passed structural_constraints::test_named_constraints_coalesce_alpha_renamed_sub_1
+passed structural_constraints::test_named_constraints_coalesce_alpha_renamed_sub_2
+passed structural_constraints::test_named_constraints_coalesce_alpha_renamed_sub_3
+passed structural_constraints::test_named_constraints_coalesce_nested_callbacks
+passed structural_constraints::test_named_constraints_execute_forward_and_interc
+passed structural_constraints::test_named_constraints_normalize_callbacks_and_fo
+passed structural_constraints::test_named_constraints_normalizeone_and_canonical
+passed structural_constraints::test_named_constraints_substitute_the_subject_thr
+passed structural_constraints::test_structural_fields_execute_multiple_nominal_r
+passed structural_constraints::test_structural_public_domain_operations_execute
+passed surface_collections::test_generic_list_methods_retain_element_type_che
+passed surface_collections::test_list_methods_indexing_and_indexed_assignment
+passed surface_collections::test_record_constructors_without_new_support_gene
+passed surface_statements::test_condition_calls_admit_nested_record_construc
+passed surface_statements::test_nested_generic_record_constructors_retain_li
+passed surface_statements::test_parentheses_spell_unit_types_values_and_bare
+passed surface_statements::test_postfix_question_propagates_success_and_erro_1
+passed surface_statements::test_postfix_question_propagates_success_and_erro_2
+passed surface_statements::test_trailing_call_commas_and_multiline_binary_op_1
+passed surface_statements::test_trailing_call_commas_and_multiline_binary_op_2
+passed surface_statements::test_trailing_call_commas_and_multiline_binary_op_3
+passed nominal_bodies::test_nominal_bodies_construct_project_update_match_and_forward_symbolic_arguments
+passed nominal_bodies::test_nominal_bodies_reuse_concrete_array_identities_created_by_earlier_function_specialization
+passed nominal_instances::test_nominal_instances_compose_with_existing_generic_functions_and_fixed_arrays
+passed nominal_instances::test_nominal_instances_construct_assign_nest_and_exhaustively_match_on_the_vm
+passed nominal_instances::test_nominal_instances_keep_growing_phantom_arguments_outside_runtime_storage
+passed python_arrays::test_a_dict_literal_builds_an_enum_indexed_table_from_qualified_case_keys
+passed python_arrays::test_a_list_literal_builds_a_fixed_array_wherever_the_context_declares_one
+passed python_arrays::test_a_list_literal_without_an_array_context_still_builds_a_managed_list
+passed python_arrays::test_divtrunc_and_remtrunc_round_toward_zero_beside_flooring
+passed python_arrays::test_truncating_helpers_keep_the_full_unsigned_width
+passed python_bytes::test_a_decoded_slice_keeps_clamping_and_invalid_utf8
+passed python_bytes::test_byte_literals_index_slice_concatenate_compare_and_iterate
+passed python_bytes::test_byte_strings_alias_through_helpers_and_survive_collection_stress
+passed python_bytes::test_generic_bodies_preserve_managed_byte_string_identities
+passed python_bytes::test_integer_list_text_and_hexadecimal_conversions_round_trip
+passed python_bytes::test_membership_accepts_a_byte_scalar_or_a_contiguous_subsequence
+passed python_bytes::test_split_join_prefix_suffix_search_and_container_storage
+passed python_calls::test_empty_and_positional_record_constructors_resolve_alongside_keyword_functions
+passed python_calls::test_generic_keyword_arguments_bind_out_of_order
+passed python_calls::test_keyword_call_temporaries_remain_rooted_under_gc_stress_and_are_reclaimed
+passed python_calls::test_keyword_calls_evaluate_effects_in_source_order_before_parameter_binding
+passed python_calls::test_keyword_defaults_bind_by_name
+passed python_calls::test_repeated_keyword_calls_bind_independently
+passed python_collections::test_augmented_assignment_applies_each_binding_types_own_operator_rules
+passed python_collections::test_augmented_assignment_writes_a_list_slot_and_a_dictionary_entry_in_place
+passed python_collections::test_contextual_nested_lists_and_receiver_fields
+passed python_collections::test_dictionary_pop_update_and_setdefault_keep_insertion_order
+passed python_collections::test_field_receiver_index_and_right_side_run_once_in_order_under_collection_stress
+passed python_collections::test_field_writeback_preserves_sibling_changes_made_by_its_right_hand_side
+passed python_collections::test_foreach_enumerate_range_and_continue
+passed python_collections::test_generic_bodies_bind_items_key_then_value_in_insertion_order
+passed python_collections::test_generic_lists_preserve_literal_foreach_slice_and_write_element_types
+passed python_collections::test_generic_record_slot_updates_and_list_aliases_remain_copyable
+passed python_collections::test_inferred_literal_indexing_negative_indices_and_append
+passed python_collections::test_list_extends_in_place_and_items_binds_key_then_value_in_insertion_order
+passed python_collections::test_list_index_and_copy_are_read_forms_with_first_occurrence_order
+passed python_collections::test_list_methods_mutate_in_place_with_python_shaped_bounds
+passed python_collections::test_outer_annotated_postfix_expressions_do_not_contaminate_literal_element_inference
+passed python_collections::test_range_end_syntax_agrees_in_constant_and_runtime_evaluation
+passed python_collections::test_record_fields_update_values_and_list_slots_without_changing_prior_copies
+passed python_collections::test_slice_copies_clamps_and_length_uses_signed_index_type
+passed python_collections::test_slice_negative_clamp_empty_and_copy_alias_semantics
+passed python_collections::test_slice_step_selects_every_nth_element_of_a_list_and_of_text_in_both_directions
+passed python_comprehension::test_a_comprehension_accepts_range_as_a_source_in_one_and_two_argument_forms
+passed python_comprehension::test_a_comprehension_maps_one_generator_optionally_filtered_into_a_fresh_list
+passed python_comprehension::test_comprehensions_read_strings_and_dictionaries_and_leave_the_source_unchanged
+passed python_core::test_class_is_a_shared_managed_reference_while_record_copies
+passed python_core::test_floating_comparisons_and_remainder_preserve_operand_evaluation_once_in_source_order
+passed python_core::test_floating_literals_operators_and_comparisons_use_numeric_binary64_semantics
+passed python_core::test_omitted_callback_ceilings_are_unbounded_and_unannotated_functions_fill_slots
+passed python_core::test_python_contextual_option_constructors_work_in_generic_functions
+passed python_core::test_python_division_remainder_numeric_conversions_and_generic_numbers
+passed python_core::test_python_indexed_assignment_evaluates_rhs_before_receiver_and_index_exactly_once
+passed python_core::test_python_payloadless_enum_values_use_ordinary_dotted_members
+passed python_core::test_python_string_and_float_defaults_remain_typed_and_independent_across_repeated_calls
+passed python_core::test_unannotated_functions_fill_the_sorted_key_callback_slot
+passed python_strings::test_search_replacement_and_classification_follow_python_answers
+passed python_strings::test_splitlines_drops_terminators_and_int_float_parse_a_whole_string
+passed python_strings::test_trimming_case_mapping_and_padding_copy_the_receiver_without_changing_it
+passed python_values::test_ascii_scalar_indexing_survives_frame_restores_and_collections
+passed python_values::test_python_values_collection_float_equality_and_membership_preserve_numeric_semantics
+passed python_values::test_python_values_dictionary_and_unicode_text_iteration_preserve_order
+passed python_values::test_python_values_dictionary_literal_growing_aliases_and_arbitrary_method_receivers
+passed python_values::test_python_values_generic_dictionary_preserves_symbolic_value_types
+passed python_values::test_python_values_generic_str_conversion_and_unicode_escapes
+passed python_values::test_python_values_unicode_literals_chained_methods_indexing_and_membership
+passed python_values::test_python_values_unicode_slicing_clamps_endpoints_and_returns_independent_text
+passed python_variants::test_a_generic_parenthesized_case_specializes_with_the_union_arguments
+passed python_variants::test_a_generic_variant_infers_its_type_arguments_from_the_expected_type
+passed python_variants::test_a_named_field_pattern_binds_one_name_per_field_and_discards_with_underscore
+passed python_variants::test_a_parenthesized_case_constructs_positionally_by_name_and_with_defaults
+passed python_variants::test_python_payload_variant_construction_names_the_union_case_like_a_call
+passed python_variants::test_python_payload_variants_nest_flow_through_locals_and_reach_record_fields
+passed standard_strings::test_chr_builds_one_character_and_round_trips
+passed standard_strings::test_chr_rejects_surrogates_and_out_of_range_code_points
+passed standard_strings::test_ord_reads_unicode_scalar_values
+passed value_equality::test_class_equality_is_reference_identity
+passed value_equality::test_cyclic_class_equality_terminates
+passed value_equality::test_equality_through_a_field_supplies_the_option_type
+passed value_equality::test_record_array_and_nested_equality_is_structural
+passed value_equality::test_union_result_and_option_equality_is_structural
+214 passed, 0 cached, 0 failed, 0 skipped across 62 programs
+idiom probes: 57 selected, 50 at target, 7 not yet
+  builtins        12/ 12 at target
+  collections     17/ 19 at target
+  dictionary       6/  6 at target
+  entry-command    1/  1 at target
+  expressions      2/  6 at target
+  program-edge     6/  7 at target
+  removals         6/  6 at target
+test
++- run test w
+guardian/test: 11 test(s) selected
+guardian/test: test wall 0.00s
+guardian/test: PASS — 11 passed
+guardian/test: RESULT {"passed":11,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/af042fe4529fb5c91779a86ee22c6fe1/test --cache-dir=./.zig-cache --seed=0xff9ffccb --listen=-
+
+test
++- run test w
+guardian/test: 7 test(s) selected
+guardian/test: test wall 0.00s
+guardian/test: PASS — 7 passed
+guardian/test: RESULT {"passed":7,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/f9a8274905ff07a551c3355d5a5d22c5/test --cache-dir=./.zig-cache --seed=0xff9ffccb --listen=-
+
+test
++- run test w
+guardian/test: 96 test(s) selected [shard 8/12 of 1163]
+guardian/test: test wall 11.51s; slowest over 50ms:
+guardian/test:   4.03s  stdlib_sort_test.test.standard sort keeps its copies rooted under collection stress
+guardian/test:   3.27s  qbe_text_test.test.every Python string method lowers onto the native text runtime
+guardian/test:   0.42s  semantic_cache_test.test.semantic cache retains a bounded prefix of bodies when the snapshot exceeds its budget
+guardian/test:   0.37s  io_files_test.test.FILE-METHOD-1 the whole-path helpers accept the qualified method spelling
+guardian/test:   0.22s  resource_source_test.test.fs.read_only preserves a dir scope while narrowing permissions
+guardian/test:   0.21s  io_print_test.test.IO-1 print renders scalars, text, bytes and containers with Python spellings
+guardian/test:   0.21s  generic_codecs_test.test.generic codecs execute concrete domain factories and accessors under allocation failures
+guardian/test:   0.20s  constants_test.test.managed constants preserve literal content aliases generic reads effects and formatting
+guardian/test:   0.19s  qbe_test.test.a call to a function that cannot allocate pushes no roots
+guardian/test:   0.18s  domains_test.test.domain backing types require built-in scalars and exact wrapping types
+guardian/test: PASS — 96 passed
+guardian/test: RESULT {"passed":96,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/f22f1c55e61a51a65f4f71c799455d54/test --guardian-shard=8/12 --cache-dir=./.zig-cache --seed=0xff9ffccb --listen=-
+
+test
++- run test w
+guardian/test: 25 test(s) selected [shard 3/6 of 153]
+guardian/test: test wall 20.37s; slowest over 50ms:
+guardian/test:   3.53s  integration.test.CLI run loads a project entry that imports a standard module and leaves single-file run unchanged
+guardian/test:   2.77s  integration.test.an executable built without a frame ceiling refuses a runtime frame budget
+guardian/test:   2.13s  integration.test.a directory benchmark run measures sequentially and stays green without tests
+guardian/test:   2.10s  integration.test.CLI resolves the Python capability spellings inside projects that import modules
+guardian/test:   1.54s  integration.test.C4 no-cache performs fresh runs without durable result or graph entries
+guardian/test:   1.42s  integration.test.R3 canonical descriptors expand transparent aliases for discovery and nested contracts
+guardian/test:   0.94s  integration.test.CLI checks domain privacy unit mismatches and qualified factory execution
+guardian/test:   0.91s  integration.test.CLI forwards guest arguments after -- for run and build --run
+guardian/test:   0.82s  integration.test.named constraints fake-only entry ignores an absent or invalid production module
+guardian/test:   0.58s  integration.test.CLI exposes fs.read_only permission attenuation and rejects the removed spelling
+guardian/test: PASS — 25 passed
+guardian/test: RESULT {"passed":25,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/04393d0f33bfe93c07c3568ed4cebced/test --guardian-shard=3/6 --cache-dir=./.zig-cache --seed=0xff9ffccb --listen=-
+
+test
++- run test w
+guardian/test: 96 test(s) selected [shard 9/12 of 1163]
+guardian/test: SLOW  8.40s  stdlib_path_test.test.standard path joins splits and normalizes without filesystem authority
+guardian/test: test wall 15.59s; slowest over 50ms:
+guardian/test:   8.40s  stdlib_path_test.test.standard path joins splits and normalizes without filesystem authority
+guardian/test:   2.19s  interfaces_test.test.generic execution retains module identities and ordinary public schema roots
+guardian/test:   1.78s  compiler_test.test.long left-associative expressions do not recursively traverse host stacks
+guardian/test:   0.69s  generic_concrete_test.test.generic record updates and array replacement preserve snapshots under allocation failures
+guardian/test:   0.39s  integers_test.test.all integer widths accept their limits and reject one-past literals
+guardian/test:   0.25s  io_print_test.test.IO-2 print renders records, enums, unions and checked results by name
+guardian/test:   0.17s  semantic_cache_test.test.semantic cache binds the mutation contract version and effects contract
+guardian/test:   0.15s  prelude_builtins_test.test.len returns int for every supported receiver and dot len is removed
+guardian/test:   0.13s  semantic_project_test.test.semantic project body reuse relocates module spans and invalidates changed imports exports signatures and types
+guardian/test:   0.11s  generic_codecs_test.test.generic codecs follow imported contracts and declaring domain privacy through module relocation
+guardian/test: PASS — 96 passed
+guardian/test: RESULT {"passed":96,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/f22f1c55e61a51a65f4f71c799455d54/test --guardian-shard=9/12 --cache-dir=./.zig-cache --seed=0xff9ffccb --listen=-
+
+test
++- run test w
+guardian/test: 26 test(s) selected [shard 0/6 of 153]
+guardian/test: test wall 24.25s; slowest over 50ms:
+guardian/test:   2.90s  integration.test.library modules and bare *_test.my files are valid guest test entries
+guardian/test:   2.58s  integration.test.PURE-SKIP-1 no-cache and force disable pure outcome replay
+guardian/test:   2.35s  integration.test.CLI test discovers a test_ function without an explicit export
+guardian/test:   2.00s  integration.test.C3s provider body changes stay visible through reused specializations
+guardian/test:   1.76s  integration.test.CLI executes the exact plan acceptance programs and recursive functions
+guardian/test:   1.72s  integration.test.C4 invalid selected project fails before any green result
+guardian/test:   1.67s  integration.test.P1 rejects stronger or malformed replacements and a bad production interface
+guardian/test:   1.51s  integration.test.CLI invalidation reports actual query work and marks unexecuted stages skipped
+guardian/test:   1.27s  integration.test.CLI clock entropy and environment providers honour their grants
+guardian/test:   0.84s  integration.test.CLI handles recoverable results and rejects silent error loss
+guardian/test: PASS — 26 passed
+guardian/test: RESULT {"passed":26,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/04393d0f33bfe93c07c3568ed4cebced/test --guardian-shard=0/6 --cache-dir=./.zig-cache --seed=0xff9ffccb --listen=-
+
+test
++- run test w
+guardian/test: 25 test(s) selected [shard 4/6 of 153]
+guardian/test: test wall 25.25s; slowest over 50ms:
+guardian/test:   4.49s  integration.test.guest print output stays off the test protocol and shows on failure
+guardian/test:   2.80s  integration.test.CLI test affected selects tests that reach a changed declaration
+guardian/test:   2.34s  integration.test.PURE-SKIP-1 pure failure outcome replays without executing and is never masked
+guardian/test:   2.07s  integration.test.C4 unchanged deterministic rerun executes zero tests without lowering emission or linking
+guardian/test:   1.91s  integration.test.R3 canonical descriptors compare provider scalar and nominal contracts
+guardian/test:   1.60s  integration.test.loadConfiguredPolicy policy applies to native test preparation ProjectConfigurationFailed and ProjectPolicyRejected
+guardian/test:   1.31s  integration.test.an executable built without a requested ceiling refuses a runtime step budget
+guardian/test:   1.28s  integration.test.CLI executes variants dumps dispatch and rejects newly incomplete matches
+guardian/test:   1.11s  integration.test.CLI grants every capability by default and resolves paths against the working directory
+guardian/test:   1.07s  integration.test.duplicate discovery is separate advisory analysis with explicit options
+guardian/test: PASS — 25 passed
+guardian/test: RESULT {"passed":25,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/04393d0f33bfe93c07c3568ed4cebced/test --guardian-shard=4/6 --cache-dir=./.zig-cache --seed=0xff9ffccb --listen=-
+
+test
++- run test w
+guardian/test: 26 test(s) selected [shard 2/6 of 153]
+guardian/test: test wall 26.31s; slowest over 50ms:
+guardian/test:   4.94s  integration.test.C4 two providers with reversed map order prepare one graph and one library
+guardian/test:   3.49s  integration.test.CLI managed constants import run build installed and invalidate warm caches
+guardian/test:   2.39s  integration.test.CLI migrated corpus projects carry the checked mutation contract
+guardian/test:   2.33s  integration.test.CLI budget traps name the flag that raises the budget
+guardian/test:   1.98s  integration.test.a wrong benchmark result or trap fails the run and reports no measurement
+guardian/test:   1.70s  integration.test.P1 ignores an unselected production body type error while its declarations stay valid
+guardian/test:   1.40s  integration.test.CLI test reports an exported ill-shaped test as a failed case
+guardian/test:   1.40s  integration.test.CLI execution timings preserve results and runtime diagnostics
+guardian/test:   1.29s  integration.test.CLI checks array schemas dumps indexing and reports bounds traps
+guardian/test:   1.14s  integration.test.all commands reject invalid programs before execution and locate runtime traps
+guardian/test: PASS — 26 passed
+guardian/test: RESULT {"passed":26,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/04393d0f33bfe93c07c3568ed4cebced/test --guardian-shard=2/6 --cache-dir=./.zig-cache --seed=0xff9ffccb --listen=-
+
+test
++- run test w
+guardian/test: 26 test(s) selected [shard 1/6 of 153]
+guardian/test: SLOW  6.14s  integration.test.C4 expectation argument budget environment and force invalidate the right receipts
+guardian/test: test wall 27.73s; slowest over 50ms:
+guardian/test:   6.14s  integration.test.C4 expectation argument budget environment and force invalidate the right receipts
+guardian/test:   4.08s  integration.test.CLI checks external capabilities but cannot silently grant ambient providers
+guardian/test:   3.70s  integration.test.guest benchmarks write a candidate and enforce an approved baseline immutably
+guardian/test:   2.05s  integration.test.CLI test ignores unexported test_ helpers that cannot default
+guardian/test:   1.81s  integration.test.CLI frame budgets count main and reject invalid overrides
+guardian/test:   1.16s  integration.test.a directory run discovers project roots instead of every module
+guardian/test:   1.12s  integration.test.CLI preserves integer width bounds and explicit casts
+guardian/test:   1.06s  integration.test.P1 rejects every incompatible replacement dimension
+guardian/test:   1.05s  integration.test.CLI step budgets count dispatch and reject invalid options
+guardian/test:   0.74s  integration.test.CLI maps Result main ok and err to status codes and one diagnostic
+guardian/test: PASS — 26 passed
+guardian/test: RESULT {"passed":26,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/04393d0f33bfe93c07c3568ed4cebced/test --guardian-shard=1/6 --cache-dir=./.zig-cache --seed=0xff9ffccb --listen=-
+
+test
++- run test w
+guardian/test: 96 test(s) selected [shard 10/12 of 1163]
+guardian/test: SLOW  6.50s  stdlib_time_random_test.test.standard time random boundary arithmetic and pinned deterministic vectors
+guardian/test: SLOW  6.62s  stdlib_path_test.test.standard path helpers need no capability and stay inside a noio ceiling
+guardian/test: SLOW  5.11s  standard_library_test.test.standard modules load through embedded providers and execute reserved sources
+guardian/test: test wall 22.30s; slowest over 50ms:
+guardian/test:   6.62s  stdlib_path_test.test.standard path helpers need no capability and stay inside a noio ceiling
+guardian/test:   6.50s  stdlib_time_random_test.test.standard time random boundary arithmetic and pinned deterministic vectors
+guardian/test:   5.11s  standard_library_test.test.standard modules load through embedded providers and execute reserved sources
+guardian/test:   0.73s  domains_test.test.domain factories accessors qualified names and discovery clean up on allocation failure
+guardian/test:   0.41s  compiler_test.test.all comparisons boolean operations and logical precedence have observable results
+guardian/test:   0.34s  python_assert_test.test.a valued assert renders its message to stderr only when the condition is false
+guardian/test:   0.30s  managed_lists_test.test.managed cycles lose local and record roots on block break and continue exits
+guardian/test:   0.19s  semantic_cache_test.test.a reused caller recomputes its return-origin bound after a callee alias change
+guardian/test:   0.16s  compiler_test.test.overflow traps at the responsible operator without folding during check
+guardian/test:   0.13s  generic_api_test.test.public generic schema separates checked templates from calls and releases allocation failures
+guardian/test: PASS — 96 passed
+guardian/test: RESULT {"passed":96,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/f22f1c55e61a51a65f4f71c799455d54/test --guardian-shard=10/12 --cache-dir=./.zig-cache --seed=0xff9ffccb --listen=-
+
+test
++- run test w
+guardian/test: 25 test(s) selected [shard 5/6 of 153]
+guardian/test: SLOW  6.78s  integration.test.boundary acceptance CLI runs through run build --run and installed paths
+guardian/test: test wall 29.05s; slowest over 50ms:
+guardian/test:   6.78s  integration.test.boundary acceptance CLI runs through run build --run and installed paths
+guardian/test:   3.77s  integration.test.CLI refuses an ungranted entry capability only while --restrict is active
+guardian/test:   3.02s  integration.test.P1 selects a validated fake while the unfinished production body is never checked
+guardian/test:   2.89s  integration.test.CLI build report states the default and explicit optimize modes
+guardian/test:   2.76s  integration.test.C4 helper edit reruns only the dependent test and lower only on an uncached selection
+guardian/test:   1.75s  integration.test.PURE-SKIP-1 a changed dependency invalidates the recorded pure outcome
+guardian/test:   1.43s  integration.test.loadConfiguredPolicy enforces mylang.json across ordinary project commands cold warm and after policy-only edits
+guardian/test:   1.12s  integration.test.CLI executes control flow and preserves discarded traps
+guardian/test:   0.78s  integration.test.CLI checks runs and dumps records and declared complete conversions
+guardian/test:   0.75s  integration.test.CLI executes complete enum tables and rejects missing mappings in every command
+guardian/test: PASS — 25 passed
+guardian/test: RESULT {"passed":25,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/04393d0f33bfe93c07c3568ed4cebced/test --guardian-shard=5/6 --cache-dir=./.zig-cache --seed=0xff9ffccb --listen=-
+
+test
++- run test w
+guardian/test: 96 test(s) selected [shard 11/12 of 1163]
+guardian/test: SLOW  8.04s  stdlib_time_random_test.test.standard time random calls reach the machine only through granted capabilities
+guardian/test: SLOW  9.96s  stdlib_codecs_test.test.standard base64 and hex match their vectors and reject noncanonical input
+retention: budget=5862 retained=4156 spec_bytes=4156 evictions=38 oldest_fresh_checks=+1
+guardian/test: test wall 26.03s; slowest over 50ms:
+guardian/test:   9.96s  stdlib_codecs_test.test.standard base64 and hex match their vectors and reject noncanonical input
+guardian/test:   8.04s  stdlib_time_random_test.test.standard time random calls reach the machine only through granted capabilities
+guardian/test:   2.00s  nominal_bodies_test.test.nominal bodies release shape catalogs and VM storage after every allocation failure
+guardian/test:   1.11s  generic_bodies_test.test.generic body contracts bound wide statement work without host execution
+guardian/test:   0.93s  semantic_cache_test.test.shared retention budget bounds distinct specializations and eviction forces fresh checks
+guardian/test:   0.47s  nominal_providers_test.test.nominal providers specialize named payloads byte inputs and completion retry ownership
+guardian/test:   0.35s  native_execute.test.native execution reports original bounds indexes for read write pop array text and bytes
+guardian/test:   0.27s  integers_test.test.inlined multiplication keeps every width and traps past its bounds
+guardian/test:   0.23s  python_bytes_test.test.PY-BYTES-4 byte strings are region allocated escaped and barrier checked under with arena
+guardian/test:   0.22s  environment_test.test.environment grants delegate explicitly and missing empty and present values remain distinct
+guardian/test: PASS — 96 passed
+guardian/test: RESULT {"passed":96,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/f22f1c55e61a51a65f4f71c799455d54/test --guardian-shard=11/12 --cache-dir=./.zig-cache --seed=0xff9ffccb --listen=-
+
+test
++- run test w
+guardian/test: 96 test(s) selected [shard 4/12 of 1163]
+guardian/test: SLOW  7.94s  qbe_test.test.large fixed scratch recursion reaches a structured frame trap
+guardian/test: SLOW  5.64s  qbe_build_test.test.a prebuilt runtime installed beside the compiler links directly, and damage falls back to source
+guardian/test: SLOW  7.69s  stdlib_strings_test.test.standard strings classify search trim pad and convert text at signed boundaries
+guardian/test: test wall 32.09s; slowest over 50ms:
+guardian/test:   7.94s  qbe_test.test.large fixed scratch recursion reaches a structured frame trap
+guardian/test:   7.69s  stdlib_strings_test.test.standard strings classify search trim pad and convert text at signed boundaries
+guardian/test:   5.64s  qbe_build_test.test.a prebuilt runtime installed beside the compiler links directly, and damage falls back to source
+guardian/test:   3.97s  stdlib_pool_test.test.standard pool reuses slots and reports stale handles as absent
+guardian/test:   2.71s  generic_execution_test.test.generic execution bounds actual discovery and reuses instances at capacity
+guardian/test:   0.71s  semantic_cache_test.test.generic publication rolls back cleanly on allocation failure
+guardian/test:   0.66s  io_print_test.test.QBE-BULK-TEXT-1 raw top-level text is encoded into the line buffer in one pass
+guardian/test:   0.28s  managed_lists_test.test.QBE-TEXT-BLOCK-1 run-time text shares one allocation with its header
+guardian/test:   0.24s  value_test.test.repeated record allocation retains bounded live storage
+guardian/test:   0.17s  io_files_test.test.IO-11 a with scope closes its file on every exit including traps and propagation
+guardian/test: PASS — 96 passed
+guardian/test: RESULT {"passed":96,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/f22f1c55e61a51a65f4f71c799455d54/test --guardian-shard=4/12 --cache-dir=./.zig-cache --seed=0xff9ffccb --listen=-
+
+test
++- run test w
+guardian/test: 96 test(s) selected [shard 1/12 of 1163]
+guardian/test: SLOW  17.18s  stdlib_json_test.test.standard json parses renders navigates and rejects noncompliant documents
+expected 41, found 1
+guardian/test: test wall 32.37s; slowest over 50ms:
+guardian/test:   17.18s  stdlib_json_test.test.standard json parses renders navigates and rejects noncompliant documents
+guardian/test:   3.85s  standard_library_test.test.standard fixture helpers report every assertion failure through declared errors
+guardian/test:   2.83s  stdlib_math_test.test.standard math roots rounding classification and checked integer helpers
+guardian/test:   2.27s  prelude_builtins_test.test.min and max accept a list or two scalars and trap on an empty list
+guardian/test:   1.47s  nominal_bodies_test.test.nominal bodies bound growing function specialization before executable output
+guardian/test:   1.46s  python_format_test.test.a native build spells an interpolated aggregate exactly as print writes it
+guardian/test:   0.38s  near_duplicates_test.test.banded distance and edit explanations agree with a full matrix over short sequences
+guardian/test:   0.33s  dotted_modules_test.test.dotted imports resolve calls types generic records and domains beside list methods
+guardian/test:   0.22s  generic_calls_test.test.generic calls forward contracts substitute types and check recursion without body expansion
+guardian/test:   0.21s  python_bytes_test.test.UTF8-DECODE-1 the checked decoder preserves ASCII and multi-byte scalars
+guardian/test: PASS — 96 passed
+guardian/test: RESULT {"passed":96,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/f22f1c55e61a51a65f4f71c799455d54/test --guardian-shard=1/12 --cache-dir=./.zig-cache --seed=0xff9ffccb --listen=-
+
+test
++- run test w
+guardian/test: 96 test(s) selected [shard 7/12 of 1163]
+guardian/test: SLOW  6.14s  stdlib_sort_test.test.standard sort orders integers floats and text stably and searches the result
+guardian/test: test wall 9.13s; slowest over 50ms:
+guardian/test:   6.14s  stdlib_sort_test.test.standard sort orders integers floats and text stably and searches the result
+guardian/test:   0.90s  prelude_builtins_test.test.reversed, list and zip iterate or materialise without a new runtime
+guardian/test:   0.46s  interfaces_test.test.module native emission is deterministic and cleans all failed allocations
+guardian/test:   0.29s  generic_arrays_test.test.expanding generic array recursion stops at the specialization budget
+guardian/test:   0.24s  nominal_environment_test.test.nominal environment distinguishes absent empty oversize and denied host values
+guardian/test:   0.13s  python_collections_test.test.iteration detects alias growth including continue and final step
+guardian/test:   0.09s  effects_test.test.M2 branches and loops attribute writes to the receiver origin
+guardian/test:   0.09s  integers_test.test.every signed and unsigned byte addition and multiplication has checked bounds
+guardian/test:   0.06s  nominal_layouts_test.test.nominal layout checking handles long finite declaration chains iteratively
+guardian/test: PASS — 96 passed
+guardian/test: RESULT {"passed":96,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/f22f1c55e61a51a65f4f71c799455d54/test --guardian-shard=7/12 --cache-dir=./.zig-cache --seed=0xff9ffccb --listen=-
+
+test
++- run test w
+guardian/test: 107 test(s) selected [shard 0/12 of 1163]
+guardian/test: SLOW  5.49s  resource_source_test.test.nested resource wrappers release at scope exit and traps unwind every instruction
+guardian/test: test wall 12.56s; slowest over 50ms:
+guardian/test:   5.49s  resource_source_test.test.nested resource wrappers release at scope exit and traps unwind every instruction
+guardian/test:   2.09s  stdlib_codecs_test.test.standard base64 round-trips every byte value under collection stress
+guardian/test:   0.93s  domain_codecs_test.test.domain codec module relocation and public schemas preserve contracts and opaque backing under allocation failures
+guardian/test:   0.92s  stdlib_time_random_test.test.standard time random calls preserve effect ceilings and reproducible draws
+guardian/test:   0.77s  python_bytes_test.test.PY-BYTES-5 the native backend lowers every byte-string operation
+guardian/test:   0.31s  semantic_cache_test.test.durable entries isolate every contract dimension and the mutation version
+guardian/test:   0.21s  integers_test.test.inlined division and remainder trap zero and narrow overflow only
+guardian/test:   0.16s  domain_equality_test.test.domain equality compares every scalar backing by value
+guardian/test:   0.13s  prelude_builtins_test.test.sum adds a list of ints or floats and rejects other element types
+guardian/test:   0.12s  io_files_test.test.IO-7 with open binds a handle whose reads follow the declared mode
+guardian/test: PASS — 107 passed
+guardian/test: RESULT {"passed":107,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/f22f1c55e61a51a65f4f71c799455d54/test --guardian-shard=0/12 --cache-dir=./.zig-cache --seed=0xff9ffccb --listen=-
+
+test
++- run test w
+guardian/test: 96 test(s) selected [shard 6/12 of 1163]
+guardian/test: SLOW  7.17s  resource_io_test.test.source IO traps at every instruction boundary release or complete exactly once
+guardian/test: test wall 14.88s; slowest over 50ms:
+guardian/test:   7.17s  resource_io_test.test.source IO traps at every instruction boundary release or complete exactly once
+guardian/test:   4.14s  stdlib_strings_test.test.standard strings error unions expose the category and message of a rejected builder
+guardian/test:   0.80s  syntax_cache_test.test.buildWithCache lookup remember and clone preserve changed results and independent storage under allocation failures
+guardian/test:   0.74s  qbe_build_test.test.a default build shares its runtime tree under XDG while an explicit cache-dir stays hermetic
+guardian/test:   0.21s  io_files_test.test.IO-12 the native backend lowers the whole file surface
+guardian/test:   0.20s  prelude_builtins_test.test.any and all fold a list of conditions
+guardian/test:   0.16s  quality_test.test.static call reachability traverses a long chain without host recursion
+guardian/test:   0.08s  compiler_test.test.mutated syntax smoke corpus keeps diagnostics inside owned source
+guardian/test:   0.08s  resource_source_test.test.fs.dir confines a derived filesystem to its root and refuses escapes
+guardian/test:   0.08s  semantic_cache_test.test.symbolic template direct results reuse while changed templates miss
+guardian/test: PASS — 96 passed
+guardian/test: RESULT {"passed":96,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/f22f1c55e61a51a65f4f71c799455d54/test --guardian-shard=6/12 --cache-dir=./.zig-cache --seed=0xff9ffccb --listen=-
+
+test
++- run test w
+guardian/test: 96 test(s) selected [shard 3/12 of 1163]
+guardian/test: SLOW  8.45s  stdlib_json_test.test.standard json error unions carry a matchable category and a message helper
+symbolic retention: budget=4386 retained=4276 symbolic_bytes=4276 templates=8 evictions=8 warm_fresh=+4 warm_reused=+8
+guardian/test: test wall 15.63s; slowest over 50ms:
+guardian/test:   8.45s  stdlib_json_test.test.standard json error unions carry a matchable category and a message helper
+guardian/test:   2.18s  stdlib_math_test.test.standard integer extrema and clamp cover every width and full signed range
+guardian/test:   1.00s  native_execute.test.a wall-clock timeout ends an unbounded native run with R_TIMEOUT
+guardian/test:   0.59s  prelude_builtins_test.test.sorted key lambdas order records stably and diagnose invalid inputs
+guardian/test:   0.47s  value_test.test.deep aggregate release is iterative and needs no additional allocations
+guardian/test:   0.43s  semantic_cache_test.test.durable batch publication issues one shared sync per batch and none when warm
+guardian/test:   0.37s  python_bytes_test.test.UTF8-DECODE-1 truncated and stray continuation bytes stay invalid
+guardian/test:   0.20s  resource_io_test.test.source resource reads expose partial data EOF and padding while writes report actual progress
+guardian/test:   0.16s  arrays_test.test.fixed arrays have structural types preserve copies and support every integer index width
+guardian/test:   0.15s  semantic_cache_test.test.declaration and type identity changes invalidate dependents while unrelated declarations preserve reuse
+guardian/test: PASS — 96 passed
+guardian/test: RESULT {"passed":96,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/f22f1c55e61a51a65f4f71c799455d54/test --guardian-shard=3/12 --cache-dir=./.zig-cache --seed=0xff9ffccb --listen=-
+
+test
++- run test w
+guardian/test: 96 test(s) selected [shard 2/12 of 1163]
+guardian/test: SLOW  8.54s  stdlib_json_test.test.standard json keeps parsed values rooted under collection stress
+guardian/test: SLOW  10.95s  nominal_providers_test.test.nominal providers unwind traps at every instruction including failed completion ownership transfer
+guardian/test: SLOW  18.98s  semantic_cache_test.test.semantic cache reuses unchanged checked bodies after edits and preserves diagnostics and ownership under allocation failures
+guardian/test: SLOW  10.49s  standard_library_test.test.standard modules compose with one another inside a single project
+guardian/test: test wall 59.16s; slowest over 50ms:
+guardian/test:   18.98s  semantic_cache_test.test.semantic cache reuses unchanged checked bodies after edits and preserves diagnostics and ownership under allocation failures
+guardian/test:   10.95s  nominal_providers_test.test.nominal providers unwind traps at every instruction including failed completion ownership transfer
+guardian/test:   10.49s  standard_library_test.test.standard modules compose with one another inside a single project
+guardian/test:   8.54s  stdlib_json_test.test.standard json keeps parsed values rooted under collection stress
+guardian/test:   2.92s  prelude_builtins_test.test.sorted returns a new ascending list for int, float and str
+guardian/test:   1.12s  domain_codecs_test.test.source codec operations resolve declared methods and preserve formatting under allocation failures
+guardian/test:   0.76s  semantic_cache_test.test.durable-hit promotion is bounded by the shared budget without changing acceptance
+guardian/test:   0.73s  generic_arrays_test.test.generic array specialization and execution clean up under allocation failure
+guardian/test:   0.69s  python_format_test.test.an aggregate hole renders through the renderers print itself calls
+guardian/test:   0.52s  python_bytes_test.test.UTF8-DECODE-1 overlong surrogate and out-of-range encodings stay invalid
+guardian/test: PASS — 96 passed
+guardian/test: RESULT {"passed":96,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/f22f1c55e61a51a65f4f71c799455d54/test --guardian-shard=2/12 --cache-dir=./.zig-cache --seed=0xff9ffccb --listen=-
+
+test
++- run test w
+guardian/test: 96 test(s) selected [shard 5/12 of 1163]
+guardian/test: SLOW  73.19s  qbe_test.test.QBE bounds ABI stack usage and heap backs large local frames
+guardian/test: test wall 82.64s; slowest over 50ms:
+guardian/test:   73.19s  qbe_test.test.QBE bounds ABI stack usage and heap backs large local frames
+guardian/test:   3.49s  stdlib_strings_test.test.standard string results survive collection at every managed allocation
+guardian/test:   1.41s  syntax_cache_large_test.test.default syntax retention survives 97 modules and matches fresh execution and errors after leaf edits
+guardian/test:   0.99s  stdlib_pool_test.test.standard pool handles stay valid across collection of the released values
+guardian/test:   0.56s  propagation_test.test.propagation releases partial aggregate operands and survives every allocation failure
+guardian/test:   0.44s  semantic_cache_test.test.shared budget covers ordinary hash growth boundaries
+guardian/test:   0.42s  nominal_layouts_test.test.nominal layout expansion bounds distinct array identities
+guardian/test:   0.40s  qbe_build_test.test.a native executable exits with its entry int result truncated to a byte
+guardian/test:   0.38s  invalidation_matrix_test.test.invalidation matrix clean and warm results agree with exact reuse deltas
+guardian/test:   0.18s  prelude_builtins_test.test.round returns the nearest integral float with halves away from zero
+guardian/test: PASS — 96 passed
+guardian/test: RESULT {"passed":96,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/f22f1c55e61a51a65f4f71c799455d54/test --guardian-shard=5/12 --cache-dir=./.zig-cache --seed=0xff9ffccb --listen=-
+
+test
++- run test w
+guardian/test: 13 test(s) selected
+main.my:7:9: error[R_HOST_FAILURE]: native execution failed
+  in main::main at main.my:7:9
+main.my:6:9: error[R_HOST_FAILURE]: native execution failed
+  in main::main at main.my:6:9
+main.my:2:8: warning[W_UNUSED_IMPORT]: import `io` is never referenced in this module; remove it or use it
+  import io
+         ^
+main.my:5:10: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def main(host: Host) -> i64:
+           ^
+main.my:1:1: error[E_MODULE_READ]: cannot load main.my: NotFound
+  
+  ^
+main.my:5:5: error[E_TYPE]: expected int, found bool
+      return True
+      ^
+main.my:5:5: error[E_TYPE]: expected int, found bool
+      return True
+      ^
+layout.my:171:9: warning[W_MUTATES_MISSING]: this function writes `rows` (parameter 1) reachable from the caller; declare `mutates(rows)`
+          rows[i].side = side
+          ^
+guardian/test: SLOW  123.26s  tests.test.schematic renders the whole fixture identically, normally and under collection stress
+main.my:7:9: error[R_HOST_FAILURE]: native execution failed
+  in main::main at main.my:7:9
+guardian/test: test wall 128.81s; slowest over 50ms:
+guardian/test:   123.26s  tests.test.schematic renders the whole fixture identically, normally and under collection stress
+guardian/test:   1.56s  tests.test.schematic byte callbacks reject positions and documents the host never supplied
+guardian/test:   1.21s  tests.test.invalid documents are rejected before the guest executable is given any bytes
+guardian/test:   0.89s  tests.test.Python schematic decimal output preserves negative numbers and minimum integer
+guardian/test:   0.86s  tests.test.schematic byte callbacks publish only on success and keep the first located issue
+guardian/test:   0.61s  tests.test.disk initDisk rejects failed compilations and reloads bounded sources
+guardian/test:   0.21s  tests.test.named schematic input handles select their host documents
+guardian/test:   0.18s  tests.test.named schematic input providers reject documents the host never supplied
+guardian/test: PASS — 13 passed
+guardian/test: RESULT {"passed":13,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/0ee47b6744846c10e2fcd6e669a24edf/test --cache-dir=./.zig-cache --seed=0xff9ffccb --listen=-
+
+Build Summary: 60/60 steps succeeded; 1347/14905 tests passed (13558 skipped)
+test success
++- run ../guardian-zig/zig-out/bin/guardian-check success 980ms
+|  +- guardian-selfcheck success
+|     +- run ../guardian-zig/zig-out/bin/guardian-check success 8ms
++- run test 107 pass, 1056 skip (1163 total) 13s MaxRSS:194M
+|  +- compile test debug native success 5s MaxRSS:390M
+|  |  +- WriteFile src/native_bytes.c cached
+|  |  +- options cached
+|  |     +- compile exe qbe fast native cached 19ms MaxRSS:37M
+|  +- install qbe cached
+|  |  +- compile exe qbe fast native (reused)
+|  +- install mylang cached
+|     +- compile exe mylang debug native cached 7ms MaxRSS:38M
+|        +- WriteFile src/native_bytes.c (reused)
++- run test 96 pass, 1067 skip (1163 total) 33s MaxRSS:200M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 96 pass, 1067 skip (1163 total) 59s MaxRSS:638M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 96 pass, 1067 skip (1163 total) 16s MaxRSS:148M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 96 pass, 1067 skip (1163 total) 32s MaxRSS:141M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 96 pass, 1067 skip (1163 total) 1m MaxRSS:147M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 96 pass, 1067 skip (1163 total) 15s MaxRSS:203M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 96 pass, 1067 skip (1163 total) 9s MaxRSS:148M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 96 pass, 1067 skip (1163 total) 12s MaxRSS:85M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 96 pass, 1067 skip (1163 total) 16s MaxRSS:137M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 96 pass, 1067 skip (1163 total) 23s MaxRSS:137M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 96 pass, 1067 skip (1163 total) 26s MaxRSS:201M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 11 pass (11 total) 15ms MaxRSS:7M
+|  +- compile test debug native success 727ms MaxRSS:165M
+|  |  +- options cached
+|  |  |  +- compile exe qbe fast native (reused)
+|  |  +- WriteFile src/native_bytes.c (reused)
+|  +- install success
+|     +- install mylang cached
+|     |  +- compile exe mylang debug native (+1 more reused dependencies)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|     |     +- guardian-selfcheck (+1 more reused dependencies)
+|     +- install qbe cached
+|     |  +- compile exe qbe fast native (reused)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|     +- install generated/ success
+|     |  +- run exe mylang (mylang-runtime) success 2s
+|     |     +- compile exe mylang debug native (+1 more reused dependencies)
+|     |     +- compile exe qbe fast native (reused)
+|     +- install board-trial cached
+|     |  +- compile exe board-trial debug native cached 6ms MaxRSS:34M
+|     |  |  +- options (+1 more reused dependencies)
+|     |  |  +- WriteFile src/native_bytes.c (reused)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|     +- install schematic-svg cached
+|     |  +- compile exe schematic-svg debug native cached 6ms MaxRSS:36M
+|     |  |  +- options (+1 more reused dependencies)
+|     |  |  +- WriteFile src/native_bytes.c (reused)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|     +- install mylang-io cached
+|     |  +- compile exe mylang-io debug native cached 6ms MaxRSS:38M
+|     |  |  +- options (+1 more reused dependencies)
+|     |  |  +- WriteFile src/native_bytes.c (reused)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|     +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- run test 26 pass, 127 skip (153 total) 24s MaxRSS:86M
+|  +- compile test debug native success 1s MaxRSS:171M
+|  |  +- options success
+|  |     +- compile exe mylang debug native (+1 more reused dependencies)
+|  |     +- compile exe qbe fast native (reused)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 26 pass, 127 skip (153 total) 27s MaxRSS:86M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 26 pass, 127 skip (153 total) 26s MaxRSS:86M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 25 pass, 128 skip (153 total) 20s MaxRSS:114M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 25 pass, 128 skip (153 total) 25s MaxRSS:86M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 25 pass, 128 skip (153 total) 29s MaxRSS:139M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 7 pass (7 total) 15ms MaxRSS:7M
+|  +- compile test debug native success 822ms MaxRSS:164M
+|  |  +- options (+1 more reused dependencies)
+|  |  +- WriteFile src/native_bytes.c (reused)
+|  +- install (+7 more reused dependencies)
++- run test 13 pass (13 total) 2m MaxRSS:269M
+|  +- compile test debug native success 2s MaxRSS:277M
+|  |  +- options success
+|  |  |  +- compile exe mylang debug native (+1 more reused dependencies)
+|  |  +- options (+1 more reused dependencies)
+|  |  +- WriteFile src/native_bytes.c (reused)
+|  +- install (+7 more reused dependencies)
++- run exe native-heap-test success 62ms
+|  +- compile exe native-heap-test debug native cached 17ms MaxRSS:37M
++- test-idioms success
+|  +- run python3 success 70ms
+|  |  +- install (+7 more reused dependencies)
+|  +- run python3 success 3s
+|     +- install (+7 more reused dependencies)
+|     +- compile exe mylang debug native (+1 more reused dependencies)
++- run exe mylang success 79ms
+|  +- compile exe mylang debug native (+1 more reused dependencies)
+|  +- install (+7 more reused dependencies)
++- run exe mylang success 5s
+|  +- compile exe mylang debug native (+1 more reused dependencies)
+|  +- install (+7 more reused dependencies)
++- run exe mylang success 12s
+|  +- compile exe mylang debug native (+1 more reused dependencies)
+|  +- install (+7 more reused dependencies)
++- run exe mylang success 13s
+   +- compile exe mylang debug native (+1 more reused dependencies)
+   +- install (+7 more reused dependencies)
+

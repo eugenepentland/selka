@@ -1,0 +1,23 @@
+{
+ "version": "e1-task-v1",
+ "id": "dev-context-01",
+ "title": "Fill the in-place ranking helper under its mutation contract",
+ "family": "context/incomplete-implementation",
+ "cohort": "development",
+ "entry": "main.my",
+ "context_symbol": "ranking::rank_in_place",
+ "acceptance_allowed": "ranking.my",
+ "budgets": {"wall_seconds": 900},
+ "public_commands": ["mylang check main.my", "mylang run main.my", "mylang context main.my --symbol=ranking::rank_in_place --format=json"],
+ "source_snapshot": "source/",
+ "intended_answer": "answer/",
+ "acceptance": {
+  "checker": "acceptance/check.py",
+  "probe": "acceptance/probe.my",
+  "oracle": "acceptance/reference.py",
+  "cases": "acceptance/cases.json",
+  "independent": "reference.py computes the expected order with Python's own stable sort; the probe reads the result through the caller's binding, so a copy-and-return helper fails"
+ },
+ "expected_intended_changes": ["ranking.my"],
+ "notes": "ranking.my is an unfinished typed hole (`todo[None]()`); `mylang check` reports E_TYPED_HOLE with a typed-hole-obligation record and every command that would run the program refuses until it is filled. The declared contract is effects(mutation) mutates(readings), so the caller's list must hold the result."
+}

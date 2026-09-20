@@ -1,0 +1,15 @@
+{
+ "version": "e1-cases-v1",
+ "task": "dev-context-01",
+ "hidden": true,
+ "note": "The scenarios the hidden probe runs and acceptance/reference.py recomputes with Python's stable sort. `tie` and `alias` are the same list read through two bindings, so a helper that sorts a copy fails them; `equal` pins stability; `empty` and `single` pin the trivial cases.",
+ "scenarios": [
+  {"label": "tie", "readings": [["a", 3], ["b", 9], ["c", 3]], "in_place": true},
+  {"label": "alias", "readings": [["a", 3], ["b", 9], ["c", 3]], "in_place": true},
+  {"label": "single", "readings": [["solo", 5]]},
+  {"label": "ordered", "readings": [["p", 9], ["q", 7]]},
+  {"label": "empty", "readings": []},
+  {"label": "equal", "readings": [["e1", 4], ["e2", 4], ["e3", 4]]},
+  {"label": "negative", "readings": [["x", -3], ["y", -9]]}
+ ]
+}

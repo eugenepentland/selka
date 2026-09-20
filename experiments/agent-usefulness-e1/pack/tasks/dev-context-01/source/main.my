@@ -1,0 +1,11 @@
+module main
+import model
+import ranking
+
+
+def main(out: Stream) -> int effects(mutation, managed_allocation, output):
+    readings = [model.Reading(name="a", value=3), model.Reading(name="b", value=9), model.Reading(name="c", value=3)]
+    ranking.rank_in_place(readings)
+    for reading in readings:
+        out.print(f"{reading.name} {reading.value}")
+    return 0

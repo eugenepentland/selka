@@ -1,0 +1,110 @@
+{
+  "before-control-census": {
+    "kind": "gc",
+    "allocations": 159179,
+    "collections": 4,
+    "live_bytes": 71797556,
+    "reserved_bytes": 0,
+    "chunks": 0,
+    "peak_rss_kib": 73992
+  },
+  "before-control-render": {
+    "kind": "gc",
+    "allocations": 190854,
+    "collections": 4,
+    "live_bytes": 116563616,
+    "reserved_bytes": 0,
+    "chunks": 0,
+    "peak_rss_kib": 116596
+  },
+  "before-compact-o3-census": {
+    "kind": "arena",
+    "allocations": 159179,
+    "collections": 0,
+    "live_bytes": 68955060,
+    "reserved_bytes": 81868224,
+    "chunks": 17,
+    "peak_rss_kib": 66256
+  },
+  "before-compact-o3-render": {
+    "kind": "arena",
+    "allocations": 190854,
+    "collections": 0,
+    "live_bytes": 110680864,
+    "reserved_bytes": 129386288,
+    "chunks": 23,
+    "peak_rss_kib": 109372
+  },
+  "text-control-census": {
+    "kind": "gc",
+    "allocations": 159161,
+    "collections": 3,
+    "live_bytes": 61689524,
+    "reserved_bytes": 0,
+    "chunks": 0,
+    "peak_rss_kib": 64696
+  },
+  "text-control-render": {
+    "kind": "gc",
+    "allocations": 190835,
+    "collections": 4,
+    "live_bytes": 87073360,
+    "reserved_bytes": 0,
+    "chunks": 0,
+    "peak_rss_kib": 105256
+  },
+  "text-compact-o3-census": {
+    "kind": "arena",
+    "allocations": 159161,
+    "collections": 0,
+    "live_bytes": 47983644,
+    "reserved_bytes": 53556672,
+    "chunks": 12,
+    "peak_rss_kib": 49984
+  },
+  "text-compact-o3-render": {
+    "kind": "arena",
+    "allocations": 190835,
+    "collections": 0,
+    "live_bytes": 81320840,
+    "reserved_bytes": 92686128,
+    "chunks": 17,
+    "peak_rss_kib": 87224
+  },
+  "bytes-control-census": {
+    "kind": "gc",
+    "allocations": 159161,
+    "collections": 3,
+    "live_bytes": 61689524,
+    "reserved_bytes": 0,
+    "chunks": 0,
+    "peak_rss_kib": 64628
+  },
+  "bytes-control-render": {
+    "kind": "gc",
+    "allocations": 367718,
+    "collections": 4,
+    "live_bytes": 102527203,
+    "reserved_bytes": 0,
+    "chunks": 0,
+    "peak_rss_kib": 106168
+  },
+  "bytes-compact-o3-census": {
+    "kind": "arena",
+    "allocations": 159161,
+    "collections": 0,
+    "live_bytes": 47983644,
+    "reserved_bytes": 53556672,
+    "chunks": 12,
+    "peak_rss_kib": 50164
+  },
+  "bytes-compact-o3-render": {
+    "kind": "arena",
+    "allocations": 367718,
+    "collections": 0,
+    "live_bytes": 76028211,
+    "reserved_bytes": 88520208,
+    "chunks": 20,
+    "peak_rss_kib": 78296
+  }
+}

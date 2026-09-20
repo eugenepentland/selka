@@ -13,6 +13,7 @@ const wire = @import("native_test_wire.zig");
 const invoke = @import("invoke.zig");
 const command = @import("invoke_command.zig");
 const schema_json = @import("invoke_wire_schema.zig");
+const runner = @import("invoke_execute.zig");
 const Value = std.json.Value;
 
 /// A checked-schema fixture shaped exactly like `language-schema-v1`: two
@@ -34,7 +35,8 @@ const fixture =
     \\{"name":"tool::Span","kind":"record","move_only":false,"opaque":false,"fields":[{"name":"low","type":"i64"},{"name":"high","type":"i64"}]},
     \\{"name":"tool::Sample","kind":"record","move_only":false,"opaque":false,"fields":[{"name":"label","type":"i64"},{"name":"span","type":"tool::Span"},{"name":"weights","type":"[3]i64"}]},
     \\{"name":"[3]i64","kind":"array","move_only":false,"opaque":false,"element":"i64","length":3},
-    \\{"name":"tool::Note","kind":"record","move_only":false,"opaque":false,"fields":[{"name":"title","type":"str"},{"name":"weight","type":"i64"}]},
+    \\{"name":"tool::Note","kind":"record","move_only":false,"opaque":false,"fields":[{"name":"title","type":"bytes"},{"name":"weight","type":"i64"}]},
+    \\{"name":"bytes","kind":"buffer","move_only":false,"opaque":true,"element":"u8"},
     \\{"name":"str","kind":"buffer","move_only":false,"opaque":true,"element":"u8"},
     \\{"name":"tool::Ratio","kind":"result","move_only":false,"requires_handling":true,"opaque":false,"cases":[{"name":"ok","payload":"i64"},{"name":"err","payload":"i64"}]},
     \\{"name":"tool::MetresWire","kind":"record","move_only":false,"opaque":false,"fields":[{"name":"count","type":"i64"}]},
@@ -186,6 +188,9 @@ test "a record argument is executable and an unsupported nested field still name
     try testing.expect(aggregate.eligible);
     try testing.expect(aggregate.wire_supported);
     try testing.expect(aggregate.refusal == null);
+    // `str` is carried now, so the unsupported nested field is a byte string:
+    // the text rule is the checked name `str`, not the buffer shape, and a
+    // `bytes` field keeps its refusal and its path.
     const nested = try invoke.eligibility(a, schema, fixtureFunction(schema, "tool::note_weight"));
     try testing.expect(!nested.eligible);
     try testing.expect(!nested.wire_supported);
@@ -293,7 +298,13 @@ test "the generated schema follows the nominal shape of a nested result" {
     try testing.expectEqual(@as(usize, 2), ratio.object.get("oneOf").?.array.items.len);
     const metres = try schema_json.typeSchema(a, invoke.types(schema), "tool::Metres", 0);
     try testing.expectEqualStrings("tool::Metres", metres.object.get("x-mylang-domain").?.string);
-    try testing.expectError(error.InvalidSchema, schema_json.typeSchema(a, invoke.types(schema), "str", 0));
+    // Text is a supported wire type now, so its schema is the string form
+    // rather than a refusal; a checked name that still has no wire encoding
+    // keeps reporting InvalidSchema.
+    const text = try schema_json.typeSchema(a, invoke.types(schema), "str", 0);
+    try testing.expectEqualStrings("string", text.object.get("type").?.string);
+    try testing.expectEqualStrings("str", text.object.get("x-mylang-type").?.string);
+    try testing.expectError(error.InvalidSchema, schema_json.typeSchema(a, invoke.types(schema), "no_such_type", 0));
     var codec: wire.Codec = .{ .allocator = a, .types = invoke.types(schema) };
     defer codec.deinit();
     const request = try schema_json.request(a, invoke.types(schema), fixtureFunction(schema, "tool::announce"));
@@ -315,8 +326,7 @@ test "describe resolves no native toolchain while an executing session does" {
     const opts: options.Options = .{
         .source = entry,
         .cache = try std.fs.path.join(context.allocator, &.{ root, "cache" }),
-        .zig = "no-such-zig-tool",
-        .qbe = "no-such-qbe-tool",
+        .toolchain = .{ .zig = "no-such-zig-tool", .qbe = "no-such-qbe-tool" },
     };
     const frontend = try sessions.Session.initFrontend(context, opts);
     defer context.remove(frontend.temporary);
@@ -347,14 +357,82 @@ test "the invoke command line rejects a malformed request before anything runs" 
 
 /// The installed compiler the build names beside `MYLANG_QBE`, plus the project
 /// root its three-level install path (`zig-out/bin|focus/qbe`) sits under.
-const Tools = struct { compiler: []const u8, root: []const u8 };
+const Tools = struct { compiler: []const u8, root: []const u8, zig: []const u8, qbe: []const u8 };
 
 fn tools(allocator: std.mem.Allocator) !Tools {
     const qbe = std.testing.environ.getPosix("MYLANG_QBE") orelse return error.ToolNotFound;
+    const zig = std.testing.environ.getPosix("MYLANG_ZIG") orelse return error.ToolNotFound;
     const bin = std.fs.path.dirname(qbe) orelse return error.ToolNotFound;
     const out = std.fs.path.dirname(bin) orelse return error.ToolNotFound;
     const root = std.fs.path.dirname(out) orelse return error.ToolNotFound;
-    return .{ .compiler = try std.fs.path.join(allocator, &.{ bin, "mylang" }), .root = try allocator.dupe(u8, root) };
+    return .{
+        .compiler = try std.fs.path.join(allocator, &.{ bin, "mylang" }),
+        .root = try allocator.dupe(u8, root),
+        .zig = try allocator.dupe(u8, zig),
+        .qbe = try allocator.dupe(u8, qbe),
+    };
+}
+
+/// The C ABI one codec call crosses: the generated adapter's wire node, run
+/// result, codec result and options. The offsets are pinned against
+/// `native_embed.h` by the assertions in the test that calls this entry, so a
+/// header change fails there instead of corrupting the call.
+const WireNode = extern struct { type: ?[*:0]const u8, bits: u64, children: usize };
+const RunFrame = extern struct { function: ?[*:0]const u8, path: ?[*:0]const u8, line: usize, column: usize };
+const TrapDetail = extern struct { version: u32, present: u32, index: i64, length: u64, left: i64, right: i64, width: u64, operation: ?[*:0]const u8 };
+const RunResult = extern struct {
+    status: c_int,
+    value: i64,
+    steps: u64,
+    code: ?[*:0]const u8,
+    path: ?[*:0]const u8,
+    line: usize,
+    column: usize,
+    frame_count: usize,
+    omitted_frames: usize,
+    frames: [16]RunFrame,
+    trap_detail: TrapDetail,
+};
+const WireResult = extern struct { execution: RunResult, node_count: usize };
+const CodecResult = extern struct { value: WireResult, domain: ?[*:0]const u8, calls: u64, rejected: c_int };
+const RunOptions = extern struct { max_steps: u64, max_frames: u64, providers: ?*anyopaque, stress: u64 };
+const CodecOptions = extern struct { run: RunOptions, max_calls: u64 };
+/// The generated library's codec entry point, as `native_embed.h` declares it.
+const CodecCall = *const fn ([*:0]const u8, [*]const WireNode, usize, ?[*]WireNode, usize, ?*const CodecOptions, *CodecResult) callconv(.c) c_int;
+
+/// One checked invoke fixture built into a fresh native library, with the
+/// session that owns the temporary directory holding it.
+fn builtLibrary(a: std.mem.Allocator, context: fs.Context, cache: []const u8, resolved: Tools, qualified: []const u8) !runner.Prepared {
+    const entry = try std.fs.path.join(a, &.{ resolved.root, "tests", "invoke", "tool.my" });
+    // `resolved.compiler` is the installed mylang, named explicitly. Leaving it
+    // null would make the session spawn *this* process, and this process is the
+    // test binary: handed `native-test-graph` it runs its tests rather than
+    // emitting facts, so the session and the suite would call each other
+    // forever. A test that drives a native session must say which compiler it
+    // means.
+    const opts: options.Options = .{
+        .source = entry,
+        .cache = cache,
+        .toolchain = .{ .zig = resolved.zig, .qbe = resolved.qbe, .compiler = resolved.compiler },
+        .mode = "Debug",
+    };
+    var prepared = switch (try runner.check(context, opts, .native)) {
+        .ok => |value| value,
+        .rejected => return error.SourceRejected,
+    };
+    try runner.build(&prepared, qualified);
+    return prepared;
+}
+
+/// Look up the generated codec entry in an already loaded library.
+fn codecEntry(loaded: *std.DynLib) !CodecCall {
+    return loaded.lookup(CodecCall, "mylang_native_call_codecs_v1") orelse error.MissingCodecEntry;
+}
+
+/// The three argument nodes `tool::bracket("ab")` takes: the text node and one
+/// node per scalar.
+fn bracketArguments() [3]WireNode {
+    return .{ .{ .type = "str", .bits = 0, .children = 2 }, .{ .type = "u32", .bits = 'a', .children = 0 }, .{ .type = "u32", .bits = 'b', .children = 0 } };
 }
 
 /// Invoke one fixture function against a fresh cache and return the CLI's stdout.
@@ -383,9 +461,92 @@ test "a nested record argument executes through the copied-value adapter" {
     const resolved = try tools(a);
     defer a.free(resolved.compiler);
     defer a.free(resolved.root);
+    defer a.free(resolved.zig);
+    defer a.free(resolved.qbe);
     const stdout = try invocation(a, resolved, "tool::sample_label", "sample");
     defer a.free(stdout);
     try testing.expect(std.mem.indexOf(u8, stdout, "\"status\":\"completed\"") != null);
     try testing.expect(std.mem.indexOf(u8, stdout, "\"value\":\"7\"") != null);
     try testing.expect(std.mem.endsWith(u8, resolved.compiler, "mylang"));
+}
+
+// spec: INVOKE-TEXT-1
+test "a text argument and result round-trip through invoke with an embedded NUL preserved" {
+    const a = testing.allocator;
+    const resolved = try tools(a);
+    defer a.free(resolved.compiler);
+    defer a.free(resolved.root);
+    defer a.free(resolved.zig);
+    defer a.free(resolved.qbe);
+    // A two-byte scalar, an astral scalar and a combining sequence arrive as one
+    // wire node each and come back as the same text between the brackets.
+    const unicode = try invocation(a, resolved, "tool::bracket", "text-unicode");
+    defer a.free(unicode);
+    try testing.expect(std.mem.indexOf(u8, unicode, "\"status\":\"completed\"") != null);
+    try testing.expect(std.mem.indexOf(u8, unicode, "\"value\":\"[a\u{e9}\u{1f600}e\u{301}]\"") != null);
+    // A NUL is an ordinary scalar, so it survives as the escaped scalar rather
+    // than terminating the text.
+    const nul = try invocation(a, resolved, "tool::bracket", "text-nul");
+    defer a.free(nul);
+    try testing.expect(std.mem.indexOf(u8, nul, "\"value\":\"[a\\u0000b]\"") != null);
+    const empty = try invocation(a, resolved, "tool::bracket", "text-empty");
+    defer a.free(empty);
+    try testing.expect(std.mem.indexOf(u8, empty, "\"value\":\"[]\"") != null);
+}
+
+// spec: QBE-TEXT-4
+test "an undersized codec result buffer reports OutputTooSmall, not WireLimit" {
+    const a = testing.allocator;
+    const resolved = try tools(a);
+    defer a.free(resolved.compiler);
+    defer a.free(resolved.root);
+    defer a.free(resolved.zig);
+    defer a.free(resolved.qbe);
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    var context = try fs.Context.init(a, testing.io, &environment);
+    defer context.deinit();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const cache = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const prepared = try builtLibrary(a, context, cache, resolved, "tool::bracket");
+    defer context.remove(prepared.session.temporary);
+    // The Zig mirror of the C ABI is only usable while it matches the header.
+    try testing.expectEqual(@as(usize, 24), @sizeOf(WireNode));
+    try testing.expectEqual(@as(usize, 32), @sizeOf(RunFrame));
+    try testing.expectEqual(@as(usize, 56), @sizeOf(TrapDetail));
+    try testing.expectEqual(@as(usize, 640), @sizeOf(RunResult));
+    try testing.expectEqual(@as(usize, 648), @sizeOf(WireResult));
+    try testing.expectEqual(@as(usize, 672), @sizeOf(CodecResult));
+    try testing.expectEqual(@as(usize, 40), @sizeOf(CodecOptions));
+    try testing.expectEqual(@as(usize, 16), @offsetOf(WireNode, "children"));
+    try testing.expectEqual(@as(usize, 24), @offsetOf(RunResult, "code"));
+    try testing.expectEqual(@as(usize, 640), @offsetOf(WireResult, "node_count"));
+    try testing.expectEqual(@as(usize, 664), @offsetOf(CodecResult, "rejected"));
+    var loaded = try std.DynLib.open(prepared.project.executor.?.library);
+    defer loaded.close();
+    const call = try codecEntry(&loaded);
+    const arguments = bracketArguments();
+    // "[ab]" is one text node plus four scalar nodes. A four-node buffer cannot
+    // hold it, and the contract is the required count plus OutputTooSmall — the
+    // staging path must not clamp at the caller's capacity and report WireLimit.
+    const sentinel: WireNode = .{ .type = "sentinel", .bits = 0xfeed, .children = 7 };
+    var small: [4]WireNode = @splat(sentinel);
+    var small_result: CodecResult = undefined;
+    const too_small = call("tool::bracket", &arguments, arguments.len, &small, small.len, null, &small_result);
+    try testing.expectEqual(@as(c_int, 2), too_small);
+    try testing.expectEqualStrings("OutputTooSmall", std.mem.span(small_result.value.execution.code.?));
+    try testing.expectEqual(@as(usize, 5), small_result.value.node_count);
+    try testing.expectEqualStrings("sentinel", std.mem.span(small[0].type.?));
+    try testing.expectEqual(@as(u64, 0xfeed), small[3].bits);
+    // The very same call completes when the buffer is large enough, so the
+    // refusal above is about capacity and nothing else.
+    var roomy: [8]WireNode = @splat(sentinel);
+    var roomy_result: CodecResult = undefined;
+    const completed = call("tool::bracket", &arguments, arguments.len, &roomy, roomy.len, null, &roomy_result);
+    try testing.expectEqual(@as(c_int, 0), completed);
+    try testing.expectEqual(@as(usize, 5), roomy_result.value.node_count);
+    try testing.expectEqualStrings("str", std.mem.span(roomy[0].type.?));
+    try testing.expectEqual(@as(usize, 4), roomy[0].children);
+    try testing.expectEqual(@as(u64, ']'), roomy[4].bits);
 }

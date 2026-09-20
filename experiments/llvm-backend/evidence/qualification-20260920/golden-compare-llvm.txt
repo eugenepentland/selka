@@ -1,0 +1,20 @@
+golden_compare: 17 fixture(s), cwd=/home/epentland/ai/canopy/mylang
+PASS  all_wide_children          251 bytes
+PASS  deeply_nested              436 bytes
+PASS  empty_lists                96 bytes
+PASS  fits_exactly               72 bytes
+PASS  long_atom                  151 bytes
+PASS  many_toplevel              419 bytes
+PASS  mixed_widths               155 bytes
+PASS  numbers_and_units          376 bytes
+PASS  one_over                   93 bytes
+PASS  single_element             81 bytes
+PASS  string_escapes             141 bytes
+PASS  units                      357 bytes
+PASS  spi                        173 bytes
+PASS  lmx2595rhar                834 bytes
+PASS  straps-synth-lmx2595       14828 bytes
+PASS  poe-pd-flyback-tps23757    140084 bytes
+PASS  remora-rf                  109469 bytes
+
+summary: 17/17 passed, 0 failed

@@ -1,0 +1,43 @@
+{
+  "text-safe": {
+    "command": [
+      "zig-out/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang/experiments/sexpr-port/main.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang/.tmp/llvm-streaming-20260919/final/text-safe",
+      "--mode=ReleaseFast",
+      "--keep-symbols",
+      "--cache-dir=/home/epentland/ai/canopy/mylang/.tmp/llvm-streaming-20260919/final/cache-text-safe",
+      "--qbe=experiments/llvm-backend/qbe_llvm.py"
+    ],
+    "seconds": 13.75369496201165
+  },
+  "bytes-safe": {
+    "command": [
+      "zig-out/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang/.tmp/llvm-streaming-20260919/final/bytes-source/main.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang/.tmp/llvm-streaming-20260919/final/bytes-safe",
+      "--mode=ReleaseFast",
+      "--keep-symbols",
+      "--cache-dir=/home/epentland/ai/canopy/mylang/.tmp/llvm-streaming-20260919/final/cache-bytes-safe",
+      "--qbe=experiments/llvm-backend/qbe_llvm.py"
+    ],
+    "seconds": 13.850428094970994
+  },
+  "text-qbe": {
+    "command": [
+      "zig-out/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang/experiments/sexpr-port/main.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang/.tmp/llvm-streaming-20260919/final/text-qbe",
+      "--mode=ReleaseFast",
+      "--keep-symbols",
+      "--cache-dir=/home/epentland/ai/canopy/mylang/.tmp/llvm-streaming-20260919/final/cache-text-qbe"
+    ],
+    "seconds": 6.778217839018907
+  }
+}

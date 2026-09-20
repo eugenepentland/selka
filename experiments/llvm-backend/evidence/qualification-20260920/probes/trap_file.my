@@ -1,0 +1,5 @@
+# R_FILE: `with fs.open(...)` on a path that cannot be opened.
+def main(fs: Filesystem) -> int:
+    with fs.open("mylang-qual-absent-file.txt", "rb") as handle:
+        data = handle.read()
+        return len(data)

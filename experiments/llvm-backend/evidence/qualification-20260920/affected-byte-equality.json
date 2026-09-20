@@ -1,0 +1,383 @@
+{
+ "tool": "qualify_affected.py",
+ "sweep": "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/evidence/qualification-20260920/build-sweep-asfound.json",
+ "entries": [
+  "examples/callbacks.my",
+  "examples/unit.my",
+  "experiments/sexpr-port/main.my",
+  "tests/fixtures/idioms/lambda_sort_key.my",
+  "tests/guest/callbacks.my",
+  "tests/lang/callbacks.my",
+  "tests/lang/migrated/generic_inference.my",
+  "tests/lang/migrated/structural_constraints.my",
+  "tests/lang/python_collections.my",
+  "tests/lang/python_core.my"
+ ],
+ "compiler_sha256": "217838b2e1512cabd81fdcd7224b0384713596f704d7d6ddf27196906fa1f6f9",
+ "adapter_sources": {
+  "amd64_sysv.py": "1d0252b37ec42904808f879590b9100292720c746efc3d9c85b537c001422919",
+  "inventory.py": "fc112547232c614979eb24cbc100f42830719dc08ce0c1681c9f1b0c371888e6",
+  "llvm_emit.py": "3ccf0f73e34cccc0e83e5f460587640b62a21b9e31b31d597a9ee6abd1766a2b",
+  "measure.py": "f804d50d5a6b9d648989886e6531bfcf2dafcd04b9db9183434b915a0c9af9cf",
+  "qbe_llvm.py": "d3ab8c24eb4e1f23e88531b31adabc3340ef59d3efccc84a6bb86f8e0fc7c8b6",
+  "qualify_affected.py": "eecf6f5325e9a58707815b5f056153c578fad86c86a19ac982fb84910a6fd83b",
+  "qualify_cost.py": "1771820b695f46f14356543550bee50d59034258e6ecff13b8a1b3f35955085c",
+  "qualify_equiv.py": "574043de1065d128ab0ca5d4db071ced932d8eec125f8ebf4e53b816a95d522d",
+  "qualify_identity.py": "112c0a1aceda46e4ad250caef492cf459123b2560f1ba6411ae1b2cdafa01d4d",
+  "qualify_sweep.py": "2a53168ab7a63d5a61eaa32c579aaf09282f9e7a08031a300693bd729f5ec3e0",
+  "qualify_traps.py": "9ddcecf97e3ac7212d0e14018cbe1149253dffd4972b555431abe069bfa19372",
+  "resolve_symbols.py": "fedcc6de37e738551604a160274e2ae666ccea49c0df623eb2364a3de2f29ae0",
+  "runtime_signatures.py": "8d0c48cdc747661daacc9eb776811543c0d24ec2ff53624a5ed4bc8b20fb637c",
+  "symbol_census.py": "720c0cc2acf5019936e202c806e6a2e147e9634700b9d6bd5349d51c4597b949",
+  "test_adapter.py": "973f7d2ab36e027744b78d094aebde1e81da01bf9fe2d47c9b2aa170fa11d0de",
+  "verify_binaries.py": "0a288dc2594f59241cc0372d52cbf3c3055a989b4011e36c8eab2f6f95b7ee00",
+  "verify_semantics.py": "52bf0bccaa5e079601a2282474020cfcc8d44042a0a6b38c2ff2a73ade74e60f",
+  "verify_traps.py": "151ff49b00eb74c0f7fc2bced067b6e3ddeadabedd3d8552f91b737424c4cc26",
+  "verify_units.py": "eb5293554e9dfad296d30e413f9ff69da7d5c6041edcab93052fd9d5ae9362c6"
+ },
+ "identity_start": {
+  "compiler_sha256": "217838b2e1512cabd81fdcd7224b0384713596f704d7d6ddf27196906fa1f6f9",
+  "qbe_zig_sha256": "f5fa59a0ea7339b5c334492c039d38576cb7f296f25a226460fd83aa9bb4804f",
+  "native_types_zig_sha256": "02810bf47830686d53e1ebd753ae4c33c7875194774611fe111770ed0a108000",
+  "translator": {
+   "qbe_llvm.py": "d3ab8c24eb4e1f23e88531b31adabc3340ef59d3efccc84a6bb86f8e0fc7c8b6",
+   "llvm_emit.py": "3ccf0f73e34cccc0e83e5f460587640b62a21b9e31b31d597a9ee6abd1766a2b",
+   "runtime_signatures.py": "8d0c48cdc747661daacc9eb776811543c0d24ec2ff53624a5ed4bc8b20fb637c",
+   "amd64_sysv.py": "1d0252b37ec42904808f879590b9100292720c746efc3d9c85b537c001422919"
+  }
+ },
+ "results": {
+  "examples/callbacks.my": {
+   "path": "examples/callbacks.my",
+   "binary": {
+    "stage": "run",
+    "agree": true,
+    "status": [
+     17,
+     17
+    ],
+    "stdout_bytes": 0,
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "qbe_stderr": "",
+    "llvm_stderr": ""
+   },
+   "tests": {
+    "stage": "test",
+    "agree": true,
+    "qbe_counts": null,
+    "llvm_counts": null,
+    "qbe_status": 1,
+    "llvm_status": 1,
+    "differences": [],
+    "llvm_stderr": "callbacks.my:1:1: error[E_MODULE_HEADER]: file must begin with a module declaration\n  record Pair:\n  ^\n"
+   }
+  },
+  "examples/unit.my": {
+   "path": "examples/unit.my",
+   "binary": {
+    "stage": "run",
+    "agree": true,
+    "status": [
+     42,
+     42
+    ],
+    "stdout_bytes": 0,
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "qbe_stderr": "",
+    "llvm_stderr": ""
+   },
+   "tests": {
+    "stage": "test",
+    "agree": true,
+    "qbe_counts": null,
+    "llvm_counts": null,
+    "qbe_status": 1,
+    "llvm_status": 1,
+    "differences": [],
+    "llvm_stderr": "unit.my:1:1: error[E_MODULE_HEADER]: file must begin with a module declaration\n  def set(values: list[int], index: int, replacement: int):\n  ^\n"
+   }
+  },
+  "tests/fixtures/idioms/lambda_sort_key.my": {
+   "path": "tests/fixtures/idioms/lambda_sort_key.my",
+   "binary": {
+    "stage": "run",
+    "agree": true,
+    "status": [
+     12,
+     12
+    ],
+    "stdout_bytes": 0,
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "qbe_stderr": "",
+    "llvm_stderr": ""
+   },
+   "tests": {
+    "stage": "test",
+    "agree": true,
+    "qbe_counts": null,
+    "llvm_counts": null,
+    "qbe_status": 1,
+    "llvm_status": 1,
+    "differences": [],
+    "llvm_stderr": "lambda_sort_key.my:1:1: error[E_MODULE_HEADER]: file must begin with a module declaration\n  record Person:\n  ^\n"
+   }
+  },
+  "tests/guest/callbacks.my": {
+   "path": "tests/guest/callbacks.my",
+   "binary": {
+    "stage": "run",
+    "agree": true,
+    "status": [
+     0,
+     0
+    ],
+    "stdout_bytes": 0,
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "qbe_stderr": "",
+    "llvm_stderr": ""
+   },
+   "tests": {
+    "stage": "test",
+    "agree": true,
+    "qbe_counts": [
+     2,
+     0,
+     0,
+     0
+    ],
+    "llvm_counts": [
+     2,
+     0,
+     0,
+     0
+    ],
+    "qbe_status": 0,
+    "llvm_status": 0,
+    "differences": [],
+    "llvm_stderr": ""
+   }
+  },
+  "tests/lang/callbacks.my": {
+   "path": "tests/lang/callbacks.my",
+   "binary": {
+    "stage": "run",
+    "agree": true,
+    "status": [
+     0,
+     0
+    ],
+    "stdout_bytes": 0,
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "qbe_stderr": "",
+    "llvm_stderr": ""
+   },
+   "tests": {
+    "stage": "test",
+    "agree": true,
+    "qbe_counts": [
+     8,
+     0,
+     0,
+     0
+    ],
+    "llvm_counts": [
+     8,
+     0,
+     0,
+     0
+    ],
+    "qbe_status": 0,
+    "llvm_status": 0,
+    "differences": [],
+    "llvm_stderr": ""
+   }
+  },
+  "experiments/sexpr-port/main.my": {
+   "path": "experiments/sexpr-port/main.my",
+   "binary": {
+    "stage": "run",
+    "agree": true,
+    "status": [
+     2,
+     2
+    ],
+    "stdout_bytes": 0,
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "qbe_stderr": "usage: main <file.sexp> [--render]\n",
+    "llvm_stderr": "usage: main <file.sexp> [--render]\n"
+   },
+   "tests": {
+    "stage": "test",
+    "agree": true,
+    "qbe_counts": [
+     0,
+     0,
+     0,
+     0
+    ],
+    "llvm_counts": [
+     0,
+     0,
+     0,
+     0
+    ],
+    "qbe_status": 3,
+    "llvm_status": 3,
+    "differences": [],
+    "llvm_stderr": ""
+   }
+  },
+  "tests/lang/migrated/generic_inference.my": {
+   "path": "tests/lang/migrated/generic_inference.my",
+   "binary": {
+    "stage": "run",
+    "agree": true,
+    "status": [
+     0,
+     0
+    ],
+    "stdout_bytes": 0,
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "qbe_stderr": "",
+    "llvm_stderr": ""
+   },
+   "tests": {
+    "stage": "test",
+    "agree": true,
+    "qbe_counts": [
+     4,
+     0,
+     0,
+     0
+    ],
+    "llvm_counts": [
+     4,
+     0,
+     0,
+     0
+    ],
+    "qbe_status": 0,
+    "llvm_status": 0,
+    "differences": [],
+    "llvm_stderr": ""
+   }
+  },
+  "tests/lang/migrated/structural_constraints.my": {
+   "path": "tests/lang/migrated/structural_constraints.my",
+   "binary": {
+    "stage": "run",
+    "agree": true,
+    "status": [
+     0,
+     0
+    ],
+    "stdout_bytes": 0,
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "qbe_stderr": "",
+    "llvm_stderr": ""
+   },
+   "tests": {
+    "stage": "test",
+    "agree": true,
+    "qbe_counts": [
+     10,
+     0,
+     0,
+     0
+    ],
+    "llvm_counts": [
+     10,
+     0,
+     0,
+     0
+    ],
+    "qbe_status": 0,
+    "llvm_status": 0,
+    "differences": [],
+    "llvm_stderr": ""
+   }
+  },
+  "tests/lang/python_collections.my": {
+   "path": "tests/lang/python_collections.my",
+   "binary": {
+    "stage": "run",
+    "agree": true,
+    "status": [
+     0,
+     0
+    ],
+    "stdout_bytes": 0,
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "qbe_stderr": "",
+    "llvm_stderr": ""
+   },
+   "tests": {
+    "stage": "test",
+    "agree": true,
+    "qbe_counts": [
+     21,
+     0,
+     0,
+     0
+    ],
+    "llvm_counts": [
+     21,
+     0,
+     0,
+     0
+    ],
+    "qbe_status": 0,
+    "llvm_status": 0,
+    "differences": [],
+    "llvm_stderr": ""
+   }
+  },
+  "tests/lang/python_core.my": {
+   "path": "tests/lang/python_core.my",
+   "binary": {
+    "stage": "run",
+    "agree": true,
+    "status": [
+     0,
+     0
+    ],
+    "stdout_bytes": 0,
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "qbe_stderr": "",
+    "llvm_stderr": ""
+   },
+   "tests": {
+    "stage": "test",
+    "agree": true,
+    "qbe_counts": [
+     10,
+     0,
+     0,
+     0
+    ],
+    "llvm_counts": [
+     10,
+     0,
+     0,
+     0
+    ],
+    "qbe_status": 0,
+    "llvm_status": 0,
+    "differences": [],
+    "llvm_stderr": ""
+   }
+  }
+ },
+ "failures": 0,
+ "identity_end": {
+  "compiler_sha256": "217838b2e1512cabd81fdcd7224b0384713596f704d7d6ddf27196906fa1f6f9",
+  "qbe_zig_sha256": "f5fa59a0ea7339b5c334492c039d38576cb7f296f25a226460fd83aa9bb4804f",
+  "native_types_zig_sha256": "02810bf47830686d53e1ebd753ae4c33c7875194774611fe111770ed0a108000",
+  "translator": {
+   "qbe_llvm.py": "d3ab8c24eb4e1f23e88531b31adabc3340ef59d3efccc84a6bb86f8e0fc7c8b6",
+   "llvm_emit.py": "3ccf0f73e34cccc0e83e5f460587640b62a21b9e31b31d597a9ee6abd1766a2b",
+   "runtime_signatures.py": "8d0c48cdc747661daacc9eb776811543c0d24ec2ff53624a5ed4bc8b20fb637c",
+   "amd64_sysv.py": "1d0252b37ec42904808f879590b9100292720c746efc3d9c85b537c001422919"
+  }
+ }
+}

@@ -9,6 +9,7 @@
 const std = @import("std");
 const v = @import("qbe_build_value.zig");
 const invoke = @import("invoke.zig");
+const wire = @import("native_test_wire.zig");
 const Value = std.json.Value;
 
 /// JSON Schema dialect name every generated document declares without a URL.
@@ -24,6 +25,9 @@ const additional_key = "additionalProperties";
 const required_key = "required";
 /// Extension key tying a wire subschema back to its checked language type.
 const type_key = "x-mylang-type";
+
+/// Annotation key carrying the human-readable meaning of one wire subschema.
+const description_key = "description";
 
 /// Pattern a signed `iN` argument must match: a canonical decimal string.
 pub const signed_pattern = "^-?(0|[1-9][0-9]*)$";
@@ -106,10 +110,19 @@ pub fn typeSchema(allocator: std.mem.Allocator, definitions: []const Value, name
     if (depth > depth_limit) return error.InvalidSchema;
     if (std.mem.eql(u8, name, "stream_cap")) return object(allocator, &.{
         .{ .key = type_key, .value = string(name) },
-        .{ .key = "description", .value = string("injected by the runtime: a standard output stream the call may print to; it takes no request value") },
+        .{ .key = description_key, .value = string("injected by the runtime: a standard output stream the call may print to; it takes no request value") },
     });
     const item = invoke.definition(definitions, name) orelse return error.InvalidSchema;
     const kind = v.text(v.get(item, "kind"));
+    // Immutable Unicode text crosses as a JSON string, in both positions. The
+    // rule is the checked name `str`, so a user `List<u32>` — which the checked
+    // schema spells identically — keeps its own refusal instead of being
+    // described as text.
+    if (wire.isText(name)) return object(allocator, &.{
+        .{ .key = "type", .value = string("string") },
+        .{ .key = type_key, .value = string(name) },
+        .{ .key = description_key, .value = string("immutable Unicode text; it crosses as a JSON string and the boundary carries one wire node per Unicode scalar, so an embedded NUL is a scalar and not a terminator") },
+    });
     if (std.mem.eql(u8, kind, "integer")) return integerSchema(allocator, item, name);
     if (std.mem.eql(u8, kind, "boolean")) return object(allocator, &.{
         .{ .key = "type", .value = string("boolean") },
@@ -147,7 +160,7 @@ fn integerSchema(allocator: std.mem.Allocator, item: Value, name: []const u8) Er
         .{ .key = type_key, .value = string(name) },
         .{ .key = "x-mylang-minimum", .value = string(minimum) },
         .{ .key = "x-mylang-maximum", .value = string(maximum) },
-        .{ .key = "description", .value = string(try std.fmt.allocPrint(allocator, "exact {d}-bit {s} integer written as a decimal string in [{s}, {s}]", .{
+        .{ .key = description_key, .value = string(try std.fmt.allocPrint(allocator, "exact {d}-bit {s} integer written as a decimal string in [{s}, {s}]", .{
             v.number(v.get(item, "bits")),
             if (signed) "signed" else "unsigned",
             minimum,

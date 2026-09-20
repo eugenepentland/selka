@@ -1,0 +1,43 @@
+module acceptance_probe
+import model
+import ranking
+
+
+# Hidden behavioural probe. It is copied into the candidate tree by check.py,
+# run once, and removed; the solver never sees this file. Every line is compared
+# with acceptance/reference.py, which computes the expected order with Python's
+# own stable sort.
+def show(out: Stream, label: str, readings: list[model.Reading]) -> None effects(managed_allocation, output):
+    text = ""
+    for reading in readings:
+        text = f"{text}{reading.name}:{reading.value} "
+    out.print(f"{label} n{len(readings)} {text}")
+
+
+def main(out: Stream) -> int effects(mutation, managed_allocation, output):
+    values = [model.Reading(name="a", value=3), model.Reading(name="b", value=9), model.Reading(name="c", value=3)]
+    alias = values
+    ranking.rank_in_place(values)
+    show(out, "tie", values)
+    show(out, "alias", alias)
+
+    single = [model.Reading(name="solo", value=5)]
+    ranking.rank_in_place(single)
+    show(out, "single", single)
+
+    ordered = [model.Reading(name="p", value=9), model.Reading(name="q", value=7)]
+    ranking.rank_in_place(ordered)
+    show(out, "ordered", ordered)
+
+    empty: list[model.Reading] = []
+    ranking.rank_in_place(empty)
+    show(out, "empty", empty)
+
+    equal = [model.Reading(name="e1", value=4), model.Reading(name="e2", value=4), model.Reading(name="e3", value=4)]
+    ranking.rank_in_place(equal)
+    show(out, "equal", equal)
+
+    negative = [model.Reading(name="x", value=0 - 3), model.Reading(name="y", value=0 - 9)]
+    ranking.rank_in_place(negative)
+    show(out, "negative", negative)
+    return 0

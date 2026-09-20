@@ -1,0 +1,4 @@
+# R_FLOAT_CONVERSION: a float that does not fit the integer destination.
+def main() -> int:
+    value = 1.0e30
+    return int(value)

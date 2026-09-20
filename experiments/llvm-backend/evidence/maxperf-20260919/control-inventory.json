@@ -1,0 +1,266 @@
+{
+  "sexpr.tokenizer::is_operator_char": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::read_operator": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::estimate_width": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::measure_width": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.ast::as_string": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::is_space": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.ast::as_atom": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::read_string": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::span_at": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::is_scale_letter": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::parse_list": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::si_suffix_len": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::source_has_mil_suffix": {
+    "removed": {},
+    "retained": {}
+  },
+  "main::tally": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.ast::span_of": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.ast::children": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::parse_unit": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::is_atom_start": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::lex_failure": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::fallback_unit_val_width": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::literal_width": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::is_short_list": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::mil_to_mm": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::tokenize": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::is_unit_required_scale": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::fallback_int_width": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.ast::zero_span": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.ast::as_number": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.ast::is_form": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::render_node": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::is_si_number_char": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::read_number": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::parse_with_depth_cap": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.ast::as_text": {
+    "removed": {},
+    "retained": {}
+  },
+  "main::summarise": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::peek": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::render": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::si_number_end": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::push_node": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::si_scale": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::push_indent": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::int_width": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::parse_node": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.ast::value_text": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::parse_int": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::fallback_float_width": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.ast::is_atom_named": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::parse": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::is_unit_letter": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::located": {
+    "removed": {},
+    "retained": {}
+  },
+  "main::main": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::lexeme": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::parse_si": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::read_atom": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::is_atom_continue": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::parse_float": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.ast::as_items": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::max_parse_depth": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::peek_at": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::is_digit": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::decimal_width": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::render_float": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::advance": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::short_list_max_width": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::invalid_number": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::measured_width": {
+    "removed": {},
+    "retained": {}
+  }
+}

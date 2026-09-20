@@ -74,7 +74,13 @@ pub const Shapes = struct {
         try v.quote(w, v.text(v.get(item, "name")));
         const fields = v.array(v.get(item, "fields"));
         const kind = try kindNumber(v.text(v.get(item, "kind")));
-        const count = if (kind == 2) v.number(v.get(item, "count")) else fields.len;
+        // A text is described by exactly one element field: the scalar type the
+        // wire carries one node per. Anything else is a malformed manifest the
+        // generated adapter must refuse rather than walk off its field table.
+        if (kind == 5 and fields.len != 1) return error.InvalidManifest;
+        // An array's and a text's element count is carried by the manifest
+        // itself; for every other aggregate the field table is the count.
+        const count = if (kind == 2 or kind == 5) v.number(v.get(item, "count")) else fields.len;
         try w.print(",{d},{d},{d},{d},", .{ v.number(v.get(item, "size")), count, v.number(v.get(item, "stride")), kind });
         try self.renderFields(w, fields, false);
         try w.writeByte(',');
@@ -96,10 +102,13 @@ pub const Shapes = struct {
     /// Whether one argument of this type crosses the native ABI as the address
     /// of the caller's storage, exactly as the compiler's emitter decided it.
     /// The manifest records the decision, so the adapter never re-derives the
-    /// QBE-AGGREF-1 rule from the type's shape.
+    /// QBE-AGGREF-1 rule from the type's shape. A manifest without the fact is
+    /// an older or incompatible one — its IL may have crossed either way — so
+    /// it is refused instead of being read as the pre-fix by-value answer.
     pub fn byAddress(self: Shapes, name: []const u8) Error!bool {
         const value = v.get(self.types[try self.index(name)], "by_address");
-        return if (value == .null) false else v.boolean(value);
+        if (value != .bool) return error.InvalidManifest;
+        return value.bool;
     }
     /// Declare a compiled function with large-result and usesVector-argument conventions.
     pub fn declaration(self: Shapes, w: *std.Io.Writer, symbol: []const u8, result: []const u8, parameters: []const Value) Error!void {
@@ -141,7 +150,7 @@ pub fn find(types: []const Value, name: []const u8) ?usize {
     return null;
 }
 fn kindNumber(name: []const u8) Error!u8 {
-    for ([_][]const u8{ "scalar", "record", "array", "variant", "domain" }, 0..) |kind, i| if (std.mem.eql(u8, name, kind)) return @intCast(i);
+    for ([_][]const u8{ "scalar", "record", "array", "variant", "domain", "text" }, 0..) |kind, i| if (std.mem.eql(u8, name, kind)) return @intCast(i);
     return error.InvalidManifest;
 }
 
@@ -162,4 +171,22 @@ test "native ABI vector budgets and domain scalar storage" {
     const many: [129]Value = @splat(word);
     try std.testing.expect(try shapes.usesVector(&many));
     try std.testing.expectError(error.InvalidManifest, shapes.index("absent"));
+}
+
+// spec: QBE-AGGREF-7
+test "the adapter refuses a manifest that omits a type's recorded crossing" {
+    const allocator = std.testing.allocator;
+    const parsed = try std.json.parseFromSlice(Value, allocator,
+        \\[{"name":"i64","kind":"scalar","size":8,"alignment":8,"by_address":false},
+        \\ {"name":"Record","kind":"record","size":8,"alignment":8,"by_address":true},
+        \\ {"name":"Older","kind":"record","size":8,"alignment":8}]
+    , .{});
+    defer parsed.deinit();
+    const shapes: Shapes = .{ .types = v.array(parsed.value) };
+    // A recorded "no" is a fact, a recorded "yes" is a fact, and an absent
+    // `by_address` is missing information this adapter must not guess at: the
+    // old default read it as the pre-fix by-value convention.
+    try std.testing.expect(!try shapes.byAddress("i64"));
+    try std.testing.expect(try shapes.byAddress("Record"));
+    try std.testing.expectError(error.InvalidManifest, shapes.byAddress("Older"));
 }

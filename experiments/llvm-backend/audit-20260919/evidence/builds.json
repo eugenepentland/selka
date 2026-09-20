@@ -1,0 +1,67 @@
+{
+  "manifest": "/tmp/census-manifest-fresh.json",
+  "arms": {
+    "stack": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-audit-20260919/probes/stack.bin",
+      "sha256": "0df4e8181f840d9b3f3b881e7c22188010bbd8ef0326ed8ffbfe61275681923d"
+    },
+    "stack-memset": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-audit-20260919/probes/stack-memset.bin",
+      "sha256": "7890c5f94e79925406d8c7874c24a0e17a8ab5c5414d81972bae3bc19dd2e405"
+    },
+    "whole-stack-memset-words": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-audit-20260919/probes/whole-stack-memset-words.bin",
+      "sha256": "1763e60ec40fc8316c25835489f478849d938aeba238c993d595fa274f07ed44"
+    },
+    "control": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-audit-20260919/probes/control.bin",
+      "sha256": "ea46d53825dda54a67a2b3f6e024e4db1e5f95eeeafc6478b28e9d861328dcce"
+    },
+    "memset": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-audit-20260919/probes/memset.bin",
+      "sha256": "c0c50b452fe83ea2ad452f3cb75b5925582ba000c2ee4b6efa45686a12b7fdbe"
+    },
+    "whole-words": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-audit-20260919/probes/whole-words.bin",
+      "sha256": "ef8b9e0937d2f7089f1192044bc47932bc17498740c5906eda20f4b42151ae19"
+    },
+    "words": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-audit-20260919/probes/words.bin",
+      "sha256": "790fa364a34a3ee2e84041376c600f5d0c887e75911570fcd7314eb25678732d"
+    },
+    "whole": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-audit-20260919/probes/whole.bin",
+      "sha256": "d006de8022bc3819a5203d3795c914f5df74e059f72c4fa7777fa6c187d0e67b"
+    },
+    "whole-memset": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-audit-20260919/probes/whole-memset.bin",
+      "sha256": "b71ac7faed737eb46f6dd0ab8b7f497c9476200e0127402fe7feb0474edaee26"
+    },
+    "twopass": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-audit-20260919/probes/twopass.bin",
+      "sha256": "0df94395d8ba205ba410dec5de378e919628d02fd582a880a45435b6d96daf26"
+    },
+    "gep": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-audit-20260919/probes/gep.bin",
+      "sha256": "ffc62f0b20d0b856f5faad3a1ec55996391444f235a69db6bf63ef8f23724f02"
+    },
+    "whole-stack-memset-words-gep": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-audit-20260919/probes/whole-stack-memset-words-gep.bin",
+      "sha256": "e8e3a3839f0444ba8a7de42429f896e2c20c1549972d7396ae7b6f0b3b087a3a"
+    },
+    "qbe-stack": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-audit-20260919/probes/qbe-stack.bin",
+      "sha256": "b9c9c4627e74df72c47cab33005b4ef12a432a9cfad209f208f814c889d5517c"
+    },
+    "whole-stack-memset-words-twopass": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-audit-20260919/probes/whole-stack-memset-words-twopass.bin",
+      "sha256": "dae92c066a0518a7c1263ab9c5e0f1343b7ea257fe629b9e56eb94cd89a9c9df"
+    }
+  },
+  "common": {
+    "/tmp/final-measure/cache-llvm-o2/objects/85f971a5fe0c6a6adc18806041169bc71d72e56efcc919ff802ecd790bf8464d/3645bda7102a13658cb39a05f4b3b82394683f081e9b6289a25ac7186a32b26a.o": "4563a345bb9685f8a75c6c78ad4746177f48c5749ba1027e89041f3847cb6e2d",
+    "/tmp/final-measure/cache-llvm-o2/objects/85f971a5fe0c6a6adc18806041169bc71d72e56efcc919ff802ecd790bf8464d/fa8e0e5d5b075ae70bf2436dcf47d4cbf1747569625114e720b86a3fd833bd77.o": "5402f4b165f519e50f085bcc6c2c451a14f1a06559572b4dbd078d5452d881ce",
+    "zig-out/lib/mylang-runtime/021d85425fa9b09fc0ae1a7688e3a48a8b349d0315d1105135cb323f3bd98b74.o": "c6c96beb4257ef4dddc7aa17d33073806727c77679659d42987b237f2f818f69",
+    "/home/epentland/ai/canopy/mylang/zig-out/lib/mylang-runtime/0e13d187cfc3f1c04ecab7d99ce80d80f7708d2c4d4a8311dad0426d9299b1e0.a": "0cdd8702725db667d80ff70656227d13e7cdaec41fac2d1a2393b7f2eba8923e"
+  }
+}

@@ -1,0 +1,5 @@
+# R_DIVISION_BY_ZERO: floor division and remainder by zero.
+def main() -> int:
+    value = 10
+    zero = 0
+    return value // zero

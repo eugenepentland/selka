@@ -1,0 +1,19 @@
+{
+  "experiments/sexpr-port/main.my": "0e89903fdb888ee2d1fdeb1b66e7bf3470f8162a8500329e5c23e21f5c19d381",
+  "experiments/sexpr-port/sexpr/parser.my": "a100c2690f65155f5aa289db867c6daa56a3a771fb9facee49859a2f86ce417d",
+  "experiments/sexpr-port/sexpr/tokenizer.my": "746aabfa4dd7496681bd52e8aad16bbfc109edebd1faf0c7cc8187c798868654",
+  "experiments/sexpr-port/sexpr/printer.my": "af0abb0ea71f47ec65380964cbf204fa39645d52770ecb1f74bd7d398fec9a9d",
+  "experiments/sexpr-port/tests/parser_test.my": "7b6e7623b288f05ee0fd0675b4d82c6d22384806420768387c5cbfeabed8543c",
+  "experiments/sexpr-port/tests/tokenizer_test.my": "4b2998385030c83d6b2d548db81b7d5850f19f7aa4c458e01a3e655bd2d29ec1",
+  "experiments/sexpr-port/tests/printer_test.my": "6d9d1c108d765243a9af4415f518b7d19af1e2cb1e0f9375f62ac8763e894291",
+  "src/stdlib/byte_builder.my": "854c0513db7aa9903db0aa42ab5784381533b83f8f7b85b993e85408ffc6339e",
+  "src/stdlib/fixtures/byte_builder.my": "20fbfa57163f48801f058b386704ee8a9f32b90abc9b2596c2d395d68a1c2602",
+  "src/byte_builder_test.zig": "be8d65dcdc51f8c263877bdd009b683986c804ae4b7f57720a0797709dcd5568",
+  "src/qbe_io.c": "0f706db28c146456fb07c08fbcb540974dd4c3569f9acec334e4b7df7bd2c803",
+  "src/qbe_io.h": "9f6917bc0c0d78851a67fe003d269ed54800818c2f17f2c5381db9553f66fa62",
+  "src/qbe_io.zig": "e0e5e44dcb2189f028bb78122394053c55df00a11ff71ac23e73464b6daa8875",
+  "src/sema.zig": "5a4aeb6ca5b7ce71a63fffc99676d1e63b6e3d4c87499b6ccfba6e8753df80f4",
+  "src/bytecode.zig": "1e8cb64227d546a32a7d6797024d8539b641372a92dcaebda4a38837c6b5c0b4",
+  "src/io_print_test.zig": "01418e03208ff3a8085e81e81398ada18511ff371cd543d6a58b095946aa9980",
+  "experiments/llvm-backend/runtime_signatures.py": "a5ca3fdb825cba3536ea2a8852bccc8a83bea109268b699b82d4cbd2a63b7817"
+}

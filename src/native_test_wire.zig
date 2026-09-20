@@ -4,6 +4,17 @@ const v = @import("qbe_build_value.zig");
 const build_io = @import("qbe_build_io.zig");
 const Value = std.json.Value;
 const enumeration_kind = "enumeration";
+/// The one checked type name that carries immutable Unicode text.
+pub const text_name = "str";
+/// Whether one checked type name is the language's text type. The rule is
+/// nominal — the name is `str` — and never structural: `language-schema-v1`
+/// spells `str` and a user `List<u32>` identically (kind `list`, opaque, a
+/// `u32` element), so a shape test would carry a user's list as if it were
+/// text. The compiler's manifest decides the same question by the same name
+/// (`qbe_wire.textScalar`), so both ends of the boundary agree by construction.
+pub fn isText(name: []const u8) bool {
+    return std.mem.eql(u8, name, text_name);
+}
 /// Failures in typed fixture validation or native result reconstruction.
 pub const Error = error{ OutOfMemory, InvalidTestArguments, InvalidTestValue, UnsupportedTestType, TestValueLimit, InvalidNativeTestResponse };
 /// One preorder copied value node; no guest pointer enters the parent process.
@@ -41,6 +52,46 @@ pub const Codec = struct {
         for (self.types) |item| if (std.mem.eql(u8, v.text(v.get(item, "name")), name)) return item;
         return error.UnsupportedTestType;
     }
+    /// The scalar element type one text definition carries its code points as.
+    fn textElement(item: Value) Error![]const u8 {
+        const element = v.get(item, "element");
+        if (element != .string) return error.UnsupportedTestType;
+        return element.string;
+    }
+    /// Flatten one JSON string into the one-node-per-scalar text wire form: a
+    /// text node whose `children` is the scalar count, followed by one node per
+    /// Unicode scalar in the declared element type. The string is decoded as
+    /// UTF-8, so invalid bytes are refused here rather than reaching the guest,
+    /// and an embedded NUL is just scalar zero — a text is length-carrying.
+    fn encodeText(self: *Codec, element: []const u8, value: Value, index: usize) Error!void {
+        if (value != .string) return error.InvalidTestValue;
+        var view = std.unicode.Utf8View.init(value.string) catch return error.InvalidTestValue;
+        var iterator = view.iterator();
+        var count: usize = 0;
+        while (iterator.nextCodepoint()) |scalar| {
+            if (self.nodes.items.len >= 65536) return error.TestValueLimit;
+            try self.nodes.append(self.allocator, .{ .type = element, .bits = scalar });
+            count += 1;
+        }
+        self.nodes.items[index].children = count;
+    }
+    /// Convert one returned text node back to a JSON string, rejecting a node
+    /// tree that is not exactly the text wire form and any scalar a JSON string
+    /// cannot hold (a surrogate half or a code point above U+10FFFF).
+    fn decodeText(self: *Codec, element: []const u8, node: Node) Error!Value {
+        if (node.bits != 0 or node.children > self.nodes.items.len - self.cursor) return error.InvalidNativeTestResponse;
+        var bytes: std.ArrayList(u8) = .empty;
+        for (0..node.children) |_| {
+            const child = self.nodes.items[self.cursor];
+            self.cursor += 1;
+            if (!std.mem.eql(u8, child.type, element) or child.children != 0) return error.InvalidNativeTestResponse;
+            const scalar = std.math.cast(u21, child.bits) orelse return error.InvalidNativeTestResponse;
+            var encoded: [4]u8 = undefined;
+            const length = std.unicode.utf8Encode(scalar, &encoded) catch return error.InvalidNativeTestResponse;
+            try bytes.appendSlice(self.allocator, encoded[0..length]);
+        }
+        return .{ .string = bytes.items };
+    }
     /// Validate and flatten one typed JSON value without running domain methods.
     pub fn encode(self: *Codec, name: []const u8, value: Value, depth: usize) Error!void {
         if (depth > 64 or self.nodes.items.len >= 65536) return error.TestValueLimit;
@@ -48,7 +99,9 @@ pub const Codec = struct {
         const kind = v.text(v.get(item, "kind"));
         const index = self.nodes.items.len;
         try self.nodes.append(self.allocator, .{ .type = name });
-        if (std.mem.eql(u8, kind, "integer")) {
+        if (isText(name)) {
+            try self.encodeText(try textElement(item), value, index);
+        } else if (std.mem.eql(u8, kind, "integer")) {
             if (value != .string) return error.InvalidTestValue;
             self.nodes.items[index].bits = try decimal(name, value.string);
         } else if (std.mem.eql(u8, kind, "boolean")) {
@@ -116,6 +169,7 @@ pub const Codec = struct {
         if (!std.mem.eql(u8, node.type, name)) return error.InvalidNativeTestResponse;
         const item = try self.definition(name);
         const kind = v.text(v.get(item, "kind"));
+        if (isText(name)) return self.decodeText(try textElement(item), node);
         if (std.mem.eql(u8, kind, "integer")) {
             if (node.children != 0) return error.InvalidNativeTestResponse;
             const number: i128 = if (v.boolean(v.get(item, "signed"))) @as(i64, @bitCast(node.bits)) else node.bits;
@@ -188,6 +242,13 @@ fn variant(kind: []const u8) bool {
     return std.mem.eql(u8, kind, enumeration_kind) or std.mem.eql(u8, kind, "tagged_union") or std.mem.eql(u8, kind, "result");
 }
 
+/// The checked definitions one text fixture needs: the element type `str`
+/// carries its scalars as, the text type itself, and a structurally identical
+/// user `List<u32>` that is deliberately not text.
+const text_types =
+    \\{"types":[{"name":"u32","kind":"integer","signed":false},{"name":"str","kind":"list","opaque":true,"element":"u32"},{"name":"List<u32>","kind":"list","opaque":true,"element":"u32"}]}
+;
+
 test "typed fixture integers and nominal trees roundtrip without guest execution" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
@@ -207,6 +268,71 @@ test "typed fixture integers and nominal trees roundtrip without guest execution
     try std.testing.expectError(error.InvalidTestValue, codec.encode("u64", .{ .string = "-1" }, 0));
     try std.testing.expectError(error.UnsupportedTestType, codec.encode("capability", .null, 0));
     try std.testing.expectError(error.InvalidTestArguments, codec.arguments(.null, .{ .integer = 1 }));
+}
+
+// spec: QBE-TEXT-2
+test "text crosses as one node per scalar and a user list is not text" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const parsed = try std.json.parseFromSlice(Value, a, text_types, .{});
+    const types = v.array(v.get(parsed.value, "types"));
+    var codec: Codec = .{ .allocator = a, .types = types };
+    defer codec.deinit();
+    // ASCII, a two-byte scalar, an astral scalar and a combining sequence all
+    // flatten to one node per scalar and come back byte for byte.
+    const mixed = "a\u{e9}\u{1f600}e\u{301}";
+    try codec.encode(text_name, .{ .string = mixed }, 0);
+    try std.testing.expectEqual(@as(usize, 5), codec.nodes.items[0].children);
+    try std.testing.expectEqual(@as(usize, 6), codec.nodes.items.len);
+    try std.testing.expectEqualStrings(text_name, codec.nodes.items[0].type);
+    try std.testing.expectEqual(@as(u64, 'a'), codec.nodes.items[1].bits);
+    try std.testing.expectEqual(@as(u64, 0x1f600), codec.nodes.items[3].bits);
+    try std.testing.expectEqualStrings(mixed, (try codec.decode(text_name, 0)).string);
+    // An empty text has no scalar nodes, and an embedded NUL is scalar zero.
+    codec.nodes.clearRetainingCapacity();
+    codec.cursor = 0;
+    try codec.encode(text_name, .{ .string = "" }, 0);
+    try std.testing.expectEqual(@as(usize, 1), codec.nodes.items.len);
+    try std.testing.expectEqualStrings("", (try codec.decode(text_name, 0)).string);
+    codec.nodes.clearRetainingCapacity();
+    codec.cursor = 0;
+    try codec.encode(text_name, .{ .string = "a\x00b" }, 0);
+    try std.testing.expectEqual(@as(usize, 3), codec.nodes.items[0].children);
+    try std.testing.expectEqualStrings("a\x00b", (try codec.decode(text_name, 0)).string);
+    // A user `List<u32>` has the identical checked shape and is still not text:
+    // the name decides, exactly as it does on the compiler's side.
+    try std.testing.expect(isText(text_name));
+    try std.testing.expect(!isText("List<u32>"));
+    try std.testing.expectError(error.UnsupportedTestType, codec.encode("List<u32>", .{ .string = "x" }, 0));
+    try std.testing.expectError(error.InvalidTestValue, codec.encode(text_name, .{ .integer = 1 }, 0));
+    try std.testing.expectError(error.InvalidTestValue, codec.encode(text_name, .{ .string = "\xff" }, 0));
+    // A text over the node budget is refused, never truncated.
+    codec.nodes.clearRetainingCapacity();
+    codec.cursor = 0;
+    const long = try a.alloc(u8, 70000);
+    @memset(long, 'x');
+    try std.testing.expectError(error.TestValueLimit, codec.encode(text_name, .{ .string = long }, 0));
+}
+
+/// One text round trip on a fixed schema, so every allocation it makes can be
+/// failed in turn: an allocation failure while decoding must be reported as
+/// `OutOfMemory` and must not leak the nodes or bytes built so far.
+fn textScenario(allocator: std.mem.Allocator) !void {
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const parsed = try std.json.parseFromSlice(Value, a, text_types, .{});
+    var codec: Codec = .{ .allocator = a, .types = v.array(v.get(parsed.value, "types")) };
+    defer codec.deinit();
+    try codec.encode(text_name, .{ .string = "a\u{e9}\u{1f600}" }, 0);
+    const decoded = try codec.decode(text_name, 0);
+    try std.testing.expectEqualStrings("a\u{e9}\u{1f600}", decoded.string);
+}
+
+// spec: QBE-TEXT-3
+test "a failed allocation while converting text is reported and released" {
+    try std.testing.checkAllAllocationFailures(std.testing.allocator, textScenario, .{});
 }
 
 /// The installed compiler the build names beside `MYLANG_QBE`, plus the project

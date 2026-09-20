@@ -1,0 +1,6 @@
+pack/tools/bin/
+work/
+zig-global-cache/
+.cache-acceptance/
+__pycache__/
+*.pyc

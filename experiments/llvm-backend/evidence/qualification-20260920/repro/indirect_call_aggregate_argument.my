@@ -1,0 +1,14 @@
+record Pair:
+    values: [2]int
+
+
+def score(p: Pair) -> int:
+    return p.values[0] + p.values[1]
+
+
+def consume(f: def(Pair) -> int, p: Pair) -> int:
+    return f(p)
+
+
+def main() -> int:
+    return consume(score, Pair(values=[3, 4]))

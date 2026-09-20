@@ -1,0 +1,362 @@
+{
+  "sexpr.tokenizer::is_operator_char": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::read_operator": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 5
+    },
+    "retained": {}
+  },
+  "sexpr.printer::estimate_width": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 62
+    },
+    "retained": {}
+  },
+  "sexpr.printer::measure_width": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 17
+    },
+    "retained": {}
+  },
+  "sexpr.ast::as_string": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::is_space": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.ast::as_atom": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::read_string": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 8
+    },
+    "retained": {}
+  },
+  "sexpr.parser::span_at": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::is_scale_letter": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::parse_list": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 24
+    },
+    "retained": {}
+  },
+  "sexpr.tokenizer::si_suffix_len": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::source_has_mil_suffix": {
+    "removed": {},
+    "retained": {}
+  },
+  "main::tally": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.ast::span_of": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.ast::children": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 31
+    },
+    "retained": {}
+  },
+  "sexpr.parser::parse_unit": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 53
+    },
+    "retained": {}
+  },
+  "sexpr.tokenizer::is_atom_start": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::lex_failure": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::fallback_unit_val_width": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::literal_width": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::is_short_list": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 6
+    },
+    "retained": {}
+  },
+  "sexpr.parser::mil_to_mm": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::tokenize": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 221
+    },
+    "retained": {}
+  },
+  "sexpr.tokenizer::is_unit_required_scale": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::fallback_int_width": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.ast::zero_span": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.ast::as_number": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.ast::is_form": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 10
+    },
+    "retained": {}
+  },
+  "sexpr.printer::render_node": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 19
+    },
+    "retained": {}
+  },
+  "sexpr.parser::is_si_number_char": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 11
+    },
+    "retained": {}
+  },
+  "sexpr.tokenizer::read_number": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 139
+    },
+    "retained": {}
+  },
+  "sexpr.parser::parse_with_depth_cap": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 59
+    },
+    "retained": {}
+  },
+  "sexpr.ast::as_text": {
+    "removed": {},
+    "retained": {}
+  },
+  "main::summarise": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 179
+    },
+    "retained": {}
+  },
+  "sexpr.tokenizer::peek": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::render": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 33
+    },
+    "retained": {}
+  },
+  "sexpr.parser::si_number_end": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 7
+    },
+    "retained": {}
+  },
+  "sexpr.printer::push_node": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 457
+    },
+    "retained": {}
+  },
+  "sexpr.parser::si_scale": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 29
+    },
+    "retained": {}
+  },
+  "sexpr.printer::push_indent": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 4
+    },
+    "retained": {}
+  },
+  "sexpr.printer::int_width": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 3
+    },
+    "retained": {}
+  },
+  "sexpr.parser::parse_node": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 27
+    },
+    "retained": {}
+  },
+  "sexpr.ast::value_text": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::parse_int": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 4
+    },
+    "retained": {}
+  },
+  "sexpr.printer::fallback_float_width": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.ast::is_atom_named": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 8
+    },
+    "retained": {}
+  },
+  "sexpr.parser::parse": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 4
+    },
+    "retained": {}
+  },
+  "sexpr.tokenizer::is_unit_letter": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::located": {
+    "removed": {},
+    "retained": {}
+  },
+  "main::main": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 229
+    },
+    "retained": {}
+  },
+  "sexpr.tokenizer::lexeme": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 6
+    },
+    "retained": {}
+  },
+  "sexpr.parser::parse_si": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 29
+    },
+    "retained": {}
+  },
+  "sexpr.tokenizer::read_atom": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 6
+    },
+    "retained": {}
+  },
+  "sexpr.tokenizer::is_atom_continue": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::parse_float": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 4
+    },
+    "retained": {}
+  },
+  "sexpr.ast::as_items": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::max_parse_depth": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::peek_at": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.tokenizer::is_digit": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::decimal_width": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 17
+    },
+    "retained": {}
+  },
+  "sexpr.printer::render_float": {
+    "removed": {
+      "arena_root_mark": 1,
+      "arena_root_head_store": 16
+    },
+    "retained": {}
+  },
+  "sexpr.tokenizer::advance": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::short_list_max_width": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.parser::invalid_number": {
+    "removed": {},
+    "retained": {}
+  },
+  "sexpr.printer::measured_width": {
+    "removed": {},
+    "retained": {}
+  }
+}

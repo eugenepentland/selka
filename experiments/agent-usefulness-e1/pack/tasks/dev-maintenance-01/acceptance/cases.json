@@ -1,0 +1,16 @@
+{
+ "version": "e1-cases-v1",
+ "task": "dev-maintenance-01",
+ "hidden": true,
+ "note": "The case values the hidden probe bakes in and acceptance/reference.py recomputes. They are on and around both new boundaries and around the boundaries the old rule used (10 and 50), so a candidate that only moves one boundary is caught.",
+ "rate_quantities": [4, 5, 19, 20, 49, 50],
+ "flag_quantities": [4, 5, 19, 20],
+ "band_quantities": [4, 5, 19, 20],
+ "orders": [
+  {"sku": "H-001", "unit_price": 250, "quantity": 4},
+  {"sku": "H-002", "unit_price": 250, "quantity": 5},
+  {"sku": "H-003", "unit_price": 333, "quantity": 20},
+  {"sku": "H-004", "unit_price": 999, "quantity": 49},
+  {"sku": "H-005", "unit_price": 1, "quantity": 1000}
+ ]
+}

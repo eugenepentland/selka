@@ -1,0 +1,10 @@
+def scale(v: float) -> float:
+    return v * 2.0
+
+
+def applyf(f: def(float) -> float, x: float) -> float:
+    return f(x)
+
+
+def main() -> int:
+    return int(applyf(scale, 3.0))

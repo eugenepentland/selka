@@ -1,0 +1,199 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 2  of event 'cpu_atom/cycles/u'
+# Event count (approx.): 400000
+#
+#       Period	Symbol	Shared Object	IPC   [IPC Coverage]
+
+
+# Samples: 24K of event 'cpu_core/cycles/u'
+# Event count (approx.): 4926000000
+#
+#       Period	Symbol                                                                    	Shared Object       	IPC   [IPC Coverage]
+ 200000     	[.] _IO_flush_all                                                         	libc.so.6           	-      -            
+ 200000     	[.] __atanh_finite                                                        	libm.so.6           	-      -            
+ 200000     	[.] __pow_finite                                                          	libm.so.6           	-      -            
+ 27400000   	[.] __wrap_myl_native_list_append                                         	compact-o3.bin      	-      -            
+ 43800000   	[.] __wrap_myl_native_list_get                                            	compact-o3.bin      	-      -            
+ 600000     	[.] cfree                                                                 	libc.so.6           	-      -            
+ 200000     	[.] cosf32                                                                	libm.so.6           	-      -            
+ 200000     	[.] cosf32x                                                               	libm.so.6           	-      -            
+ 200000     	[.] expf                                                                  	libm.so.6           	-      -            
+ 200000     	[.] getcontext                                                            	libc.so.6           	-      -            
+ 200000     	[.] logf                                                                  	libm.so.6           	-      -            
+ 200000     	[.] malloc                                                                	libc.so.6           	-      -            
+ 12000000   	[.] memcpy@plt                                                            	compact-o3.bin      	-      -            
+ 200000     	[.] memset                                                                	libc.so.6           	-      -            
+ 200000     	[.] memset@plt                                                            	libc.so.6           	-      -            
+ 1043200000 	[.] myl_f_22a60c4dacd8f24cb076d3980502ca5a577d3fdc45db8138d037c148f04f136b	compact-o3.bin      	-      -            
+ 110800000  	[.] myl_f_2e34b70956bd2f98094170b27161f4beca7b4dbc88ffeaecd468514ea7f8884c	compact-o3.bin      	-      -            
+ 1400000    	[.] myl_f_36f767de1a4f02faa9c9b05e632e517e7d2370ec5b2578a80e86da0fd089fa88	compact-o3.bin      	-      -            
+ 450200000  	[.] myl_f_3edf79354916f8d010aaa7e22a06a2b2e0944427858dfba883ade1d0e2be0036	compact-o3.bin      	-      -            
+ 718800000  	[.] myl_f_522a0393f0b978ec89dcf0a01ed40fe4c77fd2e0c5e149267c4a06b2be768f98	compact-o3.bin      	-      -            
+ 192800000  	[.] myl_f_59c4bbc7071b8e5740b45acc273a5dd464bfcfe4b67081aa51105d0e1634c116	compact-o3.bin      	-      -            
+ 12400000   	[.] myl_f_73f351c18f47dd990165f2548f3afcb7d5b743c0da8680d6a4223dfb5b0f824c	compact-o3.bin      	-      -            
+ 1000000    	[.] myl_f_792f34997f8dc64af02d751d84b97fb1ee11329582a4f406a62422ea2aa50395	compact-o3.bin      	-      -            
+ 800000     	[.] myl_f_7faf8aa444eefa653ab5ecbaa2a8a18a5e00b524833457ca6eb1f198c7096813	compact-o3.bin      	-      -            
+ 349800000  	[.] myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959	compact-o3.bin      	-      -            
+ 5400000    	[.] myl_f_96b067c9e9a223f42df861e5f816c57d88027bc98ce7a2f9698fe752d5c07806	compact-o3.bin      	-      -            
+ 336800000  	[.] myl_f_998beee1bca4ed98df5239fd3360e93dc7435bf13adf117793e129355f5cd155	compact-o3.bin      	-      -            
+ 400000     	[.] myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5	compact-o3.bin      	-      -            
+ 84200000   	[.] myl_f_c7216ff81b82e9d60b2aefddc873a7cdb611d664b3deb9b17e22a05b9481cf8a	compact-o3.bin      	-      -            
+ 3600000    	[.] myl_f_db346654ceb5a652b5f723024feb479638530adb6b7fd97ec7d886c140c1b503	compact-o3.bin      	-      -            
+ 45000000   	[.] myl_native_bytes_decode_range                                         	compact-o3.bin      	-      -            
+ 200000     	[.] myl_native_bytes_new                                                  	compact-o3.bin      	-      -            
+ 7800000    	[.] myl_native_heap_alloc                                                 	compact-o3.bin      	-      -            
+ 10800000   	[.] myl_native_heap_alloc_at                                              	compact-o3.bin      	-      -            
+ 34400000   	[.] myl_native_heap_alloc_block                                           	compact-o3.bin      	-      -            
+ 33800000   	[.] myl_native_list_append                                                	compact-o3.bin      	-      -            
+ 10200000   	[.] myl_native_list_new                                                   	compact-o3.bin      	-      -            
+ 35400000   	[.] myl_native_number_parse                                               	compact-o3.bin      	-      -            
+ 2400000    	[.] myl_native_object_region                                              	compact-o3.bin      	-      -            
+ 20600000   	[.] myl_native_root_pop                                                   	compact-o3.bin      	-      -            
+ 10000000   	[.] myl_native_root_push                                                  	compact-o3.bin      	-      -            
+ 306800000  	[.] myl_native_text_from_utf8_checked                                     	compact-o3.bin      	-      -            
+ 1600000    	[.] myl_native_text_points                                                	compact-o3.bin      	-      -            
+ 200000     	[.] myl_native_text_scalar                                                	compact-o3.bin      	-      -            
+ 28600000   	[.] myl_qbe_bytes_decode_range                                            	compact-o3.bin      	-      -            
+ 200000     	[.] myl_qbe_failed                                                        	compact-o3.bin      	-      -            
+ 800000     	[.] myl_qbe_float_unary                                                   	compact-o3.bin      	-      -            
+ 30000000   	[.] myl_qbe_heap                                                          	compact-o3.bin      	-      -            
+ 200000     	[.] myl_qbe_resource_read                                                 	compact-o3.bin      	-      -            
+ 200000     	[.] mylang_scoped_close                                                   	compact-o3.bin      	-      -            
+ 400000     	[.] read_all                                                              	compact-o3.bin      	-      -            
+ 200000     	[.] read_handle                                                           	compact-o3.bin      	-      -            
+ 600000     	[.] realloc                                                               	libc.so.6           	-      -            
+ 200000     	[.] roundevenf32x                                                         	libm.so.6           	-      -            
+ 200000     	[.] strchr                                                                	libc.so.6           	-      -            
+ 200000     	[.] strlen                                                                	libc.so.6           	-      -            
+ 200000     	[.] tanf32x                                                               	libm.so.6           	-      -            
+ 200000     	[.] truncf32                                                              	libm.so.6           	-      -            
+ 200000     	[.] wcschr                                                                	libc.so.6           	-      -            
+ 200000     	[.] wcsnlen                                                               	libc.so.6           	-      -            
+ 200000     	[.] 0x00000000000020ef                                                    	ld-linux-x86-64.so.2	-      -            
+ 400000     	[.] 0x00000000000045e0                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x00000000000047d8                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x0000000000005a50                                                    	ld-linux-x86-64.so.2	-      -            
+ 400000     	[.] 0x0000000000007e90                                                    	ld-linux-x86-64.so.2	-      -            
+ 400000     	[.] 0x00000000000087c0                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x0000000000008c64                                                    	ld-linux-x86-64.so.2	-      -            
+ 400000     	[.] 0x0000000000008c66                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x0000000000009390                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000000940d                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000000a86c                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000000b908                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000000b94c                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000000b998                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000000ba9f                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000000bb5f                                                    	ld-linux-x86-64.so.2	-      -            
+ 400000     	[.] 0x000000000000bde9                                                    	ld-linux-x86-64.so.2	-      -            
+ 600000     	[.] 0x000000000000be51                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000000be59                                                    	ld-linux-x86-64.so.2	-      -            
+ 600000     	[.] 0x000000000000c6a4                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000000c6d4                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000000c6f8                                                    	ld-linux-x86-64.so.2	-      -            
+ 400000     	[.] 0x000000000000d840                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x0000000000010f30                                                    	ld-linux-x86-64.so.2	-      -            
+ 400000     	[.] 0x0000000000010f92                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000001118f                                                    	ld-linux-x86-64.so.2	-      -            
+ 400000     	[.] 0x00000000000111a8                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x00000000000116a0                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x00000000000188e6                                                    	ld-linux-x86-64.so.2	-      -            
+ 400000     	[.] 0x000000000001a921                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000001d060                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000001ff20                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x00000000000204a0                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x0000000000020617                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x0000000000025144                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x00000000000254b7                                                    	ld-linux-x86-64.so.2	-      -            
+ 400000     	[.] 0x000000000002550d                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x0000000000025fce                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x0000000000026582                                                    	ld-linux-x86-64.so.2	-      -            
+ 400000     	[.] 0x0000000000026865                                                    	ld-linux-x86-64.so.2	-      -            
+ 400000     	[.] 0x0000000000026dbb                                                    	ld-linux-x86-64.so.2	-      -            
+ 400000     	[.] 0x00000000000275ab                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000002994f                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000002995a                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000002a680                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000002a960                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000002a9f0                                                    	ld-linux-x86-64.so.2	-      -            
+ 400000     	[.] 0x000000000002b53e                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000002b56c                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000002b584                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000002c060                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000002c2e0                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000002c2e8                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000002c560                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000002c579                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x000000000002c920                                                    	ld-linux-x86-64.so.2	-      -            
+ 200000     	[.] 0x0000000000062ea4                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x00000000000a0366                                                    	libc.so.6           	-      -            
+ 400000     	[.] 0x00000000000a03e6                                                    	libc.so.6           	-      -            
+ 400000     	[.] 0x00000000000a03e9                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x00000000000a03f2                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x00000000000b1cd4                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x00000000000b20f1                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x00000000000b213f                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x00000000000b217f                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x00000000000b221b                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x00000000000b2300                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x00000000000b2400                                                    	libc.so.6           	-      -            
+ 400000     	[.] 0x00000000000b3042                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x00000000000b316c                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x00000000000b3304                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x00000000000b3cae                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x00000000000b3dc8                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x00000000000b3e60                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x00000000000b3e79                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x000000000011a240                                                    	libc.so.6           	-      -            
+ 600000     	[.] 0x0000000000197a00                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x0000000000197a04                                                    	libc.so.6           	-      -            
+ 400000     	[.] 0x0000000000197a0d                                                    	libc.so.6           	-      -            
+ 210000000  	[.] 0x0000000000197a11                                                    	libc.so.6           	-      -            
+ 51400000   	[.] 0x0000000000197a21                                                    	libc.so.6           	-      -            
+ 16000000   	[.] 0x0000000000197a25                                                    	libc.so.6           	-      -            
+ 5800000    	[.] 0x0000000000197a2b                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x0000000000197a35                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x0000000000197a3a                                                    	libc.so.6           	-      -            
+ 600000     	[.] 0x0000000000197a3f                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x0000000000197a48                                                    	libc.so.6           	-      -            
+ 3200000    	[.] 0x0000000000197a4d                                                    	libc.so.6           	-      -            
+ 400000     	[.] 0x0000000000197a52                                                    	libc.so.6           	-      -            
+ 600000     	[.] 0x0000000000197ac7                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x0000000000197acd                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x0000000000197ad6                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x0000000000197ae9                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x0000000000197b00                                                    	libc.so.6           	-      -            
+ 400000     	[.] 0x0000000000197b06                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x0000000000197b14                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x0000000000197b19                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x0000000000197b1f                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x0000000000197b2b                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x0000000000197b3e                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x0000000000197b4b                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x0000000000197ba0                                                    	libc.so.6           	-      -            
+ 800000     	[.] 0x0000000000197ba4                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x0000000000197ba9                                                    	libc.so.6           	-      -            
+ 400000     	[.] 0x0000000000197bb3                                                    	libc.so.6           	-      -            
+ 400000     	[.] 0x0000000000197bbb                                                    	libc.so.6           	-      -            
+ 400000     	[.] 0x0000000000197bd8                                                    	libc.so.6           	-      -            
+ 600000     	[.] 0x0000000000197bff                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x0000000000197cc0                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x0000000000197cd9                                                    	libc.so.6           	-      -            
+ 88000000   	[.] 0x0000000000197d07                                                    	libc.so.6           	-      -            
+ 3600000    	[.] 0x0000000000197d09                                                    	libc.so.6           	-      -            
+ 2800000    	[.] 0x00000000001984d3                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x00000000001984d5                                                    	libc.so.6           	-      -            
+ 200000     	[.] 0x00000000000128f0                                                    	libm.so.6           	-      -            
+ 200000     	[.] 0x0000000000079220                                                    	libm.so.6           	-      -            
+ 800000     	[k] 0xffffffff8ce00080                                                    	[unknown]           	-      -            
+ 524600000  	[k] 0xffffffff8ce00b90                                                    	[unknown]           	-      -            
+ 400000     	[k] 0xffffffff8ce00ef0                                                    	[unknown]           	-      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

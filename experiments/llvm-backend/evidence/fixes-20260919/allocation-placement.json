@@ -1,0 +1,16 @@
+{
+  "before": {
+    "functions": 66,
+    "entry": 1181,
+    "later": 211,
+    "agg_entry": 81,
+    "agg_later": 211
+  },
+  "after": {
+    "functions": 66,
+    "entry": 1347,
+    "later": 45,
+    "agg_entry": 273,
+    "agg_later": 19
+  }
+}

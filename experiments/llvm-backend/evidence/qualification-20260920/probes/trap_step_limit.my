@@ -1,0 +1,9 @@
+# R_STEP_LIMIT: linear recursion under a build-time step ceiling.
+def descend(depth: int) -> int:
+    if depth == 0:
+        return 0
+    return 1 + descend(depth - 1)
+
+
+def main() -> int:
+    return descend(20000)

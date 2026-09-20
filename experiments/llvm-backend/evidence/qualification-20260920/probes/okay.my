@@ -1,0 +1,4 @@
+# Control: a program that traps nothing.
+def main(out: Stream) -> int:
+    out.print("okay")
+    return 0

@@ -1,0 +1,149 @@
+{
+ "version": "e1-observation-v1",
+ "run_id": "20260921-dsh-blocked-dev-maintenance-01",
+ "status": "blocked",
+ "blocked_reason": "solver 'dsh' cannot start: DEEPSEEK_API_KEY is not set in the launching environment and the harness does not read the credential store; export DEEPSEEK_API_KEY and re-run `pilot.py run --task dev-maintenance-01 --arm plain`",
+ "task": {
+  "id": "dev-maintenance-01",
+  "family": "maintenance",
+  "cohort": "development",
+  "title": "Volume-tier rule change across three modules",
+  "brief_sha256": "4375de7fc76c8a1ca52075ab2ba37446a3e4190e5940c047aebc3b825b675166"
+ },
+ "arm": {
+  "name": "plain",
+  "note_sha256": "1e32240c1f67e809f725466122ba503ecd199f9618ee9b09030e75a8363fda9a"
+ },
+ "solver": {
+  "name": "dsh",
+  "argv": null,
+  "model_driven": true,
+  "status": null,
+  "timed_out": false,
+  "stdout_bytes": 0,
+  "stderr_bytes": 0,
+  "stderr_tail": ""
+ },
+ "models": {
+  "route": "deepseek-official",
+  "profile": "headless",
+  "temperature": null,
+  "profile_identity": {
+   "available": true,
+   "sha256": "40ff1723bb5b03ef25c030534b74224fb89e4f5572bb24aa6deefff36b40c977",
+   "bytes": 11037
+  }
+ },
+ "prompt": {
+  "sha256": "9d120558930b9a8593ce5c3021491b7f0d080d7c0659a7cfbd391d210c504cbd",
+  "text": "You are working in the project in your current working directory. The compiler `mylang` is on your PATH.\n\nThe language documentation is readable at `docs/` and `README.md` in your working directory (read-only symlinks into the repository).\n\n# Order tiers: the volume rule changed\n\nThe `order-tiers` project in this directory prices orders and reports them. The\nvolume rule it implements is out of date. Your job is to make the project\nimplement the rule below, everywhere it is observable.\n\n## The rule as it must now behave\n\n* An order quantity of **20 or more** earns the top volume discount: **5%**\n  (500 basis points).\n* A quantity of **5 or more** (and less than 20) earns the smaller discount:\n  **2%** (200 basis points).\n* A smaller quantity earns no discount.\n* `orders.total_cents(unit_price, quantity)` is `unit_price * quantity` less the\n  discount for that quantity, in whole cents, truncating toward zero after the\n  discount is applied.\n* `audit.small_order(quantity)` is `1` exactly when the quantity earns no\n  discount, and `0` otherwise.\n* `bands.name(quantity)` is `\"top\"` for a quantity that earns the top discount,\n  `\"mid\"` for one that earns the smaller discount, and `\"none\"` otherwise.\n\n## What must not change\n\n* The public API: module names, function names, parameter order and return types\n  are used by other projects.\n* `report.line(sku, unit_price, quantity)` keeps returning one string,\n  `\"<sku> <total_cents> <small_order_flag> <band>\"`.\n* `main.my` keeps printing one report line per sample order and exits `0`.\n* `mylang check main.my` must succeed.\n\n## Notes\n\n* The compiler is `mylang`, on `PATH`.\n* The repository documentation is readable at the `docs` path named in your\n  prompt.\n* The rule must hold for every quantity, not only for the quantities `main.my`\n  prints today: an unseen grading probe exercises quantities on and around each\n  boundary.\n\nUse the compiler as you normally would: `mylang check` reports problems and `mylang run` executes the program.\n\nWork only inside your working directory. When you are finished, leave the project in the state you want graded."
+ },
+ "identities": {
+  "protocol": {
+   "path": "protocol.json",
+   "sha256": "a521d0442e1a03052743ab3de65508d2a7c3ab7f3b7084f4a16498822632cb02"
+  },
+  "preregistration": {
+   "path": "preregistration.json",
+   "sha256": "fc4f184dadc31837dd21ea815cc4b6190b60707d9b039cc0cd2a82b39ae033b3"
+  },
+  "pack_manifest": {
+   "path": "pack/manifest.json",
+   "sha256": "13ec7dfaf532c4a8080d0d0df34f19733989a305f7fc8d0a56a21dd06eba1d09"
+  },
+  "tool_identity": {
+   "path": "pack/tools/identity.json",
+   "sha256": "a790a2e2d5bd151bdd466e0682e6388af56dcea48ee9e7c753294419b67465af"
+  },
+  "compiler": {
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/experiments/agent-usefulness-e1/pack/tools/bin/mylang",
+   "sha256": "43c6ab3b1a80b53f60530560e100e626647b1d9485cf3901a9cee7b051436223",
+   "compiler_sha256": "149e9d6c39a15a11d2d5704c4cc51cff7560a4087288ed9890159f36a5168c01",
+   "qbe": "/home/epentland/ai/canopy/mylang/.worktrees/integration/experiments/agent-usefulness-e1/pack/tools/bin/qbe",
+   "materialized": true
+  },
+  "docs_digest": "23bab7a5e6fb54ca915a6edce2d58a3f9e57e77154ea6a9e805e803373108318"
+ },
+ "timings": {
+  "prepare_seconds": 0.001,
+  "solve_seconds": 0.0,
+  "grade_seconds": 0.0,
+  "cache_probe_seconds": 0.0,
+  "task_to_accepted_seconds": null,
+  "wall_seconds": 0.14
+ },
+ "completion": {
+  "accepted": false,
+  "time_to_accepted_seconds": null,
+  "unsuccessful_attempts": [
+   {
+    "attempt": "solver-and-grade",
+    "seconds": 0.0,
+    "passed": false
+   }
+  ],
+  "overlapping_note": "invocation_wall_seconds is the sum over compiler processes; solver_seconds is the enclosing wall clock, so the sum can exceed the wall time when a solver ran processes in parallel"
+ },
+ "grading": {
+  "passed": false,
+  "seconds": 0.0,
+  "document": {},
+  "exit_status": null,
+  "initial_source_sha256": "546a037d961c629ebdd5682cf52b9f37ec68e824483ed1d2f497e1f8e225541a"
+ },
+ "invocations": {
+  "invocations": 0,
+  "failed_compiler_invocations": 0,
+  "infrastructure_failures": 0,
+  "failed_checks_on_changed_source": 0,
+  "failed_candidate_versions": 0,
+  "checked_candidate_versions": 0,
+  "repeated_diagnostics": 0,
+  "distinct_diagnostics": 0,
+  "diagnostic_codes": {},
+  "stdout_bytes": 0,
+  "stderr_bytes": 0,
+  "invocation_wall_seconds": 0.0,
+  "phases": {},
+  "coverage": {
+   "missing": true,
+   "duplicates": 0,
+   "truncated": 0,
+   "invalid": 0
+  }
+ },
+ "cache_probes": {
+  "skipped": "acceptance did not pass"
+ },
+ "attempts": [
+  {
+   "attempt": "solver",
+   "seconds": 0.0,
+   "status": null
+  },
+  {
+   "attempt": "acceptance",
+   "seconds": 0.0,
+   "passed": false
+  }
+ ],
+ "tokens": {
+  "input": null,
+  "output": null,
+  "note": "not reported by the solver command; no estimate is invented"
+ },
+ "budgets": {
+  "wall_seconds_per_task": 900,
+  "turn_cap": 30,
+  "turn_cap_enforced": false,
+  "turn_cap_note": "goal.json fixes the 30-turn cap; `dsh --profile headless` exposes no turn flag, so the enforced budget is the wall-clock ceiling and the observation records the cap as unenforced",
+  "token_budget": null,
+  "token_budget_note": "no token ceiling is enforced and no token estimate is invented; the observation records null unless the solver itself reports usage",
+  "acceptance_seconds": 120
+ },
+ "initial_source_sha256": "546a037d961c629ebdd5682cf52b9f37ec68e824483ed1d2f497e1f8e225541a",
+ "started_utc": "2026-09-20T19:13:35.082103+00:00",
+ "finished_utc": "2026-09-20T19:13:35.234621+00:00",
+ "work_directory": "/home/epentland/ai/canopy/mylang/.worktrees/integration/experiments/agent-usefulness-e1/work/20260921-dsh-blocked-dev-maintenance-01",
+ "workspace": "/home/epentland/ai/canopy/mylang/.worktrees/integration/experiments/agent-usefulness-e1/work/20260921-dsh-blocked-dev-maintenance-01/project"
+}

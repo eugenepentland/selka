@@ -1,0 +1,4 @@
+# R_OUTPUT: the write itself fails. Run with stdout closed.
+def main(out: Stream) -> int:
+    out.print("hello from the output probe")
+    return 0

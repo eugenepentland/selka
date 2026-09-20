@@ -1,0 +1,4 @@
+# R_OVERFLOW: checked signed addition past the i64 ceiling.
+def main() -> int:
+    value = 9223372036854775807
+    return value + 1

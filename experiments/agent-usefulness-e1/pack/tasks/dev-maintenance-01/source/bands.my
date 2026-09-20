@@ -1,0 +1,10 @@
+module bands
+
+
+# The volume band an order quantity falls in: "top", "mid" or "none".
+public def name(quantity: int) -> str:
+    if quantity >= 50:
+        return "top"
+    if quantity >= 10:
+        return "mid"
+    return "none"

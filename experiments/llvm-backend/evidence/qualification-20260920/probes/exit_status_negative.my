@@ -1,0 +1,3 @@
+# A negative main result wraps to the low eight bits as well.
+def main() -> int:
+    return -1

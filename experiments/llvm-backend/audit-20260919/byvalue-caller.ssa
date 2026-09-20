@@ -1,0 +1,11 @@
+type :t16 = align 8 { b 16 }
+export function l $test() {
+@entry
+ %value =l alloc8 16
+ storel 11, %value
+ %second =l add %value, 8
+ storel 22, %second
+ call $change(:t16 %value)
+ %answer =l loadl %value
+ ret %answer
+}

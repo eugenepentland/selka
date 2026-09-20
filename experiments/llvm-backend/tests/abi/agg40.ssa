@@ -1,0 +1,53 @@
+# agg40.ssa -- ABI oracle: aggregate parameter of 40 bytes, align 8, as emitted
+# by src/qbe.zig typeDefinitions() for a record/aggregate layout of size 40.
+# QBE aggregate parameters/returns are POINTERS in the IL; QBE's amd64_sysv
+# backend decides register vs. memory placement from the declared size.
+type :t40 = align 8 { b 40 }
+
+# Callee: checksum of byte 0 and byte 39 of the by-value aggregate, plus %ctx.
+function l $take_40(l %ctx, :t40 %a0) {
+@start
+	%p0 =l add %a0, 0
+	%b0 =w loadub %p0
+	%p1 =l add %a0, 39
+	%b1 =w loadub %p1
+	%x0 =l extuw %b0
+	%x1 =l extuw %b1
+	%s =l add %x0, %x1
+	%r =l add %s, %ctx
+	ret %r
+}
+
+# Exported caller: pass the aggregate through to a QBE callee (caller side).
+export function l $qbe_agg40(l %ctx, :t40 %a0) {
+@start
+	%r =l call $take_40(l %ctx, :t40 %a0)
+	ret %r
+}
+
+# Callee returning the aggregate by value.
+function :t40 $give_40(l %ctx, :t40 %a0) {
+@start
+	ret %a0
+}
+
+# Exported callee returning the aggregate by value (C caller sees this).
+export function :t40 $qbe_ret40(l %ctx, :t40 %a0) {
+@start
+	%v =:t40 call $give_40(l %ctx, :t40 %a0)
+	ret %v
+}
+
+# Exported caller of a QBE callee that returns the aggregate (caller side).
+export function l $qbe_retcall_40(l %ctx, :t40 %a0) {
+@start
+	%v =:t40 call $give_40(l %ctx, :t40 %a0)
+	%p0 =l add %v, 0
+	%b0 =w loadub %p0
+	%p1 =l add %v, 39
+	%b1 =w loadub %p1
+	%x0 =l extuw %b0
+	%x1 =l extuw %b1
+	%s =l add %x0, %x1
+	ret %s
+}

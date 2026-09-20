@@ -1,0 +1,53 @@
+# agg56.ssa -- ABI oracle: aggregate parameter of 56 bytes, align 8, as emitted
+# by src/qbe.zig typeDefinitions() for a record/aggregate layout of size 56.
+# QBE aggregate parameters/returns are POINTERS in the IL; QBE's amd64_sysv
+# backend decides register vs. memory placement from the declared size.
+type :t56 = align 8 { b 56 }
+
+# Callee: checksum of byte 0 and byte 55 of the by-value aggregate, plus %ctx.
+function l $take_56(l %ctx, :t56 %a0) {
+@start
+	%p0 =l add %a0, 0
+	%b0 =w loadub %p0
+	%p1 =l add %a0, 55
+	%b1 =w loadub %p1
+	%x0 =l extuw %b0
+	%x1 =l extuw %b1
+	%s =l add %x0, %x1
+	%r =l add %s, %ctx
+	ret %r
+}
+
+# Exported caller: pass the aggregate through to a QBE callee (caller side).
+export function l $qbe_agg56(l %ctx, :t56 %a0) {
+@start
+	%r =l call $take_56(l %ctx, :t56 %a0)
+	ret %r
+}
+
+# Callee returning the aggregate by value.
+function :t56 $give_56(l %ctx, :t56 %a0) {
+@start
+	ret %a0
+}
+
+# Exported callee returning the aggregate by value (C caller sees this).
+export function :t56 $qbe_ret56(l %ctx, :t56 %a0) {
+@start
+	%v =:t56 call $give_56(l %ctx, :t56 %a0)
+	ret %v
+}
+
+# Exported caller of a QBE callee that returns the aggregate (caller side).
+export function l $qbe_retcall_56(l %ctx, :t56 %a0) {
+@start
+	%v =:t56 call $give_56(l %ctx, :t56 %a0)
+	%p0 =l add %v, 0
+	%b0 =w loadub %p0
+	%p1 =l add %v, 55
+	%b1 =w loadub %p1
+	%x0 =l extuw %b0
+	%x1 =l extuw %b1
+	%s =l add %x0, %x1
+	ret %s
+}

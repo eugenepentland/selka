@@ -190,3 +190,18 @@ test "a malformed adapter or unit is rejected rather than agreed with" {
     try std.testing.expectError(error.MissingSignature, declarations(arena.allocator(), "extern uint64_t takes(void *", "takes"));
     try std.testing.expectEqual(@as(usize, 0), (try declarations(arena.allocator(), "", "takes")).len);
 }
+
+// spec-case: QBE-AGGREF-6
+test "one ABI identity has one definition on each side of the module boundary" {
+    // The compiler owns the manifest tag as `native_test_dependencies.abi` and
+    // the native build driver owns the same tag as `qbe_build.native_abi`. A
+    // single file cannot hold it for both: Zig lets a file belong to only one
+    // module, and the driver is compiled both inside the compiler executable
+    // (root module) and as its own `qbe_build` module. This test is the join —
+    // it sees both modules at once, so a bump on either side alone fails here
+    // instead of letting the driver accept a manifest the emitter never writes.
+    const compiler_abi = @import("native_test_dependencies.zig").abi;
+    const driver = @import("qbe_build.zig");
+    try std.testing.expectEqualStrings(compiler_abi, driver.native_abi);
+    try std.testing.expect(std.mem.indexOf(u8, driver.generation_identity, compiler_abi) != null);
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "caller": "qbe",
+    "callee": "qbe",
+    "status": 0,
+    "stdout": "11\n",
+    "stderr": "",
+    "passed": true
+  },
+  {
+    "caller": "qbe",
+    "callee": "llvm",
+    "status": 0,
+    "stdout": "11\n",
+    "stderr": "",
+    "passed": true
+  },
+  {
+    "caller": "llvm",
+    "callee": "qbe",
+    "status": 0,
+    "stdout": "11\n",
+    "stderr": "",
+    "passed": true
+  },
+  {
+    "caller": "llvm",
+    "callee": "llvm",
+    "status": 0,
+    "stdout": "11\n",
+    "stderr": "",
+    "passed": true
+  }
+]

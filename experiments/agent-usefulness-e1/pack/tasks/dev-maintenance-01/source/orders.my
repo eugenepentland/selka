@@ -1,0 +1,8 @@
+module orders
+import tiers
+
+
+# Order total in cents after the volume discount.
+public def total_cents(unit_price: int, quantity: int) -> int:
+    rate = tiers.rate_bps(quantity)
+    return (unit_price * quantity * (10000 - rate)) // 10000

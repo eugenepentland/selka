@@ -1,0 +1,5 @@
+# R_TEXT_BOUNDS: index past the end of a str.
+def main() -> int:
+    text = "abc"
+    value = text[9]
+    return len(value)

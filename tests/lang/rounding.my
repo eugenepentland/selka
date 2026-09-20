@@ -1,0 +1,72 @@
+module rounding
+
+import math
+
+# `round(value)` answers the nearest integral float, with halves away from zero
+# (SPEC.md PRELUDE-ROUND-1, docs/python-syntax.md). CPython instead rounds ties to
+# even and answers an int; that divergence is declared in velocity/divergences.json
+# as `round-half-away-from-zero`. These tests pin the language's own documented
+# rule, so the contract is verified without CPython and outlives the divergence
+# entry. The tie cases are .5 and -.5; 1.4/1.6 are the non-tie cases.
+
+
+def rounded(value: float) -> float:
+    return round(value)
+
+
+# spec-case: PRELUDE-ROUND-1
+public def test_round_sends_halves_away_from_zero_for_both_signs() -> bool:
+    if rounded(2.5) != 3.0:
+        return False
+    if rounded(0.5) != 1.0:
+        return False
+    if rounded(-0.5) != -1.0:
+        return False
+    if rounded(-2.5) != -3.0:
+        return False
+    if rounded(1.5) != 2.0:
+        return False
+    if rounded(-1.5) != -2.0:
+        return False
+    return True
+
+
+public def test_round_takes_the_nearest_integral_float_off_the_tie() -> bool:
+    if rounded(1.4) != 1.0:
+        return False
+    if rounded(1.6) != 2.0:
+        return False
+    if rounded(-1.4) != -1.0:
+        return False
+    if rounded(-1.6) != -2.0:
+        return False
+    if rounded(0.0) != 0.0:
+        return False
+    if rounded(3.5) != 4.0:
+        return False
+    return True
+
+
+public def test_round_answers_a_float_and_agrees_with_math_round() -> bool:
+    total = rounded(2.5) + 0.5
+    if total != 3.5:
+        return False
+    if math.round(2.5) != rounded(2.5):
+        return False
+    if math.round(-0.5) != rounded(-0.5):
+        return False
+    return True
+
+
+public def test_round_passes_not_a_number_and_infinities_through() -> bool:
+    infinite = 1.0 / 0.0
+    if rounded(infinite) != infinite:
+        return False
+    not_a_number = 0.0 / 0.0
+    if rounded(not_a_number) == rounded(not_a_number):
+        return False
+    return True
+
+
+def main() -> int:
+    return 0

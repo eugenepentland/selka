@@ -10,7 +10,18 @@ const execute = @import("native_test_execute.zig");
 const invalidation = @import("invalidation.zig");
 /// Test setup, changed inputs, malformed compiler output and tool failures.
 pub const Error = fs.Error || snapshot.Error || execute.Error || std.json.ParseError(std.json.Scanner) ||
-    error{ ProjectConfigurationFailed, ProjectPolicyRejected, SourceRejected, InvalidNativeTestSession };
+    error{ ProjectConfigurationFailed, ProjectPolicyRejected, SourceRejected, InvalidNativeTestSession, CompilerRecursion };
+/// Ceiling on how many ancestors of this process may run the same executable.
+/// A compiler child that is really another copy of this program is the shape a
+/// runaway recursion takes, so a session refuses past this many instead of
+/// spawning forever. Legitimate nesting is shallow and known: `mylang test
+/// <dir>` spawns `mylang test <file>`, which spawns `mylang native-test-graph`
+/// and `mylang build`, so three same-executable frames are expected.
+pub const ancestry_limit = 5;
+/// How many parent links the ancestry walk follows before giving up. A cycle or
+/// an unreadable `/proc` ends the walk earlier; the bound only stops a walk
+/// that would otherwise never terminate.
+const ancestry_hops = 32;
 /// One freshly checked project or provider variant.
 pub const Project = struct {
     source: []const u8,
@@ -55,8 +66,8 @@ pub const Session = struct {
     pub fn init(context: fs.Context, opts: options.Options) Error!Session {
         var session = try initFrontend(context, opts);
         errdefer context.remove(session.temporary);
-        const zig = try context.executable(opts.zig);
-        const qbe = try context.executable(opts.qbe);
+        const zig = try context.executable(opts.toolchain.zig);
+        const qbe = try context.executable(opts.toolchain.qbe);
         session.tools = .{ .zig = zig, .qbe = qbe };
         session.hashes[1] = try context.stamp(zig);
         session.hashes[2] = try context.stamp(qbe);
@@ -66,7 +77,7 @@ pub const Session = struct {
     /// resolving zig or qbe. A caller that only needs checked facts — as
     /// `mylang invoke --describe` does — must not require the native toolchain.
     pub fn initFrontend(context: fs.Context, opts: options.Options) Error!Session {
-        const compiler = try std.Io.Dir.cwd().realPathFileAlloc(context.io, "/proc/self/exe", context.allocator);
+        const compiler = try resolveCompiler(context, opts.toolchain.compiler);
         const directory = try context.absolute(opts.cache);
         // Capture before creating cache files beneath a test source directory.
         const source = try snapshot.captureExcluding(context, opts.source, directory);
@@ -513,6 +524,106 @@ fn invalidSessionReply() Error!void {
 /// Best-effort session teardown: name the ignored cause rather than swallowing it.
 fn ignoreSessionFailure(err: anyerror) void {
     _ = @errorName(err);
+}
+
+/// The compiler a session spawns: the one the caller named, or this process
+/// when nobody did. The self case is checked against the process's own ancestry
+/// first, because a session that spawns a copy of itself is a runaway rather
+/// than a compiler invocation.
+fn resolveCompiler(context: fs.Context, requested: ?[]const u8) Error![]const u8 {
+    if (requested) |path| return context.absolute(path);
+    const self_exe = try std.Io.Dir.cwd().realPathFileAlloc(context.io, "/proc/self/exe", context.allocator);
+    return decideSelfCompiler(self_exe, selfAncestry(context, self_exe));
+}
+
+/// The decision the ancestry walk feeds. A chain that already holds this many
+/// copies of this program is a recursion rather than a compiler invocation, so
+/// it is refused before a child exists instead of after the machine fills up.
+fn decideSelfCompiler(self_exe: []const u8, ancestry: usize) Error![]const u8 {
+    if (ancestry >= ancestry_limit) return error.CompilerRecursion;
+    return self_exe;
+}
+
+/// How many ancestors of this process run the same executable. The parent chain
+/// is read from `/proc` rather than from an inherited variable, because the
+/// session fingerprints its whole environment to key cached results and a
+/// counter threaded through it would invalidate every warm pass. A `/proc`
+/// entry that cannot be read ends the walk, which can only undercount and so
+/// never refuses a legitimate session.
+fn selfAncestry(context: fs.Context, self_exe: []const u8) usize {
+    var depth: usize = 0;
+    var pid = pidOf(context, "self") orelse return 0;
+    var hops: usize = 0;
+    while (hops < ancestry_hops) : (hops += 1) {
+        const parent = parentOf(context, pid) orelse return depth;
+        if (parent <= 1) return depth;
+        if (exeOf(context, parent)) |exe| {
+            if (std.mem.eql(u8, exe, self_exe)) depth += 1;
+        } else return depth;
+        pid = parent;
+    }
+    return depth;
+}
+
+/// The executable one process runs, or null when `/proc` cannot say.
+fn exeOf(context: fs.Context, pid: i32) ?[]const u8 {
+    const path = std.fmt.allocPrint(context.allocator, "/proc/{d}/exe", .{pid}) catch return null;
+    return std.Io.Dir.cwd().realPathFileAlloc(context.io, path, context.allocator) catch null;
+}
+
+/// The parent process id `/proc/<who>/status` records, or null when that entry
+/// cannot be read. `status` is read in preference to `stat` because its fields
+/// are line-oriented and its command name is never parenthesised, so no part of
+/// the parse depends on a process name that may contain spaces.
+fn parentOf(context: fs.Context, pid: i32) ?i32 {
+    const path = std.fmt.allocPrint(context.allocator, "/proc/{d}/status", .{pid}) catch return null;
+    const text = context.read(path) catch return null;
+    return statusField(text, "PPid:");
+}
+
+/// This process's own id from `/proc/self/status`, or null when unreadable.
+fn pidOf(context: fs.Context, who: []const u8) ?i32 {
+    const path = std.fmt.allocPrint(context.allocator, "/proc/{s}/status", .{who}) catch return null;
+    const text = context.read(path) catch return null;
+    return statusField(text, "Pid:");
+}
+
+/// One numeric `status` field's value, or null when the field is absent.
+fn statusField(text: []const u8, name: []const u8) ?i32 {
+    var lines = std.mem.tokenizeScalar(u8, text, '\n');
+    while (lines.next()) |line| {
+        if (!std.mem.startsWith(u8, line, name)) continue;
+        const value = std.mem.trim(u8, line[name.len..], " \t");
+        return std.fmt.parseInt(i32, value, 10) catch null;
+    }
+    return null;
+}
+
+// spec: NATIVE-TEST-RECURSION-1
+test "a compiler child that is another copy of this program is refused before it spawns" {
+    const a = std.testing.allocator;
+    var arena = std.heap.ArenaAllocator.init(a);
+    defer arena.deinit();
+    var variables: std.process.Environ.Map = .init(arena.allocator());
+    defer variables.deinit();
+    var context = try fs.Context.init(arena.allocator(), std.testing.io, &variables);
+    defer context.deinit();
+    const self_exe = try std.Io.Dir.cwd().realPathFileAlloc(context.io, "/proc/self/exe", arena.allocator());
+    // This test process is the top of its own chain of copies of itself, so the
+    // walk counts zero and the ceiling cannot refuse a first session.
+    try std.testing.expectEqual(@as(usize, 0), selfAncestry(context, self_exe));
+    try std.testing.expect(ancestry_limit > 2);
+    // A named compiler is honoured verbatim and never resolved to this process.
+    const named = try resolveCompiler(context, "/bin/true");
+    try std.testing.expectEqualStrings("/bin/true", named);
+    try std.testing.expect(!std.mem.eql(u8, named, self_exe));
+    const named_relative = try resolveCompiler(context, "./relative-compiler");
+    try std.testing.expect(std.mem.endsWith(u8, named_relative, "/relative-compiler"));
+    // The ceiling is the containment: one copy short of the limit still runs,
+    // and the limit itself is refused before any child exists.
+    try std.testing.expectEqualStrings(self_exe, try decideSelfCompiler(self_exe, ancestry_limit - 1));
+    try std.testing.expectError(error.CompilerRecursion, decideSelfCompiler(self_exe, ancestry_limit));
+    try std.testing.expectError(error.CompilerRecursion, decideSelfCompiler(self_exe, ancestry_limit + 1));
 }
 
 // spec-case: NATIVE-TEST-9

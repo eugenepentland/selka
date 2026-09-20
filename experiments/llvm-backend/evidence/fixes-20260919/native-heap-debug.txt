@@ -1,0 +1,15 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs e8ae40d29018f45898a92bfa1d9cf74d7b8f44e2: 48/367 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 10 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 9 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1838 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs e8ae40d29018f45898a92bfa1d9cf74d7b8f44e2, 48 file(s) in scope
+native heap tests passed
+Build Summary: 6/6 steps succeeded
+test-native-heap success
++- run exe native-heap-test success 27ms
+|  +- compile exe native-heap-test debug native cached 14ms MaxRSS:37M
++- run ../guardian-zig/zig-out/bin/guardian-check success 517ms
+   +- guardian-selfcheck success
+      +- run ../guardian-zig/zig-out/bin/guardian-check success 4ms
+

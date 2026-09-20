@@ -48,6 +48,13 @@ sys.exit(0 if value is None else int(value) & 0xFF)
 ORACLE_ERROR_PREFIX = 'idiom-oracle-error: '
 TRACEBACK_HEADER = 'Traceback (most recent call last)'
 
+# A host failure is the toolchain's problem, not the guest's: the native backend
+# drives zig as its assembler and linker, and a global cache the process cannot
+# write fails the link with `manifest_create ReadOnlyFileSystem` and
+# `mylang: host failure: NativeToolFailed`. A caller must never count that as a
+# guest rejection, or a broken environment reads as a language defect.
+HOST_FAILURE_MARKERS = ('host failure:', 'NativeToolFailed', 'ReadOnlyFileSystem')
+
 
 def failed_run(result):
     """Whether stderr/status proves the guest did not complete normally."""
@@ -55,6 +62,17 @@ def failed_run(result):
     return (result['status'] < 0 or 'error[' in stderr or
             'host failure:' in stderr or 'QBE runtime failure' in stderr or
             stderr.startswith('mylang:') or stderr.startswith('usage:'))
+
+
+def host_failure(result):
+    """Whether a failed run failed for a host reason rather than a guest one.
+
+    The distinction matters to the scorer: a host failure is a broken
+    measurement, and counting it as a rejection would put a toolchain problem in
+    the C3 denominator and hide a probe that never ran.
+    """
+    stderr = result['stderr']
+    return any(marker in stderr for marker in HOST_FAILURE_MARKERS)
 
 
 def matches(result, expected):
@@ -111,10 +129,25 @@ def self_test():
     ]
     failures = [name for name, observed, expected, wanted in cases
                 if matches(observed, expected) != wanted]
+    host_cases = [
+        ('read-only zig cache is a host failure',
+         {'status': 2, 'stdout': '', 'stderr': 'error: sub-compilation of compiler_rt failed\n'
+                                              '    note: failed to check cache: '
+                                              'manifest_create ReadOnlyFileSystem\n'},
+         True),
+        ('a missing tool is a host failure',
+         {'status': 2, 'stdout': '', 'stderr': 'mylang: host failure: NativeToolFailed\n'}, True),
+        ('a guest diagnostic is not a host failure',
+         {'status': 1, 'stdout': '', 'stderr': 'p.my:1:1: error[E_TYPE]: mismatch\n'}, False),
+        ('a clean trap is not a host failure',
+         {'status': 1, 'stdout': '', 'stderr': 'error[R_ASSERT]: trap\n'}, False),
+    ]
+    failures += [name for name, observed, wanted in host_cases
+                 if host_failure(observed) != wanted]
     if failures:
         print('idiom classifier self-test failed: ' + ', '.join(failures), file=sys.stderr)
         return 1
-    print(f'idiom classifier self-test: {len(cases)} passed')
+    print(f'idiom classifier self-test: {len(cases) + len(host_cases)} passed')
     return oracle_self_test()
 
 

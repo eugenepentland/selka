@@ -1,0 +1,8 @@
+module audit
+
+
+# 1 when the order is below the smallest discounted quantity, else 0.
+public def small_order(quantity: int) -> int:
+    if quantity < 5:
+        return 1
+    return 0

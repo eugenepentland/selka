@@ -1,0 +1,6 @@
+type :t16 = align 8 { b 16 }
+export function $change(:t16 %arg) {
+@entry
+ storel 99, %arg
+ ret
+}

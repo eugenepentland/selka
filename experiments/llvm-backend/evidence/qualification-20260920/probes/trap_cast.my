@@ -1,0 +1,5 @@
+# R_OVERFLOW with the `cast` detail: a narrowing integer conversion that does
+# not fit the destination width.
+def main() -> int:
+    value = 300
+    return int(i8(value))

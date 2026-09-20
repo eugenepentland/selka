@@ -1,0 +1,304 @@
+{
+ "version": "e1-observation-v1",
+ "run_id": "20260920T191322-dev-context-01-focused-context-script--home-epentland-ai-canopy-mylang-.worktrees-integration-experiments-agent-usefulness-e1-harness-solvers-reference_workflow.sh",
+ "status": "accepted",
+ "blocked_reason": null,
+ "task": {
+  "id": "dev-context-01",
+  "family": "context/incomplete-implementation",
+  "cohort": "development",
+  "title": "Fill the in-place ranking helper under its mutation contract",
+  "brief_sha256": "bbc56d247b95390768f635ee3a13ba8978b17b1c59c06421e41c7dd48135ef32"
+ },
+ "arm": {
+  "name": "focused-context",
+  "note_sha256": "20c2e696ec536593932f244642bca7a68fc0701ef0b11c4a47605ace32b01986"
+ },
+ "solver": {
+  "name": "script:/home/epentland/ai/canopy/mylang/.worktrees/integration/experiments/agent-usefulness-e1/harness/solvers/reference_workflow.sh",
+  "argv": [
+   "sh",
+   "/home/epentland/ai/canopy/mylang/.worktrees/integration/experiments/agent-usefulness-e1/harness/solvers/reference_workflow.sh"
+  ],
+  "model_driven": false,
+  "status": 0,
+  "timed_out": false,
+  "stdout_bytes": 248,
+  "stderr_bytes": 446,
+  "stderr_tail": "ranking.my:10:12: error[E_TYPED_HOLE]: unresolved implementation obligation; fill this hole before checking or execution\n      return todo[None]()\n             ^\n  note: ranking.my:10:17: required result type declared here\nranking.my:10:12: error[E_TYPED_HOLE]: unresolved implementation obligation; fill this hole before checking or execution\n      return todo[None]()\n             ^\n  note: ranking.my:10:17: required result type declared here\n"
+ },
+ "models": {
+  "route": "deepseek-official",
+  "profile": "headless",
+  "temperature": null,
+  "profile_identity": {
+   "available": true,
+   "sha256": "40ff1723bb5b03ef25c030534b74224fb89e4f5572bb24aa6deefff36b40c977",
+   "bytes": 11037
+  }
+ },
+ "prompt": {
+  "sha256": "18695c0070043e7e18751f9deca7e87301dfbc1d77f715518b6033e7977cc0ac",
+  "text": "You are working in the project in your current working directory. The compiler `mylang` is on your PATH.\n\nThe language documentation is readable at `docs/` and `README.md` in your working directory (read-only symlinks into the repository).\n\n# Ranking: finish the in-place ranking helper\n\nThe `reading-rank` project sorts readings for a report. One body is not written\nyet: `ranking.my` declares the exported helper below with an unfinished typed\nhole, so `mylang check` reports `E_TYPED_HOLE` and every command that would run\nthe program refuses until the hole is filled.\n\n```mylang\npublic def rank_in_place(readings: list[model.Reading]) -> None effects(mutation) mutates(readings):\n    return todo[None]()\n```\n\n## What the helper must do\n\n* Order `readings` by **descending** `value`, **in place**: after the call the\n  caller's own list holds the result. Do not answer a new list.\n* The order is **stable**: two readings with equal `value` keep their original\n  relative order.\n* Answer nothing: the declared result is `None`.\n* Keep the declared contract `effects(mutation) mutates(readings)`. The caller\n  passes the list it wants sorted, and an empty or one-element list is left\n  alone.\n\n## What must not change\n\n* `model.Reading` keeps its name and its `name` and `value` fields.\n* `main.my` keeps printing one `\"<name> <value>\"` line per reading, in list\n  order, and exits `0`.\n* Module names and exported signatures are used by other modules.\n\n## Notes\n\n* The compiler is `mylang`, on `PATH`.\n* The repository documentation is readable at the `docs` path named in your\n  prompt; the structured obligation for the hole travels with the\n  `E_TYPED_HOLE` diagnostic under `mylang check --diagnostics=json`.\n* An unseen grading probe passes lists with ties, negatives, one element and no\n  elements, and reads the result through the same binding the caller passed.\n\nBefore editing, read the declaration you are changing with `mylang context main.my --symbol=ranking::rank_in_place --format=json`; when a body is an unfinished typed hole, `mylang check main.my --diagnostics=json` attaches the `typed-hole-obligation` record (bindings, declared type, effect ceiling and `mutates(...)` footprint) to the `E_TYPED_HOLE` diagnostic.\n\nWork only inside your working directory. When you are finished, leave the project in the state you want graded."
+ },
+ "identities": {
+  "protocol": {
+   "path": "protocol.json",
+   "sha256": "a521d0442e1a03052743ab3de65508d2a7c3ab7f3b7084f4a16498822632cb02"
+  },
+  "preregistration": {
+   "path": "preregistration.json",
+   "sha256": "fc4f184dadc31837dd21ea815cc4b6190b60707d9b039cc0cd2a82b39ae033b3"
+  },
+  "pack_manifest": {
+   "path": "pack/manifest.json",
+   "sha256": "13ec7dfaf532c4a8080d0d0df34f19733989a305f7fc8d0a56a21dd06eba1d09"
+  },
+  "tool_identity": {
+   "path": "pack/tools/identity.json",
+   "sha256": "a790a2e2d5bd151bdd466e0682e6388af56dcea48ee9e7c753294419b67465af"
+  },
+  "compiler": {
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/experiments/agent-usefulness-e1/pack/tools/bin/mylang",
+   "sha256": "43c6ab3b1a80b53f60530560e100e626647b1d9485cf3901a9cee7b051436223",
+   "compiler_sha256": "149e9d6c39a15a11d2d5704c4cc51cff7560a4087288ed9890159f36a5168c01",
+   "qbe": "/home/epentland/ai/canopy/mylang/.worktrees/integration/experiments/agent-usefulness-e1/pack/tools/bin/qbe",
+   "materialized": true
+  },
+  "docs_digest": "23bab7a5e6fb54ca915a6edce2d58a3f9e57e77154ea6a9e805e803373108318"
+ },
+ "timings": {
+  "prepare_seconds": 0.001,
+  "solve_seconds": 1.569,
+  "grade_seconds": 1.77,
+  "cache_probe_seconds": 1.828,
+  "task_to_accepted_seconds": 3.34,
+  "wall_seconds": 5.324
+ },
+ "completion": {
+  "accepted": true,
+  "time_to_accepted_seconds": 3.34,
+  "unsuccessful_attempts": [],
+  "overlapping_note": "invocation_wall_seconds is the sum over compiler processes; solver_seconds is the enclosing wall clock, so the sum can exceed the wall time when a solver ran processes in parallel"
+ },
+ "grading": {
+  "passed": true,
+  "exit_status": 0,
+  "seconds": 1.77,
+  "timed_out": false,
+  "command": "/usr/bin/python3 /home/epentland/ai/canopy/mylang/.worktrees/integration/experiments/agent-usefulness-e1/pack/tasks/dev-context-01/acceptance/check.py --project /home/epentland/ai/canopy/mylang/.worktrees/integration/experiments/agent-usefulness-e1/work/20260920T191322-dev-context-01-focused-context-script--home-epentland-ai-canopy-mylang-.worktrees-integration-experiments-agent-usefulness-e1-harness-solvers-reference_workflow.sh/project --frozen /home/epentland/ai/canopy/mylang/.worktrees/integration/experiments/agent-usefulness-e1/pack/tasks/dev-context-01/source --compiler /home/epentland/ai/canopy/mylang/.worktrees/integration/experiments/agent-usefulness-e1/pack/tools/bin/mylang --allowed ranking.my --json --cache-dir /home/epentland/ai/canopy/mylang/.worktrees/integration/experiments/agent-usefulness-e1/work/20260920T191322-dev-context-01-focused-context-script--home-epentland-ai-canopy-mylang-.worktrees-integration-experiments-agent-usefulness-e1-harness-solvers-reference_workflow.sh/acceptance-cache --timeout 120",
+  "document": {
+   "version": "e1-acceptance-v1",
+   "task": "dev-context-01",
+   "passed": true,
+   "command": "/home/epentland/ai/canopy/mylang/.worktrees/integration/experiments/agent-usefulness-e1/pack/tools/bin/mylang run acceptance_probe.my --cache-dir=/home/epentland/ai/canopy/mylang/.worktrees/integration/experiments/agent-usefulness-e1/work/20260920T191322-dev-context-01-focused-context-script--home-epentland-ai-canopy-mylang-.worktrees-integration-experiments-agent-usefulness-e1-harness-solvers-reference_workflow.sh/acceptance-cache",
+   "run": {
+    "status": 0,
+    "seconds": 1.722,
+    "timed_out": false,
+    "stdout": "tie n3 b:9 a:3 c:3 \nalias n3 b:9 a:3 c:3 \nsingle n1 solo:5 \nordered n2 p:9 q:7 \nempty n0 \nequal n3 e1:4 e2:4 e3:4 \nnegative n2 x:-3 y:-9 \n",
+    "stderr_tail": ""
+   },
+   "comparison": {
+    "cases": [
+     {
+      "line": 1,
+      "expected": "tie n3 b:9 a:3 c:3 ",
+      "observed": "tie n3 b:9 a:3 c:3 ",
+      "agrees": true
+     },
+     {
+      "line": 2,
+      "expected": "alias n3 b:9 a:3 c:3 ",
+      "observed": "alias n3 b:9 a:3 c:3 ",
+      "agrees": true
+     },
+     {
+      "line": 3,
+      "expected": "single n1 solo:5 ",
+      "observed": "single n1 solo:5 ",
+      "agrees": true
+     },
+     {
+      "line": 4,
+      "expected": "ordered n2 p:9 q:7 ",
+      "observed": "ordered n2 p:9 q:7 ",
+      "agrees": true
+     },
+     {
+      "line": 5,
+      "expected": "empty n0 ",
+      "observed": "empty n0 ",
+      "agrees": true
+     },
+     {
+      "line": 6,
+      "expected": "equal n3 e1:4 e2:4 e3:4 ",
+      "observed": "equal n3 e1:4 e2:4 e3:4 ",
+      "agrees": true
+     },
+     {
+      "line": 7,
+      "expected": "negative n2 x:-3 y:-9 ",
+      "observed": "negative n2 x:-3 y:-9 ",
+      "agrees": true
+     }
+    ],
+    "lines_expected": 7,
+    "lines_observed": 7,
+    "mismatches": [],
+    "unexpected_trailing_lines": [],
+    "passed": true
+   },
+   "changes": {
+    "changed": [
+     "ranking.my"
+    ],
+    "added": [],
+    "removed": []
+   },
+   "changes_classified": {
+    "permitted_edits": [
+     "ranking.my"
+    ],
+    "unintended": {
+     "changed_outside_allowed": [],
+     "added": [],
+     "removed": []
+    }
+   }
+  },
+  "initial_source_sha256": "4d75b7168834532e9b597977c16146c044fdcecee9907d898c58f3f863194508"
+ },
+ "invocations": {
+  "invocations": 3,
+  "failed_compiler_invocations": 1,
+  "infrastructure_failures": 0,
+  "failed_checks_on_changed_source": 0,
+  "failed_candidate_versions": 0,
+  "checked_candidate_versions": 2,
+  "repeated_diagnostics": 0,
+  "distinct_diagnostics": 1,
+  "diagnostic_codes": {
+   "E_TYPED_HOLE": 2
+  },
+  "stdout_bytes": 2252,
+  "stderr_bytes": 446,
+  "invocation_wall_seconds": 1.391529,
+  "phases": {
+   "checking": {
+    "invocations": 1,
+    "failed": 1,
+    "wall_seconds": 0.023532,
+    "stdout_bytes": 0,
+    "stderr_bytes": 223
+   },
+   "reading context": {
+    "invocations": 1,
+    "failed": 0,
+    "wall_seconds": 0.020506,
+    "stdout_bytes": 2240,
+    "stderr_bytes": 223
+   },
+   "compiling and running": {
+    "invocations": 1,
+    "failed": 0,
+    "wall_seconds": 1.347491,
+    "stdout_bytes": 12,
+    "stderr_bytes": 0
+   }
+  },
+  "coverage": {
+   "missing": false,
+   "duplicates": 0,
+   "truncated": 0,
+   "invalid": 0,
+   "problems": []
+  }
+ },
+ "cache_probes": {
+  "edit_applied": true,
+  "cold": {
+   "seconds": 1.481,
+   "status": 0,
+   "timed_out": false,
+   "report": {
+    "compiled_functions": 2,
+    "reused_functions": 0,
+    "functions_total": 2,
+    "reuse_fraction": 0.0,
+    "frontend_seconds": 0.077768438,
+    "codegen_seconds": 1.338496302,
+    "link_seconds": 0.029957449,
+    "native_seconds": 1.368455921
+   },
+   "report_stream": "stdout",
+   "stderr_tail": ""
+  },
+  "warm_unchanged": {
+   "seconds": 0.114,
+   "status": 0,
+   "timed_out": false,
+   "report": {
+    "compiled_functions": 0,
+    "reused_functions": 2,
+    "functions_total": 2,
+    "reuse_fraction": 1.0,
+    "frontend_seconds": 0.049670463,
+    "codegen_seconds": 0.008985743,
+    "link_seconds": 0.02482464,
+    "native_seconds": 0.033812507
+   },
+   "report_stream": "stdout",
+   "stderr_tail": ""
+  },
+  "warm_after_edit": {
+   "seconds": 0.231,
+   "status": 0,
+   "timed_out": false,
+   "report": {
+    "compiled_functions": 1,
+    "reused_functions": 1,
+    "functions_total": 2,
+    "reuse_fraction": 0.5,
+    "frontend_seconds": 0.077889002,
+    "codegen_seconds": 0.095654168,
+    "link_seconds": 0.028827709,
+    "native_seconds": 0.124484277
+   },
+   "report_stream": "stdout",
+   "stderr_tail": ""
+  }
+ },
+ "attempts": [
+  {
+   "attempt": "solver",
+   "seconds": 1.569,
+   "status": 0
+  },
+  {
+   "attempt": "acceptance",
+   "seconds": 1.77,
+   "passed": true
+  }
+ ],
+ "tokens": {
+  "input": null,
+  "output": null,
+  "note": "not reported by the solver command; no estimate is invented"
+ },
+ "budgets": {
+  "wall_seconds_per_task": 900,
+  "turn_cap": 30,
+  "turn_cap_enforced": false,
+  "turn_cap_note": "goal.json fixes the 30-turn cap; `dsh --profile headless` exposes no turn flag, so the enforced budget is the wall-clock ceiling and the observation records the cap as unenforced",
+  "token_budget": null,
+  "token_budget_note": "no token ceiling is enforced and no token estimate is invented; the observation records null unless the solver itself reports usage",
+  "acceptance_seconds": 120
+ },
+ "initial_source_sha256": "4d75b7168834532e9b597977c16146c044fdcecee9907d898c58f3f863194508",
+ "started_utc": "2026-09-20T19:13:21.961378+00:00",
+ "finished_utc": "2026-09-20T19:13:27.311006+00:00",
+ "work_directory": "/home/epentland/ai/canopy/mylang/.worktrees/integration/experiments/agent-usefulness-e1/work/20260920T191322-dev-context-01-focused-context-script--home-epentland-ai-canopy-mylang-.worktrees-integration-experiments-agent-usefulness-e1-harness-solvers-reference_workflow.sh",
+ "workspace": "/home/epentland/ai/canopy/mylang/.worktrees/integration/experiments/agent-usefulness-e1/work/20260920T191322-dev-context-01-focused-context-script--home-epentland-ai-canopy-mylang-.worktrees-integration-experiments-agent-usefulness-e1-harness-solvers-reference_workflow.sh/project"
+}

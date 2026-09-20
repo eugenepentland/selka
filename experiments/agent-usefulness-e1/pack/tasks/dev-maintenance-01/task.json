@@ -1,0 +1,23 @@
+{
+ "version": "e1-task-v1",
+ "id": "dev-maintenance-01",
+ "title": "Volume-tier rule change across three modules",
+ "family": "maintenance",
+ "cohort": "development",
+ "entry": "main.my",
+ "context_symbol": "tiers::rate_bps",
+ "acceptance_allowed": "*.my",
+ "budgets": {"wall_seconds": 900},
+ "public_commands": ["mylang check main.my", "mylang run main.my"],
+ "source_snapshot": "source/",
+ "intended_answer": "answer/",
+ "acceptance": {
+  "checker": "acceptance/check.py",
+  "probe": "acceptance/probe.my",
+  "oracle": "acceptance/reference.py",
+  "cases": "acceptance/cases.json",
+  "independent": "reference.py re-implements the brief's rule in Python; the checker never runs the workflow the task is about"
+ },
+ "expected_intended_changes": ["audit.my", "bands.my", "tiers.my"],
+ "notes": "The three boundaries are spelled differently (`>= 50`, `>= 10`, `< 10`), so the rule change is three edits in three modules; a solver that centralises them instead also passes, because grading is behavioural."
+}

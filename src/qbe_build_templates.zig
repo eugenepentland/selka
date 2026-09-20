@@ -139,6 +139,7 @@ pub const codec_start =
     \\ if(node_count>100000 || capacity>100000)return host_error(execution,"WireLimit");
     \\ if(atomic_flag_test_and_set_explicit(&busy,memory_order_acquire))return host_error(execution,"Busy");
     \\ int status=2;co_input=arguments;co_count=node_count;co_cursor=0;co_needed=0;co_rejected=0;co_error=NULL;co_domain=NULL;
+    \\ co_capacity=capacity;
     \\ co_calls=0;co_max_calls=options && options->max_calls ? options->max_calls:4096;
     \\ memset(co_arguments,0,sizeof co_arguments);co_return=NULL;co_prepared=NULL;
     \\
@@ -151,10 +152,11 @@ pub const codec_end =
     \\ if(!status && co_error)status=host_error(execution,co_error);
     \\ if(!status || (co_rejected && co_error && !strcmp(co_error,"DomainCodecRejected"))){
     \\  out->value.node_count=co_needed;
-    \\  if(co_needed>capacity)status=host_error(execution,"OutputTooSmall");
+    \\  if(co_needed>co_capacity)status=host_error(execution,"OutputTooSmall");
     \\  else if(co_needed)memcpy(output,co_prepared,co_needed*sizeof *output);
     \\ }
     \\done:
+    \\ co_unroot();
     \\ out->calls=co_calls;out->domain=co_domain;out->rejected=co_rejected;
     \\ for(size_t i=0;i<QBE_CODEC_ARGUMENTS;++i){free(co_arguments[i]);co_arguments[i]=NULL;}
     \\ free(co_return);free(co_prepared);co_return=NULL;co_prepared=NULL;co_input=NULL;co_context=NULL;

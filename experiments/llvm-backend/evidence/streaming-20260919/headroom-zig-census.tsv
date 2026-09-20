@@ -1,0 +1,38 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 2  of event 'cpu_atom/cycles/u'
+# Event count (approx.): 400000
+#
+#       Period	Symbol	Shared Object	IPC   [IPC Coverage]
+
+
+# Samples: 9K of event 'cpu_core/cycles/u'
+# Event count (approx.): 1989200000
+#
+#       Period	Symbol                                                      	Shared Object	IPC   [IPC Coverage]
+ 200000     	[.] Io.File.Reader.readVecPositional                        	zig          	-      -            
+ 200000     	[.] Io.Threaded.deinit                                      	zig          	-      -            
+ 200000     	[.] Io.Writer.Allocating.sendFile                           	zig          	-      -            
+ 200000     	[.] Io.Writer.printValue__anon_26031                        	zig          	-      -            
+ 12400000   	[.] array_list.Aligned(src.sexpr.ast.Node,null).toOwnedSlice	zig          	-      -            
+ 8200000    	[.] compiler_rt.memcpy.memcpyFast                           	zig          	-      -            
+ 10600000   	[.] fmt.parse_float.parseFloat__anon_29982                  	zig          	-      -            
+ 100400000  	[.] heap.ArenaAllocator.alloc                               	zig          	-      -            
+ 1400000    	[.] heap.ArenaAllocator.free                                	zig          	-      -            
+ 28400000   	[.] heap.ArenaAllocator.remap                               	zig          	-      -            
+ 200000     	[.] heap.SmpAllocator.free                                  	zig          	-      -            
+ 129400000  	[.] main.tally                                              	zig          	-      -            
+ 2400000    	[.] mem.findScalarPos__anon_8094                            	zig          	-      -            
+ 464400000  	[.] src.sexpr.parser.parseNode                              	zig          	-      -            
+ 1163400000 	[.] src.sexpr.tokenizer.Tokenizer.next                      	zig          	-      -            
+ 200000     	[.] src.sexpr.tokenizer.Tokenizer.readOperator              	zig          	-      -            
+ 400000     	[.] start.posixCallMainAndExit                              	zig          	-      -            
+ 56200000   	[k] 0xffffffff8ce00b90                                      	[unknown]    	-      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

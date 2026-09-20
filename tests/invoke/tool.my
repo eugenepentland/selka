@@ -63,6 +63,23 @@ public def sample_label(sample: Sample) -> i64 effects():
     return sample.label
 
 
+public def bracket(text: str) -> str effects(managed_allocation):
+    return "[" + text + "]"
+
+
+public def text_length(text: str) -> i64 effects():
+    return len(text)
+
+
+public def repeat_text(piece: str, count: i64) -> str effects(managed_allocation):
+    total = ""
+    index = 0
+    while index < count:
+        total = total + piece
+        index += 1
+    return total
+
+
 def hidden(value: i64) -> i64 effects():
     return value
 

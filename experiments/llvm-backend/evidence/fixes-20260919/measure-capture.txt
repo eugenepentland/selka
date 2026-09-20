@@ -1,0 +1,32 @@
+  wall 5/31
+  wall 10/31
+  wall 15/31
+  wall 20/31
+  wall 25/31
+  wall 30/31
+  counters 3/10
+  counters 6/10
+  counters 9/10
+
+workload           before-qbe  before-llvm          qbe      llvm-o2          zig
+census                   9.30         8.55         8.69         7.21         2.12 
+render                  14.43        13.47        14.02        11.89         2.77 
+census-7.4MB            84.37        78.36        77.55        65.42        14.21 
+render-7.4MB           127.52       120.30       120.90       105.80        19.88 
+
+census           before-qbe/before-llvm 1.088x [1.079, 1.100]
+census           before-qbe/qbe   1.070x [1.064, 1.079]
+census           before-qbe/llvm-o2 1.290x [1.283, 1.301]
+census           before-qbe/zig   4.382x [4.329, 4.432]
+render           before-qbe/before-llvm 1.072x [1.063, 1.086]
+render           before-qbe/qbe   1.029x [1.018, 1.044]
+render           before-qbe/llvm-o2 1.213x [1.198, 1.230]
+render           before-qbe/zig   5.209x [5.165, 5.320]
+census-7.4MB     before-qbe/before-llvm 1.077x [1.063, 1.084]
+census-7.4MB     before-qbe/qbe   1.088x [1.079, 1.093]
+census-7.4MB     before-qbe/llvm-o2 1.290x [1.278, 1.296]
+census-7.4MB     before-qbe/zig   5.936x [5.869, 5.988]
+render-7.4MB     before-qbe/before-llvm 1.060x [1.049, 1.068]
+render-7.4MB     before-qbe/qbe   1.055x [1.048, 1.062]
+render-7.4MB     before-qbe/llvm-o2 1.205x [1.195, 1.213]
+render-7.4MB     before-qbe/zig   6.415x [6.340, 6.468]

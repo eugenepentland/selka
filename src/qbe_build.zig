@@ -13,7 +13,15 @@ pub const Error = fs.Error || std.json.ParseError(std.json.Scanner) || outputs.E
     @import("qbe_build_embed.zig").Error || cache_api.Error ||
     @import("memory_budget").Error ||
     error{ UnsupportedNativeHost, ZigVersionMismatch, InvalidNativeManifest };
-const native_abi = "mylang-qbe-native-v5";
+/// The native ABI tag every manifest must carry, and the tag this driver's
+/// generation identity is keyed by. The compiler core owns the same tag as
+/// `native_test_dependencies.abi`; the two are one value that Zig's module
+/// boundary will not let one file spell — a file belongs to one module, and
+/// this driver is compiled both inside the compiler executable and as its own
+/// `qbe_build` module. `src/aggref_abi_test.zig` is the join: a bump on either
+/// side alone fails there rather than letting the driver accept a manifest the
+/// core would not emit.
+pub const native_abi = "mylang-qbe-native-v6";
 const Record = struct { name: []const u8, symbol: []const u8, key: []const u8, object: []const u8, reused: bool };
 /// Fixed runtime translation units archived together once per build environment.
 const runtime_units = [_][]const u8{
@@ -685,11 +693,44 @@ test "native build rejects incompatible tools targets and malformed manifests" {
     try std.testing.expectError(error.UnsupportedNativeHost, checkHost(.linux, .aarch64));
     try std.testing.expectError(error.ZigVersionMismatch, checkVersion("unrelated-version"));
     try std.testing.expectError(error.InvalidNativeManifest, validate(.null));
+    var buffer: [512]u8 = undefined;
+    const encoded = try std.fmt.bufPrint(&buffer, "{{\"version\":\"qbe-units-v1\",\"abi\":\"{s}\",\"entry\":\"1bad\",\"functions\":[{{\"symbol\":\"1bad\",\"il\":\"\"}}]}}", .{native_abi});
+    const value = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, encoded, .{});
+    defer value.deinit();
+    try std.testing.expectError(error.InvalidNativeManifest, validate(value.value));
+}
+
+// spec: QBE-AGGREF-6
+test "a pre-v6 manifest whose IL already crossed by address is refused, not re-read" {
+    // Version 5 was accepted while its `by_address` fact was optional, so a v5
+    // manifest's IL could have been emitted under the by-value convention and
+    // silently reproduce the aggregate-argument defect. The version bump is
+    // what makes `validate` refuse it before any object is built.
     const value = try std.json.parseFromSlice(std.json.Value, std.testing.allocator,
-        \\{"version":"qbe-units-v1","abi":"mylang-qbe-native-v5","entry":"1bad","functions":[{"symbol":"1bad","il":""}]}
+        \\{"version":"qbe-units-v1","abi":"mylang-qbe-native-v5","entry":"e","functions":[{"symbol":"e","il":""}]}
     , .{});
     defer value.deinit();
     try std.testing.expectError(error.InvalidNativeManifest, validate(value.value));
+    const accepted = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, "{\"version\":\"qbe-units-v1\",\"abi\":\"" ++ native_abi ++ "\",\"entry\":\"e\",\"functions\":[{\"symbol\":\"e\",\"il\":\"\"}]}", .{});
+    defer accepted.deinit();
+    try validate(accepted.value);
+}
+
+// spec: QBE-AGGREF-8
+test "the build generation is keyed by the new ABI so a v5 cache cannot be reused" {
+    // The generation every object, archive and executable is keyed by folds in
+    // the ABI tag, so an artifact produced for v5 is unreachable by a v6 build.
+    // Contrast against the identity this driver produced before the bump rather
+    // than against the constant itself.
+    const previous = "zig-qbe-build-v2\x00mylang-qbe-native-v5\x00" ++ bundled.driver_identity ++ "\x00" ++ bundled.content_hash;
+    try std.testing.expect(!std.mem.eql(u8, generation_identity, previous));
+    try std.testing.expect(std.mem.indexOf(u8, generation_identity, native_abi) != null);
+    try std.testing.expect(std.mem.indexOf(u8, previous, native_abi) == null);
+    var before: [32]u8 = undefined;
+    var after: [32]u8 = undefined;
+    std.crypto.hash.sha2.Sha256.hash(previous, &before, .{});
+    std.crypto.hash.sha2.Sha256.hash(generation_identity, &after, .{});
+    try std.testing.expect(!std.mem.eql(u8, &before, &after));
 }
 // spec: QBE-HOST-COMPILER-1
 test "the frontend honours an explicit host compiler over the running executable" {

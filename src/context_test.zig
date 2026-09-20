@@ -881,7 +881,8 @@ test "context answers an incomplete project and never reuses checked edges" {
     try t.expect(field(contract, "mutation_writes") == .null);
 
     // A project whose body syntax failed before any declaration merged still
-    // answers with its selector and says only lexical candidates were recovered.
+    // answers with the declarations its lexer pass recovered, and labels every
+    // fact it could not resolve instead of publishing an empty set.
     var syntax_files: Files = .{ .entries = &syntax_broken_entries };
     const lexical = try PartialScene.open(t.allocator, &syntax_files, "main");
     defer lexical.close();
@@ -895,10 +896,40 @@ test "context answers an incomplete project and never reuses checked edges" {
     try t.expectEqualStrings("lexical-only", nestedString(lexical_root, &.{ "analysis", "status" }));
     try t.expect(std.mem.indexOf(u8, stringAt(lexical_root, "reason"), "syntax failed") != null);
     try t.expectEqualStrings("model::validate", nestedString(lexical_root, &.{ "selector", "symbol" }));
-    try t.expect(field(nested(lexical_root, &.{"selector"}), "resolved") == .null);
-    try t.expectEqual(@as(usize, 0), records(lexical_root, "declaration").len);
+    // The selector resolves to the recovered declaration, named as the module
+    // qualifies it, and the answer says which pass recovered it.
+    try t.expectEqualStrings("model::validate", nestedString(lexical_root, &.{ "selector", "resolved" }));
+    const recovered = record(lexical_root, "declaration");
+    try t.expectEqualStrings("declaration", stringAt(recovered, "kind"));
+    try t.expectEqualStrings("model::validate", stringAt(recovered, "id"));
+    try t.expectEqualStrings("validate", stringAt(recovered, "name"));
+    try t.expectEqualStrings("function", stringAt(recovered, "declaration_kind"));
+    try t.expectEqualStrings(model_path, nestedString(recovered, &.{ "location", "path" }));
+    // No body was resolved, so every inferred fact is an explicit unknown: null,
+    // never an empty list or an empty string that a consumer would read as a
+    // checked answer.
+    const lexical_contract = record(lexical_root, "contract");
+    try t.expectEqualStrings("model::validate", stringAt(lexical_contract, "id"));
+    try t.expectEqualStrings("lexical-only", stringAt(lexical_contract, "analysis"));
+    try t.expect(field(lexical_contract, "declared_effects") == .null);
+    try t.expect(field(lexical_contract, "effects") == .null);
+    try t.expect(field(lexical_contract, "mutates") == .null);
+    try t.expect(field(lexical_contract, "return_origin") == .null);
+    try t.expect(field(lexical_contract, "mutation_writes") == .null);
+    // The relationships and tests the lexer cannot know stay empty because no
+    // edge was resolved, not because the declaration has none.
+    try t.expectEqual(@as(usize, 0), records(lexical_root, "types").len);
     try t.expectEqual(@as(usize, 0), records(lexical_root, "dependencies").len);
     try t.expectEqual(@as(usize, 0), records(lexical_root, "tests").len);
     try expectHexDigest(nestedString(lexical_root, &.{"snapshot_sha256"}));
     try expectInputDigest(lexical_root, "model", syntax_broken_model_source);
+
+    // A position selector resolves against the same recovered candidates, so a
+    // caller who knows only where the declaration is gets the same declaration.
+    const lexical_at = try lexical.render(atOptions("model.my:4:12"));
+    defer t.allocator.free(lexical_at.bytes);
+    try t.expectEqual(context.Status.partial, lexical_at.status);
+    const lexical_at_parsed = try envelope(lexical_at);
+    defer lexical_at_parsed.deinit();
+    try t.expectEqualStrings("model::validate", nestedString(lexical_at_parsed.value, &.{ "selector", "resolved" }));
 }

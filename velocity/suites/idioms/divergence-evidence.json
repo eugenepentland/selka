@@ -1,0 +1,153 @@
+{
+ "version": "divergence-evidence-v1",
+ "measured_on": "2026-09-20",
+ "policy": {
+  "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/divergences.json",
+  "version": "divergence-policy-v1",
+  "sha256": "097838a14a674abfe8edd9623a2c8d99f5c9c16ae3e374d5df2637c8846c3c4d"
+ },
+ "binary": {
+  "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/zig-out/bin/mylang",
+  "sha256": "64e2178d0895fa095ddacb03eefde21dada98cf2e8954e72847968575613a3d4"
+ },
+ "python": {
+  "executable": "/usr/bin/python3",
+  "version": "3.14.4"
+ },
+ "cases": [
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "int(round(2.5))",
+   "declared": {
+    "mylang": 3,
+    "cpython": 2
+   },
+   "observed": {
+    "mylang": "3",
+    "cpython": "2"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "int(round(0.5))",
+   "declared": {
+    "mylang": 1,
+    "cpython": 0
+   },
+   "observed": {
+    "mylang": "1",
+    "cpython": "0"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "int(round(-0.5))",
+   "declared": {
+    "mylang": -1,
+    "cpython": 0
+   },
+   "observed": {
+    "mylang": "-1",
+    "cpython": "0"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "int(round(-2.5))",
+   "declared": {
+    "mylang": -3,
+    "cpython": -2
+   },
+   "observed": {
+    "mylang": "-3",
+    "cpython": "-2"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "int(round(1.4))",
+   "declared": {
+    "mylang": 1,
+    "cpython": 1
+   },
+   "observed": {
+    "mylang": "1",
+    "cpython": "1"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "int(round(2.6))",
+   "declared": {
+    "mylang": 3,
+    "cpython": 3
+   },
+   "observed": {
+    "mylang": "3",
+    "cpython": "3"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "round(2.5) + 0.5",
+   "declared": {
+    "mylang": 3.5,
+    "cpython": 2.5
+   },
+   "observed": {
+    "mylang": "3.5",
+    "cpython": "2.5"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  }
+ ],
+ "probes": [
+  {
+   "entry": "round-half-away-from-zero",
+   "probe": "d05_round_half.my",
+   "mylang": {
+    "status": 61,
+    "value": "317",
+    "stderr_first_line": ""
+   },
+   "cpython": {
+    "status": 208,
+    "stdout": "",
+    "ok": true,
+    "error": null
+   },
+   "agrees": false
+  }
+ ],
+ "commands": {
+  "record": "python3 velocity/divergence_evidence.py --binary /home/epentland/ai/canopy/mylang/.worktrees/integration/zig-out/bin/mylang",
+  "strict_c2": "python3 velocity/score.py --probe 'd05*' --json"
+ }
+}

@@ -51,6 +51,39 @@ pub fn ownedPointer(record: typed.Record) bool {
     return record.shape.buffer != null or record.shape.resource != null;
 }
 
+/// The canonical name of the language's one text type.
+pub const text_name = "str";
+
+/// The scalar element type of the language's text record, or null when the
+/// record is not text. The rule is nominal — the record's canonical name is
+/// `str` — and never structural: the checked schema serialises `str` and a
+/// user `List<u32>` identically (kind `list`, opaque, a `u32` element), so a
+/// shape test would carry a user's list as if it were text, while no user
+/// declaration can be named `str` because the prelude owns that name.
+pub fn textScalar(record: typed.Record) ?typed.Type {
+    if (!std.mem.eql(u8, record.name, text_name)) return null;
+    return record.shape.buffer;
+}
+
+/// The manifest entry describing one text record as the copied-value codec
+/// carries it: a one-word managed pointer whose wire form is one node per
+/// scalar. The single `fields` entry names the scalar element type the
+/// generated codec reads and writes one node per, so the adapter never has to
+/// decide what text is; `count` stays zero because a text has no fixed length.
+pub fn textType(allocator: std.mem.Allocator, records: []const typed.Record, layout: native.Layout, record: typed.Record) Error!?Type {
+    const element = textScalar(record) orelse return null;
+    const fields = try allocator.alloc(Field, 1);
+    fields[0] = .{ .type = typed.typeName(element, records), .offset = 0 };
+    return .{
+        .name = record.name,
+        .kind = "text",
+        .size = layout.size,
+        .alignment = layout.alignment,
+        .aggregate = .{ .fields = fields },
+        .by_address = false,
+    };
+}
+
 /// QBE-AGGREF-1's one crossing rule: one argument of this type crosses a call
 /// boundary as the address of the caller's storage instead of a value, while a
 /// move-only aggregate keeps the by-value boundary and its single owner. The
@@ -76,11 +109,23 @@ pub fn describeWithDomains(allocator: std.mem.Allocator, catalog: *native.Catalo
         const ty: typed.Type = @fromBackingInt(index);
         const ordinary = ty.isInteger() or ty == .bool;
         const injected_stream = codecs and ty == .stream_cap;
-        if (ty.isAggregate()) {
-            if (!flags[ty.recordIndex()]) continue;
-        } else if (!ordinary and !injected_stream) continue;
         const layout = try catalog.layout(ty);
-        if (layout.trace or layout.drop) continue;
+        // Text is the one managed value the copied-value codec carries, and it
+        // is offered only on the codec boundary: the ordinary `wire_types`
+        // manifest keeps exactly the types it had, so nothing that reads it
+        // meets a kind it does not know.
+        const text: ?Type = if (codecs and ty.isAggregate())
+            try textType(allocator, catalog.records, layout, catalog.records[ty.recordIndex()])
+        else
+            null;
+        if (ty.isAggregate()) {
+            if (!flags[ty.recordIndex()] and text == null) continue;
+        } else if (!ordinary and !injected_stream) continue;
+        if ((layout.trace or layout.drop) and text == null) continue;
+        if (text) |item| {
+            try types.append(allocator, item);
+            continue;
+        }
         var item: Type = .{
             .name = typed.typeName(ty, catalog.records),
             .kind = "scalar",
@@ -119,4 +164,43 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
 }
 test "describeWithDomains releases temporary metadata on allocation failure" {
     try std.testing.checkAllAllocationFailures(std.testing.allocator, allocationScenario, .{});
+}
+
+/// One manifest entry by canonical name, or null when the slice carries none.
+fn findType(types: []const Type, name: []const u8) ?Type {
+    for (types) |item| if (std.mem.eql(u8, item.name, name)) return item;
+    return null;
+}
+
+// spec: QBE-TEXT-1
+test "text is the record named str and is offered only on the codec boundary" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const span = @import("source.zig").Span{ .start = 0, .end = 0 };
+    // A user `List<u32>` is structurally identical to `str`: same managed
+    // one-word record, same u32 element. Only the name tells them apart.
+    var records = [_]typed.Record{
+        .{ .id = @fromBackingInt(typed.Type.record_base), .name = text_name, .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = .u32 } },
+        .{ .id = @fromBackingInt(typed.Type.record_base + 1), .name = "List<u32>", .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = .u32 } },
+    };
+    var catalog = try native.Catalog.initRecords(a, &records);
+    defer catalog.deinit();
+    try std.testing.expectEqual(typed.Type.u32, textScalar(records[0]).?);
+    try std.testing.expect(textScalar(records[1]) == null);
+    const codec_types = try describeWithDomains(a, &catalog, true);
+    const text = findType(codec_types, text_name);
+    try std.testing.expect(text != null);
+    try std.testing.expectEqualStrings("text", text.?.kind);
+    try std.testing.expectEqual(@as(u64, 8), text.?.size);
+    try std.testing.expectEqual(@as(u64, 8), text.?.alignment);
+    try std.testing.expectEqual(@as(u64, 0), text.?.aggregate.count);
+    try std.testing.expectEqual(@as(usize, 1), text.?.aggregate.fields.len);
+    try std.testing.expectEqualStrings("u32", text.?.aggregate.fields[0].type.?);
+    try std.testing.expect(!text.?.by_address);
+    // A user list is not text even though its shape matches, so it keeps the
+    // unsupported verdict instead of being carried as one node per scalar.
+    try std.testing.expect(findType(codec_types, "List<u32>") == null);
+    const ordinary = try describe(a, &catalog);
+    try std.testing.expect(findType(ordinary, text_name) == null);
 }

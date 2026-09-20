@@ -1,0 +1,5 @@
+# R_INVALID_SHIFT: a shift count at or past the operand width.
+def main() -> int:
+    value = 1
+    count = 64
+    return shift_left(value, count)

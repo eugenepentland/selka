@@ -171,7 +171,7 @@ fn lookup(w: *std.Io.Writer, units: []const Value) Error!bool {
 test "library adapter preserves hidden exports, exact schema and empty wire entry points" {
     const allocator = std.testing.allocator;
     const parsed = try std.json.parseFromSlice(Value, allocator,
-        \\{"entry":"entry","entry_parameters":[],"functions":[{"symbol":"entry","export":null},{"symbol":"add","export":{"name":"module::add","scalar":true,"parameters":["i64"],"result":"i64"}}],"schema":"{}","wire_types":[{"name":"i64","kind":"scalar","size":8,"alignment":8}],"codecs":{"types":[{"name":"i64","kind":"scalar","size":8,"alignment":8}],"codecs":[],"callbacks":[]}}
+        \\{"entry":"entry","entry_parameters":[],"functions":[{"symbol":"entry","export":null},{"symbol":"add","export":{"name":"module::add","scalar":true,"parameters":["i64"],"result":"i64"}}],"schema":"{}","wire_types":[{"name":"i64","kind":"scalar","size":8,"alignment":8,"by_address":false}],"codecs":{"types":[{"name":"i64","kind":"scalar","size":8,"alignment":8,"by_address":false}],"codecs":[],"callbacks":[]}}
     , .{});
     defer parsed.deinit();
     const source = try libraryWrapper(allocator, parsed.value);

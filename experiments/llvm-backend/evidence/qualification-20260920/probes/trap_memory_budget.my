@@ -1,0 +1,13 @@
+# R_MEMORY_BUDGET: allocate past the ceiling in MYLANG_MEMORY_LIMIT.
+def main() -> int:
+    rows: list[list[int]] = []
+    outer = 0
+    while outer < 64:
+        row: list[int] = []
+        inner = 0
+        while inner < 50000:
+            row.append(inner)
+            inner = inner + 1
+        rows.append(row)
+        outer = outer + 1
+    return len(rows)

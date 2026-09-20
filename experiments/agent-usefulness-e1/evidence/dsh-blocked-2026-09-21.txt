@@ -1,0 +1,13 @@
+# The model-driven arm could not start: real command output, 2026-09-21
+#
+# 1. `dsh --profile headless` cannot boot with the default DSH_HOME: the sandbox
+#    gives the worktree write access only, so $HOME/.dsh is read-only. Pointing
+#    DSH_HOME inside the workspace fixes the boot.
+#
+# $ DSH_HOME=<worktree>/experiments/agent-usefulness-e1/work/<run>/dsh-home \
+#       dsh --profile headless "Reply with exactly the single word: PING"
+exit=1
+--- stdout (empty)
+
+--- stderr
+dsh: MISSING_CREDENTIAL: llm-deepseek: no API key for provider route "deepseek-official"; store DEEPSEEK_API_KEY through the credentials service (the web Models page writes it), or export DEEPSEEK_API_KEY in the launching environment

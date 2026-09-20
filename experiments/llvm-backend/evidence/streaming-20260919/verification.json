@@ -1,0 +1,3626 @@
+{
+  "reference": "before",
+  "cases": [
+    {
+      "arm": "before",
+      "fixture": "all_wide_children",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "24db570e20e297bd87a6f3dc516e2fb411e2a37c3036660b2b117d11de4a27fc",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "all_wide_children",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "24db570e20e297bd87a6f3dc516e2fb411e2a37c3036660b2b117d11de4a27fc",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "all_wide_children",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "24db570e20e297bd87a6f3dc516e2fb411e2a37c3036660b2b117d11de4a27fc",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "all_wide_children",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "24db570e20e297bd87a6f3dc516e2fb411e2a37c3036660b2b117d11de4a27fc",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "all_wide_children",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "24db570e20e297bd87a6f3dc516e2fb411e2a37c3036660b2b117d11de4a27fc",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "all_wide_children",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "24db570e20e297bd87a6f3dc516e2fb411e2a37c3036660b2b117d11de4a27fc",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "all_wide_children",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "24db570e20e297bd87a6f3dc516e2fb411e2a37c3036660b2b117d11de4a27fc",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "all_wide_children",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "24db570e20e297bd87a6f3dc516e2fb411e2a37c3036660b2b117d11de4a27fc",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "all_wide_children",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e53efb6bcf6a5d631a18a0212207e01d868c6010c89e49c1035a3ab0f4853d52",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "all_wide_children",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e53efb6bcf6a5d631a18a0212207e01d868c6010c89e49c1035a3ab0f4853d52",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "all_wide_children",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e53efb6bcf6a5d631a18a0212207e01d868c6010c89e49c1035a3ab0f4853d52",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "all_wide_children",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e53efb6bcf6a5d631a18a0212207e01d868c6010c89e49c1035a3ab0f4853d52",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "all_wide_children",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e53efb6bcf6a5d631a18a0212207e01d868c6010c89e49c1035a3ab0f4853d52",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "all_wide_children",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e53efb6bcf6a5d631a18a0212207e01d868c6010c89e49c1035a3ab0f4853d52",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "all_wide_children",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e53efb6bcf6a5d631a18a0212207e01d868c6010c89e49c1035a3ab0f4853d52",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "all_wide_children",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e53efb6bcf6a5d631a18a0212207e01d868c6010c89e49c1035a3ab0f4853d52",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "deeply_nested",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "de12f9f59b6d60d59a0735c3ecb3801a941cdf1a5d0e2a60303eb623aa3346ff",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "deeply_nested",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "de12f9f59b6d60d59a0735c3ecb3801a941cdf1a5d0e2a60303eb623aa3346ff",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "deeply_nested",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "de12f9f59b6d60d59a0735c3ecb3801a941cdf1a5d0e2a60303eb623aa3346ff",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "deeply_nested",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "de12f9f59b6d60d59a0735c3ecb3801a941cdf1a5d0e2a60303eb623aa3346ff",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "deeply_nested",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "de12f9f59b6d60d59a0735c3ecb3801a941cdf1a5d0e2a60303eb623aa3346ff",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "deeply_nested",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "de12f9f59b6d60d59a0735c3ecb3801a941cdf1a5d0e2a60303eb623aa3346ff",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "deeply_nested",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "de12f9f59b6d60d59a0735c3ecb3801a941cdf1a5d0e2a60303eb623aa3346ff",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "deeply_nested",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "de12f9f59b6d60d59a0735c3ecb3801a941cdf1a5d0e2a60303eb623aa3346ff",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "deeply_nested",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "47140814cc756cf2235b399450caa21f0334689552fda0b003f687d3e4d30a26",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "deeply_nested",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "47140814cc756cf2235b399450caa21f0334689552fda0b003f687d3e4d30a26",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "deeply_nested",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "47140814cc756cf2235b399450caa21f0334689552fda0b003f687d3e4d30a26",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "deeply_nested",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "47140814cc756cf2235b399450caa21f0334689552fda0b003f687d3e4d30a26",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "deeply_nested",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "47140814cc756cf2235b399450caa21f0334689552fda0b003f687d3e4d30a26",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "deeply_nested",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "47140814cc756cf2235b399450caa21f0334689552fda0b003f687d3e4d30a26",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "deeply_nested",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "47140814cc756cf2235b399450caa21f0334689552fda0b003f687d3e4d30a26",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "deeply_nested",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "47140814cc756cf2235b399450caa21f0334689552fda0b003f687d3e4d30a26",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "empty_lists",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "b7382b5bb554a500a5d631d8a3b946d4505a3b4d57eb6278b96773347e461c5c",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "empty_lists",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "b7382b5bb554a500a5d631d8a3b946d4505a3b4d57eb6278b96773347e461c5c",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "empty_lists",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "b7382b5bb554a500a5d631d8a3b946d4505a3b4d57eb6278b96773347e461c5c",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "empty_lists",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "b7382b5bb554a500a5d631d8a3b946d4505a3b4d57eb6278b96773347e461c5c",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "empty_lists",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "b7382b5bb554a500a5d631d8a3b946d4505a3b4d57eb6278b96773347e461c5c",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "empty_lists",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "b7382b5bb554a500a5d631d8a3b946d4505a3b4d57eb6278b96773347e461c5c",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "empty_lists",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "b7382b5bb554a500a5d631d8a3b946d4505a3b4d57eb6278b96773347e461c5c",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "empty_lists",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "b7382b5bb554a500a5d631d8a3b946d4505a3b4d57eb6278b96773347e461c5c",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "empty_lists",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "5202c3eb6d2ef83bd277f9d39af13f78e2a3555f10370705e18b1130b803a42c",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "empty_lists",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "5202c3eb6d2ef83bd277f9d39af13f78e2a3555f10370705e18b1130b803a42c",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "empty_lists",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "5202c3eb6d2ef83bd277f9d39af13f78e2a3555f10370705e18b1130b803a42c",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "empty_lists",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "5202c3eb6d2ef83bd277f9d39af13f78e2a3555f10370705e18b1130b803a42c",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "empty_lists",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "5202c3eb6d2ef83bd277f9d39af13f78e2a3555f10370705e18b1130b803a42c",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "empty_lists",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "5202c3eb6d2ef83bd277f9d39af13f78e2a3555f10370705e18b1130b803a42c",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "empty_lists",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "5202c3eb6d2ef83bd277f9d39af13f78e2a3555f10370705e18b1130b803a42c",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "empty_lists",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "5202c3eb6d2ef83bd277f9d39af13f78e2a3555f10370705e18b1130b803a42c",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "fits_exactly",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a55c2ff97ca96f4616c657857a2c26397b1058994cf58fa673e94431d98db0ff",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "fits_exactly",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a55c2ff97ca96f4616c657857a2c26397b1058994cf58fa673e94431d98db0ff",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "fits_exactly",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a55c2ff97ca96f4616c657857a2c26397b1058994cf58fa673e94431d98db0ff",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "fits_exactly",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a55c2ff97ca96f4616c657857a2c26397b1058994cf58fa673e94431d98db0ff",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "fits_exactly",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a55c2ff97ca96f4616c657857a2c26397b1058994cf58fa673e94431d98db0ff",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "fits_exactly",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a55c2ff97ca96f4616c657857a2c26397b1058994cf58fa673e94431d98db0ff",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "fits_exactly",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a55c2ff97ca96f4616c657857a2c26397b1058994cf58fa673e94431d98db0ff",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "fits_exactly",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a55c2ff97ca96f4616c657857a2c26397b1058994cf58fa673e94431d98db0ff",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "fits_exactly",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a34869a18b421817831d7214379fd5de3f83c5ba87bccae92d49831db0d6883b",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "fits_exactly",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a34869a18b421817831d7214379fd5de3f83c5ba87bccae92d49831db0d6883b",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "fits_exactly",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a34869a18b421817831d7214379fd5de3f83c5ba87bccae92d49831db0d6883b",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "fits_exactly",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a34869a18b421817831d7214379fd5de3f83c5ba87bccae92d49831db0d6883b",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "fits_exactly",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a34869a18b421817831d7214379fd5de3f83c5ba87bccae92d49831db0d6883b",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "fits_exactly",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a34869a18b421817831d7214379fd5de3f83c5ba87bccae92d49831db0d6883b",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "fits_exactly",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a34869a18b421817831d7214379fd5de3f83c5ba87bccae92d49831db0d6883b",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "fits_exactly",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a34869a18b421817831d7214379fd5de3f83c5ba87bccae92d49831db0d6883b",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "long_atom",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a39fb464cf547b6691ad4351e839fe07b0b86e692a2333b900951e3e18e1078a",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "long_atom",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a39fb464cf547b6691ad4351e839fe07b0b86e692a2333b900951e3e18e1078a",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "long_atom",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a39fb464cf547b6691ad4351e839fe07b0b86e692a2333b900951e3e18e1078a",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "long_atom",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a39fb464cf547b6691ad4351e839fe07b0b86e692a2333b900951e3e18e1078a",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "long_atom",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a39fb464cf547b6691ad4351e839fe07b0b86e692a2333b900951e3e18e1078a",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "long_atom",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a39fb464cf547b6691ad4351e839fe07b0b86e692a2333b900951e3e18e1078a",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "long_atom",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a39fb464cf547b6691ad4351e839fe07b0b86e692a2333b900951e3e18e1078a",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "long_atom",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a39fb464cf547b6691ad4351e839fe07b0b86e692a2333b900951e3e18e1078a",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "long_atom",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "3b340c5f127921cd84148b67e3adec8a0026c3b1d64b065d3a1ed4470970ad0c",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "long_atom",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "3b340c5f127921cd84148b67e3adec8a0026c3b1d64b065d3a1ed4470970ad0c",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "long_atom",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "3b340c5f127921cd84148b67e3adec8a0026c3b1d64b065d3a1ed4470970ad0c",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "long_atom",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "3b340c5f127921cd84148b67e3adec8a0026c3b1d64b065d3a1ed4470970ad0c",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "long_atom",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "3b340c5f127921cd84148b67e3adec8a0026c3b1d64b065d3a1ed4470970ad0c",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "long_atom",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "3b340c5f127921cd84148b67e3adec8a0026c3b1d64b065d3a1ed4470970ad0c",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "long_atom",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "3b340c5f127921cd84148b67e3adec8a0026c3b1d64b065d3a1ed4470970ad0c",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "long_atom",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "3b340c5f127921cd84148b67e3adec8a0026c3b1d64b065d3a1ed4470970ad0c",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "many_toplevel",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "dc2d9db7b6595642994d878e0d6d7204fbd66d3bc02c87ef211b00d9c29bc001",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "many_toplevel",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "dc2d9db7b6595642994d878e0d6d7204fbd66d3bc02c87ef211b00d9c29bc001",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "many_toplevel",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "dc2d9db7b6595642994d878e0d6d7204fbd66d3bc02c87ef211b00d9c29bc001",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "many_toplevel",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "dc2d9db7b6595642994d878e0d6d7204fbd66d3bc02c87ef211b00d9c29bc001",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "many_toplevel",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "dc2d9db7b6595642994d878e0d6d7204fbd66d3bc02c87ef211b00d9c29bc001",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "many_toplevel",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "dc2d9db7b6595642994d878e0d6d7204fbd66d3bc02c87ef211b00d9c29bc001",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "many_toplevel",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "dc2d9db7b6595642994d878e0d6d7204fbd66d3bc02c87ef211b00d9c29bc001",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "many_toplevel",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "dc2d9db7b6595642994d878e0d6d7204fbd66d3bc02c87ef211b00d9c29bc001",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "many_toplevel",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f4bdfe101b72e1a9569eeef957760f111ff84635fe308f7108cd8c5647adc76c",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "many_toplevel",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f4bdfe101b72e1a9569eeef957760f111ff84635fe308f7108cd8c5647adc76c",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "many_toplevel",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f4bdfe101b72e1a9569eeef957760f111ff84635fe308f7108cd8c5647adc76c",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "many_toplevel",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f4bdfe101b72e1a9569eeef957760f111ff84635fe308f7108cd8c5647adc76c",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "many_toplevel",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f4bdfe101b72e1a9569eeef957760f111ff84635fe308f7108cd8c5647adc76c",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "many_toplevel",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f4bdfe101b72e1a9569eeef957760f111ff84635fe308f7108cd8c5647adc76c",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "many_toplevel",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f4bdfe101b72e1a9569eeef957760f111ff84635fe308f7108cd8c5647adc76c",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "many_toplevel",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f4bdfe101b72e1a9569eeef957760f111ff84635fe308f7108cd8c5647adc76c",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "mixed_widths",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e1f7897f3c0c026e1a0a290b2d0af69dd8869d5909965d5e9f19b18bb620f740",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "mixed_widths",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e1f7897f3c0c026e1a0a290b2d0af69dd8869d5909965d5e9f19b18bb620f740",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "mixed_widths",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e1f7897f3c0c026e1a0a290b2d0af69dd8869d5909965d5e9f19b18bb620f740",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "mixed_widths",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e1f7897f3c0c026e1a0a290b2d0af69dd8869d5909965d5e9f19b18bb620f740",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "mixed_widths",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e1f7897f3c0c026e1a0a290b2d0af69dd8869d5909965d5e9f19b18bb620f740",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "mixed_widths",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e1f7897f3c0c026e1a0a290b2d0af69dd8869d5909965d5e9f19b18bb620f740",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "mixed_widths",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e1f7897f3c0c026e1a0a290b2d0af69dd8869d5909965d5e9f19b18bb620f740",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "mixed_widths",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e1f7897f3c0c026e1a0a290b2d0af69dd8869d5909965d5e9f19b18bb620f740",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "mixed_widths",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "ed97bf126d03d11ae875cca05a73695d002d9bad8da6a94d201d4c0b085a56d4",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "mixed_widths",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "ed97bf126d03d11ae875cca05a73695d002d9bad8da6a94d201d4c0b085a56d4",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "mixed_widths",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "ed97bf126d03d11ae875cca05a73695d002d9bad8da6a94d201d4c0b085a56d4",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "mixed_widths",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "ed97bf126d03d11ae875cca05a73695d002d9bad8da6a94d201d4c0b085a56d4",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "mixed_widths",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "ed97bf126d03d11ae875cca05a73695d002d9bad8da6a94d201d4c0b085a56d4",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "mixed_widths",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "ed97bf126d03d11ae875cca05a73695d002d9bad8da6a94d201d4c0b085a56d4",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "mixed_widths",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "ed97bf126d03d11ae875cca05a73695d002d9bad8da6a94d201d4c0b085a56d4",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "mixed_widths",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "ed97bf126d03d11ae875cca05a73695d002d9bad8da6a94d201d4c0b085a56d4",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "numbers_and_units",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f0d0d2a5fa5775c4cb2b5f70612b243044d29c1ce3adc7cf5f68f909d0768ab3",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "numbers_and_units",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f0d0d2a5fa5775c4cb2b5f70612b243044d29c1ce3adc7cf5f68f909d0768ab3",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "numbers_and_units",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f0d0d2a5fa5775c4cb2b5f70612b243044d29c1ce3adc7cf5f68f909d0768ab3",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "numbers_and_units",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f0d0d2a5fa5775c4cb2b5f70612b243044d29c1ce3adc7cf5f68f909d0768ab3",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "numbers_and_units",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f0d0d2a5fa5775c4cb2b5f70612b243044d29c1ce3adc7cf5f68f909d0768ab3",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "numbers_and_units",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f0d0d2a5fa5775c4cb2b5f70612b243044d29c1ce3adc7cf5f68f909d0768ab3",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "numbers_and_units",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f0d0d2a5fa5775c4cb2b5f70612b243044d29c1ce3adc7cf5f68f909d0768ab3",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "numbers_and_units",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f0d0d2a5fa5775c4cb2b5f70612b243044d29c1ce3adc7cf5f68f909d0768ab3",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "numbers_and_units",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "ce2d888d13c94b5ac06be230670aa1102dce426d1c73ffa50e184c747125c198",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "numbers_and_units",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "ce2d888d13c94b5ac06be230670aa1102dce426d1c73ffa50e184c747125c198",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "numbers_and_units",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "ce2d888d13c94b5ac06be230670aa1102dce426d1c73ffa50e184c747125c198",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "numbers_and_units",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "ce2d888d13c94b5ac06be230670aa1102dce426d1c73ffa50e184c747125c198",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "numbers_and_units",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "ce2d888d13c94b5ac06be230670aa1102dce426d1c73ffa50e184c747125c198",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "numbers_and_units",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "ce2d888d13c94b5ac06be230670aa1102dce426d1c73ffa50e184c747125c198",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "numbers_and_units",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "ce2d888d13c94b5ac06be230670aa1102dce426d1c73ffa50e184c747125c198",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "numbers_and_units",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "ce2d888d13c94b5ac06be230670aa1102dce426d1c73ffa50e184c747125c198",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "one_over",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a55c2ff97ca96f4616c657857a2c26397b1058994cf58fa673e94431d98db0ff",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "one_over",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a55c2ff97ca96f4616c657857a2c26397b1058994cf58fa673e94431d98db0ff",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "one_over",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a55c2ff97ca96f4616c657857a2c26397b1058994cf58fa673e94431d98db0ff",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "one_over",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a55c2ff97ca96f4616c657857a2c26397b1058994cf58fa673e94431d98db0ff",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "one_over",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a55c2ff97ca96f4616c657857a2c26397b1058994cf58fa673e94431d98db0ff",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "one_over",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a55c2ff97ca96f4616c657857a2c26397b1058994cf58fa673e94431d98db0ff",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "one_over",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a55c2ff97ca96f4616c657857a2c26397b1058994cf58fa673e94431d98db0ff",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "one_over",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "a55c2ff97ca96f4616c657857a2c26397b1058994cf58fa673e94431d98db0ff",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "one_over",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "bed8a04fb0a6d5491c8571048d9ad17f43ccc5e257e4451e7737b533adb0f9c3",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "one_over",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "bed8a04fb0a6d5491c8571048d9ad17f43ccc5e257e4451e7737b533adb0f9c3",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "one_over",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "bed8a04fb0a6d5491c8571048d9ad17f43ccc5e257e4451e7737b533adb0f9c3",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "one_over",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "bed8a04fb0a6d5491c8571048d9ad17f43ccc5e257e4451e7737b533adb0f9c3",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "one_over",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "bed8a04fb0a6d5491c8571048d9ad17f43ccc5e257e4451e7737b533adb0f9c3",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "one_over",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "bed8a04fb0a6d5491c8571048d9ad17f43ccc5e257e4451e7737b533adb0f9c3",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "one_over",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "bed8a04fb0a6d5491c8571048d9ad17f43ccc5e257e4451e7737b533adb0f9c3",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "one_over",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "bed8a04fb0a6d5491c8571048d9ad17f43ccc5e257e4451e7737b533adb0f9c3",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "single_element",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f0be894ffb24147bff57ce7b5e0c8a50c51968d1c45531145fec82741aec77bb",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "single_element",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f0be894ffb24147bff57ce7b5e0c8a50c51968d1c45531145fec82741aec77bb",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "single_element",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f0be894ffb24147bff57ce7b5e0c8a50c51968d1c45531145fec82741aec77bb",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "single_element",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f0be894ffb24147bff57ce7b5e0c8a50c51968d1c45531145fec82741aec77bb",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "single_element",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f0be894ffb24147bff57ce7b5e0c8a50c51968d1c45531145fec82741aec77bb",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "single_element",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f0be894ffb24147bff57ce7b5e0c8a50c51968d1c45531145fec82741aec77bb",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "single_element",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f0be894ffb24147bff57ce7b5e0c8a50c51968d1c45531145fec82741aec77bb",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "single_element",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f0be894ffb24147bff57ce7b5e0c8a50c51968d1c45531145fec82741aec77bb",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "single_element",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "fa971cc3b478b2ee0d8ac350012b5a5301d45a61983ba116840ffd43720ef1c0",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "single_element",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "fa971cc3b478b2ee0d8ac350012b5a5301d45a61983ba116840ffd43720ef1c0",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "single_element",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "fa971cc3b478b2ee0d8ac350012b5a5301d45a61983ba116840ffd43720ef1c0",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "single_element",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "fa971cc3b478b2ee0d8ac350012b5a5301d45a61983ba116840ffd43720ef1c0",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "single_element",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "fa971cc3b478b2ee0d8ac350012b5a5301d45a61983ba116840ffd43720ef1c0",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "single_element",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "fa971cc3b478b2ee0d8ac350012b5a5301d45a61983ba116840ffd43720ef1c0",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "single_element",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "fa971cc3b478b2ee0d8ac350012b5a5301d45a61983ba116840ffd43720ef1c0",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "single_element",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "fa971cc3b478b2ee0d8ac350012b5a5301d45a61983ba116840ffd43720ef1c0",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "string_escapes",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "cdbea126089417b2e2b204fc976f82f999709c7dcc16ac7799c12d2e6d92e251",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "string_escapes",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "cdbea126089417b2e2b204fc976f82f999709c7dcc16ac7799c12d2e6d92e251",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "string_escapes",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "cdbea126089417b2e2b204fc976f82f999709c7dcc16ac7799c12d2e6d92e251",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "string_escapes",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "cdbea126089417b2e2b204fc976f82f999709c7dcc16ac7799c12d2e6d92e251",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "string_escapes",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "cdbea126089417b2e2b204fc976f82f999709c7dcc16ac7799c12d2e6d92e251",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "string_escapes",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "cdbea126089417b2e2b204fc976f82f999709c7dcc16ac7799c12d2e6d92e251",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "string_escapes",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "cdbea126089417b2e2b204fc976f82f999709c7dcc16ac7799c12d2e6d92e251",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "string_escapes",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "cdbea126089417b2e2b204fc976f82f999709c7dcc16ac7799c12d2e6d92e251",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "string_escapes",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "dcc8cd1902a30be5ecd632d5235f4ea0359691aa2e2a37e8fc49e0521a50f2ff",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "string_escapes",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "dcc8cd1902a30be5ecd632d5235f4ea0359691aa2e2a37e8fc49e0521a50f2ff",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "string_escapes",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "dcc8cd1902a30be5ecd632d5235f4ea0359691aa2e2a37e8fc49e0521a50f2ff",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "string_escapes",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "dcc8cd1902a30be5ecd632d5235f4ea0359691aa2e2a37e8fc49e0521a50f2ff",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "string_escapes",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "dcc8cd1902a30be5ecd632d5235f4ea0359691aa2e2a37e8fc49e0521a50f2ff",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "string_escapes",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "dcc8cd1902a30be5ecd632d5235f4ea0359691aa2e2a37e8fc49e0521a50f2ff",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "string_escapes",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "dcc8cd1902a30be5ecd632d5235f4ea0359691aa2e2a37e8fc49e0521a50f2ff",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "string_escapes",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "dcc8cd1902a30be5ecd632d5235f4ea0359691aa2e2a37e8fc49e0521a50f2ff",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "units",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "485b453ca6d6fe9ebdd5ab569c4463238a6c0bee5433a5619feccd9a24b6dca6",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "units",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "485b453ca6d6fe9ebdd5ab569c4463238a6c0bee5433a5619feccd9a24b6dca6",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "units",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "485b453ca6d6fe9ebdd5ab569c4463238a6c0bee5433a5619feccd9a24b6dca6",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "units",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "485b453ca6d6fe9ebdd5ab569c4463238a6c0bee5433a5619feccd9a24b6dca6",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "units",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "485b453ca6d6fe9ebdd5ab569c4463238a6c0bee5433a5619feccd9a24b6dca6",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "units",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "485b453ca6d6fe9ebdd5ab569c4463238a6c0bee5433a5619feccd9a24b6dca6",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "units",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "485b453ca6d6fe9ebdd5ab569c4463238a6c0bee5433a5619feccd9a24b6dca6",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "units",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "485b453ca6d6fe9ebdd5ab569c4463238a6c0bee5433a5619feccd9a24b6dca6",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "units",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "3a079c1a4d9a315f2bee79f77184f62d63e12724cf98b9b8421baa5a5752fbf5",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "units",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "3a079c1a4d9a315f2bee79f77184f62d63e12724cf98b9b8421baa5a5752fbf5",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "units",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "3a079c1a4d9a315f2bee79f77184f62d63e12724cf98b9b8421baa5a5752fbf5",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "units",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "3a079c1a4d9a315f2bee79f77184f62d63e12724cf98b9b8421baa5a5752fbf5",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "units",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "3a079c1a4d9a315f2bee79f77184f62d63e12724cf98b9b8421baa5a5752fbf5",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "units",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "3a079c1a4d9a315f2bee79f77184f62d63e12724cf98b9b8421baa5a5752fbf5",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "units",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "3a079c1a4d9a315f2bee79f77184f62d63e12724cf98b9b8421baa5a5752fbf5",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "units",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "3a079c1a4d9a315f2bee79f77184f62d63e12724cf98b9b8421baa5a5752fbf5",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "spi",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e6c05edfd850e32a8ec6ae5ac713b44d2eacfed7793ccab10d9ebadedcd7dee6",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "spi",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e6c05edfd850e32a8ec6ae5ac713b44d2eacfed7793ccab10d9ebadedcd7dee6",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "spi",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e6c05edfd850e32a8ec6ae5ac713b44d2eacfed7793ccab10d9ebadedcd7dee6",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "spi",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e6c05edfd850e32a8ec6ae5ac713b44d2eacfed7793ccab10d9ebadedcd7dee6",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "spi",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e6c05edfd850e32a8ec6ae5ac713b44d2eacfed7793ccab10d9ebadedcd7dee6",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "spi",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e6c05edfd850e32a8ec6ae5ac713b44d2eacfed7793ccab10d9ebadedcd7dee6",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "spi",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e6c05edfd850e32a8ec6ae5ac713b44d2eacfed7793ccab10d9ebadedcd7dee6",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "spi",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e6c05edfd850e32a8ec6ae5ac713b44d2eacfed7793ccab10d9ebadedcd7dee6",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "spi",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "0feb05e3a62ba72d26b85a1a1742676dae3dd3b1d872b367c362035e398f19d4",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "spi",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "0feb05e3a62ba72d26b85a1a1742676dae3dd3b1d872b367c362035e398f19d4",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "spi",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "0feb05e3a62ba72d26b85a1a1742676dae3dd3b1d872b367c362035e398f19d4",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "spi",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "0feb05e3a62ba72d26b85a1a1742676dae3dd3b1d872b367c362035e398f19d4",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "spi",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "0feb05e3a62ba72d26b85a1a1742676dae3dd3b1d872b367c362035e398f19d4",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "spi",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "0feb05e3a62ba72d26b85a1a1742676dae3dd3b1d872b367c362035e398f19d4",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "spi",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "0feb05e3a62ba72d26b85a1a1742676dae3dd3b1d872b367c362035e398f19d4",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "spi",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "0feb05e3a62ba72d26b85a1a1742676dae3dd3b1d872b367c362035e398f19d4",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "lmx2595rhar",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e74e262e864738848f6d7d910442a70d502d417c71873769da4ca678e415f5b4",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "lmx2595rhar",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e74e262e864738848f6d7d910442a70d502d417c71873769da4ca678e415f5b4",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "lmx2595rhar",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e74e262e864738848f6d7d910442a70d502d417c71873769da4ca678e415f5b4",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "lmx2595rhar",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e74e262e864738848f6d7d910442a70d502d417c71873769da4ca678e415f5b4",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "lmx2595rhar",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e74e262e864738848f6d7d910442a70d502d417c71873769da4ca678e415f5b4",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "lmx2595rhar",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e74e262e864738848f6d7d910442a70d502d417c71873769da4ca678e415f5b4",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "lmx2595rhar",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e74e262e864738848f6d7d910442a70d502d417c71873769da4ca678e415f5b4",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "lmx2595rhar",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "e74e262e864738848f6d7d910442a70d502d417c71873769da4ca678e415f5b4",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "lmx2595rhar",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "07b63ce5432739d6b4d449d4aea6318307124171f632a7d14aa1957064330833",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "lmx2595rhar",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "07b63ce5432739d6b4d449d4aea6318307124171f632a7d14aa1957064330833",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "lmx2595rhar",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "07b63ce5432739d6b4d449d4aea6318307124171f632a7d14aa1957064330833",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "lmx2595rhar",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "07b63ce5432739d6b4d449d4aea6318307124171f632a7d14aa1957064330833",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "lmx2595rhar",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "07b63ce5432739d6b4d449d4aea6318307124171f632a7d14aa1957064330833",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "lmx2595rhar",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "07b63ce5432739d6b4d449d4aea6318307124171f632a7d14aa1957064330833",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "lmx2595rhar",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "07b63ce5432739d6b4d449d4aea6318307124171f632a7d14aa1957064330833",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "lmx2595rhar",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "07b63ce5432739d6b4d449d4aea6318307124171f632a7d14aa1957064330833",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "straps-synth-lmx2595",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "3c934b8e597e22f6adc4f902c3b13771ee95b2504b6bd1bd724901acd9e11874",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "straps-synth-lmx2595",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "3c934b8e597e22f6adc4f902c3b13771ee95b2504b6bd1bd724901acd9e11874",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "straps-synth-lmx2595",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "3c934b8e597e22f6adc4f902c3b13771ee95b2504b6bd1bd724901acd9e11874",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "straps-synth-lmx2595",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "3c934b8e597e22f6adc4f902c3b13771ee95b2504b6bd1bd724901acd9e11874",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "straps-synth-lmx2595",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "2dfcbcc469f741e8a5a91974960b5226e488f7697170ae9acf6d14dff41e261d",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "straps-synth-lmx2595",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "2dfcbcc469f741e8a5a91974960b5226e488f7697170ae9acf6d14dff41e261d",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "straps-synth-lmx2595",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "2dfcbcc469f741e8a5a91974960b5226e488f7697170ae9acf6d14dff41e261d",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "straps-synth-lmx2595",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "2dfcbcc469f741e8a5a91974960b5226e488f7697170ae9acf6d14dff41e261d",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "poe-pd-flyback-tps23757",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "d3c722bcfc3f54d92e18747365c1925e0ff0b307cd78c107e2f5b2cf491cbc15",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "poe-pd-flyback-tps23757",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "d3c722bcfc3f54d92e18747365c1925e0ff0b307cd78c107e2f5b2cf491cbc15",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "poe-pd-flyback-tps23757",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "d3c722bcfc3f54d92e18747365c1925e0ff0b307cd78c107e2f5b2cf491cbc15",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "poe-pd-flyback-tps23757",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "d3c722bcfc3f54d92e18747365c1925e0ff0b307cd78c107e2f5b2cf491cbc15",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "poe-pd-flyback-tps23757",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "196bb0d1889684a9b40c76a192bda46fbab8eb8f9d9ad91fa6bd0a5e99dd3b11",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "poe-pd-flyback-tps23757",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "196bb0d1889684a9b40c76a192bda46fbab8eb8f9d9ad91fa6bd0a5e99dd3b11",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "poe-pd-flyback-tps23757",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "196bb0d1889684a9b40c76a192bda46fbab8eb8f9d9ad91fa6bd0a5e99dd3b11",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "poe-pd-flyback-tps23757",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "196bb0d1889684a9b40c76a192bda46fbab8eb8f9d9ad91fa6bd0a5e99dd3b11",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "remora-rf",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "85f9e8dd1845d87d9bab94be547fd077d43a2db6212f93c16cadfa807dd167a0",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "remora-rf",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "85f9e8dd1845d87d9bab94be547fd077d43a2db6212f93c16cadfa807dd167a0",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "remora-rf",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "85f9e8dd1845d87d9bab94be547fd077d43a2db6212f93c16cadfa807dd167a0",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "remora-rf",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "85f9e8dd1845d87d9bab94be547fd077d43a2db6212f93c16cadfa807dd167a0",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "remora-rf",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "efc9f07ec74d525db7986b2a7c6412c51ee3cc100b0960e446ee31cc12821881",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "remora-rf",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "efc9f07ec74d525db7986b2a7c6412c51ee3cc100b0960e446ee31cc12821881",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "remora-rf",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "efc9f07ec74d525db7986b2a7c6412c51ee3cc100b0960e446ee31cc12821881",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "remora-rf",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "efc9f07ec74d525db7986b2a7c6412c51ee3cc100b0960e446ee31cc12821881",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "unicode",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected character at 1:5\n"
+    },
+    {
+      "arm": "before",
+      "fixture": "unicode",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected character at 1:5\n"
+    },
+    {
+      "arm": "qbe",
+      "fixture": "unicode",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected character at 1:5\n"
+    },
+    {
+      "arm": "qbe",
+      "fixture": "unicode",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected character at 1:5\n"
+    },
+    {
+      "arm": "llvm",
+      "fixture": "unicode",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected character at 1:5\n"
+    },
+    {
+      "arm": "llvm",
+      "fixture": "unicode",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected character at 1:5\n"
+    },
+    {
+      "arm": "bytes",
+      "fixture": "unicode",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected character at 1:5\n"
+    },
+    {
+      "arm": "bytes",
+      "fixture": "unicode",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected character at 1:5\n"
+    },
+    {
+      "arm": "before",
+      "fixture": "unicode",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected character at 1:5\n"
+    },
+    {
+      "arm": "before",
+      "fixture": "unicode",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected character at 1:5\n"
+    },
+    {
+      "arm": "qbe",
+      "fixture": "unicode",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected character at 1:5\n"
+    },
+    {
+      "arm": "qbe",
+      "fixture": "unicode",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected character at 1:5\n"
+    },
+    {
+      "arm": "llvm",
+      "fixture": "unicode",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected character at 1:5\n"
+    },
+    {
+      "arm": "llvm",
+      "fixture": "unicode",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected character at 1:5\n"
+    },
+    {
+      "arm": "bytes",
+      "fixture": "unicode",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected character at 1:5\n"
+    },
+    {
+      "arm": "bytes",
+      "fixture": "unicode",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected character at 1:5\n"
+    },
+    {
+      "arm": "before",
+      "fixture": "unterminated",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unterminated string at 1:6\n"
+    },
+    {
+      "arm": "before",
+      "fixture": "unterminated",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unterminated string at 1:6\n"
+    },
+    {
+      "arm": "qbe",
+      "fixture": "unterminated",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unterminated string at 1:6\n"
+    },
+    {
+      "arm": "qbe",
+      "fixture": "unterminated",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unterminated string at 1:6\n"
+    },
+    {
+      "arm": "llvm",
+      "fixture": "unterminated",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unterminated string at 1:6\n"
+    },
+    {
+      "arm": "llvm",
+      "fixture": "unterminated",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unterminated string at 1:6\n"
+    },
+    {
+      "arm": "bytes",
+      "fixture": "unterminated",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unterminated string at 1:6\n"
+    },
+    {
+      "arm": "bytes",
+      "fixture": "unterminated",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unterminated string at 1:6\n"
+    },
+    {
+      "arm": "before",
+      "fixture": "unterminated",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unterminated string at 1:6\n"
+    },
+    {
+      "arm": "before",
+      "fixture": "unterminated",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unterminated string at 1:6\n"
+    },
+    {
+      "arm": "qbe",
+      "fixture": "unterminated",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unterminated string at 1:6\n"
+    },
+    {
+      "arm": "qbe",
+      "fixture": "unterminated",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unterminated string at 1:6\n"
+    },
+    {
+      "arm": "llvm",
+      "fixture": "unterminated",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unterminated string at 1:6\n"
+    },
+    {
+      "arm": "llvm",
+      "fixture": "unterminated",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unterminated string at 1:6\n"
+    },
+    {
+      "arm": "bytes",
+      "fixture": "unterminated",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unterminated string at 1:6\n"
+    },
+    {
+      "arm": "bytes",
+      "fixture": "unterminated",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unterminated string at 1:6\n"
+    },
+    {
+      "arm": "before",
+      "fixture": "close",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected ')' \u2014 no matching '(' is open here at 1:1\n"
+    },
+    {
+      "arm": "before",
+      "fixture": "close",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected ')' \u2014 no matching '(' is open here at 1:1\n"
+    },
+    {
+      "arm": "qbe",
+      "fixture": "close",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected ')' \u2014 no matching '(' is open here at 1:1\n"
+    },
+    {
+      "arm": "qbe",
+      "fixture": "close",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected ')' \u2014 no matching '(' is open here at 1:1\n"
+    },
+    {
+      "arm": "llvm",
+      "fixture": "close",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected ')' \u2014 no matching '(' is open here at 1:1\n"
+    },
+    {
+      "arm": "llvm",
+      "fixture": "close",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected ')' \u2014 no matching '(' is open here at 1:1\n"
+    },
+    {
+      "arm": "bytes",
+      "fixture": "close",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected ')' \u2014 no matching '(' is open here at 1:1\n"
+    },
+    {
+      "arm": "bytes",
+      "fixture": "close",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected ')' \u2014 no matching '(' is open here at 1:1\n"
+    },
+    {
+      "arm": "before",
+      "fixture": "close",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected ')' \u2014 no matching '(' is open here at 1:1\n"
+    },
+    {
+      "arm": "before",
+      "fixture": "close",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected ')' \u2014 no matching '(' is open here at 1:1\n"
+    },
+    {
+      "arm": "qbe",
+      "fixture": "close",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected ')' \u2014 no matching '(' is open here at 1:1\n"
+    },
+    {
+      "arm": "qbe",
+      "fixture": "close",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected ')' \u2014 no matching '(' is open here at 1:1\n"
+    },
+    {
+      "arm": "llvm",
+      "fixture": "close",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected ')' \u2014 no matching '(' is open here at 1:1\n"
+    },
+    {
+      "arm": "llvm",
+      "fixture": "close",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected ')' \u2014 no matching '(' is open here at 1:1\n"
+    },
+    {
+      "arm": "bytes",
+      "fixture": "close",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected ')' \u2014 no matching '(' is open here at 1:1\n"
+    },
+    {
+      "arm": "bytes",
+      "fixture": "close",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected ')' \u2014 no matching '(' is open here at 1:1\n"
+    },
+    {
+      "arm": "before",
+      "fixture": "unclosed",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected end of input \u2014 a '(' was never closed at 1:1\n"
+    },
+    {
+      "arm": "before",
+      "fixture": "unclosed",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected end of input \u2014 a '(' was never closed at 1:1\n"
+    },
+    {
+      "arm": "qbe",
+      "fixture": "unclosed",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected end of input \u2014 a '(' was never closed at 1:1\n"
+    },
+    {
+      "arm": "qbe",
+      "fixture": "unclosed",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected end of input \u2014 a '(' was never closed at 1:1\n"
+    },
+    {
+      "arm": "llvm",
+      "fixture": "unclosed",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected end of input \u2014 a '(' was never closed at 1:1\n"
+    },
+    {
+      "arm": "llvm",
+      "fixture": "unclosed",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected end of input \u2014 a '(' was never closed at 1:1\n"
+    },
+    {
+      "arm": "bytes",
+      "fixture": "unclosed",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected end of input \u2014 a '(' was never closed at 1:1\n"
+    },
+    {
+      "arm": "bytes",
+      "fixture": "unclosed",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected end of input \u2014 a '(' was never closed at 1:1\n"
+    },
+    {
+      "arm": "before",
+      "fixture": "unclosed",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected end of input \u2014 a '(' was never closed at 1:1\n"
+    },
+    {
+      "arm": "before",
+      "fixture": "unclosed",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected end of input \u2014 a '(' was never closed at 1:1\n"
+    },
+    {
+      "arm": "qbe",
+      "fixture": "unclosed",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected end of input \u2014 a '(' was never closed at 1:1\n"
+    },
+    {
+      "arm": "qbe",
+      "fixture": "unclosed",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected end of input \u2014 a '(' was never closed at 1:1\n"
+    },
+    {
+      "arm": "llvm",
+      "fixture": "unclosed",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected end of input \u2014 a '(' was never closed at 1:1\n"
+    },
+    {
+      "arm": "llvm",
+      "fixture": "unclosed",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected end of input \u2014 a '(' was never closed at 1:1\n"
+    },
+    {
+      "arm": "bytes",
+      "fixture": "unclosed",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected end of input \u2014 a '(' was never closed at 1:1\n"
+    },
+    {
+      "arm": "bytes",
+      "fixture": "unclosed",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "parse error: unexpected end of input \u2014 a '(' was never closed at 1:1\n"
+    },
+    {
+      "arm": "before",
+      "fixture": "empty",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f98cbbfd8ccdd6ed7287c8b87ffd4fa8efca07c2d02144c9ca0e92526bf83eb2",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "empty",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f98cbbfd8ccdd6ed7287c8b87ffd4fa8efca07c2d02144c9ca0e92526bf83eb2",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "empty",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f98cbbfd8ccdd6ed7287c8b87ffd4fa8efca07c2d02144c9ca0e92526bf83eb2",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "empty",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f98cbbfd8ccdd6ed7287c8b87ffd4fa8efca07c2d02144c9ca0e92526bf83eb2",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "empty",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f98cbbfd8ccdd6ed7287c8b87ffd4fa8efca07c2d02144c9ca0e92526bf83eb2",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "empty",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f98cbbfd8ccdd6ed7287c8b87ffd4fa8efca07c2d02144c9ca0e92526bf83eb2",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "empty",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f98cbbfd8ccdd6ed7287c8b87ffd4fa8efca07c2d02144c9ca0e92526bf83eb2",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "empty",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "f98cbbfd8ccdd6ed7287c8b87ffd4fa8efca07c2d02144c9ca0e92526bf83eb2",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "empty",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "empty",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "empty",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "empty",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "empty",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "empty",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "empty",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "empty",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "invalid-utf8",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "6b8403dafff925adf876a6bee981423a4d6026973030df6956d92e39576c2d36",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "invalid-utf8",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "6b8403dafff925adf876a6bee981423a4d6026973030df6956d92e39576c2d36",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "invalid-utf8",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "6b8403dafff925adf876a6bee981423a4d6026973030df6956d92e39576c2d36",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "invalid-utf8",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "6b8403dafff925adf876a6bee981423a4d6026973030df6956d92e39576c2d36",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "invalid-utf8",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "6b8403dafff925adf876a6bee981423a4d6026973030df6956d92e39576c2d36",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "invalid-utf8",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "6b8403dafff925adf876a6bee981423a4d6026973030df6956d92e39576c2d36",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "invalid-utf8",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "6b8403dafff925adf876a6bee981423a4d6026973030df6956d92e39576c2d36",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "invalid-utf8",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "6b8403dafff925adf876a6bee981423a4d6026973030df6956d92e39576c2d36",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "invalid-utf8",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "63ae71884a042653a9b39cf9782aca3a57885d157cccd5c3040f63c9248df3be",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "invalid-utf8",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "63ae71884a042653a9b39cf9782aca3a57885d157cccd5c3040f63c9248df3be",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "invalid-utf8",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "63ae71884a042653a9b39cf9782aca3a57885d157cccd5c3040f63c9248df3be",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "invalid-utf8",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "63ae71884a042653a9b39cf9782aca3a57885d157cccd5c3040f63c9248df3be",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "invalid-utf8",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "63ae71884a042653a9b39cf9782aca3a57885d157cccd5c3040f63c9248df3be",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "invalid-utf8",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "63ae71884a042653a9b39cf9782aca3a57885d157cccd5c3040f63c9248df3be",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "invalid-utf8",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "63ae71884a042653a9b39cf9782aca3a57885d157cccd5c3040f63c9248df3be",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "invalid-utf8",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "63ae71884a042653a9b39cf9782aca3a57885d157cccd5c3040f63c9248df3be",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "numbers",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "20d170afe84d588674c084d8a737104a6a2654d733ed423225dfde9af0d59105",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "numbers",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "20d170afe84d588674c084d8a737104a6a2654d733ed423225dfde9af0d59105",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "numbers",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "20d170afe84d588674c084d8a737104a6a2654d733ed423225dfde9af0d59105",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "numbers",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "20d170afe84d588674c084d8a737104a6a2654d733ed423225dfde9af0d59105",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "numbers",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "20d170afe84d588674c084d8a737104a6a2654d733ed423225dfde9af0d59105",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "numbers",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "20d170afe84d588674c084d8a737104a6a2654d733ed423225dfde9af0d59105",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "numbers",
+      "render": false,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "20d170afe84d588674c084d8a737104a6a2654d733ed423225dfde9af0d59105",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "numbers",
+      "render": false,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "20d170afe84d588674c084d8a737104a6a2654d733ed423225dfde9af0d59105",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "numbers",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "4aa10d86692b059e7487ea1e4db33b86b36c61a51ef523adb4eb9a31b8a47bc1",
+      "stderr": ""
+    },
+    {
+      "arm": "before",
+      "fixture": "numbers",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "4aa10d86692b059e7487ea1e4db33b86b36c61a51ef523adb4eb9a31b8a47bc1",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "numbers",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "4aa10d86692b059e7487ea1e4db33b86b36c61a51ef523adb4eb9a31b8a47bc1",
+      "stderr": ""
+    },
+    {
+      "arm": "qbe",
+      "fixture": "numbers",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "4aa10d86692b059e7487ea1e4db33b86b36c61a51ef523adb4eb9a31b8a47bc1",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "numbers",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "4aa10d86692b059e7487ea1e4db33b86b36c61a51ef523adb4eb9a31b8a47bc1",
+      "stderr": ""
+    },
+    {
+      "arm": "llvm",
+      "fixture": "numbers",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "4aa10d86692b059e7487ea1e4db33b86b36c61a51ef523adb4eb9a31b8a47bc1",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "numbers",
+      "render": true,
+      "stress": false,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "4aa10d86692b059e7487ea1e4db33b86b36c61a51ef523adb4eb9a31b8a47bc1",
+      "stderr": ""
+    },
+    {
+      "arm": "bytes",
+      "fixture": "numbers",
+      "render": true,
+      "stress": true,
+      "match": true,
+      "status": 0,
+      "stdout_sha256": "4aa10d86692b059e7487ea1e4db33b86b36c61a51ef523adb4eb9a31b8a47bc1",
+      "stderr": ""
+    }
+  ],
+  "stress_scope": "both census and render for every fixture below 2000 bytes",
+  "arms": {
+    "before": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-streaming-20260919/before/safe",
+      "sha256": "89577b556c179514512a99986afab0182b864858207ef256a609172578fb80ac"
+    },
+    "qbe": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-streaming-20260919/final/text-qbe",
+      "sha256": "ba4f1e0f8409a3edbfe39b8e1260b16b1be2b7ccd4fc9be69e063b2af8dde06c"
+    },
+    "llvm": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-streaming-20260919/final/text-safe",
+      "sha256": "0c21e55b4b8a6298913d95d71da61847a9e81283c22e0e0a13a4330ffdc2d1c5"
+    },
+    "bytes": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-streaming-20260919/final/bytes-safe",
+      "sha256": "aa0f04538637df464b380b97a86b9b2cc1edfe9769b0f8d9b3ccf4c56fae2058"
+    }
+  },
+  "passed": 360,
+  "total": 360
+}

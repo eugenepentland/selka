@@ -1,0 +1,62 @@
+{
+ "version": "e1-pack-v1",
+ "frozen_on": "2026-09-20",
+ "files": {
+  "pack/tasks/dev-context-01/acceptance/cases.json": "b57c0a55d5cfab4d19ac851bb84ac090fb7330642672cade37cfe259f6b9bd13",
+  "pack/tasks/dev-context-01/acceptance/check.py": "624874a2725c68cdfe43e77be73249eda153dd5a740ca784adc1f7f64a1c4f81",
+  "pack/tasks/dev-context-01/acceptance/probe.my": "d7643465e65bc892b45c3d48f84386a6d6fc28fcf0903f2589fa445cb6c54d77",
+  "pack/tasks/dev-context-01/acceptance/reference.py": "fb3d67d266c423d20994e59320eb2845aab6b5316261ef05482783a283f3429e",
+  "pack/tasks/dev-context-01/answer/files/ranking.my": "f12e1761af6fd008722d3b2bd48ccf9bcacd411b33af9803ba331779c2984f1c",
+  "pack/tasks/dev-context-01/answer/intended.md": "04e5a0890aaa0fa0777ecc0a3e9cc44ce6cd6a0af27e01a2e3c9183efb612efc",
+  "pack/tasks/dev-context-01/brief.md": "bbc56d247b95390768f635ee3a13ba8978b17b1c59c06421e41c7dd48135ef32",
+  "pack/tasks/dev-context-01/source/main.my": "13c306f1cbe0eb35d478f46445affeef3f943cdf74fa92c4226d693be7b6f98f",
+  "pack/tasks/dev-context-01/source/model.my": "37fcb34b6442c559de00e284ac8dce29c3ccb6edf16367981d77f07d0abbab8a",
+  "pack/tasks/dev-context-01/source/ranking.my": "c6686a675d1b9604a71c2e5c4262bd0cebaf49dd82abf18ea4d5509e5272d85b",
+  "pack/tasks/dev-context-01/task.json": "44a19e3fc82ec8de9cf134ea5306add7eafebdc31a90ebcf45f7abc024d9ead0",
+  "pack/tasks/dev-maintenance-01/acceptance/cases.json": "fb18df71bf662752f76641a08bfa46ac5728ace8e488ee5743d5a4d6f1070134",
+  "pack/tasks/dev-maintenance-01/acceptance/check.py": "91b133de069e869b85df6c608fdce805841ce89b9e24c75ed8906d4a3c69e444",
+  "pack/tasks/dev-maintenance-01/acceptance/probe.my": "36ad7450d672531243f9042f96ecd8c28a5c41387cd82a83052c66595449b026",
+  "pack/tasks/dev-maintenance-01/acceptance/reference.py": "d53bd0c7a243c58be616b13700b6f44bc5887a1440864c37c218d54a7f666af9",
+  "pack/tasks/dev-maintenance-01/answer/files/audit.my": "58dce19ed1789220a7212f3d3aa718f79772ad65d9d0c64902006ad63aa5b007",
+  "pack/tasks/dev-maintenance-01/answer/files/bands.my": "41b791423e1edc84d50ed8c45dfc5bc15447d17525a5cf4bd19335f4a039564b",
+  "pack/tasks/dev-maintenance-01/answer/files/tiers.my": "53b23cc8548009531f89172014cb8a678aae64b7d1cf574fab2bcdf5eb6172d3",
+  "pack/tasks/dev-maintenance-01/answer/intended.md": "8d27c6a9d451f281b2e77f9f288d6ab6dd2b1787501170b7f0a15cfaa26d2fa2",
+  "pack/tasks/dev-maintenance-01/brief.md": "4375de7fc76c8a1ca52075ab2ba37446a3e4190e5940c047aebc3b825b675166",
+  "pack/tasks/dev-maintenance-01/source/audit.my": "8146c881e632ab46f17ed660ff3874fd184874502f609576d46709d71326f654",
+  "pack/tasks/dev-maintenance-01/source/bands.my": "9f0e9ffbc73cf66b6520ee457260b3ef626167fc916329a696ec8d7cdfaa5969",
+  "pack/tasks/dev-maintenance-01/source/main.my": "640571de969f7d79a95c337c1559cb1ecdba20eb28aa611395ff6d6c1d7e61df",
+  "pack/tasks/dev-maintenance-01/source/orders.my": "ea74a6e9ac53f5937c15297cfe511a86763cddf9aae12cfe1bb19fd00770f00e",
+  "pack/tasks/dev-maintenance-01/source/report.my": "6df0cee9b3ba719b7b2524dabe99726f9d9c331eafd27449394c6f875cfd4dd2",
+  "pack/tasks/dev-maintenance-01/source/tiers.my": "acd48dbb44b33aa2e24517126df8824d4d02e0a015915179bc9b02e46d17a00d",
+  "pack/tasks/dev-maintenance-01/task.json": "803f66d7d1b4661ccd9cf63701a83776498fc90398eaa3eee03f255fb2e7d084",
+  "harness/events.py": "6153106d52b53f4665ca57487d75c64f0de6e1c9316f20161d7dfd0d04173564",
+  "harness/pilot.py": "5e5b6b3357eff0d8008010282a8bee8523a16fef72ea17f376c72239fb6f6cc5",
+  "harness/shim.py": "5d5299a8517bdab438c3251b362dae06a191abc38c6ecf92adaf9d41e314da7b",
+  "harness/solvers/reference_workflow.sh": "e5aec920835d412c04d859e3df2536276eecc8e5f3357bc50115226345010cd2",
+  "protocol.json": "a521d0442e1a03052743ab3de65508d2a7c3ab7f3b7084f4a16498822632cb02",
+  "preregistration.json": "fc4f184dadc31837dd21ea815cc4b6190b60707d9b039cc0cd2a82b39ae033b3",
+  "pack/tools/identity.json": "a790a2e2d5bd151bdd466e0682e6388af56dcea48ee9e7c753294419b67465af"
+ },
+ "tasks": [
+  {
+   "id": "dev-context-01",
+   "family": "context/incomplete-implementation",
+   "cohort": "development",
+   "title": "Fill the in-place ranking helper under its mutation contract"
+  },
+  {
+   "id": "dev-maintenance-01",
+   "family": "maintenance",
+   "cohort": "development",
+   "title": "Volume-tier rule change across three modules"
+  }
+ ],
+ "protocol": {
+  "path": "protocol.json",
+  "version": "e1-protocol-v1"
+ },
+ "preregistration": {
+  "path": "preregistration.json",
+  "version": "e1-preregistration-v1"
+ }
+}

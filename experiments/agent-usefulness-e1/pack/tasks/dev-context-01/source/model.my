@@ -1,0 +1,6 @@
+module model
+
+
+public record Reading:
+    name: str
+    value: int

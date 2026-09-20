@@ -1,0 +1,3332 @@
+{
+  "mylang-render": {
+    "runs": 48,
+    "event": "cycles:u",
+    "period": 200000,
+    "total_period": 10093800000,
+    "resolved_period": 9180600000,
+    "excluded_percent": 9.04713784699519,
+    "symbols": [
+      {
+        "period": 1433000000,
+        "symbol": "sexpr.printer::push_node",
+        "raw_symbol": "myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 15.609001590310001
+      },
+      {
+        "period": 1332600000,
+        "symbol": "myl_native_text_utf8",
+        "raw_symbol": "myl_native_text_utf8",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 14.51539115090517
+      },
+      {
+        "period": 1000600000,
+        "symbol": "sexpr.tokenizer::read_string",
+        "raw_symbol": "myl_f_22a60c4dacd8f24cb076d3980502ca5a577d3fdc45db8138d037c148f04f136b",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 10.89906977757445
+      },
+      {
+        "period": 758400000,
+        "symbol": "sexpr.printer::estimate_width",
+        "raw_symbol": "myl_f_0e5340f31bcdf0c4b2fdbb9574ba048b1a3b28d2313f0935cd0144f4b6851fe2",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 8.260897980524149
+      },
+      {
+        "period": 714200000,
+        "symbol": "sexpr.tokenizer::next_raw",
+        "raw_symbol": "myl_f_522a0393f0b978ec89dcf0a01ed40fe4c77fd2e0c5e149267c4a06b2be768f98",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 7.779447966363854
+      },
+      {
+        "period": 435200000,
+        "symbol": "myl_native_text_join",
+        "raw_symbol": "myl_native_text_join",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 4.740430908655208
+      },
+      {
+        "period": 352200000,
+        "symbol": "sexpr.parser::parse_node",
+        "raw_symbol": "myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 3.836350565322528
+      },
+      {
+        "period": 336600000,
+        "symbol": "sexpr.parser::parse_leaf",
+        "raw_symbol": "myl_f_998beee1bca4ed98df5239fd3360e93dc7435bf13adf117793e129355f5cd155",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 3.6664270309130123
+      },
+      {
+        "period": 318200000,
+        "symbol": "myl_native_text_from_utf8_checked",
+        "raw_symbol": "myl_native_text_from_utf8_checked",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 3.4660044005838397
+      },
+      {
+        "period": 294400000,
+        "symbol": "0x0000000000197a11",
+        "raw_symbol": "0x0000000000197a11",
+        "dso": "libc.so.6",
+        "percent_resolved": 3.206762085266758
+      },
+      {
+        "period": 283800000,
+        "symbol": "0x0000000000197d07",
+        "raw_symbol": "0x0000000000197d07",
+        "dso": "libc.so.6",
+        "percent_resolved": 3.0913012221423437
+      },
+      {
+        "period": 229000000,
+        "symbol": "__wrap_myl_native_list_append",
+        "raw_symbol": "__wrap_myl_native_list_append",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 2.4943903448576346
+      },
+      {
+        "period": 194400000,
+        "symbol": "sexpr.parser::advance",
+        "raw_symbol": "myl_f_59c4bbc7071b8e5740b45acc273a5dd464bfcfe4b67081aa51105d0e1634c116",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 2.1175086595647343
+      },
+      {
+        "period": 166000000,
+        "symbol": "sexpr.printer::is_short_list",
+        "raw_symbol": "myl_f_4c67c278d21ffe1d0276f660f52f09d91405da77537997823b8c4bb8d7c0317d",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 1.8081606866653597
+      },
+      {
+        "period": 113600000,
+        "symbol": "sexpr.parser::parse_list",
+        "raw_symbol": "myl_f_2e34b70956bd2f98094170b27161f4beca7b4dbc88ffeaecd468514ea7f8884c",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 1.237391891597499
+      },
+      {
+        "period": 111400000,
+        "symbol": "myl_native_text_scalar",
+        "raw_symbol": "myl_native_text_scalar",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 1.2134283162320545
+      },
+      {
+        "period": 83800000,
+        "symbol": "sexpr.tokenizer::read_atom",
+        "raw_symbol": "myl_f_c7216ff81b82e9d60b2aefddc873a7cdb611d664b3deb9b17e22a05b9481cf8a",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.912794370738296
+      },
+      {
+        "period": 73800000,
+        "symbol": "0x0000000000197a21",
+        "raw_symbol": "0x0000000000197a21",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.8038690281680936
+      },
+      {
+        "period": 73600000,
+        "symbol": "0x0000000000197b71",
+        "raw_symbol": "0x0000000000197b71",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.8016905213166895
+      },
+      {
+        "period": 57600000,
+        "symbol": "myl_qbe_heap",
+        "raw_symbol": "myl_qbe_heap",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.6274099732043658
+      },
+      {
+        "period": 56000000,
+        "symbol": "memcpy@plt",
+        "raw_symbol": "memcpy@plt",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.6099819183931333
+      },
+      {
+        "period": 53400000,
+        "symbol": "__wrap_myl_native_list_get",
+        "raw_symbol": "__wrap_myl_native_list_get",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.5816613293248807
+      },
+      {
+        "period": 51800000,
+        "symbol": "0x0000000000197a85",
+        "raw_symbol": "0x0000000000197a85",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.5642332745136484
+      },
+      {
+        "period": 48800000,
+        "symbol": "myl_native_heap_alloc_block",
+        "raw_symbol": "myl_native_heap_alloc_block",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.5315556717425877
+      },
+      {
+        "period": 45200000,
+        "symbol": "sexpr.printer::push_indent",
+        "raw_symbol": "myl_f_8c380c865686fa16d2ac0012cb74038c7403a5b5a40b568cb3f209aa772d4c5e",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.4923425484173148
+      },
+      {
+        "period": 44200000,
+        "symbol": "myl_native_bytes_decode_range",
+        "raw_symbol": "myl_native_bytes_decode_range",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.48145001416029454
+      },
+      {
+        "period": 43200000,
+        "symbol": "0x0000000000197a8b",
+        "raw_symbol": "0x0000000000197a8b",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.4705574799032743
+      },
+      {
+        "period": 42800000,
+        "symbol": "myl_native_number_parse",
+        "raw_symbol": "myl_native_number_parse",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.4662004662004662
+      },
+      {
+        "period": 36000000,
+        "symbol": "myl_native_list_append",
+        "raw_symbol": "myl_native_list_append",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.3921312332527286
+      },
+      {
+        "period": 31800000,
+        "symbol": "0x0000000000197a66",
+        "raw_symbol": "0x0000000000197a66",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.34638258937324357
+      },
+      {
+        "period": 31200000,
+        "symbol": "0x0000000000197a25",
+        "raw_symbol": "0x0000000000197a25",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.33984706881903143
+      },
+      {
+        "period": 24000000,
+        "symbol": "myl_qbe_bytes_decode_range",
+        "raw_symbol": "myl_qbe_bytes_decode_range",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.2614208221684857
+      },
+      {
+        "period": 18200000,
+        "symbol": "myl_native_root_pop",
+        "raw_symbol": "myl_native_root_pop",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.19824412347776835
+      },
+      {
+        "period": 16400000,
+        "symbol": "0x0000000000197a2b",
+        "raw_symbol": "0x0000000000197a2b",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.1786375618151319
+      },
+      {
+        "period": 15400000,
+        "symbol": "sexpr.tokenizer::read_number",
+        "raw_symbol": "myl_f_73f351c18f47dd990165f2548f3afcb7d5b743c0da8680d6a4223dfb5b0f824c",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.16774502755811166
+      },
+      {
+        "period": 13000000,
+        "symbol": "myl_native_root_push",
+        "raw_symbol": "myl_native_root_push",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.1416029453412631
+      },
+      {
+        "period": 12000000,
+        "symbol": "0x0000000000197a55",
+        "raw_symbol": "0x0000000000197a55",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.13071041108424286
+      },
+      {
+        "period": 10200000,
+        "symbol": "myl_native_heap_alloc_at",
+        "raw_symbol": "myl_native_heap_alloc_at",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.11110384942160643
+      },
+      {
+        "period": 10000000,
+        "symbol": "myl_native_list_new",
+        "raw_symbol": "myl_native_list_new",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.10892534257020238
+      },
+      {
+        "period": 8400000,
+        "symbol": "myl_native_heap_alloc",
+        "raw_symbol": "myl_native_heap_alloc",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.09149728775897001
+      },
+      {
+        "period": 8400000,
+        "symbol": "0x000000000019759d",
+        "raw_symbol": "0x000000000019759d",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.09149728775897001
+      },
+      {
+        "period": 7200000,
+        "symbol": "0x0000000000197a59",
+        "raw_symbol": "0x0000000000197a59",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.07842624665054572
+      },
+      {
+        "period": 7000000,
+        "symbol": "sexpr.printer::decimal_width",
+        "raw_symbol": "myl_f_f4a38d84a9d30ead02c273ce53dbae0c35501a0cfe5eca51025015e5c69364df",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.07624773979914166
+      },
+      {
+        "period": 6600000,
+        "symbol": "0x0000000000197a5f",
+        "raw_symbol": "0x0000000000197a5f",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.07189072609633357
+      },
+      {
+        "period": 6200000,
+        "symbol": "0x0000000000197ba9",
+        "raw_symbol": "0x0000000000197ba9",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.06753371239352547
+      },
+      {
+        "period": 5800000,
+        "symbol": "0x0000000000197bae",
+        "raw_symbol": "0x0000000000197bae",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.06317669869071738
+      },
+      {
+        "period": 5800000,
+        "symbol": "0x0000000000197bb3",
+        "raw_symbol": "0x0000000000197bb3",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.06317669869071738
+      },
+      {
+        "period": 5400000,
+        "symbol": "0x0000000000197d09",
+        "raw_symbol": "0x0000000000197d09",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.058819684987909286
+      },
+      {
+        "period": 5000000,
+        "symbol": "sexpr.parser::parse_int",
+        "raw_symbol": "myl_f_96b067c9e9a223f42df861e5f816c57d88027bc98ce7a2f9698fe752d5c07806",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.05446267128510119
+      },
+      {
+        "period": 4000000,
+        "symbol": "sexpr.printer::render_float",
+        "raw_symbol": "myl_f_f50e2df75c0e3328fe08c09b30297d543938eb1149f7ac739631941a259df228",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.043570137028080956
+      },
+      {
+        "period": 4000000,
+        "symbol": "0x0000000000197a70",
+        "raw_symbol": "0x0000000000197a70",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.043570137028080956
+      },
+      {
+        "period": 4000000,
+        "symbol": "0x0000000000197a90",
+        "raw_symbol": "0x0000000000197a90",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.043570137028080956
+      },
+      {
+        "period": 3800000,
+        "symbol": "sexpr.parser::parse_float",
+        "raw_symbol": "myl_f_db346654ceb5a652b5f723024feb479638530adb6b7fd97ec7d886c140c1b503",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.04139163017667691
+      },
+      {
+        "period": 3800000,
+        "symbol": "0x0000000000197a00",
+        "raw_symbol": "0x0000000000197a00",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.04139163017667691
+      },
+      {
+        "period": 3800000,
+        "symbol": "0x0000000000197a4d",
+        "raw_symbol": "0x0000000000197a4d",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.04139163017667691
+      },
+      {
+        "period": 3800000,
+        "symbol": "0x0000000000197a6c",
+        "raw_symbol": "0x0000000000197a6c",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.04139163017667691
+      },
+      {
+        "period": 3800000,
+        "symbol": "0x0000000000197bc5",
+        "raw_symbol": "0x0000000000197bc5",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.04139163017667691
+      },
+      {
+        "period": 3600000,
+        "symbol": "0x00000000001984d3",
+        "raw_symbol": "0x00000000001984d3",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.03921312332527286
+      },
+      {
+        "period": 3400000,
+        "symbol": "myl_native_text_find",
+        "raw_symbol": "myl_native_text_find",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.03703461647386881
+      },
+      {
+        "period": 3200000,
+        "symbol": "0x0000000000197a30",
+        "raw_symbol": "0x0000000000197a30",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.03485610962246476
+      },
+      {
+        "period": 3200000,
+        "symbol": "0x0000000000197b77",
+        "raw_symbol": "0x0000000000197b77",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.03485610962246476
+      },
+      {
+        "period": 3200000,
+        "symbol": "0x0000000000197ba4",
+        "raw_symbol": "0x0000000000197ba4",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.03485610962246476
+      },
+      {
+        "period": 3000000,
+        "symbol": "myl_native_object_region",
+        "raw_symbol": "myl_native_object_region",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.032677602771060715
+      },
+      {
+        "period": 3000000,
+        "symbol": "myl_native_text_edge",
+        "raw_symbol": "myl_native_text_edge",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.032677602771060715
+      },
+      {
+        "period": 3000000,
+        "symbol": "0x0000000000197b8a",
+        "raw_symbol": "0x0000000000197b8a",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.032677602771060715
+      },
+      {
+        "period": 2800000,
+        "symbol": "sexpr.tokenizer::si_suffix_len",
+        "raw_symbol": "myl_f_36f767de1a4f02faa9c9b05e632e517e7d2370ec5b2578a80e86da0fd089fa88",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.030499095919656667
+      },
+      {
+        "period": 2800000,
+        "symbol": "0x0000000000197388",
+        "raw_symbol": "0x0000000000197388",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.030499095919656667
+      },
+      {
+        "period": 2600000,
+        "symbol": "0x0000000000197bca",
+        "raw_symbol": "0x0000000000197bca",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.02832058906825262
+      },
+      {
+        "period": 2600000,
+        "symbol": "0x0000000000197c12",
+        "raw_symbol": "0x0000000000197c12",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.02832058906825262
+      },
+      {
+        "period": 2400000,
+        "symbol": "0x0000000000197bbb",
+        "raw_symbol": "0x0000000000197bbb",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.02614208221684857
+      },
+      {
+        "period": 2400000,
+        "symbol": "0x0000000000197bc0",
+        "raw_symbol": "0x0000000000197bc0",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.02614208221684857
+      },
+      {
+        "period": 2200000,
+        "symbol": "0x0000000000197a0d",
+        "raw_symbol": "0x0000000000197a0d",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.023963575365444523
+      },
+      {
+        "period": 2000000,
+        "symbol": "myl_native_text_copy",
+        "raw_symbol": "myl_native_text_copy",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.021785068514040478
+      },
+      {
+        "period": 2000000,
+        "symbol": "0x0000000000197cf2",
+        "raw_symbol": "0x0000000000197cf2",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.021785068514040478
+      },
+      {
+        "period": 1800000,
+        "symbol": "bcmp@plt",
+        "raw_symbol": "bcmp@plt",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.01960656166263643
+      },
+      {
+        "period": 1800000,
+        "symbol": "0x000000000019758e",
+        "raw_symbol": "0x000000000019758e",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.01960656166263643
+      },
+      {
+        "period": 1800000,
+        "symbol": "0x0000000000197a62",
+        "raw_symbol": "0x0000000000197a62",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.01960656166263643
+      },
+      {
+        "period": 1800000,
+        "symbol": "0x0000000000197b84",
+        "raw_symbol": "0x0000000000197b84",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.01960656166263643
+      },
+      {
+        "period": 1200000,
+        "symbol": "myl_native_text_from_utf8",
+        "raw_symbol": "myl_native_text_from_utf8",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.013071041108424285
+      },
+      {
+        "period": 1200000,
+        "symbol": "0x00000000001975c5",
+        "raw_symbol": "0x00000000001975c5",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.013071041108424285
+      },
+      {
+        "period": 1200000,
+        "symbol": "0x0000000000197a35",
+        "raw_symbol": "0x0000000000197a35",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.013071041108424285
+      },
+      {
+        "period": 1200000,
+        "symbol": "0x0000000000197bd8",
+        "raw_symbol": "0x0000000000197bd8",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.013071041108424285
+      },
+      {
+        "period": 1000000,
+        "symbol": "__wrap_myl_native_text_slice",
+        "raw_symbol": "__wrap_myl_native_text_slice",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.010892534257020239
+      },
+      {
+        "period": 1000000,
+        "symbol": "myl_native_text_points",
+        "raw_symbol": "myl_native_text_points",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.010892534257020239
+      },
+      {
+        "period": 1000000,
+        "symbol": "0x000000000000b908",
+        "raw_symbol": "0x000000000000b908",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.010892534257020239
+      },
+      {
+        "period": 1000000,
+        "symbol": "0x0000000000197384",
+        "raw_symbol": "0x0000000000197384",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.010892534257020239
+      },
+      {
+        "period": 1000000,
+        "symbol": "0x00000000001975a8",
+        "raw_symbol": "0x00000000001975a8",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.010892534257020239
+      },
+      {
+        "period": 1000000,
+        "symbol": "0x0000000000197a3f",
+        "raw_symbol": "0x0000000000197a3f",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.010892534257020239
+      },
+      {
+        "period": 1000000,
+        "symbol": "0x0000000000197a52",
+        "raw_symbol": "0x0000000000197a52",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.010892534257020239
+      },
+      {
+        "period": 800000,
+        "symbol": "sexpr.tokenizer::read_operator",
+        "raw_symbol": "myl_f_05bad94abe02b55566d03c0ef8a0ac1a7f3d2609e72b12cfd054ca93b71064a0",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.00871402740561619
+      },
+      {
+        "period": 800000,
+        "symbol": "myl_qbe_resource_read",
+        "raw_symbol": "myl_qbe_resource_read",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.00871402740561619
+      },
+      {
+        "period": 800000,
+        "symbol": "0x000000000000bde9",
+        "raw_symbol": "0x000000000000bde9",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.00871402740561619
+      },
+      {
+        "period": 800000,
+        "symbol": "0x000000000000c6a4",
+        "raw_symbol": "0x000000000000c6a4",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.00871402740561619
+      },
+      {
+        "period": 800000,
+        "symbol": "0x0000000000197625",
+        "raw_symbol": "0x0000000000197625",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.00871402740561619
+      },
+      {
+        "period": 800000,
+        "symbol": "0x0000000000197a80",
+        "raw_symbol": "0x0000000000197a80",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.00871402740561619
+      },
+      {
+        "period": 800000,
+        "symbol": "0x0000000000197a88",
+        "raw_symbol": "0x0000000000197a88",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.00871402740561619
+      },
+      {
+        "period": 800000,
+        "symbol": "0x0000000000197adb",
+        "raw_symbol": "0x0000000000197adb",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.00871402740561619
+      },
+      {
+        "period": 800000,
+        "symbol": "0x0000000000197bb7",
+        "raw_symbol": "0x0000000000197bb7",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.00871402740561619
+      },
+      {
+        "period": 800000,
+        "symbol": "0x0000000000197c33",
+        "raw_symbol": "0x0000000000197c33",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.00871402740561619
+      },
+      {
+        "period": 800000,
+        "symbol": "0x0000000000197c3c",
+        "raw_symbol": "0x0000000000197c3c",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.00871402740561619
+      },
+      {
+        "period": 800000,
+        "symbol": "0x00000000001984fe",
+        "raw_symbol": "0x00000000001984fe",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.00871402740561619
+      },
+      {
+        "period": 600000,
+        "symbol": "0x0000000000010f92",
+        "raw_symbol": "0x0000000000010f92",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.006535520554212143
+      },
+      {
+        "period": 600000,
+        "symbol": "0x0000000000197380",
+        "raw_symbol": "0x0000000000197380",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.006535520554212143
+      },
+      {
+        "period": 600000,
+        "symbol": "0x000000000019738e",
+        "raw_symbol": "0x000000000019738e",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.006535520554212143
+      },
+      {
+        "period": 600000,
+        "symbol": "0x00000000001975c0",
+        "raw_symbol": "0x00000000001975c0",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.006535520554212143
+      },
+      {
+        "period": 600000,
+        "symbol": "0x0000000000197620",
+        "raw_symbol": "0x0000000000197620",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.006535520554212143
+      },
+      {
+        "period": 600000,
+        "symbol": "0x0000000000197b1f",
+        "raw_symbol": "0x0000000000197b1f",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.006535520554212143
+      },
+      {
+        "period": 600000,
+        "symbol": "0x0000000000197b3b",
+        "raw_symbol": "0x0000000000197b3b",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.006535520554212143
+      },
+      {
+        "period": 600000,
+        "symbol": "0x0000000000197bce",
+        "raw_symbol": "0x0000000000197bce",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.006535520554212143
+      },
+      {
+        "period": 600000,
+        "symbol": "0x00000000001984ea",
+        "raw_symbol": "0x00000000001984ea",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.006535520554212143
+      },
+      {
+        "period": 600000,
+        "symbol": "0x0000000000198533",
+        "raw_symbol": "0x0000000000198533",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.006535520554212143
+      },
+      {
+        "period": 400000,
+        "symbol": "_IO_file_setbuf",
+        "raw_symbol": "_IO_file_setbuf",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "__libc_calloc",
+        "raw_symbol": "__libc_calloc",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "cfree",
+        "raw_symbol": "cfree",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "memchr",
+        "raw_symbol": "memchr",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "memcmp",
+        "raw_symbol": "memcmp",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "memset",
+        "raw_symbol": "memset",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "memset@plt",
+        "raw_symbol": "memset@plt",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "myl_qbe_failed",
+        "raw_symbol": "myl_qbe_failed",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "myl_qbe_file_access",
+        "raw_symbol": "myl_qbe_file_access",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "read",
+        "raw_symbol": "read",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "read_handle",
+        "raw_symbol": "read_handle",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "strcspn",
+        "raw_symbol": "strcspn",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000005120",
+        "raw_symbol": "0x0000000000005120",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000008be0",
+        "raw_symbol": "0x0000000000008be0",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000008c66",
+        "raw_symbol": "0x0000000000008c66",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x000000000000bddf",
+        "raw_symbol": "0x000000000000bddf",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x000000000000be51",
+        "raw_symbol": "0x000000000000be51",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x00000000000146b1",
+        "raw_symbol": "0x00000000000146b1",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000016df0",
+        "raw_symbol": "0x0000000000016df0",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000026865",
+        "raw_symbol": "0x0000000000026865",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x000000000002a9a1",
+        "raw_symbol": "0x000000000002a9a1",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000197595",
+        "raw_symbol": "0x0000000000197595",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000197599",
+        "raw_symbol": "0x0000000000197599",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x00000000001975d7",
+        "raw_symbol": "0x00000000001975d7",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x00000000001975db",
+        "raw_symbol": "0x00000000001975db",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000197ae9",
+        "raw_symbol": "0x0000000000197ae9",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000197b0a",
+        "raw_symbol": "0x0000000000197b0a",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000197b35",
+        "raw_symbol": "0x0000000000197b35",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000197b4b",
+        "raw_symbol": "0x0000000000197b4b",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000197b6b",
+        "raw_symbol": "0x0000000000197b6b",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000197b93",
+        "raw_symbol": "0x0000000000197b93",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000197c0c",
+        "raw_symbol": "0x0000000000197c0c",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000197c25",
+        "raw_symbol": "0x0000000000197c25",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000197c2a",
+        "raw_symbol": "0x0000000000197c2a",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000198400",
+        "raw_symbol": "0x0000000000198400",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004357013702808095
+      },
+      {
+        "period": 200000,
+        "symbol": "_IO_fflush",
+        "raw_symbol": "_IO_fflush",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "_IO_file_xsputn",
+        "raw_symbol": "_IO_file_xsputn",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "__mempcpy_chk",
+        "raw_symbol": "__mempcpy_chk",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "__mprotect",
+        "raw_symbol": "__mprotect",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "__stpcpy",
+        "raw_symbol": "__stpcpy",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "__strncasecmp_l",
+        "raw_symbol": "__strncasecmp_l",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "__sysconf",
+        "raw_symbol": "__sysconf",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "acquire",
+        "raw_symbol": "acquire",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "launch",
+        "raw_symbol": "launch",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "malloc@plt",
+        "raw_symbol": "malloc@plt",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "memcpy",
+        "raw_symbol": "memcpy",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "memmove",
+        "raw_symbol": "memmove",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "sexpr.parser::parse_with_depth_cap",
+        "raw_symbol": "myl_f_792f34997f8dc64af02d751d84b97fb1ee11329582a4f406a62422ea2aa50395",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "main::main",
+        "raw_symbol": "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "myl_print_text",
+        "raw_symbol": "myl_print_text",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "mylang_qbe_run_providers",
+        "raw_symbol": "mylang_qbe_run_providers",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "open64",
+        "raw_symbol": "open64",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "read_all",
+        "raw_symbol": "read_all",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "strlen",
+        "raw_symbol": "strlen",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "strnlen",
+        "raw_symbol": "strnlen",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "wcschr",
+        "raw_symbol": "wcschr",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "wcsncpy",
+        "raw_symbol": "wcsncpy",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "wmemset",
+        "raw_symbol": "wmemset",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000002070",
+        "raw_symbol": "0x0000000000002070",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000020ac",
+        "raw_symbol": "0x00000000000020ac",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000008be4",
+        "raw_symbol": "0x0000000000008be4",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000000b915",
+        "raw_symbol": "0x000000000000b915",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000000b91b",
+        "raw_symbol": "0x000000000000b91b",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000000baff",
+        "raw_symbol": "0x000000000000baff",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000000bb86",
+        "raw_symbol": "0x000000000000bb86",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000000be40",
+        "raw_symbol": "0x000000000000be40",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000000be69",
+        "raw_symbol": "0x000000000000be69",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000000c680",
+        "raw_symbol": "0x000000000000c680",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000000c6e3",
+        "raw_symbol": "0x000000000000c6e3",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000000c6f4",
+        "raw_symbol": "0x000000000000c6f4",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000000dbbe",
+        "raw_symbol": "0x000000000000dbbe",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000001118f",
+        "raw_symbol": "0x000000000001118f",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000116a7",
+        "raw_symbol": "0x00000000000116a7",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000011720",
+        "raw_symbol": "0x0000000000011720",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000001464d",
+        "raw_symbol": "0x000000000001464d",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000016af0",
+        "raw_symbol": "0x0000000000016af0",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000016b80",
+        "raw_symbol": "0x0000000000016b80",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000001a31a",
+        "raw_symbol": "0x000000000001a31a",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000001a44b",
+        "raw_symbol": "0x000000000001a44b",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000001a8d1",
+        "raw_symbol": "0x000000000001a8d1",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000001d060",
+        "raw_symbol": "0x000000000001d060",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000206ff",
+        "raw_symbol": "0x00000000000206ff",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000024d5a",
+        "raw_symbol": "0x0000000000024d5a",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000024da0",
+        "raw_symbol": "0x0000000000024da0",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000024db8",
+        "raw_symbol": "0x0000000000024db8",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000252a5",
+        "raw_symbol": "0x00000000000252a5",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000252e4",
+        "raw_symbol": "0x00000000000252e4",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000025512",
+        "raw_symbol": "0x0000000000025512",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000002559f",
+        "raw_symbol": "0x000000000002559f",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000255cb",
+        "raw_symbol": "0x00000000000255cb",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000265be",
+        "raw_symbol": "0x00000000000265be",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000026801",
+        "raw_symbol": "0x0000000000026801",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000027566",
+        "raw_symbol": "0x0000000000027566",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000028e20",
+        "raw_symbol": "0x0000000000028e20",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000029480",
+        "raw_symbol": "0x0000000000029480",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000002a680",
+        "raw_symbol": "0x000000000002a680",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000002b5b5",
+        "raw_symbol": "0x000000000002b5b5",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000002b5cc",
+        "raw_symbol": "0x000000000002b5cc",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000002c940",
+        "raw_symbol": "0x000000000002c940",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000002cb64",
+        "raw_symbol": "0x000000000002cb64",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000004841e",
+        "raw_symbol": "0x000000000004841e",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000a035f",
+        "raw_symbol": "0x00000000000a035f",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000a03e6",
+        "raw_symbol": "0x00000000000a03e6",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000b1cba",
+        "raw_symbol": "0x00000000000b1cba",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000b2411",
+        "raw_symbol": "0x00000000000b2411",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000b279f",
+        "raw_symbol": "0x00000000000b279f",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000b2f39",
+        "raw_symbol": "0x00000000000b2f39",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000b2f3c",
+        "raw_symbol": "0x00000000000b2f3c",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000b3e79",
+        "raw_symbol": "0x00000000000b3e79",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000b3e91",
+        "raw_symbol": "0x00000000000b3e91",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000b3ef8",
+        "raw_symbol": "0x00000000000b3ef8",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000001291ff",
+        "raw_symbol": "0x00000000001291ff",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197612",
+        "raw_symbol": "0x0000000000197612",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197636",
+        "raw_symbol": "0x0000000000197636",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197a1b",
+        "raw_symbol": "0x0000000000197a1b",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197a3a",
+        "raw_symbol": "0x0000000000197a3a",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197a54",
+        "raw_symbol": "0x0000000000197a54",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197a5b",
+        "raw_symbol": "0x0000000000197a5b",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197a76",
+        "raw_symbol": "0x0000000000197a76",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197a97",
+        "raw_symbol": "0x0000000000197a97",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197ac0",
+        "raw_symbol": "0x0000000000197ac0",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197ac7",
+        "raw_symbol": "0x0000000000197ac7",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197ad6",
+        "raw_symbol": "0x0000000000197ad6",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197aee",
+        "raw_symbol": "0x0000000000197aee",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197b19",
+        "raw_symbol": "0x0000000000197b19",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197b31",
+        "raw_symbol": "0x0000000000197b31",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197b44",
+        "raw_symbol": "0x0000000000197b44",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197ba0",
+        "raw_symbol": "0x0000000000197ba0",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197bdd",
+        "raw_symbol": "0x0000000000197bdd",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197be2",
+        "raw_symbol": "0x0000000000197be2",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197bf5",
+        "raw_symbol": "0x0000000000197bf5",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197bfa",
+        "raw_symbol": "0x0000000000197bfa",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197c2f",
+        "raw_symbol": "0x0000000000197c2f",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197c46",
+        "raw_symbol": "0x0000000000197c46",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197cc0",
+        "raw_symbol": "0x0000000000197cc0",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197cd2",
+        "raw_symbol": "0x0000000000197cd2",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197cd9",
+        "raw_symbol": "0x0000000000197cd9",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197cdb",
+        "raw_symbol": "0x0000000000197cdb",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000001984c7",
+        "raw_symbol": "0x00000000001984c7",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000001984e0",
+        "raw_symbol": "0x00000000001984e0",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000001984f4",
+        "raw_symbol": "0x00000000001984f4",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000001984f9",
+        "raw_symbol": "0x00000000001984f9",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000001984fb",
+        "raw_symbol": "0x00000000001984fb",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0021785068514040477
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000128f0",
+        "raw_symbol": "0x00000000000128f0",
+        "dso": "libm.so.6",
+        "percent_resolved": 0.0021785068514040477
+      }
+    ]
+  },
+  "mylang-census": {
+    "runs": 48,
+    "event": "cycles:u",
+    "period": 200000,
+    "total_period": 4915200000,
+    "resolved_period": 4389400000,
+    "excluded_percent": 10.697428385416663,
+    "symbols": [
+      {
+        "period": 1043200000,
+        "symbol": "sexpr.tokenizer::read_string",
+        "raw_symbol": "myl_f_22a60c4dacd8f24cb076d3980502ca5a577d3fdc45db8138d037c148f04f136b",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 23.766346197657995
+      },
+      {
+        "period": 718800000,
+        "symbol": "sexpr.tokenizer::next_raw",
+        "raw_symbol": "myl_f_522a0393f0b978ec89dcf0a01ed40fe4c77fd2e0c5e149267c4a06b2be768f98",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 16.375814462113272
+      },
+      {
+        "period": 450200000,
+        "symbol": "main::tally",
+        "raw_symbol": "myl_f_3edf79354916f8d010aaa7e22a06a2b2e0944427858dfba883ade1d0e2be0036",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 10.25652708798469
+      },
+      {
+        "period": 349800000,
+        "symbol": "sexpr.parser::parse_node",
+        "raw_symbol": "myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 7.9691985237162255
+      },
+      {
+        "period": 336800000,
+        "symbol": "sexpr.parser::parse_leaf",
+        "raw_symbol": "myl_f_998beee1bca4ed98df5239fd3360e93dc7435bf13adf117793e129355f5cd155",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 7.6730304825260855
+      },
+      {
+        "period": 306800000,
+        "symbol": "myl_native_text_from_utf8_checked",
+        "raw_symbol": "myl_native_text_from_utf8_checked",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 6.9895657720873015
+      },
+      {
+        "period": 210000000,
+        "symbol": "0x0000000000197a11",
+        "raw_symbol": "0x0000000000197a11",
+        "dso": "libc.so.6",
+        "percent_resolved": 4.7842529730714904
+      },
+      {
+        "period": 192800000,
+        "symbol": "sexpr.parser::advance",
+        "raw_symbol": "myl_f_59c4bbc7071b8e5740b45acc273a5dd464bfcfe4b67081aa51105d0e1634c116",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 4.3923998724199205
+      },
+      {
+        "period": 110800000,
+        "symbol": "sexpr.parser::parse_list",
+        "raw_symbol": "myl_f_2e34b70956bd2f98094170b27161f4beca7b4dbc88ffeaecd468514ea7f8884c",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 2.524262997220577
+      },
+      {
+        "period": 88000000,
+        "symbol": "0x0000000000197d07",
+        "raw_symbol": "0x0000000000197d07",
+        "dso": "libc.so.6",
+        "percent_resolved": 2.0048298172871006
+      },
+      {
+        "period": 84200000,
+        "symbol": "sexpr.tokenizer::read_atom",
+        "raw_symbol": "myl_f_c7216ff81b82e9d60b2aefddc873a7cdb611d664b3deb9b17e22a05b9481cf8a",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 1.9182576206315214
+      },
+      {
+        "period": 51400000,
+        "symbol": "0x0000000000197a21",
+        "raw_symbol": "0x0000000000197a21",
+        "dso": "libc.so.6",
+        "percent_resolved": 1.1710028705517839
+      },
+      {
+        "period": 45000000,
+        "symbol": "myl_native_bytes_decode_range",
+        "raw_symbol": "myl_native_bytes_decode_range",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 1.0251970656581766
+      },
+      {
+        "period": 43800000,
+        "symbol": "__wrap_myl_native_list_get",
+        "raw_symbol": "__wrap_myl_native_list_get",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.9978584772406252
+      },
+      {
+        "period": 35400000,
+        "symbol": "myl_native_number_parse",
+        "raw_symbol": "myl_native_number_parse",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.8064883583177656
+      },
+      {
+        "period": 34400000,
+        "symbol": "myl_native_heap_alloc_block",
+        "raw_symbol": "myl_native_heap_alloc_block",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.7837062013031394
+      },
+      {
+        "period": 33800000,
+        "symbol": "myl_native_list_append",
+        "raw_symbol": "myl_native_list_append",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.7700369070943637
+      },
+      {
+        "period": 30000000,
+        "symbol": "myl_qbe_heap",
+        "raw_symbol": "myl_qbe_heap",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.6834647104387843
+      },
+      {
+        "period": 28600000,
+        "symbol": "myl_qbe_bytes_decode_range",
+        "raw_symbol": "myl_qbe_bytes_decode_range",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.6515696906183077
+      },
+      {
+        "period": 27400000,
+        "symbol": "__wrap_myl_native_list_append",
+        "raw_symbol": "__wrap_myl_native_list_append",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.6242311022007564
+      },
+      {
+        "period": 20600000,
+        "symbol": "myl_native_root_pop",
+        "raw_symbol": "myl_native_root_pop",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.46931243450129856
+      },
+      {
+        "period": 16000000,
+        "symbol": "0x0000000000197a25",
+        "raw_symbol": "0x0000000000197a25",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.3645145122340183
+      },
+      {
+        "period": 12400000,
+        "symbol": "sexpr.tokenizer::read_number",
+        "raw_symbol": "myl_f_73f351c18f47dd990165f2548f3afcb7d5b743c0da8680d6a4223dfb5b0f824c",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.2824987469813642
+      },
+      {
+        "period": 12000000,
+        "symbol": "memcpy@plt",
+        "raw_symbol": "memcpy@plt",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.27338588417551374
+      },
+      {
+        "period": 10800000,
+        "symbol": "myl_native_heap_alloc_at",
+        "raw_symbol": "myl_native_heap_alloc_at",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.24604729575796236
+      },
+      {
+        "period": 10200000,
+        "symbol": "myl_native_list_new",
+        "raw_symbol": "myl_native_list_new",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.23237800154918667
+      },
+      {
+        "period": 10000000,
+        "symbol": "myl_native_root_push",
+        "raw_symbol": "myl_native_root_push",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.22782157014626145
+      },
+      {
+        "period": 7800000,
+        "symbol": "myl_native_heap_alloc",
+        "raw_symbol": "myl_native_heap_alloc",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.17770082471408394
+      },
+      {
+        "period": 5800000,
+        "symbol": "0x0000000000197a2b",
+        "raw_symbol": "0x0000000000197a2b",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.13213651068483165
+      },
+      {
+        "period": 5400000,
+        "symbol": "sexpr.parser::parse_int",
+        "raw_symbol": "myl_f_96b067c9e9a223f42df861e5f816c57d88027bc98ce7a2f9698fe752d5c07806",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.12302364787898118
+      },
+      {
+        "period": 3600000,
+        "symbol": "sexpr.parser::parse_float",
+        "raw_symbol": "myl_f_db346654ceb5a652b5f723024feb479638530adb6b7fd97ec7d886c140c1b503",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.08201576525265412
+      },
+      {
+        "period": 3600000,
+        "symbol": "0x0000000000197d09",
+        "raw_symbol": "0x0000000000197d09",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.08201576525265412
+      },
+      {
+        "period": 3200000,
+        "symbol": "0x0000000000197a4d",
+        "raw_symbol": "0x0000000000197a4d",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.07290290244680367
+      },
+      {
+        "period": 2800000,
+        "symbol": "0x00000000001984d3",
+        "raw_symbol": "0x00000000001984d3",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.0637900396409532
+      },
+      {
+        "period": 2400000,
+        "symbol": "myl_native_object_region",
+        "raw_symbol": "myl_native_object_region",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.054677176835102745
+      },
+      {
+        "period": 1600000,
+        "symbol": "myl_native_text_points",
+        "raw_symbol": "myl_native_text_points",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.036451451223401835
+      },
+      {
+        "period": 1400000,
+        "symbol": "sexpr.tokenizer::si_suffix_len",
+        "raw_symbol": "myl_f_36f767de1a4f02faa9c9b05e632e517e7d2370ec5b2578a80e86da0fd089fa88",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.0318950198204766
+      },
+      {
+        "period": 1000000,
+        "symbol": "sexpr.parser::parse_with_depth_cap",
+        "raw_symbol": "myl_f_792f34997f8dc64af02d751d84b97fb1ee11329582a4f406a62422ea2aa50395",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.022782157014626145
+      },
+      {
+        "period": 800000,
+        "symbol": "main::summarise",
+        "raw_symbol": "myl_f_7faf8aa444eefa653ab5ecbaa2a8a18a5e00b524833457ca6eb1f198c7096813",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.018225725611700917
+      },
+      {
+        "period": 800000,
+        "symbol": "myl_qbe_float_unary",
+        "raw_symbol": "myl_qbe_float_unary",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.018225725611700917
+      },
+      {
+        "period": 800000,
+        "symbol": "0x0000000000197ba4",
+        "raw_symbol": "0x0000000000197ba4",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.018225725611700917
+      },
+      {
+        "period": 600000,
+        "symbol": "cfree",
+        "raw_symbol": "cfree",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.013669294208775686
+      },
+      {
+        "period": 600000,
+        "symbol": "realloc",
+        "raw_symbol": "realloc",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.013669294208775686
+      },
+      {
+        "period": 600000,
+        "symbol": "0x000000000000be51",
+        "raw_symbol": "0x000000000000be51",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.013669294208775686
+      },
+      {
+        "period": 600000,
+        "symbol": "0x000000000000c6a4",
+        "raw_symbol": "0x000000000000c6a4",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.013669294208775686
+      },
+      {
+        "period": 600000,
+        "symbol": "0x0000000000197a00",
+        "raw_symbol": "0x0000000000197a00",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.013669294208775686
+      },
+      {
+        "period": 600000,
+        "symbol": "0x0000000000197a3f",
+        "raw_symbol": "0x0000000000197a3f",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.013669294208775686
+      },
+      {
+        "period": 600000,
+        "symbol": "0x0000000000197ac7",
+        "raw_symbol": "0x0000000000197ac7",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.013669294208775686
+      },
+      {
+        "period": 600000,
+        "symbol": "0x0000000000197bff",
+        "raw_symbol": "0x0000000000197bff",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.013669294208775686
+      },
+      {
+        "period": 400000,
+        "symbol": "main::main",
+        "raw_symbol": "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "read_all",
+        "raw_symbol": "read_all",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x00000000000045e0",
+        "raw_symbol": "0x00000000000045e0",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000007e90",
+        "raw_symbol": "0x0000000000007e90",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x00000000000087c0",
+        "raw_symbol": "0x00000000000087c0",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000008c66",
+        "raw_symbol": "0x0000000000008c66",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x000000000000bde9",
+        "raw_symbol": "0x000000000000bde9",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x000000000000d840",
+        "raw_symbol": "0x000000000000d840",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000010f92",
+        "raw_symbol": "0x0000000000010f92",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x00000000000111a8",
+        "raw_symbol": "0x00000000000111a8",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x000000000001a921",
+        "raw_symbol": "0x000000000001a921",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x000000000002550d",
+        "raw_symbol": "0x000000000002550d",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000026865",
+        "raw_symbol": "0x0000000000026865",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000026dbb",
+        "raw_symbol": "0x0000000000026dbb",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x00000000000275ab",
+        "raw_symbol": "0x00000000000275ab",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x000000000002b53e",
+        "raw_symbol": "0x000000000002b53e",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x00000000000a03e6",
+        "raw_symbol": "0x00000000000a03e6",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x00000000000a03e9",
+        "raw_symbol": "0x00000000000a03e9",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x00000000000b3042",
+        "raw_symbol": "0x00000000000b3042",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000197a0d",
+        "raw_symbol": "0x0000000000197a0d",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000197a52",
+        "raw_symbol": "0x0000000000197a52",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000197b06",
+        "raw_symbol": "0x0000000000197b06",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000197bb3",
+        "raw_symbol": "0x0000000000197bb3",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000197bbb",
+        "raw_symbol": "0x0000000000197bbb",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 400000,
+        "symbol": "0x0000000000197bd8",
+        "raw_symbol": "0x0000000000197bd8",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.009112862805850459
+      },
+      {
+        "period": 200000,
+        "symbol": "_IO_flush_all",
+        "raw_symbol": "_IO_flush_all",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "__atanh_finite",
+        "raw_symbol": "__atanh_finite",
+        "dso": "libm.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "__pow_finite",
+        "raw_symbol": "__pow_finite",
+        "dso": "libm.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "cosf32",
+        "raw_symbol": "cosf32",
+        "dso": "libm.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "cosf32x",
+        "raw_symbol": "cosf32x",
+        "dso": "libm.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "expf",
+        "raw_symbol": "expf",
+        "dso": "libm.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "getcontext",
+        "raw_symbol": "getcontext",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "logf",
+        "raw_symbol": "logf",
+        "dso": "libm.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "malloc",
+        "raw_symbol": "malloc",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "memset",
+        "raw_symbol": "memset",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "memset@plt",
+        "raw_symbol": "memset@plt",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "myl_native_bytes_new",
+        "raw_symbol": "myl_native_bytes_new",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "myl_native_text_scalar",
+        "raw_symbol": "myl_native_text_scalar",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "myl_qbe_failed",
+        "raw_symbol": "myl_qbe_failed",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "myl_qbe_resource_read",
+        "raw_symbol": "myl_qbe_resource_read",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "mylang_scoped_close",
+        "raw_symbol": "mylang_scoped_close",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "read_handle",
+        "raw_symbol": "read_handle",
+        "dso": "compact-o3.bin",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "roundevenf32x",
+        "raw_symbol": "roundevenf32x",
+        "dso": "libm.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "strchr",
+        "raw_symbol": "strchr",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "strlen",
+        "raw_symbol": "strlen",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "tanf32x",
+        "raw_symbol": "tanf32x",
+        "dso": "libm.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "truncf32",
+        "raw_symbol": "truncf32",
+        "dso": "libm.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "wcschr",
+        "raw_symbol": "wcschr",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "wcsnlen",
+        "raw_symbol": "wcsnlen",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000020ef",
+        "raw_symbol": "0x00000000000020ef",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000047d8",
+        "raw_symbol": "0x00000000000047d8",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000005a50",
+        "raw_symbol": "0x0000000000005a50",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000008c64",
+        "raw_symbol": "0x0000000000008c64",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000009390",
+        "raw_symbol": "0x0000000000009390",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000000940d",
+        "raw_symbol": "0x000000000000940d",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000000a86c",
+        "raw_symbol": "0x000000000000a86c",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000000b908",
+        "raw_symbol": "0x000000000000b908",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000000b94c",
+        "raw_symbol": "0x000000000000b94c",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000000b998",
+        "raw_symbol": "0x000000000000b998",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000000ba9f",
+        "raw_symbol": "0x000000000000ba9f",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000000bb5f",
+        "raw_symbol": "0x000000000000bb5f",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000000be59",
+        "raw_symbol": "0x000000000000be59",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000000c6d4",
+        "raw_symbol": "0x000000000000c6d4",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000000c6f8",
+        "raw_symbol": "0x000000000000c6f8",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000010f30",
+        "raw_symbol": "0x0000000000010f30",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000001118f",
+        "raw_symbol": "0x000000000001118f",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000116a0",
+        "raw_symbol": "0x00000000000116a0",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000188e6",
+        "raw_symbol": "0x00000000000188e6",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000001d060",
+        "raw_symbol": "0x000000000001d060",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000001ff20",
+        "raw_symbol": "0x000000000001ff20",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000204a0",
+        "raw_symbol": "0x00000000000204a0",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000020617",
+        "raw_symbol": "0x0000000000020617",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000025144",
+        "raw_symbol": "0x0000000000025144",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000254b7",
+        "raw_symbol": "0x00000000000254b7",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000025fce",
+        "raw_symbol": "0x0000000000025fce",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000026582",
+        "raw_symbol": "0x0000000000026582",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000002994f",
+        "raw_symbol": "0x000000000002994f",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000002995a",
+        "raw_symbol": "0x000000000002995a",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000002a680",
+        "raw_symbol": "0x000000000002a680",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000002a960",
+        "raw_symbol": "0x000000000002a960",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000002a9f0",
+        "raw_symbol": "0x000000000002a9f0",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000002b56c",
+        "raw_symbol": "0x000000000002b56c",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000002b584",
+        "raw_symbol": "0x000000000002b584",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000002c060",
+        "raw_symbol": "0x000000000002c060",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000002c2e0",
+        "raw_symbol": "0x000000000002c2e0",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000002c2e8",
+        "raw_symbol": "0x000000000002c2e8",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000002c560",
+        "raw_symbol": "0x000000000002c560",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000002c579",
+        "raw_symbol": "0x000000000002c579",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000002c920",
+        "raw_symbol": "0x000000000002c920",
+        "dso": "ld-linux-x86-64.so.2",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000062ea4",
+        "raw_symbol": "0x0000000000062ea4",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000a0366",
+        "raw_symbol": "0x00000000000a0366",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000a03f2",
+        "raw_symbol": "0x00000000000a03f2",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000b1cd4",
+        "raw_symbol": "0x00000000000b1cd4",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000b20f1",
+        "raw_symbol": "0x00000000000b20f1",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000b213f",
+        "raw_symbol": "0x00000000000b213f",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000b217f",
+        "raw_symbol": "0x00000000000b217f",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000b221b",
+        "raw_symbol": "0x00000000000b221b",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000b2300",
+        "raw_symbol": "0x00000000000b2300",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000b2400",
+        "raw_symbol": "0x00000000000b2400",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000b316c",
+        "raw_symbol": "0x00000000000b316c",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000b3304",
+        "raw_symbol": "0x00000000000b3304",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000b3cae",
+        "raw_symbol": "0x00000000000b3cae",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000b3dc8",
+        "raw_symbol": "0x00000000000b3dc8",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000b3e60",
+        "raw_symbol": "0x00000000000b3e60",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000b3e79",
+        "raw_symbol": "0x00000000000b3e79",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x000000000011a240",
+        "raw_symbol": "0x000000000011a240",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197a04",
+        "raw_symbol": "0x0000000000197a04",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197a35",
+        "raw_symbol": "0x0000000000197a35",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197a3a",
+        "raw_symbol": "0x0000000000197a3a",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197a48",
+        "raw_symbol": "0x0000000000197a48",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197acd",
+        "raw_symbol": "0x0000000000197acd",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197ad6",
+        "raw_symbol": "0x0000000000197ad6",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197ae9",
+        "raw_symbol": "0x0000000000197ae9",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197b00",
+        "raw_symbol": "0x0000000000197b00",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197b14",
+        "raw_symbol": "0x0000000000197b14",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197b19",
+        "raw_symbol": "0x0000000000197b19",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197b1f",
+        "raw_symbol": "0x0000000000197b1f",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197b2b",
+        "raw_symbol": "0x0000000000197b2b",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197b3e",
+        "raw_symbol": "0x0000000000197b3e",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197b4b",
+        "raw_symbol": "0x0000000000197b4b",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197ba0",
+        "raw_symbol": "0x0000000000197ba0",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197ba9",
+        "raw_symbol": "0x0000000000197ba9",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197cc0",
+        "raw_symbol": "0x0000000000197cc0",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000197cd9",
+        "raw_symbol": "0x0000000000197cd9",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000001984d5",
+        "raw_symbol": "0x00000000001984d5",
+        "dso": "libc.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x00000000000128f0",
+        "raw_symbol": "0x00000000000128f0",
+        "dso": "libm.so.6",
+        "percent_resolved": 0.004556431402925229
+      },
+      {
+        "period": 200000,
+        "symbol": "0x0000000000079220",
+        "raw_symbol": "0x0000000000079220",
+        "dso": "libm.so.6",
+        "percent_resolved": 0.004556431402925229
+      }
+    ]
+  },
+  "zig-census": {
+    "runs": 48,
+    "event": "cycles:u",
+    "period": 200000,
+    "total_period": 1978800000,
+    "resolved_period": 1922600000,
+    "excluded_percent": 2.8401051142106337,
+    "symbols": [
+      {
+        "period": 1163400000,
+        "symbol": "src.sexpr.tokenizer.Tokenizer.next",
+        "raw_symbol": "src.sexpr.tokenizer.Tokenizer.next",
+        "dso": "zig",
+        "percent_resolved": 60.511806928118176
+      },
+      {
+        "period": 464400000,
+        "symbol": "src.sexpr.parser.parseNode",
+        "raw_symbol": "src.sexpr.parser.parseNode",
+        "dso": "zig",
+        "percent_resolved": 24.154790388016227
+      },
+      {
+        "period": 129400000,
+        "symbol": "main.tally",
+        "raw_symbol": "main.tally",
+        "dso": "zig",
+        "percent_resolved": 6.730469156350775
+      },
+      {
+        "period": 100400000,
+        "symbol": "heap.ArenaAllocator.alloc",
+        "raw_symbol": "heap.ArenaAllocator.alloc",
+        "dso": "zig",
+        "percent_resolved": 5.222095079579736
+      },
+      {
+        "period": 28400000,
+        "symbol": "heap.ArenaAllocator.remap",
+        "raw_symbol": "heap.ArenaAllocator.remap",
+        "dso": "zig",
+        "percent_resolved": 1.4771663372516384
+      },
+      {
+        "period": 12400000,
+        "symbol": "array_list.Aligned(src.sexpr.ast.Node,null).toOwnedSlice",
+        "raw_symbol": "array_list.Aligned(src.sexpr.ast.Node,null).toOwnedSlice",
+        "dso": "zig",
+        "percent_resolved": 0.6449599500676167
+      },
+      {
+        "period": 10600000,
+        "symbol": "fmt.parse_float.parseFloat__anon_29982",
+        "raw_symbol": "fmt.parse_float.parseFloat__anon_29982",
+        "dso": "zig",
+        "percent_resolved": 0.5513367315094143
+      },
+      {
+        "period": 8200000,
+        "symbol": "compiler_rt.memcpy.memcpyFast",
+        "raw_symbol": "compiler_rt.memcpy.memcpyFast",
+        "dso": "zig",
+        "percent_resolved": 0.42650577343181106
+      },
+      {
+        "period": 2400000,
+        "symbol": "mem.findScalarPos__anon_8094",
+        "raw_symbol": "mem.findScalarPos__anon_8094",
+        "dso": "zig",
+        "percent_resolved": 0.12483095807760325
+      },
+      {
+        "period": 1400000,
+        "symbol": "heap.ArenaAllocator.free",
+        "raw_symbol": "heap.ArenaAllocator.free",
+        "dso": "zig",
+        "percent_resolved": 0.07281805887860189
+      },
+      {
+        "period": 400000,
+        "symbol": "start.posixCallMainAndExit",
+        "raw_symbol": "start.posixCallMainAndExit",
+        "dso": "zig",
+        "percent_resolved": 0.020805159679600543
+      },
+      {
+        "period": 200000,
+        "symbol": "Io.File.Reader.readVecPositional",
+        "raw_symbol": "Io.File.Reader.readVecPositional",
+        "dso": "zig",
+        "percent_resolved": 0.010402579839800271
+      },
+      {
+        "period": 200000,
+        "symbol": "Io.Threaded.deinit",
+        "raw_symbol": "Io.Threaded.deinit",
+        "dso": "zig",
+        "percent_resolved": 0.010402579839800271
+      },
+      {
+        "period": 200000,
+        "symbol": "Io.Writer.Allocating.sendFile",
+        "raw_symbol": "Io.Writer.Allocating.sendFile",
+        "dso": "zig",
+        "percent_resolved": 0.010402579839800271
+      },
+      {
+        "period": 200000,
+        "symbol": "Io.Writer.printValue__anon_26031",
+        "raw_symbol": "Io.Writer.printValue__anon_26031",
+        "dso": "zig",
+        "percent_resolved": 0.010402579839800271
+      },
+      {
+        "period": 200000,
+        "symbol": "heap.SmpAllocator.free",
+        "raw_symbol": "heap.SmpAllocator.free",
+        "dso": "zig",
+        "percent_resolved": 0.010402579839800271
+      },
+      {
+        "period": 200000,
+        "symbol": "src.sexpr.tokenizer.Tokenizer.readOperator",
+        "raw_symbol": "src.sexpr.tokenizer.Tokenizer.readOperator",
+        "dso": "zig",
+        "percent_resolved": 0.010402579839800271
+      }
+    ]
+  },
+  "zig-render": {
+    "runs": 48,
+    "event": "cycles:u",
+    "period": 200000,
+    "total_period": 2500200000,
+    "resolved_period": 2396200000,
+    "excluded_percent": 4.159667226621866,
+    "symbols": [
+      {
+        "period": 1158600000,
+        "symbol": "src.sexpr.tokenizer.Tokenizer.next",
+        "raw_symbol": "src.sexpr.tokenizer.Tokenizer.next",
+        "dso": "zig",
+        "percent_resolved": 48.35155663133295
+      },
+      {
+        "period": 466200000,
+        "symbol": "src.sexpr.parser.parseNode",
+        "raw_symbol": "src.sexpr.parser.parseNode",
+        "dso": "zig",
+        "percent_resolved": 19.455805024622318
+      },
+      {
+        "period": 230200000,
+        "symbol": "src.sexpr.printer.printNode__anon_29595",
+        "raw_symbol": "src.sexpr.printer.printNode__anon_29595",
+        "dso": "zig",
+        "percent_resolved": 9.60687755613054
+      },
+      {
+        "period": 212000000,
+        "symbol": "src.sexpr.printer.estimateWidth",
+        "raw_symbol": "src.sexpr.printer.estimateWidth",
+        "dso": "zig",
+        "percent_resolved": 8.847341624238377
+      },
+      {
+        "period": 99800000,
+        "symbol": "heap.ArenaAllocator.alloc",
+        "raw_symbol": "heap.ArenaAllocator.alloc",
+        "dso": "zig",
+        "percent_resolved": 4.164927802353727
+      },
+      {
+        "period": 80400000,
+        "symbol": "Io.Writer.printValue__anon_26031",
+        "raw_symbol": "Io.Writer.printValue__anon_26031",
+        "dso": "zig",
+        "percent_resolved": 3.355312578248894
+      },
+      {
+        "period": 72200000,
+        "symbol": "compiler_rt.memcpy.memcpyFast",
+        "raw_symbol": "compiler_rt.memcpy.memcpyFast",
+        "dso": "zig",
+        "percent_resolved": 3.0131040814623153
+      },
+      {
+        "period": 29800000,
+        "symbol": "heap.ArenaAllocator.remap",
+        "raw_symbol": "heap.ArenaAllocator.remap",
+        "dso": "zig",
+        "percent_resolved": 1.2436357566146399
+      },
+      {
+        "period": 12400000,
+        "symbol": "array_list.Aligned(src.sexpr.ast.Node,null).toOwnedSlice",
+        "raw_symbol": "array_list.Aligned(src.sexpr.ast.Node,null).toOwnedSlice",
+        "dso": "zig",
+        "percent_resolved": 0.517486019530924
+      },
+      {
+        "period": 11800000,
+        "symbol": "fmt.parse_float.parseFloat__anon_29982",
+        "raw_symbol": "fmt.parse_float.parseFloat__anon_29982",
+        "dso": "zig",
+        "percent_resolved": 0.4924463734245889
+      },
+      {
+        "period": 7600000,
+        "symbol": "Io.Writer.print__anon_29625",
+        "raw_symbol": "Io.Writer.print__anon_29625",
+        "dso": "zig",
+        "percent_resolved": 0.3171688506802437
+      },
+      {
+        "period": 5800000,
+        "symbol": "mem.findScalarPos__anon_8094",
+        "raw_symbol": "mem.findScalarPos__anon_8094",
+        "dso": "zig",
+        "percent_resolved": 0.24204991236123863
+      },
+      {
+        "period": 3400000,
+        "symbol": "src.sexpr.printer.printFloat__anon_29632",
+        "raw_symbol": "src.sexpr.printer.printFloat__anon_29632",
+        "dso": "zig",
+        "percent_resolved": 0.1418913279358985
+      },
+      {
+        "period": 2200000,
+        "symbol": "compiler_rt.fastMemset",
+        "raw_symbol": "compiler_rt.fastMemset",
+        "dso": "zig",
+        "percent_resolved": 0.09181203572322845
+      },
+      {
+        "period": 1400000,
+        "symbol": "heap.ArenaAllocator.free",
+        "raw_symbol": "heap.ArenaAllocator.free",
+        "dso": "zig",
+        "percent_resolved": 0.058425840914781736
+      },
+      {
+        "period": 800000,
+        "symbol": "start.posixCallMainAndExit",
+        "raw_symbol": "start.posixCallMainAndExit",
+        "dso": "zig",
+        "percent_resolved": 0.033386194808446706
+      },
+      {
+        "period": 400000,
+        "symbol": "heap.PageAllocator.free",
+        "raw_symbol": "heap.PageAllocator.free",
+        "dso": "zig",
+        "percent_resolved": 0.016693097404223353
+      },
+      {
+        "period": 400000,
+        "symbol": "src.sexpr.printer.print",
+        "raw_symbol": "src.sexpr.printer.print",
+        "dso": "zig",
+        "percent_resolved": 0.016693097404223353
+      },
+      {
+        "period": 200000,
+        "symbol": "compiler_rt.strlen",
+        "raw_symbol": "compiler_rt.strlen",
+        "dso": "zig",
+        "percent_resolved": 0.008346548702111677
+      },
+      {
+        "period": 200000,
+        "symbol": "heap.PageAllocator.resize",
+        "raw_symbol": "heap.PageAllocator.resize",
+        "dso": "zig",
+        "percent_resolved": 0.008346548702111677
+      },
+      {
+        "period": 200000,
+        "symbol": "heap.SmpAllocator.free",
+        "raw_symbol": "heap.SmpAllocator.free",
+        "dso": "zig",
+        "percent_resolved": 0.008346548702111677
+      },
+      {
+        "period": 200000,
+        "symbol": "src.sexpr.tokenizer.Tokenizer.readOperator",
+        "raw_symbol": "src.sexpr.tokenizer.Tokenizer.readOperator",
+        "dso": "zig",
+        "percent_resolved": 0.008346548702111677
+      }
+    ]
+  }
+}

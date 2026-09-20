@@ -1,0 +1,74 @@
+[
+  {
+    "binary": "/tmp/final-measure/qbe",
+    "fixture": "experiments/sexpr-port/fixtures/layout/string_escapes.sexp",
+    "match": true,
+    "normal_status": 0,
+    "stress_status": 0,
+    "stress_stderr": ""
+  },
+  {
+    "binary": "/tmp/final-measure/llvm-o2",
+    "fixture": "experiments/sexpr-port/fixtures/layout/string_escapes.sexp",
+    "match": true,
+    "normal_status": 0,
+    "stress_status": 0,
+    "stress_stderr": ""
+  },
+  {
+    "binary": ".tmp/llvm-audit-20260919/probes/whole-stack-memset-words-gep.bin",
+    "fixture": "experiments/sexpr-port/fixtures/layout/string_escapes.sexp",
+    "match": true,
+    "normal_status": 0,
+    "stress_status": 0,
+    "stress_stderr": ""
+  },
+  {
+    "binary": "/tmp/final-measure/qbe",
+    "fixture": "experiments/sexpr-port/fixtures/layout/numbers_and_units.sexp",
+    "match": true,
+    "normal_status": 0,
+    "stress_status": 0,
+    "stress_stderr": ""
+  },
+  {
+    "binary": "/tmp/final-measure/llvm-o2",
+    "fixture": "experiments/sexpr-port/fixtures/layout/numbers_and_units.sexp",
+    "match": true,
+    "normal_status": 0,
+    "stress_status": 0,
+    "stress_stderr": ""
+  },
+  {
+    "binary": ".tmp/llvm-audit-20260919/probes/whole-stack-memset-words-gep.bin",
+    "fixture": "experiments/sexpr-port/fixtures/layout/numbers_and_units.sexp",
+    "match": true,
+    "normal_status": 0,
+    "stress_status": 0,
+    "stress_stderr": ""
+  },
+  {
+    "binary": "/tmp/final-measure/qbe",
+    "fixture": "experiments/sexpr-port/fixtures/layout/deeply_nested.sexp",
+    "match": true,
+    "normal_status": 0,
+    "stress_status": 0,
+    "stress_stderr": ""
+  },
+  {
+    "binary": "/tmp/final-measure/llvm-o2",
+    "fixture": "experiments/sexpr-port/fixtures/layout/deeply_nested.sexp",
+    "match": true,
+    "normal_status": 0,
+    "stress_status": 0,
+    "stress_stderr": ""
+  },
+  {
+    "binary": ".tmp/llvm-audit-20260919/probes/whole-stack-memset-words-gep.bin",
+    "fixture": "experiments/sexpr-port/fixtures/layout/deeply_nested.sexp",
+    "match": true,
+    "normal_status": 0,
+    "stress_status": 0,
+    "stress_stderr": ""
+  }
+]

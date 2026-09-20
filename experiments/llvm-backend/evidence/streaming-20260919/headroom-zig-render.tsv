@@ -1,0 +1,45 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 2  of event 'cpu_atom/cycles/u'
+# Event count (approx.): 400000
+#
+#       Period	Symbol	Shared Object	IPC   [IPC Coverage]
+
+
+# Samples: 12K of event 'cpu_core/cycles/u'
+# Event count (approx.): 2510600000
+#
+#       Period	Symbol                                                      	Shared Object	IPC   [IPC Coverage]
+ 80400000   	[.] Io.Writer.printValue__anon_26031                        	zig          	-      -            
+ 7600000    	[.] Io.Writer.print__anon_29625                             	zig          	-      -            
+ 12400000   	[.] array_list.Aligned(src.sexpr.ast.Node,null).toOwnedSlice	zig          	-      -            
+ 2200000    	[.] compiler_rt.fastMemset                                  	zig          	-      -            
+ 72200000   	[.] compiler_rt.memcpy.memcpyFast                           	zig          	-      -            
+ 200000     	[.] compiler_rt.strlen                                      	zig          	-      -            
+ 11800000   	[.] fmt.parse_float.parseFloat__anon_29982                  	zig          	-      -            
+ 99800000   	[.] heap.ArenaAllocator.alloc                               	zig          	-      -            
+ 1400000    	[.] heap.ArenaAllocator.free                                	zig          	-      -            
+ 29800000   	[.] heap.ArenaAllocator.remap                               	zig          	-      -            
+ 400000     	[.] heap.PageAllocator.free                                 	zig          	-      -            
+ 200000     	[.] heap.PageAllocator.resize                               	zig          	-      -            
+ 200000     	[.] heap.SmpAllocator.free                                  	zig          	-      -            
+ 5800000    	[.] mem.findScalarPos__anon_8094                            	zig          	-      -            
+ 466200000  	[.] src.sexpr.parser.parseNode                              	zig          	-      -            
+ 212000000  	[.] src.sexpr.printer.estimateWidth                         	zig          	-      -            
+ 400000     	[.] src.sexpr.printer.print                                 	zig          	-      -            
+ 3400000    	[.] src.sexpr.printer.printFloat__anon_29632                	zig          	-      -            
+ 230200000  	[.] src.sexpr.printer.printNode__anon_29595                 	zig          	-      -            
+ 1158600000 	[.] src.sexpr.tokenizer.Tokenizer.next                      	zig          	-      -            
+ 200000     	[.] src.sexpr.tokenizer.Tokenizer.readOperator              	zig          	-      -            
+ 800000     	[.] start.posixCallMainAndExit                              	zig          	-      -            
+ 400000     	[k] 0xffffffff8ce00080                                      	[unknown]    	-      -            
+ 103400000  	[k] 0xffffffff8ce00b90                                      	[unknown]    	-      -            
+ 200000     	[k] 0xffffffff8ce00ef0                                      	[unknown]    	-      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

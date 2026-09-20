@@ -1,0 +1,18 @@
+module ranking
+import model
+
+
+# Rank `readings` by descending value, in place, and answer nothing.
+#
+# The order must be stable: readings with equal values keep their original
+# relative order. The caller's own list must hold the result afterwards.
+public def rank_in_place(readings: list[model.Reading]) -> None effects(mutation) mutates(readings):
+    index = 1
+    while index < len(readings):
+        current = readings[index]
+        position = index
+        while position > 0 and readings[position - 1].value < current.value:
+            readings[position] = readings[position - 1]
+            position = position - 1
+        readings[position] = current
+        index = index + 1

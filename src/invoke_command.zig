@@ -29,6 +29,7 @@ pub const usage = "usage: mylang invoke <entry.my> --function 'module::name' (--
     "  --timeout=SECONDS    wall-clock ceiling for one call (default 60)\n" ++
     "  --max-steps=N --max-frames=N --max-calls=N  guest execution quotas\n" ++
     "  --cache-dir=DIR --zig=PATH --qbe=PATH --mode=Debug|ReleaseFast\n" ++
+    "  --gc-stress          run the call under the runtime's stress collector\n" ++
     "  --report             print a work-report-v1 reuse line on stderr\n";
 
 /// One parsed `invoke` command line: the entry and target, exactly one of the
@@ -38,9 +39,15 @@ pub const Request = struct {
     function: []const u8 = "",
     describe: bool = false,
     input: ?[]const u8 = null,
-    report: bool = false,
+    behaviour: Behaviour = .{},
     bounds: Bounds = .{},
     tools: Tools = .{},
+};
+
+/// Optional behaviours one request may ask for beyond the call itself.
+const Behaviour = struct {
+    report: bool = false,
+    stress: bool = false,
 };
 
 /// Execution-bound overrides the request may carry; null keeps the default.
@@ -97,11 +104,10 @@ fn dispatch(a: std.mem.Allocator, context: fs.Context, request: Request) !u8 {
     const opts: options.Options = .{
         .source = request.entry,
         .cache = request.tools.cache,
-        .zig = request.tools.zig,
-        .qbe = request.tools.qbe,
+        .toolchain = .{ .zig = request.tools.zig, .qbe = request.tools.qbe },
         .mode = request.tools.mode,
         .limits = quotas,
-        .flags = .{ .output = .{ .report = request.report } },
+        .flags = .{ .gc_stress = request.behaviour.stress, .output = .{ .report = request.behaviour.report } },
     };
     var check = runner.check(context, opts, if (request.describe) .frontend else .native) catch |err| switch (err) {
         error.InvalidTestArguments => {
@@ -131,9 +137,9 @@ fn dispatch(a: std.mem.Allocator, context: fs.Context, request: Request) !u8 {
         .ok => |*prepared| {
             defer context.remove(prepared.session.temporary);
             var work: invalidation.Work = .{ .command = "invoke" };
-            if (request.report) prepared.session.work = &work;
+            if (request.behaviour.report) prepared.session.work = &work;
             const status = answer(a, context, request, prepared, quotas);
-            if (request.report) try report(context, a, &work);
+            if (request.behaviour.report) try report(context, a, &work);
             return status;
         },
     }
@@ -369,7 +375,12 @@ pub fn parse(args: []const []const u8) ParseError!Request {
             continue;
         }
         if (std.mem.eql(u8, argument, "--report")) {
-            result.report = true;
+            result.behaviour.report = true;
+            continue;
+        }
+        if (std.mem.eql(u8, argument, "--gc-stress")) {
+            if (result.behaviour.stress) return error.InvalidInvocationArguments;
+            result.behaviour.stress = true;
             continue;
         }
         const split = std.mem.indexOfScalar(u8, argument, '=') orelse argument.len;

@@ -1,0 +1,36 @@
+module acceptance_probe
+import tiers
+import orders
+import audit
+import bands
+import report
+
+
+# Hidden behavioural probe. It is copied into the candidate tree by check.py,
+# run once, and removed; the solver never sees this file. Every line is compared
+# with acceptance/reference.py, which computes the same rule in Python.
+def main(out: Stream) -> int effects(managed_allocation, output):
+    out.print(f"rate 4 {tiers.rate_bps(4)}")
+    out.print(f"rate 5 {tiers.rate_bps(5)}")
+    out.print(f"rate 19 {tiers.rate_bps(19)}")
+    out.print(f"rate 20 {tiers.rate_bps(20)}")
+    out.print(f"rate 49 {tiers.rate_bps(49)}")
+    out.print(f"rate 50 {tiers.rate_bps(50)}")
+    out.print(f"flag 4 {audit.small_order(4)}")
+    out.print(f"flag 5 {audit.small_order(5)}")
+    out.print(f"flag 19 {audit.small_order(19)}")
+    out.print(f"flag 20 {audit.small_order(20)}")
+    out.print(f"band 4 {bands.name(4)}")
+    out.print(f"band 5 {bands.name(5)}")
+    out.print(f"band 19 {bands.name(19)}")
+    out.print(f"band 20 {bands.name(20)}")
+    out.print(f"total 4 {orders.total_cents(250, 4)}")
+    out.print(f"total 5 {orders.total_cents(250, 5)}")
+    out.print(f"total 20 {orders.total_cents(333, 20)}")
+    out.print(f"total 49 {orders.total_cents(999, 49)}")
+    out.print(report.line("H-001", 250, 4))
+    out.print(report.line("H-002", 250, 5))
+    out.print(report.line("H-003", 333, 20))
+    out.print(report.line("H-004", 999, 49))
+    out.print(report.line("H-005", 1, 1000))
+    return 0

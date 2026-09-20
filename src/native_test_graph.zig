@@ -9,6 +9,7 @@
 const std = @import("std");
 const fs = @import("qbe_build_io.zig");
 const v = @import("qbe_build_value.zig");
+const build = @import("qbe_build.zig");
 /// Graph cache IO, JSON and malformed compiler output failures.
 pub const Error = fs.Error || std.Io.Writer.Error || error{InvalidGraph};
 /// Bumped when the reduced graph wire shape changes so stale files are ignored.
@@ -177,11 +178,10 @@ test "a reduced graph copies dependency facts and rejects malformed manifests" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
-    const full = try std.json.parseFromSlice(std.json.Value, a,
-        \\{"abi":"mylang-qbe-native-v5","schema":"{\"functions\":[],\"types\":[]}","entry":"e","functions":[
-        \\{"name":"m.main::test_x","symbol":"sym","export":{"name":"m.main::test_x"},
-        \\ "test_dependencies":{"implementation_hash":"0000000000000000000000000000000000000000000000000000000000000000","dependencies":[{"symbol":"s","kind":"call"}],"cacheable":true,"reasons":[]}}]}
-    , .{ .allocate = .alloc_always });
+    const full = try std.json.parseFromSlice(std.json.Value, a, "{\"abi\":\"" ++ build.native_abi ++ "\",\"schema\":\"{\\\"functions\\\":[],\\\"types\\\":[]}\",\"entry\":\"e\",\"functions\":[" ++
+        "{\"name\":\"m.main::test_x\",\"symbol\":\"sym\",\"export\":{\"name\":\"m.main::test_x\"}," ++
+        "\"test_dependencies\":{\"implementation_hash\":\"000000000000000000000000000000000000000000000000" ++
+        "0000000000000000\",\"dependencies\":[{\"symbol\":\"s\",\"kind\":\"call\"}],\"cacheable\":true,\"reasons\":[]}}]}", .{ .allocate = .alloc_always });
     const reduced = try reduce(a, full.value);
     try std.testing.expect(std.mem.indexOf(u8, reduced, "\"implementation_hash\"") != null);
     try std.testing.expect(std.mem.indexOf(u8, reduced, "\"il\"") == null);

@@ -1,0 +1,10 @@
+module main
+import report
+
+
+def main(out: Stream) -> int effects(managed_allocation, output):
+    out.print(report.line("A-100", 250, 4))
+    out.print(report.line("A-200", 250, 7))
+    out.print(report.line("A-300", 250, 20))
+    out.print(report.line("A-400", 250, 50))
+    return 0

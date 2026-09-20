@@ -1,0 +1,5400 @@
+{
+  "version": "doc-examples-v1",
+  "compiler": "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+  "compiler_sha256": "217838b2e1512cabd81fdcd7224b0384713596f704d7d6ddf27196906fa1f6f9",
+  "totals": {
+    "run": 142,
+    "checked": 34,
+    "skipped": 10,
+    "mistagged": 0,
+    "failed": 2
+  },
+  "files": {
+    "README.md": {
+      "blocks": 11,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "SPEC.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/adr/D1-block-scope.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/adr/D2-record-keyword.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/adr/D3-managed-default.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/adr/D4-managed-cell.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/adr/D5-noncapturing-lambdas.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/adr/D6-runtime-boundary.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/adr/D7-feature-delay.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/adr/D8-authority-is-an-argument.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/arenas.md": {
+      "blocks": 6,
+      "run": 5,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/agent-audit-guide-scorecard-2026-09-17.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/agent-usefulness-implementation-plan-2026-09-20.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/agent-velocity-2026-09-17.md": {
+      "blocks": 5,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/aliasing-model-decision-2026-09-17.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/arena-maxperf-experiment-2026-09-19.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/byte-buffer-landed-2026-09-20.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/cascade-experiment-plan-2026-09-19.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/cascade-experiment-results-2026-09-19.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/deepseek-tools-2026-09-16/README.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/deepseek-tools-2026-09-16/measured-summary.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/deepseek-tools-2026-09-16/preset-update.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/deepseek-tools-2026-09-16/remaining-bottlenecks.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/development-velocity-agent-handoff-2026-09-15.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/development-velocity-b1-d2-s1-review-2026-09-16.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/development-velocity-c2-p1-review-2026-09-16.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/development-velocity-c3-c4-correction-review-2026-09-16.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/development-velocity-c3-c4-review-2026-09-16.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/development-velocity-correction-review-2026-09-16.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/development-velocity-implementation-plan-2026-09-15.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/development-velocity-proposals-2026-09-15.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/development-velocity-speed-2026-09-16.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/effects-as-arguments-plan-2026-09-17.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/elegance-next-step-plan-2026-09-19.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/feature-completeness-2026-09-07.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/hot-loop-plan-2026-09-19.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/hot-loops-landed-2026-09-19.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/implementation-progress-2026-09-07.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/incremental-status-2026-09-15.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/interface-research-2026-09-15.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/interfaces-and-agent-development-2026-09-15.md": {
+      "blocks": 3,
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/language-level-ssa-2026-09-19.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 1,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/language-performance-ergonomics-2026-09-20.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/language-simplicity-2026-09-12.md": {
+      "blocks": 4,
+      "run": 0,
+      "checked": 0,
+      "skipped": 1,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": [
+        "removed feature"
+      ]
+    },
+    "docs/audits/language-simplicity-2026-09-14.md": {
+      "blocks": 15,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/llvm-backend-experiment-plan-2026-09-19.md": {
+      "blocks": 4,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/llvm-backend-experiment-results-2026-09-19.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/llvm-backend-qualification-2026-09-20.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/llvm-runtime-fixes-2026-09-19.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/llvm-runtime-gap-audit-2026-09-19.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/m1b-diagnostic-feedback-readout-2026-09-19.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/m2-budget-calibration-2026-09-19.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/m2-pilot-2026-09-19.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/m2-preregistration-2026-09-19.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/m3-project-invocation-runbook-2026-09-20.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/memory-concurrency-2026-09-13.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/named-constraints-rereview-2026-09-15.md": {
+      "blocks": 6,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/named-constraints-review-2026-09-15.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/phase2-dir-notes.md": {
+      "blocks": 4,
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/phase2-env-notes.md": {
+      "blocks": 4,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/phase2-print-notes.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/phase3-clock-notes.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/phase3-decisions-notes.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/phase3-files-notes.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/phase3-net-notes.md": {
+      "blocks": 5,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/phase4-markers-notes.md": {
+      "blocks": 4,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/phase4-net2-notes.md": {
+      "blocks": 5,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/phase4-pure-notes.md": {
+      "blocks": 4,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/quality-and-maintainability-2026-09-18.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/real-project-readiness-2026-09-18.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/remaining-runtime-headroom-2026-09-19.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/research-testing-review-2026-09-19.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/runtime-headroom-second-pass-2026-09-20.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/runtime-next-steps-review-2026-09-20.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/runtime-performance-2026-09-18.md": {
+      "blocks": 5,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/runtime-to-2x-2026-09-19.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/runtime-to-2x-landed-2026-09-19.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/self-hosting-implementation-plan-2026-09-14.md": {
+      "blocks": 5,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/selfhost-pause-and-salvage-2026-09-17.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/simplification-plan-2026-09-14.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/ssa-language-audit-2026-09-19.md": {
+      "blocks": 4,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/streaming-parser-byte-output-2026-09-19.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/struct-layout-optimization-2026-09-20.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/README.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/cache-publication-next-plan-2026-09-16.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/contracts.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/final-status.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-a1.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-c0.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-c1.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-c1r.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-c2.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-c3.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-c3s.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-c4.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-d1.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-e1.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-e2.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-f1.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-hash.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-m1.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-m2.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-m3.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-p1.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-r12.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-r3.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-r4.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-retain.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-s1.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-w0-verify.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/guardian-warm.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/next-performance-report-2026-09-16.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/next-performance-work-plan-2026-09-16.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/next-publication-report-2026-09-16.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/publication-review-and-next-stage-2026-09-16.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/s1-corrected-2026-09-16/summary-tables.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/s1-corrected-report-2026-09-16.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/s1-final-2026-09-16/summary-tables.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/s1-final-report-2026-09-16.md": {
+      "blocks": 4,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/s1-profile-warm-2026-09-16.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/s1-profile-warm-2026-09-16/summary-tables.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/s1-report.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/velocity-implementation/w0-baseline-evidence.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/wave0-notes.md": {
+      "blocks": 5,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/wave1-notes.md": {
+      "blocks": 4,
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/wave1-reconciliation-2026-09-15.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/wave2-notes.md": {
+      "blocks": 4,
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/wave3-incremental-2026-09-15.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/wave3-notes.md": {
+      "blocks": 3,
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/wave4-implementation-plan.md": {
+      "blocks": 8,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/wave4-notes.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 1,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/audits/zig-vs-guest-test-times-2026-09-16.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/bootstrap-v1.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/byte-io-bulk.md": {
+      "blocks": 4,
+      "run": 0,
+      "checked": 0,
+      "skipped": 2,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": [
+        "fragment: declarations appended to an existing host io.my module",
+        "needs host capability: the mylang-io byte host and its io.my module"
+      ]
+    },
+    "docs/bytes.md": {
+      "blocks": 14,
+      "run": 14,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/c-ffi.md": {
+      "blocks": 4,
+      "run": 0,
+      "checked": 1,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/concurrency-proposal.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/const-length-generics.md": {
+      "blocks": 1,
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/current-language.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/diagnostic-recovery.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 1,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/domains.md": {
+      "blocks": 1,
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/effects.md": {
+      "blocks": 16,
+      "run": 8,
+      "checked": 8,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/agent-reference.md": {
+      "blocks": 4,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/aggregates.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/application-comparison.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/approximate-discovery.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/arrays.md": {
+      "blocks": 1,
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/attenuation.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/binding-cache.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/call-inputs.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/callbacks.md": {
+      "blocks": 1,
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/check-session.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/checked-calls.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/codec-diagnostics.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/contract-tests.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/database-language-prototype.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/declaration-store-format.md": {
+      "blocks": 4,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/declaration-store-harness.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/declaration-store-session.md": {
+      "blocks": 5,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/declaration-store.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/design-intent.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/development-host.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/development-velocity-analysis.md": {
+      "blocks": 4,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/development-velocity-corpus.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/development-velocity-loop.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/development-velocity-reporting.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/diagnostic-provenance.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/direct-agent-calibration-20260907.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/direct-agent-clearance-20260907.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/direct-agent-maintenance-20260907.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/direct-agent-pin-roles-20260907.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/doc-examples.md": {
+      "blocks": 3,
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/domain-codecs.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/domain-equality.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/domain-json.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/domains.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/duplicate-discovery.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/eda-stdlib-parity.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/effects.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/environment.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/evaluation-cache.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/evaluation-reports.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/execution-observations.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/external-capabilities.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/external-resources.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/formatter.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/generic-arrays.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/generic-bodies.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/generic-calls.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/generic-concrete.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/generic-diagnostics.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/generic-execution.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/generic-instances.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/generic-providers.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/generic-public-tooling.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/generic-requirements.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/generic-results-plan.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/generic-results.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/generic-syntax.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/generic-updates.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/generic-variants.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/guest-laws.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/guest-tests.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/host-functions.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/import-policy.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/incremental-contract.md": {
+      "blocks": 5,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/incremental-development.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/incremental-qbe.md": {
+      "blocks": 4,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/incremental-syntax.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/input-manifests.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/integers.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/interpreter-first.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/json-diagnostics.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/large-project-checking.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/list-declarations.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/local-packages.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/module-discovery.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 1,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": [
+        "fragment: header excerpt whose imported modules are not shown"
+      ]
+    },
+    "docs/experiments/module-duplicates.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/module-execution.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/module-formatting.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/module-interfaces.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 1,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": [
+        "fragment: the imported `shared.units` module is not shown"
+      ]
+    },
+    "docs/experiments/module-quality.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/module-scaling.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/module-source-mapping.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/navigation-client.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/nominal-bodies.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/nominal-instances.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/nominal-layouts.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/nominal-providers.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/nominal-template-checks.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 1,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/nominal-type-syntax.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/optional-values.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/plain-json-ergonomics.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/planner-chain-20260907.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/planner-chain-preparation-20260907.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/planner-stdlib-parity.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/portable-planner-preparation-20260907.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/portable-planner-trials-20260907.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/project-workflow.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/propagation.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/python-bindings.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/python-calls.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/quality-reports.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/resource-io.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 1,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/restricted-evaluation.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/results.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/roadmap.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/runtime-memory-budgets.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/safety-campaigns.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/schema-receipts.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/schemas.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/scoped-providers.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/source-codecs.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 1,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": [
+        "fragment: statements without the Positive domain and Wire declarations"
+      ]
+    },
+    "docs/experiments/source-resources.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 2,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/stdlib-parity-rotation-20260907.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/structural-constraints.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 1,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/tables.md": {
+      "blocks": 1,
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/typed-holes.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/typed-invocation.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/typed-json.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/unit-procedures.md": {
+      "blocks": 1,
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/variants.md": {
+      "blocks": 1,
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/velocity-iteration-v1-results.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/velocity-iteration-v1.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/verification-driver.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/verification-runtime.md": {
+      "blocks": 5,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/watch.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/experiments/workers.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/floating-point.md": {
+      "blocks": 3,
+      "run": 3,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/functions.md": {
+      "blocks": 9,
+      "run": 9,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/generic-inference.md": {
+      "blocks": 1,
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/generics.md": {
+      "blocks": 5,
+      "run": 5,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/integer-operations.md": {
+      "blocks": 4,
+      "run": 4,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/io.md": {
+      "blocks": 20,
+      "run": 7,
+      "checked": 7,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/lambdas.md": {
+      "blocks": 1,
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/managed-memory.md": {
+      "blocks": 13,
+      "run": 12,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/match-expressions.md": {
+      "blocks": 2,
+      "run": 1,
+      "checked": 1,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/module-constants.md": {
+      "blocks": 3,
+      "run": 1,
+      "checked": 2,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/modules.md": {
+      "blocks": 11,
+      "run": 5,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/mvp-audit.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/named-constraints-handoff.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/named-constraints-implementation.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/named-constraints-proposal.md": {
+      "blocks": 8,
+      "run": 0,
+      "checked": 2,
+      "skipped": 4,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": [
+        "proposed named-constraint syntax",
+        "proposed named-constraint syntax",
+        "proposed named-constraint syntax; contracts.my",
+        "proposed named-constraint syntax; checkout.my"
+      ]
+    },
+    "docs/performance.md": {
+      "blocks": 11,
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/plan.md": {
+      "blocks": 6,
+      "run": 2,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/progress.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/python-syntax.md": {
+      "blocks": 10,
+      "run": 9,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/range-iteration.md": {
+      "blocks": 1,
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/records-and-unions.md": {
+      "blocks": 10,
+      "run": 9,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 1,
+      "skips": []
+    },
+    "docs/results-and-options.md": {
+      "blocks": 7,
+      "run": 6,
+      "checked": 1,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/source-evaluation.md": {
+      "blocks": 1,
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/standard-library.md": {
+      "blocks": 25,
+      "run": 12,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 1,
+      "skips": []
+    },
+    "docs/standard-time-random.md": {
+      "blocks": 2,
+      "run": 2,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/statements.md": {
+      "blocks": 5,
+      "run": 5,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/structured-loop-exits.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 1,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/text.md": {
+      "blocks": 4,
+      "run": 4,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/tooling/agent-tools.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/tooling/api-diff.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/tooling/benchmark-plan.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/tooling/byte-runner.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/tooling/caches.md": {
+      "blocks": 5,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/tooling/documentation-gate.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/tooling/guest-tests.md": {
+      "blocks": 10,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/tooling/import-policy.md": {
+      "blocks": 5,
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/tooling/lint.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/tooling/native-build.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/tooling/navigation.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/tooling/packages.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/tooling/runtime-budgets.md": {
+      "blocks": 5,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/tooling/test-layout.md": {
+      "blocks": 0,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/tooling/timings.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/tooling/work-report.md": {
+      "blocks": 3,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/type-aliases.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 1,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/typed-holes.md": {
+      "blocks": 1,
+      "run": 0,
+      "checked": 1,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/typed-json.md": {
+      "blocks": 4,
+      "run": 0,
+      "checked": 1,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    },
+    "docs/velocity-loop.md": {
+      "blocks": 2,
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    }
+  },
+  "units": [
+    {
+      "label": "docs/arenas.md:15",
+      "kind": "block",
+      "document": "docs/arenas.md",
+      "status": "run",
+      "detail": "stdout '204'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit000/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/arenas.md:39",
+      "kind": "block",
+      "document": "docs/arenas.md",
+      "status": "run",
+      "detail": "stdout '7'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit001/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/arenas.md:70",
+      "kind": "block",
+      "document": "docs/arenas.md",
+      "status": "run",
+      "detail": "stdout '34'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit002/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/arenas.md:113",
+      "kind": "block",
+      "document": "docs/arenas.md",
+      "status": "run",
+      "detail": "stdout '14'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit003/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/arenas.md:128",
+      "kind": "block",
+      "document": "docs/arenas.md",
+      "status": "run",
+      "detail": "stdout '38'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit004/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/audits/interfaces-and-agent-development-2026-09-15.md:283",
+      "kind": "block",
+      "document": "docs/audits/interfaces-and-agent-development-2026-09-15.md",
+      "status": "run",
+      "detail": "stdout '0'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit005/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/audits/language-level-ssa-2026-09-19.md:52",
+      "kind": "block",
+      "document": "docs/audits/language-level-ssa-2026-09-19.md",
+      "status": "checked",
+      "detail": "generated entry point",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit006/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/audits/language-simplicity-2026-09-12.md:89",
+      "kind": "block",
+      "document": "docs/audits/language-simplicity-2026-09-12.md",
+      "status": "skipped",
+      "detail": "removed feature",
+      "command": []
+    },
+    {
+      "label": "docs/audits/phase2-dir-notes.md:66",
+      "kind": "block",
+      "document": "docs/audits/phase2-dir-notes.md",
+      "status": "run",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit008/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/audits/wave1-notes.md:74",
+      "kind": "block",
+      "document": "docs/audits/wave1-notes.md",
+      "status": "run",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit009/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/audits/wave2-notes.md:67",
+      "kind": "block",
+      "document": "docs/audits/wave2-notes.md",
+      "status": "run",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit010/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/audits/wave3-notes.md:64",
+      "kind": "block",
+      "document": "docs/audits/wave3-notes.md",
+      "status": "run",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit011/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/audits/wave4-notes.md:36",
+      "kind": "block",
+      "document": "docs/audits/wave4-notes.md",
+      "status": "checked",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit012/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/byte-io-bulk.md:6",
+      "kind": "block",
+      "document": "docs/byte-io-bulk.md",
+      "status": "skipped",
+      "detail": "fragment: declarations appended to an existing host io.my module",
+      "command": []
+    },
+    {
+      "label": "docs/byte-io-bulk.md:40",
+      "kind": "block",
+      "document": "docs/byte-io-bulk.md",
+      "status": "skipped",
+      "detail": "needs host capability: the mylang-io byte host and its io.my module",
+      "command": []
+    },
+    {
+      "label": "docs/bytes.md:13",
+      "kind": "block",
+      "document": "docs/bytes.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit015/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/bytes.md:43",
+      "kind": "block",
+      "document": "docs/bytes.md",
+      "status": "run",
+      "detail": "stdout '30'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit016/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/bytes.md:68",
+      "kind": "block",
+      "document": "docs/bytes.md",
+      "status": "run",
+      "detail": "stdout '15'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit017/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/bytes.md:100",
+      "kind": "block",
+      "document": "docs/bytes.md",
+      "status": "run",
+      "detail": "stdout '24'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit018/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/bytes.md:123",
+      "kind": "block",
+      "document": "docs/bytes.md",
+      "status": "run",
+      "detail": "stdout '11'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit019/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/bytes.md:146",
+      "kind": "block",
+      "document": "docs/bytes.md",
+      "status": "run",
+      "detail": "stdout '177'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit020/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/bytes.md:166",
+      "kind": "block",
+      "document": "docs/bytes.md",
+      "status": "run",
+      "detail": "stdout '6'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit021/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/bytes.md:192",
+      "kind": "block",
+      "document": "docs/bytes.md",
+      "status": "run",
+      "detail": "stdout '54'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit022/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/bytes.md:221",
+      "kind": "block",
+      "document": "docs/bytes.md",
+      "status": "run",
+      "detail": "stdout '6'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit023/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/bytes.md:280",
+      "kind": "block",
+      "document": "docs/bytes.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit024/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/bytes.md:325",
+      "kind": "block",
+      "document": "docs/bytes.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit025/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/bytes.md:409",
+      "kind": "block",
+      "document": "docs/bytes.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit026/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/bytes.md:438",
+      "kind": "block",
+      "document": "docs/bytes.md",
+      "status": "run",
+      "detail": "stdout '131'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit027/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/bytes.md:464",
+      "kind": "block",
+      "document": "docs/bytes.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit028/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/c-ffi.md:6",
+      "kind": "block",
+      "document": "docs/c-ffi.md",
+      "status": "checked",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit029/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/const-length-generics.md:5",
+      "kind": "block",
+      "document": "docs/const-length-generics.md",
+      "status": "run",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit030/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/diagnostic-recovery.md:8",
+      "kind": "block",
+      "document": "docs/diagnostic-recovery.md",
+      "status": "checked",
+      "detail": "rejected with ['E_UNKNOWN_NAME']",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit031/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/domains.md:11",
+      "kind": "block",
+      "document": "docs/domains.md",
+      "status": "run",
+      "detail": "stdout '1003'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit032/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/effects.md:30",
+      "kind": "block",
+      "document": "docs/effects.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit033/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/effects.md:85",
+      "kind": "block",
+      "document": "docs/effects.md",
+      "status": "checked",
+      "detail": "rejected with ['E_EFFECT_BOUND']",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit034/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/effects.md:141",
+      "kind": "block",
+      "document": "docs/effects.md",
+      "status": "run",
+      "detail": "stdout '7'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit035/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/effects.md:156",
+      "kind": "block",
+      "document": "docs/effects.md",
+      "status": "checked",
+      "detail": "rejected with ['E_MUTATION_PERMISSION']",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit036/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/effects.md:173",
+      "kind": "block",
+      "document": "docs/effects.md",
+      "status": "run",
+      "detail": "stdout '5'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit037/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/effects.md:191",
+      "kind": "block",
+      "document": "docs/effects.md",
+      "status": "run",
+      "detail": "stdout '1\n9'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit038/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/effects.md:209",
+      "kind": "block",
+      "document": "docs/effects.md",
+      "status": "checked",
+      "detail": "rejected with ['E_MUTATION_OVERLAP']",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit039/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/effects.md:229",
+      "kind": "block",
+      "document": "docs/effects.md",
+      "status": "run",
+      "detail": "stdout '0'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit040/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/effects.md:249",
+      "kind": "block",
+      "document": "docs/effects.md",
+      "status": "run",
+      "detail": "stdout '0'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit041/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/effects.md:275",
+      "kind": "block",
+      "document": "docs/effects.md",
+      "status": "checked",
+      "detail": "rejected with ['E_MUTATION_PERMISSION']",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit042/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/effects.md:294",
+      "kind": "block",
+      "document": "docs/effects.md",
+      "status": "run",
+      "detail": "stdout '0'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit043/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/effects.md:322",
+      "kind": "block",
+      "document": "docs/effects.md",
+      "status": "run",
+      "detail": "stdout '1\n9'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit044/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/effects.md:350",
+      "kind": "block",
+      "document": "docs/effects.md",
+      "status": "checked",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit045/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/effects.md:369",
+      "kind": "block",
+      "document": "docs/effects.md",
+      "status": "checked",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit046/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/effects.md:388",
+      "kind": "block",
+      "document": "docs/effects.md",
+      "status": "checked",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit047/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/effects.md:415",
+      "kind": "block",
+      "document": "docs/effects.md",
+      "status": "checked",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit048/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/experiments/arrays.md:10",
+      "kind": "block",
+      "document": "docs/experiments/arrays.md",
+      "status": "run",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit049/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/experiments/callbacks.md:6",
+      "kind": "block",
+      "document": "docs/experiments/callbacks.md",
+      "status": "run",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit050/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/experiments/doc-examples.md#greeting",
+      "kind": "project",
+      "document": "docs/experiments/doc-examples.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit051/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/experiments/module-discovery.md:15",
+      "kind": "block",
+      "document": "docs/experiments/module-discovery.md",
+      "status": "skipped",
+      "detail": "fragment: header excerpt whose imported modules are not shown",
+      "command": []
+    },
+    {
+      "label": "docs/experiments/module-interfaces.md:13",
+      "kind": "block",
+      "document": "docs/experiments/module-interfaces.md",
+      "status": "skipped",
+      "detail": "fragment: the imported `shared.units` module is not shown",
+      "command": []
+    },
+    {
+      "label": "docs/experiments/nominal-template-checks.md:12",
+      "kind": "block",
+      "document": "docs/experiments/nominal-template-checks.md",
+      "status": "checked",
+      "detail": "rejected with ['E_GENERIC_REQUIREMENT']",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit054/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/experiments/resource-io.md:12",
+      "kind": "block",
+      "document": "docs/experiments/resource-io.md",
+      "status": "checked",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit055/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/experiments/source-codecs.md:6",
+      "kind": "block",
+      "document": "docs/experiments/source-codecs.md",
+      "status": "skipped",
+      "detail": "fragment: statements without the Positive domain and Wire declarations",
+      "command": []
+    },
+    {
+      "label": "docs/experiments/source-resources.md:12",
+      "kind": "block",
+      "document": "docs/experiments/source-resources.md",
+      "status": "checked",
+      "detail": "generated entry point",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit057/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/experiments/source-resources.md:65",
+      "kind": "block",
+      "document": "docs/experiments/source-resources.md",
+      "status": "checked",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit058/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/experiments/structural-constraints.md:8",
+      "kind": "block",
+      "document": "docs/experiments/structural-constraints.md",
+      "status": "checked",
+      "detail": "generated entry point",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit059/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/experiments/tables.md:10",
+      "kind": "block",
+      "document": "docs/experiments/tables.md",
+      "status": "run",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit060/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/experiments/unit-procedures.md:7",
+      "kind": "block",
+      "document": "docs/experiments/unit-procedures.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit061/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/experiments/variants.md:9",
+      "kind": "block",
+      "document": "docs/experiments/variants.md",
+      "status": "run",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit062/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/floating-point.md:8",
+      "kind": "block",
+      "document": "docs/floating-point.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit063/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/floating-point.md:39",
+      "kind": "block",
+      "document": "docs/floating-point.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit064/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/floating-point.md:107",
+      "kind": "block",
+      "document": "docs/floating-point.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit065/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/functions.md:27",
+      "kind": "block",
+      "document": "docs/functions.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit066/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/functions.md:63",
+      "kind": "block",
+      "document": "docs/functions.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit067/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/functions.md:102",
+      "kind": "block",
+      "document": "docs/functions.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit068/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/functions.md:128",
+      "kind": "block",
+      "document": "docs/functions.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit069/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/functions.md:157",
+      "kind": "block",
+      "document": "docs/functions.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit070/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/functions.md:190",
+      "kind": "block",
+      "document": "docs/functions.md",
+      "status": "run",
+      "detail": "stdout '40\n2\n42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit071/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/functions.md:219",
+      "kind": "block",
+      "document": "docs/functions.md",
+      "status": "run",
+      "detail": "stdout '7'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit072/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/functions.md:256",
+      "kind": "block",
+      "document": "docs/functions.md",
+      "status": "run",
+      "detail": "stdout '9'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit073/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/functions.md:300",
+      "kind": "block",
+      "document": "docs/functions.md",
+      "status": "run",
+      "detail": "stdout '14'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit074/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/generic-inference.md:5",
+      "kind": "block",
+      "document": "docs/generic-inference.md",
+      "status": "run",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit075/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/generics.md:20",
+      "kind": "block",
+      "document": "docs/generics.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit076/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/generics.md:47",
+      "kind": "block",
+      "document": "docs/generics.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit077/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/generics.md:83",
+      "kind": "block",
+      "document": "docs/generics.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit078/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/generics.md:118",
+      "kind": "block",
+      "document": "docs/generics.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit079/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/generics.md:149",
+      "kind": "block",
+      "document": "docs/generics.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit080/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/integer-operations.md:19",
+      "kind": "block",
+      "document": "docs/integer-operations.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit081/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/integer-operations.md:36",
+      "kind": "block",
+      "document": "docs/integer-operations.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit082/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/integer-operations.md:57",
+      "kind": "block",
+      "document": "docs/integer-operations.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit083/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/integer-operations.md:80",
+      "kind": "block",
+      "document": "docs/integer-operations.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit084/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/io.md:13",
+      "kind": "block",
+      "document": "docs/io.md",
+      "status": "run",
+      "detail": "stdout 'hello 42 True None\n['a', 'b'] {'k': 1} b'\\x00\\xff''",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit085/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/io.md:25",
+      "kind": "block",
+      "document": "docs/io.md",
+      "status": "run",
+      "detail": "stdout '1-2-3!'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit086/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/io.md:38",
+      "kind": "block",
+      "document": "docs/io.md",
+      "status": "run",
+      "detail": "stdout 'Point(x=1, y=2) Colour.green\nOk(3) Err('nope') Some(4) None'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit087/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/io.md:70",
+      "kind": "block",
+      "document": "docs/io.md",
+      "status": "checked",
+      "detail": "rejected with ['E_EFFECT_BOUND']",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit088/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/io.md:84",
+      "kind": "block",
+      "document": "docs/io.md",
+      "status": "checked",
+      "detail": "rejected with ['E_OUTPUT_CAPABILITY']",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit089/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/io.md:121",
+      "kind": "block",
+      "document": "docs/io.md",
+      "status": "checked",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit090/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/io.md:137",
+      "kind": "block",
+      "document": "docs/io.md",
+      "status": "checked",
+      "detail": "generated entry point",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit091/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/io.md:217",
+      "kind": "block",
+      "document": "docs/io.md",
+      "status": "run",
+      "detail": "stdout 'count 0'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit092/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/io.md:288",
+      "kind": "block",
+      "document": "docs/io.md",
+      "status": "checked",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit093/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/io.md:307",
+      "kind": "block",
+      "document": "docs/io.md",
+      "status": "run",
+      "detail": "stdout 'Ok('hello from a granted directory\\n')\nTrue False'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit094/main.my",
+        "--diagnostics=json",
+        "--restrict",
+        "--allow-read=/home/epentland/ai/canopy/mylang/docs/fixtures/notes"
+      ]
+    },
+    {
+      "label": "docs/io.md:327",
+      "kind": "block",
+      "document": "docs/io.md",
+      "status": "run",
+      "detail": "stdout 'b'hello from a granted directory\\n'\n3'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit095/main.my",
+        "--diagnostics=json",
+        "--restrict",
+        "--allow-read=/home/epentland/ai/canopy/mylang/docs/fixtures/notes"
+      ]
+    },
+    {
+      "label": "docs/io.md:392",
+      "kind": "block",
+      "document": "docs/io.md",
+      "status": "run",
+      "detail": "stdout 'Err('read \\'../escape\\': denied: outside the granted directories, or the mode needs a write grant')\nErr('write \\'new.txt\\': denied: outside the granted directories, or the mode needs a write grant')'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit096/main.my",
+        "--diagnostics=json",
+        "--restrict",
+        "--allow-read=/home/epentland/ai/canopy/mylang/docs/fixtures/notes"
+      ]
+    },
+    {
+      "label": "docs/io.md:404",
+      "kind": "block",
+      "document": "docs/io.md",
+      "status": "checked",
+      "detail": "rejected with ['E_EFFECT_BOUND']",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit097/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/io.md:414",
+      "kind": "block",
+      "document": "docs/io.md",
+      "status": "checked",
+      "detail": "rejected with ['E_WITH_RESOURCE']",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit098/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/lambdas.md:9",
+      "kind": "block",
+      "document": "docs/lambdas.md",
+      "status": "run",
+      "detail": "stdout '12'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit099/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/managed-memory.md:9",
+      "kind": "block",
+      "document": "docs/managed-memory.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit100/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/managed-memory.md:96",
+      "kind": "block",
+      "document": "docs/managed-memory.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit101/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/managed-memory.md:135",
+      "kind": "block",
+      "document": "docs/managed-memory.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit102/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/managed-memory.md:172",
+      "kind": "block",
+      "document": "docs/managed-memory.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit103/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/managed-memory.md:210",
+      "kind": "block",
+      "document": "docs/managed-memory.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit104/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/managed-memory.md:259",
+      "kind": "block",
+      "document": "docs/managed-memory.md",
+      "status": "run",
+      "detail": "stdout '19'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit105/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/managed-memory.md:305",
+      "kind": "block",
+      "document": "docs/managed-memory.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit106/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/managed-memory.md:336",
+      "kind": "block",
+      "document": "docs/managed-memory.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit107/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/managed-memory.md:382",
+      "kind": "block",
+      "document": "docs/managed-memory.md",
+      "status": "run",
+      "detail": "stdout '20'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit108/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/managed-memory.md:392",
+      "kind": "block",
+      "document": "docs/managed-memory.md",
+      "status": "run",
+      "detail": "stdout '21'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit109/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/managed-memory.md:425",
+      "kind": "block",
+      "document": "docs/managed-memory.md",
+      "status": "run",
+      "detail": "stdout '1225'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit110/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/managed-memory.md:458",
+      "kind": "block",
+      "document": "docs/managed-memory.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit111/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/match-expressions.md:9",
+      "kind": "block",
+      "document": "docs/match-expressions.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit112/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/match-expressions.md:53",
+      "kind": "block",
+      "document": "docs/match-expressions.md",
+      "status": "checked",
+      "detail": "rejected with ['E_WILDCARD_ARM']",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit113/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/module-constants.md:5",
+      "kind": "block",
+      "document": "docs/module-constants.md",
+      "status": "checked",
+      "detail": "generated entry point",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit114/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/module-constants.md:26",
+      "kind": "block",
+      "document": "docs/module-constants.md",
+      "status": "checked",
+      "detail": "generated entry point",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit115/settings.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/module-constants.md:52",
+      "kind": "block",
+      "document": "docs/module-constants.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit116/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/modules.md:16",
+      "kind": "block",
+      "document": "docs/modules.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit117/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/modules.md#measure",
+      "kind": "project",
+      "document": "docs/modules.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit118/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/modules.md#catalog",
+      "kind": "project",
+      "document": "docs/modules.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit119/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/modules.md#report",
+      "kind": "project",
+      "document": "docs/modules.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit120/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/modules.md#published",
+      "kind": "project",
+      "document": "docs/modules.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit121/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/named-constraints-proposal.md:31",
+      "kind": "block",
+      "document": "docs/named-constraints-proposal.md",
+      "status": "checked",
+      "detail": "generated entry point",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit122/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/named-constraints-proposal.md:41",
+      "kind": "block",
+      "document": "docs/named-constraints-proposal.md",
+      "status": "skipped",
+      "detail": "proposed named-constraint syntax",
+      "command": []
+    },
+    {
+      "label": "docs/named-constraints-proposal.md:64",
+      "kind": "block",
+      "document": "docs/named-constraints-proposal.md",
+      "status": "skipped",
+      "detail": "proposed named-constraint syntax",
+      "command": []
+    },
+    {
+      "label": "docs/named-constraints-proposal.md:111",
+      "kind": "block",
+      "document": "docs/named-constraints-proposal.md",
+      "status": "checked",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit125/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/named-constraints-proposal.md:220",
+      "kind": "block",
+      "document": "docs/named-constraints-proposal.md",
+      "status": "skipped",
+      "detail": "proposed named-constraint syntax; contracts.my",
+      "command": []
+    },
+    {
+      "label": "docs/named-constraints-proposal.md:227",
+      "kind": "block",
+      "document": "docs/named-constraints-proposal.md",
+      "status": "skipped",
+      "detail": "proposed named-constraint syntax; checkout.my",
+      "command": []
+    },
+    {
+      "label": "docs/performance.md:86",
+      "kind": "block",
+      "document": "docs/performance.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit128/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/plan.md:363",
+      "kind": "block",
+      "document": "docs/plan.md",
+      "status": "run",
+      "detail": "stdout '4950'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit129/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/plan.md:385",
+      "kind": "block",
+      "document": "docs/plan.md",
+      "status": "run",
+      "detail": "stdout '6'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit130/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/python-syntax.md:12",
+      "kind": "block",
+      "document": "docs/python-syntax.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit131/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/python-syntax.md:28",
+      "kind": "block",
+      "document": "docs/python-syntax.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit132/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/python-syntax.md:92",
+      "kind": "block",
+      "document": "docs/python-syntax.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit133/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/python-syntax.md:124",
+      "kind": "block",
+      "document": "docs/python-syntax.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit134/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/python-syntax.md:150",
+      "kind": "block",
+      "document": "docs/python-syntax.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit135/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/python-syntax.md:174",
+      "kind": "block",
+      "document": "docs/python-syntax.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit136/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/python-syntax.md:203",
+      "kind": "block",
+      "document": "docs/python-syntax.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit137/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/python-syntax.md:235",
+      "kind": "block",
+      "document": "docs/python-syntax.md",
+      "status": "run",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit138/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/python-syntax.md:352",
+      "kind": "block",
+      "document": "docs/python-syntax.md",
+      "status": "run",
+      "detail": "stdout '15'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit139/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/range-iteration.md:5",
+      "kind": "block",
+      "document": "docs/range-iteration.md",
+      "status": "run",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit140/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/records-and-unions.md:22",
+      "kind": "block",
+      "document": "docs/records-and-unions.md",
+      "status": "run",
+      "detail": "stdout '14'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit141/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/records-and-unions.md:56",
+      "kind": "block",
+      "document": "docs/records-and-unions.md",
+      "status": "run",
+      "detail": "stdout '8'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit142/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/records-and-unions.md:88",
+      "kind": "block",
+      "document": "docs/records-and-unions.md",
+      "status": "run",
+      "detail": "stdout '321'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit143/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/records-and-unions.md:119",
+      "kind": "block",
+      "document": "docs/records-and-unions.md",
+      "status": "run",
+      "detail": "stdout '12'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit144/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/records-and-unions.md:144",
+      "kind": "block",
+      "document": "docs/records-and-unions.md",
+      "status": "run",
+      "detail": "stdout '7'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit145/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/records-and-unions.md:170",
+      "kind": "block",
+      "document": "docs/records-and-unions.md",
+      "status": "run",
+      "detail": "stdout '21'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit146/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/records-and-unions.md:222",
+      "kind": "block",
+      "document": "docs/records-and-unions.md",
+      "status": "failed",
+      "detail": "expected stdout '26', saw ''",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit147/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/records-and-unions.md:281",
+      "kind": "block",
+      "document": "docs/records-and-unions.md",
+      "status": "run",
+      "detail": "stdout '10'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit148/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/records-and-unions.md:325",
+      "kind": "block",
+      "document": "docs/records-and-unions.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit149/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/records-and-unions.md:367",
+      "kind": "block",
+      "document": "docs/records-and-unions.md",
+      "status": "run",
+      "detail": "stdout '115'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit150/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/results-and-options.md:22",
+      "kind": "block",
+      "document": "docs/results-and-options.md",
+      "status": "checked",
+      "detail": "rejected with ['E_RESULT_UNHANDLED']",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit151/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/results-and-options.md:58",
+      "kind": "block",
+      "document": "docs/results-and-options.md",
+      "status": "run",
+      "detail": "stdout '37'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit152/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/results-and-options.md:89",
+      "kind": "block",
+      "document": "docs/results-and-options.md",
+      "status": "run",
+      "detail": "stdout '20'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit153/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/results-and-options.md:146",
+      "kind": "block",
+      "document": "docs/results-and-options.md",
+      "status": "run",
+      "detail": "stdout '47'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit154/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/results-and-options.md:191",
+      "kind": "block",
+      "document": "docs/results-and-options.md",
+      "status": "run",
+      "detail": "stdout '9'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit155/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/results-and-options.md:232",
+      "kind": "block",
+      "document": "docs/results-and-options.md",
+      "status": "run",
+      "detail": "stdout '12'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit156/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/results-and-options.md:270",
+      "kind": "block",
+      "document": "docs/results-and-options.md",
+      "status": "run",
+      "detail": "stdout '6'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit157/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/source-evaluation.md:5",
+      "kind": "block",
+      "document": "docs/source-evaluation.md",
+      "status": "run",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit158/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/standard-library.md:77",
+      "kind": "block",
+      "document": "docs/standard-library.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit159/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/standard-library.md:128",
+      "kind": "block",
+      "document": "docs/standard-library.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit160/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/standard-library.md:191",
+      "kind": "block",
+      "document": "docs/standard-library.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit161/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/standard-library.md:246",
+      "kind": "block",
+      "document": "docs/standard-library.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit162/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/standard-library.md:289",
+      "kind": "block",
+      "document": "docs/standard-library.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit163/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/standard-library.md:318",
+      "kind": "block",
+      "document": "docs/standard-library.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit164/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/standard-library.md:354",
+      "kind": "block",
+      "document": "docs/standard-library.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit165/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/standard-library.md:421",
+      "kind": "block",
+      "document": "docs/standard-library.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit166/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/standard-library.md:500",
+      "kind": "block",
+      "document": "docs/standard-library.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit167/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/standard-library.md:566",
+      "kind": "block",
+      "document": "docs/standard-library.md",
+      "status": "run",
+      "detail": "stdout '0'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit168/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/standard-library.md:600",
+      "kind": "block",
+      "document": "docs/standard-library.md",
+      "status": "failed",
+      "detail": "expected stdout '42', saw ''",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit169/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/standard-library.md:659",
+      "kind": "block",
+      "document": "docs/standard-library.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit170/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/standard-library.md:733",
+      "kind": "block",
+      "document": "docs/standard-library.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit171/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/standard-time-random.md:27",
+      "kind": "block",
+      "document": "docs/standard-time-random.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit172/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/standard-time-random.md:68",
+      "kind": "block",
+      "document": "docs/standard-time-random.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit173/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/statements.md:33",
+      "kind": "block",
+      "document": "docs/statements.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit174/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/statements.md:65",
+      "kind": "block",
+      "document": "docs/statements.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit175/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/statements.md:91",
+      "kind": "block",
+      "document": "docs/statements.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit176/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/statements.md:104",
+      "kind": "block",
+      "document": "docs/statements.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit177/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/statements.md:129",
+      "kind": "block",
+      "document": "docs/statements.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit178/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/structured-loop-exits.md:7",
+      "kind": "block",
+      "document": "docs/structured-loop-exits.md",
+      "status": "checked",
+      "detail": "generated entry point",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit179/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/text.md:24",
+      "kind": "block",
+      "document": "docs/text.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit180/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/text.md:71",
+      "kind": "block",
+      "document": "docs/text.md",
+      "status": "run",
+      "detail": "stdout '43'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit181/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/text.md:136",
+      "kind": "block",
+      "document": "docs/text.md",
+      "status": "run",
+      "detail": "stdout '42'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit182/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/text.md:199",
+      "kind": "block",
+      "document": "docs/text.md",
+      "status": "run",
+      "detail": "stdout '8122'",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit183/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/tooling/import-policy.md#import-policy-example",
+      "kind": "project",
+      "document": "docs/tooling/import-policy.md",
+      "status": "run",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit184/main.my",
+        "--diagnostics=json",
+        "--print-result"
+      ]
+    },
+    {
+      "label": "docs/type-aliases.md:5",
+      "kind": "block",
+      "document": "docs/type-aliases.md",
+      "status": "checked",
+      "detail": "generated entry point",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit185/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/typed-holes.md:20",
+      "kind": "block",
+      "document": "docs/typed-holes.md",
+      "status": "checked",
+      "detail": "rejected with ['E_TYPED_HOLE']",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit186/main.my",
+        "--diagnostics=json"
+      ]
+    },
+    {
+      "label": "docs/typed-json.md:23",
+      "kind": "block",
+      "document": "docs/typed-json.md",
+      "status": "checked",
+      "detail": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/llvm-qual/bin/mylang-f5fa59a0",
+        "check-project",
+        "/home/epentland/ai/canopy/mylang/.mylang-cache/doctest-2d53c53e0e57a1e7/unit187/main.my",
+        "--diagnostics=json"
+      ]
+    }
+  ],
+  "mistagged": []
+}

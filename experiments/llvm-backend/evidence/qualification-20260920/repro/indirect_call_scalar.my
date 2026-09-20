@@ -1,0 +1,13 @@
+# Minimal reproducer: a call through a function value (indirect call).
+# The QBE tool builds it; qbe_llvm.py raises ParseError at the `call %vN(...)`
+# statement because the direct-call regex only accepts `$name`.
+def inc(n: int) -> int:
+    return n + 1
+
+
+def apply(f: def(int) -> int, n: int) -> int:
+    return f(n)
+
+
+def main() -> int:
+    return apply(inc, 7)

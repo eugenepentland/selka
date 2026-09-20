@@ -274,6 +274,7 @@ pub fn definition(definitions: []const Value, name: []const u8) ?Value {
 /// The wire kind one checked type name crosses the invocation boundary as.
 pub fn wireKind(definitions: []const Value, name: []const u8) []const u8 {
     if (std.mem.eql(u8, name, stream_cap_name)) return "injected-stream";
+    if (wire.isText(name)) return "text";
     const item = definition(definitions, name) orelse return "unknown";
     const kind = v.text(v.get(item, "kind"));
     if (std.mem.eql(u8, kind, "domain")) {
@@ -338,6 +339,11 @@ const Walk = struct {
         const kind = v.text(v.get(item, "kind"));
         if (std.mem.eql(u8, kind, "integer")) return integerRefusal(item, path);
         if (std.mem.eql(u8, kind, "boolean")) return null;
+        // Text is the one managed value the copied-value codec carries, in both
+        // positions: it arrives as a JSON string and crosses the guest ABI as
+        // one word. The rule is the name (`str`), never the shape, because the
+        // checked schema spells a user `List<u32>` exactly like `str`.
+        if (wire.isText(name)) return null;
         if (v.boolean(v.get(item, "move_only"))) return .{
             .kind = unsupported_type_kind,
             .path = path,
