@@ -11,7 +11,13 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
         .make_record => |record| {
             const schema = self.program.records[record.ty.recordIndex()];
             if (schema.isCollection()) return managed_lower.Lower(@TypeOf(self.*)).construct(self, record, stack);
-            const pointer = if (schema.isManagedRecord()) try allocateCell(@TypeOf(self), self, record.ty) else try self.aggregatePointer();
+            const destination = try constructorDestination(@TypeOf(self), self, self.pc);
+            const pointer = if (destination) |slot|
+                try localPointer(@TypeOf(self), self, slot)
+            else if (schema.isManagedRecord())
+                try allocateCell(@TypeOf(self), self, record.ty)
+            else
+                try self.aggregatePointer();
             for (0..record.fields) |i| {
                 const field_index = if (record.order.len == 0) i else record.order[i];
                 const member = try self.field(record.ty, field_index);
@@ -106,6 +112,123 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
     }
 }
 
+/// Whether the constructor immediately before `pc` filled local `slot` in place,
+/// so the store at `pc` has nothing left to copy.
+pub fn constructorForwarded(comptime E: type, self: E, pc: usize, slot: usize) Error!bool {
+    if (pc == 0) return false;
+    const destination = try constructorDestination(E, self, pc - 1);
+    return destination != null and destination.? == slot;
+}
+
+/// QBE-CTORFWD-1: the local a record constructor fills in place, when the very
+/// next instruction stores the constructed record into it.
+///
+/// Forwarding writes the same field stores, in the same order, into the local's
+/// own storage instead of the per-pc aggregate scratch, so the copy out of that
+/// scratch — and the now-dead scratch declaration — disappear. Every operand was
+/// already evaluated into its slot before the constructor runs and a plain
+/// record construction calls nothing, so no allocation, trap or step check can
+/// observe the destination part-way through. The destination is claimed only
+/// where nothing else can observe the change:
+///
+///  - the local owns nothing (`drop`), so no release of its old value has to
+///    happen before the new one lands, exactly like the store this replaces;
+///  - the local holds its own value — not a scalar, not a zero-length aggregate,
+///    and not a parameter slot holding a caller's address — and its type is the
+///    constructor's type;
+///  - the store is the constructor's only reader: no branch enters it directly,
+///    so it runs only over the record the constructor just built in the local;
+///  - no instruction that can reach the constructor reads the local, so no live
+///    operand can name the destination's storage and be read back half
+///    overwritten (`p = Pair(a=p.b, b=p.a)`).
+fn constructorDestination(comptime E: type, self: E, pc: usize) Error!?usize {
+    const code = self.function.scope.instructions;
+    const record = switch (code[pc].op) {
+        .make_record => |record| record,
+        else => return null,
+    };
+    const schema = self.program.records[record.ty.recordIndex()];
+    if (schema.isManagedRecord() or schema.isCollection()) return null;
+    if (pc + 1 >= code.len or self.states[pc + 1] == null) return null;
+    if (pc + 1 < self.branch_targets.len and self.branch_targets[pc + 1]) return null;
+    const slot = switch (code[pc + 1].op) {
+        .store_local => |target| @backingInt(target),
+        else => return null,
+    };
+    if (slot >= self.function.scope.locals.len) return null;
+    if (self.function.scope.locals[slot].ty != record.ty) return null;
+    if (self.isScalar(record.ty) or self.byReference(slot)) return null;
+    const value = try self.layout(record.ty);
+    if (value.drop or value.size == 0) return null;
+    if (try reachableRead(E, self, pc, slot)) return null;
+    return slot;
+}
+
+/// The pointer a forwarded constructor writes its fields through: the address of
+/// the destination local itself.
+fn localPointer(comptime E: type, self: E, slot: usize) Error!usize {
+    const pointer = self.temp();
+    try self.print(" %v{d} =l copy %l{d}\n", .{ pointer, slot });
+    return pointer;
+}
+
+/// Whether any instruction that can reach `at` reads local `slot`. Such a read
+/// is the only way this frame can put the address of the local's own storage
+/// into an operand slot, so it is exactly what makes building in place visible.
+fn reachableRead(comptime E: type, self: E, at: usize, slot: usize) Error!bool {
+    const code = self.function.scope.instructions;
+    const reached = try self.allocator.alloc(bool, code.len);
+    defer self.allocator.free(reached);
+    @memset(reached, false);
+    reached[at] = true;
+    var changed = true;
+    while (changed) {
+        changed = false;
+        var from = code.len;
+        while (from > 0) {
+            from -= 1;
+            if (reached[from] or self.states[from] == null) continue;
+            if (!flowsInto(code[from].op, from, reached)) continue;
+            reached[from] = true;
+            changed = true;
+        }
+    }
+    for (code, 0..) |instruction, pc| if (reached[pc] and readsLocal(instruction.op, slot)) return true;
+    return false;
+}
+
+/// Whether control leaving the instruction at `from` can enter an instruction
+/// already known to reach the target. The relation is the one the bytecode
+/// validator walks stack heights along: a `switch_variant` leaves only through
+/// its arm targets, a `ret` leaves nowhere, and every other instruction but an
+/// unconditional `jump` also falls through to the next pc.
+fn flowsInto(op: @FieldType(bytecode.Instruction, "op"), from: usize, reached: []const bool) bool {
+    const linear = from + 1 < reached.len and reached[from + 1];
+    return switch (op) {
+        .jump => |target| inRange(target, reached),
+        .jump_if_false => |target| inRange(target, reached) or linear,
+        .try_result => |propagate| inRange(propagate.error_target, reached) or linear,
+        .switch_variant => |dispatch| for (dispatch.arms) |arm| {
+            if (inRange(arm.target, reached)) break true;
+        } else false,
+        .ret => false,
+        else => linear,
+    };
+}
+
+fn inRange(target: usize, reached: []const bool) bool {
+    return target < reached.len and reached[target];
+}
+
+/// Whether one instruction reads local `slot` into an operand. A whole-value
+/// store is not a read: the address it consumes was read where it was produced.
+fn readsLocal(op: @FieldType(bytecode.Instruction, "op"), slot: usize) bool {
+    return switch (op) {
+        .load_local, .move_local, .drop_local => |target| @backingInt(target) == slot,
+        else => false,
+    };
+}
+
 fn allocateCell(comptime E: type, self: E, ty: typed.Type) Error!usize {
     const pointer = self.temp();
     try self.print(" %v{d} =l call $myl_native_heap_alloc(l %heap, l extern ${s}_body, l 1)\n", .{ pointer, try self.descriptor(ty) });
@@ -115,6 +238,10 @@ fn allocateCell(comptime E: type, self: E, ty: typed.Type) Error!usize {
 
 fn armPayload(comptime E: type, self: E, ty_value: typed.Type, slot_value: ?typed.LocalId, i: usize, pointer: usize) Error!void {
     if (slot_value) |slot| {
+        // QBE-MATCHPROJ-1: a projected binding already names the payload where it
+        // lives — `initializeStorage` stored that address once at entry — so the
+        // arm reads the scrutinee's own storage instead of copying it out.
+        if (self.byReference(@backingInt(slot))) return;
         const ty = self.function.scope.locals[@backingInt(slot)].ty;
         const payload = try self.readValue(try self.address(pointer, (try self.layout(ty_value)).payload_offset), ty);
         if (self.isScalar(ty)) try self.print(" storel %v{d}, %l{d}\n", .{ payload, @backingInt(slot) }) else try self.print(" blit %v{d}, %l{d}, {d}\n", .{ payload, @backingInt(slot), (try self.layout(ty)).size });

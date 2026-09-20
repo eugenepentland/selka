@@ -71,6 +71,45 @@ smallest wall time is what this page quotes. A built binary still takes
 because the program itself parses them at start-up; with none of them it runs
 unbounded.
 
+## Records are values, not copies
+
+A record is a value: assigning one, passing one to a function, or binding one in a
+pattern match never lets a later write reach the original. The backend keeps that
+meaning without paying for it. A read-only aggregate parameter crosses the call by
+address, a short-lived local is named by its own slot, a record constructed
+straight into a local is built there rather than in scratch and then copied, and a
+match arm whose binding owns nothing reads the payload where it already lives, so
+field reads, tag tests and payload projections are loads through a pointer rather
+than aggregate copies. Writes still get their own storage, and a write to a copied
+value stays a copy's write.
+
+```mylang
+# doc: expect 42
+record Point:
+    x: int
+    y: int
+
+
+def shifted(point: Point) -> Point:
+    return Point(x=point.x + 1, y=point.y + 1)
+
+
+def total(point: Point) -> int:
+    return point.x + point.y
+
+
+def main() -> int:
+    start = Point(x=1, y=2)
+    moved = shifted(start)
+    if start.x != 1 or start.y != 2:
+        return 1
+    if moved.x != 2 or moved.y != 3:
+        return 2
+    if total(start) + total(moved) != 8:
+        return 3
+    return 42
+```
+
 ## Build for speed
 
 `mylang build` and `mylang run` build **ReleaseFast** unless told otherwise; the

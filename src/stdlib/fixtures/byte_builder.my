@@ -1,0 +1,171 @@
+module main
+import byte_builder
+
+def main() -> int:
+    output = byte_builder.create()
+    byte_builder.append(output, b"head:")
+    if not byte_builder.append_byte(output, 0):
+        return 1
+    if byte_builder.append_byte(output, 256):
+        return 2
+    byte_builder.append_text(output, "hé")
+    if byte_builder.append_spaces(output, 0 - 1):
+        return 3
+    if not byte_builder.append_spaces(output, 66):
+        return 4
+    indent = byte_builder.create()
+    if not byte_builder.append_spaces(indent, 63):
+        return 11
+    indentation = byte_builder.finish(indent)
+    if len(indentation) != 63:
+        return 12
+    for octet in indentation:
+        if octet != 32:
+            return 13
+    first = byte_builder.finish(output)
+    expected = b"head:\0h\xc3\xa9                                                                  "
+    if first != expected:
+        return 5
+    if not byte_builder.append_byte(output, 33):
+        return 6
+    second = byte_builder.finish(output)
+    if first != expected:
+        return 7
+    if second != expected + b"!":
+        return 8
+    byte_builder.append(output, second)
+    third = byte_builder.finish(output)
+    if third != second + second:
+        return 9
+    if byte_builder.finish(output) != third:
+        return 10
+
+    # Range appends: the front, a middle interval and the tail of one span
+    # rebuild that span exactly, and an empty range changes nothing.
+    span = b"0123456789"
+    ranged = byte_builder.create()
+    if not byte_builder.append_range(ranged, span, 0, 3):
+        return 14
+    if not byte_builder.append_range(ranged, span, 3, 8):
+        return 15
+    if not byte_builder.append_range(ranged, span, 8, 10):
+        return 16
+    if not byte_builder.append_range(ranged, span, 4, 4):
+        return 17
+    if byte_builder.finish(ranged) != span:
+        return 18
+    if not byte_builder.append_range(ranged, span, 4, 6):
+        return 19
+    if byte_builder.finish(ranged) != span + b"45":
+        return 20
+
+    # A rejected range leaves the builder unchanged.
+    if byte_builder.append_range(ranged, span, 0 - 1, 4):
+        return 21
+    if byte_builder.append_range(ranged, span, 4, 3):
+        return 22
+    if byte_builder.append_range(ranged, span, 4, 11):
+        return 23
+    if byte_builder.append_range(ranged, span, 0, 0 - 1):
+        return 24
+    if byte_builder.append_range(ranged, span, 11, 11):
+        return 25
+    if byte_builder.finish(ranged) != span + b"45":
+        return 26
+
+    # Multi-byte UTF-8: a two-byte scalar, a four-byte emoji and another
+    # four-byte scalar outside the surrogate range.
+    scalars = byte_builder.create()
+    byte_builder.append_text(scalars, "λ")
+    byte_builder.append_text(scalars, "😀")
+    byte_builder.append_text(scalars, "𐍈")
+    if byte_builder.finish(scalars) != b"\xce\xbb\xf0\x9f\x98\x80\xf0\x90\x8d\x88":
+        return 27
+
+    # Integer spellings: zero, a positive value, negatives, both extrema and
+    # values whose spelling ends in zeros.
+    numbers = byte_builder.create()
+    byte_builder.append_int(numbers, 0)
+    byte_builder.append_int(numbers, 7)
+    byte_builder.append_int(numbers, 0 - 1234)
+    byte_builder.append_int(numbers, 1000000)
+    byte_builder.append_int(numbers, 9223372036854775807)
+    byte_builder.append_int(numbers, -9223372036854775808)
+    byte_builder.append_int(numbers, 0 - 10)
+    byte_builder.append_int(numbers, 0 - 100)
+    spelling = b"07-123410000009223372036854775807-9223372036854775808-10-100"
+    if byte_builder.finish(numbers) != spelling:
+        return 28
+    frozen = byte_builder.finish(numbers)
+    byte_builder.append_int(numbers, 0 - 5)
+    if byte_builder.finish(numbers) != spelling + b"-5":
+        return 29
+    if frozen != spelling:
+        return 30
+
+    # Float spellings: the canonical text `str(value)` prints, written into the
+    # buffer's capacity, with the non-finite values spelled by name.
+    floats = byte_builder.create()
+    for value in [0.1, 2.5, 0.0 - 2.5e-7, 1.0 / 3.0]:
+        if not byte_builder.append_float(floats, value):
+            return 50
+        if not byte_builder.append_byte(floats, 32):
+            return 51
+    if byte_builder.finish(floats) != b"0.1 2.5 -0.00000025 0.3333333333333333 ":
+        return 48
+    huge = 1e300 * 1e300
+    nonfinite = byte_builder.create()
+    for value in [huge, 0.0 - huge]:
+        if not byte_builder.append_float(nonfinite, value):
+            return 52
+        if not byte_builder.append_byte(nonfinite, 32):
+            return 53
+    if byte_builder.finish(nonfinite) != b"inf -inf ":
+        return 49
+
+    # Reserve changes neither the finished length nor the content, and the
+    # builder keeps appending afterwards.
+    reserved = byte_builder.create()
+    byte_builder.append(reserved, b"seed")
+    if not byte_builder.reserve(reserved, 4096):
+        return 31
+    if byte_builder.finish(reserved) != b"seed":
+        return 32
+    if not byte_builder.reserve(reserved, 0):
+        return 33
+    if byte_builder.reserve(reserved, 0 - 1):
+        return 34
+    if byte_builder.finish(reserved) != b"seed":
+        return 35
+    byte_builder.append(reserved, b"tail")
+    if byte_builder.finish(reserved) != b"seedtail":
+        return 36
+
+    # Growth past several capacity doublings, with an interleaved snapshot
+    # that a later append must not change.
+    growing = byte_builder.create()
+    total = 0
+    index = 0
+    while index < 100000:
+        if not byte_builder.append_byte(growing, index % 256):
+            return 37
+        total += index % 256
+        index += 1
+    early = byte_builder.finish(growing)
+    if len(early) != 100000:
+        return 38
+    if total != 12742320:
+        return 39
+    if not byte_builder.append_byte(growing, 65):
+        return 40
+    grown = byte_builder.finish(growing)
+    if len(grown) != 100001:
+        return 41
+    if len(early) != 100000 or early[0] != 0 or early[255] != 255 or early[99999] != 159:
+        return 45
+    if grown[100000] != 65 or grown[99999] != 159 or grown[0] != 0:
+        return 46
+    if early[99999] != 159 or early[256] != 0:
+        return 47
+
+    return len(grown) - 99959

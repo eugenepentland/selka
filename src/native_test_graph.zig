@@ -178,7 +178,7 @@ test "a reduced graph copies dependency facts and rejects malformed manifests" {
     defer arena.deinit();
     const a = arena.allocator();
     const full = try std.json.parseFromSlice(std.json.Value, a,
-        \\{"abi":"mylang-qbe-native-v4","schema":"{\"functions\":[],\"types\":[]}","entry":"e","functions":[
+        \\{"abi":"mylang-qbe-native-v5","schema":"{\"functions\":[],\"types\":[]}","entry":"e","functions":[
         \\{"name":"m.main::test_x","symbol":"sym","export":{"name":"m.main::test_x"},
         \\ "test_dependencies":{"implementation_hash":"0000000000000000000000000000000000000000000000000000000000000000","dependencies":[{"symbol":"s","kind":"call"}],"cacheable":true,"reasons":[]}}]}
     , .{ .allocate = .alloc_always });

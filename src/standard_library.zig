@@ -3,6 +3,7 @@ const std = @import("std");
 const Module = struct { path: []const u8, text: []const u8 };
 const modules = [_]Module{
     .{ .path = "base64.my", .text = @embedFile("stdlib/base64.my") },
+    .{ .path = "byte_builder.my", .text = @embedFile("stdlib/byte_builder.my") },
     .{ .path = "hex.my", .text = @embedFile("stdlib/hex.my") },
     .{ .path = "json.my", .text = @embedFile("stdlib/json.my") },
     .{ .path = "math.my", .text = @embedFile("stdlib/math.my") },

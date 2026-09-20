@@ -31,13 +31,21 @@ const State = enum { unseen, active, done };
 /// Versioned Linux AMD64 ABI catalog. The caller retains records and identities
 /// until deinit. Fields and cached layouts are owned by this catalog.
 pub const Catalog = struct {
-    pub const abi_version = "mylang-native-amd64-layout-v1";
+    pub const abi_version = "mylang-native-amd64-layout-v2";
     allocator: std.mem.Allocator,
     records: []const typed.Record,
     identities: []const []const u8,
     layouts: []Layout,
     states: []State,
     owns_identities: bool = false,
+    /// Fingerprints computed for the builtin types, indexed by their tag. A
+    /// builtin's layout and digest are a pure function of that tag: the switch in
+    /// `layout` reads no catalog state and `fingerprint` recurses only through an
+    /// aggregate's fields, of which a builtin has none. A digest computed once
+    /// therefore cannot go stale while this catalog lives, and `null` means "not
+    /// computed yet". Every builtin is laid out on nearly every emitted
+    /// instruction, and recomputing its SHA-256 dominated emission.
+    builtin_hashes: [typed.Type.record_base]?Digest = @splat(null),
 
     /// Nominal catalog names already encode qualified declarations and canonical
     /// type/constant arguments (nominal_catalog.Builder.appendName).
@@ -89,7 +97,7 @@ pub const Catalog = struct {
                 .file, .text_file => .{ .kind = .resource, .size = 8, .alignment = 8, .copy = .prohibited, .trace = true, .drop = true },
                 else => .{ .kind = .handle, .size = 8, .alignment = 8 },
             };
-            result.hash = try self.fingerprint(ty, result);
+            result.hash = try self.builtinHash(ty, result);
             return result;
         }
         const index = ty.recordIndex();
@@ -196,6 +204,20 @@ pub const Catalog = struct {
         result.fields = try fields.toOwnedSlice(self.allocator);
         return result;
     }
+    /// The fingerprint of one builtin type, computed at most once per catalog.
+    /// The memo is keyed by the tag and holds only the digest; the layout the
+    /// digest covers is rebuilt from the same switch every time, because it is a
+    /// handful of instructions while the digest is a SHA-256. A tag outside the
+    /// builtin range cannot arise from `isAggregate`, but one that did would fall
+    /// back to computing the digest rather than reading outside the memo.
+    fn builtinHash(self: *Catalog, ty: typed.Type, item: Layout) Error!Digest {
+        const tag = @backingInt(ty);
+        if (tag >= self.builtin_hashes.len) return self.fingerprint(ty, item);
+        if (self.builtin_hashes[tag]) |hash| return hash;
+        const hash = try self.fingerprint(ty, item);
+        self.builtin_hashes[tag] = hash;
+        return hash;
+    }
     fn fingerprint(self: *Catalog, ty: typed.Type, item: Layout) Error!Digest {
         var hash = std.crypto.hash.sha2.Sha256.init(.{});
         string(&hash, abi_version);
@@ -239,6 +261,31 @@ fn string(hash: *std.crypto.hash.sha2.Sha256, value: []const u8) void {
 const span = @import("source.zig").Span{ .start = 0, .end = 0 };
 fn recordType(index: usize) typed.Type {
     return @fromBackingInt(typed.Type.record_base + index);
+}
+// spec: NATIVE-LAYOUT-MEMO-1
+test "a memoized builtin fingerprint equals the freshly computed one for every tag" {
+    const fields = [_]typed.Field{ .{ .name = "small", .declaration = span, .ty = .u8 }, .{ .name = "large", .declaration = span, .ty = .i64 } };
+    const records = [_]typed.Record{.{ .id = recordType(0), .name = "Point", .declaration = span, .fields = &fields }};
+    var memoized = try Catalog.init(std.testing.allocator, &records, &.{"geometry::Point"});
+    defer memoized.deinit();
+    var fresh = try Catalog.init(std.testing.allocator, &records, &.{"geometry::Point"});
+    defer fresh.deinit();
+    // Lay the aggregate out first, so its fields fill the memo before the sweep,
+    // and again afterwards, so a digest computed with a warm memo cannot differ
+    // from one computed with a cold one.
+    const aggregate = try memoized.layout(recordType(0));
+    for (0..typed.Type.record_base) |tag| {
+        const ty: typed.Type = @fromBackingInt(tag);
+        const cached = try memoized.layout(ty);
+        const computed = try fresh.layout(ty);
+        try std.testing.expectEqualSlices(u8, &computed.hash, &cached.hash);
+        try std.testing.expectEqual(computed.size, cached.size);
+        try std.testing.expectEqual(computed.alignment, cached.alignment);
+        try std.testing.expectEqual(computed.kind, cached.kind);
+        try std.testing.expectEqual(computed.copy, cached.copy);
+    }
+    try std.testing.expectEqualSlices(u8, &aggregate.hash, &(try memoized.layout(recordType(0))).hash);
+    try std.testing.expectEqualSlices(u8, &(try fresh.layout(recordType(0))).hash, &(try memoized.layout(recordType(0))).hash);
 }
 test "native concrete widths, padding and nominal identity" {
     const fields = [_]typed.Field{ .{ .name = "small", .declaration = span, .ty = .u8 }, .{ .name = "large", .declaration = span, .ty = .i64 } };

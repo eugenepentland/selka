@@ -25,6 +25,9 @@ pub fn preludeType(catalog: *Catalog, name: []const u8, span: Span) Error!typed.
     // A collection operation can produce `bytes` without the source naming the
     // type, so materialize its schema on demand; a declared type still wins.
     if (std.mem.eql(u8, name, "bytes") and !state.index.names.contains("bytes")) try state.index.addByteString();
+    // The mutable octet buffer is materialized the same way, so a program that
+    // never names one carries no extra prelude type.
+    if (std.mem.eql(u8, name, "byte_buffer") and !state.index.names.contains("byte_buffer")) try state.index.addByteBuffer();
     const declaration = state.index.names.get(name) orelse return error.InternalError;
     const builtin = state.index.declarations.items[declaration].builtin_name orelse return error.InternalError;
     if (!std.mem.eql(u8, builtin, name)) return error.InternalError;
@@ -62,15 +65,24 @@ fn textMethodType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Span) 
 fn bytesOperationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Span) Error!typed.Type {
     const element = catalog.records[owner.recordIndex()].shape.buffer.?;
     return switch (kind) {
-        .length, .find => .i64,
+        .length, .find, .find_any => .i64,
         .contains, .starts_with, .ends_with => .bool,
+        .buffer_reserve, .buffer_append_byte, .buffer_append_range => .bool,
+        .buffer_append_utf8, .buffer_append_int, .buffer_append_float => .bool,
         .iteration_check => .unit,
         .read => element,
         .slice, .join => owner,
+        // A view reads the same octets and answers the same byte-string type, so
+        // every read operation is already defined for it; `copy` materializes
+        // those octets instead.
+        .view, .copy => owner,
         .split => listType(catalog, owner, span),
         .to_list => listType(catalog, .i64, span),
         .hex => preludeType(catalog, "str", span),
         .decode => resultType(catalog, try preludeType(catalog, "str", span), try preludeType(catalog, "str", span), span),
+        .scalar_count => resultType(catalog, .i64, try preludeType(catalog, "str", span), span),
+        .parse_int => optionType(catalog, .i64, span),
+        .parse_float => optionType(catalog, try preludeType(catalog, "float", span), span),
         else => error.InternalError,
     };
 }

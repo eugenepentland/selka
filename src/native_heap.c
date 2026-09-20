@@ -91,18 +91,22 @@ static void mark(myl_native_heap *heap, void *payload) {
 }
 static void trace(myl_native_heap *heap, const myl_native_type *type, const void *address) {
     const unsigned char *bytes = address;
+    if (type->trace_mode == MYL_NATIVE_TRACE_NONE) return;
     if (type->kind == MYL_NATIVE_POINTER || type->kind == MYL_NATIVE_OWNED_BUFFER || type->kind == MYL_NATIVE_OWNED_POOL) {
         void *pointer;
         memcpy(&pointer, bytes, sizeof(pointer));
         mark(heap, pointer);
     } else if (type->kind == MYL_NATIVE_ARRAY) {
+        const myl_native_field *fields = type->trace_mode == MYL_NATIVE_TRACE_FIELDS ? type->trace_fields : type->fields;
         for (size_t i = 0; i < type->count; ++i)
-            trace(heap, type->fields[0].type, bytes + i * type->stride);
+            trace(heap, fields[0].type, bytes + i * type->stride);
     } else if (type->kind == MYL_NATIVE_RECORD || type->kind == MYL_NATIVE_VARIANT) {
+        const myl_native_field *fields = type->trace_mode == MYL_NATIVE_TRACE_FIELDS ? type->trace_fields : type->fields;
+        size_t field_count = type->trace_mode == MYL_NATIVE_TRACE_FIELDS ? type->trace_field_count : type->field_count;
         uint32_t tag = 0;
         if (type->kind == MYL_NATIVE_VARIANT) memcpy(&tag, bytes, sizeof(tag));
-        for (size_t i = 0; i < type->field_count; ++i) {
-            const myl_native_field *field = &type->fields[i];
+        for (size_t i = 0; i < field_count; ++i) {
+            const myl_native_field *field = &fields[i];
             if (type->kind == MYL_NATIVE_RECORD || tag == field->tag)
                 trace(heap, field->type, bytes + field->offset);
         }
@@ -138,7 +142,8 @@ void myl_native_heap_collect(myl_native_heap *heap) {
         myl_native_object *object = heap->pending;
         heap->pending = object->pending;
         const unsigned char *payload = (const unsigned char *)(object + 1);
-        if (object->element->kind != MYL_NATIVE_PLAIN)
+        if (object->element->kind != MYL_NATIVE_PLAIN &&
+            object->element->trace_mode != MYL_NATIVE_TRACE_NONE)
             for (size_t i = 0; i < object->count; ++i)
                 trace(heap, object->element, payload + i * object->element->size);
     }

@@ -1206,6 +1206,13 @@ test "an executable built without a frame ceiling refuses a runtime frame budget
     try testing.expect(std.mem.indexOf(u8, refused.stderr, "error[R_NO_FRAME_ACCOUNTING]") != null);
     // A build that keeps its traces still runs without any ceiling argument.
     try expectConstantProcess(&.{output}, "");
+    // Both explicit ReleaseFast accounting and Debug's default must accept the
+    // requested budget. Emission cannot depend on `saw_frames`: emit-qbe does
+    // not accept run-only budget flags from its build-driver parent.
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", output, cache_argument, tools[0], tools[1], "--max-frames=1" }, "");
+    try expectConstantProcess(&.{ output, "--max-frames=1" }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", output, cache_argument, tools[0], tools[1], "--mode=Debug" }, "");
+    try expectConstantProcess(&.{ output, "--max-frames=1" }, "");
 }
 // spec-case: QBE-STEP-ACCOUNTING-1
 test "an executable built without a requested ceiling refuses a runtime step budget" {

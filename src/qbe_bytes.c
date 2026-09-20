@@ -39,3 +39,16 @@ myl_native_bytes *myl_qbe_bytes_from_list(void *context, myl_native_list *list) 
     else if (!result) myl_qbe_fail_allocation(context);
     return result;
 }
+myl_native_bytes *myl_qbe_bytes_copy(void *context, myl_native_bytes *input) {
+    myl_native_bytes *result = myl_native_bytes_copy(myl_qbe_heap(context), input);
+    if (!result) myl_qbe_fail_allocation(context);
+    return result;
+}
+/* Publish the validating scalar count as a checked result: 0 stores the count as
+   the success payload, 1 stores the decoder's invalid-UTF-8 message, and -1 is a
+   sticky trap the caller detects with myl_qbe_failed. */
+int myl_qbe_bytes_scalar_count(void *context, myl_native_bytes *input, void **output) {
+    int status = MYL_BYTES_OK;
+    int64_t count = myl_native_bytes_scalar_count(input, &status);
+    return settle(context, (void *)(intptr_t)count, status, 0, output);
+}

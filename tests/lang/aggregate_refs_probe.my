@@ -1,0 +1,81 @@
+module aggregate_refs_probe
+
+# The value-semantics probe for QBE-AGGREF-1. Every line it prints is produced
+# by an aggregate crossing a call boundary: a written parameter, a returned
+# record stored into a local, a returned record passed straight into another
+# call, and a record read out of a list by an instantiated generic body.
+
+
+public record Point:
+    x: i64
+    y: i64
+
+
+public record Pair:
+    left: Point
+    right: Point
+
+
+public union Slot:
+    filled(point: Point, tag: i64),
+    empty
+
+
+# 1. The callee writes its parameter: the caller's record must not move.
+def absorb(point: Point) -> i64:
+    point.x = point.x + 100
+    point.y = point.y + 200
+    return point.x * 1000 + point.y
+
+
+# 2. A record returned and immediately stored into a local.
+def shifted(point: Point) -> Point:
+    return Point(x=point.x + 1, y=point.y + 2)
+
+
+# 3. A record returned and passed straight into another call, which reads both
+#    parameters by address.
+def pack(pair: Pair) -> i64:
+    return pair.left.x * 1000 + pair.left.y + pair.right.x * 10 + pair.right.y
+
+
+# 4. A record inside a list, returned from an instantiated generic body.
+def pick_first[T](items: list[T]) -> T:
+    return items[0]
+
+
+def classify(slot: Slot) -> i64:
+    match slot:
+        case Slot.filled(point, tag):
+            return point.x * 10 + tag
+        case Slot.empty:
+            return 0
+
+
+def main(out: Stream) -> int:
+    original = Point(x=1, y=2)
+    out.print("1 written-parameter inside", absorb(original), "caller", original.x, original.y)
+
+    stored = shifted(original)
+    out.print("2 returned-then-stored", stored.x, stored.y, "source", original.x, original.y)
+
+    packed = pack(Pair(left=shifted(Point(x=1, y=2)), right=shifted(Point(x=3, y=4))))
+    out.print("3 returned-into-call", packed)
+
+    items: list[Point] = [Point(x=11, y=12), Point(x=13, y=14)]
+    held = pick_first[Point](items)
+    out.print("4 generic-list", held.x, held.y, "list", items[0].x, items[1].x)
+
+    slot = Slot.filled(shifted(Point(x=2, y=3)), 9)
+    out.print("5 union-payload", classify(slot))
+
+    many: list[Pair] = []
+    index = 0
+    while index < 64:
+        many.append(Pair(left=shifted(Point(x=index, y=index + 1)), right=shifted(Point(x=index + 2, y=index + 3))))
+        index = index + 1
+    total = 0
+    for pair in many:
+        total = total + pack(pair)
+    out.print("6 loop", total, len(many))
+    return 0

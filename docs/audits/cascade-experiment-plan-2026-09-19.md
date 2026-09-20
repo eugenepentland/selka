@@ -1,8 +1,16 @@
 # Cascading-benefit experiment: does "solve it once" design pay off for agents?
 
-Status: plan, 19 September 2026. Nothing here has run. The two proposals this answers
-are the user's (an "elegance = benefits cascade, obligations do not" essay and a shorter
-"reward the expected future diff" note); they are not in the repository.
+Status: plan, 19 September 2026, built and run the same day under
+[`experiments/cascade/`](../../experiments/cascade/README.md). The pack, the three frozen
+arms, the runner, the gate and the scoring script all exist and are self-checked; 63
+independent maintainer runs, 9 chained runs and 3 transfer probes have finished. The
+result is in [cascade-experiment-results-2026-09-19](cascade-experiment-results-2026-09-19.md):
+the decision rule below fails on its first two clauses, so the proposals' claim is not
+supported by this pack and no language feature is built on it. §3.6's instruction for
+that case — fix the metric or the prompt first — is what the results document proposes. The two
+proposals this answers are the user's (an "elegance = benefits cascade, obligations do
+not" essay and a shorter "reward the expected future diff" note); they are not in the
+repository.
 
 The agents in this experiment are DeepSeek agents run through the locally installed
 DeepSeek Harness (`dsh`). Nothing in the design depends on that choice: any agent that

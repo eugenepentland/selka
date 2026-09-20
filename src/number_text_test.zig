@@ -109,6 +109,38 @@ test "the grammar keeps the rounding horizon, the signed bound and the exponent 
     try std.testing.expectEqual(@as(?f64, 0), number.floating(&.{ '1', 'e', '-', '9', '9', '9', '9', '9', '9', '9', '9', '9', '9', '9', '9', '9', '9', '9', '9', '9', '9', '9', '9', '9' }));
 }
 
+// spec-case: PY-BYTES-9
+test "every shared vector answers the same through the UTF-8 octet entry points" {
+    var points: [widest]u32 = undefined;
+    var octets: [widest * 4]u8 = undefined;
+    for (rows) |line| {
+        const vector = parse(line, &points) orelse continue;
+        const encoded = try utf8(vector.points, &octets);
+        if (vector.floating) {
+            try std.testing.expect(sameFloat(number.floating(vector.points), number.floatingBytes(encoded)));
+        } else {
+            try std.testing.expectEqual(number.integer(vector.points), number.integerBytes(encoded));
+        }
+    }
+    try std.testing.expect(rows.len > 100);
+}
+
+/// Encode one vector's scalars as the UTF-8 octets a byte string would hold.
+fn utf8(points: []const u32, buffer: []u8) ![]const u8 {
+    var length: usize = 0;
+    for (points) |point| {
+        length += try std.unicode.utf8Encode(@intCast(point), buffer[length..]);
+    }
+    return buffer[0..length];
+}
+
+/// Whether two optional answers are the same value, treating every NaN as one.
+fn sameFloat(left: ?f64, right: ?f64) bool {
+    if (left == null or right == null) return left == null and right == null;
+    if (std.math.isNan(left.?) or std.math.isNan(right.?)) return std.math.isNan(left.?) and std.math.isNan(right.?);
+    return @as(u64, @bitCast(left.?)) == @as(u64, @bitCast(right.?));
+}
+
 fn repeated(buffer: []u32, point: u32, count: usize) []const u32 {
     @memset(buffer[0..count], point);
     return buffer[0..count];

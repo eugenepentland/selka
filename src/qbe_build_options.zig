@@ -24,6 +24,17 @@ pub fn keepSymbols(args: []const []const u8) bool {
     for (args) |argument| if (std.mem.eql(u8, argument, "--keep-symbols")) return true;
     return false;
 }
+/// Whether a build asked for `phase-timings-v1` JSON Lines on stderr. The
+/// request travels in the build arguments because it is observation only: it
+/// changes no generated code, no cached object and no linked artifact. Guest
+/// arguments after `--` belong to a `--run` guest, so they are never read.
+pub fn timingsJson(args: []const []const u8) bool {
+    for (args) |argument| {
+        if (std.mem.eql(u8, argument, "--")) return false;
+        if (std.mem.eql(u8, argument, "--timings=json")) return true;
+    }
+    return false;
+}
 /// The per-project object cache used when no `--cache-dir` selects another; a build
 /// left at this default may share its runtime tree with other projects, while an
 /// explicit `--cache-dir` keeps every artifact hermetically under that directory.
@@ -62,6 +73,7 @@ pub const usage = "usage: mylang build <file.my> (-o <output> | --run) [--projec
     "  --provider FILE  trusted native provider (executables only)\n" ++
     "  --qbe PATH --zig PATH --mode Debug|ReleaseFast (default ReleaseFast) --target amd64_sysv\n" ++
     "  " ++ cache_dir_flag ++ "DIR  --no-cache  --report  --mutation-markers\n" ++
+    "  --timings=json  phase-timings-v1 JSON Lines on stderr (frontend/codegen/link/native)\n" ++
     "  --keep-symbols  keep the guest symbol table so `perf report` names functions\n" ++
     "  --max-memory BYTES  byte ceiling for --run (K/M/G suffixes; default 4G)\n" ++
     "  --timeout=SECONDS  wall-clock ceiling for --run (no default; a run past it exits 1 with R_TIMEOUT)\n" ++
@@ -106,6 +118,11 @@ pub fn parse(args: []const []const u8) Error!Options {
         // `link_arguments`, which the driver already scans, so the frozen
         // Options field set does not grow for a profiling switch.
         if (std.mem.eql(u8, argument, "--keep-symbols")) continue;
+        // `--timings=json` is an observation request, not a build control. Like
+        // `--keep-symbols` it rides in `link_arguments`, which the driver already
+        // scans, so the frozen Options field set does not grow for a switch that
+        // changes no artifact.
+        if (std.mem.eql(u8, argument, "--timings=json")) continue;
         const split = std.mem.indexOfScalar(u8, argument, '=') orelse argument.len;
         const name = argument[0..split];
         const option = std.meta.stringToEnum(Flag, name) orelse return error.InvalidBuildArguments;
@@ -259,6 +276,23 @@ test "a profile build keeps the guest symbol table the default strips" {
     try std.testing.expect(keepSymbols(kept.link_arguments));
     try std.testing.expect(std.mem.indexOf(u8, usage, "--keep-symbols") != null);
     try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--keep-symbols=yes" }));
+}
+
+// spec: BUILD-TIMINGS-1
+test "a build accepts the phase-timings request without a new build option field" {
+    const asked = try parse(&.{ "main.my", "-o", "out", "--timings=json" });
+    try std.testing.expect(timingsJson(asked.link_arguments));
+    try std.testing.expectEqualStrings("main.my", asked.source);
+    try std.testing.expectEqualStrings("out", asked.output);
+    try std.testing.expect(!timingsJson((try parse(&.{ "main.my", "-o", "out" })).link_arguments));
+    try std.testing.expect(std.mem.indexOf(u8, usage, "--timings=json") != null);
+    // A guest argument that spells the switch after `--` belongs to the guest.
+    const run = try parse(&.{ "main.my", "--run", "--", "--timings=json" });
+    try std.testing.expect(!timingsJson(run.link_arguments));
+    // Only the documented spelling is accepted; a bare `--timings` is not a
+    // build control, and a value is never attached to it.
+    try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--timings" }));
+    try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--timings=json=1" }));
 }
 
 test "native link controls are repeatable and reject injected compiler switches" {

@@ -55,6 +55,15 @@ test "PY-BYTES-1 out-of-range indexes ranges and separators trap with located co
     try trapped("def main() -> int:\n    values: list[int] = [0 - 1]\n    return len(bytes(values))\n", "R_BYTE_RANGE");
 }
 
+// spec-case: PY-BYTES-6
+test "PY-BYTES-6 the mutable octet buffer traps the same byte-range conversion errors" {
+    try trapped("def main() -> int:\n    values: list[int] = [256]\n    return len(byte_buffer(values))\n", "R_BYTE_RANGE");
+    try trapped("def main() -> int:\n    values: list[int] = [0 - 1]\n    return len(byte_buffer(values))\n", "R_BYTE_RANGE");
+    try t.expectEqual(@as(i64, 42), try value("def main() -> int:\n    values: list[int] = [65, 66]\n    if byte_buffer(values) != b\"AB\":\n        return 1\n    return 42\n"));
+    try rejected("def main() -> int:\n    return len(byte_buffer(\"ab\"))\n", "E_BYTES_CONVERSION");
+    try rejected("def main() -> int:\n    raw = b\"ab\"\n    return len(byte_buffer(raw))\n", "E_BYTES_CONVERSION");
+}
+
 // spec-case: PY-BYTES-1
 test "PY-BYTES-1 byte strings are immutable and never convert through str" {
     try rejected("def main() -> int:\n    raw = b\"ab\"\n    raw[0] = 1\n    return 0\n", "E_COLLECTION_METHOD");
@@ -271,4 +280,47 @@ test "UTF8-DECODE-1 overlong surrogate and out-of-range encodings stay invalid" 
 // spec-case: UTF8-DECODE-1
 test "UTF8-DECODE-1 truncated and stray continuation bytes stay invalid" {
     try t.expectEqual(@as(i64, 0), try value(truncated_utf8_decode));
+}
+
+// spec-case: PY-BYTES-7
+test "PY-BYTES-7 views and copies exist only on the immutable byte string" {
+    try rejected("def main() -> int:\n    empty: list[int] = []\n    data = byte_buffer(empty)\n    return len(data.view(0, 1))\n", "E_COLLECTION_METHOD");
+    try rejected("def main() -> int:\n    empty: list[int] = []\n    data = byte_buffer(empty)\n    return len(data.copy())\n", "E_COLLECTION_METHOD");
+    try rejected("def main() -> int:\n    text = \"abc\"\n    return len(text.view(0, 1))\n", "E_COLLECTION_METHOD");
+    try rejected("def main() -> int:\n    text = \"abc\"\n    return len(text.copy())\n", "E_COLLECTION_METHOD");
+    try rejected("def main() -> int:\n    text = \"abc\"\n    return len(text.scalar_count())\n", "E_COLLECTION_METHOD");
+    try rejected("def main() -> int:\n    raw = b\"abc\"\n    return len(raw.view(\"a\", 1))\n", "E_TYPE");
+    try rejected("def main() -> int:\n    raw = b\"abc\"\n    return len(raw.view(0, 1, 2))\n", "E_ARITY");
+}
+
+// spec-case: PY-BYTES-9
+test "PY-BYTES-9 numeric parsing is accepted under noalloc and a view is not" {
+    try t.expectEqual(@as(i64, 42), try value(
+        "def parse(text: str) -> int noalloc:\n    match int(text):\n        case Some(found):\n            return found\n" ++
+            "        case None:\n            return 0\ndef main() -> int:\n    return parse(\"42\")\n",
+    ));
+    try t.expectEqual(@as(i64, 42), try value(
+        "def parse(raw: bytes) -> int noalloc:\n    match raw.parse_int():\n        case Some(found):\n            return found\n" ++
+            "        case None:\n            return 0\ndef main() -> int:\n    return parse(b\"42\")\n",
+    ));
+    try t.expectEqual(@as(i64, 42), try value(
+        "def measure(raw: bytes) -> int noalloc:\n    match raw.scalar_count():\n" ++
+            "        case Ok(width):\n            return width + 40\n        case Err(_):\n            return 0\n" ++
+            "def main() -> int:\n    return measure(b\"42\")\n",
+    ));
+    try t.expectEqual(@as(i64, 42), try value(
+        "def same(raw: bytes, expected: bytes) -> int noalloc:\n    if raw == expected:\n        return 42\n    return 0\n" ++
+            "def main() -> int:\n    return same(b\"42\", b\"42\")\n",
+    ));
+    try t.expectEqual(@as(i64, 42), try value(
+        "def parse(text: str) -> int noalloc:\n    match float(text):\n        case Some(found):\n" ++
+            "            if found > 2.0:\n                return 42\n            return 0\n        case None:\n            return 0\n" ++
+            "def main() -> int:\n    return parse(\"2.5\")\n",
+    ));
+    try t.expectEqual(@as(i64, 42), try value(
+        "def parse(raw: bytes) -> int noalloc:\n    match raw.parse_float():\n        case Some(found):\n" ++
+            "            if found > 2.0:\n                return 42\n            return 0\n        case None:\n            return 0\n" ++
+            "def main() -> int:\n    return parse(b\"2.5\")\n",
+    ));
+    try rejected("def peek(raw: bytes) -> int noalloc:\n    return len(raw.view(0, 1))\ndef main() -> int:\n    return peek(b\"abc\")\n", "E_EFFECT_BOUND");
 }

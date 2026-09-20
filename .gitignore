@@ -21,3 +21,15 @@ env.my
 qualified_unresolved.my
 zz-attr-tmp/
 zz-probe.out.qbe-manifest.json
+
+# Cascade experiment: run artifacts, working copies and probe scratch.
+experiments/cascade/work/
+experiments/cascade/runs/
+experiments/cascade/probes/
+experiments/cascade/.cache/
+experiments/cascade/tools/
+
+# M3 project-invocation experiment: scratch copies and the frozen tool binaries.
+# The application snapshots, case pack, evidence and cohort readouts are tracked.
+experiments/project-invocation-m3/work/
+experiments/project-invocation-m3/pack/tools/bin/

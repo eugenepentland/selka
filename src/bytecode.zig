@@ -148,6 +148,13 @@ fn validateHostType(allocator: std.mem.Allocator, records: []const typed.Record,
     };
 }
 
+fn validateStreamWrite(program: Program, write: model.StreamWrite) Error!void {
+    if (write.stream != .stream_cap or !validType(write.text, program)) return error.InternalError;
+    if (!write.text.isAggregate()) return error.InternalError;
+    const kind = program.records[write.text.recordIndex()].collection.kind;
+    if (kind != .string and kind != .bytes) return error.InternalError;
+}
+
 fn validateFunctionValue(program: Program, ty: typed.Type, target: typed.FunctionId) Error!void {
     const contract = callables.signature(ty, program.records) orelse return error.InternalError;
     if (@backingInt(target) >= program.functions.len) return error.InternalError;
@@ -215,9 +222,7 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
         .print => |output| for (output.types) |ty| {
             if (!validType(ty, program) or !@import("io_render.zig").printable(ty, program.records)) return error.InternalError;
         },
-        .stream_write => |write| {
-            if (write.stream != .stream_cap or !validType(write.text, program)) return error.InternalError;
-        },
+        .stream_write => |write| try validateStreamWrite(program, write),
         .file_access, .file_method => try validateOpFile(program, function, instruction.op),
         .cast_integer => |ty| {
             const text_target = validType(ty, program) and sequenceType(program, ty);
@@ -328,6 +333,7 @@ fn validateManagedTextOperation(program: Program, local: typed.Local, schema: ty
     const expected: typed.Type = switch (operation.kind) {
         .length => .i64,
         .find => if (dictionary) return error.InternalError else .i64,
+        .find_any => if (byte_string) .i64 else return error.InternalError,
         .iteration_check => .unit,
         .key_at => if (dictionary) schema.collection.key.? else return error.InternalError,
         .slice => if (!dictionary) local.ty else return error.InternalError,
@@ -339,25 +345,49 @@ fn validateManagedTextOperation(program: Program, local: typed.Local, schema: ty
         .starts_with, .ends_with => if (dictionary) return error.InternalError else .bool,
         .to_list, .hex, .decode => if (byte_string) try validateConversion(program, operation) else return error.InternalError,
         .encode, .from_hex => if (schema.collection.kind == .string) try validateConversion(program, operation) else return error.InternalError,
+        .buffer_reserve,
+        .buffer_append_byte,
+        .buffer_append_range,
+        .buffer_append_utf8,
+        .buffer_append_int,
+        .buffer_append_float,
+        => try validateBufferAppend(byte_string),
         .join => if (!dictionary) local.ty else return error.InternalError,
         .strip, .lstrip, .rstrip, .upper, .lower, .replace, .zfill => if (dictionary or byte_string) return error.InternalError else local.ty,
         .is_digit, .is_alpha, .is_space => if (dictionary or byte_string) return error.InternalError else .bool,
         .count => if (dictionary or byte_string) return error.InternalError else .i64,
-        .splitlines, .parse_int, .parse_float => if (dictionary or byte_string) return error.InternalError else operation.output,
+        .splitlines => if (dictionary or byte_string) return error.InternalError else operation.output,
+        // Both numeric parses read the receiver in place: a `str` through its
+        // scalars and a byte string through its octets, so no decoded or copied
+        // intermediate exists on either path.
+        .parse_int, .parse_float => if (dictionary) return error.InternalError else operation.output,
+        .view => if (byte_string) local.ty else return error.InternalError,
+        .scalar_count => if (byte_string) operation.output else return error.InternalError,
         .pop_key, .pop_default, .setdefault => if (dictionary) element else return error.InternalError,
         .update, .clear => if (dictionary) .unit else return error.InternalError,
-        .copy => if (dictionary) local.ty else return error.InternalError,
-        .split, .keys, .values, .items => list: {
-            if ((operation.kind == .split) == dictionary) return error.InternalError;
-            if (!operation.output.isAggregate()) return error.InternalError;
-            const result = program.records[operation.output.recordIndex()];
-            const member = if (operation.kind == .split) local.ty else if (operation.kind == .keys) schema.collection.key.? else element;
-            if (!result.managed or result.collection.kind != .list or result.shape.buffer != member) return error.InternalError;
-            break :list operation.output;
-        },
+        .copy => if (dictionary or byte_string) local.ty else return error.InternalError,
+        .split, .keys, .values, .items => try validateListResult(program, local, schema, operation),
         else => return error.InternalError,
     };
     if (operation.output != expected) return error.InternalError;
+}
+
+/// A list-producing text operation answers a managed list whose element is the
+/// receiver for `split`, the key for `keys`, and the value for `values`/`items`.
+fn validateListResult(program: Program, local: typed.Local, schema: typed.Record, operation: BufferOperation) Error!typed.Type {
+    if ((operation.kind == .split) == (schema.collection.kind == .dictionary)) return error.InternalError;
+    if (!operation.output.isAggregate()) return error.InternalError;
+    const result = program.records[operation.output.recordIndex()];
+    const member = if (operation.kind == .split) local.ty else if (operation.kind == .keys) schema.collection.key.? else schema.shape.buffer.?;
+    if (!result.managed or result.collection.kind != .list or result.shape.buffer != member) return error.InternalError;
+    return operation.output;
+}
+
+/// The in-place octet-buffer methods exist on byte strings only and answer a
+/// success flag, so validating one needs nothing beyond the receiver family.
+fn validateBufferAppend(byte_string: bool) Error!typed.Type {
+    if (!byte_string) return error.InternalError;
+    return .bool;
 }
 
 fn validateConversion(program: Program, operation: BufferOperation) Error!typed.Type {

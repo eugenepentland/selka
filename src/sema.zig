@@ -49,6 +49,41 @@ fn sequenceArgument(kind: BufferKind) bool {
 fn widthArgument(kind: BufferKind) bool {
     return kind == .zfill;
 }
+/// Whether one operand of an in-place byte-buffer method is a scalar count or
+/// index rather than another managed value. `append_range` takes the source span
+/// first and both endpoints after it, `append_utf8` takes text, and every other
+/// method takes one count or byte value.
+fn byteBufferInteger(kind: BufferKind, index: usize) bool {
+    return switch (kind) {
+        .buffer_append_range => index > 0,
+        .buffer_append_utf8, .buffer_append_float => false,
+        else => buffer_operations.byteBuffer(kind),
+    };
+}
+/// The builtin mutable octet buffer's name, shared with the template index that
+/// declares the type. It shares the byte collection kind with `bytes`, so the
+/// name, not the representation, is what tells the checker which receiver accepts
+/// an in-place append and which stays immutable.
+const byte_buffer_name = @import("nominal_templates.zig").byte_buffer_name;
+/// The one diagnostic for an in-place buffer method on a receiver that is not
+/// the mutable octet buffer.
+const byte_buffer_receiver = "in-place buffer methods require a byte_buffer receiver";
+/// Whether a managed byte-kind schema is the mutable octet buffer rather than an
+/// immutable byte string.
+fn isMutableBytes(schema: typed.Record) bool {
+    return schema.collection.kind == .bytes and std.mem.eql(u8, schema.name, byte_buffer_name);
+}
+/// Whether a managed byte-kind schema is an immutable byte string: a `bytes`
+/// literal, conversion result, slice or view, but never the octet buffer.
+fn isImmutableBytes(schema: typed.Record) bool {
+    return schema.collection.kind == .bytes and !isMutableBytes(schema);
+}
+/// Whether a type is either managed byte kind — the immutable byte string or the
+/// mutable octet buffer. The two hold the same one-octet elements and compare
+/// content the same way, so one comparison may name both.
+fn isByteKind(schemas: []const typed.Record, ty: typed.Type) bool {
+    return ty.isAggregate() and schemas[ty.recordIndex()].collection.kind == .bytes;
+}
 const eResourceResult = diagnostic.resource_result;
 const eResourceIoResult = "E_RESOURCE_IO_RESULT";
 const eResultLoop = diagnostic.result_loop;
@@ -1348,8 +1383,11 @@ const Checker = struct {
     }
     fn checkStreamWrite(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), stream: typed.NodeId, out: *typed.Node) Error!void {
         try call_arguments.positional(call, self.sink);
-        if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "stream.write takes one text argument");
-        const text = try self.checkPrintOperand(call.arguments[0], true);
+        if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "stream.write takes one str or bytes argument");
+        const text = self.resolved[@backingInt(call.arguments[0])].?;
+        const value = self.nodes.items[@backingInt(text)];
+        const kind = if (value.ty.isAggregate()) self.catalog.records[value.ty.recordIndex()].collection.kind else null;
+        if (kind != .string and kind != .bytes) return self.sink.fail("E_TYPE", value.span, "stream.write requires str or bytes");
         out.ty = .i64;
         out.data = .{ .stream_write = .{ .stream = stream, .text = text } };
     }
@@ -1918,6 +1956,8 @@ const Checker = struct {
         const owner_type = self.nodes.items[@backingInt(operation.base)].ty;
         const schema = self.catalog.records[owner_type.recordIndex()];
         const dictionary = schema.collection.kind == .dictionary;
+        if (buffer_operations.byteBuffer(operation.kind) and !isMutableBytes(schema))
+            return self.sink.fail(eCollectionMethod, node.span, byte_buffer_receiver);
         _ = collections.operationType(&self.catalog, owner_type, operation.kind, node.span) catch |err| switch (err) {
             error.InternalError => return self.sink.fail(eCollectionMethod, node.span, unsupported_collection),
             else => return err,
@@ -1929,10 +1969,18 @@ const Checker = struct {
         if (operation.inputs.len != operation.kind.arity()) return self.sink.fail("E_ARITY", node.span, method_arity);
         const arguments = try self.allocator.alloc(typed.NodeId, operation.inputs.len);
         for (operation.inputs, arguments, 0..) |input, *argument, index| {
-            const integer = !dictionary and (operation.kind == .read or operation.kind == .slice or widthArgument(operation.kind));
+            const integer = !dictionary and (operation.kind == .read or operation.kind == .slice or operation.kind == .view or widthArgument(operation.kind) or
+                (operation.kind == .find_any and index == 1)) or
+                byteBufferInteger(operation.kind, index);
             const expected = if (integer) typed.Type.i64 else if (dictionary) map_argument: {
                 break :map_argument if (index == 0) schema.collection.key.? else schema.shape.buffer.?;
-            } else if (operation.kind == .join) try self.collectionListType(owner_type, node.span) else owner_type;
+            } else if (operation.kind == .buffer_append_range and index == 0)
+                try collections.preludeType(&self.catalog, "bytes", node.span)
+            else if (operation.kind == .buffer_append_utf8)
+                self.catalog.names.get("str") orelse return error.InternalError
+            else if (operation.kind == .buffer_append_float)
+                self.catalog.names.get("float") orelse return error.InternalError
+            else if (operation.kind == .join) try self.collectionListType(owner_type, node.span) else owner_type;
             try self.hint(input, expected);
             argument.* = try self.expressionWithTemporaries(input, temporaries);
             if (integer) try self.requireInteger(self.nodes.items[@backingInt(argument.*)].ty, node.span) else try self.require(self.nodes.items[@backingInt(argument.*)].ty, expected, node.span);
@@ -1987,6 +2035,9 @@ const Checker = struct {
                     }
                 } else if (operation.kind == .replace and operation.arguments.len == 2) {
                     for (operation.arguments) |argument| try self.hint(argument, owner_type);
+                } else if (operation.kind == .find_any and operation.arguments.len == 2) {
+                    try self.hint(operation.arguments[0], owner_type);
+                    try self.hint(operation.arguments[1], .i64);
                 } else if (sequenceArgument(operation.kind) and operation.arguments.len == 1) {
                     const byte_needle = schema.collection.kind == .bytes and operation.kind == .contains;
                     if (!byte_needle) try self.hint(operation.arguments[0], owner_type);
@@ -2077,7 +2128,7 @@ const Checker = struct {
         if (self.streamLocal(call)) |_| {
             if (std.mem.eql(u8, self.src.text(call.name), "write")) {
                 try call_arguments.positional(call, self.sink);
-                if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "stream.write takes one text argument");
+                if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "stream.write takes one str or bytes argument");
                 try work.append(self.allocator, .{ .id = call.arguments[0] });
                 return true;
             }
@@ -2384,7 +2435,13 @@ const Checker = struct {
                 try self.require(self.nodes.items[@backingInt(arguments[0])].ty, local.ty, operation.owner);
                 out.ty = if (operation.kind == .find) .i64 else .bool;
             },
-            .strip, .lstrip, .rstrip, .upper, .lower, .splitlines, .replace, .count, .zfill, .is_digit, .is_alpha, .is_space, .parse_int, .parse_float => {
+            .find_any => {
+                if (!byte_string) return self.sink.fail(eCollectionMethod, operation.owner, "find_any requires a bytes receiver and a byte set");
+                try self.require(self.nodes.items[@backingInt(arguments[0])].ty, local.ty, operation.owner);
+                try self.requireInteger(self.nodes.items[@backingInt(arguments[1])].ty, operation.owner);
+                out.ty = .i64;
+            },
+            .strip, .lstrip, .rstrip, .upper, .lower, .splitlines, .replace, .count, .zfill, .is_digit, .is_alpha, .is_space => {
                 if (dictionary or byte_string) return self.sink.fail(eCollectionMethod, operation.owner, "this method requires str");
                 for (arguments) |argument| {
                     const actual = self.nodes.items[@backingInt(argument)].ty;
@@ -2395,10 +2452,18 @@ const Checker = struct {
                     else => return err,
                 };
             },
-            .to_list, .hex, .decode, .encode, .from_hex => out.ty = collections.operationType(&self.catalog, local.ty, operation.kind, operation.owner) catch |err| switch (err) {
-                error.InternalError => return self.sink.fail(eCollectionMethod, operation.owner, "conversion is not supported by this collection"),
+            // Both numeric parses answer through the conversion table: a `str`
+            // reads its scalars and a byte string reads its octets, so neither
+            // decodes a temporary value and neither allocates.
+            .to_list, .hex, .decode, .encode, .from_hex, .parse_int, .parse_float => out.ty = collections.operationType(&self.catalog, local.ty, operation.kind, operation.owner) catch |err| switch (err) {
+                error.InternalError => return self.sink.fail(eCollectionMethod, operation.owner, unsupported_collection),
                 else => return err,
             },
+            // A view shares the receiver's octets, `copy` materializes them and
+            // `scalar_count` measures them.
+            .view, .copy, .scalar_count => if (!try self.checkByteViewMethod(operation, owner, schema, arguments, out))
+                return self.sink.fail(eCollectionMethod, operation.owner, unsupported_collection),
+            .buffer_reserve, .buffer_append_byte, .buffer_append_range, .buffer_append_utf8, .buffer_append_int, .buffer_append_float => try self.checkByteBufferMethod(operation, owner, arguments, out),
             .read, .write, .get, .contains => {
                 if (!dictionary and operation.kind != .read and operation.kind != .contains) return self.sink.fail("E_TEXT_IMMUTABLE", operation.owner, "str values are immutable");
                 if (dictionary) {
@@ -2422,17 +2487,78 @@ const Checker = struct {
                 try self.require(self.nodes.items[@backingInt(arguments[0])].ty, if (operation.kind == .split) local.ty else list_type, operation.owner);
                 out.ty = if (operation.kind == .split) list_type else local.ty;
             },
-            .items, .pop, .pop_key, .pop_default, .update, .setdefault, .copy, .clear => return self.checkDictionaryBufferMethod(operation, owner, out),
+            .items, .pop, .pop_key, .pop_default, .update, .setdefault, .clear => return self.checkDictionaryBufferMethod(operation, owner, out),
             else => return self.sink.fail(eCollectionMethod, operation.owner, unsupported_collection),
         }
         out.data = .{ .buffer_operation = .{ .kind = operation.kind, .owner = owner, .arguments = arguments } };
+    }
+    /// Check one byte-string method that reads the receiver's own octets rather
+    /// than the collection surface around them: `view` shares the octets as a
+    /// range that retains the source's backing, `copy` materializes them, and
+    /// `scalar_count` validates and measures them. All three exist only on the
+    /// immutable byte string, so neither a mutable buffer nor a `str` reaches
+    /// them, and none of them allocates except the copy it names.
+    fn checkByteViewMethod(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation), owner: typed.LocalId, schema: typed.Record, arguments: []const typed.NodeId, out: *typed.Node) Error!bool {
+        const owner_type = self.locals.items[@backingInt(owner)].ty;
+        switch (operation.kind) {
+            .view => {
+                if (!isImmutableBytes(schema)) return self.sink.fail(eCollectionMethod, operation.owner, "view requires an immutable bytes receiver");
+                for (arguments) |argument| try self.requireInteger(self.nodes.items[@backingInt(argument)].ty, operation.owner);
+                out.ty = owner_type;
+            },
+            .copy => {
+                // A dictionary shares the spelling and keeps its own shallow copy.
+                if (schema.collection.kind == .dictionary) {
+                    try self.checkDictionaryBufferMethod(operation, owner, out);
+                    return true;
+                }
+                if (!isImmutableBytes(schema)) return self.sink.fail(eCollectionMethod, operation.owner, "copy requires an immutable bytes receiver");
+                out.ty = owner_type;
+            },
+            .scalar_count => {
+                if (schema.collection.kind != .bytes) return false;
+                out.ty = collections.operationType(&self.catalog, owner_type, operation.kind, operation.owner) catch |err| switch (err) {
+                    error.InternalError => return false,
+                    else => return err,
+                };
+            },
+            else => return false,
+        }
+        return true;
+    }
+    /// Check one in-place octet-buffer method against a `byte_buffer` receiver:
+    /// the appended span is another byte string, the appended text is a `str`,
+    /// and every other operand is a scalar count, index or byte value. Each
+    /// answers whether it wrote. An immutable byte string has no such method, so
+    /// a view or a literal can never be written through.
+    fn checkByteBufferMethod(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation), owner: typed.LocalId, arguments: []const typed.NodeId, out: *typed.Node) Error!void {
+        const local = self.locals.items[@backingInt(owner)];
+        if (!isMutableBytes(self.catalog.records[local.ty.recordIndex()]))
+            return self.sink.fail(eCollectionMethod, operation.owner, byte_buffer_receiver);
+        const text_type = self.catalog.names.get("str") orelse return error.InternalError;
+        for (arguments, 0..) |argument, index| {
+            const actual = self.nodes.items[@backingInt(argument)].ty;
+            if (byteBufferInteger(operation.kind, index)) {
+                try self.requireInteger(actual, operation.owner);
+            } else if (operation.kind == .buffer_append_utf8) {
+                try self.require(actual, text_type, operation.owner);
+            } else if (operation.kind == .buffer_append_float) {
+                try self.require(actual, self.catalog.names.get("float") orelse return error.InternalError, operation.owner);
+            } else if (operation.kind == .buffer_append_range and index == 0) {
+                // An append copies octets out of any byte-kind value, so an
+                // immutable `bytes` argument is accepted beside another buffer.
+                if (!actual.isAggregate() or self.catalog.records[actual.recordIndex()].collection.kind != .bytes)
+                    return self.sink.fail(eCollectionMethod, operation.owner, "append_range requires a bytes or byte_buffer source");
+            } else try self.require(actual, local.ty, operation.owner);
+        }
+        out.ty = .bool;
     }
     /// Check a dictionary vocabulary operation reached through the buffer-operation
     /// form that a simple `mapping.method(...)` call desugars to.
     fn checkDictionaryBufferMethod(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation), owner: typed.LocalId, out: *typed.Node) Error!void {
         const owner_type = self.locals.items[@backingInt(owner)].ty;
         const schema = self.catalog.records[owner_type.recordIndex()];
-        if (schema.collection.kind != .dictionary) return self.sink.fail(eCollectionMethod, operation.owner, "operation is not supported by this collection");
+        if (schema.collection.kind != .dictionary) return self.sink.fail(eCollectionMethod, operation.owner, unsupported_collection);
         const key_type = schema.collection.key.?;
         const value_type = schema.shape.buffer.?;
         var kind = operation.kind;
@@ -2700,17 +2826,29 @@ const Checker = struct {
         out.ty = self.locals.items[@backingInt(slot)].ty;
         out.data = .{ .local = slot };
     }
-    /// Python-spelled byte-string constructors that are not ordinary function calls.
-    const ByteConversion = enum { from_list, from_hex };
+    /// Python-spelled byte-string and octet-buffer constructors that are not
+    /// ordinary function calls. `bytes(values)` builds from a `list[int]`,
+    /// `bytes(buffer)` copies an octet buffer into an immutable byte string,
+    /// `bytes.fromhex(s)` decodes hexadecimal text and `byte_buffer(values)`
+    /// builds the mutable buffer that the in-place append methods accept.
+    const ByteConversion = enum { from_list, from_hex, buffer_from_list };
     fn byteConversion(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) ?ByteConversion {
+        const name = self.src.text(call.name);
+        if (call.owner) |owner| {
+            if (self.active.contains("bytes") or self.functions.contains("bytes")) return null;
+            const target = self.catalog.names.get("bytes") orelse return null;
+            if (!target.isAggregate() or self.catalog.records[target.recordIndex()].collection.kind != .bytes) return null;
+            if (!std.mem.eql(u8, self.src.text(owner), "bytes")) return null;
+            return if (std.mem.eql(u8, name, "fromhex")) .from_hex else null;
+        }
+        if (std.mem.eql(u8, name, byte_buffer_name)) {
+            if (self.active.contains(byte_buffer_name) or self.functions.contains(byte_buffer_name)) return null;
+            return .buffer_from_list;
+        }
         if (self.active.contains("bytes") or self.functions.contains("bytes")) return null;
         const target = self.catalog.names.get("bytes") orelse return null;
         if (!target.isAggregate() or self.catalog.records[target.recordIndex()].collection.kind != .bytes) return null;
-        if (call.owner) |owner| {
-            if (!std.mem.eql(u8, self.src.text(owner), "bytes")) return null;
-            return if (std.mem.eql(u8, self.src.text(call.name), "fromhex")) .from_hex else null;
-        }
-        return if (std.mem.eql(u8, self.src.text(call.name), "bytes")) .from_list else null;
+        return if (std.mem.eql(u8, name, "bytes")) .from_list else null;
     }
     fn checkByteConversion(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), conversion: ByteConversion, out: *typed.Node) Error!void {
         const value = self.resolved[@backingInt(call.arguments[0])].?;
@@ -2721,8 +2859,22 @@ const Checker = struct {
             out.* = try (collections.Builder(Checker){ .checker = self, .span = node.span }).access(value, .from_hex, &.{}, false);
             return;
         }
-        const integer_list = schema != null and schema.?.managed and schema.?.collection.kind == .list;
-        if (!integer_list or schema.?.shape.buffer != .i64) return self.sink.fail(eByteConversion, node.span, "bytes() requires a list[int] argument");
+        const integer_list = schema != null and schema.?.managed and schema.?.collection.kind == .list and schema.?.shape.buffer == .i64;
+        if (conversion == .buffer_from_list) {
+            if (!integer_list) return self.sink.fail(eByteConversion, node.span, "byte_buffer() requires a list[int] argument");
+            out.ty = try collections.preludeType(&self.catalog, byte_buffer_name, node.span);
+            out.data = .{ .cast = value };
+            return;
+        }
+        // `bytes(buffer)` copies the buffer's current octets, so the result shares
+        // no storage with it: a later append through the buffer, or through any
+        // alias of it, cannot change the byte string.
+        if (schema != null and isMutableBytes(schema.?)) {
+            out.ty = self.catalog.names.get("bytes") orelse return error.InternalError;
+            out.data = .{ .cast = value };
+            return;
+        }
+        if (!integer_list) return self.sink.fail(eByteConversion, node.span, "bytes() requires a list[int] or byte_buffer argument");
         out.ty = self.catalog.names.get("bytes") orelse return error.InternalError;
         out.data = .{ .cast = value };
     }
@@ -3197,7 +3349,11 @@ const Checker = struct {
         const right = operands.right;
         const lt = self.nodes.items[@backingInt(left)].ty;
         const rt = self.nodes.items[@backingInt(right)].ty;
-        try self.require(rt, lt, b.op_span);
+        // Equality of the two byte kinds is content equality of the same octets,
+        // so a byte string and an octet buffer compare without a conversion;
+        // every other operator still requires one type on both sides.
+        const mixed_bytes = (b.op == .eq or b.op == .ne) and isByteKind(self.catalog.records, lt) and isByteKind(self.catalog.records, rt);
+        if (!mixed_bytes) try self.require(rt, lt, b.op_span);
         if ((b.op == .eq or b.op == .ne) and self.requiresCellEquality(lt))
             return self.sink.fail(eCellEquality, b.op_span, "Cell equality is not defined, including inside collections");
         if (numeric_surface.isFloat(lt, self.catalog.records)) {
@@ -3264,7 +3420,11 @@ const Checker = struct {
             .string => container_type,
             .bytes => try self.byteMembership(node.span, &member, container_type),
         };
-        try self.require(self.nodes.items[@backingInt(member)].ty, expected, node.span);
+        // Both byte kinds name a contiguous octet needle, so a byte string finds
+        // its octets inside an octet buffer and the reverse without conversion.
+        const member_type = self.nodes.items[@backingInt(member)].ty;
+        const mixed_needle = schema.collection.kind == .bytes and isByteKind(self.catalog.records, member_type);
+        if (!mixed_needle) try self.require(member_type, expected, node.span);
         const inputs = [_]typed.NodeId{ member, container };
         var locals: [2]typed.LocalId = undefined;
         var statements: [2]typed.StatementId = undefined;
@@ -3275,7 +3435,7 @@ const Checker = struct {
             try self.statements.append(self.allocator, .{ .span = node.span, .terminates = false, .data = .{ .initialize = .{ .slot = locals[i], .value = input } } });
         }
         const needle_read: typed.NodeId = @fromBackingInt(self.nodes.items.len);
-        try self.nodes.append(self.allocator, .{ .span = node.span, .ty = expected, .data = .{ .local = locals[0] } });
+        try self.nodes.append(self.allocator, .{ .span = node.span, .ty = if (mixed_needle) member_type else expected, .data = .{ .local = locals[0] } });
         var result: typed.NodeId = @fromBackingInt(self.nodes.items.len);
         try self.nodes.append(self.allocator, .{ .span = node.span, .ty = .bool, .data = .{ .buffer_operation = .{ .owner = locals[1], .kind = .contains, .arguments = try self.allocator.dupe(typed.NodeId, &.{needle_read}) } } });
         if (membership.negate) {

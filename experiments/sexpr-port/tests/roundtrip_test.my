@@ -8,6 +8,25 @@ import sexpr.ast as ast
 import sexpr.parser as parser
 import sexpr.printer as printer
 
+import sexpr.view as view
+
+# A node built by hand carries a view of its own spelling, exactly as a parsed
+# node carries a view of the document it came from. These helpers produce that
+# view for a literal in a test body, so a hand-built tree looks the way it did
+# before text became a source range.
+def view_of_text(text: str) -> view.View:
+    data = text.encode()
+    return view.View(source=data, start=0, end=len(data))
+
+
+def text_in(found: view.View) -> str:
+    match view.text_of(found):
+        case Ok(text):
+            return text
+        case Err(_):
+            return "<none>"
+
+
 
 # A comment, two top-level forms, nested lists, escaped strings, an SI value,
 # a percent tolerance and mm/mil measures.
@@ -51,7 +70,7 @@ def number_of(node: ast.Node) -> float:
 def text_of(node: ast.Node) -> str:
     match ast.as_text(node):
         case Some(value):
-            return value
+            return text_in(value)
         case None:
             return ""
 

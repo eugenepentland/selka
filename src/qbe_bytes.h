@@ -11,4 +11,10 @@ int myl_qbe_bytes_decode_range(void *context, myl_native_bytes *input, int64_t s
 int myl_qbe_bytes_from_hex(void *context, myl_native_text *input, void **output);
 /* NULL after an R_BYTE_RANGE trap or an exhausted allocation budget. */
 myl_native_bytes *myl_qbe_bytes_from_list(void *context, myl_native_list *list);
+/* A fresh immutable copy of a byte-kind buffer's current octets; NULL after an
+   exhausted allocation budget. */
+myl_native_bytes *myl_qbe_bytes_copy(void *context, myl_native_bytes *input);
+/* The validating scalar count as a checked result: 0 publishes the count, 1 the
+   invalid-UTF-8 message, -1 a sticky trap. */
+int myl_qbe_bytes_scalar_count(void *context, myl_native_bytes *input, void **output);
 #endif

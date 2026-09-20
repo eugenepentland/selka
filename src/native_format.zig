@@ -9,6 +9,24 @@ const FormatError = error{NoSpaceLeft};
 comptime {
     if (!builtin.is_test) @export(&scalarC, .{ .name = "myl_native_text_scalar" });
     if (!builtin.is_test) @export(&numberC, .{ .name = "myl_native_number_parse" });
+    if (!builtin.is_test) @export(&numberBytesC, .{ .name = "myl_native_bytes_number_parse" });
+    if (!builtin.is_test) @export(&bufferFloatC, .{ .name = "myl_native_bytes_buffer_append_float" });
+}
+/// Append `count` octets of caller-owned raw storage to a byte buffer, answering
+/// the byte runtime's status enum. Defined by the C runtime beside the buffer
+/// growth it must share; declared here so the float formatter can hand it a
+/// spelling it built on its own stack.
+extern fn myl_native_bytes_buffer_append_raw(heap: *anyopaque, buffer: *anyopaque, data: [*]const u8, count: usize) c_int;
+/// Format one binary64 into a mutable byte buffer, spelling it exactly as
+/// `str(value)` does, so a buffered float and a printed float cannot disagree.
+/// The spelling is built on this stack and appended while the buffer's own
+/// capacity grows, so no managed intermediate value exists at all.
+fn bufferFloatC(heap: ?*anyopaque, buffer: ?*anyopaque, bits: u64) callconv(.c) c_uint {
+    const target = buffer orelse return 0;
+    var text: [1024]u8 = undefined;
+    const bytes = format(&text, bits, .floating) catch return 0;
+    const status = myl_native_bytes_buffer_append_raw(heap orelse return 0, target, bytes.ptr, bytes.len);
+    return @intCast(status);
 }
 /// Parse Unicode scalars under the pinned grammar, publishing the value's bits
 /// and answering 1 for a number or 0 for text that is not exactly one.
@@ -20,6 +38,19 @@ fn numberC(points: ?[*]const u32, count: usize, floating: c_uint, output: *u64) 
         return 1;
     }
     const value = number_text.integer(scalars) orelse return 0;
+    output.* = @bitCast(value);
+    return 1;
+}
+/// Parse the UTF-8 octets of a byte string under the same pinned grammar, so a
+/// byte string or a view of one parses without decoding a temporary `str`.
+fn numberBytesC(bytes: ?[*]const u8, length: usize, floating: c_uint, output: *u64) callconv(.c) c_uint {
+    const text: []const u8 = if (bytes) |found| found[0..length] else &.{};
+    if (floating != 0) {
+        const value = number_text.floatingBytes(text) orelse return 0;
+        output.* = @bitCast(value);
+        return 1;
+    }
+    const value = number_text.integerBytes(text) orelse return 0;
     output.* = @bitCast(value);
     return 1;
 }

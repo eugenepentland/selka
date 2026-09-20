@@ -8,11 +8,12 @@ const BufferOperation = @FieldType(@FieldType(bytecode.Instruction, "op"), "buff
 const store_unit = " storel 0, %s{d}\n";
 const copy_scratch = " %v{d} =l copy %s{d}\n";
 const load_scratch = " %v{d} =l loadl %s{d}\n";
-const allocation_failure = @import("qbe_format.zig").allocation_failure;
+const format = @import("qbe_format.zig");
+const allocation_failure = format.allocation_failure;
 const list_value_failure = "myl_qbe_fail_list_value";
 const missing_key_failure = "myl_qbe_fail_missing_key";
 const numeric_surface = @import("numeric_surface.zig");
-const load_word = @import("qbe_format.zig").load_word;
+const load_word = format.load_word;
 const iteration_failure = "myl_qbe_fail_iteration";
 const bytes_lower = @import("qbe_bytes.zig");
 const text_lower = @import("qbe_text.zig");
@@ -23,7 +24,7 @@ const dictionary_write = " %v{d} =w call $myl_native_dictionary_write(l %heap, l
 const dictionary_length = " %v{d} =l call $myl_native_dictionary_length(l %v{d})\n";
 /// Byte offset of `storage` in a native list header (`native_collections.h`):
 /// two size words, the generation, the element descriptor, then the pointer.
-const list_storage_offset = 32;
+const list_storage_offset = format.list_storage_offset;
 /// Detail-carrying bounds helper shared by indexable receivers.
 const index_failure = "myl_qbe_fail_index_bounds";
 /// The `make_record` operation shape this unit lowers.
@@ -114,9 +115,17 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
         .read => {
             const index_value = try self.load("s", base);
             const length = try receiverLength(E, self, list);
-            try self.print(" %v{d} =w call $myl_native_list_get(l %v{d}, l %v{d}, l %agg{d})\n", .{ output, list, index_value, self.pc });
-            try requireIndexBounds(E, self, output, index_value, length, normalized_index_failure);
-            try self.store(base, try self.readValue(try self.aggregatePointer(), op.output));
+            // A plain scalar element has a compile-time constant descriptor,
+            // size and stride, so the read is one bounds-checked load from the
+            // receiver's backing storage. Every other element keeps the runtime
+            // copy into the aggregate scratch and the pointer that reads it.
+            if (scalarElement(E, self, op.output)) {
+                try inlineIndexRead(E, self, .{ .input = list, .at = index_value, .raw_index = index_value, .length = length, .element = op.output, .slot = base }, normalized_index_failure);
+            } else {
+                try self.print(" %v{d} =w call $myl_native_list_get(l %v{d}, l %v{d}, l %agg{d})\n", .{ output, list, index_value, self.pc });
+                try requireIndexBounds(E, self, output, index_value, length, normalized_index_failure);
+                try self.store(base, try self.readValue(try self.aggregatePointer(), op.output));
+            }
         },
         .append, .write => {
             const element = schema.shape.buffer.?;
@@ -408,21 +417,35 @@ fn emitIndex(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Ty
             try requireIndexBounds(E, self, result, raw_index, length, index_failure);
             try self.store(base, input);
         } else {
-            try inlineIndexRead(E, self, .{ .input = input, .at = at, .raw_index = raw_index, .length = length, .element = schema.shape.buffer.?, .slot = base });
+            try inlineIndexRead(E, self, .{ .input = input, .at = at, .raw_index = raw_index, .length = length, .element = schema.shape.buffer.?, .slot = base }, index_failure);
         }
     }
 }
 /// One inline element read: the receiver, the normalized index, the caller's
 /// original index and the receiver length for the trap, and where the value goes.
 const IndexRead = struct { input: usize, at: usize, raw_index: usize, length: usize, element: typed.Type, slot: usize };
+/// Whether one element is a plain scalar the schema fixes at compile time: an
+/// integer, `bool`, or a nominal domain over one of those — which includes
+/// `float`, a nominal domain over `u64`. Its native value is one word and its
+/// descriptor's size and stride are constants of the schema, so a read is a
+/// direct load. Every other element type — a record, union, array, nested
+/// collection, string used as an element, or a capability — keeps the runtime
+/// copy and the aggregate pointer that represents its value.
+fn scalarElement(comptime E: type, self: *E, ty: typed.Type) bool {
+    if (ty.isInteger() or ty == .bool) return true;
+    if (!ty.isAggregate() or ty.recordIndex() >= self.program.records.len) return false;
+    const backing = self.program.records[ty.recordIndex()].shape.domain orelse return false;
+    return scalarElement(E, self, backing);
+}
 /// Read one element of a byte string or list straight from its backing storage
 /// after an unsigned bounds check, in place of a `myl_native_list_get` call.
 /// The cold path raises the same detail-carrying bounds trap, with the caller's
-/// original index and the receiver length.
-fn inlineIndexRead(comptime E: type, self: *E, read: IndexRead) Error!void {
+/// original index and the receiver length: `failure` names the helper that
+/// reports an index this lowering already normalized, or one it has not.
+fn inlineIndexRead(comptime E: type, self: *E, read: IndexRead, failure: []const u8) Error!void {
     const valid = self.temp();
     try self.print(" %v{d} =l cultl %v{d}, %v{d}\n", .{ valid, read.at, read.length });
-    try requireIndexBounds(E, self, valid, read.raw_index, read.length, index_failure);
+    try requireIndexBounds(E, self, valid, read.raw_index, read.length, failure);
     const address = try elementAddress(E, self, read.input, read.at, read.element);
     if (self.isScalar(read.element)) {
         try self.store(read.slot, try self.readValue(address, read.element));
@@ -648,7 +671,15 @@ fn equalResult(comptime E: type, self: *E, result: usize) Error!void {
 
 fn emitCast(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Type) Error!void {
     const collection = self.program.records[ty.recordIndex()].collection.kind;
-    if (collection == .bytes) return bytes_lower.Lower(E).fromList(self, stack);
+    if (collection == .bytes) {
+        const base = stack.len - 1;
+        const input_type = stack[base];
+        // A byte-kind input is already one-byte storage, so the conversion copies
+        // its current octets instead of widening a `list[int]` element by element.
+        if (input_type.isAggregate() and self.program.records[input_type.recordIndex()].collection.kind == .bytes)
+            return bytes_lower.Lower(E).copyImmutable(self, stack);
+        return bytes_lower.Lower(E).fromList(self, stack);
+    }
     if (collection != .string) return self.reject(self.pc);
     const base = stack.len - 1;
     const input_type = stack[base];

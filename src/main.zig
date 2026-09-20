@@ -82,6 +82,7 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "  list-declarations: parse-only declarations-v1 JSON with byte ranges\n" ++
     "  index-project: JSON symbols, references and pinned source snapshot\n  project-dependencies: checked module graph and hashes; --inputs supported\n" ++
     "  one-shot commands: --timings=json (phase-timings-v1 JSON Lines on stderr)\n" ++
+    "  build: --timings=json records the frontend, codegen, link and native phases it already measures for --report\n" ++
     "    --report prints work-report-v1 actual work/reuse plus a frontend-cache-v1 comparison receipt on stderr; --timings=json also adds them; --cache-dir=DIR selects their root; --no-cache disables reuse\n" ++
     "    --explain-invalidation prints an invalidation-report-v1 comparison on stderr for project-dependencies, check-project, run-project and module-syntax run; --no-cache explains against no baseline\n" ++
     "  all commands: --diagnostics=text|json (stderr JSON Lines; stdout unchanged)\n" ++
@@ -110,6 +111,7 @@ const grants = @import("cli_grants.zig");
 const project_config = @import("project_config.zig");
 const module_syntax = @import("module_syntax.zig");
 const native_run = @import("native_run.zig");
+const native_build = @import("qbe_build.zig");
 const native_options = @import("qbe_build_options.zig");
 /// Per-stage observations collected when an invalidation explanation ran.
 const StageTally = struct { hits: usize = 0, misses: usize = 0, skipped: usize = 0 };
@@ -170,13 +172,38 @@ const Context = struct {
         try std.Io.File.stderr().writeStreamingAll(self.io, rendered);
     }
 };
+
+/// Run one native build. `--timings=json` is an observation request the driver
+/// answers with its measured phase durations, so this command records them
+/// through the same `phase-timings-v1` writer `run` and `run-project` use and
+/// the JSON Lines shape cannot drift between commands. A build that named no
+/// such request takes the driver path unchanged and records nothing.
+fn buildCommand(process: std.process.Init, args: []const []const u8) !u8 {
+    const asked = native_options.timingsJson(args);
+    var timings = language.timings.Profile.init(process.io, asked, .compiler);
+    var phases: native_build.PhaseTimings = .{};
+    const status = try native_build.runMeasured(process, args, if (asked) &phases else null);
+    addBuildPhases(&timings, phases);
+    try timings.report(status);
+    return status;
+}
+
+/// Record each phase a native build actually measured. A phase that never ran
+/// stays absent rather than reporting a zero it did not observe.
+fn addBuildPhases(timings: *language.timings.Profile, phases: native_build.PhaseTimings) void {
+    const names = [_][]const u8{ "frontend", "codegen", "link", "native" };
+    const seconds = [_]?f64{ phases.frontend, phases.codegen, phases.link, phases.native };
+    for (names, seconds) |name, measured| {
+        if (measured) |value| timings.add(name, @intFromFloat(@max(0, value) * std.time.ns_per_s), false);
+    }
+}
 fn dispatch(process: std.process.Init) !u8 {
     const args = try process.minimal.args.toSlice(process.arena.allocator());
     if (args.len == 2 and std.mem.eql(u8, args[1], "--features")) {
         try featureReport(process);
         return 0;
     }
-    if (args.len >= 2 and std.mem.eql(u8, args[1], "build")) return @import("qbe_build.zig").run(process, args[2..]);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "build")) return buildCommand(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "emit-runtime")) return @import("qbe_build.zig").emitRuntime(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "test")) return @import("native_test_command.zig").run(process, args[2..]) catch |err| switch (err) {
         // `run` already rendered the child compiler's located diagnostic; exit 1
@@ -420,7 +447,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .@"report-project-quality",
         => unreachable,
         .@"emit-qbe" => {
-            const generated = emitMeasuredNative(init, &compilation, parsed.drop_debug, !parsed.drop_step_checks, parsed.saw_frames and !parsed.drop_frame_checks) catch |err| switch (err) {
+            const generated = emitMeasuredNative(init, &compilation, parsed.drop_debug, !parsed.drop_step_checks, !parsed.drop_frame_checks) catch |err| switch (err) {
                 error.SourceError => {
                     try report(init, &compilation);
                     return 1;
@@ -1675,7 +1702,7 @@ fn nativeTestCompileReply(init: Context, action: []const u8, status: u8, failure
 fn emitRequestedOutput(init: Context, compilation: *language.project_compile.Compilation, parsed: Parsed) !?[]u8 {
     return switch (parsed.command) {
         .@"native-test-graph" => try emitNativeTestFacts(init, compilation),
-        .@"emit-project-qbe" => (try emitProjectNative(init, compilation, parsed.select_file, parsed.drop_debug, !parsed.drop_step_checks, parsed.saw_frames and !parsed.drop_frame_checks)) orelse error.SourceError,
+        .@"emit-project-qbe" => (try emitProjectNative(init, compilation, parsed.select_file, parsed.drop_debug, !parsed.drop_step_checks, !parsed.drop_frame_checks)) orelse error.SourceError,
         .@"schema-project" => blk: {
             try reportProject(init, compilation);
             break :blk if (parsed.schema_report)

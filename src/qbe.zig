@@ -225,11 +225,12 @@ fn inlineFrames(allocator: std.mem.Allocator, program: bytecode.Program, code: [
 }
 
 /// Whether one operation needs the shared Zig text runtime unit: `str(value)`
-/// formatting, or the pinned `int(text)` and `float(text)` grammar.
+/// formatting, the pinned `int(text)` and `float(text)` grammar, or the same
+/// canonical float spelling appended straight into a byte buffer.
 fn needsTextRuntime(program: bytecode.Program, op: @FieldType(bytecode.Instruction, "op")) bool {
     switch (op) {
         .cast_integer => |target| return target.isAggregate() and program.records[target.recordIndex()].collection.kind == .string,
-        .buffer_operation => |operation| return operation.kind == .parse_int or operation.kind == .parse_float,
+        .buffer_operation => |operation| return operation.kind == .parse_int or operation.kind == .parse_float or operation.kind == .buffer_append_float,
         else => return false,
     }
 }
@@ -254,6 +255,90 @@ fn scalar(ty: typed.Type, records: []const typed.Record) bool {
 
 fn ownedPointer(record: typed.Record) bool {
     return record.shape.buffer != null or record.shape.resource != null;
+}
+
+/// One match payload binding that names the payload inside its scrutinee instead
+/// of copying it: the binding local, the scrutinee local it points into, and the
+/// union's payload offset.
+const ArmAddress = struct { slot: usize, source: usize, offset: u64, indirect: bool };
+
+/// Whether any instruction writes local `slot`: a whole-value store, a move
+/// that also clears the source, an explicit drop, or a match arm's payload
+/// binding, which blits the payload into the arm's slot.
+fn writtenLocal(function: bytecode.Function, slot: usize) bool {
+    for (function.scope.instructions) |instruction| switch (instruction.op) {
+        .store_local, .move_local, .drop_local => |target| if (@backingInt(target) == slot) return true,
+        .switch_variant => |dispatch| for (dispatch.arms) |arm| if (arm.slot) |target| if (@backingInt(target) == slot) return true,
+        else => {},
+    };
+    return false;
+}
+
+/// Whether the instruction at `pc` writes local `index`: a whole-value store, a
+/// move, an explicit drop, or a match arm's payload binding into it.
+fn writesLocalAt(f: bytecode.Function, pc: usize, index: usize) bool {
+    return switch (f.scope.instructions[pc].op) {
+        .store_local, .move_local, .drop_local => |target| @backingInt(target) == index,
+        .switch_variant => |dispatch| armWrites(dispatch.arms, index),
+        else => false,
+    };
+}
+
+/// Whether any arm of a dispatch binds its payload into local `index`.
+fn armWrites(arms: []const @import("bytecode_model.zig").SwitchArm, index: usize) bool {
+    for (arms) |arm| if (arm.slot) |target| if (@backingInt(target) == index) return true;
+    return false;
+}
+
+/// Whether any instruction other than a match's payload binding writes `slot`.
+/// A binding writes the slot by design, so a projected binding is checked with
+/// this instead of `writtenLocal`: everything else that could write it — a whole
+/// value store, a move, an explicit drop — would leave the address the binding
+/// holds stale or the value it names released.
+fn writtenOutsideBindings(f: bytecode.Function, slot: usize) bool {
+    for (f.scope.instructions) |instruction| switch (instruction.op) {
+        .store_local, .move_local, .drop_local => |target| if (@backingInt(target) == slot) return true,
+        else => {},
+    };
+    return false;
+}
+
+/// Whether one instruction ends the life of the operand it reads: it pops the
+/// operand, overwrites the operand slot with its own result, or reads it as an
+/// argument or a returned value. Instructions that leave the operand on the
+/// stack — a load, a move, a push, a record or variant constructor, a domain
+/// wrap, a jump, or an arena boundary — are not on this list, and neither are
+/// the provider and resource operations, whose stack effects are not worth
+/// re-deriving for a case that never reads an aggregate operand by address.
+fn consumesOperand(op: @FieldType(bytecode.Instruction, "op")) bool {
+    return switch (op) {
+        .get_field,
+        .switch_variant,
+        .array_length,
+        .get_index,
+        .update_record,
+        .replace_index,
+        .store_local,
+        .pop,
+        .acknowledge,
+        .try_result,
+        .ret,
+        .call,
+        .invoke,
+        .assert_true,
+        .jump_if_false,
+        .print,
+        .stream_write,
+        .binary_integer,
+        .cmp_i64,
+        .cmp_bool,
+        .cmp_enum,
+        .cmp_domain,
+        .cast_integer,
+        .neg_integer,
+        => true,
+        else => false,
+    };
 }
 
 /// The digits of a line that is exactly an instruction label (`@i12`), or null
@@ -507,6 +592,12 @@ const pure_callees = [_][]const u8{
     "memset",
     "myl_native_owned_drop",
     "myl_native_list_get",
+    // The pinned number grammar and the validating scalar count read their input
+    // in place: no allocation, so a function whose only calls are these starts no
+    // collection and needs neither a root protocol nor a safepoint.
+    "myl_native_number_parse",
+    "myl_native_bytes_number_parse",
+    "myl_native_bytes_scalar_count",
     "myl_qbe_int_cast",
     "myl_qbe_int_neg",
     "myl_qbe_int_binary",
@@ -667,14 +758,67 @@ fn isLocalZero(line: []const u8) bool {
 /// to a stack adjustment and pointer move. A definition whose name appears once
 /// in the unit is read nowhere, so removing it is free.
 fn dropUnusedSlots(a: std.mem.Allocator, text: []const u8) GenerateError![]u8 {
+    // One pass counts every name this unit defines, so the rewrite is O(text).
+    // Rescanning the unit once per definition made a unit with many slots cost
+    // its own length multiplied by its slot count, which dominated the frontend
+    // of every build.
+    var references: SlotReferences = .{};
+    defer references.deinit(a);
+    try references.count(a, text);
     var kept: std.ArrayList([]const u8) = .empty;
     defer kept.deinit(a);
     var scan = std.mem.splitScalar(u8, text, '\n');
     while (scan.next()) |line| {
-        if (slotDefinition(line)) |name| if (nameCount(text, name) == 1) continue;
+        if (slotDefinition(line)) |name| if (references.of(name) == 1) continue;
         try kept.append(a, line);
     }
     return std.mem.join(a, "\n", kept.items);
+}
+
+/// Whole-unit `%name` reference counts for the slot names one unit defines. A
+/// definition is dropped when its name is referenced exactly once, which is the
+/// definition itself. The table is keyed by slices of the counted text, so it
+/// owns no key storage and must not outlive that text. Its domain is exactly the
+/// names `slotDefinition` accepts: a `%v{d}` value temporary is not a slot, so
+/// `of` reports nothing for it even though the unit mentions it.
+const SlotReferences = struct {
+    counts: std.StringHashMapUnmanaged(usize) = .empty,
+
+    /// Release the count table; its key slices borrow the counted text.
+    fn deinit(self: *SlotReferences, allocator: std.mem.Allocator) void {
+        self.counts.deinit(allocator);
+    }
+    /// Count every `%name` reference for each name `text` defines as a slot. A
+    /// name is an identifier run, so the reference it counts is a `%` followed
+    /// by that whole run: exactly the pair `nameCount` requires.
+    fn count(self: *SlotReferences, allocator: std.mem.Allocator, text: []const u8) GenerateError!void {
+        var scan = std.mem.splitScalar(u8, text, '\n');
+        while (scan.next()) |line| {
+            const name = slotDefinition(line) orelse continue;
+            try self.counts.put(allocator, name, 0);
+        }
+        if (self.counts.count() == 0) return;
+        var index: usize = 0;
+        while (std.mem.indexOfScalarPos(u8, text, index, '%')) |at| {
+            const start = at + 1;
+            var end = start;
+            while (end < text.len and isNameByte(text[end])) end += 1;
+            if (end > start) {
+                if (self.counts.getPtr(text[start..end])) |slot| slot.* += 1;
+            }
+            index = end;
+        }
+    }
+    /// How many whole `%name` references the unit holds, matching `nameCount`.
+    fn of(self: *const SlotReferences, name: []const u8) usize {
+        return self.counts.get(name) orelse 0;
+    }
+};
+
+/// Whether one byte may continue a QBE identifier, which is the boundary
+/// `nameCount` tests after a candidate reference.
+fn isNameByte(byte: u8) bool {
+    return std.ascii.isAlphanumeric(byte) or byte == '_';
 }
 
 /// The slot name a line defines, when it is a named `alloc8` or heap-frame slot
@@ -692,6 +836,13 @@ fn slotDefinition(line: []const u8) ?[]const u8 {
 }
 
 /// Count whole `%name` references in the text, ignoring longer identifiers.
+///
+/// This is the reference implementation, not the hot path: `dropUnusedSlots`
+/// asks `SlotReferences` for the same number in one pass, and every counting
+/// test compares against this scan. It stays because it is the definition the
+/// equivalence is stated in — one text rescan per name — so a later reader can
+/// see what the map must reproduce. Do not call it once per definition from the
+/// rewrite again.
 fn nameCount(text: []const u8, name: []const u8) usize {
     var count: usize = 0;
     var index: usize = 0;
@@ -703,6 +854,171 @@ fn nameCount(text: []const u8, name: []const u8) usize {
         index = at + name.len;
     }
     return count;
+}
+
+// spec: QBE-PROMOTE-2
+test "slot reference counting equals the per-name scan it replaces" {
+    const text =
+        " %l1 =l alloc8 16\n" ++
+        " %l10 =l alloc8 16\n" ++
+        " %scratch =l alloc8 8\n" ++
+        " storel %l1, %l10\n" ++
+        " %v3 =l add %scratch, 8\n" ++
+        " %l1x =l alloc8 8\n" ++
+        " %unused =l add %frame_memory, 0\n" ++
+        " call $f(l %l10, l %l1x)\n" ++
+        " storew 0, %%l1\n" ++
+        " %tail =l add %frame_memory, 0\n";
+    var references: SlotReferences = .{};
+    defer references.deinit(std.testing.allocator);
+    try references.count(std.testing.allocator, text);
+    const names = [_][]const u8{ "l1", "l10", "l1x", "scratch", "unused", "tail", "l", "l1xx", "absent" };
+    for (names) |name| try std.testing.expectEqual(nameCount(text, name), references.of(name));
+    try std.testing.expectEqual(@as(usize, 3), references.of("l1"));
+    try std.testing.expectEqual(@as(usize, 1), references.of("tail"));
+    // `%v3` is a value temporary, not a slot definition: the unit mentions it
+    // once, and the drop rule never asks about it.
+    try std.testing.expectEqual(@as(usize, 1), nameCount(text, "v3"));
+    try std.testing.expectEqual(@as(usize, 0), references.of("v3"));
+}
+
+// spec-case: QBE-PROMOTE-2
+test "a slot name that prefixes another is neither counted nor dropped as it" {
+    const text =
+        " %l1 =l alloc8 16\n" ++
+        " %l10 =l alloc8 16\n" ++
+        " call $use(l %l10)\n";
+    const kept = try dropUnusedSlots(std.testing.allocator, text);
+    defer std.testing.allocator.free(kept);
+    try std.testing.expectEqualStrings(" %l10 =l alloc8 16\n call $use(l %l10)\n", kept);
+}
+
+// spec-case: QBE-PROMOTE-2
+test "an unread slot definition is dropped and a read one is kept" {
+    const text =
+        " %unused =l alloc8 16\n" ++
+        " %read =l alloc8 16\n" ++
+        " storel %read, %read\n";
+    const kept = try dropUnusedSlots(std.testing.allocator, text);
+    defer std.testing.allocator.free(kept);
+    try std.testing.expectEqualStrings(" %read =l alloc8 16\n storel %read, %read\n", kept);
+}
+
+/// The pre-change rewrite, kept as the reference the single-pass counter is
+/// tested against: it rescans the whole unit once per slot definition, which is
+/// exactly the cost the pass removes. Output bytes must be identical.
+fn referenceDropUnusedSlots(a: std.mem.Allocator, text: []const u8) GenerateError![]u8 {
+    var kept: std.ArrayList([]const u8) = .empty;
+    defer kept.deinit(a);
+    var scan = std.mem.splitScalar(u8, text, '\n');
+    while (scan.next()) |line| {
+        if (slotDefinition(line)) |name| if (nameCount(text, name) == 1) continue;
+        try kept.append(a, line);
+    }
+    return std.mem.join(a, "\n", kept.items);
+}
+
+/// Compare every slot name a unit defines against the reference per-name scan,
+/// so equivalence is checked over the names the unit actually declares rather
+/// than only over hand-written cases.
+fn expectSlotCountsMatchReference(text: []const u8, references: *const SlotReferences) !void {
+    var scan = std.mem.splitScalar(u8, text, '\n');
+    while (scan.next()) |line| {
+        const name = slotDefinition(line) orelse continue;
+        try std.testing.expectEqual(nameCount(text, name), references.of(name));
+    }
+}
+
+/// One real emitted unit, verbatim: `sexpr.parser::located` from the sexpr-port
+/// project built at ReleaseFast. It declares eight slots in 1704 bytes, so the
+/// per-name rescan used to walk its whole text eight times.
+const recorded_unit =
+    \\type :myl_slice = { l, l }
+    \\type :t03f63d9a1a213b895a592d5f44a4804ce2a79a0be44ca138053f23212e67a8ff = align 8 { b 32 }
+    \\type :t58a57a37ccc3996fdbd3dbe4ed5cc5eb56a0a9b47b95005d2e3ea6952a56cfc7 = align 8 { b 24 }
+    \\export function :t03f63d9a1a213b895a592d5f44a4804ce2a79a0be44ca138053f23212e67a8ff $myl_f_b59e41fe30fc69ebc164c43506ed7df38506c00a2c95f0307df5a00a9552a34b(l %ctx, l %a0, l %a1) {
+    \\@entry
+    \\ %trap =l add %ctx, 32
+    \\ %empty =l alloc8 32
+    \\ call $memset(l %empty, w 0, l 32)
+    \\ %l0 =l alloc8 24
+    \\ %l1 =l alloc8 8
+    \\ %s0 =l alloc8 8
+    \\ %s1 =l alloc8 8
+    \\ %s2 =l alloc8 8
+    \\ %s3 =l alloc8 8
+    \\ %agg7 =l alloc8 32
+    \\ %v6 =l alloc8 32
+    \\ %v5 =l add %ctx, 48
+    \\ %v14 =l loadl %v5
+    \\ storel %v14, %v6
+    \\ %v15 =l add %v6, 8
+    \\ storel extern $myl_f_b59e41fe30fc69ebc164c43506ed7df38506c00a2c95f0307df5a00a9552a34b_meta, %v15
+    \\ %v16 =l add %v6, 16
+    \\ storel 0, %v16
+    \\ storel %v6, %v5
+    \\ storel %a0, %l0
+    \\ storel %a1, %l1
+    \\ jmp @i0
+    \\@i0
+    \\ %v18 =l loadl %l1
+    \\ storel %v18, %s0
+    \\ %v19 =l loadl %l0
+    \\ storel %v19, %s1
+    \\ %v20 =l loadl %s1
+    \\ %v21 =l add %v20, 0
+    \\ %v22 =l loadl %v21
+    \\ storel %v22, %s1
+    \\ %v23 =l loadl %l0
+    \\ storel %v23, %s2
+    \\ %v24 =l loadl %s2
+    \\ %v25 =l add %v24, 8
+    \\ %v26 =l loadl %v25
+    \\ storel %v26, %s2
+    \\ %v27 =l loadl %l0
+    \\ storel %v27, %s3
+    \\ %v28 =l loadl %s3
+    \\ %v29 =l add %v28, 16
+    \\ %v30 =l loadl %v29
+    \\ storel %v30, %s3
+    \\ %v31 =l copy %agg7
+    \\ %v32 =l add %v31, 0
+    \\ %v33 =l loadl %s0
+    \\ storel %v33, %v32
+    \\ %v34 =l add %v31, 8
+    \\ %v35 =l loadl %s1
+    \\ storel %v35, %v34
+    \\ %v36 =l add %v31, 16
+    \\ %v37 =l loadl %s2
+    \\ storel %v37, %v36
+    \\ %v38 =l add %v31, 24
+    \\ %v39 =l loadl %s3
+    \\ storel %v39, %v38
+    \\ storel %v31, %s0
+    \\ %v40 =l loadl %s0
+    \\ %v41 =l loadl %v6
+    \\ storel %v41, %v5
+    \\ ret %v40
+    \\@failure
+    \\ %v45 =l loadl %v6
+    \\ storel %v45, %v5
+    \\ ret %empty
+    \\@entry_failure
+    \\ ret %empty
+    \\}
+;
+
+// spec-case: QBE-PROMOTE-2
+test "a recorded unit is counted and rewritten exactly as the per-name scan did" {
+    var references: SlotReferences = .{};
+    defer references.deinit(std.testing.allocator);
+    try references.count(std.testing.allocator, recorded_unit);
+    try expectSlotCountsMatchReference(recorded_unit, &references);
+    const rewritten = try dropUnusedSlots(std.testing.allocator, recorded_unit);
+    defer std.testing.allocator.free(rewritten);
+    const reference = try referenceDropUnusedSlots(std.testing.allocator, recorded_unit);
+    defer std.testing.allocator.free(reference);
+    try std.testing.expectEqualStrings(reference, rewritten);
 }
 
 /// Drop the `%heap` prologue call when nothing in the function reads it. QBE
@@ -768,6 +1084,16 @@ const Emitter = struct {
     /// The slice a later `.decode` will consume directly, recorded while its
     /// receiver and endpoints are still SSA references (see `fusibleSlice`).
     fused: ?FusedDecode = null,
+    /// Per local, whether the slot holds the address of an aggregate that lives
+    /// elsewhere — a parameter this function only reads, or a match arm's payload
+    /// binding that names the payload inside a scrutinee this function never
+    /// writes — rather than a private copy of its value.
+    by_reference: []bool = &.{},
+    /// The payload bindings whose address is stored once at entry, with the
+    /// local and offset that address is derived from.
+    arm_addresses: []const ArmAddress = &.{},
+    /// Per instruction, whether a branch reaches it directly.
+    branch_targets: []bool = &.{},
 
     /// Shared lowering primitive for target operation emitters.
     pub fn reject(self: *Emitter, pc: usize) GenerateError {
@@ -795,16 +1121,27 @@ const Emitter = struct {
         try self.print(" storel %v{d}, %s{d}\n", .{ id, slot });
     }
     /// Whether any instruction can jump straight to `pc`, which is the only way
-    /// control reaches `pc` without executing its linear predecessor.
+    /// control reaches `pc` without executing its linear predecessor. The answer
+    /// comes from one pass over the unit, so a question asked once per local read
+    /// costs a lookup rather than a walk of the whole function.
     fn isBranchTarget(self: *Emitter, pc: usize) bool {
-        for (self.function.scope.instructions) |instruction| switch (instruction.op) {
-            .jump => |target| if (target == pc) return true,
-            .jump_if_false => |target| if (target == pc) return true,
-            .try_result => |propagate| if (propagate.error_target == pc) return true,
-            .switch_variant => |dispatch| for (dispatch.arms) |arm| if (arm.target == pc) return true,
+        return pc < self.branch_targets.len and self.branch_targets[pc];
+    }
+    /// Mark every instruction a branch can reach directly.
+    fn collectBranchTargets(self: *Emitter) GenerateError![]bool {
+        const code = self.function.scope.instructions;
+        const targets = try self.allocator.alloc(bool, code.len);
+        @memset(targets, false);
+        for (code) |instruction| switch (instruction.op) {
+            .jump => |target| targets[target] = true,
+            .jump_if_false => |target| targets[target] = true,
+            .try_result => |propagate| targets[propagate.error_target] = true,
+            .switch_variant => |dispatch| {
+                for (dispatch.arms) |arm| targets[arm.target] = true;
+            },
             else => {},
         };
-        return false;
+        return targets;
     }
     /// The temporary local a `bytes` slice at `pc` feeds, when its only reader
     /// is the `.decode` two instructions later. `x[a:b].decode()` lowers to
@@ -891,6 +1228,8 @@ const Emitter = struct {
             error.OutOfMemory => return error.OutOfMemory,
         };
         self.states = ir.states;
+        self.branch_targets = try self.collectBranchTargets();
+        self.by_reference = try self.addressLocals();
         try self.findRoots();
         const capacity = ir.stack_capacity;
         const frame_bytes = try self.frameBytes(capacity);
@@ -914,7 +1253,7 @@ const Emitter = struct {
         // QBE promotes a slot to a temporary only when its `alloc8` sits in the
         // entry block, so a native-stack frame declares its slots before the
         // frame protocol introduces any label.
-        if (!self.heap_frame) try self.allocateStorage(capacity);
+        try self.allocateNativeStorage(capacity);
         self.small_leaf = self.frameLeaf() and frame_bytes + 32 < frame_headroom;
         try self.enterFrame(name);
         // A build without instruction-budget accounting cannot honor a runtime
@@ -925,8 +1264,9 @@ const Emitter = struct {
             try self.print(" %frame_memory =l call $myl_qbe_frame_allocate(l %ctx, l {d})\n", .{frame_bytes});
             try self.checkFailure("allocation_failure");
             try self.allocateStorage(capacity);
+            try self.allocateTemporaries(.all);
         }
-        try self.allocateTemporaries();
+        try self.allocateDynamicTemporaries();
         try self.initializeStorage();
         if (self.has_roots) try self.print(" %heap =l call $myl_qbe_heap(l %ctx)\n", .{});
         if (self.has_roots and self.has_safepoints) try self.print(" %root_mark =l call $myl_qbe_root_mark(l %ctx)\n", .{});
@@ -976,15 +1316,58 @@ const Emitter = struct {
         for (0..capacity) |i| try self.allocateIndex("s", i, 8);
         if (self.has_roots) for (0..f.scope.locals.len + capacity) |i| try self.allocateIndex("root", i, 32);
     }
-    /// Per-pc aggregate scratch. Its address is copied into an operand slot, so
-    /// QBE never promotes it, and keeping it out of the entry block avoids a
-    /// zero-length aggregate being folded to a null load there.
-    fn allocateTemporaries(self: *Emitter) GenerateError!void {
-        for (self.states, 0..) |state, pc| if (state != null and self.usesTemporary(pc)) {
+    fn allocateNativeStorage(self: *Emitter, capacity: usize) GenerateError!void {
+        // A heap frame cannot derive slot addresses until its allocation has
+        // succeeded; the existing heap branch emits all of its storage later.
+        if (self.heap_frame) return;
+        try self.allocateStorage(capacity);
+        // Pure aggregate temporaries are indexed by bytecode pc and reused for
+        // every execution of that instruction. Putting those buffers before the
+        // block boundary makes QBE reserve them in the fixed frame. Buffers
+        // passed through opaque runtime calls stay in the later class below.
+        try self.allocateTemporaries(.entry);
+    }
+    /// Per-pc aggregate scratch. Pure transformations use entry slots; opaque
+    /// runtime/provider calls retain QBE's later allocation because moving those
+    /// address-taken buffers into entry miscompiles retained resource ownership.
+    /// Each class still gets one pair per pc, reused by loops. Heap frames derive
+    /// every address from their allocated frame block instead.
+    const TemporaryPlacement = enum { entry, dynamic, all };
+    fn allocateTemporaries(self: *Emitter, placement: TemporaryPlacement) GenerateError!void {
+        for (self.states, 0..) |state, pc| if (state != null and self.usesTemporary(pc) and (placement == .all or (try self.temporaryInEntry(pc)) == (placement == .entry))) {
             const size = try self.temporarySize(pc);
             try self.allocateIndex("agg", pc, size);
             try self.allocateIndex("aux", pc, size);
         };
+    }
+    fn allocateDynamicTemporaries(self: *Emitter) GenerateError!void {
+        if (self.heap_frame) return;
+        // These constant-size buffers are still counted by `frameBytes`. They
+        // sit below the probe at run time, within the 64 KiB reserve guarding a
+        // native frame whose conservative estimate is capped at 32 KiB.
+        try self.allocateTemporaries(.dynamic);
+    }
+    fn temporaryInEntry(self: *Emitter, pc: usize) GenerateError!bool {
+        // `temporarySize` deliberately reserves at least one word, but a typed
+        // zero-sized aggregate must retain the later-allocation semantics. QBE
+        // can otherwise fold its entry slot and propagate a null-like address
+        // through the generic load/move path.
+        if (try self.hasNonEntryAggregate(pc)) return false;
+        return switch (self.function.scope.instructions[pc].op) {
+            .make_record, .make_variant, .get_field, .update_record, .replace_index, .get_index, .try_result => true,
+            .load_local, .move_local => |slot| !try self.nonEntryType(self.function.scope.locals[@backingInt(slot)].ty),
+            else => false,
+        };
+    }
+    fn hasNonEntryAggregate(self: *Emitter, pc: usize) GenerateError!bool {
+        if (self.states[pc]) |stack| for (stack) |ty| if (try self.nonEntryType(ty)) return true;
+        if (pc + 1 < self.states.len) if (self.states[pc + 1]) |stack| for (stack) |ty| if (try self.nonEntryType(ty)) return true;
+        return false;
+    }
+    fn nonEntryType(self: *Emitter, ty: typed.Type) GenerateError!bool {
+        if (!ty.isAggregate()) return false;
+        if (self.program.records[ty.recordIndex()].shape.array) |array| if (array.length == 0) return true;
+        return (try self.layout(ty)).size == 0;
     }
     fn initializeStorage(self: *Emitter) GenerateError!void {
         const f = self.function;
@@ -997,8 +1380,168 @@ const Emitter = struct {
         const packed_args = try self.packedParameters(f);
         for (f.scope.locals[0..f.signature.parameter_count], 0..) |local, i| {
             if (packed_args) try self.unpackArgument(i);
-            if (scalar(local.ty, self.program.records)) try self.print(" storel %a{d}, %l{d}\n", .{ i, i }) else try self.print(" blit %a{d}, %l{d}, {d}\n", .{ i, i, (try self.layout(local.ty)).size });
+            if (scalar(local.ty, self.program.records)) {
+                try self.print(" storel %a{d}, %l{d}\n", .{ i, i });
+            } else if (self.byReference(i)) {
+                // QBE-AGGREF-1: the slot holds the caller's address, so the
+                // parameter is read through it and never copied at entry.
+                try self.print(" storel %a{d}, %l{d}\n", .{ i, i });
+            } else try self.print(" blit %a{d}, %l{d}, {d}\n", .{ i, i, (try self.layout(local.ty)).size });
         }
+        for (self.arm_addresses) |entry| {
+            // The payload already lives at a constant offset inside storage this
+            // function never writes, so one store at entry gives every arm its
+            // binding and no arm copies the payload out.
+            const projected = self.temp();
+            if (entry.indirect) {
+                const base = try self.load("l", entry.source);
+                try self.print(" %v{d} =l add %v{d}, {d}\n storel %v{d}, %l{d}\n", .{ projected, base, entry.offset, projected, entry.slot });
+            } else try self.print(" %v{d} =l add %l{d}, {d}\n storel %v{d}, %l{d}\n", .{ projected, entry.source, entry.offset, projected, entry.slot });
+        }
+    }
+    /// Whether local `index` holds the address of a parameter this function
+    /// only reads. Every other local holds its value.
+    pub fn byReference(self: *Emitter, index: usize) bool {
+        return index < self.by_reference.len and self.by_reference[index];
+    }
+    /// Push the value of local `index` onto the operand stack at `slot`.
+    ///
+    /// A parameter this function only reads holds the caller's address, so the
+    /// operand is that address: nothing can write through it (the parameter is
+    /// read-only) and it stays valid, unchanged, for the whole call. An ordinary
+    /// local whose value the very next instruction alone consumes is named by
+    /// its own slot the same way, one copy fewer on every field or tag read.
+    /// Every other local is snapshotted into this pc's aggregate scratch exactly
+    /// as before, so a value whose type owns a resource keeps owning its copy.
+    fn readLocal(self: *Emitter, index: usize, slot: usize) GenerateError!void {
+        const ty = self.function.scope.locals[index].ty;
+        if (scalar(ty, self.program.records)) return self.store(slot, try self.load("l", index));
+        if (self.byReference(index)) return self.store(slot, try self.load("l", index));
+        if (try self.borrowableLocal(index, slot)) return self.print(" storel %l{d}, %s{d}\n", .{ index, slot });
+        try self.print(" blit %l{d}, %agg{d}, {d}\n storel %agg{d}, %s{d}\n", .{ index, self.pc, (try self.layout(ty)).size, self.pc, slot });
+    }
+    /// Whether an ordinary local may stand in for a copy of its own value.
+    ///
+    /// It may when its type owns nothing — so no drop, `move_local` clear or
+    /// arena rebind can ever release or clear the slot — and the instruction
+    /// after this one is the only reader, reached by falling through rather
+    /// than by a branch. That reader consumes the operand: it pops it,
+    /// overwrites the operand slot with its own result, or reads it as an
+    /// argument. Nothing runs in between, and a call in between runs with this
+    /// frame suspended, so the slot's address is a valid stand-in for the copy
+    /// for exactly as long as the operand lives.
+    fn borrowableLocal(self: *Emitter, index: usize, slot: usize) GenerateError!bool {
+        const value = try self.layout(self.function.scope.locals[index].ty);
+        if (value.drop) return false;
+        // A zero-length aggregate copies nothing; it keeps the scratch the
+        // frame protocol places after the entry block, because that scratch is
+        // what stops QBE folding a null-like address into the load.
+        if (value.size == 0) return false;
+        // The consumer is the first instruction whose own execution leaves the
+        // stack at or below the operand this read pushes. Every instruction
+        // before it either pushed another operand above ours or read ours; in
+        // both cases our value stayed in its frame slot, because nothing in the
+        // window writes the local and no branch enters it without passing
+        // through this read. A call in the window runs with this frame suspended
+        // and reads the operand during its own execution, so the address it was
+        // handed stays valid.
+        var consumer = self.pc + 1;
+        while (true) {
+            if (consumer >= self.function.scope.instructions.len or consumer >= self.states.len) return false;
+            if (self.states[consumer] == null) return false;
+            if (self.isBranchTarget(consumer) or writesLocalAt(self.function, consumer, index)) return false;
+            const after = if (consumer + 1 < self.states.len) self.states[consumer + 1] else null;
+            const height = if (after) |stack| stack.len else 0;
+            if (height <= slot + 1) break;
+            consumer += 1;
+        }
+        const op = self.function.scope.instructions[consumer].op;
+        // A match arm's payload binding copies out of the scrutinee. Naming the
+        // scrutinee's slot would copy a region onto itself, so that arm keeps
+        // the scratch copy the other locals use.
+        if (op == .switch_variant) for (op.switch_variant.arms) |arm| if (arm.slot) |target| if (@backingInt(target) == index) return false;
+        return consumesOperand(op);
+    }
+    /// Mark every parameter this function never writes. Such a parameter
+    /// crosses the call boundary as the address of the caller's value, which
+    /// the callee reads where it is: the caller's copy at the argument site
+    /// and the callee's copy into its frame both disappear, and the value is
+    /// the same one either way because nothing writes through the slot.
+    ///
+    /// A parameter the body stores, moves, drops or binds a match payload into
+    /// keeps its private slot and its entry copy, so value semantics are
+    /// untouched. A move-only value is never addressed: its single owner stays
+    /// the callee's copy, which `cleanupLocals` releases exactly once.
+    fn addressLocals(self: *Emitter) GenerateError![]bool {
+        const f = self.function;
+        const flags = try self.allocator.alloc(bool, f.scope.locals.len);
+        @memset(flags, false);
+        for (f.scope.locals[0..f.signature.parameter_count], 0..) |local, index| {
+            if (self.isScalar(local.ty)) continue;
+            const value = try self.layout(local.ty);
+            if (value.copy != .bytes or value.drop) continue;
+            // A zero-length aggregate copies nothing; it keeps the scratch the
+            // frame protocol places after the entry block, because that scratch
+            // is what stops QBE folding a null-like address into the load.
+            if (value.size == 0) continue;
+            if (writtenLocal(f, index)) continue;
+            flags[index] = true;
+        }
+        self.arm_addresses = try self.payloadAddresses(f, flags);
+        return flags;
+    }
+    /// The match payload bindings that may name the payload where it lives.
+    ///
+    /// A binding projected this way holds the address of the payload inside the
+    /// scrutinee's own storage instead of a copy of it, so an arm that only reads
+    /// fields pays no payload copy. The address is a compile-time constant —
+    /// the scrutinee local's slot plus the union's payload offset — which is why
+    /// it can be stored once at entry: the scrutinee is a local this function
+    /// never writes, so its storage and content never move.
+    ///
+    /// Every projected shape is checked: the scrutinee must be produced by the
+    /// `load_local` immediately before the dispatch with no branch reaching the
+    /// dispatch directly (so that producer is the only one), must not itself be
+    /// an address-holding local, and must never be written (`writtenLocal` covers
+    /// whole-value stores, moves, drops and arm bindings, and a record binding is
+    /// immutable, so a field write through it is already `E_IMMUTABLE`). The
+    /// binding slot must be an aggregate that owns nothing — a drop obligation
+    /// would need the copy the binding no longer has — of nonzero size, and it
+    /// must never be written either. A payload that owns nothing and is never
+    /// stored through is therefore safe to name in place, and the tracing
+    /// protocol already reads an address-holding local through its address.
+    fn payloadAddresses(self: *Emitter, f: bytecode.Function, flags: []bool) GenerateError![]const ArmAddress {
+        var projected: std.ArrayList(ArmAddress) = .empty;
+        for (f.scope.instructions, 0..) |instruction, pc| switch (instruction.op) {
+            .switch_variant => |dispatch| {
+                if (pc == 0 or self.isBranchTarget(pc)) continue;
+                const source = switch (f.scope.instructions[pc - 1].op) {
+                    .load_local => |slot| @backingInt(slot),
+                    else => continue,
+                };
+                if (source >= flags.len) continue;
+                if (writtenLocal(f, source)) continue;
+                // A local that already holds an address (a parameter this
+                // function only reads, or another projected binding) keeps the
+                // scrutinee at the caller's storage, so the payload address is
+                // one load deeper but just as constant.
+                const indirect = flags[source];
+                const union_layout = try self.layout(dispatch.ty);
+                for (dispatch.arms) |arm| {
+                    const target = @backingInt(arm.slot orelse continue);
+                    if (target >= flags.len or flags[target]) continue;
+                    const local = f.scope.locals[target];
+                    if (self.isScalar(local.ty)) continue;
+                    const value = try self.layout(local.ty);
+                    if (value.drop or value.size == 0) continue;
+                    if (writtenOutsideBindings(f, target)) continue;
+                    flags[target] = true;
+                    try projected.append(self.allocator, .{ .slot = target, .source = source, .offset = union_layout.payload_offset, .indirect = indirect });
+                }
+            },
+            else => {},
+        };
+        return projected.toOwnedSlice(self.allocator);
     }
     /// Link this function's native-stack frame record and enforce the logical
     /// depth ceiling and the execution-stack floor without a runtime call. The
@@ -1034,6 +1577,13 @@ const Emitter = struct {
         // leaf that stays well inside that headroom cannot reach it. The guard is
         // redundant there and one comparison per call goes away.
         const guarded = !self.small_leaf;
+        // Without logical depth accounting there is no `@frameadmit` block
+        // above. Still end the entry block before allocating the probe record:
+        // QBE reserves every constant allocation in entry in its static frame,
+        // while a later allocation lowers to a stack adjustment after that
+        // frame and its register saves. The latter address is the conservative
+        // physical stack position the floor comparison requires.
+        if (guarded and !self.frame_checks) try self.print(" jmp @frameadmit{d}\n@frameadmit{d}\n", .{ admit, admit });
         if (guarded) try self.print(
             " %v{d} =l alloc8 32\n %v{d} =l add %ctx, 64\n %v{d} =l loadl %v{d}\n %v{d} =l cultl %v{d}, %v{d}\n" ++
                 " jnz %v{d}, @floorfail{d}, @stackadmit{d}\n@floorfail{d}\n call $myl_qbe_fail_frame(l %ctx)\n jmp @entry_failure\n@stackadmit{d}\n",
@@ -1289,6 +1839,9 @@ const Emitter = struct {
         var index = self.function.scope.locals.len;
         while (index > 0) {
             index -= 1;
+            // A parameter read through the caller's address is the caller's
+            // value: this frame never owned it and must not release it.
+            if (self.byReference(index)) continue;
             const local = self.function.scope.locals[index];
             if (!(try self.layout(local.ty)).drop) continue;
             try self.print(drop_local, .{ try self.descriptor(local.ty), index });
@@ -1497,7 +2050,20 @@ const Emitter = struct {
     }
     /// Shared ABI lowering for guest and trusted host wrappers.
     pub fn parameterType(self: *Emitter, local: typed.Local) GenerateError![]const u8 {
-        return if (try self.largeValue(local.ty)) "l" else self.abiType(local.ty);
+        return self.argumentType(local.ty);
+    }
+    /// The ABI type one value argument of this type crosses a call boundary as.
+    /// QBE-AGGREF-1: an unmanaged aggregate crosses as the address of its
+    /// storage. The callee either copies it into a private slot (a written
+    /// parameter) or reads through it (a read-only one), so the argument copy
+    /// the by-value boundary made on both sides is gone. A move-only aggregate
+    /// keeps the by-value boundary and its single owner.
+    ///
+    /// A callback's parameters are the same boundary a direct call uses, so the
+    /// two spell it from the type alone and can never disagree.
+    pub fn argumentType(self: *Emitter, ty: typed.Type) GenerateError![]const u8 {
+        if ((try self.layout(ty)).copy == .prohibited) return self.abiType(ty);
+        return if (self.isScalar(ty)) self.abiType(ty) else "l";
     }
     /// Shared ABI lowering for guest and trusted host wrappers.
     pub fn returnType(self: *Emitter, function: bytecode.Function) GenerateError![]const u8 {
@@ -1567,7 +2133,12 @@ const Emitter = struct {
         var count: usize = 0;
         var previous = try std.fmt.allocPrint(self.allocator, "%v{d}", .{head});
         for (self.function.scope.locals, 0..) |local, i| if ((try self.layout(local.ty)).trace) {
-            const traced = try std.fmt.allocPrint(self.allocator, "%l{d}", .{i});
+            // A parameter read through the caller's address is traced where it
+            // lives; every other aggregate local is traced at its own slot.
+            const traced = if (self.byReference(i))
+                try std.fmt.allocPrint(self.allocator, "%v{d}", .{try self.load("l", i)})
+            else
+                try std.fmt.allocPrint(self.allocator, "%l{d}", .{i});
             try self.pushRoot(.{ .index = count, .source = traced, .copy = scalar(local.ty, self.program.records), .descriptor = try self.descriptor(local.ty) }, previous, base);
             previous = try std.fmt.allocPrint(self.allocator, "%root{d}", .{count});
             count += 1;
@@ -1725,7 +2296,7 @@ const Emitter = struct {
         if (packed_args) {
             try self.print(", l %arguments", .{});
         } else {
-            for (args, signature.parameters) |arg, ty| try self.print(", {s} %v{d}", .{ if (try self.largeValue(ty)) "l" else try self.abiType(ty), arg });
+            for (args, signature.parameters) |arg, ty| try self.print(", {s} %v{d}", .{ try self.argumentType(ty), arg });
         }
         try self.print(")\n", .{});
         if (indirect) try self.print(" storel %aux{d}, %s{d}\n", .{ self.pc, base }) else try self.store(base, value);
@@ -1828,19 +2399,24 @@ const Emitter = struct {
             .push_unit => try self.print(" storel 0, %s{d}\n", .{h}),
             .make_record, .get_field, .update_record, .array_length, .get_index, .replace_index, .make_variant, .switch_variant => try @import("qbe_aggregate.zig").emit(self, op, stack),
             .load_local, .move_local => |slot| {
-                const ty = self.function.scope.locals[@backingInt(slot)].ty;
-                if (scalar(ty, self.program.records)) try self.store(h, try self.load("l", @backingInt(slot))) else {
-                    try self.print(" blit %l{d}, %agg{d}, {d}\n storel %agg{d}, %s{d}\n", .{ @backingInt(slot), self.pc, (try self.layout(ty)).size, self.pc, h });
-                }
-                if (op == .move_local and (try self.layout(ty)).drop) try self.zeroTracedLocal(@backingInt(slot), ty);
+                const index = @backingInt(slot);
+                const ty = self.function.scope.locals[index].ty;
+                try self.readLocal(index, h);
+                if (op == .move_local and (try self.layout(ty)).drop) try self.zeroTracedLocal(index, ty);
             },
             .store_local => |slot| {
-                const v = try self.load("s", h - 1);
-                const ty = self.function.scope.locals[@backingInt(slot)].ty;
-                if ((try self.layout(ty)).drop) {
-                    try self.print(drop_local, .{ try self.descriptor(ty), @backingInt(slot) });
+                const index = @backingInt(slot);
+                const ty = self.function.scope.locals[index].ty;
+                // QBE-CTORFWD-1: the constructor immediately before this store
+                // already wrote the record into this local, field by field, so
+                // there is nothing left to copy.
+                if (!try @import("qbe_aggregate.zig").constructorForwarded(@TypeOf(self), self, self.pc, index)) {
+                    const v = try self.load("s", h - 1);
+                    if ((try self.layout(ty)).drop) {
+                        try self.print(drop_local, .{ try self.descriptor(ty), index });
+                    }
+                    if (scalar(ty, self.program.records)) try self.print(" storel %v{d}, %l{d}\n", .{ v, index }) else try self.print(" blit %v{d}, %l{d}, {d}\n", .{ v, index, (try self.layout(ty)).size });
                 }
-                if (scalar(ty, self.program.records)) try self.print(" storel %v{d}, %l{d}\n", .{ v, @backingInt(slot) }) else try self.print(" blit %v{d}, %l{d}, {d}\n", .{ v, @backingInt(slot), (try self.layout(ty)).size });
             },
             .drop_local => |slot| {
                 const ty = self.function.scope.locals[@backingInt(slot)].ty;

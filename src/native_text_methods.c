@@ -1,3 +1,5 @@
+/* `memmem` is a GNU extension, so the feature macro has to precede <string.h>. */
+#define _GNU_SOURCE
 #include "native_text_methods.h"
 #include <string.h>
 /* Traced pointer slot: it roots a receiver across an allocation and describes the
@@ -27,11 +29,45 @@ static size_t occurrences(const myl_native_text *input, const myl_native_text *n
     }
     return found;
 }
+/* Text storage is one 32-bit scalar per element, so the byte-level bulk search
+   only answers at an offset that begins a scalar; an unaligned hit is a byte
+   pattern that straddles two scalars and is skipped rather than reported. */
+static int64_t point_find(const uint32_t *points, size_t count, uint32_t value) {
+    const unsigned char *bytes=(const unsigned char *)points;
+    size_t length=count*sizeof(uint32_t), offset=0;
+    while (offset<length) {
+        const unsigned char *found=memchr(bytes+offset,(unsigned char)value,length-offset);
+        if (!found) return -1;
+        offset=(size_t)(found-bytes);
+        if (!(offset%sizeof(uint32_t)) && points[offset/sizeof(uint32_t)]==value) return (int64_t)(offset/sizeof(uint32_t));
+        offset++;
+    }
+    return -1;
+}
+/* A multi-scalar needle searches its exact scalar bytes, and `memmem` having
+   matched them means only the starting offset still needs checking. */
+static int64_t run_find(const uint32_t *points, size_t count, const uint32_t *needle, size_t width) {
+    const unsigned char *bytes=(const unsigned char *)points;
+    size_t length=count*sizeof(uint32_t), span=width*sizeof(uint32_t), offset=0;
+    while (offset+span<=length) {
+        const unsigned char *found=memmem(bytes+offset,length-offset,needle,span);
+        if (!found) return -1;
+        offset=(size_t)(found-bytes);
+        if (!(offset%sizeof(uint32_t))) return (int64_t)(offset/sizeof(uint32_t));
+        offset++;
+    }
+    return -1;
+}
+/* An empty needle answers -1 here; the emitted call traps R_EMPTY_SEPARATOR
+   before this runs. A needle longer than the receiver is absent as before, and
+   the scan itself runs in the libc bulk primitives instead of one `memcmp` call
+   per candidate scalar. */
 int64_t myl_native_text_find(const myl_native_text *input, const myl_native_text *needle) {
     if (!needle->length || needle->length>input->length) return -1;
-    for (size_t at=0; at+needle->length<=input->length; at++)
-        if (matches_at(input,at,needle)) return (int64_t)at;
-    return -1;
+    const uint32_t *points=myl_native_text_points(input);
+    const uint32_t *scalars=myl_native_text_points(needle);
+    if (needle->length==1) return point_find(points,input->length,scalars[0]);
+    return run_find(points,input->length,scalars,needle->length);
 }
 int64_t myl_native_text_count(const myl_native_text *input, const myl_native_text *needle) {
     return (int64_t)occurrences(input,needle);

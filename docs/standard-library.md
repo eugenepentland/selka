@@ -1,6 +1,6 @@
 # Standard library
 
-Ten modules ship inside the compiler. They are ordinary Python-style guest source
+Twelve modules ship inside the compiler. They are ordinary Python-style guest source
 built on the managed types described in the [Python-style guide](python-syntax.md),
 [managed memory](managed-memory.md) and [managed byte strings](bytes.md): `list`,
 `dict`, `str`, `bytes`, value `record` records, `Option` and `Result`. There is no
@@ -16,14 +16,89 @@ Import a module by name; projects do not copy these files.
 | [`path`](#path) | pure POSIX-style path text algebra |
 | [`hex`](#hex) | hexadecimal text for byte strings |
 | [`base64`](#base64) | RFC 4648 standard and URL-safe transcoding |
+| [`byte_builder`](#byte_builder) | incremental binary and UTF-8 output assembly |
 | [`json`](#json) | strict RFC 8259 parsing, rendering and typed access |
 | [`pool`](#pool) | generational handles into a reusable slot store |
+| [`network`](#network) | capability-based connections and byte I/O |
 | [`random`](#random) | seeded SplitMix64 streams and entropy-seeded generators |
 | [`time`](#time) | wall-clock instants and checked durations |
 
-Every fallible operation returns `Result[T, str]` with a readable message, or
-`Option[T]` when absence is not an error. No function returns an integer code and
-none of them traps on ordinary bad input.
+Managed-value modules report conversion failures using `Result` or `Option`.
+The byte builder's checked append operations return a success flag. The network
+module uses the resource-result types documented below.
+
+## byte_builder
+
+```text
+# doc: not-mylang
+class Builder: ...
+create() -> Builder
+append(builder: Builder, data: bytes) -> None
+append_range(builder: Builder, data: bytes, start: int, end: int) -> bool
+append_text(builder: Builder, text: str) -> None
+append_int(builder: Builder, value: int) -> None
+append_byte(builder: Builder, value: int) -> bool
+append_float(builder: Builder, value: float) -> bool
+append_spaces(builder: Builder, count: int) -> bool
+reserve(builder: Builder, extra: int) -> bool
+finish(builder: Builder) -> bytes
+```
+
+`byte_builder` assembles an immutable byte string in one mutable `byte_buffer`
+([in-place octet methods](bytes.md#writing-octets-in-place)) whose backing
+storage grows by doubling, so `append`, `append_range`, `append_byte`,
+`append_spaces`, `append_text`, `append_int` and `append_float` write each
+fragment's octets straight into that capacity and no fragment allocates a value
+for itself: `append_text` builds no temporary encoded `bytes`, and `append_int`
+and `append_float` no temporary text or byte value at all. `append_float` writes
+the canonical spelling `str(value)` prints, built on the runtime's own stack. `finish` copies the buffer once into an immutable
+snapshot with `bytes(buffer)`, so it contributes `managed_allocation` but does
+not mutate the builder; when the assembled octets are only going to a stream,
+`stream.write(builder.buffer)` writes the buffer's own storage instead and skips
+that copy.
+
+The checked appends reject rather than trap, and they reject before writing
+anything, so a refused call leaves the builder byte-for-byte unchanged:
+`append_range` rejects a negative `start`, an `end` below `start` or an `end`
+past `len(data)` — an empty range succeeds and changes nothing — while
+`append_byte` rejects values outside `0..255`, `append_spaces` rejects negative
+counts and `reserve` rejects a negative count. A rejection answers `False`; a
+no-op success such as `reserve(0)` answers `True` and changes nothing.
+`append_int` writes its digits through a small fixed local buffer, so it builds
+no managed intermediate value at all. `reserve` grows the buffer's
+capacity for a further `extra` octets without changing the finished length.
+
+`finish` returns an immutable snapshot. The builder remains usable, and later
+appends — including an append of a snapshot back into its own builder — do not
+change earlier results. All mutating operations carry `mutation` and
+`managed_allocation` effects and mutate only their builder argument; the buffer
+stays traced, so a builder survives collection at every allocation.
+
+```mylang
+# doc: expect 42
+module main
+import byte_builder
+
+def main() -> int:
+    output = byte_builder.create()
+    byte_builder.append_text(output, "λ")
+    if not byte_builder.append_byte(output, 0):
+        return 1
+    if not byte_builder.append_spaces(output, 3):
+        return 2
+    smallest = -9223372036854775808
+    byte_builder.append_int(output, smallest)
+    if not byte_builder.append_range(output, b"0123456789", 4, 6):
+        return 3
+    snapshot = byte_builder.finish(output)
+    if byte_builder.append_range(output, b"0123456789", 6, 99):
+        return 4
+    if not byte_builder.reserve(output, 128):
+        return 5
+    if byte_builder.finish(output) != snapshot:
+        return 6
+    return len(snapshot) + 14
+```
 
 ## math
 

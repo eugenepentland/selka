@@ -43,12 +43,13 @@ pub fn Lower(comptime E: type) type {
             try self.checkFailure("failure");
             try self.print(" storel 0, %s{d}\n", .{base});
         }
-        /// Lower `stream.write(text)`: the receiver is below the text operand.
-        pub fn write(self: *E, _: @FieldType(@FieldType(bytecode.Instruction, "op"), "stream_write"), stack: []const typed.Type) Error!void {
+        /// Lower a raw text or byte write with the receiver below the value.
+        pub fn write(self: *E, op: @FieldType(@FieldType(bytecode.Instruction, "op"), "stream_write"), stack: []const typed.Type) Error!void {
             const value = try self.load("s", stack.len - 1);
             const stream = try self.load("s", stack.len - 2);
             const count = self.temp();
-            try self.print(" %v{d} =l call $myl_qbe_stream_write(l %ctx, l %v{d}, l %v{d})\n", .{ count, stream, value });
+            const bytes = self.program.records[op.text.recordIndex()].collection.kind == .bytes;
+            try self.print(" %v{d} =l call ${s}(l %ctx, l %v{d}, l %v{d})\n", .{ count, if (bytes) "myl_qbe_stream_write_bytes" else "myl_qbe_stream_write", stream, value });
             try self.checkFailure("failure");
             try self.store(stack.len - 2, count);
         }

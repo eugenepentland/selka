@@ -72,8 +72,11 @@ pub fn reservedTypeName(ty: typed.Type) ?[]const u8 {
         else => null,
     };
 }
-/// Nonprimitive builtin names accepted by exported module signatures.
+/// Nonprimitive builtin names accepted by exported module signatures. The
+/// mutable octet buffer belongs here beside `bytes`: a module's public surface
+/// may name it without importing a declaration, exactly as it names `str`.
 pub fn scalar(name: []const u8) bool {
     if (std.mem.eql(u8, name, "str") or std.mem.eql(u8, name, "bytes") or std.mem.eql(u8, name, "float")) return true;
+    if (std.mem.eql(u8, name, "byte_buffer")) return true;
     return reservedType(name) != null;
 }

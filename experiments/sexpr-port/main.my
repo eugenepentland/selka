@@ -57,6 +57,15 @@ def summarise(nodes: list[ast.Node]) -> str:
     return f"forms={counts.forms} nodes={counts.nodes} atoms={counts.atoms} strings={counts.strings} ints={counts.ints} floats={counts.floats} measures={counts.measures} max_depth={counts.depth} value_sum={counts.values}"
 
 
+def render_to(out: Stream, nodes: list[ast.Node]) -> bool:
+    # `render_bytes` already produced one canonical byte snapshot, so writing it
+    # with a terminating newline avoids decoding those bytes to scalars and
+    # re-encoding them for `print`. The written bytes are identical, including
+    # the single trailing '\n' that `print` adds.
+    written = out.write(printer.render_bytes(nodes))
+    return written >= 0 and out.write(b"\n") == 1
+
+
 def main(args: list[str], fs: Filesystem, out: Stream, err: Stream) -> int:
     if len(args) == 0:
         err.print("usage: main <file.sexp> [--render]")
@@ -73,7 +82,8 @@ def main(args: list[str], fs: Filesystem, out: Stream, err: Stream) -> int:
     match parser.parse(source):
         case Ok(nodes):
             if render_only:
-                out.print(printer.render(nodes))
+                if not render_to(out, nodes):
+                    return 2
             else:
                 out.print(summarise(nodes))
             return 0

@@ -18,29 +18,61 @@ the project root, e.g. `import sexpr.ast as ast`.
 
 ## Frozen interfaces (do not change signatures)
 
-`sexpr/ast.my` (already written, shared, do not edit):
+`sexpr/ast.my` (shared; owner: representation workstream):
 
 ```mylang
-record Span: line: int, col: int, offset: int
-union Node: form(items: list[Node], span: Span), atom(text: str, span: Span),
-            string(text: str, span: Span), integer(value: int, span: Span),
-            decimal(value: float, span: Span, literal: Option[str] = None),
+record Span: line: u32, col: u32, offset: u32
+union Node: form(items: list[Node], span: Span), atom(text: View, span: Span),
+            string(text: View, span: Span), integer(value: int, span: Span),
+            decimal(value: float, span: Span, literal: Option[View] = None),
             measure(value: float, span: Span)
+def max_source_bytes() -> int
 def zero_span() -> Span
 def is_form(node: Node, name: str) -> bool
 def as_items(node: Node) -> Option[list[Node]]
-def as_atom(node: Node) -> Option[str]
-def as_string(node: Node) -> Option[str]
-def as_text(node: Node) -> Option[str]
+def as_atom(node: Node) -> Option[View]
+def as_string(node: Node) -> Option[View]
+def as_text(node: Node) -> Option[View]
 def as_number(node: Node) -> Option[float]
-def value_text(node: Node) -> Option[str]
+def value_text(node: Node) -> Option[View]
 def span_of(node: Node) -> Span
 def children(node: Node) -> list[Node]
 ```
 
 Each case carries the span of its first token, so the AST mirrors Zig's
 `Node { tag, span, literal }`; `decimal.literal` is `None` for a plain float and
-the source spelling (`100nF`, `220k`) for a suffixed one.
+the source spelling (`100nF`, `220k`) for a suffixed one. The three span fields
+are `u32` rather than `int`: a span is twelve bytes instead of twenty-four and a
+node eight bytes smaller, which the audit's "test narrower source metadata using
+existing integer types" asked for. `max_source_bytes()` is the largest document
+a span can address, and `parse` rejects a longer one with a located error before
+any span exists, so the checked `u32()` conversion is unreachable on valid
+input.
+
+Text is a `sexpr.view.View` — a `source`/`start`/`end` range of the document the
+node was parsed from — rather than an owned `str`. That is the whole point of the
+representation: Zig's `Node` holds `[]const u8` slices of the source, and a
+`str` payload widened every consumed spelling to one four-byte scalar per code
+point. Building a node now allocates nothing; a consumer that only re-emits text
+copies the source range, and one that needs scalars calls `view.text_of`.
+
+```mylang
+record View: source: bytes, start: int, end: int
+def at(source: bytes, start: int) -> View
+def view_len(found: View) -> int
+def bytes_of(found: View) -> bytes
+def text_of(found: View) -> Result[str, str]
+def matches(found: View, spelling: str) -> bool
+def equal(first: View, second: View) -> bool
+def first_byte(found: View) -> int
+def take(found: View, count: int) -> View
+def skip(found: View, count: int) -> View
+def through(first: View, second: View) -> View
+```
+
+`view.text_of` is the only conversion to `str`, and it reports a range that is
+not UTF-8 rather than substituting replacements. `view.matches` is how a fixed
+word (`+`, `mm`, a form name) is compared without decoding a string.
 
 `sexpr/tokenizer.my` (owner: tokenizer workstream):
 
@@ -63,18 +95,25 @@ def parse(src: bytes) -> Result[list[ast.Node], ParseError]
 ```mylang
 def render(nodes: list[ast.Node]) -> str
 def render_node(node: ast.Node) -> str
+def render_bytes(nodes: list[ast.Node]) -> bytes
+def render_node_bytes(node: ast.Node) -> bytes
 ```
+
+Both entry points run one traversal into a byte builder; the `str` forms decode
+that snapshot once instead of joining one decoded string per leaf and then
+re-encoding the join.
 
 ### Token text convention
 
-Unlike the Zig `Token.text` (a zero-copy slice), mylang tokens carry a decoded
-`str`. For a `string` token the value is the **raw slice between the quotes,
-escapes intact** (neither Zig nor this port unescapes — `parser.zig` stores the
-slice as-is). For the numeric kinds (`int_val`, `float_val`, `unit_val`,
-`si_val`) it is the **verbatim source spelling including the suffix**
-(`"100nF"`, `"1mil"`, `"220k"`), so the parser can apply the scale by
-inspecting the tail; `unit_val` is the one exception — its text stops before the
-`mm`/`mil` suffix, exactly as in Zig. `si_val` also covers `%`-terminated
+`Token.text` (the compatibility `tokenize` API) is still a decoded `str`, but the
+streaming `RawToken` a parser actually consumes carries only the source range
+`text_start..text_end`. For a `string` token that range is the **raw slice
+between the quotes, escapes intact** (neither Zig nor this port unescapes —
+`parser.zig` stores the slice as-is). For the numeric kinds (`int_val`,
+`float_val`, `unit_val`, `si_val`) it is the **verbatim source spelling including
+the suffix** (`"100nF"`, `"1mil"`, `"220k"`), so the parser can apply the scale
+by inspecting the tail; `unit_val` is the one exception — its range stops before
+the `mm`/`mil` suffix, exactly as in Zig. `si_val` also covers `%`-terminated
 literals (`"10%"`).
 
 ## Language gotchas (each of these cost a compile in this port already)

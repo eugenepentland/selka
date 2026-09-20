@@ -217,6 +217,26 @@
       "summary": "`bytes` is an immutable garbage-collected byte string with Python indexing, slicing and search.",
       "doc": "docs/bytes.md#managed-byte-strings"
     },
+    "aggregate-copy-elision": {
+      "kind": "language",
+      "summary": "A read-only aggregate parameter, a short-lived local and a match binding that owns nothing are read where they live, so field reads, tag tests and payload projections are loads rather than aggregate copies while record values keep snapshot semantics.",
+      "doc": "docs/performance.md#records-are-values-not-copies"
+    },
+    "byte-views": {
+      "kind": "language",
+      "summary": "`bytes.view(start, end)` reads a clamped range of the same storage and retains its owner, `bytes.copy()` materializes an owned copy, and every read operation works on a view.",
+      "doc": "docs/bytes.md#views-and-owned-copies"
+    },
+    "nonallocating-byte-parsing": {
+      "kind": "language",
+      "summary": "`bytes.scalar_count()` counts Unicode scalars while validating UTF-8, and `bytes.parse_int()`/`bytes.parse_float()` read the octets through the pinned number grammar, with no decoded temporary and no allocation.",
+      "doc": "docs/bytes.md#counting-characters-and-parsing-numbers"
+    },
+    "mutable-byte-buffer": {
+      "kind": "language",
+      "summary": "`byte_buffer` is the mutable octet buffer beside immutable `bytes`: six in-place append methods over spare capacity, including direct integer and canonical float formatting, and `bytes(buffer)` copies it into an immutable snapshot.",
+      "doc": "docs/bytes.md#writing-octets-in-place"
+    },
     "managed-insertion-ordered-dictionaries": {
       "kind": "language",
       "summary": "`dict` keeps insertion order over `int` or `str` keys and copyable values and answers `items`, `pop`, `update`, `setdefault`, `get`, `keys`, `values`, `copy` and `clear`.",
@@ -746,6 +766,11 @@
       "kind": "tooling",
       "summary": "Every `extern def` and `host def` takes `host: Host` as its first parameter; the checker verifies it at each call and the C ABI drops it before the foreign call, with `--allow-host` under `--restrict`.",
       "doc": "docs/c-ffi.md#direct-c-imports"
+    },
+    "buffered-stream-write": {
+      "kind": "language",
+      "summary": "`stream.write(buffer)` writes a mutable byte buffer's current octets straight out of its own storage, with no snapshot copy and the same `output` effect and byte count as a byte string.",
+      "doc": "docs/io.md#stream"
     },
     "stream-capability": {
       "kind": "language",

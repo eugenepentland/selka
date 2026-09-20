@@ -54,6 +54,19 @@ fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, 
         }
         writer.writeAll("};\n") catch return error.OutOfMemory;
     }
+    var trace_field_count: usize = 0;
+    if (layout.trace) for (layout.fields) |field| {
+        if ((try catalog.layout(field.ty)).trace) trace_field_count += 1;
+    };
+    if (trace_field_count != 0) {
+        writer.print("static const myl_native_field {s}_trace_fields[] = {{\n", .{name}) catch return error.OutOfMemory;
+        for (layout.fields) |field| {
+            if (!(try catalog.layout(field.ty)).trace) continue;
+            const child = try symbol(a, catalog, field.ty);
+            writer.print(" {{.offset={d},.type=&{s},.tag={d}}},\n", .{ field.offset, child, field.tag orelse 0 }) catch return error.OutOfMemory;
+        }
+        writer.writeAll("};\n") catch return error.OutOfMemory;
+    }
     const kind: []const u8 = if (@import("numeric_surface.zig").isFloat(ty, catalog.records)) "MYL_NATIVE_FLOAT" else switch (layout.kind) {
         .managed => "MYL_NATIVE_POINTER",
         .owned_buffer => "MYL_NATIVE_OWNED_BUFFER",
@@ -65,6 +78,8 @@ fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, 
         else => "MYL_NATIVE_PLAIN",
     };
     const fields = if (layout.fields.len == 0) "NULL" else try std.fmt.allocPrint(a, "{s}_fields", .{name});
+    const trace_fields = if (trace_field_count == 0) "NULL" else try std.fmt.allocPrint(a, "{s}_trace_fields", .{name});
+    const trace_mode = if (!layout.trace) "MYL_NATIVE_TRACE_NONE" else "MYL_NATIVE_TRACE_FIELDS";
     var collection_kind: usize = 0;
     var element: []const u8 = "NULL";
     var key: []const u8 = "NULL";
@@ -82,8 +97,9 @@ fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, 
     }
     writer.print(
         "const myl_native_type {s} = {{.size={d},.alignment={d},.fields={s},.field_count={d}," ++
-            ".count={d},.stride={d},.kind={s},.collection_kind={d},.element={s},.key={s}}};\n",
-        .{ name, layout.size, layout.alignment, fields, layout.fields.len, layout.count, layout.stride, kind, collection_kind, element, key },
+            ".count={d},.stride={d},.kind={s},.collection_kind={d},.element={s},.key={s}," ++
+            ".trace_fields={s},.trace_field_count={d},.trace_mode={s}}};\n",
+        .{ name, layout.size, layout.alignment, fields, layout.fields.len, layout.count, layout.stride, kind, collection_kind, element, key, trace_fields, trace_field_count, trace_mode },
     ) catch return error.OutOfMemory;
 }
 
@@ -108,4 +124,34 @@ test "native descriptors are catalog-order independent" {
     defer std.testing.allocator.free(b);
     try std.testing.expectEqualStrings(a, b);
     try std.testing.expect(std.mem.indexOf(u8, a, "MYL_NATIVE_ARRAY") != null);
+}
+
+test "native descriptors separate GC fields from complete structural fields" {
+    const span = @import("source.zig").Span{ .start = 0, .end = 0 };
+    const base = typed.Type.record_base;
+    const node: typed.Type = @fromBackingInt(base);
+    const holder: typed.Type = @fromBackingInt(base + 1);
+    const fields = [_]typed.Field{
+        .{ .name = "span", .declaration = span, .ty = .u64 },
+        .{ .name = "node", .declaration = span, .ty = node },
+    };
+    const records = [_]typed.Record{
+        .{ .id = node, .name = "Node", .declaration = span, .fields = &.{}, .managed = true },
+        .{ .id = holder, .name = "Holder", .declaration = span, .fields = &fields },
+    };
+    var catalog = try native.Catalog.initRecords(std.testing.allocator, &records);
+    defer catalog.deinit();
+    const output = try generate(std.testing.allocator, &catalog);
+    defer std.testing.allocator.free(output);
+    const holder_name = try symbol(std.testing.allocator, &catalog, holder);
+    defer std.testing.allocator.free(holder_name);
+    const node_name = try symbol(std.testing.allocator, &catalog, node);
+    defer std.testing.allocator.free(node_name);
+    const trace_field = try std.fmt.allocPrint(std.testing.allocator, "static const myl_native_field {s}_trace_fields[] = {{\n {{.offset=8,.type=&{s},.tag=0}},\n}};", .{ holder_name, node_name });
+    defer std.testing.allocator.free(trace_field);
+    try std.testing.expect(std.mem.indexOf(u8, output, trace_field) != null);
+    const holder_mode = try std.fmt.allocPrint(std.testing.allocator, ".trace_fields={s}_trace_fields,.trace_field_count=1,.trace_mode=MYL_NATIVE_TRACE_FIELDS", .{holder_name});
+    defer std.testing.allocator.free(holder_mode);
+    try std.testing.expect(std.mem.indexOf(u8, output, holder_mode) != null);
+    try std.testing.expect(std.mem.indexOf(u8, output, ".trace_fields=NULL,.trace_field_count=0,.trace_mode=MYL_NATIVE_TRACE_NONE") != null);
 }

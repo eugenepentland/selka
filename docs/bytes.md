@@ -86,6 +86,34 @@ def main() -> int:
     return len(record)
 ```
 
+## Searching a byte set
+
+`b.find_any(values, start)` answers where the next octet from a *set* begins.
+`values` is a byte set rather than a sequence, so its order and its repeats do not
+matter and an empty set finds nothing. The answer is the first index at or after
+`start` whose octet occurs anywhere in `values`, or `-1` when the rest of the
+receiver holds none. It is a search, so `start` clamps the way a slice endpoint
+does rather than trapping the way an index does: a negative `start` begins at 0,
+and a `start` at or past `len(b)` answers `-1`. This is how a scanner names any
+one of several terminators without first copying the bytes that remain.
+
+```mylang
+# doc: expect 24
+def main() -> int:
+    record = b"GET /index.html HTTP/1.1"
+    if record.find_any(b" \r\n", 4) != 15:
+        return 1
+    if record.find_any(b"/", 5) != 20:
+        return 2
+    if record.find_any(b"?", 0) != -1:
+        return 3
+    if record.find_any(b"", 0) != -1:
+        return 4
+    if record.find_any(b"G", -1) != 0:
+        return 5
+    return len(record)
+```
+
 ## Splitting and joining
 
 `b.split(sep)` returns `list[bytes]` and keeps leading and trailing empty pieces;
@@ -217,16 +245,191 @@ def main() -> int:
 
 ## Contracts and boundaries
 
-Byte strings are immutable: there is no `b[i] = value` and no `append`. Building
-a new value with `+`, a slice, `split`, `join`, or any conversion allocates, and
-those operations carry the transitive `managed_allocation` effect, so a `noalloc`
-function cannot construct them.
+Byte strings are immutable: there is no `b[i] = value` and no `append` on a
+`bytes` value, and `+`, a slice, `split`, `join` and every conversion build a
+fresh value and carry the transitive `managed_allocation` effect, so a `noalloc`
+function cannot construct them. Building octets in place is what the separate
+`byte_buffer` type is for.
 
 Like `str`, `bytes` is accepted in exported module signatures but is not an
 ordinary data type at wire boundaries. JSON encoding and decoding reject it with
 `E_JSON_CODEC` and `host def` signatures reject it with `E_HOST_SIGNATURE`. Every
 byte-string operation runs on the QBE native backend, over a native byte runtime
 that mirrors the managed text runtime with a one-byte stride.
+
+## Views and owned copies
+
+`b.view(start, end)` answers a byte string that *reads* the range `b[start:end]`
+instead of copying it. The endpoints clamp exactly like the slice that would have
+copied them, so a negative start counts from the end, an end past the length
+clamps, and a reversed or empty interval is the empty byte string. Every read —
+length, indexing, iteration, comparison, membership, search, slicing, `decode`,
+`scalar_count` and numeric parsing — applies to a view exactly as it does to a
+byte string, so a tokenizer can keep an atom's spelling as a range of the document
+rather than materializing it.
+
+A view retains the source's backing storage: the octets stay readable after the
+byte string that first owned them is unreachable, and a view of a view reads the
+same storage one range further in. Constructing one allocates the view's own small
+header, and that is the only allocation involved — comparing, searching, counting,
+parsing and re-emitting a view never allocate. `b.copy()` is the explicit owned
+copy: it materializes the octets into a byte string that shares no storage with
+the receiver, which is what a value that must outlive its document needs. Slicing
+a view (`v[a:b]`) copies too, exactly like slicing a byte string.
+
+```mylang
+# doc: expect 42
+def strip_quotes(line: bytes) -> bytes:
+    if len(line) < 2 or line[0] != 34:
+        return line
+    return line.view(1, len(line) - 1)
+
+
+def main() -> int:
+    line = b'"content-length: 42"'
+    field = strip_quotes(line)
+    if field != b"content-length: 42":
+        return 1
+    name = field.view(0, 14)
+    if name != b"content-length" or len(name) != 14:
+        return 2
+    if field.view(16, 18) != b"42":
+        return 3
+    # Clamping matches a slice: negative endpoints count from the end.
+    if field.view(0 - 2, 99) != b"42":
+        return 4
+    owned = name.copy()
+    if owned != b"content-length" or owned == b"content-lengt":
+        return 5
+    if line == field or len(line) != 20:
+        return 6
+    return len(name) + len(owned) + len(field.view(16, 18)) + 12
+```
+
+## Counting characters and parsing numbers
+
+`b.scalar_count()` answers `Result[int, str]`: the number of Unicode scalars in
+the octets, validated in the same pass that counts them, so measuring a range
+never decodes it. ASCII runs advance a word at a time, and an invalid sequence —
+an overlong encoding, a surrogate, a value above U+10FFFF, a truncated sequence
+or a stray continuation byte — answers `Err` carrying the decoder's reason.
+`len(b)` stays the octet count; only `scalar_count` measures characters.
+
+`b.parse_int()` and `b.parse_float()` answer `Option[int]` and `Option[float]` by
+reading the octets through the same pinned grammar as `int(text)` and
+`float(text)`: surrounding ASCII whitespace, one optional sign, decimal digits
+with single `_` separators between them, a fraction, an exponent, and the
+`inf`/`infinity`/`nan` spellings. An overflowing integer answers `None` rather
+than wrapping, and neither parse allocates, so a `noalloc` function may call them.
+
+```mylang
+# doc: expect 42
+def measure(raw: bytes) -> int:
+    match raw.scalar_count():
+        case Ok(width):
+            return width
+        case Err(_):
+            return 0 - 1
+
+
+def main() -> int:
+    ascii = b"hello"
+    if measure(ascii) != 5:
+        return 1
+    mixed = b"a\xce\xbbb\xf0\x9f\x98\x80c"
+    if measure(mixed) != 5:
+        return 2
+    if measure(b"\xff") != 0 - 1:
+        return 3
+    if measure(b"\xc0\xaf") != 0 - 1 or measure(b"\xce") != 0 - 1:
+        return 4
+    match b"  -12  ".parse_int():
+        case Some(value):
+            if value != 0 - 12:
+                return 5
+        case None:
+            return 6
+    match b"2.5e1".parse_float():
+        case Some(value):
+            if value != 25.0:
+                return 7
+        case None:
+            return 8
+    match b"12a".parse_int():
+        case Some(_):
+            return 9
+        case None:
+            pass
+    token = b"size=2.5mm".view(5, 8)
+    match token.parse_float():
+        case Some(value):
+            if value != 2.5:
+                return 10
+        case None:
+            return 11
+    return measure(ascii) + 37
+```
+
+## Writing octets in place
+
+`byte_buffer` is the mutable sibling of `bytes`: the same one-octet elements, the
+same length, indexing, iteration, comparison and search, and no `+`. What it adds
+is a growable backing with spare capacity beyond its length, and the six methods
+that write into it: `append_byte(value)`, `append_range(data, start, end)`,
+`append_utf8(text)`, `append_int(value)`, `append_float(value)` and
+`reserve(extra)`. Each answers a `bool` that is true exactly when it accepted the
+request — a no-op success such as `reserve(0)` answers true and writes nothing —
+none allocates a value for the appended fragment, and growth doubles the backing
+storage, so appending N octets performs `O(log N)` allocations. `append_utf8`,
+`append_int` and `append_float` build no temporary `bytes`, `str` or formatted
+text: the integer's digits and the float's canonical spelling are written
+straight into the buffer's capacity, and the float spelling is byte for byte what
+`str(value)` prints.
+
+The refusals mirror the checked vocabulary: `append_byte` rejects a value outside
+`0..255`, `append_range` rejects a negative `start`, an `end` below `start` or an
+`end` past `len(data)`, and `reserve` rejects a negative count. A rejection
+writes nothing, so the receiver is byte-for-byte unchanged, and `reserve` never
+changes the length. Length, indexing, iteration, comparison and search read the
+current content, and identity survives growth, so aliases see every append.
+
+A buffer's current octets reach a stream through the receiver's own `write`:
+`out.write(buffer)` writes exactly what the buffer holds, out of its own storage,
+with no snapshot and no copy — the final `bytes(buffer)` is only needed when the
+octets must outlive the buffer. It contributes the `output` effect like any other
+stream write, and appending afterwards cannot change what was already written.
+
+Only `byte_buffer` carries those methods, so an immutable byte string can never
+be written through: a `b"..."` literal, a slice and a view are all read-only, and
+`bytes(buffer)` copies the buffer's current octets into a fresh immutable byte
+string. Build a buffer with `byte_buffer(values)` from a `list[int]` — the
+standard library [`byte_builder`](standard-library.md#byte_builder) module wraps
+one — and take its snapshot with `bytes(buffer)`.
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    empty: list[int] = []
+    buffer = byte_buffer(empty)
+    if not buffer.append_range(b"hello world", 0, 5):
+        return 1
+    if not buffer.append_byte(44):
+        return 2
+    if not buffer.append_utf8(" λ"):
+        return 3
+    if not buffer.append_int(0 - 7):
+        return 4
+    if not buffer.append_float(2.5):
+        return 9
+    snapshot = bytes(buffer)
+    if not buffer.reserve(64):
+        return 5
+    if not buffer.append_byte(33):
+        return 6
+    if snapshot != b"hello, \xce\xbb-72.5" or bytes(buffer) != snapshot + b"!":
+        return 7
+    return len(snapshot) + 28
+```
 
 A `b"..."` literal still reads as a fixed `[N]u8` array exactly where the context
 demands one — an array annotation — so array-shaped host and fixture code keeps

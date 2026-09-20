@@ -5,6 +5,7 @@ const typed = @import("typed.zig");
 const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
 const templates = @import("nominal_templates.zig");
+const byte_buffer_name = templates.byte_buffer_name;
 const layouts = @import("nominal_layouts.zig");
 const Catalog = @import("type_catalog.zig").Catalog;
 const Names = @import("module_names.zig").Names;
@@ -303,6 +304,11 @@ const Builder = struct {
                     if (declaration.builtin_name) |name| {
                         if (std.mem.eql(u8, name, "str")) schema.collection.kind = .string;
                         if (std.mem.eql(u8, name, "bytes")) schema.collection.kind = .bytes;
+                        // The mutable octet buffer is a byte-kind buffer too: it
+                        // shares the one-byte element descriptor and every read
+                        // path, and only the method table separates it from the
+                        // immutable byte string.
+                        if (std.mem.eql(u8, name, "byte_buffer")) schema.collection.kind = .bytes;
                         if (std.mem.eql(u8, name, "dict")) {
                             schema.collection = .{ .kind = .dictionary, .key = schema.shape.buffer };
                             schema.shape.buffer = try self.runtimeType(node.edges[1].target);
@@ -368,4 +374,19 @@ pub fn instantiateLengths(catalog: *Catalog, declaration: usize, arguments: []co
     var builder: Builder = .{ .context = state.context, .index = state.index, .graph = state.graph, .catalog = catalog, .identities = &state.identities };
     try builder.complete();
     return builder.runtimeType(id);
+}
+
+/// Materialize a parameterless builtin prelude type on its first mention. The
+/// mutable octet buffer is declared with the other prelude types so a module may
+/// name it without an import, but a program that never names one keeps the
+/// minimal unconditional type table, so its schema is built here rather than in
+/// `collect`. Answers null for a name that is not such a builtin.
+pub fn materializePrelude(catalog: *Catalog, name: []const u8, span: source.Span) Error!?typed.Type {
+    const state = catalog.templates.store orelse return error.InternalError;
+    if (std.mem.eql(u8, name, byte_buffer_name) and !state.index.names.contains(byte_buffer_name)) try state.index.addByteBuffer();
+    const declaration = state.index.names.get(name) orelse return null;
+    const builtin = state.index.declarations.items[declaration].builtin_name orelse return null;
+    if (!std.mem.eql(u8, builtin, name)) return null;
+    const resolved = try instantiateLengths(catalog, declaration, &.{}, &.{}, span);
+    return resolved;
 }

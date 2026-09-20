@@ -4,6 +4,8 @@
 //! reporting `E_QBE_UNSUPPORTED` and falling back to the interpreter.
 const std = @import("std");
 const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
+const debug = std.debug;
 
 /// One guest program that touches every `str` method and both intrinsics.
 const every_method =
@@ -73,4 +75,50 @@ test "number parsing selects the shared text runtime unit and answers an option"
     const plain = try manifest(a, "def main() -> int:\n    return len(\"ab\")\n");
     defer a.free(plain);
     try std.testing.expect(std.mem.indexOf(u8, plain, "\"text_format\":false") != null);
+}
+
+/// Run one guest program under GC stress and return its exit value. A trap is
+/// reported and turned into an assertion failure so a runtime refusal cannot
+/// look like an ordinary nonzero result a test forgot to check.
+fn value(allocator: std.mem.Allocator, source: []const u8) !i64 {
+    var c = try language.Compilation.init(allocator, "text-find.my", source);
+    defer c.deinit();
+    const result = try native.runWithOptions(&c, .{ .gc_stress = true });
+    if (result.trapped()) debug.print("trap {s}: {s}\n", .{ result.trap.code, result.stderr });
+    try std.testing.expect(!result.trapped());
+    return result.value;
+}
+
+/// Guest program pinning `str.find`'s first-scalar-index answer for one-scalar,
+/// multi-scalar and longer-than-the-receiver needles, including multi-byte
+/// scalars whose low byte also occurs inside another scalar.
+const find_shapes =
+    \\def main() -> int:
+    \\    text = "the quick brown fox"
+    \\    if text.find("t") != 0:
+    \\        return 1
+    \\    if text.find("q") != 4:
+    \\        return 2
+    \\    if text.find("quick") != 4:
+    \\        return 3
+    \\    if text.find("fox") != 16:
+    \\        return 4
+    \\    if text.find("zebra") != -1:
+    \\        return 5
+    \\    if "aaa".find("aaaa") != -1:
+    \\        return 6
+    \\    if "héllo".find("é") != 1:
+    \\        return 7
+    \\    if "héllo".find("llo") != 2:
+    \\        return 8
+    \\    if "日本語".find("本") != 1:
+    \\        return 9
+    \\    if "日本語".find("語日") != -1:
+    \\        return 10
+    \\    return 42
+;
+
+// spec-case: PY-STR-2
+test "PY-STR-2 find answers the first scalar index for short long and overlong needles" {
+    try std.testing.expectEqual(@as(i64, 42), try value(std.testing.allocator, find_shapes));
 }

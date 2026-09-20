@@ -13,7 +13,7 @@ pub const Error = fs.Error || std.json.ParseError(std.json.Scanner) || outputs.E
     @import("qbe_build_embed.zig").Error || cache_api.Error ||
     @import("memory_budget").Error ||
     error{ UnsupportedNativeHost, ZigVersionMismatch, InvalidNativeManifest };
-const native_abi = "mylang-qbe-native-v4";
+const native_abi = "mylang-qbe-native-v5";
 const Record = struct { name: []const u8, symbol: []const u8, key: []const u8, object: []const u8, reused: bool };
 /// Fixed runtime translation units archived together once per build environment.
 const runtime_units = [_][]const u8{
@@ -24,6 +24,13 @@ const runtime_units = [_][]const u8{
 };
 /// Execute a native build using process-owned allocation and I/O policy.
 pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
+    return runMeasured(process, args, null);
+}
+/// Execute a native build and, when `phases` is non-null, hand its measured
+/// phase durations to the caller instead of writing any timing record. The
+/// caller owns the `phase-timings-v1` shape, so `--timings=json` cannot drift
+/// from the records `run` and `run-project` write.
+pub fn runMeasured(process: std.process.Init, args: []const []const u8, phases: ?*PhaseTimings) Error!u8 {
     if (args.len == 1 and std.mem.eql(u8, args[0], "--help")) {
         try std.Io.File.stdout().writeStreamingAll(process.io, options.usage);
         return 0;
@@ -39,8 +46,21 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     var context = try fs.Context.init(process.gpa, process.io, process.environ_map);
     defer context.deinit();
     const controls = try runtimeControls(context.allocator, args);
-    return build(context, parsed, controls);
+    return build(context, parsed, controls, phases);
 }
+/// The four phase durations a build measures for `--report`, in seconds. A
+/// command that asked for `phase-timings-v1` records receives them here instead
+/// of the driver writing them, so one module owns the JSON Lines shape. A field
+/// stays null when its phase never ran, and `complete` says whether every phase
+/// did: a build refused by the frontend names only `frontend`, while a linked
+/// artifact names all four.
+pub const PhaseTimings = struct {
+    frontend: ?f64 = null,
+    codegen: ?f64 = null,
+    link: ?f64 = null,
+    native: ?f64 = null,
+    complete: bool = false,
+};
 /// Collect runtime/authority controls from a `build --run` command line. They are
 /// forwarded before the `--` guest delimiter and revalidated by the native runtime.
 fn runtimeControls(allocator: std.mem.Allocator, args: []const []const u8) ![]const []const u8 {
@@ -121,7 +141,7 @@ fn frontendCompiler(context: fs.Context) fs.Error![]const u8 {
     if (context.environ.get("MYLANG_HOST_COMPILER")) |path| return context.allocator.dupe(u8, path);
     return std.Io.Dir.cwd().realPathFileAlloc(context.io, "/proc/self/exe", context.allocator);
 }
-fn build(context: fs.Context, parsed: options.Options, controls: []const []const u8) !u8 {
+fn build(context: fs.Context, parsed: options.Options, controls: []const []const u8, phases: ?*PhaseTimings) !u8 {
     const a = context.allocator;
     const prepared = prepare(context, parsed) catch |err| switch (err) {
         error.NativeToolFailed => return 2,
@@ -172,7 +192,11 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
         }
         const generated = try context.capture(arguments.items);
         const code = fs.exitCode(generated.term);
-        if (code != 0) return code;
+        if (code != 0) {
+            // A refused source still reports the phase that refused it.
+            if (phases) |measured| measured.frontend = seconds(context, start);
+            return code;
+        }
         break :frontend generated.stdout;
     };
     const manifest = (try std.json.parseFromSlice(std.json.Value, a, manifest_bytes, .{ .allocate = .alloc_always })).value;
@@ -187,6 +211,7 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
     const link_start = std.Io.Timestamp.now(context.io, .awake);
     const output = if (parsed.run) try std.fs.path.join(a, &.{ temporary, "program" }) else try context.absolute(parsed.output);
     const changed = try state.link(parsed, output);
+    const link = seconds(context, link_start);
     if (parsed.report) {
         const report = try std.json.Stringify.valueAlloc(a, .{
             .version = "qbe-build-v1",
@@ -200,7 +225,7 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
             .functions = state.records.items,
             .frontend_seconds = frontend,
             .codegen_seconds = codegen,
-            .link_seconds = seconds(context, link_start),
+            .link_seconds = link,
             .native_seconds = seconds(context, native_start),
             .target = parsed.target,
             .mode = parsed.mode,
@@ -209,6 +234,15 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
         }, .{});
         const stream = if (parsed.run) std.Io.File.stderr() else std.Io.File.stdout();
         try stream.writeStreamingAll(context.io, try std.fmt.allocPrint(a, "{s}\n", .{report}));
+    }
+    // The four phases `--report` already measures, handed to a caller that asked
+    // for `phase-timings-v1` records.
+    if (phases) |measured| {
+        measured.frontend = frontend;
+        measured.codegen = codegen;
+        measured.link = link;
+        measured.native = seconds(context, native_start);
+        measured.complete = true;
     }
     if (parsed.run) return spawnParts(context, output, controls, parsed);
     return 0;
@@ -652,7 +686,7 @@ test "native build rejects incompatible tools targets and malformed manifests" {
     try std.testing.expectError(error.ZigVersionMismatch, checkVersion("unrelated-version"));
     try std.testing.expectError(error.InvalidNativeManifest, validate(.null));
     const value = try std.json.parseFromSlice(std.json.Value, std.testing.allocator,
-        \\{"version":"qbe-units-v1","abi":"mylang-qbe-native-v4","entry":"1bad","functions":[{"symbol":"1bad","il":""}]}
+        \\{"version":"qbe-units-v1","abi":"mylang-qbe-native-v5","entry":"1bad","functions":[{"symbol":"1bad","il":""}]}
     , .{});
     defer value.deinit();
     try std.testing.expectError(error.InvalidNativeManifest, validate(value.value));

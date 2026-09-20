@@ -10,6 +10,9 @@ const requirements = @import("generic_requirements.zig");
 const Names = @import("module_names.zig").Names;
 const Error = diagnostic.Error;
 const Span = source.Span;
+/// The builtin mutable octet buffer's spelling. Only the in-place append methods
+/// belong to it, so this name is what the checker matches a receiver against.
+pub const byte_buffer_name = "byte_buffer";
 /// A type variable is local to its enclosing declaration; named identities index declarations.
 pub const Expression = union(enum) {
     callback: *const Callback,
@@ -128,6 +131,7 @@ pub const Index = struct {
         const text_declaration = &self.declarations.items[self.names.get("str").?];
         if (text_declaration.builtin_name != null) text_declaration.fields = try self.context.allocator.dupe(Field, &.{.{ .name = .{ .start = 0, .end = 0 }, .ty = .{ .builtin = .u32 } }});
         try self.addByteString();
+        try self.addByteBuffer();
         try self.addBuiltin("dict", 2, .buffer);
     }
     fn addCell(self: *Index) Error!void {
@@ -145,6 +149,21 @@ pub const Index = struct {
         if (declaration.builtin_name == null) return;
         declaration.fields = try self.context.allocator.dupe(Field, &.{.{ .name = .{ .start = 0, .end = 0 }, .ty = .{ .builtin = .u8 } }});
         // Guarantees are inferred once; a byte string registered from a later type lookup sets its own.
+        declaration.guarantees.include(.copy);
+        declaration.guarantees.include(.storable);
+    }
+    /// Materialize the mutable octet buffer on demand, for a source that names
+    /// `byte_buffer` or an operation that produces one. It shares the managed
+    /// one-byte element buffer of `bytes`, so length, indexing, iteration,
+    /// comparison and search read a buffer exactly like a byte string; the
+    /// distinct name is what restricts the in-place append methods to a buffer
+    /// and leaves the byte string immutable, so a view of a byte string can never
+    /// observe a later write through an alias.
+    pub fn addByteBuffer(self: *Index) Error!void {
+        try self.addBuiltin(byte_buffer_name, 0, .buffer);
+        const declaration = &self.declarations.items[self.names.get(byte_buffer_name) orelse return];
+        if (declaration.builtin_name == null) return;
+        declaration.fields = try self.context.allocator.dupe(Field, &.{.{ .name = .{ .start = 0, .end = 0 }, .ty = .{ .builtin = .u8 } }});
         declaration.guarantees.include(.copy);
         declaration.guarantees.include(.storable);
     }
@@ -170,6 +189,9 @@ pub const Index = struct {
         const ctx = self.context;
         const text = ctx.src.text(span);
         _ = try @import("removed_names.zig").reject(ctx.sink, span, text);
+        // The mutable octet buffer is a prelude type that a program only pays for
+        // when it names one; a declared type of that name still wins.
+        if (std.mem.eql(u8, text, "byte_buffer") and !self.syntax.aliases.contains(text)) try self.addByteBuffer();
         if (self.names.get(text)) |id| {
             if (self.declarations.items[id].builtin_name != null) {
                 if (ctx.names == null or !try ctx.names.?.topLevel(span)) return id;

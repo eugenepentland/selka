@@ -349,6 +349,67 @@ test "a managed list read past its initialized bounds is a located trap" {
     try t.expectEqual(@as(u64, 4), result.trap.line);
 }
 
+// spec-case: QBE-ELEMENT-READ-1
+test "scalar element reads load every width and keep a record read's copy" {
+    const source =
+        \\record Pair:
+        \\    left: i64
+        \\    right: i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    narrow = [1i16, 2i16, 300i16]
+        \\    flags = [True, False]
+        \\    raw = b"abc"
+        \\    total = i64(narrow[0]) + i64(narrow[-1]) + i64(narrow[1])
+        \\    if flags[-1]:
+        \\        total = total + 100
+        \\    rows = [Pair(left=5, right=6)]
+        \\    return total + rows[0].left + i64(raw[2])
+    ;
+    const result = try execute(source);
+    try t.expectEqual(@as(i64, 407), result.value);
+}
+
+// spec-case: QBE-ELEMENT-READ-1
+test "a scalar element read past the end keeps the original index in its detail" {
+    const source =
+        \\def main() -> i64:
+        \\    values = [4, 5, 6]
+        \\    return values[-4]
+    ;
+    const result = try execute(source);
+    try t.expect(result.trapped());
+    try t.expectEqualStrings("R_LIST_BOUNDS", result.trap.code);
+    try t.expectEqual(@as(i64, -4), result.trap.detail.values.index);
+    try t.expectEqual(@as(u64, 3), result.trap.detail.values.length);
+}
+
+// spec-case: QBE-ELEMENT-READ-1
+test "negative element indexes count from the end for lists byte strings and text" {
+    // A list index reaches the read already normalized by the checked frontend,
+    // so the read only compares it unsigned. A byte string and a `str` pass the
+    // caller's own index, so their reads keep the branchless sign adjustment
+    // (`sar`/`and`/`add`): this pins the values that adjustment produces.
+    const source =
+        \\record Pair:
+        \\    left: i64
+        \\    right: i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    values = [4, 5, 6]
+        \\    names = ["red", "green"]
+        \\    rows = [Pair(left=7, right=8)]
+        \\    raw = b"abc"
+        \\    text = "héllo"
+        \\    return values[-1] + values[-len(values)] + len(names[-1]) + rows[-1].left + i64(raw[-1]) + i64(raw[-len(raw)]) + len(text[-1]) + len(text[-len(text)])
+    ;
+    const result = try execute(source);
+    try t.expect(!result.trapped());
+    try t.expectEqual(@as(i64, 6 + 4 + 5 + 7 + 99 + 97 + 1 + 1), result.value);
+}
+
 // spec: GC-CAPABILITY-1
 test "a managed element declaration refuses a capability, directly or inside a record" {
     try rejectAll(&.{

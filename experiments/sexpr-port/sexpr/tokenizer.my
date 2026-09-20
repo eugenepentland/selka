@@ -25,6 +25,27 @@ module sexpr.tokenizer
 #    message/offset/line, so the column is dropped.
 #  - Source bytes are decoded to `str` (the frozen Token.text type); a slice
 #    that is not valid UTF-8 becomes "" rather than being preserved raw.
+#  - The byte loops do not touch the Lexer's cursor fields. Zig's methods read
+#    and write `self.pos`/`self.line`/`self.col` because they are inlined into
+#    one optimizer unit; here the Lexer is a heap object the backend cannot see
+#    through, so `next_raw` and the readers hold src/length/pos/line/col in
+#    local variables and store the cursor back only at token boundaries.
+#  - The string body and the comment tail are scanned as runs: an inner loop
+#    looks for the one byte class that ends the run, and the column moves once
+#    for the whole run instead of once per byte. Blanks stay per byte, because a
+#    single blank between two tokens is the common case and a run loop around it
+#    measured slower than the column increment it removes.
+#
+#    This is deliberately *not* the bulk `find` the audit note suggested. The
+#    guest surface has no find-from-offset: `bytes.find` always scans its
+#    receiver from index 0, and `src[pos:]` is an allocating, copying slice, so
+#    "search the remaining slice" costs O(remaining) per token (quadratic over a
+#    7.4 MB source) before the search itself. The search is no bargain either:
+#    `myl_native_bytes_find` calls `memcmp` once per candidate position
+#    (~30 instructions per byte, measured) against ~12-16 for the loop it would
+#    replace, and it is worse for a three-byte class than for one. A native
+#    find-from-offset or memchr-style find-any-of is the prerequisite for a real
+#    bulk scan; the tests below pin everything a run scan must keep exact.
 
 import sexpr.ast as ast
 
@@ -47,6 +68,25 @@ public record Token:
     span: ast.Span
 
 
+# Source bytes occupied by a token. `start` is inclusive and `end` exclusive;
+# unlike Token.text this also includes string quotes and dimension suffixes.
+public record SpanToken:
+    start: int
+    end: int
+    span: ast.Span
+
+
+# A streaming token whose spelling remains in the source. `text_start` and
+# `text_end` select the spelling exposed by Token.text (inside string quotes,
+# and before a consumed mm/mil suffix). This lets parsers inspect kind/span
+# without allocating a string for punctuation or tokens they reject.
+public record RawToken:
+    kind: Kind
+    source: SpanToken
+    text_start: int
+    text_end: int
+
+
 public record LexError:
     message: str
     offset: int
@@ -54,40 +94,56 @@ public record LexError:
 
 
 # Mirror of Zig's `Tokenizer` struct: the source plus the `pos`/`line`/`col`
-# cursor used for span reporting. A class, so the scan helpers below mutate one
-# shared cursor the way `*Tokenizer` methods do in Zig.
-class Lexer:
+# cursor used for span reporting. A class, so one shared cursor travels from
+# token to token the way `*Tokenizer` methods mutate theirs in Zig. The cursor
+# is only read and written at token boundaries: while scanning, `next_raw` and
+# the readers below keep `src`/`length`/`pos`/`line`/`col` in local variables.
+public class Lexer:
     src: bytes
     pos: int
     line: int
     col: int
 
 
+public def lexer(src: bytes) -> Lexer:
+    return Lexer(src=src, pos=0, line=1, col=1)
+
+
+# Reusable source-location lookup for diagnostics produced outside the normal
+# forward scan (for example conversion errors). Offsets count source bytes.
+public def span_at(src: bytes, offset: int) -> ast.Span:
+    line = 1
+    col = 1
+    index = 0
+    stop = offset
+    if stop > len(src):
+        stop = len(src)
+    while index < stop:
+        if src[index] == 10:
+            line = line + 1
+            col = 1
+        else:
+            col = col + 1
+        index = index + 1
+    return ast.Span(line=u32(line), col=u32(col), offset=u32(offset))
+
+
 # A missing peek is reported as -1: bytes index to 0..255, so no real byte can
 # collide with it, and every predicate below treats it as "not this character".
-def peek(lx: Lexer) -> int:
-    if lx.pos >= len(lx.src):
+# `length` is passed in so a caller's local copy is reused instead of reloading
+# the object header. Equivalent to Zig's `Tokenizer.peek`/`peekAt`.
+def peek(src: bytes, length: int, index: int) -> int:
+    if index >= length:
         return -1
-    return lx.src[lx.pos]
+    return src[index]
 
 
-def peek_at(lx: Lexer, offset: int) -> int:
-    index = lx.pos + offset
-    if index >= len(lx.src):
-        return -1
-    return lx.src[index]
-
-
-# Zig `Tokenizer.advance`: consuming a newline resets the column and bumps the
-# line; any other byte advances the column. Past the end it is a no-op.
-def advance(lx: Lexer):
-    if lx.pos < len(lx.src):
-        if lx.src[lx.pos] == 10:
-            lx.line = lx.line + 1
-            lx.col = 1
-        else:
-            lx.col = lx.col + 1
-        lx.pos = lx.pos + 1
+# Store the scan cursor back into the Lexer. Called once per token, never per
+# byte: inside a token the cursor is local.
+def store_cursor(lx: Lexer, pos: int, line: int, col: int):
+    lx.pos = pos
+    lx.line = line
+    lx.col = col
 
 
 def is_space(byte: int) -> bool:
@@ -139,159 +195,281 @@ def lexeme(src: bytes, start: int, end: int) -> str:
             return ""
 
 
+def raw(kind: Kind, start: int, end: int, text_start: int, text_end: int, line: int, col: int) -> RawToken:
+    span = ast.Span(line=u32(line), col=u32(col), offset=u32(start))
+    return RawToken(kind=kind, source=SpanToken(start=start, end=end, span=span), text_start=text_start, text_end=text_end)
+
+
+public def materialize(src: bytes, token: RawToken) -> Token:
+    return Token(kind=token.kind, text=lexeme(src, token.text_start, token.text_end), span=token.source.span)
+
+
 # Length (1 or 2) of an SI value suffix starting at the cursor, or 0 for none.
 #   scale letter alone:           `4.7k`, `10M`, `1n`
 #   scale letter + unit letter:   `100nF`, `10mA`, `100mV`
 #   unit letter alone:            `3.3V`, `0.5A`
-def si_suffix_len(lx: Lexer) -> int:
-    c0 = peek(lx)
+def si_suffix_len(src: bytes, length: int, pos: int) -> int:
+    c0 = peek(src, length, pos)
     if is_scale_letter(c0):
-        c1 = peek_at(lx, 1)
+        c1 = peek(src, length, pos + 1)
         if not is_atom_continue(c1):
             return 1
-        if is_unit_letter(c1) and not is_atom_continue(peek_at(lx, 2)):
+        if is_unit_letter(c1) and not is_atom_continue(peek(src, length, pos + 2)):
             return 2
         return 0
     if is_unit_required_scale(c0):
-        if is_unit_letter(peek_at(lx, 1)) and not is_atom_continue(peek_at(lx, 2)):
+        if is_unit_letter(peek(src, length, pos + 1)) and not is_atom_continue(peek(src, length, pos + 2)):
             return 2
         return 0
-    if is_unit_letter(c0) and not is_atom_continue(peek_at(lx, 1)):
+    if is_unit_letter(c0) and not is_atom_continue(peek(src, length, pos + 1)):
         return 1
     return 0
 
 
 # Quoted string. A `\` swallows the next byte; running off the end of the source
 # reports UnterminatedString at the opening quote, the most actionable location.
-def read_string(lx: Lexer, line: int, col: int, offset: int) -> Result[Token, LexError]:
-    advance(lx)  # skip opening "
-    start = lx.pos
+# A literal newline inside the string still advances line/col, exactly as Zig's
+# `advance` does while scanning the body.
+#
+# The body is consumed in runs up to the next `"` or literal newline — the only
+# two bytes whose cursor effect the scan has to see, because *every* other byte
+# of the body moves the cursor exactly one column, escape or not: `\` counts one
+# column and the byte it swallows counts the next, so a run of ordinary bytes and
+# a run of escapes have the same column effect, and an escaped newline resets the
+# column exactly like a literal one. What escapes change is only whether a quote
+# *closes* the string, and `\` swallows exactly one byte, so a quote closes it
+# unless an odd number of backslashes sits directly before it. The run scan
+# therefore tests two bytes per byte instead of three and does the escape
+# bookkeeping once per quote instead of once per body byte; the column still
+# advances once per run, with the delimiter doing its own cursor update.
+def read_string(lx: Lexer, offset: int) -> Result[RawToken, LexError]:
+    src = lx.src
+    length = len(src)
+    pos = lx.pos
+    line = lx.line
+    col = lx.col
+    start_line = line
+    start_col = col
+    pos = pos + 1  # skip opening "
+    col = col + 1
+    start = pos
     closed = False
-    while lx.pos < len(lx.src) and not closed:
-        ch = lx.src[lx.pos]
-        if ch == 92:
-            advance(lx)  # skip backslash
-            advance(lx)  # skip escaped char
-        elif ch == 34:
-            closed = True
-        else:
-            advance(lx)
+    while pos < length:
+        # One native search for the next `"` or literal newline, instead of a
+        # guest comparison per body byte: the body is most of a document.
+        found = src.find_any(b"\"\n", pos)
+        if found == -1:
+            col = col + (length - pos)
+            pos = length
+            break
+        col = col + (found - pos)
+        pos = found
+        byte = src[pos]
+        if byte == 10:
+            # A newline in the body moves line and column exactly as the
+            # scalar scan did: the run's columns, then the reset.
+            line = line + 1
+            col = 1
+            pos = pos + 1
+            continue
+        # A quote closes the string unless the backslash run directly before it
+        # is odd. Only backslashes are walked, and they are rare, so the common
+        # case is one comparison.
+        escaped = False
+        back = pos - 1
+        while back >= start and src[back] == 92:
+            escaped = not escaped
+            back = back - 1
+        if escaped:
+            pos = pos + 1
+            col = col + 1
+            continue
+        closed = True
+        break
     if not closed:
-        return Err(LexError(message="unterminated string", offset=offset, line=line))
-    text = lexeme(lx.src, start, lx.pos)
-    advance(lx)  # skip closing "
-    return Ok(Token(kind=Kind.string, text=text, span=ast.Span(line=line, col=col, offset=offset)))
+        store_cursor(lx, pos, line, col)
+        return Err(LexError(message="unterminated string", offset=offset, line=start_line))
+    text_end = pos
+    pos = pos + 1  # skip closing "
+    col = col + 1
+    store_cursor(lx, pos, line, col)
+    return Ok(raw(Kind.string, offset, pos, start, text_end, start_line, start_col))
 
 
-def read_atom(lx: Lexer, line: int, col: int, offset: int) -> Token:
-    start = lx.pos
-    while is_atom_continue(peek(lx)):
-        advance(lx)
-    return Token(kind=Kind.atom, text=lexeme(lx.src, start, lx.pos), span=ast.Span(line=line, col=col, offset=offset))
+def read_atom(lx: Lexer, offset: int) -> RawToken:
+    src = lx.src
+    length = len(src)
+    pos = lx.pos
+    line = lx.line
+    col = lx.col
+    start_line = line
+    start_col = col
+    start = pos
+    while pos < length and is_atom_continue(src[pos]):
+        pos = pos + 1
+        col = col + 1
+    store_cursor(lx, pos, line, col)
+    return raw(Kind.atom, offset, pos, start, pos, start_line, start_col)
 
 
 # An operator atom, allowing the two-character `>= <= == !=` forms.
-def read_operator(lx: Lexer, line: int, col: int, offset: int) -> Token:
-    start = lx.pos
-    advance(lx)
-    if peek(lx) == 61:
-        advance(lx)
-    return Token(kind=Kind.atom, text=lexeme(lx.src, start, lx.pos), span=ast.Span(line=line, col=col, offset=offset))
+def read_operator(lx: Lexer, offset: int) -> RawToken:
+    src = lx.src
+    length = len(src)
+    pos = lx.pos
+    line = lx.line
+    col = lx.col
+    start_line = line
+    start_col = col
+    start = pos
+    pos = pos + 1
+    col = col + 1
+    if peek(src, length, pos) == 61:
+        pos = pos + 1
+        col = col + 1
+    store_cursor(lx, pos, line, col)
+    return raw(Kind.atom, offset, pos, start, pos, start_line, start_col)
 
 
 # Number path: optional leading minus, digits, an optional fractional part, then
 # one of `mm`/`mil`, an SI suffix, `%`, or — when more atom characters follow —
 # a fallback to an atom (`204928-0301.stp`, `12.5abc`, `100kHz`, `5V3`).
-def read_number(lx: Lexer, line: int, col: int, offset: int) -> Token:
-    start = lx.pos
-    if peek(lx) == 45:
-        advance(lx)
-    while is_digit(peek(lx)):
-        advance(lx)
+# None of those bytes can be a newline, so only the column moves.
+def read_number(lx: Lexer, offset: int) -> RawToken:
+    src = lx.src
+    length = len(src)
+    pos = lx.pos
+    line = lx.line
+    col = lx.col
+    start_line = line
+    start_col = col
+    start = pos
+    if peek(src, length, pos) == 45:
+        pos = pos + 1
+        col = col + 1
+    while pos < length and is_digit(src[pos]):
+        pos = pos + 1
+        col = col + 1
     is_float = False
-    if peek(lx) == 46 and is_digit(peek_at(lx, 1)):
+    if peek(src, length, pos) == 46 and is_digit(peek(src, length, pos + 1)):
         is_float = True
-        advance(lx)  # skip .
-        while is_digit(peek(lx)):
-            advance(lx)
-    num_end = lx.pos
+        pos = pos + 1  # skip .
+        col = col + 1
+        while pos < length and is_digit(src[pos]):
+            pos = pos + 1
+            col = col + 1
+    num_end = pos
     # Dimension units: the token text stops before the suffix.
-    if peek(lx) == 109:
-        if peek_at(lx, 1) == 109 and not is_atom_continue(peek_at(lx, 2)):
-            advance(lx)
-            advance(lx)
-            return Token(kind=Kind.unit_val, text=lexeme(lx.src, start, num_end), span=ast.Span(line=line, col=col, offset=offset))
-        if peek_at(lx, 1) == 105 and peek_at(lx, 2) == 108 and not is_atom_continue(peek_at(lx, 3)):
-            advance(lx)
-            advance(lx)
-            advance(lx)
-            return Token(kind=Kind.unit_val, text=lexeme(lx.src, start, num_end), span=ast.Span(line=line, col=col, offset=offset))
+    if peek(src, length, pos) == 109:
+        if peek(src, length, pos + 1) == 109 and not is_atom_continue(peek(src, length, pos + 2)):
+            pos = pos + 2
+            col = col + 2
+            store_cursor(lx, pos, line, col)
+            return raw(Kind.unit_val, offset, pos, start, num_end, start_line, start_col)
+        if peek(src, length, pos + 1) == 105 and peek(src, length, pos + 2) == 108 and not is_atom_continue(peek(src, length, pos + 3)):
+            pos = pos + 3
+            col = col + 3
+            store_cursor(lx, pos, line, col)
+            return raw(Kind.unit_val, offset, pos, start, num_end, start_line, start_col)
     # SI scale (or a bare unit letter); the text keeps the suffix verbatim so
     # the parser can apply the scale.
-    suffix = si_suffix_len(lx)
+    suffix = si_suffix_len(src, length, pos)
     if suffix > 0:
-        step = 0
-        while step < suffix:
-            advance(lx)
-            step = step + 1
-        return Token(kind=Kind.si_val, text=lexeme(lx.src, start, lx.pos), span=ast.Span(line=line, col=col, offset=offset))
+        pos = pos + suffix
+        col = col + suffix
+        store_cursor(lx, pos, line, col)
+        return raw(Kind.si_val, offset, pos, start, pos, start_line, start_col)
     # Percent literal: only when the sign ends the token, so a standalone `%`
     # still lexes as an operator atom.
-    if peek(lx) == 37 and not is_atom_continue(peek_at(lx, 1)):
-        advance(lx)
-        return Token(kind=Kind.si_val, text=lexeme(lx.src, start, lx.pos), span=ast.Span(line=line, col=col, offset=offset))
-    if is_atom_continue(peek(lx)):
-        while is_atom_continue(peek(lx)):
-            advance(lx)
-        return Token(kind=Kind.atom, text=lexeme(lx.src, start, lx.pos), span=ast.Span(line=line, col=col, offset=offset))
-    text = lexeme(lx.src, start, lx.pos)
+    if peek(src, length, pos) == 37 and not is_atom_continue(peek(src, length, pos + 1)):
+        pos = pos + 1
+        col = col + 1
+        store_cursor(lx, pos, line, col)
+        return raw(Kind.si_val, offset, pos, start, pos, start_line, start_col)
+    if is_atom_continue(peek(src, length, pos)):
+        while pos < length and is_atom_continue(src[pos]):
+            pos = pos + 1
+            col = col + 1
+        store_cursor(lx, pos, line, col)
+        return raw(Kind.atom, offset, pos, start, pos, start_line, start_col)
+    store_cursor(lx, pos, line, col)
     if is_float:
-        return Token(kind=Kind.float_val, text=text, span=ast.Span(line=line, col=col, offset=offset))
-    return Token(kind=Kind.int_val, text=text, span=ast.Span(line=line, col=col, offset=offset))
+        return raw(Kind.float_val, offset, pos, start, pos, start_line, start_col)
+    return raw(Kind.int_val, offset, pos, start, pos, start_line, start_col)
 
 
 # Lex the whole source into a token list ending in `eof`, or stop at the first
 # LexError. `offset`/`line` in the error point at the offending byte (for an
 # unterminated string, at its opening quote).
+#
+# The skip loop is the only place the scanner itself consumes a newline, so it
+# is the only place line/col need updating here; the readers do their own.
+public def next_raw(lx: Lexer) -> Result[RawToken, LexError]:
+    src = lx.src
+    length = len(src)
+    pos = lx.pos
+    line = lx.line
+    col = lx.col
+    # Skip whitespace and `;` comments to end of line. A comment is consumed as
+    # a run up to the next line break, so the column moves once for the whole
+    # comment. Blanks stay per byte: a single blank between two tokens is the
+    # common case, and a run loop around it costs more than the column
+    # increment it removes (measured on the mixed-input probe).
+    skipping = True
+    while skipping:
+        byte = peek(src, length, pos)
+        if is_space(byte):
+            if byte == 10:
+                line = line + 1
+                col = 1
+            else:
+                col = col + 1
+            pos = pos + 1
+        elif byte == 59:
+            # A comment runs to the next line break: one native search for it
+            # rather than a guest comparison per comment byte.
+            run = pos
+            stop = src.find_any(b"\n", pos)
+            if stop == -1:
+                stop = length
+            pos = stop
+            col = col + (pos - run)
+        else:
+            skipping = False
+    offset = pos
+    byte = peek(src, length, pos)
+    if byte == -1:
+        store_cursor(lx, pos, line, col)
+        return Ok(raw(Kind.eof, offset, offset, offset, offset, line, col))
+    if byte == 40:
+        store_cursor(lx, pos + 1, line, col + 1)
+        return Ok(raw(Kind.lparen, offset, pos + 1, offset, pos + 1, line, col))
+    if byte == 41:
+        store_cursor(lx, pos + 1, line, col + 1)
+        return Ok(raw(Kind.rparen, offset, pos + 1, offset, pos + 1, line, col))
+    # Hand the cursor over at the token boundary; each reader re-reads it once.
+    store_cursor(lx, pos, line, col)
+    if byte == 34:
+        return read_string(lx, offset)
+    if is_digit(byte) or (byte == 45 and is_digit(peek(src, length, pos + 1))):
+        return Ok(read_number(lx, offset))
+    if is_atom_start(byte):
+        return Ok(read_atom(lx, offset))
+    if is_operator_char(byte):
+        return Ok(read_operator(lx, offset))
+    return Err(LexError(message="unexpected character", offset=offset, line=line))
+
+
+# Compatibility API: collect the streaming tokens and materialize their text.
 public def tokenize(src: bytes) -> Result[list[Token], LexError]:
-    lx = Lexer(src=src, pos=0, line=1, col=1)
+    lx = lexer(src)
     tokens: list[Token] = []
     while True:
-        # Skip whitespace and `;` comments to end of line.
-        skipping = True
-        while skipping:
-            byte = peek(lx)
-            if is_space(byte):
-                advance(lx)
-            elif byte == 59:
-                while peek(lx) != -1 and peek(lx) != 10:
-                    advance(lx)
-            else:
-                skipping = False
-        line = lx.line
-        col = lx.col
-        offset = lx.pos
-        byte = peek(lx)
-        if byte == -1:
-            tokens.append(Token(kind=Kind.eof, text="", span=ast.Span(line=line, col=col, offset=offset)))
-            return Ok(tokens)
-        if byte == 40:
-            advance(lx)
-            tokens.append(Token(kind=Kind.lparen, text="(", span=ast.Span(line=line, col=col, offset=offset)))
-        elif byte == 41:
-            advance(lx)
-            tokens.append(Token(kind=Kind.rparen, text=")", span=ast.Span(line=line, col=col, offset=offset)))
-        elif byte == 34:
-            match read_string(lx, line, col, offset):
-                case Ok(token):
-                    tokens.append(token)
-                case Err(problem):
-                    return Err(problem)
-        elif is_digit(byte) or (byte == 45 and is_digit(peek_at(lx, 1))):
-            tokens.append(read_number(lx, line, col, offset))
-        elif is_atom_start(byte):
-            tokens.append(read_atom(lx, line, col, offset))
-        elif is_operator_char(byte):
-            tokens.append(read_operator(lx, line, col, offset))
-        else:
-            return Err(LexError(message="unexpected character", offset=offset, line=line))
+        match next_raw(lx):
+            case Ok(found):
+                token = materialize(src, found)
+                tokens.append(token)
+                if token.kind == Kind.eof:
+                    return Ok(tokens)
+            case Err(problem):
+                return Err(problem)

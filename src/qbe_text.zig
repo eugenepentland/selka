@@ -97,22 +97,15 @@ fn emitPad(comptime E: type, self: *E, input: usize, base: usize) Error!void {
 
 /// Lower `int(text)` and `float(text)` into the shared grammar and an `Option`.
 fn emitParse(comptime E: type, self: *E, op: BufferOperation, input: usize, base: usize) Error!void {
-    const shape = prelude.optionShape(op.output, self.program.records) orelse return error.InternalError;
     const points = self.temp();
     const count = self.temp();
     const status = self.temp();
     try self.print(" %v{d} =l call $myl_native_text_points(l %v{d})\n", .{ points, input });
     try self.print(load_word, .{ count, input });
     try self.print(" %v{d} =w call $myl_native_number_parse(l %v{d}, l %v{d}, w {d}, l %scratch)\n", .{ status, points, count, @intFromBool(op.kind == .parse_float) });
-    const pointer = try self.aggregatePointer();
-    const slot = try self.address(pointer, (try self.layout(op.output)).payload_offset);
     const value = self.temp();
-    const label = self.temp();
     try self.print(" %v{d} =l loadl %scratch\n", .{value});
-    try self.print(" jnz %v{d}, @some{d}, @none{d}\n@some{d}\n storew {d}, %v{d}\n", .{ status, label, label, label, shape.some, pointer });
-    try self.writeValue(slot, value, shape.element);
-    try self.print(" jmp @parsed{d}\n@none{d}\n storew {d}, %v{d}\n jmp @parsed{d}\n@parsed{d}\n", .{ label, label, shape.none, pointer, label, label });
-    try self.store(base, pointer);
+    return @import("qbe_results.zig").Lower(E).option(self, .{ .ty = op.output, .status = status, .value = value, .slot = base });
 }
 
 /// An empty needle traps `R_EMPTY_SEPARATOR` before the runtime is called.

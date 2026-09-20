@@ -20,7 +20,16 @@ struct myl_native_type {
     unsigned kind;
     unsigned collection_kind; /* 0 opaque, 1 list, 2 string, 3 dictionary, 4 bytes */
     const myl_native_type *element, *key;
+    /* GC-only field view. Runtime-built descriptors may leave trace_mode zero,
+     * which preserves the legacy walk through `fields`. Generated descriptors
+     * use NONE for pointer-free values and FIELDS for a filtered table containing
+     * only children that can reach managed storage. Other descriptor consumers
+     * continue to use the complete field table above. */
+    const myl_native_field *trace_fields;
+    size_t trace_field_count;
+    unsigned trace_mode;
 };
+enum { MYL_NATIVE_TRACE_LEGACY, MYL_NATIVE_TRACE_NONE, MYL_NATIVE_TRACE_FIELDS };
 enum { MYL_NATIVE_PLAIN, MYL_NATIVE_POINTER, MYL_NATIVE_RECORD,
        MYL_NATIVE_ARRAY, MYL_NATIVE_VARIANT, MYL_NATIVE_OWNED_BUFFER, MYL_NATIVE_OWNED_POOL, MYL_NATIVE_FLOAT, MYL_NATIVE_RESOURCE };
 typedef struct myl_native_root {

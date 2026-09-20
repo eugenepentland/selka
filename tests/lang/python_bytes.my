@@ -119,6 +119,83 @@ public def test_generic_bodies_preserve_managed_byte_string_identities() -> bool
     return len(both[0]) + 40 == 42
 
 
+def bytes_search(raw: bytes, start: int) -> int:
+    return raw.find_any(b",;", start)
+
+
+# spec-case: PY-BYTES-3
+public def test_find_any_reports_the_first_octet_of_a_set_at_or_after_start() -> bool:
+    raw = b"a,b;c"
+    if raw.find_any(b",;", 0) != 1:
+        return False
+    if raw.find_any(b",;", 2) != 3:
+        return False
+    if raw.find_any(b"c", 0) != 4:
+        return False
+    if raw.find_any(b"z", 0) != -1:
+        return False
+    if raw.find_any(b"", 0) != -1:
+        return False
+    start = 2
+    if raw.find_any(b",;", start) != 3:
+        return False
+    return raw.find_any(b"a", 1) == -1
+
+
+# spec-case: PY-BYTES-3
+public def test_find_any_clamps_start_and_reads_values_as_a_byte_set() -> bool:
+    raw = b"a,b;c"
+    if raw.find_any(b"a", -5) != 0:
+        return False
+    if raw.find_any(b"a", len(raw)) != -1:
+        return False
+    if raw.find_any(b"a", len(raw) + 1) != -1:
+        return False
+    if raw.find_any(b",", 1) != 1:
+        return False
+    if raw.find_any(b"xx,xx", 0) != 1:
+        return False
+    if b"".find_any(b"a", 0) != -1:
+        return False
+    if b"needle-in-haystack".find_any(b"-", 0) != 6:
+        return False
+    if bytes_search(b"a,b;c", 2) != 3:
+        return False
+    values: list[int] = []
+    for value in range(256):
+        values.append(value)
+    every = bytes(values)
+    if len(every) != 256:
+        return False
+    if every.find_any(b"\x00", 0) != 0:
+        return False
+    if every.find_any(b"\xff", 255) != 255:
+        return False
+    if every.find_any(b"\x7f", 300) != -1:
+        return False
+    return raw.find_any(b"\x00\xff", 0) == -1
+
+
+# spec-case: PY-BYTES-3
+public def test_find_keeps_its_first_index_answer_for_short_and_long_needles() -> bool:
+    raw = b"banana"
+    if raw.find(b"a") != 1:
+        return False
+    if raw.find(b"n") != 2:
+        return False
+    if raw.find(b"na") != 2:
+        return False
+    if raw.find(b"banana") != 0:
+        return False
+    if raw.find(b"bananas") != -1:
+        return False
+    if raw.find(b"") != 0:
+        return False
+    if b"".find(b"a") != -1:
+        return False
+    return raw.find(b"an") == 1
+
+
 # spec: PY-BYTES-2
 public def test_integer_list_text_and_hexadecimal_conversions_round_trip() -> bool:
     values: list[int] = [0, 65, 255]

@@ -397,15 +397,26 @@ pub const Session = struct {
         const ast_index = self.prepared.ordinary_ast[index];
         const entry_index = self.cache.index.get(self.prepared.keys[ast_index]) orelse return self.reason(.no_entry);
         const entry = &self.cache.entries[entry_index];
+        // Cheap rejections first. The dependency digest is a 32-byte compare that
+        // also carries the mutation and effect contract, and both stored lengths
+        // are integer compares; only a request that survives all three touches
+        // the source bytes.
         if (!std.mem.eql(u8, &entry.meta.identity.context, &self.prepared.contexts[ast_index])) return self.reason(.context_changed);
         const before = entry.meta.identity.body;
         const after = self.prepared.bodies[ast_index];
-        if (before.end - before.start != after.end - after.start) return self.reason(.region_length_changed);
-        if (!std.mem.eql(u8, entry.source.body_bytes, self.src.bytes[after.start..after.end])) return self.reason(.region_bytes_changed);
         const old_region = entry.meta.identity.region;
         const new_region = self.prepared.regions[ast_index];
+        if (before.end - before.start != after.end - after.start) return self.reason(.region_length_changed);
         if (old_region.end - old_region.start != new_region.end - new_region.start) return self.reason(.region_length_changed);
+        // No stored digest covers the body bytes, so this byte comparison stays
+        // the authority and a same-length body edit still misses here. It is also
+        // the only source pass: the stored region encloses the stored body as its
+        // trailing slice, so one comparison over the union decides both ranges
+        // instead of walking the body's bytes again. An entry whose stored shape
+        // does not give that guarantee keeps its own body comparison.
+        const suffix = bodyIsRegionSuffix(entry.meta.identity, new_region, after);
         if (!std.mem.eql(u8, entry.source.region_bytes, self.src.bytes[new_region.start..new_region.end])) return self.reason(.region_bytes_changed);
+        if (!suffix and !std.mem.eql(u8, entry.source.body_bytes, self.src.bytes[after.start..after.end])) return self.reason(.region_bytes_changed);
 
         // Resolve only the declarations this body actually references. A dense
         // old-ordinal-indexed array would allocate and initialize one slot per
@@ -651,6 +662,21 @@ pub const Session = struct {
         try persistFresh(cache, fresh.items);
     }
 };
+
+/// Whether one entry's stored body bytes are the trailing slice of its stored
+/// region bytes, which is the shape `Entry.create` always writes: a region runs
+/// from the declaration's first byte to the end of its body. When it holds, and
+/// the two lengths have already been proven equal, byte equality of the region
+/// implies byte equality of the body, so the body needs no second pass. The
+/// fresh side is always in that shape because `key.prepare` ends a region where
+/// the body ends; this guards the stored side, whose shape a decoder only
+/// bounds-checks.
+fn bodyIsRegionSuffix(identity: owned.Identity, region: source.Span, body: source.Span) bool {
+    return identity.region.end == identity.body.end and
+        identity.body.start >= identity.region.start and
+        region.end == body.end and
+        body.start >= region.start;
+}
 
 /// Publish only entries freshly created by this request. Already-retained
 /// entries are either durable from an earlier process or intentionally bypassed

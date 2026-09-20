@@ -5,6 +5,7 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const io_render = @import("io_render.zig");
+const native_wiring = @import("wiring/native_session.zig");
 
 const module = "io-print.my";
 
@@ -205,6 +206,53 @@ test "STREAM-CAPABILITY a helper takes any Stream name and stream.write returns 
     try t.expectEqualStrings("abcd4\n", result.stderr);
 }
 
+// spec: STREAM-BYTES-1
+test "STREAM-BYTES raw writes preserve binary octets and return byte counts" {
+    const source =
+        "def send(log: Stream, data: bytes) -> int:\n    return log.write(data)\n\n" ++
+        "def main(out: Stream, err: Stream) -> int:\n" ++
+        "    out.print(send(out, b\"A\\0\\xff\"))\n" ++
+        "    err.print(send(err, b\"B\\0\\xff\"))\n" ++
+        "    out.print(send(out, b\"\"))\n" ++
+        "    out.print(out.write(\"λ\"), out.write(b\"λ\"))\n" ++
+        "    return 0\n";
+    const result = try runStreams(source);
+    try t.expectEqualStrings("A\x00\xff3\n0\nλλ1 2\n", result.stdout);
+    try t.expectEqualStrings("B\x00\xff3\n", result.stderr);
+}
+
+// spec-case: STREAM-BYTES-1
+test "STREAM-BYTES rejects non byte values and preserves the output effect" {
+    try reject("def main(out: Stream) -> int:\n    return out.write(42)\n", "E_TYPE");
+    try reject("def main(out: Stream) -> int noio:\n    return out.write(b\"x\")\n", "E_EFFECT_BOUND");
+}
+
+// spec-case: STREAM-BYTES-1
+test "STREAM-BYTES traps R_OUTPUT when the native byte sink refuses output" {
+    var compilation = try language.Compilation.init(t.allocator, module, "def main(out: Stream) -> int:\n    _ = out.write(b\"raw\\0\\xff\")\n    return 0\n");
+    defer compilation.deinit();
+    const session = try native_wiring.acquire();
+    var scratch = std.heap.ArenaAllocator.init(session.allocator());
+    defer scratch.deinit();
+    const manifest = try compilation.emitQbe(scratch.allocator());
+    const executable = try native.program(session, manifest);
+    const full = std.Io.Dir.openFileAbsolute(t.io, "/dev/full", .{ .mode = .write_only }) catch
+        return error.SkipZigTest;
+    defer full.close(t.io);
+    var child = try std.process.spawn(t.io, .{
+        .argv = &.{executable},
+        .stdout = .{ .file = full },
+        .stderr = .pipe,
+    });
+    var buffer: [4096]u8 = undefined;
+    var reader = child.stderr.?.readerStreaming(t.io, &buffer);
+    const diagnostic = try reader.interface.allocRemaining(t.allocator, .limited(64 * 1024));
+    defer t.allocator.free(diagnostic);
+    const term = try child.wait(t.io);
+    try t.expect(term == .exited and term.exited != 0);
+    try t.expect(std.mem.indexOf(u8, diagnostic, "R_OUTPUT") != null);
+}
+
 // spec-case: STREAM-CAPABILITY-1
 test "STREAM-CAPABILITY entry Stream parameters must be named out or err" {
     try reject("def main(log: Stream) -> int:\n    return 0\n", "E_MAIN");
@@ -243,4 +291,39 @@ test "DEBUG-LINE-1 a ReleaseFast build drops debug nodes in lowering" {
     const kept_manifest = try kept.emitQbe(t.allocator);
     defer t.allocator.free(kept_manifest);
     try t.expect(std.mem.indexOf(u8, kept_manifest, "myl_qbe_eprint_begin") != null);
+}
+
+// spec: STREAM-BYTES-2
+test "STREAM-BYTES-2 a mutable buffer writes its own octets without a snapshot" {
+    const source =
+        "def emit(log: Stream) -> int:\n" ++
+        "    empty: list[int] = []\n" ++
+        "    buffer = byte_buffer(empty)\n" ++
+        "    if not buffer.append_range(b\"head\\0\\xff\", 0, 6):\n" ++
+        "        return 0 - 1\n" ++
+        "    if not buffer.append_float(2.5):\n" ++
+        "        return 0 - 1\n" ++
+        "    written = log.write(buffer)\n" ++
+        "    if not buffer.append_byte(33):\n" ++
+        "        return 0 - 1\n" ++
+        "    _ = log.write(buffer)\n" ++
+        "    return written\n" ++
+        "\n" ++
+        "def main(out: Stream) -> int:\n" ++
+        "    count = emit(out)\n" ++
+        "    out.print(count)\n" ++
+        "    return 0\n";
+    const result = try runStreams(source);
+    try t.expectEqualStrings("head\x00\xff2.5head\x00\xff2.5!9\n", result.stdout);
+}
+
+// spec-case: STREAM-BYTES-2
+test "STREAM-BYTES-2 a buffer write keeps the output effect of the bytes it writes" {
+    try reject(
+        "def main(out: Stream) -> int noio:\n" ++
+            "    empty: list[int] = []\n" ++
+            "    buffer = byte_buffer(empty)\n" ++
+            "    return out.write(buffer)\n",
+        "E_EFFECT_BOUND",
+    );
 }

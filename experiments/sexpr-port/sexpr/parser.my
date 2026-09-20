@@ -1,32 +1,8 @@
 module sexpr.parser
 
-# Recursive-descent parser over sexpr.tokenizer's token list, ported from
-# eda/src/sexpr/parser.zig. Faithful behaviours:
-#   * every top-level form becomes one ast.Node, in source order
-#   * nested lists become ast.Node.form, however deep
-#   * int_val -> ast.Node.integer; float_val -> ast.Node.decimal
-#   * unit_val -> ast.Node.measure, normalised to millimetres
-#     (1 mil = 0.0254 mm); mm vs mil comes from the token-text suffix
-#   * si_val -> ast.Node.decimal with the SI scale applied from the suffix's
-#     first letter; a trailing unit letter (V/A/F/H/R) or `%` carries no scale
-#   * nesting past max_parse_depth() is rejected before the native stack
-#     overflows, and every rejection carries message + line + col + offset
-#
-# Omissions vs. the Zig parser, noted per CONTRACT.md:
-#   * the Zig `Node.literal` source spelling is not retained: a mylang union
-#     case cannot carry an optional field, so `100nF` and `100n` both decode
-#     to 1e-7 and are indistinguishable afterwards
-#   * the Zig parser owns no allocator-freeing code (mylang is garbage
-#     collected), and its `OutOfMemory` case has no mylang analogue
-#   * lexer failures arrive as tk.LexError, which carries no column; the
-#     column is derived from the reported offset so line and column agree
-#   * `parse_with_depth_cap` is an added seam so a test can exercise the
-#     nesting guard without the runner's 1,000,000-step test budget, which
-#     cannot even tokenize a 10_016-byte run of `(`
-
 import sexpr.ast as ast
 import sexpr.tokenizer as tk
-
+import sexpr.view as view
 
 public record ParseError:
     message: str
@@ -34,258 +10,227 @@ public record ParseError:
     col: int
     offset: int
 
-
-# Maximum S-expression nesting depth, mirroring parser.zig's `max_parse_depth`.
-# Real files nest well under 100 deep, so this cap only stops hostile
-# `(((…` input before the native stack overflows.
 def max_parse_depth() -> int:
     return 10000
 
-
-# 1 mil in millimetres, mirroring parser.zig's `mil_to_mm`.
 def mil_to_mm() -> float:
     return 0.0254
 
-
-# A token-index cursor handed to parse_node. The token list (and the raw source,
-# needed for the `mil` suffix, which the tokenizer strips) is shared by
-# reference, so threading `pos` keeps the parser free of mutable traversal state.
-# `cap` is the nesting cap in force for this parse.
-record Cursor:
+# One-token lookahead shared by recursive calls. Token text stays in src until
+# a node needs it, and traversal does not copy a list cursor per node.
+class Cursor:
     src: bytes
-    tokens: list[tk.Token]
-    pos: int
+    lexer: tk.Lexer
+    current: tk.RawToken
     cap: int
 
-
-# One parsed node plus the index of the first token after it, so a caller can
-# resume the walk without mutable state.
-record Step:
-    node: ast.Node
-    next: int
-
-
 def located(span: ast.Span, message: str) -> ParseError:
-    return ParseError(message=message, line=span.line, col=span.col, offset=span.offset)
+    return ParseError(message=message, line=int(span.line), col=int(span.col), offset=int(span.offset))
 
+def invalid_number(span: ast.Span) -> ParseError:
+    return located(span, "invalid number literal")
 
-def invalid_number(token: tk.Token) -> ParseError:
-    return located(token.span, "invalid number literal")
-
-
-# Line/column of a byte offset, derived the way the tokenizer advances: a
-# newline resets the column, every other byte advances it by one.
-def span_at(src: bytes, offset: int) -> ast.Span:
-    line = 1
-    col = 1
-    index = 0
-    size = len(src)
-    stop = offset
-    if stop > size:
-        stop = size
-    while index < stop:
-        if src[index] == 10:
-            line = line + 1
-            col = 1
-        else:
-            col = col + 1
-        index = index + 1
-    return ast.Span(line=line, col=col, offset=offset)
-
-
-# Translate a tokenizer rejection into a located ParseError. LexError carries
-# no column, so the column is recovered from the offset.
 def lex_failure(src: bytes, problem: tk.LexError) -> ParseError:
-    span = span_at(src, problem.offset)
+    span = tk.span_at(src, problem.offset)
     message = problem.message
     if len(message) == 0:
         message = "unexpected character"
-    return ParseError(message=message, line=span.line, col=span.col, offset=problem.offset)
+    return ParseError(message=message, line=int(span.line), col=int(span.col), offset=problem.offset)
+
+def advance(cursor: Cursor) -> Result[bool, ParseError]:
+    match tk.next_raw(cursor.lexer):
+        case Ok(token):
+            cursor.current = token
+            return Ok(True)
+        case Err(problem):
+            return Err(lex_failure(cursor.src, problem))
+
+# The source range a token's `Token.text` spelling occupies. A node keeps this
+# range instead of a decoded copy, so an atom or a string costs no allocation.
+def view_of(src: bytes, start: int, end: int) -> view.View:
+    return view.View(source=src, start=start, end=end)
+
+# Whether the token's spelling ends with the two ASCII bytes `first`, `second`.
+# The suffix letters are ASCII, which no continuation byte can equal, so reading
+# them straight out of the source is the same test as reading the decoded tail.
+def spelling_ends_with(src: bytes, raw: tk.RawToken, first: int, second: int) -> bool:
+    end = raw.text_end
+    return end - 2 >= raw.text_start and src[end - 2] == first and src[end - 1] == second
 
 
-def parse_int(token: tk.Token, next_pos: int) -> Result[Step, ParseError]:
-    match int(token.text):
-        case Some(value):
-            return Ok(Step(node=ast.Node.integer(value, token.span), next=next_pos))
-        case None:
-            return Err(invalid_number(token))
+# Whether the token's spelling ends with the three ASCII bytes `mil`.
+def spelling_ends_with_mil(src: bytes, raw: tk.RawToken) -> bool:
+    end = raw.text_end
+    return end - 3 >= raw.text_start and src[end - 3] == 109 and src[end - 2] == 105 and src[end - 1] == 108
 
+def source_has_mil_suffix(src: bytes, raw: tk.RawToken) -> bool:
+    after = raw.text_end
+    return after + 3 <= len(src) and src[after] == 109 and src[after + 1] == 105 and src[after + 2] == 108
 
-def parse_float(token: tk.Token, next_pos: int) -> Result[Step, ParseError]:
-    match float(token.text):
-        case Some(value):
-            return Ok(Step(node=ast.Node.decimal(value, token.span), next=next_pos))
-        case None:
-            return Err(invalid_number(token))
+# A `mm`/`mil` dimension: the number part has already been read as a float,
+# `mil` scales to millimetres, and the node stores the normalised value, exactly
+# as before.
+def parse_unit(raw: tk.RawToken, value: float, is_mil: bool) -> ast.Node:
+    mm_value = value
+    if is_mil:
+        mm_value = value * mil_to_mm()
+    return ast.Node.measure(mm_value, raw.source.span)
 
-
-# Whether the bytes just past the number spell `mil`. CONTRACT.md says a
-# unit token's text keeps its suffix, but the landed tokenizer follows Zig and
-# strips it, so accept either: the text suffix when present, else the source
-# bytes at the token's offset — exactly the check parser.zig makes.
-def source_has_mil_suffix(src: bytes, token: tk.Token) -> bool:
-    after = token.span.offset + len(token.text)
-    if after + 3 <= len(src):
-        return src[after] == 109 and src[after + 1] == 105 and src[after + 2] == 108
-    return False
-
-
-# A unit token is either `1.0mm`/`10mil` verbatim (the contract convention) or
-# bare `1.0`/`10` with the suffix consumed (the landed tokenizer's convention);
-# both decode to the same normalised millimetre measure.
-def parse_unit(src: bytes, token: tk.Token, next_pos: int) -> Result[Step, ParseError]:
-    text = token.text
-    number_text = text
-    is_mil = False
-    if text.endswith("mil"):
-        number_text = text[0:len(text) - 3]
-        is_mil = True
-    elif text.endswith("mm"):
-        number_text = text[0:len(text) - 2]
-    else:
-        is_mil = source_has_mil_suffix(src, token)
-    match float(number_text):
-        case Some(value):
-            mm_value = value
-            if is_mil:
-                mm_value = value * mil_to_mm()
-            return Ok(Step(node=ast.Node.measure(mm_value, token.span), next=next_pos))
-        case None:
-            return Err(invalid_number(token))
-
-
-# The suffix letter's multiplier, mirroring tokenizer.zig's `si_scales`:
-# k=1e3 M=1e6 G=1e9 m=1e-3 u=1e-6 n=1e-9 p=1e-12. A unit letter
-# (V/A/F/H/R) or `%` is not in the table and carries no scale.
-def si_scale(letter: str) -> float:
-    if letter == "k":
+# The scale a one-byte SI suffix selects. The suffix byte is read from the
+# source octet: ASCII `k`, `M`, `G`, `m`, `u`, `n`, `p`, and 1.0 otherwise.
+def si_scale(letter: int) -> float:
+    if letter == 107:
         return 1e3
-    if letter == "M":
+    if letter == 77:
         return 1e6
-    if letter == "G":
+    if letter == 71:
         return 1e9
-    if letter == "m":
+    if letter == 109:
         return 1e-3
-    if letter == "u":
+    if letter == 117:
         return 1e-6
-    if letter == "n":
+    if letter == 110:
         return 1e-9
-    if letter == "p":
+    if letter == 112:
         return 1e-12
     return 1.0
 
+def is_si_number_char(byte: int, index: int) -> bool:
+    return (byte >= 48 and byte <= 57) or byte == 46 or (byte == 45 and index == 0)
 
-# One character of an SI literal's numeric prefix, mirroring parseSiValue's
-# scan: digits, the decimal point, and a leading minus.
-def is_si_number_char(ch: str, index: int) -> bool:
-    if ch.isdigit():
-        return True
-    if ch == ".":
-        return True
-    if ch == "-" and index == 0:
-        return True
-    return False
-
-
-def si_number_end(text: str) -> int:
+# The byte length of the number part of an SI literal: its digits, an optional
+# leading sign and an optional dot, stopping at the first suffix byte. The
+# suffix is a scale letter, a unit letter or `%`, none of which a number part
+# can contain, so the scan stops exactly where the value ends. The scan reads
+# the source range in place, so no copy of the spelling is made.
+def si_number_end(src: bytes, raw: tk.RawToken) -> int:
     end = 0
-    size = len(text)
-    while end < size and is_si_number_char(text[end], end):
+    while raw.text_start + end < raw.text_end and is_si_number_char(src[raw.text_start + end], end):
         end = end + 1
     return end
 
-
-def parse_si(token: tk.Token, next_pos: int) -> Result[Step, ParseError]:
-    text = token.text
-    end = si_number_end(text)
-    # A missing prefix or a suffixless text cannot be scaled; the tokenizer's
-    # suffix rules make this unreachable for a real si_val token.
-    if end == 0 or end == len(text):
-        return Err(invalid_number(token))
-    match float(text[0:end]):
+# An SI-scaled or `%`-terminated literal. The suffix is one or two bytes — a
+# scale letter optionally followed by a unit letter, or `%` — and only its first
+# byte selects the multiplier, exactly as the scalar form's `text[end]` did. The
+# number part is parsed from its octets, and the node keeps the whole source
+# spelling, so printing it reproduces `100nF` rather than the `1e-7` value.
+def parse_si(src: bytes, raw: tk.RawToken) -> Result[ast.Node, ParseError]:
+    span = raw.source.span
+    end = si_number_end(src, raw)
+    if end == 0 or end >= raw.text_end - raw.text_start:
+        return Err(invalid_number(span))
+    match src.view(raw.text_start, raw.text_start + end).parse_float():
         case Some(value):
-            scaled = value * si_scale(text[end])
-            # Keep the source spelling alongside the decoded value, exactly as
-            # Zig's `Node.suffixedFloat` does: `100nF` and `100n` are the same
-            # number, but only the first says which physical quantity it is.
-            return Ok(Step(node=ast.Node.decimal(scaled, token.span, Some(text)), next=next_pos))
+            letter = src[raw.text_start + end]
+            return Ok(ast.Node.decimal(value * si_scale(letter), span, Some(view_of(src, raw.text_start, raw.text_end))))
         case None:
-            return Err(invalid_number(token))
+            return Err(invalid_number(span))
 
+# One leaf. Punctuation, EOF and the `string` kind are handled by the caller.
+# The numeric kinds read their octets in place, so no spelling is decoded on the
+# way to `int` or `float`.
+def parse_leaf(src: bytes, raw: tk.RawToken) -> Result[ast.Node, ParseError]:
+    span = raw.source.span
+    if raw.kind == tk.Kind.atom:
+        return Ok(ast.Node.atom(view_of(src, raw.text_start, raw.text_end), span))
+    if raw.kind == tk.Kind.int_val:
+        match src.view(raw.text_start, raw.text_end).parse_int():
+            case Some(value):
+                return Ok(ast.Node.integer(value, span))
+            case None:
+                return Err(invalid_number(span))
+    if raw.kind == tk.Kind.float_val:
+        match src.view(raw.text_start, raw.text_end).parse_float():
+            case Some(value):
+                return Ok(ast.Node.decimal(value, span))
+            case None:
+                return Err(invalid_number(span))
+    if raw.kind == tk.Kind.unit_val:
+        is_mil = False
+        number_end = raw.text_end
+        if spelling_ends_with_mil(src, raw):
+            number_end = raw.text_end - 3
+            is_mil = True
+        elif spelling_ends_with(src, raw, 109, 109):
+            number_end = raw.text_end - 2
+        else:
+            is_mil = source_has_mil_suffix(src, raw)
+        match src.view(raw.text_start, number_end).parse_float():
+            case Some(value):
+                return Ok(parse_unit(raw, value, is_mil))
+            case None:
+                return Err(invalid_number(span))
+    if raw.kind == tk.Kind.si_val:
+        return parse_si(src, raw)
+    return Err(located(span, "unexpected token"))
 
-# Parse one node starting at `cursor.pos`, returning it and the first index
-# after it. `depth` is the enclosing list nesting (0 at top level).
-def parse_node(cursor: Cursor, depth: int) -> Result[Step, ParseError]:
-    token = cursor.tokens[cursor.pos]
-    next_pos = cursor.pos + 1
-    match token.kind:
+def parse_node(cursor: Cursor, depth: int) -> Result[ast.Node, ParseError]:
+    raw = cursor.current
+    match raw.kind:
         case tk.Kind.lparen:
-            return parse_list(cursor, next_pos, depth, token.span)
+            _ = advance(cursor)?
+            return parse_list(cursor, depth, raw.source.span)
         case tk.Kind.rparen:
-            return Err(located(token.span, "unexpected ')' — no matching '(' is open here"))
-        case tk.Kind.atom:
-            return Ok(Step(node=ast.Node.atom(token.text, token.span), next=next_pos))
-        case tk.Kind.string:
-            return Ok(Step(node=ast.Node.string(token.text, token.span), next=next_pos))
-        case tk.Kind.int_val:
-            return parse_int(token, next_pos)
-        case tk.Kind.float_val:
-            return parse_float(token, next_pos)
-        case tk.Kind.unit_val:
-            return parse_unit(cursor.src, token, next_pos)
-        case tk.Kind.si_val:
-            return parse_si(token, next_pos)
+            return Err(located(raw.source.span, "unexpected ')' — no matching '(' is open here"))
         case tk.Kind.eof:
-            return Err(located(token.span, "unexpected end of input — a '(' was never closed"))
+            return Err(located(raw.source.span, "unexpected end of input — a '(' was never closed"))
+        case tk.Kind.string:
+            # A string node keeps the bytes between the quotes with escapes
+            # intact, which is exactly the tokenizer's text range.
+            node = ast.Node.string(view_of(cursor.src, raw.text_start, raw.text_end), raw.source.span)
+            _ = advance(cursor)?
+            return Ok(node)
+        case _:
+            node = parse_leaf(cursor.src, raw)?
+            _ = advance(cursor)?
+            return Ok(node)
 
-
-# Parse the children of a list whose `(` was consumed, stopping at its `)`.
-# `pos` is the index of the first child token; the returned Step points just
-# past the closing `)`.
-def parse_list(cursor: Cursor, pos: int, depth: int, open_span: ast.Span) -> Result[Step, ParseError]:
+def parse_list(cursor: Cursor, depth: int, open_span: ast.Span) -> Result[ast.Node, ParseError]:
     if depth >= cursor.cap:
         return Err(located(open_span, "s-expression nesting is too deep"))
     entries: list[ast.Node] = []
-    cursor_pos = pos
     while True:
-        token = cursor.tokens[cursor_pos]
-        # Point an unterminated list at the `(` that was never closed — the
-        # actionable location, not the end of the file where scanning stopped.
-        if token.kind == tk.Kind.eof:
+        if cursor.current.kind == tk.Kind.eof:
             return Err(located(open_span, "unexpected end of input — a '(' was never closed"))
-        if token.kind == tk.Kind.rparen:
-            cursor_pos = cursor_pos + 1
-            break
-        child = parse_node(Cursor(src=cursor.src, tokens=cursor.tokens, pos=cursor_pos, cap=cursor.cap), depth + 1)?
-        entries.append(child.node)
-        cursor_pos = child.next
-    return Ok(Step(node=ast.Node.form(entries, open_span), next=cursor_pos))
+        if cursor.current.kind == tk.Kind.rparen:
+            _ = advance(cursor)?
+            return Ok(ast.Node.form(entries, open_span))
+        entries.append(parse_node(cursor, depth + 1)?)
 
+# The old parser tokenized all input first. Drain only the syntax-error path so
+# a later lexical failure retains its historical precedence.
+def finish_after_syntax_error(cursor: Cursor, syntax: ParseError) -> Result[list[ast.Node], ParseError]:
+    while cursor.current.kind != tk.Kind.eof:
+        match tk.next_raw(cursor.lexer):
+            case Ok(token):
+                cursor.current = token
+            case Err(problem):
+                return Err(lex_failure(cursor.src, problem))
+    return Err(syntax)
 
-# Parse S-expression source into its top-level nodes under the default nesting
-# cap. Every tokenizer or parser rejection comes back as a located ParseError.
 public def parse(src: bytes) -> Result[list[ast.Node], ParseError]:
     return parse_with_depth_cap(src, max_parse_depth())
 
-
-# `parse` with an explicit nesting cap. Kept public so a test can exercise the
-# guard on a small document: the default test process gets 1,000,000 steps and
-# 1,024 frames, so a 10_016-deep document cannot even be tokenized there. The
-# public `parse` always passes max_parse_depth().
 public def parse_with_depth_cap(src: bytes, cap: int) -> Result[list[ast.Node], ParseError]:
-    tokens: list[tk.Token] = []
-    match tk.tokenize(src):
-        case Ok(lexed):
-            tokens = lexed
+    # `Span` addresses a document in 32 bits, so the whole-document bound is
+    # checked here, once, before any span exists. Every narrowing conversion in
+    # the tokenizer and this module is therefore in range, and an oversized
+    # document is an ordinary located failure rather than a conversion trap.
+    if len(src) > ast.max_source_bytes():
+        return Err(ParseError(message="document exceeds the 4 GiB source range", line=1, col=1, offset=0))
+    lx = tk.lexer(src)
+    first = tk.RawToken(kind=tk.Kind.eof, source=tk.SpanToken(start=0, end=0, span=ast.Span(line=1, col=1, offset=0)), text_start=0, text_end=0)
+    match tk.next_raw(lx):
+        case Ok(token):
+            first = token
         case Err(problem):
             return Err(lex_failure(src, problem))
+    cursor = Cursor(src=src, lexer=lx, current=first, cap=cap)
     nodes: list[ast.Node] = []
-    pos = 0
-    while True:
-        token = tokens[pos]
-        if token.kind == tk.Kind.eof:
-            break
-        parsed = parse_node(Cursor(src=src, tokens=tokens, pos=pos, cap=cap), 0)?
-        nodes.append(parsed.node)
-        pos = parsed.next
+    while cursor.current.kind != tk.Kind.eof:
+        match parse_node(cursor, 0):
+            case Ok(node):
+                nodes.append(node)
+            case Err(problem):
+                return finish_after_syntax_error(cursor, problem)
     return Ok(nodes)

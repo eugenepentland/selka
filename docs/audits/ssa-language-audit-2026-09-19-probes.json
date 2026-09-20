@@ -1,0 +1,170 @@
+{
+  "date": "2026-09-19",
+  "scope": "Installed-binary probes and static inspection; no compiler rebuild, Guardian gate, performance benchmark or agent trial.",
+  "git_head": "4919ea9f0b58528eb60aed60b91376aeb4ca3c15",
+  "pre_audit_git_status": " M .gitignore\n M docs/audits/cascade-experiment-plan-2026-09-19.md\n M docs/audits/runtime-performance-2026-09-18.md\n M experiments/sexpr-audit/evidence/audit.json\n?? SPEC.md.orig\n?? docs/audits/cascade-experiment-results-2026-09-19.md\n?? docs/audits/elegance-next-step-plan-2026-09-19.md\n?? docs/audits/llvm-backend-experiment-plan-2026-09-19.md\n?? docs/audits/research-testing-review-2026-09-19.md\n?? docs/audits/runtime-to-2x-2026-09-19.md\n?? experiments/cascade/\n?? experiments/diagnostic-feedback/\n?? experiments/elegance-metrics/\n?? experiments/llvm-backend/\n?? experiments/sexpr-audit/evidence/next-2x-20260919/\n?? src/bytecode_inline.zig.orig\n?? src/bytecode_inline_test.zig.orig\n?? src/qbe.zig.orig\n?? src/qbe_test.zig.orig\n",
+  "binary_sha256": {
+    "zig-out/bin/mylang": "6c131aefadc06395edd1a777973970f025be85aa157288419455f4cdff260dd6",
+    "zig-out/bin/qbe": "808cce427c310c4ecdcdae6360fade2f5579548f5af3852b1c94e77b22960c5d"
+  },
+  "source_sha256": {
+    "src/origins.zig": "d7eed4485114d0f80ddba40ef9ac92cbea8b90288b11524f75330c32c50451bd",
+    "src/qbe.zig": "2969ce18150ca2c7bc10adfaacee68630a8c038bba37da561eb2ff3db0139876",
+    "src/lower.zig": "d12816051c8d6d2ec24e307c6f049a2706120a48cfa8ad1e1a881720ec514e89",
+    "src/native_ir.zig": "b302e0112282d398d84f09725e2eabfa94a5fbad4844658e77e9eb7636ccfbfb",
+    "vendor/qbe/main.c": "868016acd52bacf84dc3c02633ecb4514d06b5057673b13bb5f3f40be26c98d5",
+    "vendor/qbe/mem.c": "4229d499db4186086b2d02ac78c983a6f31012d350bd281128ea61c037af4b65"
+  },
+  "scratch_directory": "/var/tmp/mylang-ssa-audit-20260919-hisqzux6",
+  "sources": {
+    "fresh_new_name.my": "def f(a: list[int]) -> int effects(managed_allocation):\n    input_alias = a\n    work = [2]\n    work[0] = 42\n    _ = input_alias\n    return work[0]\n\ndef main() -> int:\n    values = [1]\n    assert f(values) == 42\n    assert values[0] == 1\n    return 0\n",
+    "fresh_rebinding.my": "def f(a: list[int]) -> int effects(managed_allocation):\n    work = a\n    work = [2]\n    work[0] = 42\n    return work[0]\n\ndef main() -> int:\n    values = [1]\n    assert f(values) == 42\n    assert values[0] == 1\n    return 0\n",
+    "probes.my": "def reused(x: int) -> int:\n    value = x + 1\n    value = value * 2\n    return value\n\ndef versions(x: int) -> int:\n    incremented = x + 1\n    doubled = incremented * 2\n    return doubled\n\ndef accumulate(limit: int, choose: bool) -> int:\n    total = 1\n    if choose:\n        total = 2\n    else:\n        total = 3\n    i = 0\n    while i < limit:\n        total += i\n        i += 1\n    return total\n\ndef shared() -> int:\n    values = [1]\n    alias = values\n    before = values[0]\n    alias[0] = 9\n    return before * 10 + values[0]\n\ndef main() -> int:\n    assert reused(20) == 42\n    assert versions(20) == 42\n    assert accumulate(9, True) == 38\n    assert accumulate(0, False) == 3\n    assert shared() == 19\n    return 0\n",
+    "readonly_observation.my": "def first(values: list[int]) -> int effects():\n    return values[0]\n\ndef replace(values: list[int]) -> None effects(mutation) mutates(values):\n    values[0] = 9\n\ndef main() -> int:\n    values = [1]\n    before = first(values)\n    replace(values)\n    after = first(values)\n    assert before == 1\n    assert after == 9\n    return 0\n",
+    "unbound.my": "def choose(flag: bool) -> int:\n    if flag:\n        value = 42\n    return value\n\ndef main() -> int:\n    return choose(True)\n"
+  },
+  "semantic_checks": [
+    {
+      "name": "fresh_rebinding",
+      "mode": "check",
+      "status": 1,
+      "stdout": "",
+      "stderr": "/var/tmp/mylang-ssa-audit-20260919-hisqzux6/fresh_rebinding.my:4:5: error[E_MUTATION_PERMISSION]: managed write in `f` exceeds its contract; the declared effect ceiling does not include `mutation`\n      work[0] = 42\n      ^\n  note: /var/tmp/mylang-ssa-audit-20260919-hisqzux6/fresh_rebinding.my:1:28: declared effect ceiling and mutates footprint are here\n",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/var/tmp/mylang-ssa-audit-20260919-hisqzux6/fresh_rebinding.my"
+      ]
+    },
+    {
+      "name": "readonly_observation",
+      "mode": "check",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/var/tmp/mylang-ssa-audit-20260919-hisqzux6/readonly_observation.my"
+      ]
+    },
+    {
+      "name": "readonly_observation",
+      "mode": "run",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "run",
+        "/var/tmp/mylang-ssa-audit-20260919-hisqzux6/readonly_observation.my",
+        "--gc-stress",
+        "--timeout=20"
+      ]
+    },
+    {
+      "name": "unbound",
+      "mode": "check",
+      "status": 1,
+      "stdout": "",
+      "stderr": "/var/tmp/mylang-ssa-audit-20260919-hisqzux6/unbound.my:4:12: error[E_UNBOUND]: name may be read before it is assigned; some control-flow path reaching here leaves it unbound\n      return value\n             ^\n  note: /var/tmp/mylang-ssa-audit-20260919-hisqzux6/unbound.my:3:9: binding first assigned here\n",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/var/tmp/mylang-ssa-audit-20260919-hisqzux6/unbound.my"
+      ]
+    },
+    {
+      "name": "fresh_new_name",
+      "mode": "check",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/var/tmp/mylang-ssa-audit-20260919-hisqzux6/fresh_new_name.my"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "fresh_new_name",
+      "mode": "run",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "run",
+        "/var/tmp/mylang-ssa-audit-20260919-hisqzux6/fresh_new_name.my",
+        "--gc-stress",
+        "--timeout=20"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "combined_probe": {
+    "check_exit": 0,
+    "emit_exit": 0,
+    "native_run_command": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "run",
+      "/var/tmp/mylang-ssa-audit-20260919-hisqzux6/probes.my",
+      "--gc-stress",
+      "--print-result",
+      "--timeout=20"
+    ],
+    "native_run_exit": 0,
+    "stdout": "0\n",
+    "stderr": ""
+  },
+  "codegen": {
+    "emit_command": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "emit-qbe",
+      "/var/tmp/mylang-ssa-audit-20260919-hisqzux6/probes.my",
+      "--drop-debug",
+      "--drop-step-checks",
+      "--drop-frame-checks"
+    ],
+    "qbe_debug_command_template": [
+      "zig-out/bin/qbe",
+      "-d",
+      "MN",
+      "-o",
+      "NAME.s",
+      "NAME.ssa"
+    ],
+    "qbe_assembly_command_template": [
+      "zig-out/bin/qbe",
+      "-o",
+      "NAME.s",
+      "NAME.ssa"
+    ],
+    "units_accepted": [
+      "reused",
+      "versions",
+      "accumulate",
+      "shared",
+      "main"
+    ],
+    "emitted_il": {
+      "reused": "type :myl_slice = { l, l }\nexport function l $myl_f_7ad47c54939ef72323893e6c952c5f3a118c34cc76b31d9903d3ea0a4955e874(l %ctx, l %a0) {\n@entry\n %trap =l add %ctx, 32\n %l0 =l alloc8 8\n %l1 =l alloc8 8\n %s0 =l alloc8 8\n %s1 =l alloc8 8\n %v6 =l alloc8 32\n %v5 =l add %ctx, 48\n %v14 =l loadl %v5\n storel %v14, %v6\n %v15 =l add %v6, 8\n storel extern $myl_f_7ad47c54939ef72323893e6c952c5f3a118c34cc76b31d9903d3ea0a4955e874_meta, %v15\n %v16 =l add %v6, 16\n storel 0, %v16\n storel %v6, %v5\n %position =l add %v6, 16\n storel %a0, %l0\n jmp @i0\n@i0\n %v18 =l loadl %l0\n storel %v18, %s0\n storel 1, %s1\n %v19 =l loadl %s1\n %v20 =l loadl %s0\n %v21 =l add %v20, %v19\n %v22 =l csgtl %v20, 9223372036854775806\n jnz %v22, @overflow21, @checked21\n@overflow21\n storel 2, %position\n call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v20, l %v19, l 64)\n jmp @failure\n@checked21\n storel %v21, %s0\n %v23 =l loadl %s0\n storel %v23, %l1\n %v24 =l loadl %l1\n storel %v24, %s0\n storel 2, %s1\n %v25 =l loadl %s1\n %v26 =l loadl %s0\n %v27 =l mul %v26, %v25\n %v28 =l and %v26, 4294967295\n %v29 =l shr %v26, 32\n %v30 =l and %v25, 4294967295\n %v31 =l shr %v25, 32\n %v32 =l mul %v28, %v30\n %v33 =l shr %v32, 32\n %v34 =l mul %v29, %v30\n %v35 =l add %v34, %v33\n %v36 =l and %v35, 4294967295\n %v37 =l shr %v35, 32\n %v38 =l mul %v28, %v31\n %v39 =l add %v38, %v36\n %v40 =l shr %v39, 32\n %v41 =l mul %v29, %v31\n %v42 =l add %v41, %v37\n %v43 =l add %v42, %v40\n %v44 =l csltl %v26, 0\n %v45 =l csltl %v25, 0\n %v46 =l neg %v44\n %v47 =l neg %v45\n %v48 =l and %v25, %v46\n %v49 =l and %v26, %v47\n %v50 =l sub %v43, %v48\n %v50 =l sub %v50, %v49\n %v51 =l sar %v27, 63\n %v52 =l cnel %v50, %v51\n jnz %v52, @overflow27, @checked27\n@overflow27\n storel 6, %position\n call $myl_qbe_fail_overflow_op(l %ctx, l 2, l %v26, l %v25, l 64)\n jmp @failure\n@checked27\n storel %v27, %s0\n %v53 =l loadl %s0\n storel %v53, %l1\n %v54 =l loadl %l1\n storel %v54, %s0\n %v55 =l loadl %s0\n %v56 =l loadl %v6\n storel %v56, %v5\n ret %v55\n@failure\n %v59 =l loadl %v6\n storel %v59, %v5\n ret 0\n@entry_failure\n ret 0\n}\n",
+      "versions": "type :myl_slice = { l, l }\nexport function l $myl_f_4612828a45f10028b2454c6e3af053f8f82f2c0db635475a36ef65657683fa55(l %ctx, l %a0) {\n@entry\n %trap =l add %ctx, 32\n %l0 =l alloc8 8\n %l1 =l alloc8 8\n %l2 =l alloc8 8\n %s0 =l alloc8 8\n %s1 =l alloc8 8\n %v6 =l alloc8 32\n %v5 =l add %ctx, 48\n %v14 =l loadl %v5\n storel %v14, %v6\n %v15 =l add %v6, 8\n storel extern $myl_f_4612828a45f10028b2454c6e3af053f8f82f2c0db635475a36ef65657683fa55_meta, %v15\n %v16 =l add %v6, 16\n storel 0, %v16\n storel %v6, %v5\n %position =l add %v6, 16\n storel %a0, %l0\n jmp @i0\n@i0\n %v18 =l loadl %l0\n storel %v18, %s0\n storel 1, %s1\n %v19 =l loadl %s1\n %v20 =l loadl %s0\n %v21 =l add %v20, %v19\n %v22 =l csgtl %v20, 9223372036854775806\n jnz %v22, @overflow21, @checked21\n@overflow21\n storel 2, %position\n call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v20, l %v19, l 64)\n jmp @failure\n@checked21\n storel %v21, %s0\n %v23 =l loadl %s0\n storel %v23, %l1\n %v24 =l loadl %l1\n storel %v24, %s0\n storel 2, %s1\n %v25 =l loadl %s1\n %v26 =l loadl %s0\n %v27 =l mul %v26, %v25\n %v28 =l and %v26, 4294967295\n %v29 =l shr %v26, 32\n %v30 =l and %v25, 4294967295\n %v31 =l shr %v25, 32\n %v32 =l mul %v28, %v30\n %v33 =l shr %v32, 32\n %v34 =l mul %v29, %v30\n %v35 =l add %v34, %v33\n %v36 =l and %v35, 4294967295\n %v37 =l shr %v35, 32\n %v38 =l mul %v28, %v31\n %v39 =l add %v38, %v36\n %v40 =l shr %v39, 32\n %v41 =l mul %v29, %v31\n %v42 =l add %v41, %v37\n %v43 =l add %v42, %v40\n %v44 =l csltl %v26, 0\n %v45 =l csltl %v25, 0\n %v46 =l neg %v44\n %v47 =l neg %v45\n %v48 =l and %v25, %v46\n %v49 =l and %v26, %v47\n %v50 =l sub %v43, %v48\n %v50 =l sub %v50, %v49\n %v51 =l sar %v27, 63\n %v52 =l cnel %v50, %v51\n jnz %v52, @overflow27, @checked27\n@overflow27\n storel 6, %position\n call $myl_qbe_fail_overflow_op(l %ctx, l 2, l %v26, l %v25, l 64)\n jmp @failure\n@checked27\n storel %v27, %s0\n %v53 =l loadl %s0\n storel %v53, %l2\n %v54 =l loadl %l2\n storel %v54, %s0\n %v55 =l loadl %s0\n %v56 =l loadl %v6\n storel %v56, %v5\n ret %v55\n@failure\n %v59 =l loadl %v6\n storel %v59, %v5\n ret 0\n@entry_failure\n ret 0\n}\n",
+      "accumulate": "type :myl_slice = { l, l }\nexport function l $myl_f_2d1d52c3d18efcfdc850d0a5d7b65db2c7345b58fde859223a375a38fb0b2a83(l %ctx, l %a0, l %a1) {\n@entry\n %trap =l add %ctx, 32\n %l0 =l alloc8 8\n %l1 =l alloc8 8\n %l2 =l alloc8 8\n %l3 =l alloc8 8\n %s0 =l alloc8 8\n %s1 =l alloc8 8\n %v6 =l alloc8 32\n %v5 =l add %ctx, 48\n %v14 =l loadl %v5\n storel %v14, %v6\n %v15 =l add %v6, 8\n storel extern $myl_f_2d1d52c3d18efcfdc850d0a5d7b65db2c7345b58fde859223a375a38fb0b2a83_meta, %v15\n %v16 =l add %v6, 16\n storel 0, %v16\n storel %v6, %v5\n %position =l add %v6, 16\n storel %a0, %l0\n storel %a1, %l1\n jmp @i0\n@i0\n storel 1, %s0\n %v18 =l loadl %s0\n storel %v18, %l2\n %v19 =l loadl %l1\n storel %v19, %s0\n %v20 =l loadl %s0\n jnz %v20, @next21, @i7\n@next21\n storel 2, %s0\n %v21 =l loadl %s0\n storel %v21, %l2\n jmp @i9\n@i7\n storel 3, %s0\n %v22 =l loadl %s0\n storel %v22, %l2\n@i9\n storel 0, %s0\n %v23 =l loadl %s0\n storel %v23, %l3\n@i11\n %v24 =l loadl %l3\n storel %v24, %s0\n %v25 =l loadl %l0\n storel %v25, %s1\n %v26 =l loadl %s1\n %v27 =l loadl %s0\n %v28 =l csltl %v27, %v26\n storel %v28, %s0\n %v29 =l loadl %s0\n jnz %v29, @next30, @i24\n@next30\n %v30 =l loadl %l2\n storel %v30, %s0\n %v31 =l loadl %l3\n storel %v31, %s1\n %v32 =l loadl %s1\n %v33 =l loadl %s0\n %v34 =l add %v33, %v32\n %v36 =l xor %v33, %v34\n %v37 =l xor %v32, %v34\n %v38 =l and %v36, %v37\n %v35 =l csltl %v38, 0\n jnz %v35, @overflow34, @checked34\n@overflow34\n storel 17, %position\n call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v33, l %v32, l 64)\n jmp @failure\n@checked34\n storel %v34, %s0\n %v39 =l loadl %s0\n storel %v39, %l2\n %v40 =l loadl %l3\n storel %v40, %s0\n storel 1, %s1\n %v41 =l loadl %s1\n %v42 =l loadl %s0\n %v43 =l add %v42, %v41\n %v44 =l csgtl %v42, 9223372036854775806\n jnz %v44, @overflow43, @checked43\n@overflow43\n storel 21, %position\n call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v42, l %v41, l 64)\n jmp @failure\n@checked43\n storel %v43, %s0\n %v45 =l loadl %s0\n storel %v45, %l3\n jmp @i11\n@i24\n %v46 =l loadl %l2\n storel %v46, %s0\n %v47 =l loadl %s0\n %v48 =l loadl %v6\n storel %v48, %v5\n ret %v47\n@failure\n %v51 =l loadl %v6\n storel %v51, %v5\n ret 0\n@entry_failure\n ret 0\n}\n"
+    },
+    "accumulate_ssa": "function $myl_f_2d1d52c3d18efcfdc850d0a5d7b65db2c7345b58fde859223a375a38fb0b2a83() {\n@entry\n\t%ctx =l par\n\t%a0 =l par\n\t%a1 =l par\n\t%trap =l add %ctx, 32\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\t%v6 =l alloc8 32\n\t%v5 =l add %ctx, 48\n\t%v14 =l load %v5\n\tstorel %v14, %v6\n\t%v15 =l add %v6, 8\n\tstorel extern $myl_f_2d1d52c3d18efcfdc850d0a5d7b65db2c7345b58fde859223a375a38fb0b2a83_meta, %v15\n\t%v16 =l add %v6, 16\n\tstorel 0, %v16\n\tstorel %v6, %v5\n\t%position =l add %v6, 16\n\t%l0 =l copy %a0\n\t%l1 =l copy %a1\n@i0\n\t%s0.2 =l copy 1\n\t%v18 =l copy %s0.2\n\t%l2.1 =l copy %v18\n\t%v19 =l copy %l1\n\t%s0.3 =l copy %v19\n\t%v20 =l copy %s0.3\n\tjnz %v20, @next21, @i7\n@next21\n\t%s0.4 =l copy 2\n\t%v21 =l copy %s0.4\n\t%l2.30 =l copy %v21\n\tjmp @i9\n@i7\n\t%s0.5 =l copy 3\n\t%v22 =l copy %s0.5\n\t%l2.29 =l copy %v22\n@i9\n\t%l2.17 =l phi @i7 %l2.29, @next21 %l2.30\n\t%s0.6 =l copy 0\n\t%v23 =l copy %s0.6\n\t%l3.18 =l copy %v23\n@i11\n\t%l3.19 =l phi @i9 %l3.18, @checked43 %l3.28\n\t%l2.20 =l phi @i9 %l2.17, @checked43 %l2.24\n\t%v24 =l copy %l3.19\n\t%s0.7 =l copy %v24\n\t%v25 =l copy %l0\n\t%s1.14 =l copy %v25\n\t%v26 =l copy %s1.14\n\t%v27 =l copy %s0.7\n\t%v28 =l csltl %v27, %v26\n\t%s0.8 =l copy %v28\n\t%v29 =l copy %s0.8\n\tjnz %v29, @next30, @i24\n@next30\n\t%v30 =l copy %l2.20\n\t%s0.9 =l copy %v30\n\t%v31 =l copy %l3.19\n\t%s1.15 =l copy %v31\n\t%v32.21 =l copy %s1.15\n\t%v33.22 =l copy %s0.9\n\t%v34.23 =l add %v33.22, %v32.21\n\t%v36 =l xor %v33.22, %v34.23\n\t%v37 =l xor %v32.21, %v34.23\n\t%v38 =l and %v36, %v37\n\t%v35 =l csltl %v38, 0\n\tjnz %v35, @overflow34, @checked34\n@overflow34\n\tstorel 17, %position\n\targl %ctx\n\targl 0\n\targl %v33.22\n\targl %v32.21\n\targl 64\n\tcall $myl_qbe_fail_overflow_op\n\tjmp @failure\n@checked34\n\t%s0.10 =l copy %v34.23\n\t%v39 =l copy %s0.10\n\t%l2.24 =l copy %v39\n\t%v40 =l copy %l3.19\n\t%s0.11 =l copy %v40\n\t%s1.16 =l copy 1\n\t%v41.25 =l copy %s1.16\n\t%v42.26 =l copy %s0.11\n\t%v43.27 =l add %v42.26, %v41.25\n\t%v44 =l csgtl %v42.26, 9223372036854775806\n\tjnz %v44, @overflow43, @checked43\n@overflow43\n\tstorel 21, %position\n\targl %ctx\n\targl 0\n\targl %v42.26\n\targl %v41.25\n\targl 64\n\tcall $myl_qbe_fail_overflow_op\n\tjmp @failure\n@checked43\n\t%s0.12 =l copy %v43.27\n\t%v45 =l copy %s0.12\n\t%l3.28 =l copy %v45\n\tjmp @i11\n@i24\n\t%v46 =l copy %l2.20\n\t%s0.13 =l copy %v46\n\t%v47 =l copy %s0.13\n\t%v48 =l load %v6\n\tstorel %v48, %v5\n\tretl %v47\n@failure\n\t%v51 =l load %v6\n\tstorel %v51, %v5\n\tretl 0\n}\n",
+    "accumulate_phi_nodes": [
+      "\t%l2.17 =l phi @i7 %l2.29, @next21 %l2.30",
+      "\t%l3.19 =l phi @i9 %l3.18, @checked43 %l3.28",
+      "\t%l2.20 =l phi @i9 %l2.17, @checked43 %l2.24"
+    ],
+    "accumulate_source_local_slots": 4,
+    "accumulate_local_slot_memory_operations_after_ssa": 0,
+    "normalized_assembly": {
+      "reused": ".text\n.balign 16\n.globl FUNCTION\nFUNCTION:\n\tendbr64\n\tpushq %rbp\n\tmovq %rsp, %rbp\n\tsubq $40, %rsp\n\tpushq %rbx\n\tmovq %rsi, %rdx\n\tmovq 48(%rdi), %rax\n\tmovq %rax, -32(%rbp)\n\tmovq FUNCTION_meta@gotpcrel(%rip), %rax\n\tmovq %rax, -24(%rbp)\n\tmovq $0, -16(%rbp)\n\tleaq -32(%rbp), %rax\n\tmovq %rax, 48(%rdi)\n\tmovq $9223372036854775806, %rax\n\tcmpq %rax, %rdx\n\tjg .Lbb4\n\taddq $1, %rdx\n\timulq $2, %rdx, %rcx\n\tmovl $4294967295, %eax\n\tmovq %rdx, %r9\n\tandq %rax, %r9\n\tmovq %rdx, %r8\n\tshrq $32, %r8\n\timulq $2, %r9, %rax\n\tshrq $32, %rax\n\timulq $2, %r8, %rsi\n\taddq %rax, %rsi\n\tmovl $4294967295, %eax\n\tandq %rsi, %rax\n\tshrq $32, %rsi\n\timulq $0, %r9, %r9\n\taddq %r9, %rax\n\tshrq $32, %rax\n\timulq $0, %r8, %r8\n\taddq %r8, %rsi\n\taddq %rsi, %rax\n\tcmpq $0, %rdx\n\tsetl %sil\n\tmovzbq %sil, %rsi\n\tnegq %rsi\n\tmovq %rsi, %r8\n\tandq $2, %r8\n\tmovq %rdx, %rsi\n\tandq $0, %rsi\n\tsubq %r8, %rax\n\tsubq %rsi, %rax\n\tsarq $63, %rcx\n\tcmpq %rax, %rcx\n\tjnz .Lbb3\n\tmovq -32(%rbp), %rax\n\tmovq %rax, 48(%rdi)\n\timulq $2, %rdx, %rax\n\tjmp .Lbb6\n.Lbb3:\n\tmovq $6, -16(%rbp)\n\tmovl $64, %r8d\n\tmovl $2, %ecx\n\tmovl $2, %esi\n\tmovq %rdi, %rbx\n\tcallq myl_qbe_fail_overflow_op\n\tmovq %rbx, %rdi\n\tjmp .Lbb5\n.Lbb4:\n\tmovq $2, -16(%rbp)\n\tmovl $64, %r8d\n\tmovl $1, %ecx\n\tmovl $0, %esi\n\tmovq %rdi, %rbx\n\tcallq myl_qbe_fail_overflow_op\n\tmovq %rbx, %rdi\n.Lbb5:\n\tmovq -32(%rbp), %rax\n\tmovq %rax, 48(%rdi)\n\tmovl $0, %eax\n.Lbb6:\n\tpopq %rbx\n\tleave\n\tret\n.type FUNCTION, @function\n.size FUNCTION, .-FUNCTION\n/* end function FUNCTION */\n\n.section .note.GNU-stack,\"\",@progbits\n",
+      "versions": ".text\n.balign 16\n.globl FUNCTION\nFUNCTION:\n\tendbr64\n\tpushq %rbp\n\tmovq %rsp, %rbp\n\tsubq $40, %rsp\n\tpushq %rbx\n\tmovq %rsi, %rdx\n\tmovq 48(%rdi), %rax\n\tmovq %rax, -32(%rbp)\n\tmovq FUNCTION_meta@gotpcrel(%rip), %rax\n\tmovq %rax, -24(%rbp)\n\tmovq $0, -16(%rbp)\n\tleaq -32(%rbp), %rax\n\tmovq %rax, 48(%rdi)\n\tmovq $9223372036854775806, %rax\n\tcmpq %rax, %rdx\n\tjg .Lbb4\n\taddq $1, %rdx\n\timulq $2, %rdx, %rcx\n\tmovl $4294967295, %eax\n\tmovq %rdx, %r9\n\tandq %rax, %r9\n\tmovq %rdx, %r8\n\tshrq $32, %r8\n\timulq $2, %r9, %rax\n\tshrq $32, %rax\n\timulq $2, %r8, %rsi\n\taddq %rax, %rsi\n\tmovl $4294967295, %eax\n\tandq %rsi, %rax\n\tshrq $32, %rsi\n\timulq $0, %r9, %r9\n\taddq %r9, %rax\n\tshrq $32, %rax\n\timulq $0, %r8, %r8\n\taddq %r8, %rsi\n\taddq %rsi, %rax\n\tcmpq $0, %rdx\n\tsetl %sil\n\tmovzbq %sil, %rsi\n\tnegq %rsi\n\tmovq %rsi, %r8\n\tandq $2, %r8\n\tmovq %rdx, %rsi\n\tandq $0, %rsi\n\tsubq %r8, %rax\n\tsubq %rsi, %rax\n\tsarq $63, %rcx\n\tcmpq %rax, %rcx\n\tjnz .Lbb3\n\tmovq -32(%rbp), %rax\n\tmovq %rax, 48(%rdi)\n\timulq $2, %rdx, %rax\n\tjmp .Lbb6\n.Lbb3:\n\tmovq $6, -16(%rbp)\n\tmovl $64, %r8d\n\tmovl $2, %ecx\n\tmovl $2, %esi\n\tmovq %rdi, %rbx\n\tcallq myl_qbe_fail_overflow_op\n\tmovq %rbx, %rdi\n\tjmp .Lbb5\n.Lbb4:\n\tmovq $2, -16(%rbp)\n\tmovl $64, %r8d\n\tmovl $1, %ecx\n\tmovl $0, %esi\n\tmovq %rdi, %rbx\n\tcallq myl_qbe_fail_overflow_op\n\tmovq %rbx, %rdi\n.Lbb5:\n\tmovq -32(%rbp), %rax\n\tmovq %rax, 48(%rdi)\n\tmovl $0, %eax\n.Lbb6:\n\tpopq %rbx\n\tleave\n\tret\n.type FUNCTION, @function\n.size FUNCTION, .-FUNCTION\n/* end function FUNCTION */\n\n.section .note.GNU-stack,\"\",@progbits\n"
+    },
+    "normalization": "Replace each function own linker symbol (also a prefix of its metadata symbol) with FUNCTION; no other edits.",
+    "assembly_identical": true,
+    "limitation": "This establishes equivalent code generation for one scalar example, not a general runtime speedup result."
+  }
+}

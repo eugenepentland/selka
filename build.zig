@@ -432,6 +432,40 @@ pub fn build(b: *std.Build) void {
     guardian.addAllChecks(b, guardian_exe, repair_step, .{});
     boundedChecks(repair_step);
     const qbe_step = b.step("test-qbe", "Run QBE native compilation, runtime, and object-cache acceptance");
+    const native_heap_module = b.createModule(.{
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+    });
+    native_heap_module.addIncludePath(b.path("src"));
+    native_heap_module.addCSourceFiles(.{
+        .root = b.path("."),
+        .files = &.{
+            "tests/native_heap_test.c",
+            "src/native_heap.c",
+            "src/native_equal.c",
+            "src/native_text.c",
+            "src/native_collections.c",
+            "src/native_bytes.c",
+        },
+        // Keep the harness's C assertions active under every optimize mode.
+        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG" },
+    });
+    const native_heap_test = b.addExecutable(.{
+        .max_rss = rss.compile,
+        .name = "native-heap-test",
+        .root_module = native_heap_module,
+    });
+    const run_native_heap_test = b.addRunArtifact(native_heap_test);
+    run_native_heap_test.step.max_rss = rss.driver;
+    run_native_heap_test.has_side_effects = true;
+    const native_heap_step = b.step("test-native-heap", "Verify native collector trace, cycle, budget, and equality paths");
+    native_heap_step.dependOn(&run_native_heap_test.step);
+    guardian.addAllChecks(b, guardian_exe, native_heap_step, .{});
+    boundedChecks(native_heap_step);
+    compile_tests.dependOn(&native_heap_test.step);
+    test_step.dependOn(&run_native_heap_test.step);
+    qbe_step.dependOn(&run_native_heap_test.step);
     const native_test_step = b.step("test-native-tests", "Verify native guest test discovery, execution, fixtures, and affected-test reuse");
     const native_test_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
         .root_source_file = b.path("src/native_test_cli_test.zig"),

@@ -61,7 +61,12 @@ fn emitEnd(comptime E: type, self: *E, watermark: usize) Error!void {
     for (locals[0..scanned], 0..) |local, index| {
         if (!(try self.layout(local.ty)).trace) continue;
         const retained = self.temp();
-        try self.print(" %v{d} =w call $myl_qbe_region_retains(l %ctx, l extern ${s}, l %l{d})\n", .{ retained, try self.descriptor(local.ty), index });
+        // A parameter read through the caller's address keeps no slot of its
+        // own, so the value this check reads is the one at that address.
+        if (self.byReference(index)) {
+            const source = try self.load("l", index);
+            try self.print(" %v{d} =w call $myl_qbe_region_retains(l %ctx, l extern ${s}, l %v{d})\n", .{ retained, try self.descriptor(local.ty), source });
+        } else try self.print(" %v{d} =w call $myl_qbe_region_retains(l %ctx, l extern ${s}, l %l{d})\n", .{ retained, try self.descriptor(local.ty), index });
         const label = self.temp();
         try self.print(" jnz %v{d}, @outlives{d}, @kept{d}\n@outlives{d}\n call ${s}(l %ctx)\n jmp @failure\n@kept{d}\n", .{ retained, label, label, label, escape_failure, label });
     }
@@ -70,6 +75,7 @@ fn emitEnd(comptime E: type, self: *E, watermark: usize) Error!void {
     var index = locals.len;
     while (index > scanned) {
         index -= 1;
+        if (self.byReference(index)) continue;
         const value = try self.layout(locals[index].ty);
         if (value.trace) try self.zeroTracedLocal(index, locals[index].ty);
     }

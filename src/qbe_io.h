@@ -22,6 +22,8 @@ void myl_qbe_stream_finish(void *context, void *sink, uint64_t stream);
 /* `stream.write(text)` writes the encoded text immediately and answers its
    character count, or zero after an R_OUTPUT trap. */
 uint64_t myl_qbe_stream_write(void *context, uint64_t stream, myl_native_text *text);
+/* Raw byte output preserves every octet and returns its byte count. */
+uint64_t myl_qbe_stream_write_bytes(void *context, uint64_t stream, myl_native_list *bytes);
 /* An f-string hole over an aggregate renders through the same sink `print`
    fills, then copies the rendered bytes into fresh managed text and releases
    the sink. NULL once the rendering or the copy has already set the trap. */

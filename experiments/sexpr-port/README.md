@@ -182,8 +182,11 @@ Zig goldens are byte-identical. Differences that matter when reading the numbers
   original `mil` spelling is not reconstructed (Zig does not either).
 - `LexError` carries `message/offset/line` (no column), matching the frozen
   interface; Zig's `Tokenizer.error_span` also tracks a column.
-- Source slices are decoded to `str`; a non-UTF-8 token becomes `""` rather than
-  a preserved byte slice. All fixtures are ASCII.
+- Source slices are decoded to `str` only where the AST exposes text
+  (`value_text`, `as_text`); a non-UTF-8 token becomes `""` there rather than a
+  preserved byte slice. Numeric leaves are parsed from their octets in place
+  (`bytes.parse_int`/`parse_float`) and the printer's width measurement counts
+  scalars from the range, so neither decodes a spelling. All fixtures are ASCII.
 - The 10 000-deep nesting cap is real and trips at exactly depth 10 000
   (`parse error: s-expression nesting is too deep at 1:10001`), but the mylang
   runtime's own call-depth budget (1 024 frames by default) is exhausted first,

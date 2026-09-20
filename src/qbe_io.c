@@ -50,6 +50,16 @@ uint64_t myl_qbe_stream_write(void *context, uint64_t stream, myl_native_text *t
     free(out.bytes);
     return (uint64_t)text->length;
 }
+uint64_t myl_qbe_stream_write_bytes(void *context, uint64_t stream, myl_native_list *bytes) {
+    if (!bytes) return 0;
+    FILE *file = stream_file(stream);
+    if (bytes->length && fwrite(bytes->storage, 1, bytes->length, file) != bytes->length) {
+        myl_qbe_fail(context, "R_OUTPUT");
+        return 0;
+    }
+    if (fflush(file)) { myl_qbe_fail(context, "R_OUTPUT"); return 0; }
+    return (uint64_t)bytes->length;
+}
 myl_native_text *myl_qbe_text_render(void *context, void *sink) {
     MylPrint *out = sink;
     myl_native_text *text = NULL;

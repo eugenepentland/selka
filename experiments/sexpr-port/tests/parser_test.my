@@ -11,9 +11,26 @@ module tests.parser_test
 
 import sexpr.ast as ast
 import sexpr.parser as parser
+import sexpr.view as view
 
 
 # ── helpers ───────────────────────────────────────────────────────────
+
+
+# A view of a test literal's own spelling, and the text it spells. Hand-built
+# trees and parsed trees now carry a source range rather than a decoded string.
+def view_of_text(text: str) -> view.View:
+    data = text.encode()
+    return view.View(source=data, start=0, end=len(data))
+
+
+def text_in(found: view.View) -> str:
+    match view.text_of(found):
+        case Ok(text):
+            return text
+        case Err(_):
+            return "<none>"
+
 
 def parse_nodes(src: bytes) -> list[ast.Node]:
     match parser.parse(src):
@@ -65,7 +82,7 @@ def kind_of(node: ast.Node) -> int:
 def text_of(node: ast.Node) -> str:
     match ast.as_text(node):
         case Some(value):
-            return value
+            return text_in(value)
         case None:
             return "<none>"
 
@@ -94,7 +111,7 @@ def child_number(src: bytes, form_index: int, child_index: int) -> float:
 def child_value_text(src: bytes, form_index: int, child_index: int) -> str:
     match ast.value_text(child(src, form_index, child_index)):
         case Some(value):
-            return value
+            return text_in(value)
         case None:
             return "<none>"
 
@@ -321,3 +338,16 @@ public def test_invalid_number_literal_is_rejected() -> bool:
 
 public def test_malformed_inputs_return_errors_not_crashes() -> bool:
     return has_error(b"(unterminated") and has_error(b")") and has_error(b"\"oops") and has_error(b"(bad ]char)")
+
+
+# The former parser lexed the whole source first. Streaming keeps that visible
+# behavior by draining after an early syntax failure and preferring this later
+# lexical rejection.
+public def test_later_lex_error_precedes_early_syntax_error() -> bool:
+    src = b") ?"
+    return error_message(src) == "unexpected character" and error_offset(src) == 2
+
+
+public def test_syntax_error_survives_clean_remainder_drain() -> bool:
+    src = b") trailing atoms"
+    return error_message(src).find("unexpected ')'") >= 0 and error_offset(src) == 0

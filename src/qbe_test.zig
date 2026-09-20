@@ -272,6 +272,17 @@ test "a leaf skips the stack-floor guard while a calling function keeps it" {
     defer parsed.deinit();
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, named(parsed.value, "leaf").?.il, "myl_qbe_fail_frame"));
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, named(parsed.value, "rec").?.il, "myl_qbe_fail_frame"));
+
+    const unaccounted = try c.emitQbeWithOptions(a, false, true, false);
+    defer a.free(unaccounted);
+    var unaccounted_parsed = try std.json.parseFromSlice(Manifest, a, unaccounted, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+    defer unaccounted_parsed.deinit();
+    const unaccounted_rec = named(unaccounted_parsed.value, "rec").?.il;
+    const boundary = std.mem.indexOf(u8, unaccounted_rec, "@frameadmit") orelse return error.TestUnexpectedResult;
+    const record = std.mem.indexOfPos(u8, unaccounted_rec, boundary, "=l alloc8 32") orelse return error.TestUnexpectedResult;
+    const floor = std.mem.indexOfPos(u8, unaccounted_rec, record, "=l cultl") orelse return error.TestUnexpectedResult;
+    try std.testing.expect(boundary < record);
+    try std.testing.expect(record < floor);
 }
 // spec: QBE-PROLOGUE-1
 test "generated code tests traps directly and omits root machinery it never uses" {
@@ -345,6 +356,59 @@ test "an opcode that can allocate pushes no roots in a variant that cannot" {
     const converted = named(parsed.value, "narrow").?.il;
     try std.testing.expect(std.mem.indexOf(u8, converted, "myl_qbe_fail_cast") != null);
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, converted, "myl_qbe_int_cast"));
+}
+// spec: QBE-ELEMENT-READ-1
+test "a plain scalar element read is one bounds-checked load and a record read keeps the copy" {
+    const a = std.testing.allocator;
+    var program = try language.Compilation.init(a, "qbe.my",
+        \\record Pair:
+        \\    left: i64
+        \\    right: i64
+        \\
+        \\
+        \\def scalar(w: list[i64], i: i64) -> i64:
+        \\    return w[i]
+        \\
+        \\
+        \\def narrow(w: list[i16], i: i64) -> i16:
+        \\    return w[i]
+        \\
+        \\
+        \\def flags(w: list[bool], i: i64) -> bool:
+        \\    return w[i]
+        \\
+        \\
+        \\def wide(w: list[Pair], i: i64) -> i64:
+        \\    return w[i].left
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return scalar([1, 2], 0) + i64(narrow([3i16], 0)) + wide([Pair(left=4, right=5)], 0)
+    );
+    defer program.deinit();
+    const manifest = try program.emitQbe(a);
+    defer a.free(manifest);
+    var parsed = try std.json.parseFromSlice(Manifest, a, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+    defer parsed.deinit();
+    // A scalar element is addressed from the header's storage word at its own
+    // stride and loaded at its own width, with a cold path that reports the
+    // already-normalized index; nothing calls the runtime element copy.
+    const scalar = named(parsed.value, "scalar").?.il;
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, scalar, "myl_native_list_get"));
+    try std.testing.expect(std.mem.indexOf(u8, scalar, "myl_qbe_fail_normalized_index_bounds") != null);
+    try std.testing.expect(std.mem.indexOf(u8, scalar, "=l mul %v") != null);
+    try std.testing.expect(std.mem.indexOf(u8, scalar, "=l loadl %v") != null);
+    const narrow = named(parsed.value, "narrow").?.il;
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, narrow, "myl_native_list_get"));
+    try std.testing.expect(std.mem.indexOf(u8, narrow, "=l loadsh %v") != null);
+    const booleans = named(parsed.value, "flags").?.il;
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, booleans, "myl_native_list_get"));
+    try std.testing.expect(std.mem.indexOf(u8, booleans, "=l loadub %v") != null);
+    // A record element keeps the runtime copy into the aggregate scratch and
+    // the pointer that reads it.
+    const wide = named(parsed.value, "wide").?.il;
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, wide, "myl_native_list_get"));
+    try std.testing.expect(std.mem.indexOf(u8, wide, "=l copy %agg") != null);
 }
 // spec: QBE-POSITION-1
 test "a build without a ceiling stores a position only where a diagnostic reads it" {
@@ -624,6 +688,130 @@ test "scalar slots are declared in the entry block so QBE can promote them" {
     // declared before the frame protocol's first label.
     try std.testing.expect(declaration < protocol);
 }
+// spec-case: QBE-FRAMES-1
+test "fixed aggregate scratch is inside the physical stack-floor check" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Pair:
+        \\    left: i64
+        \\    right: i64
+        \\
+        \\
+        \\def adjust(value: Pair) -> Pair:
+        \\    return Pair(left=value.left + 1, right=value.right)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    value = adjust(Pair(left=1, right=2))
+        \\    return value.left + value.right
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "main").?.il;
+    const scratch = std.mem.indexOf(u8, body, " %agg") orelse return error.TestUnexpectedResult;
+    const frame_boundary = std.mem.indexOf(u8, body, "@frameadmit") orelse return error.TestUnexpectedResult;
+    const record = std.mem.indexOfPos(u8, body, frame_boundary, "=l alloc8 32") orelse return error.TestUnexpectedResult;
+    const floor_probe = std.mem.indexOf(u8, body, "=l cultl") orelse return error.TestUnexpectedResult;
+    const admitted = std.mem.indexOf(u8, body, "@stackadmit") orelse return error.TestUnexpectedResult;
+    // The guard compares the frame record allocated below every fixed slot.
+    // Scratch after this branch would evade the physical-stack accounting.
+    try std.testing.expect(scratch < frame_boundary);
+    try std.testing.expect(frame_boundary < record);
+    try std.testing.expect(record < floor_probe);
+    try std.testing.expect(floor_probe < admitted);
+}
+
+// spec-case: QBE-FRAMES-1
+test "loop scratch has one fixed slot while managed allocation stays in the loop" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Pair:
+        \\    left: i64
+        \\    right: i64
+        \\
+        \\
+        \\def step(value: i64) -> i64:
+        \\    return value + 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    index: i64 = 0
+        \\    value = Pair(left=0, right=1)
+        \\    while index < 3:
+        \\        value = Pair(left=value.left + value.right, right=value.left)
+        \\        items = [index]
+        \\        index = step(index + len(items) - 1)
+        \\    return value.left
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "main").?.il;
+    const admitted = std.mem.indexOf(u8, body, "@stackadmit") orelse return error.TestUnexpectedResult;
+    const loop_allocation = std.mem.indexOf(u8, body, "call $myl_native_list_new") orelse return error.TestUnexpectedResult;
+    // Per-pc aggregate buffers are allocated once for the function, even when
+    // their instruction is in a loop. The managed list allocation remains at
+    // its instruction and therefore still executes on every iteration.
+    try std.testing.expect(std.mem.count(u8, body, " %agg") != 0);
+    try std.testing.expect(loop_allocation > admitted);
+    try std.testing.expect(std.mem.indexOf(u8, body[admitted..loop_allocation], "jnz") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body[loop_allocation..], "jmp @i") != null);
+}
+
+// spec-case: QBE-FRAMES-1
+test "zero-length aggregate scratch retains later allocation semantics" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Item:
+        \\    value: i64
+        \\
+        \\
+        \\def count(items: [0]Item) -> u64:
+        \\    _ = items
+        \\    return 0u64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return i64(count([]))
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "count").?.il;
+    const boundary = std.mem.indexOf(u8, body, "@frameadmit") orelse return error.TestUnexpectedResult;
+    const scratch = std.mem.indexOf(u8, body, "%agg0 =l alloc8 8") orelse return error.TestUnexpectedResult;
+    try std.testing.expect(scratch > boundary);
+    try std.testing.expect(std.mem.indexOf(u8, body, "blit %l0, %agg0, 0") != null);
+}
+
+// spec-case: QBE-FLOOR-GUARD-1
+test "large fixed scratch recursion reaches a structured frame trap" {
+    const a = std.testing.allocator;
+    var source: std.Io.Writer.Allocating = .init(a);
+    defer source.deinit();
+    try source.writer.writeAll(
+        \\record Pair:
+        \\    left: i64
+        \\    right: i64
+        \\
+        \\
+        \\def descend(depth: i64, value: Pair) -> i64:
+        \\
+    );
+    // Keep this just below the native-frame cutoff. Every assignment needs its
+    // own per-pc aggregate buffers and the final value keeps the chain live.
+    for (0..60) |_| try source.writer.writeAll("    value = Pair(left=value.left + 1, right=value.right)\n");
+    try source.writer.writeAll(
+        \\    if depth == 0:
+        \\        return value.left
+        \\    return descend(depth - 1, value)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return descend(20, Pair(left=0, right=1))
+    );
+    var compilation = try language.Compilation.init(a, "large-frame.my", source.written());
+    defer compilation.deinit();
+    const manifest = try compilation.emitQbe(a);
+    defer a.free(manifest);
+    try std.testing.expect(std.mem.indexOf(u8, manifest, "myl_qbe_frame_allocate") == null);
+    const outcome = try native.runWithOptions(&compilation, .{ .max_frames = 4, .max_steps = 100000 });
+    try std.testing.expect(outcome.trapped());
+    try std.testing.expectEqualStrings("R_FRAME_LIMIT", outcome.trap.code);
+    try std.testing.expect(outcome.trap.frames.len != 0);
+}
 // spec: QBE-FLOAT-ENV-1
 test "float arithmetic lowers without a per-operation environment check" {
     var parsed = try emitted(std.testing.allocator,
@@ -682,4 +870,334 @@ test "QBE checks a constant increment against its bound instead of the general s
     const il = named(parsed.value, "bump").?.il;
     try std.testing.expect(std.mem.indexOf(u8, il, "9223372036854775806") != null);
     try std.testing.expect(std.mem.indexOf(u8, il, " =l xor ") == null);
+}
+
+// spec-case: PY-BYTES-5
+test "PY-BYTES-5 find_any lowers to one native byte-set search and no guest scan" {
+    var parsed = try emitted(std.testing.allocator,
+        \\def scan(src: bytes, start: i64) -> i64:
+        \\    return src.find_any(b",;", start)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return scan(b"a,b;c", 0)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "scan").?.il;
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body, "myl_native_bytes_find_any("));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_bytes_find("));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "=w call $myl_native_bytes_has_byte("));
+}
+
+// spec: QBE-AGGREF-1
+test "an aggregate parameter a function only reads crosses by address and is not copied" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Pair:
+        \\    left: i64
+        \\    right: i64
+        \\
+        \\
+        \\def total(pair: Pair) -> i64:
+        \\    return pair.left + pair.right
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return total(Pair(left=1, right=2))
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "total").?.il;
+    // The parameter is one address, the entry copies nothing, and the field
+    // read follows that address instead of a snapshot of the whole record.
+    try std.testing.expect(std.mem.indexOf(u8, body, "(l %ctx, l %a0)") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit %a0"));
+    try std.testing.expect(std.mem.indexOf(u8, body, "storel %a0, %l0") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "=l loadl %l0") != null);
+}
+
+// spec-case: QBE-AGGREF-1
+test "an aggregate parameter a function writes keeps the caller's value private" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Pair:
+        \\    left: i64
+        \\    right: i64
+        \\
+        \\
+        \\def bumped(pair: Pair) -> i64:
+        \\    pair = Pair(left=pair.left + 1, right=pair.right)
+        \\    return pair.left
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return bumped(Pair(left=1, right=2))
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "bumped").?.il;
+    // The body stores into the parameter, so the callee owns a copy of it and
+    // the write can never reach the caller's record.
+    try std.testing.expect(std.mem.indexOf(u8, body, "(l %ctx, l %a0)") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "blit %a0, %l0, 16") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "storel %l0, %s") != null);
+}
+
+// spec-case: QBE-AGGREF-1
+test "an aggregate local the next instruction alone consumes is read from its own slot" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Pair:
+        \\    left: i64
+        \\    right: i64
+        \\
+        \\
+        \\def first(pair: Pair) -> i64:
+        \\    held = pair
+        \\    return held.left
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return first(Pair(left=5, right=6))
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "first").?.il;
+    // The one field read that follows the load names `held`'s own slot, so no
+    // copy of the record is made to read one word out of it.
+    try std.testing.expect(std.mem.indexOf(u8, body, "storel %l1, %s0") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit %l1"));
+}
+
+// spec-case: QBE-AGGREF-1
+test "an aggregate parameter that owns a resource keeps its private copy" {
+    var parsed = try emitted(std.testing.allocator,
+        \\def opened(value: Result[TextFile, str]) -> bool:
+        \\    match value:
+        \\        case Ok(_):
+        \\            return True
+        \\        case Err(_):
+        \\            return False
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "opened").?.il;
+    // A value that releases something stays the callee's own copy: the entry
+    // copy and the release of that copy are both still here.
+    try std.testing.expect(std.mem.indexOf(u8, body, "blit %a0, %l0, ") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "myl_native_owned_drop") != null);
+}
+
+// spec-case: QBE-AGGREF-1
+test "a call passes an aggregate argument as an address" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Pair:
+        \\    left: i64
+        \\    right: i64
+        \\
+        \\
+        \\def total(pair: Pair) -> i64:
+        \\    return pair.left + pair.right
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return total(Pair(left=1, right=2))
+    );
+    defer parsed.deinit();
+    const callee = named(parsed.value, "total").?.symbol;
+    const caller = named(parsed.value, "main").?.il;
+    const needle = try std.fmt.allocPrint(std.testing.allocator, "call ${s}(l %ctx, l %", .{callee});
+    defer std.testing.allocator.free(needle);
+    try std.testing.expect(std.mem.indexOf(u8, caller, needle) != null);
+}
+
+// spec-case: STREAM-BYTES-2
+test "STREAM-BYTES-2 a buffer write lowers to the raw byte sink with no snapshot copy" {
+    var parsed = try emitted(std.testing.allocator,
+        \\def emit(out: Stream) -> i64:
+        \\    empty: list[int] = []
+        \\    buffer = byte_buffer(empty)
+        \\    _ = buffer.append_range(b"head", 0, 4)
+        \\    _ = buffer.append_float(2.5)
+        \\    return out.write(buffer)
+        \\
+        \\
+        \\def main(out: Stream) -> i64:
+        \\    return emit(out)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "emit").?.il;
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body, "myl_qbe_stream_write_bytes("));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_bytes_copy("));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_bytes_slice("));
+}
+// spec: QBE-MATCHPROJ-1
+test "QBE-MATCHPROJ a read-only binding names a payload that owns nothing in place" {
+    var parsed = try emitted(std.testing.allocator,
+        \\union Token:
+        \\    pair(first: i64, second: i64),
+        \\    empty
+        \\
+        \\
+        \\def first_of(token: Token) -> i64:
+        \\    match token:
+        \\        case Token.pair(first, _):
+        \\            return first
+        \\        case Token.empty:
+        \\            return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return first_of(Token.pair(first=1, second=2))
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "first_of").?.il;
+    // No payload copy at all: the binding holds the payload's address and the
+    // field read is one load through it.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
+    try std.testing.expect(std.mem.indexOf(u8, body, "loadl %l1") != null);
+}
+
+// spec-case: QBE-MATCHPROJ-1
+test "QBE-MATCHPROJ an aggregate payload field is still read through its own address" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Span:
+        \\    line: i64
+        \\    col: i64
+        \\
+        \\
+        \\union Token:
+        \\    word(span: Span, kind: i64),
+        \\    empty
+        \\
+        \\
+        \\def line_of(token: Token) -> i64:
+        \\    match token:
+        \\        case Token.word(span, _):
+        \\            return span.line
+        \\        case Token.empty:
+        \\            return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return line_of(Token.word(span=Span(line=1, col=2), kind=3))
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "line_of").?.il;
+    // The 24-byte payload copy is gone. The one remaining copy is the
+    // intermediate `span` field read, which belongs to the field projection
+    // rather than to the match binding.
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body, "blit "));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body, "blit %v"));
+}
+
+// spec-case: QBE-MATCHPROJ-1
+test "QBE-MATCHPROJ a scrutinee the arm writes keeps the payload copy" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Span:
+        \\    line: i64
+        \\    col: i64
+        \\
+        \\
+        \\union Token:
+        \\    word(span: Span, kind: i64),
+        \\    pair(first: i64, second: i64),
+        \\    empty
+        \\
+        \\
+        \\def line_of(token: Token) -> i64:
+        \\    result = 0
+        \\    match token:
+        \\        case Token.word(span, _):
+        \\            token = Token.pair(first=50, second=60)
+        \\            result = span.line
+        \\        case Token.pair(first, _):
+        \\            result = first
+        \\        case Token.empty:
+        \\            result = 0
+        \\    return result
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return line_of(Token.word(span=Span(line=1, col=2), kind=3))
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "line_of").?.il;
+    // The local is written, so the binding keeps its copy: the arm reads the
+    // value the scrutinee had when the arm was entered.
+    try std.testing.expect(std.mem.count(u8, body, "blit ") >= 2);
+}
+
+// spec: QBE-AGGREF-2
+test "QBE-AGGREF-2 a local passed beside another argument is named by its own slot" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Point:
+        \\    x: i64
+        \\    y: i64
+        \\
+        \\
+        \\def total(point: Point, extra: i64) -> i64:
+        \\    return point.x + point.y + extra
+        \\
+        \\
+        \\def main() -> i64:
+        \\    start = Point(x=1, y=2)
+        \\    return total(start, 39)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "main").?.il;
+    // The call pushes `39` after the record, so the borrow reaches past that
+    // push to the call itself: the record crosses as its own slot's address and
+    // is never snapshotted out of the local.
+    try std.testing.expect(std.mem.indexOf(u8, body, "storel %l0, %s0") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit %l0,"));
+}
+
+// spec: QBE-CTORFWD-1
+test "QBE-CTORFWD-1 a constructor assigned to a local writes that local in place" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Point:
+        \\    x: i64
+        \\    y: i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    start = Point(x=3, y=4)
+        \\    return start.x + start.y
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "main").?.il;
+    // The store immediately after the constructor is the record's destination,
+    // so the field stores go through a copy of `%l0` itself instead of the
+    // per-pc aggregate scratch: no whole-record copy is emitted, and the
+    // scratch declaration forwarding made dead is removed.
+    try std.testing.expect(std.mem.indexOf(u8, body, "=l copy %l0") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
+    try std.testing.expect(std.mem.indexOf(u8, body, "%agg") == null);
+}
+
+// spec-case: QBE-CTORFWD-1
+test "QBE-CTORFWD-1 an operand read from the destination keeps the constructor copy" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Point:
+        \\    x: i64
+        \\    y: i64
+        \\
+        \\
+        \\record Pair:
+        \\    a: Point
+        \\    b: Point
+        \\
+        \\
+        \\def main() -> i64:
+        \\    p = Pair(a=Point(x=1, y=2), b=Point(x=3, y=4))
+        \\    p = Pair(a=p.b, b=p.a)
+        \\    return p.a.x + p.b.x
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "main").?.il;
+    // The second constructor's operands name `p`'s own storage, so it keeps the
+    // scratch and the copy: filling `p` in place would overwrite the operand its
+    // own second field reads. The first constructor is unaffected, so the two
+    // field copies of the swap plus the second constructor's whole-record copy
+    // are the five that remain.
+    try std.testing.expectEqual(@as(usize, 5), std.mem.count(u8, body, "blit "));
+    try std.testing.expect(std.mem.indexOf(u8, body, "%agg") != null);
 }

@@ -142,6 +142,7 @@ test {
     _ = @import("builtin_context_test.zig");
     _ = @import("json_document_test.zig");
     _ = @import("standard_library_test.zig");
+    _ = @import("byte_builder_test.zig");
     _ = @import("loop_exit_test.zig");
     _ = @import("constants_test.zig");
     _ = @import("incremental_test.zig");
@@ -159,6 +160,7 @@ test {
 }
 
 test {
+    _ = @import("qbe.zig");
     _ = @import("qbe_test.zig");
     _ = @import("qbe_text_test.zig");
     _ = @import("qbe_literals_test.zig");

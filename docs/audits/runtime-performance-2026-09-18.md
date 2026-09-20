@@ -570,6 +570,20 @@ with a real chance of a few percent, (2) is a project. Everything in the origina
 six-wave plan has been landed or measured and disproved, so this section is the
 honest successor to it.
 
+**Superseded 2026-09-19 by `hot-loop-plan-2026-09-19.md`.** Both premises above
+were re-measured. QBE already treats a non-escaping `alloc8` as disjoint from
+every unknown pointer (`vendor/qbe/alias.c:31-85`); the frame record is
+may-alias because its address is linked into `ctx->active_frame`, and deleting
+every position store from `advance`'s IL leaves its field reloads in place, so
+option 1 could never have recovered them. A hand-written register-resident
+`advance` (option 2 on the hottest function) measures −0.8 % of instructions and
+no cycles. What the loop functions actually pay for is the root protocol pinning
+their locals and operand slots to memory (`storel %l0, …` into every root
+record): roots that carry the value instead of the slot address measure −9.6 %
+of cycles on the census with byte-identical output, and turn inlining `advance`
+from a +9 % cycle loss into a further −5 %. The plan, its measured bounds and the
+scan floors in cycles (1.5× Zig with every check kept) are in that note.
+
 ## 1. The answer in one table
 
 The gap is **instruction count, not efficiency**: mylang retires more

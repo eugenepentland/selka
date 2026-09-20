@@ -7,11 +7,31 @@ typedef myl_native_list myl_native_bytes;
 /* Status of a fallible byte conversion; only OK publishes a value. */
 enum { MYL_BYTES_OK = 0, MYL_BYTES_MEMORY = 1, MYL_BYTES_RANGE = 2, MYL_BYTES_INVALID = 3 };
 myl_native_bytes *myl_native_bytes_new(myl_native_heap *, const unsigned char *, size_t);
+/* A fresh byte string holding the input's current octets. The copy shares
+ * nothing with the input, so a later append through an alias of a mutable
+ * buffer cannot change it. */
+myl_native_bytes *myl_native_bytes_copy(myl_native_heap *, myl_native_bytes *);
 myl_native_bytes *myl_native_bytes_concat(myl_native_heap *, myl_native_bytes *, myl_native_bytes *);
+/* A byte string that reads the clamped range `source[start:end]` without copying
+ * it. The view's own header retains the source's backing block, so the octets
+ * outlive the byte string that first owned them, and every read operation —
+ * length, indexing, iteration, comparison, search, slicing, decode, numeric
+ * parsing — reads a view exactly as it reads a byte string. */
+myl_native_bytes *myl_native_bytes_view(myl_native_heap *, myl_native_bytes *source, int64_t start, int64_t end);
+/* Unicode scalars in a byte string, validated in the same nonallocating pass, so
+ * measuring a range never decodes it. Reports MYL_BYTES_INVALID, and no count,
+ * for exactly the sequences the decoder rejects. The range form is the same
+ * scanner over raw octets, which is what a view of a larger buffer passes. */
+int64_t myl_native_bytes_scalar_count(const myl_native_bytes *, int *status);
+int64_t myl_native_bytes_scalar_count_range(const unsigned char *, size_t, int *status);
 /* Clamped Python endpoints; a reversed interval produces an empty byte string. */
 myl_native_bytes *myl_native_bytes_slice(myl_native_heap *, myl_native_bytes *, int64_t, int64_t);
 /* First index of a contiguous subsequence, or -1 when it is absent. */
 int64_t myl_native_bytes_find(const myl_native_bytes *, const myl_native_bytes *);
+/* First index at or after `start` holding any octet of the set `values`, or -1.
+ * An empty set finds nothing, a negative start clamps to zero, and a start at or
+ * past the end finds nothing, so a search never traps where a read would. */
+int64_t myl_native_bytes_find_any(const myl_native_bytes *, const myl_native_bytes *values, int64_t start);
 int myl_native_bytes_starts_with(const myl_native_bytes *, const myl_native_bytes *);
 int myl_native_bytes_ends_with(const myl_native_bytes *, const myl_native_bytes *);
 /* Membership of one octet; values outside 0..255 are never present. */
@@ -31,4 +51,31 @@ myl_native_text *myl_native_bytes_decode(myl_native_heap *, myl_native_bytes *, 
 /* Decode one clamped range directly, so `s[a:b].decode()` never builds the
  * intermediate byte string. Same status contract as `myl_native_bytes_decode`. */
 myl_native_text *myl_native_bytes_decode_range(myl_native_heap *, myl_native_bytes *, int64_t, int64_t, int *status);
+/* In-place octet-buffer operations. A buffer is an ordinary managed byte string
+ * whose header keeps spare capacity: `length` counts the octets it holds and
+ * `capacity` the octets its backing can hold, so an append writes into that
+ * spare capacity and growth doubles it instead of allocating per fragment. The
+ * buffer's identity is stable across growth, which is what lets one managed
+ * object be mutated through the ordinary byte-string surface. A frozen
+ * `bytes` literal is shared by the whole image, so every mutating entry point
+ * refuses an immortal receiver rather than writing storage the image owns. */
+/* One write, one rejected argument or frozen receiver, one refused allocation. */
+enum { MYL_BYTES_FAILED = 0, MYL_BYTES_WROTE = 1, MYL_BYTES_REFUSED = 2 };
+/* Grow the backing so `extra` more octets fit, keeping `length` and content. */
+int myl_native_bytes_buffer_reserve(myl_native_heap *, myl_native_bytes *, int64_t extra);
+/* Append one octet; a value outside 0..255 is refused without writing. */
+int myl_native_bytes_buffer_append_byte(myl_native_heap *, myl_native_bytes *, int64_t value);
+/* Append `data[start:end]`; a negative start, an end below start or an end past
+ * `len(data)` is refused before anything is written. `data` may be the buffer. */
+int myl_native_bytes_buffer_append_range(myl_native_heap *, myl_native_bytes *, myl_native_bytes *data, int64_t start, int64_t end);
+/* Append the UTF-8 encoding of text, which the shared encoder writes straight
+ * into the buffer's capacity. */
+int myl_native_bytes_buffer_append_utf8(myl_native_heap *, myl_native_bytes *, myl_native_text *text);
+/* Append the decimal spelling of an integer, formatted into the buffer's own
+ * capacity with no intermediate text or byte value. */
+int myl_native_bytes_buffer_append_int(myl_native_heap *, myl_native_bytes *, int64_t value);
+/* Append `count` octets of raw storage the caller owns, which must not be the
+ * receiver's own backing: growth may reallocate that, while this source cannot
+ * move. The float formatter reaches the buffer through this entry point. */
+int myl_native_bytes_buffer_append_raw(myl_native_heap *, myl_native_bytes *, const unsigned char *data, size_t count);
 #endif

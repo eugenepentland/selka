@@ -96,6 +96,20 @@ together. Byte-exact stream separation is covered by the native CLI tests.
 
 ## Stream
 
+`stream.write(data: bytes)` writes bytes directly, including NUL and non-UTF-8
+octets, and returns the byte count. It adds no quotes or newline. This is useful
+for binary protocols and UTF-8 output built as bytes; it avoids converting the
+output to `str` and encoding it again. The `str` overload still returns its
+Unicode scalar count. Both flush the selected stream and trap `R_OUTPUT` if the
+write or flush fails.
+
+A mutable [`byte_buffer`](bytes.md#writing-octets-in-place) is a byte string for
+this purpose too: `stream.write(buffer)` writes the octets the buffer holds right
+now, straight out of the buffer's own storage. Nothing is copied and no snapshot
+is built, so a program assembled in a buffer can reach the stream without a final
+`bytes(buffer)`; it contributes the same `output` effect and returns the same byte
+count. Appending to the buffer afterwards cannot change what was already written.
+
 `Stream` is a capability like `Filesystem`: the entry point declares the
 standard streams it wants, and a helper may take any `Stream` name and be handed
 either one. `stream.print(values..., sep=, end=)` renders Python's `print`

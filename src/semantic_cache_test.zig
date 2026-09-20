@@ -167,6 +167,41 @@ test "managed constant edits invalidate dependent bodies while unrelated constan
     try t.expectEqual(@as(usize, 2), cache.statistics.stored);
     try t.expectEqual(@as(usize, 0), cache.statistics.bypassed);
 }
+// spec: SEMANTIC-CACHE-16
+test "a same-length body edit misses the retained body and reuses its neighbours" {
+    const original = "def tweak(n: i64) -> i64:\n    return n + 1\n\n\ndef keep(n: i64) -> i64:\n    return n * 2\n\n\ndef main() -> i64:\n    return keep(tweak(20))\n";
+    const mutated = "def tweak(n: i64) -> i64:\n    return n + 2\n\n\ndef keep(n: i64) -> i64:\n    return n * 2\n\n\ndef main() -> i64:\n    return keep(tweak(20))\n";
+    // The two sources are the same length and differ in exactly one body byte, so
+    // only the byte comparison can tell them apart.
+    try t.expectEqual(original.len, mutated.len);
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, original, 42);
+    const checked = cache.statistics.checked;
+    const reused = cache.statistics.reused;
+    const misses = cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.region_bytes_changed)];
+    try compare(t.allocator, &cache, mutated, 44);
+    try t.expectEqual(checked + 1, cache.statistics.checked);
+    try t.expectEqual(reused + 2, cache.statistics.reused);
+    try t.expectEqual(misses + 1, cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.region_bytes_changed)]);
+}
+
+// spec-case: SEMANTIC-CACHE-16
+test "a same-length declaration edit misses with the dependency reason it always did" {
+    const original = "def widen(n: i64) -> i64:\n    return n\n\n\ndef main() -> i64:\n    return widen(41)\n";
+    const mutated = "def widen(m: i64) -> i64:\n    return m\n\n\ndef main() -> i64:\n    return widen(41)\n";
+    try t.expectEqual(original.len, mutated.len);
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, original, 41);
+    const misses = cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.context_changed)];
+    try compare(t.allocator, &cache, mutated, 41);
+    // The renamed parameter changes the edited declaration's own region text and
+    // the fingerprint its caller depends on, so both miss as a dependency change
+    // and neither is served from the retained pair.
+    try t.expectEqual(misses + 2, cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.context_changed)]);
+    try t.expectEqual(@as(usize, 0), cache.statistics.reused);
+}
 // spec: SEMANTIC-CACHE-3
 test "semantic cache InvalidRelocation never accepts foreign source or expression identities" {
     const relocation = @import("semantic_copy.zig");
@@ -1858,6 +1893,11 @@ fn genericScenario(allocator: std.mem.Allocator) !void {
 // spec-case: SEMANTIC-CACHE-14
 // spec-case: SEMANTIC-CACHE-11
 test "generic publication rolls back cleanly on allocation failure" {
+    // Warm the native-build artifacts twice before the failing allocator runs:
+    // creating one on first use costs a few allocations, and a baseline run that
+    // pays them while a later run does not looks like nondeterministic memory
+    // usage to `checkAllAllocationFailures`.
+    try genericScenario(t.allocator);
     try genericScenario(t.allocator);
     try t.checkAllAllocationFailures(t.allocator, genericScenario, .{});
 }
