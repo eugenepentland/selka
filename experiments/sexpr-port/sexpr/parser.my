@@ -79,19 +79,19 @@ def parse_unit(raw: tk.RawToken, value: float, is_mil: bool) -> ast.Node:
 # The scale a one-byte SI suffix selects. The suffix byte is read from the
 # source octet: ASCII `k`, `M`, `G`, `m`, `u`, `n`, `p`, and 1.0 otherwise.
 def si_scale(letter: int) -> float:
-    if letter == 107:
+    if letter == ord("k"):
         return 1e3
-    if letter == 77:
+    if letter == ord("M"):
         return 1e6
-    if letter == 71:
+    if letter == ord("G"):
         return 1e9
-    if letter == 109:
+    if letter == ord("m"):
         return 1e-3
-    if letter == 117:
+    if letter == ord("u"):
         return 1e-6
-    if letter == 110:
+    if letter == ord("n"):
         return 1e-9
-    if letter == 112:
+    if letter == ord("p"):
         return 1e-12
     return 1.0
 

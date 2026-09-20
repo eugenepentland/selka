@@ -2371,6 +2371,452 @@ test "CLI api-diff records a baseline and classifies body and interface changes"
     defer testing.allocator.free(missing.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, missing.term);
 }
+
+/// The two-module fixture `mylang context` answers about: the entry imports
+/// `model`, `model::validate` calls the private `check`, and the separate
+/// `entry_value` export keeps `main` independent of `validate`'s signature so
+/// the baseline fixture can change it without breaking the project.
+const context_entry =
+    \\module main
+    \\import model
+    \\
+    \\
+    \\def main() -> int:
+    \\    return model.entry_value()
+;
+
+const context_model =
+    \\module model
+    \\
+    \\
+    \\public def validate(value: int) -> int:
+    \\    total = value
+    \\    return check(total)
+    \\
+    \\
+    \\public def entry_value() -> int:
+    \\    return 1
+    \\
+    \\
+    \\def check(value: int) -> int:
+    \\    return value + 1
+;
+
+/// `context_model` with a body-only edit: the same signature computes a
+/// different result, which an interface baseline classifies as compatible.
+const context_model_body_edit =
+    \\module model
+    \\
+    \\
+    \\public def validate(value: int) -> int:
+    \\    total = value + 1
+    \\    return check(total)
+    \\
+    \\
+    \\public def entry_value() -> int:
+    \\    return 1
+    \\
+    \\
+    \\def check(value: int) -> int:
+    \\    return value + 1
+;
+
+/// `context_model` with a breaking interface edit: `validate` gains a parameter
+/// every caller would have to supply.
+const context_model_signature_edit =
+    \\module model
+    \\
+    \\
+    \\public def validate(value: int, extra: int) -> int:
+    \\    total = value + extra
+    \\    return check(total)
+    \\
+    \\
+    \\public def entry_value() -> int:
+    \\    return 1
+    \\
+    \\
+    \\def check(value: int) -> int:
+    \\    return value + 1
+;
+
+/// The `model` module whose `validate` body carries `extra` straight-line
+/// updates, so the complete answer about it is far wider than a small
+/// `--context-bytes` budget and the envelope has to drop records.
+fn wideContextModel(allocator: std.mem.Allocator, extra: usize) ![]u8 {
+    var source: std.ArrayList(u8) = .empty;
+    defer source.deinit(allocator);
+    try source.appendSlice(allocator, "module model\n\n\npublic def validate(value: int) -> int:\n    total = value\n");
+    var line: usize = 0;
+    while (line < extra) : (line += 1) {
+        try source.appendSlice(allocator, "    total = total + 1\n");
+    }
+    try source.appendSlice(allocator, "    return check(total)\n\n\npublic def entry_value() -> int:\n    return 1\n\n\ndef check(value: int) -> int:\n    return value + 1\n");
+    return source.toOwnedSlice(allocator);
+}
+
+/// Write `main.my` and `model.my` into `temporary` and return the allocated
+/// entry path every `context` invocation names.
+fn writeContextProject(temporary: *testing.TmpDir, model: []const u8) ![]u8 {
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = context_entry });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "model.my", .data = model });
+    return temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+}
+
+/// Parse the one JSON object a successful `mylang context` prints, asserting
+/// stdout holds nothing else around it.
+fn parseContextAnswer(printed: []const u8) !std.json.Parsed(std.json.Value) {
+    const body = std.mem.trim(u8, printed, " \t\r\n");
+    try testing.expect(body.len > 1);
+    try testing.expectEqual(@as(u8, '{'), body[0]);
+    try testing.expectEqual(@as(u8, '}'), body[body.len - 1]);
+    return std.json.parseFromSlice(std.json.Value, testing.allocator, body, .{});
+}
+
+/// A required top-level string field of a context envelope.
+fn contextString(answer: std.json.Value, key: []const u8) ![]const u8 {
+    const value = answer.object.get(key) orelse return error.MissingContextField;
+    if (value != .string) return error.ContextFieldNotString;
+    return value.string;
+}
+
+/// A required top-level integer field of a context envelope.
+fn contextInteger(answer: std.json.Value, key: []const u8) !i64 {
+    const value = answer.object.get(key) orelse return error.MissingContextField;
+    if (value != .integer) return error.ContextFieldNotInteger;
+    return value.integer;
+}
+
+/// A required top-level array field of a context envelope.
+fn contextArray(answer: std.json.Value, key: []const u8) ![]std.json.Value {
+    const value = answer.object.get(key) orelse return error.MissingContextField;
+    if (value != .array) return error.ContextFieldNotArray;
+    return value.array.items;
+}
+
+/// Index of the first `sections` entry named `name`.
+fn contextSectionIndex(answer: std.json.Value, name: []const u8) !usize {
+    const sections = answer.object.get("sections") orelse return error.MissingContextSections;
+    if (sections != .array) return error.ContextSectionsNotArray;
+    for (sections.array.items, 0..) |section, index| {
+        if (section != .object) continue;
+        const field = section.object.get("name") orelse continue;
+        if (field != .string) continue;
+        if (std.mem.eql(u8, field.string, name)) return index;
+    }
+    return error.MissingContextSection;
+}
+
+/// The rendered JSON of one section, so a test can assert on a record's
+/// vocabulary without pinning field order the implementation still owns.
+fn contextSectionRendering(answer: std.json.Value, name: []const u8) ![]u8 {
+    const sections = answer.object.get("sections") orelse return error.MissingContextSections;
+    const index = try contextSectionIndex(answer, name);
+    return std.json.Stringify.valueAlloc(testing.allocator, sections.array.items[index], .{});
+}
+
+/// The `declaration` section must name the declaration it is about.
+fn expectDeclarationNames(answer: std.json.Value, needle: []const u8) !void {
+    const rendered = try contextSectionRendering(answer, "declaration");
+    defer testing.allocator.free(rendered);
+    try testing.expect(std.mem.indexOf(u8, rendered, needle) != null);
+}
+
+/// The envelope echoes its question in `selector`; only the shape is asserted,
+/// because its rendering is still moving.
+fn expectContextSelectorShape(answer: std.json.Value) !void {
+    const selector = answer.object.get("selector") orelse return error.MissingContextField;
+    switch (selector) {
+        .string => |text| try testing.expect(text.len > 0),
+        .object => |object| try testing.expect(object.count() > 0),
+        else => return error.ContextSelectorShape,
+    }
+}
+
+/// A rejected request must not print a successful envelope: stdout is either
+/// empty or one JSON object whose `status` is not `ok`.
+fn expectNoContextOk(printed: []const u8) !void {
+    const body = std.mem.trim(u8, printed, " \t\r\n");
+    if (body.len == 0) return;
+    var parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, body, .{});
+    defer parsed.deinit();
+    if (parsed.value != .object) return;
+    const status = parsed.value.object.get("status") orelse return;
+    if (status != .string) return;
+    try testing.expect(!std.mem.eql(u8, status.string, "ok"));
+}
+
+/// Run `mylang context` with `options` and require `expected_status`, with no
+/// successful envelope printed.
+fn expectContextRejected(entry: []const u8, options: []const []const u8, expected_status: u8) !void {
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "context", entry });
+    try args.appendSlice(testing.allocator, options);
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = expected_status }, outcome.term);
+    try expectNoContextOk(outcome.stdout);
+}
+
+/// A usage mistake prints nothing on stdout and the usage text on stderr.
+fn expectContextUsage(entry: []const u8, options: []const []const u8) !void {
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "context", entry });
+    try args.appendSlice(testing.allocator, options);
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, outcome.term);
+    try testing.expectEqualStrings("", outcome.stdout);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, "usage:") != null);
+}
+
+/// An incomplete project must not publish an `ok` verdict: either the
+/// envelope's own status says so, or the analysis record inside it reports that
+/// checking did not complete.
+fn expectUncheckedVerdict(answer: std.json.Value) !void {
+    const status = try contextString(answer, "status");
+    if (!std.mem.eql(u8, status, "ok")) return;
+    inline for (.{ "analysis", "analysis_status" }) |key| {
+        if (answer.object.get(key)) |analysis| {
+            const rendered = try std.json.Stringify.valueAlloc(testing.allocator, analysis, .{});
+            defer testing.allocator.free(rendered);
+            try testing.expect(std.mem.indexOf(u8, rendered, "checked") == null);
+            return;
+        }
+    }
+    return error.IncompleteProjectClaimedChecked;
+}
+
+// spec-case: CONTEXT-SECTIONS-1
+// spec-case: CONTEXT-ENVELOPE-1
+test "CLI context answers a symbol question with declaration before contract" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const path = try writeContextProject(&temp, context_model);
+    defer testing.allocator.free(path);
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "context", path, "--symbol", "model::validate", "--format=json" } });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    try testing.expectEqualStrings("", outcome.stderr);
+    const answer = try parseContextAnswer(outcome.stdout);
+    defer answer.deinit();
+    try testing.expectEqualStrings("agent-context-v1", try contextString(answer.value, "version"));
+    try testing.expectEqualStrings("ok", try contextString(answer.value, "status"));
+    try expectContextSelectorShape(answer.value);
+    try testing.expect(try contextInteger(answer.value, "emitted_bytes") > 0);
+    try testing.expect(try contextInteger(answer.value, "emitted_bytes") <= 8192);
+    const declaration = try contextSectionIndex(answer.value, "declaration");
+    const contract = try contextSectionIndex(answer.value, "contract");
+    try testing.expect(declaration < contract);
+    try expectDeclarationNames(answer.value, "validate");
+}
+
+// spec-case: CONTEXT-BUDGET-1
+test "CLI context keeps emitted bytes within the requested budget" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const model = try wideContextModel(testing.allocator, 200);
+    defer testing.allocator.free(model);
+    const path = try writeContextProject(&temp, model);
+    defer testing.allocator.free(path);
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "context", path, "--symbol", "model::validate", "--context-bytes=1200" } });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    const answer = try parseContextAnswer(outcome.stdout);
+    defer answer.deinit();
+    const emitted = try contextInteger(answer.value, "emitted_bytes");
+    try testing.expect(emitted > 0);
+    // The budget covers the whole serialized response, JSON escaping included,
+    // so even a response that had to drop records stays inside it.
+    try testing.expect(emitted <= 1200);
+    try testing.expect((try contextString(answer.value, "status")).len > 0);
+    const omissions = try contextArray(answer.value, "omissions");
+    try testing.expect(omissions.len > 0);
+    try testing.expect((try contextString(answer.value, "continuation")).len > 0);
+}
+
+// spec-case: CONTEXT-SELECT-1
+test "CLI context rejects a symbol no declaration carries" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const path = try writeContextProject(&temp, context_model);
+    defer testing.allocator.free(path);
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "context", path, "--symbol", "model::no_such_function" } });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, outcome.term);
+    try expectNoContextOk(outcome.stdout);
+}
+
+// spec-case: CONTEXT-SELECT-1
+test "CLI context refuses an unqualified name that two modules both declare" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
+        \\module main
+        \\import alpha
+        \\import beta
+        \\
+        \\
+        \\def main() -> int:
+        \\    return alpha.first() + beta.second()
+    });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "alpha.my", .data =
+        \\module alpha
+        \\
+        \\
+        \\public def validate(value: int) -> int:
+        \\    return value + 1
+        \\
+        \\
+        \\public def first() -> int:
+        \\    return 1
+    });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "beta.my", .data =
+        \\module beta
+        \\
+        \\
+        \\public def validate(value: int) -> int:
+        \\    return value + 2
+        \\
+        \\
+        \\public def second() -> int:
+        \\    return 2
+    });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(path);
+    // Both `alpha::validate` and `beta::validate` exist, so the bare name is
+    // genuinely ambiguous rather than unknown...
+    const qualified = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "context", path, "--symbol", "alpha::validate" } });
+    defer testing.allocator.free(qualified.stdout);
+    defer testing.allocator.free(qualified.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, qualified.term);
+    const answer = try parseContextAnswer(qualified.stdout);
+    defer answer.deinit();
+    try testing.expectEqualStrings("agent-context-v1", try contextString(answer.value, "version"));
+    // ...and `--symbol` takes a module-qualified name, so the command refuses
+    // to choose between the two rather than silently picking one.
+    try expectContextRejected(path, &.{ "--symbol", "validate" }, 2);
+}
+
+// spec-case: CONTEXT-AT-1
+test "CLI context resolves a source position and rejects unusable coordinates" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const path = try writeContextProject(&temp, context_model);
+    defer testing.allocator.free(path);
+    // `context_model` line 5 column 5 is inside `validate`'s body.
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "context", path, "--at", "model.my:5:5" } });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    const answer = try parseContextAnswer(outcome.stdout);
+    defer answer.deinit();
+    try testing.expectEqualStrings("agent-context-v1", try contextString(answer.value, "version"));
+    try expectDeclarationNames(answer.value, "validate");
+    // A file that is not in the project, and two malformed coordinate strings.
+    try expectContextRejected(path, &.{ "--at", "ghost.my:1:1" }, 2);
+    try expectContextRejected(path, &.{ "--at", "model.my:not-a-coordinate" }, 2);
+    try expectContextRejected(path, &.{ "--at", "model.my" }, 2);
+}
+
+// spec-case: CONTEXT-SELECT-1
+// spec-case: CONTEXT-BUDGET-1
+test "CLI context rejects missing conflicting and malformed options" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const path = try writeContextProject(&temp, context_model);
+    defer testing.allocator.free(path);
+    // Neither selector, and both selectors.
+    try expectContextUsage(path, &.{});
+    try expectContextUsage(path, &.{ "--symbol", "model::validate", "--at", "model.my:5:5" });
+    // A budget below the documented minimum, at the boundary and far below it,
+    // and one that is not a number at all.
+    try expectContextUsage(path, &.{ "--symbol", "model::validate", "--context-bytes=1023" });
+    try expectContextUsage(path, &.{ "--symbol", "model::validate", "--context-bytes=10" });
+    try expectContextUsage(path, &.{ "--symbol", "model::validate", "--context-bytes=abc" });
+    // JSON is the only accepted format.
+    try expectContextUsage(path, &.{ "--symbol", "model::validate", "--format=xml" });
+}
+
+// spec-case: CONTEXT-PARTIAL-1
+test "CLI context answers an incomplete project without checked facts" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    // `validate` declares an `int` result and returns `True`, so the project's
+    // bodies do not check; the command still owes a parseable answer.
+    const broken_model =
+        \\module model
+        \\
+        \\
+        \\public def validate(value: int) -> int:
+        \\    return True
+        \\
+        \\
+        \\public def entry_value() -> int:
+        \\    return 1
+    ;
+    const path = try writeContextProject(&temp, broken_model);
+    defer testing.allocator.free(path);
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "context", path, "--symbol", "model::validate" } });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    const answer = try parseContextAnswer(outcome.stdout);
+    defer answer.deinit();
+    try testing.expectEqualStrings("agent-context-v1", try contextString(answer.value, "version"));
+    try expectUncheckedVerdict(answer.value);
+}
+
+// spec-case: CONTEXT-SECTIONS-1
+test "CLI context classifies a declaration against an api-diff baseline" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const path = try writeContextProject(&temp, context_model);
+    defer testing.allocator.free(path);
+    const baseline = try std.fs.path.join(testing.allocator, &.{ root, "baseline.txt" });
+    defer testing.allocator.free(baseline);
+    const write_option = try std.fmt.allocPrint(testing.allocator, "--write={s}", .{baseline});
+    defer testing.allocator.free(write_option);
+    const against_option = try std.fmt.allocPrint(testing.allocator, "--against={s}", .{baseline});
+    defer testing.allocator.free(against_option);
+    const write = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "api-diff", path, write_option } });
+    defer testing.allocator.free(write.stdout);
+    defer testing.allocator.free(write.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, write.term);
+    // A body-only edit stays compatible; `main` calls the untouched
+    // `entry_value`, so the project still checks.
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "model.my", .data = context_model_body_edit });
+    const body = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "context", path, "--symbol", "model::validate", against_option } });
+    defer testing.allocator.free(body.stdout);
+    defer testing.allocator.free(body.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, body.term);
+    const body_answer = try parseContextAnswer(body.stdout);
+    defer body_answer.deinit();
+    const body_changes = try contextSectionRendering(body_answer.value, "changes");
+    defer testing.allocator.free(body_changes);
+    try testing.expect(std.mem.indexOf(u8, body_changes, "compatible") != null);
+    // A signature change is breaking.
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "model.my", .data = context_model_signature_edit });
+    const signature = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "context", path, "--symbol", "model::validate", against_option } });
+    defer testing.allocator.free(signature.stdout);
+    defer testing.allocator.free(signature.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, signature.term);
+    const signature_answer = try parseContextAnswer(signature.stdout);
+    defer signature_answer.deinit();
+    const signature_changes = try contextSectionRendering(signature_answer.value, "changes");
+    defer testing.allocator.free(signature_changes);
+    try testing.expect(std.mem.indexOf(u8, signature_changes, "breaking") != null);
+}
+
 /// Run one git subcommand in `root`, asserting a zero exit. `std.process.run`
 /// ignores the child's stdin, so git cannot disturb the test harness protocol.
 fn gitIn(allocator: std.mem.Allocator, root: []const u8, args: []const []const u8) !void {

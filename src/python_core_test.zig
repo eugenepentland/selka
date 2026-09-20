@@ -330,5 +330,5 @@ test "DIAG-ORACLE-1 unknown list methods name the accepted spellings" {
         \\    items = [1, 2]
         \\    items.appnd(3)
         \\    return 0
-    , "E_LIST_METHOD", "unknown managed collection method; methods: append, clear, copy, extend, index, insert, pop, remove, reverse, sort");
+    , "E_LIST_METHOD", "unknown method for a list[int] receiver; accepted methods: append, clear, copy, extend, index, insert, pop, remove, reverse, sort");
 }

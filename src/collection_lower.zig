@@ -52,7 +52,9 @@ pub fn optionType(catalog: *Catalog, element: typed.Type, span: Span) Error!type
 fn textMethodType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Span) Error!typed.Type {
     return switch (kind) {
         .strip, .lstrip, .rstrip, .upper, .lower, .replace, .zfill => owner,
-        .splitlines => listType(catalog, owner, span),
+        .splitlines, .split_whitespace => listType(catalog, owner, span),
+        .text_ord => .i64,
+        .text_chr => preludeType(catalog, "str", span),
         .is_digit, .is_alpha, .is_space, .starts_with, .ends_with => .bool,
         .count, .find => .i64,
         .parse_int => optionType(catalog, .i64, span),
@@ -77,6 +79,7 @@ fn bytesOperationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Sp
         // those octets instead.
         .view, .copy => owner,
         .split => listType(catalog, owner, span),
+        .split_whitespace => listType(catalog, owner, span),
         .to_list => listType(catalog, .i64, span),
         .hex => preludeType(catalog, "str", span),
         .decode => resultType(catalog, try preludeType(catalog, "str", span), try preludeType(catalog, "str", span), span),

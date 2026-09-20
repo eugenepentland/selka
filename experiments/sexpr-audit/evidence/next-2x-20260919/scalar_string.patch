@@ -1,0 +1,43 @@
+--- sexpr/tokenizer.my
++++ sexpr/tokenizer.my
+@@ -165,17 +165,32 @@
+ # reports UnterminatedString at the opening quote, the most actionable location.
+ def read_string(lx: Lexer, line: int, col: int, offset: int) -> Result[Token, LexError]:
+     advance(lx)  # skip opening "
+-    start = lx.pos
++    src = lx.src
++    pos = lx.pos
++    current_line = lx.line
++    current_col = lx.col
++    size = len(src)
++    start = pos
+     closed = False
+-    while lx.pos < len(lx.src) and not closed:
+-        ch = lx.src[lx.pos]
+-        if ch == 92:
+-            advance(lx)  # skip backslash
+-            advance(lx)  # skip escaped char
+-        elif ch == 34:
++    escaped = False
++    while pos < size and not closed:
++        ch = src[pos]
++        if ch == 34 and not escaped:
+             closed = True
+         else:
+-            advance(lx)
++            if ch == 10:
++                current_line = current_line + 1
++                current_col = 1
++            else:
++                current_col = current_col + 1
++            pos = pos + 1
++            if escaped:
++                escaped = False
++            elif ch == 92:
++                escaped = True
++    lx.pos = pos
++    lx.line = current_line
++    lx.col = current_col
+     if not closed:
+         return Err(LexError(message="unterminated string", offset=offset, line=line))
+     text = lexeme(lx.src, start, lx.pos)

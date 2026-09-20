@@ -112,6 +112,60 @@ const eTextOperator = "E_TEXT_OPERATOR";
 const unsupported_collection = "operation is not supported by this collection";
 const unsupported_list = "operation is not supported by lists";
 const method_arity = "collection method argument count differs from its signature";
+/// The whitespace alternative for the two `split` forms, attached to a rejected
+/// `split` arity so the reader learns the spelling that does accept it.
+const split_alternative = "`split()` with no argument splits on runs of ASCII whitespace and drops empty parts; `split(separator)` splits on one exact separator";
+/// The accepted callee for a bare `print` or `eprint`: `Stream`'s printing
+/// method, with the optional `sep` and `end` keywords the I/O builtins accept.
+const print_signature = buffer_operations.stream_print_signature;
+/// The accepted callee of the `sorted` prelude builtin; Python's `reverse=` is
+/// rejected with `reversed(sorted(...))` instead.
+const sorted_signature = buffer_operations.sorted_signature;
+/// The accepted spelling for Python's `sorted(..., reverse=True)`.
+const sorted_reverse_alternative = "sorted orders ascending only; write `reversed(sorted(values))` for a descending order";
+/// The accepted spelling of a Python method form this language rejects, or null
+/// when it has none. Only deliberate, known gaps appear here; a rejected call
+/// with no entry prints its signature or its accepted methods and stops.
+fn methodAlternative(name: []const u8) ?[]const u8 {
+    if (std.mem.eql(u8, name, "format")) return "use an f-string: f\"{value}\" interpolates where str.format does";
+    return null;
+}
+/// The accepted spelling beside a rejected collection operation, or null when
+/// the language has no alternative for it.
+fn alternativeFor(kind: BufferKind) ?[]const u8 {
+    return switch (kind) {
+        .split, .split_whitespace => split_alternative,
+        else => null,
+    };
+}
+/// The capability-first repair for a free file helper called the Python way.
+const capability_first = "a free file helper takes the Filesystem capability first: `open(fs, path, mode)` or `read_text(fs, path)`; `fs.open(path, mode)` is the method spelling";
+/// The checked signature of one whole-path file helper as the free spelling
+/// prints it, which is also how `docs/io.md` tabulates the helpers.
+fn fileAccessSignature(kind: file_operations.Access) []const u8 {
+    return switch (kind) {
+        .open => "open(fs: Filesystem, path: str, mode: str) -> Result[File, str]",
+        .read_file => "read_file(fs: Filesystem, path: str) -> Result[bytes, str]",
+        .read_text => "read_text(fs: Filesystem, path: str) -> Result[str, str]",
+        .write_file => "write_file(fs: Filesystem, path: str, data: bytes) -> Result[None, str]",
+        .write_text => "write_text(fs: Filesystem, path: str, text: str) -> Result[None, str]",
+        .exists => "exists(fs: Filesystem, path: str) -> bool",
+        .listdir => "listdir(fs: Filesystem, path: str) -> Result[list[str], str]",
+        .mkdir => "mkdir(fs: Filesystem, path: str) -> Result[None, str]",
+        .remove => "remove(fs: Filesystem, path: str) -> Result[None, str]",
+    };
+}
+/// The accepted argument shapes of one open-handle method.
+fn fileMethodSignature(kind: file_operations.Method) []const u8 {
+    return switch (kind) {
+        .read => "read() -> str, or read(size: int) -> str",
+        .readline => "readline() -> str",
+        .readlines => "readlines() -> list[str]",
+        .write => "write(data) -> int",
+        .flush => "flush() -> None",
+        .close => "close() -> None",
+    };
+}
 
 const ast = @import("ast.zig");
 const effect_set = @import("effect_set.zig");
@@ -799,16 +853,83 @@ const Checker = struct {
         }
     }
     const ResolvedCall = struct { declaration: instances.DeclarationId, call: @FieldType(@FieldType(ast.Node, "data"), "call") };
+    /// Whether one in-scope local may appear in a hole snapshot as a usable
+    /// input: initialized, not consumed, not arena-confined, not synthetic.
+    fn holeUsable(self: *Checker, local: typed.Local) bool {
+        if (!local.ownership.initialized) return false;
+        if (local.ownership.arena_confined) return false;
+        if (local.usage.temporary) return false;
+        return !self.transfers(local.ty) or local.ownership.transfer_available;
+    }
+    /// One binding's snapshot entry, spelled the way source declares its type.
+    fn holeCandidate(self: *Checker, local: typed.Local) Error!diagnostic.Candidate {
+        return .{
+            .name = local.name,
+            .ty = try typed.surfaceTypeName(self.allocator, local.ty, self.catalog.records),
+            .declaration = local.declaration,
+            .mutable = local.mutable,
+            .usable = self.holeUsable(local),
+        };
+    }
+    /// Offer every in-scope binding a filling could read at a typed hole.
+    fn holeCandidates(self: *Checker, out: *std.ArrayList(diagnostic.Candidate)) Error!void {
+        for (self.locals.items, 0..) |local, index| {
+            if (self.active.get(local.name) != @as(typed.LocalId, @fromBackingInt(index))) continue;
+            try out.append(self.allocator, try self.holeCandidate(local));
+        }
+    }
+    /// The generic requirements in force at a typed hole.
+    fn holeRequirements(self: *Checker, out: *std.ArrayList(diagnostic.Requirement)) Error!void {
+        if (self.current_function) |id| try diagnostic.appendRequirements(self.allocator, self.src, self.syntaxFunction(id).signature.type_parameters, out);
+    }
+    /// The callable enclosing a hole: its checked function, its lambda, or none.
+    fn holeFunction(self: *Checker) ?diagnostic.Fact {
+        if (self.current_function) |id| {
+            const declaration = self.syntaxFunction(id).name;
+            return .{ .text = self.src.text(declaration), .span = declaration };
+        }
+        if (self.current_lambda) |index| return .{ .text = "lambda", .span = self.syntax.lambdas[index].span };
+        return null;
+    }
+    /// The contextual expected type, published only when the checker knows one.
+    fn holeExpected(self: *Checker, call_span: source.Span) Error!?diagnostic.Fact {
+        const expected = self.expected_types.get(call_span) orelse return null;
+        return .{ .text = try typed.surfaceTypeName(self.allocator, expected, self.catalog.records), .span = call_span };
+    }
+    /// The declared effect ceiling and permitted mutation footprint. A lambda
+    /// states no ceiling of its own, so both stay explicitly unknown there.
+    fn holeContract(self: *Checker) Error!diagnostic.ObligationContract {
+        const id = self.current_function orelse return .{};
+        const function = self.syntaxFunction(id);
+        return .{
+            .effects = if (function.policy.effect_bound) |bound| .{ .text = self.src.text(bound.span), .span = bound.span } else null,
+            .mutation = try diagnostic.mutationFact(self.allocator, self.src, function),
+        };
+    }
+    /// The bounded facts this checker can see at a typed hole. The candidate and
+    /// requirement lists live in the checker's own allocator, so they outlive
+    /// this call and are released with the rest of the check.
+    fn holeFindings(self: *Checker, call_span: source.Span, candidates: []const diagnostic.Candidate, requirements: []const diagnostic.Requirement) Error!diagnostic.Findings {
+        return .{ .function = self.holeFunction(), .expected = try self.holeExpected(call_span), .candidates = candidates, .requirements = requirements, .contract = try self.holeContract() };
+    }
+    /// Record one typed hole from the facts this checker sees right now.
+    fn recordHole(self: *Checker, at: source.Span, target: source.Span, call_span: source.Span) Error {
+        var candidates: std.ArrayList(diagnostic.Candidate) = .empty;
+        try self.holeCandidates(&candidates);
+        var requirements: std.ArrayList(diagnostic.Requirement) = .empty;
+        try self.holeRequirements(&requirements);
+        return self.sink.recordHole(self.src, at, target, try self.holeFindings(call_span, candidates.items, requirements.items));
+    }
     fn callTarget(self: *Checker, input: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span) Error!typed.FunctionId {
         const target = try self.callDeclaration(input, span);
         return self.specialize(target.declaration, target.call, span);
     }
-    fn callDeclaration(self: *Checker, raw: @FieldType(@FieldType(ast.Node, "data"), "call"), _: source.Span) Error!ResolvedCall {
+    fn callDeclaration(self: *Checker, raw: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span) Error!ResolvedCall {
         const applied = try @import("call_type_arguments.zig").split(self.src, self.syntax, self.catalog.module_names, raw, self.sink);
         const input = applied orelse raw;
         if (std.mem.eql(u8, self.src.text(input.name), "todo") and input.owner == null) {
             _ = try self.ty(input.type_arguments[0]);
-            return self.sink.typedHole(input.name, input.type_arguments[0]);
+            return self.recordHole(input.name, input.type_arguments[0], span);
         }
         const call = try @import("source_codec.zig").resolve(self.src, self.syntax, self.catalog, input, self.sink);
         const owner = if (call.owner) |name| try self.ty(name) else null;
@@ -910,9 +1031,10 @@ const Checker = struct {
             return self.sink.fail("E_UNKNOWN_NAME", name, message);
         };
     }
-    /// Render the `unknown managed collection method` diagnostic with the method
-    /// spellings a receiver accepts, or their union when its family is not known.
-    fn unknownMethodMessage(self: *Checker, family: ?ManagedKind) Error![]const u8 {
+    /// Render the `unknown managed collection method` diagnostic with the
+    /// receiver's type when its family is known and the method spellings that
+    /// receiver accepts, or their union when its family is not known.
+    fn unknownMethodMessage(self: *Checker, family: ?ManagedKind, receiver: ?typed.Type) Error![]const u8 {
         const spellings = if (family) |kind|
             try buffer_operations.methodSpellings(self.allocator, kind)
         else
@@ -923,7 +1045,90 @@ const Checker = struct {
             if (index != 0) try joined.appendSlice(self.allocator, ", ");
             try joined.appendSlice(self.allocator, spelling);
         }
-        return std.fmt.allocPrint(self.allocator, "unknown managed collection method; methods: {s}", .{joined.items});
+        const name = if (receiver) |receiver_type|
+            try std.fmt.allocPrint(self.allocator, "a {s} receiver", .{try typed.surfaceTypeName(self.allocator, receiver_type, self.catalog.records)})
+        else
+            try self.allocator.dupe(u8, "this receiver");
+        return std.fmt.allocPrint(self.allocator, "unknown method for {s}; accepted methods: {s}", .{ name, joined.items });
+    }
+    /// The receiver, family, element and key type spellings one method signature
+    /// is rendered with.
+    fn signatureNames(self: *Checker, owner_type: typed.Type) Error!buffer_operations.SignatureNames {
+        const schema = self.catalog.records[owner_type.recordIndex()];
+        return .{
+            .receiver = try typed.surfaceTypeName(self.allocator, owner_type, self.catalog.records),
+            .family = schema.collection.kind,
+            .element = try typed.surfaceTypeName(self.allocator, schema.shape.buffer orelse .i64, self.catalog.records),
+            .key = if (schema.collection.key) |key| try typed.surfaceTypeName(self.allocator, key, self.catalog.records) else "int",
+        };
+    }
+    /// One rejected method call: the syntax it occupies, the callee, and the
+    /// argument count or argument type that did not match the callee.
+    const MethodRejection = struct {
+        span: source.Span,
+        name: source.Span,
+        kind: BufferKind,
+        names: buffer_operations.SignatureNames,
+        arguments: usize,
+    };
+    /// One argument whose checked type did not match the method's declared
+    /// parameter type, kept together so the signature is rendered only on failure.
+    const ArgumentRejection = struct {
+        actual: typed.Type,
+        expected: typed.Type,
+        span: source.Span,
+        kind: BufferKind,
+        names: buffer_operations.SignatureNames,
+    };
+    /// Reject a method call whose argument count differs from the callee's
+    /// checked signature. The message names the receiver type and renders the
+    /// signature through the one shared renderer, and a Python form with a known
+    /// accepted spelling carries that spelling as an `alternative` note.
+    fn methodArityFailure(self: *Checker, rejection: MethodRejection) Error {
+        const signature = try buffer_operations.signatureText(self.allocator, rejection.kind, rejection.names) orelse method_arity;
+        const message = try std.fmt.allocPrint(self.allocator, "`{s}` takes {d} argument{s}, but this call passes {d}", .{
+            signature, rejection.kind.arity(), if (rejection.kind.arity() == 1) "" else "s", rejection.arguments,
+        });
+        if (alternativeFor(rejection.kind)) |alternative|
+            return self.sink.failRelated("E_ARITY", rejection.span, message, .{ .span = rejection.name, .message = alternative, .role = .alternative });
+        return self.sink.fail("E_ARITY", rejection.span, message);
+    }
+    /// Require one method argument's type, attaching the callee's rendered
+    /// signature beside the offending argument when the type is rejected.
+    fn requireArgument(self: *Checker, rejection: ArgumentRejection) Error!void {
+        self.require(rejection.actual, rejection.expected, rejection.span) catch |err| {
+            if (err == error.SourceError) if (try buffer_operations.signatureText(self.allocator, rejection.kind, rejection.names)) |signature|
+                self.attachAlternative(rejection.span, signature);
+            return err;
+        };
+    }
+    /// Attach an `alternative` note to the diagnostic just appended, unless that
+    /// diagnostic already carries related evidence.
+    fn attachAlternative(self: *Checker, span: source.Span, message: []const u8) void {
+        const items = self.sink.items.items;
+        if (items.len == 0) return;
+        const last = &items[items.len - 1];
+        if (last.related != null) return;
+        last.related = .{ .span = span, .message = message, .role = .alternative };
+    }
+    /// Reject a whole-path file helper whose argument count differs from its
+    /// checked signature, rendering that signature and, for the free spelling, the
+    /// capability-first repair a Python `open(path)` call needs.
+    fn fileAccessArityFailure(self: *Checker, node: ast.Node, kind: file_operations.Access, actual: usize, method: bool) Error {
+        const expected = if (method) kind.methodArity() else kind.arity();
+        const message = try std.fmt.allocPrint(self.allocator, "`{s}` takes {d} argument{s}, but this call passes {d}", .{
+            fileAccessSignature(kind), expected, if (expected == 1) "" else "s", actual,
+        });
+        if (method) return self.sink.fail("E_ARITY", node.span, message);
+        return self.sink.failRelated("E_ARITY", node.span, message, .{ .span = node.span, .message = capability_first, .role = .alternative });
+    }
+    /// Reject an open-handle method whose argument count differs from its checked
+    /// signature.
+    fn fileMethodArityFailure(self: *Checker, name: source.Span, kind: file_operations.Method, actual: usize) Error {
+        const message = try std.fmt.allocPrint(self.allocator, "`{s}` does not take {d} argument{s}", .{
+            fileMethodSignature(kind), actual, if (actual == 1) "" else "s",
+        });
+        return self.sink.fail("E_ARITY", name, message);
     }
     /// Reject reading a function-scoped binding that no path reaching here has
     /// assigned, or one that names a managed value confined to a released arena.
@@ -1186,14 +1391,19 @@ const Checker = struct {
         return true;
     }
     fn validateSortedArguments(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!void {
-        if (call.arguments.len == 0 or call.arguments.len > 2) return self.sink.fail("E_ARITY", call.name, "sorted requires a list and optional key callback");
+        if (call.arguments.len == 0 or call.arguments.len > 2) return self.sink.failCallSite("E_ARITY", call.name, "sorted requires a list and optional key callback", null, sorted_signature);
         if (call.argument_names.len == 0) {
-            if (call.arguments.len == 2) return self.sink.fail(call_argument_code, self.syntax.nodes.items[@backingInt(call.arguments[1])].span, "sorted key must be written as key=callback");
+            if (call.arguments.len == 2) return self.sink.failCallSite(call_argument_code, self.syntax.nodes.items[@backingInt(call.arguments[1])].span, "sorted key must be written as key=callback", null, sorted_signature);
             return;
         }
-        if (call.argument_names[0] != null) return self.sink.fail(call_argument_code, call.argument_names[0].?, "the sorted list is positional");
-        if (call.arguments.len != 2 or call.argument_names[1] == null or !std.mem.eql(u8, self.src.text(call.argument_names[1].?), "key"))
-            return self.sink.fail(call_argument_code, call.name, "sorted accepts only the named argument key=callback");
+        if (call.argument_names[0] != null) return self.sink.failCallSite(call_argument_code, call.argument_names[0].?, "the sorted list is positional", null, sorted_signature);
+        if (call.arguments.len != 2 or call.argument_names[1] == null or !std.mem.eql(u8, self.src.text(call.argument_names[1].?), "key")) {
+            // `reverse=` is a Python keyword this surface does not accept, and the
+            // repair is mechanical: `reversed` is already a prelude builtin.
+            if (call.argument_names.len > 1) if (call.argument_names[1]) |keyword| if (std.mem.eql(u8, self.src.text(keyword), "reverse"))
+                return self.sink.failCallSite(call_argument_code, call.name, "sorted accepts only the named argument key=callback", .{ .span = keyword, .message = sorted_reverse_alternative, .role = .alternative }, sorted_signature);
+            return self.sink.failCallSite(call_argument_code, call.name, "sorted accepts only the named argument key=callback", null, sorted_signature);
+        }
     }
     fn hintSortedArguments(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!void {
         try self.validateSortedArguments(call);
@@ -1272,13 +1482,13 @@ const Checker = struct {
     /// the capability the method form carries as its receiver.
     fn checkFileAccessCall(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), kind: file_operations.Access, out: *typed.Node) Error!void {
         try call_arguments.positional(call, self.sink);
-        if (call.type_arguments.len != 0 or call.arguments.len != kind.arity()) return self.sink.fail("E_ARITY", node.span, "this file operation's argument count does not match its signature");
+        if (call.type_arguments.len != 0 or call.arguments.len != kind.arity()) return self.fileAccessArityFailure(node, kind, call.arguments.len, false);
         return self.checkFileAccess(node, kind, self.resolved[@backingInt(call.arguments[0])].?, call.arguments[1..], out);
     }
     /// Check the qualified `fs.read_text(path)` spelling on a local `Filesystem`.
     fn checkFileAccessMethod(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), kind: file_operations.Access, out: *typed.Node) Error!void {
         try call_arguments.positional(call, self.sink);
-        if (call.type_arguments.len != 0 or call.arguments.len != kind.methodArity()) return self.sink.fail("E_ARITY", node.span, "this file operation's argument count does not match its signature");
+        if (call.type_arguments.len != 0 or call.arguments.len != kind.methodArity()) return self.fileAccessArityFailure(node, kind, call.arguments.len, true);
         const owner = call.owner.?;
         const slot = self.active.get(self.src.text(owner)).?;
         try self.requireReadable(slot, owner);
@@ -1342,14 +1552,21 @@ const Checker = struct {
     const PrintTarget = struct { sink: typed.Sink = .stdout, stream: ?typed.NodeId = null, debug: bool = false };
     /// `print`/`eprint` without a receiver are gone: once no local binding,
     /// declared function or imported name shadows the spelling, they name
-    /// `E_OUTPUT_CAPABILITY` rather than an ambient sink.
+    /// `E_OUTPUT_CAPABILITY` rather than an ambient sink. The same sentence the
+    /// message carries is attached as an `alternative` note, so a tool reads the
+    /// accepted spelling as data instead of parsing prose, and the primary
+    /// message is unchanged.
     fn outputBuiltin(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?typed.Sink {
         if (call.owner != null or call.type_arguments.len != 0) return null;
         const name = self.src.text(call.name);
         if (!std.mem.eql(u8, name, "print") and !std.mem.eql(u8, name, "eprint")) return null;
         if (self.active.contains(name) or self.functions.contains(name)) return null;
         if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return null;
-        return self.sink.fail(io_builtins.output_capability_code, call.name, io_builtins.output_capability_message);
+        return self.sink.failCallSite(io_builtins.output_capability_code, call.name, io_builtins.output_capability_message, .{
+            .span = call.name,
+            .message = io_builtins.output_capability_message,
+            .role = .alternative,
+        }, print_signature);
     }
     fn checkPrintOperand(self: *Checker, id: ast.NodeId, expected_text: bool) Error!typed.NodeId {
         const value = self.resolved[@backingInt(id)].?;
@@ -1470,22 +1687,29 @@ const Checker = struct {
                         return self.sink.fail(eFileArgument, call.name, "unknown file method; open handles support read, readline, readlines, write, flush and close");
                     const most: usize = @intFromBool(kind.takesArgument());
                     const least: usize = @intFromBool(kind.requiresArgument());
-                    if (call.type_arguments.len != 0 or call.arguments.len > most or call.arguments.len < least) return self.sink.fail("E_ARITY", node.span, "file method argument count does not match its signature");
+                    if (call.type_arguments.len != 0 or call.arguments.len > most or call.arguments.len < least)
+                        return self.fileMethodArityFailure(call.name, kind, call.arguments.len);
                     node.data = .{ .file_operation = .{ .kind = kind, .owner = owner, .argument = if (call.arguments.len == 0) null else call.arguments[0] } };
                     return node;
                 }
                 if (value_type.isAggregate() and self.catalog.records[value_type.recordIndex()].isCollection()) {
                     try call_arguments.positional(call, self.sink);
                     const name = self.src.text(call.name);
-                    const kind = buffer_operations.method(name) orelse {
+                    const family = self.catalog.records[value_type.recordIndex()].collection.kind;
+                    const kind = buffer_operations.methodFor(name, call.arguments.len) orelse {
                         _ = try @import("removed_names.zig").reject(self.sink, call.name, name);
-                        const family = self.catalog.records[value_type.recordIndex()].collection.kind;
-                        return self.sink.fail("E_LIST_METHOD", call.name, try self.unknownMethodMessage(family));
+                        return self.sink.fail("E_LIST_METHOD", call.name, try self.unknownMethodMessage(family, value_type));
                     };
                     // The everyday vocabulary stays a buffer operation; the
                     // checker picks its arity from the receiver and `pop` name.
                     if (!buffer_operations.vocabulary(kind) and (call.type_arguments.len != 0 or call.arguments.len != kind.arity()))
-                        return self.sink.fail("E_ARITY", node.span, "list method argument count does not match its signature");
+                        return self.methodArityFailure(.{
+                            .span = node.span,
+                            .name = call.name,
+                            .kind = kind,
+                            .names = try self.signatureNames(value_type),
+                            .arguments = call.arguments.len,
+                        });
                     node.data = .{ .buffer_operation = .{ .kind = kind, .owner = owner, .arguments = call.arguments } };
                 }
             };
@@ -1843,7 +2067,18 @@ const Checker = struct {
         const call = node.data.method_call;
         const name = self.src.text(call.name);
         _ = try @import("removed_names.zig").reject(self.sink, call.name, name);
-        const kind = buffer_operations.method(name) orelse return self.sink.fail("E_COLLECTION_METHOD", call.name, try self.unknownMethodMessage(null));
+        // The receiver is checked first so an unknown method can name its type;
+        // `checkListAccess` reads the same cached checked node.
+        const base = try self.expressionWithTemporaries(call.base, temporaries);
+        const owner_type = self.nodes.items[@backingInt(base)].ty;
+        const kind = buffer_operations.methodFor(name, call.arguments.len) orelse {
+            const managed = owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].isCollection();
+            const family: ?ManagedKind = if (managed) self.catalog.records[owner_type.recordIndex()].collection.kind else null;
+            const message = try self.unknownMethodMessage(family, if (managed) owner_type else null);
+            if (methodAlternative(name)) |alternative|
+                return self.sink.failRelated(eCollectionMethod, call.name, message, .{ .span = call.name, .message = alternative, .role = .alternative });
+            return self.sink.fail(eCollectionMethod, call.name, message);
+        };
         return self.checkListAccess(node, .{ .base = call.base, .kind = kind, .inputs = call.arguments }, temporaries);
     }
     fn checkCollectionSlice(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
@@ -1893,7 +2128,13 @@ const Checker = struct {
         const element = try self.listElement(self.nodes.items[@backingInt(base)].ty, node.span);
         if (kind == .contains and self.requiresCellEquality(element))
             return self.sink.fail(eCellEquality, node.span, "list membership over Cell-bearing values requires equality, which Cell does not define");
-        if (inputs.len != kind.arity()) return self.sink.fail("E_ARITY", node.span, method_arity);
+        if (inputs.len != kind.arity()) return self.methodArityFailure(.{
+            .span = node.span,
+            .name = node.span,
+            .kind = kind,
+            .names = try self.signatureNames(self.nodes.items[@backingInt(base)].ty),
+            .arguments = inputs.len,
+        });
         const arguments = try self.allocator.alloc(typed.NodeId, inputs.len);
         for (inputs, arguments, 0..) |input, *argument, i| {
             const writes_element = kind == .append or kind == .contains or (kind == .write and i == 1);
@@ -1916,16 +2157,23 @@ const Checker = struct {
         const element = try self.listElement(owner_type, node.span);
         if ((kind == .remove or kind == .index_of) and self.requiresCellEquality(element))
             return self.sink.fail(eCellEquality, node.span, "list search over Cell-bearing values requires equality, which Cell does not define");
-        if (inputs.len != kind.arity()) return self.sink.fail("E_ARITY", node.span, method_arity);
+        if (inputs.len != kind.arity()) return self.methodArityFailure(.{
+            .span = node.span,
+            .name = node.span,
+            .kind = kind,
+            .names = try self.signatureNames(owner_type),
+            .arguments = inputs.len,
+        });
         if (kind == .sort and !(element.isInteger() or numeric_surface.isFloat(element, self.catalog.records))) {
             return self.sink.fail(eCollectionMethod, node.span, "sort requires an integer or float element type");
         }
+        const names = try self.signatureNames(owner_type);
         const arguments = try self.allocator.alloc(typed.NodeId, inputs.len);
         switch (kind) {
             .extend => {
                 try self.hint(inputs[0], owner_type);
                 arguments[0] = try self.expressionWithTemporaries(inputs[0], temporaries);
-                try self.require(self.nodes.items[@backingInt(arguments[0])].ty, owner_type, node.span);
+                try self.requireArgument(.{ .actual = self.nodes.items[@backingInt(arguments[0])].ty, .expected = owner_type, .span = node.span, .kind = kind, .names = names });
             },
             .insert => {
                 try self.hint(inputs[0], .i64);
@@ -1933,7 +2181,7 @@ const Checker = struct {
                 try self.requireInteger(self.nodes.items[@backingInt(arguments[0])].ty, node.span);
                 try self.hint(inputs[1], element);
                 arguments[1] = try self.expressionWithTemporaries(inputs[1], temporaries);
-                try self.require(self.nodes.items[@backingInt(arguments[1])].ty, element, node.span);
+                try self.requireArgument(.{ .actual = self.nodes.items[@backingInt(arguments[1])].ty, .expected = element, .span = node.span, .kind = kind, .names = names });
             },
             .pop_at => {
                 try self.hint(inputs[0], .i64);
@@ -1943,7 +2191,7 @@ const Checker = struct {
             .remove, .index_of => {
                 try self.hint(inputs[0], element);
                 arguments[0] = try self.expressionWithTemporaries(inputs[0], temporaries);
-                try self.require(self.nodes.items[@backingInt(arguments[0])].ty, element, node.span);
+                try self.requireArgument(.{ .actual = self.nodes.items[@backingInt(arguments[0])].ty, .expected = element, .span = node.span, .kind = kind, .names = names });
             },
             .pop, .reverse, .sort, .copy, .clear => {},
             else => return self.sink.fail(eCollectionMethod, node.span, unsupported_list),
@@ -1966,7 +2214,14 @@ const Checker = struct {
             .items, .update, .setdefault, .pop_key, .pop_default, .copy, .clear => true,
             else => false,
         }) return self.checkDictionaryMethod(node, owner_type, operation, temporaries);
-        if (operation.inputs.len != operation.kind.arity()) return self.sink.fail("E_ARITY", node.span, method_arity);
+        if (operation.inputs.len != operation.kind.arity()) return self.methodArityFailure(.{
+            .span = node.span,
+            .name = node.span,
+            .kind = operation.kind,
+            .names = try self.signatureNames(owner_type),
+            .arguments = operation.inputs.len,
+        });
+        const names = try self.signatureNames(owner_type);
         const arguments = try self.allocator.alloc(typed.NodeId, operation.inputs.len);
         for (operation.inputs, arguments, 0..) |input, *argument, index| {
             const integer = !dictionary and (operation.kind == .read or operation.kind == .slice or operation.kind == .view or widthArgument(operation.kind) or
@@ -1983,7 +2238,8 @@ const Checker = struct {
             else if (operation.kind == .join) try self.collectionListType(owner_type, node.span) else owner_type;
             try self.hint(input, expected);
             argument.* = try self.expressionWithTemporaries(input, temporaries);
-            if (integer) try self.requireInteger(self.nodes.items[@backingInt(argument.*)].ty, node.span) else try self.require(self.nodes.items[@backingInt(argument.*)].ty, expected, node.span);
+            const actual = self.nodes.items[@backingInt(argument.*)].ty;
+            if (integer) try self.requireInteger(actual, node.span) else try self.requireArgument(.{ .actual = actual, .expected = expected, .span = node.span, .kind = operation.kind, .names = names });
         }
         try self.requireArenaOperation(operation.receiver, operation.kind, arguments);
         return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(operation.base, operation.kind, arguments, false);
@@ -1993,27 +2249,34 @@ const Checker = struct {
         const schema = self.catalog.records[owner_type.recordIndex()];
         const key_type = schema.collection.key.?;
         const value_type = schema.shape.buffer.?;
-        if (operation.inputs.len != operation.kind.arity()) return self.sink.fail("E_ARITY", node.span, method_arity);
+        if (operation.inputs.len != operation.kind.arity()) return self.methodArityFailure(.{
+            .span = node.span,
+            .name = node.span,
+            .kind = operation.kind,
+            .names = try self.signatureNames(owner_type),
+            .arguments = operation.inputs.len,
+        });
+        const names = try self.signatureNames(owner_type);
         const arguments = try self.allocator.alloc(typed.NodeId, operation.inputs.len);
         switch (operation.kind) {
             .items, .copy, .clear => {},
             .update => {
                 try self.hint(operation.inputs[0], owner_type);
                 arguments[0] = try self.expressionWithTemporaries(operation.inputs[0], temporaries);
-                try self.require(self.nodes.items[@backingInt(arguments[0])].ty, owner_type, node.span);
+                try self.requireArgument(.{ .actual = self.nodes.items[@backingInt(arguments[0])].ty, .expected = owner_type, .span = node.span, .kind = operation.kind, .names = names });
             },
             .pop_key => {
                 try self.hint(operation.inputs[0], key_type);
                 arguments[0] = try self.expressionWithTemporaries(operation.inputs[0], temporaries);
-                try self.require(self.nodes.items[@backingInt(arguments[0])].ty, key_type, node.span);
+                try self.requireArgument(.{ .actual = self.nodes.items[@backingInt(arguments[0])].ty, .expected = key_type, .span = node.span, .kind = operation.kind, .names = names });
             },
             .pop_default, .setdefault => {
                 try self.hint(operation.inputs[0], key_type);
                 arguments[0] = try self.expressionWithTemporaries(operation.inputs[0], temporaries);
-                try self.require(self.nodes.items[@backingInt(arguments[0])].ty, key_type, node.span);
+                try self.requireArgument(.{ .actual = self.nodes.items[@backingInt(arguments[0])].ty, .expected = key_type, .span = node.span, .kind = operation.kind, .names = names });
                 try self.hint(operation.inputs[1], value_type);
                 arguments[1] = try self.expressionWithTemporaries(operation.inputs[1], temporaries);
-                try self.require(self.nodes.items[@backingInt(arguments[1])].ty, value_type, node.span);
+                try self.requireArgument(.{ .actual = self.nodes.items[@backingInt(arguments[1])].ty, .expected = value_type, .span = node.span, .kind = operation.kind, .names = names });
             },
             else => return self.sink.fail(eCollectionMethod, node.span, "operation is not supported by dictionaries"),
         }
@@ -2481,11 +2744,13 @@ const Checker = struct {
                 if (!dictionary) return self.sink.fail(eCollectionMethod, operation.owner, "keys and values require a dictionary");
                 out.ty = try self.collectionListType(if (operation.kind == .keys) schema.collection.key.? else element, operation.owner);
             },
-            .split, .join => {
+            .split, .split_whitespace, .join => {
                 if (dictionary) return self.sink.fail(eCollectionMethod, operation.owner, "split and join require str");
                 const list_type = try self.collectionListType(local.ty, operation.owner);
-                try self.require(self.nodes.items[@backingInt(arguments[0])].ty, if (operation.kind == .split) local.ty else list_type, operation.owner);
-                out.ty = if (operation.kind == .split) list_type else local.ty;
+                // The no-argument form has no separator to type-check; `join`
+                // takes the list of pieces and both splits answer one.
+                if (operation.kind != .split_whitespace) try self.require(self.nodes.items[@backingInt(arguments[0])].ty, if (operation.kind == .split) local.ty else list_type, operation.owner);
+                out.ty = if (operation.kind == .join) local.ty else list_type;
             },
             .items, .pop, .pop_key, .pop_default, .update, .setdefault, .clear => return self.checkDictionaryBufferMethod(operation, owner, out),
             else => return self.sink.fail(eCollectionMethod, operation.owner, unsupported_collection),
@@ -2563,7 +2828,14 @@ const Checker = struct {
         const value_type = schema.shape.buffer.?;
         var kind = operation.kind;
         if (kind == .pop) kind = if (operation.arguments.len == 2) .pop_default else .pop_key;
-        if (operation.arguments.len != kind.arity()) return self.sink.fail("E_ARITY", operation.owner, method_arity);
+        if (operation.arguments.len != kind.arity()) return self.methodArityFailure(.{
+            .span = operation.owner,
+            .name = operation.owner,
+            .kind = kind,
+            .names = try self.signatureNames(owner_type),
+            .arguments = operation.arguments.len,
+        });
+        const names = try self.signatureNames(owner_type);
         const arguments = try self.allocator.alloc(typed.NodeId, operation.arguments.len);
         for (operation.arguments, arguments, 0..) |input, *argument, index| {
             argument.* = self.resolved[@backingInt(input)].?;
@@ -2571,9 +2843,12 @@ const Checker = struct {
             const span = self.syntax.nodes.items[@backingInt(input)].span;
             switch (kind) {
                 .items, .copy, .clear => {},
-                .update => try self.require(actual, owner_type, span),
-                .pop_key => try self.require(actual, key_type, span),
-                .pop_default, .setdefault => if (index == 0) try self.require(actual, key_type, span) else try self.require(actual, value_type, span),
+                .update => try self.requireArgument(.{ .actual = actual, .expected = owner_type, .span = span, .kind = kind, .names = names }),
+                .pop_key => try self.requireArgument(.{ .actual = actual, .expected = key_type, .span = span, .kind = kind, .names = names }),
+                .pop_default, .setdefault => if (index == 0)
+                    try self.requireArgument(.{ .actual = actual, .expected = key_type, .span = span, .kind = kind, .names = names })
+                else
+                    try self.requireArgument(.{ .actual = actual, .expected = value_type, .span = span, .kind = kind, .names = names }),
                 else => {},
             }
         }
@@ -2631,20 +2906,27 @@ const Checker = struct {
         if (kind == .pop) kind = if (operation.arguments.len == 1) .pop_at else .pop;
         if ((kind == .remove or kind == .index_of) and self.requiresCellEquality(element))
             return self.sink.fail(eCellEquality, operation.owner, "list search over Cell-bearing values requires equality, which Cell does not define");
-        if (operation.arguments.len != kind.arity()) return self.sink.fail("E_ARITY", operation.owner, method_arity);
+        if (operation.arguments.len != kind.arity()) return self.methodArityFailure(.{
+            .span = operation.owner,
+            .name = operation.owner,
+            .kind = kind,
+            .names = try self.signatureNames(owner_type),
+            .arguments = operation.arguments.len,
+        });
         if (kind == .sort and !(element.isInteger() or numeric_surface.isFloat(element, self.catalog.records))) {
             return self.sink.fail(eCollectionMethod, operation.owner, "sort requires an integer or float element type");
         }
+        const names = try self.signatureNames(owner_type);
         const arguments = try self.allocator.alloc(typed.NodeId, operation.arguments.len);
         for (operation.arguments, arguments, 0..) |input, *argument, index| {
             argument.* = self.resolved[@backingInt(input)].?;
             const actual = self.nodes.items[@backingInt(argument.*)].ty;
             const span = self.syntax.nodes.items[@backingInt(input)].span;
             switch (kind) {
-                .extend => try self.require(actual, owner_type, span),
-                .insert => if (index == 0) try self.requireInteger(actual, span) else try self.require(actual, element, span),
+                .extend => try self.requireArgument(.{ .actual = actual, .expected = owner_type, .span = span, .kind = kind, .names = names }),
+                .insert => if (index == 0) try self.requireInteger(actual, span) else try self.requireArgument(.{ .actual = actual, .expected = element, .span = span, .kind = kind, .names = names }),
                 .pop_at => try self.requireInteger(actual, span),
-                .remove, .index_of => try self.require(actual, element, span),
+                .remove, .index_of => try self.requireArgument(.{ .actual = actual, .expected = element, .span = span, .kind = kind, .names = names }),
                 else => {},
             }
         }

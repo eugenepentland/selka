@@ -1,0 +1,31 @@
+{
+  "git_head": "70447f376f621b8ca5716d0c886c0196ea7464f1",
+  "toolchain": "0.17.0-dev.1683+5ceec001b",
+  "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           39 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  20\nOn-line CPU(s) list:                     0-19\nVendor ID:                               GenuineIntel\nModel name:                              12th Gen Intel(R) Core(TM) i7-12700H\nCPU family:                              6\nModel:                                   154\nThread(s) per core:                      2\nCore(s) per socket:                      14\nSocket(s):                               1\nStepping:                                3\nCPU(s) scaling MHz:                      32%\nCPU max MHz:                             4700.0000\nCPU min MHz:                             400.0000\nBogoMIPS:                                5376.00\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nVirtualization:                          VT-x\nL1d cache:                               544 KiB (14 instances)\nL1i cache:                               704 KiB (14 instances)\nL2 cache:                                11.5 MiB (8 instances)\nL3 cache:                                24 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-19\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Mitigation; Clear Register File\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS SW sequence; BHI BHI_DIS_S\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Mitigation; IBPB before exit to userspace\n",
+  "compiler_matches_worktree_not_guaranteed": true,
+  "installed_compiler_has_fused_decode_range": true,
+  "frozen_source_sha256": {
+    "a_read.my": "1cf038907c2c1f361aa3dbda5941ee33d8664d37e800cafd9f2562f393df67ac",
+    "b_tokens.my": "25fcc6a8379d4d2bd0c47bf728c79642b06601853327768fb6634644e18db427",
+    "c_parse.my": "1782b65e8dacee1a5518e2683f0bddced65fa871f85a7192d61c6655418117d4",
+    "e_scan.my": "74381396e25b650a2398fc364ce7246ba99b2c1562158aa5f334f0aa474d7454",
+    "main.my": "0e89903fdb888ee2d1fdeb1b66e7bf3470f8162a8500329e5c23e21f5c19d381",
+    "scan_once.my": "14a21acba32953d17ff4e88c449928995c70065461a3d03ed81e79f2b2265ed8",
+    "sexpr/ast.my": "033b4f2a59e111d671b1cf12af6b6356b39af47c4d80b20dc9f373aacc2e8def",
+    "sexpr/parser.my": "5c262b182335b845cc0ff66290b662249630cf12fdfc909e1ea4bf043b4ec5d5",
+    "sexpr/printer.my": "5d95812989fcc191f4a457b40bd0c817ee5a5be5dc991c4f67b406ed156af155",
+    "sexpr/tokenizer.my": "0df95a9584912f8d853581c765b2f921e0143a1fe9ed33fc8ac96282ce79bbc2"
+  },
+  "sizes": {
+    "myl_native_object": 96,
+    "myl_native_list": 72,
+    "nonempty_str_fixed_bytes_before_allocator_overhead": 264
+  },
+  "notes": [
+    "No production source edits. Used installed compiler; did not run Guardian.",
+    "Source checkout already dirty. Compiler and QBE copied to scratch before builds; hashes in measurement.json.",
+    "perf counters are user-mode counts; do not compare their absolute values with older all-mode counts.",
+    "no_text patch changes semantics and is only a ceiling experiment.",
+    "Source/IR/C prototypes have bounded validation, not full language gates."
+  ]
+}

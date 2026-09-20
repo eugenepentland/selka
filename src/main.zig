@@ -10,6 +10,12 @@ const lint_profile_prefix = "--profile=";
 const lint_against_prefix = "--against=";
 /// `api-diff --write=FILE` prefix.
 const api_write_prefix = "--write=";
+/// `context --symbol=NAME` prefix.
+const context_symbol_prefix = "--symbol=";
+/// `context --at=PATH:LINE:COLUMN` prefix.
+const context_at_prefix = "--at=";
+/// `context --context-bytes=N` prefix.
+const context_bytes_prefix = "--context-bytes=";
 /// Wall-clock ceiling forwarded to the guest runtime, which parses the same flag.
 const timeout_prefix = "--timeout=";
 /// Shared internal session failure name for an over-long request line.
@@ -43,6 +49,7 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "       mylang build <file.my> (-o <output> | --run) [--help]\n" ++
     "       mylang doc-coverage [<repo-root>] (every implemented feature and standard export needs a documented example)\n       mylang " ++
     "doctest [<repo-root>] [--filter GLOB] [--report PATH] [--jobs N] [--verbose] (run every fenced documentation example)\n       mylang " ++
+    "reference --query TERM [--format=text|json] (compiler-derived facts from this executable)\n       mylang " ++
     "<schema-project|input-module|check|run|dump-bytecode|di" ++
     "scover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fm" ++
     "t-module|fmt-project|emit-qbe|emit-project-qbe|list-modules|list-interfaces|list-" ++
@@ -50,8 +57,9 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "-project|run-project|check-policy> <file.my>\n  schema-project: --schema-report (include " ++
     "checked source and compiler identities)\n  " ++
     "input-module: reads a typed JSON manifest and writes generated " ++
-    "module source\n  run: builds the program natively and runs it; it loads the whole project when the entry " ++
-    "file opens with a module header (or a module-only import/export), and stays single-unit otherwise; " ++
+    "module source\n  run: builds the program natively and runs it; it loads the reachable module graph when the entry " ++
+    "file opens with a module header or an import/export directive, including a headerless script that imports embedded " ++
+    "standard modules, and stays single-unit otherwise; " ++
     "run-project is the explicit project-entry alias\n  run/run-project: unbounded in instructions and frames by default; " ++
     "--max-steps=N and --max-frames=N impose a ceiling and --timeout=SECONDS caps elapsed time; " ++
     "--max-memory=BYTES --gc-stress --print-result --cache-dir=DIR --qbe=PATH --zig=PATH " ++
@@ -76,6 +84,8 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "lint: --gate --accept --json --profile=agent|strict|safety --against=REF (blocking findings exit 3)\n  " ++
     "tests-for: <entry.my> <qualified-name> lists the tests that reach a declaration\n  " ++
     "api-diff: <entry.my> --write=FILE | --against=FILE [--json] (classified interface changes)\n  " ++
+    "context: <entry.my> --symbol=NAME | --at=PATH:LINE:COLUMN [--context-bytes=N] [--format=json] " ++
+    "[--against=FILE] (one bounded agent-context-v1 answer about one declaration)\n  " ++
     "fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: " ++
     "--check (otherwise writes formatted source to " ++
     "stdout)\n" ++
@@ -165,6 +175,10 @@ const Context = struct {
     /// Populated by a command that produced an invalidation explanation so the
     /// frontend-cache receipt can report the same per-stage counts.
     observation: ?*RunObservation = null,
+    /// Opt-in friction record for this command, or null when neither
+    /// `--friction-log` nor `MYLANG_FRICTION_LOG` asked for one. Every write is
+    /// best effort: a failure drops information rather than failing the command.
+    friction: ?*language.friction_log.Recorder = null,
     fn text(self: Context, bytes: []const u8) !void {
         if (self.diagnostics == .text) return std.Io.File.stderr().writeStreamingAll(self.io, bytes);
         const rendered = try diagnostic_output.message(self.gpa, bytes, self.diagnostics);
@@ -214,6 +228,7 @@ fn dispatch(process: std.process.Init) !u8 {
     if (args.len >= 2 and std.mem.eql(u8, args[1], "bench-promote")) return @import("native_bench_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "doc-coverage")) return @import("doc_coverage_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "doctest")) return @import("doctest_command.zig").run(process, args[2..]);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "reference")) return @import("reference_command.zig").run(@import("mylang"), process, args[2..]);
     // The C backend is gone. Answer its command names with a migration that
     // points at the QBE replacements rather than a bare usage dump.
     if (args.len >= 2 and (std.mem.eql(u8, args[1], "emit-c") or std.mem.eql(u8, args[1], "emit-project-c"))) {
@@ -250,12 +265,20 @@ fn dispatch(process: std.process.Init) !u8 {
 }
 fn run(init: Context, parsed: Parsed) !u8 {
     if (parsed.command == .@"check-session") return checkSession(init, parsed);
+    // One optional record per command, built before any work so the wall time it
+    // carries covers the whole command. `init` returns null unless the flag or
+    // `MYLANG_FRICTION_LOG` asked for a log, so an ordinary run pays one check.
+    var friction_storage: language.friction_log.Recorder = undefined;
+    const friction = startFriction(init, parsed, &friction_storage);
+    const friction_start = if (friction != null) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
+    defer if (friction) |recorder| recorder.deinit();
     var frontend_cache = openFrontendCache(init, parsed);
     var semantic_store = openSemanticStore(init, parsed);
     var observation: RunObservation = .{ .executed = executedStages(parsed.command) };
     observation.work.command = @tagName(parsed.command);
     var command_init = init;
     command_init.observation = &observation;
+    command_init.friction = friction;
     var with_frontend = parsed;
     with_frontend.frontend = if (frontend_cache) |*cache| cache else null;
     with_frontend.semantic = if (semantic_store) |*store| store else null;
@@ -265,12 +288,48 @@ fn run(init: Context, parsed: Parsed) !u8 {
         }
         if (frontend_cache) |*cache| cache.deinit();
         if (semantic_store) |*store| store.deinit();
+        if (friction) |recorder| recorder.finish(2, frictionElapsedNs(friction_start, init.io));
         return err;
     };
     try reportMeasured(init, parsed, if (frontend_cache) |*cache| cache else null, &observation);
     if (frontend_cache) |*cache| cache.deinit();
     if (semantic_store) |*store| store.deinit();
+    if (friction) |recorder| recorder.finish(status, frictionElapsedNs(friction_start, init.io));
     return status;
+}
+
+/// Start this command's friction record, or return null when no log was asked
+/// for. The compiler identity and the entry file's snapshot digest come from the
+/// same receipt machinery every other command receipt uses, so a record names
+/// exactly the build and the source it judged. A failed identity, allocation or
+/// read leaves the destination null: logging never fails the command.
+fn startFriction(init: Context, parsed: Parsed, storage: *language.friction_log.Recorder) ?*language.friction_log.Recorder {
+    if (parsed.friction_path == null and init.environ.get(language.friction_log.variable) == null) return null;
+    const identity = compilerIdentity(init.io) catch return null;
+    const compiler = language.source_receipt.implementation(init.gpa, identity) catch return null;
+    storage.* = language.friction_log.Recorder.init(init.gpa, init.io, init.environ, .{
+        .flag = parsed.friction_path,
+        .command = @tagName(parsed.command),
+        .path = parsed.path,
+        .snapshot = entrySnapshot(init, parsed.path),
+        .compiler = compiler,
+    }) orelse return null;
+    return storage;
+}
+
+/// The command's elapsed monotonic nanoseconds, clamped at zero so a clock that
+/// never steps backwards still cannot produce a negative duration.
+fn frictionElapsedNs(start: std.Io.Timestamp, io: std.Io) u64 {
+    const nanoseconds = start.durationTo(std.Io.Timestamp.now(io, .awake)).nanoseconds;
+    return @intCast(@max(nanoseconds, 0));
+}
+
+/// Lowercase SHA-256 of the entry file as the command was given it, or the empty
+/// string when it cannot be read. Only the digest is ever recorded, never bytes.
+fn entrySnapshot(init: Context, path: []const u8) []const u8 {
+    const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, path, init.gpa, .limited(16 * 1024 * 1024)) catch return "";
+    defer init.gpa.free(bytes);
+    return language.friction_log.snapshotHex(init.gpa, bytes) catch "";
 }
 
 /// Emit every requested machine-readable receipt after a command finishes.
@@ -308,6 +367,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .lint,
         .@"tests-for",
         .@"api-diff",
+        .context,
         .@"discover-project-duplicates",
         .@"report-project-quality",
         .@"fmt-project",
@@ -443,6 +503,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .lint,
         .@"tests-for",
         .@"api-diff",
+        .context,
         .@"discover-project-duplicates",
         .@"report-project-quality",
         => unreachable,
@@ -570,6 +631,7 @@ fn runNative(init: Context, parsed: Parsed, manifest: []const u8) !u8 {
 
 fn report(init: Context, compilation: *const language.Compilation) !void {
     for (compilation.diagnostics.items) |diagnostic| {
+        if (init.friction) |recorder| recorder.addDiagnostic(diagnostic);
         const rendered = try diagnostic_output.render(init.gpa, diagnostic, compilation.src, init.diagnostics);
         defer init.gpa.free(rendered);
         try std.Io.File.stderr().writeStreamingAll(init.io, rendered);
@@ -593,6 +655,7 @@ const Command = enum {
     lint,
     @"tests-for",
     @"api-diff",
+    context,
     @"check-project",
     @"run-project",
     @"list-interfaces",
@@ -607,6 +670,19 @@ const Command = enum {
     @"report-quality",
 };
 const ArgError = error{ Usage, OutOfMemory };
+
+/// `mylang context` selection and budget. Grouped so `Parsed` gains one field
+/// rather than four, and shared with the parser that validates the switches.
+const ContextOptions = struct {
+    /// `--symbol=NAME`: the module-qualified declaration to describe.
+    symbol: ?[]const u8 = null,
+    /// `--at=PATH:LINE:COLUMN`: the one-based position to describe.
+    at: ?[]const u8 = null,
+    /// `--context-bytes=N`: total response budget, metadata included.
+    bytes: usize = language.context.default_context_bytes,
+    /// `--against=FILE`: an `api-diff` baseline to classify the selection against.
+    against: ?[]const u8 = null,
+};
 
 const Parsed = struct {
     schema_report: bool,
@@ -629,6 +705,8 @@ const Parsed = struct {
     lint: language.lint.Options,
     /// `tests-for` subject: the qualified declaration name to query.
     subject: ?[]const u8,
+    /// `context` selector, budget and optional baseline.
+    context: ContextOptions,
     /// `api-diff` baseline to compare against, or the path to write.
     api_against: ?[]const u8,
     api_write: ?[]const u8,
@@ -660,6 +738,9 @@ const Parsed = struct {
     /// Persistent checked-body store opened by `run`. It shares the existing
     /// `--cache-dir` root and is null under `--no-cache`.
     semantic: ?*language.semantic_cache.Store = null,
+    /// `--friction-log=PATH` as typed, or null when the flag was not passed.
+    /// `MYLANG_FRICTION_LOG` names the same destination when the flag is absent.
+    friction_path: ?[]const u8 = null,
 };
 fn parseArgs(allocator: std.mem.Allocator, args: []const []const u8) ArgError!Parsed {
     if (args.len < 2) return error.Usage;
@@ -681,16 +762,8 @@ fn parseArgs(allocator: std.mem.Allocator, args: []const []const u8) ArgError!Pa
             parser.reporting.diagnostics = std.meta.stringToEnum(diagnostic_output.Format, arg["--diagnostics=".len..]) orelse return error.Usage;
             continue;
         }
-        if (std.mem.eql(u8, arg, "--no-cache")) {
-            if (parser.no_cache) return error.Usage;
-            parser.no_cache = true;
-            continue;
-        }
-        if (std.mem.eql(u8, arg, "--mutation-markers")) {
-            if (parser.mutation_markers) return error.Usage;
-            parser.mutation_markers = true;
-            continue;
-        }
+        if (try parseSwitchFlag(arg, &parser)) continue;
+        if (try parseFrictionFlag(arg, &parser)) continue;
         if (std.mem.eql(u8, arg, "--report")) {
             if (parser.reporting.report) return error.Usage;
             parser.reporting.report = true;
@@ -746,10 +819,15 @@ const ArgumentParser = struct {
     reporting: Reporting = .{},
     lint: language.lint.Options = .{},
     subject: ?[]const u8 = null,
+    context_symbol: ?[]const u8 = null,
+    context_at: ?[]const u8 = null,
+    context_bytes: usize = language.context.default_context_bytes,
+    context_against: ?[]const u8 = null,
     api_against: ?[]const u8 = null,
     api_write: ?[]const u8 = null,
     api_json: bool = false,
     no_cache: bool = false,
+    friction_path: ?[]const u8 = null,
     mutation_markers: bool = false,
     cache_dir: ?[]const u8 = null,
     select_file: ?[]const u8 = null,
@@ -926,6 +1004,7 @@ const ArgumentParser = struct {
     fn discoveryOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
         if (try self.lintOption(arg)) return true;
         if (try self.apiDiffOption(arg)) return true;
+        if (try self.contextOption(arg)) return true;
         if (std.mem.startsWith(u8, arg, "--min-nodes=")) {
             if ((self.command != .@"discover-duplicates" and self.command != .@"discover-project-duplicates") or self.saw_min) return error.Usage;
             self.saw_min = true;
@@ -991,12 +1070,39 @@ const ArgumentParser = struct {
         return true;
     }
 
-    fn finish(self: *ArgumentParser) ArgError!Parsed {
-        if (self.saw_work and !self.discovery.approximate) return error.Usage;
+    /// `context` switches: exactly one of `--symbol=NAME` or
+    /// `--at=PATH:LINE:COLUMN`, an optional total byte budget, and an optional
+    /// `api-diff` baseline. `--format` accepts only the JSON the command
+    /// publishes today, so an unsupported format is a usage error rather than a
+    /// silently different rendering.
+    fn contextOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (self.command != .context) return false;
+        if (std.mem.startsWith(u8, arg, context_symbol_prefix)) {
+            if (self.context_symbol != null or arg.len == context_symbol_prefix.len) return error.Usage;
+            self.context_symbol = arg[context_symbol_prefix.len..];
+        } else if (std.mem.startsWith(u8, arg, context_at_prefix)) {
+            if (self.context_at != null or arg.len == context_at_prefix.len) return error.Usage;
+            self.context_at = arg[context_at_prefix.len..];
+        } else if (std.mem.startsWith(u8, arg, context_bytes_prefix)) {
+            const text = arg[context_bytes_prefix.len..];
+            const requested = std.fmt.parseInt(usize, text, 10) catch return error.Usage;
+            if (requested < language.context.minimum_context_bytes) return error.Usage;
+            self.context_bytes = requested;
+        } else if (std.mem.startsWith(u8, arg, lint_against_prefix)) {
+            if (self.context_against != null or arg.len == lint_against_prefix.len) return error.Usage;
+            self.context_against = arg[lint_against_prefix.len..];
+        } else if (std.mem.startsWith(u8, arg, "--format=")) {
+            if (!std.mem.eql(u8, arg["--format=".len..], "json")) return error.Usage;
+        } else return false;
+        return true;
+    }
+
+    fn finish(self: *ArgumentParser) ArgError!Parsed {        if (self.saw_work and !self.discovery.approximate) return error.Usage;
         if (self.command == .@"fmt-project" and !self.format_check) return error.Usage;
         if (self.command == .@"check-policy" and self.policy == null) return error.Usage;
         if (self.command == .@"tests-for" and self.subject == null) return error.Usage;
         if (self.command == .@"api-diff" and (self.api_against == null) == (self.api_write == null)) return error.Usage;
+        if (self.command == .context and (self.context_symbol == null) == (self.context_at == null)) return error.Usage;
         return .{
             .schema_report = self.schema_report,
             .inputs = self.inputs,
@@ -1015,6 +1121,12 @@ const ArgumentParser = struct {
             .reporting = self.reporting,
             .lint = self.lint,
             .subject = self.subject,
+            .context = .{
+                .symbol = self.context_symbol,
+                .at = self.context_at,
+                .bytes = self.context_bytes,
+                .against = self.context_against,
+            },
             .api_against = self.api_against,
             .api_write = self.api_write,
             .api_json = self.api_json,
@@ -1028,9 +1140,39 @@ const ArgumentParser = struct {
             .drop_frame_checks = self.drop_frame_checks,
             .saw_steps = self.saw_steps,
             .saw_frames = self.saw_frames,
+            .friction_path = self.friction_path,
         };
     }
 };
+
+/// Consume the value-less switches that may appear at most once: `--no-cache`
+/// and `--mutation-markers`. A repeat is a usage error; an argument that is
+/// neither is left for the caller's other branches.
+fn parseSwitchFlag(arg: []const u8, parser: *ArgumentParser) ArgError!bool {
+    if (std.mem.eql(u8, arg, "--no-cache")) {
+        if (parser.no_cache) return error.Usage;
+        parser.no_cache = true;
+        return true;
+    }
+    if (std.mem.eql(u8, arg, "--mutation-markers")) {
+        if (parser.mutation_markers) return error.Usage;
+        parser.mutation_markers = true;
+        return true;
+    }
+    return false;
+}
+
+/// Consume `--friction-log=PATH`, the opt-in friction destination for this
+/// command. A repeated or empty destination is a usage error; an argument that
+/// is not this flag is left for the caller's other branches.
+fn parseFrictionFlag(arg: []const u8, parser: *ArgumentParser) ArgError!bool {
+    if (!std.mem.startsWith(u8, arg, "--friction-log=")) return false;
+    if (parser.friction_path != null) return error.Usage;
+    const destination_path = arg["--friction-log=".len..];
+    if (destination_path.len == 0) return error.Usage;
+    parser.friction_path = destination_path;
+    return true;
+}
 
 fn positive(digits: []const u8) error{Usage}!u64 {
     if (digits.len == 0) return error.Usage;
@@ -1407,6 +1549,99 @@ fn apiDiffError(init: Context, err: language.api_diff.Error) !u8 {
     }
 }
 
+/// What one failed body check means for the command that asked for it. A gate
+/// reports the diagnostics and stops; `context` keeps going with the
+/// declarations it recovered, so the caller learns why the relationships it
+/// cannot see are missing instead of seeing nothing at all.
+fn checkFailure(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation, inputs: []const GeneratedInput) !?u8 {
+    try reportProject(init, compilation);
+    if (parsed.command == .context) return null;
+    if (parsed.reporting.explain_invalidation) try reportFailedInvalidation(init, parsed, compilation, inputs);
+    return 1;
+}
+
+/// The selector `finish` already proved is present: exactly one of `--symbol`
+/// and `--at` survives parsing, so the unwrap cannot observe a usage error.
+fn contextSelector(parsed: Parsed) language.context.Selector {
+    return if (parsed.context.symbol) |name| .{ .symbol = name } else .{ .at = parsed.context.at.? };
+}
+
+/// `context`: one bounded `agent-context-v1` answer about one declaration. A
+/// compilation that did not check still answers — `unavailable` carries the
+/// reason the resolved relationships are missing. The answer goes to stdout
+/// alone so it stays parseable; diagnostics keep going to stderr.
+fn contextCommand(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation, unavailable: ?[]const u8) !u8 {
+    var request = contextOptions(init, parsed) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.BaselineUnreadable => return 2,
+    };
+    defer request.release(init.gpa);
+    request.options.unavailable_reason = unavailable;
+    const answer = language.context.render(init.gpa, compilation, try compilerIdentity(init.io), request.options) catch |err| return contextError(init, err);
+    const status = try emitContext(init, answer);
+    return status;
+}
+
+/// `context` when body syntax failed before any declaration merged: the lexical
+/// candidates answer names its selector and publishes no resolved relationship.
+fn contextPartial(init: Context, parsed: Parsed, project: *language.project.Project) !u8 {
+    var request = contextOptions(init, parsed) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.BaselineUnreadable => return 2,
+    };
+    defer request.release(init.gpa);
+    request.options.unavailable_reason = "body syntax failed; only lexical top-level candidates were recovered";
+    const answer = language.context.renderPartial(init.gpa, project, try compilerIdentity(init.io), request.options) catch |err| return contextError(init, err);
+    const status = try emitContext(init, answer);
+    return status;
+}
+
+/// The baseline bytes a `--against` request needs, kept beside the options so
+/// the caller can release them once the answer is rendered.
+const ContextRequest = struct {
+    options: language.context.Options,
+    baseline_bytes: ?[]u8 = null,
+
+    fn release(self: ContextRequest, allocator: std.mem.Allocator) void {
+        if (self.baseline_bytes) |owned| allocator.free(owned);
+    }
+};
+
+fn contextOptions(init: Context, parsed: Parsed) error{ OutOfMemory, BaselineUnreadable }!ContextRequest {
+    var request: ContextRequest = .{ .options = .{ .entry = parsed.path, .selector = contextSelector(parsed), .context_bytes = parsed.context.bytes } };
+    const path = parsed.context.against orelse return request;
+    const loaded = std.Io.Dir.cwd().readFileAlloc(init.io, path, init.gpa, .limited(64 * 1024 * 1024)) catch return error.BaselineUnreadable;
+    request.baseline_bytes = loaded;
+    request.options.baseline = .{ .path = path, .bytes = loaded };
+    return request;
+}
+
+fn emitContext(init: Context, answer: language.context.Answer) !u8 {
+    defer init.gpa.free(answer.bytes);
+    try std.Io.File.stdout().writeStreamingAll(init.io, answer.bytes);
+    return switch (answer.status) {
+        .ok, .partial => 0,
+        else => 2,
+    };
+}
+
+/// Map a context failure to a status: allocation propagates, a rejected budget
+/// or an unreadable baseline is a usage failure, and anything else is internal.
+fn contextError(init: Context, err: language.context.Error) !u8 {
+    switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.BudgetTooSmall => {
+            try init.text("context: --context-bytes is below the documented minimum\n");
+            return 2;
+        },
+        error.InvalidBaseline => {
+            try init.text("context: cannot read or classify the baseline\n");
+            return 2;
+        },
+        else => return error.InternalError,
+    }
+}
+
 /// Entry module name and import root for one project command. A standalone
 /// `*_test.my` under a subdirectory resolves both from its enclosing project
 /// root, so `tests/parser_test.my` is module `tests.parser_test`; `owned` holds
@@ -1465,24 +1700,26 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     // publishes those declared contracts for provider validation.
     if (parsed.command == .@"list-interfaces") return listInterfaces(init, &project, parsed, cache, frontend);
     const output = if (parsed.command != .@"list-modules") result: {
-        var index = (try buildIndex(init, &project, cache, frontend)) orelse return partialNavigation(init, &project, parsed.command);
+        var index = (try buildIndex(init, &project, cache, frontend)) orelse return partialNavigation(init, &project, parsed);
         init.timings.begin("source_merge", false);
         var compilation = try language.project_compile.Compilation.init(&index);
         init.timings.end();
         if (parsed.command == .@"index-project") break :result try renderNavigation(init, &compilation, functions);
         const semantic_before = if (functions) |f| f.statistics else null;
+        // `context` answers about a project that does not check: it publishes the
+        // declarations and diagnostics it did recover and names the reason the
+        // resolved relationships are missing, rather than failing like a gate.
+        var unchecked_reason: ?[]const u8 = null;
         compilation.checkWithCache(functions) catch |err| switch (err) {
             error.SourceError => {
                 recordCheckWork(init, functions, semantic_before, compilation.program);
-                try reportProject(init, &compilation);
-                if (parsed.reporting.explain_invalidation) {
-                    try reportFailedInvalidation(init, parsed, &compilation, files.inputs);
-                }
-                return 1;
+                if (try checkFailure(init, parsed, &compilation, files.inputs)) |status| return status;
+                unchecked_reason = "bodies did not check; declarations and diagnostics only";
             },
             else => return err,
         };
         recordCheckWork(init, functions, semantic_before, compilation.program);
+        if (parsed.command == .context) return contextCommand(init, parsed, &compilation, unchecked_reason);
         init.timings.counts.ast_nodes = compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len;
         init.timings.counts.typed_nodes = compilation.program.?.nodes.len + compilation.program.?.statements.len;
         // The internal native-test compile session keeps this one checked
@@ -1722,8 +1959,9 @@ fn emitRequestedOutput(init: Context, compilation: *language.project_compile.Com
     };
 }
 
-fn partialNavigation(init: Context, project: *language.project.Project, command: Command) !u8 {
-    if (command != .@"index-project") return 1;
+fn partialNavigation(init: Context, project: *language.project.Project, parsed: Parsed) !u8 {
+    if (parsed.command == .context) return contextPartial(init, parsed, project);
+    if (parsed.command != .@"index-project") return 1;
     const output = try language.navigation_partial.render(init.gpa, project, try compilerIdentity(init.io));
     defer init.gpa.free(output);
     try std.Io.File.stdout().writeStreamingAll(init.io, output);
@@ -1788,7 +2026,7 @@ fn loadModules(init: Context, project: *language.project.Project, files: *Module
 }
 
 fn listInterfaces(init: Context, project: *language.project.Project, parsed: Parsed, cache: ?*language.syntax_cache.Cache, frontend: ?*language.frontend_cache.Cache) !u8 {
-    var index = (try buildIndex(init, project, cache, frontend)) orelse return partialNavigation(init, project, parsed.command);
+    var index = (try buildIndex(init, project, cache, frontend)) orelse return partialNavigation(init, project, parsed);
     if (parsed.contracts) {
         const contracts = index.renderContracts(init.gpa) catch |err| switch (err) {
             error.SourceError, error.IncompleteProject => {
@@ -1937,6 +2175,7 @@ fn rememberFrontendVerdict(init: Context, command: Command, project: *const lang
 
 fn reportProject(init: Context, compilation: *language.project_compile.Compilation) !void {
     for (compilation.diagnostics.items.items) |problem| {
+        if (init.friction) |recorder| recorder.addDiagnostic(problem);
         const message = try diagnostic_output.render(init.gpa, problem, compilation.src, init.diagnostics);
         defer init.gpa.free(message);
         try std.Io.File.stderr().writeStreamingAll(init.io, message);

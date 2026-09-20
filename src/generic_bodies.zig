@@ -45,6 +45,7 @@ fn scopedDirectoryPath(bytes: []const u8) bool {
     return true;
 }
 const FunctionMap = std.StringHashMapUnmanaged(usize);
+
 const Pending = struct { available: bool, transfer_span: ?source.Span };
 const Local = struct {
     name: source.Span,
@@ -929,7 +930,7 @@ const Checker = struct {
         if (try self.textConstructor(input_call, span)) |value| return value;
         if (std.mem.eql(u8, self.src.text(input_call.name), "todo") and input_call.owner == null) {
             _ = try self.ty(input_call.type_arguments[0]);
-            return self.sink.typedHole(input_call.name, input_call.type_arguments[0]);
+            return self.recordHole(input_call.name, input_call.type_arguments[0], span);
         }
         if (try self.truncatingHelper(input_call, span)) |value| return value;
         if (try self.variantConstruction(input_call, span)) |value| return value;
@@ -945,6 +946,115 @@ const Checker = struct {
         }
         if (try self.operationCall(input_call)) |result| return result;
         return null;
+    }
+    /// One binding's snapshot entry, spelled from its abstract type.
+    fn holeCandidate(self: *Checker, binding: Local) Error!diagnostic.Candidate {
+        return .{
+            .name = self.src.text(binding.name),
+            .ty = try self.symbolicText(binding.ty),
+            .declaration = binding.name,
+            .mutable = binding.mutable,
+            .usable = binding.available,
+        };
+    }
+    /// Offer every active, unconsumed binding a filling could read at a typed hole.
+    fn holeCandidates(self: *Checker, out: *std.ArrayList(diagnostic.Candidate)) Error!void {
+        for (self.locals.items, 0..) |binding, index| {
+            if (self.active.get(self.src.text(binding.name)) != index) continue;
+            try out.append(self.allocator, try self.holeCandidate(binding));
+        }
+    }
+    /// The generic requirements in force at a typed hole.
+    fn holeRequirements(self: *Checker, out: *std.ArrayList(diagnostic.Requirement)) Error!void {
+        try diagnostic.appendRequirements(self.allocator, self.src, self.program.functions[self.function_index].signature.type_parameters, out);
+    }
+    /// The template whose body the hole sits in.
+    fn holeFunction(self: *Checker) diagnostic.Fact {
+        const name = self.program.functions[self.function_index].name;
+        return .{ .text = self.src.text(name), .span = name };
+    }
+    /// The contextual expected type, published only when the checker knows one.
+    fn holeExpected(self: *Checker, call_span: source.Span) Error!?diagnostic.Fact {
+        const expected = self.expected_types.get(call_span) orelse return null;
+        return .{ .text = try self.symbolicText(expected), .span = call_span };
+    }
+    /// The declared effect ceiling and permitted mutation footprint.
+    fn holeContract(self: *Checker) Error!diagnostic.ObligationContract {
+        const function = self.program.functions[self.function_index];
+        return .{
+            .effects = if (function.policy.effect_bound) |bound| .{ .text = self.src.text(bound.span), .span = bound.span } else null,
+            .mutation = try diagnostic.mutationFact(self.allocator, self.src, function),
+        };
+    }
+    /// The bounded facts this checker can see at a typed hole. The candidate and
+    /// requirement lists live in the checker's own allocator, so they outlive
+    /// this call and are released with the rest of the check.
+    fn holeFindings(self: *Checker, call_span: source.Span, candidates: []const diagnostic.Candidate, required: []const diagnostic.Requirement) Error!diagnostic.Findings {
+        return .{ .function = self.holeFunction(), .expected = try self.holeExpected(call_span), .candidates = candidates, .requirements = required, .contract = try self.holeContract() };
+    }
+    /// Record one typed hole from the facts this checker sees right now.
+    fn recordHole(self: *Checker, at: source.Span, target: source.Span, call_span: source.Span) Error {
+        var candidates: std.ArrayList(diagnostic.Candidate) = .empty;
+        try self.holeCandidates(&candidates);
+        var required: std.ArrayList(diagnostic.Requirement) = .empty;
+        try self.holeRequirements(&required);
+        return self.sink.recordHole(self.src, at, target, try self.holeFindings(call_span, candidates.items, required.items));
+    }
+    /// Render one abstract type as bounded source spelling for a hole snapshot.
+    fn symbolicText(self: *Checker, value: Symbolic) error{OutOfMemory}![]const u8 {
+        var out: std.Io.Writer.Allocating = .init(self.allocator);
+        // The successful slice is transferred out and empties the writer, so
+        // this releases only a partial buffer on an error return.
+        defer out.deinit();
+        self.writeSymbolic(&out.writer, value, 4) catch return error.OutOfMemory;
+        return out.toOwnedSlice();
+    }
+    /// Write one abstract type, replacing anything past `depth` with a marker
+    /// instead of recursing without bound.
+    fn writeSymbolic(self: *Checker, writer: *std.Io.Writer, value: Symbolic, depth: usize) error{OutOfMemory}!void {
+        if (depth == 0) {
+            writer.writeAll("<abstract>") catch return error.OutOfMemory;
+            return;
+        }
+        switch (value) {
+            .concrete => |ty_value| writer.writeAll(typed.typeName(ty_value, self.catalog.records)) catch return error.OutOfMemory,
+            .parameter => |index| writer.writeAll(self.src.text(self.parameters[index].name)) catch return error.OutOfMemory,
+            .length_parameter => |index| writer.writeAll(self.src.text(self.parameters[index].name)) catch return error.OutOfMemory,
+            .length => |count| writer.print("{d}", .{count}) catch return error.OutOfMemory,
+            .array => |array| {
+                writer.writeAll("[") catch return error.OutOfMemory;
+                try self.writeSymbolic(writer, array.element, depth - 1);
+                if (array.key) |key| {
+                    writer.print(": {s}]", .{typed.typeName(key, self.catalog.records)}) catch return error.OutOfMemory;
+                } else {
+                    writer.print("; {d}]", .{array.length}) catch return error.OutOfMemory;
+                }
+            },
+            .callback => |callback| {
+                writer.writeAll("fn(") catch return error.OutOfMemory;
+                for (callback.parameters, 0..) |parameter, index| {
+                    if (index != 0) writer.writeAll(", ") catch return error.OutOfMemory;
+                    try self.writeSymbolic(writer, parameter, depth - 1);
+                }
+                writer.writeAll(") -> ") catch return error.OutOfMemory;
+                try self.writeSymbolic(writer, callback.result, depth - 1);
+            },
+            .nominal => |nominal| {
+                const store = self.catalog.templates.store orelse {
+                    writer.writeAll("<nominal>") catch return error.OutOfMemory;
+                    return;
+                };
+                const declaration = store.index.declarations.items[nominal.declaration];
+                writer.writeAll(declaration.builtin_name orelse self.src.text(declaration.name)) catch return error.OutOfMemory;
+                if (nominal.arguments.len == 0) return;
+                writer.writeAll("[") catch return error.OutOfMemory;
+                for (nominal.arguments, 0..) |argument, index| {
+                    if (index != 0) writer.writeAll(", ") catch return error.OutOfMemory;
+                    try self.writeSymbolic(writer, argument, depth - 1);
+                }
+                writer.writeAll("]") catch return error.OutOfMemory;
+            },
+        }
     }
     fn call(self: *Checker, input_call: Call, span: source.Span) Error!Symbolic {
         if (try self.specialCall(input_call, span)) |value| {

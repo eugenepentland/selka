@@ -1,7 +1,11 @@
 # Making mylang more useful to coding agents
 
-Status: **proposed implementation plan; this document implements no features**.
-Prepared 2026-09-20 from repository inspection and a small installed-compiler probe.
+Status: **implementation plan, partly executed**. Prepared 2026-09-20 from
+repository inspection and a small installed-compiler probe. Packages W0, S1,
+D1, D2, L1, M1 and the lane C scorer were implemented in the working tree the
+same day; their status, measured numbers, deviations and open build items are
+in [`agent-usefulness-reports/ledger.md`](agent-usefulness-reports/ledger.md),
+which outranks any status implied by the package text below.
 
 ## 1. Outcome
 
@@ -10,12 +14,16 @@ bounded change, and establish that the resulting behavior is correct. Also make
 mylang a practical language for the small reusable tools an agent creates while
 working on other projects.
 
-Deliver four improvements:
+Deliver five improvements:
 
 1. Dependable, bounded context for a symbol, source location, or diagnostic.
 2. Native invocation of an exported function using structured inputs and outputs.
 3. Typed-hole reports that describe the implementation obligation precisely.
 4. Measured improvements to the complete read/edit/check/test loop.
+5. Fewer repair rounds on first-try code: every call-site rejection names the
+   callee's signature and the accepted alternative, the parser explains the
+   declaration forms that differ from Python, and the small surface gaps a
+   script hits first are closed.
 
 The guiding design principle is to expose facts the compiler already knows,
 with their provenance and limitations. Keep ordinary source files, the current
@@ -57,6 +65,45 @@ Relevant foundations:
 - [Typed holes](../typed-holes.md) and [diagnostic recovery](../diagnostic-recovery.md).
 - [Caches](../tooling/caches.md) and [previous velocity implementation status](velocity-implementation/final-status.md).
 
+### Session probe, 2026-09-20
+
+An agent session on the installed `zig-out/bin/mylang` (built 2026-09-20 13:37,
+working tree dirty) wrote four small first-try programs, ran the S-expression
+port's guest tests and timed a hot loop against CPython. The loop was never the
+bottleneck:
+
+| Action | Wall time |
+| --- | --- |
+| `check` on a 25-line single file | 80 ms |
+| `run` on it (native build plus execution) | 414 ms |
+| `mylang test experiments/sexpr-port/tests`, 114 tests across 7 programs | 4.0 s |
+| Sieve to 5,000,000, `mylang build` output | 0.15 s |
+| Same sieve under CPython 3.14 | 0.50 s |
+
+Every repair round the session paid came from a Python habit meeting a small
+surface difference, and every fix was one line:
+
+| First-try spelling | What the compiler said | Turns lost |
+| --- | --- | --- |
+| `text.split()` | `E_ARITY: list method argument count does not match its signature`; the receiver is a `str` and no signature is shown | 1 |
+| `union` cases on separate lines without commas | `E_SYNTAX: unexpected token; expected a dedent` at the second case | 1 |
+| `import strings` at the top of a headerless script | `E_MODULE_HEADER: file must begin with a module declaration` | 1 |
+| `b == strings.ord("m")` | `E_TYPE: expected int, found Result[int, strings.Error]`; the port's tokenizer and parser carry 33 comparisons against raw byte codes such as `109` for this reason | 1 |
+| `lambda w: -counts[w]` | `E_LAMBDA_CAPTURE` naming the fix (top-level function with an explicit state parameter) | 0 |
+| unused `x: int = 0` | `W_UNUSED_BINDING` naming the `_ =` idiom | 0 |
+
+The two rejections that carried their fix cost nothing; the four that did not
+cost a turn each. `mylang lint --profile=agent` on the port reported ten
+`L_UNTESTED_EXPORT` findings on `sexpr/ast.my` accessors that every parser test
+reaches transitively, because the rule counts only direct callees of `test_`
+functions. The idiom suite already holds probes for the first two gaps
+(`a64_split_noargs.my`, `a55_chr_ord_hex.my`; both `mylang_accepts: false` in the
+17 September baseline), lane C3 of [`velocity/goal.json`](../../velocity/goal.json)
+already counts "rejections naming the alternative or carrying a fix" (baseline
+0.02, target 0.95), and [`velocity/friction/classifier.json`](../../velocity/friction/classifier.json)
+already maps diagnostic code plus source regex to an idiom name. The packages
+below reuse all three rather than adding instruments.
+
 ## 3. Scope and implementation rules
 
 - Extend the existing checker, semantic index, native build path, and native
@@ -84,6 +131,11 @@ Size is relative implementation scope, not a calendar estimate.
 | Package | Deliverable | Depends on | Size |
 | --- | --- | --- | --- |
 | W0 | Verified baseline, protocol decisions, and runnable task pack | — | Small |
+| D1 | Call-site rejections print the callee's signature and the alternative | W0 | Small |
+| D2 | Parser hints for declaration forms that differ from Python | W0 | Small |
+| S1 | Close the first-try surface gaps a script hits first (`split()`, `ord`/`chr`, headerless imports) | W0 | Small |
+| L1 | Untested-export lint counts test reachability, not direct calls | W0 | Small |
+| M1 | Opt-in friction log on ordinary commands, folded into repair rounds per diagnostic | W0 | Small |
 | F1 | Honest interface facts and current agent reference | W0 | Medium |
 | C1 | Focused context command over existing compiler facts | F1 | Medium |
 | I1 | Native invocation for the existing copied-value subset | W0, F1 | Medium |
@@ -93,7 +145,13 @@ Size is relative implementation scope, not a calendar estimate.
 | E1 | Maintenance and tool-authoring comparisons | W0; each measured package | Medium |
 | P1 | Targeted latency improvements selected by measurements | E1 profiling | Variable |
 
-Recommended execution order: W0 → F1 → C1 → I1 → I2 → H1 → I3. Capture
+Recommended execution order: W0 → S1 → D1 → D2 → L1 → M1 → F1 → C1 → I1 → I2
+→ H1 → I3. The five small packages go first because each is bounded to one or
+two source files, each removes a repair round from every session that hits it,
+and each is scored by an instrument that already exists (lane C of the idiom
+suite, the port's lint finding count, the friction log itself), so their
+verdicts arrive without waiting for the E1 cohorts. I1 is the largest missing
+capability and follows as soon as F1's interface facts are honest. Capture
 measurements throughout; start P1 when profiling identifies a concrete target.
 Each package has its own correctness acceptance and can land independently of a
 productivity claim. The useful-tool milestone requires I2; a scalar-only I1 is
@@ -123,6 +181,173 @@ infrastructure, not completion of that outcome.
 **Acceptance:** both application baselines pass; the focused observations are
 reproducible; protocol decisions and unsupported cases are explicit. No agent
 productivity experiment begins against a nonworking baseline.
+
+W0 also freezes three small decisions the repair-round packages need. All three
+were taken on 2026-09-20 and are recorded in the ledger: a prelude `ord`/`chr`
+**traps** `R_TEXT_SCALAR` on input that is not exactly one scalar (the user's
+call; `Option` was the rejected alternative), diagnostic notes gain an optional
+`role` inside `diagnostic-v1` with no `diagnostic-v2`, and the friction-log
+record shape is pinned by the `friction_log.zig` unit test.
+
+### D1 — Every call-site rejection prints the callee's signature and the alternative
+
+**Entry points:** `src/sema.zig` (the `E_ARITY` sites near lines 1473 and 1488,
+`E_LIST_METHOD` and `unknownMethodMessage`, argument `E_TYPE` at calls),
+`src/buffer_operations.zig` (method vocabulary and arity), `src/removed_names.zig`,
+`src/interfaces.zig` (existing signature rendering), `src/diagnostic.zig`, and
+`src/diagnostic_output.zig`.
+
+Today `"a b".split()` reports a list-method arity error with no signature. The
+checker knows the receiver type, the method's checked signature and, through
+`removed_names.zig`, which Python spellings are deliberately not accepted. Say
+all three:
+
+- Every `E_ARITY`, unknown-method and argument-position `E_TYPE` diagnostic at a
+  call names the receiver type and renders the callee's signature exactly as
+  `list-interfaces` prints it, through one shared renderer so the two can never
+  disagree: `str.split(separator: str) -> list[str]`.
+- When the rejected spelling matches a Python form the language does not accept
+  (no-argument `split`, `sorted(..., key=lambda ...)` with a capture, `**`,
+  `set`, tuples), attach a note whose role is `alternative` naming the accepted
+  spelling, or a `fix` edit when the repair is mechanical. This is the field
+  lane C3 already counts.
+- Never describe a `str`, `bytes`, `byte_buffer` or `dict` receiver as a "list
+  method"; the family is known at the failure site.
+
+Keep the first-fault-per-function rule and every existing code. Do not add
+heuristic repair prose for unknown cases; a rejection with no known alternative
+prints the signature and stops.
+
+**Acceptance:** every call-site rejection in `velocity/suites/idioms/` carries
+the callee signature; `a64_split_noargs.my`'s rejection names `split(separator)`
+and the whitespace alternative; the C3 score over the suite moves from 0.02 to
+above 0.5 on this package alone (D2 and S1 take it further); diagnostics for
+unaffected codes are byte-identical in text and JSON; each new behavioral line
+has its `// spec:` tag and `SPEC.md` bullet.
+
+### D2 — Parser hints for the declaration forms that differ from Python
+
+**Entry points:** `src/parser.zig` (`expect` near line 104 builds
+"unexpected token; expected <spelling>"; the enum/union case loop near lines
+527–541 breaks on a missing comma and then fails on `expect(.dedent)`),
+`velocity/friction/classifier.json`.
+
+A `union` whose cases sit on separate lines without commas is the shape an
+agent writes first, and the parser answers "expected a dedent" at the second
+case. The parser knows it is inside a union body and that the offending token
+is an identifier at the case column. Report `E_SYNTAX` with "union cases are
+separated by commas" and a `fix` note inserting the comma after the previous
+case. Apply the same treatment to the other declaration bodies whose syntax
+departs from Python and already have idiom probes: a bare module-level
+assignment such as `MAX = 42`, which fails with "expected def" and whose
+accepted form is `const MAX: int = 42` (`a37_const.my`); a `def` inside a
+`class` body, which fails with "expected a name" and whose alternative is a
+top-level function taking the record (`a38_class_methods.my`); and
+`from module import name`, which fails with "expected def" before the
+`@dataclass` line is reached and whose accepted forms are `import module` and a
+`record` declaration (`a39_dataclass.my`). Keep the list of hinted forms in the
+friction classifier so the suite's classification and the parser's hints are one
+table; a form present in one and absent from the other is a test failure.
+
+This is targeted messaging at known failure points, not general error
+recovery. The parser still stops at the first syntax error.
+
+**Acceptance:** the listed probes reject with a note naming the accepted form;
+existing `E_SYNTAX` tests keep their code and span; the classifier and the hint
+table agree under a unit test; spec tags and `SPEC.md` bullets for each hint.
+
+### S1 — Close the first-try surface gaps a script hits first
+
+Three independently landable items, each with an existing probe or a measured
+cost. Land them in this order.
+
+**(a) `str.split()` with no argument.** Python semantics: split on runs of
+whitespace and drop empty parts. Entry points: `src/buffer_operations.zig`
+(arity table), `src/native_text_methods.c` and `src/qbe_text.zig` (the runtime
+path `splitlines()` already uses), `docs/text.md`. Probe `a64_split_noargs.my`,
+oracle CPython. Acceptance: the probe agrees with CPython on stdout and exit
+status; `split(separator)` is unchanged; a doc example runs under `doctest`.
+
+**(b) Prelude `ord` and `chr` with literal folding.** The `strings` module keeps
+its `Result` forms. Add prelude `ord(text: str) -> int` and `chr(code: int) -> str`,
+where `ord` of a one-scalar string literal folds at check time to an `int`
+constant usable in comparisons, `case` arms and `const` initializers, and the
+runtime form traps `R_TEXT_SCALAR` on text that is not exactly one scalar (the
+W0 decision, taken 2026-09-20; the same trap `chr` raises on an invalid code
+point). Entry points: `src/prelude_builtins.zig` (the ledger corrects the
+original `src/prelude.zig`, which holds the canonical constructors),
+`src/sema.zig` (the scalar-constant folder the `const` rule uses),
+`src/stdlib/strings.my` (unchanged), `docs/text.md`. Probe
+`a55_chr_ord_hex.my`. Evidence of cost: the port's tokenizer and parser compare
+against raw byte codes with comments explaining which letter each means; a
+narrow `== NNN` count gives 33, and the ledger's fuller count is 63, 29 of
+them letter codes. Acceptance: `b == ord("m")` checks and
+lowers to an immediate compare with no allocation and no call; the probe agrees
+with CPython for `ord` and `chr` (`hex` is out of scope); rewriting the port's
+33 comparisons to `ord("x")` produces byte-identical QBE for those functions.
+
+**(c) A headerless script may import standard modules.** `src/parser.zig:325`
+requires `module` whenever the first token is not `module`, so a script whose
+first line is `import strings` fails with `E_MODULE_HEADER`. Let a file with no
+`module` header import embedded standard modules and stay a single-unit
+program; importing a project module still requires the header and still reports
+`E_MODULE_HEADER`. Entry points: `src/parser.zig:325`, `src/project.zig`
+(lines 300–308), the `run` entry rule in `src/main.zig`, `docs/modules.md`
+(the single-file rule near line 242). Acceptance: the session's `probe4.my`
+shape checks and runs; a headerless file importing a project module keeps its
+current diagnostic; the module-graph commands are unaffected.
+
+### L1 — Untested-export lint counts test reachability
+
+**Entry points:** `src/lint.zig` (`runUntestedExport`, which marks only the
+direct callees of discovered tests), `src/tests_index.zig` (`Index.reached`,
+the direct-and-transitive answer `tests-for` already returns).
+
+On the S-expression port the agent profile reports ten untested-export findings
+on `sexpr/ast.my` accessors that every parser test reaches. A lint an agent
+learns to ignore is worse than none. Build the rule on the shared reachability
+index so `lint` and `tests-for` cannot disagree: under `--profile=agent` an
+export reached by any test, directly or transitively, is tested. Keep the
+direct-call rule available under `--profile=strict` with a message that says
+"reached only transitively" rather than "not called", so the two profiles report
+different facts rather than the same fact at different thresholds.
+
+**Acceptance:** the port under the agent profile reports zero untested-export
+findings for reached accessors and still reports a genuinely unreached export;
+`tests-for` and the lint agree on every export of both real applications by
+construction; the strict profile's findings carry the transitive-only wording;
+existing lint tests and the `--gate` exit status are unchanged for reports that
+do not involve reachability.
+
+### M1 — Harvest friction from real sessions
+
+**Entry points:** `src/main.zig` (`checkSession` and the one-shot `check`,
+`run`, `test` commands), `velocity/friction/classifier.json`,
+`velocity/backlog.json` item V2.
+
+The velocity loop plans to measure repair rounds (A3) from solver sessions
+against a task pack that does not exist yet. Every real session already
+produces the same signal. Add an opt-in `MYLANG_FRICTION_LOG=PATH`
+(`--friction-log=PATH` on the same commands) that appends one JSON line per
+command: compiler identity, command, file path as given, source snapshot hash,
+each diagnostic's code and span, exit status, and wall time. No source text, no
+environment values, no absolute paths beyond what the user passed. Off by
+default, and never read by the compiler.
+
+Add `velocity/friction/harvest.py`, which folds a log into repair rounds: a
+diagnostic code on a file followed, within the next few records for that file,
+by a passing check is one round attributed to that code, and the existing
+classifier names the idiom. Output is repair rounds per code and per idiom,
+which is the ranking input for D1, D2 and S1 and the A3 value the loop wants,
+from every session rather than a nightly run.
+
+**Acceptance:** a unit test pins the record shape; the log is absent unless
+requested; a replayed log of the 2026-09-20 session yields four rounds
+(`E_ARITY` split, `E_SYNTAX` union comma, `E_MODULE_HEADER`, `E_TYPE` ord) and
+attributes zero to `E_LAMBDA_CAPTURE` and `W_UNUSED_BINDING`; the harvest
+script is documented beside the classifier; the record contains no secret and
+no source text, checked by a test that logs a session over a file containing a
+sentinel string and asserts the sentinel never appears in the log.
 
 ### F1 — Make compiler facts unambiguous and current
 
@@ -393,6 +618,14 @@ Retain failed attempts, retries, timeouts, and delivery failures. Record:
   executing tests; distinguish overlapping work from wall-clock totals.
 - Cold, warm-unchanged, and warm-after-edit behavior, plus work/reuse counters.
 
+D1, D2 and S1 do not need a cohort. Their productivity verdict is lane C of the
+idiom suite (C1 first-try fidelity, C3 rejections carrying a fix, C2 silent
+wrong answers as the gate), rerun against the same 110 probes and the CPython
+oracle, with the manifest baseline regenerated and committed beside the change.
+L1's verdict is the untested-export finding count on both real applications
+before and after. M1 produces the A3 series itself; its verdict is that the
+harvested rounds for a package's diagnostic codes fall after the package lands.
+
 Feature correctness and productivity are separate verdicts. Recommend a default
 workflow change only when the held-out comparison meets its preregistered useful
 improvement threshold without an unacceptable correctness loss. Report uncertainty
@@ -432,6 +665,11 @@ Shared regressions to preserve: selected-provider tests with unfinished unselect
 production bodies, checked effects/mutation, source-mapped diagnostics, empty-test
 selection failure, exact cache invalidation, and existing typed JSON compatibility.
 
+A package that changes what the idiom suite accepts or how it rejects (D1, D2,
+S1) regenerates `velocity/suites/idioms/manifest.json` and records the C1, C2
+and C3 values before and after in the ledger. A silent wrong answer (C2) blocks
+the package regardless of its C1 gain.
+
 After any task that exercises Guardian, append concrete feedback to
 `~/ai/canopy/guardian-zig/FEEDBACK.md` and commit that feedback in the Guardian
 repository, following the user's global instructions. A documentation-only task
@@ -439,6 +677,6 @@ that does not exercise Guardian does not need a feedback entry.
 
 Complete each package with its implemented behavior, source/compiler identity,
 commands and evidence, remaining limits, and measurement verdict recorded in the
-ledger. The plan is complete when all four outcomes have implemented acceptance
+ledger. The plan is complete when all five outcomes have implemented acceptance
 evidence and an honest evaluation readout; a favorable productivity finding is
 not something implementation can guarantee.

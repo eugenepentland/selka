@@ -1,0 +1,78 @@
+//! Bytecode inlining removes only calls that can neither fail nor allocate.
+const std = @import("std");
+const language = @import("compiler.zig");
+const inliner = @import("bytecode_inline.zig");
+const native = @import("native_execute.zig");
+const testing = std.testing;
+
+/// A caller whose helper is a leaf of comparison and local operations. The
+/// eligible call is made from `use`, not from the entry, because an inlined
+/// callee removes a frame the entry's budget would otherwise count.
+const pure_program =
+    \\def helper(x: i64) -> bool:
+    \\    return x > 0
+    \\
+    \\
+    \\def use(x: i64) -> i64:
+    \\    if helper(x):
+    \\        return 7
+    \\    return 0
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return use(41)
+;
+
+/// A caller whose helper performs a checked add, which can trap.
+const fallible_program =
+    \\def risky(x: i64) -> i64:
+    \\    return x + 1
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return risky(41)
+;
+
+/// A caller whose helper constructs a record, which admits allocation.
+const allocating_program =
+    \\record Cell:
+    \\    value: i64
+    \\
+    \\
+    \\def make(x: i64) -> Cell:
+    \\    return Cell(value=x)
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return make(5).value
+;
+
+/// Number of direct calls left after lowering and inlining `source`.
+fn loweredCallSites(source: []const u8) !usize {
+    var compilation = try language.Compilation.init(testing.allocator, "inline.my", source);
+    defer compilation.deinit();
+    try compilation.emit();
+    return inliner.callSites(compilation.code.?);
+}
+
+/// The entry value of `source`, built and run through the native backend.
+fn loweredValue(source: []const u8) !i64 {
+    var compilation = try language.Compilation.init(testing.allocator, "inline.my", source);
+    defer compilation.deinit();
+    return (try native.run(&compilation)).value;
+}
+
+// spec: BYTECODE-INLINE-1
+test "inlining removes an eligible helper call and preserves its result" {
+    // `main`'s call to `use` survives because the entry keeps its frames, so one
+    // call site remains; `use`'s call to `helper` is the one that is inlined.
+    try testing.expectEqual(@as(usize, 1), try loweredCallSites(pure_program));
+    try testing.expectEqual(@as(i64, 7), try loweredValue(pure_program));
+}
+
+test "inlining keeps calls to fallible and allocating callees" {
+    try testing.expectEqual(@as(usize, 1), try loweredCallSites(fallible_program));
+    try testing.expectEqual(@as(i64, 42), try loweredValue(fallible_program));
+    try testing.expectEqual(@as(usize, 1), try loweredCallSites(allocating_program));
+    try testing.expectEqual(@as(i64, 5), try loweredValue(allocating_program));
+}

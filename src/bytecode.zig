@@ -366,19 +366,22 @@ fn validateManagedTextOperation(program: Program, local: typed.Local, schema: ty
         .pop_key, .pop_default, .setdefault => if (dictionary) element else return error.InternalError,
         .update, .clear => if (dictionary) .unit else return error.InternalError,
         .copy => if (dictionary or byte_string) local.ty else return error.InternalError,
-        .split, .keys, .values, .items => try validateListResult(program, local, schema, operation),
+        .split, .split_whitespace, .keys, .values, .items => try validateListResult(program, local, schema, operation),
+        .text_ord, .text_chr => if (dictionary or byte_string) return error.InternalError else operation.output,
         else => return error.InternalError,
     };
     if (operation.output != expected) return error.InternalError;
 }
 
 /// A list-producing text operation answers a managed list whose element is the
-/// receiver for `split`, the key for `keys`, and the value for `values`/`items`.
+/// receiver for `split` and its whitespace form, the key for `keys`, and the
+/// value for `values`/`items`.
 fn validateListResult(program: Program, local: typed.Local, schema: typed.Record, operation: BufferOperation) Error!typed.Type {
-    if ((operation.kind == .split) == (schema.collection.kind == .dictionary)) return error.InternalError;
+    const splits = operation.kind == .split or operation.kind == .split_whitespace;
+    if (splits == (schema.collection.kind == .dictionary)) return error.InternalError;
     if (!operation.output.isAggregate()) return error.InternalError;
     const result = program.records[operation.output.recordIndex()];
-    const member = if (operation.kind == .split) local.ty else if (operation.kind == .keys) schema.collection.key.? else schema.shape.buffer.?;
+    const member = if (splits) local.ty else if (operation.kind == .keys) schema.collection.key.? else schema.shape.buffer.?;
     if (!result.managed or result.collection.kind != .list or result.shape.buffer != member) return error.InternalError;
     return operation.output;
 }

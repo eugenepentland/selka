@@ -6,6 +6,11 @@
 static const myl_native_type byte_type = { .size=1,.alignment=1,.kind=MYL_NATIVE_PLAIN };
 static const myl_native_type integer_type = { .size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN };
 static const myl_native_type pointer_type = { .size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER };
+/* Splits on maximal runs of ASCII whitespace, dropping every empty piece. It is
+   declared here rather than in the companion header so this file stays the only
+   one the whitespace-split addition touches on the byte runtime side; the QBE
+   emitter reaches it by symbol name. */
+myl_native_list *myl_native_bytes_split_whitespace(myl_native_heap *, myl_native_bytes *);
 /* Python endpoints clamp instead of trapping, matching managed list slices. */
 static size_t endpoint(size_t length, int64_t value) {
     if (value>=0) return (uint64_t)value>length ? length : (size_t)value;
@@ -207,6 +212,34 @@ myl_native_list *myl_native_bytes_split(myl_native_heap *heap, myl_native_bytes 
         }
     }
     myl_native_root_pop(heap,&c); myl_native_root_pop(heap,&b); myl_native_root_pop(heap,&a);
+    return result;
+}
+/* The six octets Python's `bytes.split()` treats as whitespace: space, tab,
+   line feed, carriage return, vertical tab and form feed. */
+static int byte_space(unsigned char value) {
+    return value==' ' || value=='\t' || value=='\n' || value=='\r' || value==0x0b || value==0x0c;
+}
+/* Python's no-argument byte split: break the receiver on maximal runs of ASCII
+   whitespace and keep only the nonempty pieces, so leading, trailing and
+   doubled whitespace produce no empty byte string. */
+myl_native_list *myl_native_bytes_split_whitespace(myl_native_heap *heap, myl_native_bytes *input) {
+    myl_native_root a,b;
+    myl_native_root_push(heap,&a,&input,&pointer_type);
+    myl_native_list *result=myl_native_list_new(heap,&pointer_type,0);
+    myl_native_root_push(heap,&b,&result,&pointer_type);
+    if (result) {
+        const unsigned char *octets=input->storage;
+        size_t cursor=0;
+        while (cursor<input->length) {
+            while (cursor<input->length && byte_space(octets[cursor])) cursor++;
+            size_t start=cursor;
+            while (cursor<input->length && !byte_space(octets[cursor])) cursor++;
+            if (start==cursor) break;
+            myl_native_bytes *piece=copy_range(heap,input,start,cursor-start);
+            if (!piece || !myl_native_list_append(heap,result,&piece)) { result=NULL; break; }
+        }
+    }
+    myl_native_root_pop(heap,&b); myl_native_root_pop(heap,&a);
     return result;
 }
 myl_native_bytes *myl_native_bytes_join(myl_native_heap *heap, myl_native_bytes *separator, myl_native_list *list) {

@@ -134,6 +134,11 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try self.require(result, allocation_failure);
             try self.store(base, result);
         },
+        .split_whitespace => {
+            try self.print(" %v{d} =l call $myl_native_bytes_split_whitespace(l %heap, l %v{d})\n", .{ result, input });
+            try self.require(result, allocation_failure);
+            try self.store(base, result);
+        },
         .split, .join => {
             const argument = try self.load("s", base);
             if (op.kind == .split) {

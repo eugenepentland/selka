@@ -1,0 +1,44 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 6K of event 'cpu_core/cycles/u'
+# Event count (approx.): 4810383221
+#
+# Overhead  Symbol                                                                      IPC   [IPC Coverage]
+# ........  ..........................................................................  ....................
+#
+    16.67%  [.] sexpr.tokenizer::read_string  -      -            
+    16.18%  [.] sexpr.tokenizer::tokenize  -      -            
+     5.47%  [k] 0xffffffff8ce00b90                                                      -      -            
+     5.39%  [.] myl_native_text_from_utf8_checked                                       -      -            
+     5.19%  [.] trace                                                                   -      -            
+     4.70%  [.] sexpr.parser::parse_node  -      -            
+     4.44%  [.] sexpr.parser::parse_list  -      -            
+     3.77%  [.] compiler_rt.memmove.memmoveFast                                         -      -            
+     3.28%  [.] sexpr.tokenizer::is_atom_continue  -      -            
+     2.80%  [.] myl_native_list_append                                                  -      -            
+     2.39%  [.] compiler_rt.memcpy.memcpyFast                                           -      -            
+     2.18%  [.] myl_native_heap_collect                                                 -      -            
+     2.01%  [.] sexpr.tokenizer::read_atom  -      -            
+     1.86%  [.] main::tally  -      -            
+     1.67%  [.] myl_native_heap_alloc_at                                                -      -            
+     1.36%  [.] myl_native_heap_destroy                                                 -      -            
+     1.17%  [.] myl_native_root_push                                                    -      -            
+     1.14%  [.] cfree                                                                   -      -            
+     1.06%  [.] sexpr.tokenizer::read_number  -      -            
+     1.03%  [.] compiler_rt.fastMemset                                                  -      -            
+     0.92%  [.] sexpr.tokenizer::lexeme  -      -            
+     0.91%  [.] myl_native_root_pop                                                     -      -            
+     0.69%  [.] myl_native_list_new                                                     -      -            
+     0.65%  [.] myl_native_number_parse                                                 -      -            
+     0.65%  [.] myl_native_bytes_decode_range                                           -      -            
+     0.64%  [.] myl_native_list_get                                                     -      -            
+     0.52%  [.] sexpr.tokenizer::advance  -      -            
+     0.51%  [.] myl_qbe_root_mark                                                       -      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

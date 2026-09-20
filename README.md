@@ -135,8 +135,13 @@ The development tools keep the ordinary read/edit/check workflow:
 - [Contract fixtures](docs/experiments/contract-tests.md) exercise an application's
   actual stdin/stdout interface, with strict JSON or exact-byte expectations and
   bounded child execution. A maintained runner replaces per-task driver scripts.
-- [Compiler-pinned references](docs/experiments/agent-reference.md) provide a
-  concise searchable language/API reference derived from the selected executable.
+- The compiler-derived surface is what the installed binary reports about itself:
+  `mylang --features`, `mylang list-declarations`, `mylang list-interfaces` and
+  `mylang schema-project`. The [compiler-pinned reference
+  page](docs/experiments/agent-reference.md) is a historical design record — its
+  `scripts/reference.py` generator was removed with the Zig-native tooling fold.
+  [The compiler-derived reference](docs/reference.md) documents the in-binary
+  reference engine that replaces it.
 
 Run `zig build test-agent-tools --summary all` for their implementation regressions.
 These tests also belong to the default suite; they do not launch agent evaluations

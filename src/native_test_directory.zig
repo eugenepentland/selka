@@ -100,7 +100,7 @@ pub fn run(context: fs.Context, opts: options.Options) Error!u8 {
     while (start < paths.len) : (start += workers) {
         try wave(context, .{ .compiler = compiler, .options = opts, .workspace = workspace }, paths[start..@min(start + workers, paths.len)], outcomes[start..]);
     }
-    return summarize(context, opts, paths.len, outcomes);
+    return summarize(context, opts, paths, outcomes);
 }
 /// One child program's exit status and the report bytes it produced.
 const Outcome = struct { code: u8, report: []const u8 };
@@ -160,15 +160,19 @@ fn argv(context: fs.Context, shared: Fanout, source: []const u8) Error![]const [
 fn decimal(allocator: std.mem.Allocator, value: u64) Error![]const u8 {
     return std.fmt.allocPrint(allocator, "{d}", .{value});
 }
-/// Merged counts over every child report of one directory run.
+/// Merged counts over every child report of one directory run. `setup` counts
+/// programs whose child produced no usable report — the work the run did not do.
 const Totals = struct { passed: usize = 0, cached: usize = 0, failed: usize = 0, skipped: usize = 0, setup: usize = 0 };
-fn summarize(context: fs.Context, opts: options.Options, count: usize, outcomes: []const Outcome) Error!u8 {
+fn summarize(context: fs.Context, opts: options.Options, paths: []const []const u8, outcomes: []const Outcome) Error!u8 {
     const a = context.allocator;
     var totals: Totals = .{};
     var rows: std.ArrayList(std.json.Value) = .empty;
-    for (outcomes) |outcome| {
+    for (paths, outcomes) |path, outcome| {
         if (outcome.report.len == 0 or outcome.code == 2) {
             totals.setup += 1;
+            // Name the program and its status: a totals-only reading of the
+            // count line must never pass while whole programs are missing.
+            try std.Io.File.stderr().writeStreamingAll(context.io, try droppedText(a, path, outcome));
             continue;
         }
         const parsed = try merged((try std.json.parseFromSlice(std.json.Value, a, outcome.report, .{ .allocate = .alloc_always })).value);
@@ -178,7 +182,7 @@ fn summarize(context: fs.Context, opts: options.Options, count: usize, outcomes:
         totals.skipped += @intCast(v.number(v.get(parsed, "skipped")));
         for (v.array(v.get(parsed, "tests"))) |row| try rows.append(a, row);
     }
-    try publish(context, opts.flags.output.json, count, totals, rows.items);
+    try publish(context, opts.flags.output.json, paths.len, totals, rows.items);
     if (opts.flags.output.report) try reportWork(context, totals);
     // A benchmark run's children already fold their own correctness and
     // performance gates into one status, so the parent takes the most severe
@@ -187,6 +191,10 @@ fn summarize(context: fs.Context, opts: options.Options, count: usize, outcomes:
     if (totals.setup != 0) return 2;
     if (totals.failed != 0) return 1;
     return if (totals.passed + totals.cached != 0) 0 else 3;
+}
+/// The stderr line naming one program whose child never produced a report.
+fn droppedText(allocator: std.mem.Allocator, path: []const u8, outcome: Outcome) Error![]const u8 {
+    return std.fmt.allocPrint(allocator, "not run: {s} (exit {d}, no report)\n", .{ path, outcome.code });
 }
 /// Most severe child exit status: setup failure, then any failure, else green.
 fn worstCode(outcomes: []const Outcome) u8 {
@@ -228,10 +236,16 @@ fn publish(context: fs.Context, json: bool, count: usize, totals: Totals, rows: 
         .cached = totals.cached,
         .executed = totals.passed + totals.failed,
         .programs = count,
-    }, .{}) else try std.fmt.allocPrint(a, "{d} passed, {d} cached, {d} failed, {d} skipped across {d} programs", .{
-        totals.passed, totals.cached, totals.failed, totals.skipped, count,
-    });
+        .dropped = totals.setup,
+    }, .{}) else try summaryText(a, count, totals);
     try out.writeStreamingAll(context.io, try std.fmt.allocPrint(a, "{s}\n", .{text}));
+}
+/// The merged count line of one directory run, carrying the programs whose child
+/// produced no report so the totals cannot hide work the run never did.
+fn summaryText(allocator: std.mem.Allocator, count: usize, totals: Totals) Error![]const u8 {
+    return std.fmt.allocPrint(allocator, "{d} passed, {d} cached, {d} failed, {d} skipped, {d} dropped across {d} programs", .{
+        totals.passed, totals.cached, totals.failed, totals.skipped, totals.setup, count,
+    });
 }
 fn bounded(found: usize) Error!void {
     if (found >= program_limit) return error.TooManyTestPrograms;
@@ -325,4 +339,18 @@ test "a directory run refuses unbounded fan-out and reports a child could not pr
     , .{});
     defer parsed.deinit();
     try std.testing.expectEqual(@as(u64, 2), v.number(v.get(try merged(parsed.value), "passed")));
+}
+// spec: NATIVE-TEST-11
+test "a directory summary counts and names every program whose child produced no report" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const totals = Totals{ .passed = 171, .cached = 0, .failed = 0, .skipped = 0, .setup = 3 };
+    const line = try summaryText(context.allocator, 30, totals);
+    try std.testing.expectEqualStrings("171 passed, 0 cached, 0 failed, 0 skipped, 3 dropped across 30 programs", line);
+    const dropped = try droppedText(context.allocator, "tests/lang/callbacks.my", .{ .code = 2, .report = "" });
+    try std.testing.expectEqualStrings("not run: tests/lang/callbacks.my (exit 2, no report)\n", dropped);
+    const green = try summaryText(context.allocator, 2, .{ .passed = 227 });
+    try std.testing.expectEqualStrings("227 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 2 programs", green);
 }

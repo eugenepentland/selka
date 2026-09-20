@@ -1,0 +1,46 @@
+{
+  "goldens": {
+    "census": 17,
+    "census_scalar": 17
+  },
+  "diagnostics": [
+    {
+      "input_hex": "2822756e66696e6973686564",
+      "identical": true
+    },
+    {
+      "input_hex": "286120226162635c",
+      "identical": true
+    },
+    {
+      "input_hex": "2861202261625c2263642229",
+      "identical": true
+    },
+    {
+      "input_hex": "28612022610a620a6322206261642329",
+      "identical": true
+    },
+    {
+      "input_hex": "286120226162635c0a64656622204029",
+      "identical": true
+    },
+    {
+      "input_hex": "28612022cebbf09f9880c3a92229",
+      "identical": true
+    },
+    {
+      "input_hex": "28225c5c22207829",
+      "identical": true
+    },
+    {
+      "input_hex": "286120226162635c2222204029",
+      "identical": true
+    }
+  ],
+  "max_rss_kib": {
+    "mylang input.sexp": 13268,
+    "zig input.sexp": 2852,
+    "mylang input8.sexp": 80544,
+    "zig input8.sexp": 16932
+  }
+}

@@ -22,7 +22,7 @@ whose compiler moved is void. One command reproduces the block:
 
 **Not the default yet — but no longer because anything is missing from the
 language. Adopt it as an opt-in release backend, and gate a default switch on
-the two items in §8.** Every gate that was runnable passed, on every entry the
+the three items in §8.** Every gate that was runnable passed, on every entry the
 language tree contains:
 
 * the 326-entry build sweep has **0 LLVM-only failures** (as found, it had 10);
@@ -62,12 +62,14 @@ Both arms are built by that compiler with the same flags
 archive, the same assembler and linker; only the QBE tool differs. The receipt
 of every measured binary records the runtime object hash, and both arms share it.
 
-The qualification is a statement about that revision. The tree moved twice while
-it ran — `src/qbe.zig` was rewritten at 14:03, 14:08 and 14:10, and the installed
-compiler was rebuilt at 14:03 and 14:13 — which is why the compiler was frozen to
-an immutable copy before the load-sensitive stages, and why the earlier
-`f42c3c9c` (13:05) and `996a33e7` (13:37) results are kept but labelled
-**superseded**.
+The qualification is a statement about that revision. The tree moved under it —
+`src/qbe.zig` was rewritten at 14:03, 14:08 and 14:10, and the installed compiler
+was rebuilt at 14:03 and 14:13 — which is why the compiler was frozen to an
+immutable copy before the load-sensitive stages. Results from the earlier
+`f42c3c9c` (13:05) build and the as-found adapter are kept as the *as-found*
+column of §2 (`build-sweep-asfound.json`); the intermediate `996a33e7` stages were
+superseded by the frozen re-runs and a loaded-machine measurement batch was
+discarded, so nothing below mixes two revisions.
 
 ## 2. Build coverage — every `.my` entry, both arms
 
@@ -232,7 +234,7 @@ same compiler and the same flags the step uses:
 |---|---|
 | `mylang test tests/guest` | 42/42, exit 0 (§3) |
 | `mylang test tests/lang --gc-stress` | 227/227, exit 0 (§3) |
-| `mylang doctest .` | **144 examples run, 0 failed**, exit 0 |
+| `mylang doctest .` | **144 examples run, 0 failed**, exit 0 (QBE baseline, run one child at a time: 144 run, 0 failed) |
 | `mylang doc-coverage .` | static, no backend |
 | `experiments/sexpr-port/golden_compare.py` | **17/17 passed** |
 | `experiments/sexpr-port/compare.py` | **4/4 fixtures agree** with the reference reader |
@@ -246,7 +248,9 @@ arm and this report does not assert anything about them.
 31 interleaved rounds of QBE O2 against LLVM O2, both arms built by the frozen
 compiler with `--mode=ReleaseFast --keep-symbols`, parent and children pinned to
 one physical CPU, all four workloads in every round, output verified on every
-captured run. 1-minute load stayed between 0.36 and 1.3 for the whole batch.
+captured run. The 1-minute load was 0.52 at the start of the batch, 0.87 after
+the arms were built and 1.12 at the end; the cold-build batch that followed ran
+between 0.36 and 1.16.
 
 | workload | QBE O2 | LLVM O2 | ratio | LLVM gain |
 |---|---:|---:|---:|---:|
@@ -294,6 +298,36 @@ Both arms report 101 compiled functions and 0 reused. The frontend differs by
 2%, so **all of the difference is code generation**: the translator emits LLVM IR
 for each unit and runs `zig cc -S -O2` on it, while QBE selects instructions
 itself. The LLVM executable is 3.6% smaller.
+
+### Correction: the cold-build ratio above is understated
+
+An independent harness that measured the same revision for the chart
+(`.tmp/bench/compiletimes.sh`, median of 3 fresh-cache rounds, no
+`--keep-symbols`) reported QBE 3.75 s against LLVM 12.30 s — a **3.28× wall,
+3.95× codegen** ratio, not the 2.97× / 3.39× above. The two harnesses were
+reconciled by direct A/B rather than by preferring one:
+
+| compiler used for the build | QBE codegen | QBE wall | reproduces |
+|---|---:|---:|---|
+| `./zig-out/bin/mylang` | 2.91 s | 3.72 s | the chart harness (2.908 s) |
+| `.tmp/llvm-qual/bin/mylang-f5fa59a0` | 3.88 s | 4.70 s | this section (3.831–3.907 s) |
+
+The cause is the frozen compiler's **location**, not the machine state and not
+the flag. The frozen copy is relocated into `.tmp/llvm-qual/bin/`, which has no
+`lib/mylang-runtime/` beside it, so every build re-derives the runtime archive
+instead of reusing the published one; that adds a fixed ≈1 s to *both* arms.
+Deleting the cache directory does not remove the archive, which lives under
+`zig-out/lib/`, so a relocated prefix pays it on every round. Measured with
+`--keep-symbols` held constant in both rows, so the flag is excluded.
+
+A fixed per-arm addition of ≈1 s *lowers* the ratio, because it is a larger
+share of QBE's smaller total. **The correct cold-build figure for a normally
+installed compiler is therefore 3.28× wall and 3.95× codegen** — that is, LLVM's
+cold-build tax is slightly worse than this section's table states, not better.
+The verdict in §8 does not turn on the difference: both values round to the same
+"≈3× cold build" that keeps the arm off by default, and correcting the number
+strengthens rather than weakens that conclusion. Runtime (§6) is unaffected —
+those measurements execute prebuilt binaries and never rebuild the runtime.
 
 ## 8. Verdict and caveats
 
@@ -358,8 +392,10 @@ E=experiments/llvm-backend/evidence/qualification-20260920
 python3 -B $D/qualify_sweep.py   --mylang $M --work /tmp/q/sweep --jobs 8 --json $E/build-sweep-fixed.json
 # 3. byte-equality for the entries the as-found sweep failed
 python3 -B $D/qualify_affected.py --mylang $M --work /tmp/q/aff --jobs 3 --json $E/affected-byte-equality.json
-# 3. suites, both arms, separate caches, verdicts by name (sequential: see §10)
-python3 -B $D/qualify_equiv.py   --mylang $M --work /tmp/q/eq --jobs 1 --json $E/equivalence-fixed.json
+# 3. suites, both arms, separate caches, verdicts by name
+#    --inner-jobs 1 is required: concurrent test children lose the cache-staging
+#    race and silently drop tests (see §10)
+python3 -B $D/qualify_equiv.py   --mylang $M --work /tmp/q/eq --jobs 1 --inner-jobs 1 --json $E/equivalence-fixed.json
 # 4. traps, ceilings, GC stress, exit status; then the historical set
 python3 -B $D/qualify_traps.py   --mylang $M --work /tmp/q/tr --jobs 4 --json $E/trap-matrix-fixed.json
 python3 -B $D/verify_traps.py    --work /tmp/q/htr --jobs 8 --json $E/historical-trapdiff.json
@@ -378,18 +414,33 @@ python3 -B $D/qualify_cost.py --mylang $M --work /tmp/q/cost --rounds 3 --json $
 
 ## 10. Limitations
 
-* **The harness can silently drop work under concurrency.** With roughly sixteen
-  concurrent compilers on this machine, the driver's cache staging failed with
-  `unexpected errno: 2` (ENOENT in `createDirPath`,
-  `src/qbe_build_io.zig:160`), and `mylang test` then reported a *smaller*
-  `N passed, 0 failed` and exited 2. Trigger: run several `mylang test <dir>` or
-  `mylang doctest` invocations, each with `--jobs`, at the same time. Observed
-  twice — `mylang test experiments/sexpr-port` lost 8 tests under a concurrent
-  sweep, and `mylang doctest . --jobs 6` lost 2 of 144 examples while
-  `--jobs 1` ran all 144 green. It hits the QBE arm too, so it is a driver
-  defect, not an arm difference; it is recorded here rather than fixed because
-  `src/qbe_build_io.zig` is outside this qualification's change budget. Every
-  correctness number in this report was produced without concurrent load.
+* **The harness can silently drop work.** `mylang test <dir>` and
+  `mylang doctest .` run test children concurrently, and those children contend
+  for the same cache objects; the driver's cache staging then fails with
+  `unexpected errno: 2` (ENOENT in `createDirPath`, `src/qbe_build_io.zig:160`)
+  and the run reports a **smaller** `N passed, 0 failed` and exits 2. The
+  dropped tests are simply absent, so a totals-only comparison calls it green.
+  Observed repeatedly, on both arms, at both high and low concurrency:
+
+  | run | configuration | result |
+  |---|---|---|
+  | `mylang test experiments/sexpr-port` | under a concurrent 8-worker sweep | QBE 114, LLVM 106 (8 lost) |
+  | `mylang test tests/lang` | under concurrent stages | QBE 215, LLVM 227 (12 lost on QBE) |
+  | `mylang doctest .` | `--jobs 6` | QBE 142 run + 2 failed, LLVM 144 |
+  | `mylang doctest .` | `--jobs 1` | QBE 144 run, 0 failed |
+  | the final equivalence run | `--inner-jobs 1` | all four suites equal, 0 lost |
+
+  It is a driver defect, not an arm difference, and it is recorded rather than
+  fixed because `src/qbe_build_io.zig` is outside this qualification's change
+  budget. **Every correctness number in this report was produced with one test
+  child at a time**; the artifact of a parallel doctest run is kept as
+  `doctest-qbe-jobs6-artifact.txt` so the failure mode is visible.
+* **`/tmp` is a shared 16 GB tmpfs, and exhausting it looks like a compiler
+  failure.** A serial equivalence attempt failed all four suites with
+  `mylang: host failure: DiskQuota` once this qualification's caches had filled
+  the filesystem. It is recorded because the symptom (`0 passed, 0 failed`, exit
+  2, both arms) is indistinguishable from a broken backend until the stderr is
+  read.
 * **The Zig test roots were not run through the arm** (§5). The gate's guest
   steps, the documentation corpus and the port's own comparisons were.
 * **`mylang run` does not accept `--qbe`**, so the arm is selected by the
@@ -403,5 +454,8 @@ python3 -B $D/qualify_cost.py --mylang $M --work /tmp/q/cost --rounds 3 --json $
   subset; floating-point aggregate members, unions and other targets are outside
   what has been tested.
 * **The revision is frozen, the tree is not.** Everything here describes
-  `f5fa59a0` / `217838b2`; results from the `f42c3c9c` and `996a33e7` builds are
-  kept in the evidence directory but are superseded and are not cited.
+  `f5fa59a0` / `217838b2`. The as-found column of §2 is kept as
+  `build-sweep-asfound.json` against the 13:05 build and the as-found adapter;
+  intermediate results from the `996a33e7` build were superseded by the frozen
+  re-runs and are not cited. A loaded-machine measurement batch was taken and
+  discarded rather than mixed in.

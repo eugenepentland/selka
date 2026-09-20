@@ -1,7 +1,7 @@
 {
  "version": "idiom-suite-v1",
- "measured_on": "2026-09-17",
- "binary": "commit 237871a6",
+ "measured_on": "2026-09-20",
+ "binary": "sha256:e76021f7f7fcf3325855ac20a9d7213d689261a4788ab7ff263c86f8b9e43a94 zig-out/bin/mylang compiler:b5f4b4caff9eadc661bccf4c907bccdbb28f2c458bc5ca4b1870bcb83bdad636",
  "oracle_rule": "cpython: run with runpy, call main(), compare exit & 0xFF and stdout; rejected-by-design: valid Python the language rejects on purpose, counts only toward C3; mylang-only: uses Option/Result/record/union, no CPython oracle, needs an expect directive",
  "probes": [
   {
@@ -53,7 +53,7 @@
    "name": "a06_eq_none.my",
    "oracle": "mylang-only",
    "baseline": {
-    "mylang_accepts": false,
+    "mylang_accepts": true,
     "agree": null,
     "silent_wrong": false
    }
@@ -107,8 +107,8 @@
    "name": "a12_docstring.my",
    "oracle": "cpython",
    "baseline": {
-    "mylang_accepts": false,
-    "agree": false,
+    "mylang_accepts": true,
+    "agree": true,
     "silent_wrong": false
    }
   },
@@ -287,8 +287,8 @@
    "name": "a32_join_map.my",
    "oracle": "cpython",
    "baseline": {
-    "mylang_accepts": true,
-    "agree": true,
+    "mylang_accepts": false,
+    "agree": false,
     "silent_wrong": false
    }
   },
@@ -314,8 +314,8 @@
    "name": "a35_div.my",
    "oracle": "cpython",
    "baseline": {
-    "mylang_accepts": true,
-    "agree": true,
+    "mylang_accepts": false,
+    "agree": false,
     "silent_wrong": false
    }
   },
@@ -404,7 +404,7 @@
    "name": "a45_record_default.my",
    "oracle": "mylang-only",
    "baseline": {
-    "mylang_accepts": false,
+    "mylang_accepts": true,
     "agree": null,
     "silent_wrong": false
    }
@@ -413,7 +413,7 @@
    "name": "a46_record_eq.my",
    "oracle": "mylang-only",
    "baseline": {
-    "mylang_accepts": false,
+    "mylang_accepts": true,
     "agree": null,
     "silent_wrong": false
    }
@@ -512,7 +512,7 @@
    "name": "a57_assert_fstring.my",
    "oracle": "mylang-only",
    "baseline": {
-    "mylang_accepts": false,
+    "mylang_accepts": true,
     "agree": null,
     "silent_wrong": false
    }
@@ -539,7 +539,7 @@
    "name": "a60_overflow.my",
    "oracle": "cpython",
    "baseline": {
-    "mylang_accepts": false,
+    "mylang_accepts": true,
     "agree": false,
     "silent_wrong": false
    }
@@ -575,8 +575,8 @@
    "name": "a64_split_noargs.my",
    "oracle": "cpython",
    "baseline": {
-    "mylang_accepts": false,
-    "agree": false,
+    "mylang_accepts": true,
+    "agree": true,
     "silent_wrong": false
    }
   },
@@ -620,8 +620,8 @@
    "name": "a69_print_end.my",
    "oracle": "cpython",
    "baseline": {
-    "mylang_accepts": true,
-    "agree": true,
+    "mylang_accepts": false,
+    "agree": false,
     "silent_wrong": false
    }
   },
@@ -719,8 +719,8 @@
    "name": "a80_none_return_call.my",
    "oracle": "cpython",
    "baseline": {
-    "mylang_accepts": true,
-    "agree": true,
+    "mylang_accepts": false,
+    "agree": false,
     "silent_wrong": false
    }
   },
@@ -773,7 +773,7 @@
    "name": "c06_result_record_err.my",
    "oracle": "mylang-only",
    "baseline": {
-    "mylang_accepts": true,
+    "mylang_accepts": false,
     "agree": null,
     "silent_wrong": false
    }
@@ -782,7 +782,7 @@
    "name": "c07_if_let_style.my",
    "oracle": "mylang-only",
    "baseline": {
-    "mylang_accepts": false,
+    "mylang_accepts": true,
     "agree": null,
     "silent_wrong": false
    }
@@ -827,8 +827,8 @@
    "name": "d04_dict_items_keys.my",
    "oracle": "cpython",
    "baseline": {
-    "mylang_accepts": true,
-    "agree": true,
+    "mylang_accepts": false,
+    "agree": false,
     "silent_wrong": false
    }
   },
@@ -836,9 +836,9 @@
    "name": "d05_round_half.my",
    "oracle": "cpython",
    "baseline": {
-    "mylang_accepts": true,
+    "mylang_accepts": false,
     "agree": false,
-    "silent_wrong": true
+    "silent_wrong": false
    }
   },
   {
@@ -863,8 +863,8 @@
    "name": "d08_int_float_mix.my",
    "oracle": "cpython",
    "baseline": {
-    "mylang_accepts": true,
-    "agree": true,
+    "mylang_accepts": false,
+    "agree": false,
     "silent_wrong": false
    }
   },
@@ -962,8 +962,8 @@
    "name": "e09_walk_dict_sorted.my",
    "oracle": "cpython",
    "baseline": {
-    "mylang_accepts": true,
-    "agree": true,
+    "mylang_accepts": false,
+    "agree": false,
     "silent_wrong": false
    }
   },
@@ -980,8 +980,8 @@
    "name": "e11_if_no_else_bind.my",
    "oracle": "cpython",
    "baseline": {
-    "mylang_accepts": true,
-    "agree": true,
+    "mylang_accepts": false,
+    "agree": false,
     "silent_wrong": false
    }
   },
@@ -989,7 +989,7 @@
    "name": "e12_none_default_param.my",
    "oracle": "mylang-only",
    "baseline": {
-    "mylang_accepts": true,
+    "mylang_accepts": false,
     "agree": null,
     "silent_wrong": false
    }

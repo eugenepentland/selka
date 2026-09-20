@@ -1,0 +1,12 @@
+{
+  "base/a_read.my": "1cf038907c2c1f361aa3dbda5941ee33d8664d37e800cafd9f2562f393df67ac",
+  "base/b_tokens.my": "25fcc6a8379d4d2bd0c47bf728c79642b06601853327768fb6634644e18db427",
+  "base/c_parse.my": "1782b65e8dacee1a5518e2683f0bddced65fa871f85a7192d61c6655418117d4",
+  "base/e_scan.my": "74381396e25b650a2398fc364ce7246ba99b2c1562158aa5f334f0aa474d7454",
+  "base/main.my": "0e89903fdb888ee2d1fdeb1b66e7bf3470f8162a8500329e5c23e21f5c19d381",
+  "base/scan_once.my": "14a21acba32953d17ff4e88c449928995c70065461a3d03ed81e79f2b2265ed8",
+  "base/sexpr/ast.my": "033b4f2a59e111d671b1cf12af6b6356b39af47c4d80b20dc9f373aacc2e8def",
+  "base/sexpr/parser.my": "5c262b182335b845cc0ff66290b662249630cf12fdfc909e1ea4bf043b4ec5d5",
+  "base/sexpr/printer.my": "5d95812989fcc191f4a457b40bd0c817ee5a5be5dc991c4f67b406ed156af155",
+  "base/sexpr/tokenizer.my": "0df95a9584912f8d853581c765b2f921e0143a1fe9ed33fc8ac96282ce79bbc2"
+}

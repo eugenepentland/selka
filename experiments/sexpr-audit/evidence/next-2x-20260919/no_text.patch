@@ -1,0 +1,38 @@
+--- sexpr/tokenizer.my
++++ sexpr/tokenizer.my
+@@ -178,7 +178,7 @@
+             advance(lx)
+     if not closed:
+         return Err(LexError(message="unterminated string", offset=offset, line=line))
+-    text = lexeme(lx.src, start, lx.pos)
++    text = ""
+     advance(lx)  # skip closing "
+     return Ok(Token(kind=Kind.string, text=text, span=ast.Span(line=line, col=col, offset=offset)))
+ 
+@@ -187,7 +187,7 @@
+     start = lx.pos
+     while is_atom_continue(peek(lx)):
+         advance(lx)
+-    return Token(kind=Kind.atom, text=lexeme(lx.src, start, lx.pos), span=ast.Span(line=line, col=col, offset=offset))
++    return Token(kind=Kind.atom, text="", span=ast.Span(line=line, col=col, offset=offset))
+ 
+ 
+ # An operator atom, allowing the two-character `>= <= == !=` forms.
+@@ -196,7 +196,7 @@
+     advance(lx)
+     if peek(lx) == 61:
+         advance(lx)
+-    return Token(kind=Kind.atom, text=lexeme(lx.src, start, lx.pos), span=ast.Span(line=line, col=col, offset=offset))
++    return Token(kind=Kind.atom, text="", span=ast.Span(line=line, col=col, offset=offset))
+ 
+ 
+ # Number path: optional leading minus, digits, an optional fractional part, then
+@@ -243,7 +243,7 @@
+     if is_atom_continue(peek(lx)):
+         while is_atom_continue(peek(lx)):
+             advance(lx)
+-        return Token(kind=Kind.atom, text=lexeme(lx.src, start, lx.pos), span=ast.Span(line=line, col=col, offset=offset))
++        return Token(kind=Kind.atom, text="", span=ast.Span(line=line, col=col, offset=offset))
+     text = lexeme(lx.src, start, lx.pos)
+     if is_float:
+         return Token(kind=Kind.float_val, text=text, span=ast.Span(line=line, col=col, offset=offset))

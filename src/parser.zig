@@ -51,6 +51,30 @@ const RequirementCollections = struct {
     operations: std.ArrayList(ast.Operation) = .empty,
     names: std.ArrayList(ast.BoundReference) = .empty,
 };
+/// A declaration form whose Python spelling this language rejects at a known
+/// point. The enum is what a call site names; `declaration_hints` carries the
+/// table row it resolves to.
+pub const HintForm = enum { union_cases, module_constant, method, from_import };
+/// One hinted declaration form: the idiom the friction classifier files the
+/// shape under, the primary message, and the accepted spelling the note names.
+pub const DeclarationHint = struct { form: HintForm, idiom: []const u8, message: []const u8, accepted: []const u8 };
+/// The hinted forms in `HintForm` order. `velocity/friction/classifier.json`
+/// files the same idioms in its `hints` array, so the suite's classification and
+/// the parser's messaging are one table; `src/declaration_hints_test.zig` and
+/// `tests/parser_hints.py` fail when one side names a form the other lacks.
+pub const declaration_hints = [_]DeclarationHint{
+    .{ .form = .union_cases, .idiom = "union-cases", .message = "union cases are separated by commas", .accepted = "insert a comma after the previous case" },
+    .{ .form = .module_constant, .idiom = "module-constant", .message = "a bare assignment declares no module-level binding", .accepted = "declare it as a constant: const MAX: int = 42" },
+    .{ .form = .method, .idiom = "method", .message = "a record or class body declares fields, not methods", .accepted = "declare a top-level function taking the record: def norm1(p: Point) -> int" },
+    .{ .form = .from_import, .idiom = "from-import", .message = "a from-import is not a declaration", .accepted = "import the module and declare a record: import dataclasses" },
+};
+/// The primary message for a case list whose next case lacks its separating
+/// comma. `union` reads from the hint table so the two can never drift.
+fn caseCommaMessage(head: []const u8) []const u8 {
+    if (std.mem.eql(u8, head, "enum")) return "enum cases are separated by commas";
+    if (std.mem.eql(u8, head, "result")) return "result cases are separated by commas";
+    return declaration_hints[@backingInt(HintForm.union_cases)].message;
+}
 /// Token cursor and allocator-backed syntax builder with bounded recursive nesting.
 pub const Parser = struct {
     src: @import("source.zig").Source,
@@ -103,6 +127,34 @@ pub const Parser = struct {
         }
         if (!self.take(tag)) return self.sink.fail(syntax_code, token.span, "unexpected token; expected " ++ comptime lex.spelling(tag));
         return token;
+    }
+    /// Report one known Python spelling at a declaration head: the primary
+    /// message names the shape and the note names the accepted form under the
+    /// counted `alternative` role, so the repair reads as an alternative rather
+    /// than as more evidence.
+    fn hint(self: *Parser, form: HintForm, span: Span, message: []const u8, note_span: Span) diagnostic.Error {
+        return self.sink.failRelated(syntax_code, span, message, .{ .span = note_span, .message = declaration_hints[@backingInt(form)].accepted, .role = .alternative });
+    }
+    /// Hint the form at the cursor, attaching its note to the same token.
+    fn hintHere(self: *Parser, form: HintForm) diagnostic.Error {
+        return self.hint(form, self.current().span, declaration_hints[@backingInt(form)].message, self.current().span);
+    }
+    /// Whether the cursor sits on an identifier in `previous`'s column: the next
+    /// case of a union, enum or result written without the separating comma.
+    fn caseAtSameColumn(self: *Parser, previous: Span) bool {
+        const token = self.current();
+        if (token.tag != .ident) return false;
+        return self.src.locate(token.span.start).column == self.src.locate(previous.start).column;
+    }
+    /// The Python declaration head at the cursor that this language spells
+    /// differently, if any: a bare module-level assignment or a `from` import.
+    fn pythonDeclarationHead(self: *Parser) ?HintForm {
+        const token = self.current();
+        if (token.tag != .ident) return null;
+        const next = self.tokens[self.cursor.pos + 1].tag;
+        if (next == .equal or next == .colon) return .module_constant;
+        if (std.mem.eql(u8, self.src.text(token.span), "from")) return .from_import;
+        return null;
     }
     fn enter(self: *Parser) diagnostic.Error!void {
         if (self.cursor.depth >= 256) return self.sink.fail("E_NESTING_LIMIT", self.current().span, "parser nesting exceeds 256 levels");
@@ -319,12 +371,24 @@ pub const Parser = struct {
         return span;
     }
     /// Parse module headers and bodies without loading imports or checking names.
+    /// A file with no `module` header is a module program only when it opens with
+    /// imports of compiler-embedded standard modules and nothing else; every
+    /// other headerless file still reports `E_MODULE_HEADER`.
     pub fn parseModule(self: *Parser) diagnostic.Error!ast.Program {
         self.module_syntax = true;
+        if (try self.standardImportScript()) {
+            try self.importDirectives();
+            return self.parse();
+        }
         const first = try self.expect(.ident);
         if (!std.mem.eql(u8, self.src.text(first.span), "module")) return self.sink.fail("E_MODULE_HEADER", first.span, "file must begin with a module declaration");
         try self.moduleName();
         _ = try self.expect(.semicolon);
+        try self.importDirectives();
+        return self.parse();
+    }
+    /// Parse the leading `import` directives, recording each module qualifier.
+    fn importDirectives(self: *Parser) diagnostic.Error!void {
         while (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "import")) {
             self.cursor.pos += 1;
             const path_start = self.current().span;
@@ -340,7 +404,12 @@ pub const Parser = struct {
             try self.syntax.import_aliases.put(allocator, self.src.text(path), {});
             _ = try self.expect(.semicolon);
         }
-        return self.parse();
+    }
+    /// Whether the file opens with a headerless run of standard-module imports:
+    /// the script shape that needs no `module` declaration. The one policy lives
+    /// in `project.zig` so the parser and the project loader cannot disagree.
+    fn standardImportScript(self: *Parser) diagnostic.Error!bool {
+        return @import("project.zig").standardImportOpening(self.arena.allocator(), self.src, self.tokens, self.cursor.pos);
     }
     fn parseCodec(self: *Parser) diagnostic.Error!ast.Codec {
         const wire = try self.typeName();
@@ -438,6 +507,25 @@ pub const Parser = struct {
             return self.sink.fail(syntax_code, self.current().span, "`public` marks a declaration, not an export directive");
         return declared;
     }
+    /// Consume a dotted re-export directive when the cursor names `export`, and
+    /// reject the removed bare form. Answers whether a directive was consumed,
+    /// so the top-level dispatch stays below the complexity cap.
+    fn reexportDirective(self: *Parser) diagnostic.Error!bool {
+        if (!self.module_syntax) return false;
+        if (self.current().tag != .ident) return false;
+        if (!std.mem.eql(u8, self.src.text(self.current().span), "export")) return false;
+        self.cursor.pos += 1;
+        const first_name = try self.declaredName();
+        // The bare `export NAME` directive is removed: a local declaration
+        // publishes itself with `public`. Only a re-export, which names an
+        // imported declaration through its module qualifier
+        // (`export shared.units.Distance`), is still a directive.
+        if (!self.take(.dot)) return self.sink.fail(eExportRemoved, first_name, "plain `export NAME` is removed; mark the declaration `public` instead");
+        _ = try self.declaredName();
+        while (self.take(.dot)) _ = try self.declaredName();
+        _ = try self.expect(.semicolon);
+        return true;
+    }
     /// Parse a complete source program, retaining syntax and diagnostics in the supplied allocator.
     pub fn parse(self: *Parser) diagnostic.Error!ast.Program {
         self.indexShadowingDeclarations();
@@ -459,19 +547,7 @@ pub const Parser = struct {
             // module marks visibility on the declaration itself. It is not a way
             // to spell the separate `export NAME` directive.
             const declare_public = try self.takePublic();
-            if (self.module_syntax and self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "export")) {
-                self.cursor.pos += 1;
-                const first_name = try self.declaredName();
-                // The bare `export NAME` directive is removed: a local declaration
-                // publishes itself with `public`. Only a re-export, which names an
-                // imported declaration through its module qualifier
-                // (`export shared.units.Distance`), is still a directive.
-                if (!self.take(.dot)) return self.sink.fail(eExportRemoved, first_name, "plain `export NAME` is removed; mark the declaration `public` instead");
-                _ = try self.declaredName();
-                while (self.take(.dot)) _ = try self.declaredName();
-                _ = try self.expect(.semicolon);
-                continue;
-            }
+            if (try self.reexportDirective()) continue;
             if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "constraint")) {
                 const head = self.current().span;
                 self.cursor.pos += 1;
@@ -520,6 +596,7 @@ pub const Parser = struct {
             const fallible = self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "result");
             if (self.current().tag == .kw_enum or self.current().tag == .kw_union or fallible) {
                 const is_union = self.current().tag != .kw_enum;
+                const case_head: []const u8 = if (fallible) "result" else if (self.current().tag == .kw_enum) "enum" else "union";
                 self.cursor.pos += 1;
                 const name = try self.expect(.ident);
                 const type_parameters = try self.typeParameters();
@@ -536,7 +613,12 @@ pub const Parser = struct {
                         payload = try self.typeName();
                     }
                     try cases.append(self.arena.allocator(), .{ .name = tag.span, .payload = payload, .fields = fields });
-                    if (!self.take(.comma)) break;
+                    if (!self.take(.comma)) {
+                        // A next case on its own line is the shape an agent writes
+                        // first, so name the rule instead of "expected a dedent".
+                        if (self.caseAtSameColumn(tag.span)) return self.hint(.union_cases, self.current().span, caseCommaMessage(case_head), tag.span);
+                        break;
+                    }
                 };
                 _ = try self.expect(.dedent);
                 try self.markPublic(&public_names, declare_public, name.span);
@@ -576,6 +658,7 @@ pub const Parser = struct {
                 try records.append(self.arena.allocator(), .{ .managed = managed_record, .type_parameters = type_parameters, .name = name.span, .fields = fields });
                 continue;
             }
+            if (self.pythonDeclarationHead()) |form| return self.hintHere(form);
             const declared_function = try self.function(null);
             try self.markPublic(&public_names, declare_public, declared_function.name);
             try functions.append(self.arena.allocator(), declared_function);
@@ -696,6 +779,8 @@ pub const Parser = struct {
         const empty_record = self.take(.kw_pass);
         if (empty_record) _ = try self.expect(.semicolon);
         if (!empty_record and self.current().tag != .dedent) while (true) {
+            // A method belongs to the record's functions, not to its field list.
+            if (self.current().tag == .kw_def) return self.hintHere(.method);
             const field = try self.declaredName();
             _ = try self.expect(.colon);
             const ty = try self.typeName();

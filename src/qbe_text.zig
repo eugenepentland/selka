@@ -12,6 +12,8 @@ const Kind = @import("buffer_operations.zig").Kind;
 const allocation_failure = @import("qbe_format.zig").allocation_failure;
 const load_word = @import("qbe_format.zig").load_word;
 const empty_separator = "myl_qbe_fail_empty_separator";
+/// The located trap `ord` and `chr` raise on an operand that is not one scalar.
+const text_scalar = "myl_native_fail_text_scalar";
 
 /// Bind text-method lowering to the concrete emitter without an import cycle.
 pub fn Lower(comptime E: type) type {
@@ -27,13 +29,14 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
     const base = stack.len - op.kind.arity();
     const input = try self.load("l", @backingInt(op.owner));
     switch (op.kind) {
-        .strip, .lstrip, .rstrip, .upper, .lower, .splitlines => return emitFresh(E, self, op, input, base),
+        .strip, .lstrip, .rstrip, .upper, .lower, .splitlines, .split_whitespace => return emitFresh(E, self, op, input, base),
         .is_digit, .is_alpha, .is_space => return emitClass(E, self, op, input, base),
         .starts_with, .ends_with => return emitEdge(E, self, op, input, base),
         .find, .count => return emitSearch(E, self, op, input, base),
         .replace => return emitReplace(E, self, input, base),
         .zfill => return emitPad(E, self, input, base),
         .parse_int, .parse_float => return emitParse(E, self, op, input, base),
+        .text_ord, .text_chr => return emitScalar(E, self, op, input, base),
         else => return self.reject(self.pc),
     }
 }
@@ -43,6 +46,7 @@ fn emitFresh(comptime E: type, self: *E, op: BufferOperation, input: usize, base
     const result = self.temp();
     switch (op.kind) {
         .splitlines => try self.print(" %v{d} =l call $myl_native_text_lines(l %heap, l %v{d})\n", .{ result, input }),
+        .split_whitespace => try self.print(" %v{d} =l call $myl_native_text_split_whitespace(l %heap, l %v{d})\n", .{ result, input }),
         .upper, .lower => try self.print(" %v{d} =l call $myl_native_text_case(l %heap, l %v{d}, w {d})\n", .{ result, input, @intFromBool(op.kind == .upper) }),
         else => try self.print(" %v{d} =l call $myl_native_text_trim(l %heap, l %v{d}, w {d})\n", .{ result, input, ends(op.kind) }),
     }
@@ -106,6 +110,27 @@ fn emitParse(comptime E: type, self: *E, op: BufferOperation, input: usize, base
     const value = self.temp();
     try self.print(" %v{d} =l loadl %scratch\n", .{value});
     return @import("qbe_results.zig").Lower(E).option(self, .{ .ty = op.output, .status = status, .value = value, .slot = base });
+}
+
+/// Lower `ord(text)` and `chr(code)`. `ord` measures the receiver first, because
+/// its argument must hold exactly one scalar; `chr` validates the code point
+/// inside the native call. Both report `R_TEXT_SCALAR` through the same located
+/// trap, and `chr` still checks its result so a refused allocation surfaces.
+fn emitScalar(comptime E: type, self: *E, op: BufferOperation, input: usize, base: usize) Error!void {
+    const result = self.temp();
+    if (op.kind == .text_ord) {
+        const length = self.temp();
+        const single = self.temp();
+        try self.print(load_word, .{ length, input });
+        try self.print(" %v{d} =w ceql %v{d}, 1\n", .{ single, length });
+        try self.require(single, text_scalar);
+        try self.print(" %v{d} =l call $myl_native_text_ord(l %v{d})\n", .{ result, input });
+    } else {
+        const code = try self.load("s", base);
+        try self.print(" %v{d} =l call $myl_native_text_chr(l %ctx, l %heap, l %v{d})\n", .{ result, code });
+        try self.require(result, allocation_failure);
+    }
+    try self.store(base, result);
 }
 
 /// An empty needle traps `R_EMPTY_SEPARATOR` before the runtime is called.

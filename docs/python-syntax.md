@@ -274,6 +274,58 @@ plus `read_text`, `write_text`, `exists`, `listdir`, `mkdir` and `remove`.
 `--restrict` withholds them and turns on the `--allow-*` flags. See
 [printing, files and command-line authority](io.md).
 
+## Declaration forms Python spells differently
+
+Four declaration shapes have a different accepted spelling, and each one is
+rejected with a message that names it. A bare module-level assignment is a
+module constant:
+
+```mylang
+# doc: expect-error E_SYNTAX
+MAX = 42
+```
+
+Declare it with `const MAX: int = 42`; the type is required, the value must be an
+immutable scalar literal, and the name is visible to every function in the file.
+
+A method belongs to the record's functions, not to its field list:
+
+```mylang
+# doc: expect-error E_SYNTAX
+class Point:
+    def __init__(self, x: int, y: int):
+        self.x = x
+```
+
+There are no methods on `class` or `record`; write a top-level function that
+takes the record as its first parameter, `def norm1(p: Point) -> int:`, and call
+it as `norm1(p)`.
+
+`from module import name` is not a declaration either:
+
+```mylang
+# doc: expect-error E_SYNTAX
+from dataclasses import dataclass
+```
+
+Import the module (`import math`) and name its exports through the module, or
+declare a `record` for the data you need. `record` is the language's data
+declaration and replaces the decorator class.
+
+Union, enum and result bodies separate their cases with commas. A case written
+on its own line without one is rejected at that case:
+
+```mylang
+# doc: expect-error E_SYNTAX
+union Event:
+    heartbeat
+    count: int
+```
+
+Write `heartbeat,` and `count: int,`. The parser still stops at the first syntax
+error; these four messages are targeted at the shapes above rather than general
+error recovery.
+
 ## One command shape
 
 Use `mylang run <entry.my>` for both standalone files and module entries. The

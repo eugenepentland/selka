@@ -10,6 +10,7 @@ const t = std.testing;
 const graph = @import("project.zig");
 const ast = @import("ast.zig");
 const interfaces = @import("interfaces.zig");
+const fact_status = @import("fact_status.zig");
 const module_names = @import("module_names.zig");
 const project_syntax = @import("project_syntax.zig");
 const diagnostic_module = @import("diagnostic.zig");
@@ -2275,4 +2276,156 @@ test "a public declaration crosses the module boundary while an unmarked one sta
         \\def main() -> i64:
         \\    return units.hidden()
     , dependency, "E_PRIVATE_SYMBOL");
+}
+
+/// The plan's incomplete-interface fixture: one complete declaration with a
+/// declared ceiling and one whose body is still a typed hole. The hole makes the
+/// body check fail, which is the state `mylang list-interfaces` renders after it
+/// ignores the body diagnostic.
+const checked_ceiling_fixture =
+    \\module main
+    \\
+    \\
+    \\public def double(x: i64) -> i64 effects(managed_allocation):
+    \\    return x * 2
+    \\
+    \\
+    \\public def pure(x: i64) -> i64:
+    \\    return x + 1
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return double(2)
+;
+const hole_fixture =
+    \\module main
+    \\
+    \\
+    \\public def double(x: i64) -> i64 effects(managed_allocation):
+    \\    return x * 2
+    \\
+    \\
+    \\public def unfinished(x: i64) -> i64:
+    \\    return todo[i64]()
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return double(2)
+;
+
+// spec: INTERFACE-FACTS-1
+test "an unchecked listing reports an unavailable inferred set and keeps a declared ceiling" {
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = hole_fixture }} };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try project_compile_module.Compilation.init(&index);
+    // Body checking fails on the hole, which is what leaves the summary
+    // unavailable; the interface gate restores the pre-check problem and lists
+    // declarations anyway, exactly as `mylang list-interfaces` does.
+    const saved_problem = project.problem;
+    try t.expectError(error.SourceError, compilation.check());
+    project.problem = saved_problem;
+    try t.expect(compilation.program == null);
+    index.program = compilation.program;
+    const text = try index.render(t.allocator);
+    defer t.allocator.free(text);
+    try t.expect(std.mem.indexOf(u8, text, "export function double def(x:i64)->i64 effects(unavailable) analysis(declaration-only) ceiling(managed_allocation) tests(unavailable)") != null);
+    try t.expect(std.mem.indexOf(u8, text, "export function unfinished def(x:i64)->i64 effects(unavailable) analysis(declaration-only) tests(unavailable)") != null);
+    // The internal conservative mask is a bound, never a published inference.
+    try t.expect(std.mem.indexOf(u8, text, "filesystem") == null);
+}
+// spec-case: INTERFACE-FACTS-1
+test "a checked listing publishes the inferred set with no analysis clause" {
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = checked_ceiling_fixture }} };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try project_compile_module.Compilation.init(&index);
+    try compilation.check();
+    index.program = compilation.program.?;
+    const text = try index.render(t.allocator);
+    defer t.allocator.free(text);
+    try t.expect(std.mem.indexOf(u8, text, "export function double def(x:i64)->i64 effects() ceiling(managed_allocation) tests(0)") != null);
+    try t.expect(std.mem.indexOf(u8, text, "export function pure def(x:i64)->i64 effects() tests(0)") != null);
+    try t.expect(std.mem.indexOf(u8, text, "analysis(") == null);
+    try t.expect(std.mem.indexOf(u8, text, "unavailable") == null);
+}
+
+// spec: INTERFACE-FACTS-2
+test "an uninstantiated generic publishes an unavailable template summary" {
+    const body =
+        \\module main
+        \\
+        \\
+        \\public def build[T](x: T) -> i64:
+        \\    items: list[i64] = []
+        \\    items.append(1)
+        \\    return items[0]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ;
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = body }} };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try project_compile_module.Compilation.init(&index);
+    // The program checks; it simply holds no instantiation of the template, so
+    // the checker's conservative mask is not an inferred fact for it.
+    try compilation.check();
+    index.program = compilation.program.?;
+    const text = try index.render(t.allocator);
+    defer t.allocator.free(text);
+    try t.expect(std.mem.indexOf(u8, text, "export function build def(x:$0)->i64 effects(unavailable) analysis(template)") != null);
+    try t.expect(std.mem.indexOf(u8, text, "filesystem") == null);
+    // The reachability index exists here, so no tests column is published and
+    // none is claimed unavailable.
+    try t.expect(std.mem.indexOf(u8, text, "tests(unavailable)") == null);
+}
+
+// spec: INTERFACE-CONTRACT-STATUS-1
+test "the contract manifest states whether a checked program supplied inferred effects" {
+    var files_unchecked: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = hole_fixture }} };
+    var project_unchecked = graph.Project.init(t.allocator);
+    defer project_unchecked.deinit();
+    try project_unchecked.load(files_unchecked.provider(), "main", .{});
+    var index_unchecked = try interfaces.build(&project_unchecked);
+    const unchecked = try index_unchecked.renderContracts(t.allocator);
+    defer t.allocator.free(unchecked);
+    // Declared ceilings and directional bounds do not change; the manifest now
+    // says that no body was checked, so its `effects=` value cannot be read as an
+    // inferred summary.
+    try t.expect(std.mem.indexOf(u8, unchecked, "\"analysis\":\"declaration-only\"") != null);
+    try t.expect(std.mem.indexOf(u8, unchecked, "\"permissions\":\"effects=managed_allocation;mutates=;origin=unknown\"") != null);
+    try t.expect(std.mem.indexOf(u8, unchecked, "\"permissions\":\"effects=filesystem") != null);
+
+    var files_checked: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = checked_ceiling_fixture }} };
+    var project_checked = graph.Project.init(t.allocator);
+    defer project_checked.deinit();
+    try project_checked.load(files_checked.provider(), "main", .{});
+    var index_checked = try interfaces.build(&project_checked);
+    var compilation_checked = try project_compile_module.Compilation.init(&index_checked);
+    try compilation_checked.check();
+    index_checked.program = compilation_checked.program.?;
+    const checked = try index_checked.renderContracts(t.allocator);
+    defer t.allocator.free(checked);
+    // A checked manifest keeps exactly the bytes it always published: the status
+    // field is omitted rather than written as `checked`, and the inferred set is
+    // still the `permissions` value.
+    try t.expect(std.mem.indexOf(u8, checked, "\"analysis\"") == null);
+    try t.expect(std.mem.indexOf(u8, checked, "\"permissions\":\"effects=;mutates=;origin=unknown\"") != null);
+}
+
+// spec: FACT-STATUS-1
+test "the shared fact-status vocabulary spells the statuses the reference publishes" {
+    try t.expectEqualStrings("checked", fact_status.name(.checked));
+    try t.expectEqualStrings("template", fact_status.name(.template));
+    try t.expectEqualStrings("declaration-only", fact_status.name(.declaration_only));
+    try t.expectEqualStrings("declared", fact_status.name(.declared));
+    try t.expectEqualStrings("lexical-only", fact_status.name(.lexical_only));
 }

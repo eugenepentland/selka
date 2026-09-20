@@ -535,6 +535,23 @@ pub fn build(b: *std.Build) void {
     idiom_run.has_side_effects = true;
     idiom_step.dependOn(&idiom_run.step);
     test_step.dependOn(idiom_step);
+    // The repair-round packages ship two Python drivers beside their Zig tests:
+    // the parser-hint/classifier agreement (static, then end to end against this
+    // compiler) and the friction harvest over its replay fixture. Registering
+    // them here keeps them from rotting outside the gate.
+    const usefulness_step = b.step("test-agent-usefulness", "Verify parser hints, headerless imports, and the friction harvest");
+    const hints_static = bounded(b.addSystemCommand(&.{ "python3", "tests/parser_hints.py" }), rss.driver);
+    hints_static.setCwd(b.path("."));
+    usefulness_step.dependOn(&hints_static.step);
+    const hints_run = bounded(b.addSystemCommand(&.{ "python3", "tests/parser_hints.py", "--compiler" }), rss.parity);
+    hints_run.addArtifactArg(exe);
+    hints_run.setCwd(b.path("."));
+    hints_run.has_side_effects = true;
+    usefulness_step.dependOn(&hints_run.step);
+    const harvest_run = bounded(b.addSystemCommand(&.{ "python3", "tests/test_friction_harvest.py" }), rss.driver);
+    harvest_run.setCwd(b.path("."));
+    usefulness_step.dependOn(&harvest_run.step);
+    test_step.dependOn(usefulness_step);
     const doc_coverage = bounded(b.addRunArtifact(exe), rss.driver);
     doc_coverage.addArgs(&.{ "doc-coverage", "." });
     doc_coverage.setCwd(b.path("."));

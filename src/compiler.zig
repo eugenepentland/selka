@@ -68,6 +68,8 @@ pub const declaration_diff = @import("declaration_diff.zig");
 pub const affected_tests = @import("affected_tests.zig");
 /// `mylang api-diff` baseline comparison and classification.
 pub const api_diff = @import("api_diff.zig");
+/// `mylang context` bounded per-declaration answer for a coding agent.
+pub const context = @import("context.zig");
 const disassemble = @import("disassemble.zig");
 
 /// Owns one source unit and all parsed, checked, and lowered data in its arena.
@@ -215,3 +217,27 @@ pub const values = @import("value.zig");
 
 /// Opt-in structured phase timing for command-line hosts.
 pub const timings = @import("timings.zig");
+
+/// Builtin vocabulary tables the compiler-derived reference engine reads. The
+/// engine is compiled into the root module beside the other subcommands, which
+/// cannot import these files directly without becoming a second module member,
+/// so it names them through this one namespace instead of a copied list.
+pub const reference_tables = struct {
+    /// Familiar constructor spellings and the reserved prelude type names.
+    pub const prelude = @import("prelude.zig");
+    /// Builtin call names, arities and result types.
+    pub const prelude_builtins = @import("prelude_builtins.zig");
+    /// Managed collection method vocabulary and per-operation arities.
+    pub const buffer_operations = @import("buffer_operations.zig");
+    /// Host I/O builtin names and arities.
+    pub const io_builtins = @import("io_builtins.zig");
+    /// Scalar intrinsic names the checker accepts in call position.
+    pub const float_intrinsics = @import("float_intrinsics.zig");
+    /// Managed collection families a method spelling is accepted on.
+    pub const runtime_values = @import("runtime_values.zig");
+};
+
+/// Opt-in per-command friction record. It reads the compiler's own diagnostic
+/// and identity types, so it lives in this module and the command-line root
+/// reaches it through `language.friction_log` rather than a second import.
+pub const friction_log = @import("friction_log.zig");

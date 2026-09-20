@@ -178,7 +178,10 @@ test "navigation synthesized array shapes never resolve to function local or fie
     try typeTargets(parsed.value);
 }
 // The standard library discovers this method reflectively; exercise its wire
-// contract directly as well as through whole-index rendering.
+// contract directly as well as through whole-index rendering. The symbol
+// declares `analysis = .checked` because that is the wire shape this test pins:
+// a symbol whose facts were not checked publishes `analysis` and `null` inferred
+// fields instead (see `NAVIGATION-FACTS-1`).
 test "navigation jsonStringify preserves flat wire facts and reports a full writer" {
     const symbol: navigation.Symbol = .{
         .id = "main::draw",
@@ -186,7 +189,7 @@ test "navigation jsonStringify preserves flat wire facts and reports a full writ
         .kind = "function",
         .location = .{ .path = "main.my", .start = 10, .end = 14, .line = 2, .column = 4 },
         .exported = true,
-        .details = .{ .signature = "draw() -> i64", .type_name = "i64", .effects = &.{"alloc"} },
+        .details = .{ .analysis = .checked, .signature = "draw() -> i64", .type_name = "i64", .effects = &.{"alloc"} },
         .context = .{ .snippet = "draw() -> i64:\n    return 1", .snippet_truncated = true },
     };
     var output = std.Io.Writer.Allocating.init(t.allocator);
@@ -332,4 +335,146 @@ test "renderTestsFor reports direct and transitive tests for a declaration" {
     try t.expect(std.mem.indexOf(u8, rendered, "direct (1): main::test_end_to_end") != null);
     try t.expect(std.mem.indexOf(u8, rendered, "reached-by (2): main::test_parse main::test_end_to_end") != null);
     try t.expectEqual(@as(?[]u8, null), try navigation.renderTestsFor(t.allocator, &compilation, "main::missing"));
+}
+
+/// Whether one parsed symbol carries `null` for every inferred fact field.
+fn expectUnavailableFacts(symbol: std.json.ObjectMap) !void {
+    try t.expect(symbol.get("effects").? == .null);
+    try t.expect(symbol.get("mutates").? == .null);
+    try t.expect(symbol.get("return_origin").? == .null);
+    try t.expect(symbol.get("mutation_writes").? == .null);
+}
+
+// spec: NAVIGATION-FACTS-1
+test "navigation publishes null inferred facts and a status when bodies were not checked" {
+    var files: Files = .{ .main =
+        \\module main
+        \\import data
+        \\
+        \\
+        \\def double(x: i64) -> i64 effects(managed_allocation):
+        \\    return x * 2
+        \\
+        \\
+        \\def unfinished(x: i64) -> i64:
+        \\    return todo[i64]()
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return data.read(data.Box(value=double(2)))
+    };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(.{ .context = &files, .read = Files.read }, "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try pc.Compilation.init(&index);
+    try t.expectError(error.SourceError, compilation.check());
+    const bytes = try navigation.render(t.allocator, &compilation, identity, .{});
+    defer t.allocator.free(bytes);
+    const parsed = try std.json.parseFromSlice(std.json.Value, t.allocator, bytes, .{});
+    defer parsed.deinit();
+    try t.expect(!parsed.value.object.get("checked").?.bool);
+    var saw_function = false;
+    var saw_type = false;
+    for (parsed.value.object.get("symbols").?.array.items) |item| {
+        const symbol = item.object;
+        const name = symbol.get("name").?.string;
+        if (std.mem.eql(u8, name, "double")) {
+            saw_function = true;
+            try t.expectEqualStrings("declaration-only", symbol.get("analysis").?.string);
+            try expectUnavailableFacts(symbol);
+        }
+        if (std.mem.eql(u8, name, "Box")) {
+            saw_type = true;
+            // A type declaration's own shape is declared, not missing.
+            try t.expectEqualStrings("declared", symbol.get("analysis").?.string);
+            try expectUnavailableFacts(symbol);
+        }
+    }
+    try t.expect(saw_function and saw_type);
+}
+// spec-case: NAVIGATION-FACTS-1
+test "navigation keeps a checked symbol's exact field set with no analysis clause" {
+    const parsed = try document(fixture);
+    defer parsed.deinit();
+    var saw_checked = false;
+    for (parsed.value.object.get("symbols").?.array.items) |item| {
+        const symbol = item.object;
+        if (!std.mem.eql(u8, symbol.get("name").?.string, "read")) continue;
+        if (!std.mem.eql(u8, symbol.get("kind").?.string, "function")) continue;
+        saw_checked = true;
+        // `effects` stays a real inferred set — here the empty one, which is a
+        // fact — and the status field that marks an unavailable analysis is
+        // absent, so a previously checked answer is byte-identical.
+        try t.expect(symbol.get("analysis") == null);
+        try t.expectEqual(@as(usize, 0), symbol.get("effects").?.array.items.len);
+        try t.expectEqual(@as(usize, 0), symbol.get("mutates").?.array.items.len);
+        try t.expect(symbol.get("return_origin").? != .null);
+    }
+    try t.expect(saw_checked);
+}
+
+// spec: NAVIGATION-FACTS-2
+test "navigation marks a generic no instantiation used as a template" {
+    var files: Files = .{ .main =
+        \\module main
+        \\
+        \\
+        \\def build[T](x: T) -> i64:
+        \\    items: list[i64] = []
+        \\    items.append(1)
+        \\    return items[0]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(.{ .context = &files, .read = Files.read }, "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try pc.Compilation.init(&index);
+    try compilation.check();
+    const bytes = try navigation.render(t.allocator, &compilation, identity, .{});
+    defer t.allocator.free(bytes);
+    const parsed = try std.json.parseFromSlice(std.json.Value, t.allocator, bytes, .{});
+    defer parsed.deinit();
+    try t.expect(parsed.value.object.get("checked").?.bool);
+    var saw_template = false;
+    for (parsed.value.object.get("symbols").?.array.items) |item| {
+        const symbol = item.object;
+        if (!std.mem.eql(u8, symbol.get("name").?.string, "build")) continue;
+        saw_template = true;
+        try t.expectEqualStrings("template", symbol.get("analysis").?.string);
+        try expectUnavailableFacts(symbol);
+    }
+    try t.expect(saw_template);
+}
+
+// spec: NAVIGATION-FACTS-3
+test "lexical-only navigation candidates publish a status and no inferred facts" {
+    var files: Files = .{ .main =
+        \\module main
+        \\import data
+        \\def broken() -> i64:
+        \\    return +
+    };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(.{ .context = &files, .read = Files.read }, "main", .{});
+    try t.expectError(error.SourceError, interfaces.build(&project));
+    const bytes = try @import("navigation_partial.zig").render(t.allocator, &project, identity);
+    defer t.allocator.free(bytes);
+    const parsed = try std.json.parseFromSlice(std.json.Value, t.allocator, bytes, .{});
+    defer parsed.deinit();
+    try t.expect(!parsed.value.object.get("checked").?.bool);
+    var saw_lexical = false;
+    for (parsed.value.object.get("symbols").?.array.items) |item| {
+        const symbol = item.object;
+        if (!std.mem.eql(u8, symbol.get("name").?.string, "broken")) continue;
+        saw_lexical = true;
+        try t.expectEqualStrings("lexical-only", symbol.get("analysis").?.string);
+        try expectUnavailableFacts(symbol);
+    }
+    try t.expect(saw_lexical);
 }

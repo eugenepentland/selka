@@ -1,0 +1,191 @@
+{
+  "counters": {
+    "census": [
+      {
+        "cpu_core/instructions/u": 213009685.0,
+        "cpu_core/cycles/u": 55619172.0
+      },
+      {
+        "cpu_core/instructions/u": 213009686.0,
+        "cpu_core/cycles/u": 53483493.0
+      },
+      {
+        "cpu_core/instructions/u": 213009686.0,
+        "cpu_core/cycles/u": 53447998.0
+      },
+      {
+        "cpu_core/instructions/u": 213009689.0,
+        "cpu_core/cycles/u": 53860477.0
+      },
+      {
+        "cpu_core/instructions/u": 213009694.0,
+        "cpu_core/cycles/u": 53934212.0
+      },
+      {
+        "cpu_core/instructions/u": 213009689.0,
+        "cpu_core/cycles/u": 53866675.0
+      },
+      {
+        "cpu_core/instructions/u": 213009691.0,
+        "cpu_core/cycles/u": 54071642.0
+      }
+    ],
+    "census_il": [
+      {
+        "cpu_core/instructions/u": 213009690.0,
+        "cpu_core/cycles/u": 53503916.0
+      },
+      {
+        "cpu_core/instructions/u": 213009689.0,
+        "cpu_core/cycles/u": 53767644.0
+      },
+      {
+        "cpu_core/instructions/u": 213009688.0,
+        "cpu_core/cycles/u": 53510477.0
+      },
+      {
+        "cpu_core/instructions/u": 213009692.0,
+        "cpu_core/cycles/u": 58670286.0
+      },
+      {
+        "cpu_core/instructions/u": 213009685.0,
+        "cpu_core/cycles/u": 53739838.0
+      },
+      {
+        "cpu_core/instructions/u": 213009685.0,
+        "cpu_core/cycles/u": 53261311.0
+      },
+      {
+        "cpu_core/instructions/u": 213009689.0,
+        "cpu_core/cycles/u": 53627515.0
+      }
+    ],
+    "census_bulk": [
+      {
+        "cpu_core/instructions/u": 196952618.0,
+        "cpu_core/cycles/u": 52326053.0
+      },
+      {
+        "cpu_core/instructions/u": 196952618.0,
+        "cpu_core/cycles/u": 50813433.0
+      },
+      {
+        "cpu_core/instructions/u": 196952620.0,
+        "cpu_core/cycles/u": 50621321.0
+      },
+      {
+        "cpu_core/instructions/u": 196952623.0,
+        "cpu_core/cycles/u": 52734484.0
+      },
+      {
+        "cpu_core/instructions/u": 196952616.0,
+        "cpu_core/cycles/u": 51135563.0
+      },
+      {
+        "cpu_core/instructions/u": 196952616.0,
+        "cpu_core/cycles/u": 52835139.0
+      },
+      {
+        "cpu_core/instructions/u": 196952615.0,
+        "cpu_core/cycles/u": 51743239.0
+      }
+    ]
+  },
+  "wall_ms": {
+    "census": [
+      17.765308,
+      17.074774,
+      16.736799,
+      16.944223,
+      16.275964,
+      16.905066,
+      17.14021,
+      17.550818,
+      16.936029,
+      16.989996,
+      17.567169,
+      17.545945,
+      16.924872,
+      16.737725,
+      17.077038,
+      16.778928,
+      16.959971,
+      16.752313,
+      17.093678,
+      17.074253,
+      16.860125
+    ],
+    "census_il": [
+      17.272783,
+      17.313785,
+      17.326459,
+      17.217645,
+      16.746649,
+      16.929427,
+      17.839044,
+      18.601518,
+      16.963348,
+      16.789576,
+      17.344955,
+      16.712514,
+      16.763614,
+      16.929828,
+      17.074572,
+      16.996985,
+      17.206842,
+      16.872132,
+      16.882583,
+      16.728909,
+      17.046296
+    ],
+    "census_bulk": [
+      17.020838,
+      16.254041,
+      16.740642,
+      17.052566,
+      16.323518,
+      16.391648,
+      17.272089,
+      16.326544,
+      16.90795,
+      16.368993,
+      18.177041,
+      16.302965,
+      16.245753,
+      16.228121,
+      16.15444,
+      16.336923,
+      16.355072,
+      16.302274,
+      16.362656,
+      16.199869,
+      16.430468
+    ]
+  },
+  "summary": {
+    "census": {
+      "median_ms": 16.959971,
+      "cpu_core/instructions/u": 213009689.0,
+      "cpu_core/cycles/u": 53866675.0
+    },
+    "census_il": {
+      "median_ms": 16.996985,
+      "cpu_core/instructions/u": 213009689.0,
+      "cpu_core/cycles/u": 53627515.0
+    },
+    "census_bulk": {
+      "median_ms": 16.355072,
+      "cpu_core/instructions/u": 196952618.0,
+      "cpu_core/cycles/u": 51743239.0
+    }
+  },
+  "validation": {
+    "goldens": {
+      "census": 17,
+      "census_scalar": 17,
+      "census_bulk": 17
+    },
+    "unicode_matches": true,
+    "benchmark_matches": true
+  }
+}

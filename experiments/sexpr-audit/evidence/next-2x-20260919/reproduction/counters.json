@@ -1,0 +1,470 @@
+{
+  "summary": {
+    "base": {
+      "cpu_core/instructions/u": 130835429.0,
+      "cpu_core/cycles/u": 33050190.0,
+      "cpu_core/branches/u": 21797818.0,
+      "cpu_core/branch-misses/u": 67383.0,
+      "task-clock": 10.09
+    },
+    "scalar_string": {
+      "cpu_core/instructions/u": 125974538.0,
+      "cpu_core/cycles/u": 32498530.0,
+      "cpu_core/branches/u": 21189254.0,
+      "cpu_core/branch-misses/u": 65871.0,
+      "task-clock": 9.89
+    },
+    "no_text_upper_bound": {
+      "cpu_core/instructions/u": 99495537.0,
+      "cpu_core/cycles/u": 23012000.0,
+      "cpu_core/branches/u": 15416152.0,
+      "cpu_core/branch-misses/u": 37955.0,
+      "task-clock": 6.88
+    },
+    "zig": {
+      "cpu_core/instructions/u": 19423025.0,
+      "cpu_core/cycles/u": 5206568.0,
+      "cpu_core/branches/u": 4503960.0,
+      "cpu_core/branch-misses/u": 21483.0,
+      "task-clock": 1.77
+    },
+    "scan": {
+      "cpu_core/instructions/u": 35689347.0,
+      "cpu_core/cycles/u": 6662561.0,
+      "cpu_core/branches/u": 7479050.0,
+      "cpu_core/branch-misses/u": 14479.0,
+      "task-clock": 2.19
+    },
+    "scan_once": {
+      "cpu_core/instructions/u": 27391748.0,
+      "cpu_core/cycles/u": 5457598.0,
+      "cpu_core/branches/u": 6557778.0,
+      "cpu_core/branch-misses/u": 14771.0,
+      "task-clock": 1.9
+    },
+    "render": {
+      "cpu_core/instructions/u": 213009690.0,
+      "cpu_core/cycles/u": 53608671.0,
+      "cpu_core/branches/u": 36662437.0,
+      "cpu_core/branch-misses/u": 91128.0,
+      "task-clock": 16.2
+    },
+    "zig_render": {
+      "cpu_core/instructions/u": 22748034.0,
+      "cpu_core/cycles/u": 6639914.0,
+      "cpu_core/branches/u": 5035452.0,
+      "cpu_core/branch-misses/u": 27909.0,
+      "task-clock": 2.34
+    }
+  },
+  "samples": {
+    "base": [
+      {
+        "cpu_core/instructions/u": 130835424.0,
+        "cpu_core/cycles/u": 33050190.0,
+        "cpu_core/branches/u": 21797816.0,
+        "cpu_core/branch-misses/u": 67383.0,
+        "task-clock": 9.73
+      },
+      {
+        "cpu_core/instructions/u": 130835431.0,
+        "cpu_core/cycles/u": 32814168.0,
+        "cpu_core/branches/u": 21797820.0,
+        "cpu_core/branch-misses/u": 66606.0,
+        "task-clock": 10.09
+      },
+      {
+        "cpu_core/instructions/u": 130835429.0,
+        "cpu_core/cycles/u": 33623054.0,
+        "cpu_core/branches/u": 21797818.0,
+        "cpu_core/branch-misses/u": 67391.0,
+        "task-clock": 10.3
+      },
+      {
+        "cpu_core/instructions/u": 130835430.0,
+        "cpu_core/cycles/u": 32832287.0,
+        "cpu_core/branches/u": 21797819.0,
+        "cpu_core/branch-misses/u": 67402.0,
+        "task-clock": 9.75
+      },
+      {
+        "cpu_core/instructions/u": 130835432.0,
+        "cpu_core/cycles/u": 36508832.0,
+        "cpu_core/branches/u": 21797821.0,
+        "cpu_core/branch-misses/u": 67040.0,
+        "task-clock": 11.38
+      },
+      {
+        "cpu_core/instructions/u": 130835427.0,
+        "cpu_core/cycles/u": 32972389.0,
+        "cpu_core/branches/u": 21797816.0,
+        "cpu_core/branch-misses/u": 66432.0,
+        "task-clock": 10.19
+      },
+      {
+        "cpu_core/instructions/u": 130835426.0,
+        "cpu_core/cycles/u": 33148541.0,
+        "cpu_core/branches/u": 21797818.0,
+        "cpu_core/branch-misses/u": 67718.0,
+        "task-clock": 10.09
+      }
+    ],
+    "scalar_string": [
+      {
+        "cpu_core/instructions/u": 125974566.0,
+        "cpu_core/cycles/u": 32241598.0,
+        "cpu_core/branches/u": 21189252.0,
+        "cpu_core/branch-misses/u": 66842.0,
+        "task-clock": 9.5
+      },
+      {
+        "cpu_core/instructions/u": 125974537.0,
+        "cpu_core/cycles/u": 32301395.0,
+        "cpu_core/branches/u": 21189253.0,
+        "cpu_core/branch-misses/u": 65886.0,
+        "task-clock": 9.69
+      },
+      {
+        "cpu_core/instructions/u": 125974538.0,
+        "cpu_core/cycles/u": 32498530.0,
+        "cpu_core/branches/u": 21189254.0,
+        "cpu_core/branch-misses/u": 65772.0,
+        "task-clock": 9.95
+      },
+      {
+        "cpu_core/instructions/u": 125974538.0,
+        "cpu_core/cycles/u": 32105609.0,
+        "cpu_core/branches/u": 21189254.0,
+        "cpu_core/branch-misses/u": 65926.0,
+        "task-clock": 9.63
+      },
+      {
+        "cpu_core/instructions/u": 125974538.0,
+        "cpu_core/cycles/u": 32635355.0,
+        "cpu_core/branches/u": 21189254.0,
+        "cpu_core/branch-misses/u": 65871.0,
+        "task-clock": 9.89
+      },
+      {
+        "cpu_core/instructions/u": 125974538.0,
+        "cpu_core/cycles/u": 32953877.0,
+        "cpu_core/branches/u": 21189254.0,
+        "cpu_core/branch-misses/u": 65752.0,
+        "task-clock": 10.11
+      },
+      {
+        "cpu_core/instructions/u": 125974540.0,
+        "cpu_core/cycles/u": 33127619.0,
+        "cpu_core/branches/u": 21189253.0,
+        "cpu_core/branch-misses/u": 65317.0,
+        "task-clock": 10.3
+      }
+    ],
+    "no_text_upper_bound": [
+      {
+        "cpu_core/instructions/u": 99495536.0,
+        "cpu_core/cycles/u": 23173113.0,
+        "cpu_core/branches/u": 15416152.0,
+        "cpu_core/branch-misses/u": 37866.0,
+        "task-clock": 6.67
+      },
+      {
+        "cpu_core/instructions/u": 99495535.0,
+        "cpu_core/cycles/u": 22892667.0,
+        "cpu_core/branches/u": 15416151.0,
+        "cpu_core/branch-misses/u": 37955.0,
+        "task-clock": 6.9
+      },
+      {
+        "cpu_core/instructions/u": 99495538.0,
+        "cpu_core/cycles/u": 22918348.0,
+        "cpu_core/branches/u": 15416151.0,
+        "cpu_core/branch-misses/u": 37947.0,
+        "task-clock": 6.84
+      },
+      {
+        "cpu_core/instructions/u": 99495537.0,
+        "cpu_core/cycles/u": 22968984.0,
+        "cpu_core/branches/u": 15416153.0,
+        "cpu_core/branch-misses/u": 38248.0,
+        "task-clock": 6.73
+      },
+      {
+        "cpu_core/instructions/u": 99495537.0,
+        "cpu_core/cycles/u": 23012000.0,
+        "cpu_core/branches/u": 15416153.0,
+        "cpu_core/branch-misses/u": 37870.0,
+        "task-clock": 6.88
+      },
+      {
+        "cpu_core/instructions/u": 99495539.0,
+        "cpu_core/cycles/u": 23106242.0,
+        "cpu_core/branches/u": 15416152.0,
+        "cpu_core/branch-misses/u": 38065.0,
+        "task-clock": 6.95
+      },
+      {
+        "cpu_core/instructions/u": 99495537.0,
+        "cpu_core/cycles/u": 23109969.0,
+        "cpu_core/branches/u": 15416150.0,
+        "cpu_core/branch-misses/u": 38121.0,
+        "task-clock": 6.9
+      }
+    ],
+    "zig": [
+      {
+        "cpu_core/instructions/u": 19423025.0,
+        "cpu_core/cycles/u": 5237999.0,
+        "cpu_core/branches/u": 4503960.0,
+        "cpu_core/branch-misses/u": 22330.0,
+        "task-clock": 1.74
+      },
+      {
+        "cpu_core/instructions/u": 19423026.0,
+        "cpu_core/cycles/u": 5204494.0,
+        "cpu_core/branches/u": 4503961.0,
+        "cpu_core/branch-misses/u": 21597.0,
+        "task-clock": 1.75
+      },
+      {
+        "cpu_core/instructions/u": 19423026.0,
+        "cpu_core/cycles/u": 5186206.0,
+        "cpu_core/branches/u": 4503961.0,
+        "cpu_core/branch-misses/u": 21450.0,
+        "task-clock": 1.75
+      },
+      {
+        "cpu_core/instructions/u": 19423024.0,
+        "cpu_core/cycles/u": 5211408.0,
+        "cpu_core/branches/u": 4503960.0,
+        "cpu_core/branch-misses/u": 21238.0,
+        "task-clock": 1.81
+      },
+      {
+        "cpu_core/instructions/u": 19423024.0,
+        "cpu_core/cycles/u": 5202118.0,
+        "cpu_core/branches/u": 4503960.0,
+        "cpu_core/branch-misses/u": 21481.0,
+        "task-clock": 1.78
+      },
+      {
+        "cpu_core/instructions/u": 19423024.0,
+        "cpu_core/cycles/u": 5206568.0,
+        "cpu_core/branches/u": 4503959.0,
+        "cpu_core/branch-misses/u": 22178.0,
+        "task-clock": 1.77
+      },
+      {
+        "cpu_core/instructions/u": 19423026.0,
+        "cpu_core/cycles/u": 5315315.0,
+        "cpu_core/branches/u": 4503961.0,
+        "cpu_core/branch-misses/u": 21483.0,
+        "task-clock": 1.87
+      }
+    ],
+    "scan": [
+      {
+        "cpu_core/instructions/u": 35689351.0,
+        "cpu_core/cycles/u": 6724267.0,
+        "cpu_core/branches/u": 7479051.0,
+        "cpu_core/branch-misses/u": 14312.0,
+        "task-clock": 2.2
+      },
+      {
+        "cpu_core/instructions/u": 35689348.0,
+        "cpu_core/cycles/u": 6716968.0,
+        "cpu_core/branches/u": 7479051.0,
+        "cpu_core/branch-misses/u": 14573.0,
+        "task-clock": 2.21
+      },
+      {
+        "cpu_core/instructions/u": 35689347.0,
+        "cpu_core/cycles/u": 6594207.0,
+        "cpu_core/branches/u": 7479050.0,
+        "cpu_core/branch-misses/u": 14570.0,
+        "task-clock": 2.21
+      },
+      {
+        "cpu_core/instructions/u": 35689345.0,
+        "cpu_core/cycles/u": 6644367.0,
+        "cpu_core/branches/u": 7479048.0,
+        "cpu_core/branch-misses/u": 14377.0,
+        "task-clock": 2.15
+      },
+      {
+        "cpu_core/instructions/u": 35689347.0,
+        "cpu_core/cycles/u": 6625759.0,
+        "cpu_core/branches/u": 7479050.0,
+        "cpu_core/branch-misses/u": 14479.0,
+        "task-clock": 2.13
+      },
+      {
+        "cpu_core/instructions/u": 35689345.0,
+        "cpu_core/cycles/u": 6736746.0,
+        "cpu_core/branches/u": 7479048.0,
+        "cpu_core/branch-misses/u": 14570.0,
+        "task-clock": 2.19
+      },
+      {
+        "cpu_core/instructions/u": 35689346.0,
+        "cpu_core/cycles/u": 6662561.0,
+        "cpu_core/branches/u": 7479049.0,
+        "cpu_core/branch-misses/u": 14362.0,
+        "task-clock": 2.18
+      }
+    ],
+    "scan_once": [
+      {
+        "cpu_core/instructions/u": 27391745.0,
+        "cpu_core/cycles/u": 5460593.0,
+        "cpu_core/branches/u": 6557776.0,
+        "cpu_core/branch-misses/u": 14771.0,
+        "task-clock": 1.93
+      },
+      {
+        "cpu_core/instructions/u": 27391748.0,
+        "cpu_core/cycles/u": 5543987.0,
+        "cpu_core/branches/u": 6557779.0,
+        "cpu_core/branch-misses/u": 14871.0,
+        "task-clock": 1.99
+      },
+      {
+        "cpu_core/instructions/u": 27391750.0,
+        "cpu_core/cycles/u": 5426710.0,
+        "cpu_core/branches/u": 6557778.0,
+        "cpu_core/branch-misses/u": 14386.0,
+        "task-clock": 1.89
+      },
+      {
+        "cpu_core/instructions/u": 27391749.0,
+        "cpu_core/cycles/u": 5447686.0,
+        "cpu_core/branches/u": 6557780.0,
+        "cpu_core/branch-misses/u": 14824.0,
+        "task-clock": 1.88
+      },
+      {
+        "cpu_core/instructions/u": 27391747.0,
+        "cpu_core/cycles/u": 5457598.0,
+        "cpu_core/branches/u": 6557778.0,
+        "cpu_core/branch-misses/u": 14529.0,
+        "task-clock": 1.98
+      },
+      {
+        "cpu_core/instructions/u": 27391750.0,
+        "cpu_core/cycles/u": 5430909.0,
+        "cpu_core/branches/u": 6557778.0,
+        "cpu_core/branch-misses/u": 14845.0,
+        "task-clock": 1.9
+      },
+      {
+        "cpu_core/instructions/u": 27391746.0,
+        "cpu_core/cycles/u": 5538272.0,
+        "cpu_core/branches/u": 6557777.0,
+        "cpu_core/branch-misses/u": 14678.0,
+        "task-clock": 1.8
+      }
+    ],
+    "render": [
+      {
+        "cpu_core/instructions/u": 213009696.0,
+        "cpu_core/cycles/u": 53569816.0,
+        "cpu_core/branches/u": 36662443.0,
+        "cpu_core/branch-misses/u": 90586.0,
+        "task-clock": 16.29
+      },
+      {
+        "cpu_core/instructions/u": 213009690.0,
+        "cpu_core/cycles/u": 53439845.0,
+        "cpu_core/branches/u": 36662437.0,
+        "cpu_core/branch-misses/u": 91924.0,
+        "task-clock": 16.2
+      },
+      {
+        "cpu_core/instructions/u": 213009691.0,
+        "cpu_core/cycles/u": 53931574.0,
+        "cpu_core/branches/u": 36662438.0,
+        "cpu_core/branch-misses/u": 91128.0,
+        "task-clock": 16.31
+      },
+      {
+        "cpu_core/instructions/u": 213009692.0,
+        "cpu_core/cycles/u": 53499133.0,
+        "cpu_core/branches/u": 36662439.0,
+        "cpu_core/branch-misses/u": 91061.0,
+        "task-clock": 16.14
+      },
+      {
+        "cpu_core/instructions/u": 213009687.0,
+        "cpu_core/cycles/u": 55154644.0,
+        "cpu_core/branches/u": 36662437.0,
+        "cpu_core/branch-misses/u": 90624.0,
+        "task-clock": 16.33
+      },
+      {
+        "cpu_core/instructions/u": 213009687.0,
+        "cpu_core/cycles/u": 53608671.0,
+        "cpu_core/branches/u": 36662437.0,
+        "cpu_core/branch-misses/u": 91353.0,
+        "task-clock": 16.18
+      },
+      {
+        "cpu_core/instructions/u": 213009690.0,
+        "cpu_core/cycles/u": 53612770.0,
+        "cpu_core/branches/u": 36662437.0,
+        "cpu_core/branch-misses/u": 91322.0,
+        "task-clock": 16.15
+      }
+    ],
+    "zig_render": [
+      {
+        "cpu_core/instructions/u": 22748034.0,
+        "cpu_core/cycles/u": 6639914.0,
+        "cpu_core/branches/u": 5035451.0,
+        "cpu_core/branch-misses/u": 28243.0,
+        "task-clock": 2.33
+      },
+      {
+        "cpu_core/instructions/u": 22748035.0,
+        "cpu_core/cycles/u": 6644111.0,
+        "cpu_core/branches/u": 5035452.0,
+        "cpu_core/branch-misses/u": 27771.0,
+        "task-clock": 2.29
+      },
+      {
+        "cpu_core/instructions/u": 22748035.0,
+        "cpu_core/cycles/u": 6679643.0,
+        "cpu_core/branches/u": 5035452.0,
+        "cpu_core/branch-misses/u": 28061.0,
+        "task-clock": 2.34
+      },
+      {
+        "cpu_core/instructions/u": 22748034.0,
+        "cpu_core/cycles/u": 6659314.0,
+        "cpu_core/branches/u": 5035451.0,
+        "cpu_core/branch-misses/u": 28205.0,
+        "task-clock": 2.31
+      },
+      {
+        "cpu_core/instructions/u": 22748034.0,
+        "cpu_core/cycles/u": 6628682.0,
+        "cpu_core/branches/u": 5035451.0,
+        "cpu_core/branch-misses/u": 27909.0,
+        "task-clock": 2.37
+      },
+      {
+        "cpu_core/instructions/u": 22748036.0,
+        "cpu_core/cycles/u": 6618963.0,
+        "cpu_core/branches/u": 5035453.0,
+        "cpu_core/branch-misses/u": 27626.0,
+        "task-clock": 2.54
+      },
+      {
+        "cpu_core/instructions/u": 22748034.0,
+        "cpu_core/cycles/u": 6602095.0,
+        "cpu_core/branches/u": 5035452.0,
+        "cpu_core/branch-misses/u": 27772.0,
+        "task-clock": 2.36
+      }
+    ]
+  }
+}

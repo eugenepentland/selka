@@ -1,0 +1,281 @@
+//! Conservative bytecode inliner for callees that can neither fail nor allocate.
+//!
+//! Milestone 1 inlines only direct calls to leaf functions whose every
+//! instruction is drawn from an allow-list of operations that cannot trap and
+//! cannot allocate, and whose locals need no owned-resource cleanup. Such a call
+//! changes no trap trace, no GC root set, and no observable result, so no
+//! inline-frame metadata is required. A later round may extend this to trapping
+//! callees with an inline-frame table.
+const std = @import("std");
+const bytecode = @import("bytecode.zig");
+const typed = @import("typed.zig");
+const scalar = @import("qbe_scalar.zig");
+const Span = @import("source.zig").Span;
+
+/// Failures returned by the inliner.
+pub const Error = error{ OutOfMemory, InternalError };
+
+/// Largest callee body, in instructions, that may be inlined.
+const max_instructions = 32;
+/// Largest callee local table that may be inlined.
+const max_locals = 24;
+/// Nominal nesting bound for the owned-resource test; deeper types are refused.
+const max_type_depth = 16;
+
+/// One function's current instruction stream, local table and eligibility.
+const State = struct {
+    instructions: []const bytecode.Instruction,
+    locals: []const typed.Local,
+    eligible: bool = false,
+};
+
+/// The parts of an eligible callee one splice needs.
+const Callee = struct {
+    body: []const bytecode.Instruction,
+    locals: []const typed.Local,
+    params: usize,
+};
+
+/// Inline every eligible direct call in `program`, repeating until no function
+/// changes, and return the rewritten program or the original when nothing
+/// changed. Callees are processed before their callers, so a function that only
+/// calls other eligible functions becomes eligible itself.
+pub fn inlineProgram(allocator: std.mem.Allocator, program: bytecode.Program) Error!bytecode.Program {
+    const states = try allocator.alloc(State, program.functions.len);
+    for (program.functions, states) |function, *state| {
+        state.* = .{ .instructions = function.scope.instructions, .locals = function.scope.locals };
+    }
+    var changed = false;
+    var sweeping = true;
+    while (sweeping) {
+        sweeping = false;
+        for (program.functions, 0..) |_, index| {
+            states[index].eligible = eligible(program, index, states[index].instructions, states[index].locals);
+        }
+        for (states, 0..) |*state, index| {
+            // A caller that opens an arena keeps its watermark locals untouched,
+            // so it stays out of milestone 1.
+            if (containsArena(state.instructions)) continue;
+            if (try rewrite(allocator, program, states, index)) |next| {
+                state.* = next;
+                state.eligible = eligible(program, index, state.instructions, state.locals);
+                sweeping = true;
+                changed = true;
+            }
+        }
+    }
+    if (!changed) return program;
+    const functions = try allocator.alloc(bytecode.Function, program.functions.len);
+    for (program.functions, states, functions) |function, state, *out| {
+        out.* = function;
+        out.scope = .{ .locals = state.locals, .instructions = state.instructions };
+    }
+    return .{ .functions = functions, .main = program.main, .records = program.records };
+}
+
+/// Whether one function may be inlined at a call site: a non-entry, non-host,
+/// non-c_abi, non-conversion leaf within the size budget whose every instruction
+/// is on the no-fault, no-allocation allow-list and whose locals need no drop.
+fn eligible(program: bytecode.Program, index: usize, code: []const bytecode.Instruction, locals: []const typed.Local) bool {
+    if (index == @backingInt(program.main)) return false;
+    const function = program.functions[index];
+    const policy = function.policy;
+    // `constant` is an AST-only policy: constant declarations are evaluated at
+    // check time, so no lowered bytecode function carries it.
+    if (policy.host != null or policy.c_abi or policy.conversion) return false;
+    if (code.len == 0 or code.len > max_instructions) return false;
+    if (locals.len > max_locals) return false;
+    if (function.signature.parameter_count > locals.len) return false;
+    var returns = false;
+    for (code) |instruction| {
+        if (instruction.op == .ret) returns = true;
+        if (!allowed(instruction.op)) return false;
+    }
+    if (!returns) return false;
+    for (locals) |local| if (needsDrop(local.ty, program.records, 0)) return false;
+    return true;
+}
+
+/// The no-fault, no-allocation allow-list. `binary_integer` is admitted only for
+/// the integer forms `qbe_scalar.select` lowers to one instruction; aggregate
+/// forms and the checked `add`/`sub` that trap stay out.
+fn allowed(op: @FieldType(bytecode.Instruction, "op")) bool {
+    return switch (op) {
+        .push_i64,
+        .push_bool,
+        .push_unit,
+        .push_integer,
+        .load_local,
+        .move_local,
+        .store_local,
+        .drop_local,
+        .jump,
+        .jump_if_false,
+        .ret,
+        .cmp_i64,
+        .cmp_bool,
+        .cmp_enum,
+        .cmp_domain,
+        .not_bool,
+        .wrap_domain,
+        .unwrap_domain,
+        .get_field,
+        .array_length,
+        => true,
+        .binary_integer => |binary| binary.ty.isInteger() and scalar.select(binary.op, false) != null,
+        else => false,
+    };
+}
+
+/// Whether a type needs owned-resource cleanup, so a cloned local would be
+/// dropped by the caller's epilogue in addition to whatever the callee does.
+/// Managed collections are GC-owned and are deliberately not drop types.
+fn needsDrop(ty: typed.Type, records: []const typed.Record, depth: usize) bool {
+    if (depth > max_type_depth) return true;
+    if (ty.isFile()) return true;
+    if (!ty.isAggregate() or ty.recordIndex() >= records.len) return false;
+    const record = records[ty.recordIndex()];
+    if (record.managed or record.contract.callback != null) return false;
+    if (record.shape.resource != null) return true;
+    if (record.shape.hasRuntimeIdentity() and record.contract.move_only) return true;
+    if (record.shape.array) |array| return needsDrop(array.element, records, depth + 1);
+    if (record.shape.domain) |backing| return needsDrop(backing, records, depth + 1);
+    if (record.shape.variants) |variants| {
+        for (variants.cases) |case| if (case.payload) |payload| {
+            if (needsDrop(payload, records, depth + 1)) return true;
+        };
+    }
+    for (record.fields) |field| if (needsDrop(field.ty, records, depth + 1)) return true;
+    return false;
+}
+
+/// Whether a caller opens an arena region, which milestone 1 never inlines into.
+fn containsArena(code: []const bytecode.Instruction) bool {
+    for (code) |instruction| if (instruction.op == .begin_arena) return true;
+    return false;
+}
+
+/// The callee index one instruction may inline, or null when it stays a call.
+/// An owner-scoped callee is only spliced into a caller of the same owner: its
+/// `wrap`/`unwrap` operations are valid only inside that owner's scope.
+fn inlineTarget(program: bytecode.Program, states: []const State, caller: usize, instruction: bytecode.Instruction) ?usize {
+    const id = switch (instruction.op) {
+        .call => |callee| callee,
+        else => return null,
+    };
+    // The entry function is where `--max-frames`/`--max-steps` are most directly
+    // observable, and an inlined callee removes a counted frame; until inline
+    // expansions carry logical-depth accounting, nothing is spliced into it.
+    if (caller == @backingInt(program.main)) return null;
+    const index = @backingInt(id);
+    if (index >= states.len or index == @backingInt(program.main)) return null;
+    if (program.functions[index].policy.owner != null and program.functions[index].policy.owner != program.functions[caller].policy.owner) return null;
+    if (!states[index].eligible) return null;
+    if (states[index].instructions.len == 0) return null;
+    return index;
+}
+
+/// Rewrite one caller, or return null when it has no inlinable call site.
+fn rewrite(allocator: std.mem.Allocator, program: bytecode.Program, states: []const State, caller: usize) Error!?State {
+    const code = states[caller].instructions;
+    var any = false;
+    for (code) |instruction| if (inlineTarget(program, states, caller, instruction) != null) {
+        any = true;
+        break;
+    };
+    if (!any) return null;
+    // Phase one: the new pc of every old pc, sized by the splice each inlined
+    // call expands to. Phase two emits the same decision, so the two must agree.
+    const base = try allocator.alloc(usize, code.len);
+    var cursor: usize = 0;
+    for (code, 0..) |instruction, index| {
+        base[index] = cursor;
+        if (inlineTarget(program, states, caller, instruction)) |callee| {
+            cursor += program.functions[callee].signature.parameter_count + states[callee].instructions.len;
+        } else cursor += 1;
+    }
+    var instructions: std.ArrayList(bytecode.Instruction) = .empty;
+    var locals: std.ArrayList(typed.Local) = .empty;
+    try locals.appendSlice(allocator, states[caller].locals);
+    for (code, 0..) |instruction, index| {
+        if (inlineTarget(program, states, caller, instruction)) |callee| {
+            const view: Callee = .{
+                .body = states[callee].instructions,
+                .locals = states[callee].locals,
+                .params = program.functions[callee].signature.parameter_count,
+            };
+            try splice(allocator, view, instruction.span, base[index], &instructions, &locals);
+        } else try instructions.append(allocator, .{ .span = instruction.span, .op = try remapCaller(allocator, instruction.op, base) });
+    }
+    return .{ .instructions = try instructions.toOwnedSlice(allocator), .locals = try locals.toOwnedSlice(allocator) };
+}
+
+/// Replace one call with its argument stores followed by the callee's body,
+/// whose locals are cloned into fresh caller-side slots at `base`.
+fn splice(
+    allocator: std.mem.Allocator,
+    callee: Callee,
+    span: Span,
+    base: usize,
+    instructions: *std.ArrayList(bytecode.Instruction),
+    locals: *std.ArrayList(typed.Local),
+) Error!void {
+    const fresh = locals.items.len;
+    try locals.appendSlice(allocator, callee.locals);
+    var remaining = callee.params;
+    while (remaining > 0) {
+        remaining -= 1;
+        try instructions.append(allocator, .{ .span = span, .op = .{ .store_local = @fromBackingInt(fresh + remaining) } });
+    }
+    const body_base = base + callee.params;
+    const continuation = body_base + callee.body.len;
+    for (callee.body) |instruction| {
+        try instructions.append(allocator, .{ .span = instruction.span, .op = remapCallee(instruction.op, fresh, body_base, continuation) });
+    }
+}
+
+/// Shift one callee local slot into its fresh caller-side clone.
+fn shift(slot: typed.LocalId, base: usize) typed.LocalId {
+    return @fromBackingInt(base + @backingInt(slot));
+}
+
+/// Remap one spliced callee instruction: locals move to the clone range, branch
+/// targets move to the spliced body, and `ret` leaves for the continuation.
+fn remapCallee(op: @FieldType(bytecode.Instruction, "op"), fresh: usize, body_base: usize, continuation: usize) @FieldType(bytecode.Instruction, "op") {
+    return switch (op) {
+        .ret => .{ .jump = continuation },
+        .jump => |target| .{ .jump = body_base + target },
+        .jump_if_false => |target| .{ .jump_if_false = body_base + target },
+        .load_local => |slot| .{ .load_local = shift(slot, fresh) },
+        .store_local => |slot| .{ .store_local = shift(slot, fresh) },
+        .move_local => |slot| .{ .move_local = shift(slot, fresh) },
+        .drop_local => |slot| .{ .drop_local = shift(slot, fresh) },
+        else => op,
+    };
+}
+
+/// Remap one surviving caller instruction whose targets moved because a
+/// preceding call site expanded.
+fn remapCaller(allocator: std.mem.Allocator, op: @FieldType(bytecode.Instruction, "op"), base: []const usize) Error!@FieldType(bytecode.Instruction, "op") {
+    return switch (op) {
+        .jump => |target| .{ .jump = base[target] },
+        .jump_if_false => |target| .{ .jump_if_false = base[target] },
+        .try_result => |propagate| .{ .try_result = .{ .input = propagate.input, .output = propagate.output, .error_target = base[propagate.error_target] } },
+        .switch_variant => |dispatch| blk: {
+            const arms = try allocator.alloc(bytecode.SwitchArm, dispatch.arms.len);
+            for (dispatch.arms, arms) |arm, *out| out.* = .{ .target = base[arm.target], .slot = arm.slot };
+            break :blk .{ .switch_variant = .{ .ty = dispatch.ty, .arms = arms } };
+        },
+        else => op,
+    };
+}
+
+/// Count the direct call instructions still present in `program`; used by
+/// tests to observe inlining without reaching into the pass internals.
+pub fn callSites(program: bytecode.Program) usize {
+    var count: usize = 0;
+    for (program.functions) |function| for (function.scope.instructions) |instruction| {
+        if (instruction.op == .call) count += 1;
+    };
+    return count;
+}
