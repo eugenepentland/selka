@@ -45,6 +45,10 @@ pub const Batch = struct { iterations: u64, duration_ns: u64 };
 /// One execution result; expected-value comparison never executes guest code.
 /// `output` carries the guest stdout captured during the call, if any.
 pub const Outcome = struct { status: []const u8, actual: Value = .null, diagnostics: []const u8 = "", output: []const u8 = "", steps: u64 = 0 };
+/// One bounded child call and whether the wall-clock bound ended it. A caller
+/// that must tell a timeout from a trap needs the distinction `Outcome` alone
+/// cannot carry, because both leave no guest value.
+pub const Attempt = struct { outcome: Outcome, timed_out: bool = false };
 /// One sampled benchmark call. `actual` is the validated value tree produced by
 /// the sampled workload; `raw` preserves every timed batch for investigation.
 pub const BenchOutcome = struct {
@@ -83,6 +87,13 @@ pub const Executor = struct {
     }
     /// Validate named typed arguments and run one bounded child invocation.
     pub fn execute(self: Executor, function: Value, arguments: Value, limits: Limits) Error!Outcome {
+        return (try self.attempt(function, arguments, limits)).outcome;
+    }
+    /// Validate named typed arguments and run one bounded child invocation,
+    /// reporting whether the wall-clock bound ended the child. Test callers use
+    /// `execute`; an invocation boundary that must name a timeout separately
+    /// reads `timed_out`.
+    pub fn attempt(self: Executor, function: Value, arguments: Value, limits: Limits) Error!Attempt {
         if (!limitsValid(limits)) return error.InvalidTestLimits;
         var codec: wire.Codec = .{ .allocator = self.context.allocator, .types = self.types };
         defer codec.deinit();
@@ -94,13 +105,15 @@ pub const Executor = struct {
             .stdout_limit = .limited(32 * 1024 * 1024),
             .stderr_limit = .limited(1024 * 1024),
             .timeout = .{ .duration = .{ .raw = .fromMilliseconds(limits.timeout_ms), .clock = .awake } },
-        }) catch |err| return .{ .status = infrastructure_failure, .diagnostics = @errorName(err) };
+        }) catch |err| return .{ .outcome = .{ .status = infrastructure_failure, .diagnostics = @errorName(err) }, .timed_out = err == error.Timeout };
         if (fs.exitCode(result.term) != 0) return .{
-            .status = infrastructure_failure,
-            .diagnostics = try std.fmt.allocPrint(self.context.allocator, "NativeTestProcessFailed: {any}\n{s}", .{ result.term, result.stderr }),
+            .outcome = .{
+                .status = infrastructure_failure,
+                .diagnostics = try std.fmt.allocPrint(self.context.allocator, "NativeTestProcessFailed: {any}\n{s}", .{ result.term, result.stderr }),
+            },
         };
         const parsed = try self.parse(v.text(v.get(function, "result")), result.stdout, false);
-        return .{ .status = parsed.status, .actual = parsed.actual, .diagnostics = parsed.diagnostics, .output = parsed.output, .steps = parsed.steps };
+        return .{ .outcome = .{ .status = parsed.status, .actual = parsed.actual, .diagnostics = parsed.diagnostics, .output = parsed.output, .steps = parsed.steps } };
     }
     /// Sample one validated copied-value call. Compilation is never timed; the
     /// child warms up, calibrates a batch size, then reports raw timed batches.

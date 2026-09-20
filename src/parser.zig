@@ -1,5 +1,7 @@
 //! Recursive descent for statements; precedence climbing for expressions.
 const syntax_code = "E_SYNTAX";
+const expression_code = "E_EXPRESSION";
+const expected_expression = "expected an expression";
 const eExportRemoved = "E_EXPORT_REMOVED";
 const eInternalName = "E_INTERNAL_NAME";
 const eDefaultArgument = "E_DEFAULT_ARGUMENT";
@@ -51,10 +53,30 @@ const RequirementCollections = struct {
     operations: std.ArrayList(ast.Operation) = .empty,
     names: std.ArrayList(ast.BoundReference) = .empty,
 };
-/// A declaration form whose Python spelling this language rejects at a known
-/// point. The enum is what a call site names; `declaration_hints` carries the
-/// table row it resolves to.
-pub const HintForm = enum { union_cases, module_constant, method, from_import };
+/// A declaration or statement form whose Python spelling this language rejects
+/// at a known point. The enum is what a call site names; `declaration_hints`
+/// carries the table row it resolves to.
+pub const HintForm = enum {
+    union_cases,
+    module_constant,
+    method,
+    from_import,
+    ternary,
+    tuple,
+    is_none,
+    chained_assignment,
+    set_literal,
+    exceptions,
+    match_literal,
+    del_statement,
+    string_prefix,
+    main_guard,
+    option_unwrap,
+    nested_comprehension,
+    dict_comprehension,
+    generator_argument,
+    walrus,
+};
 /// One hinted declaration form: the idiom the friction classifier files the
 /// shape under, the primary message, and the accepted spelling the note names.
 pub const DeclarationHint = struct { form: HintForm, idiom: []const u8, message: []const u8, accepted: []const u8 };
@@ -67,6 +89,21 @@ pub const declaration_hints = [_]DeclarationHint{
     .{ .form = .module_constant, .idiom = "module-constant", .message = "a bare assignment declares no module-level binding", .accepted = "declare it as a constant: const MAX: int = 42" },
     .{ .form = .method, .idiom = "method", .message = "a record or class body declares fields, not methods", .accepted = "declare a top-level function taking the record: def norm1(p: Point) -> int" },
     .{ .form = .from_import, .idiom = "from-import", .message = "a from-import is not a declaration", .accepted = "import the module and declare a record: import dataclasses" },
+    .{ .form = .ternary, .idiom = "ternary", .message = "a conditional expression is not part of the language", .accepted = "write an if/else statement that assigns the same name" },
+    .{ .form = .tuple, .idiom = "tuple", .message = "a comma-separated target list declares no binding", .accepted = "bind one name per statement and use a temporary variable; declare a record to return several values" },
+    .{ .form = .is_none, .idiom = "is-none", .message = "`is` is not an operator", .accepted = "compare the value with `== None`, or match it: `case Some(value)` and `case None`" },
+    .{ .form = .chained_assignment, .idiom = "chained-assign", .message = "a chained assignment declares no binding", .accepted = "assign one name per statement: `x = 21` first, then `y = 21`" },
+    .{ .form = .set_literal, .idiom = "set-literal", .message = "a set literal is not a collection this language has", .accepted = "use a dict literal keyed by the value: `{1: True, 2: True}`" },
+    .{ .form = .exceptions, .idiom = "exceptions", .message = "a try statement is not part of the language", .accepted = "return `Result` and match it: `case Ok(value)` and `case Err(reason)`" },
+    .{ .form = .match_literal, .idiom = "match-literal", .message = "a case names a union, enum or result case, not a literal", .accepted = "compare literals with `if`/`elif`: `if x == 1:` then `elif x == 3:`" },
+    .{ .form = .del_statement, .idiom = "del", .message = "a del statement is not part of the language", .accepted = "remove with `_ = xs.pop(index)` for a list or `_ = d.pop(key)` for a dictionary" },
+    .{ .form = .string_prefix, .idiom = "string-prefix", .message = "a string prefix is not part of a literal", .accepted = "drop the prefix and write the escape in an ordinary quoted string" },
+    .{ .form = .main_guard, .idiom = "main-guard", .message = "a module has no `__name__` guard", .accepted = "delete the guard: `mylang run` calls `def main()` directly" },
+    .{ .form = .option_unwrap, .idiom = "option-unwrap", .message = "`unwrap` is a keyword here, not a method", .accepted = "extract with `match`: `case Ok(value)` or `case Some(value)`; `?` propagates a `Result`" },
+    .{ .form = .nested_comprehension, .idiom = "nested-comprehension", .message = "a comprehension takes exactly one generator", .accepted = "write the loops out and append: `for row in grid:` then `for x in row: flat.append(x)`" },
+    .{ .form = .dict_comprehension, .idiom = "dict-comprehension", .message = "a dict comprehension is not provided", .accepted = "build the dictionary with a loop: `for x in range(4): d[x] = x * x`" },
+    .{ .form = .generator_argument, .idiom = "generator-argument", .message = "a generator expression is not provided", .accepted = "materialize a list instead: `any([x > 2 for x in xs])`" },
+    .{ .form = .walrus, .idiom = "walrus", .message = "the walrus operator is not part of the language", .accepted = "assign the name on its own line first, then test it" },
 };
 /// The primary message for a case list whose next case lacks its separating
 /// comma. `union` reads from the hint table so the two can never drift.
@@ -75,6 +112,19 @@ fn caseCommaMessage(head: []const u8) []const u8 {
     if (std.mem.eql(u8, head, "result")) return "result cases are separated by commas";
     return declaration_hints[@backingInt(HintForm.union_cases)].message;
 }
+/// Accepted spellings for Python forms whose rejection is not `E_SYNTAX`, so
+/// they have no row in the shared classifier table. Each one names a construct
+/// the language accepts today for the same intent; nothing here guesses.
+const loop_else_accepted = "use a flag: assign it before the loop, set it before `break`, and test it after";
+const nested_def_accepted = "declare the function at the top level and call it from the body";
+const match_expression_accepted = "assign the value in each branch of an if/elif statement";
+const power_accepted = "multiply in a loop: `total = 1` then `for i in range(exponent): total = total * base`";
+const shift_accepted = "use `shift_left(value, count)` or `shift_right(value, count)`";
+const for_else_message = "a loop has no `else` clause";
+const nested_def_message = "a function body declares statements, not another function";
+const match_expression_message = "`match` is a statement, not an expression";
+const power_message = "`**` is not an operator";
+const shift_message = "`<<` and `>>` are not operators";
 /// Token cursor and allocator-backed syntax builder with bounded recursive nesting.
 pub const Parser = struct {
     src: @import("source.zig").Source,
@@ -139,6 +189,100 @@ pub const Parser = struct {
     fn hintHere(self: *Parser, form: HintForm) diagnostic.Error {
         return self.hint(form, self.current().span, declaration_hints[@backingInt(form)].message, self.current().span);
     }
+    /// Report one Python form whose rejection is not `E_SYNTAX`, so it has no row
+    /// in the shared declaration table: the code and span stay the ones the
+    /// failure already produced and only the counted note is added.
+    fn alternative(self: *Parser, code: []const u8, message: []const u8, accepted: []const u8) diagnostic.Error {
+        const span = self.current().span;
+        return self.sink.failRelated(code, span, message, .{ .span = span, .message = accepted, .role = .alternative });
+    }
+    /// One expression-position Python form with the accepted spelling it has
+    /// instead of the grammar production that is missing.
+    const ExpressionForm = struct { message: []const u8, accepted: []const u8 };
+    /// The Python form standing where an expression belongs: a nested `def`, a
+    /// `match` expression, or the second `*`/`<` of `**`/`<<`. Every other token
+    /// keeps the ordinary "expected an expression" failure.
+    fn pythonExpressionFailure(self: *Parser, token: lex.Token) diagnostic.Error {
+        const form: ?ExpressionForm = switch (token.tag) {
+            .kw_def => .{ .message = nested_def_message, .accepted = nested_def_accepted },
+            .kw_match => .{ .message = match_expression_message, .accepted = match_expression_accepted },
+            .star => if (self.previousTag() == .star) .{ .message = power_message, .accepted = power_accepted } else null,
+            .lt => if (self.previousTag() == .lt) .{ .message = shift_message, .accepted = shift_accepted } else null,
+            else => null,
+        };
+        if (form) |shape| return self.alternative(expression_code, shape.message, shape.accepted);
+        return self.sink.fail(expression_code, token.span, expected_expression);
+    }
+    /// Whether the statement's terminator is already there: an explicit `;`, or
+    /// the line break, closing dedent or end of file accepted in its place.
+    fn terminatorAhead(self: *Parser) bool {
+        return self.current().tag == .semicolon or lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos);
+    }
+    /// Where the token before the cursor ends, or zero at the start of a file.
+    fn previousEnd(self: *Parser) usize {
+        return if (self.cursor.pos == 0) 0 else self.tokens[self.cursor.pos - 1].span.end;
+    }
+    /// The tag of the token before the cursor, or the end-of-file tag at the
+    /// start of a file.
+    fn previousTag(self: *Parser) lex.Tag {
+        return if (self.cursor.pos == 0) .eof else self.tokens[self.cursor.pos - 1].tag;
+    }
+    /// The Python statement shape standing where the terminator belongs, or null
+    /// when the statement simply has no terminator. Only a statement whose
+    /// terminator is already missing is asked, so every form here is a program
+    /// the parser rejects whatever message it prints.
+    fn statementShapeHint(self: *Parser, first: lex.Token) ?HintForm {
+        const token = self.current();
+        if (first.tag == .ident) {
+            const text = self.src.text(first.span);
+            if (std.mem.eql(u8, text, "try") and token.tag == .indent) return .exceptions;
+            if (std.mem.eql(u8, text, "del")) return .del_statement;
+            // A prefix the lexer does not know (`r"..."`, `u"..."`) leaves the
+            // prefix as a name and the literal right against it.
+            if ((token.tag == .bytes or token.tag == .format) and self.previousEnd() == token.span.start) return .string_prefix;
+        }
+        return switch (token.tag) {
+            .kw_if => .ternary,
+            .equal => .chained_assignment,
+            else => null,
+        };
+    }
+    /// One statement's terminator, or the hint that names the Python statement
+    /// shape standing in its place: a conditional expression, a tuple target or
+    /// return list, a chained assignment, `del`, `try:` or a string prefix.
+    fn statementEnd(self: *Parser, first: lex.Token) diagnostic.Error!lex.Token {
+        if (!self.terminatorAhead()) {
+            if (self.current().tag == .comma) {
+                const message = if (first.tag == .kw_return) "a comma-separated return list is not one value" else declaration_hints[@backingInt(HintForm.tuple)].message;
+                return self.hint(.tuple, self.current().span, message, self.current().span);
+            }
+            if (self.statementShapeHint(first)) |form| return self.hintHere(form);
+        }
+        return self.expect(.semicolon);
+    }
+    /// The `indent` that opens a suite, or the hint that names the Python form
+    /// standing in its place. A missing indent is already a failure, so the hint
+    /// only chooses the message.
+    fn blockOpen(self: *Parser) diagnostic.Error!lex.Token {
+        const token = self.current();
+        if (token.tag == .ident and std.mem.eql(u8, self.src.text(token.span), "is")) return self.hintHere(.is_none);
+        return self.expect(.indent);
+    }
+    /// The `)` that closes a call's arguments, or the hint that names a generator
+    /// argument standing in its place. A missing `)` is already a failure, and a
+    /// `for` after a call that already closed itself (`[f(x) for x in xs]`) never
+    /// reaches this point.
+    fn callClose(self: *Parser) diagnostic.Error!lex.Token {
+        if (self.current().tag == .kw_for) return self.hintHere(.generator_argument);
+        return self.closeWithHint(.rparen);
+    }
+    /// A closing delimiter, or the hint that names a conditional expression
+    /// standing where the close belongs. Every token but the one expected is
+    /// already a failure here, so the hint only chooses the message.
+    fn closeWithHint(self: *Parser, comptime tag: lex.Tag) diagnostic.Error!lex.Token {
+        if (self.current().tag == .kw_if) return self.hintHere(.ternary);
+        return self.expect(tag);
+    }
     /// Whether the cursor sits on an identifier in `previous`'s column: the next
     /// case of a union, enum or result written without the separating comma.
     fn caseAtSameColumn(self: *Parser, previous: Span) bool {
@@ -147,9 +291,11 @@ pub const Parser = struct {
         return self.src.locate(token.span.start).column == self.src.locate(previous.start).column;
     }
     /// The Python declaration head at the cursor that this language spells
-    /// differently, if any: a bare module-level assignment or a `from` import.
+    /// differently, if any: a bare module-level assignment, a `from` import, or
+    /// the `if __name__` guard a script wraps its entry point in.
     fn pythonDeclarationHead(self: *Parser) ?HintForm {
         const token = self.current();
+        if (token.tag == .kw_if) return .main_guard;
         if (token.tag != .ident) return null;
         const next = self.tokens[self.cursor.pos + 1].tag;
         if (next == .equal or next == .colon) return .module_constant;
@@ -1042,7 +1188,7 @@ pub const Parser = struct {
     fn block(self: *Parser, owner: ?Span) diagnostic.Error!ast.StatementId {
         try self.enter();
         defer self.cursor.depth -= 1;
-        const open = try self.expect(.indent);
+        const open = try self.blockOpen();
         // A function body's first string statement documents the function; any
         // other block keeps the ordinary discarded-expression reading.
         if (owner) |declaration| try self.recordDocstring(declaration);
@@ -1115,6 +1261,7 @@ pub const Parser = struct {
         if (self.take(.kw_while)) {
             const condition = try self.conditionExpression();
             const body = try self.block(null);
+            if (self.current().tag == .kw_else) return self.alternative(expression_code, for_else_message, loop_else_accepted);
             return self.addStatement(.{ .span = .join(first.span, self.syntax.statements.items[@backingInt(body)].span), .data = .{ .loop = .{ .condition = condition, .body = body } } });
         }
         var implicit_discard = false;
@@ -1177,7 +1324,7 @@ pub const Parser = struct {
                 break :expression .{ .discard = try self.expression(0) };
             },
         };
-        const end = try self.expect(.semicolon);
+        const end = try self.statementEnd(first);
         return self.addStatement(.{ .span = .join(first.span, end.span), .implicit_discard = implicit_discard, .data = data });
     }
     /// Recognize `range(end)` or `range(start, end)` as an iteration source and return its
@@ -1223,6 +1370,7 @@ pub const Parser = struct {
             } else if (second_name != null) return self.sink.fail(eIteration, node.span, "two iteration names require enumerate or zip");
         }
         const body = try self.block(null);
+        if (self.current().tag == .kw_else) return self.alternative(expression_code, for_else_message, loop_else_accepted);
         const span: Span = .join(first.span, self.syntax.statements.items[@backingInt(body)].span);
         if (start) |range_start| {
             if (second_name != null) return self.sink.fail(eIteration, span, "range requires one iteration name");
@@ -1346,11 +1494,15 @@ pub const Parser = struct {
                 _ = self.take(.lparen);
                 if (self.take(.rparen)) break :group try self.append(.{ .span = .join(token.span, self.tokens[self.cursor.pos - 1].span), .data = .unit });
                 const inner = try self.expression(0);
-                const close = try self.expect(.rparen);
+                if (self.current().tag == .colon and self.tokens[self.cursor.pos + 1].tag == .equal) return self.hintHere(.walrus);
+                const close = try self.closeWithHint(.rparen);
                 self.syntax.nodes.items[@backingInt(inner)].span = .join(token.span, close.span);
                 break :group inner;
             },
-            else => return self.sink.fail("E_EXPRESSION", token.span, "expected an expression"),
+            // A `def` or `match` in expression position, and the second `*` or
+            // `<` of a `**` or `<<`, name their accepted spelling; every other
+            // token keeps the plain rejection.
+            else => return self.pythonExpressionFailure(token),
         };
         while (true) {
             if (self.cursor.delimiters == 0 and self.current().tag != .dedent and self.current().tag != .eof) {
@@ -1416,6 +1568,9 @@ pub const Parser = struct {
         return self.append(.{ .span = span, .data = .{ .name = token.span } });
     }
     fn parseMemberSuffix(self: *Parser, left: ast.NodeId) diagnostic.Error!ast.NodeId {
+        // `unwrap` is the keyword that opens a domain, so it is never a member
+        // name; the value it would extract comes from `match` or `?`.
+        if (self.current().tag == .kw_unwrap) return self.hintHere(.option_unwrap);
         const name: lex.Token = .{ .tag = .ident, .span = try self.declaredName() };
         if (self.take(.lparen)) {
             var arguments: std.ArrayList(ast.NodeId) = .empty;
@@ -1423,7 +1578,7 @@ pub const Parser = struct {
                 try arguments.append(self.arena.allocator(), try self.expression(0));
                 if (!self.take(.comma) or self.current().tag == .rparen) break;
             };
-            const close = try self.expect(.rparen);
+            const close = try self.callClose();
             return self.append(.{
                 .span = .join(self.syntax.nodes.items[@backingInt(left)].span, close.span),
                 .data = .{ .method_call = .{ .base = left, .name = name.span, .arguments = try arguments.toOwnedSlice(self.arena.allocator()) } },
@@ -1464,6 +1619,7 @@ pub const Parser = struct {
         const name = try self.expect(.ident);
         _ = try self.expect(.kw_in);
         const input = try self.expression(0);
+        if (self.current().tag == .kw_for) return self.hintHere(.nested_comprehension);
         const filter = if (self.take(.kw_if)) try self.expression(0) else null;
         const close = try self.expect(.rbracket);
         const src: ast.Comprehension.Source = if (try self.rangeBounds(input)) |bounds|
@@ -1531,8 +1687,12 @@ pub const Parser = struct {
         var entries: std.ArrayList(ast.NodeId) = .empty;
         while (self.current().tag != .rbrace) {
             try entries.append(self.arena.allocator(), try self.expression(0));
+            // A comma where the `:` belongs is a set literal, and a `for` after
+            // the value is a dict comprehension; neither shape parses today.
+            if (self.current().tag == .comma) return self.hintHere(.set_literal);
             _ = try self.expect(.colon);
             try entries.append(self.arena.allocator(), try self.expression(0));
+            if (self.current().tag == .kw_for) return self.hintHere(.dict_comprehension);
             if (!self.take(.comma)) break;
         }
         const close = try self.expect(.rbrace);
@@ -1728,6 +1888,10 @@ pub const Parser = struct {
     const Pattern = struct { ty: Span, name: Span, bindings: []const ?Span = &.{} };
     fn matchPattern(self: *Parser) diagnostic.Error!Pattern {
         const head = self.current();
+        // A case names a union, enum or result case — or `_`, or `None`. A
+        // literal here is Python's literal-pattern spelling, which matches by
+        // value instead: `if`/`elif` is what this language accepts.
+        if (head.tag != .ident and head.tag != .kw_none) return self.hintHere(.match_literal);
         const first = if (self.take(.kw_none)) head.span else try self.nominalTypeName();
         const contextual = self.current().tag != .dot;
         var pattern: Pattern = .{
@@ -1866,7 +2030,7 @@ pub const Parser = struct {
             const type_arguments = try self.squareTypeArguments();
             _ = try self.expect(.lparen);
             const arguments = try self.callArguments();
-            const close = try self.expect(.rparen);
+            const close = try self.callClose();
             return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{
                 .owner = owner,
                 .type_arguments = type_arguments,
@@ -1880,7 +2044,7 @@ pub const Parser = struct {
             const name = try self.typeName();
             _ = try self.expect(.lparen);
             const arguments = try self.callArguments();
-            const close = try self.expect(.rparen);
+            const close = try self.callClose();
             return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{ .name = name, .arguments = arguments.values, .argument_names = arguments.names, .argument_markers = arguments.markers } } });
         }
         self.cursor.pos += 1;
@@ -1894,7 +2058,7 @@ pub const Parser = struct {
         const callable_name = token.tag == .ident or token.tag == .kw_len or token.tag == .kw_replace;
         if (callable_name and self.sameExpressionLine() and self.take(.lparen)) {
             const arguments = try self.callArguments();
-            const close = try self.expect(.rparen);
+            const close = try self.callClose();
             return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{ .owner = owner, .name = name, .arguments = arguments.values, .argument_names = arguments.names, .argument_markers = arguments.markers } } });
         }
         return self.append(.{ .span = name, .data = switch (token.tag) {

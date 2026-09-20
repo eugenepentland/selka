@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -62,10 +63,24 @@ def validate(root: str, filt: str | None) -> str | None:
     return filt
 
 
+def zig_program() -> str:
+    """The Zig driver to run: the checkout's ``zigw`` wrapper when it is present.
+
+    ``zigw`` pins ``ZIG_GLOBAL_CACHE_DIR`` inside the checkout, which is the only
+    writable path under the agent sandbox. A bare ``zig`` dies there with
+    ``failed to check cache: manifest_create ReadOnlyFileSystem``, because its
+    default global cache lives under ``$HOME``.
+    """
+    wrapper = ROOT / "zigw"
+    if wrapper.is_file() and os.access(wrapper, os.X_OK):
+        return str(wrapper)
+    return "zig"
+
+
 def command(root: str, filt: str | None) -> list[str]:
     """The supported ``zig build`` command line for one request."""
     target = "test" if root == FULL else FOCUSED[root]
-    argv = ["zig", "build", target, "--summary", "all"]
+    argv = [zig_program(), "build", target, "--summary", "all"]
     if filt is not None:
         argv.append("-Dtest-filter=" + filt)
     return argv

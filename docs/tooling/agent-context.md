@@ -87,12 +87,22 @@ command never reuses edges from an earlier successful check as though they
 described the current source. A partial answer is a statement about the snapshot
 it names, not about the last version that happened to compile.
 
+## Source confirmation
+
+The envelope names the exact source identities the answer was assembled from, and
+the command re-reads every one of them through the same provider the project was
+loaded from before it prints anything. An answer therefore describes the snapshot
+it names or it is rejected: a file that changed while the answer was being
+assembled — an edit between the load and the response — is reported as a `stale`
+snapshot instead of mixing two versions, and a file that can no longer be read at
+all is reported as a failure to confirm rather than as a changed source.
+
 ## Exit statuses
 
 | Exit | Meaning |
 | --- | --- |
 | 0 | A complete or partial answer. |
-| 2 | A usage error, an ambiguous selector (a name matching several declarations), a selector matching nothing, a `--context-bytes` below the documented minimum, or a source change detected while the answer was being assembled. |
+| 2 | A usage error, an ambiguous selector (a name matching several declarations), a selector matching nothing, a `--context-bytes` below the documented minimum, a source change detected while the answer was being assembled, or a source that could not be re-read to confirm the answer. |
 
 An incomplete project is not a failure of this command: the partial answer is
 the answer, so it exits 0. The rejections above are requests the command could

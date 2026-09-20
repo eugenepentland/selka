@@ -1,0 +1,12 @@
+#!/bin/sh
+# Zig wrapper for the DSH sandbox.
+#
+# The sandbox bind-mounts this checkout read-write and everything else
+# read-only, and gives every command a *fresh* tmpfs at /tmp, so Zig's default
+# global cache under $HOME is unwritable and /tmp does not survive one command.
+# Pin the global cache to the main checkout's, which is inside the writable
+# bind mount and persists. The local cache stays per-worktree in ./.zig-cache.
+here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+ZIG_GLOBAL_CACHE_DIR="${ZIG_GLOBAL_CACHE_DIR:-$here/../../.zig-global-cache}"
+export ZIG_GLOBAL_CACHE_DIR
+exec zig "$@"

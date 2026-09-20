@@ -24,6 +24,14 @@ pub const Project = struct {
     /// invocation; selective lowering consumes it instead of checking again.
     compile: ?*Compile = null,
 };
+/// The answer to one checked-facts request: the compiler's checked graph, or
+/// the located diagnostics it refused the project with.
+pub const Facts = union(enum) {
+    /// The `native-test-graph-v3` payload the checked project published.
+    manifest: []const u8,
+    /// The compiler's own located diagnostics for a refused project.
+    rejected: []const u8,
+};
 /// Environment variable naming a file to append one line per compiler child.
 /// Gated so ordinary runs pay nothing; used by native-test acceptance traces.
 pub const trace_variable = "MYLANG_TEST_TRACE";
@@ -45,9 +53,20 @@ pub const Session = struct {
     work: ?*invalidation.Work = null,
     /// Pin sources and tools before checking or consulting successful-result receipts.
     pub fn init(context: fs.Context, opts: options.Options) Error!Session {
-        const compiler = try std.Io.Dir.cwd().realPathFileAlloc(context.io, "/proc/self/exe", context.allocator);
+        var session = try initFrontend(context, opts);
+        errdefer context.remove(session.temporary);
         const zig = try context.executable(opts.zig);
         const qbe = try context.executable(opts.qbe);
+        session.tools = .{ .zig = zig, .qbe = qbe };
+        session.hashes[1] = try context.stamp(zig);
+        session.hashes[2] = try context.stamp(qbe);
+        return session;
+    }
+    /// Resolve the frontend paths, snapshot and temporary directory without
+    /// resolving zig or qbe. A caller that only needs checked facts — as
+    /// `mylang invoke --describe` does — must not require the native toolchain.
+    pub fn initFrontend(context: fs.Context, opts: options.Options) Error!Session {
+        const compiler = try std.Io.Dir.cwd().realPathFileAlloc(context.io, "/proc/self/exe", context.allocator);
         const directory = try context.absolute(opts.cache);
         // Capture before creating cache files beneath a test source directory.
         const source = try snapshot.captureExcluding(context, opts.source, directory);
@@ -58,8 +77,8 @@ pub const Session = struct {
             .context = context,
             .options = opts,
             .compiler = compiler,
-            .tools = .{ .zig = zig, .qbe = qbe },
-            .hashes = .{ bundled.compiler_identity, try context.stamp(zig), try context.stamp(qbe) },
+            .tools = .{ .zig = "", .qbe = "" },
+            .hashes = .{ bundled.compiler_identity, "", "" },
             .environment = try environment.capture(context),
             .directory = directory,
             .temporary = temporary,
@@ -162,6 +181,17 @@ pub const Session = struct {
     /// Checked facts via `native-test-graph`: full project validity, schema and
     /// per-function dependency fingerprints with no QBE lowering or emission.
     pub fn facts(self: Session, source: []const u8) Error!Project {
+        return switch (try self.factsText(source)) {
+            .rejected => error.SourceRejected,
+            .manifest => |bytes| self.projectFromManifest(source, bytes),
+        };
+    }
+    /// Checked facts as their raw `native-test-graph-v3` payload, or the
+    /// compiler's own located diagnostics when the project does not check. A
+    /// caller that must report the source-mapped failure rather than a bare
+    /// status code reads the rejected text instead of running the frontend
+    /// again.
+    pub fn factsText(self: Session, source: []const u8) Error!Facts {
         var argv: std.ArrayList([]const u8) = .empty;
         defer argv.deinit(self.context.allocator);
         try argv.appendSlice(self.context.allocator, &.{ self.compiler, "native-test-graph", source });
@@ -171,8 +201,11 @@ pub const Session = struct {
         const output = try self.context.capture(argv.items);
         self.observe(output.stderr);
         const code = fs.exitCode(output.term);
-        if (code != 0) return mapExit(code);
-        return self.projectFromManifest(source, output.stdout);
+        if (code != 0) return switch (mapExit(code)) {
+            error.SourceRejected, error.ProjectConfigurationFailed, error.ProjectPolicyRejected => .{ .rejected = output.stderr },
+            else => |err| err,
+        };
+        return .{ .manifest = output.stdout };
     }
     /// Validate one materialized project graph through the shared compiler
     /// query caches without lowering or emitting. A green result here is the

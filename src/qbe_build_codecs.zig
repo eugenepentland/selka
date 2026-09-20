@@ -66,7 +66,7 @@ fn methods(w: *std.Io.Writer, shapes: shape.Shapes, callbacks: []const Value) sh
     try w.writeAll("default:return co_bad(\"InternalError\");}}\n");
 }
 fn methodArgument(w: *std.Io.Writer, shapes: shape.Shapes, name: []const u8) shape.Error!void {
-    if (try shapes.size(name) > 4096) {
+    if (try shapes.byAddress(name)) {
         try w.writeAll("input");
     } else if (try shapes.scalar(name)) {
         try w.print("co_word(input,{d})", .{try shapes.index(name)});

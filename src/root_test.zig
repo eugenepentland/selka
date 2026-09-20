@@ -12,6 +12,8 @@ test {
     _ = @import("doc_coverage_command.zig");
     _ = @import("doctest_command.zig");
     _ = @import("reference_test.zig");
+    _ = @import("context_test.zig");
+    _ = @import("invoke_test.zig");
 
     _ = @import("host_declarations_test.zig");
     _ = @import("native_execute.zig");
@@ -168,6 +170,7 @@ test {
     _ = @import("qbe_test.zig");
     _ = @import("qbe_text_test.zig");
     _ = @import("qbe_literals_test.zig");
+    _ = @import("aggref_abi_test.zig");
 }
 
 test {

@@ -826,6 +826,11 @@
       "kind": "tooling",
       "summary": "`mylang context <entry.my> --symbol 'module::name'` or `--at 'path:line:column'` answers one `agent-context-v1` object about one declaration from the facts `mylang index-project`, `mylang list-interfaces`, `mylang tests-for` and `mylang api-diff` already publish: declaration, contract with fact status, types, dependencies, tests and optional changes in a fixed priority order inside a `--context-bytes` budget, with per-section `omissions`, a `continuation` query, and a labeled partial answer on an incomplete project.",
       "doc": "docs/tooling/agent-context.md#mylang-context"
+    },
+    "native-invocation": {
+      "kind": "tooling",
+      "summary": "`mylang invoke <entry.my> --function 'module::name' --describe` reports the selected export's checked argument and result contract, wire representation, effects, required capabilities and invocation eligibility without running it, and `--input=FILE` executes exactly one call in a bounded native child and writes one `native-invocation-v1` JSON object on stdout, where a returned `Result.Err` is a completed call and traps, timeouts and malformed requests are distinguished from it.",
+      "doc": "docs/tooling/invocation.md#mylang-invoke"
     }
   },
   "unsupported": [

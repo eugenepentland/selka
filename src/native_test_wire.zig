@@ -1,6 +1,7 @@
 //! Typed JSON and copied native value trees share the public language schema.
 const std = @import("std");
 const v = @import("qbe_build_value.zig");
+const build_io = @import("qbe_build_io.zig");
 const Value = std.json.Value;
 const enumeration_kind = "enumeration";
 /// Failures in typed fixture validation or native result reconstruction.
@@ -206,4 +207,48 @@ test "typed fixture integers and nominal trees roundtrip without guest execution
     try std.testing.expectError(error.InvalidTestValue, codec.encode("u64", .{ .string = "-1" }, 0));
     try std.testing.expectError(error.UnsupportedTestType, codec.encode("capability", .null, 0));
     try std.testing.expectError(error.InvalidTestArguments, codec.arguments(.null, .{ .integer = 1 }));
+}
+
+/// The installed compiler the build names beside `MYLANG_QBE`, plus the project
+/// root the three-level install path (`zig-out/bin|focus/qbe`) sits under.
+const Tools = struct { compiler: []const u8, root: []const u8 };
+
+fn tools(allocator: std.mem.Allocator) !Tools {
+    const qbe = std.testing.environ.getPosix("MYLANG_QBE") orelse return error.ToolNotFound;
+    const bin = std.fs.path.dirname(qbe) orelse return error.ToolNotFound;
+    const out = std.fs.path.dirname(bin) orelse return error.ToolNotFound;
+    const root = std.fs.path.dirname(out) orelse return error.ToolNotFound;
+    return .{ .compiler = try std.fs.path.join(allocator, &.{ bin, "mylang" }), .root = try allocator.dupe(u8, root) };
+}
+
+/// Run one checked-in case fixture through the installed compiler against a
+/// fresh cache, then require the runner's case count and its failure count.
+fn runFixture(allocator: std.mem.Allocator, resolved: Tools, stem: []const u8, expected_passes: []const u8) !void {
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const entry = try std.fs.path.join(a, &.{ resolved.root, "tests", "native", try std.fmt.allocPrint(a, "{s}.my", .{stem}) });
+    const cases = try std.fs.path.join(a, &.{ resolved.root, "tests", "native", try std.fmt.allocPrint(a, "{s}.cases.json", .{stem}) });
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const cache = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const result = try std.process.run(a, std.testing.io, .{
+        .argv = &.{ resolved.compiler, "test", entry, "--cases", cases, "--cache-dir", cache },
+        .cwd = .inherit,
+    });
+    if (build_io.exitCode(result.term) != 0) try std.Io.File.stderr().writeStreamingAll(std.testing.io, result.stderr);
+    try std.testing.expectEqual(@as(u8, 0), build_io.exitCode(result.term));
+    try std.testing.expect(std.mem.indexOf(u8, result.stdout, expected_passes) != null);
+    try std.testing.expect(std.mem.indexOf(u8, result.stdout, "0 failed") != null);
+}
+
+// spec: QBE-AGGREF-5
+test "a record, an array, a nested record, a zero-length and a large argument round-trip through mylang test" {
+    const a = std.testing.allocator;
+    const resolved = try tools(a);
+    defer a.free(resolved.compiler);
+    defer a.free(resolved.root);
+    try runFixture(a, resolved, "aggref_arguments", "7 passed");
+    try std.testing.expect(resolved.root.len != 0);
+    try std.testing.expect(std.mem.endsWith(u8, resolved.compiler, "mylang"));
 }

@@ -93,6 +93,14 @@ pub const Shapes = struct {
         }
         try w.writeByte('}');
     }
+    /// Whether one argument of this type crosses the native ABI as the address
+    /// of the caller's storage, exactly as the compiler's emitter decided it.
+    /// The manifest records the decision, so the adapter never re-derives the
+    /// QBE-AGGREF-1 rule from the type's shape.
+    pub fn byAddress(self: Shapes, name: []const u8) Error!bool {
+        const value = v.get(self.types[try self.index(name)], "by_address");
+        return if (value == .null) false else v.boolean(value);
+    }
     /// Declare a compiled function with large-result and usesVector-argument conventions.
     pub fn declaration(self: Shapes, w: *std.Io.Writer, symbol: []const u8, result: []const u8, parameters: []const Value) Error!void {
         const large = try self.size(result) > 4096;
@@ -105,7 +113,7 @@ pub const Shapes = struct {
         } else for (parameters) |parameter| {
             try w.writeAll(", ");
             const name = v.text(parameter);
-            if (try self.size(name) > 4096) try w.writeAll("const void *") else try self.ctype(w, name);
+            if (try self.byAddress(name)) try w.writeAll("const void *") else try self.ctype(w, name);
         }
         try w.writeAll(");\n");
     }
@@ -116,7 +124,7 @@ pub const Shapes = struct {
             if (self.codecs) {
                 try w.print("co_word(co_arguments[{d}],{d})", .{ i, try self.index(name) });
             } else try w.print("wire_word(wire_arguments[{d}],&wire_types[{d}])", .{ i, try self.index(name) });
-        } else if (packed_value or try self.size(name) > 4096) {
+        } else if (packed_value or try self.byAddress(name)) {
             if (packed_value) try w.writeAll("(uint64_t)(uintptr_t)");
             try w.print("{s}_arguments[{d}]", .{ prefix, i });
         } else {

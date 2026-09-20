@@ -326,6 +326,51 @@ Write `heartbeat,` and `count: int,`. The parser still stops at the first syntax
 error; these four messages are targeted at the shapes above rather than general
 error recovery.
 
+## Statement forms Python spells differently
+
+The same targeted messaging covers the everyday statement shapes a Python first
+attempt reaches for. Each rejection names the accepted spelling it has instead,
+as an `alternative` note on the diagnostic:
+
+| rejected spelling | accepted spelling |
+| --- | --- |
+| `y = 42 if x > 0 else 0` | an `if`/`else` statement that assigns `y` |
+| `a, b = b, a` | one name per statement, with a temporary variable |
+| `return a // b, a % b` | a declared `record` carrying both values |
+| `x = y = 21` | `x = 21` then `y = 21` |
+| `del xs[0]` | `_ = xs.pop(index)`; for a dictionary `_ = d.pop(key)` |
+| `try:` / `except` | `Result` and `match`: `case Ok(value)` / `case Err(reason)` |
+| `r"a\nb"` | an ordinary quoted string with the escape written out |
+| `if r is None:` | `r == None`, or `match r:` with `case None` |
+| `{1, 2, 2}` | a dict literal keyed by the value: `{1: True, 2: True}` |
+| `{x: x * x for x in xs}` | a `for` loop that assigns `d[x]` |
+| `[x for row in grid for x in row]` | nested `for` loops with `append` |
+| `any(x > 2 for x in xs)` | `any([x > 2 for x in xs])` |
+| `case 1:` | `if x == 1:` / `elif x == 3:` |
+| `v = parse(s).unwrap()` | `match` on the `Result`, or `?` to propagate it |
+| `if (n := len(xs)) > 2:` | `n = len(xs)` on its own line, then the test |
+| `if __name__ == "__main__":` | nothing: `mylang run` calls `def main()` |
+
+```mylang
+# doc: expect-error E_SYNTAX
+def main() -> int:
+    y = 42 if True else 0
+    return y
+```
+
+```mylang
+# doc: expect-error E_SYNTAX
+def main() -> int:
+    xs = [1, 2, 3]
+    del xs[0]
+    return len(xs)
+```
+
+A loop `else`, a nested `def`, a `match` used as an expression, `**` and `<<`
+keep their own `E_EXPRESSION` code and name the construct to write instead: a
+flag tested after the loop, a top-level function, an `if`/`elif` assignment,
+a multiplication loop, and `shift_left(value, count)`.
+
 ## One command shape
 
 Use `mylang run <entry.my>` for both standalone files and module entries. The

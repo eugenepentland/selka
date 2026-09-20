@@ -1,7 +1,7 @@
 {
  "version": "idiom-suite-v1",
  "measured_on": "2026-09-20",
- "binary": "sha256:e76021f7f7fcf3325855ac20a9d7213d689261a4788ab7ff263c86f8b9e43a94 zig-out/bin/mylang compiler:b5f4b4caff9eadc661bccf4c907bccdbb28f2c458bc5ca4b1870bcb83bdad636",
+ "binary": "sha256:b3265ab0679338dc2683766f11f105f133b648e1d6aa33fa1e4696b7e0cf46ec zig-out/bin/mylang compiler:d6bc5756105a656c5002a40d139263fe3992f71fd451654c368e617171566658",
  "oracle_rule": "cpython: run with runpy, call main(), compare exit & 0xFF and stdout; rejected-by-design: valid Python the language rejects on purpose, counts only toward C3; mylang-only: uses Option/Result/record/union, no CPython oracle, needs an expect directive",
  "probes": [
   {

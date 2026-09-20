@@ -1,0 +1,75 @@
+module tool
+
+# A callable library with no `main`: `mylang invoke` checks a private copy with
+# the same stub entry the native guest-test runner uses, so a tool can be called
+# without editing it or adding a dummy program entry.
+
+
+public record Span:
+    low: i64
+    high: i64
+
+
+public record Sample:
+    label: i64
+    span: Span
+    weights: [3]i64
+
+
+public result Ratio:
+    ok: i64,
+    err: i64
+
+
+public def answer() -> i64 effects():
+    return 42
+
+
+public def scale(value: i64, factor: i64) -> i64 effects():
+    return value * factor
+
+
+public def byte_span(first: u8, second: u8) -> i64 effects():
+    return int(second) - int(first)
+
+
+public def ratio(numerator: i64, denominator: i64) -> Ratio effects():
+    if denominator == 0:
+        return Err(-1)
+    return Ok(numerator // denominator)
+
+
+public def integer_divide(numerator: i64, denominator: i64) -> i64 effects():
+    return numerator // denominator
+
+
+public def count_up(limit: i64) -> i64 effects():
+    total = 0
+    while total < limit:
+        total += 1
+    return total
+
+
+public def announce(out: Stream, value: i64) -> i64 effects(output):
+    out.print("value", value)
+    return value
+
+
+public def grow(seed: i64) -> Sample effects():
+    return Sample(label=seed, span=Span(low=seed, high=seed * 2), weights=[seed, seed + 1, seed + 2])
+
+
+public def sample_label(sample: Sample) -> i64 effects():
+    return sample.label
+
+
+def hidden(value: i64) -> i64 effects():
+    return value
+
+
+public def identity[T](value: T) -> T effects():
+    return value
+
+
+public def probe_filesystem(fs: Filesystem) -> i64 effects(filesystem):
+    return 0

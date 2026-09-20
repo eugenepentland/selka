@@ -16,6 +16,14 @@ const context_symbol_prefix = "--symbol=";
 const context_at_prefix = "--at=";
 /// `context --context-bytes=N` prefix.
 const context_bytes_prefix = "--context-bytes=";
+/// `context --symbol NAME` spelling, which takes the next argument.
+const context_symbol_flag = "--symbol";
+/// `context --at PATH:LINE:COLUMN` spelling, which takes the next argument.
+const context_at_flag = "--at";
+/// `context --context-bytes N` spelling, which takes the next argument.
+const context_bytes_flag = "--context-bytes";
+/// `context --against FILE` spelling, which takes the next argument.
+const context_against_flag = "--against";
 /// Wall-clock ceiling forwarded to the guest runtime, which parses the same flag.
 const timeout_prefix = "--timeout=";
 /// Shared internal session failure name for an over-long request line.
@@ -46,6 +54,7 @@ const Reporting = struct {
 const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--json] [--force]\n" ++
     "       mylang test <entry.my|directory> --bench GLOB [--bench-output FILE] [--bench-baseline FILE] [--bench-policy FILE]\n" ++
     "       mylang bench-promote --candidate FILE --approver NAME --reason TEXT [--baseline FILE] [--output FILE] [--revision REV]\n" ++
+    "       mylang invoke <entry.my> --function 'module::name' (--describe | --input=FILE) [--format=json]\n" ++
     "       mylang build <file.my> (-o <output> | --run) [--help]\n" ++
     "       mylang doc-coverage [<repo-root>] (every implemented feature and standard export needs a documented example)\n       mylang " ++
     "doctest [<repo-root>] [--filter GLOB] [--report PATH] [--jobs N] [--verbose] (run every fenced documentation example)\n       mylang " ++
@@ -229,6 +238,7 @@ fn dispatch(process: std.process.Init) !u8 {
     if (args.len >= 2 and std.mem.eql(u8, args[1], "doc-coverage")) return @import("doc_coverage_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "doctest")) return @import("doctest_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "reference")) return @import("reference_command.zig").run(@import("mylang"), process, args[2..]);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "invoke")) return @import("invoke_command.zig").run(process, args[2..]);
     // The C backend is gone. Answer its command names with a migration that
     // points at the QBE replacements rather than a bare usage dump.
     if (args.len >= 2 and (std.mem.eql(u8, args[1], "emit-c") or std.mem.eql(u8, args[1], "emit-project-c"))) {
@@ -746,7 +756,9 @@ fn parseArgs(allocator: std.mem.Allocator, args: []const []const u8) ArgError!Pa
     if (args.len < 2) return error.Usage;
     const command = std.meta.stringToEnum(Command, args[0]) orelse return error.Usage;
     var parser: ArgumentParser = .{ .command = command, .allocator = allocator };
-    for (args[1..]) |arg| {
+    var index: usize = 1;
+    while (index < args.len) : (index += 1) {
+        const arg = args[index];
         if (parser.after_delimiter) {
             try parser.appendRuntime(arg);
             continue;
@@ -783,6 +795,9 @@ fn parseArgs(allocator: std.mem.Allocator, args: []const []const u8) ArgError!Pa
         if (try parser.qualityOption(arg)) continue;
         if (try parser.grantOption(arg)) continue;
         if (try parser.executionOption(arg)) continue;
+        // `context` also accepts its `--flag value` spelling, which consumes the
+        // next argument; every other flag keeps the `--flag=value` form.
+        if (try parser.contextSeparateValue(args, &index)) continue;
         if (try parser.discoveryOption(arg)) continue;
         if (std.mem.startsWith(u8, arg, policy_prefix)) {
             if (command != .@"check-policy" or parser.policy != null or arg.len == policy_prefix.len) return error.Usage;
@@ -1070,34 +1085,73 @@ const ArgumentParser = struct {
         return true;
     }
 
-    /// `context` switches: exactly one of `--symbol=NAME` or
-    /// `--at=PATH:LINE:COLUMN`, an optional total byte budget, and an optional
-    /// `api-diff` baseline. `--format` accepts only the JSON the command
-    /// publishes today, so an unsupported format is a usage error rather than a
-    /// silently different rendering.
+    /// `context` switches, in both `--flag=value` and `--flag value` spellings:
+    /// exactly one of `--symbol=NAME` or `--at=PATH:LINE:COLUMN`, an optional
+    /// total byte budget, and an optional `api-diff` baseline. `--format`
+    /// accepts only the JSON the command publishes today, so an unsupported
+    /// format is a usage error rather than a silently different rendering.
     fn contextOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
         if (self.command != .context) return false;
         if (std.mem.startsWith(u8, arg, context_symbol_prefix)) {
-            if (self.context_symbol != null or arg.len == context_symbol_prefix.len) return error.Usage;
-            self.context_symbol = arg[context_symbol_prefix.len..];
+            return contextValue(&self.context_symbol, arg[context_symbol_prefix.len..]);
         } else if (std.mem.startsWith(u8, arg, context_at_prefix)) {
-            if (self.context_at != null or arg.len == context_at_prefix.len) return error.Usage;
-            self.context_at = arg[context_at_prefix.len..];
+            return contextValue(&self.context_at, arg[context_at_prefix.len..]);
         } else if (std.mem.startsWith(u8, arg, context_bytes_prefix)) {
-            const text = arg[context_bytes_prefix.len..];
-            const requested = std.fmt.parseInt(usize, text, 10) catch return error.Usage;
-            if (requested < language.context.minimum_context_bytes) return error.Usage;
-            self.context_bytes = requested;
+            return self.setContextBytes(arg[context_bytes_prefix.len..]);
         } else if (std.mem.startsWith(u8, arg, lint_against_prefix)) {
-            if (self.context_against != null or arg.len == lint_against_prefix.len) return error.Usage;
-            self.context_against = arg[lint_against_prefix.len..];
+            return contextValue(&self.context_against, arg[lint_against_prefix.len..]);
         } else if (std.mem.startsWith(u8, arg, "--format=")) {
             if (!std.mem.eql(u8, arg["--format=".len..], "json")) return error.Usage;
         } else return false;
         return true;
     }
 
-    fn finish(self: *ArgumentParser) ArgError!Parsed {        if (self.saw_work and !self.discovery.approximate) return error.Usage;
+    /// Store one `context` selector or baseline value; a repeat or an empty
+    /// value is a usage error.
+    fn contextValue(slot: *?[]const u8, text: []const u8) error{Usage}!bool {
+        if (text.len == 0 or slot.* != null) return error.Usage;
+        slot.* = text;
+        return true;
+    }
+
+    /// The `--context-bytes` value: a decimal count at or above the documented
+    /// minimum.
+    fn setContextBytes(self: *ArgumentParser, text: []const u8) error{Usage}!bool {
+        const requested = std.fmt.parseInt(usize, text, 10) catch return error.Usage;
+        if (requested < language.context.minimum_context_bytes) return error.Usage;
+        self.context_bytes = requested;
+        return true;
+    }
+
+    /// Consume the value that follows a `context` switch written with a space
+    /// instead of `=`. Returns false when `args[index.*]` is not one of those
+    /// switches, so the caller keeps parsing it as an ordinary argument, and
+    /// reports usage when the switch has no value left to take.
+    fn contextSeparateValue(self: *ArgumentParser, args: []const []const u8, index: *usize) error{Usage}!bool {
+        const flag = args[index.*];
+        const which: enum { symbol, at, bytes, against } = if (std.mem.eql(u8, flag, context_symbol_flag))
+            .symbol
+        else if (std.mem.eql(u8, flag, context_at_flag))
+            .at
+        else if (std.mem.eql(u8, flag, context_bytes_flag))
+            .bytes
+        else if (std.mem.eql(u8, flag, context_against_flag))
+            .against
+        else
+            return false;
+        if (self.command != .context or index.* + 1 >= args.len) return error.Usage;
+        index.* += 1;
+        const text = args[index.*];
+        return switch (which) {
+            .symbol => contextValue(&self.context_symbol, text),
+            .at => contextValue(&self.context_at, text),
+            .bytes => self.setContextBytes(text),
+            .against => contextValue(&self.context_against, text),
+        };
+    }
+
+    fn finish(self: *ArgumentParser) ArgError!Parsed {
+        if (self.saw_work and !self.discovery.approximate) return error.Usage;
         if (self.command == .@"fmt-project" and !self.format_check) return error.Usage;
         if (self.command == .@"check-policy" and self.policy == null) return error.Usage;
         if (self.command == .@"tests-for" and self.subject == null) return error.Usage;
@@ -1569,11 +1623,21 @@ fn contextSelector(parsed: Parsed) language.context.Selector {
 /// `context`: one bounded `agent-context-v1` answer about one declaration. A
 /// compilation that did not check still answers — `unavailable` carries the
 /// reason the resolved relationships are missing. The answer goes to stdout
-/// alone so it stays parseable; diagnostics keep going to stderr.
-fn contextCommand(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation, unavailable: ?[]const u8) !u8 {
-    var request = contextOptions(init, parsed) catch |err| switch (err) {
+/// alone so it stays parseable; diagnostics keep going to stderr. The files are
+/// re-read through the provider the project was loaded from before the answer is
+/// published, so a source that changed while it was assembled is rejected
+/// instead of contributing facts from two versions.
+/// An unreadable `--against` file is a usage-level failure: the request named a
+/// baseline this process cannot read, so no answer can be classified against it.
+fn baselineFailure(init: Context) !u8 {
+    try init.text("context: cannot read or classify the baseline\n");
+    return 2;
+}
+
+fn contextCommand(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation, unavailable: ?[]const u8, files: *ModuleFiles) !u8 {
+    var request = contextOptions(init, parsed, files) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
-        error.BaselineUnreadable => return 2,
+        error.BaselineUnreadable => return baselineFailure(init),
     };
     defer request.release(init.gpa);
     request.options.unavailable_reason = unavailable;
@@ -1584,10 +1648,10 @@ fn contextCommand(init: Context, parsed: Parsed, compilation: *language.project_
 
 /// `context` when body syntax failed before any declaration merged: the lexical
 /// candidates answer names its selector and publishes no resolved relationship.
-fn contextPartial(init: Context, parsed: Parsed, project: *language.project.Project) !u8 {
-    var request = contextOptions(init, parsed) catch |err| switch (err) {
+fn contextPartial(init: Context, parsed: Parsed, project: *language.project.Project, files: ?*ModuleFiles) !u8 {
+    var request = contextOptions(init, parsed, files) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
-        error.BaselineUnreadable => return 2,
+        error.BaselineUnreadable => return baselineFailure(init),
     };
     defer request.release(init.gpa);
     request.options.unavailable_reason = "body syntax failed; only lexical top-level candidates were recovered";
@@ -1607,8 +1671,18 @@ const ContextRequest = struct {
     }
 };
 
-fn contextOptions(init: Context, parsed: Parsed) error{ OutOfMemory, BaselineUnreadable }!ContextRequest {
-    var request: ContextRequest = .{ .options = .{ .entry = parsed.path, .selector = contextSelector(parsed), .context_bytes = parsed.context.bytes } };
+fn contextOptions(init: Context, parsed: Parsed, files: ?*ModuleFiles) error{ OutOfMemory, BaselineUnreadable }!ContextRequest {
+    var request: ContextRequest = .{
+        .options = .{
+            .entry = parsed.path,
+            .selector = contextSelector(parsed),
+            .context_bytes = parsed.context.bytes,
+            // The provider the project was loaded from, so the answer re-reads the
+            // same files before it is published. `null` when the caller had none:
+            // the answer is then confirmed only against the bytes it holds.
+            .sources = if (files) |provider| .{ .context = provider, .read = ModuleFiles.read } else null,
+        },
+    };
     const path = parsed.context.against orelse return request;
     const loaded = std.Io.Dir.cwd().readFileAlloc(init.io, path, init.gpa, .limited(64 * 1024 * 1024)) catch return error.BaselineUnreadable;
     request.baseline_bytes = loaded;
@@ -1625,8 +1699,9 @@ fn emitContext(init: Context, answer: language.context.Answer) !u8 {
     };
 }
 
-/// Map a context failure to a status: allocation propagates, a rejected budget
-/// or an unreadable baseline is a usage failure, and anything else is internal.
+/// Map a context failure to a status: allocation propagates, a rejected budget,
+/// an unreadable baseline or an unconfirmable source snapshot is a usage
+/// failure, and anything else is internal.
 fn contextError(init: Context, err: language.context.Error) !u8 {
     switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
@@ -1636,6 +1711,10 @@ fn contextError(init: Context, err: language.context.Error) !u8 {
         },
         error.InvalidBaseline => {
             try init.text("context: cannot read or classify the baseline\n");
+            return 2;
+        },
+        error.RecheckUnavailable => {
+            try init.text("context: cannot re-read every source to confirm the answer\n");
             return 2;
         },
         else => return error.InternalError,
@@ -1665,6 +1744,18 @@ fn entryLocation(init: Context, path: []const u8) !EntryLocation {
     }
     const basename = std.fs.path.basename(path);
     return .{ .root = std.fs.path.dirname(path) orelse ".", .name = basename[0 .. basename.len - 3] };
+}
+
+/// The stages a receipt pass actually executes. A selective
+/// `emit-project-qbe --select-file` lowers only its closure in the emission
+/// helper, so the whole-project receipt pass must not claim to have lowered.
+fn receiptStages(parsed: Parsed, executed: [std.meta.tags(invalidation.Stage).len]bool) [std.meta.tags(invalidation.Stage).len]bool {
+    var stages = executed;
+    if (parsed.command == .@"emit-project-qbe" and parsed.select_file != null) {
+        stages[@backingInt(invalidation.Stage.lower_function)] = false;
+        stages[@backingInt(invalidation.Stage.emit_fragment)] = false;
+    }
+    return stages;
 }
 
 fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_cache.Cache, verdict: ?*language.check_cache.Cache, functions: ?*language.semantic_cache.Cache) !u8 {
@@ -1700,7 +1791,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     // publishes those declared contracts for provider validation.
     if (parsed.command == .@"list-interfaces") return listInterfaces(init, &project, parsed, cache, frontend);
     const output = if (parsed.command != .@"list-modules") result: {
-        var index = (try buildIndex(init, &project, cache, frontend)) orelse return partialNavigation(init, &project, parsed);
+        var index = (try buildIndex(init, &project, cache, frontend)) orelse return partialNavigation(init, &project, parsed, &files);
         init.timings.begin("source_merge", false);
         var compilation = try language.project_compile.Compilation.init(&index);
         init.timings.end();
@@ -1719,7 +1810,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
             else => return err,
         };
         recordCheckWork(init, functions, semantic_before, compilation.program);
-        if (parsed.command == .context) return contextCommand(init, parsed, &compilation, unchecked_reason);
+        if (parsed.command == .context) return contextCommand(init, parsed, &compilation, unchecked_reason, &files);
         init.timings.counts.ast_nodes = compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len;
         init.timings.counts.typed_nodes = compilation.program.?.nodes.len + compilation.program.?.statements.len;
         // The internal native-test compile session keeps this one checked
@@ -1735,11 +1826,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         const executed = executedStages(parsed.command);
         // A selective `emit-project-qbe --select-file` lowers only its closure in
         // the emission helper; the whole-project receipt pass must not lower first.
-        var receipt_stages = executed;
-        if (parsed.command == .@"emit-project-qbe" and parsed.select_file != null) {
-            receipt_stages[@backingInt(invalidation.Stage.lower_function)] = false;
-            receipt_stages[@backingInt(invalidation.Stage.emit_fragment)] = false;
-        }
+        const receipt_stages = receiptStages(parsed, executed);
         // A command that lowers must do so before the receipt is built: emitted
         // fragments are real inputs to the lower/emit/link explanation, not an
         // empty table that can only compare equal.
@@ -1959,8 +2046,8 @@ fn emitRequestedOutput(init: Context, compilation: *language.project_compile.Com
     };
 }
 
-fn partialNavigation(init: Context, project: *language.project.Project, parsed: Parsed) !u8 {
-    if (parsed.command == .context) return contextPartial(init, parsed, project);
+fn partialNavigation(init: Context, project: *language.project.Project, parsed: Parsed, files: ?*ModuleFiles) !u8 {
+    if (parsed.command == .context) return contextPartial(init, parsed, project, files);
     if (parsed.command != .@"index-project") return 1;
     const output = try language.navigation_partial.render(init.gpa, project, try compilerIdentity(init.io));
     defer init.gpa.free(output);
@@ -2026,7 +2113,7 @@ fn loadModules(init: Context, project: *language.project.Project, files: *Module
 }
 
 fn listInterfaces(init: Context, project: *language.project.Project, parsed: Parsed, cache: ?*language.syntax_cache.Cache, frontend: ?*language.frontend_cache.Cache) !u8 {
-    var index = (try buildIndex(init, project, cache, frontend)) orelse return partialNavigation(init, project, parsed);
+    var index = (try buildIndex(init, project, cache, frontend)) orelse return partialNavigation(init, project, parsed, null);
     if (parsed.contracts) {
         const contracts = index.renderContracts(init.gpa) catch |err| switch (err) {
             error.SourceError, error.IncompleteProject => {

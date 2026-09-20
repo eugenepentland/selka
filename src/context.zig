@@ -57,6 +57,7 @@ const key_analysis = "analysis";
 const key_declaration = "declaration";
 const key_id = "id";
 const key_name = "name";
+const key_contract = "contract";
 
 /// Which declaration, or source position, the caller asked about.
 pub const Selector = union(enum) {
@@ -79,6 +80,11 @@ pub const Options = struct {
     baseline: ?Baseline = null,
     /// Why resolved relationships are unavailable, when the project is incomplete.
     unavailable_reason: ?[]const u8 = null,
+    /// The provider the project was loaded from. When present, the answer is
+    /// confirmed against the files as they are now before it is published, so a
+    /// source that changed while the answer was assembled is rejected instead of
+    /// contributing facts from two versions.
+    sources: ?project.Provider = null,
 };
 
 /// The command's verdict, which decides the process status: `ok` and `partial`
@@ -88,13 +94,20 @@ pub const Status = enum { ok, partial, ambiguous, missing, stale };
 /// A rendered answer and the verdict that goes with it.
 pub const Answer = struct { bytes: []u8, status: Status };
 
-/// Failures a context run reports.
-pub const Error = error{ OutOfMemory, InternalError, IncompleteProject, NavigationLimit, BudgetTooSmall, InvalidBaseline };
+/// Failures a context run reports. `RecheckUnavailable` is separate from a
+/// changed source: the answer could not be confirmed, rather than being known
+/// to describe another version.
+pub const Error = error{ OutOfMemory, InternalError, IncompleteProject, NavigationLimit, BudgetTooSmall, InvalidBaseline, RecheckUnavailable };
 
 /// Smallest budget the envelope and its identity metadata fit in.
 pub const minimum_context_bytes = 1024;
 /// Budget used when `--context-bytes` is absent.
 pub const default_context_bytes = 8192;
+/// Largest source the confirmation pass re-reads through the provider.
+const recheck_source_limit = 64 * 1024 * 1024;
+/// The path prefix of a module that ships inside the compiler, which no file
+/// change can reach.
+const embedded_source_prefix = "@stdlib/";
 
 /// How much of the answer one assembly attempt may include. A `null` section cap
 /// omits the section; a number keeps at most that many of its records.
@@ -107,9 +120,14 @@ const Caps = struct {
     changes: ?usize = unlimited,
     /// False drops the selected declaration's source body.
     snippet: bool = true,
-    /// False publishes identity and verdict only, for a rejected answer.
-    detail: bool = true,
+    /// How much of the body this attempt publishes.
+    detail: Detail = .full,
 };
+
+/// The three depths of an answer once records stop fitting: the sections, the
+/// identity and verdict with the omissions that name what the sections would
+/// have carried, and finally the identity alone for a rejected answer.
+const Detail = enum { full, identity, bare };
 
 /// The list-valued sections in the fixed priority order the answer publishes
 /// them. `declaration` and `contract` are always present and never dropped.
@@ -219,7 +237,7 @@ fn run(allocator: std.mem.Allocator, compilation: *pc.Compilation, identity: rec
         session.diagnosis.reason = options.unavailable_reason orelse "bodies were not checked; declarations and diagnostics only";
     }
     if (session.diagnosis.status == .ok or session.diagnosis.status == .partial) try collectRecords(&session);
-    if (try staleChanged(session.arena, &compilation.index.project.*, facts.snapshot)) {
+    if (try sourcesChanged(&session, session.arena, &compilation.index.project.*, facts.snapshot)) {
         return .{ .bytes = try rejectedAnswer(&session), .status = .stale };
     }
     return assembleAnswer(&session);
@@ -244,7 +262,7 @@ fn runPartial(allocator: std.mem.Allocator, loaded: *const project.Project, iden
         .status = .partial,
         .reason = options.unavailable_reason orelse "body syntax failed; only lexical top-level candidates were recovered",
     };
-    if (try staleChanged(session.arena, loaded, snapshot)) {
+    if (try sourcesChanged(&session, session.arena, loaded, snapshot)) {
         return .{ .bytes = try rejectedAnswer(&session), .status = .stale };
     }
     return assembleAnswer(&session);
@@ -360,30 +378,63 @@ fn pathMatches(loaded: []const u8, requested: []const u8) bool {
 fn innermostSymbol(session: *Session, path: []const u8, offset: usize) Error!?*const navigation.Symbol {
     const facts = session.source.facts orelse return null;
     var best: ?*const navigation.Symbol = null;
+    var best_width: usize = unlimited;
     for (facts.symbols) |*item| {
         if (!pathMatches(item.location.path, path)) continue;
-        if (!covers(item.location, offset)) continue;
-        if (best) |current| {
-            if (spanWidth(item.location) >= spanWidth(current.location)) continue;
-        }
+        if (!covers(session, item, offset)) continue;
+        const width = spanWidth(item, session);
+        if (width >= best_width) continue;
         best = item;
+        best_width = width;
     }
     return best;
 }
 
-fn covers(location: navigation.Location, offset: usize) bool {
-    return location.start <= offset and offset <= location.end;
+/// Whether a declaration's source span contains one position. `navigation`
+/// locates a declaration by its name, but the span a caller means by "inside this
+/// declaration" runs to the end of its body: the snippet `navigation` publishes
+/// starts at the name and stops at the body end, so the coverage is the name plus
+/// the snippet rather than the name token alone. A type, field or local declares
+/// no body and keeps the span `navigation` gave it.
+fn covers(session: *const Session, symbol: *const navigation.Symbol, offset: usize) bool {
+    return symbol.location.start <= offset and offset <= coverageEnd(session, symbol);
 }
 
-fn spanWidth(location: navigation.Location) usize {
-    return location.end -| location.start;
+/// The last byte a declaration covers.
+fn coverageEnd(session: *const Session, symbol: *const navigation.Symbol) usize {
+    if (symbol.context.snippet.len == 0) return symbol.location.end;
+    const shown = symbol.location.start +| symbol.context.snippet.len;
+    if (!symbol.context.snippet_truncated) return @max(shown, symbol.location.end);
+    // A snippet longer than the excerpt limit stops short of the body end, so the
+    // merged syntax supplies the end the excerpt was cut off from.
+    return bodyEnd(session, symbol) orelse @max(shown, symbol.location.end);
+}
+
+/// The original end of the function declaration whose name starts where `symbol`
+/// starts, for a declaration whose published snippet was cut short of its body.
+fn bodyEnd(session: *const Session, symbol: *const navigation.Symbol) ?usize {
+    const compilation = session.source.compilation orelse return null;
+    for (compilation.syntax.functions) |function| {
+        const name = compilation.src.originalSpan(function.name) catch continue;
+        if (name.span.start != symbol.location.start) continue;
+        if (name.input >= compilation.index.project.modules.items.len) continue;
+        if (!pathMatches(compilation.index.project.modules.items[name.input].src.path, symbol.location.path)) continue;
+        const body = compilation.src.originalSpan(compilation.syntax.statements.items[@backingInt(function.body)].span) catch continue;
+        if (body.input != name.input) continue;
+        return body.span.end;
+    }
+    return null;
+}
+
+fn spanWidth(symbol: *const navigation.Symbol, session: *const Session) usize {
+    return coverageEnd(session, symbol) -| symbol.location.start;
 }
 
 /// The smallest diagnostic whose original span covers the position.
 fn innermostDiagnostic(compilation: *pc.Compilation, path: []const u8, offset: usize) Error!?usize {
     var best: ?usize = null;
     var best_width: usize = unlimited;
-    for (compilation.diagnostics.items, 0..) |item, index| {
+    for (compilation.diagnostics.items.items, 0..) |item, index| {
         const at = compilation.src.locate(item.span.start);
         if (!pathMatches(at.path, path)) continue;
         const original = compilation.src.originalSpan(item.span) catch continue;
@@ -400,15 +451,41 @@ fn innermostDiagnostic(compilation: *pc.Compilation, path: []const u8, offset: u
 /// files as they are now. A read failure counts as a change: the answer cannot
 /// be pinned to the source it claims. Combining facts from two versions is never
 /// allowed.
-fn staleChanged(arena: std.mem.Allocator, loaded: *const project.Project, before: navigation.Snapshot) Error!bool {
+///
+/// The receipt hashes the module digest recorded when the source was loaded, so
+/// comparing two receipts alone cannot see an edit to the bytes the answer was
+/// assembled from. Each digest is therefore re-derived from the bytes the module
+/// holds now, and, when the caller supplied the provider the project was loaded
+/// from, every input is re-read and compared with the identity the snapshot
+/// published. A file that cannot be re-read is its own outcome: the answer is
+/// unconfirmed rather than known to describe another version.
+fn sourcesChanged(session: *const Session, arena: std.mem.Allocator, loaded: *const project.Project, before: navigation.Snapshot) Error!bool {
     var current = loaded.*;
     current.problem = null;
-    const after = receipt.inputs(arena, &current) catch return true;
-    if (after.len != before.inputs.len) return true;
-    for (after, before.inputs) |now, then| {
-        if (!std.mem.eql(u8, now.sha256, then.sha256)) return true;
+    _ = receipt.inputs(arena, &current) catch return true;
+    if (current.order.items.len != before.inputs.len) return true;
+    for (current.order.items, before.inputs) |id, then| {
+        const module = current.modules.items[id];
+        if (!std.mem.eql(u8, module.name, then.module)) return true;
+        if (!hashesTo(module.src.bytes, then.sha256)) return true;
+    }
+    const sources = session.options.sources orelse return false;
+    for (before.inputs) |input| {
+        if (std.mem.startsWith(u8, input.path, embedded_source_prefix)) continue;
+        const bytes = sources.read(sources.context, arena, input.path, recheck_source_limit) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => return error.RecheckUnavailable,
+        };
+        if (!hashesTo(bytes, input.sha256)) return true;
     }
     return false;
+}
+
+/// Whether one source still hashes to the identity a snapshot published.
+fn hashesTo(bytes: []const u8, recorded: []const u8) bool {
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.sha2.Sha256.hash(bytes, &digest, .{});
+    return std.mem.eql(u8, &std.fmt.bytesToHex(digest, .lower), recorded);
 }
 
 /// The answer a rejected run publishes: identities and the reason, no facts.
@@ -416,7 +493,7 @@ fn rejectedAnswer(session: *Session) Error![]u8 {
     session.diagnosis.status = .stale;
     session.diagnosis.reason = "the source changed while this answer was being assembled; no facts are published";
     session.diagnosis.records = .{};
-    return assemble(session, .{ .inputs = false, .types = null, .dependencies = null, .tests = null, .changes = null, .snippet = false, .detail = false });
+    return assemble(session, .{ .inputs = false, .types = null, .dependencies = null, .tests = null, .changes = null, .snippet = false, .detail = .bare });
 }
 
 fn assembleAnswer(session: *Session) Error!Answer {
@@ -439,8 +516,13 @@ fn assembleAnswer(session: *Session) Error!Answer {
     return error.BudgetTooSmall;
 }
 
-/// The number of rungs in the reduction ladder: one per droppable item.
-const drop_levels = 7;
+/// The number of rungs in the reduction ladder: one per droppable item, then the
+/// rung that drops the sections and the rung that drops the omissions too.
+const drop_levels = 8;
+
+/// The rung that gives the sections up: it keeps the identity, the verdict and
+/// the omissions that name every section the answer would have carried.
+const identity_level = 7;
 
 /// The largest record cap for one section whose complete response still fits.
 fn largestFittingCap(session: *Session, caps: Caps, section: ListSection, budget: usize) Error!usize {
@@ -466,7 +548,7 @@ fn capsFor(session: *const Session, level: usize) Caps {
         .dependencies = if (level >= 4) null else unlimited,
         .types = if (level >= 5) null else unlimited,
         .snippet = level < 6,
-        .detail = level < drop_levels,
+        .detail = if (level < identity_level) .full else if (level < drop_levels) .identity else .bare,
     };
 }
 
@@ -614,9 +696,9 @@ fn snapshotValue(session: *Session, snapshot: navigation.Snapshot, with_inputs: 
 
 fn sectionsValue(session: *Session, caps: Caps) Error!Value {
     var sections = Array.init(session.arena);
-    if (!caps.detail) return .{ .array = sections };
+    if (caps.detail != .full) return .{ .array = sections };
     try sections.append(try sectionOf(session, key_declaration, try declarationRecords(session, caps)));
-    try sections.append(try sectionOf(session, "contract", try contractRecords(session)));
+    try sections.append(try sectionOf(session, key_contract, try contractRecords(session)));
     for (priority_order) |section| {
         if (section == .changes and session.options.baseline == null) continue;
         const cap = capOf(caps, section) orelse continue;
@@ -637,7 +719,11 @@ fn sectionOf(session: *Session, name: []const u8, records: []const Value) Error!
 
 fn omissionsValue(session: *Session, caps: Caps) Error!Array {
     var omissions = Array.init(session.arena);
-    if (!caps.detail) return omissions;
+    if (caps.detail == .bare) return omissions;
+    if (caps.detail == .identity) {
+        try appendIdentityOmissions(session, &omissions);
+        return omissions;
+    }
     if (!caps.inputs) try appendOmission(session, &omissions, "source", "inputs", null);
     if (!caps.snippet) try appendOmission(session, &omissions, key_declaration, "snippet", null);
     for (priority_order) |section| {
@@ -650,6 +736,23 @@ fn omissionsValue(session: *Session, caps: Caps) Error!Array {
         if (cap < total) try appendOmission(session, &omissions, section.wireName(), null, total - cap);
     }
     return omissions;
+}
+
+/// The omissions of the identity-only rung: the sections are gone, so every
+/// section the answer would have carried is named with the whole record count
+/// the caller gave up, and the envelope's continuation query asks for the room
+/// to include them. A budget too small for the sections is still an answer that
+/// says what it left out rather than a silent truncation.
+fn appendIdentityOmissions(session: *Session, omissions: *Array) Error!void {
+    if (session.source.symbol != null or session.source.diagnostic != null) {
+        try appendOmission(session, omissions, key_declaration, null, null);
+        try appendOmission(session, omissions, key_contract, null, null);
+    }
+    for (priority_order) |section| {
+        if (section == .changes and session.options.baseline == null) continue;
+        const total = session.diagnosis.records.count(section);
+        if (total != 0) try appendOmission(session, omissions, section.wireName(), null, total);
+    }
 }
 
 fn appendOmission(session: *Session, omissions: *Array, section: []const u8, field: ?[]const u8, dropped: ?usize) Error!void {
@@ -717,7 +820,8 @@ fn diagnosticsFor(session: *Session, compilation: *pc.Compilation) Error![]const
 }
 
 /// The selected declaration's span in the merged source, which is the
-/// coordinate space diagnostics use.
+/// coordinate space diagnostics use. The span is the whole declaration, body
+/// included, so a diagnostic inside the selected body is published with it.
 fn selectionSpan(session: *const Session) ?struct { start: usize, end: usize } {
     const symbol = session.source.symbol orelse return null;
     const compilation = session.source.compilation orelse return null;
@@ -725,7 +829,7 @@ fn selectionSpan(session: *const Session) ?struct { start: usize, end: usize } {
         if (!pathMatches(module.src.path, symbol.location.path)) continue;
         if (index >= compilation.src.origins.len) return null;
         const origin = compilation.src.origins[index];
-        return .{ .start = origin.start + symbol.location.start, .end = origin.start + symbol.location.end };
+        return .{ .start = origin.start + symbol.location.start, .end = origin.start + coverageEnd(session, symbol) };
     }
     return null;
 }
@@ -775,7 +879,7 @@ fn contractRecords(session: *Session) Error![]const Value {
     var records = Array.init(session.arena);
     const symbol = session.source.symbol orelse return records.items;
     var object = Doc.init(session.arena);
-    try object.put("kind", .{ .string = "contract" });
+    try object.put("kind", .{ .string = key_contract });
     try object.put(key_id, .{ .string = symbol.id });
     try object.put("signature", .{ .string = symbol.details.signature });
     try object.put("return_type", .{ .string = symbol.details.type_name });
@@ -967,7 +1071,7 @@ fn collectChanges(session: *Session) Error!void {
             try object.put(key_declaration, .{ .string = change.display });
             try object.put("detail", .{ .string = change.detail });
             try object.put("basis", .{ .string = "api-diff" });
-            session.diagnosis.records.changes.append(object.json()) catch return error.OutOfMemory;
+            session.diagnosis.records.changes.append(session.arena, object.json()) catch return error.OutOfMemory;
         }
     }
 }

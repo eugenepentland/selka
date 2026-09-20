@@ -115,6 +115,9 @@ const method_arity = "collection method argument count differs from its signatur
 /// The whitespace alternative for the two `split` forms, attached to a rejected
 /// `split` arity so the reader learns the spelling that does accept it.
 const split_alternative = "`split()` with no argument splits on runs of ASCII whitespace and drops empty parts; `split(separator)` splits on one exact separator";
+/// The accepted spelling beside a rejected `dict.get` arity: the fallback is a
+/// required operand, so the repair is to pass it rather than to drop it.
+const dictionary_get_alternative = "a dictionary `get` always takes its fallback: `d.get(key, default)`";
 /// The accepted callee for a bare `print` or `eprint`: `Stream`'s printing
 /// method, with the optional `sep` and `end` keywords the I/O builtins accept.
 const print_signature = buffer_operations.stream_print_signature;
@@ -135,6 +138,7 @@ fn methodAlternative(name: []const u8) ?[]const u8 {
 fn alternativeFor(kind: BufferKind) ?[]const u8 {
     return switch (kind) {
         .split, .split_whitespace => split_alternative,
+        .get => dictionary_get_alternative,
         else => null,
     };
 }

@@ -3,6 +3,7 @@ const std = @import("std");
 const t = std.testing;
 const debug = std.debug;
 const language = @import("compiler.zig");
+const diagnostic = @import("diagnostic.zig");
 const native = @import("native_execute.zig");
 fn run(text: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(t.allocator, "core.my", text);
@@ -331,4 +332,27 @@ test "DIAG-ORACLE-1 unknown list methods name the accepted spellings" {
         \\    items.appnd(3)
         \\    return 0
     , "E_LIST_METHOD", "unknown method for a list[int] receiver; accepted methods: append, clear, copy, extend, index, insert, pop, remove, reverse, sort");
+}
+
+/// Assert the first diagnostic's code and the accepted spelling it carries under
+/// the counted `alternative` role.
+fn expectAlternative(text: []const u8, code: []const u8, accepted: []const u8) !void {
+    var compilation = try language.Compilation.init(t.allocator, "alternative.my", text);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.check());
+    const failure = compilation.diagnostics.items[0];
+    try t.expectEqualStrings(code, failure.code);
+    try t.expect(failure.related != null);
+    try t.expectEqual(diagnostic.Role.alternative, failure.related.?.role);
+    try t.expectEqualStrings(accepted, failure.related.?.message);
+}
+
+// spec: DIAG-ALTERNATIVE-1
+test "a dict get without its fallback names the operand the accepted call carries" {
+    try expectAlternative(
+        \\def main() -> int:
+        \\    d = {"a": 1}
+        \\    v = d.get("b")
+        \\    return v
+    , "E_ARITY", "a dictionary `get` always takes its fallback: `d.get(key, default)`");
 }

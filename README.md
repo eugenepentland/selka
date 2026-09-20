@@ -142,6 +142,18 @@ The development tools keep the ordinary read/edit/check workflow:
   `scripts/reference.py` generator was removed with the Zig-native tooling fold.
   [The compiler-derived reference](docs/reference.md) documents the in-binary
   reference engine that replaces it.
+- [Focused context](docs/tooling/agent-context.md) answers one bounded
+  `agent-context-v1` question about one declaration — its contract with a fact
+  status per field, the types it names, its dependencies, its static test
+  reachability and, optionally, how an API baseline changed — inside a byte
+  budget that reports what it dropped: `mylang context app/main.my --symbol
+  'model::validate'`.
+- [Invoking an export](docs/tooling/invocation.md) describes one exported
+  function's checked argument and result contract and whether it is callable at
+  all (`--describe`), or executes exactly one bounded call and reports a
+  `native-invocation-v1` result, distinguishing a returned `Result.Err` from a
+  trap, a timeout and a refused request: `mylang invoke app/main.my --function
+  'app::normalize' --input=request.json`.
 
 Run `zig build test-agent-tools --summary all` for their implementation regressions.
 These tests also belong to the default suite; they do not launch agent evaluations

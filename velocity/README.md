@@ -43,10 +43,13 @@ python3 velocity/score.py --binary zig-out/bin/mylang \
 Current limits, stated so the numbers are not over-read:
 
 - **C3 counts only the structured field**: a non-null `fix` or a note whose `role` is
-  `alternative`. That field does not exist yet, so `C3` is 0.000 on the frozen baseline.
-  A secondary reading of the prose the compiler already prints is reported beside it as
-  `C3_text_any` and is never merged into `C3`; it is 0.250 on the frozen baseline and
-  will not move when D1 lands. Use `C3` for the package verdict.
+  `alternative`. The field now exists: `C3` is 0.304 (24/79) on the tree as D1 and D2
+  landed it, and 0.633 (50/79) after the follow-up that extended the shared hint table,
+  against 0.000 on the frozen baseline where the field did not exist yet. A secondary
+  reading of the prose the compiler already prints is reported beside it as
+  `C3_text_any` and is never merged into `C3`; it is 0.354 and 0.506 at those two points.
+  Use `C3` for the package verdict. The per-form account of what still carries no
+  alternative is in `docs/audits/agent-usefulness-reports/idiom-coverage.md`.
 - **Rejections include traps before any output.** Two of the 80 frozen-baseline
   rejections are runtime traps (`a57_assert_fstring.my`, a probe that asserts a false
   condition on purpose, and `a60_overflow.my`), not compile errors.

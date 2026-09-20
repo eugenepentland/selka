@@ -3,7 +3,9 @@
 Plan: [`agent-usefulness-implementation-plan-2026-09-20.md`](../agent-usefulness-implementation-plan-2026-09-20.md).
 Baseline evidence: [`baseline-2026-09-20.md`](baseline-2026-09-20.md).
 Package reports: `sites.md` (S1a, D1, S1b), `parser.md` (D2, S1c), `lint.md` (L1),
-`friction.md` (M1), `scorer.md` (lane C instrument).
+`friction.md` (M1), `scorer.md` (lane C instrument), `interface-facts.md` (F1a),
+`typed-holes.md` (H1), `context.md` (C1), `idiom-coverage.md` (the C3 follow-up),
+`invoke.md` (I1), `aggref-abi.md` (the aggregate-argument ABI fix).
 
 Status values: `done`, `partial`, `not started`, `blocked`.
 
@@ -32,9 +34,11 @@ Status values: `done`, `partial`, `not started`, `blocked`.
 | V0 (lane C) | `velocity/score.py` C1/C2/C3 instrument | scorer | **done, verified** | `scorer.md`, `score-baseline-2026-09-20.json`, `score-D1D2S1.json`; re-run reproduces every verdict |
 | F1(b) | Compiler-derived reference engine and command | reference | **done, wired and verified** | `mylang reference --query …` answers text and JSON from the installed binary; 12 spec-tagged tests |
 | F1(a) | Honest interface facts: ceiling vs inferred vs status | interface-facts | **done, verified** | `interface-facts.md`; both surfaces verified by the lead (see below) |
-| C1 | Focused context command | — | not started | the plan sequences it after F1, whose fact-status vocabulary it consumes |
-| I1 | Native invocation of an ordinary export | — | not started | — |
-| I2, I3, E1, P1 | remaining plan packages | — | not started | — |
+| C1 | Focused context command | context | **done, verified** | `context.md`; `agent-context-v1` answers on both real applications, 14 budget pairs all within budget, byte-identical repeats, ambiguous/missing/stale/partial all handled; gate green |
+| I1 | Native invocation of an ordinary export | invoke | **done on the scalar subset; aggregate arguments refused pending the ABI fix below** | `invoke.md`; a non-test export called without editing it, boundaries and nested results validated, `Err`/trap/timeout distinguished, stdout one JSON object, artifacts reused |
+| I2, I3, E1, P1 | remaining plan packages | — | not started | I2's managed values were blocked by the aggregate-argument defect below; I3 depends on I1 |
+| C3 follow-up | Every rejection names the accepted spelling | idiom | **done; target met** | `idiom-coverage.md`; C3 0.304 → **0.633** (24/79 → 50/79), C1 unchanged at 0.254, C2 still 0 |
+| ABI | Generated adapter agrees with QBE-AGGREF-1 | aggref | see below | `aggref-abi.md` |
 | H1 | Bounded typed-hole obligations | typed-holes | **done, verified** | `typed-holes.md`; a valid `todo[T]()` retains a bounded obligation carrying the declared type, enclosing callable, initialized bindings, requirements, declared ceiling, mutation footprint and an explicit `unavailable` list, keyed by a snapshot identity rather than a line number; `Diagnostic` still at seven fields |
 
 ### Where the work stood when the last automatic round ended
@@ -495,3 +499,206 @@ reasons rather than rounded up.
     the gate, but `scripts/navigate.py` and `scripts/store_server.py` have no test
     that would have caught the null-`effects` crash; a small consumer test would
     have turned a runtime `TypeError` into a gate failure.
+
+## Second round: C1, the C3 follow-up, I1, and an ABI defect
+
+### Why this round ran in a separate worktree
+
+The first round's work sat as uncommitted changes in
+`/home/epentland/ai/canopy/mylang`, and a second session was editing that same
+tree concurrently while this round began — `src/context.zig` appeared,
+`src/main.zig` grew 262 lines of C1 wiring, and a build that was green at 16:41
+was red at 17:29 with a compile error the second session had not finished
+fixing. Two writers in one checkout cannot produce a trustworthy gate.
+
+This round therefore works in a linked worktree:
+
+| Fact | Value |
+| --- | --- |
+| Worktree | `.worktrees/agent-usefulness` (nested inside the checkout: the sandbox mounts only that path read-write) |
+| Branch | `agent-usefulness/base` |
+| Base commit | `ed6148cff489c792fa34354f9800cf7a7d2c2edb` — a snapshot of the working tree at 17:35 on 2026-09-20, parented on `b8f6ec3f` |
+| Snapshot scope | `src`, `test`, `tests`, `docs`, `velocity`, `scripts`, `examples`, `experiments/sexpr-port`, `experiments/sexpr-audit` and the build files. The multi-hundred-megabyte `experiments/*/work` trees were left out of the commit so the object store stays small; they remain untouched and untracked in the main checkout |
+| Excluded from the snapshot | `.worktrees/` is added to `.git/info/exclude` |
+
+Two environment facts are worth recording because they cost most of the time
+lost at the start of this round, and they will bite any agent working here:
+
+1. Zig's global cache lives under `$HOME`, which the sandbox bind-mounts
+   **read-only**, so a bare `zig build` dies with
+   `failed to check cache: manifest_create ReadOnlyFileSystem`. `./zigw` in the
+   worktree root pins `ZIG_GLOBAL_CACHE_DIR` inside the checkout; `./stage.sh`
+   copies the freshly compiled compiler into `zig-out/bin/` because the *install*
+   step is gated on a green Guardian run. The compiler itself shells out to
+   `zig`, so `ZIG_GLOBAL_CACHE_DIR` must be exported before running
+   `zig-out/bin/mylang` too.
+2. `/tmp` is a **fresh tmpfs for every command**, so nothing staged there
+   survives to the next command. Every scratch path in this round is under the
+   worktree's `.tmp/`.
+
+The base snapshot carried the first round's result, including a `src/context.zig`
+that compiled only after the lead fixed two errors in it (an
+`ArrayList` iteration and a missing allocator argument) and one Guardian
+finding that the second session had not yet cleared.
+
+### C1 — `mylang context` — done
+
+`context.md`. The implementation was inherited half-finished and had **no tests
+at all**: Guardian failed the `spec` check on the seven `CONTEXT-*` bullets
+already written in `SPEC.md`. This round finished and verified it:
+
+| Acceptance | Result |
+| --- | --- |
+| Real answers on two applications | `experiments/sexpr-port` `sexpr.parser::parse` 3118 B; `src/schematic/guest` `schematic::build` 7466 B, `declared_effects == effects` |
+| Budget adherence | 14 (project, budget) pairs from 1024 to 16384: `stdout_bytes <= budget` and `emitted_bytes == len(stdout)`, 0 failures |
+| Deterministic ordering | same query twice byte-identical at 1024/4096/8192 on both projects |
+| Ambiguous / missing | `--symbol build` → exit 2, 4 candidates; unknown name → `missing`; neither resolved to a near match |
+| Partial project | exit 0, `declaration-only`, `E_TYPE` beside the declaration, `effects`/`mutates`/`return_origin` **null**, 0 dependencies |
+| Source change during collection | 48-module fixture edited 0.8 s in → exit 2, `status=stale`, 0 sections published |
+| Sibling semantics | `navigation`/`interfaces`/`tests_index`/`project`/`api_diff`/`source_receipt` unchanged; `index-project` on `src/schematic/guest` gives the baseline's 815 symbols / 6265 refs |
+
+Two defects were found by testing rather than by reading, and both are fixed:
+`--symbol NAME` and `--at POS` (the **space** forms the spec bullets, the docs
+page and the pre-written integration tests all use) did not parse at all — only
+the `=` forms did; and `--at` resolved positions only against a declaration's
+*name* token, so a position inside a healthy function body answered `missing`.
+`test/integration.zig` had been red on the first of these and was not in any
+earlier owner's file list.
+
+### The C3 follow-up — the plan's unmet D1 target is now met
+
+`idiom-coverage.md`. The `D1` row above records C3 as an unmet target at 0.304
+against the plan's 0.5. This round closed it by extending the **one shared hint
+table** (15 new `E_SYNTAX` rows, 5 non-`E_SYNTAX` alternatives) and the
+classifier that must agree with it:
+
+| Metric | Before | After |
+| --- | --- | --- |
+| C1 first-try fidelity | 0.254 (17/67) | **0.254 (17/67)** — unchanged |
+| C2 silent wrong answers | 0 | **0** |
+| C3 structured | 0.304 (24/79) | **0.633 (50/79)** |
+| C3 text-any (secondary) | 0.354 | 0.506 |
+
+26 rejections gained a structured alternative and **none lost one**; no probe's
+verdict changed and the agreement set is identical. The after-row was
+re-measured independently by the lead against the installed binary
+(sha256 `b3265ab0679338dc2683766f11f105f133b648e1d6aa33fa1e4696b7e0cf46ec`) and
+reproduces 0.254 / 0 / 0.633 exactly. 29 rejections still carry
+no alternative, each with its reason in the report — 8 have no accepted
+counterpart at all, 2 are runtime traps, 3 need a formula rather than a
+spelling, 3 cannot be named where they are raised, and 13 have a known spelling
+left for a later round.
+
+**`C2 = 0` is still a blind spot, and this round did not remove it.** The
+follow-up that was supposed to restore a running divergence-prone probe was
+checked instead of assumed: `int(round(2.5))` answers `3` under mylang and `2`
+under CPython, and the language documents halves-away-from-zero, so adding the
+probe the first round proposed would report `C2 = 1` and block every package
+behind a *`round` semantics* decision. It is recorded as a language question,
+not a lane C task.
+
+### I1 — native invocation — done on the scalar subset
+
+`invoke.md`. `mylang invoke` selects an ordinary exported concrete function with
+no `test_` prefix and no fixture, refuses a private, unknown, generic-template
+or authority-requiring target **before executing guest code**, validates named
+arguments against the checked signature, executes exactly one call in a bounded
+native child and writes one `native-invocation-v1` object on stdout. A returned
+`Result.Err` is a completed call (exit 0); a trap and a timeout are exit 1; a
+malformed request is exit 2. Artifacts are reused across calls while every call
+still executes (`compiled_functions: 0, reused_functions: 1` on a warm cache).
+
+It landed on the scalar-argument subset because it found a real defect that
+blocks the rest.
+
+### A pre-existing memory-safety defect: aggregate arguments through the copied boundary
+
+Found by the I1 workstream, reproduced and classified by the lead:
+
+```sh
+./zig-out/bin/mylang test .tmp/abi/shapes.my --cases .tmp/abi/cases.json
+failed shapes::test_one: NativeTestProcessFailed: .{ .signal = .SEGV }   # record argument
+failed shapes::test_sum: expected 6, got 34                              # [3]i64 argument
+```
+
+**This is not a regression from this plan.** The frozen W0 baseline binary
+`zig-out/bin/mylang-baseline-20260920` fails identically, and
+`src/qbe.zig`, `src/qbe_build_shapes.zig` and `src/qbe_wire.zig` are byte-identical
+to `b8f6ec3f`. The committed spec bullet **QBE-AGGREF-1** taught the emitter that
+a copyable aggregate crosses a call boundary as the *address of the caller's
+storage*, and the generated C adapter was never updated to match: it still
+declares the parameter by value and dereferences the argument buffer, so the
+callee reads the aggregate's first eight bytes as a pointer. The native test
+suites never caught it because no fixture passes an aggregate **argument**
+through the copied-value boundary — the plan's own premise that native guest
+tests "validate typed inputs and execute in bounded child processes" was
+untested for exactly this shape.
+
+I1 refuses such targets pre-execution (`aggregate-argument`,
+`wire_supported: true`, `eligible: false`) rather than SEGVing, which is the
+correct behavior for an unusable callable but is not the plan's outcome.
+I2's "nested Unicode/list/record/result round trips" cannot be met without the
+fix, so it was made and verified in this worktree. `aggref-abi.md`.
+
+**The fix, and why it is a shared fact rather than a second rule.** The defect
+existed because the crossing rule was written twice: `src/qbe.zig` knew it, and
+`src/qbe_build_shapes.zig` guessed it from the type's C spelling. The rule now
+lives once in `src/qbe_wire.zig` as `byAddress(layout, ty, records)`, and both
+the emitter's `argumentType` and the copied-value manifest read that one answer;
+each manifest type carries an explicit `by_address` fact, appended last so every
+existing key and its order are untouched. `scalar()` and `ownedPointer()` moved
+with it, so the emitter's `isScalar` and the manifest cannot drift either. The
+adapter declares `const void *` and passes the argument buffer itself when the
+manifest records a crossing, and scalars, move-only aggregates, aggregate results
+and the `size > 4096` path are unchanged.
+
+**Verified in both directions, not just asserted.** The new
+`src/aggref_abi_test.zig` requires the manifest fact, the emitted QBE callee
+signature and every generated C declaration to agree parameter by parameter, and
+a second test renders the adapter from a manifest whose two structurally
+identical records carry opposite `by_address` values — so only an adapter that
+reads the field can pass. Reverting the adapter side fails 2 tests; reverting the
+emitter side fails 1; restored, 14 pass.
+
+**The guard whose absence let it live.** `tests/native/aggref_arguments.my` with
+its `.cases.json` drives seven cases — record, fixed array, nested record,
+zero-length, a 4160-byte array, a scalar and an aggregate result — through
+`mylang test --cases`. The frozen baseline passes 4 and fails 3; the fixed tree
+passes 7. A Zig test in `src/native_test_wire.zig` runs that file against the
+installed compiler, so the language-level guard is itself in the gate.
+
+**Lead-verified independently:** the original reproduction now prints
+`passed shapes::test_one` / `passed shapes::test_sum`, and
+`mylang invoke tests/invoke/tool.my --function 'tool::sample_label'
+--input=tests/invoke/requests/sample.json` answers `status: completed`,
+`"value":"7"`, exit 0. The 4-line `src/qbe.zig` change is behavior-preserving:
+`byAddress` is `copy != prohibited and !scalar`, exactly the predicate the old
+`argumentType` spelled, and `isScalar` now delegates to the same moved function.
+
+### Final acceptance — the plan's §7 gate set, whole tree
+
+All four commands, run by the lead in this worktree with C1, the C3 follow-up,
+I1 and the ABI fix in the tree:
+
+| Command | Result |
+| --- | --- |
+| `./zigw build test --summary all` | **exit 0 — 64/64 steps succeeded, 1493/16603 tests passed, 0 failed** |
+| `./zigw build test-qbe --summary all` | **exit 0 — 38/38 steps succeeded** |
+| `./zigw build test-qbe-build --summary all` | **exit 0 — 22/22 steps succeeded** |
+| `./zigw build fmt-check` | **exit 0** |
+| Guardian (inside every step) | **88 check(s) passed** — no findings |
+| `mylang doctest .` (inside `test`) | 335 files, 755 blocks, 154 run, 46 checked, **0 mis-tagged, 0 failed** |
+| `mylang doc-coverage .` (inside `test`) | **166 documented features** across 48 pages, 12 standard modules, **0 failures** |
+
+The earlier run of the same gate, before the ABI fix, was also green at
+64/64 steps and 1488 tests; the five extra tests are the ABI agreement and
+round-trip guards.
+
+### Still not started, and not claimed
+
+**I2, I3, E1 and P1.** No productivity comparison was run in this round: E1's
+cohorts need solver sessions against a frozen task pack, which this round did
+not create, and P1 is sequenced behind E1's profiling. D1, D2, S1 and the C3
+follow-up remain judged only by lane C; L1 only by its finding counts. The
+`round` semantics divergence above is a language question this plan did not open.
+

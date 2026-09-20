@@ -10,7 +10,7 @@ the shape under. They are one table: a form present in one and absent from the
 other is a failure here.
 
 Without ``--compiler`` this is a static agreement check (no build needed).
-With ``--compiler PATH`` it also runs the four probes the plan names and the
+With ``--compiler PATH`` it also runs one probe per hinted form plus the
 headerless-script shape, so the messages, spans and exit statuses are checked
 against the shipped compiler.
 """
@@ -41,6 +41,21 @@ CLASSIFY_CASES = [
     ('method', 'E_SYNTAX', PROBES / 'a38_class_methods.my'),
     ('from-import', 'E_SYNTAX', PROBES / 'a39_dataclass.my'),
     ('union-cases', 'E_SYNTAX', None),
+    ('ternary', 'E_SYNTAX', PROBES / 'a01_ternary.my'),
+    ('tuple', 'E_SYNTAX', PROBES / 'a03_tuple_swap.my'),
+    ('is-none', 'E_SYNTAX', PROBES / 'a05_is_none.my'),
+    ('chained-assign', 'E_SYNTAX', PROBES / 'a10_chained_assign.my'),
+    ('set-literal', 'E_SYNTAX', PROBES / 'a22_set_literal.my'),
+    ('exceptions', 'E_SYNTAX', PROBES / 'a40_try_except.my'),
+    ('match-literal', 'E_SYNTAX', PROBES / 'a49_match_literal.my'),
+    ('del', 'E_SYNTAX', PROBES / 'a51_del.my'),
+    ('string-prefix', 'E_SYNTAX', PROBES / 'a53_multiline_str.my'),
+    ('main-guard', 'E_SYNTAX', PROBES / 'a58_main_guard.my'),
+    ('option-unwrap', 'E_SYNTAX', PROBES / 'a61_result_unwrap.my'),
+    ('nested-comprehension', 'E_SYNTAX', PROBES / 'a66_nested_comp.my'),
+    ('dict-comprehension', 'E_SYNTAX', PROBES / 'a67_dict_comp.my'),
+    ('generator-argument', 'E_SYNTAX', PROBES / 'a68_genexp.my'),
+    ('walrus', 'E_SYNTAX', PROBES / 'a73_while_else_walrus.my'),
 ]
 
 # The same shapes, with the location the rejected token keeps and the accepted
@@ -50,6 +65,24 @@ PROBE_CASES = [
     ('module-constant', 'E_SYNTAX', 'a37_const.my', 2, 1),
     ('method', 'E_SYNTAX', 'a38_class_methods.my', 3, 5),
     ('from-import', 'E_SYNTAX', 'a39_dataclass.my', 2, 1),
+    ('ternary', 'E_SYNTAX', 'a01_ternary.my', 4, 12),
+    ('ternary', 'E_SYNTAX', 'a70_int_from_float.my', 3, 41),
+    ('tuple', 'E_SYNTAX', 'a03_tuple_swap.my', 5, 6),
+    ('tuple', 'E_SYNTAX', 'a04_tuple_return.my', 3, 18),
+    ('is-none', 'E_SYNTAX', 'a05_is_none.my', 10, 10),
+    ('chained-assign', 'E_SYNTAX', 'a10_chained_assign.my', 3, 11),
+    ('set-literal', 'E_SYNTAX', 'a22_set_literal.my', 3, 14),
+    ('exceptions', 'E_SYNTAX', 'a40_try_except.my', 3, 8),
+    ('match-literal', 'E_SYNTAX', 'a49_match_literal.my', 5, 14),
+    ('match-literal', 'E_SYNTAX', 'a50_match_str.my', 4, 14),
+    ('del', 'E_SYNTAX', 'a51_del.my', 4, 9),
+    ('string-prefix', 'E_SYNTAX', 'a53_multiline_str.my', 5, 10),
+    ('main-guard', 'E_SYNTAX', 'a58_main_guard.my', 5, 1),
+    ('option-unwrap', 'E_SYNTAX', 'a61_result_unwrap.my', 10, 21),
+    ('nested-comprehension', 'E_SYNTAX', 'a66_nested_comp.my', 4, 31),
+    ('dict-comprehension', 'E_SYNTAX', 'a67_dict_comp.my', 3, 19),
+    ('generator-argument', 'E_SYNTAX', 'a68_genexp.my', 4, 18),
+    ('walrus', 'E_SYNTAX', 'a73_while_else_walrus.my', 4, 11),
 ]
 
 HEADERLESS = """import strings

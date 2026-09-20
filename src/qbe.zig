@@ -15,6 +15,7 @@ const native_descriptors = @import("native_descriptors.zig");
 const test_dependencies = @import("native_test_dependencies.zig");
 const native_interface = @import("native_interface.zig");
 const prelude = @import("prelude.zig");
+const qbe_wire = @import("qbe_wire.zig");
 /// Failures producing independent QBE native units.
 pub const GenerateError = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 const drop_local = " call $myl_native_owned_drop(l %heap, l extern ${s}, l %l{d})\n";
@@ -128,7 +129,7 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
     // A program that neither prints nor renders a value into text carries no
     // renderers, and copies nothing.
     const runtime_data = if (renderers.len == 0) descriptors else try std.mem.concat(a, u8, &.{ descriptors, renderers });
-    const wire_types = @import("qbe_wire.zig").describe(a, &layouts) catch |err| return layoutError(err);
+    const wire_types = qbe_wire.describe(a, &layouts) catch |err| return layoutError(err);
     const codecs = @import("qbe_codecs.zig").describe(a, program, &layouts) catch |err| return layoutError(err);
     var text_format = false;
     for (program.functions) |function| for (function.scope.instructions) |instruction| {
@@ -243,19 +244,11 @@ fn symbol(a: std.mem.Allocator, name: []const u8) ![]const u8 {
 fn layoutError(err: native_types.Error) GenerateError {
     return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
 }
-fn scalar(ty: typed.Type, records: []const typed.Record) bool {
-    // An open file and a capability are both one opaque native word.
-    const authority = ty.capabilityIndex() != null or ty.isFile();
-    if (ty.isInteger() or ty == .bool or ty == .unit or authority) return true;
-    if (!ty.isAggregate() or ty.recordIndex() >= records.len) return false;
-    const record = records[ty.recordIndex()];
-    if (record.managed or record.contract.callback != null or ownedPointer(record)) return true;
-    return if (record.shape.domain) |backing| scalar(backing, records) else false;
-}
-
-fn ownedPointer(record: typed.Record) bool {
-    return record.shape.buffer != null or record.shape.resource != null;
-}
+/// Whether the native value is represented in one scalar register, and which
+/// aggregate fields its record carries. One shared predicate, so the copied
+/// value manifest and this emitter cannot answer it differently.
+const scalar = qbe_wire.scalar;
+const ownedPointer = qbe_wire.ownedPointer;
 
 /// One match payload binding that names the payload inside its scrutinee instead
 /// of copying it: the binding local, the scrutinee local it points into, and the
@@ -2062,8 +2055,10 @@ const Emitter = struct {
     /// A callback's parameters are the same boundary a direct call uses, so the
     /// two spell it from the type alone and can never disagree.
     pub fn argumentType(self: *Emitter, ty: typed.Type) GenerateError![]const u8 {
-        if ((try self.layout(ty)).copy == .prohibited) return self.abiType(ty);
-        return if (self.isScalar(ty)) self.abiType(ty) else "l";
+        // One decision, read here and recorded in the copied-value manifest, so
+        // the generated adapter can never spell the crossing rule a second time.
+        if (qbe_wire.byAddress(try self.layout(ty), ty, self.program.records)) return "l";
+        return self.abiType(ty);
     }
     /// Shared ABI lowering for guest and trusted host wrappers.
     pub fn returnType(self: *Emitter, function: bytecode.Function) GenerateError![]const u8 {

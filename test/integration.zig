@@ -2456,8 +2456,9 @@ fn wideContextModel(allocator: std.mem.Allocator, extra: usize) ![]u8 {
 }
 
 /// Write `main.my` and `model.my` into `temporary` and return the allocated
-/// entry path every `context` invocation names.
-fn writeContextProject(temporary: *testing.TmpDir, model: []const u8) ![]u8 {
+/// entry path every `context` invocation names. The path keeps its sentinel, so
+/// the caller frees exactly the allocation `realPathFileAlloc` made.
+fn writeContextProject(temporary: *testing.TmpDir, model: []const u8) ![:0]u8 {
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = context_entry });
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "model.my", .data = model });
     return temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
@@ -2743,6 +2744,41 @@ test "CLI context rejects missing conflicting and malformed options" {
     try expectContextUsage(path, &.{ "--symbol", "model::validate", "--context-bytes=abc" });
     // JSON is the only accepted format.
     try expectContextUsage(path, &.{ "--symbol", "model::validate", "--format=xml" });
+}
+
+// A `--against=FILE` path the process cannot read is reported before any
+// classification runs: `contextOptions` answers `error.BaselineUnreadable`,
+// which the command turns into the same usage-level failure a malformed
+// baseline gets, and never into an answer with a silently absent changes
+// section. Both spellings of the flag take the same path.
+// spec-case: CONTEXT-SECTIONS-1
+test "CLI context reports an unreadable baseline as error.BaselineUnreadable" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const path = try writeContextProject(&temp, context_model);
+    defer testing.allocator.free(path);
+    const root = std.fs.path.dirname(path).?;
+    const missing = try std.fs.path.join(testing.allocator, &.{ root, "no-such-baseline.txt" });
+    defer testing.allocator.free(missing);
+    const attached = try std.fmt.allocPrint(testing.allocator, "--against={s}", .{missing});
+    defer testing.allocator.free(attached);
+    try expectUnreadableBaseline(path, &.{ "--symbol", "model::validate", attached });
+    try expectUnreadableBaseline(path, &.{ "--symbol", "model::validate", "--against", missing });
+}
+
+/// Run `mylang context` with one unreadable baseline spelling and require the
+/// usage-level failure with its message, printing no envelope at all.
+fn expectUnreadableBaseline(entry: []const u8, options: []const []const u8) !void {
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "context", entry });
+    try args.appendSlice(testing.allocator, options);
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, outcome.term);
+    try testing.expectEqualStrings("", outcome.stdout);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, "cannot read or classify the baseline") != null);
 }
 
 // spec-case: CONTEXT-PARTIAL-1
