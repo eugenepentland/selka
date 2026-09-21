@@ -86,6 +86,11 @@ var install_qbe_focus: ?*std.Build.Step = null;
 /// The focused prefix pairs the compiler with `qbe`, because tests in the unit
 /// root resolve `mylang` from the directory `MYLANG_QBE` names.
 var install_exe_focus: ?*std.Build.Step = null;
+/// The qualified LLVM adapter source a test driver names through
+/// `MYLANG_LLVM_ADAPTER`: a test binary runs the compiler from a cache directory
+/// that has no `lib/mylang-llvm` beside it, and a ReleaseFast build defaults to
+/// the LLVM arm, so the adapter must be found the way `qbe` is.
+var tool_llvm_adapter: []const u8 = "";
 /// Declare a step's resident-memory ceiling, and give it the native tools a guest
 /// build needs; harmless on steps that build no guest.
 fn bounded(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
@@ -98,6 +103,7 @@ fn bounded(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
     if (tool_qbe.len != 0) {
         step.setEnvironmentVariable("MYLANG_QBE", tool_qbe);
         step.setEnvironmentVariable("MYLANG_ZIG", tool_zig);
+        if (tool_llvm_adapter.len != 0) step.setEnvironmentVariable("MYLANG_LLVM_ADAPTER", tool_llvm_adapter);
         if (install_all) |install| step.step.dependOn(install);
     }
     return step;
@@ -120,6 +126,7 @@ fn focused(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
     if (tool_qbe_focus.len != 0) {
         step.setEnvironmentVariable("MYLANG_QBE", tool_qbe_focus);
         step.setEnvironmentVariable("MYLANG_ZIG", tool_zig);
+        if (tool_llvm_adapter.len != 0) step.setEnvironmentVariable("MYLANG_LLVM_ADAPTER", tool_llvm_adapter);
         if (install_qbe_focus) |qbe| step.step.dependOn(qbe);
         if (install_exe_focus) |compiler| step.step.dependOn(compiler);
     }
@@ -247,6 +254,10 @@ pub fn build(b: *std.Build) void {
     const root = std.Io.Dir.cwd().realPathFileAlloc(b.graph.io, ".", b.allocator) catch @panic("build root");
     tool_qbe = b.pathJoin(&.{ root, "zig-out", "bin", "qbe" });
     tool_zig = b.graph.zig_exe;
+    // A test binary runs the compiler from a cache directory with no
+    // `lib/mylang-llvm` beside it, and a ReleaseFast build now defaults to the
+    // LLVM arm, so name the adapter source the same way `qbe` is named.
+    tool_llvm_adapter = b.pathJoin(&.{ root, "experiments", "llvm-backend", "qbe_llvm.py" });
     // Focused tests need `qbe` on disk but must stay off the gated install graph.
     // A separate, unattached install of the same compile step gives them a stable
     // path without pulling in Guardian or the other installed artifacts.

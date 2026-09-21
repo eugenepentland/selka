@@ -50,9 +50,8 @@ fn resolveLlvm(context: fs.Context, parsed: options.Options, zig: []const u8, ll
     const adapter = if (llvm.adapter.len != 0)
         try context.executable(llvm.adapter)
     else installed: {
-        if (context.self_directory.len == 0) return error.ToolNotFound;
-        const candidate = try std.fs.path.resolve(context.allocator, &.{ context.self_directory, "../lib/mylang-llvm/qbe_llvm.py" });
-        break :installed try context.executable(candidate);
+        const found = (try defaultAdapter(context)) orelse return error.ToolNotFound;
+        break :installed found;
     };
     const target = try llvmTarget(context, zig, parsed.target);
     return .{
@@ -66,14 +65,27 @@ fn resolveLlvm(context: fs.Context, parsed: options.Options, zig: []const u8, ll
     };
 }
 
-/// The content identity of the adapter installed beside this compiler, or null
-/// when no copy is there. It hashes the small Python package and never runs a
-/// tool, so callers that cache by identity can afford it on a warm path.
-pub fn installedAdapterIdentity(context: fs.Context, zig: []const u8) fs.Error!?[]const u8 {
+/// The adapter a build uses when none is named explicitly: `MYLANG_LLVM_ADAPTER`
+/// when a test driver sets it, else the copy installed beside the compiler under
+/// `lib/mylang-llvm/`. Null when neither names a runnable file.
+fn defaultAdapter(context: fs.Context) fs.Error!?[]const u8 {
+    if (context.environ.get("MYLANG_LLVM_ADAPTER")) |path| {
+        const chosen = try context.executable(path);
+        return chosen;
+    }
     if (context.self_directory.len == 0) return null;
     const candidate = try std.fs.path.resolve(context.allocator, &.{ context.self_directory, "../lib/mylang-llvm/qbe_llvm.py" });
     if (!context.exists(candidate)) return null;
-    const identity = try adapterIdentity(context, candidate, zig);
+    const chosen = try context.executable(candidate);
+    return chosen;
+}
+
+/// The content identity of the adapter this build would use, or null when none
+/// resolves. It hashes the small Python package and never runs a tool, so callers
+/// that cache by identity can afford it on a warm path.
+pub fn installedAdapterIdentity(context: fs.Context, zig: []const u8) fs.Error!?[]const u8 {
+    const adapter = (try defaultAdapter(context)) orelse return null;
+    const identity = try adapterIdentity(context, adapter, zig);
     return identity;
 }
 
@@ -197,6 +209,34 @@ test "an unnamed backend takes the release path from ReleaseFast and keeps QBE f
     // ReleaseFast wants the installed LLVM adapter; with none beside the compiler
     // the build refuses loudly rather than silently falling back to QBE.
     try std.testing.expectError(error.ToolNotFound, resolve(context, .{ .mode = "ReleaseFast" }, "/bin/sh"));
+}
+
+// spec: BUILD-BACKEND-5
+test "the LLVM adapter resolves from MYLANG_LLVM_ADAPTER before the installed copy" {
+    var named: std.process.Environ.Map = .init(std.testing.allocator);
+    defer named.deinit();
+    var bare: std.process.Environ.Map = .init(std.testing.allocator);
+    defer bare.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(std.testing.io, ".", std.testing.allocator);
+    defer std.testing.allocator.free(directory);
+    const adapter = try std.fs.path.join(std.testing.allocator, &.{ directory, "qbe_llvm.py" });
+    defer std.testing.allocator.free(adapter);
+    // A test driver runs the compiler from a cache directory with no install
+    // beside it, so the environment names the adapter exactly as it names `qbe`.
+    var with_environment = try fs.Context.init(std.testing.allocator, std.testing.io, &named);
+    defer with_environment.deinit();
+    try with_environment.write(adapter, "#!/usr/bin/env python3\n");
+    try std.Io.Dir.cwd().setFilePermissions(std.testing.io, adapter, .executable_file, .{});
+    with_environment.self_directory = "";
+    try named.put("MYLANG_LLVM_ADAPTER", adapter);
+    try std.testing.expectEqualStrings(adapter, (try defaultAdapter(with_environment)).?);
+    // With neither the variable nor an install, nothing resolves.
+    var without_environment = try fs.Context.init(std.testing.allocator, std.testing.io, &bare);
+    defer without_environment.deinit();
+    without_environment.self_directory = "";
+    try std.testing.expectEqual(@as(?[]const u8, null), try defaultAdapter(without_environment));
 }
 
 test "LLVM target probe retains CPU and positive and negative features" {

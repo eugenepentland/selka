@@ -1168,6 +1168,20 @@ class Emitter:
                     # the declaration is the one that carries the call.  A second
                     # `@f = external global` would be a redefinition.
                     continue
+                declared = self.signatures.get(name)
+                exact_runtime = runtime_signature(name)
+                if declared is not None or exact_runtime is not None:
+                    # A callable whose address is taken but which this unit never
+                    # calls is still a function, not storage: a lambda passed as a
+                    # callback is defined by its own unit, and an `external global`
+                    # here would leave the LTO link with an undefined symbol.
+                    if exact_runtime is not None:
+                        parameters, result = exact_runtime
+                    else:
+                        parameters = self.parameter_abis(declared[0], declared[1])
+                        result = self.declared_result(name, declared)
+                    self.declarations.setdefault(name, (tuple(parameters), result, "external"))
+                    continue
                 out.append(f"@{name} = external global {self.globals[name]}, align 8")
         declarations = [(name, entry) for name, entry in sorted(self.declarations.items())
                         if entry[2] != "undefined"]

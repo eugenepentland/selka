@@ -38,7 +38,9 @@ run uses QBE, and `--qbe PATH` forces QBE.
 The LLVM backend is the Python adapter installed beside the compiler at
 `lib/mylang-llvm/qbe_llvm.py` (its helpers `llvm_emit.py`,
 `runtime_signatures.py` and `amd64_sysv.py` sit in the same directory).
-`--llvm-adapter PATH` overrides it, and `MYLANG_QBE_LLVM_*` variables select the
+`--llvm-adapter PATH` overrides it, `MYLANG_LLVM_ADAPTER` names it for a
+compiler that runs from a directory with no install beside it (the build's own
+test drivers set it), and `MYLANG_QBE_LLVM_*` variables select the
 optimization, Zig driver, runtime sources and target CPU policy. A ReleaseFast
 build that names the LLVM backend and cannot resolve the adapter **fails with a
 tool error**; it never silently falls back to QBE. The adapter needs a
