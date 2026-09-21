@@ -1,4 +1,5 @@
-//! Pin inherited build inputs without exposing environment values in receipts.
+//! Pin inherited frontend, C-driver and Python-adapter build inputs without
+//! exposing their values in cache paths or receipts.
 const std = @import("std");
 const fs = @import("qbe_build_io.zig");
 /// Allocation and canonical environment serialization failures.
@@ -6,10 +7,26 @@ pub const Error = fs.Error;
 /// Canonical compiler-input fingerprint and eligibility for persistent results.
 pub const Fingerprint = struct { hash: []const u8, cacheable: bool };
 const compiler_inputs = [_][]const u8{
+    "CCC_OVERRIDE_OPTIONS",
+    "COMPILER_PATH",
+    "CPATH",
+    "CPLUS_INCLUDE_PATH",
+    "C_INCLUDE_PATH",
+    "GCC_EXEC_PREFIX",
+    "LIBRARY_PATH",
     "MYLANG_HOST_COMPILER",
     "MYLANG_LLVM_ADAPTER",
     "MYLANG_QBE_LLVM_OPT",
+    "MYLANG_QBE_LLVM_UNIT",
     "MYLANG_SEMANTIC_BUDGET",
+    "OBJC_INCLUDE_PATH",
+    "PYTHONHASHSEED",
+    "PYTHONHOME",
+    "PYTHONOPTIMIZE",
+    "PYTHONPATH",
+    "SOURCE_DATE_EPOCH",
+    "ZIG_LIBC",
+    "ZIG_LIB_DIR",
 };
 /// Fingerprint only inherited inputs read by compiler/build children. Dynamic
 /// loader overrides can read mutable external libraries, so disable reuse.
@@ -54,6 +71,12 @@ test "environment fingerprints ignore unrelated variables but retain compiler in
     context.environ = &environment;
     try environment.put("MYLANG_SEMANTIC_BUDGET", "2M");
     try std.testing.expect(!std.mem.eql(u8, first.hash, (try capture(context)).hash));
+    const compiler_changed = try capture(context);
+    try environment.put("C_INCLUDE_PATH", "/headers");
+    try std.testing.expect(!std.mem.eql(u8, compiler_changed.hash, (try capture(context)).hash));
+    const c_changed = try capture(context);
+    try environment.put("PYTHONPATH", "/adapter-modules");
+    try std.testing.expect(!std.mem.eql(u8, c_changed.hash, (try capture(context)).hash));
     try environment.put("LD_LIBRARY_PATH", "/mutable");
     try std.testing.expect(!(try capture(context)).cacheable);
 }
