@@ -215,6 +215,62 @@ change is not paid twice.
 **Acceptance.** `str_build` ≤ 1.5× Zig; `dict_count` ≤ 1.5×; text-method tests,
 `docs/text.md` examples and the SVG/parser goldens byte-identical.
 
+**Landed in part, 2026-09-24** (`UTF8-TEXT-1`, `QBE-TEXT-BLOCK-1`). A `str` is
+now a 24-byte header — the Unicode scalar count at offset 0, which generated
+code still loads as `len(text)`, the payload's octet count, and a flag word
+whose bit 0 says every scalar is below 0x80 and whose fourth word caches the
+payload hash a dictionary computes — followed by the value's UTF-8 payload in
+the same managed block. Equality is one byte compare, order is UTF-8 byte order,
+and `from_utf8`, `utf8`, `bytes.encode`, `bytes.hex`, `bytes.fromhex`, a file
+path and a print sink copy octets instead of decoding and re-encoding scalars.
+Scalar indexing, slicing, a stepped slice and `ord` compute byte offsets on
+demand: a scalar index is a byte index on ASCII text and one payload walk
+otherwise, and the same walk turns an octet offset back into a scalar index for
+`find`. `find`, `count`, `split`, `replace`, `splitlines` and `split()` scan
+octets, because an ASCII scalar is its own octet and no octet of a non-ASCII
+scalar is below 0x80. The payload holds no pointer, so the collector still sees
+a leaf; the arena escape copier clones a text as one payload copy and a
+whole-path file helper borrows a payload only for the write helpers that consume
+one. ABI v8 and cache contract `runtime-abi-v3` retire every v7 manifest and
+object.
+
+Measured with the audit's harness (interleaved arms, byte-identical stdout on
+every arm). Baseline is `dcbcc2fd` measured on this machine with
+`.tmp/verify/measure.py --kernels str_build dict_count list_append_sum
+list_records fib --rounds 15`; final is the same command over ten kernels;
+`o3-lto` is the default arm:
+
+| kernel | baseline `o3-lto` | final `o3-lto` | target |
+|---|---:|---:|---:|
+| `dict_count` | 99.4 ms (2.77×) | 67.9 ms (2.09×) | ≤ 1.5×, **not met** |
+| `str_build` | 173.1 ms (3.17×) | 177.2 ms (3.50×) | ≤ 1.5×, **not met** |
+| `list_append_sum` | 144.6 ms (2.32×) | 123.7 ms (2.25×) | no regression |
+| `list_records` | 109.0 ms (2.02×) | 102.4 ms (1.87×) | no regression |
+| `fib` | 139.2 ms (3.37×) | 129.8 ms (3.30×) | no regression |
+
+A same-session interleaved A/B of the two compilers (`.tmp/verify/ab.py
+--kernels str_build dict_count --rounds 21`) puts `dict_count` at 100.4 → 71.4 ms
+(**0.711×**, −29%) and `str_build` at 168.3 → 173.8 ms (1.033×, with identical
+per-run minima, 162.2 vs 162.6 ms). The remaining kernels show no regression:
+`records` 0.92×, `intloop` 0.97×, `calls` 0.95×, `alloc_churn` 2.00×,
+`bytes_scan` 1.41× on the final run.
+
+**Why the two targets are still short.** `str_build` is a *byte-buffer* kernel
+with no `str` in it at all: its emitted IL is **byte-identical** between the two
+commits (27,937 bytes, zero `myl_native_text_*` symbols) and its manifest carries
+`"text_format":false`, so item 4 cannot move it. What its 3.2–3.5× is made of is
+the per-iteration root chain around `byte_buffer.append_range` plus the buffer's
+growth copies: a self-PC profile of the `o3-lto` binary puts 43% of samples on
+the eight-byte append store itself, inside the `entry_run` LTO built out of the
+guest `main`, with 30% outside the executable in `memcpy`/page-fault territory.
+`dict_count`'s remaining 0.6× is not text either. After the hash cache, `find`
+is still 53% of its samples, and the kernel's own spelling — `counts[key] =
+counts.get(key, 0) + 1` — is *two* lookups, exactly what the audit's
+`zig-fast-getorput` arm measures the cost of. Removing the second lookup
+entirely bounds the kernel near 53 ms ≈ 1.5× and no further, so the target needs
+the `get`/write fusion (and the emitted call and root overhead around it), not a
+different string representation.
+
 ### 5. Give the runtime's fast paths to the optimizer
 
 *Runtime and build. Size: small, incremental.*
