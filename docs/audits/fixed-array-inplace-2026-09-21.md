@@ -87,10 +87,22 @@ arms print `414450`. Load average 9.3 falling to 5.4.
 | --- | ---: | ---: | ---: |
 | `[4096]int`, QBE | 2349.7 ms | **7.3 ms** | 0.0031 (321× faster) |
 | `[4096]int`, LLVM O3 + LTO | 1423.3 ms | **7.2 ms** | 0.0051 (197× faster) |
-| `list[int]`, QBE (control) | 11.0 ms | 11.0 ms | 1.00 |
-| `list[int]`, LLVM O3 + LTO (control) | 8.6 ms | 8.6 ms | 1.00 |
 
-The fixed array now beats the managed list on the same writes.
+An arm that runs for seconds inflates the millisecond arms interleaved with it,
+so the four fast arms were re-measured in a batch of their own (31 rounds, load
+average 6.6). The ratios above are still fair — every arm in a batch is
+interleaved with every other — but these are the honest absolute times:
+
+| arm, after the change | QBE | LLVM O3 + LTO |
+| --- | ---: | ---: |
+| 409,600 writes into `[4096]int` | **1.91 ms** | **1.76 ms** |
+| the same writes into `list[int]` | 3.43 ms | 2.50 ms |
+
+The list control was also measured with the base compiler in its own batch
+(15 rounds, load average 7.8): 3.461 ms against 3.448 ms on QBE and 2.582 ms
+against 2.561 ms on LLVM — unchanged, as a managed collection must be. The fixed
+array now beats the managed list on the same writes, by 1.8× on QBE and 1.4× on
+LLVM.
 
 **The isolated flush loop** — `replace_loop_heavy`, 20 passes of the audit's
 `replace_loop.my` over 49,617 bytes, 11 rounds, load average 3.5. The
@@ -165,13 +177,14 @@ Run on this branch, after merging the base's fixture commit `0c871992`:
 
 | step | result |
 | --- | --- |
-| `zig build test --summary all --maxrss 8000000000` | see the final report |
-| `zig build test-qbe --summary all` | see the final report |
-| `zig build test-qbe-build --summary all` | see the final report |
-| `zig build fmt-check` | see the final report |
+| `zig build test --summary all --maxrss 8000000000` | **pass** — 70/70 steps, 1523/17142 tests passed (15619 skipped by sharding), every one of the 18 shard verdicts `"failed":0` |
+| `zig build test-qbe --summary all` | **pass** — 48/48 steps, 206/206 tests |
+| `zig build test-qbe-build --summary all` | **pass** — 30/30 steps |
+| `zig build fmt-check` | **pass** |
 
-Guardian's whole-tree run passed 88/88 at commit time. `zig build test-schematic`
-passed 27/27.
+Guardian's whole-tree run passed 88/88 at both commits. `zig build test-schematic`
+passed 27/27. `mylang doc-coverage .` reports 0 failures and `mylang doctest .`
+runs 157 examples with 0 failed and 0 mis-tagged.
 
 ## Limits and what is left
 

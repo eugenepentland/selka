@@ -200,22 +200,26 @@ mylang emit-qbe stage4096.my | grep -o 'blit [^\\]*' | wc -l
 Until 2026-09-21 the write did copy: `replace` blitted the array into scratch,
 wrote one element and the store copied it back, so an element write was **O(N)**
 and staging a `[256]u8` one byte at a time cost 512 bytes of copying per byte
-(`QBE-ARRAYWRITE-1`). The table is the same program before and after that change:
-409,600 element writes into a `[4096]int` local, against the same writes into a
-`list[int]` of the same length. Prebuilt `--mode ReleaseFast` binaries, `taskset`
-to one CPU, 15 interleaved rounds, medians, machine load average 5–10.
+(`QBE-ARRAYWRITE-1`). The table is one program — 409,600 element writes into a
+`[4096]int` local — built by the compiler before that change and by the compiler
+after it. Prebuilt `--mode ReleaseFast` binaries, `taskset` to one CPU, 15
+interleaved rounds, medians, machine load average 5–10.
 
-| 409,600 element writes | before | after |
+| 409,600 element writes into `[4096]int` | before | after |
 | --- | ---: | ---: |
-| `[4096]int`, QBE | 2349.7 ms | **7.3 ms** |
-| `[4096]int`, LLVM O3 + LTO | 1423.3 ms | **7.2 ms** |
-| `list[int]`, QBE | 11.0 ms | 11.0 ms |
-| `list[int]`, LLVM O3 + LTO | 8.6 ms | 8.6 ms |
+| QBE | 2349.7 ms | **7.3 ms** |
+| LLVM O3 + LTO | 1423.3 ms | **7.2 ms** |
+
+A batch holding a multi-second arm inflates the short arms beside it, so the two
+fast columns were re-measured on their own against the same writes into a
+`list[int]`: **1.91 ms** into the array against 3.43 ms into the list on QBE, and
+**1.76 ms** against 2.50 ms on LLVM. A fixed array is now a usable buffer, and on
+writes it beats the managed list, because it carries no header and no growth
+check.
 
 Reads were already O(1) and did not move: 4,096,000 reads out of a `[4096]int`
 local take 30.0 ms on QBE and 17.8 ms on LLVM, against 25.6 ms and 13.0 ms for the
-same reads out of a `list[int]`. So a fixed array is now a usable buffer — it beats
-the managed list on writes, because it has no header and no growth check.
+same reads out of a `list[int]`.
 
 What is still expensive is **passing** a large `[N]T` to a function called in a
 loop. The argument itself crosses by address, but the callee's frame still reserves
