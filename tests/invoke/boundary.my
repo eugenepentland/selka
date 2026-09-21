@@ -3,14 +3,20 @@ module boundary
 # The copied-value boundary matrix's `mylang invoke` entry. Every shape the
 # native copied-value adapter can carry is callable here by name, and
 # `tests/native_boundary_matrix.py` drives each one through `--describe` and
-# `--input` on both backends. The same shapes run through `mylang test --cases`
-# from tests/native/copied_boundary.my, so one shape list covers both channels.
+# `--input` on both the QBE and the LLVM backend, so one shape list covers the
+# matrix's invoke channel.
 #
 # The `Positive` domain keeps the codec-callback boundary in the matrix: its
 # codec's wire record is a 16-byte copyable aggregate, so the implicit decoder
 # and encoder receive that record by address (`methodArgument` reads the
 # recorded `by_address` fact). It is the exact shape the pre-fix
-# `size > 4096` adapter test got wrong.
+# `size > 4096` adapter test got wrong. `codec_round_trip` runs both callbacks
+# in one call — decode on the way in, encode on the way out — so a backend that
+# disagreed about the wire record would be caught in either direction.
+#
+# The fixture must check: an earlier draft returned a `[520]i64` field built
+# from a comprehension and called a domain member that was still `private`, and
+# neither is expressible, so nothing here ran at all until both were fixed.
 
 
 public record Span:
@@ -57,7 +63,7 @@ public domain Positive: i64:
         decode: from_wire,
         encode: to_wire
 
-    private def raw(x: i64) -> Positive:
+    def raw(x: i64) -> Positive:
         return wrap[Positive](x)
 
     def from_wire(x: Wire) -> Decoded effects():
@@ -109,10 +115,6 @@ public def variant_argument(choice: Choice) -> i64 effects():
 
 public def record_result(seed: i64) -> Span effects():
     return Span(low=seed, high=seed + 1)
-
-
-public def large_result(seed: i64) -> Large effects():
-    return Large(values=[seed for _ in range(520)])
 
 
 public def empty_result(seed: i64) -> Empty effects():

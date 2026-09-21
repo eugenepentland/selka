@@ -52,6 +52,32 @@ INVOKE_CASES = (
     ("tests/invoke/tool.my", "tool::grow", "tests/invoke/requests/grow.json", None),
     ("tests/invoke/tool.my", "tool::ratio", "tests/invoke/requests/ratio.json", None),
     ("tests/invoke/tool.my", "tool::ratio", "tests/invoke/requests/ratio-error.json", None),
+    # The codec-callback boundary: a domain whose codec receives a copyable
+    # aggregate by address, so the generated adapter's implicit decoder and
+    # encoder both run and both have to agree between backends. `codec_round_trip`
+    # exercises the two callbacks in one call, decode then encode.
+    ("tests/invoke/boundary.my", "boundary::scalar_argument", "tests/invoke/requests/boundary-scalar.json", "6"),
+    ("tests/invoke/boundary.my", "boundary::record_argument", "tests/invoke/requests/boundary-span.json", "1002"),
+    (
+        "tests/invoke/boundary.my",
+        "boundary::codec_round_trip",
+        "tests/invoke/requests/boundary-codec.json",
+        {"n": "7", "m": "1"},
+    ),
+    (
+        "tests/invoke/boundary.my",
+        "boundary::codec_result",
+        "tests/invoke/requests/boundary-codec-result.json",
+        {"n": "5", "m": "1"},
+    ),
+    ("tests/invoke/boundary.my", "boundary::text_round_trip", "tests/invoke/requests/boundary-text.json", "[hi]"),
+    ("tests/invoke/boundary.my", "boundary::variant_argument", "tests/invoke/requests/boundary-choice.json", "7"),
+    (
+        "tests/invoke/boundary.my",
+        "boundary::empty_result",
+        "tests/invoke/requests/boundary-empty.json",
+        {"nothing": []},
+    ),
     # An export whose body calls another function: the build lowers the target's
     # transitive call closure, so a tool composed of helpers builds like any
     # other. `shifted` reaches `twice` only through `quad`.
@@ -152,6 +178,11 @@ DESCRIBE_CASES = (
     ("tests/invoke/composed.my", "composed::totals"),
     ("tests/invoke/composed.my", "composed::first_or_none"),
     ("tests/invoke/composed.my", "composed::find"),
+    ("tests/invoke/boundary.my", "boundary::codec_round_trip"),
+    ("tests/invoke/boundary.my", "boundary::codec_result"),
+    ("tests/invoke/boundary.my", "boundary::record_argument"),
+    ("tests/invoke/boundary.my", "boundary::variant_argument"),
+    ("tests/invoke/boundary.my", "boundary::large_argument"),
 )
 
 # Guest `.my` cases driven through `mylang test --cases`, whose codec is the same

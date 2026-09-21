@@ -381,6 +381,69 @@ test "a failed allocation while converting text is reported and released" {
     try std.testing.checkAllAllocationFailures(std.testing.allocator, textScenario, .{});
 }
 
+/// A schema whose values nest a list inside a list and inside a record, so an
+/// allocation failure can land anywhere in a tree instead of on a single node.
+const nested_types =
+    \\{"types":[
+    \\{"name":"u32","kind":"integer","signed":false},
+    \\{"name":"i64","kind":"integer","signed":true},
+    \\{"name":"str","kind":"list","opaque":true,"element":"u32"},
+    \\{"name":"List<i64>","kind":"list","opaque":true,"element":"i64"},
+    \\{"name":"List<List<i64>>","kind":"list","opaque":true,"element":"List<i64>"},
+    \\{"name":"Bucket","kind":"record","move_only":false,"opaque":false,"fields":[{"name":"label","type":"str"},{"name":"values","type":"List<i64>"}]}]}
+;
+
+fn stringArray(allocator: std.mem.Allocator, items: []const []const u8) !Value {
+    var array: std.json.Array = .init(allocator);
+    for (items) |item| try array.append(.{ .string = item });
+    return .{ .array = array };
+}
+
+/// A record holding a text and a list: the shape a tool returns, and the one
+/// whose decode builds three separate managed values before it can hand back a
+/// single node tree.
+fn bucketValue(allocator: std.mem.Allocator) !Value {
+    var object: std.json.ObjectMap = .empty;
+    try object.put(allocator, "label", .{ .string = "x" });
+    try object.put(allocator, "values", try stringArray(allocator, &.{ "1", "2" }));
+    return .{ .object = object };
+}
+
+/// One nested round trip on a fixed schema, so every allocation it makes can be
+/// failed in turn: an allocation failure while converting a list or a record
+/// must be reported as `OutOfMemory` and must not leak the nodes, the elements
+/// or the text built so far.
+fn nestedScenario(allocator: std.mem.Allocator) !void {
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const parsed = try std.json.parseFromSlice(Value, a, nested_types, .{});
+    var codec: Codec = .{ .allocator = a, .types = v.array(v.get(parsed.value, "types")) };
+    defer codec.deinit();
+    var outer: std.json.Array = .init(a);
+    try outer.append(try stringArray(a, &.{ "1", "2" }));
+    try outer.append(try stringArray(a, &.{"3"}));
+    try codec.encode("List<List<i64>>", .{ .array = outer }, 0);
+    const lists = try codec.decode("List<List<i64>>", 0);
+    // Without this the scenario would pass even if it converted nothing: the
+    // assertions are what make a failed allocation the only way to fail.
+    try std.testing.expectEqual(@as(usize, 2), lists.array.items.len);
+    try std.testing.expectEqual(@as(usize, 2), lists.array.items[0].array.items.len);
+    try std.testing.expectEqualStrings("3", lists.array.items[1].array.items[0].string);
+    codec.nodes.clearRetainingCapacity();
+    codec.cursor = 0;
+    try codec.encode("Bucket", try bucketValue(a), 0);
+    const record = try codec.decode("Bucket", 0);
+    try std.testing.expectEqualStrings("x", record.object.get("label").?.string);
+    try std.testing.expectEqual(@as(usize, 2), record.object.get("values").?.array.items.len);
+    try std.testing.expectEqualStrings("2", record.object.get("values").?.array.items[1].string);
+}
+
+// spec: QBE-LIST-3
+test "a failed allocation while converting a nested list or record is released" {
+    try std.testing.checkAllAllocationFailures(std.testing.allocator, nestedScenario, .{});
+}
+
 /// The installed compiler the build names beside `MYLANG_QBE`, plus the project
 /// root the three-level install path (`zig-out/bin|focus/qbe`) sits under.
 const Tools = struct { compiler: []const u8, root: []const u8 };
