@@ -206,7 +206,10 @@ runs 157 examples with 0 failed and 0 mis-tagged.
   every call. A `kernel(values: [1024]int)` that only reads `values[0]` therefore
   calls `myl_qbe_frame_allocate(82128)` per call even though its emitted body
   contains no `%agg` at all. That is what the `peek` and `scan` rows above are
-  measuring, and it is the obvious next item.
+  measuring, and it is the obvious next item. **Fixed later the same day** by
+  `QBE-FRAMEFIT-1` and `QBE-AGGREF-9`, which size the by-address slot at one word
+  and decide the frame from the scratch the lowered body declares: see
+  [frame-fit-2026-09-21](frame-fit-2026-09-21.md).
 * Measurements were taken on a shared machine under load average 3.5–9.3. Every
   number above is a within-batch ratio of interleaved arms; absolute times are
   not comparable with the audit's quiet-machine figures.
