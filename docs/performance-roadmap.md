@@ -254,6 +254,25 @@ aggregate result (about 30 of the parser's 209 blits).
 schematic profile; `peek1024`/`peek4096` in `docs/performance.md` within 2× of
 `peek8` (met: 1.46 ms and 1.48 ms against 1.30 ms).
 
+**Landed in part, 2026-09-21** (`QBE-AGGREF-1`). A list element whose only
+consumer is the `store_local` that copies it — `x = xs[i]` and the loop variable
+of `for x in xs` — is now read through its checked own address instead of being
+blitted into per-pc aggregate scratch and then copied again, so one of the two
+copies disappears; bounds, generation and trap behavior are unchanged. Measured
+on the default `o3-lto` arm, interleaved, arms byte-identical: `list_records`
+**2.16× → 1.88×** (131.13 ms → 102.73 ms, ~21% absolute; the Zig arm also moved
+7–10% between the runs, so part of the ratio gain is drift), and `records`
+0.87× → 0.95× is drift, not a regression — that kernel has no list and the diff
+cannot reach it. The target is **not met**: the surviving copy into the
+destination local, the per-iteration generation check, the length reload and the
+bounds check still dominate. Removing them needs a sound proof that the loop
+body cannot mutate or alias the receiver across the borrow's live range, which
+is the next step. The remaining named changes — a by-reference destination local,
+array-typed record fields through `update_record`, and return-slot forwarding
+(about 30 of the parser's 209 blits) — are not done, and the
+`layout_routes::build` profile share and schematic `peek` numbers were not
+measured, so no claim is made about them.
+
 ### 7. Dictionary follow-ups
 
 *Runtime. Size: small.*
