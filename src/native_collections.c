@@ -90,6 +90,12 @@ failure:
     myl_native_root_pop(heap, &owner_root);
     return 0;
 }
+int myl_native_list_append_scalar(myl_native_heap *heap, myl_native_list *list, uint64_t value) {
+    /* The element lives in the low bytes of `value` on this little-endian
+       target, so one stack slot of eight bytes is the value pointer the shared
+       grow path copies from. Emitted code has already answered the room case. */
+    return myl_native_list_append(heap, list, &value);
+}
 int myl_native_list_get(const myl_native_list *list, size_t index, void *output) {
     if (index >= list->length) return 0;
     copy_element(output, (const unsigned char *)list->storage + index * list->element->size, list->element->size);

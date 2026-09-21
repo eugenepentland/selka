@@ -8,6 +8,10 @@ const BufferOperation = @FieldType(@FieldType(bytecode.Instruction, "op"), "buff
 const store_unit = " storel 0, %s{d}\n";
 const copy_scratch = " %v{d} =l copy %s{d}\n";
 const load_scratch = " %v{d} =l loadl %s{d}\n";
+/// Load one native word through a computed pointer.
+const load_pointer = " %v{d} =l loadl %v{d}\n";
+/// Append one element through the runtime's grow-capable helper.
+const list_append_call = " %v{d} =w call $myl_native_list_append(l %heap, l %v{d}, l %v{d})\n";
 const format = @import("qbe_format.zig");
 const allocation_failure = format.allocation_failure;
 const list_value_failure = "myl_qbe_fail_list_value";
@@ -25,6 +29,10 @@ const dictionary_length = " %v{d} =l call $myl_native_dictionary_length(l %v{d})
 /// Byte offset of `storage` in a native list header (`native_collections.h`):
 /// two size words, the generation, the element descriptor, then the pointer.
 const list_storage_offset = format.list_storage_offset;
+/// Byte offsets of the capacity and generation words of that same header, which
+/// the inline append fast path reads and bumps.
+const list_capacity_offset = 8;
+const list_generation_offset = 16;
 /// Detail-carrying bounds helper shared by indexable receivers.
 const index_failure = "myl_qbe_fail_index_bounds";
 /// The `make_record` operation shape this unit lowers.
@@ -134,8 +142,12 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             if (self.isScalar(element)) try self.print(copy_scratch, .{ value_pointer, position }) else try self.print(load_scratch, .{ value_pointer, position });
             try arena_lower.Lower(E).barrier(self, list, element, value_pointer);
             if (op.kind == .append) {
-                try self.print(" %v{d} =w call $myl_native_list_append(l %heap, l %v{d}, l %v{d})\n", .{ output, list, value_pointer });
-                try self.require(output, allocation_failure);
+                if (self.needsRootProtocol()) {
+                    try inlineAppend(E, self, list, element, value_pointer, output, stack);
+                } else {
+                    try self.print(list_append_call, .{ output, list, value_pointer });
+                    try self.require(output, allocation_failure);
+                }
             } else {
                 const index_value = try self.load("s", base);
                 const length = try receiverLength(E, self, list);
@@ -294,7 +306,7 @@ fn emitConstruct(comptime E: type, self: *E, record: MakeRecord, stack: []const 
         for (0..record.fields) |i| {
             const ok = self.temp();
             const value_pointer = try operandPointer(E, self, element, base + i);
-            try self.print(" %v{d} =w call $myl_native_list_append(l %heap, l %v{d}, l %v{d})\n", .{ ok, result, value_pointer });
+            try self.print(list_append_call, .{ ok, result, value_pointer });
             try self.require(ok, allocation_failure);
         }
     }
@@ -351,6 +363,60 @@ fn pushedValue(comptime E: type, self: *E, at: usize) i128 {
 fn elementBytes(width: usize, value: i128, scratch: *[8]u8) []const u8 {
     std.mem.writeInt(u64, scratch, @truncate(@as(u128, @bitCast(value))), .little);
     return scratch[0..width];
+}
+/// Lower `list.append(value)` with the capacity-sufficient case inline: a
+/// length/capacity compare, one element store and two counter bumps. The grow
+/// helper is reached only when the element does not fit, and the frame's roots
+/// are linked only around that call, so the common path neither allocates nor
+/// publishes a root and the value no longer has to live at an address a callee
+/// can capture. The frozen receiver the helper refuses — `generation` at
+/// `UINT64_MAX` — cannot occur for a list: the runtime only ever increments the
+/// generation, and the image-frozen literals carry `generation = 0` plus an
+/// immortal object header, so the receiver is always writable and the helper's
+/// refusal test is left to the slow path it already guards.
+fn inlineAppend(comptime E: type, self: *E, list: usize, element: typed.Type, value_pointer: usize, output: usize, stack: []const typed.Type) Error!void {
+    const label = self.temp();
+    const width = (try self.layout(element)).size;
+    // A one-word scalar is read into a register once and carried through both
+    // paths by value, so no callee ever receives the operand slot's address and
+    // the push that filled it can be promoted away. Wider and aggregate elements
+    // keep the pointer the runtime copies from.
+    const scalar = self.isScalar(element) and width != 0 and width <= 8;
+    const held = if (scalar) try self.readValue(value_pointer, element) else value_pointer;
+    const generation = try self.address(list, list_generation_offset);
+    const current = self.temp();
+    try self.print(load_pointer, .{ current, generation });
+    const length = self.temp();
+    const capacity_pointer = try self.address(list, list_capacity_offset);
+    const capacity = self.temp();
+    try self.print(" %v{d} =l loadl %v{d}\n %v{d} =l loadl %v{d}\n", .{ length, list, capacity, capacity_pointer });
+    const fits = self.temp();
+    try self.print(" %v{d} =l cultl %v{d}, %v{d}\n jnz %v{d}, @append_fast{d}, @append_slow{d}\n@append_slow{d}\n", .{ fits, length, capacity, fits, label, label, label });
+    const pushed = try self.roots(stack);
+    if (scalar) {
+        try self.print(" %v{d} =w call $myl_native_list_append_scalar(l %heap, l %v{d}, l %v{d})\n", .{ output, list, held });
+    } else {
+        try self.print(list_append_call, .{ output, list, value_pointer });
+    }
+    try self.require(output, allocation_failure);
+    if (pushed) try self.restoreRoots();
+    try self.print(" jmp @append_done{d}\n@append_fast{d}\n", .{ label, label });
+    const storage = try self.address(list, list_storage_offset);
+    const backing = self.temp();
+    try self.print(load_pointer, .{ backing, storage });
+    const destination = self.temp();
+    if (width == 1) {
+        try self.print(" %v{d} =l add %v{d}, %v{d}\n", .{ destination, backing, length });
+    } else {
+        const offset = self.temp();
+        try self.print(" %v{d} =l mul %v{d}, {d}\n %v{d} =l add %v{d}, %v{d}\n", .{ offset, length, width, destination, backing, offset });
+    }
+    if (width != 0) try self.writeValue(destination, held, element);
+    const next_length = self.temp();
+    try self.print(" %v{d} =l add %v{d}, 1\n storel %v{d}, %v{d}\n", .{ next_length, length, next_length, list });
+    const next_generation = self.temp();
+    try self.print(" %v{d} =l add %v{d}, 1\n storel %v{d}, %v{d}\n@append_done{d}\n", .{ next_generation, current, next_generation, generation, label });
+    self.inline_roots = true;
 }
 /// Read Unicode scalar count, list length, or dictionary entry count.
 fn emitLength(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Type) Error!void {
@@ -667,7 +733,7 @@ fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: [
 
 fn textAt(comptime E: type, self: *E, input: usize, at: usize, ty: typed.Type, result: usize, base: usize) Error!void {
     const size = self.temp();
-    try self.print(" %v{d} =l loadl %v{d}\n", .{ size, input });
+    try self.print(load_pointer, .{ size, input });
     const normalized = try normalizedIndex(E, self, at, size, ty);
     const valid = self.temp();
     try self.print(" %v{d} =l cultl %v{d}, %v{d}\n", .{ valid, normalized, size });

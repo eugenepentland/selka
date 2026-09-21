@@ -13,6 +13,11 @@ typedef struct {
  * typed bytes; managed fields are traced by the element descriptor. */
 myl_native_list *myl_native_list_new(myl_native_heap *, const myl_native_type *, size_t capacity);
 int myl_native_list_append(myl_native_heap *, myl_native_list *, const void *value);
+/* Grow path for one scalar element already in a register: the low
+ * `element->size` bytes of `value` in little-endian order are the element.
+ * Emitted code answers the capacity-sufficient case inline and calls this only
+ * when the backing must grow, so this never has to be cheap. */
+int myl_native_list_append_scalar(myl_native_heap *, myl_native_list *, uint64_t value);
 int myl_native_list_get(const myl_native_list *, size_t index, void *output);
 int myl_native_list_set(myl_native_list *, size_t index, const void *value);
 int myl_native_list_pop(myl_native_list *, void *output);

@@ -142,6 +142,26 @@ public def test_find_any_reports_the_first_octet_of_a_set_at_or_after_start() ->
     return raw.find_any(b"a", 1) == -1
 
 
+# spec: PY-BYTES-21
+public def test_find_any_searches_a_two_octet_set_with_one_pass_per_octet() -> bool:
+    raw = b"x;y,z"
+    if raw.find_any(b",;", 0) != 1:
+        return False
+    if raw.find_any(b";,", 0) != 1:
+        return False
+    if raw.find_any(b",;", 2) != 3:
+        return False
+    if b"x,y;z".find_any(b",;", 0) != 1:
+        return False
+    if b"abcdef".find_any(b",;", 0) != -1:
+        return False
+    if b"abc;ef".find_any(b",;", 5) != -1:
+        return False
+    if b"abxc".find_any(b"xx", 0) != 2:
+        return False
+    return b"\xff\x00".find_any(b"\x00\xff", 0) == 0
+
+
 # spec-case: PY-BYTES-3
 public def test_find_any_clamps_start_and_reads_values_as_a_byte_set() -> bool:
     raw = b"a,b;c"

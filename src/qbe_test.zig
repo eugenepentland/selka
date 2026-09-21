@@ -1060,6 +1060,28 @@ test "PY-BYTES-5 find_any lowers to one native byte-set search and no guest scan
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "=w call $myl_native_bytes_has_byte("));
 }
 
+// spec: QBE-APPEND-FAST-1
+test "QBE-APPEND-FAST-1 a list append lowers its fitting path inline and roots only the grow call" {
+    var parsed = try emitted(std.testing.allocator,
+        \\def build(n: i64) -> i64:
+        \\    values: list[i64] = []
+        \\    for i in range(n):
+        \\        values.append(i)
+        \\    return len(values)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return build(3)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "build").?.il;
+    try std.testing.expect(std.mem.indexOf(u8, body, "@append_fast") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "cultl") != null);
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body, "=w call $myl_native_list_append_scalar("));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "=w call $myl_native_list_append("));
+    try std.testing.expect(std.mem.indexOf(u8, body, "%root0") != null);
+}
+
 // spec: QBE-AGGREF-1
 test "an aggregate parameter a function only reads crosses by address and is not copied" {
     var parsed = try emitted(std.testing.allocator,

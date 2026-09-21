@@ -1055,6 +1055,11 @@ const Emitter = struct {
     /// can allocate and therefore collect. A rooted function with none never
     /// pushes a root, so it needs no mark/restore either.
     has_safepoints: bool = false,
+    /// Set by a lowering that linked the frame's roots itself around the one
+    /// allocating branch of an instruction, so the caller must not wrap the
+    /// whole body — including the non-allocating fast path — in a second root
+    /// push. Cleared before every detached lowering.
+    inline_roots: bool = false,
     heap_frame: bool = false,
     arenas: bool = false,
     frame_offset: u64 = 0,
@@ -1722,9 +1727,16 @@ const Emitter = struct {
                 // The opcode admits allocation, so lower it aside first and push
                 // roots only if this variant's text actually names an allocating
                 // callee; the common non-allocating case emits nothing extra.
+                self.inline_roots = false;
                 const text = try self.lowerDetached(instruction.op, stack);
                 if (stickyOp(instruction.op)) sticky_text = text;
-                if (loweredAllocates(text)) {
+                if (self.inline_roots) {
+                    // This lowering guarded its own allocating branch with a root
+                    // push, so the fast path runs unrooted and the caller adds
+                    // nothing around the whole body.
+                    self.inline_roots = false;
+                    try self.print("{s}", .{text});
+                } else if (loweredAllocates(text)) {
                     const pushed = try self.roots(stack);
                     try self.print("{s}", .{text});
                     if (pushed) try self.restoreRoots();
@@ -2215,13 +2227,20 @@ const Emitter = struct {
         for (stack) |ty| if ((try self.layout(ty)).trace) return true;
         return false;
     }
+    /// Whether this function keeps the root protocol at all: it has a live
+    /// traced local or operand and at least one instruction that can collect.
+    /// A lowering that roots only its allocating branch asks first, because
+    /// without the protocol there is no `%root_mark` or root slot to link.
+    pub fn needsRootProtocol(self: *Emitter) bool {
+        return self.has_roots and self.has_safepoints;
+    }
     /// Push every live traced local and operand as a `myl_native_root` link
     /// built from straight-line stores instead of a runtime call. The chain
     /// head is loaded once from the frozen `myl_native_heap.roots` offset, and
     /// each slot's `previous` names the link pushed before it, so the collector
     /// walks every live root. Field order matches `struct myl_native_root`.
     /// Returns whether any root was pushed.
-    fn roots(self: *Emitter, stack: []const typed.Type) GenerateError!bool {
+    pub fn roots(self: *Emitter, stack: []const typed.Type) GenerateError!bool {
         if (!try self.liveRoots(stack)) return false;
         const base = self.temp();
         try self.print(" %v{d} =l add %heap, {d}\n", .{ base, heap_roots_offset });
@@ -2277,7 +2296,7 @@ const Emitter = struct {
     }
     /// Restore the heap's root chain to this frame's mark with one store,
     /// replacing the former `myl_qbe_root_restore` call.
-    fn restoreRoots(self: *Emitter) GenerateError!void {
+    pub fn restoreRoots(self: *Emitter) GenerateError!void {
         const base = self.temp();
         try self.print(" %v{d} =l add %heap, {d}\n storel %root_mark, %v{d}\n", .{ base, heap_roots_offset, base });
     }
