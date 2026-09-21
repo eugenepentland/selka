@@ -137,3 +137,35 @@ serializes identical builds, and caches the published executable. Native object
 cache directories and executable keys include relevant build-environment inputs;
 the latter also include an explicit build-recipe version. The full compiler and
 QBE remain pinned for native guest tests.
+
+The complete cold LLVM application build succeeded in **434.492 seconds** with
+two CPUs. Subsequent operations used the same executable path, content hash and
+modification time:
+
+| Operation | Wall time | Result |
+|---|---:|---|
+| Reuse application build | 0.115 s | cached executable |
+| Help | 0.116 s | usage on stderr; exit 0 |
+| Status | 0.115 s | valid JSON; exit 0 |
+| Observe | 0.165 s | valid JSON; exit 0 |
+| Evaluate | 0.115 s | valid infeasible report; expected exit 3 |
+| Unknown command | 0.115 s | expected usage exit 2 |
+
+The CLI checks used a private journal whose path contains spaces. The production
+journal was not touched. See [CLI measurements](verification/accepted-cli.json)
+and [artifact identity and assertions](verification/accepted-cli-artifact.json).
+A separate [concurrent cold-build fixture](verification/concurrent-build-check.json)
+issued two simultaneous requests, invoked the compiler once, and returned the
+same executable path to both callers.
+
+Cold application builds remain expensive. These changes remove repeated work
+from unchanged tool calls; reducing native emission and code generation after
+source edits remains a separate performance opportunity. The initial suite
+comparison and final acceptance conditions are recorded above so concurrent
+compiler-test load is not mistaken for a compiler regression.
+
+All implementation changes are committed. Guardian's whole-tree commit gate
+passed all 88 checks; see [gate output](verification/guardian-whole-tree.log).
+The external workbench patch was checked against the frozen original files with
+`patch --dry-run -p1`. Resume agents using the workbench's updated `AGENTS.md`,
+leave `MYLANG` unset for the pin, and use `guest/gate.sh` / `guest/pcb.sh`.

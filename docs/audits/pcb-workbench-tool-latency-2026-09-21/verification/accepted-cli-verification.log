@@ -1,0 +1,8 @@
+{"label": "accepted-app-build", "argv": ["sh", "guest/build-app.sh"], "seconds": 434.49247489900154, "exit_code": 0, "stdout_bytes": 137, "stderr_bytes": 337}
+{"label": "accepted-app-warm", "argv": ["sh", "guest/build-app.sh"], "seconds": 0.11463758099125698, "exit_code": 0, "stdout_bytes": 137, "stderr_bytes": 155}
+{"label": "accepted-cli-help", "argv": ["sh", "guest/pcb.sh", "help"], "seconds": 0.11606542598747183, "exit_code": 0, "stdout_bytes": 0, "stderr_bytes": 1064}
+{"label": "accepted-cli-status", "argv": ["sh", "guest/pcb.sh", "status", "--kit", "kit/black-canyon.kit.json", "--journal", "/tmp/pcb-latency-fixes-20260921/private cli journal"], "seconds": 0.11480306199518964, "exit_code": 0, "stdout_bytes": 224, "stderr_bytes": 155}
+{"label": "accepted-cli-observe", "argv": ["sh", "guest/pcb.sh", "observe", "--kit", "kit/black-canyon.kit.json", "--journal", "/tmp/pcb-latency-fixes-20260921/private cli journal"], "seconds": 0.16515683400211856, "exit_code": 0, "stdout_bytes": 5521, "stderr_bytes": 155}
+{"label": "accepted-cli-evaluate", "argv": ["sh", "guest/pcb.sh", "evaluate", "--kit", "kit/black-canyon.kit.json", "--journal", "/tmp/pcb-latency-fixes-20260921/private cli journal"], "seconds": 0.11543838899524417, "exit_code": 3, "stdout_bytes": 32651, "stderr_bytes": 155}
+{"label": "accepted-cli-invalid", "argv": ["sh", "guest/pcb.sh", "not-a-command"], "seconds": 0.11465752600634005, "exit_code": 2, "stdout_bytes": 0, "stderr_bytes": 201}
+CLI validation PASS: one published executable, native JSON and meaningful exit statuses

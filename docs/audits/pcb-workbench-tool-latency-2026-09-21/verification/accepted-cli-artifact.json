@@ -1,0 +1,41 @@
+{
+  "path": "/home/epentland/ai/canopy/pcb-workbench/.workbench/builds/2b2f95f37f22ee93f24a3efd87392ba49c7886136e62530c08955c0c39a60068/pcb-workbench",
+  "bytes": 9895656,
+  "sha256": "4be161f21d71ae08b045e74bf487cbc7b67d76439c17ac499ba92b30e38bfb62",
+  "compiler_pin": "/home/epentland/ai/canopy/pcb-workbench/.mylang/installs/4bbbce22f660a58c0f7a024d5a31138cc6a8bb32b1040f8b8d59295761cf72ce",
+  "compiler_head": "69260c32",
+  "native_report": "/home/epentland/ai/canopy/pcb-workbench/.workbench/builds/2b2f95f37f22ee93f24a3efd87392ba49c7886136e62530c08955c0c39a60068/report.G0DTwJ/stdout.log",
+  "native_report_sha256": "917641b4967e9ee77af6c0f320d2cd8591b7d9385d1578e7c1da93386af6e3f7",
+  "report_summary": [
+    {
+      "version": "qbe-build-v1",
+      "output": "/home/epentland/ai/canopy/pcb-workbench/.workbench/builds/2b2f95f37f22ee93f24a3efd87392ba49c7886136e62530c08955c0c39a60068/pcb-workbench.tmp.676649",
+      "output_changed": true,
+      "compiled_functions": 1899,
+      "reused_functions": 0,
+      "runtime_reused": true,
+      "runtime_installed": true,
+      "metadata_reused": false,
+      "frontend_seconds": 72.341519092,
+      "codegen_seconds": 335.29093287,
+      "link_seconds": 26.68014763,
+      "native_seconds": 361.971082888,
+      "target": "amd64_sysv",
+      "mode": "ReleaseFast",
+      "zig_version": "0.17.0-dev.1683+5ceec001b",
+      "artifact_kind": "executable",
+      "backend": "llvm",
+      "optimization": "3",
+      "lto": true
+    }
+  ],
+  "checks": [
+    "same binary path and unchanged hash/mtime after all commands",
+    "help usage on stderr",
+    "status and observe valid JSON",
+    "evaluate feasibility agrees with exit 0 or 3",
+    "unknown command exits 2",
+    "private journal path with spaces preserved"
+  ],
+  "diagnostics": "/home/epentland/ai/canopy/pcb-workbench/.workbench/builds/2b2f95f37f22ee93f24a3efd87392ba49c7886136e62530c08955c0c39a60068/report.G0DTwJ/diagnostics.log"
+}

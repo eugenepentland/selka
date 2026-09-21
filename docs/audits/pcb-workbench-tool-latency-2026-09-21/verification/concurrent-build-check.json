@@ -1,0 +1,7 @@
+{
+  "passed": true,
+  "simultaneous_cold_requests": 2,
+  "compiler_executions": 1,
+  "same_executable": true,
+  "fixture": "/tmp/pcb-concurrent-build-smybp7em"
+}
