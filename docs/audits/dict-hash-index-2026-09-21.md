@@ -174,20 +174,23 @@ parity audit ranks 2, 3 and 4. Those are out of scope here.
 
 ## Gate
 
-Run on `fix/dict-hash` at `42a9a67c`, on a machine also running other sessions'
-gates. All four steps passed.
+Run on `fix/dict-hash`, on a machine also running other sessions' gates: once
+before this report was written and again with it in place, since the report adds
+no source and no fenced example. All four steps passed both times; the second
+run's numbers are below.
 
 | step | result |
 |---|---|
-| `zig build test --summary all --maxrss 8000000000` | 70/70 steps succeeded; 1,521/17,118 tests passed (15,597 skipped, the shards' complement); guest `tests/lang` 241 passed / 0 failed across 68 programs under `--gc-stress`; `doc-coverage: 0 failures`; Guardian 88/88 |
+| `zig build test --summary all --maxrss 8000000000` | 70/70 steps succeeded; 1,555/17,152 tests passed (15,597 skipped, the shards' complement); guest `tests/lang` 241 passed / 0 failed across 68 programs under `--gc-stress`, and the doctest root 42 passed / 0 failed across 11; `doc-coverage: 0 failures` over 168 documented features; Guardian 88/88 |
 | `zig build test-qbe --summary all` | 48/48 steps succeeded; 206/206 tests passed |
 | `zig build test-qbe-build --summary all` | 30/30 steps succeeded |
 | `zig build fmt-check` | exit 0 |
 
 `scripts/test_native_memory.py`, which builds every C harness with
 `-std=c11 -Wall -Wextra -Werror -fsanitize=undefined`, passes all nine suites.
-Each of the three commits was made through Guardian's pre-commit hook, which
-runs the whole-tree gate rather than the diff-scoped one: 88/88 each time.
+Each of the four commits on this branch was made through Guardian's pre-commit
+hook, which runs the whole-tree gate rather than the diff-scoped one: 88/88 each
+time.
 
 ## Limits
 
