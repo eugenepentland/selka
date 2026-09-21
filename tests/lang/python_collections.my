@@ -335,5 +335,29 @@ public def test_scalar_element_reads_load_every_width_from_backing_storage() -> 
     return total == 509
 
 
+# A list that outgrows the size classes grows by extending its own reservation,
+# so a long append run keeps every element it already stored, keeps the element
+# identity of the list, and still reads back through the index it was built with.
+# spec: LIST-GROWTH-1
+public def test_append_past_the_segment_threshold_keeps_every_element() -> bool:
+    seed = [index % 1009 for index in range(4096)]
+    values: list[int] = []
+    writes = 0
+    while writes < 80:
+        values.extend(seed)
+        writes += 1
+    if len(values) != 4096 * 80:
+        return False
+    check = 0
+    while check < 4096 * 80:
+        if values[check] != (check % 4096) % 1009:
+            return False
+        check += 1009
+    if values[4096 * 80 - 1] != (4096 * 80 - 1) % 4096 % 1009:
+        return False
+    values.append(0 - 1)
+    return values[4096 * 80] == 0 - 1 and len(values) == 4096 * 80 + 1
+
+
 def main() -> int:
     return 0

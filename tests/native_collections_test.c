@@ -5,7 +5,40 @@
 #include <stdio.h>
 static const myl_native_type number = { .size = 8, .alignment = 8, .kind = MYL_NATIVE_PLAIN };
 static const myl_native_type pointer = { .size = sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_POINTER };
+/* spec-case: LIST-GROWTH-1. A list grown past the size classes keeps every
+   element it already stored — the backing is extended in its own reservation,
+   so the elements are neither copied nor faulted a second time — and an append
+   whose source lies inside the backing being replaced, which is the one value
+   that could not survive a move, still copies from the right place. */
+static void growth_keeps_elements(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap, 64u << 20);
+    myl_native_list *list = myl_native_list_new(&heap, &number, 0);
+    assert(list);
+    myl_native_root root;
+    myl_native_root_push(&heap, &root, &list, &pointer);
+    for (int64_t i = 0; i < 200000; ++i) assert(myl_native_list_append(&heap, list, &i));
+    assert(list->length == 200000 && list->capacity >= 262144);
+    for (size_t i = 0; i < list->length; i += 9973) {
+        int64_t held = -1;
+        assert(myl_native_list_get(list, i, &held) && held == (int64_t)i);
+    }
+    /* Extending a list with itself feeds the append a pointer into the backing
+       every growth replaces, so this is the aliased path the copy still serves. */
+    assert(myl_native_list_extend(&heap, list, list));
+    assert(list->length == 400000);
+    for (size_t i = 0; i < list->length; i += 9973) {
+        int64_t held = -1;
+        assert(myl_native_list_get(list, i, &held) && held == (int64_t)(i % 200000));
+    }
+    myl_native_heap_collect(&heap);
+    int64_t tail = -1;
+    assert(myl_native_list_get(list, 399999, &tail) && tail == 199999);
+    myl_native_root_pop(&heap, &root);
+    myl_native_heap_destroy(&heap);
+}
 int main(void) {
+    growth_keeps_elements();
     myl_native_heap heap;
     myl_native_heap_init(&heap, 1 << 20);
     heap.stress = 1;

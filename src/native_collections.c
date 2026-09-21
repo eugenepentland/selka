@@ -52,8 +52,14 @@ static inline __attribute__((always_inline)) void copy_element(void *destination
     default: memcpy(destination,source,size); return;
     }
 }
-int myl_native_list_append(myl_native_heap *heap, myl_native_list *list, const void *value) {
-    if (list->generation == UINT64_MAX) return 0;
+/* Whether `address` names a byte inside the `bytes` at `block`: the one value an
+   in-place growth must not be handed, because the reservation it points into is
+   the one about to move. */
+static int elementWithin(const void *address, const void *block, size_t bytes) {
+    uintptr_t at = (uintptr_t)address, start = (uintptr_t)block;
+    return block && at >= start && at - start < bytes;
+}
+int myl_native_list_append(myl_native_heap *heap, myl_native_list *list, const void *value) {    if (list->generation == UINT64_MAX) return 0;
     /* Room already reserved: nothing here can allocate, so nothing can collect
        and neither the list nor the value needs a root record for this call. */
     if (list->length < list->capacity) {
@@ -72,10 +78,24 @@ int myl_native_list_append(myl_native_heap *heap, myl_native_list *list, const v
     }
     /* Grown backing joins the list's own arena, so an append performed inside
        a younger arena never leaves an older list with storage that is about
-       to be bulk released. */
-    void *storage = myl_native_heap_alloc_at(heap, list->element, capacity, myl_native_object_region(heap, list));
-    if (!storage) goto failure;
-    if (list->length) memcpy(storage, list->storage, list->length * list->element->size);
+       to be bulk released.
+
+       A backing big enough to be its own one-slot segment is extended in place
+       instead: the elements it already holds are exactly the ones the copy would
+       rewrite and the pages behind them exactly the ones it would fault a second
+       time for. Nothing outside the list holds a pointer into that backing — the
+       element reads, the index, the sort and the dictionary entries all derive
+       their addresses from the header on every use — so only a value already
+       inside it has to keep its distance rather than its address, and that value
+       is what the ordinary allocate-and-copy path below still serves. */
+    void *storage = NULL;
+    if (!elementWithin(value, list->storage, list->length * list->element->size))
+        storage = myl_native_heap_extend(heap, list->storage, capacity);
+    if (!storage) {
+        storage = myl_native_heap_alloc_at(heap, list->element, capacity, myl_native_object_region(heap, list));
+        if (!storage) goto failure;
+        if (list->length) memcpy(storage, list->storage, list->length * list->element->size);
+    }
     /* value may point into old backing; copy before unlinking that backing. */
     copy_element((unsigned char *)storage + list->length * list->element->size, value, list->element->size);
     list->storage = storage;
