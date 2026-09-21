@@ -830,7 +830,14 @@ def compile_ir(ir_text, output):
     ir_path = output + ".ll"
     with open(ir_path, "w") as handle:
         handle.write(ir_text)
-    command = ["zig", "cc", "-S", optimization, "-fPIC", "-g0", ir_path, "-o", output]
+    zig = os.environ.get("MYLANG_QBE_LLVM_ZIG", "zig")
+    # Under `--lto` the driver passes the final object path as `-o` and links
+    # every unit itself, so the adapter must hand it an LTO object rather than
+    # assembly: `zig cc -c -flto` folds the IR into bitcode that `ld.lld` reads.
+    if os.environ.get("MYLANG_QBE_LLVM_EMIT_LTO_OBJECT"):
+        command = [zig, "cc", "-c", "-flto", optimization, "-fPIC", "-g0", ir_path, "-o", output]
+    else:
+        command = [zig, "cc", "-S", optimization, "-fPIC", "-g0", ir_path, "-o", output]
     completed = subprocess.run(command, capture_output=True, text=True)
     if completed.returncode != 0:
         raise ParseError(f"LLVM rejected the translated unit:\n{completed.stderr}\n"
