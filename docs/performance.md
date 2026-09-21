@@ -372,8 +372,8 @@ CPU of a shared machine, so read the ratios and not the absolute times):
 
 | arm | before | after | against the same body on the collecting heap |
 |---|---:|---:|---|
-| QBE | 17.7× Zig | **4.1× Zig** | 3.2× slower → **1.35× faster** |
-| LLVM O3 + LTO | 15.7× Zig | **2.2× Zig** | 4.3× slower → **1.64× faster** |
+| QBE | 17.7× Zig | **4.2× Zig** | 3.1× slower → **1.35× faster** |
+| LLVM O3 + LTO | 15.8× Zig | **2.2× Zig** | 4.3× slower → **1.65× faster** |
 
 "Zig" is `std.heap.ArenaAllocator` reset once per batch. Peak resident memory is
 unchanged at 2.4 MB, because the retained chunk is one the scope had already
