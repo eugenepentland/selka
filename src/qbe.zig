@@ -2412,10 +2412,11 @@ const Emitter = struct {
             .store_local => |slot| {
                 const index = @backingInt(slot);
                 const ty = self.function.scope.locals[index].ty;
-                // QBE-CTORFWD-1: the constructor immediately before this store
-                // already wrote the record into this local, field by field, so
+                // QBE-CTORFWD-1 and QBE-ARRAYWRITE-1: the instruction before
+                // this store already wrote this local where it lives — a
+                // constructor field by field, a `replace` one element — so
                 // there is nothing left to copy.
-                if (!try @import("qbe_aggregate.zig").constructorForwarded(@TypeOf(self), self, self.pc, index)) {
+                if (!try @import("qbe_aggregate.zig").storeForwarded(@TypeOf(self), self, self.pc, index)) {
                     const v = try self.load("s", h - 1);
                     if ((try self.layout(ty)).drop) {
                         try self.print(drop_local, .{ try self.descriptor(ty), index });
