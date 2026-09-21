@@ -641,6 +641,43 @@ test "a body that cannot leave a sticky trap carries no test for one" {
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, named(parsed.value, "scan").?.il, "loadl %trap"));
     try std.testing.expect(std.mem.count(u8, named(parsed.value, "main").?.il, "loadl %trap") != 0);
 }
+// spec: QBE-UNWIND-1
+test "the fast protocol drops the per-call sticky test and keeps the trace position" {
+    const a = std.testing.allocator;
+    const source =
+        \\def pick(b: bytes, i: i64) -> int:
+        \\    return b[i]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return pick(b"abc", 1)
+    ;
+    var fast = try language.Compilation.init(a, "qbe.my", source);
+    defer fast.deinit();
+    const bare = try fast.emitQbeWithOptions(a, false, false, false);
+    defer a.free(bare);
+    var parsed = try std.json.parseFromSlice(Manifest, a, bare, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+    defer parsed.deinit();
+    const reader = named(parsed.value, "pick").?.il;
+    // The bounds check still unwinds through its fail helper, but nothing reads
+    // the sticky flag afterwards: that helper leaves through the runtime.
+    try std.testing.expect(std.mem.indexOf(u8, reader, "myl_qbe_fail_index_bounds") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, reader, "loadl %trap"));
+    const caller = named(parsed.value, "main").?.il;
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, caller, "loadl %trap"));
+    // A call site keeps its position: a callee's trace names this pc, and the
+    // missing sticky branch no longer marks the body observable by itself.
+    try std.testing.expect(std.mem.indexOf(u8, caller, ", %position") != null);
+    try std.testing.expect(std.mem.indexOf(u8, caller, "call $myl_f_") != null);
+    // An accounting build keeps the flag test, so its trap delivery is unchanged.
+    var accounted = try language.Compilation.init(a, "qbe.my", source);
+    defer accounted.deinit();
+    const full = try accounted.emitQbeWithOptions(a, false, false, true);
+    defer a.free(full);
+    var full_parsed = try std.json.parseFromSlice(Manifest, a, full, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+    defer full_parsed.deinit();
+    try std.testing.expect(std.mem.indexOf(u8, named(full_parsed.value, "main").?.il, "loadl %trap") != null);
+}
 // spec: QBE-POSITION-2
 test "a trap position stores on the cold path and a call site keeps its own" {
     const a = std.testing.allocator;

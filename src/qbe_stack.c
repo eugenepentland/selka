@@ -3,6 +3,7 @@
  * frame checks remain active rather than translating SIGSEGV into guest traps. */
 #define _GNU_SOURCE
 #include "qbe_runtime.h"
+#include <setjmp.h>
 #include <stdlib.h>
 #include <ucontext.h>
 #include <sys/mman.h>
@@ -11,11 +12,21 @@ typedef struct {
     uint64_t (*entry)(void *);
     MylQbeContext *context;
     uint64_t result;
+    jmp_buf unwind;
 } StackCall;
+/* Run the entry with one armed non-local exit. A trap is fatal: the first
+   `fail` builds the trace on the generated stack and then longjmps back here,
+   so the recursion unwinds without running guest code after the failure. The
+   call pointer is volatile because longjmp restores callee-saved registers
+   only, and `low`/`high` arrive in caller-saved ones. */
 static void launch(unsigned low,unsigned high) {
     uintptr_t pointer=(uintptr_t)low|((uintptr_t)high<<32);
-    StackCall *call=(StackCall *)pointer;
-    call->result=call->entry(call->context);
+    StackCall *volatile call=(StackCall *)pointer;
+    if (setjmp(call->unwind)==0) {
+        call->context->unwind=&call->unwind;
+        call->result=call->entry(call->context);
+    } else call->result=0;
+    call->context->unwind=NULL;
 }
 uint64_t myl_qbe_on_stack(uint64_t (*entry)(void *),MylQbeContext *ctx) {
     long page_size=sysconf(_SC_PAGESIZE);

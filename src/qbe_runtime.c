@@ -4,6 +4,7 @@
 #include "native_collections.h"
 #include "native_text.h"
 #include <inttypes.h>
+#include <setjmp.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -223,6 +224,11 @@ static uint64_t fail(void *context, const char *code) {
             trace_frame(ctx, frame->function, frame->position, 0, &logical);
         }
         ctx->omitted_frames = logical > ctx->trace_count ? logical-ctx->trace_count : 0;
+        /* The trace is complete, so leave. Generated code does not test the
+           sticky flag after a call; the trampoline armed this jump while the
+           entry ran. A context without one (the direct C entry points and
+           budget parsing) keeps the sticky behavior. */
+        if (ctx->unwind) longjmp(*(jmp_buf *)ctx->unwind, 1);
     }
     return 0;
 }

@@ -417,8 +417,10 @@ fn functionLabel(line: []const u8) bool {
 /// instruction, so an instruction whose body cannot fail and is not a call site
 /// does not need it: the next instruction that can be observed stores its own.
 /// Bodies are delimited by the position stores themselves, which is why this
-/// pass runs before unreferenced labels are stripped.
-fn elideUnobservablePositions(a: std.mem.Allocator, text: []const u8) GenerateError![]u8 {
+/// pass runs before unreferenced labels are stripped. In `fast` mode the sticky
+/// test is gone, so a call — not the literal text `failure` — is what makes a
+/// body observable: any callee can trap and will name this frame's call site.
+fn elideUnobservablePositions(a: std.mem.Allocator, text: []const u8, fast: bool) GenerateError![]u8 {
     var lines: std.ArrayList([]const u8) = .empty;
     defer lines.deinit(a);
     var scan = std.mem.splitScalar(u8, text, '\n');
@@ -433,7 +435,7 @@ fn elideUnobservablePositions(a: std.mem.Allocator, text: []const u8) GenerateEr
         var end = index + 1;
         while (end < lines.items.len and positionStore(lines.items[end]) == null and !functionLabel(lines.items[end])) end += 1;
         for (lines.items[index..end]) |body| {
-            if (std.mem.indexOf(u8, body, "failure") == null) continue;
+            if (std.mem.indexOf(u8, body, "failure") == null and !(fast and std.mem.indexOf(u8, body, "call $") != null)) continue;
             try observable.append(a, index);
             break;
         }
@@ -1309,7 +1311,7 @@ const Emitter = struct {
         // failure path. With a step check, every instruction can fail, so every
         // instruction keeps its position.
         if (!self.step_checks) {
-            text = try elideUnobservablePositions(self.allocator, text);
+            text = try elideUnobservablePositions(self.allocator, text, !self.stickyFlagTest());
             text = try sinkPositions(self.allocator, text);
         }
         text = try dropUnusedRoots(self.allocator, text);
@@ -2293,8 +2295,16 @@ const Emitter = struct {
         try self.print(" %v{d} =l ceql %v{d}, %v{d}\n jnz %v{d}, @step_limit, @step{d}\n@step{d}\n", .{ exhausted, used, maximum, exhausted, next, next });
         try self.print(" %v{d} =l add %v{d}, 1\n storel %v{d}, %ctx\n", .{ next, used, next });
     }
+    /// Whether a sticky `ctx->trap` test belongs after this instruction's body.
+    /// The fast protocol (no step and no frame accounting) omits the accounting
+    /// that can fail without trapping, so every failure reaches the runtime
+    /// directly through the fail helper's non-local exit; the test is dead there.
+    fn stickyFlagTest(self: *Emitter) bool {
+        return self.frame_checks or self.step_checks;
+    }
     /// Shared lowering primitive for target operation emitters.
     pub fn checkFailure(self: *Emitter, target: []const u8) GenerateError!void {
+        if (!self.stickyFlagTest()) return;
         const failed = self.temp();
         try self.print(" %v{d} =l loadl %trap\n jnz %v{d}, @{s}, @ok{d}\n@ok{d}\n", .{ failed, failed, target, failed, failed });
     }
