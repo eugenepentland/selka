@@ -13,7 +13,6 @@ const diagnostic = @import("diagnostic.zig");
 const native_types = @import("native_types.zig");
 const walk = @import("typed_walk.zig");
 const dependencies = @import("native_test_dependencies.zig");
-const effect_set = @import("effect_set.zig");
 const Sha = std.crypto.hash.sha2.Sha256;
 /// Facts generation failures; malformed checked programs never publish facts.
 pub const Error = error{ OutOfMemory, InvalidProgram };
@@ -245,7 +244,7 @@ const FunctionFacts = struct {
             }
         }
         if (function.policy.host != null) try reasons.add("host-call");
-        const external_effects = function.policy.effects & ~effect_set.bit(.managed_allocation);
+        const external_effects = function.policy.effects & ~dependencies.deterministic_effects;
         if (external_effects != 0) try reasons.add("external-effects");
         if (self.codecs.len != 0) {
             try reasons.add("conservative-codec-runtime-set");

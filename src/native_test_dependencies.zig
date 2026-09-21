@@ -32,6 +32,8 @@ pub const Metadata = struct {
     pure: bool,
     reasons: []const []const u8,
 };
+/// Effects confined to one freshly spawned test process and its keyed inputs.
+pub const deterministic_effects = effects.bit(.managed_allocation) | effects.bit(.mutation);
 /// Record checked call edges and the canonical type inputs actually used by a unit.
 /// All returned allocations belong to the caller's compilation arena.
 pub fn describe(allocator: std.mem.Allocator, program: bytecode.Program, index: usize, il: []const u8, catalog: *layouts.Catalog, states: []const ?[]const typed.Type) layouts.Error!Metadata {
@@ -40,8 +42,7 @@ pub fn describe(allocator: std.mem.Allocator, program: bytecode.Program, index: 
     defer builder.types.deinit(allocator);
     for (function.scope.instructions) |instruction| try builder.operation(instruction.op);
     if (function.policy.host != null) try builder.reason("host-call");
-    const deterministic = effects.bit(.managed_allocation);
-    const external_effects = function.policy.effects & ~deterministic;
+    const external_effects = function.policy.effects & ~deterministic_effects;
     if (external_effects != 0) try builder.reason("external-effects");
     const cacheable = function.policy.host == null and external_effects == 0 and !builder.external;
     try builder.typeInput(function.signature.return_type);
@@ -181,7 +182,8 @@ fn part(hash: *Sha, bytes: []const u8) void {
     hash.update(bytes);
 }
 
-test "checked metadata tracks indirect targets and allows deterministic allocation" {
+// spec: NATIVE-TEST-13
+test "checked metadata allows process-local mutation but rejects external effects" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
@@ -191,13 +193,14 @@ test "checked metadata tracks indirect targets and allows deterministic allocati
         .{ .span = span, .op = .{ .invoke = .i64 } },
     };
     var functions = [_]bytecode.Function{
-        .{ .id = @fromBackingInt(0), .name = "testA", .scope = .{ .instructions = &instructions }, .policy = .{ .effects = effects.bit(.managed_allocation) } },
+        .{ .id = @fromBackingInt(0), .name = "testA", .scope = .{ .instructions = &instructions }, .policy = .{ .effects = effects.bit(.managed_allocation) | effects.bit(.mutation) }, .signature = .{ .declared_mutates = &.{0} } },
         .{ .id = @fromBackingInt(1), .name = "callback", .scope = .{ .instructions = &.{} } },
     };
     var catalog = try layouts.Catalog.initRecords(a, &.{});
     defer catalog.deinit();
     const first = try describe(a, .{ .functions = &functions }, 0, "stable IL", &catalog, &.{});
     try std.testing.expect(first.cacheable);
+    try std.testing.expect(!first.pure);
     try std.testing.expectEqual(@as(usize, 2), first.dependencies.len);
     functions[0].policy.effects = effects.bit(.clock);
     const external = try describe(a, .{ .functions = &functions }, 0, "stable IL", &catalog, &.{});

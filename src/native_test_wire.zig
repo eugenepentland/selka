@@ -477,6 +477,45 @@ fn runFixture(allocator: std.mem.Allocator, resolved: Tools, stem: []const u8, e
     try std.testing.expect(std.mem.indexOf(u8, result.stdout, "0 failed") != null);
 }
 
+// spec-case: NATIVE-TEST-13
+test "local mutation reuses a receipt while output executes again" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const resolved = try tools(a);
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data =
+        \\module main
+        \\
+        \\def change(xs: list[int]) -> None effects(mutation) mutates(xs):
+        \\    xs[0] = 2
+        \\
+        \\public def test_local_mutation() -> bool effects(mutation, managed_allocation):
+        \\    xs: list[int] = [1]
+        \\    change(xs)
+        \\    return xs[0] == 2
+        \\
+        \\public def test_external_output(out: Stream) -> bool effects(output):
+        \\    out.print("")
+        \\    return True
+        \\
+        \\def main() -> int:
+        \\    return 0
+    });
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const entry = try std.fs.path.join(a, &.{ root, "main.my" });
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    const argv = &.{ resolved.compiler, "test", entry, "--json", "--cache-dir", cache };
+    const cold = try std.process.run(a, std.testing.io, .{ .argv = argv });
+    try std.testing.expectEqual(@as(u8, 0), build_io.exitCode(cold.term));
+    const warm = try std.process.run(a, std.testing.io, .{ .argv = argv });
+    try std.testing.expectEqual(@as(u8, 0), build_io.exitCode(warm.term));
+    const report = try std.json.parseFromSlice(std.json.Value, a, warm.stdout, .{});
+    try std.testing.expectEqual(@as(i64, 1), v.get(report.value, "cached").integer);
+    try std.testing.expectEqual(@as(i64, 1), v.get(report.value, "passed").integer);
+}
+
 // spec: QBE-AGGREF-5
 test "a record, an array, a nested record, a zero-length and a large argument round-trip through mylang test" {
     const a = std.testing.allocator;
