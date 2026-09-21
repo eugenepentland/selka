@@ -41,4 +41,12 @@ myl_native_list *myl_native_list_copy(myl_native_heap *, const myl_native_list *
 /* Fresh stepped slice under Python's endpoint rules. A zero step or a refused
  * allocation returns NULL. */
 myl_native_list *myl_native_list_slice_step(myl_native_heap *, myl_native_list *, int64_t start, int64_t stop, int64_t step);
+/* The three endpoint rules `myl_native_list_slice_step` applies, shared with
+ * every other indexable receiver so a stepped slice cannot be spelled twice: an
+ * omitted endpoint arrives as one of the sentinels above and is resolved here,
+ * then clamped for the step's sign, and the element count rounds the distance
+ * between the adjusted endpoints up to whole steps. */
+int64_t myl_native_slice_start(int64_t length, int64_t start, int64_t step);
+int64_t myl_native_slice_stop(int64_t length, int64_t stop, int64_t step);
+uint64_t myl_native_slice_count(int64_t start, int64_t stop, int64_t step);
 #endif

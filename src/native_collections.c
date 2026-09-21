@@ -330,7 +330,7 @@ myl_native_list *myl_native_list_copy(myl_native_heap *heap, const myl_native_li
     return result;
 }
 /* Resolve an omitted endpoint, then apply Python's clamp for the step's sign. */
-static int64_t slice_start(int64_t length, int64_t start, int64_t step) {
+int64_t myl_native_slice_start(int64_t length, int64_t start, int64_t step) {
     if (start == MYL_NATIVE_SLICE_FIRST) start = step > 0 ? 0 : length - 1;
     if (step > 0) {
         if (start < 0) { start += length; if (start < 0) return 0; }
@@ -341,7 +341,7 @@ static int64_t slice_start(int64_t length, int64_t start, int64_t step) {
     else if (start >= length) return length - 1;
     return start;
 }
-static int64_t slice_stop(int64_t length, int64_t stop, int64_t step) {
+int64_t myl_native_slice_stop(int64_t length, int64_t stop, int64_t step) {
     if (stop == MYL_NATIVE_SLICE_LAST) stop = step > 0 ? length : -length - 1;
     if (step > 0) {
         if (stop < 0) { stop += length; if (stop < 0) return 0; }
@@ -353,16 +353,16 @@ static int64_t slice_stop(int64_t length, int64_t stop, int64_t step) {
     return stop;
 }
 /* Element count between two adjusted endpoints, rounded up to whole steps. */
-static uint64_t slice_count(int64_t start, int64_t stop, int64_t step) {
+uint64_t myl_native_slice_count(int64_t start, int64_t stop, int64_t step) {
     if (step > 0) return stop > start ? (uint64_t)((stop - start + step - 1) / step) : 0;
     return start > stop ? (uint64_t)((start - stop - step - 1) / (-step)) : 0;
 }
 myl_native_list *myl_native_list_slice_step(myl_native_heap *heap, myl_native_list *input, int64_t start, int64_t stop, int64_t step) {
     if (!step) return NULL;
     const int64_t length = (int64_t)input->length;
-    const int64_t first = slice_start(length, start, step);
-    const int64_t last = slice_stop(length, stop, step);
-    const uint64_t count = slice_count(first, last, step);
+    const int64_t first = myl_native_slice_start(length, start, step);
+    const int64_t last = myl_native_slice_stop(length, stop, step);
+    const uint64_t count = myl_native_slice_count(first, last, step);
     myl_native_root root;
     myl_native_root_push(heap, &root, &input, &pointer_type);
     myl_native_list *result = myl_native_list_new(heap, input->element, count);

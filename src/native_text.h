@@ -82,6 +82,14 @@ myl_native_text *myl_native_text_from_scalars(myl_native_heap *, const uint32_t 
 /* Fresh text holding scalar range `[start, start+count)`, with `input` rooted
  * across the allocation. A range past the receiver is clamped by its callers. */
 myl_native_text *myl_native_text_copy(myl_native_heap *, myl_native_text *, size_t start, size_t count);
+/* Fresh text holding every `step`-th scalar in Python's stepped-slice range, or
+ * NULL for a zero step or a refused allocation. A stepped slice gathers scalars,
+ * so it cannot read a stride of the UTF-8 payload. */
+myl_native_text *myl_native_text_slice_step(myl_native_heap *, myl_native_text *, int64_t start, int64_t stop, int64_t step);
+/* A copy of one text inside the heap's current arena depth, payload and all: the
+ * arena escape copier clones a text wholesale because its payload holds no
+ * pointer to patch. */
+myl_native_text *myl_native_text_clone(myl_native_heap *, const myl_native_text *);
 myl_native_text *myl_native_text_concat(myl_native_heap *, myl_native_text *, myl_native_text *);
 myl_native_text *myl_native_text_at(myl_native_heap *, myl_native_text *, int64_t);
 myl_native_text *myl_native_text_slice(myl_native_heap *, myl_native_text *, int64_t, int64_t);

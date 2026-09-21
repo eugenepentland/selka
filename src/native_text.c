@@ -1,6 +1,7 @@
 /* `memmem` is a GNU extension, so the feature macro has to precede <string.h>. */
 #define _GNU_SOURCE
 #include "native_text.h"
+#include <stdlib.h>
 #include <string.h>
 /* A text object's payload is UTF-8 octets, so the collector has nothing to walk;
  * the element descriptor names a plain byte and switches tracing off. */
@@ -194,6 +195,81 @@ myl_native_text *myl_native_text_copy(myl_native_heap *heap, myl_native_text *in
     myl_native_root root;
     myl_native_root_push(heap,&root,&input,&pointer_type);
     myl_native_text *result=myl_native_text_substring(heap,input,from,to);
+    myl_native_root_pop(heap,&root);
+    return result;
+}
+myl_native_text *myl_native_text_clone(myl_native_heap *heap, const myl_native_text *input) {
+    return build(heap,myl_native_text_storage(input),input->bytes,input->length,input->flags&MYL_TEXT_ASCII);
+}
+/* Gather `count` scalars of a non-ASCII text, `step` apart from `first`, into one
+ * fresh text. One forward walk records where each selected scalar starts, so the
+ * gather costs a pass over the payload rather than a walk per scalar. */
+static myl_native_text *gather(myl_native_heap *heap, const myl_native_text *input, int64_t first, uint64_t count, int64_t step) {
+    const unsigned char *bytes=myl_native_text_storage(input);
+    size_t *offsets=malloc((size_t)count*sizeof(size_t));
+    if (!offsets) return NULL;
+    /* The selected scalars are `lowest`, `lowest+magnitude`, ... in payload
+       order, so one countdown visits each of them in the walk below and records
+       it under its own place in the answer: a negative step answers its
+       selection reversed, so the walk fills the record back to front. */
+    const int64_t magnitude=step>0?step:-step;
+    int64_t next=step>0?first:first-(int64_t)(count-1)*magnitude;
+    int64_t place=step>0?0:(int64_t)count-1;
+    size_t octets=0, at=0;
+    int plain=1;
+    uint64_t found=0;
+    int64_t index=0;
+    while (found<count) {
+        size_t width=1;
+        while (at+width<input->bytes && (bytes[at+width]&0xc0u)==0x80u) width++;
+        if (index==next) {
+            offsets[place]=at;
+            octets+=width;
+            if (width>1) plain=0;
+            next+=magnitude;
+            place+=step>0?1:-1;
+            found++;
+        }
+        at+=width; index++;
+    }
+    myl_native_text *result=myl_native_text_build(heap,octets);
+    if (result) {
+        unsigned char *output=(unsigned char *)myl_native_text_storage(result);
+        size_t written=0;
+        for (uint64_t i=0;i<count;i++) {
+            size_t from=offsets[i], width=1;
+            while (from+width<input->bytes && (bytes[from+width]&0xc0u)==0x80u) width++;
+            memcpy(output+written,bytes+from,width);
+            written+=width;
+        }
+        myl_native_text_publish(result,(size_t)count,plain);
+    }
+    free(offsets);
+    return result;
+}
+myl_native_text *myl_native_text_slice_step(myl_native_heap *heap, myl_native_text *input, int64_t start, int64_t stop, int64_t step) {
+    if (!step) return NULL;
+    const int64_t length=(int64_t)input->length;
+    int64_t first=myl_native_slice_start(length,start,step);
+    const int64_t last=myl_native_slice_stop(length,stop,step);
+    uint64_t count=myl_native_slice_count(first,last,step);
+    /* An adjusted start outside the receiver selects nothing, which is also what
+       the arithmetic above answers for every other endpoint combination. */
+    if (first<0 || first>=length) count=0;
+    myl_native_root root;
+    myl_native_root_push(heap,&root,&input,&pointer_type);
+    myl_native_text *result=NULL;
+    if (!count) result=myl_native_text_substring(heap,input,0,0);
+    else if (input->flags&MYL_TEXT_ASCII) {
+        /* A scalar offset is a byte offset, so the gather needs no walk. */
+        result=myl_native_text_build(heap,(size_t)count);
+        if (result) {
+            unsigned char *output=(unsigned char *)myl_native_text_storage(result);
+            const unsigned char *bytes=myl_native_text_storage(input);
+            for (uint64_t i=0;i<count;i++) output[i]=bytes[first+(int64_t)i*step];
+            myl_native_text_publish(result,(size_t)count,1);
+        }
+    } else result=gather(heap,input,first,count,step);
     myl_native_root_pop(heap,&root);
     return result;
 }

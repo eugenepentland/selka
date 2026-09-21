@@ -88,6 +88,10 @@ static void *shallow(Copier *copier, const myl_native_type *type, void *source) 
         const myl_native_dictionary *from = source;
         return myl_native_dictionary_new(copier->heap, from->key, from->value, from->string_keys);
     }
+    /* A text's payload is UTF-8 octets with no pointer to patch, so the clone is
+       the whole value: one allocation in the enclosing region and nothing left
+       for `fill` to walk. */
+    if (type->collection_kind == 2) return myl_native_text_clone(copier->heap, source);
     if (!type->collection_kind || type->collection_kind > 4) return NULL;
     const myl_native_list *from = source;
     myl_native_list *clone = myl_native_list_new(copier->heap, from->element, from->length);
@@ -149,6 +153,7 @@ static void fill_dictionary(Copier *copier, Clone item) {
 }
 static void fill(Copier *copier, Clone item) {
     if (item.type->collection_kind == 3) return fill_dictionary(copier, item);
+    if (item.type->collection_kind == 2) return;
     myl_native_list *from = item.source, *clone = item.clone;
     size_t width = from->element->size;
     for (size_t i = 0; i < from->length && !copier->failed; ++i)

@@ -567,6 +567,18 @@ test "UTF8-TEXT-1 text stores UTF-8 octets and still indexes Unicode scalars" {
         \\            return 35
         \\    if len("a\u00e9".splitlines()) != 1:
         \\        return 36
+        \\    if text[3:0:-2] != "b\u00e9":
+        \\        return 39
+        \\    if text[::-1] != "b\u6f22\u00e9a":
+        \\        return 40
+        \\    if len(text[1:4:2]) != 2 or text[1:4:2][0] != "\u00e9":
+        \\        return 41
+        \\    kept = "z"
+        \\    with arena() as scratch:
+        \\        inside = "-".join([text, "\u00e9"])
+        \\        kept = scratch.escape(inside)
+        \\    if kept != "a\u00e9\u6f22b-\u00e9" or len(kept) != 6:
+        \\        return 42
         \\    return 1234
     ;
     const result = try execute(source);

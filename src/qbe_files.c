@@ -232,8 +232,14 @@ static int finish(void *context, myl_native_resource *owner, unsigned request, O
 int myl_qbe_file_access(void *context, uint64_t authority, unsigned request, myl_native_text *path, const void *input, uint64_t *value) {
     unsigned kind = request & 0xff;
     *value = 0;
+    /* Only a write helper consumes a payload, and the request's text bit says
+       whether that payload arrived as text or as octets. `open` alone receives a
+       nonempty operand here without consuming it — its mode spelling, whose
+       text-ness is the handle's, never the operand's — so borrowing it would
+       describe the wrong value. */
     Owned spelling = borrow(path, 1);
-    Owned payload = borrow(input, (request >> 16) & 1);
+    Owned payload = {NULL, 0, 0};
+    if (kind == MYL_FILE_WRITE_FILE || kind == MYL_FILE_WRITE_TEXT) payload = borrow(input, (request >> 16) & 1);
     int status = 0;
     if (spelling.failed || payload.failed) { myl_qbe_fail_allocation(context); status = -1; }
     myl_native_resource *owner = NULL;

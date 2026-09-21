@@ -104,8 +104,9 @@ int main(void) {
     assert(one && one->length==1);
     myl_native_list *blanks=myl_native_text_lines(&heap,raw(&heap,"\n\n"));
     assert(blanks && blanks->length==2);
-    /* Scalar storage stays readable for the shared number grammar. */
-    assert(myl_native_text_points(line)[0]=='b');
+    /* The payload is UTF-8 octets, which is exactly what the shared number
+       grammar reads. */
+    assert(myl_native_text_payload(line)[0]=='b' && line->bytes==strlen("banana"));
     keep(&heap,myl_native_text_trim(&heap,padded,MYL_TEXT_BOTH));
     myl_native_heap_collect(&heap);
     equals(((myl_native_text **)bag->storage)[bag->length-1],"value");

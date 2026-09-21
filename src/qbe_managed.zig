@@ -239,6 +239,18 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
 
 /// Copy a stepped slice through the shared native list routine, which text shares.
 fn steppedSlice(comptime E: type, self: *E, base: usize, input: usize) Error!void {
+    return sliceStep(E, self, base, input, "myl_native_list_slice_step");
+}
+
+/// Lower a stepped slice of text, whose element storage is UTF-8 octets: the
+/// gather cannot read a stride of the payload, so it runs on the text runtime.
+fn textStep(comptime E: type, self: *E, base: usize, input: usize) Error!void {
+    return sliceStep(E, self, base, input, "myl_native_text_slice_step");
+}
+
+/// Lower `receiver[start:stop:step]` onto `callee`, trapping a zero step before
+/// either engine runs.
+fn sliceStep(comptime E: type, self: *E, base: usize, input: usize, callee: []const u8) Error!void {
     const first = try self.load("s", base);
     const last = try self.load("s", base + 1);
     const step = try self.load("s", base + 2);
@@ -246,7 +258,7 @@ fn steppedSlice(comptime E: type, self: *E, base: usize, input: usize) Error!voi
     try self.print(" %v{d} =l cnel %v{d}, 0\n", .{ nonzero, step });
     try self.require(nonzero, "myl_qbe_fail_slice_step");
     const result = self.temp();
-    try self.print(" %v{d} =l call $myl_native_list_slice_step(l %heap, l %v{d}, l %v{d}, l %v{d}, l %v{d})\n", .{ result, input, first, last, step });
+    try self.print(" %v{d} =l call ${s}(l %heap, l %v{d}, l %v{d}, l %v{d}, l %v{d})\n", .{ result, callee, input, first, last, step });
     try checkedPointer(E, self, result, base);
 }
 
@@ -692,7 +704,7 @@ fn textOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try self.print(" %v{d} =l call $myl_native_text_slice(l %heap, l %v{d}, l %v{d}, l %v{d})\n", .{ result, input, start, end });
             try checkedPointer(E, self, result, base);
         },
-        .slice_step => try steppedSlice(E, self, base, input),
+        .slice_step => try textStep(E, self, base, input),
         .split, .join => {
             const argument = try self.load("s", base);
             if (op.kind == .split) {
