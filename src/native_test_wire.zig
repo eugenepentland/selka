@@ -4,6 +4,8 @@ const v = @import("qbe_build_value.zig");
 const build_io = @import("qbe_build_io.zig");
 const Value = std.json.Value;
 const enumeration_kind = "enumeration";
+/// The one checked schema kind that carries a variable-length element run.
+const list_kind = "list";
 /// The one checked type name that carries immutable Unicode text.
 pub const text_name = "str";
 /// Whether one checked type name is the language's text type. The rule is
@@ -58,6 +60,33 @@ pub const Codec = struct {
         if (element != .string) return error.UnsupportedTestType;
         return element.string;
     }
+    /// The element type one user-list definition carries its items as, or null
+    /// when the definition is not a list. Text is excluded nominally: the checked
+    /// schema spells `str` with the same `list` kind and the same `u32` element,
+    /// so the name is the only thing that separates text from `list[u32]`.
+    fn listElement(name: []const u8, item: Value) Error!?[]const u8 {
+        if (isText(name)) return null;
+        if (!std.mem.eql(u8, v.text(v.get(item, "kind")), list_kind)) return null;
+        const element = try textElement(item);
+        return element;
+    }
+    /// Flatten one JSON array into the one-node-per-element list wire form: a
+    /// list node whose `children` is the element count, followed by one node per
+    /// element. The tree is copied in, so the guest never shares an alias with
+    /// the request and a repeated reference arrives as repeated values.
+    fn encodeList(self: *Codec, element: []const u8, value: Value, index: usize, depth: usize) Error!void {
+        if (value != .array) return error.InvalidTestValue;
+        self.nodes.items[index].children = value.array.items.len;
+        for (value.array.items) |child| try self.encode(element, child, depth + 1);
+    }
+    /// Convert one returned list node back to a JSON array, rejecting a node tree
+    /// that is not exactly the one-node-per-element list wire form.
+    fn decodeList(self: *Codec, element: []const u8, node: Node, depth: usize) Error!Value {
+        if (node.bits != 0 or node.children > self.nodes.items.len - self.cursor) return error.InvalidNativeTestResponse;
+        var array: std.json.Array = .init(self.allocator);
+        for (0..node.children) |_| try array.append(try self.decode(element, depth + 1));
+        return .{ .array = array };
+    }
     /// Flatten one JSON string into the one-node-per-scalar text wire form: a
     /// text node whose `children` is the scalar count, followed by one node per
     /// Unicode scalar in the declared element type. The string is decoded as
@@ -101,6 +130,8 @@ pub const Codec = struct {
         try self.nodes.append(self.allocator, .{ .type = name });
         if (isText(name)) {
             try self.encodeText(try textElement(item), value, index);
+        } else if (try listElement(name, item)) |element| {
+            try self.encodeList(element, value, index, depth);
         } else if (std.mem.eql(u8, kind, "integer")) {
             if (value != .string) return error.InvalidTestValue;
             self.nodes.items[index].bits = try decimal(name, value.string);
@@ -170,6 +201,7 @@ pub const Codec = struct {
         const item = try self.definition(name);
         const kind = v.text(v.get(item, "kind"));
         if (isText(name)) return self.decodeText(try textElement(item), node);
+        if (try listElement(name, item)) |element| return self.decodeList(element, node, depth);
         if (std.mem.eql(u8, kind, "integer")) {
             if (node.children != 0) return error.InvalidNativeTestResponse;
             const number: i128 = if (v.boolean(v.get(item, "signed"))) @as(i64, @bitCast(node.bits)) else node.bits;

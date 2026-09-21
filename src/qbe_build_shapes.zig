@@ -9,6 +9,9 @@ pub const Shapes = struct {
     types: []const Value,
     ordinary: []const Value = &.{},
     codecs: bool = false,
+    /// The native descriptor symbol of each `types` entry, position for
+    /// position. Absent on the ordinary manifest, which carries no list.
+    descriptors: []const Value = &.{},
 
     /// Find a canonical type in this manifest.
     pub fn index(self: Shapes, name: []const u8) Error!usize {
@@ -68,19 +71,39 @@ pub const Shapes = struct {
             try w.writeAll(";\n");
         }
     }
+    /// Declare and tabulate the native descriptor of every manifest entry,
+    /// position for position, so the generated adapter hands the runtime the
+    /// `myl_native_type` the program already publishes for that type instead of
+    /// synthesizing a second descriptor that could drift from the collector's.
+    /// A manifest carrying a list without this table is refused: an absent
+    /// descriptor would reach the allocator as a null type rather than as a
+    /// shape the collector can trace.
+    pub fn descriptorTable(self: Shapes, w: *std.Io.Writer) Error!void {
+        if (self.descriptors.len != 0 and self.descriptors.len != self.types.len) return error.InvalidManifest;
+        if (self.descriptors.len == 0) for (self.types) |item| {
+            if (try kindNumber(v.text(v.get(item, "kind"))) == list_kind) return error.InvalidManifest;
+        };
+        for (self.descriptors) |item| try w.print("extern const myl_native_type {s};\n", .{v.text(item)});
+        try w.writeAll("static const myl_native_type *const co_native_types[]={\n");
+        for (self.descriptors) |item| try w.print("&{s},\n", .{v.text(item)});
+        if (self.descriptors.len == 0) try w.writeAll("NULL,\n");
+        try w.writeAll("};\n");
+    }
     /// Emit the common native layout fields of one conversion schema.
     pub fn schema(self: Shapes, w: *std.Io.Writer, item: Value) Error!void {
         try w.writeByte('{');
         try v.quote(w, v.text(v.get(item, "name")));
         const fields = v.array(v.get(item, "fields"));
         const kind = try kindNumber(v.text(v.get(item, "kind")));
-        // A text is described by exactly one element field: the scalar type the
-        // wire carries one node per. Anything else is a malformed manifest the
-        // generated adapter must refuse rather than walk off its field table.
-        if (kind == 5 and fields.len != 1) return error.InvalidManifest;
-        // An array's and a text's element count is carried by the manifest
-        // itself; for every other aggregate the field table is the count.
-        const count = if (kind == 2 or kind == 5) v.number(v.get(item, "count")) else fields.len;
+        // A text and a list are each described by exactly one element field: the
+        // type the wire carries one node per. Anything else is a malformed
+        // manifest the generated adapter must refuse rather than walk off its
+        // field table.
+        if ((kind == 5 or kind == list_kind) and fields.len != 1) return error.InvalidManifest;
+        // An array's, a text's and a list's element count is carried by the
+        // manifest itself — zero for the two variable-length kinds. For every
+        // other aggregate the field table is the count.
+        const count = if (kind == 2 or kind == 5 or kind == list_kind) v.number(v.get(item, "count")) else fields.len;
         try w.print(",{d},{d},{d},{d},", .{ v.number(v.get(item, "size")), count, v.number(v.get(item, "stride")), kind });
         try self.renderFields(w, fields, false);
         try w.writeByte(',');
@@ -149,8 +172,13 @@ pub fn find(types: []const Value, name: []const u8) ?usize {
     for (types, 0..) |item, index_value| if (std.mem.eql(u8, v.text(v.get(item, "name")), name)) return index_value;
     return null;
 }
+/// Manifest kind names in their stable numeric order; the index is the number
+/// the generated adapter switches on.
+const kind_names = [_][]const u8{ "scalar", "record", "array", "variant", "domain", "text", "list" };
+/// The manifest kind number of a user list, carried as one wire node per element.
+const list_kind: u8 = 6;
 fn kindNumber(name: []const u8) Error!u8 {
-    for ([_][]const u8{ "scalar", "record", "array", "variant", "domain", "text" }, 0..) |kind, i| if (std.mem.eql(u8, name, kind)) return @intCast(i);
+    for (kind_names, 0..) |kind, i| if (std.mem.eql(u8, name, kind)) return @intCast(i);
     return error.InvalidManifest;
 }
 

@@ -344,6 +344,19 @@ const Walk = struct {
         // one word. The rule is the name (`str`), never the shape, because the
         // checked schema spells a user `List<u32>` exactly like `str`.
         if (wire.isText(name)) return null;
+        // A user list crosses as one wire node per element, so it is acceptable
+        // exactly when its element is. The verdict is the element's, reported at
+        // the list's own path so a refusal still names the argument the caller
+        // has to change.
+        if (std.mem.eql(u8, kind, list_kind)) {
+            const element = v.get(item, "element");
+            if (element != .string) return .{
+                .kind = unsupported_type_kind,
+                .path = path,
+                .reason = "the list's element type is not published in the checked schema",
+            };
+            return self.child(element.string, path, "element");
+        }
         if (v.boolean(v.get(item, "move_only"))) return .{
             .kind = unsupported_type_kind,
             .path = path,
@@ -419,6 +432,9 @@ pub const invalid_request_kind = "invalid-request";
 const unsupported_type_kind = "unsupported-type";
 /// The name the checked schema gives the injected standard output stream.
 const stream_cap_name = "stream_cap";
+/// The checked schema kind of a user list: a variable-length element run. Text
+/// carries the same kind, so the name `str` is what separates them.
+const list_kind = "list";
 
 /// The exact-integer names the copied-value codec accepts; a user alias of an
 /// integer is a distinct nominal spelling and is not reconstructed.

@@ -7,8 +7,17 @@ const bytecode = @import("bytecode_model.zig");
 pub const Codec = struct { domain: []const u8, wire: []const u8, decode: usize, encode: usize, result: []const u8, ok: usize, err: usize, error_type: []const u8 };
 /// One compiled codec method the native runtime calls by its exported symbol.
 pub const Callback = struct { index: usize, symbol: []const u8, input: []const u8, output: []const u8 };
-/// Domain conversion shapes and the compiled methods that implement them.
-pub const Metadata = struct { types: []const @import("qbe_wire.zig").Type, codecs: []const Codec, callbacks: []const Callback };
+/// Domain conversion shapes, the native descriptor symbol of each manifest
+/// entry, and the compiled methods that implement them. `descriptors` is
+/// positionally parallel to `types`: the generated adapter hands the runtime the
+/// exact `myl_native_type` the program already publishes for that type, rather
+/// than synthesizing a second descriptor that could drift from the collector's.
+pub const Metadata = struct {
+    types: []const @import("qbe_wire.zig").Type,
+    descriptors: []const []const u8,
+    codecs: []const Codec,
+    callbacks: []const Callback,
+};
 
 /// Derive metadata for every declared domain codec in the program.
 pub fn describe(allocator: std.mem.Allocator, program: bytecode.Program, catalog: *native.Catalog) native.Error!Metadata {
@@ -39,8 +48,12 @@ pub fn describe(allocator: std.mem.Allocator, program: bytecode.Program, catalog
             });
         }
     };
+    const table = try @import("qbe_wire.zig").describeWithDomains(allocator, catalog, true);
+    const descriptors = try allocator.alloc([]const u8, table.types.len);
+    for (table.ids, descriptors) |id, *slot| slot.* = try @import("native_descriptors.zig").symbol(allocator, catalog, id);
     return .{
-        .types = try @import("qbe_wire.zig").describeWithDomains(allocator, catalog, true),
+        .types = table.types,
+        .descriptors = descriptors,
         .codecs = try codecs.toOwnedSlice(allocator),
         .callbacks = try callbacks.toOwnedSlice(allocator),
     };

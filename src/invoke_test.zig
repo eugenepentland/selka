@@ -436,18 +436,20 @@ fn bracketArguments() [3]WireNode {
 }
 
 /// Invoke one fixture function against a fresh cache and return the CLI's stdout.
-fn invocation(allocator: std.mem.Allocator, resolved: Tools, name: []const u8, request: []const u8) ![]const u8 {
+/// `entry` names the fixture under `tests/invoke`, so a shape that would clutter
+/// the general tool fixture can live in a library of its own.
+fn invocation(allocator: std.mem.Allocator, resolved: Tools, entry: []const u8, name: []const u8, request: []const u8) ![]const u8 {
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
     const a = arena.allocator();
-    const entry = try std.fs.path.join(a, &.{ resolved.root, "tests", "invoke", "tool.my" });
+    const path = try std.fs.path.join(a, &.{ resolved.root, "tests", "invoke", entry });
     const input = try std.fs.path.join(a, &.{ resolved.root, "tests", "invoke", "requests", try std.fmt.allocPrint(a, "{s}.json", .{request}) });
     const flag = try std.fmt.allocPrint(a, "--input={s}", .{input});
     var temporary = std.testing.tmpDir(.{});
     defer temporary.cleanup();
     const cache = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
     const result = try std.process.run(a, std.testing.io, .{
-        .argv = &.{ resolved.compiler, "invoke", entry, "--function", name, flag, "--cache-dir", cache },
+        .argv = &.{ resolved.compiler, "invoke", path, "--function", name, flag, "--cache-dir", cache },
         .cwd = .inherit,
     });
     if (fs.exitCode(result.term) != 0) try std.Io.File.stderr().writeStreamingAll(std.testing.io, result.stderr);
@@ -463,7 +465,7 @@ test "a nested record argument executes through the copied-value adapter" {
     defer a.free(resolved.root);
     defer a.free(resolved.zig);
     defer a.free(resolved.qbe);
-    const stdout = try invocation(a, resolved, "tool::sample_label", "sample");
+    const stdout = try invocation(a, resolved, "tool.my", "tool::sample_label", "sample");
     defer a.free(stdout);
     try testing.expect(std.mem.indexOf(u8, stdout, "\"status\":\"completed\"") != null);
     try testing.expect(std.mem.indexOf(u8, stdout, "\"value\":\"7\"") != null);
@@ -480,18 +482,63 @@ test "a text argument and result round-trip through invoke with an embedded NUL 
     defer a.free(resolved.qbe);
     // A two-byte scalar, an astral scalar and a combining sequence arrive as one
     // wire node each and come back as the same text between the brackets.
-    const unicode = try invocation(a, resolved, "tool::bracket", "text-unicode");
+    const unicode = try invocation(a, resolved, "tool.my", "tool::bracket", "text-unicode");
     defer a.free(unicode);
     try testing.expect(std.mem.indexOf(u8, unicode, "\"status\":\"completed\"") != null);
     try testing.expect(std.mem.indexOf(u8, unicode, "\"value\":\"[a\u{e9}\u{1f600}e\u{301}]\"") != null);
     // A NUL is an ordinary scalar, so it survives as the escaped scalar rather
     // than terminating the text.
-    const nul = try invocation(a, resolved, "tool::bracket", "text-nul");
+    const nul = try invocation(a, resolved, "tool.my", "tool::bracket", "text-nul");
     defer a.free(nul);
     try testing.expect(std.mem.indexOf(u8, nul, "\"value\":\"[a\\u0000b]\"") != null);
-    const empty = try invocation(a, resolved, "tool::bracket", "text-empty");
+    const empty = try invocation(a, resolved, "tool.my", "tool::bracket", "text-empty");
     defer a.free(empty);
     try testing.expect(std.mem.indexOf(u8, empty, "\"value\":\"[]\"") != null);
+}
+
+// Drives the list boundary tagged QBE-LIST-1 end to end through the public CLI,
+// on both a list argument and a list result.
+test "a list round-trips through invoke at every shape the codec carries" {
+    const a = testing.allocator;
+    const resolved = try tools(a);
+    defer a.free(resolved.compiler);
+    defer a.free(resolved.root);
+    defer a.free(resolved.zig);
+    defer a.free(resolved.qbe);
+    const entry = "lists.my";
+    // A list of scalars in, a scalar out: the request's JSON array becomes one
+    // wire node per element and the guest reads a list it owns.
+    const total = try invocation(a, resolved, entry, "lists::sum_numbers", "list-numbers");
+    defer a.free(total);
+    try testing.expect(std.mem.indexOf(u8, total, "\"status\":\"completed\"") != null);
+    try testing.expect(std.mem.indexOf(u8, total, "\"value\":\"9\"") != null);
+    // An empty list is one node with no children rather than a missing argument.
+    const empty = try invocation(a, resolved, entry, "lists::sum_numbers", "list-empty");
+    defer a.free(empty);
+    try testing.expect(std.mem.indexOf(u8, empty, "\"value\":\"0\"") != null);
+    // A list result is built fresh in guest storage and copied out one node per
+    // element, so the parent never holds a guest pointer.
+    const made = try invocation(a, resolved, entry, "lists::make_numbers", "list-count");
+    defer a.free(made);
+    try testing.expect(std.mem.indexOf(u8, made, "\"value\":[\"0\",\"1\",\"2\",\"3\"]") != null);
+    // A list of text in both positions: each element is itself carried as one
+    // node per Unicode scalar.
+    const joined = try invocation(a, resolved, entry, "lists::join_text", "list-pieces");
+    defer a.free(joined);
+    try testing.expect(std.mem.indexOf(u8, joined, "\"value\":\"abc\"") != null);
+    const sized = try invocation(a, resolved, entry, "lists::lengths", "list-lengths");
+    defer a.free(sized);
+    try testing.expect(std.mem.indexOf(u8, sized, "\"value\":[\"1\",\"2\",\"3\"]") != null);
+    const bracketed = try invocation(a, resolved, entry, "lists::bracket_all", "list-text");
+    defer a.free(bracketed);
+    try testing.expect(std.mem.indexOf(u8, bracketed, "\"value\":[\"[hi]\",\"hi\"]") != null);
+    // A nested list nests on both sides: `list[list[i64]]` in and out again.
+    const rows = try invocation(a, resolved, entry, "lists::row_totals", "list-rows");
+    defer a.free(rows);
+    try testing.expect(std.mem.indexOf(u8, rows, "\"value\":[\"3\",\"3\"]") != null);
+    const scaled = try invocation(a, resolved, entry, "lists::scale_rows", "list-scale-rows");
+    defer a.free(scaled);
+    try testing.expect(std.mem.indexOf(u8, scaled, "\"value\":[[\"10\",\"20\"],[\"30\"]]") != null);
 }
 
 // spec: QBE-TEXT-4

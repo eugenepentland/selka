@@ -129,7 +129,7 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
     // A program that neither prints nor renders a value into text carries no
     // renderers, and copies nothing.
     const runtime_data = if (renderers.len == 0) descriptors else try std.mem.concat(a, u8, &.{ descriptors, renderers });
-    const wire_types = qbe_wire.describe(a, &layouts) catch |err| return layoutError(err);
+    const wire_types = (qbe_wire.describe(a, &layouts) catch |err| return layoutError(err)).types;
     const codecs = @import("qbe_codecs.zig").describe(a, program, &layouts) catch |err| return layoutError(err);
     var text_format = false;
     for (program.functions) |function| for (function.scope.instructions) |instruction| {

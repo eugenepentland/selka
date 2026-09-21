@@ -65,6 +65,18 @@ pub fn textScalar(record: typed.Record) ?typed.Type {
     return record.shape.buffer;
 }
 
+/// The element type of a user list, or null when the record is not one. Text is
+/// excluded nominally even though it is a managed buffer too: a record built
+/// without an explicit collection kind keeps the `.list` default, so the shape
+/// alone cannot separate the prelude's `str` from a user's `list[u32]`. The
+/// other builtin buffers are excluded by kind, which keeps `bytes` and
+/// `dict[str,T]` unsupported until their wire encodings are specified.
+pub fn listScalar(record: typed.Record) ?typed.Type {
+    if (textScalar(record) != null) return null;
+    if (!record.isCollection() or record.collection.kind != .list) return null;
+    return record.shape.buffer;
+}
+
 /// The manifest entry describing one text record as the copied-value codec
 /// carries it: a one-word managed pointer whose wire form is one node per
 /// scalar. The single `fields` entry names the scalar element type the
@@ -84,6 +96,35 @@ pub fn textType(allocator: std.mem.Allocator, records: []const typed.Record, lay
     };
 }
 
+/// The manifest entry describing one user list as the copied-value codec carries
+/// it: a one-word managed pointer whose wire form is one node per element. The
+/// single `fields` entry names the element type the generated codec reads and
+/// writes one node per, so the adapter never has to decide what a list is;
+/// `count` stays zero because a list has no fixed length. The list crosses the
+/// copied ABI by value like every other managed pointer, so it never takes the
+/// by-address convention that rewrites a copyable aggregate.
+pub fn listType(allocator: std.mem.Allocator, records: []const typed.Record, layout: native.Layout, record: typed.Record) Error!?Type {
+    const element = listScalar(record) orelse return null;
+    const fields = try allocator.alloc(Field, 1);
+    fields[0] = .{ .type = typed.typeName(element, records), .offset = 0 };
+    return .{
+        .name = record.name,
+        .kind = "list",
+        .size = layout.size,
+        .alignment = layout.alignment,
+        .aggregate = .{ .fields = fields },
+        .by_address = false,
+    };
+}
+
+/// The one managed value kind this record carries across the copied boundary, or
+/// null when the codec has no encoding for it yet. Text and lists share this
+/// entry point so the caller never spells the choice twice.
+fn managedType(allocator: std.mem.Allocator, records: []const typed.Record, layout: native.Layout, record: typed.Record) Error!?Type {
+    if (try textType(allocator, records, layout, record)) |item| return item;
+    return listType(allocator, records, layout, record);
+}
+
 /// QBE-AGGREF-1's one crossing rule: one argument of this type crosses a call
 /// boundary as the address of the caller's storage instead of a value, while a
 /// move-only aggregate keeps the by-value boundary and its single owner. The
@@ -94,36 +135,87 @@ pub fn byAddress(layout: native.Layout, ty: typed.Type, records: []const typed.R
     return !scalar(ty, records);
 }
 
+/// Whether each record reaches the manifest once the codec's managed values are
+/// counted. `native_wire.supported` decides this for the encodings that predate
+/// the codec and cannot see text or lists at all, so this closes over just those
+/// two: text enters by name and a list enters once its element has, which admits
+/// `list[str]` and `list[list[i64]]` while leaving `list[dict[str,i64]]`, `bytes`
+/// and a domain without a supported codec out. A record that merely *contains* a
+/// text or a list is deliberately still out: the manifest renders a record from
+/// its native layout, not from its declared fields, so admitting one needs the
+/// layout in hand and a check driven by it. Admitting a record whose child has no
+/// entry would produce a manifest the generated adapter cannot resolve, which is
+/// a build failure rather than a refusal — the codec must decline instead.
+fn includable(allocator: std.mem.Allocator, records: []const typed.Record, flags: []const bool, codecs: bool) Error![]bool {
+    const included = try allocator.alloc(bool, records.len);
+    errdefer allocator.free(included);
+    for (records, 0..) |record, i| included[i] = flags[i] or (codecs and textScalar(record) != null);
+    var changed = codecs;
+    while (changed) {
+        changed = false;
+        for (records, 0..) |record, i| {
+            if (included[i]) continue;
+            const element = listScalar(record) orelse continue;
+            if (!carriable(element, included)) continue;
+            included[i] = true;
+            changed = true;
+        }
+    }
+    return included;
+}
+
+/// Whether one value can cross once the records admitted so far are known.
+fn carriable(ty: typed.Type, included: []const bool) bool {
+    return if (ty.isAggregate()) included[ty.recordIndex()] else ty.isInteger() or ty == .bool;
+}
+
+/// A manifest table and, position by position, the catalog identity each entry
+/// describes. A caller that needs the native descriptor symbol for an entry
+/// reads `ids` rather than matching names back onto the catalog, which would
+/// silently pick the wrong record if two entries ever shared a spelling.
+pub const Table = struct {
+    /// The serializable manifest entries, in catalog order.
+    types: []const Type,
+    /// The catalog type whose layout each entry records.
+    ids: []const typed.Type,
+};
+
 /// Describe finite ordinary values; runtime identities and domains stay opaque.
-pub fn describe(allocator: std.mem.Allocator, catalog: *native.Catalog) Error![]const Type {
+pub fn describe(allocator: std.mem.Allocator, catalog: *native.Catalog) Error!Table {
     return describeWithDomains(allocator, catalog, false);
 }
 
 /// Include codec-owned domain backing nodes only for the normative JSON boundary.
-pub fn describeWithDomains(allocator: std.mem.Allocator, catalog: *native.Catalog, codecs: bool) Error![]const Type {
+pub fn describeWithDomains(allocator: std.mem.Allocator, catalog: *native.Catalog, codecs: bool) Error!Table {
     const flags = try @import("native_wire.zig").supported(allocator, catalog.records, codecs);
     defer allocator.free(flags);
+    const included = try includable(allocator, catalog.records, flags, codecs);
+    defer allocator.free(included);
     var types: std.ArrayList(Type) = .empty;
     errdefer types.deinit(allocator);
+    var ids: std.ArrayList(typed.Type) = .empty;
+    errdefer ids.deinit(allocator);
     for (0..typed.Type.record_base + catalog.records.len) |index| {
         const ty: typed.Type = @fromBackingInt(index);
         const ordinary = ty.isInteger() or ty == .bool;
         const injected_stream = codecs and ty == .stream_cap;
+        const ready = !ty.isAggregate() or included[ty.recordIndex()];
         const layout = try catalog.layout(ty);
-        // Text is the one managed value the copied-value codec carries, and it
-        // is offered only on the codec boundary: the ordinary `wire_types`
-        // manifest keeps exactly the types it had, so nothing that reads it
-        // meets a kind it does not know.
-        const text: ?Type = if (codecs and ty.isAggregate())
-            try textType(allocator, catalog.records, layout, catalog.records[ty.recordIndex()])
+        // Text and lists are the managed values the copied-value codec carries,
+        // and they are offered only on the codec boundary: the ordinary
+        // `wire_types` manifest keeps exactly the types it had, so nothing that
+        // reads it meets a kind it does not know.
+        const managed: ?Type = if (codecs and ty.isAggregate() and ready)
+            try managedType(allocator, catalog.records, layout, catalog.records[ty.recordIndex()])
         else
             null;
         if (ty.isAggregate()) {
-            if (!flags[ty.recordIndex()] and text == null) continue;
+            if (!ready) continue;
         } else if (!ordinary and !injected_stream) continue;
-        if ((layout.trace or layout.drop) and text == null) continue;
-        if (text) |item| {
+        if ((layout.trace or layout.drop) and managed == null) continue;
+        if (managed) |item| {
             try types.append(allocator, item);
+            try ids.append(allocator, ty);
             continue;
         }
         var item: Type = .{
@@ -150,8 +242,12 @@ pub fn describeWithDomains(allocator: std.mem.Allocator, catalog: *native.Catalo
             }
         }
         try types.append(allocator, item);
+        try ids.append(allocator, ty);
     }
-    return types.toOwnedSlice(allocator);
+    const owned_types = try types.toOwnedSlice(allocator);
+    errdefer allocator.free(owned_types);
+    const owned_ids = try ids.toOwnedSlice(allocator);
+    return .{ .types = owned_types, .ids = owned_ids };
 }
 
 fn allocationScenario(allocator: std.mem.Allocator) !void {
@@ -160,7 +256,8 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
     var catalog = try native.Catalog.initRecords(arena.allocator(), &.{});
     defer catalog.deinit();
     const types = try describeWithDomains(arena.allocator(), &catalog, true);
-    try std.testing.expect(types.len > 0);
+    try std.testing.expect(types.types.len > 0);
+    try std.testing.expectEqual(types.types.len, types.ids.len);
 }
 test "describeWithDomains releases temporary metadata on allocation failure" {
     try std.testing.checkAllAllocationFailures(std.testing.allocator, allocationScenario, .{});
@@ -179,7 +276,9 @@ test "text is the record named str and is offered only on the codec boundary" {
     const a = arena.allocator();
     const span = @import("source.zig").Span{ .start = 0, .end = 0 };
     // A user `List<u32>` is structurally identical to `str`: same managed
-    // one-word record, same u32 element. Only the name tells them apart.
+    // one-word record, same u32 element. Both records here also leave their
+    // collection kind at its `.list` default, so nothing but the prelude's name
+    // stops `str` being read as a user list.
     var records = [_]typed.Record{
         .{ .id = @fromBackingInt(typed.Type.record_base), .name = text_name, .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = .u32 } },
         .{ .id = @fromBackingInt(typed.Type.record_base + 1), .name = "List<u32>", .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = .u32 } },
@@ -188,8 +287,9 @@ test "text is the record named str and is offered only on the codec boundary" {
     defer catalog.deinit();
     try std.testing.expectEqual(typed.Type.u32, textScalar(records[0]).?);
     try std.testing.expect(textScalar(records[1]) == null);
+    try std.testing.expect(listScalar(records[0]) == null);
     const codec_types = try describeWithDomains(a, &catalog, true);
-    const text = findType(codec_types, text_name);
+    const text = findType(codec_types.types, text_name);
     try std.testing.expect(text != null);
     try std.testing.expectEqualStrings("text", text.?.kind);
     try std.testing.expectEqual(@as(u64, 8), text.?.size);
@@ -198,9 +298,75 @@ test "text is the record named str and is offered only on the codec boundary" {
     try std.testing.expectEqual(@as(usize, 1), text.?.aggregate.fields.len);
     try std.testing.expectEqualStrings("u32", text.?.aggregate.fields[0].type.?);
     try std.testing.expect(!text.?.by_address);
-    // A user list is not text even though its shape matches, so it keeps the
-    // unsupported verdict instead of being carried as one node per scalar.
-    try std.testing.expect(findType(codec_types, "List<u32>") == null);
+    // Text never reaches the ordinary `wire_types` manifest, so a reader that
+    // predates the codec boundary keeps seeing exactly the kinds it knew.
     const ordinary = try describe(a, &catalog);
-    try std.testing.expect(findType(ordinary, text_name) == null);
+    try std.testing.expect(findType(ordinary.types, text_name) == null);
+}
+
+// spec: QBE-LIST-1
+test "a user list is carried as one node per element while other buffers stay out" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const span = @import("source.zig").Span{ .start = 0, .end = 0 };
+    const base = typed.Type.record_base;
+    var records = [_]typed.Record{
+        .{ .id = @fromBackingInt(base), .name = "List<i64>", .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = .i64 } },
+        .{ .id = @fromBackingInt(base + 1), .name = "bytes", .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = .u8 }, .collection = .{ .kind = .bytes } },
+        .{ .id = @fromBackingInt(base + 2), .name = "List<List<i64>>", .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = @fromBackingInt(base) } },
+    };
+    var catalog = try native.Catalog.initRecords(a, &records);
+    defer catalog.deinit();
+    try std.testing.expectEqual(typed.Type.i64, listScalar(records[0]).?);
+    try std.testing.expect(listScalar(records[1]) == null);
+    try std.testing.expectEqual(@as(typed.Type, @fromBackingInt(base)), listScalar(records[2]).?);
+    const codec_types = try describeWithDomains(a, &catalog, true);
+    const list = findType(codec_types.types, "List<i64>");
+    try std.testing.expect(list != null);
+    try std.testing.expectEqualStrings("list", list.?.kind);
+    try std.testing.expectEqual(@as(u64, 0), list.?.aggregate.count);
+    try std.testing.expectEqual(@as(usize, 1), list.?.aggregate.fields.len);
+    try std.testing.expectEqualStrings("i64", list.?.aggregate.fields[0].type.?);
+    // A managed pointer crosses by value; only a copyable aggregate takes the
+    // caller's address, and a list is neither copyable nor an aggregate value.
+    try std.testing.expect(!list.?.by_address);
+    // A nested list names its element by the element's own canonical name, so
+    // the generated codec resolves it to that entry's descriptor.
+    const nested = findType(codec_types.types, "List<List<i64>>");
+    try std.testing.expect(nested != null);
+    try std.testing.expectEqualStrings("List<i64>", nested.?.aggregate.fields[0].type.?);
+    // `bytes` has no specified wire encoding yet, so it stays unsupported
+    // rather than being carried by the rule that happens to fit lists.
+    try std.testing.expect(findType(codec_types.types, "bytes") == null);
+    // The ordinary manifest stays list-free in both directions.
+    const ordinary = try describe(a, &catalog);
+    try std.testing.expect(findType(ordinary.types, "List<i64>") == null);
+    try std.testing.expect(findType(ordinary.types, "bytes") == null);
+}
+
+// Also pins the admission rule tagged QBE-LIST-1: a list is carried only when
+// its element is, and the allocation that decides it reports failure.
+test "a list of an uncarriable element stays out and a failed admission is fatal" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const span = @import("source.zig").Span{ .start = 0, .end = 0 };
+    const base = typed.Type.record_base;
+    var records = [_]typed.Record{
+        .{ .id = @fromBackingInt(base), .name = "List<bytes>", .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = @fromBackingInt(base + 1) } },
+        .{ .id = @fromBackingInt(base + 1), .name = "bytes", .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = .u8 }, .collection = .{ .kind = .bytes } },
+        .{ .id = @fromBackingInt(base + 2), .name = "List<i64>", .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = .i64 } },
+    };
+    const flags = try a.alloc(bool, records.len);
+    @memset(flags, false);
+    const included = try includable(a, &records, flags, true);
+    // A list is admitted by its element, so a list of a kind the codec has no
+    // encoding for is left out rather than admitted with a dangling element.
+    try std.testing.expect(!included[0]);
+    try std.testing.expect(!included[1]);
+    try std.testing.expect(included[2]);
+    // Deciding admission allocates, so a failure must surface to the caller
+    // instead of silently shrinking the table.
+    try std.testing.expectError(error.OutOfMemory, includable(std.testing.failing_allocator, &records, flags, true));
 }

@@ -7,11 +7,17 @@ const templates = @import("qbe_build_templates.zig");
 const Value = std.json.Value;
 /// Render native codec schemas, checked callbacks and the public codec-call ABI.
 pub fn write(w: *std.Io.Writer, units: []const Value, metadata: Value, ordinary: []const Value) shape.Error!void {
-    const shapes: shape.Shapes = .{ .types = v.array(v.get(metadata, "types")), .ordinary = ordinary, .codecs = true };
+    const shapes: shape.Shapes = .{ .types = v.array(v.get(metadata, "types")), .ordinary = ordinary, .codecs = true, .descriptors = v.array(v.get(metadata, "descriptors")) };
     try w.print("#define QBE_CODEC_ARGUMENTS {d}\n", .{dispatch.maximum(units, shapes)});
+    // Every container being built holds one root while its children are read, so
+    // a pool sized by argument count alone runs out on a list of text: the list
+    // takes the argument's slot and the first text element has nowhere to root.
+    // The nesting bound is the runtime's own, so the pool cannot be short of it.
+    try w.writeAll("#define QBE_CODEC_DEPTH 128\n#define QBE_CODEC_ROOTS (QBE_CODEC_ARGUMENTS+QBE_CODEC_DEPTH)\n");
     try w.writeAll(@embedFile("qbe_codecs_runtime.c"));
     try w.writeByte('\n');
     try shapes.typedefs(w);
+    try shapes.descriptorTable(w);
     try w.writeAll("static const CoType co_types[]={\n");
     for (shapes.types) |item| {
         try shapes.schema(w, item);

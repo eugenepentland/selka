@@ -37,6 +37,9 @@ pub const unsigned_pattern = "^(0|[1-9][0-9]*)$";
 
 /// The nesting bound the copied-value codec enforces on one value tree.
 const depth_limit = 64;
+/// The checked schema kind of a user list. Text carries the same kind, so the
+/// earlier nominal `str` branch is what keeps text out of this one.
+const list_kind = "list";
 
 const Pair = struct { key: []const u8, value: Value };
 
@@ -122,6 +125,14 @@ pub fn typeSchema(allocator: std.mem.Allocator, definitions: []const Value, name
         .{ .key = "type", .value = string("string") },
         .{ .key = type_key, .value = string(name) },
         .{ .key = description_key, .value = string("immutable Unicode text; it crosses as a JSON string and the boundary carries one wire node per Unicode scalar, so an embedded NUL is a scalar and not a terminator") },
+    });
+    // A user list crosses as one wire node per element, so the schema is a JSON
+    // array whose items are the element's own schema. Neither end is bounded:
+    // a list has no declared length, unlike a fixed-size array.
+    if (std.mem.eql(u8, kind, list_kind)) return object(allocator, &.{
+        .{ .key = "type", .value = string("array") },
+        .{ .key = "items", .value = try typeSchema(allocator, definitions, v.text(v.get(item, "element")), depth + 1) },
+        .{ .key = type_key, .value = string(name) },
     });
     if (std.mem.eql(u8, kind, "integer")) return integerSchema(allocator, item, name);
     if (std.mem.eql(u8, kind, "boolean")) return object(allocator, &.{
