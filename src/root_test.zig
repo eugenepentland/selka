@@ -19,6 +19,7 @@ test {
     _ = @import("native_execute.zig");
     _ = @import("exit_status_test.zig");
     _ = @import("native_run.zig");
+    _ = @import("native_run_cache.zig");
     _ = @import("wiring/native_session.zig");
     _ = @import("qbe_build_test.zig");
     _ = @import("qbe_build.zig");

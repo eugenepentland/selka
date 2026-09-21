@@ -74,6 +74,74 @@ test "CLI run reports each frontend warning once" {
     try testing.expectEqual(@as(usize, 1), std.mem.count(u8, outcome.stderr, "W_MUTATES_MISSING"));
 }
 
+// spec-case: NATIVE-RUN-MANIFEST-CACHE-1
+test "CLI project run reuses emitted manifest while no-cache and grants stay authoritative" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
+        \\module main
+        \\
+        \\
+        \\def main(fs: Filesystem) -> int:
+        \\    _ = fs
+        \\    return 0
+    });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const root = std.fs.path.dirname(entry).?;
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
+    defer testing.allocator.free(cache);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
+    defer testing.allocator.free(cache_argument);
+    const base = .{ compiler_path, "run-project", entry, "--report", cache_argument } ++ tools;
+
+    const cold = try std.process.run(testing.allocator, testing.io, .{ .argv = &base });
+    defer testing.allocator.free(cold.stdout);
+    defer testing.allocator.free(cold.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cold.term);
+    const cold_work = try c4CommandWorkLine(cold.stderr, "run-project");
+    const cold_lowered = try c4WorkCount(cold_work, "lowered_functions", "performed");
+    const cold_emitted = try c4WorkCount(cold_work, "emitted_fragments", "performed");
+    try testing.expect(cold_lowered > 0);
+    try testing.expectEqual(cold_lowered, cold_emitted);
+
+    const warm = try std.process.run(testing.allocator, testing.io, .{ .argv = &base });
+    defer testing.allocator.free(warm.stdout);
+    defer testing.allocator.free(warm.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, warm.term);
+    const warm_work = try c4CommandWorkLine(warm.stderr, "run-project");
+    try testing.expectEqual(@as(usize, 0), try c4WorkCount(warm_work, "lowered_functions", "performed"));
+    try testing.expectEqual(cold_lowered, try c4WorkCount(warm_work, "lowered_functions", "reused"));
+    try testing.expectEqual(@as(usize, 0), try c4WorkCount(warm_work, "emitted_fragments", "performed"));
+    try testing.expectEqual(cold_emitted, try c4WorkCount(warm_work, "emitted_fragments", "reused"));
+
+    const explained_argv = base ++ .{"--explain-invalidation"};
+    const explained = try std.process.run(testing.allocator, testing.io, .{ .argv = &explained_argv });
+    defer testing.allocator.free(explained.stdout);
+    defer testing.allocator.free(explained.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, explained.term);
+    const explained_work = try c4CommandWorkLine(explained.stderr, "run-project");
+    try testing.expect(try c4WorkCount(explained_work, "lowered_functions", "performed") > 0);
+    try testing.expectEqual(@as(usize, 0), try c4WorkCount(explained_work, "emitted_fragments", "performed"));
+    try testing.expectEqual(cold_emitted, try c4WorkCount(explained_work, "emitted_fragments", "reused"));
+
+    const uncached_argv = base ++ .{"--no-cache"};
+    const uncached = try std.process.run(testing.allocator, testing.io, .{ .argv = &uncached_argv });
+    defer testing.allocator.free(uncached.stdout);
+    defer testing.allocator.free(uncached.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, uncached.term);
+    const uncached_work = try c4CommandWorkLine(uncached.stderr, "run-project");
+    try testing.expect(try c4WorkCount(uncached_work, "lowered_functions", "performed") > 0);
+    try testing.expect(try c4WorkCount(uncached_work, "emitted_fragments", "performed") > 0);
+
+    const restricted_argv = base ++ .{"--restrict"};
+    const restricted = try std.process.run(testing.allocator, testing.io, .{ .argv = &restricted_argv });
+    defer testing.allocator.free(restricted.stdout);
+    defer testing.allocator.free(restricted.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, restricted.term);
+    try testing.expect(std.mem.indexOf(u8, restricted.stderr, "--allow-read=DIR") != null);
+}
+
 // spec-case: CONSTANT-2
 test "CLI managed constants import run build installed and invalidate warm caches" {
     var temporary = testing.tmpDir(.{});

@@ -1760,12 +1760,14 @@ fn entryLocation(init: Context, path: []const u8) !EntryLocation {
     return .{ .root = std.fs.path.dirname(path) orelse ".", .name = basename[0 .. basename.len - 3] };
 }
 
-/// The stages a receipt pass actually executes. A selective
-/// `emit-project-qbe --select-file` lowers only its closure in the emission
-/// helper, so the whole-project receipt pass must not claim to have lowered.
+/// The stages a receipt pass actually executes. Selective emission lowers only
+/// its closure, while an ordinary project run defers lowering until after its
+/// manifest-cache lookup. Invalidation explanation still requests the complete
+/// fragment receipt it compares.
 fn receiptStages(parsed: Parsed, executed: [std.meta.tags(invalidation.Stage).len]bool) [std.meta.tags(invalidation.Stage).len]bool {
     var stages = executed;
-    if (parsed.command == .@"emit-project-qbe" and parsed.select_file != null) {
+    const deferred_project_run = parsed.command == .@"run-project" and !parsed.reporting.explain_invalidation;
+    if ((parsed.command == .@"emit-project-qbe" and parsed.select_file != null) or deferred_project_run) {
         stages[@backingInt(invalidation.Stage.lower_function)] = false;
         stages[@backingInt(invalidation.Stage.emit_fragment)] = false;
     }
@@ -1869,10 +1871,6 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         if (parsed.command == .@"check-project") return finishCheckProject(init, &project, &compilation, verdict, frontend, &configured);
         if (parsed.command == .@"discover-project-duplicates") return discoverProject(init, parsed, &project, &compilation, frontend_start);
         if (parsed.command == .@"check-policy") return checkProjectPolicy(init, parsed, &project);
-        init.timings.begin(lowering_phase, false);
-        try compilation.emit();
-        if (compilation.code) |code| recordLoweredCount(init, code.functions.len);
-        init.timings.end();
         return runProjectProgram(init, &compilation, parsed, &configured);
     } else try project.render(init.gpa);
     defer init.gpa.free(output);
@@ -1918,7 +1916,28 @@ fn flushOutput(stdout: *std.Io.File.Writer) void {
 
 /// Build the checked project with the native backend and run its entry point.
 fn runProjectProgram(init: Context, compilation: *language.project_compile.Compilation, parsed: Parsed, configured: *const ConfiguredPolicy) !u8 {
-    if (grants.ungranted(compilation.code.?, parsed.grants)) |flag| return reportUngranted(init, flag);
+    if (grants.ungranted(compilation.program.?, parsed.grants)) |flag| return reportUngranted(init, flag);
+    if (try projectWarningsDenied(init, compilation, configured)) return 1;
+    const sources = try init.gpa.alloc(native_run.manifest_cache.Source, compilation.src.origins.len);
+    defer init.gpa.free(sources);
+    for (compilation.src.origins, sources) |origin, *source| source.* = .{ .path = origin.original.path, .bytes = origin.original.bytes };
+    const identity: native_run.manifest_cache.Identity = .{
+        .sources = sources,
+        .policy = if (configured.identity) |*value| value else null,
+        .mutation_markers = parsed.mutation_markers,
+        .step_checks = parsed.saw_steps,
+    };
+    if (!parsed.no_cache) {
+        if (try native_run.manifest_cache.load(init.gpa, init.io, init.environ, parsed.native, identity)) |entry| {
+            defer init.gpa.free(entry.manifest);
+            // `--explain-invalidation` deliberately lowered above to construct
+            // its complete fragment receipt. Preserve that observed work while
+            // still recording that QBE emission itself was reused.
+            if (compilation.code == null) setWork(init, .lowered_functions, 0, entry.fragments);
+            setWork(init, .emitted_fragments, 0, entry.fragments);
+            return runNative(init, parsed, entry.manifest);
+        }
+    }
     const manifest = emitMeasuredNative(init, compilation, false, parsed.saw_steps, true) catch |err| switch (err) {
         error.SourceError => {
             try reportProject(init, compilation);
@@ -1927,9 +1946,7 @@ fn runProjectProgram(init: Context, compilation: *language.project_compile.Compi
         else => return err,
     };
     defer init.gpa.free(manifest);
-    // The caller already reported this compilation's diagnostics once, before
-    // lowering; reporting here printed every warning a second time.
-    if (try projectWarningsDenied(init, compilation, configured)) return 1;
+    if (!parsed.no_cache) native_run.manifest_cache.store(init.gpa, init.io, init.environ, parsed.native, identity, manifest) catch return runNative(init, parsed, manifest);
     return runNative(init, parsed, manifest);
 }
 

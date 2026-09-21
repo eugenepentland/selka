@@ -154,7 +154,8 @@ fn validOptimization(value: []const u8) bool {
 /// Hash every Python source beside the adapter. Installed adapter packages keep
 /// their local imports in this directory; conservatively including all siblings
 /// also invalidates the cache when a newly imported helper replaces an old one.
-fn adapterIdentity(context: fs.Context, adapter: []const u8, zig: []const u8) fs.Error![]const u8 {
+/// The Zig stamp is included without running the cold build's target probe.
+pub fn adapterIdentity(context: fs.Context, adapter: []const u8, zig: []const u8) fs.Error![]const u8 {
     const directory_name = std.fs.path.dirname(adapter) orelse ".";
     var directory = try std.Io.Dir.cwd().openDir(context.io, directory_name, .{ .iterate = true, .follow_symlinks = false });
     defer directory.close(context.io);

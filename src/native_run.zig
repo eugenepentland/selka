@@ -13,6 +13,8 @@ const backend = @import("qbe_build_backend.zig");
 const options = @import("qbe_build_options.zig");
 const bundled = @import("qbe_build_assets");
 const trap_detail = @import("native_trap_detail.zig");
+/// Persistent checked-graph to emitted-manifest reuse used before lowering.
+pub const manifest_cache = @import("native_run_cache.zig");
 
 /// Native build, tool and child-process failures raised while running a program.
 pub const Error = builder.Error;
@@ -198,13 +200,41 @@ fn buildEnvironment(context: fs.Context, settings: options.Options) Error![]cons
 /// default hashes the installed adapter instead, which is the identity the
 /// object cache keys on and costs only a read of the small Python package.
 fn codegenIdentity(context: fs.Context, settings: options.Options) Error![]const u8 {
-    switch (settings.codegen) {
-        .qbe => |path| return context.stamp(try context.executable(path)),
-        .llvm => |llvm| if (llvm.adapter.len != 0) return context.stamp(try context.executable(llvm.adapter)),
-        .auto => if (std.mem.eql(u8, settings.mode, "Debug")) return "auto-qbe",
-    }
     const zig = try context.executable(settings.zig);
-    return (try backend.installedAdapterIdentity(context, zig)) orelse "auto-llvm-uninstalled";
+    return switch (settings.codegen) {
+        .qbe => |path| qbeIdentity(context, try context.executable(path), zig),
+        .llvm => |llvm| llvmIdentity(context, llvm, settings.mode, zig),
+        .auto => if (std.mem.eql(u8, settings.mode, "Debug"))
+            qbeIdentity(context, try context.executable("qbe"), zig)
+        else
+            llvmIdentity(context, .{ .optimization = "3", .lto = true }, settings.mode, zig),
+    };
+}
+
+fn qbeIdentity(context: fs.Context, tool: []const u8, zig: []const u8) Error![]const u8 {
+    if (!std.mem.eql(u8, std.fs.path.basename(tool), "qbe_llvm.py")) {
+        return std.json.Stringify.valueAlloc(context.allocator, .{ .backend = "qbe", .tool = try context.stamp(tool) }, .{});
+    }
+    const legacy = context.environ.get("MYLANG_QBE_LLVM_OPT") orelse "-O2";
+    return std.json.Stringify.valueAlloc(context.allocator, .{
+        .backend = "llvm-legacy",
+        .tool = try backend.adapterIdentity(context, tool, zig),
+        .optimization = legacy,
+        .lto = false,
+    }, .{});
+}
+
+fn llvmIdentity(context: fs.Context, llvm: options.Llvm, mode: []const u8, zig: []const u8) Error![]const u8 {
+    const tool = if (llvm.adapter.len != 0)
+        try backend.adapterIdentity(context, try context.executable(llvm.adapter), zig)
+    else
+        (try backend.installedAdapterIdentity(context, zig)) orelse "llvm-uninstalled";
+    return std.json.Stringify.valueAlloc(context.allocator, .{
+        .backend = "llvm",
+        .tool = tool,
+        .optimization = llvm.optimization orelse if (std.mem.eql(u8, mode, "Debug")) "0" else "3",
+        .lto = llvm.lto,
+    }, .{});
 }
 
 /// Name an executable by its build environment and the units it was made from.
@@ -265,6 +295,39 @@ test "a run identity separates programs, toolchains and build modes" {
     try std.testing.expect(!std.mem.eql(u8, first, second));
     try std.testing.expect(!std.mem.eql(u8, first, try identity(context, release, "{\"functions\":[]}")));
     try std.testing.expectEqualStrings(first, try identity(context, settings, "{\"functions\":[]}"));
+}
+
+test "run identity follows resolved QBE tools and effective LLVM settings" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    const qbe = try std.fs.path.join(context.allocator, &.{ root, "qbe" });
+    const zig = try std.fs.path.join(context.allocator, &.{ root, "zig" });
+    const adapter = try std.fs.path.join(context.allocator, &.{ root, "adapter.py" });
+    try context.write(qbe, "#!/bin/sh\nexit 0\n");
+    try context.write(zig, "#!/bin/sh\nexit 0\n");
+    try context.write(adapter, "#!/usr/bin/env python3\n");
+    try std.Io.Dir.cwd().setFilePermissions(std.testing.io, qbe, .executable_file, .{});
+    try std.Io.Dir.cwd().setFilePermissions(std.testing.io, zig, .executable_file, .{});
+    try std.Io.Dir.cwd().setFilePermissions(std.testing.io, adapter, .executable_file, .{});
+    try environment.put("PATH", root);
+    context.self_directory = "";
+    const debug: options.Options = .{ .source = "", .run = true, .zig = zig, .mode = "Debug" };
+    const before = try context.allocator.dupe(u8, try codegenIdentity(context, debug));
+    try context.write(qbe, "#!/bin/sh\nexit 22\n");
+    const after = try codegenIdentity(context, debug);
+    const llvm: options.Options = .{ .source = "", .run = true, .zig = zig, .codegen = .{ .llvm = .{ .adapter = adapter, .optimization = "2" } } };
+    var lto = llvm;
+    lto.codegen.llvm.lto = true;
+    var optimize = llvm;
+    optimize.codegen.llvm.optimization = "3";
+    try std.testing.expect(!std.mem.eql(u8, before, after));
+    try std.testing.expect(!std.mem.eql(u8, try codegenIdentity(context, llvm), try codegenIdentity(context, lto)));
+    try std.testing.expect(!std.mem.eql(u8, try codegenIdentity(context, llvm), try codegenIdentity(context, optimize)));
 }
 
 // spec-case: QBE-GENERATION-1
