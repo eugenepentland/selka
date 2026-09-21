@@ -1477,6 +1477,11 @@ test "a parameter that crosses by address occupies one word of its callee's fram
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "alloc8 8192"));
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "%frame_memory"));
     try std.testing.expect(std.mem.indexOf(u8, body, " storel %a0, %l0\n") != null);
+    // The caller hands over one `l` word too: the same crossing rule decides
+    // the argument's ABI type and the word the frame estimate charges for it.
+    const caller = named(parsed.value, "main").?.il;
+    try std.testing.expect(std.mem.indexOf(u8, caller, "(l %ctx, l %v") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, caller, "(l %ctx, :t"));
 }
 /// `outer` hands the `[4096]int` parameter it was given straight on to
 /// `kernel`, which recurses so the inliner leaves both calls in place.

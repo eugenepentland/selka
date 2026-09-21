@@ -171,19 +171,20 @@ storing the same 128-byte `Pin` twice; the parser's hot addresses are 64-byte
 copies were found during the fixes: array-typed record fields still copy on
 `r.cells = replace(r.cells, i, v)`, and `frameBytes` sizes a frame from every
 per-pc aggregate scratch even when forwarding removes it, so a function taking
-a `[1024]int` parameter heap-allocates an 82 KB frame per call (in progress as
-a separate task).
+a `[1024]int` parameter heap-allocated an 82 KB frame per call until
+`QBE-FRAMEFIT-1` and `QBE-AGGREF-9` landed
+([frame-fit-2026-09-21](audits/frame-fit-2026-09-21.md)).
 
 **Change.** Apply `QBE-AGGREF-1`'s by-address rule to `xs[i]` and `for x in
 xs` when the consumer only reads: pass `storage + i * stride` with the
 generation check hoisted out of the loop. Extend `QBE-ARRAYWRITE-1` to array
-fields through `update_record`. Size frames from the scratch that survives
-forwarding. Return-slot forwarding for call sites that immediately store an
+fields through `update_record`. Frames are now sized from the scratch that
+survives forwarding (done). Return-slot forwarding for call sites that immediately store an
 aggregate result (about 30 of the parser's 209 blits).
 
 **Acceptance.** `list_records` ≤ 1.3× Zig; `layout_routes::build` ≤ 5% of the
 schematic profile; `peek1024`/`peek4096` in `docs/performance.md` within 2× of
-`peek8`.
+`peek8` (met: 1.46 ms and 1.48 ms against 1.30 ms).
 
 ### 7. Dictionary follow-ups
 

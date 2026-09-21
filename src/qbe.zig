@@ -2030,11 +2030,13 @@ const Emitter = struct {
         return @max(8, (try self.layout(ty)).size);
     }
     /// The stack bytes one outgoing argument of this type can occupy: one word
-    /// for a value that crosses as a scalar or as an address (`argumentType`),
-    /// the value's own size only for a move-only aggregate that crosses by value.
+    /// for a value that crosses as a scalar or as an address, the value's own
+    /// size only for a move-only aggregate that still crosses by value. The
+    /// crossing answer is `qbe_wire.byAddress`, the one `argumentType` reads,
+    /// so the estimate and the call can never disagree.
     fn argumentBytes(self: *Emitter, ty: typed.Type) GenerateError!u64 {
         const value = try self.layout(ty);
-        if (self.isScalar(ty) or value.copy != .prohibited) return 8;
+        if (self.isScalar(ty) or qbe_wire.byAddress(value, ty, self.program.records)) return 8;
         return @max(8, value.size);
     }
     /// Every per-pc aggregate scratch pair the lowering might declare, each at
