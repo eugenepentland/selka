@@ -321,16 +321,31 @@ void myl_qbe_fail_allocation(void *context) {
     fail(context, ((Context *)context)->heap.exhausted ? memory_budget_code : "OutOfMemory");
 }
 void myl_qbe_fail_iteration(void *context) { fail(context, "R_LIST_ITERATION_MUTATION"); }
+/* The function and pc the innermost live activation names. A record build owns
+   it through `ctx->active_frame`; the fast protocol owns it in the slot at the
+   current depth. Both are the same activation, so callers that read the current
+   position (the assert message) do not care which protocol produced it. */
+static const MylQbeFunction *current_activation(Context *ctx, uint64_t *position) {
+    if (ctx->active_frame) {
+        *position = ctx->active_frame->position;
+        return ctx->active_frame->function;
+    }
+    if (ctx->frame_slots && ctx->frames) {
+        *position = ctx->frame_slots[ctx->frames - 1].position;
+        return ctx->frame_slots[ctx->frames - 1].function;
+    }
+    return NULL;
+}
 /* A failed assertion reports the `assert cond, "text"` message the current pc's
    function metadata carries, as the trap's `operation`, so both the human stderr
    line and the structured record name the message. A pc without a message (or a
    frame whose function metadata predates messages) keeps the bare trap. */
 void myl_qbe_fail_assert(void *context) {
     Context *ctx = context;
-    const MylQbeActiveFrame *frame = ctx->active_frame;
-    if (frame && frame->function && frame->function->messages &&
-        frame->position < frame->function->count) {
-        const char *message = frame->function->messages[frame->position];
+    uint64_t position = 0;
+    const MylQbeFunction *function = current_activation(ctx, &position);
+    if (function && function->messages && position < function->count) {
+        const char *message = function->messages[position];
         if (message && *message) {
             fail_detail(context, "R_ASSERT", message, 0, 0, 0, 0, 0, 0);
             return;
