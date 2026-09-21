@@ -139,6 +139,10 @@ static void fill_dictionary(Copier *copier, Clone item) {
         memcpy(entry, source, from->entry_type.size);
         patch(copier, item.type->key, entry);
         patch(copier, item.type->element, entry + from->value_offset);
+        /* Appended straight onto the entry list, never through the dictionary's
+           own write: a cloned `str` key is still an empty shell at this point, so
+           key equality and key hashes are not yet meaningful. The clone's index is
+           built once every clone is filled, by reindex below. */
         if (!myl_native_list_append(copier->heap, clone->entries, entry)) copier->failed = 1;
     }
     free(entry);
@@ -163,6 +167,11 @@ int myl_native_region_escape(myl_native_heap *heap, const myl_native_type *type,
     heap->region_depth = copier.dying - 1;
     translate(&copier, type, value, output);
     for (size_t i = 0; i < copier.queued && !copier.failed; ++i) fill(&copier, copier.pending[i]);
+    /* Only now does every cloned key hold its final contents, so this is the
+       first point at which a cloned dictionary can hash its own keys. */
+    for (size_t i = 0; i < copier.queued && !copier.failed; ++i)
+        if (copier.pending[i].type->collection_kind == 3)
+            myl_native_dictionary_reindex(heap, copier.pending[i].clone);
     heap->region_depth = copier.dying;
     heap->suspended = suspended;
     heap->arena.escaped += copier.count;
