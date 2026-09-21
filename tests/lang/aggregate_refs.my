@@ -126,7 +126,7 @@ public def test_a_returning_path_still_returns_its_record_next_to_a_trapping_one
 
 
 # A large fixed array crosses a call by address, and a callee that only reads
-# it keeps its whole frame on the native stack (QBE-FRAMEFIT-1, QBE-AGGREF-3).
+# it keeps its whole frame on the native stack (QBE-FRAMEFIT-1, QBE-AGGREF-9).
 # These cases pin what that must not move: every element the callee reads is
 # the caller's, deep recursion and relaying the parameter both work on the
 # real stack, and a copy the callee returns leaves the argument alone.
@@ -213,7 +213,7 @@ public def test_a_large_array_parameter_survives_deep_recursion_and_a_relay() ->
     return first_after(data, 200) == 201 and relay(data) == 1025
 
 
-# spec-case: QBE-AGGREF-3
+# spec-case: QBE-AGGREF-9
 public def test_a_copy_returned_from_a_large_array_parameter_leaves_the_argument_alone() -> bool:
     data: [1024]i64 = ones()
     turned: [1024]i64 = bumped(data)

@@ -229,7 +229,7 @@ local take 30.0 ms on QBE and 17.8 ms on LLVM, against 25.6 ms and 13.0 ms for t
 same reads out of a `list[int]`.
 
 **Passing** a large `[N]T` to a function called in a loop is cheap too, since
-2026-09-21 (`QBE-FRAMEFIT-1`, `QBE-AGGREF-3`). The argument crosses by address, the
+2026-09-21 (`QBE-FRAMEFIT-1`, `QBE-AGGREF-9`). The argument crosses by address, the
 callee's slot for it is one word, and the callee's frame is sized from the scratch
 its lowered body really declares rather than from every buffer the lowering might
 have declared, so a callee that only reads the array keeps its frame on the native

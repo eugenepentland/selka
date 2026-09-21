@@ -1466,7 +1466,7 @@ test "a frame whose surviving scratch alone exceeds the limit is still heap-back
     try std.testing.expect(std.mem.indexOf(u8, keep, "%agg") != null);
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, keep, "myl_qbe_frame_allocate"));
 }
-// spec: QBE-AGGREF-3
+// spec: QBE-AGGREF-9
 test "a parameter that crosses by address occupies one word of its callee's frame" {
     var parsed = try emitted(std.testing.allocator, peekProgram(1024));
     defer parsed.deinit();
@@ -1499,7 +1499,7 @@ fn relayProgram() []const u8 {
         \\    return outer(data)
     , .{ones(4095)});
 }
-// spec-case: QBE-AGGREF-3
+// spec-case: QBE-AGGREF-9
 test "a caller charges one word of outgoing space for an argument that crosses by address" {
     var parsed = try emitted(std.testing.allocator, relay_program);
     defer parsed.deinit();
