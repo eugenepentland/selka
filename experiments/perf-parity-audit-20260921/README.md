@@ -64,3 +64,14 @@ keep those samples. The parser, fib, multiply and start-up batches were re-run a
 load average 2 (`results/quiet/`), and the report quotes those. The micro suite,
 dictionary and replace-loop probes have only the loaded pass; the report quotes
 their within-batch ratios only.
+
+## Rerun on the merged compiler
+
+After the three defect fixes were merged (`a1a5e609`), every benchmark was rerun
+by `results/merged/chain.log`'s script (sequential phases on CPU 6, quiet machine):
+`results/merged/{sexpr,dict-scaling,replace-loop,fib,mulloop,startup}.json`,
+`micro/results-merged.{md,json}` (the pre-fix suite is kept as
+`micro/results-prefix.{md,json}`), and `svg-rerun/` (a copy of the production SVG
+harness pointed at `.tmp/perf-audit-20260921/svg-merged`, with the pre-merge
+arms as before arms; `measurements.json`, `qualification.json`, `builds.json`).
+Report: `docs/audits/performance-parity-rerun-2026-09-21.md`.

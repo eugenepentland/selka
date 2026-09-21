@@ -1,5 +1,10 @@
 # What separates mylang from Zig and Rust, and what closes it — 2026-09-21
 
+> Rerun after the three §3 defects were fixed and merged (`a1a5e609`):
+> [performance-parity-rerun-2026-09-21.md](performance-parity-rerun-2026-09-21.md).
+> The schematic is now 2.06× Zig / 1.84× Rust; the parser is unchanged; the
+> dictionary and arena cliffs are gone. The tables below are the pre-fix state.
+
 **Headline.** On scalar code the LLVM arm of mylang is already at Zig's speed with
 every check on: an integer loop runs at 0.9× Zig ReleaseFast, a record-building
 loop at 1.0×. Everything above that is not code generation. It is, in order of
