@@ -24,7 +24,44 @@ def main() -> int:
 
 `mylang run main.my --print-result` prints `42`; `mylang run-project main.my`
 remains the explicit alias for the same entry. A file with no module header is
-still checked and run as one standalone unit, unchanged.
+still checked and run as one standalone unit; see
+[headerless scripts](#headerless-scripts) for the one import it may carry.
+
+### Headerless scripts
+
+A file with no `module` header is one standalone unit, and it may import the
+compiler-embedded standard modules directly. The first line is the import; there
+is no module name to declare because nothing imports the file back:
+
+```mylang
+# doc: expect 42
+import math
+
+def main() -> int:
+    return math.clamp(99, 0, 42)
+```
+
+Save it as `probe4.my` and `mylang run probe4.my --print-result` prints `42`.
+The imports resolve from the embedded standard library exactly as they do for a
+project entry — the same ten modules, the same exports — and the rest of the file
+is an ordinary program body. Anything other than standard-module imports still
+needs the header, because a project module has to declare the name its importers
+request:
+
+```mylang
+# doc: expect-error E_MODULE_HEADER
+import helper
+
+def main() -> int:
+    return 0
+```
+
+That rejection is reported at the file's first token and names the accepted
+form: begin the file with `module NAME` when it imports a module of its own.
+A file that begins with a declaration, with an `export` directive or with a
+dotted import path is rejected the same way, and a headerless file that another
+module imports is rejected too — only the entry the command names may be
+headerless.
 
 This is the canonical everyday command shape:
 
@@ -239,5 +276,7 @@ def main() -> int:
   `E_DUPLICATE_IMPORT`.
 - Standard-library names are reserved and load from embedded source rather than
   from the project root; see [the standard library](standard-library.md).
-- A single-file program needs no `module` header at all. It is the project
-  commands, not the language, that turn a file into a graph.
+- A single-file program needs no `module` header at all, and it may import the
+  embedded standard modules directly. Only an import of a project module needs
+  the header: it is the project commands, not the language, that turn a file
+  into a graph.

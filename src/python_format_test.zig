@@ -1,4 +1,4 @@
-//! Interpolated `f"..."` literals lower to str conversion and concatenation.
+//! Interpolated `f"..."` literals render once and join multiple pieces into text.
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
@@ -112,6 +112,80 @@ test "an aggregate hole renders through the renderers print itself calls" {
     try t.expect(std.mem.indexOf(u8, manifest, "myl_print_list") != null);
     try t.expect(std.mem.indexOf(u8, manifest, "myl_print_dictionary") != null);
     try t.expect(std.mem.indexOf(u8, manifest, "myl_print_variant") != null);
+}
+
+// spec-case: PY-FSTRING-1
+test "an f-string joins rendered pieces once without prefix concatenations" {
+    var c = try language.Compilation.init(t.allocator, "format.my",
+        \\def main() -> int:
+        \\    x = 20
+        \\    y = 22
+        \\    text = f"x={x}; y={y}!"
+        \\    return len(text)
+    );
+    defer c.deinit();
+    const manifest = try c.emitQbe(t.allocator);
+    defer t.allocator.free(manifest);
+    try t.expectEqual(@as(usize, 1), std.mem.count(u8, manifest, "myl_native_text_join"));
+    try t.expectEqual(@as(usize, 0), std.mem.count(u8, manifest, "myl_native_text_concat"));
+}
+
+// spec-case: PY-FSTRING-1
+test "a single f-string piece needs no joining or intermediate list" {
+    var c = try language.Compilation.init(t.allocator, "format.my",
+        \\def identity(value: str) -> str noalloc:
+        \\    return f"{value}"
+        \\def generic[T: integer](value: str, unused: T) -> str noalloc:
+        \\    return f"{value}"
+        \\def main() -> int:
+        \\    return len(generic(identity("hello"), 1)) + len(f"")
+    );
+    defer c.deinit();
+    const manifest = try c.emitQbe(t.allocator);
+    defer t.allocator.free(manifest);
+    try t.expectEqual(@as(usize, 0), std.mem.count(u8, manifest, "myl_native_text_join"));
+    try t.expectEqual(@as(usize, 0), std.mem.count(u8, manifest, "myl_native_list_new"));
+}
+
+// spec-case: PY-FSTRING-1
+test "f-string holes still evaluate once from left to right including generic holes" {
+    const source =
+        \\def mark(out: Stream, value: int) -> int effects(output):
+        \\    out.print(value, end="")
+        \\    return value
+        \\
+        \\def generic[T: integer](value: T) -> str:
+        \\    return f"{value}"
+        \\
+        \\def main(out: Stream) -> int:
+        \\    text = f"{mark(out, 1)}{mark(out, 2)}"
+        \\    out.print(text, end="")
+        \\    out.print()
+        \\    if generic(42) == "42":
+        \\        return 42
+        \\    return 0
+    ;
+    var c = try language.Compilation.init(t.allocator, "format.my", source);
+    defer c.deinit();
+    const outcome = try native.run(&c);
+    try t.expectEqual(@as(i64, 42), outcome.value);
+    try t.expectEqualStrings("1212\n", outcome.stdout);
+}
+
+// spec-case: PY-FSTRING-1
+test "a failing later f-string hole writes none of the unfinished result" {
+    var c = try language.Compilation.init(t.allocator, "format.my",
+        \\def fail(value: int) -> int:
+        \\    return 1 // value
+        \\
+        \\def main(out: Stream) -> int:
+        \\    out.print(f"ready {fail(0)}")
+        \\    return 0
+    );
+    defer c.deinit();
+    const outcome = try native.run(&c);
+    try t.expect(outcome.trap.code.len != 0);
+    try t.expectEqualStrings("", outcome.stdout);
 }
 
 // spec-case: PY-FSTRING-2

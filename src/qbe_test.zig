@@ -358,7 +358,7 @@ test "an opcode that can allocate pushes no roots in a variant that cannot" {
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, converted, "myl_qbe_int_cast"));
 }
 // spec: QBE-ELEMENT-READ-1
-test "a plain scalar element read is one bounds-checked load and a record read keeps the copy" {
+test "element reads retain bounds checks while immediate record fields avoid snapshots" {
     const a = std.testing.allocator;
     var program = try language.Compilation.init(a, "qbe.my",
         \\record Pair:
@@ -404,11 +404,87 @@ test "a plain scalar element read is one bounds-checked load and a record read k
     const booleans = named(parsed.value, "flags").?.il;
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, booleans, "myl_native_list_get"));
     try std.testing.expect(std.mem.indexOf(u8, booleans, "=l loadub %v") != null);
-    // A record element keeps the runtime copy into the aggregate scratch and
-    // the pointer that reads it.
+    // The only consumer is a scalar field read, so the checked element address
+    // reaches that read directly without materializing the whole Pair.
     const wide = named(parsed.value, "wide").?.il;
-    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, wide, "myl_native_list_get"));
-    try std.testing.expect(std.mem.indexOf(u8, wide, "=l copy %agg") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, wide, "myl_native_list_get"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, wide, "blit "));
+    try std.testing.expect(std.mem.indexOf(u8, wide, "myl_qbe_fail_normalized_index_bounds") != null);
+}
+
+const aggregate_projection_program =
+    \\record Inner:
+    \\    value: int
+    \\    other: int
+    \\record Item:
+    \\    inner: Inner
+    \\    label: bytes
+    \\def projected(items: list[Item], index: int) -> int:
+    \\    return items[index].inner.value
+    \\def label(items: list[Item], index: int) -> bytes:
+    \\    return items[index].label
+    \\def snapshot(items: list[Item], index: int) -> Item:
+    \\    return items[index]
+    \\def main() -> int:
+    \\    with arena():
+    \\        items = [Item(inner=Inner(value=7, other=8), label=b"old")]
+    \\        saved = snapshot(items, 0)
+    \\        name = label(items, -1)
+    \\        items[0] = Item(inner=Inner(value=9, other=10), label=b"new")
+    \\        i = 0
+    \\        while i < 40:
+    \\            items.append(Item(inner=Inner(value=i, other=0), label=b"grown" + b"!"))
+    \\            i += 1
+    \\        if saved.inner.value != 7 or saved.label != b"old" or name != b"old":
+    \\            return 1
+    \\        if projected(items, 0) != 9 or projected(items, -1) != 39:
+    \\            return 2
+    \\        return 42
+;
+
+// spec: QBE-AGGREGATE-READ-1
+test "aggregate projections load scalars directly while escaping records retain snapshots" {
+    var parsed = try emitted(std.testing.allocator, aggregate_projection_program);
+    defer parsed.deinit();
+    for ([_][]const u8{ "projected", "label" }) |name| {
+        const body = named(parsed.value, name).?.il;
+        try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_list_get"));
+        try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
+        try std.testing.expect(std.mem.indexOf(u8, body, "myl_qbe_fail_normalized_index_bounds") != null);
+    }
+    const snapshot = named(parsed.value, "snapshot").?.il;
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, snapshot, "myl_native_list_get"));
+    try std.testing.expect(std.mem.indexOf(u8, snapshot, "blit ") != null);
+}
+
+// spec-case: QBE-AGGREGATE-READ-1
+test "aggregate projections preserve snapshots and managed fields across mutation growth and GC" {
+    var program = try language.Compilation.init(std.testing.allocator, "projection.my", aggregate_projection_program);
+    defer program.deinit();
+    for ([_]bool{ false, true }) |stress| {
+        const result = try native.runWithOptions(&program, .{ .gc_stress = stress });
+        try std.testing.expect(!result.trapped());
+        try std.testing.expectEqual(@as(i64, 42), result.value);
+    }
+}
+
+// spec-case: QBE-AGGREGATE-READ-1
+test "aggregate projections reject both negative and positive out of bounds indexes" {
+    const a = std.testing.allocator;
+    for ([_]i64{ -2, 1 }) |index| {
+        const text = try std.fmt.allocPrint(
+            a,
+            "record Pair:\n    left: int\n    right: int\ndef read(items: list[Pair], index: int) -> int:\n    return items[index].left\ndef main() -> int:\n    return read([Pair(left=3, right=4)], {d})\n",
+            .{index},
+        );
+        defer a.free(text);
+        var program = try language.Compilation.init(a, "projection-bounds.my", text);
+        defer program.deinit();
+        const result = try native.runWithOptions(&program, .{ .gc_stress = true });
+        try std.testing.expect(result.trapped());
+        try std.testing.expectEqualStrings("R_LIST_BOUNDS", result.trap.code);
+        try std.testing.expectEqual(@as(u64, 5), result.trap.line);
+    }
 }
 // spec: QBE-POSITION-1
 test "a build without a ceiling stores a position only where a diagnostic reads it" {
@@ -480,6 +556,64 @@ test "a slice decoded in place lowers to one range decoder" {
     defer kept.deinit();
     try std.testing.expect(std.mem.count(u8, named(kept.value, "late").?.il, "myl_native_bytes_slice") != 0);
     try std.testing.expect(std.mem.indexOf(u8, named(kept.value, "late").?.il, "myl_qbe_bytes_decode_range") == null);
+}
+// spec-case: PY-BYTES-FUSED-RANGE-1
+test "immediate byte slice and view parses emit only range parsers" {
+    var parsed = try emitted(std.testing.allocator,
+        \\def parse(src: bytes, start: i64, end: i64) -> i64 noalloc:
+        \\    match src[start:end].parse_int():
+        \\        case Some(integer):
+        \\            match src.view(start, end).parse_float():
+        \\                case Some(floating):
+        \\                    if floating > 0.0:
+        \\                        return integer
+        \\                case None:
+        \\                    pass
+        \\        case None:
+        \\            pass
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return parse(b"42", 0, 2)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "parse").?.il;
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, body, "myl_native_bytes_range"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_bytes_slice"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_bytes_view"));
+}
+
+test "dictionary view iteration reads values directly by insertion position" {
+    var parsed = try emitted(std.testing.allocator,
+        \\def values_total(mapping: dict[str, int]) -> int noalloc:
+        \\    total = 0
+        \\    for value in mapping.values():
+        \\        total += value
+        \\    return total
+        \\
+        \\
+        \\def items_total(mapping: dict[str, int]) -> int noalloc:
+        \\    total = 0
+        \\    for key, value in mapping.items():
+        \\        _ = key
+        \\        total += value
+        \\    return total
+        \\
+        \\
+        \\def main() -> int:
+        \\    mapping = {"a": 20, "b": 22}
+        \\    return values_total(mapping) + items_total(mapping)
+    );
+    defer parsed.deinit();
+    const values = named(parsed.value, "values_total").?.il;
+    const items = named(parsed.value, "items_total").?.il;
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, values, "myl_native_dictionary_value_at"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, values, "myl_native_dictionary_key_at"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, values, "myl_native_dictionary_read"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, items, "myl_native_dictionary_value_at"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, items, "myl_native_dictionary_key_at"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, items, "myl_native_dictionary_read"));
 }
 // spec: QBE-STICKY-1
 test "a body that cannot leave a sticky trap carries no test for one" {

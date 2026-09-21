@@ -8,6 +8,7 @@ const ast = @import("ast.zig");
 const source = @import("source.zig");
 const typed = @import("typed.zig");
 const diagnostic = @import("diagnostic.zig");
+const buffer_operations = @import("buffer_operations.zig");
 const collections = @import("collection_lower.zig");
 const numeric_surface = @import("numeric_surface.zig");
 const Error = diagnostic.Error;
@@ -15,9 +16,17 @@ const Error = diagnostic.Error;
 /// Value families the prelude folds and orderings understand.
 pub const Family = enum { integer, floating, text };
 
+/// The one prelude spelling that appears both in the reserved-name table and in
+/// the call dispatch, kept as one const so the two cannot drift.
+const reversed_builtin = "reversed";
+/// The two scalar/text prelude names, shared by the reserved table and the
+/// dispatch below for the same reason.
+const ord_builtin = "ord";
+const chr_builtin = "chr";
+
 /// Prelude names answered without an import when no binding or declaration shadows them.
 pub fn reserved(name: []const u8) bool {
-    inline for (.{ "sum", "min", "max", "sorted", "abs", "round", "any", "all", "reversed", "list", "zip" }) |builtin| {
+    inline for (.{ "sum", "min", "max", "sorted", "abs", "round", "any", "all", reversed_builtin, "list", "zip", ord_builtin, chr_builtin }) |builtin| {
         if (std.mem.eql(u8, name, builtin)) return true;
     }
     return false;
@@ -152,8 +161,10 @@ fn buildCall(comptime Checker: type, checker: *Checker, span: source.Span, name:
         return largest;
     }
     if (std.mem.eql(u8, name, "zip")) return checker.sink.fail(unsupported, span, "zip is only an iteration source: for a, b in zip(xs, ys)");
+    if (std.mem.eql(u8, name, ord_builtin)) return @as(?typed.Node, try ordCall(Checker, checker, span, arguments));
+    if (std.mem.eql(u8, name, chr_builtin)) return @as(?typed.Node, try chrCall(Checker, checker, span, arguments));
     if (std.mem.eql(u8, name, "sorted")) {
-        if (arguments.len == 0 or arguments.len > 2) return checker.sink.fail(eArity, span, "sorted requires a list and optional key callback");
+        if (arguments.len == 0 or arguments.len > 2) return checker.sink.failCallSite(eArity, span, "sorted requires a list and optional key callback", null, buffer_operations.sorted_signature);
         return @as(?typed.Node, try sorted(Checker, checker, span, arguments[0], if (arguments.len == 2) arguments[1] else null));
     }
     const input = try single(Checker, checker, span, name, arguments);
@@ -163,7 +174,7 @@ fn buildCall(comptime Checker: type, checker: *Checker, span: source.Span, name:
         try anyAll(Checker, checker, span, input, true)
     else if (std.mem.eql(u8, name, "all"))
         try anyAll(Checker, checker, span, input, false)
-    else if (std.mem.eql(u8, name, "reversed"))
+    else if (std.mem.eql(u8, name, reversed_builtin))
         try reversedList(Checker, checker, span, input)
     else if (std.mem.eql(u8, name, "round"))
         try roundFloat(Checker, checker, span, input)
@@ -172,12 +183,78 @@ fn buildCall(comptime Checker: type, checker: *Checker, span: source.Span, name:
     if (built) |value| return value;
     return checker.sink.fail(unsupported, span, "this prelude builtin is not available in this position");
 }
+/// `ord(text)`: the one Unicode scalar value of a text argument. A one-scalar
+/// text *literal* folds here to its `int`, so `b == ord("m")` is an immediate
+/// compare with no allocation and no call; every other text becomes the
+/// operation's owner, and the emitted length check traps `R_TEXT_SCALAR` when
+/// the receiver does not hold exactly one scalar.
+fn ordCall(comptime Checker: type, checker: *Checker, span: source.Span, arguments: []const typed.NodeId) Error!typed.Node {
+    const input = try ordArgument(Checker, checker, span, arguments);
+    if (constantScalar(Checker, checker, input)) |point| return .{ .span = span, .ty = .i64, .data = .{ .integer = point } };
+    const b = builder(Checker, checker, span);
+    const owner = try b.local(nodeType(Checker, checker, input));
+    return b.block(&.{try b.stmt(.{ .initialize = .{ .slot = owner, .value = input } })}, try b.operation(owner, .text_ord, &.{}));
+}
+
+/// `chr(code)`: the one-scalar text for a Unicode scalar value. The owner is an
+/// empty text that names the operation's family, the one argument is the code,
+/// and an invalid code point is the runtime's located `R_TEXT_SCALAR` trap.
+fn chrCall(comptime Checker: type, checker: *Checker, span: source.Span, arguments: []const typed.NodeId) Error!typed.Node {
+    if (arguments.len != 1) {
+        const message = try std.fmt.allocPrint(checker.allocator, "`{s}(code: int) -> str` takes 1 argument, but this call passes {d}", .{ chr_builtin, arguments.len });
+        return checker.sink.fail(eArity, span, message);
+    }
+    if (!nodeType(Checker, checker, arguments[0]).isInteger()) return checker.sink.fail(unsupported, span, "chr requires an integer code point");
+    const text = checker.catalog.names.get("str") orelse return error.InternalError;
+    const b = builder(Checker, checker, span);
+    const owner = try b.local(text);
+    const empty = try b.node(text, .{ .array = &.{} });
+    return b.block(&.{try b.stmt(.{ .initialize = .{ .slot = owner, .value = empty } })}, try b.operation(owner, .text_chr, &.{arguments[0]}));
+}
+
+/// The single text argument `ord` takes, rejected with its own signature when
+/// the call passes another count or a value that is not text.
+fn ordArgument(comptime Checker: type, checker: *Checker, span: source.Span, arguments: []const typed.NodeId) Error!typed.NodeId {
+    if (arguments.len != 1) {
+        const message = try std.fmt.allocPrint(checker.allocator, "`ord(text: str) -> int` takes 1 argument, but this call passes {d}", .{arguments.len});
+        return checker.sink.fail(eArity, span, message);
+    }
+    const ty = nodeType(Checker, checker, arguments[0]);
+    if (!ty.isAggregate() or checker.catalog.records[ty.recordIndex()].collection.kind != .string)
+        return checker.sink.fail(unsupported, span, "ord requires a str argument");
+    return arguments[0];
+}
+
+/// The single scalar of an already-checked one-scalar text literal, or null when
+/// the value is not a compile-time text of exactly one scalar. A text literal is
+/// an `array` of its scalars, so a one-element array is the folded form.
+fn constantScalar(comptime Checker: type, checker: *Checker, value: typed.NodeId) ?i128 {
+    const node = checker.nodes.items[@backingInt(value)];
+    if (node.data != .array or node.data.array.len != 1) return null;
+    const element = checker.nodes.items[@backingInt(node.data.array[0])];
+    if (element.data != .integer) return null;
+    return element.data.integer;
+}
+
 fn single(comptime Checker: type, checker: *Checker, span: source.Span, name: []const u8, arguments: []const typed.NodeId) Error!typed.NodeId {
     if (arguments.len != 1) {
-        const message = try std.fmt.allocPrint(checker.allocator, "{s} requires exactly one argument", .{name});
+        const signature = preludeSignature(name) orelse name;
+        const message = try std.fmt.allocPrint(checker.allocator, "`{s}` takes 1 argument, but this call passes {d}", .{ signature, arguments.len });
         return checker.sink.fail(eArity, span, message);
     }
     return arguments[0];
+}
+
+/// The checked shape of one prelude builtin whose only accepted count is one,
+/// rendered the way a reader spells the call. Names outside this table keep the
+/// bare name in their rejection.
+fn preludeSignature(name: []const u8) ?[]const u8 {
+    if (std.mem.eql(u8, name, "round")) return "round(value: float) -> float";
+    if (std.mem.eql(u8, name, "sum")) return "sum(values: list[int]) -> int, or sum(values: list[float]) -> float";
+    if (std.mem.eql(u8, name, "reversed")) return "reversed(values: list[T]) -> list[T], or reversed(text: str) -> str";
+    if (std.mem.eql(u8, name, "any")) return "any(conditions: list[bool]) -> bool";
+    if (std.mem.eql(u8, name, "all")) return "all(conditions: list[bool]) -> bool";
+    return null;
 }
 
 /// `abs(x)` for an integer: the magnitude, trapping only on the unrepresentable minimum.
@@ -331,7 +408,7 @@ fn extreme(comptime Checker: type, checker: *Checker, span: source.Span, argumen
         const found = try extremeOfList(Checker, checker, span, arguments[0], greatest);
         return found;
     }
-    if (arguments.len != 2) return checker.sink.fail(eArity, span, "min and max take one list or two values");
+    if (arguments.len != 2) return checker.sink.failCallSite(eArity, span, "min and max take one list or two values", null, buffer_operations.extreme_signature);
     const left = arguments[0];
     const right = arguments[1];
     const ty = nodeType(Checker, checker, left);
@@ -398,6 +475,14 @@ fn sorted(comptime Checker: type, checker: *Checker, span: source.Span, input: t
     const b = builder(Checker, checker, span);
     const element = try listElement(Checker, checker, nodeType(Checker, checker, input), span);
     const family = if (key == null) familyOf(Checker, checker, element) orelse return checker.sink.fail(unsupported, span, "sorted requires a list of int, float or str values") else .integer;
+    if (key == null) {
+        const list = try collections.listType(&checker.catalog, element, span);
+        const result = try b.local(list);
+        return b.block(&.{
+            try b.stmt(.{ .initialize = .{ .slot = result, .value = try retain(Checker, checker, span, try b.slice(input, null, null)) } }),
+            try b.stmt(.{ .discard = try b.operation(result, .sort, &.{}) }),
+        }, try b.read(result));
+    }
     if (key) |callback| {
         const contract = @import("callables.zig").signature(nodeType(Checker, checker, callback), checker.catalog.records) orelse return checker.sink.fail(unsupported, span, "sorted key requires a callback");
         if (contract.parameters.len != 1 or contract.parameters[0] != element or contract.return_type != .i64 or contract.effects != 0)
@@ -420,7 +505,6 @@ fn sorted(comptime Checker: type, checker: *Checker, span: source.Span, input: t
     const n = try b.read(count);
     const w = try b.read(width);
     const i = try b.read(cursor);
-    const empty = try b.node(list, .{ .acquire_buffer = .{ .capacity = try b.integer(0) } });
     const fresh = try b.node(list, .{ .acquire_buffer = .{ .capacity = n } });
     const step_up = try b.binary(.add, w, w, .i64);
     // `middle` and `end` clamp one run to the end of the list.
@@ -479,7 +563,7 @@ fn sorted(comptime Checker: type, checker: *Checker, span: source.Span, input: t
         try b.stmt(.{ .assign = .{ .slot = cursor, .value = try b.read(end) } }),
     }) });
     const pass = try b.stmt(.{ .block = try keep(Checker, checker, &.{
-        try b.stmt(.{ .assign = .{ .slot = target_slot, .value = fresh } }),
+        try b.stmt(.{ .discard = try b.operation(target_slot, .clear, &.{}) }),
         try b.stmt(.{ .assign = .{ .slot = cursor, .value = try b.integer(0) } }),
         try b.stmt(.{ .loop = .{ .id = loopId(Checker, checker), .condition = try b.binary(.lt, try b.read(cursor), n, .bool), .body = run, .step = null } }),
         try b.stmt(.{ .assign = .{ .slot = swap_slot, .value = try b.read(source_slot) } }),
@@ -488,10 +572,10 @@ fn sorted(comptime Checker: type, checker: *Checker, span: source.Span, input: t
         try b.stmt(.{ .assign = .{ .slot = width, .value = step_up } }),
     }) });
     var setup: std.ArrayList(typed.StatementId) = .empty;
-    try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = target_slot, .value = empty } }));
     try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = source_slot, .value = try retain(Checker, checker, span, try b.slice(input, null, null)) } }));
     if (key_slot) |slot| try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = slot, .value = key.? } }));
     try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = count, .value = try b.length(source_slot) } }));
+    try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = target_slot, .value = fresh } }));
     try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = width, .value = try b.integer(1) } }));
     try setup.append(checker.allocator, try b.stmt(.{ .loop = .{ .id = loopId(Checker, checker), .condition = try b.binary(.lt, try b.read(width), n, .bool), .body = pass, .step = null } }));
     return b.block(setup.items, try b.read(source_slot));
@@ -539,7 +623,7 @@ fn reversedList(comptime Checker: type, checker: *Checker, span: source.Span, in
 
 /// `list(range(end))` and `list(range(start, end))`: the counted range as a new list.
 fn rangeListCall(comptime Checker: type, checker: *Checker, span: source.Span, arguments: []const typed.NodeId) Error!typed.Node {
-    if (arguments.len == 0 or arguments.len > 2) return checker.sink.fail(eArity, span, "range requires end or start, end");
+    if (arguments.len == 0 or arguments.len > 2) return checker.sink.failCallSite(eArity, span, "range requires end or start, end", null, buffer_operations.range_signature);
     const b = builder(Checker, checker, span);
     for (arguments) |argument| if (!nodeType(Checker, checker, argument).isInteger()) return checker.sink.fail(unsupported, span, "range bounds require integers");
     if (arguments.len == 2 and nodeType(Checker, checker, arguments[0]) != nodeType(Checker, checker, arguments[1])) return checker.sink.fail(unsupported, span, "range bounds require one integer type");
@@ -556,11 +640,12 @@ fn rangeListCall(comptime Checker: type, checker: *Checker, span: source.Span, a
     }) });
     const bind = if (arguments.len == 2) arguments[0] else try b.node(element, .{ .integer = 0 });
     const loop = loopId(Checker, checker);
+    const capacity = try b.rangeCapacity(try b.read(start), try b.read(limit), element);
     return b.block(&.{
         try b.stmt(.{ .initialize = .{ .slot = start, .value = bind } }),
         try b.stmt(.{ .initialize = .{ .slot = limit, .value = arguments[arguments.len - 1] } }),
         try b.stmt(.{ .initialize = .{ .slot = index, .value = try b.read(start) } }),
-        try b.stmt(.{ .initialize = .{ .slot = output, .value = try b.node(list, .{ .acquire_buffer = .{ .capacity = try b.integer(0) } }) } }),
+        try b.stmt(.{ .initialize = .{ .slot = output, .value = try b.node(list, .{ .acquire_buffer = .{ .capacity = capacity } }) } }),
         try b.stmt(.{ .loop = .{ .id = loop, .condition = try b.binary(.lt, i, try b.read(limit), .bool), .body = body, .step = null } }),
     }, try b.read(output));
 }
@@ -569,71 +654,17 @@ fn rangeListCall(comptime Checker: type, checker: *Checker, span: source.Span, a
 fn copyListCall(comptime Checker: type, checker: *Checker, span: source.Span, input: typed.NodeId) Error!typed.Node {
     const b = builder(Checker, checker, span);
     const ty = nodeType(Checker, checker, input);
+    const views = @import("dictionary_views.zig");
+    if (views.identify(checker.catalog, ty)) |kind| if (kind != .item) return views.snapshot(Checker, checker, span, input, kind);
     const sequence = ty.isAggregate() and checker.catalog.records[ty.recordIndex()].isCollection();
     if (!sequence or checker.catalog.records[ty.recordIndex()].collection.kind != .list)
-        return checker.sink.fail(unsupported, span, "list requires a list, range or reversed source");
+        return checker.sink.fail(unsupported, span, "list requires a list, range, reversed source or dictionary view");
     return b.slice(input, null, null);
 }
 
 /// Compare two texts the way `sort.compare_strs` does, by Unicode code point order.
 fn textLess(comptime Checker: type, checker: *Checker, span: source.Span, left: typed.NodeId, right: typed.NodeId) Error!typed.NodeId {
-    const b = builder(Checker, checker, span);
-    const text = nodeType(Checker, checker, left);
-    const bytes = collections.preludeType(&checker.catalog, "bytes", span) catch |err| switch (err) {
-        error.InternalError => return checker.sink.fail(unsupported, span, "ordering str values requires the bytes prelude type"),
-        else => return err,
-    };
-    const left_text = try b.local(text);
-    const right_text = try b.local(text);
-    const left_bytes = try b.local(bytes);
-    const right_bytes = try b.local(bytes);
-    const left_count = try b.local(.i64);
-    const right_count = try b.local(.i64);
-    const index = try b.local(.i64);
-    const limit = try b.local(.i64);
-    const answer = try b.local(.bool);
-    const decided = try b.local(.bool);
-    const i = try b.read(index);
-    const condition = try b.binary(.logical_and, try b.binary(.lt, i, try b.read(limit), .bool), try b.node(.bool, .{ .unary = .{ .op = .not, .operand = try b.read(decided), .op_span = span } }), .bool);
-    const left_byte = try b.node(.i64, .{ .cast = try b.operation(left_bytes, .read, &.{i}) });
-    const right_byte = try b.node(.i64, .{ .cast = try b.operation(right_bytes, .read, &.{i}) });
-    const differ = try b.binary(.ne, left_byte, right_byte, .bool);
-    const smaller = try b.binary(.lt, left_byte, right_byte, .bool);
-    const body = try b.stmt(.{ .block = try keep(Checker, checker, &.{
-        try b.stmt(.{ .branch = .{
-            .condition = differ,
-            .then_body = try b.stmt(.{ .block = try keep(Checker, checker, &.{
-                try b.stmt(.{ .assign = .{ .slot = answer, .value = smaller } }),
-                try b.stmt(.{ .assign = .{ .slot = decided, .value = try b.node(.bool, .{ .boolean = true }) } }),
-            }) }),
-            .else_body = null,
-        } }),
-        try b.stmt(.{ .assign = .{ .slot = index, .value = try b.binary(.add, i, try b.integer(1), .i64) } }),
-    }) });
-    const shorter_is_less = try b.stmt(.{ .branch = .{
-        .condition = try b.binary(.lt, try b.read(left_count), try b.read(right_count), .bool),
-        .then_body = try b.stmt(.{ .assign = .{ .slot = answer, .value = try b.node(.bool, .{ .boolean = true }) } }),
-        .else_body = null,
-    } });
-    const loop = loopId(Checker, checker);
-    return retain(Checker, checker, span, try b.block(&.{
-        try b.stmt(.{ .initialize = .{ .slot = left_text, .value = left } }),
-        try b.stmt(.{ .initialize = .{ .slot = right_text, .value = right } }),
-        try b.stmt(.{ .initialize = .{ .slot = left_bytes, .value = try b.operation(left_text, .encode, &.{}) } }),
-        try b.stmt(.{ .initialize = .{ .slot = right_bytes, .value = try b.operation(right_text, .encode, &.{}) } }),
-        try b.stmt(.{ .initialize = .{ .slot = left_count, .value = try b.length(left_bytes) } }),
-        try b.stmt(.{ .initialize = .{ .slot = right_count, .value = try b.length(right_bytes) } }),
-        try b.stmt(.{ .initialize = .{ .slot = limit, .value = try shortLength(Checker, checker, span, try b.read(left_count), try b.read(right_count)) } }),
-        try b.stmt(.{ .initialize = .{ .slot = index, .value = try b.integer(0) } }),
-        try b.stmt(.{ .initialize = .{ .slot = answer, .value = try b.node(.bool, .{ .boolean = false }) } }),
-        try b.stmt(.{ .initialize = .{ .slot = decided, .value = try b.node(.bool, .{ .boolean = false }) } }),
-        try b.stmt(.{ .loop = .{ .id = loop, .condition = condition, .body = body, .step = null } }),
-        try b.stmt(.{ .branch = .{
-            .condition = try b.node(.bool, .{ .unary = .{ .op = .not, .operand = try b.read(decided), .op_span = span } }),
-            .then_body = shorter_is_less,
-            .else_body = null,
-        } }),
-    }, try b.read(answer)));
+    return builder(Checker, checker, span).binary(.lt, left, right, .bool);
 }
 
 fn shortLength(comptime Checker: type, checker: *Checker, span: source.Span, left: typed.NodeId, right: typed.NodeId) Error!typed.NodeId {

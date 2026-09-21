@@ -5,6 +5,13 @@ const Sha = std.crypto.hash.sha2.Sha256;
 /// directory keeps at most one shared staging folder instead of one
 /// `.pending-<hex>` sibling per build.
 const staging_name = ".pending";
+/// Attempts one staging call makes before reporting its last real failure. A
+/// shared `.pending` folder can be reclaimed twice per attempt — once before the
+/// existence check that tolerates an existing component, once before this
+/// invocation's private child exists — so the budget absorbs a burst of lost
+/// races while a genuine filesystem fault still surfaces after a handful of
+/// syscalls.
+const staging_attempts: usize = 8;
 /// The advisory lease file every generation directory carries. A process that
 /// opens a generation for use holds a *shared* lock on it for the rest of its
 /// life; a sweeper takes a non-blocking *exclusive* lock before evicting a
@@ -153,22 +160,39 @@ pub const Context = struct {
     /// rather than one sibling each, and stale scratch stays contained.
     pub fn temporary(self: Context, parent: []const u8) Error![]const u8 {
         const staging = try std.fs.path.join(self.allocator, &.{ parent, staging_name });
-        // A concurrent `remove` may delete the shared folder after it empties
-        // and before this child is created; recreate it and retry.
+        // A concurrent `remove` reclaims the shared folder the moment it empties,
+        // so one attempt can lose the folder twice: between `createDirPath`'s
+        // `mkdir` and the check that tolerates an existing component, and again
+        // between that check and this invocation's private child. The first loss
+        // arrives as `FileNotFound`, or as `Unexpected` because the Linux `statx`
+        // behind the check has no ENOENT arm and reports the vanished folder
+        // through the generic errno path. Both are a lost race, not a broken
+        // filesystem, so each costs one of a bounded number of fresh attempts;
+        // the last real error is what an exhausted budget returns.
         var attempt: usize = 0;
-        while (attempt < 3) : (attempt += 1) {
-            try std.Io.Dir.cwd().createDirPath(self.io, staging);
+        var last: Error = error.FileNotFound;
+        while (attempt < staging_attempts) : (attempt += 1) {
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                error.FileNotFound, error.Unexpected => {
+                    last = err;
+                    continue;
+                },
+                else => return err,
+            };
             var random: [16]u8 = undefined;
             std.Io.random(self.io, &random);
             const name = std.fmt.bytesToHex(random, .lower);
             const path = try std.fs.path.join(self.allocator, &.{ staging, &name });
             std.Io.Dir.cwd().createDir(self.io, path, .default_dir) catch |err| switch (err) {
-                error.FileNotFound => continue,
+                error.FileNotFound => {
+                    last = err;
+                    continue;
+                },
                 else => return err,
             };
             return path;
         }
-        return error.FileNotFound;
+        return last;
     }
     /// Remove only this invocation's private staging directory, then the shared
     /// `.pending/` folder when nothing else is using it. Removal stays best
@@ -305,6 +329,11 @@ pub const Context = struct {
         try std.Io.File.stderr().writeStreamingAll(self.io, result.stderr);
         return result;
     }
+    /// Capture a tool query whose stderr is machine-readable rather than a user
+    /// diagnostic. Callers must check the returned termination status.
+    pub fn captureQuiet(self: Context, argv: []const []const u8) Error!std.process.RunResult {
+        return std.process.run(self.allocator, self.io, .{ .argv = argv });
+    }
     /// Invoke tools directly, preserving inherited environment and stderr.
     pub fn command(self: Context, argv: []const []const u8, environment: ?*const std.process.Environ.Map) Error!void {
         const result = try std.process.run(self.allocator, self.io, .{ .argv = argv, .environ_map = environment });
@@ -374,6 +403,92 @@ test "one staging folder per directory contains concurrent and abandoned scratch
     try context.rename(second, published);
     context.remove(second);
     try std.testing.expect(!context.exists(staging));
+}
+/// Threads, rounds and reclaim attempts the staging race test runs. Four workers
+/// stage into one destination while every round also reclaims the shared folder
+/// the way a finishing build does; on a driver that does not retry a lost race
+/// these rounds lose staging calls in every run, while a retrying one loses none.
+const staging_race_threads = 4;
+const staging_race_rounds = 20000;
+const staging_reclaim_per_round = 1;
+/// One staging worker in the shared-folder race: a build of its own that
+/// repeatedly stages a private child under one destination and reclaims it, the
+/// way concurrent builds sharing a destination do.
+const StagingRace = struct {
+    allocator: std.mem.Allocator,
+    environment: *const std.process.Environ.Map,
+    parent: []const u8,
+    staging: []const u8,
+    rounds: usize,
+    losses: std.atomic.Value(usize) = .init(0),
+};
+/// Run one worker's rounds through a private build context; a round that cannot
+/// stage a child counts as a loss instead of aborting the other workers. Losing
+/// the folder inside the existence check is the race this test provokes, so a run
+/// that hits it makes the standard library print `unexpected errno: 2` with a
+/// stack trace before `temporary` retries; that diagnostic is expected here and
+/// is not a failure.
+fn raceStaging(worker: *StagingRace) void {
+    var context = Context.init(worker.allocator, std.testing.io, worker.environment) catch {
+        _ = worker.losses.fetchAdd(1, .monotonic);
+        return;
+    };
+    defer context.deinit();
+    var round: usize = 0;
+    while (round < worker.rounds) : (round += 1) {
+        var reclaim: usize = 0;
+        while (reclaim < staging_reclaim_per_round) : (reclaim += 1) {
+            std.Io.Dir.cwd().deleteDir(std.testing.io, worker.staging) catch |err| switch (err) {
+                // A reclaim loses either way by design: the folder is gone
+                // already, or it still holds another worker's child.
+                error.FileNotFound, error.DirNotEmpty => continue,
+                else => {
+                    _ = worker.losses.fetchAdd(1, .monotonic);
+                    continue;
+                },
+            };
+        }
+        const child = context.temporary(worker.parent) catch {
+            _ = worker.losses.fetchAdd(1, .monotonic);
+            continue;
+        };
+        context.remove(child);
+    }
+}
+/// Spawn `threads` staging workers over one shared parent and report how many
+/// rounds lost their private child to a concurrent reclaim of the folder.
+fn stagingRaceLosses(allocator: std.mem.Allocator, environment: *const std.process.Environ.Map, parent: []const u8, threads: usize, rounds: usize) !usize {
+    const workers = try allocator.alloc(StagingRace, threads);
+    defer allocator.free(workers);
+    const handles = try allocator.alloc(std.Thread, threads);
+    defer allocator.free(handles);
+    const staging = try std.fs.path.join(allocator, &.{ parent, staging_name });
+    defer allocator.free(staging);
+    var spawned: usize = 0;
+    for (workers, 0..) |*worker, slot| {
+        worker.* = .{ .allocator = allocator, .environment = environment, .parent = parent, .staging = staging, .rounds = rounds };
+        handles[slot] = std.Thread.spawn(.{}, raceStaging, .{worker}) catch |err| {
+            for (handles[0..spawned]) |handle| handle.join();
+            return err;
+        };
+        spawned += 1;
+    }
+    for (handles[0..spawned]) |handle| handle.join();
+    var losses: usize = 0;
+    for (workers) |worker| losses += worker.losses.load(.monotonic);
+    return losses;
+}
+// spec: NATIVE-STAGING-2
+test "concurrent staging in one destination never loses a child to another build's reclaim" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var context = try Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const parent = try temporary.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    const losses = try stagingRaceLosses(std.testing.allocator, &environment, parent, staging_race_threads, staging_race_rounds);
+    try std.testing.expectEqual(@as(usize, 0), losses);
 }
 test "native build IO owns allocations and rejects missing tools or failing commands" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);

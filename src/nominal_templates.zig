@@ -133,6 +133,30 @@ pub const Index = struct {
         try self.addByteString();
         try self.addByteBuffer();
         try self.addBuiltin("dict", 2, .buffer);
+        try self.addDictionaryViews();
+    }
+    fn addDictionaryViews(self: *Index) Error!void {
+        const allocator = self.context.allocator;
+        const empty: Span = .{ .start = 0, .end = 0 };
+        try self.addBuiltin("DictItem", 2, .record);
+        const item = &self.declarations.items[self.names.get("DictItem").?];
+        if (item.builtin_name != null) item.fields = try allocator.dupe(Field, &.{
+            .{ .name = empty, .ty = .{ .parameter = 0 }, .builtin_name = "key" },
+            .{ .name = empty, .ty = .{ .parameter = 1 }, .builtin_name = "value" },
+        });
+        const mapping = try allocator.create(Application);
+        mapping.* = .{
+            .syntax = .{ .span = empty, .name = empty, .arguments = try allocator.dupe(Span, &.{ empty, empty }) },
+            .declaration = self.names.get("dict").?,
+            .arguments = try allocator.dupe(Expression, &.{ .{ .parameter = 0 }, .{ .parameter = 1 } }),
+        };
+        for ([_][]const u8{ "DictKeys", "DictValues", "DictItems" }) |name| {
+            try self.addBuiltin(name, 2, .record);
+            const declaration = &self.declarations.items[self.names.get(name).?];
+            if (declaration.builtin_name != null) declaration.fields = try allocator.dupe(Field, &.{
+                .{ .name = empty, .ty = .{ .application = mapping }, .builtin_name = "mapping" },
+            });
+        }
     }
     fn addCell(self: *Index) Error!void {
         try self.addBuiltin("Cell", 1, .record);

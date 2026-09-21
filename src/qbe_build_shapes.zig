@@ -74,7 +74,10 @@ pub const Shapes = struct {
         try v.quote(w, v.text(v.get(item, "name")));
         const fields = v.array(v.get(item, "fields"));
         const kind = try kindNumber(v.text(v.get(item, "kind")));
-        const count = if (kind == 2) v.number(v.get(item, "count")) else fields.len;
+        // A text carries its element as the single child entry and has no fixed
+        // length, so its count is zero rather than the field count an aggregate
+        // uses.
+        const count = if (kind == 2) v.number(v.get(item, "count")) else if (kind == 5) 0 else fields.len;
         try w.print(",{d},{d},{d},{d},", .{ v.number(v.get(item, "size")), count, v.number(v.get(item, "stride")), kind });
         try self.renderFields(w, fields, false);
         try w.writeByte(',');
@@ -133,7 +136,7 @@ pub fn find(types: []const Value, name: []const u8) ?usize {
     return null;
 }
 fn kindNumber(name: []const u8) Error!u8 {
-    for ([_][]const u8{ "scalar", "record", "array", "variant", "domain" }, 0..) |kind, i| if (std.mem.eql(u8, name, kind)) return @intCast(i);
+    for ([_][]const u8{ "scalar", "record", "array", "variant", "domain", "list" }, 0..) |kind, i| if (std.mem.eql(u8, name, kind)) return @intCast(i);
     return error.InvalidManifest;
 }
 

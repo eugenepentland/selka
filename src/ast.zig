@@ -46,7 +46,7 @@ pub const BinaryOp = enum {
 /// Parsed simple and augmented assignment forms.
 pub const AssignmentOp = enum { set, add, sub, mul, div, floor_div, rem };
 /// Parsed negation and Boolean inversion operators.
-pub const UnaryOp = enum { neg, not, f64_sqrt, f64_floor, f64_ceil, f64_trunc, f64_abs, f64_neg, f64_from_u64, f64_to_u64, f64_from_i64, f64_to_i64 };
+pub const UnaryOp = enum { neg, not, is_none, f64_sqrt, f64_floor, f64_ceil, f64_trunc, f64_abs, f64_neg, f64_from_u64, f64_to_u64, f64_from_i64, f64_to_i64 };
 /// Source type spelling paired with an expression requiring that type.
 pub const TypedValue = struct { ty: Span, value: NodeId };
 /// Parsed expression with source-spelled names and unresolved operand identities.
@@ -115,7 +115,7 @@ pub const Statement = struct {
         assertion: Assertion,
         ret: NodeId,
         loop_exit: bool,
-        for_each: struct { name: Span, index_name: ?Span, iterable: NodeId, body: StatementId },
+        for_each: struct { name: Span, index_name: ?Span, iterable: NodeId, body: StatementId, enumerated: bool = false },
         for_range: struct { name: Span, start: NodeId, end: NodeId, body: StatementId },
         discard: NodeId,
         branch: struct { condition: NodeId, then_body: StatementId, else_body: ?StatementId },

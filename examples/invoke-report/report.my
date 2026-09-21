@@ -1,0 +1,38 @@
+module report
+
+
+def render(value: i64) -> str effects(managed_allocation):
+    if value == 0:
+        return "0"
+    out = ""
+    rest = value
+    while rest > 0:
+        out = chr(48 + rest % 10) + out
+        rest = rest // 10
+    return out
+
+
+public def digit_counts(n: i64) -> list[i64] effects(managed_allocation):
+    counts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    rest = n
+    if rest < 0:
+        rest = -rest
+    if rest == 0:
+        counts[0] = 1
+    while rest > 0:
+        digit = rest % 10
+        counts[digit] = counts[digit] + 1
+        rest = rest // 10
+    return counts
+
+
+public def headline(n: i64) -> str effects(managed_allocation):
+    rest = n
+    if rest < 0:
+        rest = -rest
+    total = 0
+    reach = rest
+    while reach > 0:
+        total = total + reach % 10
+        reach = reach // 10
+    return "n=" + render(rest) + " sum=" + render(total)

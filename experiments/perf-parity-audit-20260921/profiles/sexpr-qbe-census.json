@@ -1,0 +1,642 @@
+{
+  "binary": ".tmp/perf-audit-20260921/sexpr-qbe",
+  "binary_sha256": "65912253a679e3f0a9bd64857b425da404ccd9741ae700351384ffb949fdba80",
+  "note": "production QBE backend; census of input8.sexp",
+  "argv_tail": [],
+  "runs": 600,
+  "samples": 23600,
+  "outside_main_executable": 4198,
+  "percent_outside_main_executable": 17.78813559322034,
+  "unmapped_inside": 77,
+  "percent_unmapped_inside": 0.326271186440678,
+  "located_samples": 19325,
+  "class_totals": {
+    "guest": {
+      "samples": 10770,
+      "percent_all_samples": 45.63559322033898
+    },
+    "runtime-c": {
+      "samples": 5991,
+      "percent_all_samples": 25.385593220338983
+    },
+    "libc": {
+      "samples": 2564,
+      "percent_all_samples": 10.864406779661017
+    }
+  },
+  "functions": [
+    {
+      "name": "sexpr.tokenizer::next_raw",
+      "class": "guest",
+      "samples": 2311,
+      "percent_all_samples": 9.792372881355933
+    },
+    {
+      "name": "trace [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 1982,
+      "percent_all_samples": 8.398305084745763
+    },
+    {
+      "name": "memcpy",
+      "class": "libc",
+      "samples": 1965,
+      "percent_all_samples": 8.326271186440678
+    },
+    {
+      "name": "myl_native_bytes_find_any [native_bytes.c]",
+      "class": "runtime-c",
+      "samples": 1789,
+      "percent_all_samples": 7.580508474576271
+    },
+    {
+      "name": "sexpr.tokenizer::raw",
+      "class": "guest",
+      "samples": 1429,
+      "percent_all_samples": 6.055084745762712
+    },
+    {
+      "name": "sexpr.tokenizer::is_atom_continue",
+      "class": "guest",
+      "samples": 1308,
+      "percent_all_samples": 5.5423728813559325
+    },
+    {
+      "name": "main::tally",
+      "class": "guest",
+      "samples": 1111,
+      "percent_all_samples": 4.7076271186440675
+    },
+    {
+      "name": "sexpr.parser::parse_node",
+      "class": "guest",
+      "samples": 1042,
+      "percent_all_samples": 4.415254237288136
+    },
+    {
+      "name": "sexpr.parser::advance",
+      "class": "guest",
+      "samples": 889,
+      "percent_all_samples": 3.766949152542373
+    },
+    {
+      "name": "myl_native_heap_collect [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 887,
+      "percent_all_samples": 3.7584745762711864
+    },
+    {
+      "name": "sexpr.parser::parse_list",
+      "class": "guest",
+      "samples": 751,
+      "percent_all_samples": 3.1822033898305087
+    },
+    {
+      "name": "sexpr.tokenizer::read_string",
+      "class": "guest",
+      "samples": 636,
+      "percent_all_samples": 2.694915254237288
+    },
+    {
+      "name": "memset",
+      "class": "libc",
+      "samples": 599,
+      "percent_all_samples": 2.538135593220339
+    },
+    {
+      "name": "myl_native_list_append [native_collections.c]",
+      "class": "runtime-c",
+      "samples": 527,
+      "percent_all_samples": 2.233050847457627
+    },
+    {
+      "name": "sexpr.parser::parse_leaf",
+      "class": "guest",
+      "samples": 503,
+      "percent_all_samples": 2.1313559322033897
+    },
+    {
+      "name": "sexpr.tokenizer::read_atom",
+      "class": "guest",
+      "samples": 363,
+      "percent_all_samples": 1.5381355932203389
+    },
+    {
+      "name": "myl_native_heap_alloc_at [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 226,
+      "percent_all_samples": 0.9576271186440678
+    },
+    {
+      "name": "sexpr.tokenizer::read_number",
+      "class": "guest",
+      "samples": 214,
+      "percent_all_samples": 0.9067796610169492
+    },
+    {
+      "name": "sexpr.parser::view_of",
+      "class": "guest",
+      "samples": 158,
+      "percent_all_samples": 0.6694915254237288
+    },
+    {
+      "name": "myl_qbe_heap [qbe_runtime.c]",
+      "class": "runtime-c",
+      "samples": 147,
+      "percent_all_samples": 0.6228813559322034
+    },
+    {
+      "name": "myl_qbe_root_mark [qbe_runtime.c]",
+      "class": "runtime-c",
+      "samples": 142,
+      "percent_all_samples": 0.6016949152542372
+    },
+    {
+      "name": "myl_native_bytes_number_parse",
+      "class": "runtime-c",
+      "samples": 83,
+      "percent_all_samples": 0.3516949152542373
+    },
+    {
+      "name": "myl_native_list_new [native_collections.c]",
+      "class": "runtime-c",
+      "samples": 54,
+      "percent_all_samples": 0.2288135593220339
+    },
+    {
+      "name": "myl_native_root_pop [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 52,
+      "percent_all_samples": 0.22033898305084745
+    },
+    {
+      "name": "sexpr.tokenizer::si_suffix_len",
+      "class": "guest",
+      "samples": 52,
+      "percent_all_samples": 0.22033898305084745
+    },
+    {
+      "name": "myl_native_root_push [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 41,
+      "percent_all_samples": 0.17372881355932204
+    },
+    {
+      "name": "myl_native_arena_region [native_arena.c]",
+      "class": "runtime-c",
+      "samples": 30,
+      "percent_all_samples": 0.1271186440677966
+    },
+    {
+      "name": "myl_native_object_region [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 10,
+      "percent_all_samples": 0.0423728813559322
+    },
+    {
+      "name": "myl_native_heap_alloc [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 4,
+      "percent_all_samples": 0.01694915254237288
+    },
+    {
+      "name": "myl_native_bytes_range [native_bytes.c]",
+      "class": "runtime-c",
+      "samples": 4,
+      "percent_all_samples": 0.01694915254237288
+    },
+    {
+      "name": "myl_qbe_float_unary [qbe_runtime.c]",
+      "class": "runtime-c",
+      "samples": 3,
+      "percent_all_samples": 0.012711864406779662
+    },
+    {
+      "name": "myl_qbe_resource_read [qbe_resources.c]",
+      "class": "runtime-c",
+      "samples": 3,
+      "percent_all_samples": 0.012711864406779662
+    },
+    {
+      "name": "myl_native_text_utf8 [native_text.c]",
+      "class": "runtime-c",
+      "samples": 1,
+      "percent_all_samples": 0.00423728813559322
+    },
+    {
+      "name": "execute_config_args [qbe_runtime.c]",
+      "class": "runtime-c",
+      "samples": 1,
+      "percent_all_samples": 0.00423728813559322
+    },
+    {
+      "name": "main::summarise",
+      "class": "guest",
+      "samples": 1,
+      "percent_all_samples": 0.00423728813559322
+    },
+    {
+      "name": "sexpr.parser::parse_with_depth_cap",
+      "class": "guest",
+      "samples": 1,
+      "percent_all_samples": 0.00423728813559322
+    },
+    {
+      "name": "myl_qbe_resource_complete [qbe_resources.c]",
+      "class": "runtime-c",
+      "samples": 1,
+      "percent_all_samples": 0.00423728813559322
+    },
+    {
+      "name": "myl_qbe_failed [qbe_runtime.c]",
+      "class": "runtime-c",
+      "samples": 1,
+      "percent_all_samples": 0.00423728813559322
+    },
+    {
+      "name": "myl_native_arena_trace [native_arena.c]",
+      "class": "runtime-c",
+      "samples": 1,
+      "percent_all_samples": 0.00423728813559322
+    },
+    {
+      "name": "myl_qbe_on_stack [qbe_stack.c]",
+      "class": "runtime-c",
+      "samples": 1,
+      "percent_all_samples": 0.00423728813559322
+    },
+    {
+      "name": "read_handle [native_scoped.c]",
+      "class": "runtime-c",
+      "samples": 1,
+      "percent_all_samples": 0.00423728813559322
+    },
+    {
+      "name": "main::main",
+      "class": "guest",
+      "samples": 1,
+      "percent_all_samples": 0.00423728813559322
+    }
+  ],
+  "top_pcs": [
+    {
+      "address": "0x103cb51",
+      "samples": 962,
+      "percent_all_samples": 4.076271186440678,
+      "function": "memcpy",
+      "class": "libc",
+      "offset_in_function": "0x141",
+      "function_bytes": 470,
+      "disassembly": [
+        {
+          "address": "0x103cb32",
+          "text": "vmovups %ymm0,-0xa0(%rax,%r10,1)",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb3c",
+          "text": "vmovaps -0x80(%rsi,%r10,1),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb43",
+          "text": "vmovups %ymm0,-0x80(%rax,%r10,1)",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb4a",
+          "text": "vmovaps -0x60(%rsi,%r10,1),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb51",
+          "text": "vmovups %ymm0,-0x60(%rax,%r10,1)",
+          "sampled": true
+        },
+        {
+          "address": "0x103cb58",
+          "text": "vmovaps -0x40(%rsi,%r10,1),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb5f",
+          "text": "vmovups %ymm0,-0x40(%rax,%r10,1)",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb66",
+          "text": "vmovaps -0x20(%rsi,%r10,1),%ymm0",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x10389c4",
+      "samples": 703,
+      "percent_all_samples": 2.9788135593220337,
+      "function": "myl_native_bytes_find_any [native_bytes.c]",
+      "class": "runtime-c",
+      "offset_in_function": "0xf4",
+      "function_bytes": 272,
+      "disassembly": [
+        {
+          "address": "0x10389b6",
+          "text": "shr    $0x6,%ecx",
+          "sampled": false
+        },
+        {
+          "address": "0x10389b9",
+          "text": "mov    -0x30(%rbp,%rcx,8),%rcx",
+          "sampled": false
+        },
+        {
+          "address": "0x10389be",
+          "text": "bt     %rax,%rcx",
+          "sampled": false
+        },
+        {
+          "address": "0x10389c2",
+          "text": "jb     10389d3 <myl_native_bytes_find_any+0x103>",
+          "sampled": false
+        },
+        {
+          "address": "0x10389c4",
+          "text": "inc    %rdi",
+          "sampled": true
+        },
+        {
+          "address": "0x10389c7",
+          "text": "cmp    %rdi,%r8",
+          "sampled": false
+        },
+        {
+          "address": "0x10389ca",
+          "text": "jne    10389b0 <myl_native_bytes_find_any+0xe0>",
+          "sampled": false
+        },
+        {
+          "address": "0x10389cc",
+          "text": "mov    $0xffffffffffffffff,%rdi",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x103557f",
+      "samples": 621,
+      "percent_all_samples": 2.6313559322033897,
+      "function": "myl_native_heap_collect [native_heap.c]",
+      "class": "runtime-c",
+      "offset_in_function": "0x14f",
+      "function_bytes": 408,
+      "disassembly": [
+        {
+          "address": "0x1035573",
+          "text": "mov    (%rdi),%rdi",
+          "sampled": false
+        },
+        {
+          "address": "0x1035576",
+          "text": "test   %rdi,%rdi",
+          "sampled": false
+        },
+        {
+          "address": "0x1035579",
+          "text": "je     1035590 <myl_native_heap_collect+0x160>",
+          "sampled": false
+        },
+        {
+          "address": "0x103557b",
+          "text": "cmpl   $0x0,0x2c(%rdi)",
+          "sampled": false
+        },
+        {
+          "address": "0x103557f",
+          "text": "jne    1035570 <myl_native_heap_collect+0x140>",
+          "sampled": true
+        },
+        {
+          "address": "0x1035581",
+          "text": "cmpl   $0x0,0x28(%rdi)",
+          "sampled": false
+        },
+        {
+          "address": "0x1035585",
+          "text": "je     1035555 <myl_native_heap_collect+0x125>",
+          "sampled": false
+        },
+        {
+          "address": "0x1035587",
+          "text": "movl   $0x0,0x28(%rdi)",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x10356b2",
+      "samples": 603,
+      "percent_all_samples": 2.555084745762712,
+      "function": "trace [native_heap.c]",
+      "class": "runtime-c",
+      "offset_in_function": "0xe2",
+      "function_bytes": 352,
+      "disassembly": [
+        {
+          "address": "0x10356a4",
+          "text": "call   1035930 <myl_native_arena_region>",
+          "sampled": false
+        },
+        {
+          "address": "0x10356a9",
+          "text": "test   %eax,%eax",
+          "sampled": false
+        },
+        {
+          "address": "0x10356ab",
+          "text": "jne    1035721 <trace+0x151>",
+          "sampled": false
+        },
+        {
+          "address": "0x10356ad",
+          "text": "cmpl   $0x0,-0x34(%r14)",
+          "sampled": false
+        },
+        {
+          "address": "0x10356b2",
+          "text": "jne    1035721 <trace+0x151>",
+          "sampled": true
+        },
+        {
+          "address": "0x10356b4",
+          "text": "cmpl   $0x0,-0x38(%r14)",
+          "sampled": false
+        },
+        {
+          "address": "0x10356b9",
+          "text": "jne    1035721 <trace+0x151>",
+          "sampled": false
+        },
+        {
+          "address": "0x10356bb",
+          "text": "lea    -0x60(%r14),%rax",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x103cb6d",
+      "samples": 510,
+      "percent_all_samples": 2.1610169491525424,
+      "function": "memcpy",
+      "class": "libc",
+      "offset_in_function": "0x15d",
+      "function_bytes": 470,
+      "disassembly": [
+        {
+          "address": "0x103cb51",
+          "text": "vmovups %ymm0,-0x60(%rax,%r10,1)",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb58",
+          "text": "vmovaps -0x40(%rsi,%r10,1),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb5f",
+          "text": "vmovups %ymm0,-0x40(%rax,%r10,1)",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb66",
+          "text": "vmovaps -0x20(%rsi,%r10,1),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb6d",
+          "text": "vmovups %ymm0,-0x20(%rax,%r10,1)",
+          "sampled": true
+        },
+        {
+          "address": "0x103cb74",
+          "text": "vmovaps (%rsi,%r10,1),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb7a",
+          "text": "vmovups %ymm0,(%rax,%r10,1)",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb80",
+          "text": "add    $0x8,%r9",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x1035648",
+      "samples": 405,
+      "percent_all_samples": 1.7161016949152543,
+      "function": "trace [native_heap.c]",
+      "class": "runtime-c",
+      "offset_in_function": "0x78",
+      "function_bytes": 352
+    },
+    {
+      "address": "0x102ca31",
+      "samples": 368,
+      "percent_all_samples": 1.5593220338983051,
+      "function": "sexpr.tokenizer::raw",
+      "class": "guest",
+      "offset_in_function": "0x131",
+      "function_bytes": 632
+    },
+    {
+      "address": "0x102ca57",
+      "samples": 339,
+      "percent_all_samples": 1.4364406779661016,
+      "function": "sexpr.tokenizer::raw",
+      "class": "guest",
+      "offset_in_function": "0x157",
+      "function_bytes": 632
+    },
+    {
+      "address": "0x1011aba",
+      "samples": 299,
+      "percent_all_samples": 1.2669491525423728,
+      "function": "main::tally",
+      "class": "guest",
+      "offset_in_function": "0x41a",
+      "function_bytes": 1624
+    },
+    {
+      "address": "0x10389c2",
+      "samples": 259,
+      "percent_all_samples": 1.097457627118644,
+      "function": "myl_native_bytes_find_any [native_bytes.c]",
+      "class": "runtime-c",
+      "offset_in_function": "0xf2",
+      "function_bytes": 272
+    },
+    {
+      "address": "0x1014279",
+      "samples": 232,
+      "percent_all_samples": 0.9830508474576272,
+      "function": "sexpr.parser::advance",
+      "class": "guest",
+      "offset_in_function": "0x339",
+      "function_bytes": 1025
+    },
+    {
+      "address": "0x10389be",
+      "samples": 193,
+      "percent_all_samples": 0.8177966101694916,
+      "function": "myl_native_bytes_find_any [native_bytes.c]",
+      "class": "runtime-c",
+      "offset_in_function": "0xee",
+      "function_bytes": 272
+    },
+    {
+      "address": "0x103cbc6",
+      "samples": 176,
+      "percent_all_samples": 0.7457627118644068,
+      "function": "memcpy",
+      "class": "libc",
+      "offset_in_function": "0x1b6",
+      "function_bytes": 470
+    },
+    {
+      "address": "0x103c8a0",
+      "samples": 175,
+      "percent_all_samples": 0.7415254237288136,
+      "function": "memset",
+      "class": "libc",
+      "offset_in_function": "0x0",
+      "function_bytes": 364
+    },
+    {
+      "address": "0x103c915",
+      "samples": 146,
+      "percent_all_samples": 0.6186440677966102,
+      "function": "memset",
+      "class": "libc",
+      "offset_in_function": "0x75",
+      "function_bytes": 364
+    }
+  ],
+  "method": "LD_PRELOAD SIGPROF (ITIMER_PROF) userspace self-PC sampling of unmodified binaries; 500us requested, kernel tick (CONFIG_HZ=1000) limited; no stack attribution, no hardware counters (perf_event_paranoid=4). The `dense` sampler is the repository sampler with the first expiration moved inside the first tick, so no prefix of a short run goes unsampled. A sample inside a shared library counts in `samples` and is reported only as `outside_main_executable`, so libc memcpy/malloc in the LLVM builds is inside that share. LTO inlines many guest functions into their callers, so a sample is attributed to the surviving outer symbol. Every run is pinned to CPU 6 and its output hash is verified; no wall-time claim is made from profiled runs.",
+  "sampler": "dense",
+  "sampler_source": "experiments/perf-parity-audit-20260921/profiles/sample_dense.c",
+  "sampler_source_sha256": "f494bbd1caa925d9ee02616d09f65dd2ff31a8b8f8d81cfd231b2c5b3ef54061",
+  "sampler_sha256": "312212283319eeec021923ce05881f6636e34a5ed6f9dbdcecedf4edcb354a4c",
+  "cpu": 6,
+  "seed": 20260921,
+  "output_digest": "aa9d2fdaca105bfb6c19d7b427b4da7d",
+  "interleaved_with": [
+    "sexpr-o3-lto-census",
+    "sexpr-o3-lto-render",
+    "sexpr-qbe-census",
+    "sexpr-qbe-render"
+  ]
+}

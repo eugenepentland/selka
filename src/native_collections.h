@@ -20,7 +20,8 @@ int myl_native_list_pop_at(myl_native_list *, int64_t index, void *output);
 int myl_native_list_clear(myl_native_list *);
 /* Python-shaped list methods. `extend`/`insert` may allocate and return zero on
  * refusal; `remove`/`index` answer 1 found, 0 absent and negative on comparison
- * failure. `sort` orders signed integers, unsigned integers or binary64 values. */
+ * failure. `sort` stably orders signed integers, unsigned integers, binary64
+ * values (with NaNs last), or text pointers in Unicode scalar order. */
 int myl_native_list_extend(myl_native_heap *, myl_native_list *, const myl_native_list *other);
 int myl_native_list_insert(myl_native_heap *, myl_native_list *, int64_t index, const void *value);
 int myl_native_list_remove(myl_native_list *, const void *value);

@@ -4,7 +4,8 @@
 /* Deepest arena depth reachable from one native value's bytes. Managed
  * references are not followed past the first hop: the store barrier keeps an
  * object from ever referencing a younger arena, so one hop is already exact. */
-unsigned myl_native_region_reach(const myl_native_type *type, const void *value);
+unsigned myl_native_region_reach(const myl_native_heap *heap,
+                                 const myl_native_type *type, const void *value);
 /* Nonzero when storing this value into that container respects the arena
  * ordering; zero is the located R_ARENA_ESCAPE case. */
 int myl_native_region_check(myl_native_heap *heap, const void *container,

@@ -1,0 +1,12 @@
+qbe cold 3.16 s
+qbe nochange 0.11 s
+llvm cold 12.61 s
+llvm nochange 0.16 s
+sexpr/printer.my:142:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      _unused_probe = 1
+      ^
+qbe one-function-edit 0.23 s
+sexpr/printer.my:142:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      _unused_probe = 1
+      ^
+llvm one-function-edit 0.38 s

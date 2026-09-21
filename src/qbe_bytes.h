@@ -17,4 +17,5 @@ myl_native_bytes *myl_qbe_bytes_copy(void *context, myl_native_bytes *input);
 /* The validating scalar count as a checked result: 0 publishes the count, 1 the
    invalid-UTF-8 message, -1 a sticky trap. */
 int myl_qbe_bytes_scalar_count(void *context, myl_native_bytes *input, void **output);
+int myl_qbe_bytes_scalar_count_range(void *context, myl_native_bytes *input, int64_t start, int64_t end, void **output);
 #endif

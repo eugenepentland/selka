@@ -3,7 +3,11 @@
    exactly the scopes the frame opened. */
 #include "qbe_arena.h"
 void myl_qbe_fail_arena_escape(void *context) { myl_qbe_fail(context, "R_ARENA_ESCAPE"); }
-void myl_qbe_region_begin(void *context) { myl_native_region_begin(myl_qbe_heap(context)); }
+int myl_qbe_region_begin(void *context) {
+    if (myl_native_region_begin(myl_qbe_heap(context))) return 1;
+    myl_qbe_fail_allocation(context);
+    return 0;
+}
 void myl_qbe_region_end(void *context) { myl_native_region_end(myl_qbe_heap(context)); }
 uint64_t myl_qbe_region_mark(void *context) { return myl_qbe_heap(context)->region_depth; }
 void myl_qbe_region_restore(void *context, uint64_t mark) {

@@ -38,6 +38,10 @@ int main(void) {
     assert(myl_native_dictionary_read(dict,&input,&out) && out==3);
     myl_native_text *first;
     assert(myl_native_dictionary_key_at(dict,0,&first) && first==input);
+    out=-1;
+    assert(myl_native_dictionary_value_at(dict,0,&out) && out==3);
+    out=-1;
+    assert(!myl_native_dictionary_value_at(dict,2,&out) && out==-1);
     myl_native_list *snapshot=myl_native_dictionary_snapshot(&heap,dict,0); assert(snapshot);
     myl_native_root_push(&heap,&roots[5],&snapshot,&pointer);
     assert(myl_native_dictionary_write(&heap,dict,&input,&one));
@@ -71,7 +75,7 @@ int main(void) {
     myl_native_root_pop(&heap,&roots[0]);
     myl_native_root_push(&heap,&roots[0],&snapshot,&pointer);
     myl_native_heap_collect(&heap);
-    assert(heap.objects_live==4);
+    assert(heap.objects_live==3);
     assert(myl_native_list_get(snapshot,0,&first)); equals(first,"retained key");
     myl_native_heap_collect(&heap);
     assert(myl_native_list_get(snapshot,0,&first)); equals(first,"retained key");

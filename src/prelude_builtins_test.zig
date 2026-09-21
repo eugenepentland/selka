@@ -91,6 +91,15 @@ test "min and max accept a list or two scalars and trap on an empty list" {
     try trapped("def main() -> int:\n    return min([])\n", "R_LIST_BOUNDS");
     try trapped("def main() -> int:\n    return max([])\n", "R_LIST_BOUNDS");
     try reject("def main() -> int:\n    return min([1], [2])\n", "E_PRELUDE_TYPE");
+    try run(
+        \\def choose(words: list[str]) -> str noalloc:
+        \\    return min(words)
+        \\
+        \\def main() -> int:
+        \\    if choose(["é", "z", "apple"]) == "apple":
+        \\        return 1
+        \\    return 0
+    , 1);
 }
 
 // spec: PRELUDE-SORT-1
@@ -101,6 +110,27 @@ test "sorted returns a new ascending list for int, float and str" {
     try run("def main() -> int:\n    ys = sorted([2.5, 0.5, 4.0])\n    return int(ys[0] * 2.0)\n", 1);
     try run("def main() -> int:\n    return len(sorted([]))\n", 0);
     try run("def main() -> int:\n    ys = sorted([9, 8, 7, 6, 5, 4, 3, 2, 1, 0])\n    if ys[0] == 0 and ys[9] == 9 and ys[4] == 4:\n        return 1\n    return 0\n", 1);
+    try run(
+        \\def main() -> int:
+        \\    values: list[int] = []
+        \\    n = 2048
+        \\    while n > 0:
+        \\        values.append(n)
+        \\        n -= 1
+        \\    alias = values
+        \\    ordered = sorted(values)
+        \\    if alias[0] == 2048 and ordered[0] == 1 and ordered[2047] == 2048:
+        \\        return 1
+        \\    return 0
+    , 1);
+    try run(
+        \\def main() -> int:
+        \\    nan = 0.0 / 0.0
+        \\    values = sorted([nan, 2.0, 0.0 - 0.0, 0.0, 0.0 - 1.0])
+        \\    if values[0] == 0.0 - 1.0 and values[1] == 0.0 and values[2] == 0.0 and values[3] == 2.0 and values[4] != values[4]:
+        \\        return 1
+        \\    return 0
+    , 1);
     try reject("def main() -> int:\n    return len(sorted([True, False]))\n", "E_PRELUDE_TYPE");
 }
 

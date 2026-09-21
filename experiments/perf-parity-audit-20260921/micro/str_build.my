@@ -1,0 +1,15 @@
+# str_build: append a short piece into a growable byte buffer 8,000,000 times.
+
+
+def main(out: Stream) -> int:
+    empty: list[int] = []
+    buffer = byte_buffer(empty)
+    piece = b"mylang!\n"
+    for i in range(16000000):
+        _ = buffer.append_range(piece, 0, 8)
+    length = len(buffer)
+    total = 0
+    for j in range(length // 1021):
+        total = (total + buffer[j * 1021]) % 1000003
+    out.print(length, total)
+    return 0

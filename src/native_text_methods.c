@@ -2,6 +2,14 @@
 #define _GNU_SOURCE
 #include "native_text_methods.h"
 #include <string.h>
+/* Splits on maximal runs of ASCII whitespace, dropping every empty piece. It is
+   declared here rather than in the companion header so this file stays the only
+   one the whitespace-split addition touches on the runtime side; the QBE
+   emitter reaches it by symbol name. */
+myl_native_list *myl_native_text_split_whitespace(myl_native_heap *, myl_native_text *);
+/* The runtime trap reporter the emitted checks call; declared here for the same
+   reason, and defined in qbe_runtime.c beside every other trap reporter. */
+void myl_qbe_fail(void *, const char *);
 /* Traced pointer slot: it roots a receiver across an allocation and describes the
    element of the list `splitlines` builds. */
 static const myl_native_type pointer_type = { .size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER };
@@ -173,6 +181,67 @@ myl_native_list *myl_native_text_lines(myl_native_heap *heap, myl_native_text *i
             start=cursor;
         }
         if (result && start<input->length && !append_line(heap,result,input,start,input->length-start)) result=NULL;
+    }
+    myl_native_root_pop(heap,&b); myl_native_root_pop(heap,&a);
+    return result;
+}
+/* The Unicode scalar value of a text that holds exactly one scalar. The
+   emitted length check has already rejected every other text, so this reads the
+   single stored scalar and cannot fail. */
+int64_t myl_native_text_ord(const myl_native_text *text) {
+    return (int64_t)myl_native_text_points(text)[0];
+}
+/* One-scalar text for a Unicode scalar value: `0..0x10FFFF` excluding the
+   surrogate range, encoded here so the caller needs no intermediate list. An
+   invalid code is a located `R_TEXT_SCALAR` trap; a refused allocation answers
+   NULL once the emitted check reports the budget. */
+myl_native_text *myl_native_text_chr(void *context, myl_native_heap *heap, int64_t code) {
+    if (code < 0 || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff)) {
+        myl_qbe_fail(context, "R_TEXT_SCALAR");
+        return NULL;
+    }
+    uint32_t point = (uint32_t)code;
+    unsigned char raw[4];
+    size_t width = 0;
+    if (point < 0x80) raw[width++] = (unsigned char)point;
+    else if (point < 0x800) {
+        raw[width++] = (unsigned char)(0xc0 | (point >> 6));
+        raw[width++] = (unsigned char)(0x80 | (point & 0x3f));
+    } else if (point < 0x10000) {
+        raw[width++] = (unsigned char)(0xe0 | (point >> 12));
+        raw[width++] = (unsigned char)(0x80 | ((point >> 6) & 0x3f));
+        raw[width++] = (unsigned char)(0x80 | (point & 0x3f));
+    } else {
+        raw[width++] = (unsigned char)(0xf0 | (point >> 18));
+        raw[width++] = (unsigned char)(0x80 | ((point >> 12) & 0x3f));
+        raw[width++] = (unsigned char)(0x80 | ((point >> 6) & 0x3f));
+        raw[width++] = (unsigned char)(0x80 | (point & 0x3f));
+    }
+    return myl_native_text_from_utf8(heap, raw, width);
+}
+/* The located trap an `ord` argument that is not exactly one scalar raises. The
+   emitted length check calls this by name, exactly as the separator check calls
+   `myl_qbe_fail_empty_separator`. */
+void myl_native_fail_text_scalar(void *context) { myl_qbe_fail(context, "R_TEXT_SCALAR"); }
+/* Python's no-argument split: break the receiver on maximal runs of ASCII
+   whitespace and keep only the nonempty pieces, so leading, trailing and
+   doubled whitespace produce no empty string. `space_point` is the same
+   predicate `str.isspace()` classifies with, so the two cannot disagree about
+   which scalar separates. */
+myl_native_list *myl_native_text_split_whitespace(myl_native_heap *heap, myl_native_text *input) {
+    myl_native_root a,b;
+    myl_native_root_push(heap,&a,&input,&pointer_type);
+    myl_native_list *result=myl_native_list_new(heap,&pointer_type,0);
+    myl_native_root_push(heap,&b,&result,&pointer_type);
+    if (result) {
+        size_t cursor=0;
+        while (cursor<input->length) {
+            while (cursor<input->length && space_point(myl_native_text_points(input)[cursor])) cursor++;
+            size_t start=cursor;
+            while (cursor<input->length && !space_point(myl_native_text_points(input)[cursor])) cursor++;
+            if (start==cursor) break;
+            if (!append_line(heap,result,input,start,cursor-start)) { result=NULL; break; }
+        }
     }
     myl_native_root_pop(heap,&b); myl_native_root_pop(heap,&a);
     return result;

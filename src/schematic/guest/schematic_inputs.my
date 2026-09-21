@@ -4,5 +4,5 @@ import io
 # The schematic host supplies these three named documents.
 
 
-public def load(host: Host) -> io.Inputs effects(host):
+public def load(host: Host) -> Result[io.Inputs, int] effects(host, managed_allocation):
     return io.inputs(host)

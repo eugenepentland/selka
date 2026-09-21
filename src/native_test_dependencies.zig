@@ -6,7 +6,7 @@ const layouts = @import("native_types.zig");
 const effects = @import("effect_set.zig");
 const Sha = std.crypto.hash.sha2.Sha256;
 /// Native ABI identity carried by every checked-facts manifest.
-pub const abi = "mylang-qbe-native-v5";
+pub const abi = "mylang-qbe-native-v6";
 /// The semantic reason another implementation can affect a function's behavior.
 pub const Kind = enum { call, function_value, indirect, codec };
 /// A dependency names a persistent linker symbol rather than a function-table index.

@@ -197,6 +197,15 @@ myl_native_text *myl_native_text_slice(myl_native_heap *heap, myl_native_text *i
 int myl_native_text_equal(const myl_native_text *a, const myl_native_text *b) {
     return a->length==b->length && (!a->length || !memcmp(a->storage,b->storage,a->length*4));
 }
+int myl_native_text_compare(const myl_native_text *a, const myl_native_text *b) {
+    const uint32_t *left=a->storage, *right=b->storage;
+    size_t count=a->length<b->length?a->length:b->length;
+    for (size_t i=0;i<count;i++) {
+        if (left[i]<right[i]) return -1;
+        if (left[i]>right[i]) return 1;
+    }
+    return a->length<b->length?-1:a->length>b->length?1:0;
+}
 int myl_native_text_contains(const myl_native_text *input, const myl_native_text *needle) {
     if (!needle->length) return 1;
     if (needle->length>input->length) return 0;

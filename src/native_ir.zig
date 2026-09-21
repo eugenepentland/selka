@@ -38,7 +38,9 @@ const Analyzer = struct {
             if (!ty.isAggregate() or ty.recordIndex() >= self.program.records.len) return error.UnsupportedOperation;
             const record = self.program.records[ty.recordIndex()];
             const concatenation = record.managed and op == .add and (record.collection.kind == .string or record.collection.kind == .bytes);
-            if (op != .eq and op != .ne and !concatenation) return error.UnsupportedOperation;
+            const text_order = record.collection.kind == .string and op == .lt;
+            if (concatenation or text_order) return;
+            if (op != .eq and op != .ne) return error.UnsupportedOperation;
         }
     }
     fn validateCast(self: *Analyzer, ty: typed.Type) AnalyzeError!void {

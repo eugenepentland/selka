@@ -296,8 +296,11 @@ fn sequenceType(program: Program, ty: typed.Type) bool {
 
 fn validateCollectionBinary(program: Program, binary: @FieldType(@FieldType(Instruction, "op"), "binary_integer")) Error!void {
     if (validType(binary.ty, program) and binary.ty.isAggregate()) {
-        const concatenate = program.records[binary.ty.recordIndex()].managed and binary.op == .add and sequenceType(program, binary.ty);
-        if (!concatenate and binary.op != .eq and binary.op != .ne) return error.InternalError;
+        const record = program.records[binary.ty.recordIndex()];
+        const concatenate = record.managed and binary.op == .add and sequenceType(program, binary.ty);
+        const text_order = record.collection.kind == .string and binary.op == .lt;
+        if (concatenate or text_order) return;
+        if (binary.op != .eq and binary.op != .ne) return error.InternalError;
         return;
     }
     if (!binary.ty.isInteger() or binary.op == .logical_and or binary.op == .logical_or) return error.InternalError;
@@ -307,6 +310,7 @@ fn validateCollectionBinary(program: Program, binary: @FieldType(@FieldType(Inst
 fn validateManagedOperation(program: Program, local: typed.Local, operation: BufferOperation) Error!void {
     const schema = program.records[local.ty.recordIndex()];
     if (schema.collection.kind == .list) return validateManagedListOperation(local, schema, operation);
+    if (try validateByteRangeOperation(schema.collection.kind == .bytes, operation)) return;
     return validateManagedTextOperation(program, local, schema, operation);
 }
 
@@ -326,6 +330,13 @@ fn validateManagedListOperation(local: typed.Local, schema: typed.Record, operat
     if (operation.output != expected) return error.InternalError;
 }
 
+fn validateByteRangeOperation(byte_string: bool, operation: BufferOperation) Error!bool {
+    return switch (operation.kind) {
+        .parse_int_range, .parse_float_range, .scalar_count_range => if (byte_string) true else error.InternalError,
+        else => false,
+    };
+}
+
 fn validateManagedTextOperation(program: Program, local: typed.Local, schema: typed.Record, operation: BufferOperation) Error!void {
     const element = schema.shape.buffer.?;
     const dictionary = schema.collection.kind == .dictionary;
@@ -340,7 +351,7 @@ fn validateManagedTextOperation(program: Program, local: typed.Local, schema: ty
         .slice_step => if (!dictionary and !byte_string) local.ty else return error.InternalError,
         .read => if (dictionary or byte_string) element else local.ty,
         .write => if (dictionary) .unit else return error.InternalError,
-        .get => if (dictionary) element else return error.InternalError,
+        .get, .value_at => if (dictionary) element else return error.InternalError,
         .contains => .bool,
         .starts_with, .ends_with => if (dictionary) return error.InternalError else .bool,
         .to_list, .hex, .decode => if (byte_string) try validateConversion(program, operation) else return error.InternalError,
@@ -366,19 +377,22 @@ fn validateManagedTextOperation(program: Program, local: typed.Local, schema: ty
         .pop_key, .pop_default, .setdefault => if (dictionary) element else return error.InternalError,
         .update, .clear => if (dictionary) .unit else return error.InternalError,
         .copy => if (dictionary or byte_string) local.ty else return error.InternalError,
-        .split, .keys, .values, .items => try validateListResult(program, local, schema, operation),
+        .split, .split_whitespace, .keys, .values, .items => try validateListResult(program, local, schema, operation),
+        .text_ord, .text_chr => if (dictionary or byte_string) return error.InternalError else operation.output,
         else => return error.InternalError,
     };
     if (operation.output != expected) return error.InternalError;
 }
 
 /// A list-producing text operation answers a managed list whose element is the
-/// receiver for `split`, the key for `keys`, and the value for `values`/`items`.
+/// receiver for `split` and its whitespace form, the key for `keys`, and the
+/// value for `values`/`items`.
 fn validateListResult(program: Program, local: typed.Local, schema: typed.Record, operation: BufferOperation) Error!typed.Type {
-    if ((operation.kind == .split) == (schema.collection.kind == .dictionary)) return error.InternalError;
+    const splits = operation.kind == .split or operation.kind == .split_whitespace;
+    if (splits == (schema.collection.kind == .dictionary)) return error.InternalError;
     if (!operation.output.isAggregate()) return error.InternalError;
     const result = program.records[operation.output.recordIndex()];
-    const member = if (operation.kind == .split) local.ty else if (operation.kind == .keys) schema.collection.key.? else schema.shape.buffer.?;
+    const member = if (splits) local.ty else if (operation.kind == .keys) schema.collection.key.? else schema.shape.buffer.?;
     if (!result.managed or result.collection.kind != .list or result.shape.buffer != member) return error.InternalError;
     return operation.output;
 }

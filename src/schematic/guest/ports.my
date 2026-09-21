@@ -121,12 +121,12 @@ def size(item: Port) -> int:
 def byteAt(host: Host, item: Port, index: int) -> u8:
     n = item.prefix.end - item.prefix.start
     if n == 0:
-        return io.byte(host, item.name.file, item.name.start + index)
+        return u8(item.name.source[item.name.start + index])
     if index < n:
-        return io.byte(host, item.prefix.file, item.prefix.start + index)
+        return u8(item.prefix.source[item.prefix.start + index])
     if index == n:
         return 95u8
-    return io.byte(host, item.name.file, item.name.start + index - n - 1)
+    return u8(item.name.source[item.name.start + index - n - 1])
 
 
 public def equal(host: Host, a: Port, b: Port) -> bool effects(host):
@@ -140,7 +140,7 @@ public def equal(host: Host, a: Port, b: Port) -> bool effects(host):
     return True
 
 
-public def validate(host: Host, connections: list[Port], pins: list[c.Pin]) -> int effects(host):
+public def validate(host: Host, connections: list[Port], pins: list[c.Pin]) -> int effects(host, managed_allocation):
     i = 0
     while i < len(connections):
         item = connections[i]

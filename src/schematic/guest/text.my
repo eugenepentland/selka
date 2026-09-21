@@ -4,13 +4,15 @@ import io
 
 public record Span:
     file: int
+    source: bytes
     start: int
     end: int
 
 
-public def empty() -> Span effects():
+public def empty() -> Span effects(managed_allocation):
     return Span(
         file=0,
+        source=b"",
         start=0,
         end=0
     )
@@ -21,7 +23,7 @@ public def equal(host: Host, a: Span, b: Span) -> bool effects(host):
         return False
     i = 0
     while i < a.end - a.start:
-        if io.byte(host, a.file, a.start + i) != io.byte(host, b.file, b.start + i):
+        if a.source[a.start + i] != b.source[b.start + i]:
             return False
         i += 1
     return True
@@ -32,7 +34,7 @@ public def matches(host: Host, a: Span, b: bytes) -> bool effects(host):
         return False
     i = 0
     while i < a.end - a.start:
-        if int(io.byte(host, a.file, a.start + i)) != b[i]:
+        if a.source[a.start + i] != b[i]:
             return False
         i += 1
     return True
@@ -44,7 +46,7 @@ public def number(host: Host, a: Span) -> int effects(host):
     if i == a.end:
         return - 1
     while i < a.end:
-        c = int(io.byte(host, a.file, i))
+        c = a.source[i]
         if c < 48 or c > 57:
             return - 1
         if value > 1000000:
@@ -54,21 +56,17 @@ public def number(host: Host, a: Span) -> int effects(host):
     return value
 
 
-public def write(host: Host, text: bytes) effects(host):
-    i = 0
-    while i < len(text):
-        _ = io.put(host, u8(text[i]))
-        i += 1
-    return
+public def write(out: io.Output, value: bytes) effects(managed_allocation, mutation) mutates(out):
+    return io.append(out, value)
 
 
-public def escaped(host: Host, a: Span) effects(host, managed_allocation):
+public def escaped(out: io.Output, a: Span) effects(managed_allocation, mutation) mutates(out):
     i = a.start
     while i < a.end:
-        c = io.byte(host, a.file, i)
+        c = u8(a.source[i])
         i += 1
         if c == 92u8 and i < a.end:
-            c = io.byte(host, a.file, i)
+            c = u8(a.source[i])
             i += 1
             if c == 110u8:
                 c = 10u8
@@ -77,35 +75,26 @@ public def escaped(host: Host, a: Span) effects(host, managed_allocation):
             elif c == 116u8:
                 c = 9u8
         if c == 9u8:
-            write(host, b"&#9;")
+            write(out, b"&#9;")
         elif c == 10u8:
-            write(host, b"&#10;")
+            write(out, b"&#10;")
         elif c == 13u8:
-            write(host, b"&#13;")
+            write(out, b"&#13;")
         elif c == 38u8:
-            write(host, b"&amp;")
+            write(out, b"&amp;")
         elif c == 60u8:
-            write(host, b"&lt;")
+            write(out, b"&lt;")
         elif c == 62u8:
-            write(host, b"&gt;")
+            write(out, b"&gt;")
         elif c == 34u8:
-            write(host, b"&quot;")
+            write(out, b"&quot;")
         else:
-            _ = io.put(host, c)
+            io.appendByte(out, c)
     return
 
 
-public def decimal(host: Host, value: int) effects(host):
-    if value < 0:
-        _ = io.put(host, 45u8)
-        if value <= - 10:
-            decimal(host, -((value + 9) // 10))
-        _ = io.put(host, u8(((-(value + 1) % 10 + 1) % 10) + 48))
-        return
-    if value >= 10:
-        decimal(host, value // 10)
-    _ = io.put(host, u8(value % 10 + 48))
-    return
+public def decimal(out: io.Output, value: int) effects(managed_allocation, mutation) mutates(out):
+    return io.appendInt(out, value)
 
 
 public def identifier(host: Host, a: Span) -> bool effects(host):
@@ -113,7 +102,7 @@ public def identifier(host: Host, a: Span) -> bool effects(host):
         return False
     i = a.start
     while i < a.end:
-        ch = io.byte(host, a.file, i)
+        ch = u8(a.source[i])
         if ch < 33u8 or ch == 92u8:
             return False
         i += 1
@@ -131,7 +120,7 @@ public def folded(host: Host, a: Span, b: Span) -> bool effects(host):
         return False
     i = 0
     while i < a.end - a.start:
-        if lower(io.byte(host, a.file, a.start + i)) != lower(io.byte(host, b.file, b.start + i)):
+        if lower(u8(a.source[a.start + i])) != lower(u8(b.source[b.start + i])):
             return False
         i += 1
     return True

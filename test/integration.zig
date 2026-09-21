@@ -2371,6 +2371,492 @@ test "CLI api-diff records a baseline and classifies body and interface changes"
     defer testing.allocator.free(missing.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, missing.term);
 }
+
+/// The two-module fixture `mylang context` answers about: the entry imports
+/// `model`, `model::validate` calls the private `check`, and the separate
+/// `entry_value` export keeps `main` independent of `validate`'s signature so
+/// the baseline fixture can change it without breaking the project.
+const context_entry =
+    \\module main
+    \\import model
+    \\
+    \\
+    \\def main() -> int:
+    \\    return model.entry_value()
+;
+
+const context_model =
+    \\module model
+    \\
+    \\
+    \\public def validate(value: int) -> int:
+    \\    total = value
+    \\    return check(total)
+    \\
+    \\
+    \\public def entry_value() -> int:
+    \\    return 1
+    \\
+    \\
+    \\def check(value: int) -> int:
+    \\    return value + 1
+;
+
+/// `context_model` with a body-only edit: the same signature computes a
+/// different result, which an interface baseline classifies as compatible.
+const context_model_body_edit =
+    \\module model
+    \\
+    \\
+    \\public def validate(value: int) -> int:
+    \\    total = value + 1
+    \\    return check(total)
+    \\
+    \\
+    \\public def entry_value() -> int:
+    \\    return 1
+    \\
+    \\
+    \\def check(value: int) -> int:
+    \\    return value + 1
+;
+
+/// `context_model` with a breaking interface edit: `validate` gains a parameter
+/// every caller would have to supply.
+const context_model_signature_edit =
+    \\module model
+    \\
+    \\
+    \\public def validate(value: int, extra: int) -> int:
+    \\    total = value + extra
+    \\    return check(total)
+    \\
+    \\
+    \\public def entry_value() -> int:
+    \\    return 1
+    \\
+    \\
+    \\def check(value: int) -> int:
+    \\    return value + 1
+;
+
+/// The `model` module whose `validate` body carries `extra` straight-line
+/// updates and one call to each of 24 private helpers, so the complete answer
+/// about it is far wider than a small `--context-bytes` budget whichever
+/// sections the implementation renders and it has to drop records.
+fn wideContextModel(allocator: std.mem.Allocator, extra: usize) ![]u8 {
+    var source: std.ArrayList(u8) = .empty;
+    defer source.deinit(allocator);
+    try source.appendSlice(allocator, "module model\n\n\npublic def validate(value: int) -> int:\n    total = value\n");
+    var line: usize = 0;
+    while (line < extra) : (line += 1) {
+        try source.appendSlice(allocator, "    total = total + 1\n");
+    }
+    var step: usize = 0;
+    while (step < 24) : (step += 1) {
+        try source.print(allocator, "    total = total + step_{d}(value)\n", .{step});
+    }
+    try source.appendSlice(allocator, "    return check(total)\n\n\npublic def entry_value() -> int:\n    return 1\n\n\ndef check(value: int) -> int:\n    return value + 1\n");
+    var helper: usize = 0;
+    while (helper < 24) : (helper += 1) {
+        try source.print(allocator, "\n\ndef step_{d}(value: int) -> int:\n    return value + {d}\n", .{ helper, helper });
+    }
+    return source.toOwnedSlice(allocator);
+}
+
+/// Write `main.my` and `model.my` into `temporary` and return the allocated
+/// entry path every `context` invocation names. The sentinel-terminated type is
+/// load-bearing: `realPathFileAlloc` allocates the terminator too, so widening
+/// the result to `[]u8` would make `allocator.free` release one byte short.
+fn writeContextProject(temporary: *testing.TmpDir, model: []const u8) ![:0]u8 {
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = context_entry });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "model.my", .data = model });
+    return temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+}
+
+/// Parse the one JSON object a successful `mylang context` prints, asserting
+/// stdout holds nothing else around it.
+fn parseContextAnswer(printed: []const u8) !std.json.Parsed(std.json.Value) {
+    const body = std.mem.trim(u8, printed, " \t\r\n");
+    try testing.expect(body.len > 1);
+    try testing.expectEqual(@as(u8, '{'), body[0]);
+    try testing.expectEqual(@as(u8, '}'), body[body.len - 1]);
+    return std.json.parseFromSlice(std.json.Value, testing.allocator, body, .{});
+}
+
+/// A required top-level string field of a context envelope.
+fn contextString(answer: std.json.Value, key: []const u8) ![]const u8 {
+    const value = answer.object.get(key) orelse return error.MissingContextField;
+    if (value != .string) return error.ContextFieldNotString;
+    return value.string;
+}
+
+/// A required top-level integer field of a context envelope.
+fn contextInteger(answer: std.json.Value, key: []const u8) !i64 {
+    const value = answer.object.get(key) orelse return error.MissingContextField;
+    if (value != .integer) return error.ContextFieldNotInteger;
+    return value.integer;
+}
+
+/// A required top-level array field of a context envelope.
+fn contextArray(answer: std.json.Value, key: []const u8) ![]std.json.Value {
+    const value = answer.object.get(key) orelse return error.MissingContextField;
+    if (value != .array) return error.ContextFieldNotArray;
+    return value.array.items;
+}
+
+/// Index of the first `sections` entry named `name`.
+fn contextSectionIndex(answer: std.json.Value, name: []const u8) !usize {
+    const sections = answer.object.get("sections") orelse return error.MissingContextSections;
+    if (sections != .array) return error.ContextSectionsNotArray;
+    for (sections.array.items, 0..) |section, index| {
+        if (section != .object) continue;
+        const field = section.object.get("name") orelse continue;
+        if (field != .string) continue;
+        if (std.mem.eql(u8, field.string, name)) return index;
+    }
+    return error.MissingContextSection;
+}
+
+/// The rendered JSON of one section, so a test can assert on a record's
+/// vocabulary without pinning field order the implementation still owns.
+fn contextSectionRendering(answer: std.json.Value, name: []const u8) ![]u8 {
+    const sections = answer.object.get("sections") orelse return error.MissingContextSections;
+    const index = try contextSectionIndex(answer, name);
+    return std.json.Stringify.valueAlloc(testing.allocator, sections.array.items[index], .{});
+}
+
+/// The `declaration` section must name the declaration it is about.
+fn expectDeclarationNames(answer: std.json.Value, needle: []const u8) !void {
+    const rendered = try contextSectionRendering(answer, "declaration");
+    defer testing.allocator.free(rendered);
+    try testing.expect(std.mem.indexOf(u8, rendered, needle) != null);
+}
+
+/// The envelope echoes its question in `selector`; only the shape is asserted,
+/// because its rendering is still moving.
+fn expectContextSelectorShape(answer: std.json.Value) !void {
+    const selector = answer.object.get("selector") orelse return error.MissingContextField;
+    switch (selector) {
+        .string => |text| try testing.expect(text.len > 0),
+        .object => |object| try testing.expect(object.count() > 0),
+        else => return error.ContextSelectorShape,
+    }
+}
+
+/// A rejected request must not print a successful envelope: stdout is either
+/// empty or one JSON object whose `status` is not `ok`.
+fn expectNoContextOk(printed: []const u8) !void {
+    const body = std.mem.trim(u8, printed, " \t\r\n");
+    if (body.len == 0) return;
+    var parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, body, .{});
+    defer parsed.deinit();
+    if (parsed.value != .object) return;
+    const status = parsed.value.object.get("status") orelse return;
+    if (status != .string) return;
+    try testing.expect(!std.mem.eql(u8, status.string, "ok"));
+}
+
+/// Run `mylang context` with `options` and require `expected_status`, with no
+/// successful envelope printed.
+fn expectContextRejected(entry: []const u8, options: []const []const u8, expected_status: u8) !void {
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "context", entry });
+    try args.appendSlice(testing.allocator, options);
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = expected_status }, outcome.term);
+    try expectNoContextOk(outcome.stdout);
+}
+
+/// A usage mistake prints nothing on stdout and the usage text on stderr.
+fn expectContextUsage(entry: []const u8, options: []const []const u8) !void {
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "context", entry });
+    try args.appendSlice(testing.allocator, options);
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, outcome.term);
+    try testing.expectEqualStrings("", outcome.stdout);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, "usage:") != null);
+}
+
+/// An incomplete project must not publish an `ok` verdict: either the
+/// envelope's own status says so, or the analysis record inside it reports that
+/// checking did not complete.
+fn expectUncheckedVerdict(answer: std.json.Value) !void {
+    const status = try contextString(answer, "status");
+    if (!std.mem.eql(u8, status, "ok")) return;
+    inline for (.{ "analysis", "analysis_status" }) |key| {
+        if (answer.object.get(key)) |analysis| {
+            const rendered = try std.json.Stringify.valueAlloc(testing.allocator, analysis, .{});
+            defer testing.allocator.free(rendered);
+            try testing.expect(std.mem.indexOf(u8, rendered, "checked") == null);
+            return;
+        }
+    }
+    return error.IncompleteProjectClaimedChecked;
+}
+
+// spec-case: CONTEXT-SECTIONS-1
+// spec-case: CONTEXT-ENVELOPE-1
+test "CLI context answers a symbol question with declaration before contract" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const path = try writeContextProject(&temp, context_model);
+    defer testing.allocator.free(path);
+    // The behavioral tests spell the selectors the way the command's own usage
+    // line publishes them (`--symbol=NAME`); the two-argument spelling from the
+    // documented usage has its own test after the option-rejection test.
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "context", path, "--symbol=model::validate", "--format=json" } });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    try testing.expectEqualStrings("", outcome.stderr);
+    const answer = try parseContextAnswer(outcome.stdout);
+    defer answer.deinit();
+    try testing.expectEqualStrings("agent-context-v1", try contextString(answer.value, "version"));
+    try testing.expectEqualStrings("ok", try contextString(answer.value, "status"));
+    try expectContextSelectorShape(answer.value);
+    try testing.expect(try contextInteger(answer.value, "emitted_bytes") > 0);
+    try testing.expect(try contextInteger(answer.value, "emitted_bytes") <= 8192);
+    const declaration = try contextSectionIndex(answer.value, "declaration");
+    const contract = try contextSectionIndex(answer.value, "contract");
+    try testing.expect(declaration < contract);
+    try expectDeclarationNames(answer.value, "validate");
+}
+
+// spec-case: CONTEXT-BUDGET-1
+test "CLI context keeps emitted bytes within the requested budget" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const model = try wideContextModel(testing.allocator, 200);
+    defer testing.allocator.free(model);
+    const path = try writeContextProject(&temp, model);
+    defer testing.allocator.free(path);
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "context", path, "--symbol=model::validate", "--context-bytes=1536" } });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    const answer = try parseContextAnswer(outcome.stdout);
+    defer answer.deinit();
+    const emitted = try contextInteger(answer.value, "emitted_bytes");
+    try testing.expect(emitted > 0);
+    // The budget covers the whole serialized response, JSON escaping included,
+    // so even a response that had to drop records stays inside it. The wide
+    // fixture cannot fit 1536 bytes whole, so drops are certain.
+    try testing.expect(emitted <= 1536);
+    try testing.expect((try contextString(answer.value, "status")).len > 0);
+    const omissions = try contextArray(answer.value, "omissions");
+    try testing.expect(omissions.len > 0);
+    try testing.expect((try contextString(answer.value, "continuation")).len > 0);
+}
+
+// spec-case: CONTEXT-SELECT-1
+test "CLI context rejects a symbol no declaration carries" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const path = try writeContextProject(&temp, context_model);
+    defer testing.allocator.free(path);
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "context", path, "--symbol=model::no_such_function" } });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, outcome.term);
+    try expectNoContextOk(outcome.stdout);
+}
+
+// spec-case: CONTEXT-SELECT-1
+test "CLI context refuses an unqualified name that two modules both declare" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
+        \\module main
+        \\import alpha
+        \\import beta
+        \\
+        \\
+        \\def main() -> int:
+        \\    return alpha.first() + beta.second()
+    });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "alpha.my", .data =
+        \\module alpha
+        \\
+        \\
+        \\public def validate(value: int) -> int:
+        \\    return value + 1
+        \\
+        \\
+        \\public def first() -> int:
+        \\    return 1
+    });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "beta.my", .data =
+        \\module beta
+        \\
+        \\
+        \\public def validate(value: int) -> int:
+        \\    return value + 2
+        \\
+        \\
+        \\public def second() -> int:
+        \\    return 2
+    });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(path);
+    // Both `alpha::validate` and `beta::validate` exist, so the bare name is
+    // genuinely ambiguous rather than unknown...
+    const qualified = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "context", path, "--symbol=alpha::validate" } });
+    defer testing.allocator.free(qualified.stdout);
+    defer testing.allocator.free(qualified.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, qualified.term);
+    const answer = try parseContextAnswer(qualified.stdout);
+    defer answer.deinit();
+    try testing.expectEqualStrings("agent-context-v1", try contextString(answer.value, "version"));
+    // ...and `--symbol` takes a module-qualified name, so the command refuses
+    // to choose between the two rather than silently picking one.
+    try expectContextRejected(path, &.{"--symbol=validate"}, 2);
+}
+
+// spec-case: CONTEXT-AT-1
+test "CLI context resolves a source position and rejects unusable coordinates" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const path = try writeContextProject(&temp, context_model);
+    defer testing.allocator.free(path);
+    // `context_model` line 5 column 5 is inside `validate`'s body.
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "context", path, "--at=model.my:5:5" } });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    const answer = try parseContextAnswer(outcome.stdout);
+    defer answer.deinit();
+    try testing.expectEqualStrings("agent-context-v1", try contextString(answer.value, "version"));
+    try expectDeclarationNames(answer.value, "validate");
+    // A file that is not in the project, and two malformed coordinate strings.
+    try expectContextRejected(path, &.{"--at=ghost.my:1:1"}, 2);
+    try expectContextRejected(path, &.{"--at=model.my:not-a-coordinate"}, 2);
+    try expectContextRejected(path, &.{"--at=model.my"}, 2);
+}
+
+// spec-case: CONTEXT-SELECT-1
+// spec-case: CONTEXT-BUDGET-1
+test "CLI context rejects missing conflicting and malformed options" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const path = try writeContextProject(&temp, context_model);
+    defer testing.allocator.free(path);
+    // Neither selector, and both selectors.
+    try expectContextUsage(path, &.{});
+    try expectContextUsage(path, &.{ "--symbol=model::validate", "--at=model.my:5:5" });
+    // A budget below the documented minimum, at the boundary one byte under it
+    // and far below it, and one that is not a number at all.
+    try expectContextUsage(path, &.{ "--symbol=model::validate", "--context-bytes=1535" });
+    try expectContextUsage(path, &.{ "--symbol=model::validate", "--context-bytes=10" });
+    try expectContextUsage(path, &.{ "--symbol=model::validate", "--context-bytes=abc" });
+    // JSON is the only accepted format.
+    try expectContextUsage(path, &.{ "--symbol=model::validate", "--format=xml" });
+}
+
+// spec-case: CONTEXT-SELECT-1
+test "CLI context accepts the documented space-separated selector spelling" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const path = try writeContextProject(&temp, context_model);
+    defer testing.allocator.free(path);
+    // The command's documented usage spells each selector as two arguments
+    // (`--symbol 'module::name'`, `--at 'path.my:line:column'`) while the
+    // options around them join their value with `=`. This is the one test that
+    // pins the documented spelling: a CLI that only accepts `--symbol=NAME`
+    // fails here and nowhere else, and this test goes away if the joined
+    // spelling is declared authoritative instead.
+    const symbol = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "context", path, "--symbol", "model::validate" } });
+    defer testing.allocator.free(symbol.stdout);
+    defer testing.allocator.free(symbol.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, symbol.term);
+    const symbol_answer = try parseContextAnswer(symbol.stdout);
+    defer symbol_answer.deinit();
+    try testing.expectEqualStrings("agent-context-v1", try contextString(symbol_answer.value, "version"));
+    const at = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "context", path, "--at", "model.my:5:5" } });
+    defer testing.allocator.free(at.stdout);
+    defer testing.allocator.free(at.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, at.term);
+}
+
+// spec-case: CONTEXT-PARTIAL-1
+test "CLI context answers an incomplete project without checked facts" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    // `validate` declares an `int` result and returns `True`, so the project's
+    // bodies do not check; the command still owes a parseable answer.
+    const broken_model =
+        \\module model
+        \\
+        \\
+        \\public def validate(value: int) -> int:
+        \\    return True
+        \\
+        \\
+        \\public def entry_value() -> int:
+        \\    return 1
+    ;
+    const path = try writeContextProject(&temp, broken_model);
+    defer testing.allocator.free(path);
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "context", path, "--symbol=model::validate" } });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    const answer = try parseContextAnswer(outcome.stdout);
+    defer answer.deinit();
+    try testing.expectEqualStrings("agent-context-v1", try contextString(answer.value, "version"));
+    try expectUncheckedVerdict(answer.value);
+}
+
+// spec-case: CONTEXT-SECTIONS-1
+test "CLI context classifies a declaration against an api-diff baseline" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const path = try writeContextProject(&temp, context_model);
+    defer testing.allocator.free(path);
+    const baseline = try std.fs.path.join(testing.allocator, &.{ root, "baseline.txt" });
+    defer testing.allocator.free(baseline);
+    const write_option = try std.fmt.allocPrint(testing.allocator, "--write={s}", .{baseline});
+    defer testing.allocator.free(write_option);
+    const against_option = try std.fmt.allocPrint(testing.allocator, "--against={s}", .{baseline});
+    defer testing.allocator.free(against_option);
+    const write = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "api-diff", path, write_option } });
+    defer testing.allocator.free(write.stdout);
+    defer testing.allocator.free(write.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, write.term);
+    // A body-only edit stays compatible; `main` calls the untouched
+    // `entry_value`, so the project still checks.
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "model.my", .data = context_model_body_edit });
+    const body = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "context", path, "--symbol=model::validate", against_option } });
+    defer testing.allocator.free(body.stdout);
+    defer testing.allocator.free(body.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, body.term);
+    const body_answer = try parseContextAnswer(body.stdout);
+    defer body_answer.deinit();
+    const body_changes = try contextSectionRendering(body_answer.value, "changes");
+    defer testing.allocator.free(body_changes);
+    try testing.expect(std.mem.indexOf(u8, body_changes, "compatible") != null);
+    // A signature change is breaking.
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "model.my", .data = context_model_signature_edit });
+    const signature = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "context", path, "--symbol=model::validate", against_option } });
+    defer testing.allocator.free(signature.stdout);
+    defer testing.allocator.free(signature.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, signature.term);
+    const signature_answer = try parseContextAnswer(signature.stdout);
+    defer signature_answer.deinit();
+    const signature_changes = try contextSectionRendering(signature_answer.value, "changes");
+    defer testing.allocator.free(signature_changes);
+    try testing.expect(std.mem.indexOf(u8, signature_changes, "breaking") != null);
+}
+
 /// Run one git subcommand in `root`, asserting a zero exit. `std.process.run`
 /// ignores the child's stdin, so git cannot disturb the test harness protocol.
 fn gitIn(allocator: std.mem.Allocator, root: []const u8, args: []const []const u8) !void {
@@ -6847,4 +7333,1188 @@ test "CLI list-interfaces prints a tests column from the shared reachability ind
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
     try testing.expect(std.mem.indexOf(u8, result.stdout, "export function parse") != null);
     try testing.expect(std.mem.indexOf(u8, result.stdout, "tests(1)") != null);
+}
+
+// `mylang invoke` calls one export of a checked project through the native
+// runtime. These cases follow the `CLI context` fixtures: a small library
+// project in a temporary directory, one JSON answer on stdout, and assertions
+// about the shape of that answer rather than about a byte-for-byte document,
+// because the envelope is still moving. Every case passes this build's QBE and
+// Zig and a cache directory under its own fixture, so no case reads the
+// repository cache, depends on PATH, or shares artifacts with another shard.
+
+/// The invoked project: one small module whose exports each answer one wire
+/// question, with a `main` so it is also an ordinary program.
+const invoke_app =
+    \\module app
+    \\
+    \\
+    \\public class Point:
+    \\    x: i64
+    \\    y: i64
+    \\
+    \\
+    \\public def add(a: i64, b: i64) -> i64:
+    \\    return a + b
+    \\
+    \\
+    \\public def identity(x: i64) -> i64:
+    \\    return x
+    \\
+    \\
+    \\public def shift(p: Point, dx: i64) -> Point effects(managed_allocation):
+    \\    return Point(x=p.x + dx, y=p.y)
+    \\
+    \\
+    \\public def origin(x: i64) -> Point effects(managed_allocation):
+    \\    return Point(x=x, y=0)
+    \\
+    \\
+    \\public def classify(x: i64) -> Result[i64, i64]:
+    \\    if x < 0:
+    \\        return Err(x)
+    \\    return Ok(x)
+    \\
+    \\
+    \\public def shout(out: Stream, x: i64) -> i64 effects(output):
+    \\    out.print(x)
+    \\    return x
+    \\
+    \\
+    \\def hidden(x: i64) -> i64:
+    \\    return x
+    \\
+    \\
+    \\public def look(fs: Filesystem, x: i64) -> i64 effects(filesystem):
+    \\    return x
+    \\
+    \\
+    \\public def text_len(text: str) -> i64 effects(managed_allocation):
+    \\    return len(text)
+    \\
+    \\
+    \\public def total(values: list[i64]) -> i64:
+    \\    return len(values)
+    \\
+    \\
+    \\public def pick[T](x: T) -> T:
+    \\    return x
+    \\
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+
+/// The second fixture declares no `main` at all: the command has to supply a
+/// synthetic entry instead of asking the caller to edit the library first.
+const invoke_library =
+    \\module library
+    \\
+    \\
+    \\public def double(x: i64) -> i64:
+    \\    return x + x
+;
+
+/// The text fixture: a copied managed text crosses the invocation boundary in
+/// the return direction, so a `str` result is eligible and comes back as the
+/// exact string while the same type in an argument position stays refused for
+/// want of a root. The non-ASCII literals are written as language escapes, so
+/// this Zig file stays ASCII and the guest decodes the scalars itself.
+const invoke_text =
+    \\module app
+    \\
+    \\
+    \\public def letter(n: i64) -> str effects(managed_allocation):
+    \\    return chr(n)
+    \\
+    \\
+    \\public def greeting() -> str effects(managed_allocation):
+    \\    return "h\u00e9llo \u4e16\u754c \U0001F600"
+    \\
+    \\
+    \\public def frozen() -> str effects(managed_allocation):
+    \\    return "literal"
+    \\
+    \\
+    \\public def shout(n: i64) -> str effects(managed_allocation):
+    \\    return chr(n) + "!"
+    \\
+    \\
+    \\public def repeated(n: i64) -> str effects(managed_allocation):
+    \\    text = ""
+    \\    i = 0
+    \\    while i < n:
+    \\        text = text + "z"
+    \\        i = i + 1
+    \\    return text
+    \\
+    \\
+    \\public def count(text: str) -> i64 effects(managed_allocation):
+    \\    return len(text)
+;
+
+/// Write `source` as `name` in `temporary` and return its absolute path.
+fn writeInvokeSource(a: std.mem.Allocator, temporary: *testing.TmpDir, name: []const u8, source: []const u8) ![]u8 {
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = name, .data = source });
+    return temporary.dir.realPathFileAlloc(testing.io, name, a);
+}
+
+/// Write one request document and return its absolute path.
+fn writeInvokeRequest(a: std.mem.Allocator, temporary: *testing.TmpDir, name: []const u8, body: []const u8) ![]u8 {
+    return writeInvokeSource(a, temporary, name, body);
+}
+
+/// The `--input=FILE` option naming `path`.
+fn invokeInputOption(a: std.mem.Allocator, path: []const u8) ![]u8 {
+    return std.fmt.allocPrint(a, "--input={s}", .{path});
+}
+
+/// The `--cache-dir=DIR` option every fixture passes, under the fixture root so
+/// concurrent shards and the repository cache stay independent.
+fn invokeCacheOption(a: std.mem.Allocator, temporary: *testing.TmpDir) ![]u8 {
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    return std.fmt.allocPrint(a, "--cache-dir={s}/cache", .{root});
+}
+
+/// Run `mylang invoke` for `entry` with `options`, the fixture's private cache
+/// and this build's QBE and Zig.
+fn runInvoke(entry: []const u8, options: []const []const u8, cache_option: []const u8) !std.process.RunResult {
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "invoke", entry });
+    try args.appendSlice(testing.allocator, options);
+    try args.append(testing.allocator, cache_option);
+    try args.appendSlice(testing.allocator, &tools);
+    return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+}
+
+/// Index of the `}` that closes the object starting at `body[0]`, so a caller
+/// can prove stdout holds exactly one object and nothing else around it.
+fn singleObjectEnd(body: []const u8) ?usize {
+    var depth: usize = 0;
+    var quoted = false;
+    var escaped = false;
+    for (body, 0..) |byte, index| {
+        if (quoted) {
+            if (escaped) {
+                escaped = false;
+            } else if (byte == '\\') {
+                escaped = true;
+            } else if (byte == '"') {
+                quoted = false;
+            }
+            continue;
+        }
+        if (byte == '"') {
+            quoted = true;
+        } else if (byte == '{') {
+            depth += 1;
+        } else if (byte == '}') {
+            if (depth == 0) return null;
+            depth -= 1;
+            if (depth == 0) return index;
+        }
+    }
+    return null;
+}
+
+/// Parse the single JSON object a `mylang invoke` answer prints, asserting that
+/// stdout holds nothing else around it.
+fn parseInvokeAnswer(printed: []const u8) !std.json.Parsed(std.json.Value) {
+    const body = std.mem.trim(u8, printed, " \t\r\n");
+    try testing.expect(body.len > 1);
+    const end = singleObjectEnd(body) orelse return error.InvokeStdoutNotOneObject;
+    try testing.expectEqual(body.len - 1, end);
+    var parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, body, .{});
+    errdefer parsed.deinit();
+    try testing.expect(parsed.value == .object);
+    return parsed;
+}
+
+/// A required top-level string field of an invoke answer.
+fn invokeString(answer: std.json.Value, key: []const u8) ![]const u8 {
+    const value = answer.object.get(key) orelse return error.MissingInvokeField;
+    if (value != .string) return error.InvokeFieldNotString;
+    return value.string;
+}
+
+/// The qualified name an answer is about, accepted either at the top level or
+/// inside the `target` record.
+fn invokeFunction(answer: std.json.Value) ![]const u8 {
+    const value = answer.object.get("function") orelse return error.MissingInvokeFunction;
+    if (value != .string) return error.MissingInvokeFunction;
+    return value.string;
+}
+
+/// One object an answer carries at the top level. The envelope is pinned to the
+/// published shape, so a second tolerated spelling would let a rename through.
+fn invokeContextObject(answer: std.json.Value, key: []const u8) !std.json.Value {
+    const value = answer.object.get(key) orelse return error.MissingInvokeContext;
+    if (value != .object) return error.MissingInvokeContext;
+    return value;
+}
+
+/// Whether an object carries at least one non-empty string value.
+fn objectHasText(value: std.json.Value) bool {
+    var entries = value.object.iterator();
+    while (entries.next()) |entry| {
+        const item = entry.value_ptr.*;
+        if (item != .string) continue;
+        if (item.string.len != 0) return true;
+    }
+    return false;
+}
+
+/// Every answer carries the version, a status, the function it is about, the
+/// identities it was produced from and the limits it was judged against.
+fn expectInvokeEnvelope(answer: std.json.Value, qualified: []const u8) !void {
+    try testing.expectEqualStrings("native-invocation-v1", try invokeString(answer, "version"));
+    try testing.expect((try invokeString(answer, "status")).len > 0);
+    try testing.expectEqualStrings(qualified, try invokeFunction(answer));
+    const limits = try invokeContextObject(answer, "limits");
+    try testing.expect(limits.object.count() > 0);
+    const identities = try invokeContextObject(answer, "identities");
+    try testing.expect(objectHasText(identities));
+}
+
+/// One effective limit the answer reports. Bounds travel as JSON numbers; only
+/// a guest value uses the decimal-string form, which is why this does not go
+/// through `valueInteger`.
+fn limitInteger(answer: std.json.Value, key: []const u8) !i64 {
+    const limits = try invokeContextObject(answer, "limits");
+    const value = limits.object.get(key) orelse return error.MissingInvokeLimit;
+    if (value != .integer) return error.MissingInvokeLimit;
+    return value.integer;
+}
+
+/// The integer a response value carries. The published wire form is a canonical
+/// decimal string, chosen so a 64-bit value survives a client whose numbers
+/// cannot represent it, so a JSON number here would be a contract regression
+/// rather than an alternative spelling.
+fn valueInteger(value: std.json.Value) !i64 {
+    if (value != .string) return error.InvokeValueNotInteger;
+    return std.fmt.parseInt(i64, value.string, 10);
+}
+
+/// The text a response value carries. A returned `str` is published as one
+/// wire node per Unicode scalar and rebuilt as a JSON string, so an integer
+/// node or a bare scalar array at the value position is a contract regression
+/// rather than another spelling of the same answer.
+fn valueText(value: std.json.Value) ![]const u8 {
+    if (value != .string) return error.InvokeValueNotText;
+    return value.string;
+}
+
+/// The description payload of a `--describe` answer.
+fn invokeDescribe(answer: std.json.Value) !std.json.Value {
+    if (answer.object.get("describe")) |value| {
+        if (value == .object) return value;
+    }
+    if (answer.object.get("description")) |value| {
+        if (value == .object) return value;
+    }
+    return error.MissingInvokeDescribe;
+}
+
+/// The argument positions a description publishes.
+fn describeParameters(payload: std.json.Value) ![]std.json.Value {
+    inline for (.{ "parameters", "arguments" }) |key| {
+        if (payload.object.get(key)) |value| {
+            if (value == .array) return value.array.items;
+        }
+    }
+    return error.MissingInvokeParameters;
+}
+
+/// The description must publish `name` as a position of the checked type.
+fn expectDescribeParameter(parameters: []std.json.Value, name: []const u8, type_name: []const u8) !void {
+    for (parameters) |parameter| {
+        if (parameter == .string) {
+            if (std.mem.eql(u8, parameter.string, name)) return;
+            continue;
+        }
+        if (parameter != .object) continue;
+        const field = parameter.object.get("name") orelse continue;
+        if (field != .string) continue;
+        if (!std.mem.eql(u8, field.string, name)) continue;
+        if (parameter.object.get("type")) |declared| {
+            if (declared == .string) try testing.expectEqualStrings(type_name, declared.string);
+        }
+        return;
+    }
+    return error.MissingInvokeParameter;
+}
+
+/// The checked result position a description publishes.
+fn describeResult(payload: std.json.Value) ![]const u8 {
+    const value = payload.object.get("result") orelse return error.MissingInvokeResult;
+    if (value == .string) return value.string;
+    if (value == .object) {
+        if (value.object.get("type")) |declared| {
+            if (declared == .string) return declared.string;
+        }
+    }
+    return error.InvokeResultNotString;
+}
+
+/// Whether a description says the target can be called as written.
+fn describeEligible(payload: std.json.Value) !bool {
+    if (payload.object.get("eligible")) |value| {
+        if (value == .bool) return value.bool;
+    }
+    inline for (.{ "invocation", "wire", "eligibility" }) |key| {
+        if (payload.object.get(key)) |scope| {
+            if (scope == .object) {
+                if (scope.object.get("eligible")) |value| {
+                    if (value == .bool) return value.bool;
+                }
+            }
+        }
+    }
+    return error.MissingInvokeEligibility;
+}
+
+/// The sentence explaining why a description is not eligible.
+fn describeReason(payload: std.json.Value) ![]const u8 {
+    if (payload.object.get("reason")) |value| {
+        if (value == .string) return value.string;
+    }
+    inline for (.{ "invocation", "wire", "eligibility" }) |key| {
+        if (payload.object.get(key)) |scope| {
+            if (scope == .object) {
+                if (scope.object.get("reason")) |value| {
+                    if (value == .string) return value.string;
+                }
+            }
+        }
+    }
+    return error.MissingInvokeReason;
+}
+
+/// The executed call an answer reports, or null when no call ran.
+fn invokeOutcome(answer: std.json.Value) ?std.json.Value {
+    inline for (.{ "outcome", "invocation", "call" }) |key| {
+        if (answer.object.get(key)) |value| {
+            if (value != .null) return value;
+        }
+    }
+    return null;
+}
+
+/// The typed value one executed call reports.
+fn outcomeValue(outcome: std.json.Value) !std.json.Value {
+    if (outcome != .object) return outcome;
+    inline for (.{ "value", "result", "actual" }) |key| {
+        if (outcome.object.get(key)) |value| return value;
+    }
+    return error.MissingInvokeOutcomeValue;
+}
+
+/// The guest output one executed call captured, when the envelope reports it.
+fn outcomeOutput(outcome: std.json.Value) ?[]const u8 {
+    if (outcome != .object) return null;
+    inline for (.{ "output", "captured_output", "guest_output" }) |key| {
+        if (outcome.object.get(key)) |value| {
+            if (value == .string) return value.string;
+        }
+    }
+    return null;
+}
+
+/// Run a request that must complete: exit 0 and one parseable answer object.
+fn expectInvokeCompleted(entry: []const u8, options: []const []const u8, cache_option: []const u8) !std.json.Parsed(std.json.Value) {
+    const outcome = try runInvoke(entry, options, cache_option);
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    return parseInvokeAnswer(outcome.stdout);
+}
+
+/// A refused request must not print a success object: stdout is either empty or
+/// one JSON object whose status is none of the completion spellings.
+fn expectNoInvokeSuccess(printed: []const u8) !void {
+    const body = std.mem.trim(u8, printed, " \t\r\n");
+    if (body.len == 0) return;
+    var parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, body, .{});
+    defer parsed.deinit();
+    try testing.expect(parsed.value == .object);
+    const status = parsed.value.object.get("status") orelse return;
+    if (status != .string) return;
+    inline for (.{ "ok", "described", "completed", "value" }) |success| {
+        try testing.expect(!std.mem.eql(u8, status.string, success));
+    }
+}
+
+/// Run an `invoke` request that must be refused with `expected_status` and must
+/// not report a completed call.
+fn expectInvokeRefused(entry: []const u8, options: []const []const u8, cache_option: []const u8, expected_status: u8) !void {
+    const outcome = try runInvoke(entry, options, cache_option);
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = expected_status }, outcome.term);
+    try expectNoInvokeSuccess(outcome.stdout);
+}
+
+/// Run a usage mistake: exit 2, the usage text on stderr, no success object.
+fn expectInvokeUsage(entry: []const u8, options: []const []const u8, cache_option: []const u8) !void {
+    const outcome = try runInvoke(entry, options, cache_option);
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, outcome.term);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, "usage") != null);
+    try expectNoInvokeSuccess(outcome.stdout);
+}
+
+/// An authority refusal must name the capability in either spelling.
+fn expectMentionsFilesystem(bytes: []const u8) !void {
+    if (std.mem.indexOf(u8, bytes, "Filesystem") != null) return;
+    try testing.expect(std.mem.indexOf(u8, bytes, "filesystem") != null);
+}
+
+/// A refusal about a call position must name the native call ABI, so a caller
+/// can tell "not a copied value" from "a copied value the call ABI cannot carry".
+fn expectMentionsCallAbi(bytes: []const u8) !void {
+    try testing.expect(std.mem.indexOf(u8, bytes, "ABI") != null);
+}
+
+/// A text-argument refusal must name the root the argument direction would
+/// need, so a caller can tell it from "this type cannot cross the boundary at
+/// all".
+fn expectMentionsRoot(bytes: []const u8) !void {
+    try testing.expect(std.mem.indexOf(u8, bytes, "root") != null);
+}
+
+/// The generic wording a type with no copied-value representation gets must
+/// not be used for a text argument: the same type does cross the boundary in
+/// the return direction, so the refusal has to be the specific one.
+fn expectNoGenericTextRefusal(bytes: []const u8) !void {
+    try testing.expect(std.mem.indexOf(u8, bytes, "no copied-value representation") == null);
+}
+
+// spec-case: INVOKE-DESCRIBE-1
+test "CLI invoke describes an integer export without running guest code" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "app.my", invoke_app);
+    const cache = try invokeCacheOption(a, &temporary);
+    const answer = try expectInvokeCompleted(entry, &.{ "--function", "app::add", "--describe", "--format=json" }, cache);
+    defer answer.deinit();
+    try expectInvokeEnvelope(answer.value, "app::add");
+    const describe = try invokeDescribe(answer.value);
+    try expectDescribeParameter(try describeParameters(describe), "a", "i64");
+    try expectDescribeParameter(try describeParameters(describe), "b", "i64");
+    try testing.expectEqualStrings("i64", try describeResult(describe));
+    try testing.expect(try describeEligible(describe));
+    // `--describe` answers from the checked schema: the object describes the
+    // target instead of reporting that any guest code ran.
+    try testing.expect(invokeOutcome(answer.value) == null);
+}
+
+// spec-case: INVOKE-DESCRIBE-1
+// spec-case: INVOKE-SELECT-1
+// spec-case: INVOKE-STATUS-1
+test "CLI invoke describes and calls an export of a library module that declares no main" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    // The fixture is the stated requirement: no `main` anywhere in the file.
+    try testing.expect(std.mem.indexOf(u8, invoke_library, "def main") == null);
+    const entry = try writeInvokeSource(a, &temporary, "library.my", invoke_library);
+    const cache = try invokeCacheOption(a, &temporary);
+    const answer = try expectInvokeCompleted(entry, &.{ "--function", "library::double", "--describe" }, cache);
+    defer answer.deinit();
+    try expectInvokeEnvelope(answer.value, "library::double");
+    const describe = try invokeDescribe(answer.value);
+    try expectDescribeParameter(try describeParameters(describe), "x", "i64");
+    try testing.expect(try describeEligible(describe));
+    try testing.expect(invokeOutcome(answer.value) == null);
+    // The synthetic entry is not only described: the call runs too.
+    const request = try writeInvokeRequest(a, &temporary, "double.json", "{\"x\": \"21\"}");
+    const input_option = try invokeInputOption(a, request);
+    const call = try expectInvokeCompleted(entry, &.{ "--function", "library::double", input_option }, cache);
+    defer call.deinit();
+    const outcome = invokeOutcome(call.value) orelse return error.MissingInvokeOutcome;
+    try testing.expectEqual(@as(i64, 42), try valueInteger(try outcomeValue(outcome)));
+}
+
+// spec-case: INVOKE-DESCRIBE-1
+test "CLI invoke reports the effective limits the request supplied" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "app.my", invoke_app);
+    const cache = try invokeCacheOption(a, &temporary);
+    const answer = try expectInvokeCompleted(entry, &.{
+        "--function",
+        "app::add",
+        "--describe",
+        "--max-steps=1000000",
+        "--max-frames=1000",
+        "--max-calls=1000",
+        "--timeout-ms=30000",
+        "--max-memory=67108864",
+        "--mode=Debug",
+    }, cache);
+    defer answer.deinit();
+    try expectInvokeEnvelope(answer.value, "app::add");
+    try testing.expectEqual(@as(i64, 1000000), try limitInteger(answer.value, "max_steps"));
+    try testing.expectEqual(@as(i64, 1000), try limitInteger(answer.value, "max_frames"));
+    try testing.expectEqual(@as(i64, 1000), try limitInteger(answer.value, "max_calls"));
+    try testing.expectEqual(@as(i64, 30000), try limitInteger(answer.value, "timeout_ms"));
+    try testing.expectEqual(@as(i64, 67108864), try limitInteger(answer.value, "max_memory"));
+}
+
+// spec-case: INVOKE-ARGS-1
+// spec-case: INVOKE-STATUS-1
+test "CLI invoke calls an integer export and reports the exact value" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "app.my", invoke_app);
+    const cache = try invokeCacheOption(a, &temporary);
+    const request = try writeInvokeRequest(a, &temporary, "add.json", "{\"a\": \"2\", \"b\": \"3\"}");
+    const input_option = try invokeInputOption(a, request);
+    const answer = try expectInvokeCompleted(entry, &.{ "--function", "app::add", input_option }, cache);
+    defer answer.deinit();
+    // One object on stdout, nothing else: `expectInvokeCompleted` proved it.
+    try expectInvokeEnvelope(answer.value, "app::add");
+    const outcome = invokeOutcome(answer.value) orelse return error.MissingInvokeOutcome;
+    try testing.expectEqual(@as(i64, 5), try valueInteger(try outcomeValue(outcome)));
+}
+
+// spec-case: INVOKE-ARGS-1
+// spec-case: INVOKE-RESULT-1
+test "CLI invoke accepts both i64 extremes and reports them exactly" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "app.my", invoke_app);
+    const cache = try invokeCacheOption(a, &temporary);
+    // `identity` cannot overflow, so the reported value pins the whole path:
+    // decimal string in, exact 64-bit value out.
+    const maximum = try writeInvokeRequest(a, &temporary, "maximum.json", "{\"x\": \"9223372036854775807\"}");
+    const minimum = try writeInvokeRequest(a, &temporary, "minimum.json", "{\"x\": \"-9223372036854775808\"}");
+    const maximum_option = try invokeInputOption(a, maximum);
+    const minimum_option = try invokeInputOption(a, minimum);
+    const maximum_answer = try expectInvokeCompleted(entry, &.{ "--function", "app::identity", maximum_option }, cache);
+    defer maximum_answer.deinit();
+    const maximum_outcome = invokeOutcome(maximum_answer.value) orelse return error.MissingInvokeOutcome;
+    try testing.expectEqual(@as(i64, std.math.maxInt(i64)), try valueInteger(try outcomeValue(maximum_outcome)));
+    const minimum_answer = try expectInvokeCompleted(entry, &.{ "--function", "app::identity", minimum_option }, cache);
+    defer minimum_answer.deinit();
+    const minimum_outcome = invokeOutcome(minimum_answer.value) orelse return error.MissingInvokeOutcome;
+    try testing.expectEqual(@as(i64, std.math.minInt(i64)), try valueInteger(try outcomeValue(minimum_outcome)));
+}
+
+// spec-case: INVOKE-ARGS-1
+// spec-case: INVOKE-RESULT-1
+test "CLI invoke refuses record arguments and record results the call ABI cannot carry" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "app.my", invoke_app);
+    const cache = try invokeCacheOption(a, &temporary);
+    const argument_request = try writeInvokeRequest(a, &temporary, "shift.json", "{\"p\": {\"x\": \"2\", \"y\": \"3\"}, \"dx\": \"4\"}");
+    const argument_option = try invokeInputOption(a, argument_request);
+    // A record is a legitimate copied value but not a value the native call ABI
+    // carries, so the position is refused before a child process exists, naming
+    // the ABI rather than pretending the signature is callable.
+    const argument = try runInvoke(entry, &.{ "--function", "app::shift", argument_option }, cache);
+    defer testing.allocator.free(argument.stdout);
+    defer testing.allocator.free(argument.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, argument.term);
+    try expectNoInvokeSuccess(argument.stdout);
+    try expectMentionsCallAbi(argument.stdout);
+    // The same rule refuses a record *result*, so an export taking only
+    // integers is refused at `result`.
+    const result_request = try writeInvokeRequest(a, &temporary, "origin.json", "{\"x\": \"2\"}");
+    const result_option = try invokeInputOption(a, result_request);
+    const result = try runInvoke(entry, &.{ "--function", "app::origin", result_option }, cache);
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, result.term);
+    try expectNoInvokeSuccess(result.stdout);
+    try expectMentionsCallAbi(result.stdout);
+    // `--describe` still answers, and says why the target is not callable.
+    const answer = try expectInvokeCompleted(entry, &.{ "--function", "app::shift", "--describe" }, cache);
+    defer answer.deinit();
+    const describe = try invokeDescribe(answer.value);
+    try testing.expect(!try describeEligible(describe));
+    try expectMentionsCallAbi(try describeReason(describe));
+}
+
+// spec-case: INVOKE-ARGS-1
+test "CLI invoke injects a Stream parameter without a JSON argument" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "app.my", invoke_app);
+    const cache = try invokeCacheOption(a, &temporary);
+    // The request names only `x`; the adapter supplies `out` itself.
+    const request = try writeInvokeRequest(a, &temporary, "shout.json", "{\"x\": \"4\"}");
+    const input_option = try invokeInputOption(a, request);
+    const answer = try expectInvokeCompleted(entry, &.{ "--function", "app::shout", input_option }, cache);
+    defer answer.deinit();
+    const outcome = invokeOutcome(answer.value) orelse return error.MissingInvokeOutcome;
+    try testing.expectEqual(@as(i64, 4), try valueInteger(try outcomeValue(outcome)));
+    // The guest's own print travels inside the answer, never on the protocol
+    // channel that `parseInvokeAnswer` just proved holds one object.
+    try testing.expect(std.mem.indexOf(u8, outcomeOutput(outcome) orelse "", "4") != null);
+}
+
+// spec-case: INVOKE-RESULT-1
+// spec-case: INVOKE-STATUS-1
+test "CLI invoke refuses a Result result the call ABI cannot carry" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "app.my", invoke_app);
+    const cache = try invokeCacheOption(a, &temporary);
+    const request = try writeInvokeRequest(a, &temporary, "err.json", "{\"x\": \"-7\"}");
+    const input_option = try invokeInputOption(a, request);
+    // A returned language `Err` would be a completed call at exit 0, but this
+    // call ABI cannot carry a `Result` back at all, so the export is refused
+    // before any guest code runs and the typed-error case is unreachable today.
+    const refusal = try runInvoke(entry, &.{ "--function", "app::classify", input_option }, cache);
+    defer testing.allocator.free(refusal.stdout);
+    defer testing.allocator.free(refusal.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, refusal.term);
+    try expectNoInvokeSuccess(refusal.stdout);
+    try expectMentionsCallAbi(refusal.stdout);
+    const answer = try expectInvokeCompleted(entry, &.{ "--function", "app::classify", "--describe" }, cache);
+    defer answer.deinit();
+    const describe = try invokeDescribe(answer.value);
+    try testing.expect(!try describeEligible(describe));
+    try expectMentionsCallAbi(try describeReason(describe));
+}
+
+// spec-case: INVOKE-SELECT-1
+test "CLI invoke refuses a private name an unknown name and an uninstantiated template" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "app.my", invoke_app);
+    const cache = try invokeCacheOption(a, &temporary);
+    // A private declaration is not an export any caller may select.
+    try expectInvokeRefused(entry, &.{ "--function", "app::hidden", "--describe" }, cache, 2);
+    // Nor is a name that no export carries.
+    try expectInvokeRefused(entry, &.{ "--function", "app::no_such_export", "--describe" }, cache, 2);
+    // A generic template with no checked instantiation is refused by name.
+    try expectInvokeRefused(entry, &.{ "--function", "app::pick", "--describe" }, cache, 2);
+}
+
+// spec-case: INVOKE-AUTHORITY-1
+test "CLI invoke refuses an export whose capability parameter needs external authority" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "app.my", invoke_app);
+    const cache = try invokeCacheOption(a, &temporary);
+    const request = try writeInvokeRequest(a, &temporary, "probe.json", "{\"x\": \"1\"}");
+    const input_option = try invokeInputOption(a, request);
+    const refusal = try runInvoke(entry, &.{ "--function", "app::look", input_option }, cache);
+    defer testing.allocator.free(refusal.stdout);
+    defer testing.allocator.free(refusal.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, refusal.term);
+    try expectNoInvokeSuccess(refusal.stdout);
+    try expectMentionsFilesystem(refusal.stdout);
+    // `--describe` still answers about the same target, with eligibility false
+    // and the missing capability named: a checked signature is described, never
+    // advertised as callable when the host would refuse the call.
+    const answer = try expectInvokeCompleted(entry, &.{ "--function", "app::look", "--describe" }, cache);
+    defer answer.deinit();
+    const describe = try invokeDescribe(answer.value);
+    try testing.expect(!try describeEligible(describe));
+    try expectMentionsFilesystem(try describeReason(describe));
+}
+
+// spec-case: INVOKE-ARGS-1
+test "CLI invoke refuses managed argument positions before any guest code runs" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "app.my", invoke_app);
+    const cache = try invokeCacheOption(a, &temporary);
+    const request = try writeInvokeRequest(a, &temporary, "probe.json", "{\"x\": \"1\"}");
+    const input_option = try invokeInputOption(a, request);
+    // A `str` position and a `list[i64]` position are outside the copied-value
+    // subset, so the call is refused before a child process exists.
+    try expectInvokeRefused(entry, &.{ "--function", "app::text_len", input_option }, cache, 2);
+    try expectInvokeRefused(entry, &.{ "--function", "app::total", input_option }, cache, 2);
+    // `--describe` answers, and says why the same target is not callable.
+    const answer = try expectInvokeCompleted(entry, &.{ "--function", "app::text_len", "--describe" }, cache);
+    defer answer.deinit();
+    const describe = try invokeDescribe(answer.value);
+    try testing.expect(!try describeEligible(describe));
+    try testing.expect((try describeReason(describe)).len > 0);
+}
+
+// spec-case: INVOKE-ARGS-1
+test "CLI invoke refuses a missing extra or malformed argument set" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "app.my", invoke_app);
+    const cache = try invokeCacheOption(a, &temporary);
+    const missing = try writeInvokeRequest(a, &temporary, "missing.json", "{\"a\": \"2\"}");
+    const extra = try writeInvokeRequest(a, &temporary, "extra.json", "{\"a\": \"2\", \"b\": \"3\", \"c\": \"4\"}");
+    const number = try writeInvokeRequest(a, &temporary, "number.json", "{\"a\": 2, \"b\": \"3\"}");
+    const text = try writeInvokeRequest(a, &temporary, "text.json", "{\"a\": \"two\", \"b\": \"3\"}");
+    const overflow = try writeInvokeRequest(a, &temporary, "overflow.json", "{\"x\": \"9223372036854775808\"}");
+    const field = try writeInvokeRequest(a, &temporary, "field.json", "{\"p\": {\"x\": \"2\"}, \"dx\": \"4\"}");
+    try expectInvokeRefused(entry, &.{ "--function", "app::add", try invokeInputOption(a, missing) }, cache, 2);
+    try expectInvokeRefused(entry, &.{ "--function", "app::add", try invokeInputOption(a, extra) }, cache, 2);
+    // A JSON number loses the precision a fixed-width integer needs, and a
+    // non-numeric string is not a decimal either; both are malformed.
+    try expectInvokeRefused(entry, &.{ "--function", "app::add", try invokeInputOption(a, number) }, cache, 2);
+    try expectInvokeRefused(entry, &.{ "--function", "app::add", try invokeInputOption(a, text) }, cache, 2);
+    // One past the largest i64 is a malformed value, not a wraparound.
+    try expectInvokeRefused(entry, &.{ "--function", "app::identity", try invokeInputOption(a, overflow) }, cache, 2);
+    // A record position needs every declared field.
+    try expectInvokeRefused(entry, &.{ "--function", "app::shift", try invokeInputOption(a, field) }, cache, 2);
+}
+
+// spec-case: INVOKE-ARGS-1
+test "CLI invoke refuses an absent or unreadable request file" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "app.my", invoke_app);
+    const cache = try invokeCacheOption(a, &temporary);
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const absent = try std.fs.path.join(a, &.{ root, "absent.json" });
+    const junk = try writeInvokeRequest(a, &temporary, "junk.json", "this is not JSON at all");
+    const array = try writeInvokeRequest(a, &temporary, "array.json", "[\"2\", \"3\"]");
+    try expectInvokeRefused(entry, &.{ "--function", "app::add", try invokeInputOption(a, absent) }, cache, 2);
+    try expectInvokeRefused(entry, &.{ "--function", "app::add", try invokeInputOption(a, junk) }, cache, 2);
+    // A JSON array is not the object of named arguments a request must be.
+    try expectInvokeRefused(entry, &.{ "--function", "app::add", try invokeInputOption(a, array) }, cache, 2);
+}
+
+// spec-case: INVOKE-STATUS-1
+test "CLI invoke rejects incomplete and contradictory command lines" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "app.my", invoke_app);
+    const cache = try invokeCacheOption(a, &temporary);
+    const request = try writeInvokeRequest(a, &temporary, "add.json", "{\"a\": \"2\", \"b\": \"3\"}");
+    const input_option = try invokeInputOption(a, request);
+    // `--function` is always required.
+    try expectInvokeUsage(entry, &.{"--describe"}, cache);
+    // Exactly one selector is required.
+    try expectInvokeUsage(entry, &.{ "--function", "app::add" }, cache);
+    try expectInvokeUsage(entry, &.{ "--function", "app::add", "--describe", input_option }, cache);
+    // JSON is the only accepted format.
+    try expectInvokeUsage(entry, &.{ "--function", "app::add", "--describe", "--format=xml" }, cache);
+    // An unknown flag is a usage error rather than a silently ignored one, and
+    // zero is not a bound.
+    try expectInvokeUsage(entry, &.{ "--function", "app::add", "--describe", "--frobnicate=1" }, cache);
+    try expectInvokeUsage(entry, &.{ "--function", "app::add", "--describe", "--max-steps=0" }, cache);
+}
+
+// spec-case: INVOKE-SELECT-1
+test "CLI invoke accepts the joined function spelling its usage line publishes" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "app.my", invoke_app);
+    const cache = try invokeCacheOption(a, &temporary);
+    // The rest of these cases spell `--function NAME`, the form the usage text
+    // documents; this one pins `--function=NAME`, the form the command summary
+    // prints, so neither spelling can be dropped by accident.
+    const answer = try expectInvokeCompleted(entry, &.{ "--function=app::identity", "--describe" }, cache);
+    defer answer.deinit();
+    try expectInvokeEnvelope(answer.value, "app::identity");
+    const describe = try invokeDescribe(answer.value);
+    try testing.expect(try describeEligible(describe));
+}
+
+// spec-case: INVOKE-STATUS-1
+// spec-case: INVOKE-RESULT-1
+test "CLI invoke executes the same request twice and reuses only artifacts" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "app.my", invoke_app);
+    const cache = try invokeCacheOption(a, &temporary);
+    const request = try writeInvokeRequest(a, &temporary, "add.json", "{\"a\": \"20\", \"b\": \"22\"}");
+    const input_option = try invokeInputOption(a, request);
+    // Reused native artifacts must not become a cached *result*: the second run
+    // is a fresh child process that reports its own outcome.
+    const first = try expectInvokeCompleted(entry, &.{ "--function", "app::add", input_option }, cache);
+    defer first.deinit();
+    const first_outcome = invokeOutcome(first.value) orelse return error.MissingInvokeOutcome;
+    try testing.expectEqual(@as(i64, 42), try valueInteger(try outcomeValue(first_outcome)));
+    const second = try expectInvokeCompleted(entry, &.{ "--function", "app::add", input_option }, cache);
+    defer second.deinit();
+    const second_outcome = invokeOutcome(second.value) orelse return error.MissingInvokeOutcome;
+    try testing.expectEqual(@as(i64, 42), try valueInteger(try outcomeValue(second_outcome)));
+}
+
+// spec-case: INVOKE-TEXT-1
+test "CLI invoke returns a text result as its exact string" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "app.my", invoke_text);
+    const cache = try invokeCacheOption(a, &temporary);
+    const request = try writeInvokeRequest(a, &temporary, "letter.json", "{\"n\": \"65\"}");
+    const input_option = try invokeInputOption(a, request);
+    // `expectInvokeCompleted` parses stdout as exactly one JSON object, so a
+    // text that escaped the envelope would fail here before any value check.
+    const answer = try expectInvokeCompleted(entry, &.{ "--function", "app::letter", input_option }, cache);
+    defer answer.deinit();
+    try expectInvokeEnvelope(answer.value, "app::letter");
+    const outcome = invokeOutcome(answer.value) orelse return error.MissingInvokeOutcome;
+    try testing.expectEqualStrings("returned", try invokeString(outcome, "status"));
+    const value = try outcomeValue(outcome);
+    // The published wire form is one node per scalar, rebuilt as a JSON
+    // string: a JSON number or a bare scalar array would be a different
+    // contract, so the JSON type is pinned as well as the text.
+    try testing.expect(value == .string);
+    try testing.expectEqualStrings("A", try valueText(value));
+    try testing.expectEqual(@as(usize, 1), (try valueText(value)).len);
+}
+
+// spec-case: INVOKE-TEXT-1
+test "CLI invoke round-trips a multi-scalar text including an astral scalar" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "app.my", invoke_text);
+    const cache = try invokeCacheOption(a, &temporary);
+    const request = try writeInvokeRequest(a, &temporary, "greeting.json", "{}");
+    const input_option = try invokeInputOption(a, request);
+    const answer = try expectInvokeCompleted(entry, &.{ "--function", "app::greeting", input_option }, cache);
+    defer answer.deinit();
+    const outcome = invokeOutcome(answer.value) orelse return error.MissingInvokeOutcome;
+    const text = try valueText(try outcomeValue(outcome));
+    // The expected literal is written with escapes so this Zig file stays
+    // ASCII: ten scalars, the last one astral. A byte-oriented encoding would
+    // come back as mojibake or a truncated value, neither of which is equal to
+    // this string, and the scalar count would not be ten either.
+    try testing.expectEqualStrings("h\u{e9}llo \u{4e16}\u{754c} \u{1F600}", text);
+    try testing.expectEqual(@as(usize, 10), try std.unicode.utf8CountCodepoints(text));
+}
+
+// spec-case: INVOKE-TEXT-1
+test "CLI invoke returns a literal a concatenation and a built string" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "app.my", invoke_text);
+    const cache = try invokeCacheOption(a, &temporary);
+    const empty = try writeInvokeRequest(a, &temporary, "empty.json", "{}");
+    const letter = try writeInvokeRequest(a, &temporary, "letter.json", "{\"n\": \"65\"}");
+    const long = try writeInvokeRequest(a, &temporary, "long.json", "{\"n\": \"40\"}");
+    // A frozen literal is eligible too, because the effect ceiling is what the
+    // check reads rather than whether the value came from an allocation.
+    const frozen = try expectInvokeCompleted(entry, &.{ "--function", "app::frozen", try invokeInputOption(a, empty) }, cache);
+    defer frozen.deinit();
+    const frozen_outcome = invokeOutcome(frozen.value) orelse return error.MissingInvokeOutcome;
+    try testing.expectEqualStrings("literal", try valueText(try outcomeValue(frozen_outcome)));
+    // `chr(n) + "!"` is the checked concatenation of two `str` values.
+    const shout = try expectInvokeCompleted(entry, &.{ "--function", "app::shout", try invokeInputOption(a, letter) }, cache);
+    defer shout.deinit();
+    const shout_outcome = invokeOutcome(shout.value) orelse return error.MissingInvokeOutcome;
+    try testing.expectEqualStrings("A!", try valueText(try outcomeValue(shout_outcome)));
+    // A string built by the guest, not a constant the compiler could fold.
+    const repeated = try expectInvokeCompleted(entry, &.{ "--function", "app::repeated", try invokeInputOption(a, long) }, cache);
+    defer repeated.deinit();
+    const repeated_outcome = invokeOutcome(repeated.value) orelse return error.MissingInvokeOutcome;
+    var expected: [40]u8 = undefined;
+    @memset(&expected, 'z');
+    try testing.expectEqualStrings(expected[0..], try valueText(try outcomeValue(repeated_outcome)));
+}
+
+// spec-case: INVOKE-TEXT-1
+test "CLI invoke refuses a text argument before any guest code runs" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "app.my", invoke_text);
+    const cache = try invokeCacheOption(a, &temporary);
+    const request = try writeInvokeRequest(a, &temporary, "count.json", "{\"text\": \"hello\"}");
+    const input_option = try invokeInputOption(a, request);
+    // `--describe` still answers, and its reason is the specific one: the
+    // position is named and the missing root is the excuse, not the generic
+    // "no copied-value representation" a type outside the boundary would get.
+    const answer = try expectInvokeCompleted(entry, &.{ "--function", "app::count", "--describe" }, cache);
+    defer answer.deinit();
+    const describe = try invokeDescribe(answer.value);
+    try testing.expect(!try describeEligible(describe));
+    const reason = try describeReason(describe);
+    try expectMentionsRoot(reason);
+    try testing.expect(std.mem.indexOf(u8, reason, "parameters.text") != null);
+    try expectNoGenericTextRefusal(reason);
+    // The call itself exits 2, prints no success object and reports no outcome
+    // at all: the refusal happened before a child process ran the guest.
+    const refusal = try runInvoke(entry, &.{ "--function", "app::count", input_option }, cache);
+    defer testing.allocator.free(refusal.stdout);
+    defer testing.allocator.free(refusal.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, refusal.term);
+    try expectNoInvokeSuccess(refusal.stdout);
+    var refusal_answer = try parseInvokeAnswer(refusal.stdout);
+    defer refusal_answer.deinit();
+    try testing.expect(invokeOutcome(refusal_answer.value) == null);
+}
+
+// spec-case: INVOKE-TEXT-1
+test "CLI invoke runs a multi-scalar text under gc-stress unchanged" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "app.my", invoke_text);
+    const cache = try invokeCacheOption(a, &temporary);
+    const request = try writeInvokeRequest(a, &temporary, "greeting.json", "{}");
+    const input_option = try invokeInputOption(a, request);
+    // The returned text is read out of the guest after the call has finished,
+    // so a collector that runs at every allocation must not change it.
+    const plain = try expectInvokeCompleted(entry, &.{ "--function", "app::greeting", input_option }, cache);
+    defer plain.deinit();
+    const stressed = try expectInvokeCompleted(entry, &.{ "--function", "app::greeting", "--gc-stress", input_option }, cache);
+    defer stressed.deinit();
+    const plain_outcome = invokeOutcome(plain.value) orelse return error.MissingInvokeOutcome;
+    const stressed_outcome = invokeOutcome(stressed.value) orelse return error.MissingInvokeOutcome;
+    // The same text under both collectors, not merely two texts of the same
+    // shape, and the stressed answer is still the expected scalars.
+    try testing.expectEqualStrings(try valueText(try outcomeValue(plain_outcome)), try valueText(try outcomeValue(stressed_outcome)));
+    try testing.expectEqualStrings("h\u{e9}llo \u{4e16}\u{754c} \u{1F600}", try valueText(try outcomeValue(stressed_outcome)));
+}
+
+// spec-case: INVOKE-TEXT-1
+test "CLI invoke returns a few hundred scalars bounded and untruncated" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry = try writeInvokeSource(a, &temporary, "app.my", invoke_text);
+    const cache = try invokeCacheOption(a, &temporary);
+    const request = try writeInvokeRequest(a, &temporary, "long.json", "{\"n\": \"300\"}");
+    const input_option = try invokeInputOption(a, request);
+    const answer = try expectInvokeCompleted(entry, &.{ "--function", "app::repeated", input_option }, cache);
+    defer answer.deinit();
+    const outcome = invokeOutcome(answer.value) orelse return error.MissingInvokeOutcome;
+    const text = try valueText(try outcomeValue(outcome));
+    var expected: [300]u8 = undefined;
+    @memset(&expected, 'z');
+    // Every scalar is present: a value cut short would fail the length, the
+    // scalar count, the whole-string comparison and the last scalar alike.
+    try testing.expectEqual(@as(usize, 300), text.len);
+    try testing.expectEqual(@as(usize, 300), try std.unicode.utf8CountCodepoints(text));
+    try testing.expectEqualStrings(expected[0..], text);
+    try testing.expectEqual(@as(u8, 'z'), text[text.len - 1]);
+}
+
+/// The worked invocation example, invoked in place from the repository root so
+/// the committed fixture is exactly the file the example publishes.
+const invoke_report_example = "examples/invoke-report/report.my";
+
+/// A list result must be one JSON array of element texts, exactly `expected`
+/// in order and with no element added or dropped. A returned `list[T]` is
+/// published as one node per element in the declared element form, so an array
+/// collapsed into a single string at the value position is a contract
+/// regression rather than another spelling of the same answer.
+fn expectValueStrings(value: std.json.Value, expected: []const []const u8) !void {
+    if (value != .array) return error.InvokeValueNotList;
+    try testing.expectEqual(expected.len, value.array.items.len);
+    for (value.array.items, 0..) |item, index| {
+        try testing.expectEqualStrings(expected[index], try valueText(item));
+    }
+}
+
+/// A call that printed nothing must publish no captured output text: the
+/// protocol channel carries the answer alone, so absent and empty are both a
+/// zero-length capture and neither is text that leaked onto the channel.
+fn expectNoCapturedOutput(outcome: std.json.Value) !void {
+    const captured: []const u8 = outcomeOutput(outcome) orelse "";
+    try testing.expectEqual(@as(usize, 0), captured.len);
+}
+
+// spec: INVOKE-EXAMPLE-1
+test "CLI invoke describes the report example in place with no main" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    // The entry is the committed example itself, run from the repository root
+    // rather than copied into the fixture: that is the command the example's
+    // README publishes, and it is what an agent would run.
+    const source = try readFile(a, invoke_report_example);
+    // The fixture is the stated requirement — no `main` anywhere in the file,
+    // so the synthetic entry the runner supplies is what makes these exports
+    // reachable at all rather than a dummy main being needed in the library.
+    try testing.expect(std.mem.indexOf(u8, source, "def main") == null);
+    const cache = try invokeCacheOption(a, &temporary);
+    const answer = try expectInvokeCompleted(invoke_report_example, &.{ "--function", "report::headline", "--describe" }, cache);
+    defer answer.deinit();
+    try expectInvokeEnvelope(answer.value, "report::headline");
+    try testing.expect(try describeEligible(try invokeDescribe(answer.value)));
+    // `--describe` answers from the checked schema: the object describes the
+    // target instead of reporting that any guest code ran.
+    try testing.expect(invokeOutcome(answer.value) == null);
+}
+
+// spec-case: INVOKE-EXAMPLE-1
+test "CLI invoke returns the report example's text report at hand-computed values" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const cache = try invokeCacheOption(a, &temporary);
+    // Every expectation below is a literal computed by hand from the published
+    // contract, "the digits of n and their sum", never from a second
+    // implementation of it: the digits of 90210 sum to 12, the single digit 7
+    // sums to 7, and 1000 sums to 1.
+    const long = try writeInvokeRequest(a, &temporary, "long.json", "{\"n\": \"90210\"}");
+    const answer = try expectInvokeCompleted(invoke_report_example, &.{ "--function", "report::headline", try invokeInputOption(a, long) }, cache);
+    defer answer.deinit();
+    try expectInvokeEnvelope(answer.value, "report::headline");
+    const outcome = invokeOutcome(answer.value) orelse return error.MissingInvokeOutcome;
+    try testing.expectEqualStrings("returned", try invokeString(outcome, "status"));
+    try testing.expectEqualStrings("n=90210 sum=12", try valueText(try outcomeValue(outcome)));
+    const seven_request = try writeInvokeRequest(a, &temporary, "seven.json", "{\"n\": \"7\"}");
+    const seven = try expectInvokeCompleted(invoke_report_example, &.{ "--function", "report::headline", try invokeInputOption(a, seven_request) }, cache);
+    defer seven.deinit();
+    const seven_outcome = invokeOutcome(seven.value) orelse return error.MissingInvokeOutcome;
+    try testing.expectEqualStrings("n=7 sum=7", try valueText(try outcomeValue(seven_outcome)));
+    const thousand_request = try writeInvokeRequest(a, &temporary, "thousand.json", "{\"n\": \"1000\"}");
+    const thousand = try expectInvokeCompleted(invoke_report_example, &.{ "--function", "report::headline", try invokeInputOption(a, thousand_request) }, cache);
+    defer thousand.deinit();
+    const thousand_outcome = invokeOutcome(thousand.value) orelse return error.MissingInvokeOutcome;
+    try testing.expectEqualStrings("n=1000 sum=1", try valueText(try outcomeValue(thousand_outcome)));
+}
+
+// spec-case: INVOKE-EXAMPLE-1
+test "CLI invoke returns the report example's digit histogram as a JSON array" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const cache = try invokeCacheOption(a, &temporary);
+    const long = try writeInvokeRequest(a, &temporary, "long.json", "{\"n\": \"90210\"}");
+    const answer = try expectInvokeCompleted(invoke_report_example, &.{ "--function", "report::digit_counts", try invokeInputOption(a, long) }, cache);
+    defer answer.deinit();
+    try expectInvokeEnvelope(answer.value, "report::digit_counts");
+    const outcome = invokeOutcome(answer.value) orelse return error.MissingInvokeOutcome;
+    const value = try outcomeValue(outcome);
+    // The list is one JSON array of ten element nodes, not one string built
+    // from them: collapsing the list encoding would fail here before the
+    // element-by-element comparison below.
+    try testing.expect(value == .array);
+    // The literals are the hand-computed counts, not a reimplementation:
+    // 90210 answers two 0s, one 1, one 2 and one 9, at the indices those
+    // digits name.
+    try expectValueStrings(value, &.{ "2", "1", "1", "0", "0", "0", "0", "0", "0", "1" });
+    // 7 has one digit and it is a 7, so the only non-zero count sits at index 7.
+    const seven_request = try writeInvokeRequest(a, &temporary, "seven.json", "{\"n\": \"7\"}");
+    const seven = try expectInvokeCompleted(invoke_report_example, &.{ "--function", "report::digit_counts", try invokeInputOption(a, seven_request) }, cache);
+    defer seven.deinit();
+    const seven_outcome = invokeOutcome(seven.value) orelse return error.MissingInvokeOutcome;
+    try expectValueStrings(try outcomeValue(seven_outcome), &.{ "0", "0", "0", "0", "0", "0", "0", "1", "0", "0" });
+    // Zero has one digit and it is a zero, which is the case a digit loop that
+    // never runs would answer with ten zeroes instead.
+    const zero_request = try writeInvokeRequest(a, &temporary, "zero.json", "{\"n\": \"0\"}");
+    const zero = try expectInvokeCompleted(invoke_report_example, &.{ "--function", "report::digit_counts", try invokeInputOption(a, zero_request) }, cache);
+    defer zero.deinit();
+    const zero_outcome = invokeOutcome(zero.value) orelse return error.MissingInvokeOutcome;
+    try expectValueStrings(try outcomeValue(zero_outcome), &.{ "1", "0", "0", "0", "0", "0", "0", "0", "0", "0" });
+}
+
+// spec-case: INVOKE-EXAMPLE-1
+test "CLI invoke drops a negative sign in the report example and refuses its helper" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const cache = try invokeCacheOption(a, &temporary);
+    // `|n|` is what the report is computed from, so a negative input answers
+    // the same text as its magnitude: the sign is dropped, not transcribed.
+    const negative = try writeInvokeRequest(a, &temporary, "negative.json", "{\"n\": \"-90210\"}");
+    const answer = try expectInvokeCompleted(invoke_report_example, &.{ "--function", "report::headline", try invokeInputOption(a, negative) }, cache);
+    defer answer.deinit();
+    const outcome = invokeOutcome(answer.value) orelse return error.MissingInvokeOutcome;
+    try testing.expectEqualStrings("n=90210 sum=12", try valueText(try outcomeValue(outcome)));
+    // `render` is private, so it is not an export any caller may select.
+    try expectInvokeRefused(invoke_report_example, &.{ "--function", "report::render", "--describe" }, cache, 2);
+}
+
+// spec-case: INVOKE-EXAMPLE-1
+test "CLI invoke answers one JSON object per report example call with no output leak" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const cache = try invokeCacheOption(a, &temporary);
+    const long = try writeInvokeRequest(a, &temporary, "long.json", "{\"n\": \"90210\"}");
+    const input_option = try invokeInputOption(a, long);
+    // `expectInvokeCompleted` parses stdout as exactly one JSON object, so a
+    // second object, a bare diagnostic line or a trailing byte would fail
+    // before any value check runs.
+    const text = try expectInvokeCompleted(invoke_report_example, &.{ "--function", "report::headline", input_option }, cache);
+    defer text.deinit();
+    try expectInvokeEnvelope(text.value, "report::headline");
+    const text_outcome = invokeOutcome(text.value) orelse return error.MissingInvokeOutcome;
+    try testing.expectEqualStrings("returned", try invokeString(text_outcome, "status"));
+    try testing.expect((try outcomeValue(text_outcome)) == .string);
+    // The guest printed nothing, so nothing was captured onto the same channel
+    // the answer travels on.
+    try expectNoCapturedOutput(text_outcome);
+    const list = try expectInvokeCompleted(invoke_report_example, &.{ "--function", "report::digit_counts", input_option }, cache);
+    defer list.deinit();
+    try expectInvokeEnvelope(list.value, "report::digit_counts");
+    const list_outcome = invokeOutcome(list.value) orelse return error.MissingInvokeOutcome;
+    try testing.expectEqualStrings("returned", try invokeString(list_outcome, "status"));
+    try testing.expect((try outcomeValue(list_outcome)) == .array);
+    try expectNoCapturedOutput(list_outcome);
 }

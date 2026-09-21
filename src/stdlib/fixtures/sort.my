@@ -100,11 +100,17 @@ def comparisons() -> int:
         return 41
     if sort.compare_strs("", "a") != 0 - 1 or sort.compare_strs("é", "z") != 1:
         return 42
+    if noalloc_compare("😀", "é") != 1:
+        return 45
     if len(sort.unique_ints([1, 2, 1, 3])) != 3 or sort.unique_ints([1, 2, 1])[1] != 2:
         return 43
     if len(sort.unique_strs(["a", "b", "a"])) != 2:
         return 44
     return 0
+
+
+def noalloc_compare(left: str, right: str) -> int noalloc:
+    return sort.compare_strs(left, right)
 
 
 def main() -> int:

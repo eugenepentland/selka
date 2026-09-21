@@ -230,6 +230,13 @@ pub fn build(b: *std.Build) void {
     const qbe_exe = vendoredQbe(b, target);
     const install_qbe_step = b.addInstallArtifact(qbe_exe, .{});
     b.getInstallStep().dependOn(&install_qbe_step.step);
+    // LLVM's adapter is optional at run time; keep its imported modules beside
+    // its entry point so an installed compiler needs no source checkout.
+    for ([_][]const u8{ "qbe_llvm.py", "llvm_emit.py", "runtime_signatures.py", "amd64_sysv.py" }) |file| {
+        const source = b.path(b.pathJoin(&.{ "experiments", "llvm-backend", file }));
+        const install = b.addInstallFileWithDir(source, .lib, b.pathJoin(&.{ "mylang-llvm", file }));
+        b.getInstallStep().dependOn(&install.step);
+    }
     // Guest-running drivers invoke an uninstalled compiler with no tools beside it
     // and none on `PATH`; name the vendored tools for them through the environment.
     // The build runs with the project root as its working directory, and the
@@ -270,6 +277,7 @@ pub fn build(b: *std.Build) void {
     const host_tools = b.addOptions();
     host_tools.addOptionPath("qbe", qbe_exe.getEmittedBin());
     host_tools.addOption([]const u8, "zig", b.graph.zig_exe);
+    host_tools.addOption([]const u8, "llvm_adapter", b.pathJoin(&.{ root, "experiments", "llvm-backend", "qbe_llvm.py" }));
     const host_native = b.createModule(.{ .root_source_file = b.path("src/host_native.zig"), .target = target, .optimize = optimize });
     host_native.addImport("qbe_build", native_build);
     host_native.addImport("host_tools", host_tools.createModule());
@@ -443,6 +451,7 @@ pub fn build(b: *std.Build) void {
         .files = &.{
             "tests/native_heap_test.c",
             "src/native_heap.c",
+            "src/native_arena.c",
             "src/native_equal.c",
             "src/native_text.c",
             "src/native_collections.c",
@@ -460,12 +469,44 @@ pub fn build(b: *std.Build) void {
     run_native_heap_test.step.max_rss = rss.driver;
     run_native_heap_test.has_side_effects = true;
     const native_heap_step = b.step("test-native-heap", "Verify native collector trace, cycle, budget, and equality paths");
+    const native_arena_module = b.createModule(.{
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+    });
+    native_arena_module.addIncludePath(b.path("src"));
+    native_arena_module.addCSourceFiles(.{
+        .root = b.path("."),
+        .files = &.{
+            "tests/native_arena_chunks_test.c",
+            "src/native_heap.c",
+            "src/native_arena.c",
+            "src/native_collections.c",
+            "src/native_text.c",
+            "src/native_dictionary.c",
+            "src/native_equal.c",
+            "src/native_bytes.c",
+        },
+        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG" },
+    });
+    const native_arena_test = b.addExecutable(.{
+        .max_rss = rss.compile,
+        .name = "native-arena-chunks-test",
+        .root_module = native_arena_module,
+    });
+    const run_native_arena_test = b.addRunArtifact(native_arena_test);
+    run_native_arena_test.step.max_rss = rss.driver;
+    run_native_arena_test.has_side_effects = true;
+    native_heap_step.dependOn(&run_native_arena_test.step);
     native_heap_step.dependOn(&run_native_heap_test.step);
     guardian.addAllChecks(b, guardian_exe, native_heap_step, .{});
     boundedChecks(native_heap_step);
     compile_tests.dependOn(&native_heap_test.step);
+    compile_tests.dependOn(&native_arena_test.step);
     test_step.dependOn(&run_native_heap_test.step);
+    test_step.dependOn(&run_native_arena_test.step);
     qbe_step.dependOn(&run_native_heap_test.step);
+    qbe_step.dependOn(&run_native_arena_test.step);
     const native_test_step = b.step("test-native-tests", "Verify native guest test discovery, execution, fixtures, and affected-test reuse");
     const native_test_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
         .root_source_file = b.path("src/native_test_cli_test.zig"),
@@ -494,6 +535,14 @@ pub fn build(b: *std.Build) void {
     qbe_step.dependOn(ffi_step);
     const qbe_build_step = b.step("test-qbe-build", "Verify native builds without Python and native adapter generation");
     qbe_step.dependOn(qbe_build_step);
+    const host_native_unit = b.addTest(.{
+        .max_rss = rss.compile,
+        .test_runner = guardian.testRunner(guardian_dep),
+        .root_module = host_native,
+    });
+    guardian.enableTestDiagnostics(host_native_unit.root_module);
+    qbe_build_step.dependOn(&bounded(b.addRunArtifact(host_native_unit), rss.suite).step);
+    compile_tests.dependOn(&host_native_unit.step);
     const qbe_build_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
         .root_source_file = b.path("src/qbe_build_test.zig"),
         .target = target,
@@ -504,6 +553,15 @@ pub fn build(b: *std.Build) void {
     guardian.enableTestDiagnostics(qbe_build_unit.root_module);
     qbe_build_step.dependOn(&bounded(b.addRunArtifact(qbe_build_unit), rss.suite).step);
     compile_tests.dependOn(&qbe_build_unit.step);
+    const host_bridge_module = b.createModule(.{ .target = target, .optimize = optimize, .link_libc = true });
+    host_bridge_module.addIncludePath(b.path("src"));
+    host_bridge_module.addCSourceFile(.{
+        .file = b.path("tests/qbe_host_bridge.c"),
+        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG" },
+    });
+    const host_bridge_test = b.addExecutable(.{ .name = "host-bridge-test", .root_module = host_bridge_module, .max_rss = rss.compile });
+    qbe_build_step.dependOn(&bounded(b.addRunArtifact(host_bridge_test), rss.suite).step);
+    compile_tests.dependOn(&host_bridge_test.step);
     guardian.addAllChecks(b, guardian_exe, qbe_build_step, .{});
     boundedChecks(qbe_build_step);
     const golden_step = b.step("test-golden", "Replay the checked-in native golden corpora with no Python oracle");
@@ -535,6 +593,23 @@ pub fn build(b: *std.Build) void {
     idiom_run.has_side_effects = true;
     idiom_step.dependOn(&idiom_run.step);
     test_step.dependOn(idiom_step);
+    // The repair-round packages ship two Python drivers beside their Zig tests:
+    // the parser-hint/classifier agreement (static, then end to end against this
+    // compiler) and the friction harvest over its replay fixture. Registering
+    // them here keeps them from rotting outside the gate.
+    const usefulness_step = b.step("test-agent-usefulness", "Verify parser hints, headerless imports, and the friction harvest");
+    const hints_static = bounded(b.addSystemCommand(&.{ "python3", "tests/parser_hints.py" }), rss.driver);
+    hints_static.setCwd(b.path("."));
+    usefulness_step.dependOn(&hints_static.step);
+    const hints_run = bounded(b.addSystemCommand(&.{ "python3", "tests/parser_hints.py", "--compiler" }), rss.parity);
+    hints_run.addArtifactArg(exe);
+    hints_run.setCwd(b.path("."));
+    hints_run.has_side_effects = true;
+    usefulness_step.dependOn(&hints_run.step);
+    const harvest_run = bounded(b.addSystemCommand(&.{ "python3", "tests/test_friction_harvest.py" }), rss.driver);
+    harvest_run.setCwd(b.path("."));
+    usefulness_step.dependOn(&harvest_run.step);
+    test_step.dependOn(usefulness_step);
     const doc_coverage = bounded(b.addRunArtifact(exe), rss.driver);
     doc_coverage.addArgs(&.{ "doc-coverage", "." });
     doc_coverage.setCwd(b.path("."));

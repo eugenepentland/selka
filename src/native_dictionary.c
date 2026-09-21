@@ -80,6 +80,11 @@ int myl_native_dictionary_key_at(const myl_native_dictionary *dict, size_t index
     memmove(output,(const unsigned char *)dict->entries->storage+index*dict->entry_type.size,dict->key->size);
     return 1;
 }
+int myl_native_dictionary_value_at(const myl_native_dictionary *dict, size_t index, void *output) {
+    if (index>=dict->entries->length) return 0;
+    memmove(output,(const unsigned char *)dict->entries->storage+index*dict->entry_type.size+dict->value_offset,dict->value->size);
+    return 1;
+}
 int myl_native_dictionary_pop(myl_native_dictionary *dict, const void *key, void *output) {
     size_t index=find(dict,key);
     if (index==SIZE_MAX) return 0;

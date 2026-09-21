@@ -113,6 +113,20 @@ pub const RuleContext = struct {
     /// Diff scope for `--gate --against REF`, or null when this run judges the
     /// tree rather than a diff. Only `change-without-test` reads it.
     change: ?ChangeScope = null,
+    /// Test-reachability facts of this run: the selected profile and the one
+    /// index every reachability reading comes from.
+    reach: Reachability = .{},
+};
+
+/// The reachability evidence one run shares: which profile decides how much
+/// test contact counts as tested, and the single index built for that walk.
+pub const Reachability = struct {
+    /// Selected profile. `agent` accepts an export any discovered test reaches,
+    /// directly or transitively; `strict` and `safety` keep the direct-call fact.
+    profile: lint_config.Profile = .agent,
+    /// Index over the same discovery, call graph and inversion `mylang
+    /// tests-for` answers from, or null when the caller built none.
+    index: ?*const tests_index.Index = null,
 };
 
 /// The repository, reference revision and I/O a diff-judging rule reads.
@@ -217,7 +231,7 @@ const default_min_chars: usize = 12;
 pub const rules = [_]Rule{
     .{
         .name = rule_untested_export,
-        .description = "an exported declaration is not called directly by a discovered test",
+        .description = "an exported declaration no discovered test reaches under `agent`, or does not call directly under `strict`",
         .modes = .{ .agent = .report, .strict = .block, .safety = .block },
         .run = runUntestedExport,
     },
@@ -405,6 +419,13 @@ pub fn evaluate(request: Request, scratch: std.mem.Allocator) RunError!Outcome {
         .export_flags = export_flags,
     };
 
+    // One reachability walk for the whole run, built before any rule reads it:
+    // the same discovered tests, call graph and inversion `mylang tests-for`
+    // answers from. The `untested-export` verdict and every related note on a
+    // finding read this index, so none of them can disagree with the command.
+    var reach = try buildReachabilityIndex(scratch, request.compilation);
+    defer reach.deinit();
+
     var findings: std.ArrayList(Finding) = .empty;
     var waived: usize = 0;
 
@@ -432,6 +453,7 @@ pub fn evaluate(request: Request, scratch: std.mem.Allocator) RunError!Outcome {
         .memory = scratch,
         .findings = &findings,
         .change = change,
+        .reach = .{ .profile = profile, .index = &reach },
     };
     for (rules) |rule| {
         const mode = resolveMode(rule, profile, request.config);
@@ -450,9 +472,10 @@ pub fn evaluate(request: Request, scratch: std.mem.Allocator) RunError!Outcome {
     findings.shrinkRetainingCapacity(reason_kept);
 
     // Every finding that names a declaration carries the discovered tests that
-    // reach it, from the same index `tests-for` answers from. Waived findings
-    // are already gone, and a rule that set its own related note keeps it.
-    try attachReachabilityNotes(scratch, &facts, findings.items);
+    // reach it, from the same index `tests-for` answers from and the same one
+    // the rule above judged. Waived findings are already gone, and a rule that
+    // set its own related note keeps it.
+    try attachReachabilityNotes(scratch, &facts, &reach, findings.items);
 
     // Baselines turn existing blockers into accepted debt. `--accept` rewrites
     // the store so the next `--gate` is green; a plain `--gate` only reads it.
@@ -701,16 +724,14 @@ fn configuredExemptFrom(config: ?*const lint_config.Config, rule: []const u8, qu
 }
 
 /// W2 `untested-export`: every exported declaration, and every public method
-/// of an exported domain, must be a direct callee of a discovered test.
+/// of an exported domain, must be reached by a discovered test. The `agent`
+/// profile accepts an export any test reaches, directly or transitively, so a
+/// reached accessor is never reported as untested; `strict` and `safety` keep
+/// the direct-call fact and say "reached only transitively" when the only
+/// evidence is indirect. Both readings come from the run's one shared index.
 fn runUntestedExport(context: *RuleContext) std.mem.Allocator.Error!void {
     const facts = context.facts;
-    const tested = try context.memory.alloc(bool, facts.program.functions.len);
-    @memset(tested, false);
-    for (facts.tests) |id| {
-        for (facts.functions[@backingInt(id)].calls) |call| {
-            tested[@backingInt(call.callee)] = true;
-        }
-    }
+    const transitive_is_tested = context.reach.profile == .agent;
     for (facts.exports) |id| {
         const index = @backingInt(id);
         const function = facts.program.functions[index];
@@ -718,8 +739,15 @@ fn runUntestedExport(context: *RuleContext) std.mem.Allocator.Error!void {
         if (facts.isTest(id)) continue;
         if (id == facts.program.main) continue;
         if (configuredExempt(context, rule_test_coverage, function.name)) continue;
-        if (tested[index]) continue;
-        const message = try std.fmt.allocPrint(context.memory, "{s}: exported {s} is not called directly by any test_ function", .{ rule_untested_export, function.name });
+        const answer = if (context.reach.index) |shared| shared.answer(id) else tests_index.Answer{};
+        if (answer.direct.len != 0) continue;
+        if (transitive_is_tested and answer.reached.len != 0) continue;
+        const message = if (answer.reached.len != 0)
+            try std.fmt.allocPrint(context.memory, "{s}: exported {s} is reached only transitively; no test calls it directly", .{ rule_untested_export, function.name })
+        else if (transitive_is_tested)
+            try std.fmt.allocPrint(context.memory, "{s}: exported {s} is not reached by any discovered test", .{ rule_untested_export, function.name })
+        else
+            try std.fmt.allocPrint(context.memory, "{s}: exported {s} is not called directly by any test_ function", .{ rule_untested_export, function.name });
         try context.findings.append(context.memory, .{
             .code = "L_UNTESTED_EXPORT",
             .rule = rule_untested_export,
@@ -1189,24 +1217,28 @@ fn callerNote(memory: std.mem.Allocator, function: typed.Function, facts: *const
     return .{ .span = callers.items[0].declaration, .message = try std.fmt.allocPrint(memory, "tests that call {s} directly: {s}", .{ function.name, list.items }) };
 }
 
+/// Build the run's one test-reachability index: the same discovery, per-function
+/// call graph and inversion `mylang tests-for` performs, so this run and that
+/// command answer from one walk rather than two that could drift apart. The
+/// index owns its own arena; the caller frees it with `deinit`.
+fn buildReachabilityIndex(scratch: std.mem.Allocator, compilation: *project_compile.Compilation) std.mem.Allocator.Error!tests_index.Index {
+    const program = compilation.program.?;
+    const modules = try compilation.index.moduleSyntax(scratch);
+    const call_graph = try tests_index.callGraph(scratch, program);
+    const discovered = try tests_index.discoveredTests(scratch, program, modules);
+    return tests_index.build(scratch, program, call_graph, discovered);
+}
+
 /// Attach the discovered tests that reach a finding's declaration as a related
-/// note. The walk is the shared `tests_index.zig` one, so the note agrees with
-/// `tests-for` and the `list-interfaces` tests column. A rule that already set
-/// its own related note keeps it, and a declaration no test reaches gets none.
-fn attachReachabilityNotes(scratch: std.mem.Allocator, facts: *const Facts, findings: []Finding) std.mem.Allocator.Error!void {
-    if (facts.tests.len == 0) return;
-    const call_graph = try scratch.alloc([]const typed.FunctionId, facts.program.functions.len);
-    for (facts.functions, 0..) |function, index| {
-        const calls = try scratch.alloc(typed.FunctionId, function.calls.len);
-        for (function.calls, 0..) |call, slot| calls[slot] = call.callee;
-        call_graph[index] = calls;
-    }
-    var index = try tests_index.build(scratch, facts.program, call_graph, facts.tests);
-    defer index.deinit();
+/// note. The walk is the shared `tests_index.zig` one built once for this run,
+/// so the note agrees with `tests-for`, the `list-interfaces` tests column and
+/// the `untested-export` verdict. A rule that already set its own related note
+/// keeps it, and a declaration no test reaches gets none.
+fn attachReachabilityNotes(scratch: std.mem.Allocator, facts: *const Facts, reach: *const tests_index.Index, findings: []Finding) std.mem.Allocator.Error!void {
     for (findings) |*finding| {
         if (finding.related != null) continue;
         const target = findFunctionByName(facts.program, finding.subject.qualified) orelse continue;
-        const answer = index.answer(target);
+        const answer = reach.answer(target);
         if (answer.reached.len == 0) continue;
         const first = findFunctionByName(facts.program, answer.reached[0]) orelse continue;
         finding.related = .{

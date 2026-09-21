@@ -26,6 +26,9 @@ the other rows use the same `run5` pattern with the work named in the table.
 The [18 September 2026 runtime audit](audits/runtime-performance-2026-09-18.md)
 measures where a native build still spends 30–90× Zig's instruction count on a
 byte-loop workload and lays out the six-wave plan to close it.
+The [21 September 2026 parity audit](audits/performance-parity-audit-2026-09-21.md)
+re-measures the current tree against Zig and Rust, attributes the remaining gap
+per primitive with a matched kernel suite, and ranks what closes it.
 
 ## What is fast without trying
 

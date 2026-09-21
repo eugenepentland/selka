@@ -128,10 +128,14 @@ whose signature fixes both types.
 - A document selects an exact qualified exported type name, not a local import
   alias; private and unknown names reject. Root structural arrays are reachable
   only through the embedding API.
-- There is no longer a command that decodes a standalone value document or calls
-  an exported function from one. `mylang test --cases` is the only path that
-  executes guest code from typed JSON, and it runs a test, not an arbitrary
-  export.
+- There is no longer a command that decodes a standalone value *document*: no
+  surface reads a `typed-json-v1` envelope from a file and materializes it. Two
+  commands execute guest code from typed JSON, and neither takes an envelope.
+  `mylang test --cases` runs a test, and `mylang invoke --input=FILE` calls one
+  exported function from a bare object of named arguments; both take the values
+  directly, because the selected signature already fixes every type. `invoke`
+  carries integers, booleans and an injected `Stream` across the call boundary;
+  see [calling one export](tooling/invoke.md).
 - Explicit domain codecs, external key mappings and source-level codec operations
   remain unfinished.
 

@@ -38,7 +38,7 @@ public def test_python_values_dictionary_literal_growing_aliases_and_arbitrary_m
     box.values["two"] = 40
     if "two" not in alias:
         return False
-    if box.values.keys()[0] != "one":
+    if list(box.values.keys())[0] != "one":
         return False
     return alias.get("two",0) + {"fallback": 2}.get("fallback",0) == 42
 

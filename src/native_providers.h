@@ -5,8 +5,8 @@
 #ifndef MYLANG_NATIVE_HOST_H
 #include "native_host.h"
 #endif
-#define MYLANG_NATIVE_PROVIDER_ABI 5
-#define mylang_native_providers mylang_native_providers_v5
+#define MYLANG_NATIVE_PROVIDER_ABI 6
+#define mylang_native_providers mylang_native_providers_v6
 /* Trusted synchronous adapters. Contexts outlive the generated program's run.
    Callbacks must not reenter this generated program. No callback is invoked
    while checking whether an entry grant is available. */

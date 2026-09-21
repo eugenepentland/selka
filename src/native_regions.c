@@ -6,38 +6,40 @@
 #include "native_regions.h"
 #include <stdlib.h>
 #include <string.h>
-static void reach(const myl_native_type *type, const void *bytes, unsigned *deepest) {
+static void reach(const myl_native_heap *heap, const myl_native_type *type,
+                  const void *bytes, unsigned *deepest) {
     const unsigned char *raw = bytes;
     if (type->kind == MYL_NATIVE_POINTER) {
         void *pointer;
         memcpy(&pointer, raw, sizeof pointer);
-        unsigned region = myl_native_object_region(pointer);
+        unsigned region = myl_native_object_region(heap, pointer);
         if (region > *deepest) *deepest = region;
     } else if (type->kind == MYL_NATIVE_ARRAY) {
-        for (size_t i = 0; i < type->count; ++i) reach(type->fields[0].type, raw + i * type->stride, deepest);
+        for (size_t i = 0; i < type->count; ++i) reach(heap, type->fields[0].type, raw + i * type->stride, deepest);
     } else if (type->kind == MYL_NATIVE_RECORD || type->kind == MYL_NATIVE_VARIANT) {
         uint32_t tag = 0;
         if (type->kind == MYL_NATIVE_VARIANT) memcpy(&tag, raw, sizeof tag);
         for (size_t i = 0; i < type->field_count; ++i) {
             const myl_native_field *field = &type->fields[i];
             if (type->kind == MYL_NATIVE_RECORD || tag == field->tag)
-                reach(field->type, raw + field->offset, deepest);
+                reach(heap, field->type, raw + field->offset, deepest);
         }
     }
 }
-unsigned myl_native_region_reach(const myl_native_type *type, const void *value) {
+unsigned myl_native_region_reach(const myl_native_heap *heap,
+                                 const myl_native_type *type, const void *value) {
     unsigned deepest = 0;
-    reach(type, value, &deepest);
+    reach(heap, type, value, &deepest);
     return deepest;
 }
 int myl_native_region_check(myl_native_heap *heap, const void *container,
                             const myl_native_type *type, const void *value) {
     if (!heap->region_depth) return 1;
-    return myl_native_region_reach(type, value) <= myl_native_object_region(container);
+    return myl_native_region_reach(heap, type, value) <= myl_native_object_region(heap, container);
 }
 int myl_native_region_retains(myl_native_heap *heap, const myl_native_type *type, const void *value) {
     if (!heap->region_depth) return 0;
-    return myl_native_region_reach(type, value) >= heap->region_depth;
+    return myl_native_region_reach(heap, type, value) >= heap->region_depth;
 }
 /* One cloned managed object and the descriptor that shapes its contents. */
 typedef struct { void *source, *clone; const myl_native_type *type; } Clone;
@@ -93,7 +95,7 @@ static void *shallow(Copier *copier, const myl_native_type *type, void *source) 
     return clone;
 }
 static void *ensure(Copier *copier, const myl_native_type *type, void *source) {
-    if (!source || myl_native_object_region(source) < copier->dying) return source;
+    if (!source || myl_native_object_region(copier->heap, source) < copier->dying) return source;
     if (!reserve(copier)) { copier->failed = 1; return NULL; }
     size_t at = probe(copier->entries, copier->capacity, source);
     if (copier->entries[at].source) return copier->entries[at].clone;

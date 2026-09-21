@@ -149,7 +149,7 @@ def query(index, *, text='', symbol=None, relation='definition', type_name=None,
     seeds = {name for name, item in symbols.items()
              if (symbol is None or name == symbol) and text.casefold() in name.casefold()
              and (type_name is None or item['type_name'] == type_name)
-             and (effect is None or effect in item['effects'])}
+             and (effect is None or effect in (item['effects'] or []))}
     selected, edges, truncated = set(seeds), [], False
     references = index['references'] if index['checked'] else []
     if relation in ('references', 'callers', 'callees', 'context'):

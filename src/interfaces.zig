@@ -21,6 +21,7 @@ const typed = @import("typed.zig");
 const generic_requirements = @import("generic_requirements.zig");
 const structural_declarations = @import("structural_declarations.zig");
 const effect_set = @import("effect_set.zig");
+const fact_status = @import("fact_status.zig");
 const prelude = @import("prelude.zig");
 const tests_index = @import("tests_index.zig");
 const SyntaxCache = @import("syntax_cache.zig").Cache;
@@ -44,7 +45,18 @@ pub const ContractDeclaration = struct {
 /// One module's exported declared-contract table.
 pub const ContractModule = struct { name: []const u8, declarations: []const ContractDeclaration };
 /// Versioned declaration-level contract manifest; bodies are not checked.
-pub const ContractManifest = struct { version: []const u8 = "interface-contracts-v2", modules: []const ContractModule };
+///
+/// `analysis` is the status of the run that produced it: `declaration-only` when
+/// no checked program was attached, so every `permissions` value is the declared
+/// bound a replacement may narrow and never an inferred summary; null (omitted
+/// from the JSON) when a checked program supplied the inferred effects. The
+/// field is omitted rather than `null` in the checked case, which keeps every
+/// checked manifest byte-identical to the one this compiler published before.
+pub const ContractManifest = struct {
+    version: []const u8 = "interface-contracts-v2",
+    analysis: ?[]const u8 = null,
+    modules: []const ContractModule,
+};
 /// Allocation, rejected declarations and an incomplete project all prevent a manifest.
 pub const ContractError = diagnostic.Error || error{IncompleteProject};
 /// Distinguish type declarations from callable declarations during name resolution.
@@ -525,8 +537,9 @@ pub const Index = struct {
     }
     /// Render exported declarations after interface checking; output belongs to
     /// allocator. Callable lines carry their whole signature, the inferred
-    /// `effects(...)` set, `mutates(...)` parameter names, and the declared
-    /// ceiling when the source wrote one.
+    /// `effects(...)` set when a checked instantiation produced one (the literal
+    /// `unavailable` plus an `analysis(STATUS)` clause otherwise), `mutates(...)`
+    /// parameter names, and the declared ceiling when the source wrote one.
     pub fn render(self: *Index, allocator: std.mem.Allocator) ContractError![]u8 {
         if (self.project.problem != null) return error.IncompleteProject;
         var output: std.Io.Writer.Allocating = .init(allocator);
@@ -554,21 +567,35 @@ pub const Index = struct {
         return output.toOwnedSlice();
     }
     /// Render one exported function as `export function NAME def(...) effects(...)
-    /// [mutates(names)] [ceiling(...)] [tests(N)] [# first docstring line]`. The
-    /// ceiling is the already-inferred mask when a checked program is attached,
-    /// or the unbounded mask otherwise, which is what an omitted declaration
-    /// promises. `tests` carries the shared reachability index, or null when no
-    /// checked program is attached.
+    /// [analysis(STATUS)] [mutates(names)] [ceiling(...)] [tests(N)]
+    /// [# first docstring line]`.
+    ///
+    /// `effects(...)` is the checked inferred set when a checked instantiation
+    /// exists and the literal `unavailable` otherwise, and `analysis(STATUS)`
+    /// appears exactly in that second case, so the conservative internal mask is
+    /// never published as an inferred fact. The status is `template` for a
+    /// generic declaration no checked instantiation used and `declaration-only`
+    /// when this listing has no checked bodies at all. A declared ceiling is the
+    /// source's own and stays visible either way, including an explicitly empty
+    /// `ceiling()`. `tests` carries the shared reachability index, or null when
+    /// no checked program is attached, in which case the column says
+    /// `tests(unavailable)` rather than silently disappearing.
     fn renderFunctionLine(self: *Index, writer: *std.Io.Writer, module: usize, symbol: Symbol, tests: ?*const tests_index.Index) ContractError!void {
         const allocator = self.project.arena.allocator();
         const origin = self.declarationSource(module, symbol);
         const function = self.findFunction(self.units[origin.module], origin.symbol.span) orelse return error.InternalError;
         const signature = try self.contractSignatureText(origin.module, function.signature);
+        const inferred = self.publishedEffects(origin.module, origin.symbol);
         writer.print("  export function {s} {s} effects(", .{ origin.display, signature }) catch return error.OutOfMemory;
-        var inferred: std.ArrayList(u8) = .empty;
-        try appendEffectNames(&inferred, allocator, self.publishedEffects(origin.module, origin.symbol));
-        writer.writeAll(inferred.items) catch return error.OutOfMemory;
+        if (inferred) |mask| {
+            var names: std.ArrayList(u8) = .empty;
+            try appendEffectNames(&names, allocator, mask);
+            writer.writeAll(names.items) catch return error.OutOfMemory;
+        } else {
+            writer.writeAll("unavailable") catch return error.OutOfMemory;
+        }
         writer.writeAll(")") catch return error.OutOfMemory;
+        if (inferred == null) writer.print(" analysis({s})", .{fact_status.name(unavailableAnalysis(self.program, function))}) catch return error.OutOfMemory;
         const mutates = try self.mutatesNamesText(origin.module, function.signature);
         if (mutates.len != 0) writer.print(" mutates({s})", .{mutates}) catch return error.OutOfMemory;
         if (function.policy.effect_bound) |bound| {
@@ -583,6 +610,8 @@ pub const Index = struct {
                 const answer = index.answer(id);
                 writer.print(" tests({d})", .{answer.reached.len}) catch return error.OutOfMemory;
             }
+        } else {
+            writer.writeAll(" tests(unavailable)") catch return error.OutOfMemory;
         }
         try self.appendDocstringLine(writer, origin.module, origin.symbol);
         writer.writeAll("\n") catch return error.OutOfMemory;
@@ -662,7 +691,11 @@ pub const Index = struct {
     /// that already have the defaulting test shape, as a canonical
     /// declared-contract manifest. Bodies are never checked; declared signatures
     /// and explicit public ceilings are, so a provider can be validated before
-    /// production bodies run.
+    /// production bodies run. The manifest's `analysis` field says
+    /// `declaration-only` when no checked program supplied inferred effects, so a
+    /// reader can tell a declared bound (an omitted ceiling promises the full
+    /// mask) from an inferred summary; the per-declaration `permissions` string
+    /// stays the directional replacement bound its frozen consumer compares.
     pub fn renderContracts(self: *Index, allocator: std.mem.Allocator) ContractError![]u8 {
         if (self.project.problem != null) return error.IncompleteProject;
         // Intermediate tables live in the project arena; only the final JSON text
@@ -693,7 +726,10 @@ pub const Index = struct {
             });
         }
         std.mem.sort(ContractModule, modules.items, {}, moduleLess);
-        return std.json.Stringify.valueAlloc(allocator, ContractManifest{ .modules = try modules.toOwnedSlice(scratch) }, .{ .emit_null_optional_fields = false });
+        return std.json.Stringify.valueAlloc(allocator, ContractManifest{
+            .analysis = if (self.program == null) fact_status.name(.declaration_only) else null,
+            .modules = try modules.toOwnedSlice(scratch),
+        }, .{ .emit_null_optional_fields = false });
     }
     /// Whether one symbol's declaration carries `@test`.
     fn isTestDeclaration(self: *Index, module: usize, symbol: Symbol) bool {
@@ -728,10 +764,18 @@ pub const Index = struct {
         const function = self.findFunction(self.units[module], symbol.span) orelse return error.InternalError;
         // An explicit `noalloc`/`noio`/`effects(...)` is an opt-in narrowing and
         // is published exactly as declared. Without one, publish the ceiling the
-        // checker already inferred for the body instead of refusing to build the
-        // contract; pure interface pre-validation falls back to the unbounded
-        // `all` mask, which is what an omitted ceiling promises.
-        const mask = if (function.policy.effect_bound) |bound| bound.allowed else self.publishedEffects(module, symbol);
+        // checker already inferred for the body; pure interface pre-validation
+        // falls back to the unbounded `all` mask, which is what an omitted
+        // ceiling promises.
+        //
+        // F1 keeps that fallback here rather than publishing an unknown token:
+        // the manifest is the directional declared bound a provider replaces
+        // (`interface-contracts-v2`, consumed by `native_test_contracts.zig`'s
+        // subset relation), and unannotated functions carry `origin=unknown` for
+        // the return origin they never checked. The interface listing and
+        // `index-project`, which do publish inferred summaries, report the
+        // unavailable case explicitly instead.
+        const mask = if (function.policy.effect_bound) |bound| bound.allowed else self.publishedEffects(module, symbol) orelse effect_set.all;
         var out: ContractDeclaration = .{ .name = symbol.name, .kind = "function" };
         out.generics = try self.contractGenericsText(module, function.signature.type_parameters);
         out.signature = try self.contractSignatureText(module, function.signature);
@@ -743,22 +787,26 @@ pub const Index = struct {
     /// `noalloc`/`noio`/`effects(...)` wins as an opt-in narrowing; otherwise the
     /// typed program's frozen inferred mask is used, matched by the
     /// module-qualified name so ordinary, domain and generic specialization
-    /// entries all match. With no checked program attached (pure interface
-    /// pre-validation) or no instantiation to read, the published contract is
-    /// the unbounded `all` mask, which is what an omitted ceiling promises.
-    fn publishedEffects(self: *Index, module: usize, symbol: Symbol) effect_set.Mask {
-        const program = self.program orelse return effect_set.all;
+    /// entries all match. Null when the necessary checking did not produce a
+    /// concrete instantiation — no checked program was attached, or this generic
+    /// declaration was never instantiated — because the checker's conservative
+    /// `all` mask is a bound, not an inferred fact, and no caller may publish it
+    /// as one. `renderFunctionLine` reports the null as `effects(unavailable)`
+    /// plus the analysis status; `contractFunction` keeps the declared-bound
+    /// meaning of the contract manifest.
+    fn publishedEffects(self: *Index, module: usize, symbol: Symbol) ?effect_set.Mask {
+        const program = self.program orelse return null;
         const prefix = std.fmt.allocPrint(
             self.project.arena.allocator(),
             qualified_name_format,
             .{ self.project.modules.items[module].name, symbol.name },
-        ) catch return effect_set.all;
+        ) catch return null;
         for (program.functions) |function| {
             if (!std.mem.startsWith(u8, function.name, prefix)) continue;
             if (function.name.len != prefix.len and function.name[prefix.len] != '[') continue;
             return function.policy.effects;
         }
-        return effect_set.all;
+        return null;
     }
     fn contractSignatureText(self: *Index, module: usize, signature: ast.FunctionSignature) ContractError![]const u8 {
         const allocator = self.project.arena.allocator();
@@ -1142,6 +1190,16 @@ fn appendEffectNames(out: *std.ArrayList(u8), allocator: std.mem.Allocator, mask
             separator = true;
         }
     }
+}
+/// The status of an inferred summary this listing could not produce: `template`
+/// when a checked program exists but never instantiated this generic
+/// declaration, and `declaration-only` when the listing has no checked bodies at
+/// all. A non-generic declaration missing from a checked program also reports
+/// `declaration-only`, because no inferred summary is available for it either.
+fn unavailableAnalysis(program: ?typed.Program, function: ast.Function) fact_status.Status {
+    if (program == null) return .declaration_only;
+    if (function.signature.type_parameters.len != 0) return .template;
+    return .declaration_only;
 }
 fn boundSpan(reference: ast.BoundReference) source.Span {
     return if (reference.alias) |alias| source.Span.join(alias, reference.name) else reference.name;

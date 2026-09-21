@@ -37,5 +37,14 @@ public def test_a_comprehension_accepts_range_as_a_source_in_one_and_two_argumen
     return total(squares) + total(span) + total(kept) + len(empty) == 60
 
 
+# spec-case: PY-COMPREHENSION-3
+public def test_range_comprehension_capacity_math_preserves_signed_and_unsigned_results() -> bool:
+    crossed = [i for i in range(-3i8, 4i8)]
+    unsigned = [i for i in range(2u8, 6u8)]
+    reversed = [i for i in range(6u8, 2u8)]
+    materialized = list(range(-2i16, 3i16))
+    return len(crossed) + len(unsigned) * 2 + len(reversed) + len(materialized) * 5 == 40
+
+
 def main() -> int:
     return 0

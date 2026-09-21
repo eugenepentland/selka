@@ -32,6 +32,13 @@ const Modules = struct {
             \\    return Some(1)
             \\public def items() -> list[int] effects(managed_allocation):
             \\    return [1, 2]
+            \\public def live_values[T: copy + storable](mapping: dict[str, T]) -> DictValues[str, T] noalloc:
+            \\    return mapping.values()
+            \\public def item_total(entries: DictItems[str, list[int]]) -> int noalloc:
+            \\    total = 0
+            \\    for key, value in entries:
+            \\        total += len(key) + value[0]
+            \\    return total
         );
         if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
         return allocator.dupe(u8,
@@ -50,6 +57,20 @@ const Modules = struct {
             \\    numbers: list[i64] = values.items()
             \\    if len(numbers) != 2:
             \\        return 3
+            \\    mapping = {"a": [10], "bb": [20]}
+            \\    live = values.live_values(mapping)
+            \\    snapshot = list(live)
+            \\    items = mapping.items()
+            \\    alias = mapping
+            \\    alias["a"] = [1]
+            \\    for index in range(200):
+            \\        garbage = [index, index + 1]
+            \\        if len(garbage) != 2:
+            \\            return 4
+            \\    if snapshot[0][0] != 10 or list(live)[0][0] != 1:
+            \\        return 5
+            \\    if values.item_total(items) != 24:
+            \\        return 6
             \\    match values.answer():
             \\        case Result.ok(n):
             \\            return n
@@ -59,14 +80,15 @@ const Modules = struct {
     }
 };
 // spec: PYTHON-CORE-1
-test "prelude list Result and Option keep one identity across modules and spellings" {
+// spec-case: DICT-VIEWS-1
+test "prelude containers results options and dictionary views keep one identity across modules" {
     var project = language.project.Project.init(t.allocator);
     defer project.deinit();
     try project.load(.{ .context = null, .read = Modules.read }, "main", .{});
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
     try compilation.emit();
-    try t.expectEqual(@as(i64, 42), (try native.run(&compilation)).value);
+    try t.expectEqual(@as(i64, 42), (try native.runWithOptions(&compilation, .{ .gc_stress = true })).value);
 }
 // spec: PYTHON-CORE-2
 test "unit and checked-result main adapt to scalar status without changing guest call signatures" {
@@ -330,5 +352,5 @@ test "DIAG-ORACLE-1 unknown list methods name the accepted spellings" {
         \\    items = [1, 2]
         \\    items.appnd(3)
         \\    return 0
-    , "E_LIST_METHOD", "unknown managed collection method; methods: append, clear, copy, extend, index, insert, pop, remove, reverse, sort");
+    , "E_LIST_METHOD", "unknown method for a list[int] receiver; accepted methods: append, clear, copy, extend, index, insert, pop, remove, reverse, sort");
 }

@@ -329,7 +329,8 @@ static void byte_scalar_count_test(void) {
     for (size_t i=0;i<sizeof cases/sizeof cases[0];++i) {
         size_t length = strlen(cases[i].bytes);
         int status = MYL_BYTES_OK;
-        int64_t scalars = myl_native_bytes_scalar_count_range((const unsigned char *)cases[i].bytes, length, &status);
+        myl_native_bytes view = {.length=length,.capacity=length,.element=&test_byte_type,.storage=(void *)cases[i].bytes};
+        int64_t scalars = myl_native_bytes_scalar_count_range(&view,0,(int64_t)length,&status);
         int valid = myl_native_text_valid_utf8((const unsigned char *)cases[i].bytes, length) != 0;
         assert(valid == (cases[i].scalars >= 0));
         if (cases[i].scalars >= 0) assert(status == MYL_BYTES_OK && scalars == cases[i].scalars);

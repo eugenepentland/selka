@@ -52,3 +52,8 @@ int myl_qbe_bytes_scalar_count(void *context, myl_native_bytes *input, void **ou
     int64_t count = myl_native_bytes_scalar_count(input, &status);
     return settle(context, (void *)(intptr_t)count, status, 0, output);
 }
+int myl_qbe_bytes_scalar_count_range(void *context, myl_native_bytes *input, int64_t start, int64_t end, void **output) {
+    int status = MYL_BYTES_OK;
+    int64_t count = myl_native_bytes_scalar_count_range(input, start, end, &status);
+    return settle(context, (void *)(intptr_t)count, status, 0, output);
+}

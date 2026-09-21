@@ -173,18 +173,18 @@ def is_operator_char(byte: int) -> bool:
 
 # `si_scales` rows with `bare = true`: k M G u n p.
 def is_scale_letter(byte: int) -> bool:
-    return byte == 107 or byte == 77 or byte == 71 or byte == 117 or byte == 110 or byte == 112
+    return byte == ord("k") or byte == ord("M") or byte == ord("G") or byte == ord("u") or byte == ord("n") or byte == ord("p")
 
 
 # `si_scales` rows with `bare = false`: today just `m`, a scale only when a
 # unit letter follows (`10mA`) so bare `3m`/`mm`/`mil` keep their meanings.
 def is_unit_required_scale(byte: int) -> bool:
-    return byte == 109
+    return byte == ord("m")
 
 
 # `si_unit_letters` = "VAFHR": accepted after a scale or alone, no scale.
 def is_unit_letter(byte: int) -> bool:
-    return byte == 86 or byte == 65 or byte == 70 or byte == 72 or byte == 82
+    return byte == ord("V") or byte == ord("A") or byte == ord("F") or byte == ord("H") or byte == ord("R")
 
 
 def lexeme(src: bytes, start: int, end: int) -> str:

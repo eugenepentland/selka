@@ -1,72 +1,73 @@
 module draw
 import text
+import io
 
 
-public def rect(host: Host, x: int, y: int, w: int, h: int) effects(host, managed_allocation):
-    text.write(host, b"<rect class=\"chip\" x=\"")
-    text.decimal(host, x)
-    text.write(host, b"\" y=\"")
-    text.decimal(host, y)
-    text.write(host, b"\" width=\"")
-    text.decimal(host, w)
-    text.write(host, b"\" height=\"")
-    text.decimal(host, h)
-    text.write(host, b"\" rx=\"6\"/>")
+public def rect(out: io.Output, x: int, y: int, w: int, h: int) effects(managed_allocation, mutation) mutates(out):
+    text.write(out, b"<rect class=\"chip\" x=\"")
+    text.decimal(out, x)
+    text.write(out, b"\" y=\"")
+    text.decimal(out, y)
+    text.write(out, b"\" width=\"")
+    text.decimal(out, w)
+    text.write(out, b"\" height=\"")
+    text.decimal(out, h)
+    text.write(out, b"\" rx=\"6\"/>")
     return
 
 
-public def line(host: Host, x1: int, y1: int, x2: int, y2: int) effects(host, managed_allocation):
-    text.write(host, b"<line x1=\"")
-    text.decimal(host, x1)
-    text.write(host, b"\" y1=\"")
-    text.decimal(host, y1)
-    text.write(host, b"\" x2=\"")
-    text.decimal(host, x2)
-    text.write(host, b"\" y2=\"")
-    text.decimal(host, y2)
-    text.write(host, b"\"/>")
+public def line(out: io.Output, x1: int, y1: int, x2: int, y2: int) effects(managed_allocation, mutation) mutates(out):
+    text.write(out, b"<line x1=\"")
+    text.decimal(out, x1)
+    text.write(out, b"\" y1=\"")
+    text.decimal(out, y1)
+    text.write(out, b"\" x2=\"")
+    text.decimal(out, x2)
+    text.write(out, b"\" y2=\"")
+    text.decimal(out, y2)
+    text.write(out, b"\"/>")
     return
 
 
-public def labelStart(host: Host, x: int, y: int, anchor: int) effects(host, managed_allocation):
-    text.write(host, b"<text x=\"")
-    text.decimal(host, x)
-    text.write(host, b"\" y=\"")
-    text.decimal(host, y)
-    text.write(host, b"\" text-anchor=\"")
+public def labelStart(out: io.Output, x: int, y: int, anchor: int) effects(managed_allocation, mutation) mutates(out):
+    text.write(out, b"<text x=\"")
+    text.decimal(out, x)
+    text.write(out, b"\" y=\"")
+    text.decimal(out, y)
+    text.write(out, b"\" text-anchor=\"")
     if anchor == 0:
-        text.write(host, b"start")
+        text.write(out, b"start")
     elif anchor == 1:
-        text.write(host, b"middle")
+        text.write(out, b"middle")
     else:
-        text.write(host, b"end")
-    text.write(host, b"\">")
+        text.write(out, b"end")
+    text.write(out, b"\">")
     return
 
 
-public def labelEnd(host: Host) effects(host, managed_allocation):
-    text.write(host, b"</text>")
+public def labelEnd(out: io.Output) effects(managed_allocation, mutation) mutates(out):
+    text.write(out, b"</text>")
     return
 
 
-public def label(host: Host, x: int, y: int, anchor: int, value: text.Span) effects(host, managed_allocation):
-    labelStart(host, x, y, anchor)
-    text.escaped(host, value)
-    return labelEnd(host)
+public def label(out: io.Output, x: int, y: int, anchor: int, value: text.Span) effects(managed_allocation, mutation) mutates(out):
+    labelStart(out, x, y, anchor)
+    text.escaped(out, value)
+    return labelEnd(out)
 
 
-public def symbol(host: Host, kind: int) effects(host, managed_allocation):
-    text.write(host, b"<g class=\"symbol\">")
-    line(host, - 20, 0, - 12, 0)
-    line(host, 12, 0, 20, 0)
+public def symbol(out: io.Output, kind: int) effects(managed_allocation, mutation) mutates(out):
+    text.write(out, b"<g class=\"symbol\">")
+    line(out, - 20, 0, - 12, 0)
+    line(out, 12, 0, 20, 0)
     if kind == 1:
-        line(host, - 3, - 6, - 3, 6)
-        line(host, 3, - 6, 3, 6)
-        line(host, - 12, 0, - 3, 0)
-        line(host, 3, 0, 12, 0)
+        line(out, - 3, - 6, - 3, 6)
+        line(out, 3, - 6, 3, 6)
+        line(out, - 12, 0, - 3, 0)
+        line(out, 3, 0, 12, 0)
     elif kind == 2:
-        text.write(host, b"<rect x=\"-12\" y=\"-5\" width=\"24\" height=\"10\"/>")
+        text.write(out, b"<rect x=\"-12\" y=\"-5\" width=\"24\" height=\"10\"/>")
     else:
-        text.write(host, b"<path d=\"M -12 0 c 0,-7 6,-7 6,0 c 0,-7 6,-7 6,0 c 0,-7 6,-7 6,0 c 0,-7 6,-7 6,0\"/>")
-    text.write(host, b"</g>")
+        text.write(out, b"<path d=\"M -12 0 c 0,-7 6,-7 6,0 c 0,-7 6,-7 6,0 c 0,-7 6,-7 6,0 c 0,-7 6,-7 6,0\"/>")
+    text.write(out, b"</g>")
     return

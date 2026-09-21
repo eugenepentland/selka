@@ -41,6 +41,17 @@ correctness rules report, style rules stay silent, and nothing refuses until
 `--gate`. `strict` blocks everything blockable; `safety` additionally demotes
 size budgets so a large legacy project can adopt the gate without a wall.
 
+The profile selects the fact a rule reports, not only its severity.
+`untested-export` is the one rule with two facts: under `agent` an export any
+discovered test reaches, directly or transitively, is tested, so a helper an
+end-to-end test exercises through another function is not reported at all;
+under `strict` (and `safety`) the rule keeps the narrower direct-call fact and
+reports such an export as "reached only transitively", while an export no test
+reaches at all is reported as not called directly. A project that wants the
+direct-call question answered without refusing can select `"profile": "strict"`
+and list `untested-export` under `report`: the lists below override the
+profile's severity, while the profile still chooses which fact the rule reports.
+
 ```json
 {
   "version": 2,
@@ -79,7 +90,7 @@ default, `report`, leaves the inner loop untouched.
 
 | Rule | Code | Default (`agent`) | What it finds |
 | --- | --- | --- | --- |
-| `untested-export` | `L_UNTESTED_EXPORT` | report; block under `strict` | An exported function or public domain method that no discovered test calls directly. |
+| `untested-export` | `L_UNTESTED_EXPORT` | report; block under `strict` | An exported function or public domain method that no discovered test reaches, directly or transitively, under `agent`; under `strict` and `safety` one that no test calls directly, where an export only reached transitively is reported with that wording instead. |
 | `dead-private` | `L_DEAD_PRIVATE` | block | A private function with no call site anywhere in the project. |
 | `undocumented-export` | `L_UNDOCUMENTED_EXPORT` | report; block under `strict` | An exported function, record, union or domain with no docstring, one under `lint.min_chars` non-whitespace characters, or one that merely restates the name. |
 | `change-without-test` | `L_CHANGE_WITHOUT_TEST` | block, but only under `--gate --against REF` | A declaration that changed since `REF` and whose callers are not tests that changed in the same diff. Judged against a diff, never the standing tree, and never suppressed by a baseline. |
@@ -109,8 +120,10 @@ default `*_integration` / `integration.*` globs keep a project's own integration
 suite quiet.
 
 A finding that names a declaration also carries the discovered tests that reach
-it as a related note, from the same index `mylang tests-for` answers from, so
-the report says which test to extend without a second command.
+it as a related note, from the same index `mylang tests-for` answers from and
+the same one the `untested-export` verdict reads, so the report says which test
+to extend without a second command and cannot claim a declaration is unreached
+where `tests-for` names a test.
 
 
 ## Waivers
