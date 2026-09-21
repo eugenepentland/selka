@@ -181,37 +181,58 @@ cap how much a guest may hold; the collector enforces the cap. Measured on twent
 set fits. At `MYLANG_MEMORY_LIMIT=4M`, below the live set, the same program traps
 `R_MEMORY_BUDGET` rather than merely slowing down.
 
-## Fixed arrays are wire data, not buffers
+## Fixed arrays are values you can write in place
 
-`[N]T` is a value type, and the native backend copies it at every boundary and at
-every element read. The copies are visible in the emitted QBE of a function that
-scans a `[4096]int` parameter, where 32768 is the array's size in bytes: four
-`blit`s of the whole array appear, one at entry and three around the indexed read.
+`[N]T` is a value type, but an element access no longer pays for the value: a read
+is one bounds check and one load, and `x = replace(x, i, v)` — the result landing
+back in the array it read — is one bounds check and one store into `x`'s own
+storage. Neither emits a copy of the whole array, which the emitted QBE shows: a
+function that scans a `[4096]int` parameter and a function that stages a
+`[4096]int` one element at a time both carry no `blit` at all.
 
 ```bash
 mylang emit-qbe scan4096.my | grep -o 'blit [^\\]*' | wc -l
-4
-mylang emit-qbe scan4096.my | grep -o 'blit [^\\]*' | grep -c 32768
-4
+0
+mylang emit-qbe stage4096.my | grep -o 'blit [^\\]*' | wc -l
+0
 ```
 
-The consequence is that indexing an `[N]T` is **O(N) per access**, not O(1): the
-table below grows the array while holding the element access and the call count
-fixed, and then compares the same complete scan over an array and over a list. All
-rows are prebuilt `--mode ReleaseFast` binaries.
+Until 2026-09-21 the write did copy: `replace` blitted the array into scratch,
+wrote one element and the store copied it back, so an element write was **O(N)**
+and staging a `[256]u8` one byte at a time cost 512 bytes of copying per byte
+(`QBE-ARRAYWRITE-1`). The table is the same program before and after that change:
+409,600 element writes into a `[4096]int` local, against the same writes into a
+`list[int]` of the same length. Prebuilt `--mode ReleaseFast` binaries, `taskset`
+to one CPU, 15 interleaved rounds, medians, machine load average 5–10.
+
+| 409,600 element writes | before | after |
+| --- | ---: | ---: |
+| `[4096]int`, QBE | 2349.7 ms | **7.3 ms** |
+| `[4096]int`, LLVM O3 + LTO | 1423.3 ms | **7.2 ms** |
+| `list[int]`, QBE | 11.0 ms | 11.0 ms |
+| `list[int]`, LLVM O3 + LTO | 8.6 ms | 8.6 ms |
+
+Reads were already O(1) and did not move: 4,096,000 reads out of a `[4096]int`
+local take 30.0 ms on QBE and 17.8 ms on LLVM, against 25.6 ms and 13.0 ms for the
+same reads out of a `list[int]`. So a fixed array is now a usable buffer — it beats
+the managed list on writes, because it has no header and no growth check.
+
+What is still expensive is **passing** a large `[N]T` to a function called in a
+loop. The argument itself crosses by address, but the callee's frame still reserves
+the parameter's full size plus per-pc aggregate scratch for every instruction that
+might need one, and a frame over 32 KiB is heap-allocated on every call:
 
 | Work | Time |
-| --- | --- |
-| 100,000 calls of `peek(values: [8]int)` returning `values[0]` | 9 ms |
-| 100,000 calls of the same function over `[1024]int` | 0.26 s |
-| 100,000 calls of the same function over `[4096]int` | 1.15 s |
-| 1,000 calls scanning every element of a `[4096]int` parameter | 6.00 s |
-| 1,000 calls scanning every element of a `list[int]` of the same length | 0.23 s |
+| --- | ---: |
+| 100,000 calls of `peek(values: [8]int)` returning `values[0]` | 4.4 ms (the empty-program floor is 3.7 ms) |
+| 100,000 calls of the same function over `[1024]int` | 0.44 s |
+| 100,000 calls of the same function over `[4096]int` | 1.42 s |
+| 1,000 calls scanning every element of a `[4096]int` parameter | 41 ms (QBE), 34 ms (LLVM) |
+| 1,000 calls scanning every element of a `list[int]` of the same length | 16 ms (QBE), 9.0 ms (LLVM) |
 
-The first three rows hold the work constant and grow only the array, so the cost is
-the copy, not the call. The last two rows are the same scan over the same data, and
-the managed list is **26× faster** because a list carries a pointer instead of a
-snapshot.
+The last two rows are the same scan over the same data; what is left of the gap is
+that per-call frame, not the element reads. Every row above comes from these
+programs:
 
 ```bash
 python3 - <<'PY'
@@ -233,25 +254,47 @@ def managed(n, calls):
         f"    total = 0\n    call = 0\n    while call < {calls}:\n"
         "        total += kernel(data)\n        call += 1\n    return total\n")
 
+def stage(n, rounds, array):
+    head = (f"def main() -> int:\n    data: [{n}]int = [{', '.join(['1'] * n)}]\n" if array else
+            f"def main() -> int:\n    data: list[int] = []\n    fill = 0\n"
+            f"    while fill < {n}:\n        data.append(1)\n        fill += 1\n")
+    write = "data = replace(data, index, index + round)" if array else "data[index] = index + round"
+    return head + (f"    total = 0\n    round = 0\n    while round < {rounds}:\n        index = 0\n"
+                   f"        while index < {n}:\n            {write}\n            index += 1\n"
+                   f"        total = (total + data[{n - 1}]) % 1000003\n        round += 1\n    return total\n")
+
+def read(n, rounds, array):
+    head = (f"def main() -> int:\n    data: [{n}]int = [{', '.join(['1'] * n)}]\n" if array else
+            f"def main() -> int:\n    data: list[int] = []\n    fill = 0\n"
+            f"    while fill < {n}:\n        data.append(1)\n        fill += 1\n")
+    return head + (f"    total = 0\n    round = 0\n    while round < {rounds}:\n        index = 0\n"
+                   f"        while index < {n}:\n            total += data[index]\n            index += 1\n"
+                   "        round += 1\n    return total\n")
+
 for n in (8, 1024, 4096):
     open(f"peek{n}.my", "w").write(fixed(n, False, 100000))
 open("scan4096.my", "w").write(fixed(4096, True, 1000))
 open("scanlist4096.my", "w").write(managed(4096, 1000))
+open("stage4096.my", "w").write(stage(4096, 100, True))
+open("stagelist4096.my", "w").write(stage(4096, 100, False))
+open("read4096.my", "w").write(read(4096, 1000, True))
+open("readlist4096.my", "w").write(read(4096, 1000, False))
 PY
-for name in peek8 peek1024 peek4096 scan4096 scanlist4096; do
-  mylang build $name.my -o $name && run5 ./$name
+for name in peek8 peek1024 peek4096 scan4096 scanlist4096 stage4096 stagelist4096 read4096 readlist4096; do
+  mylang build $name.my -o $name --mode ReleaseFast && run5 ./$name
 done
 ```
 
-`scan4096` and `scanlist4096` run the identical kernel body over the identical
-4,096 values and both answer `4096000`; only the storage differs.
+`stage4096` and `stagelist4096` perform the identical 409,600 element writes over
+the identical 4,096 values and both answer `414450`; `read4096` and `readlist4096`
+both answer `4096000`. Only the storage differs.
 
-So: keep `[N]T` for wire-shaped data — records, tables, `bytes`, values whose length
-is part of their type and that cross a function boundary rarely. Use `list[T]` for
-anything a hot loop reads, because the managed list *is* the mutable buffer in this
-language, and a managed `list` read is a pointer load with a bounds check. Passing a
-large `[N]T` to a function that is called in a loop is the single most expensive
-habit available here; a `bytes` value is the immutable byte-shaped alternative.
+So: reach for `[N]T` whenever the length is part of the type — wire records,
+tables, staging buffers a host call takes — and write its elements freely. Reach
+for `list[T]` when the length is not known up front or the value is passed by name
+into functions a hot loop calls, because a `list` argument is a pointer and an
+`[N]T` argument still drags a frame the size of the array behind it. A `bytes`
+value remains the immutable byte-shaped alternative.
 
 ## Call C when you need a library
 
