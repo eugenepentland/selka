@@ -1,0 +1,57 @@
+module composed
+
+# Lists composed with records, `Option` and `Result`, which is what a useful tool
+# actually returns: a record that holds a text and a list, a list whose elements
+# are records, and an optional element. Every export here is callable through
+# `mylang invoke` with no handwritten JSON plumbing.
+#
+# None of these functions calls another: `mylang invoke` currently cannot build an
+# export whose body calls one, because the native selection follows indirect
+# calls and codecs but not direct callees, so the callee is never lowered. That
+# is a separate defect from the shapes here and is recorded rather than worked
+# around silently.
+
+
+public record Bucket:
+    label: str
+    values: list[i64]
+
+
+public result Lookup:
+    ok: Bucket,
+    err: str
+
+
+public def bucket_total(bucket: Bucket) -> i64 effects():
+    total = 0
+    for value in bucket.values:
+        total += value
+    return total
+
+
+public def bucket_labels(buckets: list[Bucket]) -> list[str] effects(managed_allocation):
+    return [bucket.label for bucket in buckets]
+
+
+public def make_buckets(count: i64) -> list[Bucket] effects(managed_allocation):
+    buckets: list[Bucket] = []
+    for index in range(count):
+        buckets.append(Bucket(label="b", values=[index, index + 1]))
+    return buckets
+
+
+public def totals(buckets: list[Bucket]) -> list[i64] effects(managed_allocation):
+    return [sum(bucket.values) for bucket in buckets]
+
+
+public def first_or_none(values: list[i64]) -> Option[i64] effects():
+    for value in values:
+        return Some(value)
+    return None
+
+
+public def find(buckets: list[Bucket], label: str) -> Lookup effects(managed_allocation):
+    for bucket in buckets:
+        if bucket.label == label:
+            return Ok(bucket)
+    return Err("no bucket named " + label)

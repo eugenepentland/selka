@@ -28,6 +28,10 @@ test {
     _ = @import("qbe_build_options.zig");
     _ = @import("qbe_build_outputs.zig");
     _ = @import("qbe_build_io.zig");
+    // The manifest's own tables were described here but never reached this root,
+    // so the QBE-TEXT/QBE-LIST checks that pin them existed without running.
+    _ = @import("qbe_wire.zig");
+    _ = @import("qbe_codecs.zig");
 
     _ = @import("cli_grants.zig");
 

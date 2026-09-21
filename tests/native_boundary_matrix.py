@@ -52,6 +52,36 @@ INVOKE_CASES = (
     ("tests/invoke/tool.my", "tool::grow", "tests/invoke/requests/grow.json", None),
     ("tests/invoke/tool.my", "tool::ratio", "tests/invoke/requests/ratio.json", None),
     ("tests/invoke/tool.my", "tool::ratio", "tests/invoke/requests/ratio-error.json", None),
+    # Lists composed with records, `Option` and `Result`: the shapes a tool
+    # actually returns once text and lists cross.
+    ("tests/invoke/composed.my", "composed::bucket_total", "tests/invoke/requests/bucket-one.json", "3"),
+    ("tests/invoke/composed.my", "composed::bucket_labels", "tests/invoke/requests/buckets-two.json", ["x", "y"]),
+    ("tests/invoke/composed.my", "composed::totals", "tests/invoke/requests/buckets-two.json", ["1", "5"]),
+    (
+        "tests/invoke/composed.my",
+        "composed::make_buckets",
+        "tests/invoke/requests/list-count.json",
+        [
+            {"label": "b", "values": ["0", "1"]},
+            {"label": "b", "values": ["1", "2"]},
+            {"label": "b", "values": ["2", "3"]},
+            {"label": "b", "values": ["3", "4"]},
+        ],
+    ),
+    ("tests/invoke/composed.my", "composed::first_or_none", "tests/invoke/requests/option-some.json", {"case": "some", "value": "7"}),
+    ("tests/invoke/composed.my", "composed::first_or_none", "tests/invoke/requests/option-none.json", {"case": "none"}),
+    (
+        "tests/invoke/composed.my",
+        "composed::find",
+        "tests/invoke/requests/lookup-hit.json",
+        {"case": "ok", "value": {"label": "x", "values": ["1"]}},
+    ),
+    (
+        "tests/invoke/composed.my",
+        "composed::find",
+        "tests/invoke/requests/lookup-miss.json",
+        {"case": "err", "value": "no bucket named z"},
+    ),
     # The two worked examples, whose contracts a caller is meant to discover
     # through `--describe` rather than by reading the wire form.
     (
@@ -109,6 +139,11 @@ DESCRIBE_CASES = (
     ("examples/invoke/text_report.my", "text_report::join"),
     ("examples/invoke/text_report.my", "text_report::widths"),
     ("examples/invoke/text_report.my", "text_report::bracket_all"),
+    ("tests/invoke/composed.my", "composed::bucket_total"),
+    ("tests/invoke/composed.my", "composed::bucket_labels"),
+    ("tests/invoke/composed.my", "composed::totals"),
+    ("tests/invoke/composed.my", "composed::first_or_none"),
+    ("tests/invoke/composed.my", "composed::find"),
 )
 
 # Guest `.my` cases driven through `mylang test --cases`, whose codec is the same

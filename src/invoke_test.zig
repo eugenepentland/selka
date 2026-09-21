@@ -627,3 +627,41 @@ test "a type that names itself through a list is refused rather than walked fore
     // place in the type rather than at the signature as a whole.
     try testing.expect(std.mem.startsWith(u8, verdict.refusal.?.path, "result"));
 }
+
+// Drives the composed boundary tagged QBE-LIST-2 end to end through the CLI.
+test "a record holding a text or a list composes with Option and Result" {
+    const a = testing.allocator;
+    const resolved = try tools(a);
+    defer a.free(resolved.compiler);
+    defer a.free(resolved.root);
+    defer a.free(resolved.zig);
+    defer a.free(resolved.qbe);
+    const entry = "composed.my";
+    // A record whose fields are a text and a list crosses with both.
+    const total = try invocation(a, resolved, entry, "composed::bucket_total", "bucket-one");
+    defer a.free(total);
+    try testing.expect(std.mem.indexOf(u8, total, "\"status\":\"completed\"") != null);
+    try testing.expect(std.mem.indexOf(u8, total, "\"value\":\"3\"") != null);
+    // A list of those records, read back as labels and as totals.
+    const labels = try invocation(a, resolved, entry, "composed::bucket_labels", "buckets-two");
+    defer a.free(labels);
+    try testing.expect(std.mem.indexOf(u8, labels, "\"value\":[\"x\",\"y\"]") != null);
+    const totals = try invocation(a, resolved, entry, "composed::totals", "buckets-two");
+    defer a.free(totals);
+    try testing.expect(std.mem.indexOf(u8, totals, "\"value\":[\"1\",\"5\"]") != null);
+    // A result whose arms are a record and a text, in both directions.
+    const hit = try invocation(a, resolved, entry, "composed::find", "lookup-hit");
+    defer a.free(hit);
+    try testing.expect(std.mem.indexOf(u8, hit, "\"value\":{\"case\":\"ok\",\"value\":{\"label\":\"x\",\"values\":[\"1\"]}}") != null);
+    const miss = try invocation(a, resolved, entry, "composed::find", "lookup-miss");
+    defer a.free(miss);
+    try testing.expect(std.mem.indexOf(u8, miss, "\"value\":{\"case\":\"err\",\"value\":\"no bucket named z\"}") != null);
+    // An optional scalar: present and absent are different wire shapes, and the
+    // absent one carries no value at all rather than a null.
+    const some = try invocation(a, resolved, entry, "composed::first_or_none", "option-some");
+    defer a.free(some);
+    try testing.expect(std.mem.indexOf(u8, some, "\"value\":{\"case\":\"some\",\"value\":\"7\"}") != null);
+    const none = try invocation(a, resolved, entry, "composed::first_or_none", "option-none");
+    defer a.free(none);
+    try testing.expect(std.mem.indexOf(u8, none, "\"value\":{\"case\":\"none\"}") != null);
+}

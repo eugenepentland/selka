@@ -154,14 +154,32 @@ fn includable(allocator: std.mem.Allocator, records: []const typed.Record, flags
     while (changed) {
         changed = false;
         for (records, 0..) |record, i| {
-            if (included[i]) continue;
-            const element = listScalar(record) orelse continue;
-            if (!carriable(element, included)) continue;
+            if (included[i] or record.contract.move_only) continue;
+            if (listScalar(record)) |element| {
+                if (!carriable(element, included)) continue;
+            } else if (record.shape.hasRuntimeIdentity() or record.shape.domain != null or record.shape.resource != null or record.contract.callback != null) continue else if (!childrenCarriable(record, included)) continue;
             included[i] = true;
             changed = true;
         }
     }
     return included;
+}
+
+/// Whether every value one aggregate record reaches can itself cross, read from
+/// the record's declared fields. A record with runtime identity is reached only
+/// through `listScalar`, which checks the element directly, so the buffer kind
+/// itself is never carriable here.
+fn childrenCarriable(record: typed.Record, included: []const bool) bool {
+    if (record.shape.hasRuntimeIdentity()) return false;
+    if (record.shape.variants) |variants| {
+        for (variants.cases) |case| if (case.payload) |payload| {
+            if (!carriable(payload, included)) return false;
+        };
+        return true;
+    }
+    if (record.shape.array) |array| return carriable(array.element, included);
+    for (record.fields) |field| if (!carriable(field.ty, included)) return false;
+    return true;
 }
 
 /// Whether one value can cross once the records admitted so far are known.
@@ -212,7 +230,6 @@ pub fn describeWithDomains(allocator: std.mem.Allocator, catalog: *native.Catalo
         if (ty.isAggregate()) {
             if (!ready) continue;
         } else if (!ordinary and !injected_stream) continue;
-        if ((layout.trace or layout.drop) and managed == null) continue;
         if (managed) |item| {
             try types.append(allocator, item);
             try ids.append(allocator, ty);
@@ -369,4 +386,50 @@ test "a list of an uncarriable element stays out and a failed admission is fatal
     // Deciding admission allocates, so a failure must surface to the caller
     // instead of silently shrinking the table.
     try std.testing.expectError(error.OutOfMemory, includable(std.testing.failing_allocator, &records, flags, true));
+}
+
+// spec: QBE-LIST-2
+test "a record holding text or a list is admitted and one holding bytes is not" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const span = @import("source.zig").Span{ .start = 0, .end = 0 };
+    const base = typed.Type.record_base;
+    const bucket_fields = [_]typed.Field{
+        .{ .name = "label", .declaration = span, .ty = @fromBackingInt(base) },
+        .{ .name = "values", .declaration = span, .ty = @fromBackingInt(base + 1) },
+    };
+    const raw_fields = [_]typed.Field{
+        .{ .name = "raw", .declaration = span, .ty = @fromBackingInt(base + 2) },
+    };
+    var records = [_]typed.Record{
+        .{ .id = @fromBackingInt(base), .name = text_name, .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = .u32 } },
+        .{ .id = @fromBackingInt(base + 1), .name = "List<i64>", .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = .i64 } },
+        .{ .id = @fromBackingInt(base + 2), .name = "bytes", .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = .u8 }, .collection = .{ .kind = .bytes } },
+        .{ .id = @fromBackingInt(base + 3), .name = "Bucket", .declaration = span, .fields = &bucket_fields },
+        .{ .id = @fromBackingInt(base + 4), .name = "Raw", .declaration = span, .fields = &raw_fields },
+    };
+    var catalog = try native.Catalog.initRecords(a, &records);
+    defer catalog.deinit();
+    const flags = try a.alloc(bool, records.len);
+    @memset(flags, false);
+    const included = try includable(a, &records, flags, true);
+    // A record is admitted by its fields, so one that holds the two managed
+    // values the codec carries crosses with them.
+    try std.testing.expect(included[3]);
+    // One that holds a `bytes` is still refused: the rule that admits a list
+    // does not quietly admit every managed buffer beside it.
+    try std.testing.expect(!included[4]);
+    const codec_types = try describeWithDomains(a, &catalog, true);
+    const bucket = findType(codec_types.types, "Bucket");
+    try std.testing.expect(bucket != null);
+    try std.testing.expectEqualStrings("record", bucket.?.kind);
+    try std.testing.expectEqual(@as(usize, 2), bucket.?.aggregate.fields.len);
+    try std.testing.expectEqualStrings(text_name, bucket.?.aggregate.fields[0].type.?);
+    try std.testing.expectEqualStrings("List<i64>", bucket.?.aggregate.fields[1].type.?);
+    // `Raw` is absent, so a record the codec declines still cannot reach the
+    // manifest through a field that happened to be admitted.
+    try std.testing.expect(findType(codec_types.types, "Raw") == null);
+    const ordinary = try describe(a, &catalog);
+    try std.testing.expect(findType(ordinary.types, "Bucket") == null);
 }
