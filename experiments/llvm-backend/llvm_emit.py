@@ -31,7 +31,7 @@ from qbe_llvm import (AGGREGATE_NAME, BASE_TYPES, COMPARISONS, CONVERSIONS,
                       EXT_WIDTH, INTEGER_OPS, LOADS, STORES, infer_types,
                       letter_for)
 from amd64_sysv import aggregate_abi
-from runtime_signatures import signature as runtime_signature
+from runtime_signatures import signature as runtime_signature, ATTRIBUTES as runtime_attributes
 
 # ---------------------------------------------------------------------------
 # Structural operand recognition
@@ -1186,7 +1186,9 @@ class Emitter:
                     result_type = "void"
                 else:
                     result_type = result.value if hasattr(result, "storage") else result
-                out.append(f"declare {result_type} @{name}({', '.join(rendered)})")
+                attributes = runtime_attributes.get(name, "")
+                suffix = " " + attributes if attributes else ""
+                out.append(f"declare {result_type} @{name}({', '.join(rendered)}){suffix}")
         if self.attributes:
             out.append("")
             out.append("attributes #0 = { " + " ".join(sorted(self.attributes)) + " }")
@@ -1243,7 +1245,13 @@ class Emitter:
         # says `export`: another unit or the generated C entry point calls it by
         # name.  `dllexport` reproduces that, and `noinline` keeps a local helper
         # from inlining the symbol out of existence.
-        attributes = "" if self.function.export else " #0"
+        target_cpu = target_attribute("MYLANG_QBE_LLVM_TARGET_CPU")
+        target_features = target_attribute("MYLANG_QBE_LLVM_TARGET_FEATURES")
+        if target_cpu:
+            self.attributes.add(f'"target-cpu"="{target_cpu}"')
+        if target_features:
+            self.attributes.add(f'"target-features"="{target_features}"')
+        attributes = " #0" if self.attributes or not self.function.export else ""
         if not self.function.export:
             self.attributes.add("noinline")
         first = self.function.blocks[0].label

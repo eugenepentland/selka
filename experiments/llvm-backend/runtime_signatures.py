@@ -102,7 +102,11 @@ def signature(name):
 # are read from the Zig source itself; otherwise every such entry point is
 # invisible until someone hand-registers it, which is how the benchmark closure
 # stopped building when the guest began calling `myl_native_bytes_buffer_append_float`.
-_SRC = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "src")
+_PACKAGE = os.path.dirname(os.path.abspath(__file__))
+_INSTALLED_RUNTIME = os.path.join(_PACKAGE, "runtime")
+_SRC = os.environ.get("MYLANG_QBE_LLVM_RUNTIME_SOURCES") or (
+    _INSTALLED_RUNTIME if os.path.isdir(_INSTALLED_RUNTIME) else
+    os.path.join(os.path.dirname(os.path.dirname(_PACKAGE)), "src"))
 _DECLARATION = re.compile(r"(?m)^[A-Za-z_][^\n;{}#]*?\b(\w+)\s*\(([^;{}]*?)\)\s*;")
 _ZIG_EXPORT = re.compile(r"@export\(&(\w+)\s*,\s*\.\{\s*\.name\s*=\s*\"(\w+)\"")
 _GENERATED = None

@@ -830,7 +830,11 @@ def compile_ir(ir_text, output):
     ir_path = output + ".ll"
     with open(ir_path, "w") as handle:
         handle.write(ir_text)
-    command = ["zig", "cc", "-S", optimization, "-fPIC", "-g0", ir_path, "-o", output]
+    zig = os.environ.get("MYLANG_QBE_LLVM_ZIG", "zig")
+    if os.environ.get("MYLANG_QBE_LLVM_EMIT_LTO_OBJECT"):
+        command = [zig, "cc", "-c", "-flto", optimization, "-fPIC", "-g0", ir_path, "-o", output]
+    else:
+        command = [zig, "cc", "-S", optimization, "-fPIC", "-g0", ir_path, "-o", output]
     completed = subprocess.run(command, capture_output=True, text=True)
     if completed.returncode != 0:
         raise ParseError(f"LLVM rejected the translated unit:\n{completed.stderr}\n"
@@ -838,6 +842,26 @@ def compile_ir(ir_text, output):
     if not keep_ir:
         os.unlink(ir_path)
     return output
+
+
+def declare_signatures(inputs, sidecar):
+    """Publish every input unit's call-site signature into one sidecar.
+
+    A driver that translates units concurrently cannot rely on the order in
+    which each unit's own signature reaches the sidecar, so it calls this once
+    over the whole closure first.  Every input is then translated against the
+    same complete table a sequential build would have converged on.
+    """
+    for source in inputs:
+        with open(source) as handle:
+            text = handle.read()
+        try:
+            unit = parse_unit(text, os.path.basename(source))
+        except ParseError as error:
+            sys.stderr.write(f"{error}\n")
+            return 1
+        publish_signatures(sidecar, unit.function.name, signature_map(unit))
+    return 0
 
 
 def main(argv=None):
@@ -848,11 +872,15 @@ def main(argv=None):
     parser = argparse.ArgumentParser(prog="qbe_llvm.py", add_help=True)
     parser.add_argument("-t", "--target", default="amd64_sysv")
     parser.add_argument("-o", "--output", required=True)
+    parser.add_argument("--signatures-only", action="store_true",
+                        help="publish every input's signature to OUTPUT and stop")
     parser.add_argument("inputs", nargs="+")
     options = parser.parse_args(argv)
     if options.target != "amd64_sysv":
         sys.stderr.write(f"qbe_llvm: unsupported target `{options.target}`\n")
         return 1
+    if options.signatures_only:
+        return declare_signatures(options.inputs, options.output)
     sidecar = signature_path(os.environ, options.output)
     signatures = load_signatures(sidecar)
     source = options.inputs[0]
