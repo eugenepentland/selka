@@ -44,6 +44,13 @@ has to work at being slow:
 | 2,500,000 appends, 50,000 short-lived lists | each list built, used, and dropped | 90 ms | 1.8 MB |
 | 20 × 300,000-element list | each built, used, and dropped | 0.25 s | 8.2 MB |
 
+The dictionary row predates the hash index of 21 September 2026 and has not been
+rerun as written, because the table does not record how many distinct keys it
+used. A program matching its description with 1,000 distinct keys was measured
+on both sides of that change, same binary pair, interleaved: **127 ms before and
+3 ms after**. Dictionary reads and writes are no longer linear in the key count;
+see [the dictionary index audit](audits/dict-hash-index-2026-09-21.md).
+
 The first row is the floor: about 4 ms of process start-up and 1.7 MB of resident
 memory before the program does anything, so a program that finishes in tens of
 milliseconds is mostly start-up and its memory figure means little. The last three
