@@ -124,52 +124,35 @@ static int escaped(uint32_t scalar) {
     if (scalar == '\t') return 't';
     return 0;
 }
-static void encode(MylPrint *out, uint32_t point) {
-    unsigned char frame[4];
-    size_t width;
-    if (point < 0x80) { frame[0] = (unsigned char)point; width = 1; }
-    else if (point < 0x800) { frame[0] = (unsigned char)(0xc0 | (point >> 6)); frame[1] = (unsigned char)(0x80 | (point & 63)); width = 2; }
-    else if (point < 0x10000) {
-        frame[0] = (unsigned char)(0xe0 | (point >> 12));
-        frame[1] = (unsigned char)(0x80 | ((point >> 6) & 63));
-        frame[2] = (unsigned char)(0x80 | (point & 63));
-        width = 3;
-    } else {
-        frame[0] = (unsigned char)(0xf0 | (point >> 18));
-        frame[1] = (unsigned char)(0x80 | ((point >> 12) & 63));
-        frame[2] = (unsigned char)(0x80 | ((point >> 6) & 63));
-        frame[3] = (unsigned char)(0x80 | (point & 63));
-        width = 4;
-    }
-    myl_print_raw(out, frame, width);
-}
 void myl_print_text(MylPrint *out, const void *value, unsigned depth) {
     if (myl_print_deep(out, depth)) return;
     myl_native_text *text;
     memcpy(&text, value, sizeof text);
+    const unsigned char *payload = myl_native_text_storage(text);
     if (!depth) {
-        /* Raw top-level text needs no quoting or escaping, so the whole value is
-           encoded straight into the line buffer: one pass to size the UTF-8, one
-           reserve and one fill, instead of a call, a capacity test and a branch
-           per scalar. Nested text still walks the escaping loop below. */
+        /* Raw top-level text needs no quoting or escaping, so the whole payload
+           is copied straight into the line buffer: one sizing read, one reserve
+           and one fill, instead of a call, a capacity test and a branch per
+           scalar. */
         if (out->failed) return;
-        size_t count = myl_native_text_utf8(text, NULL, 0);
-        if (!count || !reserve(out, count)) return;
-        myl_native_text_utf8(text, out->bytes + out->length, count);
-        out->length += count;
+        if (!text->bytes || !reserve(out, text->bytes)) return;
+        memcpy(out->bytes + out->length, payload, text->bytes);
+        out->length += text->bytes;
         return;
     }
     byte(out, '\'');
-    const uint32_t *points = text->storage;
-    for (size_t i = 0; i < text->length; ++i) {
-        uint32_t point = points[i];
-        if (point == '\'' || point == '\\') byte(out, '\\');
-        if (escaped(point)) {
+    /* Only an ASCII octet can need quoting or escaping: the octets of a
+       non-ASCII scalar are all at or above 0x80, so copying them through
+       reproduces exactly what encoding the scalar wrote. */
+    for (size_t i = 0; i < text->bytes; ++i) {
+        unsigned char octet = payload[i];
+        if (octet == '\'' || octet == '\\') byte(out, '\\');
+        if (escaped(octet)) {
             byte(out, '\\');
-            byte(out, (unsigned char)escaped(point));
+            byte(out, (unsigned char)escaped(octet));
             continue;
         }
-        encode(out, point);
+        byte(out, octet);
     }
     byte(out, '\'');
 }

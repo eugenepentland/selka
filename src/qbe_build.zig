@@ -22,7 +22,7 @@ pub const Error = fs.Error || std.json.ParseError(std.json.Scanner) || outputs.E
 /// `qbe_build` module. `src/aggref_abi_test.zig` is the join: a bump on either
 /// side alone fails there rather than letting the driver accept a manifest the
 /// core would not emit.
-pub const native_abi = "mylang-qbe-native-v7";
+pub const native_abi = "mylang-qbe-native-v8";
 const Record = struct { name: []const u8, symbol: []const u8, key: []const u8, object: []const u8, reused: bool };
 /// Fixed runtime translation units archived together once per build environment.
 const runtime_units = [_][]const u8{

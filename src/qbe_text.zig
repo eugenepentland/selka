@@ -14,6 +14,9 @@ const load_word = @import("qbe_format.zig").load_word;
 const empty_separator = "myl_qbe_fail_empty_separator";
 /// The located trap `ord` and `chr` raise on an operand that is not one scalar.
 const text_scalar = "myl_native_fail_text_scalar";
+/// Byte offset of a native text's payload octet count (`native_text.h`): the
+/// scalar count, then that word.
+const text_bytes_offset = 8;
 
 /// Bind text-method lowering to the concrete emitter without an import cycle.
 pub fn Lower(comptime E: type) type {
@@ -100,13 +103,16 @@ fn emitPad(comptime E: type, self: *E, input: usize, base: usize) Error!void {
 }
 
 /// Lower `int(text)` and `float(text)` into the shared grammar and an `Option`.
+/// The grammar reads the text's UTF-8 payload directly, exactly as it reads a
+/// byte string's octets, so no scalar array is built for it.
 fn emitParse(comptime E: type, self: *E, op: BufferOperation, input: usize, base: usize) Error!void {
-    const points = self.temp();
+    const bytes = self.temp();
     const count = self.temp();
     const status = self.temp();
-    try self.print(" %v{d} =l call $myl_native_text_points(l %v{d})\n", .{ points, input });
-    try self.print(load_word, .{ count, input });
-    try self.print(" %v{d} =w call $myl_native_number_parse(l %v{d}, l %v{d}, w {d}, l %scratch)\n", .{ status, points, count, @intFromBool(op.kind == .parse_float) });
+    try self.print(" %v{d} =l call $myl_native_text_payload(l %v{d})\n", .{ bytes, input });
+    const stored = try self.address(input, text_bytes_offset);
+    try self.print(load_word, .{ count, stored });
+    try self.print(" %v{d} =w call $myl_native_bytes_number_parse(l %v{d}, l %v{d}, w {d}, l %scratch)\n", .{ status, bytes, count, @intFromBool(op.kind == .parse_float) });
     const value = self.temp();
     try self.print(" %v{d} =l loadl %scratch\n", .{value});
     return @import("qbe_results.zig").Lower(E).option(self, .{ .ty = op.output, .status = status, .value = value, .slot = base });

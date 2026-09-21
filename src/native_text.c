@@ -1,24 +1,14 @@
+/* `memmem` is a GNU extension, so the feature macro has to precede <string.h>. */
+#define _GNU_SOURCE
 #include "native_text.h"
 #include <string.h>
-const myl_native_type myl_native_text_point = { .size=4,.alignment=4,.kind=MYL_NATIVE_PLAIN };
+/* A text object's payload is UTF-8 octets, so the collector has nothing to walk;
+ * the element descriptor names a plain byte and switches tracing off. */
+const myl_native_type myl_native_text_leaf = { .size=1,.alignment=1,.kind=MYL_NATIVE_PLAIN,.trace_mode=MYL_NATIVE_TRACE_NONE };
 static const myl_native_type pointer_type = { .size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER };
-/* Text is immutable in practice but keeps the list header, so the scalars live
-   in the same allocation as that header rather than in a second one with a
-   header of its own: 96 bytes and one allocator round trip less per text, at
-   the cost of a `storage` pointer that is not a payload. The object descriptor
-   handed to the allocator therefore has no traced field — the scalars are
-   plain u32, so there is nothing to trace — and `storage` is set to the block's
-   tail only when there is at least one scalar to hold. Appending to such a text
-   still grows an ordinary backing array, because `length == capacity`. */
-myl_native_text *myl_native_text_new(myl_native_heap *heap, size_t count) {
-    if (count > (SIZE_MAX-sizeof(myl_native_list))/sizeof(uint32_t)) return NULL;
-    myl_native_text *text=myl_native_heap_alloc_block(heap,sizeof(myl_native_list),count*sizeof(uint32_t));
-    if (!text) return NULL;
-    text->element=&myl_native_text_point;
-    text->capacity=count;
-    if (count) text->storage=(unsigned char *)text+sizeof(myl_native_list);
-    return text;
-}
+/* Decode one scalar from `bytes` at `*offset`, advancing it. Answers 1 for a
+ * scalar, 0 at the end of the input and -1 for a malformed or non-shortest
+ * encoding, an out-of-range scalar or a surrogate. */
 static int decode(const unsigned char *bytes, size_t length, size_t *offset, uint32_t *point) {
     if (*offset == length) return 0;
     unsigned char first = bytes[(*offset)++];
@@ -44,12 +34,12 @@ int myl_native_text_valid_utf8(const unsigned char *bytes, size_t length) {
     while ((status=decode(bytes,length,&offset,&point))>0) {}
     return status==0;
 }
-/* One scalar per byte for the ASCII range, which is the whole of most source
-   text: check for a high bit and widen in two flat passes instead of running
-   the branchy UTF-8 decoder twice (once to count, once to fill). The high-bit
-   scan goes a word at a time — it is the only part of an ASCII conversion that
-   touches every input byte, and the byte loop it replaces measured as the bulk
-   of `myl_native_text_from_utf8_checked` on the census. */
+const unsigned char *myl_native_text_payload(const myl_native_text *text) {
+    return myl_native_text_storage(text);
+}
+/* Nonzero when `bytes` holds no octet at or above 0x80, a word at a time: the
+ * scan that decides whether a text is ASCII is the only part of a conversion
+ * that touches every input octet, so it cannot be a per-octet loop. */
 static int ascii(const unsigned char *bytes, size_t length) {
     size_t i=0;
     for (; i+sizeof(uint64_t)<=length; i+=sizeof(uint64_t)) {
@@ -60,90 +50,143 @@ static int ascii(const unsigned char *bytes, size_t length) {
     for (; i<length; ++i) if (bytes[i]&0x80u) return 0;
     return 1;
 }
-/* End of the ASCII run starting at `offset`: whole words first, then the bytes
-   of the word that held the high bit and any trailing bytes too short for one.
-   The fallback below runs this over input that is ASCII except for a few bytes,
-   which is what source text with a stray non-ASCII character looks like. */
-static size_t ascii_run(const unsigned char *bytes, size_t length, size_t offset) {
-    size_t i=offset;
-    for (; i+sizeof(uint64_t)<=length; i+=sizeof(uint64_t)) {
-        uint64_t word;
-        memcpy(&word,bytes+i,sizeof word);
-        if (word&UINT64_C(0x8080808080808080)) break;
-    }
-    while (i<length && bytes[i]<0x80u) i++;
-    return i;
+/* Text is immutable and keeps its UTF-8 payload in the same allocation as its
+ * header: 24 bytes of header plus one octet per scalar of source text, one
+ * allocator round trip, and the collector never walks the payload because it
+ * holds no pointer. `length` stays the scalar count so `len(text)` and scalar
+ * indexing keep Python's meaning, and `bytes` lets every UTF-8 boundary copy
+ * octets instead of re-encoding them. */
+myl_native_text *myl_native_text_build(myl_native_heap *heap, size_t bytes) {
+    if (bytes > (SIZE_MAX-sizeof(myl_native_text))) return NULL;
+    myl_native_text *text=myl_native_heap_alloc_block(heap,sizeof(myl_native_text),bytes);
+    if (!text) return NULL;
+    text->length=0;
+    text->bytes=bytes;
+    text->flags=0;
+    text->reserved=0;
+    return text;
 }
-/* One validating pass that both checks and fills. ASCII (the whole of most
-   source text) is a high-bit scan plus a widening pass; every other input runs
-   the branchy decoder once to validate and count and once more to fill, so no
-   caller needs a separate prior validation pass. `*invalid` names the failure:
-   1 for malformed input, 0 for a refused allocation. Inside the fallback the
-   ASCII runs are still skipped a word at a time, so text that is ASCII but for
-   one multi-byte character does not pay the per-byte decoder for all of it. */
-myl_native_text *myl_native_text_from_utf8_checked(myl_native_heap *heap, const unsigned char *bytes, size_t length, int *invalid) {
-    *invalid=0;
-    size_t count=0, offset=0, run=0;
+void myl_native_text_publish(myl_native_text *text, size_t scalars, int plain) {
+    text->length=scalars;
+    if (plain) text->flags=MYL_TEXT_ASCII;
+}
+/* Scalars in `bytes` and whether all of them are below 0x80, or -1 for a
+ * malformed payload. Octets of a continuation byte never begin a scalar, so the
+ * count is one per octet that is not `10xxxxxx`. */
+static int measure(const unsigned char *bytes, size_t length, size_t *scalars, int *plain) {
+    if (ascii(bytes,length)) { *scalars=length; *plain=1; return 1; }
+    size_t offset=0, count=0;
     uint32_t point;
-    if (ascii(bytes,length)) {
-        myl_native_text *result=myl_native_text_new(heap,length);
-        if (!result) return NULL;
-        uint32_t *points=(uint32_t *)result->storage;
-        for (size_t i=0; i<length; ++i) points[i]=bytes[i];
-        result->length=length;
-        return result;
-    }
-    for (;;) {
-        run=ascii_run(bytes,length,offset);
-        count+=run-offset;
-        offset=run;
-        if (offset==length) break;
-        if (decode(bytes,length,&offset,&point)<0) { *invalid=1; return NULL; }
-        count++;
-    }
-    myl_native_text *result=myl_native_text_new(heap,count);
-    if (!result) return NULL;
-    uint32_t *points=(uint32_t *)result->storage;
-    offset=0;
-    size_t written=0;
-    for (;;) {
-        run=ascii_run(bytes,length,offset);
-        const size_t ascii=run-offset;
-        for (size_t i=0; i<ascii; ++i) points[written+i]=bytes[offset+i];
-        written+=ascii;
-        offset=run;
-        if (offset==length) break;
-        decode(bytes,length,&offset,&point);
-        points[written++]=point;
-    }
-    result->length=count;
-    return result;
+    int status;
+    while ((status=decode(bytes,length,&offset,&point))>0) count++;
+    if (status<0) return -1;
+    *scalars=count; *plain=0;
+    return 1;
+}
+/* Fresh text holding the `count` octets at `bytes`, already known to be valid
+ * UTF-8 with `scalars` scalar values and `plain` naming the ASCII case. */
+static myl_native_text *build(myl_native_heap *heap, const unsigned char *bytes, size_t length, size_t scalars, int plain) {
+    myl_native_text *text=myl_native_text_build(heap,length);
+    if (!text) return NULL;
+    if (length) memcpy((unsigned char *)myl_native_text_storage(text),bytes,length);
+    myl_native_text_publish(text,scalars,plain);
+    return text;
+}
+myl_native_text *myl_native_text_from_utf8_checked(myl_native_heap *heap, const unsigned char *bytes, size_t length, int *invalid) {
+    size_t scalars=0;
+    int plain=0;
+    *invalid=0;
+    if (measure(bytes,length,&scalars,&plain)<0) { *invalid=1; return NULL; }
+    return build(heap,bytes,length,scalars,plain);
 }
 myl_native_text *myl_native_text_from_utf8(myl_native_heap *heap, const unsigned char *bytes, size_t length) {
     int invalid=0;
     return myl_native_text_from_utf8_checked(heap,bytes,length,&invalid);
 }
+myl_native_text *myl_native_text_from_scalars(myl_native_heap *heap, const uint32_t *points, size_t count) {
+    size_t length=0;
+    for (size_t i=0;i<count;i++) {
+        uint32_t point=points[i];
+        size_t width;
+        if (point<0x80) width=1;
+        else if (point<0x800) width=2;
+        else if (point<0x10000) { if (point>=0xd800 && point<=0xdfff) return NULL; width=3; }
+        else if (point<=0x10ffff) width=4;
+        else return NULL;
+        if (width>SIZE_MAX-length) return NULL;
+        length+=width;
+    }
+    myl_native_text *text=myl_native_text_build(heap,length);
+    if (!text) return NULL;
+    unsigned char *output=(unsigned char *)myl_native_text_storage(text);
+    size_t at=0;
+    for (size_t i=0;i<count;i++) {
+        uint32_t point=points[i];
+        if (point<0x80) output[at++]=(unsigned char)point;
+        else if (point<0x800) { output[at++]=(unsigned char)(0xc0|(point>>6)); output[at++]=(unsigned char)(0x80|(point&63)); }
+        else if (point<0x10000) { output[at++]=(unsigned char)(0xe0|(point>>12)); output[at++]=(unsigned char)(0x80|((point>>6)&63)); output[at++]=(unsigned char)(0x80|(point&63)); }
+        else { output[at++]=(unsigned char)(0xf0|(point>>18)); output[at++]=(unsigned char)(0x80|((point>>12)&63)); output[at++]=(unsigned char)(0x80|((point>>6)&63)); output[at++]=(unsigned char)(0x80|(point&63)); }
+    }
+    myl_native_text_publish(text,count,ascii(output,length));
+    return text;
+}
+myl_native_text *myl_native_text_from_points(myl_native_heap *heap, const myl_native_list *points) {
+    const myl_native_list *list=points;
+    myl_native_root root;
+    myl_native_root_push(heap,&root,&list,&pointer_type);
+    myl_native_text *text=myl_native_text_from_scalars(heap,list->storage,list->length);
+    myl_native_root_pop(heap,&root);
+    return text;
+}
+size_t myl_native_text_offset(const myl_native_text *text, size_t index) {
+    if (text->flags&MYL_TEXT_ASCII) return index;
+    const unsigned char *bytes=myl_native_text_storage(text);
+    size_t at=0;
+    while (index--) {
+        at++;
+        while (at<text->bytes && (bytes[at]&0xc0u)==0x80u) at++;
+    }
+    return at;
+}
+size_t myl_native_text_index(const myl_native_text *text, size_t at) {
+    if (text->flags&MYL_TEXT_ASCII) return at;
+    const unsigned char *bytes=myl_native_text_storage(text);
+    size_t scalars=0;
+    for (size_t i=0;i<at;i++) if ((bytes[i]&0xc0u)!=0x80u) scalars++;
+    return scalars;
+}
+myl_native_text *myl_native_text_substring(myl_native_heap *heap, myl_native_text *input, size_t from, size_t to) {
+    const unsigned char *bytes=myl_native_text_storage(input);
+    int plain=input->flags&MYL_TEXT_ASCII;
+    size_t scalars=plain ? to-from : myl_native_text_index(input,to)-myl_native_text_index(input,from);
+    return build(heap,bytes+from,to-from,scalars,plain);
+}
+uint32_t myl_native_text_point_at(const myl_native_text *text, size_t index) {
+    size_t at=myl_native_text_offset(text,index);
+    uint32_t point=0;
+    (void)decode(myl_native_text_storage(text),text->bytes,&at,&point);
+    return point;
+}
 myl_native_text *myl_native_text_copy(myl_native_heap *heap, myl_native_text *input, size_t start, size_t count) {
+    size_t from=myl_native_text_offset(input,start), to=myl_native_text_offset(input,start+count);
     myl_native_root root;
     myl_native_root_push(heap,&root,&input,&pointer_type);
-    myl_native_text *result=myl_native_text_new(heap,count);
-    if (result) {
-        if (count) memcpy(result->storage,(uint32_t *)input->storage+start,count*4);
-        result->length=count;
-    }
+    myl_native_text *result=myl_native_text_substring(heap,input,from,to);
     myl_native_root_pop(heap,&root);
     return result;
 }
 myl_native_text *myl_native_text_concat(myl_native_heap *heap, myl_native_text *left, myl_native_text *right) {
-    if (left->length>SIZE_MAX-right->length) return NULL;
+    if (left->bytes>SIZE_MAX-right->bytes) return NULL;
+    size_t bytes=left->bytes+right->bytes;
     myl_native_root a,b;
     myl_native_root_push(heap,&a,&left,&pointer_type);
     myl_native_root_push(heap,&b,&right,&pointer_type);
-    myl_native_text *result=myl_native_text_new(heap,left->length+right->length);
+    myl_native_text *result=myl_native_text_build(heap,bytes);
     if (result) {
-        if (left->length) memcpy(result->storage,left->storage,left->length*4);
-        if (right->length) memcpy((uint32_t *)result->storage+left->length,right->storage,right->length*4);
-        result->length=left->length+right->length;
+        unsigned char *output=(unsigned char *)myl_native_text_storage(result);
+        if (left->bytes) memcpy(output,myl_native_text_storage(left),left->bytes);
+        if (right->bytes) memcpy(output+left->bytes,myl_native_text_storage(right),right->bytes);
+        myl_native_text_publish(result,left->length+right->length,left->flags&right->flags&MYL_TEXT_ASCII);
     }
     myl_native_root_pop(heap,&b); myl_native_root_pop(heap,&a);
     return result;
@@ -153,7 +196,7 @@ static size_t endpoint(size_t length, int64_t value) {
     uint64_t distance=(uint64_t)(-(value+1))+1;
     return distance>length ? 0 : length-(size_t)distance;
 }
-/* Return the shared immortal one-scalar text for an ASCII code point, building
+/* Return the shared immortal one-octet text for an ASCII code point, building
  * the table on first use. NULL means the slot could not be allocated and the
  * caller must fall back to a fresh copy. */
 static myl_native_text *ascii_scalar(myl_native_heap *heap, unsigned point) {
@@ -169,10 +212,9 @@ static myl_native_text *ascii_scalar(myl_native_heap *heap, unsigned point) {
         unsigned depth=heap->region_depth;
         heap->region_depth=0;
         for (unsigned code=0; code<128; code++) {
-            myl_native_text *text=myl_native_text_new(heap,1);
+            unsigned char octet=(unsigned char)code;
+            myl_native_text *text=myl_native_text_from_utf8(heap,&octet,1);
             if (!text) { heap->region_depth=depth; return NULL; }
-            ((uint32_t *)text->storage)[0]=code;
-            text->length=1;
             heap->text_scalars[code]=text;
         }
         heap->region_depth=depth;
@@ -182,36 +224,38 @@ static myl_native_text *ascii_scalar(myl_native_heap *heap, unsigned point) {
 myl_native_text *myl_native_text_at(myl_native_heap *heap, myl_native_text *input, int64_t index) {
     if (index<0 && (uint64_t)(-(index+1))+1>input->length) return NULL;
     if (index>=0 && (uint64_t)index>=input->length) return NULL;
-    size_t at=endpoint(input->length,index);
-    uint32_t point=((const uint32_t *)input->storage)[at];
+    size_t at=myl_native_text_offset(input,endpoint(input->length,index));
+    uint32_t point=0;
+    size_t cursor=at;
+    (void)decode(myl_native_text_storage(input),input->bytes,&cursor,&point);
     if (point<128) {
         myl_native_text *scalar=ascii_scalar(heap,point);
         if (scalar) return scalar;
     }
-    return myl_native_text_copy(heap,input,at,1);
+    return myl_native_text_substring(heap,input,at,cursor);
 }
 myl_native_text *myl_native_text_slice(myl_native_heap *heap, myl_native_text *input, int64_t start, int64_t end) {
     size_t first=endpoint(input->length,start), last=endpoint(input->length,end);
     return myl_native_text_copy(heap,input,first,last>first ? last-first : 0);
 }
 int myl_native_text_equal(const myl_native_text *a, const myl_native_text *b) {
-    return a->length==b->length && (!a->length || !memcmp(a->storage,b->storage,a->length*4));
+    return a->bytes==b->bytes && (!a->bytes || !memcmp(myl_native_text_storage(a),myl_native_text_storage(b),a->bytes));
 }
 int myl_native_text_compare(const myl_native_text *a, const myl_native_text *b) {
-    const uint32_t *left=a->storage, *right=b->storage;
-    size_t count=a->length<b->length?a->length:b->length;
-    for (size_t i=0;i<count;i++) {
-        if (left[i]<right[i]) return -1;
-        if (left[i]>right[i]) return 1;
-    }
-    return a->length<b->length?-1:a->length>b->length?1:0;
+    size_t count=a->bytes<b->bytes?a->bytes:b->bytes;
+    int order=count?memcmp(myl_native_text_storage(a),myl_native_text_storage(b),count):0;
+    if (order) return order<0?-1:1;
+    return a->bytes<b->bytes?-1:a->bytes>b->bytes?1:0;
+}
+size_t myl_native_text_find_bytes(const myl_native_text *input, const myl_native_text *needle) {
+    if (!needle->bytes) return 0;
+    if (needle->bytes>input->bytes) return SIZE_MAX;
+    const unsigned char *haystack=myl_native_text_storage(input);
+    const unsigned char *found=memmem(haystack,input->bytes,myl_native_text_storage(needle),needle->bytes);
+    return found ? (size_t)(found-haystack) : SIZE_MAX;
 }
 int myl_native_text_contains(const myl_native_text *input, const myl_native_text *needle) {
-    if (!needle->length) return 1;
-    if (needle->length>input->length) return 0;
-    for (size_t i=0;i<=input->length-needle->length;i++)
-        if (!memcmp((const uint32_t *)input->storage+i,needle->storage,needle->length*4)) return 1;
-    return 0;
+    return myl_native_text_find_bytes(input,needle)!=SIZE_MAX;
 }
 myl_native_list *myl_native_text_split(myl_native_heap *heap, myl_native_text *input, myl_native_text *separator) {
     if (!separator->length) return NULL;
@@ -221,13 +265,15 @@ myl_native_list *myl_native_text_split(myl_native_heap *heap, myl_native_text *i
     myl_native_list *result=myl_native_list_new(heap,&pointer_type,0);
     myl_native_root_push(heap,&c,&result,&pointer_type);
     if (result) {
-        size_t start=0,cursor=0;
-        while (cursor<=input->length) {
-            if (cursor==input->length || (separator->length<=input->length-cursor && !memcmp((uint32_t *)input->storage+cursor,separator->storage,separator->length*4))) {
-                myl_native_text *piece=myl_native_text_copy(heap,input,start,cursor-start);
+        const unsigned char *haystack=myl_native_text_storage(input);
+        const unsigned char *needle=myl_native_text_storage(separator);
+        size_t start=0, cursor=0;
+        while (cursor<=input->bytes) {
+            if (cursor==input->bytes || (separator->bytes<=input->bytes-cursor && !memcmp(haystack+cursor,needle,separator->bytes))) {
+                myl_native_text *piece=myl_native_text_substring(heap,input,start,cursor);
                 if (!piece || !myl_native_list_append(heap,result,&piece)) { result=NULL; break; }
-                if (cursor==input->length) break;
-                cursor+=separator->length; start=cursor;
+                if (cursor==input->bytes) break;
+                cursor+=separator->bytes; start=cursor;
             } else cursor++;
         }
     }
@@ -238,41 +284,31 @@ myl_native_text *myl_native_text_join(myl_native_heap *heap, myl_native_text *se
     size_t count=0;
     myl_native_text **items=list->storage;
     for (size_t i=0;i<list->length;i++) {
-        if (items[i]->length>SIZE_MAX-count) return NULL;
-        count+=items[i]->length;
-        if (i) { if (separator->length>SIZE_MAX-count) return NULL; count+=separator->length; }
+        if (items[i]->bytes>SIZE_MAX-count) return NULL;
+        count+=items[i]->bytes;
+        if (i) { if (separator->bytes>SIZE_MAX-count) return NULL; count+=separator->bytes; }
     }
     myl_native_root a,b;
     myl_native_root_push(heap,&a,&separator,&pointer_type); myl_native_root_push(heap,&b,&list,&pointer_type);
-    myl_native_text *result=myl_native_text_new(heap,count);
+    myl_native_text *result=myl_native_text_build(heap,count);
     if (result) {
-        size_t at=0;
+        unsigned char *output=(unsigned char *)myl_native_text_storage(result);
+        int plain=separator->flags&MYL_TEXT_ASCII;
+        size_t at=0, scalars=0;
         for (size_t i=0;i<list->length;i++) {
-            if (i && separator->length) { memcpy((uint32_t *)result->storage+at,separator->storage,separator->length*4); at+=separator->length; }
-            if (items[i]->length) memcpy((uint32_t *)result->storage+at,items[i]->storage,items[i]->length*4);
-            at+=items[i]->length;
+            if (i && separator->bytes) { memcpy(output+at,myl_native_text_storage(separator),separator->bytes); at+=separator->bytes; scalars+=separator->length; }
+            if (items[i]->bytes) memcpy(output+at,myl_native_text_storage(items[i]),items[i]->bytes);
+            at+=items[i]->bytes;
+            scalars+=items[i]->length;
+            plain&=items[i]->flags&MYL_TEXT_ASCII;
         }
-        result->length=count;
+        myl_native_text_publish(result,scalars,plain);
     }
     myl_native_root_pop(heap,&b); myl_native_root_pop(heap,&a);
     return result;
 }
 size_t myl_native_text_utf8(const myl_native_text *text, unsigned char *output, size_t capacity) {
-    const uint32_t *points=text->storage;
-    size_t required=0;
-    for (size_t i=0;i<text->length;i++) {
-        size_t width=points[i]<0x80?1:points[i]<0x800?2:points[i]<0x10000?3:4;
-        if (width>SIZE_MAX-required) return SIZE_MAX;
-        required+=width;
-    }
-    if (!output || capacity<required) return required;
-    size_t at=0;
-    for (size_t i=0;i<text->length;i++) {
-        uint32_t p=points[i];
-        if (p<0x80) output[at++]=(unsigned char)p;
-        else if (p<0x800) { output[at++]=(unsigned char)(0xc0|(p>>6)); output[at++]=(unsigned char)(0x80|(p&63)); }
-        else if (p<0x10000) { output[at++]=(unsigned char)(0xe0|(p>>12)); output[at++]=(unsigned char)(0x80|((p>>6)&63)); output[at++]=(unsigned char)(0x80|(p&63)); }
-        else { output[at++]=(unsigned char)(0xf0|(p>>18)); output[at++]=(unsigned char)(0x80|((p>>12)&63)); output[at++]=(unsigned char)(0x80|((p>>6)&63)); output[at++]=(unsigned char)(0x80|(p&63)); }
-    }
-    return required;
+    if (!output || capacity<text->bytes) return text->bytes;
+    if (text->bytes) memcpy(output,myl_native_text_storage(text),text->bytes);
+    return text->bytes;
 }

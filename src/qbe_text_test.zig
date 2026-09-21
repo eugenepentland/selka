@@ -44,10 +44,10 @@ const every_method =
 
 /// Runtime entry points the lowering must reach for the methods above.
 const required = [_][]const u8{
-    "myl_native_text_trim",    "myl_native_text_case",    "myl_native_text_zfill",
-    "myl_native_text_replace", "myl_native_text_count",   "myl_native_text_find",
-    "myl_native_text_lines",   "myl_native_text_edge",    "myl_native_text_every",
-    "myl_native_text_points",  "myl_native_number_parse", "myl_qbe_fail_empty_separator",
+    "myl_native_text_trim",    "myl_native_text_case",          "myl_native_text_zfill",
+    "myl_native_text_replace", "myl_native_text_count",         "myl_native_text_find",
+    "myl_native_text_lines",   "myl_native_text_edge",          "myl_native_text_every",
+    "myl_native_text_payload", "myl_native_bytes_number_parse", "myl_qbe_fail_empty_separator",
 };
 
 fn manifest(a: std.mem.Allocator, source: []const u8) ![]u8 {
@@ -71,7 +71,7 @@ test "number parsing selects the shared text runtime unit and answers an option"
     const emitted = try manifest(a, "def main() -> int:\n    match int(\"42\"):\n        case Some(value):\n            return value\n        case None:\n            return 0\n");
     defer a.free(emitted);
     try std.testing.expect(std.mem.indexOf(u8, emitted, "\"text_format\":true") != null);
-    try std.testing.expect(std.mem.indexOf(u8, emitted, "myl_native_number_parse") != null);
+    try std.testing.expect(std.mem.indexOf(u8, emitted, "myl_native_bytes_number_parse") != null);
     const plain = try manifest(a, "def main() -> int:\n    return len(\"ab\")\n");
     defer a.free(plain);
     try std.testing.expect(std.mem.indexOf(u8, plain, "\"text_format\":false") != null);

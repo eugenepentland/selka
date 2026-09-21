@@ -76,9 +76,9 @@ static int managed(Work *work,Pair pair) {
         return 1;
     }
     if (!pair.type->collection_kind) return left==right;
+    if (pair.type->collection_kind==2) return myl_native_text_equal(left,right);
     const myl_native_list *a=left,*b=right;
     if (a->length!=b->length) return 0;
-    if (pair.type->collection_kind==2) return myl_native_text_equal(a,b);
     /* 4 is an immutable byte string; its elements compare exactly like a list of u8. */
     if (pair.type->collection_kind!=1&&pair.type->collection_kind!=4) return left==right;
     for (size_t i=0;i<a->length;i++) {

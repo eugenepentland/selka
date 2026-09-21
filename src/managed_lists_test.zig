@@ -443,7 +443,7 @@ test "a managed element declaration refuses a capability, directly or inside a r
 }
 
 // spec: QBE-TEXT-BLOCK-1
-test "QBE-TEXT-BLOCK-1 run-time text shares one allocation with its header" {
+test "QBE-TEXT-BLOCK-1 run-time text shares one allocation with its payload" {
     const source =
         \\def main() -> i64:
         \\    keep: list[str] = []
@@ -460,10 +460,117 @@ test "QBE-TEXT-BLOCK-1 run-time text shares one allocation with its header" {
         \\    return total
     ;
     // Every allocation collects under gc-stress, so a text whose block still
-    // traced a `storage` pointer into its own allocation would corrupt or crash
-    // here rather than merely leak.
+    // traced a pointer into its own allocation would corrupt or crash here
+    // rather than merely leak.
     const result = try execute(source);
     try t.expectEqual(@as(i64, 64 * 7), result.value);
+    try t.expectEqualStrings("", result.trap.code);
+}
+
+// spec: UTF8-TEXT-1
+test "UTF8-TEXT-1 text stores UTF-8 octets and still indexes Unicode scalars" {
+    // Scalar indexing, slicing, length, comparison, searching, case mapping,
+    // classification, joining, padding, dictionary keys and byte interop all
+    // run over a payload whose scalars are one, two, three and four octets
+    // wide. A representation that answered any of them in octets, or that
+    // cached a scalar count that drifted from the payload, disagrees here; the
+    // mixed-width keys are what makes a dictionary's hashing and equality part
+    // of the same check.
+    const source =
+        \\def main() -> i64:
+        \\    text = "a\u00e9\u6f22b"
+        \\    if len(text) != 4:
+        \\        return 1
+        \\    if text[0] != "a":
+        \\        return 2
+        \\    if text[1] != "\u00e9":
+        \\        return 3
+        \\    if text[2] != "\u6f22":
+        \\        return 4
+        \\    if text[-1] != "b":
+        \\        return 5
+        \\    if text[1:3] != "\u00e9\u6f22":
+        \\        return 6
+        \\    if text[3:99] != "b":
+        \\        return 7
+        \\    ordered = sorted(["\u6f22", "\u00e9", "a"])
+        \\    if ordered[0] != "a":
+        \\        return 8
+        \\    if ordered[1] != "\u00e9":
+        \\        return 9
+        \\    if ordered[2] != "\u6f22":
+        \\        return 10
+        \\    if text == "ab":
+        \\        return 37
+        \\    if "a\u00e9" != "a" + "\u00e9":
+        \\        return 10
+        \\    if ord("\u00e9") != 233:
+        \\        return 11
+        \\    if chr(233) != "\u00e9":
+        \\        return 12
+        \\    if len(chr(128512)) != 1:
+        \\        return 13
+        \\    if chr(128512) != "\U0001f600":
+        \\        return 14
+        \\    if "aXbXc".replace("X", "\u00e9") != "a\u00e9b\u00e9c":
+        \\        return 15
+        \\    if "a\u00e9b\u00e9c".count("\u00e9") != 2:
+        \\        return 16
+        \\    if "a\u00e9b\u00e9c".find("\u00e9") != 1:
+        \\        return 17
+        \\    if "a\u00e9b\u00e9c".find("c") != 4:
+        \\        return 18
+        \\    if "a\u00e9b\u00e9c".find("\u6f22") != -1:
+        \\        return 19
+        \\    if len("a\u00e9,b".split(",")) != 2:
+        \\        return 20
+        \\    if "a\u00e9,b".split(",")[0] != "a\u00e9":
+        \\        return 21
+        \\    if "-".join(["\u00e9", "\u6f22"]) != "\u00e9-\u6f22":
+        \\        return 22
+        \\    if "\u00c9a".upper() != "\u00c9A":
+        \\        return 23
+        \\    if not "aB".isalpha():
+        \\        return 24
+        \\    if "\u00e9".isalpha():
+        \\        return 38
+        \\    if "\u00e9".isdigit():
+        \\        return 25
+        \\    if "  \u00e9 ".strip() != "\u00e9":
+        \\        return 26
+        \\    if "a\u00e9".zfill(4) != "00a\u00e9":
+        \\        return 27
+        \\    counts: dict[str, int] = {}
+        \\    counts["\u00e9"] = 1
+        \\    counts["\u6f22"] = 2
+        \\    counts["\u00e9"] = counts["\u00e9"] + 1
+        \\    if counts["\u00e9"] != 2:
+        \\        return 28
+        \\    if counts["\u6f22"] != 2:
+        \\        return 29
+        \\    if len(counts) != 2:
+        \\        return 30
+        \\    if "\u00e9" not in counts:
+        \\        return 31
+        \\    total = 0
+        \\    for letter in text:
+        \\        total = total + len(letter)
+        \\    if total != 4:
+        \\        return 32
+        \\    if len(text.encode()) != 7:
+        \\        return 33
+        \\    match text.encode().decode():
+        \\        case Ok(value):
+        \\            if value != text:
+        \\                return 34
+        \\        case Err(message):
+        \\            return 35
+        \\    if len("a\u00e9".splitlines()) != 1:
+        \\        return 36
+        \\    return 1234
+    ;
+    const result = try execute(source);
+    try t.expectEqual(@as(i64, 1234), result.value);
     try t.expectEqualStrings("", result.trap.code);
 }
 

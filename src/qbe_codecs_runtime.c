@@ -36,6 +36,18 @@ static void *co_root_values[QBE_CODEC_ROOTS];
 static myl_native_root co_root_slots[QBE_CODEC_ROOTS];
 static size_t co_root_count;
 static int co_bad(const char *code){co_error=code;return 0;}
+/* Decode one UTF-8 scalar from `bytes` at `*at`, advancing it past the scalar.
+   A guest text's payload is valid UTF-8 by construction, so no truncated or
+   overlong sequence can reach this and the length bound only keeps a malformed
+   header from reading past the payload. */
+static uint32_t co_scalar(const unsigned char *bytes,size_t length,size_t *at){
+    unsigned char first=bytes[(*at)++];
+    if(first<0x80)return first;
+    unsigned width=first>=0xf0?3u:first>=0xe0?2u:1u;
+    uint32_t point=first&((1u<<(6-width))-1);
+    while(width-- && *at<length)point=(point<<6)|(bytes[(*at)++]&0x3fu);
+    return point;
+}
 static int co_charge(void){if(co_calls==co_max_calls)return co_bad("CodecCallLimit");++co_calls;return 1;}
 static int co_method(size_t,void *,const void *,void *);
 static int co_write(size_t,const void *,size_t);
@@ -72,22 +84,25 @@ static int co_read(size_t index,void *output,size_t depth){
     if(type->kind==5){
         /* One node per Unicode scalar, decoded into fresh guest-owned storage.
            The input node count already bounds the request, so the decoded size
-           is bounded by it rather than by anything the request claims. */
+           is bounded by it rather than by anything the request claims. The
+           scalars are staged on the host and encoded in one pass, because a
+           text's payload is UTF-8 and a scalar's width is only known once it has
+           been read; a value that is not a Unicode scalar is a malformed
+           request, since a text storing one could not be valid UTF-8. */
         if(node->bits || node->children>co_count-co_cursor)return co_bad("InvalidArgument");
         const CoType *element=&co_types[type->children[0]];
         if(element->kind || element->size!=sizeof(uint32_t))return co_bad("InternalError");
-        myl_native_text *text=myl_native_text_new(myl_qbe_heap(co_context),node->children);
-        if(!text)return co_bad("OutOfMemory");
-        if(!co_root(text))return co_bad("OutOfMemory");
-        myl_native_list *list=(myl_native_list *)text;
-        list->length=node->children;
+        uint32_t *scalars=calloc(node->children?node->children:1,sizeof(uint32_t));
+        if(!scalars)return co_bad("OutOfMemory");
         for(size_t i=0;i<node->children;++i){
             const MylangWireNode *child=&co_input[co_cursor++];
-            uint32_t scalar;
-            if(!child->type || strcmp(child->type,element->name) || child->children || child->bits>UINT32_MAX)return co_bad("InvalidArgument");
-            scalar=(uint32_t)child->bits;
-            if(!myl_native_list_set(list,i,&scalar))return co_bad("InternalError");
+            if(!child->type || strcmp(child->type,element->name) || child->children || child->bits>UINT32_MAX){free(scalars);return co_bad("InvalidArgument");}
+            scalars[i]=(uint32_t)child->bits;
         }
+        myl_native_text *text=myl_native_text_from_scalars(myl_qbe_heap(co_context),scalars,node->children);
+        free(scalars);
+        if(!text)return co_bad("OutOfMemory");
+        if(!co_root(text))return co_bad("OutOfMemory");
         memcpy(output,&text,sizeof text);return 1;
     }
     if(type->kind==6){
@@ -148,18 +163,20 @@ static int co_write(size_t index,const void *input,size_t depth){
     if(type->kind==5){
         const myl_native_text *text=*(const myl_native_text *const *)input;
         if(!text)return co_bad("InternalError");
-        const myl_native_list *list=(const myl_native_list *)text;
         const CoType *element=&co_types[type->children[0]];
         if(element->kind || element->size!=sizeof(uint32_t))return co_bad("InternalError");
         /* One node per scalar of the guest text, bounded by the staging array
            alone: the caller's capacity is deliberately not consulted here, so a
            result that does not fit is still measured and the epilogue reports
-           OutputTooSmall with the required count instead of WireLimit. */
-        if(list->length>100000-co_needed)return co_bad("WireLimit");
-        node->children=list->length;
-        for(size_t i=0;i<list->length;++i){
-            uint32_t scalar;
-            if(!myl_native_list_get(list,i,&scalar))return co_bad("InternalError");
+           OutputTooSmall with the required count instead of WireLimit. The
+           scalars are decoded from the UTF-8 payload, which is a walk per text
+           rather than a per-scalar call into the list machinery. */
+        if(text->length>100000-co_needed)return co_bad("WireLimit");
+        node->children=text->length;
+        const unsigned char *bytes=myl_native_text_storage(text);
+        size_t at=0;
+        for(size_t i=0;i<text->length;++i){
+            uint32_t scalar=(uint32_t)co_scalar(bytes,text->bytes,&at);
             co_prepared[co_needed++]=(MylangWireNode){element->name,scalar,0};
         }
         return 1;

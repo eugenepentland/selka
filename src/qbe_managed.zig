@@ -42,15 +42,22 @@ const MakeRecord = @FieldType(@FieldType(bytecode.Instruction, "op"), "make_reco
 /// lowercase hex. Format: `# myl-lit <symbol> <element> <width> <count> [hex]`.
 const literal_marker = "# myl-lit ";
 /// A frozen `str`/`bytes` literal: the global data symbol the metadata unit
-/// defines, the element descriptor it stores in the list header, its scalar
-/// width, its element count and the digest that names it.
+/// defines, the element descriptor its object header stores, its element width —
+/// zero for a text, whose payload is UTF-8 octets rather than elements — its
+/// payload unit count, and for a text its scalar count and ASCII flag, which are
+/// also the count of the constant pushes it was built from. `digest` names it.
 const Frozen = struct {
     name: [72]u8,
     element: []const u8,
     width: usize,
     count: usize,
+    scalars: usize,
+    ascii: bool,
     digest: [32]u8,
 };
+/// The element descriptor a frozen text literal's object header stores: a text's
+/// payload is octets and holds no traced pointer, so the collector never walks it.
+const text_leaf = "myl_native_text_leaf";
 /// List element access normalizes a negative index in the checked frontend; the
 /// runtime helper subtracts the length back to recover the original index.
 const normalized_index_failure = "myl_qbe_fail_normalized_index_bounds";
@@ -294,12 +301,13 @@ fn emitConstruct(comptime E: type, self: *E, record: MakeRecord, stack: []const 
             try self.require(ok, allocation_failure);
         }
     } else {
-        const element: typed.Type = if (schema.collection.kind == .string) .u32 else schema.shape.buffer.?;
+        const text = schema.collection.kind == .string;
+        const element: typed.Type = if (text) .u32 else schema.shape.buffer.?;
         // A `str`/`bytes` literal whose every element is a constant push is
         // immutable for the life of the image, so it lives as one shared data
         // object instead of one allocation per evaluation.
-        if (schema.collection.kind == .string or schema.collection.kind == .bytes) {
-            if (try frozenLiteral(E, self, record, element)) |frozen| return emitFrozen(E, self, frozen, base);
+        if (text or schema.collection.kind == .bytes) {
+            if (try frozenLiteral(E, self, record, element, text)) |frozen| return emitFrozen(E, self, frozen, base);
         }
         try self.print(" %v{d} =l call $myl_native_list_new(l %heap, l ${s}, l {d})\n", .{ result, try self.descriptor(element), record.fields });
         try self.require(result, allocation_failure);
@@ -309,14 +317,26 @@ fn emitConstruct(comptime E: type, self: *E, record: MakeRecord, stack: []const 
             try self.print(list_append_call, .{ ok, result, value_pointer });
             try self.require(ok, allocation_failure);
         }
+        // A text whose elements were not all constants is assembled scalar by
+        // scalar into a temporary list, because a text's payload is UTF-8 and a
+        // scalar's width is only known once it is written. The conversion roots
+        // the temporary across its own allocation.
+        if (text) {
+            const converted = self.temp();
+            try self.print(" %v{d} =l call $myl_native_text_from_points(l %heap, l %v{d})\n", .{ converted, result });
+            try self.require(converted, allocation_failure);
+            try self.store(base, converted);
+            return;
+        }
     }
     try self.store(base, result);
 }
 /// Describe a constant `str`/`bytes` literal as one frozen data object, or null
 /// when any operand is not a constant push of the element type. The data symbol
 /// hashes the element descriptor and the native payload, so equal literals share
-/// one object across the whole image.
-fn frozenLiteral(comptime E: type, self: *E, record: MakeRecord, element: typed.Type) Error!?Frozen {
+/// one object across the whole image; a text hashes its UTF-8 octets, so equal
+/// text shares one object whatever its scalar widths.
+fn frozenLiteral(comptime E: type, self: *E, record: MakeRecord, element: typed.Type, text: bool) Error!?Frozen {
     const count = record.fields;
     if (record.order.len != 0 or self.pc < count) return null;
     const first = self.pc - count;
@@ -326,29 +346,65 @@ fn frozenLiteral(comptime E: type, self: *E, record: MakeRecord, element: typed.
     };
     var frozen: Frozen = .{
         .name = undefined,
-        .element = try self.descriptor(element),
-        .width = (try self.layout(element)).size,
+        .element = if (text) text_leaf else try self.descriptor(element),
+        .width = if (text) 0 else (try self.layout(element)).size,
         .count = count,
+        .scalars = count,
+        .ascii = true,
         .digest = undefined,
     };
     var hasher = std.crypto.hash.sha2.Sha256.init(.{});
     hasher.update(frozen.element);
     hasher.update(&[_]u8{0});
     var scratch: [8]u8 = undefined;
-    for (0..count) |i| hasher.update(elementBytes(frozen.width, pushedValue(E, self, first + i), &scratch));
+    var octets: usize = 0;
+    for (0..count) |i| {
+        const value = pushedValue(E, self, first + i);
+        if (!text) {
+            hasher.update(elementBytes(frozen.width, value, &scratch));
+            continue;
+        }
+        var encoded: [4]u8 = undefined;
+        const bytes = encodeScalar(value, &encoded) orelse return null;
+        hasher.update(bytes);
+        octets += bytes.len;
+        if (value >= 0x80) frozen.ascii = false;
+    }
+    if (text) frozen.count = octets;
     hasher.final(&frozen.digest);
     _ = std.fmt.bufPrint(&frozen.name, "myl_lit_{s}", .{std.fmt.bytesToHex(frozen.digest, .lower)}) catch return error.InternalError;
     return frozen;
 }
+/// The UTF-8 encoding of one pushed scalar, or null when the value is not a
+/// Unicode scalar value and so could not be part of a text.
+fn encodeScalar(value: i128, buffer: *[4]u8) ?[]const u8 {
+    if (value < 0 or value > 0x10ffff) return null;
+    const scalar: u21 = @intCast(value);
+    if (scalar >= 0xd800 and scalar <= 0xdfff) return null;
+    const length = std.unicode.utf8Encode(scalar, buffer) catch return null;
+    return buffer[0..length];
+}
 /// Lower one frozen literal as a load of its shared data pointer plus the
-/// metadata marker that names its image bytes.
+/// metadata marker that names its image bytes. A text marker carries its scalar
+/// count and ASCII flag after the octet count, because its object header is not
+/// an element list and the metadata unit emits a different block for it.
 fn emitFrozen(comptime E: type, self: *E, frozen: Frozen, base: usize) Error!void {
     const result = self.temp();
     try self.print(" %v{d} =l loadl ${s}\n", .{ result, frozen.name[0..] });
     try self.print("{s}{s} {s} {d} {d} ", .{ literal_marker, frozen.name[0..], frozen.element, frozen.width, frozen.count });
-    const first = self.pc - frozen.count;
+    const pushes = if (frozen.width == 0) frozen.scalars else frozen.count;
+    if (frozen.width == 0) try self.print("{d} {d} ", .{ frozen.scalars, @intFromBool(frozen.ascii) });
+    const first = self.pc - pushes;
     var scratch: [8]u8 = undefined;
-    for (0..frozen.count) |i| for (elementBytes(frozen.width, pushedValue(E, self, first + i), &scratch)) |byte| try self.print("{x:0>2}", .{byte});
+    for (0..pushes) |i| {
+        const value = pushedValue(E, self, first + i);
+        if (frozen.width != 0) {
+            for (elementBytes(frozen.width, value, &scratch)) |byte| try self.print("{x:0>2}", .{byte});
+            continue;
+        }
+        var encoded: [4]u8 = undefined;
+        for (encodeScalar(value, &encoded) orelse return error.InternalError) |byte| try self.print("{x:0>2}", .{byte});
+    }
     try self.print("\n", .{});
     try self.store(base, result);
 }

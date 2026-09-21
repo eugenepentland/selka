@@ -4,8 +4,11 @@
 /* Python string methods over immutable managed text. Every one reads its
  * receiver and answers a fresh value, so no alias observes a change. Case
  * mapping and classification cover ASCII and leave every other scalar alone.
- * A method that allocates answers NULL once the allocation budget is exhausted;
- * an empty needle is the caller's trap to raise, never this runtime's. */
+ * Because the payload is UTF-8, each of them is a bulk octet operation: an
+ * ASCII octet is its own scalar and every octet of a non-ASCII scalar is at or
+ * above 0x80, so a byte predicate cannot disagree with the scalar one. A method
+ * that allocates answers NULL once the allocation budget is exhausted; an empty
+ * needle is the caller's trap to raise, never this runtime's. */
 /* Which ends `strip`, `lstrip` and `rstrip` trim. */
 enum { MYL_TEXT_BOTH = 0, MYL_TEXT_LEADING = 1, MYL_TEXT_TRAILING = 2 };
 /* Which scalar property `isdigit`, `isalpha` and `isspace` test. */
@@ -25,6 +28,4 @@ int64_t myl_native_text_count(const myl_native_text *, const myl_native_text *ne
 int myl_native_text_edge(const myl_native_text *, const myl_native_text *affix, int leading);
 /* Whether every scalar has one property; empty text answers false, as in Python. */
 int myl_native_text_every(const myl_native_text *, int property);
-/* Scalar storage of one text value, which the shared number grammar reads. */
-const uint32_t *myl_native_text_points(const myl_native_text *);
 #endif

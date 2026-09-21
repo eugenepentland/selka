@@ -73,9 +73,23 @@ pub fn metadata(allocator: std.mem.Allocator, manifest: std.json.Value) Error![]
     }
     return buffer.toOwnedSlice();
 }
+/// One frozen image literal parsed from the emitted metadata marker: the data
+/// symbol the generated C defines, the element descriptor its managed header
+/// stores, the element width — zero for a text, whose payload is UTF-8 octets —
+/// the payload unit count, and for a text its scalar count and whether every
+/// scalar is below 0x80, plus the payload bytes in lowercase hex.
+const Literal = struct {
+    symbol: []const u8,
+    element: []const u8,
+    width: usize,
+    count: usize,
+    scalars: usize,
+    ascii: bool,
+    hex: []const u8,
+};
 /// Emit one C definition for every frozen `str`/`bytes` literal the emitted IL
-/// names. The marker carries the exact element payload, so equal literals share
-/// one data object even across units.
+/// names. The marker carries the exact payload, so equal literals share one data
+/// object even across units.
 fn literalDefinitions(w: *std.Io.Writer, allocator: std.mem.Allocator, units: []const std.json.Value) Error!void {
     var seen: std.StringHashMapUnmanaged(void) = .empty;
     defer seen.deinit(allocator);
@@ -95,35 +109,55 @@ fn literalDefinitions(w: *std.Io.Writer, allocator: std.mem.Allocator, units: []
             try seen.put(allocator, symbol, {});
             const width = std.fmt.parseInt(usize, width_text, 10) catch continue;
             const count = std.fmt.parseInt(usize, count_text, 10) catch continue;
+            var literal: Literal = .{ .symbol = symbol, .element = element, .width = width, .count = count, .scalars = count, .ascii = false, .hex = "" };
+            if (width == 0) {
+                const scalars_text = tokens.next() orelse continue;
+                const ascii_text = tokens.next() orelse continue;
+                literal.scalars = std.fmt.parseInt(usize, scalars_text, 10) catch continue;
+                literal.ascii = !std.mem.eql(u8, ascii_text, "0");
+            }
+            literal.hex = tokens.next() orelse "";
             if (!header) {
-                try w.writeAll("#include \"native_collections.h\"\n");
+                try w.writeAll("#include \"native_text.h\"\n");
                 header = true;
             }
-            try emitLiteral(w, symbol, element, width, count, tokens.next() orelse "");
+            try emitLiteral(w, literal);
         }
     }
 }
-/// Emit one static literal block: the managed header and list the collector
-/// expects around the payload, plus the element storage the literal owns. The
-/// block's list payload is published as the symbol the IL loads.
-fn emitLiteral(w: *std.Io.Writer, symbol: []const u8, element: []const u8, width: usize, count: usize, hex: []const u8) Error!void {
-    const bytes = count * width;
+/// Emit one static literal block: the managed header and payload object the
+/// collector expects around the bytes, plus the storage the literal owns. The
+/// block's payload is published as the symbol the IL loads. A text is a header,
+/// its scalar and octet counts and flags, and the UTF-8 payload behind them; a
+/// `bytes` literal keeps the list header and its element storage.
+fn emitLiteral(w: *std.Io.Writer, literal: Literal) Error!void {
+    const symbol = literal.symbol;
+    // A text's payload is `count` octets with no element stride; every other
+    // literal's payload is its elements at `width` bytes each.
+    const bytes = if (literal.width == 0) literal.count else literal.count * literal.width;
     const storage = if (bytes == 0) 1 else bytes;
-    try w.print("typedef struct {{ myl_native_object header; myl_native_list value; myl_native_object storage_header; unsigned char storage[{d}]; }} {s}_block;\n", .{ storage, symbol });
-    try w.print("static {s}_block {s}_instance = {{\n", .{ symbol, symbol });
-    try w.print(" .header = {{.mark = MYL_NATIVE_OBJECT_LITERAL_MARK, .element = &{s}}},\n", .{element});
-    try w.print(" .value = {{.length = {d}, .capacity = {d}, .generation = 0, .element = &{s}", .{ count, count, element });
-    if (bytes == 0) try w.writeAll(", .storage = 0") else try w.print(", .storage = {s}_instance.storage", .{symbol});
-    try w.writeAll(", .region = 0},\n");
-    try w.print(" .storage_header = {{.mark = MYL_NATIVE_OBJECT_LITERAL_MARK, .element = &{s}}},\n", .{element});
+    if (literal.width == 0) {
+        try w.print("typedef struct {{ myl_native_object header; myl_native_text value; unsigned char storage[{d}]; }} {s}_block;\n", .{ storage, symbol });
+        try w.print("static {s}_block {s}_instance = {{\n", .{ symbol, symbol });
+        try w.print(" .header = {{.mark = MYL_NATIVE_OBJECT_LITERAL_MARK, .element = &{s}}},\n", .{literal.element});
+        try w.print(" .value = {{.length = {d}, .bytes = {d}, .flags = {d}, .reserved = 0}},\n", .{ literal.scalars, literal.count, @as(u32, if (literal.ascii) 1 else 0) });
+    } else {
+        try w.print("typedef struct {{ myl_native_object header; myl_native_list value; myl_native_object storage_header; unsigned char storage[{d}]; }} {s}_block;\n", .{ storage, symbol });
+        try w.print("static {s}_block {s}_instance = {{\n", .{ symbol, symbol });
+        try w.print(" .header = {{.mark = MYL_NATIVE_OBJECT_LITERAL_MARK, .element = &{s}}},\n", .{literal.element});
+        try w.print(" .value = {{.length = {d}, .capacity = {d}, .generation = 0, .element = &{s}", .{ literal.count, literal.count, literal.element });
+        if (bytes == 0) try w.writeAll(", .storage = 0") else try w.print(", .storage = {s}_instance.storage", .{symbol});
+        try w.writeAll(", .region = 0},\n");
+        try w.print(" .storage_header = {{.mark = MYL_NATIVE_OBJECT_LITERAL_MARK, .element = &{s}}},\n", .{literal.element});
+    }
     if (bytes == 0) {
         try w.writeAll(" .storage = {0},\n");
     } else {
         try w.writeAll(" .storage = {");
         var index: usize = 0;
-        while (index + 1 < hex.len) : (index += 2) {
-            const high = std.fmt.charToDigit(hex[index], 16) catch 0;
-            const low = std.fmt.charToDigit(hex[index + 1], 16) catch 0;
+        while (index + 1 < literal.hex.len) : (index += 2) {
+            const high = std.fmt.charToDigit(literal.hex[index], 16) catch 0;
+            const low = std.fmt.charToDigit(literal.hex[index + 1], 16) catch 0;
             try w.print("0x{x:0>2},", .{high * 16 + low});
         }
         try w.writeAll("},\n");
