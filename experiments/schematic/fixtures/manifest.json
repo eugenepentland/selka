@@ -1,0 +1,21 @@
+{
+  "source_url": "https://netlisp.eugenepentland.dev/schematics/straps-synth-lmx2595",
+  "captured": "2026-09-07",
+  "files": [
+    {
+      "file": "straps-synth-lmx2595.sexp",
+      "source": "/home/epentland/ai/canopy/eda/projects/designs/lib/modules/straps-synth-lmx2595.sexp",
+      "sha256": "8681d12c988a9779a5072fe3070120dad0a15c6121c368d83329846a477a8479"
+    },
+    {
+      "file": "lmx2595rhar.sexp",
+      "source": "/home/epentland/ai/canopy/eda/projects/designs/lib/pinouts/lmx2595rhar.sexp",
+      "sha256": "a567d10222218cd0aceb075afce6279367ce0626c768a0b5e444944378869334"
+    },
+    {
+      "file": "spi.sexp",
+      "source": "/home/epentland/ai/canopy/eda/stdlib/interfaces/spi.sexp",
+      "sha256": "797591a982b2e266790089259049bf18f7534b5c0d18f1a985038ea2b1f0b726"
+    }
+  ]
+}
