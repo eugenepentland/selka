@@ -514,3 +514,6 @@ int myl_native_bytes_buffer_append_int(myl_native_heap *heap, myl_native_bytes *
     buffer->length+=width;
     return MYL_BYTES_WROTE;
 }
+void myl_native_bytes_copy_octets(void *destination, const void *source, size_t count) {
+    if (count) memcpy(destination,source,count);
+}

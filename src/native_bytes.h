@@ -80,4 +80,12 @@ int myl_native_bytes_buffer_append_int(myl_native_heap *, myl_native_bytes *, in
  * receiver's own backing: growth may reallocate that, while this source cannot
  * move. The float formatter reaches the buffer through this entry point. */
 int myl_native_bytes_buffer_append_raw(myl_native_heap *, myl_native_bytes *, const unsigned char *data, size_t count);
+/* Copy `count` octets between two storage ranges the caller has already
+ * validated. Emitted code reaches this only on the capacity-sufficient append
+ * path, where the destination is the receiver's own spare capacity and the
+ * source is a range of another byte string or of the receiver's already
+ * published octets. Nothing here allocates, collects or roots, so the copy
+ * neither observes nor changes collector state, and the caller reaches it
+ * without the root protocol. */
+void myl_native_bytes_copy_octets(void *destination, const void *source, size_t count);
 #endif

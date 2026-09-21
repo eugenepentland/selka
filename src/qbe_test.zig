@@ -1060,6 +1060,33 @@ test "PY-BYTES-5 find_any lowers to one native byte-set search and no guest scan
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "=w call $myl_native_bytes_has_byte("));
 }
 
+// spec: QBE-BUFFER-APPEND-1
+test "QBE-BUFFER-APPEND-1 a byte-buffer append lowers its fitting path inline and roots only the grow call" {
+    var parsed = try emitted(std.testing.allocator,
+        \\def build(n: i64) -> i64:
+        \\    empty: list[i64] = []
+        \\    buffer = byte_buffer(empty)
+        \\    piece = b"mylang!\n"
+        \\    for i in range(n):
+        \\        _ = buffer.append_range(piece, 0, 8)
+        \\    _ = buffer.append_byte(33)
+        \\    return len(buffer)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return build(3)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "build").?.il;
+    try std.testing.expect(std.mem.indexOf(u8, body, "@buf_fast") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "@byte_fast") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "@buf_refused") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "myl_native_bytes_copy_octets(") != null);
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body, "=w call $myl_native_bytes_buffer_append_range("));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body, "=w call $myl_native_bytes_buffer_append_byte("));
+    try std.testing.expect(std.mem.indexOf(u8, body, "%root0") != null);
+}
+
 // spec: QBE-APPEND-FAST-1
 test "QBE-APPEND-FAST-1 a list append lowers its fitting path inline and roots only the grow call" {
     var parsed = try emitted(std.testing.allocator,

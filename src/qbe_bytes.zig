@@ -8,10 +8,23 @@ const typed = @import("typed.zig");
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 const BufferOperation = @FieldType(@FieldType(bytecode.Instruction, "op"), "buffer_operation");
 const format = @import("qbe_format.zig");
+const std = @import("std");
 const allocation_failure = format.allocation_failure;
 const load_word = format.load_word;
 const list_storage_offset = format.list_storage_offset;
 const load_scratch = "  %v{d} =l loadl %scratch\n";
+/// The builtin mutable octet buffer's spelling, which is the only receiver the
+/// checker admits the in-place append methods on.
+const byte_buffer_name = @import("nominal_templates.zig").byte_buffer_name;
+/// Byte offsets of the capacity and backing words of that buffer's header
+/// (`native_collections.h`): two size words, the generation, the element
+/// descriptor, then the storage pointer.
+const buffer_capacity_offset = 8;
+const buffer_storage_offset = list_storage_offset;
+/// One buffered method's boolean answer, written into the operand slot it came
+/// from on the paths that never call the runtime.
+const store_true = " storel 1, %s{d}\n";
+const store_false = " storel 0, %s{d}\n";
 
 /// Bind byte-string lowering to the concrete emitter without an import cycle.
 pub fn Lower(comptime E: type) type {
@@ -230,6 +243,7 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
 /// is an argument or frozen-receiver refusal that becomes `False` without having
 /// written anything.
 fn emitBuffer(comptime E: type, self: *E, op: BufferOperation, stack: []const typed.Type, input: usize) Error!void {
+    if (try inlineBufferAppend(E, self, op, stack, input)) return;
     const base = stack.len - op.kind.arity();
     const status = self.temp();
     switch (op.kind) {
@@ -261,6 +275,19 @@ fn emitBuffer(comptime E: type, self: *E, op: BufferOperation, stack: []const ty
         },
         else => return self.reject(self.pc),
     }
+    try emitBufferStatus(E, self, status, base);
+}
+
+/// One inlined octet-buffer append: the receiver the octets are written through,
+/// its one-octet element descriptor, and the operand slot the method's boolean
+/// result is stored into.
+const BufferAppend = struct { input: usize, element: typed.Type, base: usize };
+
+/// Answer one buffer status word as the boolean the method returns: a zero
+/// status refused the allocation budget, which traps the way every other refused
+/// allocation does, and any other status wrote exactly when it is
+/// `MYL_BYTES_WROTE`.
+fn emitBufferStatus(comptime E: type, self: *E, status: usize, base: usize) Error!void {
     const allocated = self.temp();
     const nonzero = self.temp();
     try self.print(" %v{d} =l extuw %v{d}\n %v{d} =l cnel %v{d}, 0\n", .{ allocated, status, nonzero, allocated });
@@ -268,4 +295,156 @@ fn emitBuffer(comptime E: type, self: *E, op: BufferOperation, stack: []const ty
     const wrote = self.temp();
     try self.print(" %v{d} =w ceqw %v{d}, 1\n", .{ wrote, status });
     try emitBoolean(E, self, wrote, base);
+}
+
+/// Lower one octet-buffer method with its capacity-sufficient case inline, or
+/// answer false when this method has no inlined case.
+fn inlineBufferAppend(comptime E: type, self: *E, op: BufferOperation, stack: []const typed.Type, input: usize) Error!bool {
+    const element = (try mutableOctetBuffer(E, self, op)) orelse return false;
+    const append: BufferAppend = .{ .input = input, .element = element, .base = stack.len - op.kind.arity() };
+    switch (op.kind) {
+        .buffer_append_range => try inlineAppendRange(E, self, stack, append),
+        .buffer_append_byte => try inlineAppendByte(E, self, stack, append),
+        else => return false,
+    }
+    return true;
+}
+
+/// The element descriptor of the mutable octet buffer this operation appends
+/// through, or null when the receiver is anything else.
+///
+/// The checker admits the in-place append methods only on `byte_buffer`, whose
+/// one constructor is `byte_buffer(...)`'s `acquire_buffer` — a fresh, mortal,
+/// heap-allocated list. An immutable `bytes` literal can therefore never be a
+/// receiver, so no image-frozen object reaches the inline paths below and the
+/// runtime's frozen-receiver refusal stays with the helper on the path that can
+/// still reach it. The stride is one octet, the same one `myl_native_bytes_*`
+/// copies, so the inline store is the byte `storage + length` names.
+fn mutableOctetBuffer(comptime E: type, self: *E, op: BufferOperation) Error!?typed.Type {
+    const ty = self.function.scope.locals[@backingInt(op.owner)].ty;
+    if (!ty.isAggregate()) return null;
+    const schema = self.program.records[ty.recordIndex()];
+    if (!schema.managed or schema.collection.kind != .bytes) return null;
+    if (!std.mem.eql(u8, schema.name, byte_buffer_name)) return null;
+    const element = schema.shape.buffer orelse return null;
+    return if ((try self.layout(element)).size == 1) element else null;
+}
+
+/// Lower `buffer.append_range(data, start, end)` with the capacity-sufficient
+/// case inline: the four argument checks the runtime performs, one compare of
+/// `length + count` against `capacity`, one bulk copy of the octets and one
+/// length bump. Only a request that does not fit reaches
+/// `myl_native_bytes_buffer_append_range`, and the frame's live roots are linked
+/// around that call alone, so the common path neither allocates nor publishes a
+/// root.
+///
+/// The refusals come before the copy because they are what make the copy's
+/// operands trustworthy: `start` negative, `end` before `start`, or `end` past
+/// `len(data)` would otherwise turn `end - start` into a count no capacity can
+/// bound and `data->storage + start` into a source outside `data`. With those
+/// three answered, `count` fits in the receiver's own length, `length + count`
+/// cannot wrap, and `length <= capacity` — the invariant every constructor,
+/// grow and reserve maintains — makes `capacity - length` the room that is
+/// really there.
+fn inlineAppendRange(comptime E: type, self: *E, stack: []const typed.Type, append: BufferAppend) Error!void {
+    const data = try self.load("s", append.base);
+    const start = try self.load("s", append.base + 1);
+    const end = try self.load("s", append.base + 2);
+    const label = self.temp();
+    const nonnegative = self.temp();
+    const ordered = self.temp();
+    const available = self.temp();
+    const bounded = self.temp();
+    const length = self.temp();
+    const capacity = self.temp();
+    const count = self.temp();
+    const room = self.temp();
+    const fits = self.temp();
+    const capacity_pointer = try self.address(append.input, buffer_capacity_offset);
+    try self.print(
+        " %v{d} =l csgel %v{d}, 0\n jnz %v{d}, @buf_start{d}, @buf_refused{d}\n@buf_start{d}\n",
+        .{ nonnegative, start, nonnegative, label, label, label },
+    );
+    try self.print(
+        " %v{d} =l cslel %v{d}, %v{d}\n jnz %v{d}, @buf_order{d}, @buf_refused{d}\n@buf_order{d}\n",
+        .{ ordered, start, end, ordered, label, label, label },
+    );
+    // The end bound is the *source's* octet count, not the receiver's: it is
+    // what makes `data->storage + start` a range this call owns the length of.
+    try self.print(
+        " %v{d} =l loadl %v{d}\n %v{d} =l culel %v{d}, %v{d}\n jnz %v{d}, @buf_bound{d}, @buf_refused{d}\n@buf_bound{d}\n",
+        .{ available, data, bounded, end, available, bounded, label, label, label },
+    );
+    try self.print(
+        " %v{d} =l loadl %v{d}\n %v{d} =l loadl %v{d}\n %v{d} =l sub %v{d}, %v{d}\n %v{d} =l sub %v{d}, %v{d}\n %v{d} =l cultl %v{d}, %v{d}\n jnz %v{d}, @buf_fast{d}, @buf_slow{d}\n@buf_slow{d}\n",
+        .{ length, append.input, capacity, capacity_pointer, count, end, start, room, capacity, length, fits, count, room, fits, label, label, label },
+    );
+    const pushed = try self.roots(stack);
+    const status = self.temp();
+    try self.print(" %v{d} =w call $myl_native_bytes_buffer_append_range(l %heap, l %v{d}, l %v{d}, l %v{d}, l %v{d})\n", .{ status, append.input, data, start, end });
+    if (pushed) try self.restoreRoots();
+    try emitBufferStatus(E, self, status, append.base);
+    try self.print(" jmp @buf_done{d}\n@buf_fast{d}\n", .{ label, label });
+    const storage_pointer = try self.address(append.input, buffer_storage_offset);
+    const data_storage_pointer = try self.address(data, buffer_storage_offset);
+    const storage = self.temp();
+    const destination = self.temp();
+    const source_storage = self.temp();
+    const source = self.temp();
+    const next_length = self.temp();
+    try self.print(
+        " %v{d} =l loadl %v{d}\n %v{d} =l add %v{d}, %v{d}\n %v{d} =l loadl %v{d}\n %v{d} =l add %v{d}, %v{d}\n",
+        .{ storage, storage_pointer, destination, storage, length, source_storage, data_storage_pointer, source, source_storage, start },
+    );
+    try self.print(" call $myl_native_bytes_copy_octets(l %v{d}, l %v{d}, l %v{d})\n", .{ destination, source, count });
+    try self.print(
+        " %v{d} =l add %v{d}, %v{d}\n storel %v{d}, %v{d}\n" ++ store_true ++ " jmp @buf_done{d}\n@buf_refused{d}\n" ++ store_false ++ " jmp @buf_done{d}\n@buf_done{d}\n",
+        .{ next_length, length, count, next_length, append.input, append.base, label, label, append.base, label, label },
+    );
+    self.inline_roots = true;
+}
+
+/// Lower `buffer.append_byte(value)` with the capacity-sufficient case inline:
+/// the range check the runtime performs, one compare of `length` against
+/// `capacity`, one octet store and one length bump. Only an out-of-range value
+/// or a full receiver reaches `myl_native_bytes_buffer_append_byte`, and the
+/// frame's live roots are linked around that call alone.
+fn inlineAppendByte(comptime E: type, self: *E, stack: []const typed.Type, append: BufferAppend) Error!void {
+    const value = try self.load("s", append.base);
+    const label = self.temp();
+    const nonnegative = self.temp();
+    const inrange = self.temp();
+    const length = self.temp();
+    const capacity = self.temp();
+    const room = self.temp();
+    const capacity_pointer = try self.address(append.input, buffer_capacity_offset);
+    try self.print(
+        " %v{d} =l csgel %v{d}, 0\n jnz %v{d}, @byte_low{d}, @byte_refused{d}\n@byte_low{d}\n",
+        .{ nonnegative, value, nonnegative, label, label, label },
+    );
+    try self.print(
+        " %v{d} =l cslel %v{d}, 255\n jnz %v{d}, @byte_high{d}, @byte_refused{d}\n@byte_high{d}\n",
+        .{ inrange, value, inrange, label, label, label },
+    );
+    try self.print(
+        " %v{d} =l loadl %v{d}\n %v{d} =l loadl %v{d}\n %v{d} =l cultl %v{d}, %v{d}\n jnz %v{d}, @byte_fast{d}, @byte_slow{d}\n@byte_slow{d}\n",
+        .{ length, append.input, capacity, capacity_pointer, room, length, capacity, room, label, label, label },
+    );
+    const pushed = try self.roots(stack);
+    const status = self.temp();
+    try self.print(" %v{d} =w call $myl_native_bytes_buffer_append_byte(l %heap, l %v{d}, l %v{d})\n", .{ status, append.input, value });
+    if (pushed) try self.restoreRoots();
+    try emitBufferStatus(E, self, status, append.base);
+    try self.print(" jmp @byte_done{d}\n@byte_fast{d}\n", .{ label, label });
+    const storage_pointer = try self.address(append.input, buffer_storage_offset);
+    const storage = self.temp();
+    const destination = self.temp();
+    const next_length = self.temp();
+    try self.print(" %v{d} =l loadl %v{d}\n %v{d} =l add %v{d}, %v{d}\n", .{ storage, storage_pointer, destination, storage, length });
+    try self.writeValue(destination, value, append.element);
+    try self.print(
+        " %v{d} =l add %v{d}, 1\n storel %v{d}, %v{d}\n" ++ store_true ++ " jmp @byte_done{d}\n@byte_refused{d}\n" ++ store_false ++ " jmp @byte_done{d}\n@byte_done{d}\n",
+        .{ next_length, length, next_length, append.input, append.base, label, label, append.base, label, label },
+    );
+    self.inline_roots = true;
 }
