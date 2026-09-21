@@ -1,0 +1,20 @@
+build-app: reused /home/epentland/.cache/mylang/workbench/projects/pcb-workbench/builds/9c9fbea2db46e904acd42d313a402a28d70538c0aa6539bd006e85b79e87a978/pcb-workbench
+pcb-workbench — build a PCB layout through explicit geometry edits
+
+usage: pcb-workbench <command> [options]
+
+  kit         extract the frozen problem kit from the design sources
+  status      report the frozen problem and the current candidate
+  observe     read the circuit, geometry and open connections
+  probe       local measurements and the limits that apply
+  evaluate    run the referee and print the measured report
+  render      write a PNG view of the current candidate
+  finish      fully validate, serialize and recheck the candidate
+  recall      retrieve related experiments from the journal
+  note        attach reasoning to a recorded trial
+  checkpoint  retain the current candidate under a label
+  restore     return to an earlier revision
+
+common options
+  --kit PATH        problem kit JSON (default kit/black-canyon.kit.json)
+  --journal DIR     journal root (default .pcb-workbench)

@@ -1,0 +1,9 @@
+test_concurrent_cold_build_and_failed_publish (__main__.SharedCacheTest.test_concurrent_cold_build_and_failed_publish) ... ok
+test_cross_worktree_cache_lifecycle (__main__.SharedCacheTest.test_cross_worktree_cache_lifecycle) ... ok
+test_failed_install_and_corrupt_snapshot_are_rejected (__main__.SharedCacheTest.test_failed_install_and_corrupt_snapshot_are_rejected) ... ok
+test_reports_and_journals_remain_checkout_local (__main__.SharedCacheTest.test_reports_and_journals_remain_checkout_local) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 5.365s
+
+OK

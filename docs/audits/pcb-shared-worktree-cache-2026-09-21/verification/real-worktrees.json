@@ -1,0 +1,50 @@
+[
+  {
+    "label": "real-build-a",
+    "seconds": 0.21503493099589832,
+    "exit": 0,
+    "cwd": "/tmp/pcb-shared-cache-20260921/real worktree A",
+    "command": [
+      "guest/build-app.sh"
+    ]
+  },
+  {
+    "label": "real-build-b",
+    "seconds": 0.20444517699070275,
+    "exit": 0,
+    "cwd": "/tmp/pcb-shared-cache-20260921/real worktree B",
+    "command": [
+      "guest/build-app.sh"
+    ]
+  },
+  {
+    "label": "real-help-b",
+    "seconds": 0.21728192099544685,
+    "exit": 0,
+    "cwd": "/tmp/pcb-shared-cache-20260921/real worktree B",
+    "command": [
+      "guest/pcb.sh",
+      "help",
+      "--journal",
+      "/tmp/pcb-shared-cache-20260921/real worktree B/journal"
+    ]
+  },
+  {
+    "label": "real-gate-a",
+    "seconds": 221.26553497399436,
+    "exit": 0,
+    "cwd": "/tmp/pcb-shared-cache-20260921/real worktree A",
+    "command": [
+      "guest/gate.sh"
+    ]
+  },
+  {
+    "label": "real-gate-b",
+    "seconds": 5.748850619987934,
+    "exit": 0,
+    "cwd": "/tmp/pcb-shared-cache-20260921/real worktree B",
+    "command": [
+      "guest/gate.sh"
+    ]
+  }
+]

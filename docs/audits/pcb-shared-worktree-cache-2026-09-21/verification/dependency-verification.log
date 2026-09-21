@@ -1,0 +1,13 @@
+dep-build-a 0.820521154004382
+dep-build-b 0.20279509499960113
+dep-run-a 0.0008387700072489679
+dep-test-a 0.5861302220000653
+dep-test-b 0.23396629600028973
+dep-build-edited-b 0.6514274259970989
+dep-run-edited-b 0.0011509440082591027
+dep-test-edited-b 0.45357151799544226
+dep-run-unmodified-a 0.0008254880085587502
+dep-test-unmodified-a 0.20765137400303502
+dep-build-reverted-b 0.1986903649958549
+dep-test-reverted-b 0.22219738199783023
+real dependency invalidation and reversion: PASS

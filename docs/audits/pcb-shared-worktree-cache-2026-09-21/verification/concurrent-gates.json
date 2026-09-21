@@ -1,0 +1,29 @@
+{
+  "seconds": 0.5444198100012727,
+  "reports": [
+    {
+      "version": "pcb-workbench-gate-v1",
+      "native_report_version": "native-tests-v1",
+      "snapshot": "a1be48e3b5864af260f738204d0629b4ce2d92ea6eb18de41a7724e247b5bb2b",
+      "passed": 1,
+      "cached": 0,
+      "failed": 0,
+      "skipped": 0,
+      "executed": 1,
+      "report": "/tmp/pcb-shared-cache-20260921/dependency A/.workbench/results/test-a1be48e3b5864af260f738204d0629b4ce2d92ea6eb18de41a7724e247b5bb2b.9tUMs5/result.jsonl",
+      "diagnostics": "/tmp/pcb-shared-cache-20260921/dependency A/.workbench/results/test-a1be48e3b5864af260f738204d0629b4ce2d92ea6eb18de41a7724e247b5bb2b.9tUMs5/diagnostics.log"
+    },
+    {
+      "version": "pcb-workbench-gate-v1",
+      "native_report_version": "native-tests-v1",
+      "snapshot": "a1be48e3b5864af260f738204d0629b4ce2d92ea6eb18de41a7724e247b5bb2b",
+      "passed": 0,
+      "cached": 1,
+      "failed": 0,
+      "skipped": 0,
+      "executed": 0,
+      "report": "/tmp/pcb-shared-cache-20260921/dependency B/.workbench/results/test-a1be48e3b5864af260f738204d0629b4ce2d92ea6eb18de41a7724e247b5bb2b.h6dDQy/result.jsonl",
+      "diagnostics": "/tmp/pcb-shared-cache-20260921/dependency B/.workbench/results/test-a1be48e3b5864af260f738204d0629b4ce2d92ea6eb18de41a7724e247b5bb2b.h6dDQy/diagnostics.log"
+    }
+  ]
+}

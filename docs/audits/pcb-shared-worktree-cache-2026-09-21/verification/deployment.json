@@ -1,0 +1,46 @@
+[
+  {
+    "file": ".gitignore",
+    "sha256": "6ce47be18849fa9e976b24354bea228a9e8ded49aa4d5da65d47dad4b51ba414"
+  },
+  {
+    "file": "workbench.json",
+    "sha256": "2033d54cd1ddcda28a14b93a27a77077aac95b8d801cbff1a6efaf35c3bbfe65"
+  },
+  {
+    "file": "tools/workbench-store.py",
+    "sha256": "de4d2a6804dfd17d2dc8452e28f26b7e1dfdc82b9469165fc380a9fdd4b1ed67"
+  },
+  {
+    "file": "tools/update-toolchain.sh",
+    "sha256": "ccfc48ca73dcf97fc5213b2b39e7067576a180292e3710695b986186e1fbb447"
+  },
+  {
+    "file": "guest/build-app.sh",
+    "sha256": "f82d4673f67788862963a75c8d502c7c9d411c8ced98402294f7540f0fe4122a"
+  },
+  {
+    "file": "guest/gate.sh",
+    "sha256": "46584951f45026c982ec97922b7a087b4ad43fd4b2b6fc4f40954af2ac7db3e0"
+  },
+  {
+    "file": "tests/workflow.sh",
+    "sha256": "83e431721c088aa808b1207bcd6f1d820c0d68a9335ae9083178bf586bf524df"
+  },
+  {
+    "file": "tests/shared_cache.py",
+    "sha256": "3e5c9ab4ec18e6b5aaae60c3e7440e0b8d9ca600b64db1e10aea3e8cabc7c664"
+  },
+  {
+    "file": "README.md",
+    "sha256": "a1095182cec8464b55132c5f4e0acee81e471c25732f097fba1cc88a3fcd1538"
+  },
+  {
+    "file": "AGENTS.md",
+    "sha256": "2572de170566238f5d4b2b8c0b6ac1bae85c536f666ced2cf3e8c30e4e292549"
+  },
+  {
+    "file": "guest/PORTING.md",
+    "sha256": "8e13c5d22df1c33f4560264afca1e1ddb962f75ca0dae239b6d8f3d4c949eca1"
+  }
+]

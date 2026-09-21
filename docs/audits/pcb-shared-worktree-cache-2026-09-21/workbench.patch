@@ -1,0 +1,804 @@
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..da476d8
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,3 @@
++.mylang/
++.workbench/
++__pycache__/
+diff --git a/AGENTS.md b/AGENTS.md
+index 4143132..95f1b11 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -8,3 +8,10 @@
+-- Use the pinned `.mylang/current` installation. Change it only with
+-  `tools/update-toolchain.sh PATH`, which validates and records a complete
+-  compiler, QBE, LLVM adapter, and runtime installation.
++- Use the compiler pin in tracked `workbench.json`. Change it only with
++  `tools/update-toolchain.sh PATH`, which validates and shares a complete
++  compiler, QBE, LLVM adapter, and runtime installation. This changes only this
++  checkout's pin; review and commit it deliberately.
++- Worktrees automatically share the store at `$XDG_CACHE_HOME/mylang/workbench`
++  (normally `~/.cache/mylang/workbench`). Leave `CACHE` unset. An absolute
++  `PCB_SHARED_CACHE` isolates the entire store for experiments. Preserve the
++  project identity in `workbench.json` across worktrees, and do not clear shared
++  caches while other agents run. Identical inputs reuse the executable and test
++  receipts; changed inputs still need validation. Reports and journals stay local.
+diff --git a/README.md b/README.md
+index 85e7c82..261aec0 100644
+--- a/README.md
++++ b/README.md
+@@ -41,0 +42,38 @@ toolchain experiment and bypasses the active pin.
++## Shared worktree cache
++
++`workbench.json` records the project identity and complete compiler-install hash.
++Keep it in version control with the wrappers. Checkouts of the same project use
++`$XDG_CACHE_HOME/mylang/workbench` (normally `~/.cache/mylang/workbench`); an
++absolute `PCB_SHARED_CACHE` overrides this location. A new worktree on this
++machine can immediately run the commands above with the existing pin. On a new
++machine, register the matching complete installation with
++`tools/update-toolchain.sh /path/to/install` first.
++
++Source snapshots, compiler installations, native caches, test receipts and final
++executables are shared by content. Identical sources and build inputs reuse the
++same executable and test receipts across worktrees. CPU scheduling width is not
++a build input: changing `PCB_BUILD_JOBS` preserves the executable. Each compiler
++pin gets its own native-cache namespace, so upgrading one checkout cannot evict
++another pin's warm generation. An upgrade changes only that checkout's
++`workbench.json`; review and commit that change deliberately. `.mylang/current`
++is a compatibility link, not the source of the pin.
++
++Concurrent identical builds lock before compiling and publish only successful
++outputs. Test invocations keep reports in each checkout's `.workbench/results`;
++application journals remain at the requested checkout-local path. New or changed
++sources still need compilation/test validation, and `--force` intentionally runs
++tests again. The first migration to the shared snapshot path may revalidate old
++test receipts once. Snapshots currently capture flat `guest/*.my` inputs and the
++test inventory; extend the snapshot contract before adding other compile inputs.
++
++Leave `CACHE` unset normally. If set for an experiment, native caches are placed
++under `$CACHE/<compiler-pin>/<build|tests>`; use `PCB_SHARED_CACHE` to isolate the
++entire store. There is no automatic pruning of whole toolchain pins or executable
++snapshots. Treat published installations and snapshots as immutable; use the
++installer to register different contents instead of editing the shared store. Never clear the shared store while agents are running; clearing it
++makes every checkout cold. Per-pin native generation cleanup remains enabled.
++
++Wrapper regression checks are `tests/workflow.sh` and
++`python3 tests/shared_cache.py`; the latter creates isolated Git worktrees and a
++private shared store, without changing the production cache.
++
+diff --git a/guest/PORTING.md b/guest/PORTING.md
+index 9a62498..f4d6d3d 100644
+--- a/guest/PORTING.md
++++ b/guest/PORTING.md
+@@ -39,8 +39,6 @@ must point somewhere writable (`.mylang-cache` goes in the cwd).
+-**`mylang test` snapshots the whole directory of the entry file** and aborts with
+-`mylang: host failure: SourceChanged` if *any* sibling in it changes mid-run. So
+-while several modules are being written in parallel, verify from a copy:
+-
+-```sh
+-rm -rf /tmp/v && mkdir -p /tmp/v && cp guest/*.my /tmp/v/
+-$MYLANG test /tmp/v/<module>.my --cache-dir=/tmp/mlcache
+-```
++**Use `guest/gate.sh` for stable test inputs.** It publishes a content-addressed
++snapshot in the shared worktree store and rejects inputs that change during the
++copy. Identical worktrees use the same canonical source path, allowing native
++test receipts to be reused. Keep the checkout's `workbench.json` pin and project
++identity in version control; leave `MYLANG` and `CACHE` unset for normal work.
++Never use a shared mutable `/tmp/v` tree or clear caches while agents are running.
+diff --git a/guest/build-app.sh b/guest/build-app.sh
+index e11e2bf..2d2bbc1 100755
+--- a/guest/build-app.sh
++++ b/guest/build-app.sh
+@@ -5,3 +5,4 @@ ROOT=$(CDPATH= cd -- "$HERE/.." && pwd)
+-requested=${MYLANG:-"$ROOT/.mylang/current/bin/mylang"}
+-MYLANG=$(realpath "$requested")
+-CACHE=${CACHE:-"$ROOT/.workbench/cache/build"}
++STORE_TOOL="$ROOT/tools/workbench-store.py"
++STORE=$("$STORE_TOOL" state)
++MYLANG=$("$STORE_TOOL" compiler)
++CACHE=$("$STORE_TOOL" cache build "$MYLANG")
+@@ -16 +17 @@ esac
+-[ -x "$MYLANG" ] || { printf 'build-app: compiler missing: %s\n' "$requested" >&2; exit 2; }
++[ -x "$MYLANG" ] || { printf 'build-app: compiler missing: %s\n' "$MYLANG" >&2; exit 2; }
+@@ -37,19 +38,6 @@ recipe_version=pcb-native-build-v2-llvm-affinity
+-sources=$(mktemp)
+-copied=
+-trap 'rm -f "$sources"; [ -z "$copied" ] || rm -rf "$copied"' EXIT HUP INT TERM
+-(cd "$HERE" && sha256sum ./*.my) >"$sources"
+-source_digest=$(sha256sum "$sources" | awk '{ print $1 }')
+-snapshot="$ROOT/.workbench/snapshots/$source_digest"
+-mkdir -p "$ROOT/.workbench/snapshots" "$ROOT/.workbench/builds" "$CACHE"
+-mkdir -p "$build_cache"
+-if [ ! -d "$snapshot" ]; then
+-    copied=$(mktemp -d "$ROOT/.workbench/snapshots/.build-copy.XXXXXX")
+-    cp "$HERE"/*.my "$copied"/
+-    (cd "$HERE" && sha256sum -c "$sources" >/dev/null) || { printf '%s\n' 'build-app: sources changed while snapshotting' >&2; exit 1; }
+-    (cd "$copied" && sha256sum -c "$sources" >/dev/null) || { printf '%s\n' 'build-app: copied snapshot failed verification' >&2; exit 1; }
+-    if ! mv -T "$copied" "$snapshot" 2>/dev/null; then rm -rf "$copied"; fi
+-    copied=
+-fi
+-digest=$(printf '%s\n%s\n%s\n%s\n%s\n%s\n' "$identity" "$source_digest" "$mode" "$JOBS" "$environment_identity" "$recipe_version" | sha256sum | awk '{ print $1 }')
+-build="$ROOT/.workbench/builds/$digest"
+-mkdir -p "$build"
++snapshot=$("$STORE_TOOL" snapshot build)
++source_digest=$(basename "$snapshot")
++# Scheduling width changes latency, not the generated executable.
++digest=$(printf '%s\n%s\n%s\n%s\n%s\n' "$identity" "$source_digest" "$mode" "$environment_identity" "$recipe_version" | sha256sum | awk '{ print $1 }')
++build="$STORE/builds/$digest"
++mkdir -p "$build" "$build_cache"
+@@ -57,0 +46,11 @@ flock 9
++if [ ! -x "$build/pcb-workbench" ]; then
++    for old_jobs in "$JOBS" 2; do
++        old_digest=$(printf '%s\n%s\n%s\n%s\n%s\n%s\n' "$identity" "$source_digest" "$mode" "$old_jobs" "$environment_identity" "$recipe_version" | sha256sum | awk '{ print $1 }')
++        previous="$STORE/builds/$old_digest/pcb-workbench"
++        if [ -x "$previous" ]; then
++            cp -p "$previous" "$build/pcb-workbench.seed.$$"
++            mv "$build/pcb-workbench.seed.$$" "$build/pcb-workbench"
++            break
++        fi
++    done
++fi
+@@ -60,2 +59,3 @@ if [ ! -x "$build/pcb-workbench" ]; then
+-    trap 'rm -f "$sources" "$output"; [ -z "$copied" ] || rm -rf "$copied"' EXIT HUP INT TERM
+-    report_dir=$(mktemp -d "$build/report.XXXXXX")
++    trap 'rm -f "$output"' EXIT HUP INT TERM
++    mkdir -p "$ROOT/.workbench/results"
++    report_dir=$(mktemp -d "$ROOT/.workbench/results/build-$digest.XXXXXX")
+diff --git a/guest/gate.sh b/guest/gate.sh
+index ba3ad74..3c360fa 100755
+--- a/guest/gate.sh
++++ b/guest/gate.sh
+@@ -5,2 +5,3 @@ ROOT=$(CDPATH= cd -- "$HERE/.." && pwd)
+-MYLANG=${MYLANG:-"$ROOT/.mylang/current/bin/mylang"}
+-CACHE=${CACHE:-"$ROOT/.workbench/cache/tests"}
++STORE_TOOL="$ROOT/tools/workbench-store.py"
++MYLANG=$("$STORE_TOOL" compiler)
++CACHE=$("$STORE_TOOL" cache tests "$MYLANG")
+@@ -27 +28 @@ QBE=$(realpath "$QBE"); ZIG=$(realpath "$ZIG")
+-mkdir -p "$CACHE" "$ROOT/.workbench/snapshots" "$ROOT/.workbench/results"
++mkdir -p "$CACHE" "$ROOT/.workbench/results"
+@@ -36,20 +37,2 @@ fi
+-manifest=$(mktemp)
+-copied=$(mktemp -d "$ROOT/.workbench/snapshots/.copy.XXXXXX")
+-trap 'rm -f "$manifest"; rm -rf "$copied"' EXIT HUP INT TERM
+-(cd "$HERE" && sha256sum ./*.my test-inventory.txt) >"$manifest"
+-digest=$(sha256sum "$manifest" | awk '{ print $1 }')
+-snapshot="$ROOT/.workbench/snapshots/$digest"
+-if [ ! -d "$snapshot" ]; then
+-    cp "$HERE"/*.my "$copied"/
+-    cp "$HERE/test-inventory.txt" "$copied"/
+-    (cd "$HERE" && sha256sum -c "$manifest" >/dev/null) || {
+-        printf '%s\n' 'gate: sources changed while snapshotting; retry on a stable tree' >&2
+-        exit 1
+-    }
+-    (cd "$copied" && sha256sum -c "$manifest" >/dev/null) || {
+-        printf '%s\n' 'gate: copied snapshot failed verification' >&2
+-        exit 1
+-    }
+-    if ! mv -T "$copied" "$snapshot" 2>/dev/null; then rm -rf "$copied"; fi
+-fi
+-rm -rf "$copied"
++snapshot=$("$STORE_TOOL" snapshot tests)
++digest=$(basename "$snapshot")
+@@ -63,0 +47,4 @@ printf 'gate: snapshot=%s compiler=%s\n' "$digest" "$MYLANG" >&2
++selection=$(printf '%s\n%s\n%s\n%s\n' "$digest" "$entry" "$filter" "$STEPS" | sha256sum | awk '{ print $1 }')
++mkdir -p "$CACHE/locks"
++exec 9>"$CACHE/locks/$selection"
++flock 9
+diff --git a/tests/shared_cache.py b/tests/shared_cache.py
+new file mode 100644
+index 0000000..73c9229
+--- /dev/null
++++ b/tests/shared_cache.py
+@@ -0,0 +1,295 @@
++#!/usr/bin/env python3
++"""Cross-worktree regression tests for the PCB shared cache contract."""
++
++from __future__ import annotations
++
++import json
++import os
++from pathlib import Path
++import shutil
++import subprocess
++import tempfile
++import textwrap
++import unittest
++
++
++STAGE = Path(__file__).resolve().parents[1]
++
++
++def run(argv, *, cwd: Path, env: dict[str, str], check: bool = True):
++    result = subprocess.run(argv, cwd=cwd, env=env, text=True, capture_output=True)
++    if check and result.returncode:
++        raise AssertionError(
++            f"command failed ({result.returncode}): {argv}\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
++        )
++    return result
++
++
++class SharedCacheTest(unittest.TestCase):
++    def setUp(self):
++        self.temp = tempfile.TemporaryDirectory(prefix="pcb shared cache ")
++        self.root = Path(self.temp.name)
++        self.shared = self.root / "shared cache"
++        self.seed = self.root / "seed"
++        self.seed.mkdir()
++        for name in ("guest", "tools", "kit"):
++            source = STAGE / name
++            if source.exists():
++                shutil.copytree(source, self.seed / name)
++        for name in ("README.md", "AGENTS.md"):
++            source = STAGE / name
++            if source.exists():
++                shutil.copy2(source, self.seed / name)
++        config = STAGE / "workbench.json"
++        if config.exists():
++            shutil.copy2(config, self.seed / "workbench.json")
++        else:
++            (self.seed / "workbench.json").write_text(
++                json.dumps({"version": 1, "project": "pcb-workbench"}, indent=2) + "\n"
++            )
++        self.git("init", cwd=self.seed)
++        self.git("config", "user.email", "cache-test@example.invalid", cwd=self.seed)
++        self.git("config", "user.name", "Cache Test", cwd=self.seed)
++        self.git("config", "core.hooksPath", "/dev/null", cwd=self.seed)
++        self.git("add", ".", cwd=self.seed)
++        self.git("commit", "-m", "fixture", cwd=self.seed)
++        self.one = self.root / "checkout one"
++        self.two = self.root / "checkout-two"
++        self.git("worktree", "add", "-b", "one", str(self.one), cwd=self.seed)
++        self.git("worktree", "add", "-b", "two", str(self.two), cwd=self.seed)
++        self.env = os.environ.copy()
++        for name in (
++            "CACHE", "MYLANG", "MYLANG_HOST_COMPILER", "MYLANG_LLVM_ADAPTER",
++            "MYLANG_QBE", "MYLANG_ZIG", "PCB_BUILD_JOBS", "PCB_BUILD_MODE",
++        ):
++            self.env.pop(name, None)
++        for name in list(self.env):
++            if name.startswith("MYLANG_"):
++                self.env.pop(name)
++        self.env["PCB_SHARED_CACHE"] = str(self.shared)
++        self.env["FAKE_BUILD_COUNT"] = str(self.root / "compiler-count")
++        self.install_a = self.fake_install("compiler-a", "A")
++        self.install_b = self.fake_install("compiler-b", "B")
++
++    def tearDown(self):
++        self.temp.cleanup()
++
++    def git(self, *args: str, cwd: Path):
++        return subprocess.run(["git", *args], cwd=cwd, check=True, text=True, capture_output=True)
++
++    def fake_install(self, name: str, generation: str) -> Path:
++        root = self.root / name
++        (root / "bin").mkdir(parents=True)
++        (root / "lib/mylang-llvm").mkdir(parents=True)
++        (root / "lib/mylang-runtime").mkdir(parents=True)
++        compiler = root / "bin/mylang"
++        compiler.write_text(textwrap.dedent(f"""\
++            #!/usr/bin/env python3
++            # generation {generation}
++            import fcntl, json, os, pathlib, sys, time
++            args = sys.argv[1:]
++            if args and args[0] == "test":
++                print(json.dumps({{"version":"native-tests-v1","tests":[{{"name":"fixture::test_ok","status":"passed"}}],"passed":1,"cached":0,"failed":0,"skipped":0,"executed":1}}))
++                raise SystemExit(0)
++            if not args or args[0] != "build":
++                raise SystemExit(2)
++            count_path = pathlib.Path(os.environ["FAKE_BUILD_COUNT"])
++            count_path.parent.mkdir(parents=True, exist_ok=True)
++            with count_path.open("a+") as count:
++                fcntl.flock(count, fcntl.LOCK_EX)
++                count.seek(0)
++                value = int(count.read() or "0") + 1
++                count.seek(0); count.truncate(); count.write(str(value)); count.flush()
++            time.sleep(float(os.environ.get("FAKE_BUILD_DELAY", "0")))
++            if os.environ.get("FAKE_BUILD_FAIL") == "1":
++                partial = pathlib.Path(args[args.index("-o") + 1])
++                partial.write_text("incomplete artifact")
++                partial.chmod(0o755)
++                print("controlled fake build failure", file=sys.stderr)
++                raise SystemExit(9)
++            output = pathlib.Path(args[args.index("-o") + 1])
++            output.write_text("#!/usr/bin/env python3\\nimport json, pathlib, sys\\nargs=sys.argv[1:]\\nif '--journal' in args:\\n pathlib.Path(args[args.index('--journal')+1]).mkdir(parents=True, exist_ok=True)\\nprint(json.dumps({{'generation':'{generation}','args':args}}))\\n")
++            output.chmod(0o755)
++            print(json.dumps({{"version":"qbe-build-v1","generation":"{generation}"}}), file=sys.stderr)
++        """))
++        compiler.chmod(0o755)
++        for executable in ("qbe", "mylang-io"):
++            path = root / "bin" / executable
++            path.write_text("#!/bin/sh\nexit 0\n")
++            path.chmod(0o755)
++        for helper in ("qbe_llvm.py", "llvm_emit.py", "amd64_sysv.py", "runtime_signatures.py"):
++            (root / "lib/mylang-llvm" / helper).write_text(f"# {generation} {helper}\n")
++        (root / "lib/mylang-runtime/runtime.a").write_text(f"runtime {generation}\n")
++        return root
++
++    def install(self, checkout: Path, source: Path) -> str:
++        result = run(["tools/update-toolchain.sh", str(source)], cwd=checkout, env=self.env)
++        self.assertRegex(result.stdout, r"^pinned mylang install [0-9a-f]{64}\n$")
++        return result.stdout.split()[-1]
++
++    def store(self, checkout: Path, *args: str) -> Path:
++        result = run(["tools/workbench-store.py", *args], cwd=checkout, env=self.env)
++        return Path(result.stdout.strip())
++
++    def build(self, checkout: Path, **extra: str):
++        env = self.env | extra
++        return run(["guest/build-app.sh"], cwd=checkout, env=env, check=False)
++
++    def count(self) -> int:
++        path = Path(self.env["FAKE_BUILD_COUNT"])
++        return int(path.read_text()) if path.exists() else 0
++
++    def test_cross_worktree_cache_lifecycle(self):
++        pin_a = self.install(self.one, self.install_a)
++        self.install(self.two, self.install_a)
++        self.assertEqual(
++            json.loads((self.one / "workbench.json").read_text()),
++            {"version": 1, "project": "pcb-workbench", "toolchain": pin_a},
++        )
++        self.assertEqual(self.store(self.one, "state"), self.store(self.two, "state"))
++        self.assertEqual(self.store(self.one, "compiler"), self.store(self.two, "compiler"))
++        self.assertEqual(self.store(self.one, "snapshot", "build"), self.store(self.two, "snapshot", "build"))
++        tests_snapshot = self.store(self.one, "snapshot", "tests")
++        self.assertEqual(tests_snapshot, self.store(self.two, "snapshot", "tests"))
++        self.assertTrue((tests_snapshot / "test-inventory.txt").is_file())
++        self.assertEqual(
++            self.store(self.one, "cache", "build", str(self.store(self.one, "compiler"))),
++            self.store(self.two, "cache", "build", str(self.store(self.two, "compiler"))),
++        )
++        self.assertEqual(
++            self.store(self.one, "cache", "tests", str(self.store(self.one, "compiler"))),
++            self.store(self.two, "cache", "tests", str(self.store(self.two, "compiler"))),
++        )
++
++        first = self.build(self.one, PCB_BUILD_JOBS="1")
++        self.assertEqual(first.returncode, 0, first.stderr)
++        second = self.build(self.two, PCB_BUILD_JOBS="7")
++        self.assertEqual(second.returncode, 0, second.stderr)
++        self.assertEqual(first.stdout.strip(), second.stdout.strip())
++        self.assertEqual(self.count(), 1)
++
++        original = (self.one / "guest/units.my").read_text()
++        (self.one / "guest/units.my").write_text(original + "\n# private edit\n")
++        edited = self.build(self.one)
++        self.assertEqual(edited.returncode, 0, edited.stderr)
++        self.assertNotEqual(edited.stdout.strip(), first.stdout.strip())
++        (self.one / "guest/units.my").write_text(original)
++        reverted = self.build(self.one)
++        self.assertEqual(reverted.stdout.strip(), first.stdout.strip())
++        self.assertEqual(self.count(), 2)
++
++        old_compiler = self.store(self.two, "compiler")
++        old_binary = Path(first.stdout.strip())
++        old_cache = self.store(self.two, "cache", "build", str(old_compiler))
++        sentinel = old_cache / "warm-generation-sentinel"
++        sentinel.write_text("retained old compiler generation")
++        pin_b = self.install(self.one, self.install_b)
++        self.assertNotEqual(pin_a, pin_b)
++        self.assertEqual(self.store(self.two, "compiler"), old_compiler)
++        new_cache = self.store(self.one, "cache", "build", str(self.store(self.one, "compiler")))
++        self.assertNotEqual(old_cache, new_cache)
++        self.assertIn(pin_a, old_cache.parts)
++        self.assertIn(pin_b, new_cache.parts)
++        upgraded = self.build(self.one)
++        self.assertEqual(upgraded.returncode, 0, upgraded.stderr)
++        self.assertNotEqual(upgraded.stdout.strip(), first.stdout.strip())
++        self.assertTrue(old_binary.is_file(), "compiler upgrade removed the old generation")
++        self.assertEqual(self.build(self.two).stdout.strip(), first.stdout.strip())
++        self.assertEqual(sentinel.read_text(), "retained old compiler generation")
++
++    def test_concurrent_cold_build_and_failed_publish(self):
++        self.install(self.one, self.install_a)
++        self.install(self.two, self.install_a)
++        env_one = self.env | {"PCB_BUILD_JOBS": "1", "FAKE_BUILD_DELAY": "0.3"}
++        env_two = self.env | {"PCB_BUILD_JOBS": "8", "FAKE_BUILD_DELAY": "0.3"}
++        one = subprocess.Popen(["guest/build-app.sh"], cwd=self.one, env=env_one, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++        two = subprocess.Popen(["guest/build-app.sh"], cwd=self.two, env=env_two, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++        out_one, err_one = one.communicate(timeout=15)
++        out_two, err_two = two.communicate(timeout=15)
++        self.assertEqual((one.returncode, two.returncode), (0, 0), err_one + err_two)
++        self.assertEqual(out_one.strip(), out_two.strip())
++        self.assertEqual(self.count(), 1)
++
++        (self.one / "guest/units.my").write_text((self.one / "guest/units.my").read_text() + "\n# failing generation\n")
++        failed = self.build(self.one, FAKE_BUILD_FAIL="1")
++        self.assertEqual(failed.returncode, 9)
++        # Failure controls are intentionally absent from cache identity; retry
++        # must run the compiler again and only then publish the executable.
++        retry = self.build(self.one)
++        self.assertEqual(retry.returncode, 0, retry.stderr)
++        self.assertEqual(self.count(), 3)
++        self.assertTrue(Path(retry.stdout.strip()).is_file())
++
++    def test_reports_and_journals_remain_checkout_local(self):
++        self.install(self.one, self.install_a)
++        self.install(self.two, self.install_a)
++        gate_one = run(["guest/gate.sh", "--focus", "units"], cwd=self.one, env=self.env)
++        gate_two = run(["guest/gate.sh", "--focus", "units"], cwd=self.two, env=self.env)
++        report_one = Path(json.loads(gate_one.stdout)["report"])
++        report_two = Path(json.loads(gate_two.stdout)["report"])
++        self.assertTrue(report_one.is_relative_to(self.one / ".workbench/results"))
++        self.assertTrue(report_two.is_relative_to(self.two / ".workbench/results"))
++        self.assertNotEqual(report_one, report_two)
++        journal_one = self.one / "private journal"
++        journal_two = self.two / "private journal"
++        pcb_one = run(["guest/pcb.sh", "status", "--journal", str(journal_one)], cwd=self.one, env=self.env)
++        run(["guest/pcb.sh", "status", "--journal", str(journal_two)], cwd=self.two, env=self.env)
++        built_line = next(line for line in pcb_one.stderr.splitlines() if line.startswith("build-app: built "))
++        diagnostics = Path(built_line.split("diagnostics=", 1)[1].split(" stdout=", 1)[0])
++        self.assertTrue(diagnostics.is_relative_to(self.one / ".workbench/results"))
++        self.assertFalse(diagnostics.is_relative_to(self.shared))
++        self.assertTrue(journal_one.is_dir())
++        self.assertTrue(journal_two.is_dir())
++        self.assertFalse(any(self.shared.rglob("private journal")))
++
++    def test_failed_install_and_corrupt_snapshot_are_rejected(self):
++        pin = self.install(self.one, self.install_a)
++        config_before = (self.one / "workbench.json").read_bytes()
++        link_before = (self.one / ".mylang/current").resolve()
++        incomplete = self.root / "incomplete-install"
++        (incomplete / "bin").mkdir(parents=True)
++        (incomplete / "bin/mylang").write_text("#!/bin/sh\nexit 0\n")
++        (incomplete / "bin/mylang").chmod(0o755)
++        refused = run(
++            ["tools/update-toolchain.sh", str(incomplete)],
++            cwd=self.one,
++            env=self.env,
++            check=False,
++        )
++        self.assertNotEqual(refused.returncode, 0)
++        self.assertEqual((self.one / "workbench.json").read_bytes(), config_before)
++        self.assertEqual((self.one / ".mylang/current").resolve(), link_before)
++        self.assertEqual(json.loads(config_before)["toolchain"], pin)
++
++        linked = self.root / "linked-install"
++        shutil.copytree(self.install_b, linked)
++        external = self.root / "external-runtime.a"
++        external.write_text("mutable external runtime\n")
++        (linked / "lib/mylang-runtime/runtime.a").unlink()
++        (linked / "lib/mylang-runtime/runtime.a").symlink_to(external)
++        refused_link = run(
++            ["tools/update-toolchain.sh", str(linked)],
++            cwd=self.one,
++            env=self.env,
++            check=False,
++        )
++        self.assertNotEqual(refused_link.returncode, 0)
++        self.assertIn("symlink", refused_link.stderr)
++        self.assertEqual((self.one / "workbench.json").read_bytes(), config_before)
++        self.assertEqual((self.one / ".mylang/current").resolve(), link_before)
++
++        snapshot = self.store(self.one, "snapshot", "build")
++        source = snapshot / "units.my"
++        source.write_text(source.read_text() + "\n# corrupt shared snapshot\n")
++        corrupt = run(
++            ["tools/workbench-store.py", "snapshot", "build"],
++            cwd=self.one,
++            env=self.env,
++            check=False,
++        )
++        self.assertEqual(corrupt.returncode, 2)
++        self.assertIn("shared snapshot is corrupt", corrupt.stderr)
++
++
++if __name__ == "__main__":
++    unittest.main(verbosity=2)
+diff --git a/tests/workflow.sh b/tests/workflow.sh
+index 9a35449..c2385af 100755
+--- a/tests/workflow.sh
++++ b/tests/workflow.sh
+@@ -5,0 +6 @@ trap 'rm -rf "$tmp"' EXIT HUP INT TERM
++export PCB_SHARED_CACHE="$tmp/shared"
+@@ -7,0 +9 @@ mkdir -p "$tmp/fixture/guest" "$tmp/fixture/tools"
++cp "$ROOT/workbench.json" "$tmp/fixture/"
+@@ -89 +91 @@ mkdir -p "$tmp/project/tools" "$tmp/install-a/bin" "$tmp/install-a/lib/mylang-ll
+-cp "$ROOT/tools/update-toolchain.sh" "$tmp/project/tools/"
++cp "$ROOT/tools/update-toolchain.sh" "$ROOT/tools/workbench-store.py" "$tmp/project/tools/"
+@@ -149 +150,0 @@ chmod +x "$tmp/fake/bin/mylang"
+-rm -rf "$tmp/fixture/.workbench/builds"
+diff --git a/tools/update-toolchain.sh b/tools/update-toolchain.sh
+index 5495064..55d480b 100755
+--- a/tools/update-toolchain.sh
++++ b/tools/update-toolchain.sh
+@@ -5,25 +5 @@ ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+-source=$1
+-for asset in bin/mylang bin/qbe lib/mylang-llvm/qbe_llvm.py lib/mylang-llvm/llvm_emit.py lib/mylang-llvm/amd64_sysv.py lib/mylang-llvm/runtime_signatures.py lib/mylang-runtime; do
+-    [ -e "$source/$asset" ] || { printf 'update-toolchain: incomplete install, missing %s\n' "$asset" >&2; exit 1; }
+-done
+-identity=$(cd "$source" && find bin lib/mylang-llvm lib/mylang-runtime -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum | awk '{ print $1 }')
+-destination="$ROOT/.mylang/installs/$identity"
+-mkdir -p "$ROOT/.mylang/installs"
+-if [ ! -d "$destination" ]; then
+-    staging="$destination.tmp.$$"
+-    trap 'rm -rf "$staging"' EXIT HUP INT TERM
+-    mkdir -p "$staging"
+-    cp -a "$source/bin" "$source/lib" "$staging"/
+-    copied_identity=$(cd "$staging" && find bin lib/mylang-llvm lib/mylang-runtime -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum | awk '{ print $1 }')
+-    [ "$copied_identity" = "$identity" ] || { printf '%s\n' 'update-toolchain: copied install failed identity verification' >&2; exit 1; }
+-    printf '%s\n' "$identity" >"$staging/IDENTITY"
+-    if ! mv -T "$staging" "$destination" 2>/dev/null; then
+-        rm -rf "$staging"
+-    fi
+-fi
+-installed_identity=$(cd "$destination" && find bin lib/mylang-llvm lib/mylang-runtime -type f ! -name IDENTITY -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum | awk '{ print $1 }')
+-[ "$installed_identity" = "$identity" ] || { printf '%s\n' 'update-toolchain: existing pinned install is corrupt' >&2; exit 1; }
+-current_new="$ROOT/.mylang/current.new.$$"
+-ln -s "installs/$identity" "$current_new"
+-mv -Tf "$current_new" "$ROOT/.mylang/current"
+-printf 'pinned mylang install %s\n' "$identity"
++exec "$ROOT/tools/workbench-store.py" install "$1"
+diff --git a/tools/workbench-store.py b/tools/workbench-store.py
+new file mode 100755
+index 0000000..95723b3
+--- /dev/null
++++ b/tools/workbench-store.py
+@@ -0,0 +1,253 @@
++#!/usr/bin/env python3
++"""Shared immutable build inputs and artifacts for PCB workbench checkouts."""
++import argparse
++from contextlib import contextmanager
++import fcntl
++import hashlib
++import json
++import os
++from pathlib import Path
++import re
++import shutil
++import sys
++import tempfile
++import uuid
++
++ROOT = Path(__file__).resolve().parent.parent
++CONFIG = ROOT / "workbench.json"
++HEX = re.compile(r"[0-9a-f]{64}\Z")
++
++
++def configuration(required=True):
++    if not CONFIG.exists() and not required:
++        return {"version": 1, "project": "project-" + uuid.uuid4().hex}
++    value = json.loads(CONFIG.read_text())
++    if (not isinstance(value, dict) or value.get("version") != 1
++            or not isinstance(value.get("project"), str)
++            or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", value["project"])):
++        raise ValueError("invalid workbench.json project identity")
++    return value
++
++
++def base():
++    override = os.environ.get("PCB_SHARED_CACHE")
++    if override:
++        path = Path(override)
++        if not path.is_absolute():
++            raise ValueError("PCB_SHARED_CACHE must be an absolute path")
++    else:
++        cache = Path(os.environ.get("XDG_CACHE_HOME", str(Path.home() / ".cache")))
++        if not cache.is_absolute():
++            raise ValueError("XDG_CACHE_HOME must be an absolute path")
++        path = cache / "mylang" / "workbench"
++    path.mkdir(parents=True, exist_ok=True)
++    return path.resolve()
++
++
++def state():
++    path = base() / "projects" / configuration()["project"]
++    path.mkdir(parents=True, exist_ok=True)
++    return path
++
++
++@contextmanager
++def locked(path):
++    path.parent.mkdir(parents=True, exist_ok=True)
++    with path.open("a") as handle:
++        fcntl.flock(handle, fcntl.LOCK_EX)
++        yield
++
++
++def atomic_text(path, text):
++    path.parent.mkdir(parents=True, exist_ok=True)
++    descriptor, name = tempfile.mkstemp(prefix=".publish-", dir=path.parent)
++    try:
++        with os.fdopen(descriptor, "w") as handle:
++            handle.write(text)
++        os.replace(name, path)
++    finally:
++        Path(name).unlink(missing_ok=True)
++
++
++def compiler():
++    override = os.environ.get("MYLANG")
++    if override:
++        result = Path(override).resolve(strict=True)
++    else:
++        pin = configuration().get("toolchain", "")
++        if not isinstance(pin, str) or not HEX.fullmatch(pin):
++            raise ValueError("missing toolchain pin; run tools/update-toolchain.sh INSTALL")
++        install = base() / "toolchains" / pin
++        if (install / "IDENTITY").read_text().strip() != pin:
++            raise ValueError("shared toolchain identity does not match the pin")
++        result = install / "bin" / "mylang"
++    if not result.is_file() or not os.access(result, os.X_OK):
++        raise ValueError("compiler missing or not executable: " + str(result))
++    return result
++
++
++def compiler_identity(executable):
++    executable = Path(executable).resolve(strict=True)
++    marker = executable.parent.parent / "IDENTITY"
++    if marker.is_file():
++        identity = marker.read_text().strip()
++        if not HEX.fullmatch(identity):
++            raise ValueError("invalid compiler identity")
++        return identity
++    return hashlib.sha256(executable.read_bytes()).hexdigest()
++
++
++def cache(family, executable):
++    # Native generation cleanup only sees one compiler pin in this namespace.
++    root = Path(os.environ["CACHE"]).resolve() if os.environ.get("CACHE") else state() / "cache"
++    path = root / compiler_identity(executable) / family
++    path.mkdir(parents=True, exist_ok=True)
++    return path
++
++
++def source_files(purpose):
++    guest = ROOT / "guest"
++    files = sorted(guest.glob("*.my"), key=lambda path: path.name)
++    if not files:
++        raise ValueError("guest source files missing")
++    if purpose == "tests":
++        files.append(guest / "test-inventory.txt")
++    if any(path.is_symlink() or not path.is_file() for path in files):
++        raise ValueError("source snapshots require regular files")
++    return files
++
++
++def capture(purpose):
++    files = source_files(purpose)
++    contents = {path.name: path.read_bytes() for path in files}
++    # Match the previous sha256sum manifest, so its already-built binaries seed
++    # the shared store without recompilation.
++    manifest = "".join(
++        hashlib.sha256(contents[path.name]).hexdigest() + "  "
++        + ("./" if path.suffix == ".my" else "") + path.name + "\n"
++        for path in files
++    )
++    if source_files(purpose) != files or any(path.read_bytes() != contents[path.name] for path in files):
++        raise ValueError("sources changed while snapshotting; retry on stable inputs")
++    return hashlib.sha256(manifest.encode()).hexdigest(), contents
++
++
++def snapshot(purpose):
++    digest, contents = capture(purpose)
++    shared = state()
++    destination = shared / "snapshots" / digest
++    with locked(shared / "locks" / ("snapshot-" + digest)):
++        if destination.exists():
++            if any(not (destination / name).is_file() or (destination / name).read_bytes() != data
++                   for name, data in contents.items()):
++                raise ValueError("shared snapshot is corrupt: " + str(destination))
++            if {p.name for p in destination.iterdir()} != set(contents):
++                raise ValueError("shared snapshot contains unexpected files")
++            return destination
++        destination.parent.mkdir(parents=True, exist_ok=True)
++        pending = Path(tempfile.mkdtemp(prefix=".snapshot-", dir=destination.parent))
++        try:
++            for name, data in contents.items():
++                (pending / name).write_bytes(data)
++            pending.rename(destination)
++        finally:
++            if pending.exists():
++                shutil.rmtree(pending)
++    return destination
++
++
++def installation_identity(source):
++    required = ["bin/mylang", "bin/qbe", "lib/mylang-llvm/qbe_llvm.py",
++                "lib/mylang-llvm/llvm_emit.py", "lib/mylang-llvm/amd64_sysv.py",
++                "lib/mylang-llvm/runtime_signatures.py", "lib/mylang-runtime"]
++    for name in required:
++        if not (source / name).exists():
++            raise ValueError("incomplete install, missing " + name)
++    for name in ("bin/mylang", "bin/qbe"):
++        if not os.access(source / name, os.X_OK):
++            raise ValueError("installation tool is not executable: " + name)
++    for name in ("bin", "lib"):
++        directory = source / name
++        if not directory.is_dir() or directory.is_symlink():
++            raise ValueError("installation requires regular directories: " + name)
++        for path in directory.rglob("*"):
++            if path.is_symlink() or not (path.is_file() or path.is_dir()):
++                raise ValueError("installation contains a symlink or special file: " + str(path))
++    files = sorted((p for name in ["bin", "lib/mylang-llvm", "lib/mylang-runtime"]
++                    for p in (source / name).rglob("*") if p.is_file()),
++                   key=lambda p: str(p.relative_to(source)))
++    manifest = "".join(hashlib.sha256(p.read_bytes()).hexdigest() + "  "
++                       + str(p.relative_to(source)) + "\n" for p in files)
++    return hashlib.sha256(manifest.encode()).hexdigest()
++
++
++def install(source):
++    source = Path(source).resolve(strict=True)
++    identity = installation_identity(source)
++    shared = base()
++    destination = shared / "toolchains" / identity
++    with locked(shared / "locks" / ("toolchain-" + identity)):
++        if destination.exists():
++            if (installation_identity(destination) != identity
++                    or (destination / "IDENTITY").read_text().strip() != identity):
++                raise ValueError("shared installation is corrupt")
++        else:
++            destination.parent.mkdir(parents=True, exist_ok=True)
++            pending = Path(tempfile.mkdtemp(prefix=".install-", dir=destination.parent))
++            try:
++                for name in ["bin", "lib"]:
++                    shutil.copytree(source / name, pending / name, symlinks=False)
++                if installation_identity(pending) != identity:
++                    raise ValueError("installation changed while copying")
++                (pending / "IDENTITY").write_text(identity + "\n")
++                pending.rename(destination)
++            finally:
++                if pending.exists():
++                    shutil.rmtree(pending)
++    # The pin is checkout-local and trackable; no shared mutable 'current' pin.
++    with locked(ROOT / ".workbench" / "pin.lock"):
++        config = configuration(required=False)
++        config["toolchain"] = identity
++        atomic_text(CONFIG, json.dumps(config, indent=2) + "\n")
++        compat = ROOT / ".mylang"
++        compat.mkdir(exist_ok=True)
++        link = compat / ("current.new." + uuid.uuid4().hex)
++        try:
++            link.symlink_to(destination)
++            os.replace(link, compat / "current")
++        finally:
++            link.unlink(missing_ok=True)
++    return identity
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    commands = parser.add_subparsers(dest="command", required=True)
++    for name in ["state", "compiler"]:
++        commands.add_parser(name)
++    commands.add_parser("snapshot").add_argument("purpose", choices=["build", "tests"])
++    command = commands.add_parser("cache")
++    command.add_argument("family", choices=["build", "tests"])
++    command.add_argument("compiler")
++    commands.add_parser("install").add_argument("source")
++    args = parser.parse_args()
++    try:
++        if args.command == "state":
++            result = state()
++        elif args.command == "compiler":
++            result = compiler()
++        elif args.command == "snapshot":
++            result = snapshot(args.purpose)
++        elif args.command == "cache":
++            result = cache(args.family, args.compiler)
++        else:
++            result = "pinned mylang install " + install(args.source)
++    except (OSError, ValueError, KeyError) as error:
++        print("workbench-store: " + str(error), file=sys.stderr)
++        return 2
++    print(result)
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/workbench.json b/workbench.json
+new file mode 100644
+index 0000000..8888b59
+--- /dev/null
++++ b/workbench.json
+@@ -0,0 +1,5 @@
++{
++  "version": 1,
++  "project": "pcb-workbench",
++  "toolchain": "4bbbce22f660a58c0f7a024d5a31138cc6a8bb32b1040f8b8d59295761cf72ce"
++}

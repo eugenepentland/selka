@@ -1,0 +1,108 @@
+[
+  {
+    "label": "dep-build-a",
+    "seconds": 0.820521154004382,
+    "exit": 0,
+    "command": [
+      "guest/build-app.sh"
+    ]
+  },
+  {
+    "label": "dep-build-b",
+    "seconds": 0.20279509499960113,
+    "exit": 0,
+    "command": [
+      "guest/build-app.sh"
+    ]
+  },
+  {
+    "label": "dep-run-a",
+    "seconds": 0.0008387700072489679,
+    "exit": 0,
+    "command": [
+      "/home/epentland/.cache/mylang/workbench/projects/pcb-cache-dependency-verification-20260921/builds/1874d0c781f4d9954b8afda4597f520c735c28ec6f54643e72d405fc7db7a6ed/pcb-workbench"
+    ]
+  },
+  {
+    "label": "dep-test-a",
+    "seconds": 0.5861302220000653,
+    "exit": 0,
+    "command": [
+      "guest/gate.sh",
+      "--focus",
+      "main"
+    ]
+  },
+  {
+    "label": "dep-test-b",
+    "seconds": 0.23396629600028973,
+    "exit": 0,
+    "command": [
+      "guest/gate.sh",
+      "--focus",
+      "main"
+    ]
+  },
+  {
+    "label": "dep-build-edited-b",
+    "seconds": 0.6514274259970989,
+    "exit": 0,
+    "command": [
+      "guest/build-app.sh"
+    ]
+  },
+  {
+    "label": "dep-run-edited-b",
+    "seconds": 0.0011509440082591027,
+    "exit": 0,
+    "command": [
+      "/home/epentland/.cache/mylang/workbench/projects/pcb-cache-dependency-verification-20260921/builds/f449351205ffe8ff055592f9a4bc0e7daae34a0cc583f817ec717f31d5661cda/pcb-workbench"
+    ]
+  },
+  {
+    "label": "dep-test-edited-b",
+    "seconds": 0.45357151799544226,
+    "exit": 1,
+    "command": [
+      "guest/gate.sh",
+      "--focus",
+      "main"
+    ]
+  },
+  {
+    "label": "dep-run-unmodified-a",
+    "seconds": 0.0008254880085587502,
+    "exit": 0,
+    "command": [
+      "/home/epentland/.cache/mylang/workbench/projects/pcb-cache-dependency-verification-20260921/builds/1874d0c781f4d9954b8afda4597f520c735c28ec6f54643e72d405fc7db7a6ed/pcb-workbench"
+    ]
+  },
+  {
+    "label": "dep-test-unmodified-a",
+    "seconds": 0.20765137400303502,
+    "exit": 0,
+    "command": [
+      "guest/gate.sh",
+      "--focus",
+      "main"
+    ]
+  },
+  {
+    "label": "dep-build-reverted-b",
+    "seconds": 0.1986903649958549,
+    "exit": 0,
+    "command": [
+      "guest/build-app.sh"
+    ]
+  },
+  {
+    "label": "dep-test-reverted-b",
+    "seconds": 0.22219738199783023,
+    "exit": 0,
+    "command": [
+      "guest/gate.sh",
+      "--focus",
+      "main"
+    ]
+  }
+]
