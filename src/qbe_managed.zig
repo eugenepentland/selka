@@ -512,6 +512,34 @@ fn immediateScalarProjection(comptime E: type, self: *E, element: typed.Type) Er
     }
     return false;
 }
+/// QBE-AGGREF-1's by-address rule for a list element whose only consumer is the
+/// store that copies it into a local of its own.
+///
+/// The element lives in the receiver's backing storage. The instruction that
+/// follows this read is a `store_local` reached by falling through, of the
+/// element's own type, and the element owns nothing, so that store can blit
+/// straight out of the element instead of out of a snapshot of it: passing the
+/// checked address on removes the copy into per-pc aggregate scratch, and the
+/// one copy the program asked for — into the destination local — remains. No
+/// call, allocation, mutation or release runs in between, because the very next
+/// instruction is the store, and the address is dead once it has copied. An
+/// element the store would release (a type with a `drop`) keeps its snapshot,
+/// so no release ever runs against storage the list still owns, and a zero-sized
+/// element keeps the scratch the frame protocol places after the entry block.
+fn elementFeedsStore(comptime E: type, self: *E, element: typed.Type) Error!bool {
+    const code = self.function.scope.instructions;
+    const next = self.pc + 1;
+    if (next >= code.len or self.states[next] == null) return false;
+    if (next < self.branch_targets.len and self.branch_targets[next]) return false;
+    const slot = switch (code[next].op) {
+        .store_local => |target| @backingInt(target),
+        else => return false,
+    };
+    if (slot >= self.function.scope.locals.len) return false;
+    if (self.function.scope.locals[slot].ty != element) return false;
+    const value = try self.layout(element);
+    return !value.drop and value.size != 0;
+}
 /// Read one element of a byte string or list straight from its backing storage
 /// after an unsigned bounds check, in place of a `myl_native_list_get` call.
 /// The cold path raises the same detail-carrying bounds trap, with the caller's
@@ -525,6 +553,8 @@ fn inlineIndexRead(comptime E: type, self: *E, read: IndexRead, failure: []const
     if (self.isScalar(read.element)) {
         try self.store(read.slot, try self.readValue(address, read.element));
     } else if (try immediateScalarProjection(E, self, read.element)) {
+        try self.store(read.slot, address);
+    } else if (try elementFeedsStore(E, self, read.element)) {
         try self.store(read.slot, address);
     } else {
         const pointer = try self.aggregatePointer();
