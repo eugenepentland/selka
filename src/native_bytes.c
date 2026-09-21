@@ -408,7 +408,16 @@ static int buffer_frozen(const myl_native_heap *heap, const myl_native_bytes *bu
    and later blocks double, so the count of growth allocations stays logarithmic.
    The grown block joins the buffer's own arena, so an append performed inside a
    younger arena never leaves an older buffer owning storage about to be
-   bulk released. */
+   bulk released.
+
+   A backing big enough to be its own one-slot segment is extended in place
+   instead: the octets it already holds are exactly the ones the copy would
+   rewrite, and the pages behind them are exactly the ones the copy would fault
+   a second time for, so a doubling buffer costs its final size in memory
+   traffic rather than twice it. The buffer's backing is private — `byte_buffer`
+   is only ever built by a fresh allocation or a copy, and `view` refuses a
+   mutable receiver — so nothing else points into it and a moved reservation is
+   observed only through the header this stores it back into. */
 static int buffer_grow(myl_native_heap *heap, myl_native_bytes *buffer, size_t needed) {
     if (needed<=buffer->capacity) return 1;
     size_t capacity=buffer->capacity<64 ? 64 : buffer->capacity;
@@ -416,7 +425,13 @@ static int buffer_grow(myl_native_heap *heap, myl_native_bytes *buffer, size_t n
         if (capacity>SIZE_MAX/2) return 0;
         capacity*=2;
     }
-    void *storage=myl_native_heap_alloc_at(heap,buffer->element,capacity,myl_native_object_region(heap,buffer));
+    void *storage=myl_native_heap_extend(heap,buffer->storage,capacity);
+    if (storage) {
+        buffer->storage=storage;
+        buffer->capacity=capacity;
+        return 1;
+    }
+    storage=myl_native_heap_alloc_at(heap,buffer->element,capacity,myl_native_object_region(heap,buffer));
     if (!storage) return 0;
     if (buffer->length) memcpy(storage,buffer->storage,buffer->length);
     buffer->storage=storage;

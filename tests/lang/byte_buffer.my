@@ -226,3 +226,33 @@ public def test_append_float_matches_the_printed_spelling() -> bool:
     if bytes(infinite) != b"inf,-inf":
         return False
     return len(bytes(seeded)) == 10
+
+
+# A backing that outgrows the size classes grows by extending its own
+# reservation, so every octet written before the growth is still there after it,
+# and the buffer's identity, length and element descriptor are unchanged.
+# spec: BUFFER-GROWTH-1
+public def test_growth_past_the_segment_threshold_keeps_every_octet() -> bool:
+    seed = byte_buffer([index % 256 for index in range(65536)])
+    if len(seed) != 65536:
+        return False
+    empty: list[int] = []
+    buffer = byte_buffer(empty)
+    alias = buffer
+    writes = 0
+    while writes < 6:
+        if not buffer.append_range(seed, 0, 65536):
+            return False
+        writes += 1
+    if len(buffer) != 6 * 65536 or len(alias) != 6 * 65536:
+        return False
+    check = 0
+    while check < 6 * 65536:
+        if buffer[check] != check % 256:
+            return False
+        check += 1021
+    if not buffer.append_byte(7):
+        return False
+    if buffer[6 * 65536] != 7:
+        return False
+    return buffer[6 * 65536 - 1] == 255

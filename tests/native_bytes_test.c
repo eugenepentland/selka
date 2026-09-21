@@ -10,7 +10,48 @@ static void equals(myl_native_bytes *value,const char *text) {
     assert(value && value->length==strlen(text));
     assert(!value->length || !memcmp(value->storage,text,value->length));
 }
+/* spec-case: BUFFER-GROWTH-1. Octet writes stay correct across every doubling
+   of a buffer's backing, including the doublings the allocator serves by
+   extending the block's own reservation rather than by copying it. A backing
+   drawn from a size class is a slot shared with its class, so the allocator
+   refuses to resize it; once a backing is big enough to own a segment whole,
+   the growth keeps the octets already written, keeps the object's element count
+   and traced size exact, and leaves the extended block alive across a
+   collection. */
+static void growth_keeps_octets(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap,256u<<20);
+    myl_native_bytes *buffer=myl_native_bytes_new(&heap,(const unsigned char *)"",0);
+    assert(buffer);
+    myl_native_root root;
+    myl_native_root_push(&heap,&root,&buffer,&pointer);
+    assert(myl_native_bytes_buffer_append_byte(&heap,buffer,'a')==MYL_BYTES_WROTE);
+    assert(!myl_native_heap_extend(&heap,buffer->storage,buffer->capacity+1));
+    const unsigned char *octets=(const unsigned char *)buffer->storage;
+    size_t written=1;
+    size_t grown=0;
+    for (int step=0;step<40;++step) {
+        size_t before=buffer->capacity;
+        for (int i=0;i<8000;++i) {
+            assert(myl_native_bytes_buffer_append_byte(&heap,buffer,(int64_t)(written%251))==MYL_BYTES_WROTE);
+            written++;
+        }
+        if (buffer->capacity!=before) grown++;
+        octets=(const unsigned char *)buffer->storage;
+        assert(octets[0]=='a');
+        assert(octets[1]==1);
+        assert(buffer->length==written);
+    }
+    assert(grown>=4 && buffer->capacity>(256u<<10));
+    assert(myl_native_object_element(&heap,buffer->storage)==buffer->element);
+    for (size_t i=1;i<written;++i) assert(octets[i]==(i%251));
+    myl_native_heap_collect(&heap);
+    assert(buffer->length==written && octets[written-1]==((written-1)%251));
+    myl_native_root_pop(&heap,&root);
+    myl_native_heap_destroy(&heap);
+}
 int main(void) {
+    growth_keeps_octets();
     myl_native_heap heap;
     myl_native_heap_init(&heap,1<<20); heap.stress=1;
     myl_native_root roots[8];

@@ -336,6 +336,76 @@ void *myl_native_heap_alloc_block(myl_native_heap *heap, size_t prefix, size_t e
     if (prefix > SIZE_MAX - extra) return NULL;
     return myl_native_heap_alloc_at(heap, &block_type, prefix + extra, heap->region_depth);
 }
+/* The list slot naming the one-slot segment whose whole payload is `payload`, or
+ * NULL when the payload is anything else. Only an oversized segment — one whose
+ * single object owns the entire reservation — can be handed back to the host to
+ * resize, so a size-class slot, an arena allocation and a null pointer all
+ * answer NULL. */
+static myl_native_segment **extendable_slot(myl_native_heap *heap, const void *payload) {
+    for (myl_native_segment **link = &heap->segments; *link; link = &(*link)->next) {
+        myl_native_segment *segment = *link;
+        if (segment->class_index < MYL_NATIVE_CLASS_COUNT) continue;
+        if ((const unsigned char *)segment->data + sizeof(myl_native_object) == payload) return link;
+    }
+    return NULL;
+}
+/* An element descriptor whose bytes the collector never interprets, so an
+ * extension of such a block needs no zeroing: every octet a reader can reach
+ * was written by the caller. The test is the collector's own — `trace` returns
+ * at once for `MYL_NATIVE_TRACE_NONE` and reads nothing for a plain kind, and
+ * the drain loop walks a block only when neither holds — so a descriptor this
+ * accepts is one no collection can follow into the bytes left uninitialized. */
+static int opaque_elements(const myl_native_type *element) {
+    return element->kind == MYL_NATIVE_PLAIN || element->trace_mode == MYL_NATIVE_TRACE_NONE;
+}
+void *myl_native_heap_extend(myl_native_heap *heap, void *payload, size_t count) {
+    if (!payload) return NULL;
+    if (myl_native_arena_region(heap, payload)) return NULL;
+    myl_native_object *object = (myl_native_object *)payload - 1;
+    if (object->mark & MYL_NATIVE_OBJECT_IMMORTAL) return NULL;
+    const myl_native_type *element = object->element;
+    if (!element || !element->size) return NULL;
+    if (count > (SIZE_MAX >> MYL_NATIVE_OBJECT_COUNT_SHIFT)) return NULL;
+    if (count > (SIZE_MAX - sizeof(myl_native_object)) / element->size) return NULL;
+    /* The count and stride the ordinary allocation path would charge for the
+     * same request, so a grown block is indistinguishable from a fresh one. */
+    size_t stride = round_stride(sizeof(myl_native_object) + count * element->size);
+    if (!stride || class_for(stride) < MYL_NATIVE_CLASS_COUNT) return NULL;
+    myl_native_segment **link = extendable_slot(heap, payload);
+    if (!link) return NULL;
+    size_t previous = (*link)->stride;
+    if (stride <= previous) return NULL;
+    size_t growth = stride - previous;
+    size_t gc_bytes = heap->bytes - heap->arena.reserved_bytes;
+    int due = heap->stress || heap->bytes > heap->limit || growth > heap->limit - heap->bytes;
+    due = due || gc_bytes >= heap->next_collection || growth > heap->next_collection - gc_bytes;
+    /* An escape copy suspends collection because its clones are not yet rooted. */
+    if (due && !heap->suspended) {
+        myl_native_heap_collect(heap);
+        /* The sweep rebuilds the segment list, so the slot that names this
+         * segment — and the segment itself, which the buffer keeps alive — are
+         * found again rather than reused across the collection. */
+        link = extendable_slot(heap, payload);
+        if (!link) return NULL;
+    }
+    /* A collection the host could not finish (an unallocatable worklist) refuses
+     * the request rather than growing over a partly marked graph. */
+    if (heap->scratch_failed) { heap->exhausted = 1; return NULL; }
+    if (heap->bytes > heap->limit || growth > heap->limit - heap->bytes) {
+        heap->exhausted = 1;
+        return NULL;
+    }
+    myl_native_segment *grown = realloc(*link, sizeof(myl_native_segment) + stride);
+    if (!grown) return NULL;
+    grown->stride = stride;
+    *link = grown;
+    object = (myl_native_object *)grown->data;
+    if (!opaque_elements(element)) memset(grown->data + previous, 0, growth);
+    object->mark = (uintptr_t)count << MYL_NATIVE_OBJECT_COUNT_SHIFT;
+    object->element = element;
+    heap->bytes += growth;
+    return grown->data + sizeof(myl_native_object);
+}
 void *myl_native_heap_alloc_at(myl_native_heap *heap, const myl_native_type *element, size_t count, unsigned region) {
     if (!element || !element->alignment || element->alignment > alignof(max_align_t)) return NULL;
     if ((element->alignment & (element->alignment - 1)) || element->size % element->alignment) return NULL;

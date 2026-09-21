@@ -204,6 +204,27 @@ void *myl_native_heap_alloc(myl_native_heap *heap,
  * the data must point at another heap object. Returns NULL on overflow or
  * budget exhaustion. */
 void *myl_native_heap_alloc_block(myl_native_heap *heap, size_t prefix, size_t extra);
+/* Grow one oversized, one-slot managed block to `count` elements of its own
+ * element type, in place when the host can extend the reservation and moved —
+ * with its bytes — when it cannot. The payload address is unchanged when the
+ * reservation could be extended, which is what lets a buffer grow without
+ * copying and without faulting a second time for pages it already owns.
+ *
+ * This is the allocator's growth path, not a constructor: it answers NULL for a
+ * payload that is not the whole of its own one-slot segment, for an arena or
+ * immortal allocation, for a count that is not larger, for a request that would
+ * overflow, and for one the memory budget refuses after the same collection the
+ * ordinary allocation path would run. The bytes the block did not already hold
+ * are zeroed unless its element descriptor is opaque — `MYL_NATIVE_PLAIN` with
+ * `MYL_NATIVE_TRACE_NONE` — in which case the collector is promised never to
+ * interpret them and only the caller's own writes are readable. A refused
+ * request leaves the block exactly as it was; the caller then allocates a fresh
+ * block and copies into it.
+ *
+ * The reservation may move, so the caller must treat every address it derived
+ * from the block — the payload itself and any pointer into its bytes — as dead
+ * the moment it asks. Only a block nothing else points into may grow. */
+void *myl_native_heap_extend(myl_native_heap *heap, void *payload, size_t count);
 void myl_native_heap_collect(myl_native_heap *heap);
 /* Allocate at an explicit arena depth so collection backing joins its owner
  * rather than the innermost open arena. */
