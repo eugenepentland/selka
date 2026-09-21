@@ -113,6 +113,12 @@ typedef struct {
        the frozen ABI prefix, so generated-code offsets stay unchanged. */
     MylQbeEnvironmentScope environment_scopes[MYL_QBE_ENVIRONMENT_SCOPES];
     unsigned environment_scope_count;
+    /* Armed by the guest-stack trampoline while generated code runs, so the
+       first failure leaves through `longjmp` instead of a sticky flag tested
+       after every call. NULL outside execution and in the direct C entry
+       points, which keep the sticky behavior. Appended after the frozen ABI
+       prefix, so generated-code offsets stay unchanged. */
+    void *unwind;
 } MylQbeContext;
 typedef struct {
     uint64_t value, steps;
