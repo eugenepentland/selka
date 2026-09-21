@@ -4,7 +4,10 @@
 checks the project, finds the exported functions whose names begin with `test_`,
 builds them natively and runs each one in its own process. Cases are configured
 with one JSON file rather than with a framework inside the language, and the
-runner needs no Python. The design record is
+runner itself needs no Python. The default `Debug` build uses QBE and stays
+Python-free; `mylang test --mode ReleaseFast` builds the LLVM release path and
+therefore needs the installed adapter, exactly as `mylang build` does. The
+design record is
 [the guest test workflow](../experiments/guest-tests.md).
 
 ## `mylang test`

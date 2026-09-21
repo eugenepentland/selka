@@ -11,9 +11,47 @@ when to reach for a native build, what the optimize mode costs, and how to
 measure the result, see the [performance page](../performance.md).
 
 Bytecode is still part of the compiler, but only as that internal IR. Nothing
-executes it: there is no interpreter, and QBE is the only backend. `mylang run`
-is this same pipeline followed by running the result, and `dump-bytecode`
-disassembles the IR for inspection rather than for execution.
+executes it: there is no interpreter. QBE is the inner-loop backend and the
+`Debug` default; the `ReleaseFast` default is the qualified LLVM backend at
+`-O3` with full LTO. `mylang run` is this same pipeline followed by running the
+result, and `dump-bytecode` disassembles the IR for inspection rather than for
+execution.
+
+## Backends
+
+A native build names no backend by default, and the optimize mode decides:
+
+- **`--mode ReleaseFast`** (the default for `mylang build` and `mylang run`)
+  uses the qualified LLVM backend at `-O3` with full LTO — exactly
+  `--backend llvm --llvm-opt 3 --lto`.
+- **`--mode Debug`** keeps QBE, because unoptimized LLVM buys nothing over it,
+  and `mylang test` keeps its own `Debug` default for the same reason.
+
+An explicit choice is never upgraded. `--backend qbe` and `--qbe PATH` select
+QBE whatever the mode, and the LLVM-only controls (`--llvm-adapter`,
+`--llvm-opt 0|1|2|3|s|z`, `--lto`) are rejected until `--backend llvm` names
+that backend. `--report` states the resolved `backend`, `optimization` and
+`lto` for every build. `mylang test` follows the same policy through the child
+build it spawns: a `ReleaseFast` test run uses the LLVM release path, a `Debug`
+run uses QBE, and `--qbe PATH` forces QBE.
+
+The LLVM backend is the Python adapter installed beside the compiler at
+`lib/mylang-llvm/qbe_llvm.py` (its helpers `llvm_emit.py`,
+`runtime_signatures.py` and `amd64_sysv.py` sit in the same directory).
+`--llvm-adapter PATH` overrides it, and `MYLANG_QBE_LLVM_*` variables select the
+optimization, Zig driver, runtime sources and target CPU policy. A ReleaseFast
+build that names the LLVM backend and cannot resolve the adapter **fails with a
+tool error**; it never silently falls back to QBE. The adapter needs a
+`python3` interpreter at build time. Guest units are content-addressed and
+cached per function, so a Python process runs only for a unit whose IL actually
+changed (see *Concurrent code generation* below).
+
+```console
+$ mylang build examples/factorial.my -o /tmp/factorial --cache-dir /tmp/cache --report
+{"version":"qbe-build-v1",...,"backend":"llvm","optimization":"3","lto":true,...}
+$ mylang build examples/factorial.my --mode Debug -o /tmp/factorial-debug --cache-dir /tmp/cache
+$ mylang build examples/factorial.my --backend qbe -o /tmp/factorial-qbe --cache-dir /tmp/cache
+```
 
 ## `mylang build`
 
@@ -30,9 +68,12 @@ never from the working directory. `amd64_sysv` is the only supported target, a
 module entry needs `--project`, `--library` produces a shared library, and a
 program using a construct the native backend does not implement fails with
 `E_QBE_UNSUPPORTED` before any output is written. `--report` adds one
-`qbe-build-v1` JSON line naming every compiled function, its cached object and
-whether that object was reused; `zig build test-qbe-build` repeats these builds through a relocated compiler with
-no Python on `PATH` using the Zig-native build driver tests.
+`qbe-build-v1` JSON line naming every compiled function, its cached object,
+whether that object was reused, and the resolved `backend`, `optimization` and
+`lto`; `zig build test-qbe-build` repeats the **QBE** builds through a relocated
+compiler with no Python on `PATH` using the Zig-native build driver tests (the
+driver in those tests passes `--qbe` explicitly, so the release-path adapter is
+neither resolved nor needed).
 
 ```console
 $ mylang build examples/factorial.my -o /tmp/factorial --cache-dir /tmp/qbe-cache
@@ -61,9 +102,10 @@ enforced by the runtime and are unaffected.
 Everything a build compiles is content addressed under `--cache-dir`
 (`.mylang-cache/qbe` by default): one object per guest function, one for the
 generated typed-metadata unit, and one for the generated entry adapter. Their
-keys cover the *native driver* identity, the runtime content hash, the Zig and
-QBE tool stamps, and the target and optimize mode, so a changed tool or mode
-never reuses an object built by another one. The native driver identity is a
+keys cover the *native driver* identity, the runtime content hash, the codegen
+tool stamp (QBE's stamp, or a content hash of the LLVM adapter package), the
+optimization level, whether LTO is on, and the target, so a changed tool, mode,
+optimization or backend never reuses an object built by another one. The native driver identity is a
 build-time digest over only the sources that decide how already-emitted QBE IL
 becomes an object or an executable — the build driver (`src/qbe_build*.zig`) and
 the link-argument policy (`src/native_link*.zig`) — plus the Zig version and the
@@ -146,21 +188,59 @@ $ mylang build examples/factorial.my -o /tmp/factorial --cache-dir /tmp/qbe-cach
 Compiling the runtime is the only real work a cold build does — everything else
 is codegen and a link measured in tens of milliseconds. So `zig build` does that
 work once, when it builds the compiler: it prebuilds the runtime archive and the
-text-formatter object for each optimize mode and installs them beside the compiler
-under `zig-out/lib/mylang-runtime/`, each named by a portable hash of the runtime
-content hash, the pinned Zig version, the optimize mode and the target. `mylang`
-finds this directory relative to its own executable, the same way it finds the
-sibling `qbe`.
+text-formatter object and installs them beside the compiler under
+`zig-out/lib/mylang-runtime/`, each named by a portable hash of the runtime
+content hash, the pinned Zig version, the optimize mode, the target and the
+**backend flavor**. There are four flavors:
+
+| mode | flavor | codegen |
+|---|---|---|
+| `Debug` | `qbe` | QBE, `-O0` |
+| `ReleaseFast` | `qbe` | QBE, `-O2` |
+| `ReleaseFast` | `llvm` | LLVM `-O3` |
+| `ReleaseFast` | `llvm-lto` | LLVM `-O3` with `-flto`, so the link sees bitcode |
+
+The flavor is part of the hash, so a QBE archive can never be linked into an
+LLVM build and an `-O3` archive can never be linked into an LTO one. `mylang`
+finds the directory relative to its own executable, the same way it finds the
+sibling `qbe`. The LLVM flavors need the adapter, so `zig build` passes
+`--llvm-adapter` to `emit-runtime`; without that flag `emit-runtime` publishes
+only the QBE flavors, which keeps a Python-less prebuild working.
 
 A cold `mylang build` computes the hash its runtime needs and, if a matching
 archive is installed, links it directly and skips compiling the runtime from
-source — `--report` shows `"runtime_installed": true`. The prebuilt hash excludes
-the Zig and QBE tool file stamps that object-cache keys carry, so an installed
-archive still matches a build that resolved those tools from a different path. A
-missing archive (a cross-target build, or a relocated compiler with no `lib`
-beside it), a mode with no matching install, or a corrupted file whose fingerprint
-no longer matches the `.digest` published beside it all fall back cleanly to
-compiling the runtime from source in one `zig build-obj`.
+source — `--report` shows `"runtime_installed": true`. This is what makes a
+plain `ReleaseFast` build affordable: it links the `llvm-lto` bitcode archive
+instead of compiling twenty runtime translation units with LTO itself. The
+prebuilt hash excludes the Zig and QBE tool file stamps that object-cache keys
+carry, so an installed archive still matches a build that resolved those tools
+from a different path. A missing archive (a cross-target build, or a relocated
+compiler with no `lib` beside it), a mode with no matching install, or a
+corrupted file whose fingerprint no longer matches the `.digest` published
+beside it all fall back cleanly to compiling the runtime from source.
+
+## Concurrent code generation
+
+The LLVM adapter is one Python process per guest unit, and on a closure of a
+hundred functions that process start-up and translation dominated a cold build.
+Each unit is still its own content-addressed object and a cache hit still runs
+no tool, but the driver now stages every missing unit first, starts them in
+**concurrent waves** (up to eight, or the machine's core count), and publishes
+each object as its wave finishes. Before the waves it makes one
+`--signatures-only` adapter pass over the whole closure, which fills the
+per-build call-site signature sidecar: a unit translated concurrently cannot
+rely on its callees having run first, so the table is made complete up front and
+every unit declares its callees exactly as a sequential build would. The native
+QBE arm keeps its sequential loop. A wave reports the first tool failure only
+after reaping every child it started, so a failed build leaves no process
+behind.
+
+Measured on the [S-expression parser](../../experiments/sexpr-port/main.my)
+(101 functions, 1 MiB input), cold wall clock before this work was 12.7 s for
+LLVM against 3.2 s for QBE; it is now about equal: roughly 4.1 s each, with
+QBE's time unchanged. An unchanged rebuild is about 1.0 s for QBE against
+1.9 s for LLVM, and the difference is the LTO link itself — the per-function
+object cache still makes the codegen phase a cache hit on both arms.
 
 ## Runtime source tree and shared caches
 
