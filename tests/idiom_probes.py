@@ -10,6 +10,11 @@ unchanged; a probe that matches neither has moved and needs a human look.
 The regression gate is ``must_pass``: probes that already meet their target must
 keep meeting it. With ``--require-targets`` every probe must meet its target,
 which is the mode to enable once the plan's workstreams have landed.
+
+``cpython_oracle`` runs one probe under CPython with ``runpy`` and reports the
+exit status ``main()``'s value implies. It is shared with ``velocity/score.py``,
+the lane C scorer, so the two instruments cannot disagree about what CPython
+does (backlog item V0).
 """
 import argparse
 import glob
@@ -18,11 +23,30 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / 'tests' / 'fixtures' / 'idioms'
 MANIFEST = FIXTURES / 'manifest.json'
 TIMEOUT = 60
+
+# Run the probe with runpy, call main(), and exit with that value's low byte.
+# The status travels as the driver's own exit status, so the probe's stdout is
+# exactly what CPython produced and nothing else is mixed into it.
+CPYTHON_DRIVER = '''
+import runpy
+import sys
+
+namespace = runpy.run_path(sys.argv[1], run_name="idiom_probe")
+main = namespace.get("main")
+if main is None:
+    sys.stderr.write("idiom-oracle-error: probe defines no main()\\n")
+    sys.exit(1)
+value = main()
+sys.exit(0 if value is None else int(value) & 0xFF)
+'''
+ORACLE_ERROR_PREFIX = 'idiom-oracle-error: '
+TRACEBACK_HEADER = 'Traceback (most recent call last)'
 
 
 def failed_run(result):
@@ -91,6 +115,36 @@ def self_test():
         print('idiom classifier self-test failed: ' + ', '.join(failures), file=sys.stderr)
         return 1
     print(f'idiom classifier self-test: {len(cases)} passed')
+    return oracle_self_test()
+
+
+def oracle_self_test():
+    """Exercise the CPython oracle against known statuses and stdout."""
+    cases = [
+        ('value becomes the exit status',
+         'def main() -> int:\n    print("hi")\n    return 6\n', 6, 'hi\n'),
+        ('none exits zero', 'def main():\n    print("none")\n', 0, 'none\n'),
+        ('high values truncate', 'def main() -> int:\n    return 300\n', 300 & 0xFF, ''),
+        ('a missing main is an oracle error', 'x = 1\n', None, None),
+        ('a raising probe is an oracle error',
+         'def main() -> int:\n    raise ValueError("boom")\n', None, None),
+    ]
+    failures = []
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / 'probe.my'
+        for name, source, status, stdout in cases:
+            path.write_text(source)
+            observed = cpython_oracle(path)
+            if status is None:
+                if observed['ok']:
+                    failures.append(name)
+            elif (not observed['ok'] or observed['status'] != status or
+                  observed['stdout'] != stdout):
+                failures.append(name)
+    if failures:
+        print('cpython oracle self-test failed: ' + ', '.join(failures), file=sys.stderr)
+        return 1
+    print(f'cpython oracle self-test: {len(cases)} passed')
     return 0
 
 
@@ -100,6 +154,46 @@ def run_probe(compiler, path):
         [str(compiler), 'run', str(path), '--print-result'],
         capture_output=True, text=True, timeout=TIMEOUT)
     return {'status': completed.returncode, 'stdout': completed.stdout, 'stderr': completed.stderr}
+
+
+def cpython_oracle(path, timeout=TIMEOUT):
+    """Run one probe under CPython and report the outcome ``main()`` implies.
+
+    The probe executes with ``runpy`` under a non-``__main__`` name, so a
+    ``if __name__ == "__main__"`` guard does not run it twice, and ``main()`` is
+    called once. Its return value is truncated to the low byte exactly as the
+    language truncates a ``def main() -> int`` value, and ``None`` means success.
+
+    A returned mapping always carries ``status`` (``None`` when the oracle
+    failed), ``stdout``, ``stderr``, ``error`` and ``ok``. ``ok`` is false for a
+    probe that raises, defines no ``main``, or times out; a caller must not
+    compare a probe's output against an oracle that did not answer.
+    """
+    try:
+        completed = subprocess.run(
+            [sys.executable, '-c', CPYTHON_DRIVER, str(path)],
+            capture_output=True, text=True, timeout=timeout)
+    except subprocess.TimeoutExpired as expired:
+        stdout = expired.stdout or ''
+        stderr = expired.stderr or ''
+        if isinstance(stdout, bytes):
+            stdout = stdout.decode(errors='replace')
+        if isinstance(stderr, bytes):
+            stderr = stderr.decode(errors='replace')
+        return {'status': None, 'stdout': stdout, 'stderr': stderr, 'ok': False,
+                'error': f'timeout after {timeout}s'}
+    except OSError as error:
+        return {'status': None, 'stdout': '', 'stderr': '', 'ok': False,
+                'error': f'cannot start {sys.executable}: {error}'}
+    error = None
+    if ORACLE_ERROR_PREFIX in completed.stderr:
+        error = completed.stderr.split(ORACLE_ERROR_PREFIX, 1)[1].strip()
+    elif TRACEBACK_HEADER in completed.stderr:
+        error = 'probe raised under CPython'
+    elif completed.returncode < 0:
+        error = f'oracle killed by signal {-completed.returncode}'
+    return {'status': completed.returncode, 'stdout': completed.stdout,
+            'stderr': completed.stderr, 'ok': error is None, 'error': error}
 
 
 def first_line(text):

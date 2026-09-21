@@ -138,7 +138,7 @@ pub const codec_start =
     \\ if(!name || (node_count && !arguments) || (capacity && !output))return host_error(execution,"InvalidArgument");
     \\ if(node_count>100000 || capacity>100000)return host_error(execution,"WireLimit");
     \\ if(atomic_flag_test_and_set_explicit(&busy,memory_order_acquire))return host_error(execution,"Busy");
-    \\ int status=2;co_input=arguments;co_count=node_count;co_cursor=0;co_needed=0;co_rejected=0;co_error=NULL;co_domain=NULL;
+    \\ int status=2;co_input=arguments;co_count=node_count;co_cursor=0;co_needed=0;co_capacity=capacity;co_rejected=0;co_error=NULL;co_domain=NULL;
     \\ co_calls=0;co_max_calls=options && options->max_calls ? options->max_calls:4096;
     \\ memset(co_arguments,0,sizeof co_arguments);co_return=NULL;co_prepared=NULL;
     \\

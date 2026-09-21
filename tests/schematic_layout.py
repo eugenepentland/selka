@@ -147,8 +147,8 @@ def main():
         shutil.copytree(args.project.resolve(), mutant)
         renderer = mutant / 'svg.my'
         changed_source, count = re.subn(
-            r'd\.line\(item\.x1,\s*item\.y1,\s*item\.x2,\s*item\.y2\)',
-            'd.line(item.x1, item.y1, item.x1, item.y1)', renderer.read_text())
+            r'd\.line\(host,\s*item\.x1,\s*item\.y1,\s*item\.x2,\s*item\.y2\)',
+            'd.line(host, item.x1, item.y1, item.x1, item.y1)', renderer.read_text())
         assert count == 1, 'route drawing mutation target changed; update the mutation deliberately'
         renderer.write_text(changed_source)
         broken = execute(args.runner.resolve(), mutant, source)

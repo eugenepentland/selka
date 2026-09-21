@@ -17,6 +17,10 @@ pub const App = struct {
     /// Build the guest project at this root together with the trusted provider.
     /// Source diagnostics are reported before any native tool runs.
     pub fn initDisk(self: *App, process: std.process.Init, root: []const u8) InitError!void {
+        return self.initDiskWithOptions(process, root, .{});
+    }
+    /// Build the checked guest with an explicit native backend policy.
+    pub fn initDiskWithOptions(self: *App, process: std.process.Init, root: []const u8, build: native.BuildOptions) InitError!void {
         // The frontend check needed only to read the guest's host declarations is
         // transient: a long-lived host reloading its guest reclaims it every time,
         // so it uses an arena over `gpa` rather than the process's own arena.
@@ -27,7 +31,7 @@ pub const App = struct {
         try loaded.initDisk(allocator, process.io, root);
         defer loaded.deinit();
         const names = try bridge.declared(allocator, try loaded.compilation.emitQbe(allocator));
-        var program = try native.Program.build(process, .{ .project = root, .provider = bridge.provider });
+        var program = try native.Program.build(process, build.request(root, bridge.provider));
         errdefer program.deinit();
         self.* = .{
             .program = program,

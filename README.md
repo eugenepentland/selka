@@ -9,7 +9,8 @@ is still a hypothesis; [the plan](docs/plan.md) tracks the application evidence 
 would confirm it. The working language name and `.my` extension are provisional.
 
 The [incremental QBE native backend](docs/experiments/incremental-qbe.md) is the
-only runtime. `mylang build` produces an executable, reusing individual native
+default runtime; an opt-in LLVM adapter supports optimized Linux x86-64 builds.
+`mylang build` produces an executable, reusing individual native
 function objects, and the ordinary frontend reuses checked ordinary bodies,
 symbolic generic templates and concrete specializations across processes by
 default while still collecting declarations, types and global
@@ -30,8 +31,17 @@ cases. Three exploratory agent maintenance blocks have since completed; see
 [the audit](docs/audits/feature-completeness-2026-09-07.md). These do not establish
 a comparative productivity advantage.
 Expensive geometry can remain in Zig/C/Rust behind explicit typed wrappers.
-QBE is the only native backend. LLVM and a custom native backend remain future
-work.
+Select LLVM with `mylang build … --backend llvm --llvm-opt 3`; `--lto` is optional.
+The installed adapter requires Python 3 and uses the selected Zig toolchain's
+LLVM. Guest functions retain that C driver's resolved CPU features through LTO;
+the CPU policy is part of the native object cache identity. QBE remains the
+default; the LLVM path is experimental. See the
+[schematic performance implementation](docs/audits/schematic-llvm-o3-implementation-2026-09-21.md)
+and [full SVG performance fixes](docs/audits/svg-performance-fixes-2026-09-21.md).
+The [GC versus arena benchmarks](experiments/svg-arenas-20260921/README.md)
+build both memory policies at LLVM O3, with separate LTO and tool-limit variants.
+Existing [`with arena()` scopes](docs/arenas.md) now use bulk bump allocation;
+ordinary managed allocation continues to use tracing GC.
 
 The language reads like Python: `def`, `record`, indented blocks, ordinary
 assignments, `list[T]`, strings, dictionaries, and tracing GC — with static types
@@ -135,8 +145,13 @@ The development tools keep the ordinary read/edit/check workflow:
 - [Contract fixtures](docs/experiments/contract-tests.md) exercise an application's
   actual stdin/stdout interface, with strict JSON or exact-byte expectations and
   bounded child execution. A maintained runner replaces per-task driver scripts.
-- [Compiler-pinned references](docs/experiments/agent-reference.md) provide a
-  concise searchable language/API reference derived from the selected executable.
+- The compiler-derived surface is what the installed binary reports about itself:
+  `mylang --features`, `mylang list-declarations`, `mylang list-interfaces` and
+  `mylang schema-project`. The [compiler-pinned reference
+  page](docs/experiments/agent-reference.md) is a historical design record — its
+  `scripts/reference.py` generator was removed with the Zig-native tooling fold.
+  [The compiler-derived reference](docs/reference.md) documents the in-binary
+  reference engine that replaces it.
 
 Run `zig build test-agent-tools --summary all` for their implementation regressions.
 These tests also belong to the default suite; they do not launch agent evaluations

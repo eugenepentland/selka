@@ -213,11 +213,12 @@ def decoded(body: str) -> int:
 ```
 
 `to_int` rejects anything the signed range cannot hold, including
-`9223372036854775808`. `to_float` accumulates an exact integer mantissa and
-applies one power-of-ten scaling, so short decimals convert exactly; long or
-extreme literals are accurate to a few units in the last place rather than
-correctly rounded. `format_float` rounds halves away from zero and rejects values
-too large for fixed decimals.
+`9223372036854775808`. `to_float` delegates to `float(text)`, so both spellings
+use the pinned numeric grammar and parser. This includes surrounding ASCII
+whitespace, single underscores between digits, and `inf`, `infinity`, and `nan`;
+these forms were rejected by the older `strings.to_float` implementation.
+`format_float` rounds halves away from zero and rejects values too large for
+fixed decimals.
 
 ## sort
 
@@ -237,11 +238,20 @@ unique_ints(values: list[int]) -> list[int]
 unique_strs(values: list[str]) -> list[str]
 ```
 
-Every ordering is a stable merge sort that returns a new list and leaves its input
-untouched. Text compares in Unicode code point order. A generic sort over an
-arbitrary element type needs an integer key function, because the language has no
-ordering contract: `copy`, `equality`, `integer`, `codec` and `storable` are the
-only generic requirements.
+The concrete `sort_ints`, `sort_floats` and `sort_strs` wrappers delegate to the
+same stable merge engine as `sorted`, returning a new list and leaving the input
+untouched. That engine uses one reusable work buffer rather than recursive slices.
+Not-a-number follows every ordered float, equal values and signed zeros retain
+their input order, and text compares its stored Unicode scalar values directly.
+`compare_strs` and `min_str` therefore allocate no temporary encodings. A generic
+sort over an arbitrary element type needs an integer key function, because the
+language has no ordering contract: `copy`, `equality`, `integer`, `codec` and
+`storable` are the only generic requirements. `sort_by_key` retains its recursive
+merge so existing callback comparison and trap order do not change; keyed
+`sorted` retains its bottom-up order but now reuses one scratch list across every
+pass. Sorting NaNs last is a deliberate regularization: the earlier comparator
+treated a NaN as tied with every value, so its position could depend on merge
+boundaries rather than one ordering contract.
 
 ```mylang
 # doc: expect 42

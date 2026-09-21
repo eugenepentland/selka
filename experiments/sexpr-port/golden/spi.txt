@@ -1,7 +1,0 @@
-(interface
-  spi
-  "Four-wire SPI (controller/peripheral), peripheral perspective"
-  (signal SCK in clock)
-  (signal MOSI in data)
-  (signal MISO out data)
-  (signal CS in))

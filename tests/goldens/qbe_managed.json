@@ -29,7 +29,7 @@
   },
   "64ca9c4dc7b97bec5d1887d7db5fc511": {
    "case": [
-    "def make() -> list[str]:\n    values: dict[int,str] = {1: \"retained\", 2: \"\ud83d\ude42\"}\n    return values.values()\ndef main() -> int:\n    values = make()\n    i = 0\n    while i < 40:\n        garbage = [\"new\" + \" text\", \"\ud83d\ude42\"]\n        i += 1\n    if values[1] != \"\ud83d\ude42\":\n        return 1\n    return len(values[0])\n",
+    "def make() -> list[str]:\n    values: dict[int,str] = {1: \"retained\", 2: \"\ud83d\ude42\"}\n    return list(values.values())\ndef main() -> int:\n    values = make()\n    i = 0\n    while i < 40:\n        garbage = [\"new\" + \" text\", \"\ud83d\ude42\"]\n        i += 1\n    if values[1] != \"\ud83d\ude42\":\n        return 1\n    return len(values[0])\n",
     []
    ],
    "returncode": 8,
@@ -47,7 +47,7 @@
   },
   "6e06c7f076922c47cd30183459ea9d90": {
    "case": [
-    "def main() -> int:\n    values: dict[str,int] = {\"first\": 40, \"second\": 2}\n    alias = values\n    alias[\"first\"] = 41\n    keys = values.keys()\n    before = values.values()\n    values[\"first\"] = 42\n    if keys[0] != \"first\":\n        return 1\n    return before[0] + values.get(\"missing\", 1)\n",
+    "def main() -> int:\n    values: dict[str,int] = {\"first\": 40, \"second\": 2}\n    alias = values\n    alias[\"first\"] = 41\n    keys = list(values.keys())\n    before = list(values.values())\n    values[\"first\"] = 42\n    if keys[0] != \"first\":\n        return 1\n    return before[0] + values.get(\"missing\", 1)\n",
     []
    ],
    "returncode": 42,

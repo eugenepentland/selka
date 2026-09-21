@@ -23,7 +23,9 @@ myl_native_bytes *myl_native_bytes_view(myl_native_heap *, myl_native_bytes *sou
  * for exactly the sequences the decoder rejects. The range form is the same
  * scanner over raw octets, which is what a view of a larger buffer passes. */
 int64_t myl_native_bytes_scalar_count(const myl_native_bytes *, int *status);
-int64_t myl_native_bytes_scalar_count_range(const unsigned char *, size_t, int *status);
+int64_t myl_native_bytes_scalar_count_range(const myl_native_bytes *, int64_t, int64_t, int *status);
+/* Borrow one clamped range and publish its length without allocating. */
+const unsigned char *myl_native_bytes_range(const myl_native_bytes *, int64_t, int64_t, size_t *length);
 /* Clamped Python endpoints; a reversed interval produces an empty byte string. */
 myl_native_bytes *myl_native_bytes_slice(myl_native_heap *, myl_native_bytes *, int64_t, int64_t);
 /* First index of a contiguous subsequence, or -1 when it is absent. */

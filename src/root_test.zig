@@ -11,6 +11,7 @@ test {
     _ = @import("doc_coverage.zig");
     _ = @import("doc_coverage_command.zig");
     _ = @import("doctest_command.zig");
+    _ = @import("reference_test.zig");
 
     _ = @import("host_declarations_test.zig");
     _ = @import("native_execute.zig");
@@ -74,6 +75,7 @@ test {
     _ = @import("diagnostic_output_test.zig");
     _ = @import("diagnostic_recovery_test.zig");
     _ = @import("generic_inference_test.zig");
+    _ = @import("flow_inference_test.zig");
     _ = @import("generic_execution_test.zig");
     _ = @import("generic_instances_test.zig");
     _ = @import("generic_calls_test.zig");
@@ -84,6 +86,8 @@ test {
     _ = @import("generic_requirements_test.zig");
     _ = @import("generic_syntax_test.zig");
     _ = @import("syntax_cache_test.zig");
+    _ = @import("declaration_hints_test.zig");
+    _ = @import("headerless_import_test.zig");
     _ = @import("frontend_cache_test.zig");
     _ = @import("check_cache_test.zig");
     _ = @import("semantic_cache_test.zig");
@@ -93,6 +97,7 @@ test {
     _ = @import("import_policy_test.zig");
     _ = @import("lint_config_test.zig");
     _ = @import("lint_test.zig");
+    _ = @import("lint_reach_test.zig");
     _ = @import("lint_store_test.zig");
     _ = @import("source_map_test.zig");
     _ = @import("project_test.zig");
@@ -104,6 +109,10 @@ test {
     _ = @import("quality_test.zig");
     _ = @import("affected_tests_test.zig");
     _ = @import("navigation_test.zig");
+    _ = @import("context_test.zig");
+    _ = @import("invoke_command.zig");
+    _ = @import("native_wire.zig");
+    _ = @import("qbe_wire.zig");
     _ = @import("ref_diff.zig");
     _ = @import("api_diff.zig");
     _ = @import("generic_api_test.zig");
@@ -189,4 +198,10 @@ test {
 
 test {
     _ = @import("c_abi_test.zig");
+    _ = @import("friction_log_test.zig");
+}
+
+test {
+    _ = @import("prelude_scalar_test.zig");
+    _ = @import("dictionary_views_test.zig");
 }

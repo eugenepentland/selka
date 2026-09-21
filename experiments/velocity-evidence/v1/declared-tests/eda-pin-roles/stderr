@@ -1,3 +1,0 @@
-verify: cli
-verify: schema
-verify: pin-roles

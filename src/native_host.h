@@ -15,7 +15,26 @@ typedef struct {
     int exhausted;
 } MylangHostCall;
 /* Charge before effects. Failed charge is sticky even if a callback returns success. */
-static int mylang_host_charge(MylangHostCall *call, uint64_t work) {
+static inline int mylang_host_charge(MylangHostCall *call, uint64_t work) {
+    if (call->exhausted || work > call->work_remaining) { call->exhausted=1;return 0; }
+    call->work_remaining-=work;return 1;
+}
+/* Packed calls are an opt-in fast path for integers and padding-free fixed u8
+   arrays. Every value points into runtime-owned scratch; callbacks may neither
+   retain these copies nor reenter the generated program. Payloads have byte
+   alignment only: use memcpy, never scalar pointer casts, to access integers.
+   The initially zeroed output must keep its pointer and size; on success set
+   output_written to exactly output.size. Return NULL or a static error name. */
+typedef struct { void *bytes; size_t size; } MylangHostPackedValue;
+typedef struct {
+    const MylangHostPackedValue *arguments;
+    size_t argument_count;
+    MylangHostPackedValue output;
+    size_t output_written;
+    uint64_t work_remaining;
+    int exhausted;
+} MylangHostPackedCall;
+static inline int mylang_host_packed_charge(MylangHostPackedCall *call, uint64_t work) {
     if (call->exhausted || work > call->work_remaining) { call->exhausted=1;return 0; }
     call->work_remaining-=work;return 1;
 }
@@ -30,6 +49,9 @@ typedef struct {
        call's storage; type strings remain valid until copying completes. The
        callback must not retain call buffers or reenter the generated program. */
     const char *(*invoke)(void *, MylangHostCall *);
+    /* Optional packed-copy callback. The runtime uses it only after validating
+       an all-scalar/fixed-u8-array schema and equivalent node/depth quotas. */
+    const char *(*invoke_packed)(void *, MylangHostPackedCall *);
 } MylangHostBinding;
 typedef struct {
     const MylangHostBinding *bindings;

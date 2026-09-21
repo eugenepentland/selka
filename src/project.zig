@@ -29,6 +29,9 @@ const std = @import("std");
 const source = @import("source.zig");
 const lex = @import("lexer.zig");
 const diagnostic = @import("diagnostic.zig");
+const standard_library = @import("standard_library.zig");
+/// The one code every malformed or missing module header reports.
+const eModuleHeader = "E_MODULE_HEADER";
 pub const ReadError = error{ OutOfMemory, NotFound, ReadFailed, TooLarge };
 /// Source reader callback; returned bytes use the supplied allocator and respect the byte limit.
 pub const Provider = struct { context: ?*anyopaque, read: *const fn (?*anyopaque, std.mem.Allocator, []const u8, usize) ReadError![]u8 };
@@ -38,6 +41,8 @@ pub const Provider = struct { context: ?*anyopaque, read: *const fn (?*anyopaque
 pub const Options = struct { max_modules: usize = 4096, max_imports: usize = 65536, max_file_bytes: usize = 4 * 1024 * 1024, max_total_bytes: usize = 16 * 1024 * 1024, mutation_markers: bool = false };
 /// A source span paired with the module whose bytes it indexes.
 pub const Site = struct { module: usize, span: source.Span };
+/// A dotted module path: its joined text, its trailing segment, and its span.
+pub const ModuleName = struct { text: []const u8, last: []const u8, span: source.Span };
 /// Project diagnostic and optional related declaration/import location.
 pub const Problem = struct { code: []const u8, message: []const u8, site: Site, related: ?Site = null };
 /// Declared public name and its source location. A re-export directive
@@ -108,18 +113,18 @@ pub const Project = struct {
         try self.names.put(allocator, owned_name, id);
         const site = origin orelse Site{ .module = id, .span = .{ .start = 0, .end = 0 } };
         const limit = @min(options.max_file_bytes, options.max_total_bytes - self.counts.bytes);
-        const bytes = if (@import("standard_library.zig").source(path)) |library| try allocator.dupe(u8, library) else provider.read(provider.context, allocator, path, limit) catch |err| {
+        const bytes = if (standard_library.source(path)) |library| try allocator.dupe(u8, library) else provider.read(provider.context, allocator, path, limit) catch |err| {
             if (err == error.OutOfMemory) return error.OutOfMemory;
             return self.fail(if (err == error.TooLarge) "E_PROJECT_BYTES" else "E_MODULE_READ", try std.fmt.allocPrint(allocator, "cannot load {s}: {s}", .{ path, @errorName(err) }), site, null);
         };
         defer allocator.free(bytes);
         if (bytes.len > limit) return self.fail("E_PROJECT_BYTES", "provider exceeded the source byte budget", site, null);
         self.counts.bytes += bytes.len;
-        const source_path = if (@import("standard_library.zig").source(path) != null) try std.fmt.allocPrint(allocator, "@stdlib/{s}", .{path}) else path;
+        const source_path = if (standard_library.source(path) != null) try std.fmt.allocPrint(allocator, "@stdlib/{s}", .{path}) else path;
         self.modules.items[id].src = try source.Source.init(allocator, source_path, bytes);
         self.modules.items[id].src.mutation_markers = options.mutation_markers;
         std.crypto.hash.sha2.Sha256.hash(bytes, &self.modules.items[id].digest, .{});
-        try self.header(id, options);
+        try self.header(id, options, origin == null);
         return id;
     }
     /// Load the reachable import graph iteratively while enforcing source and graph limits.
@@ -171,7 +176,7 @@ pub const Project = struct {
         }
         self.progress.complete = true;
     }
-    fn header(self: *Project, id: usize, options: Options) diagnostic.Error!void {
+    fn header(self: *Project, id: usize, options: Options, is_entry: bool) diagnostic.Error!void {
         const allocator = self.arena.allocator();
         const src = self.modules.items[id].src;
         var sink: diagnostic.Sink = .{ .allocator = allocator };
@@ -181,11 +186,10 @@ pub const Project = struct {
             return self.fail(problem.code, problem.message, .{ .module = id, .span = problem.span }, null);
         };
         var scanner: Scanner = .{ .project = self, .id = id, .tokens = tokens };
-        try scanner.word("module");
-        const declared = try scanner.name();
-        _ = try scanner.expect(.semicolon);
-        self.modules.items[id].header.declaration = declared.span;
-        if (!std.mem.eql(u8, declared.text, self.modules.items[id].name)) return self.fail("E_MODULE_NAME", "declared module name does not match its requested path", .{ .module = id, .span = declared.span }, null);
+        if (try self.moduleDeclaration(&scanner, is_entry)) |declared| {
+            self.modules.items[id].header.declaration = declared.span;
+            if (!std.mem.eql(u8, declared.text, self.modules.items[id].name)) return self.fail("E_MODULE_NAME", "declared module name does not match its requested path", .{ .module = id, .span = declared.span }, null);
+        }
         var imports: std.ArrayList(Import) = .empty;
         var aliases: std.StringHashMapUnmanaged(source.Span) = .empty;
         var imported_names: std.StringHashMapUnmanaged(source.Span) = .empty;
@@ -234,6 +238,22 @@ pub const Project = struct {
             try exports.append(allocator, .{ .name = exported_name.last, .span = exported_name.span, .alias = alias });
         }
         self.modules.items[id].exports = try exports.toOwnedSlice(allocator);
+    }
+    /// Consume the `module NAME;` header, or the headerless opening of an entry
+    /// script whose every import names an embedded standard module. Answers the
+    /// declared name when there is one, null for the headerless form, and reports
+    /// `E_MODULE_HEADER` for every other opening, including an imported file that
+    /// declares nothing.
+    fn moduleDeclaration(self: *Project, scanner: *Scanner, is_entry: bool) diagnostic.Error!?ModuleName {
+        if (scanner.isWord("module")) {
+            scanner.pos += 1;
+            const declared = try scanner.name();
+            _ = try scanner.expect(.semicolon);
+            return declared;
+        }
+        if (!is_entry or !try standardImportOpening(self.arena.allocator(), self.modules.items[scanner.id].src, scanner.tokens, scanner.pos))
+            return self.fail(eModuleHeader, "file must begin with a module declaration", .{ .module = scanner.id, .span = scanner.tokens[scanner.pos].span }, null);
+        return null;
     }
     /// Allocate the completed dependency graph report; reject incomplete loading state.
     pub fn render(self: *Project, allocator: std.mem.Allocator) RenderError![]u8 {
@@ -297,7 +317,7 @@ const Scanner = struct {
             const end = self.tokens[self.pos - 1].span.end;
             return .{ .tag = .semicolon, .span = .{ .start = end, .end = end } };
         }
-        if (!self.take(tag)) return self.project.fail("E_MODULE_HEADER", "unexpected token in module/import header", .{ .module = self.id, .span = token.span }, null);
+        if (!self.take(tag)) return self.project.fail(eModuleHeader, "unexpected token in module/import header", .{ .module = self.id, .span = token.span }, null);
         return token;
     }
     fn isWord(self: Scanner, text: []const u8) bool {
@@ -305,10 +325,10 @@ const Scanner = struct {
         return token.tag == .ident and std.mem.eql(u8, self.project.modules.items[self.id].src.text(token.span), text);
     }
     fn word(self: *Scanner, text: []const u8) diagnostic.Error!void {
-        if (!self.isWord(text)) return self.project.fail("E_MODULE_HEADER", "file must begin with a module declaration", .{ .module = self.id, .span = self.tokens[self.pos].span }, null);
+        if (!self.isWord(text)) return self.project.fail(eModuleHeader, "file must begin with a module declaration", .{ .module = self.id, .span = self.tokens[self.pos].span }, null);
         self.pos += 1;
     }
-    fn name(self: *Scanner) diagnostic.Error!struct { text: []const u8, last: []const u8, span: source.Span } {
+    fn name(self: *Scanner) diagnostic.Error!ModuleName {
         const src = self.project.modules.items[self.id].src;
         const first = try self.expect(.ident);
         var last = first;
@@ -338,4 +358,37 @@ pub fn modulePath(allocator: std.mem.Allocator, name: []const u8) ModulePathErro
         byte.* = '/';
     };
     return path;
+}
+/// Whether `name` resolves to a compiler-embedded standard module. The embedded
+/// set is fixed at compile time, so this is a table lookup, never a disk read.
+pub fn isStandardModule(allocator: std.mem.Allocator, name: []const u8) diagnostic.Error!bool {
+    const path = modulePath(allocator, name) catch |err| switch (err) {
+        error.InvalidModuleName => return false,
+        error.OutOfMemory => return error.OutOfMemory,
+    };
+    defer allocator.free(path);
+    return standard_library.source(path) != null;
+}
+/// Whether the token run at `at` opens a headerless file whose imports all name
+/// embedded standard modules: the script shape that needs no `module`
+/// declaration. A dotted path, a project module, or any other opening answers
+/// false, so the caller keeps the header requirement. Parser and project loader
+/// share this one policy.
+pub fn standardImportOpening(allocator: std.mem.Allocator, src: source.Source, tokens: []const lex.Token, at: usize) diagnostic.Error!bool {
+    var cursor = at;
+    while (cursor + 1 < tokens.len and tokens[cursor].tag == .ident and std.mem.eql(u8, src.text(tokens[cursor].span), "import")) {
+        if (tokens[cursor + 1].tag != .ident) return false;
+        if (!try isStandardModule(allocator, src.text(tokens[cursor + 1].span))) return false;
+        cursor += 2;
+        if (cursor < tokens.len and tokens[cursor].tag == .kw_as) {
+            if (cursor + 1 >= tokens.len or tokens[cursor + 1].tag != .ident) return false;
+            cursor += 2;
+        }
+        // A directive ends at its explicit semicolon or at the line break the
+        // module-header grammar accepts in its place.
+        if (cursor < tokens.len and tokens[cursor].tag == .semicolon) {
+            cursor += 1;
+        } else if (!lex.implicitTerminator(src.bytes, tokens, cursor)) return false;
+    }
+    return cursor != at;
 }

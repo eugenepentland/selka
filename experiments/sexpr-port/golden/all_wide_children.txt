@@ -1,8 +1,0 @@
-(all-wide
-  (aaaaaaaaaaaa bbbbbbbbbbbb)
-  (cccccccccccc dddddddddddd)
-  (eeeeeeeeeeee ffffffffffff))
-(wide-children
-  (aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa)
-  (bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb)
-  (cccccccccccccccccccccccccccccccccccccccc))

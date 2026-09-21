@@ -15,17 +15,26 @@ def main():
         flags.append("-fsanitize=address")
     with tempfile.TemporaryDirectory(prefix="mylang-native-memory-") as directory:
         for suite, sources in (
-            ("native_heap", ["native_heap.c"]),
+            ("native_heap", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c", "native_bytes.c"]),
             ("native_collections", ["native_heap.c", "native_collections.c"]),
             ("native_text_dictionary", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c"]),
             ("native_equal", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c"]),
             ("native_bytes", ["native_heap.c", "native_collections.c", "native_text.c", "native_bytes.c"]),
-            ("native_regions", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_regions.c"]),
+            ("native_regions", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c", "native_regions.c"]),
+            ("native_arena_chunks", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c", "native_bytes.c", "native_regions.c"]),
             ("native_print", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_print.c"]),
             ("native_text_methods", ["native_heap.c", "native_collections.c", "native_text.c", "native_text_methods.c"]),
             ("native_scoped", ["native_scoped.c"]),
         ):
             executable = Path(directory) / suite
+            if "native_heap.c" in sources:
+                required = ("native_arena.c", "native_collections.c", "native_text.c",
+                            "native_dictionary.c", "native_equal.c")
+                at = sources.index("native_heap.c") + 1
+                for source in required:
+                    if source not in sources:
+                        sources.insert(at, source)
+                        at += 1
             subprocess.run(
                 compiler + flags + ["-I", str(root / "src")]
                 + [str(root / "src" / source) for source in sources]

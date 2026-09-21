@@ -1,8 +1,0 @@
-{"task": "eda-clearance-boundary", "passed": true, "seconds": 1.302080127003137}
-{"task": "planner-input-boundary", "passed": true, "seconds": 13.197035538032651}
-{"task": "eda-pin-roles", "passed": true, "seconds": 3.199627159978263}
-{"task": "planner-priority", "passed": true, "seconds": 11.360154900990892}
-{"task": "eda-rotation", "passed": true, "seconds": 2.6552444380358793}
-{"task": "planner-cycle-groups", "passed": true, "seconds": 11.266519520024303}
-{"task": "planner-dependency-lags", "passed": true, "seconds": 23.86539501301013}
-{"task": "planner-slack", "passed": true, "seconds": 27.956298755016178}

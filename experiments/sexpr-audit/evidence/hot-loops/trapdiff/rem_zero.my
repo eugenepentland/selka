@@ -1,4 +1,0 @@
-def main() -> int:
-    x = 10
-    y = 0
-    return x % y

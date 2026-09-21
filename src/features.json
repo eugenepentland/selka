@@ -2,6 +2,11 @@
   "language_version": "0.1.0",
   "primary_backend": "qbe",
   "implemented": {
+    "typed-hole-obligations": {
+      "kind": "tooling",
+      "summary": "`mylang check --diagnostics=json` attaches a versioned `typed-hole-obligation` record to each `E_TYPED_HOLE` diagnostic: snapshot identity and hole range, declared and contextual expected types, usable bindings, generic requirements, effect ceiling and mutation footprint, with whole-program facts a hole cannot promise named in an `unavailable` list.",
+      "doc": "docs/typed-holes.md#structured-obligations"
+    },
     "lint-command": {
       "kind": "tooling",
       "summary": "`mylang lint` reports `L_*` findings over a checked project, with profiles, waiver comments, related notes naming the tests that reach a declaration, section-9 advisory report rules, and a report/block split that only `--gate` enforces.",
@@ -11,6 +16,11 @@
       "kind": "tooling",
       "summary": "One tests-reachability index backs `mylang tests-for`, the related notes on `mylang lint` findings, and the `tests(N)` column of `mylang list-interfaces`.",
       "doc": "docs/tooling/navigation.md#which-tests-reach-a-declaration"
+    },
+    "interface-fact-status": {
+      "kind": "tooling",
+      "summary": "`mylang list-interfaces` and `mylang index-project` label every effect, mutation and return-origin fact with its analysis status (`checked`, `template`, `declaration-only`, `declared`, `lexical-only`), publish `unavailable`/`null` instead of the checker's conservative mask when no checked instantiation exists, and keep a declared `ceiling(...)` visible either way.",
+      "doc": "docs/tooling/navigation.md#fact-status-in-interface-and-navigation-output"
     },
     "unused-import-warning": {
       "kind": "tooling",
@@ -156,6 +166,16 @@
       "kind": "language",
       "summary": "`str` answers Python's strip, case, search, classification and padding methods with fresh strings.",
       "doc": "docs/text.md#string-methods"
+    },
+    "whitespace-split": {
+      "kind": "language",
+      "summary": "`text.split()` with no argument breaks on runs of the six ASCII whitespace scalars and drops empty pieces, `text.split(separator)` keeps its exact-separator meaning, and `bytes.split()` agrees on the octets.",
+      "doc": "docs/text.md#splitting-on-whitespace"
+    },
+    "prelude-scalar-builtins": {
+      "kind": "language",
+      "summary": "`ord(text)` and `chr(code)` convert between a `str` and its one Unicode scalar value, folding a one-scalar literal at check time and trapping `R_TEXT_SCALAR` on anything else.",
+      "doc": "docs/text.md#unicode-scalar-values"
     },
     "format-strings": {
       "kind": "language",
@@ -352,6 +372,16 @@
       "summary": "A generic call omits its type arguments when the argument types determine every parameter.",
       "doc": "docs/generic-inference.md#generic-call-inference"
     },
+    "expected-type-inference": {
+      "kind": "language",
+      "summary": "A generic call infers type and const arguments from its expected result as well as its arguments.",
+      "doc": "docs/generic-inference.md#expected-result-types"
+    },
+    "flow-sensitive-option-guards": {
+      "kind": "language",
+      "summary": "Local Option payloads are available on paths guarded by `is None` or `is not None`.",
+      "doc": "docs/results-and-options.md#flow-sensitive-option-guards"
+    },
     "const-length-generics": {
       "kind": "language",
       "summary": "A `const N: u64` parameter carries a bounded array length through generic signatures.",
@@ -376,6 +406,11 @@
       "kind": "language",
       "summary": "A project is `module`/`import`/`export` declarations over files resolved from disk.",
       "doc": "docs/modules.md#disk-modules"
+    },
+    "headerless-standard-imports": {
+      "kind": "language",
+      "summary": "A file with no `module` header may import the embedded standard modules directly (`import strings`) and stays a standalone unit; importing a project module still requires the header and reports `E_MODULE_HEADER`.",
+      "doc": "docs/modules.md#headerless-scripts"
     },
     "typed-json": {
       "kind": "language",
@@ -791,6 +826,21 @@
       "kind": "language",
       "summary": "A standard module whose operations can fail exports an error union with one `str` payload per case and a `message(error)` helper instead of returning `Result[_, str]`.",
       "doc": "docs/standard-library.md#error-unions"
+    },
+    "reference-command": {
+      "kind": "tooling",
+      "summary": "`mylang reference --query TERM [--format=text|json]` answers from data embedded in the running executable: implemented features with their documentation anchors, supported boundaries, unsupported and removed names, embedded standard-library declarations with their checked signature, effects and declared ceiling labeled by analysis status, and the checker's own builtin and collection-method vocabulary.",
+      "doc": "docs/reference.md#the-compiler-derived-reference"
+    },
+    "agent-context": {
+      "kind": "tooling",
+      "summary": "`mylang context <entry.my> --symbol 'module::name'` or `--at 'path:line:column'` answers one `agent-context-v1` object about one declaration from the facts `mylang index-project`, `mylang list-interfaces`, `mylang tests-for` and `mylang api-diff` already publish: declaration, contract with fact status, types, dependencies, tests and optional changes in a fixed priority order inside a `--context-bytes` budget, with per-section `omissions`, a `continuation` query, and a labeled partial answer on an incomplete project.",
+      "doc": "docs/tooling/agent-context.md#mylang-context"
+    },
+    "invoke-command": {
+      "kind": "tooling",
+      "summary": "`mylang invoke <entry.my> --function 'module::name'` calls one ordinary exported function through the native test runner's checked schema, copied-value codec and isolated bounded child process, answering `--describe` with the checked contract, wire representation, declared effects, required capabilities, effective limits and invocation eligibility of that export without executing any guest code, or `--input=FILE` with one `native-invocation-v1` object carrying the typed outcome, and naming the first unsupported type path or the missing capability before any guest code runs rather than advertising a callable the command would refuse.",
+      "doc": "docs/tooling/invoke.md#mylang-invoke"
     }
   },
   "unsupported": [

@@ -1,6 +1,0 @@
-test_independently_written_repaired_starters_match_all_contract_groups (test_starter_contracts.RepairedContracts.test_independently_written_repaired_starters_match_all_contract_groups) ... ok
-
-----------------------------------------------------------------------
-Ran 1 test in 7.956s
-
-OK

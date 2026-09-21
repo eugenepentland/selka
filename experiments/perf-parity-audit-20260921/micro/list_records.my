@@ -1,0 +1,21 @@
+# list_records: a list of 32-byte records, then ten field-summing passes.
+
+
+record Row:
+    a: int
+    b: int
+    c: int
+    d: int
+
+
+def main(out: Stream) -> int:
+    rows: list[Row] = []
+    for i in range(2000000):
+        rows.append(Row(a=i, b=i + 1, c=i + 2, d=i + 3))
+    total = 0
+    for pass_index in range(10):
+        total += pass_index
+        for row in rows:
+            total += row.c
+    out.print(total)
+    return 0

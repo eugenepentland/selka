@@ -6,6 +6,54 @@ that can find nothing returns `Option[T]`. The two are deliberately different: a
 ordinary data that may be ignored. Both are prelude types with one identity everywhere,
 so no module declares or imports them, and both are taken apart with the `match`
 statement described in [records, unions and enums](records-and-unions.md#tagged-unions).
+Options also support local presence guards.
+
+## Flow-sensitive Option guards
+
+`value is None` and `value is not None` test an Option's tag. When a branch establishes
+that a local Option is present, reads of that binding use its payload type. An early
+return from the absent branch leaves the payload available on the continuing path.
+
+```mylang
+# doc: expect 42
+record Node:
+    width: int
+
+def width(node: Option[Node]) -> int:
+    if node is None:
+        return 0
+    return node.width
+
+def positive(value: Option[int]) -> bool:
+    return value is not None and value > 0
+
+def main() -> int:
+    if positive(Some(42)):
+        return width(Some(Node(width=42)))
+    return 0
+```
+
+Facts follow `if`/`else`, `not`, and short-circuit `and`/`or`, in ordinary and generic
+functions. A `while value is not None` guard establishes presence inside its body.
+After a join, a fact survives only if every continuing branch preserves it. Reassigning
+the binding invalidates its fact; loop bodies are checked with assignments from later
+iterations in mind, and a loop that might never run establishes no new fact afterwards.
+
+The declared binding remains an Option. Assign `None` or `Some(...)` to replace it;
+an annotated destination or parameter expecting that same Option type receives the
+original wrapper. Repeated `is None` tests and explicit `match` also see the wrapper.
+Narrowed record field updates preserve the wrapper, while class and collection
+mutation preserve the payload's usual shared identity.
+
+Only local bindings are refined. A test of `box.item` evaluates that expression once,
+but does not establish a fact about future reads through a mutable alias. Assign the
+Option to a local first when a stable snapshot is wanted. Presence tests on wrappers
+carrying an owned value or a checked `Result` are rejected; use `match` to preserve
+their handling obligations.
+
+This initial implementation lowers guards and payload reads through existing variant
+dispatch, including a defensive trap for an invalidated payload projection. It does
+not promise redundant-check elimination or prove integer bounds.
 
 ## Checked results
 
@@ -275,7 +323,7 @@ import strings
 def summarise(counts: dict[str, int]) -> Result[str, str]:
     if len(counts) == 0:
         return Err("no counts")
-    names: list[str] = counts.keys()
+    names: list[str] = list(counts.keys())
     return Ok(names[0])
 
 def main() -> int:

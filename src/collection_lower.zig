@@ -52,7 +52,9 @@ pub fn optionType(catalog: *Catalog, element: typed.Type, span: Span) Error!type
 fn textMethodType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Span) Error!typed.Type {
     return switch (kind) {
         .strip, .lstrip, .rstrip, .upper, .lower, .replace, .zfill => owner,
-        .splitlines => listType(catalog, owner, span),
+        .splitlines, .split_whitespace => listType(catalog, owner, span),
+        .text_ord => .i64,
+        .text_chr => preludeType(catalog, "str", span),
         .is_digit, .is_alpha, .is_space, .starts_with, .ends_with => .bool,
         .count, .find => .i64,
         .parse_int => optionType(catalog, .i64, span),
@@ -77,12 +79,13 @@ fn bytesOperationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Sp
         // those octets instead.
         .view, .copy => owner,
         .split => listType(catalog, owner, span),
+        .split_whitespace => listType(catalog, owner, span),
         .to_list => listType(catalog, .i64, span),
         .hex => preludeType(catalog, "str", span),
         .decode => resultType(catalog, try preludeType(catalog, "str", span), try preludeType(catalog, "str", span), span),
-        .scalar_count => resultType(catalog, .i64, try preludeType(catalog, "str", span), span),
-        .parse_int => optionType(catalog, .i64, span),
-        .parse_float => optionType(catalog, try preludeType(catalog, "float", span), span),
+        .scalar_count, .scalar_count_range => resultType(catalog, .i64, try preludeType(catalog, "str", span), span),
+        .parse_int, .parse_int_range => optionType(catalog, .i64, span),
+        .parse_float, .parse_float_range => optionType(catalog, try preludeType(catalog, "float", span), span),
         else => error.InternalError,
     };
 }
@@ -116,6 +119,7 @@ pub fn operationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Spa
         .copy => if (dictionary) owner else error.InternalError,
         .items => if (dictionary) listType(catalog, element, span) else error.InternalError,
         .key_at => if (dictionary) schema.collection.key.? else error.InternalError,
+        .value_at => if (dictionary) element else error.InternalError,
         .slice, .join => if (!dictionary) owner else error.InternalError,
         .slice_step => if (dictionary or schema.collection.kind == .bytes) error.InternalError else owner,
         .keys => if (dictionary) listType(catalog, schema.collection.key.?, span) else error.InternalError,
@@ -169,6 +173,32 @@ pub fn Builder(comptime Checker: type) type {
             const ty = try operationType(&self.checker.catalog, owner_type, kind, self.span);
             return self.node(ty, .{ .buffer_operation = .{ .owner = slot, .kind = kind, .arguments = try self.checker.allocator.dupe(typed.NodeId, arguments) } });
         }
+        /// Replace an immediately consumed byte slice or view with the matching
+        /// range operation. The checked intermediate can be either a direct
+        /// operation on a local or a block that first roots an expression; in
+        /// the latter case the same block keeps receiver-before-bounds order.
+        pub fn fuseImmediateByteRange(self: Self, base: typed.NodeId, kind: Kind) Error!?typed.Node {
+            const checked = self.checker.nodes.items[@backingInt(base)];
+            var body: ?typed.StatementId = null;
+            var value = base;
+            if (checked.data == .block_value) {
+                body = checked.data.block_value.body;
+                value = checked.data.block_value.value;
+            }
+            const range_op = switch (self.checker.nodes.items[@backingInt(value)].data) {
+                .buffer_operation => |op| op,
+                else => return null,
+            };
+            if ((range_op.kind != .slice and range_op.kind != .view) or range_op.arguments.len != 2) return null;
+            const result = try self.operation(range_op.owner, kind, range_op.arguments);
+            if (body) |statements| return .{
+                .span = self.span,
+                .ty = self.checker.nodes.items[@backingInt(result)].ty,
+                .data = .{ .block_value = .{ .body = statements, .value = result } },
+            };
+            const fused = try self.block(&.{}, result);
+            return fused;
+        }
         /// Read collection length with the ordinary signed index type.
         pub fn length(self: Self, slot: typed.LocalId) Error!typed.NodeId {
             return self.node(.i64, .{ .cast = try self.operation(slot, .length, &.{}) });
@@ -176,6 +206,46 @@ pub fn Builder(comptime Checker: type) type {
         /// Create a binary operation with explicit result type.
         pub fn binary(self: Self, op: typed.BinaryOp, left: typed.NodeId, right: typed.NodeId, ty: typed.Type) Error!typed.NodeId {
             return self.node(ty, .{ .binary = .{ .op = op, .left = left, .right = right, .op_span = self.span } });
+        }
+        /// Compute `max(end - start, 0)` as an unsigned list capacity. Signed
+        /// bounds that cross zero are split around `-1/0`, so even the full
+        /// `minInt..maxInt` distance is represented without signed overflow.
+        pub fn rangeCapacity(self: Self, start: typed.NodeId, end: typed.NodeId, ty: typed.Type) Error!typed.NodeId {
+            const info = ty.integer() orelse return error.InternalError;
+            const capacity = try self.local(.u64);
+            const zero = try self.node(ty, .{ .integer = 0 });
+            const zero_capacity = try self.node(.u64, .{ .integer = 0 });
+            const direct = try self.node(.u64, .{ .cast = try self.binary(.sub, end, start, ty) });
+            const direct_assignment = try self.stmt(.{ .assign = .{ .slot = capacity, .value = direct } });
+            const ascending = try self.binary(.lt, start, end, .bool);
+            const reserve = if (!info.signed)
+                direct_assignment
+            else reserve: {
+                const start_negative = try self.binary(.lt, start, zero, .bool);
+                const end_negative = try self.binary(.lt, end, zero, .bool);
+                const one = try self.node(ty, .{ .integer = 1 });
+                const adjusted = try self.binary(.add, start, one, ty);
+                const magnitude = try self.node(ty, .{ .unary = .{ .op = .neg, .operand = adjusted, .op_span = self.span } });
+                const low = try self.node(.u64, .{ .cast = magnitude });
+                const high = try self.node(.u64, .{ .cast = end });
+                const crossed = try self.binary(.add, try self.binary(.add, high, low, .u64), try self.node(.u64, .{ .integer = 1 }), .u64);
+                const crossed_assignment = try self.stmt(.{ .assign = .{ .slot = capacity, .value = crossed } });
+                const negative_start = try self.stmt(.{ .branch = .{
+                    .condition = end_negative,
+                    .then_body = direct_assignment,
+                    .else_body = crossed_assignment,
+                } });
+                break :reserve try self.stmt(.{ .branch = .{
+                    .condition = start_negative,
+                    .then_body = negative_start,
+                    .else_body = direct_assignment,
+                } });
+            };
+            const block_value = try self.block(&.{
+                try self.stmt(.{ .initialize = .{ .slot = capacity, .value = zero_capacity } }),
+                try self.stmt(.{ .branch = .{ .condition = ascending, .then_body = reserve, .else_body = null } }),
+            }, try self.read(capacity));
+            return self.node(block_value.ty, block_value.data);
         }
         /// Normalize negative signed indices once; slices additionally clamp endpoints.
         pub fn index(self: Self, owner: typed.LocalId, input: typed.NodeId, clamp: bool) Error!typed.NodeId {

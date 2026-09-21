@@ -1,6 +1,0 @@
-module main;
-import io;
-buffer B: i64;
-result A {ok:B,err:i64}
-result S {ok:bool,err:i64}
-fn main(heap:allocator)->i64 {match acquire_buffer<A>(heap,16384) {A.ok(value)=>{let mut b=value;match resize_buffer<S>(b,16384,0) {S.ok(discard)=>{borrow mut b[0..128] as slice {write_slice(slice,0,42);}return 0;},S.err(e)=>{return e;}}},A.err(e)=>{return e;}}}

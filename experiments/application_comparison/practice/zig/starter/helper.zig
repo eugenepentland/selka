@@ -1,3 +1,0 @@
-pub fn multiply(value: i64) i64 {
-    return value * 6;
-}

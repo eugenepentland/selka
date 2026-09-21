@@ -315,6 +315,21 @@ an overlong encoding, a surrogate, a value above U+10FFFF, a truncated sequence
 or a stray continuation byte — answers `Err` carrying the decoder's reason.
 `len(b)` stays the octet count; only `scalar_count` measures characters.
 
+An immediately parsed slice or view is lowered directly to the existing range
+parser. Both `b[start:end].parse_int()` and
+`b.view(start, end).parse_float()` avoid constructing the intermediate byte
+value and are accepted under `noalloc`. The receiver and bounds are evaluated
+once in source order; omitted endpoints, negative offsets, clamping, and
+reversed ranges keep the ordinary slice/view behavior. Assigning the slice or
+view to a binding still constructs that value, as does slicing a mutable
+`byte_buffer`.
+
+The explicit `b.parse_int_range(start, end)` and
+`b.parse_float_range(start, end)` operations expose the same underlying range
+parser for code that already stores offsets. `b.scalar_count_range(start, end)`
+also avoids a view, but may allocate the error string for invalid UTF-8 and is
+therefore not accepted under `noalloc`.
+
 `b.parse_int()` and `b.parse_float()` answer `Option[int]` and `Option[float]` by
 reading the octets through the same pinned grammar as `int(text)` and
 `float(text)`: surrounding ASCII whitespace, one optional sign, decimal digits

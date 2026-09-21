@@ -15,7 +15,7 @@ public record Node:
     next: int
 
 
-public def at(nodes: list[Node], index: int) -> Node effects():
+public def at(nodes: list[Node], index: int) -> Node effects(managed_allocation):
     if index < 0 or index >= len(nodes):
         return Node(
             kind=Kind.atom,
@@ -25,7 +25,7 @@ public def at(nodes: list[Node], index: int) -> Node effects():
     return nodes[index]
 
 
-public def form(host: Host, nodes: list[Node], index: int, name: bytes) -> bool effects(host):
+public def form(host: Host, nodes: list[Node], index: int, name: bytes) -> bool effects(host, managed_allocation):
     item = at(nodes, index)
     if item.kind != Kind.list or item.next == index + 1:
         return False
@@ -33,27 +33,29 @@ public def form(host: Host, nodes: list[Node], index: int, name: bytes) -> bool 
 
 
 public def parse(host: Host, document: io.Document) -> Result[list[Node], int] effects(host, managed_allocation):
-    file = io.Document.id(document)
+    file = io.id(document)
+    source = document.source
     nodes: list[Node] = []
     stack: list[int] = []
     depth = 0
     p = 0
-    size = io.length(host, file)
+    size = len(source)
     nodes.append(Node(
         kind=Kind.list,
         span=text.Span(
             file=file,
+            source=source,
             start=0,
             end=size
         ),
         next=0
     ))
     while p < size:
-        c = io.byte(host, file, p)
+        c = u8(source[p])
         if c == 32u8 or c == 9u8 or c == 10u8 or c == 13u8:
             p += 1
         elif c == 59u8:
-            while p < size and io.byte(host, file, p) != 10u8:
+            while p < size and source[p] != 10:
                 p += 1
         elif c == 41u8:
             if depth == 0:
@@ -86,13 +88,13 @@ public def parse(host: Host, document: io.Document) -> Result[list[Node], int] e
                 p += 1
                 closed = False
                 while p < size and not closed:
-                    ch = io.byte(host, file, p)
+                    ch = u8(source[p])
                     p += 1
                     if ch == 92u8:
                         if p == size:
                             _ = io.issue(host, 3, file, start)
                             return Err(3)
-                        escape = io.byte(host, file, p)
+                        escape = u8(source[p])
                         if escape != 92u8 and escape != 34u8 and escape != 110u8 and escape != 114u8 and escape != 116u8:
                             _ = io.issue(host, 6, file, p)
                             return Err(6)
@@ -105,13 +107,14 @@ public def parse(host: Host, document: io.Document) -> Result[list[Node], int] e
             else:
                 scanning = True
                 while p < size and scanning:
-                    ch = io.byte(host, file, p)
+                    ch = u8(source[p])
                     if ch == 40u8 or ch == 41u8 or ch == 32u8 or ch == 9u8 or ch == 10u8 or ch == 13u8 or ch == 59u8:
                         scanning = False
                     else:
                         p += 1
             span = text.Span(
                 file=file,
+                source=source,
                 start=start,
                 end=p
             )

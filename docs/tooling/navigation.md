@@ -25,6 +25,15 @@ question over the same index — `definition`, `references`, `callers`, `callees
 `impact` or `context` — and `tests/navigation_client.py --compiler BINARY`
 exercises the whole surface.
 
+Every symbol also carries the analysis behind its facts, so an unavailable
+inference is never an empty fact: see [Fact status](#fact-status-in-interface-and-navigation-output).
+A symbol whose bodies were checked keeps exactly the field set and values it
+published before — for a private helper the inferred summary, and for an exported
+function with a declared ceiling that ceiling, which E2 has always reported in
+`effects` with `return_origin` as the bound `unknown`. A symbol whose bodies were
+not checked publishes `analysis` and `null` for those four fields instead, and a
+consumer must read `null` as "not known here" rather than as "none".
+
 ```console
 $ mylang index-project examples/modules/main.my > /tmp/index.json
 $ python3 -c "import json; d=json.load(open('/tmp/index.json')); print(d['version'], d['checked'], len(d['symbols']), len(d['references']))"
@@ -44,14 +53,62 @@ spelling, the inferred `effects(...)` set when the bodies check, any
 one, and a `tests(N)` column: the number of discovered tests that reach the
 callable, directly or transitively, from the same index `tests-for` reads. A
 body that fails to check leaves the declaration listed and reports no body
-diagnostic, and the `tests` column is omitted when no bodies were checked.
+diagnostic.
+
+An inferred summary exists only when checking produced one. When it did not, the
+line prints the literal `effects(unavailable)` with an `analysis(STATUS)` clause
+instead of the conservative full mask, so a bound the checker keeps internally is
+never published as a fact, and a declared ceiling — including an explicitly empty
+`ceiling()` — stays visible either way. `analysis(declaration-only)` means the
+bodies were not checked; `analysis(template)` means the project checked but no
+call instantiated this generic declaration; the `tests` column becomes
+`tests(unavailable)` for the whole-listing case. A declaration with a checked
+summary prints exactly what it always printed.
 
 ```console
-$ mylang list-interfaces program.my
+$ mylang list-interfaces main.my
 module interfaces v1; declarations/signature visibility checked; bodies not type checked
 module main
-  export function parse def(value:i64)->i64 effects() tests(2)
-  export function main def(fs:Filesystem,clock:Clock)->i64 effects() tests(0)
+  export function double def(x:i64)->i64 effects() ceiling(managed_allocation) tests(0)
+  export function parse def(value:i64)->i64 effects() tests(1)
+$ mylang list-interfaces hole.my
+module interfaces v1; declarations/signature visibility checked; bodies not type checked
+module hole
+  export function double def(x:i64)->i64 effects(unavailable) analysis(declaration-only) ceiling(managed_allocation) tests(unavailable)
+  export function unfinished def(x:i64)->i64 effects(unavailable) analysis(declaration-only) tests(unavailable)
+```
+
+## Fact status in interface and navigation output
+
+`mylang list-interfaces` and `mylang index-project` publish the same vocabulary
+of analysis status, so a text line and a JSON field cannot disagree about
+whether a fact was checked. The words are defined in
+[the compiler-derived reference](../reference.md#fact-status) and shared with
+`mylang reference`: `checked`, `template`, `declaration-only`, `declared` and
+`lexical-only`.
+
+| Surface | Unavailable inference | Status field |
+| --- | --- | --- |
+| `list-interfaces` text | `effects(unavailable)`, `tests(unavailable)` | `analysis(STATUS)` clause on the callable line |
+| `index-project` JSON | `null` for `effects`, `mutates`, `return_origin`, `mutation_writes` | `"analysis": "STATUS"` on the symbol |
+| `list-interfaces --contracts` | `permissions` keeps the declared directional bound (an omitted ceiling promises the full mask) | envelope `"analysis": "declaration-only"`; omitted when a checked program supplied inferred effects |
+
+A checked symbol or line keeps its previous bytes exactly, so a consumer that
+only ever saw checked answers reads the same values; a consumer that may see an
+unchecked one must distinguish `null` (unknown) from `[]` (inferred: none) and
+from an absent `analysis` key (checked). The `interface-contracts-v2` manifest is
+the declared replacement contract rather than an inferred summary, which is why
+its per-declaration `permissions` value stays the directional bound its frozen
+set-subset consumer compares.
+
+```console
+$ mylang index-project hole.my > /tmp/index.json
+$ python3 -c "import json; d=json.load(open('/tmp/index.json')); print(d['checked']); print([(s['name'], s.get('analysis'), s['effects']) for s in d['symbols'] if s['kind'] == 'function'])"
+False
+[('double', 'declaration-only', None), ('unfinished', 'declaration-only', None), ('main', 'declaration-only', None)]
+$ mylang index-project main.my > /tmp/index.json
+$ python3 -c "import json; d=json.load(open('/tmp/index.json')); print([(s['name'], s.get('analysis'), s['effects']) for s in d['symbols'] if s['name'] == 'parse'])"
+[('parse', None, [])]
 ```
 
 ## Which tests reach a declaration

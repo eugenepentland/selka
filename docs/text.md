@@ -57,7 +57,8 @@ def main() -> int:
 
 `str` answers `strip`, `lstrip`, `rstrip`, `upper`, `lower`, `zfill(width)`,
 `replace(old, new)`, `find(sub)`, `count(sub)`, `startswith`, `endswith`,
-`isdigit`, `isalpha`, `isspace` and `splitlines()`. Each one returns a fresh
+`isdigit`, `isalpha`, `isspace`, `split(separator)` and `splitlines()`. Each one
+returns a fresh
 value and leaves the receiver and every alias untouched. `find` answers `-1`
 rather than raising when the needle is absent, the three classifications answer
 `False` for empty text, case mapping covers ASCII letters and leaves every other
@@ -117,11 +118,80 @@ def main() -> int:
     return len(escaped) * 10 + len(lines)
 ```
 
+## Splitting on whitespace
+
+`text.split()` with no argument is Python's whitespace split: it breaks the
+receiver on runs of the same six ASCII whitespace scalars `isspace()` accepts —
+space, tab, line feed, carriage return, vertical tab and form feed — keeps only
+the nonempty pieces and answers `list[str]`. Leading, trailing and doubled
+whitespace therefore produce no empty string, and `"".split()` is empty.
+`bytes.split()` agrees on the octets and answers `list[bytes]`.
+`text.split(separator)` keeps its exact-separator meaning: adjacent separators
+still produce empty pieces, an empty needle still traps `R_EMPTY_SEPARATOR`, and
+the separator form still requires its one argument. A call with any other
+argument count is rejected with the callee's rendered signature, and the `split`
+rejection also carries the accepted spelling as an `alternative` note.
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    words = "  one two\tthree  ".split()
+    if len(words) != 3:
+        return 1
+    if words[1] != "two":
+        return 2
+    if len("".split()) != 0:
+        return 3
+    if len("a,,b".split(",")) != 3:
+        return 4
+    if len(b" x\ty ".split()) != 2:
+        return 5
+    return len(words) * 14
+```
+
+## Unicode scalar values
+
+`ord(text)` answers the one Unicode scalar value of `text`, and `chr(code)`
+answers the one-scalar text for a scalar value. `ord` of a one-scalar literal
+folds at check time to an `int` constant, so `byte == ord("m")` compiles to an
+immediate comparison with no call and no allocation; any other text is measured
+at run time. Both builtins trap `R_TEXT_SCALAR` rather than answering a partial
+value: `ord` requires exactly one scalar, and `chr` requires a code point in
+`0..0x10FFFF` outside the surrogate range. The [`strings`
+module](standard-library.md#strings) keeps its `Result` forms — `strings.ord` and
+`strings.chr` — for callers that would rather handle the failure.
+
+```mylang
+# doc: expect 42
+def byte_code(marker: str) -> bool:
+    return ord(marker) == 109
+
+
+def main() -> int:
+    if ord("A") != 65:
+        return 1
+    marker = "m"
+    if ord(marker) != 109:
+        return 2
+    if not byte_code(marker):
+        return 3
+    if chr(65) != "A":
+        return 4
+    if ord(chr(233)) != 233:
+        return 5
+    if len(chr(128512)) != 1:
+        return 6
+    return ord("A") - 23
+```
+
 ## Format strings
 
 An `f"..."` literal interpolates each `{expression}` hole with the same conversion
-`str(value)` performs, then concatenates the literal pieces and the converted
-holes into one new `str`. A hole holds exactly one ordinary expression — a call,
+`str(value)` performs, then joins the literal pieces and converted holes into one
+exactly-sized result allocation. A single piece returns its rendered text directly,
+so `f"{text}"` needs no allocation when `text` is already a `str`. Each hole
+evaluates and renders once from left to right; the implementation does not
+repeatedly copy a growing prefix. A hole holds exactly one ordinary expression — a call,
 an operator, an index, a field, even a nested format string — and is checked in
 its own source position. A hole takes any value `print` can render — a list, a
 dictionary, a record, an enum case, a result, an option or a byte string as well

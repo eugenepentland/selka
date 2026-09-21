@@ -3,6 +3,10 @@
 #include <stdio.h>
 #include <string.h>
 static const myl_native_type pointer={.size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER};
+void myl_qbe_fail(void *context,const char *code) {
+    (void)context; (void)code;
+    assert(0 && "unexpected text trap");
+}
 /* Every temporary this test builds is retained here, so collection stress never
    reclaims an operand that is still an argument of the expression under test. */
 static myl_native_list *bag;

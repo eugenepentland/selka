@@ -17,7 +17,10 @@ int myl_native_dictionary_contains(const myl_native_dictionary *, const void *ke
 int myl_native_dictionary_read(const myl_native_dictionary *, const void *key, void *output);
 int myl_native_dictionary_write(myl_native_heap *, myl_native_dictionary *, const void *key, const void *value);
 myl_native_list *myl_native_dictionary_snapshot(myl_native_heap *, myl_native_dictionary *, int keys);
+/* Insertion-order reads return zero outside the live entry range and preserve
+ * output. They are internal iteration primitives, not source-level methods. */
 int myl_native_dictionary_key_at(const myl_native_dictionary *, size_t index, void *output);
+int myl_native_dictionary_value_at(const myl_native_dictionary *, size_t index, void *output);
 /* Python-shaped dictionary methods. `pop` removes a matching entry and answers 1
  * found or 0 absent; `update`/`setdefault` may allocate and answer 0 on refusal. */
 int myl_native_dictionary_pop(myl_native_dictionary *, const void *key, void *output);

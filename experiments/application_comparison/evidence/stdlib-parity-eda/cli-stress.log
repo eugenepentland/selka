@@ -1,5 +1,0 @@
-independent CLI cases passed
-one-MiB whitespace 1048576 input bytes 0.478 seconds
-50000 unique keys 538903 input bytes 0.296 seconds
-long duplicate keys 200022 input bytes 0.097 seconds
-output stress: 841355 input bytes, 57692813 output bytes, 40.908 seconds

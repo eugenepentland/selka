@@ -330,7 +330,7 @@ test "ARENA-MANAGED-5 break and continue out of an arena close the scope exactly
 }
 
 // spec: ARENA-MANAGED-6
-test "ARENA-MANAGED-6 stress collection inside an arena sweeps unreachable arena objects" {
+test "ARENA-MANAGED-6 stress collection inside an arena preserves its values until bulk release" {
     const source =
         \\def waste() -> int:
         \\    temp: list[int] = [1, 2, 3]
@@ -415,6 +415,37 @@ test "ARENA-MANAGED-8 an arena-free program emits neither the barrier nor depth 
     defer t.allocator.free(manifest);
     try t.expect(std.mem.indexOf(u8, manifest, "myl_qbe_region_check") == null);
     try t.expect(std.mem.indexOf(u8, manifest, "myl_qbe_region_mark") == null);
+}
+
+// spec-case: ARENA-MANAGED-8
+test "ARENA-MANAGED-8 only a function that opens an arena records and restores its depth" {
+    const Unit = struct { name: []const u8, il: []const u8 };
+    const Manifest = struct { functions: []Unit };
+    var qbe = try language.Compilation.init(t.allocator, module,
+        \\def helper(value: int) -> int:
+        \\    return value + 1
+        \\
+        \\def main() -> int:
+        \\    total = 0
+        \\    with arena():
+        \\        total = helper(6)
+        \\    return total
+    );
+    defer qbe.deinit();
+    const encoded = try qbe.emitQbe(t.allocator);
+    defer t.allocator.free(encoded);
+    var parsed = try std.json.parseFromSlice(Manifest, t.allocator, encoded, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+    defer parsed.deinit();
+    var helper: ?[]const u8 = null;
+    var main: ?[]const u8 = null;
+    for (parsed.value.functions) |unit| {
+        if (std.mem.eql(u8, unit.name, "helper")) helper = unit.il;
+        if (std.mem.eql(u8, unit.name, "main")) main = unit.il;
+    }
+    try t.expect(std.mem.indexOf(u8, helper.?, "myl_qbe_region_mark") == null);
+    try t.expect(std.mem.indexOf(u8, helper.?, "myl_qbe_region_restore") == null);
+    try t.expect(std.mem.indexOf(u8, main.?, "myl_qbe_region_mark") != null);
+    try t.expect(std.mem.indexOf(u8, main.?, "myl_qbe_region_restore") != null);
 }
 
 test "arena source formatting preserves the with statement" {

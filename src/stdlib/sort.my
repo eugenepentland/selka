@@ -1,116 +1,28 @@
 module sort
 
 
-# Byte view of text; the empty literal also registers the module's bytes type.
-def octets(text: str) -> bytes:
-    if len(text) == 0:
-        return b""
-    return text.encode()
-
-
 # Three-way comparison of two texts in Unicode code point order.
-public def compare_strs(a: str, b: str) -> int effects(managed_allocation):
+public def compare_strs(a: str, b: str) -> int effects():
     if a == b:
         return 0
-    left = octets(a)
-    right = octets(b)
-    index = 0
-    while index < len(left) and index < len(right):
-        if left[index] != right[index]:
-            if left[index] < right[index]:
-                return 0 - 1
-            return 1
-        index += 1
-    if len(left) < len(right):
+    if min(a, b) == a:
         return 0 - 1
     return 1
 
 
-# Merge two ordered integer runs, keeping equal values in their original order.
-def merge_ints(left: list[int], right: list[int]) -> list[int]:
-    out: list[int] = []
-    a = 0
-    b = 0
-    while a < len(left) and b < len(right):
-        if right[b] < left[a]:
-            out.append(right[b])
-            b += 1
-        else:
-            out.append(left[a])
-            a += 1
-    while a < len(left):
-        out.append(left[a])
-        a += 1
-    while b < len(right):
-        out.append(right[b])
-        b += 1
-    return out
-
-
 # A new ascending list of integers; the input list is not modified.
 public def sort_ints(values: list[int]) -> list[int] effects(managed_allocation):
-    if len(values) <= 1:
-        return values[:]
-    middle = len(values) // 2
-    return merge_ints(sort_ints(values[0:middle]), sort_ints(values[middle:len(values)]))
+    return sorted(values)
 
 
-# Merge two ordered float runs; not-a-number sorts after every ordered value.
-def merge_floats(left: list[float], right: list[float]) -> list[float]:
-    out: list[float] = []
-    a = 0
-    b = 0
-    while a < len(left) and b < len(right):
-        if right[b] < left[a]:
-            out.append(right[b])
-            b += 1
-        else:
-            out.append(left[a])
-            a += 1
-    while a < len(left):
-        out.append(left[a])
-        a += 1
-    while b < len(right):
-        out.append(right[b])
-        b += 1
-    return out
-
-
-# A new ascending list of floats; the input list is not modified.
+# A new ascending list of floats; NaNs follow ordered values and the input is unchanged.
 public def sort_floats(values: list[float]) -> list[float] effects(managed_allocation):
-    if len(values) <= 1:
-        return values[:]
-    middle = len(values) // 2
-    return merge_floats(sort_floats(values[0:middle]), sort_floats(values[middle:len(values)]))
-
-
-# Merge two ordered text runs, keeping equal values in their original order.
-def merge_strs(left: list[str], right: list[str]) -> list[str]:
-    out: list[str] = []
-    a = 0
-    b = 0
-    while a < len(left) and b < len(right):
-        if compare_strs(right[b], left[a]) < 0:
-            out.append(right[b])
-            b += 1
-        else:
-            out.append(left[a])
-            a += 1
-    while a < len(left):
-        out.append(left[a])
-        a += 1
-    while b < len(right):
-        out.append(right[b])
-        b += 1
-    return out
+    return sorted(values)
 
 
 # A new list of texts in Unicode code point order; the input is not modified.
 public def sort_strs(values: list[str]) -> list[str] effects(managed_allocation):
-    if len(values) <= 1:
-        return values[:]
-    middle = len(values) // 2
-    return merge_strs(sort_strs(values[0:middle]), sort_strs(values[middle:len(values)]))
+    return sorted(values)
 
 
 # Merge two runs ordered by an integer key, preserving equal-key order.
@@ -192,7 +104,7 @@ public def max_int(values: list[int]) -> Option[int] effects():
 
 
 # Smallest text of a list in code point order, if the list has one.
-public def min_str(values: list[str]) -> Option[str] effects(managed_allocation):
+public def min_str(values: list[str]) -> Option[str] effects():
     if len(values) == 0:
         return None
     best = values[0]

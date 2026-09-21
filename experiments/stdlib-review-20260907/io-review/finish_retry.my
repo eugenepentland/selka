@@ -1,3 +1,0 @@
-module finish_retry;import std_io as io;import std_fs as fs;
-fn start(file:io::File)->i64{match io::write_all(io::writer(file),"hi"){io::Writing.err(discard)=>{return -1;},io::Writing.ok(value)=>{match io::finish(take_field(value,writer)){io::Finished.ok(discard)=>{return -2;},io::Finished.err(failure)=>{if read_field(failure,progress)!=2u64{return -3;}let writer=take_field(failure,writer);if read_field(writer,length)!=0u64{return -4;}match io::finish(writer){io::Finished.err(discard)=>{return -5;},io::Finished.ok(n)=>{if n!=0u64{return -6;}return 42;}}}}}}}
-fn main(heap:allocator,cap:filesystem_cap)->i64{match fs::open(heap,cap,"data",new fs::Mode.write_existing){fs::Open.err(discard)=>{return -7;},fs::Open.ok(file)=>{return start(file);}}}

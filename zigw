@@ -1,0 +1,10 @@
+#!/bin/sh
+# Zig wrapper for the DSH sandbox.
+#
+# The sandbox bind-mounts the checkout read-write and everything else read-only,
+# and gives every command a *fresh* tmpfs at /tmp. Zig's default global cache
+# lives under $HOME (read-only) and /tmp does not survive one command, so pin the
+# global cache inside the checkout, where it actually persists between calls.
+ZIG_GLOBAL_CACHE_DIR="${ZIG_GLOBAL_CACHE_DIR:-$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)/.zig-global-cache}"
+export ZIG_GLOBAL_CACHE_DIR
+exec zig "$@"

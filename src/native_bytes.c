@@ -6,6 +6,11 @@
 static const myl_native_type byte_type = { .size=1,.alignment=1,.kind=MYL_NATIVE_PLAIN };
 static const myl_native_type integer_type = { .size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN };
 static const myl_native_type pointer_type = { .size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER };
+/* Splits on maximal runs of ASCII whitespace, dropping every empty piece. It is
+   declared here rather than in the companion header so this file stays the only
+   one the whitespace-split addition touches on the byte runtime side; the QBE
+   emitter reaches it by symbol name. */
+myl_native_list *myl_native_bytes_split_whitespace(myl_native_heap *, myl_native_bytes *);
 /* Python endpoints clamp instead of trapping, matching managed list slices. */
 static size_t endpoint(size_t length, int64_t value) {
     if (value>=0) return (uint64_t)value>length ? length : (size_t)value;
@@ -55,9 +60,8 @@ static const myl_native_type view_header_type = {
    block its `storage` points into; a view already points into a block an
    earlier view recorded, so it hands that record on instead of deriving a
    header from a mid-block address. */
-static void *view_backing(const myl_native_bytes *source) {
-    const myl_native_object *header=(const myl_native_object *)source-1;
-    if (header->element==&view_header_type) return source->work.owner;
+static void *view_backing(const myl_native_heap *heap, const myl_native_bytes *source) {
+    if (myl_native_object_element(heap, source)==&view_header_type) return source->work.owner;
     return source->storage;
 }
 myl_native_bytes *myl_native_bytes_view(myl_native_heap *heap, myl_native_bytes *source, int64_t start, int64_t end) {
@@ -71,7 +75,7 @@ myl_native_bytes *myl_native_bytes_view(myl_native_heap *heap, myl_native_bytes 
         view->length=count;
         view->capacity=count;
         view->storage=count ? (unsigned char *)source->storage+first : source->storage;
-        view->work.owner=view_backing(source);
+        view->work.owner=view_backing(heap,source);
     }
     myl_native_root_pop(heap,&root);
     return view;
@@ -82,10 +86,11 @@ myl_native_bytes *myl_native_bytes_view(myl_native_heap *heap, myl_native_bytes 
    `myl_native_text_valid_utf8`: a lead byte of 0xC2..0xF4 with that many
    continuation bytes, above the length's minimum and inside the scalar range. A
    malformed sequence reports MYL_BYTES_INVALID and no count. */
+static int64_t scalar_count(const unsigned char *, size_t, int *);
 int64_t myl_native_bytes_scalar_count(const myl_native_bytes *input, int *status) {
-    return myl_native_bytes_scalar_count_range(input->storage,input->length,status);
+    return scalar_count(input->storage,input->length,status);
 }
-int64_t myl_native_bytes_scalar_count_range(const unsigned char *bytes, size_t length, int *status) {
+static int64_t scalar_count(const unsigned char *bytes, size_t length, int *status) {
     size_t at=0;
     int64_t count=0;
     while (at<length) {
@@ -118,6 +123,16 @@ int64_t myl_native_bytes_scalar_count_range(const unsigned char *bytes, size_t l
     }
     *status=MYL_BYTES_OK;
     return count;
+}
+int64_t myl_native_bytes_scalar_count_range(const myl_native_bytes *input, int64_t start, int64_t end, int *status) {
+    size_t first=endpoint(input->length,start), last=endpoint(input->length,end);
+    size_t count=last>first ? last-first : 0;
+    return scalar_count((const unsigned char *)input->storage+first,count,status);
+}
+const unsigned char *myl_native_bytes_range(const myl_native_bytes *input, int64_t start, int64_t end, size_t *length) {
+    size_t first=endpoint(input->length,start), last=endpoint(input->length,end);
+    *length=last>first ? last-first : 0;
+    return input->storage ? (const unsigned char *)input->storage+first : NULL;
 }
 myl_native_bytes *myl_native_bytes_concat(myl_native_heap *heap, myl_native_bytes *left, myl_native_bytes *right) {
     if (left->length>SIZE_MAX-right->length) return NULL;
@@ -207,6 +222,34 @@ myl_native_list *myl_native_bytes_split(myl_native_heap *heap, myl_native_bytes 
         }
     }
     myl_native_root_pop(heap,&c); myl_native_root_pop(heap,&b); myl_native_root_pop(heap,&a);
+    return result;
+}
+/* The six octets Python's `bytes.split()` treats as whitespace: space, tab,
+   line feed, carriage return, vertical tab and form feed. */
+static int byte_space(unsigned char value) {
+    return value==' ' || value=='\t' || value=='\n' || value=='\r' || value==0x0b || value==0x0c;
+}
+/* Python's no-argument byte split: break the receiver on maximal runs of ASCII
+   whitespace and keep only the nonempty pieces, so leading, trailing and
+   doubled whitespace produce no empty byte string. */
+myl_native_list *myl_native_bytes_split_whitespace(myl_native_heap *heap, myl_native_bytes *input) {
+    myl_native_root a,b;
+    myl_native_root_push(heap,&a,&input,&pointer_type);
+    myl_native_list *result=myl_native_list_new(heap,&pointer_type,0);
+    myl_native_root_push(heap,&b,&result,&pointer_type);
+    if (result) {
+        const unsigned char *octets=input->storage;
+        size_t cursor=0;
+        while (cursor<input->length) {
+            while (cursor<input->length && byte_space(octets[cursor])) cursor++;
+            size_t start=cursor;
+            while (cursor<input->length && !byte_space(octets[cursor])) cursor++;
+            if (start==cursor) break;
+            myl_native_bytes *piece=copy_range(heap,input,start,cursor-start);
+            if (!piece || !myl_native_list_append(heap,result,&piece)) { result=NULL; break; }
+        }
+    }
+    myl_native_root_pop(heap,&b); myl_native_root_pop(heap,&a);
     return result;
 }
 myl_native_bytes *myl_native_bytes_join(myl_native_heap *heap, myl_native_bytes *separator, myl_native_list *list) {
@@ -342,8 +385,8 @@ myl_native_text *myl_native_bytes_decode_range(myl_native_heap *heap, myl_native
    frozen literal's storage belongs to the whole image, so a mutating entry point
    refuses an immortal receiver instead of writing storage the image owns. */
 /* Whether this payload is shared frozen storage rather than one heap object. */
-static int buffer_frozen(const myl_native_bytes *buffer) {
-    return ((const myl_native_object *)buffer-1)->immortal;
+static int buffer_frozen(const myl_native_heap *heap, const myl_native_bytes *buffer) {
+    return myl_native_object_immortal(heap,buffer);
 }
 /* Grow the backing to hold `needed` octets. The first block is one cache line
    and later blocks double, so the count of growth allocations stays logarithmic.
@@ -357,7 +400,7 @@ static int buffer_grow(myl_native_heap *heap, myl_native_bytes *buffer, size_t n
         if (capacity>SIZE_MAX/2) return 0;
         capacity*=2;
     }
-    void *storage=myl_native_heap_alloc_at(heap,buffer->element,capacity,myl_native_object_region(buffer));
+    void *storage=myl_native_heap_alloc_at(heap,buffer->element,capacity,myl_native_object_region(heap,buffer));
     if (!storage) return 0;
     if (buffer->length) memcpy(storage,buffer->storage,buffer->length);
     buffer->storage=storage;
@@ -381,14 +424,14 @@ static int buffer_grow_rooted(myl_native_heap *heap, myl_native_bytes *buffer, v
 }
 int myl_native_bytes_buffer_reserve(myl_native_heap *heap, myl_native_bytes *buffer, int64_t extra) {
     if (extra<0) return MYL_BYTES_REFUSED;
-    if (buffer_frozen(buffer)) return extra==0 ? MYL_BYTES_WROTE : MYL_BYTES_REFUSED;
+    if (buffer_frozen(heap,buffer)) return extra==0 ? MYL_BYTES_WROTE : MYL_BYTES_REFUSED;
     if ((uint64_t)extra>SIZE_MAX-buffer->length) return MYL_BYTES_FAILED;
     if (!buffer_grow_rooted(heap,buffer,NULL,buffer->length+(size_t)extra)) return MYL_BYTES_FAILED;
     return MYL_BYTES_WROTE;
 }
 int myl_native_bytes_buffer_append_byte(myl_native_heap *heap, myl_native_bytes *buffer, int64_t value) {
     if (value<0 || value>255) return MYL_BYTES_REFUSED;
-    if (buffer_frozen(buffer)) return MYL_BYTES_REFUSED;
+    if (buffer_frozen(heap,buffer)) return MYL_BYTES_REFUSED;
     if (buffer->length==SIZE_MAX) return MYL_BYTES_FAILED;
     if (!buffer_grow_rooted(heap,buffer,NULL,buffer->length+1)) return MYL_BYTES_FAILED;
     ((unsigned char *)buffer->storage)[buffer->length++]=(unsigned char)value;
@@ -396,7 +439,7 @@ int myl_native_bytes_buffer_append_byte(myl_native_heap *heap, myl_native_bytes 
 }
 int myl_native_bytes_buffer_append_range(myl_native_heap *heap, myl_native_bytes *buffer, myl_native_bytes *data, int64_t start, int64_t end) {
     if (start<0 || end<start || (uint64_t)end>data->length) return MYL_BYTES_REFUSED;
-    if (buffer_frozen(buffer)) return MYL_BYTES_REFUSED;
+    if (buffer_frozen(heap,buffer)) return MYL_BYTES_REFUSED;
     size_t count=(size_t)(end-start);
     if (!count) return MYL_BYTES_WROTE;
     if (count>SIZE_MAX-buffer->length) return MYL_BYTES_FAILED;
@@ -410,7 +453,7 @@ int myl_native_bytes_buffer_append_range(myl_native_heap *heap, myl_native_bytes
     return MYL_BYTES_WROTE;
 }
 int myl_native_bytes_buffer_append_utf8(myl_native_heap *heap, myl_native_bytes *buffer, myl_native_text *text) {
-    if (buffer_frozen(buffer)) return MYL_BYTES_REFUSED;
+    if (buffer_frozen(heap,buffer)) return MYL_BYTES_REFUSED;
     size_t required=myl_native_text_utf8(text,NULL,0);
     if (required==SIZE_MAX || required>SIZE_MAX-buffer->length) return MYL_BYTES_FAILED;
     if (!required) return MYL_BYTES_WROTE;
@@ -433,7 +476,7 @@ static size_t decimal_digits(unsigned char *digits, int64_t value) {
     return (size_t)(at-digits);
 }
 int myl_native_bytes_buffer_append_raw(myl_native_heap *heap, myl_native_bytes *buffer, const unsigned char *data, size_t count) {
-    if (buffer_frozen(buffer)) return MYL_BYTES_REFUSED;
+    if (buffer_frozen(heap,buffer)) return MYL_BYTES_REFUSED;
     if (!count) return MYL_BYTES_WROTE;
     if (count>SIZE_MAX-buffer->length) return MYL_BYTES_FAILED;
     if (!buffer_grow_rooted(heap,buffer,NULL,buffer->length+count)) return MYL_BYTES_FAILED;
@@ -442,7 +485,7 @@ int myl_native_bytes_buffer_append_raw(myl_native_heap *heap, myl_native_bytes *
     return MYL_BYTES_WROTE;
 }
 int myl_native_bytes_buffer_append_int(myl_native_heap *heap, myl_native_bytes *buffer, int64_t value) {
-    if (buffer_frozen(buffer)) return MYL_BYTES_REFUSED;
+    if (buffer_frozen(heap,buffer)) return MYL_BYTES_REFUSED;
     unsigned char digits[20];
     size_t width=decimal_digits(digits,value);
     if (width>SIZE_MAX-buffer->length) return MYL_BYTES_FAILED;

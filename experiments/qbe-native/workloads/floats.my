@@ -1,1 +1,0 @@
-fn main()->i64{let mut x:float=0.0;let mut i=0;while i<1000000{x=x+0.5;i+=1;}return int(x);}

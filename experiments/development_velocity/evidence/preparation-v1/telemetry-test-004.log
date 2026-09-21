@@ -1,9 +1,0 @@
-test_clock_union_rejects_other_boot_and_clips_seal (test_telemetry.TelemetryTests.test_clock_union_rejects_other_boot_and_clips_seal) ... ok
-test_phase_records_leave_inclusive_measurements_separate (test_telemetry.TelemetryTests.test_phase_records_leave_inclusive_measurements_separate) ... ok
-test_real_operations_capture_edits_failures_and_unknown_time (test_telemetry.TelemetryTests.test_real_operations_capture_edits_failures_and_unknown_time) ... ok
-test_successful_document_reads_are_not_compiler_failures (test_telemetry.TelemetryTests.test_successful_document_reads_are_not_compiler_failures) ... ok
-
-----------------------------------------------------------------------
-Ran 4 tests in 0.174s
-
-OK

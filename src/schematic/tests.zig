@@ -16,6 +16,18 @@ const declarations =
     \\public host def put(host: Host, value: u8) -> i64 effects(host)
     \\
     \\
+    \\public host def read_block(host: Host, file: i64, position: i64) -> [256]u8 effects(host)
+    \\
+    \\
+    \\public host def write_block(host: Host, payload: [256]u8, count: i64) -> i64 effects(host)
+    \\
+    \\
+    \\public host def finish(host: Host) -> i64 effects(host)
+    \\
+    \\
+    \\public host def output_limit(host: Host) -> i64 effects(host)
+    \\
+    \\
     \\public host def issue(host: Host, code: i64, file: i64, position: i64) -> i64 effects(host)
 ;
 const empty: [3][]const u8 = .{ "", "", "" };
@@ -90,6 +102,8 @@ const Harness = struct {
         try app.initDisk(self.process(), self.root);
         defer app.deinit();
         _ = app.run(&documents, &budget) catch return app.issue;
+        // A successful render must not satisfy a rejection assertion.
+        try t.expect(false);
         return null;
     }
 };
@@ -161,6 +175,57 @@ test "schematic byte callbacks reject positions and documents the host never sup
         \\    return 3
     );
     try t.expectEqual(@as(i64, 24), (try harness.reject(empty)).?.code);
+}
+// spec: SCHEMATIC-BULK-1
+test "schematic packed blocks zero fill input tails and flush exact output counts" {
+    const harness = try staged(
+        \\module main
+        \\import io
+        \\
+        \\
+        \\def main(host: Host) -> i64:
+        \\    block = io.read_block(host, 0, 1)
+        \\    if block[0] != 66u8 or block[1] != 0u8 or block[255] != 0u8:
+        \\        return 9
+        \\    _ = io.write_block(host, block, 2)
+        \\    return io.finish(host)
+    );
+    defer harness.close();
+    try t.expectEqualSlices(u8, "B\x00", try harness.render(.{ "AB", "", "" }));
+}
+// spec-case: SCHEMATIC-BULK-1
+test "schematic packed callbacks reject invalid ranges and preserve output-limit traps" {
+    const harness = try staged(
+        \\module main
+        \\import io
+        \\
+        \\
+        \\def main(host: Host) -> i64:
+        \\    block = io.read_block(host, 0, 0)
+        \\    _ = io.write_block(host, block, 257)
+        \\    return io.finish(host)
+    );
+    defer harness.close();
+    try t.expectEqual(@as(?bridge.Issue, null), try harness.reject(.{ "A", "", "" }));
+    try harness.source("main.my",
+        \\module main
+        \\import io
+        \\
+        \\
+        \\def main(host: Host) -> i64:
+        \\    _ = io.read_block(host, 0, 2)
+        \\    return 0
+    );
+    try t.expectEqual(@as(?bridge.Issue, null), try harness.reject(.{ "A", "", "" }));
+    try harness.source("main.my",
+        \\module main
+        \\import io
+        \\
+        \\
+        \\def main(host: Host) -> i64:
+        \\    return io.output_limit(host)
+    );
+    try t.expectEqual(@as(?bridge.Issue, null), try harness.reject(empty));
 }
 test "schematic documents reject malformed UTF8 and XML controls with exact byte positions" {
     try t.expect(bridge.validateDocuments(&.{"ok \xc2\xb5\n\t\r"}) == null);
@@ -259,12 +324,12 @@ const named_main =
     \\import io
     \\
     \\
-    \\def main(host: Host) -> i64:
-    \\    inputs = io.inputs(host)
-    \\    _ = io.put(host, io.byte(host, io.Document.id(inputs.circuit), 0))
-    \\    _ = io.put(host, io.byte(host, io.Document.id(inputs.pinout), 0))
-    \\    _ = io.put(host, io.byte(host, io.Document.id(inputs.interface), 0))
-    \\    return 0
+    \\def main(host: Host) -> Result[None, int]:
+    \\    inputs = io.inputs(host)?
+    \\    _ = io.put(host, io.byte(host, io.id(inputs.circuit), 0))
+    \\    _ = io.put(host, io.byte(host, io.id(inputs.pinout), 0))
+    \\    _ = io.put(host, io.byte(host, io.id(inputs.interface), 0))
+    \\    return Ok(None)
 ;
 // spec: SCHEMATIC-INPUTS-1
 test "named schematic input handles select their host documents" {
@@ -285,10 +350,10 @@ test "named schematic input providers reject documents the host never supplied" 
         \\import io
         \\
         \\
-        \\def main(host: Host) -> i64:
-        \\    inputs = io.inputs(host)
-        \\    _ = io.byte(host, io.Document.id(inputs.interface), 0)
-        \\    return 0
+        \\def main(host: Host) -> Result[None, int]:
+        \\    inputs = io.inputs(host)?
+        \\    _ = io.byte(host, io.id(inputs.interface), 0)
+        \\    return Ok(None)
     );
     var app: application.App = undefined;
     try app.initDisk(harness.process(), harness.root);
@@ -304,13 +369,44 @@ const decimal_main =
     \\import io
     \\import text
     \\def main(host: Host) -> int:
-    \\    text.decimal(host, -12)
-    \\    _ = io.put(host, 44u8)
-    \\    text.decimal(host, -9223372036854775808)
-    \\    _ = io.put(host, 44u8)
-    \\    text.decimal(host, 0)
-    \\    return 0
+    \\    out = io.output()
+    \\    text.decimal(out, -12)
+    \\    io.appendByte(out, 44u8)
+    \\    text.decimal(out, -9223372036854775808)
+    \\    io.appendByte(out, 44u8)
+    \\    text.decimal(out, 0)
+    \\    return io.flush(host, out)
 ;
+
+// spec-case: SCHEMATIC-BULK-1
+test "schematic bulk buffer boundaries hold normally and under collection stress" {
+    const harness = try Harness.open();
+    defer harness.close();
+    try harness.source("io.my", @embedFile("guest/io.my"));
+    try harness.source("bulk_io_test.my", @embedFile("guest/bulk_io_test.my"));
+    try harness.source("main.my",
+        \\module main
+        \\import bulk_io_test
+        \\
+        \\
+        \\def main(host: Host) -> int:
+        \\    if not bulk_io_test.test_minimum_integer_decimal():
+        \\        return 1
+        \\    if not bulk_io_test.test_negative_decimal_width_boundaries():
+        \\        return 2
+        \\    if not bulk_io_test.test_output_limit_fails_without_oversized_buffer():
+        \\        return 3
+        \\    if not bulk_io_test.test_decimal_uses_exact_remaining_capacity():
+        \\        return 4
+        \\    return 0
+    );
+    var app: application.App = undefined;
+    try app.initDisk(harness.process(), harness.root);
+    defer app.deinit();
+    try t.expectEqualStrings("", try app.run(&empty, &budget));
+    try t.expectEqualStrings("", try app.run(&empty, &.{ budget[0], "--gc-stress" }));
+}
+
 // spec: SCHEMATIC-PYTHON-1
 test "Python schematic decimal output preserves negative numbers and minimum integer" {
     const harness = try Harness.open();

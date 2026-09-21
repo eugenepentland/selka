@@ -7,6 +7,7 @@ const receipt = @import("source_receipt.zig");
 const walk = @import("typed_walk.zig");
 const uses_type = "uses_type";
 const effect_set = @import("effect_set.zig");
+const fact_status = @import("fact_status.zig");
 const tests_index = @import("tests_index.zig");
 /// Analysis limits prevent an inspection request from producing unbounded graphs.
 pub const Limits = struct { symbols: usize = 50000, references: usize = 250000 };
@@ -27,6 +28,11 @@ pub const Symbol = struct {
     const Details = struct {
         signature: []const u8 = "",
         type_name: []const u8 = "",
+        /// How much of this declaration's contract the run analyzed. The default
+        /// is lexical-only because the one constructor that leaves it unset is
+        /// the partial renderer's lexical candidate list, which resolved nothing;
+        /// every symbol `Builder` publishes states its own status.
+        analysis: fact_status.Status = .lexical_only,
         effects: []const []const u8 = &.{},
         mutates: []const u16 = &.{},
         return_origin: []const u8 = "unknown",
@@ -35,7 +41,38 @@ pub const Symbol = struct {
     const Context = struct { snippet: []const u8 = "", snippet_truncated: bool = false };
 
     /// Keep the navigation-v1 wire format flat while grouping internal facts.
+    ///
+    /// A symbol whose facts were checked publishes exactly the field set this
+    /// command always published, so every previously checked answer stays
+    /// byte-identical. A symbol whose inferred summary is unavailable publishes
+    /// an explicit `analysis` status and `null` for every inferred field —
+    /// effects, mutation positions, the return-origin bound and the managed-write
+    /// flag — so a conservative or missing analysis can never be read as an
+    /// empty fact.
     pub fn jsonStringify(self: Symbol, writer: anytype) !void {
+        if (self.details.analysis != .checked) {
+            const unavailable_effects: ?[]const []const u8 = null;
+            const unavailable_mutates: ?[]const u16 = null;
+            const unavailable_origin: ?[]const u8 = null;
+            const unavailable_writes: ?bool = null;
+            try writer.write(.{
+                .id = self.id,
+                .name = self.name,
+                .kind = self.kind,
+                .location = self.location,
+                .exported = self.exported,
+                .signature = self.details.signature,
+                .type_name = self.details.type_name,
+                .analysis = fact_status.name(self.details.analysis),
+                .effects = unavailable_effects,
+                .mutates = unavailable_mutates,
+                .return_origin = unavailable_origin,
+                .mutation_writes = unavailable_writes,
+                .snippet = self.context.snippet,
+                .snippet_truncated = self.context.snippet_truncated,
+            });
+            return;
+        }
         try writer.write(.{
             .id = self.id,
             .name = self.name,
@@ -61,6 +98,27 @@ fn originName(origin: typed.ReturnOrigin) []const u8 {
         .params => "params",
         .unknown => "unknown",
     };
+}
+
+/// The status of a declaration before any typed entry is attached. A declaration
+/// in a checked program stays `checked`, so a checked answer keeps exactly the
+/// field set this command always published; an unchecked one separates a
+/// callable, whose inferred summary is missing, from a type declaration, whose
+/// declared shape is complete without a body.
+fn declarationAnalysis(checked: bool, is_function: bool) fact_status.Status {
+    if (checked) return .checked;
+    return if (is_function) .declaration_only else .declared;
+}
+
+/// The status of a function declaration once the merged syntax is known:
+/// `template` when the declaration is generic and this program holds no
+/// instantiation of it, and `declaration-only` when the program carries no entry
+/// for the declaration at all. `functionFacts` promotes every symbol a typed
+/// entry covers back to `checked`.
+fn functionAnalysis(checked: bool, generic: bool) fact_status.Status {
+    if (!checked) return .declaration_only;
+    if (generic) return .template;
+    return .declaration_only;
 }
 
 const Builder = struct {
@@ -94,12 +152,20 @@ const Builder = struct {
     }
     fn declarationsFromSyntax(self: *Builder) Error!void {
         const compilation = self.compilation;
+        const checked = compilation.program != null;
         for (compilation.index.units, 0..) |unit, module_id| {
             const module = compilation.index.project.modules.items[module_id];
             for (unit.symbols.items) |symbol| {
                 const span = compilation.src.mappedSpan(module_id, symbol.span) catch return error.InternalError;
                 const qualified = try std.fmt.allocPrint(self.allocator, "{s}::{s}", .{ module.name, symbol.name });
-                try self.add(span, .{ .id = qualified, .name = symbol.name, .kind = @tagName(symbol.kind), .location = try self.location(span), .exported = symbol.exported });
+                try self.add(span, .{
+                    .id = qualified,
+                    .name = symbol.name,
+                    .kind = @tagName(symbol.kind),
+                    .location = try self.location(span),
+                    .exported = symbol.exported,
+                    .details = .{ .analysis = declarationAnalysis(checked, symbol.kind == .function) },
+                });
             }
         }
         for (compilation.syntax.functions) |function| {
@@ -113,6 +179,7 @@ const Builder = struct {
             const stop = excerptEnd(original.bytes, start, body_at.span.end);
             self.symbols.items[slot].details.type_name = compilation.src.text(function.signature.return_type);
             self.symbols.items[slot].details.signature = original.bytes[start..body_at.span.start];
+            self.symbols.items[slot].details.analysis = functionAnalysis(checked, function.signature.type_parameters.len != 0);
             self.symbols.items[slot].context.snippet = original.bytes[start..stop];
             self.symbols.items[slot].context.snippet_truncated = stop != body_at.span.end;
         }
@@ -125,7 +192,7 @@ const Builder = struct {
                     .name = name,
                     .kind = "field",
                     .location = try self.location(field.name),
-                    .details = .{ .type_name = compilation.src.text(field.ty) },
+                    .details = .{ .analysis = declarationAnalysis(checked, false), .type_name = compilation.src.text(field.ty) },
                 });
             }
         }
@@ -133,7 +200,13 @@ const Builder = struct {
             const owner = self.id(variant.name) orelse continue;
             for (variant.cases) |item| {
                 const name = compilation.src.text(item.name);
-                try self.add(item.name, .{ .id = try std.fmt.allocPrint(self.allocator, "{s}.{s}", .{ owner, name }), .name = name, .kind = "case", .location = try self.location(item.name) });
+                try self.add(item.name, .{
+                    .id = try std.fmt.allocPrint(self.allocator, "{s}.{s}", .{ owner, name }),
+                    .name = name,
+                    .kind = "case",
+                    .location = try self.location(item.name),
+                    .details = .{ .analysis = declarationAnalysis(checked, false) },
+                });
             }
         }
     }
@@ -160,6 +233,9 @@ const Builder = struct {
     fn functionFacts(self: *Builder, program: typed.Program, function: typed.Function) Error!void {
         const owner = self.id(function.declaration) orelse return;
         const slot = self.declarations.get(function.declaration.start).?;
+        // This declaration has a typed entry, so its inferred facts are checked
+        // facts whatever the declaration-level status started as.
+        self.symbols.items[slot].details.analysis = .checked;
         if (function.type_arguments.len == 0) self.symbols.items[slot].details.type_name = typed.typeName(function.signature.return_type, program.records);
         var effects: std.ArrayList([]const u8) = .empty;
         // E2: navigation reports the declared public ceiling for exported
@@ -195,7 +271,7 @@ const Builder = struct {
                 .name = local.name,
                 .kind = if (i < function.signature.parameter_count) "parameter" else "local",
                 .location = try self.location(local.declaration),
-                .details = .{ .type_name = typed.typeName(local.ty, program.records) },
+                .details = .{ .analysis = .checked, .type_name = typed.typeName(local.ty, program.records) },
             });
             try self.edge(owner, self.typeId(program, local.ty), if (i < function.signature.parameter_count) "accepts" else uses_type, local.declaration);
         }
@@ -229,10 +305,42 @@ const Builder = struct {
         }
     }
 };
-/// Render source-indexed declarations and checked references; failed checking yields declarations only.
-pub fn render(allocator: std.mem.Allocator, compilation: *pc.Compilation, identity: receipt.Identity, limits: Limits) Error![]u8 {
+/// The identities an answer is pinned to: the compiler that produced it and the
+/// loaded source it was produced from.
+pub const Snapshot = struct { implementation: receipt.Implementation, inputs: []const receipt.Input };
+
+/// Every declaration and resolved reference one frontend pass produced, owned by
+/// their arena until `deinit`. `render` publishes these as `navigation-v1`;
+/// `context.zig` reads the same tables instead of paying for a second pass.
+pub const Facts = struct {
+    arena: std.heap.ArenaAllocator,
+    symbols: []const Symbol,
+    references: []const Reference,
+    snapshot: Snapshot,
+    snapshot_sha256: []const u8,
+    checked: bool,
+
+    /// Release the arena every slice above points into.
+    pub fn deinit(self: *Facts) void {
+        self.arena.deinit();
+    }
+
+    /// The declaration with one exact identity, or null when this pass did not
+    /// produce it. A source position never selects through this helper.
+    pub fn symbol(self: *const Facts, id: []const u8) ?*const Symbol {
+        for (self.symbols) |*item| {
+            if (std.mem.eql(u8, item.id, id)) return item;
+        }
+        return null;
+    }
+};
+
+/// Collect source-indexed declarations and checked references in one pass over
+/// the merged compilation. Failed checking yields declarations only; every
+/// symbol then carries the status of the analysis behind it.
+pub fn collect(allocator: std.mem.Allocator, compilation: *pc.Compilation, identity: receipt.Identity, limits: Limits) Error!Facts {
     var arena = std.heap.ArenaAllocator.init(allocator);
-    defer arena.deinit();
+    errdefer arena.deinit();
     const scratch = arena.allocator();
     var builder: Builder = .{ .allocator = scratch, .compilation = compilation, .limits = limits };
     try builder.declarationsFromSyntax();
@@ -247,15 +355,34 @@ pub fn render(allocator: std.mem.Allocator, compilation: *pc.Compilation, identi
     // exact loaded-source receipt without treating that diagnostic as a missing file.
     var loaded = compilation.index.project.*;
     loaded.problem = null;
-    const snapshot = .{ .implementation = try receipt.implementation(scratch, identity), .inputs = try receipt.inputs(scratch, &loaded) };
-    return std.json.Stringify.valueAlloc(allocator, .{
-        .version = "navigation-v1",
-        .checked = compilation.program != null,
-        .reference_scope = "resolved concrete bodies and specializations; generic declarations indexed; static edges are not runtime coverage",
-        .snapshot_sha256 = try receipt.digest(scratch, snapshot),
-        .snapshot = snapshot,
+    const snapshot: Snapshot = .{ .implementation = try receipt.implementation(scratch, identity), .inputs = try receipt.inputs(scratch, &loaded) };
+    const digest = try receipt.digest(scratch, snapshot);
+    return .{
+        .arena = arena,
         .symbols = builder.symbols.items,
         .references = builder.references.items,
+        .snapshot = snapshot,
+        .snapshot_sha256 = digest,
+        .checked = compilation.program != null,
+    };
+}
+
+/// Render source-indexed declarations and checked references; failed checking
+/// yields declarations only. Every symbol carries the status of the analysis
+/// behind it: a checked symbol publishes its inferred facts exactly as before,
+/// and a symbol whose facts were not checked publishes `null` for each inferred
+/// field plus that status, so an empty array is never a stand-in for "unknown".
+pub fn render(allocator: std.mem.Allocator, compilation: *pc.Compilation, identity: receipt.Identity, limits: Limits) Error![]u8 {
+    var facts = try collect(allocator, compilation, identity, limits);
+    defer facts.deinit();
+    return std.json.Stringify.valueAlloc(allocator, .{
+        .version = "navigation-v1",
+        .checked = facts.checked,
+        .reference_scope = "resolved concrete bodies and specializations; generic declarations indexed; static edges are not runtime coverage",
+        .snapshot_sha256 = facts.snapshot_sha256,
+        .snapshot = facts.snapshot,
+        .symbols = facts.symbols,
+        .references = facts.references,
     }, .{});
 }
 

@@ -42,7 +42,7 @@ var current: ?Session = null;
 
 /// Build options naming the harness toolchain and the suites' shared object cache.
 pub fn settings() build_options.Options {
-    return .{ .source = "", .run = true, .cache = harness.cache_directory, .qbe = harness.qbe_path, .zig = harness.zig_path };
+    return .{ .source = "", .run = true, .cache = harness.cache_directory, .codegen = .{ .qbe = harness.qbe_path }, .zig = harness.zig_path };
 }
 
 /// Open, or reuse, this process's native build session.
@@ -63,7 +63,7 @@ pub fn acquire() Error!*Session {
     const executables = try native_build.generation(context, prepared.root, "exe", native_build.generation_identity);
     session.toolchain = .{
         .zig = try owner.dupe(u8, prepared.cache.zig),
-        .qbe = try owner.dupe(u8, prepared.cache.qbe),
+        .qbe = try owner.dupe(u8, prepared.cache.codegen.tool),
         .assets = try owner.dupe(u8, prepared.cache.assets),
         .environment = try owner.dupe(u8, prepared.cache.environment),
         .directory = try owner.dupe(u8, prepared.cache.directory),

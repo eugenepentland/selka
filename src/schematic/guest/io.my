@@ -2,15 +2,138 @@ module io
 # Document identities come from the host; application code uses their roles.
 
 
-public domain Document: int:
-    def circuit(host: Host) -> Document effects(host):
-        return wrap[Document](circuit_input(host))
-    def pinout(host: Host) -> Document effects(host):
-        return wrap[Document](pinout_input(host))
-    def interface(host: Host) -> Document effects(host):
-        return wrap[Document](interface_input(host))
-    def id(document: Document) -> int noalloc:
-        return unwrap(document)
+public record Document:
+    identity: int
+    source: bytes
+
+
+public def id(document: Document) -> int noalloc:
+    return document.identity
+
+
+public class Output:
+    buffer: byte_buffer
+    failed: bool
+
+
+def load(host: Host, identity: int) -> Result[Document, int] effects(host, managed_allocation):
+    size = length(host, identity)
+    values: list[int] = []
+    buffer = byte_buffer(values)
+    if not buffer.reserve(size):
+        _ = issue(host, 5, identity, 0)
+        return Err(5)
+    position = 0
+    while position < size:
+        block = read_block(host, identity, position)
+        count = 256
+        if size - position < count:
+            count = size - position
+        i = 0
+        while i < count:
+            if not buffer.append_byte(int(block[i])):
+                _ = issue(host, 5, identity, position + i)
+                return Err(5)
+            i += 1
+        position += count
+    return Ok(Document(identity=identity, source=bytes(buffer)))
+
+
+public def output() -> Output effects(managed_allocation):
+    values: list[int] = []
+    return Output(buffer=byte_buffer(values), failed=False)
+
+
+public def append(out: Output, value: bytes) effects(managed_allocation, mutation) mutates(out):
+    if out.failed:
+        return
+    if len(out.buffer) > 4194304 - len(value):
+        out.failed = True
+        return
+    if not out.buffer.append_range(value, 0, len(value)):
+        out.failed = True
+    return
+
+
+public def appendByte(out: Output, value: u8) effects(managed_allocation, mutation) mutates(out):
+    if out.failed:
+        return
+    if len(out.buffer) == 4194304:
+        out.failed = True
+        return
+    if not out.buffer.append_byte(int(value)):
+        out.failed = True
+    return
+
+
+public def appendInt(out: Output, value: int) effects(managed_allocation, mutation) mutates(out):
+    if out.failed:
+        return
+    width = decimalWidth(value)
+    if len(out.buffer) > 4194304 - width:
+        out.failed = True
+        return
+    if not out.buffer.append_int(value):
+        out.failed = True
+    return
+
+
+public def decimalWidth(value: int) -> int:
+    width = 1
+    if value < 0:
+        width = 2
+        threshold = - 10
+        while value <= threshold:
+            width += 1
+            if threshold == - 1000000000000000000:
+                return width
+            threshold = threshold * 10
+        return width
+    threshold = 10
+    while value >= threshold:
+        width += 1
+        if threshold == 1000000000000000000:
+            return width
+        threshold = threshold * 10
+    return width
+
+
+public def flush(host: Host, out: Output) -> int effects(host, managed_allocation):
+    if out.failed:
+        _ = output_limit(host)
+        return 5
+    position = 0
+    while position < len(out.buffer):
+        payload: [256]u8 = [
+            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+            0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        ]
+        count = 256
+        if len(out.buffer) - position < count:
+            count = len(out.buffer) - position
+        i = 0
+        while i < count:
+            payload = replace(payload, i, u8(out.buffer[position + i]))
+            i += 1
+        status = write_block(host, payload, count)
+        if status != 0:
+            return status
+        position += count
+    return finish(host)
 
 
 public record Inputs:
@@ -19,16 +142,19 @@ public record Inputs:
     interface: Document
 
 
-public def inputs(host: Host) -> Inputs effects(host):
-    return Inputs(
-        circuit=Document.circuit(host),
-        pinout=Document.pinout(host),
-        interface=Document.interface(host)
-    )
+public def inputs(host: Host) -> Result[Inputs, int] effects(host, managed_allocation):
+    circuit = load(host, circuit_input(host))?
+    pinout = load(host, pinout_input(host))?
+    interface = load(host, interface_input(host))?
+    return Ok(Inputs(circuit=circuit, pinout=pinout, interface=interface))
 host def circuit_input(host: Host) -> int effects(host)
 host def pinout_input(host: Host) -> int effects(host)
 host def interface_input(host: Host) -> int effects(host)
 public host def length(host: Host, file: int) -> int effects(host)
+public host def read_block(host: Host, file: int, position: int) -> [256]u8 effects(host)
+public host def write_block(host: Host, payload: [256]u8, count: int) -> int effects(host)
+public host def finish(host: Host) -> int effects(host)
+public host def output_limit(host: Host) -> int effects(host)
 public host def byte(host: Host, file: int, position: int) -> u8 effects(host)
 public host def put(host: Host, value: u8) -> int effects(host)
 public host def issue(host: Host, code: int, file: int, position: int) -> int effects(host)

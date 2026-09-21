@@ -112,8 +112,8 @@ fn link(session: *wiring.Session, manifest: []const u8, output: []const u8) Erro
         .assets = session.toolchain.assets,
         .environment = session.toolchain.environment,
         .zig = session.toolchain.zig,
-        .qbe = session.toolchain.qbe,
         .mode = "Debug",
+        .codegen = .{ .tool = session.toolchain.qbe },
     };
     const document = try std.json.parseFromSlice(std.json.Value, context.allocator, manifest, .{ .allocate = .alloc_always });
     _ = try native_build.assemble(cache, wiring.settings(), document.value, output);

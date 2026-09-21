@@ -36,6 +36,88 @@ pub const Codec = struct {
             try self.encode(v.text(v.get(parameter, "type")), value, 0);
         }
     }
+    /// The scalar type of a text value, or null when the declared type is not
+    /// one. `str` is declared as an opaque list of 32-bit scalars, and that is
+    /// the whole of its wire contract: an opaque byte list is deliberately not
+    /// text, because `bytes` is staged behind its own encoding.
+    fn listElement(self: Codec, item: Value) ?[]const u8 {
+        if (!std.mem.eql(u8, v.text(v.get(item, "kind")), "list")) return null;
+        if (!v.boolean(v.get(item, "opaque"))) return null;
+        // `bytes` has this shape and its encoding is staged separately, so the
+        // boundary refuses it here as well as in the wire table; three readers of
+        // three different documents have to agree, and this is one of them.
+        if (std.mem.eql(u8, v.text(v.get(item, "name")), "bytes")) return null;
+        const element = v.text(v.get(item, "element"));
+        const scalar = self.definition(element) catch return null;
+        const kind = v.text(v.get(scalar, "kind"));
+        if (!std.mem.eql(u8, kind, "integer") and !std.mem.eql(u8, kind, "boolean")) return null;
+        return element;
+    }
+
+    /// Whether one copied managed list reads as a string rather than an array.
+    /// `str` is the language's text type and the only list whose scalars spell
+    /// characters; every other list, `list[u32]` included, is an array.
+    fn stringList(self: Codec, item: Value) bool {
+        _ = self;
+        return std.mem.eql(u8, v.text(v.get(item, "name")), "str");
+    }
+
+    /// Encode one text value as a node with one integer child per Unicode
+    /// scalar. The fixed-size node format then carries the whole value with no
+    /// byte payload, and the guest rebuilds a managed text of exactly that many
+    /// scalars. A byte string that is not UTF-8 is refused here rather than
+    /// reaching the guest, which is where the scalar count comes from.
+    fn encodeList(self: *Codec, item: Value, element: []const u8, value: Value, index: usize, depth: usize) Error!void {
+        if (!self.stringList(item)) {
+            if (value != .array) return error.InvalidTestValue;
+            if (self.nodes.items.len + value.array.items.len >= 65536) return error.TestValueLimit;
+            self.nodes.items[index].children = value.array.items.len;
+            for (value.array.items) |child| try self.encode(element, child, depth + 1);
+            return;
+        }
+        if (value != .string) return error.InvalidTestValue;
+        try self.encodeText(element, value.string, index);
+    }
+
+    fn encodeText(self: *Codec, element: []const u8, bytes: []const u8, index: usize) Error!void {
+        var view = std.unicode.Utf8View.init(bytes) catch return error.InvalidTestValue;
+        var iterator = view.iterator();
+        var count: usize = 0;
+        while (iterator.nextCodepoint()) |scalar| {
+            if (self.nodes.items.len >= 65536) return error.TestValueLimit;
+            try self.nodes.append(self.allocator, .{ .type = element, .bits = scalar });
+            count += 1;
+        }
+        self.nodes.items[index].children = count;
+    }
+
+    /// Rebuild the JSON string one text value came from. A child that is not a
+    /// Unicode scalar cannot have been produced by a text, so it is a malformed
+    /// response rather than a value to repair.
+    fn decodeList(self: *Codec, item: Value, element: []const u8, count: usize, depth: usize) Error!Value {
+        if (count > 65536) return error.InvalidNativeTestResponse;
+        if (!self.stringList(item)) {
+            var array: std.json.Array = .init(self.allocator);
+            for (0..count) |_| try array.append(try self.decode(element, depth + 1));
+            return .{ .array = array };
+        }
+        return self.decodeText(element, count, depth);
+    }
+
+    fn decodeText(self: *Codec, element: []const u8, count: usize, depth: usize) Error!Value {
+        var text: std.ArrayList(u8) = .empty;
+        errdefer text.deinit(self.allocator);
+        for (0..count) |_| {
+            const child = try self.decode(element, depth + 1);
+            const scalar = std.fmt.parseInt(u32, child.string, 10) catch return error.InvalidNativeTestResponse;
+            if (scalar > 0x10FFFF) return error.InvalidNativeTestResponse;
+            var buffer: [4]u8 = undefined;
+            const length = std.unicode.utf8Encode(@intCast(scalar), &buffer) catch return error.InvalidNativeTestResponse;
+            try text.appendSlice(self.allocator, buffer[0..@as(usize, length)]);
+        }
+        return .{ .string = text.items };
+    }
+
     fn definition(self: Codec, name: []const u8) Error!Value {
         for (self.types) |item| if (std.mem.eql(u8, v.text(v.get(item, "name")), name)) return item;
         return error.UnsupportedTestType;
@@ -53,6 +135,8 @@ pub const Codec = struct {
         } else if (std.mem.eql(u8, kind, "boolean")) {
             if (value != .bool) return error.InvalidTestValue;
             self.nodes.items[index].bits = @intFromBool(value.bool);
+        } else if (self.listElement(item)) |element| {
+            try self.encodeList(item, element, value, index, depth);
         } else if (std.mem.eql(u8, kind, "domain")) {
             const wire = v.get(v.get(item, "codec"), "wire");
             if (wire != .string) return error.UnsupportedTestType;
@@ -123,6 +207,10 @@ pub const Codec = struct {
         if (std.mem.eql(u8, kind, "boolean")) {
             if (node.children != 0 or node.bits > 1) return error.InvalidNativeTestResponse;
             return .{ .bool = node.bits == 1 };
+        }
+        if (self.listElement(item)) |element| {
+            if (node.bits != 0) return error.InvalidNativeTestResponse;
+            return self.decodeList(item, element, node.children, depth);
         }
         if (std.mem.eql(u8, kind, "domain")) {
             if (node.children != 1 or node.bits != 0) return error.InvalidNativeTestResponse;
@@ -206,4 +294,87 @@ test "typed fixture integers and nominal trees roundtrip without guest execution
     try std.testing.expectError(error.InvalidTestValue, codec.encode("u64", .{ .string = "-1" }, 0));
     try std.testing.expectError(error.UnsupportedTestType, codec.encode("capability", .null, 0));
     try std.testing.expectError(error.InvalidTestArguments, codec.arguments(.null, .{ .integer = 1 }));
+}
+
+// spec: WIRE-TEXT-1
+test "a text value crosses the wire as one node per Unicode scalar" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const parsed = try std.json.parseFromSlice(Value, a,
+        \\{"types":[{"name":"u32","kind":"integer","signed":false,"bits":32},{"name":"str","kind":"list","opaque":true,"element":"u32"},{"name":"bytes","kind":"list","opaque":true,"element":"u8"},{"name":"u8","kind":"integer","signed":false,"bits":8},{"name":"Texts","kind":"record","fields":[{"name":"label","type":"str"}]}]}
+    , .{});
+    var codec: Codec = .{ .allocator = a, .types = v.array(v.get(parsed.value, "types")) };
+    defer codec.deinit();
+    // ASCII, a two-byte scalar, a three-byte scalar and an astral scalar: the
+    // node count is the scalar count, not the byte count.
+    const label = "h\u{e9}llo \u{4e16}\u{754c} \u{1F600}";
+    try codec.encode("str", .{ .string = label }, 0);
+    try std.testing.expectEqual(@as(usize, 11), codec.nodes.items.len);
+    try std.testing.expectEqual(@as(usize, 10), codec.nodes.items[0].children);
+    const actual = try codec.decode("str", 0);
+    try std.testing.expectEqualStrings(label, actual.string);
+    // A record field of the same type takes the same path.
+    try codec.encode("Texts", .{ .object = try textObject(a, label) }, 0);
+    const record = try codec.decode("Texts", 0);
+    try std.testing.expectEqualStrings(label, v.text(v.get(record, "label")));
+}
+
+fn textObject(a: std.mem.Allocator, label: []const u8) !std.json.ObjectMap {
+    var object: std.json.ObjectMap = .empty;
+    try object.put(a, "label", .{ .string = label });
+    return object;
+}
+
+// spec: WIRE-TEXT-2
+test "a text value is refused when its bytes are not Unicode or its length is unbounded" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const parsed = try std.json.parseFromSlice(Value, a,
+        \\{"types":[{"name":"u32","kind":"integer","signed":false,"bits":32},{"name":"u8","kind":"integer","signed":false,"bits":8},{"name":"str","kind":"list","opaque":true,"element":"u32"},{"name":"bytes","kind":"list","opaque":true,"element":"u8"}]}
+    , .{});
+    var codec: Codec = .{ .allocator = a, .types = v.array(v.get(parsed.value, "types")) };
+    defer codec.deinit();
+    try std.testing.expectError(error.InvalidTestValue, codec.encode("str", .{ .integer = 1 }, 0));
+    try std.testing.expectError(error.InvalidTestValue, codec.encode("str", .{ .string = "\xff\xfe" }, 0));
+    // A surrogate encoded as three bytes is exactly what UTF-8 forbids.
+    try std.testing.expectError(error.InvalidTestValue, codec.encode("str", .{ .string = "\xed\xa0\x80" }, 0));
+    // An opaque byte list is not text: `bytes` keeps its own encoding for later.
+    try std.testing.expectError(error.UnsupportedTestType, codec.encode("bytes", .{ .string = "ab" }, 0));
+    const long = try a.alloc(u8, 70000);
+    @memset(long, 'a');
+    try std.testing.expectError(error.TestValueLimit, codec.encode("str", .{ .string = long }, 0));
+}
+
+// spec: WIRE-TEXT-3
+test "a text response that is not a scalar sequence is rejected and reports allocation failure" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const parsed = try std.json.parseFromSlice(Value, a,
+        \\{"types":[{"name":"u32","kind":"integer","signed":false,"bits":32},{"name":"str","kind":"list","opaque":true,"element":"u32"}]}
+    , .{});
+    var codec: Codec = .{ .allocator = a, .types = v.array(v.get(parsed.value, "types")) };
+    defer codec.deinit();
+    try codec.encode("str", .{ .string = "ok" }, 0);
+    codec.cursor = 0;
+    codec.nodes.items[0].bits = 1;
+    try std.testing.expectError(error.InvalidNativeTestResponse, codec.decode("str", 0));
+    codec.nodes.items[0].bits = 0;
+    codec.nodes.items[1].bits = 0x110000;
+    codec.cursor = 0;
+    try std.testing.expectError(error.InvalidNativeTestResponse, codec.decode("str", 0));
+    // The nodes are built with a working allocator, then the codec is handed one
+    // that fails immediately, so the only allocation left is the string the
+    // rebuild needs — which is the path that must report OutOfMemory rather
+    // than leave a partial value behind.
+    var tight: Codec = .{ .allocator = std.testing.allocator, .types = v.array(v.get(parsed.value, "types")) };
+    try tight.encode("str", .{ .string = "ok" }, 0);
+    var failing = std.testing.FailingAllocator.init(std.testing.allocator, .{ .fail_index = 0 });
+    tight.allocator = failing.allocator();
+    tight.cursor = 1;
+    try std.testing.expectError(error.OutOfMemory, tight.decodeText("u32", 2, 0));
+    tight.allocator = std.testing.allocator;
+    tight.deinit();
 }

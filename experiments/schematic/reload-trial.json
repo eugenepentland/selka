@@ -1,8 +1,0 @@
-{
-  "runner_sha256": "03dbdf34edacaf48bbe51340f88f14d5d55d29728c185a0d848e5d3f0f785f64",
-  "same_host_process": true,
-  "changed_svg_exactly": true,
-  "failed_edit_retained_last_good": true,
-  "repair_restored_original": true,
-  "build_tools_on_path": false
-}

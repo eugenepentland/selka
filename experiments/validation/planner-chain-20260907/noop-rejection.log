@@ -1,6 +1,0 @@
-test_each_feature_pack_rejects_unchanged_v1_behavior (tests.application_comparison.test_task_pack.TaskPackTests.test_each_feature_pack_rejects_unchanged_v1_behavior) ... ok
-
-----------------------------------------------------------------------
-Ran 1 test in 0.758s
-
-OK

@@ -11,6 +11,16 @@ and `experiments/llvm-backend/evidence/`.
 
 ## Decision
 
+> **Forward reference, 20 September 2026.** This finding was re-opened: the
+> qualification at [`llvm-backend-qualification-2026-09-20.md`](llvm-backend-qualification-2026-09-20.md)
+> found that this arm could not build the benchmark closure unaided (a
+> Zig-`@export`ed runtime helper was invisible to the signature registry) and
+> could not compile indirect calls at all — every function value was refused —
+> then fixed both and measured a repeatable **17–20%** whole-program speedup on
+> the census/render pair. The decision below stands as the finding of its own
+> experiment, on the arm as it then was; it is superseded as a statement about
+> the current arm.
+
 **A repeatable 5.4–8.9% whole-program speedup, with correctness intact: inside the
 plan's own `<10%` band.** The evidence does not support adopting LLVM as an
 optimized/release backend for this lowering, and it does not support a universal

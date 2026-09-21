@@ -935,6 +935,30 @@ fn execute(session: Session, unit: *Unit, index: usize, total: usize, unit_dir: 
     try record(session.allocator, unit, decided, invocation, written.has_main);
 }
 
+/// The status the compiler uses for a host failure — a usage error or an I/O
+/// fault — as opposed to a source diagnostic, which exits 1.
+const host_status: u8 = 2;
+/// The CLI's host-failure marker on stderr. It corroborates the machine-readable
+/// host status and names the cause in the failure text; a changed wording costs
+/// the detail, never the verdict.
+const host_failure_marker = "mylang: host failure";
+/// One finished child's failure inputs, grouped to keep the classifier compact.
+const ChildFailure = struct { status: u8, stdout: []const u8, stderr: []const u8, diagnosed: bool };
+
+/// Whether a child died in the host rather than reporting a diagnosed guest
+/// error: the host status with no `diagnostic-v1` record, corroborated by the
+/// CLI's own marker or by having produced no program output at all. A guest
+/// `main` that returns the host status has still printed its recorded result or
+/// its own output, so it is never mistaken for the host dying, and a wording
+/// change in the marker falls back to the machine-readable signal instead of
+/// silently passing a dropped example.
+fn hostFailed(child: ChildFailure) bool {
+    if (child.status != host_status) return false;
+    if (child.diagnosed) return false;
+    if (std.mem.indexOf(u8, child.stderr, host_failure_marker) != null) return true;
+    return child.stdout.len == 0;
+}
+
 fn record(allocator: std.mem.Allocator, unit: *Unit, decided: Plan, invocation: Invocation, has_main: bool) !void {
     const status = commandStatus(invocation.term);
     if (decided.action == .expect_error) {
@@ -958,17 +982,23 @@ fn record(allocator: std.mem.Allocator, unit: *Unit, decided: Plan, invocation: 
     }
     // A run now exits with its entry's `int` result, so a nonzero status is not a
     // failure by itself. A genuine failure is a checker rejection (`check`), a
-    // native trap (a `diagnostic-v1` record on stderr), or a crash by signal.
+    // native trap (a `diagnostic-v1` record on stderr), a crash by signal, or the
+    // host dying before the guest ever ran.
     const crashed = invocation.term != .exited;
+    const diagnosed = try diagnosedError(allocator, invocation.stderr);
+    const host_failed = !crashed and hostFailed(.{ .status = status, .stdout = invocation.stdout, .stderr = invocation.stderr, .diagnosed = diagnosed });
     const failed = if (decided.action == .run)
-        crashed or try diagnosedError(allocator, invocation.stderr)
+        crashed or diagnosed or host_failed
     else
         status != 0;
     if (failed) {
         const rendered = try normalise(allocator, invocation.stderr);
         const fallback = if (rendered.len > 0) rendered else try normalise(allocator, invocation.stdout);
         unit.status = .failed;
-        unit.detail = try std.fmt.allocPrint(allocator, "exit {d}: {s}", .{ status, fallback });
+        unit.detail = if (host_failed)
+            try std.fmt.allocPrint(allocator, "host failure (exit {d}): {s}", .{ status, fallback })
+        else
+            try std.fmt.allocPrint(allocator, "exit {d}: {s}", .{ status, fallback });
         return;
     }
     if (decided.action == .check) {
@@ -1448,4 +1478,21 @@ test "doctest the pool width follows --jobs, then MYLANG_JOBS, then the machine"
     try testing.expectEqual(@as(usize, 2), width(testing.io, 2, 8));
     try testing.expectEqual(@as(usize, 8), width(testing.io, 99, 8));
     try testing.expect(width(testing.io, null, 168) >= 1);
+}
+
+// spec: DOCTEST-3
+test "a host-failed child fails its example even when the example expects nothing" {
+    // The CLI wraps the host-failure line in a diagnostic-v1 message record;
+    // either spelling is a host failure, and an empty run with the host status
+    // is one even after the wording changes.
+    try testing.expect(hostFailed(.{ .status = 2, .stdout = "", .stderr = "{\"version\":\"diagnostic-v1\",\"kind\":\"message\",\"message\":\"mylang: host failure: AccessDenied\\n\"}\n", .diagnosed = false }));
+    try testing.expect(hostFailed(.{ .status = 2, .stdout = "", .stderr = "mylang: host failure: Unexpected\n", .diagnosed = false }));
+    try testing.expect(hostFailed(.{ .status = 2, .stdout = "", .stderr = "", .diagnosed = false }));
+    // A located source error is a diagnosed failure, never a host failure.
+    try testing.expect(!hostFailed(.{ .status = 1, .stdout = "", .stderr = "{\"diagnostic\":{\"severity\":\"error\"}}", .diagnosed = true }));
+    try testing.expect(!hostFailed(.{ .status = 0, .stdout = "", .stderr = "", .diagnosed = false }));
+    // A guest `main` that returns the host status still printed its result or its
+    // own output, so it keeps its recorded meaning.
+    try testing.expect(!hostFailed(.{ .status = 2, .stdout = "2\n", .stderr = "", .diagnosed = false }));
+    try testing.expect(!hostFailed(.{ .status = 2, .stdout = "hello\n", .stderr = "", .diagnosed = false }));
 }

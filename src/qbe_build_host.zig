@@ -93,7 +93,8 @@ test "empty host metadata embeds preflight and produces valid sentinel tables" {
     try std.testing.expect(std.mem.indexOf(u8, result, "qbe_host_declaration_count=0;") != null);
 }
 
-test "native host generator matches established Python C output" {
+// spec: HOST-PACKED-1
+test "native host generator preserves the checked copied-value bridge snapshot" {
     const parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator,
         \\{"types":[{"name":"i64","kind":"scalar","size":8,"alignment":8,"bits":64,"signed":true},{"name":"Box","kind":"record","size":8,"alignment":8,"fields":[{"type":"i64","offset":0}]},{"name":"Big","kind":"array","size":8192,"alignment":8,"count":1024,"stride":8,"fields":[{"type":"i64","offset":0}]},{"name":"Code","kind":"domain","size":8,"alignment":8,"fields":[{"type":"i64","offset":0}]}],"declarations":[{"name":"echo","symbol":"host_echo","parameters":["Box","Code"],"result":"Big","effects":64}]}
     , .{});
@@ -102,5 +103,7 @@ test "native host generator matches established Python C output" {
     defer std.testing.allocator.free(result);
     var digest: [32]u8 = undefined;
     std.crypto.hash.sha2.Sha256.hash(result, &digest, .{});
-    try std.testing.expectEqualStrings("582baa6b570c7e23afb10631bdb3b8d86ef2dcba331f083e4bc5a3957b9a49db", &std.fmt.bytesToHex(digest, .lower));
+    // Includes cached bindings, bounded scratch and checked scalar/packed copies;
+    // tests/qbe_host_bridge.c exercises their runtime checks and cleanup.
+    try std.testing.expectEqualStrings("dbd4bb4c0020088d75adcada9779771804a1231a9222d4a080c7e1ee7b7842e2", &std.fmt.bytesToHex(digest, .lower));
 }

@@ -533,11 +533,25 @@ test "lint attaches the transitive tests that reach a finding as a related note"
     var arena = std.heap.ArenaAllocator.init(t.allocator);
     defer arena.deinit();
     const scratch = arena.allocator();
-    const outcome = try evaluateFixture(scratch, root, .{});
-    const flagged = findFinding(outcome, "L_UNTESTED_EXPORT");
+    // Under `strict` the direct-call fact still reports `outer`, and the note
+    // names the test that reaches it transitively.
+    var strict_config: lint_config.Config = .{ .profile = .strict };
+    defer strict_config.deinit(t.allocator);
+    const strict = try evaluateFixture(scratch, root, .{ .config = &strict_config });
+    const flagged = findFinding(strict, "L_UNTESTED_EXPORT");
     try t.expect(flagged != null);
+    try t.expect(std.mem.indexOf(u8, flagged.?.message, "reached only transitively") != null);
     try t.expect(flagged.?.related != null);
     try t.expect(std.mem.indexOf(u8, flagged.?.related.?.message, "main::test_end_to_end") != null);
+
+    // Under `agent` the same declaration counts as tested, so the note rides its
+    // remaining reportable finding instead of an untested-export one.
+    const agent = try evaluateFixture(scratch, root, .{});
+    try t.expect(findFinding(agent, "L_UNTESTED_EXPORT") == null);
+    const note = findFinding(agent, "L_UNDOCUMENTED_EXPORT");
+    try t.expect(note != null);
+    try t.expect(note.?.related != null);
+    try t.expect(std.mem.indexOf(u8, note.?.related.?.message, "main::test_end_to_end") != null);
 }
 
 // spec: LINT-6

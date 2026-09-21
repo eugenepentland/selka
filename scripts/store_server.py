@@ -647,7 +647,7 @@ class StoreSession:
                 matches = set()
                 if index is not None:
                     matches = {owner(item['id']) for item in index['symbols']
-                               if needle in item.get('effects', [])}
+                               if needle in (item.get('effects') or [])}
                 else:
                     for row in rows:
                         if needle in row['effects']:

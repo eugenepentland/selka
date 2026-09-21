@@ -19,7 +19,8 @@ typedef struct {
     const MylangHostRegistry *registry;
     uint64_t calls,work,call_limit;
     size_t value_limit,depth_limit;
-    int initialized;
+    int initialized,invoking;
+    const MylangHostBinding *bound[];
 } QbeHostState;
 static const QbeHostType qbe_host_types[];
 static const QbeHostDeclaration qbe_host_declarations[];
@@ -47,7 +48,10 @@ void myl_qbe_host_begin(void *context) {
     MylQbeContext *ctx=context;
     (void)mylang_host_charge;
     if (ctx->host_state) return;
-    QbeHostState *state=calloc(1,sizeof(*state));
+    if (qbe_host_declaration_count>(SIZE_MAX-sizeof(QbeHostState))/sizeof(MylangHostBinding *)) {
+        myl_qbe_fail(ctx,"OutOfMemory"); return;
+    }
+    QbeHostState *state=calloc(1,sizeof(*state)+qbe_host_declaration_count*sizeof(MylangHostBinding *));
     if (!state) { myl_qbe_fail(ctx,"OutOfMemory"); return; }
     ctx->host_state=state;
     state->registry=ctx->providers?&ctx->providers->host:&qbe_empty_registry;
@@ -64,7 +68,10 @@ void myl_qbe_host_begin(void *context) {
         for (size_t j=0;name && j<qbe_host_declaration_count;j++) if (!strcmp(name,qbe_host_declarations[j].name)) found=1;
         if (!found) { myl_qbe_fail(ctx,"HostUnknownFunction"); return; }
     }
-    for (size_t i=0;i<qbe_host_declaration_count;i++) if (!qbe_host_binding(ctx,state,&qbe_host_declarations[i])) return;
+    for (size_t i=0;i<qbe_host_declaration_count;i++) {
+        state->bound[i]=qbe_host_binding(ctx,state,&qbe_host_declarations[i]);
+        if (!state->bound[i]) return;
+    }
     state->initialized=1;
 }
 static int qbe_host_error(void *ctx,const char *code) {
@@ -156,26 +163,145 @@ static size_t qbe_host_nodes(size_t index,size_t depth,size_t limit,size_t depth
     }
     return total;
 }
+static int qbe_host_scalar_call(const QbeHostState *state,const QbeHostDeclaration *declaration) {
+    if (state->depth_limit<1 || declaration->count>=state->value_limit || declaration->count>=8 || qbe_host_types[declaration->result].kind!=1) return 0;
+    for (size_t i=0;i<declaration->count;i++) if (qbe_host_types[declaration->parameters[i]].kind!=1) return 0;
+    return 1;
+}
+static int qbe_host_packed_type(size_t index,size_t *nodes,size_t depth,size_t depth_limit) {
+    const QbeHostType *type=&qbe_host_types[index];
+    if (depth>depth_limit) return 0;
+    if (type->kind==1) {
+        if ((type->bits!=8 && type->bits!=16 && type->bits!=32 && type->bits!=64) || type->size!=type->bits/8) return 0;
+        *nodes=1; return 1;
+    }
+    if (type->kind!=3 || type->stride!=1 || type->size!=type->count ||
+        !type->children || !type->offsets || type->offsets[0]!=0) return 0;
+    const QbeHostType *element=&qbe_host_types[type->children[0]];
+    if (element->kind!=1 || element->size!=1 || element->bits!=8 || element->is_signed) return 0;
+    if (depth+1>depth_limit || type->count==SIZE_MAX) return 0;
+    *nodes=1+type->count;
+    return 1;
+}
+static int qbe_host_packed_call(QbeHostState *state,const QbeHostDeclaration *declaration,const MylangHostBinding *binding,size_t *bytes) {
+    if (!binding->invoke_packed) return 0;
+    size_t nodes=0,total=0;
+    for (size_t i=0;i<declaration->count;i++) {
+        if (!qbe_host_packed_type(declaration->parameters[i],&nodes,1,state->depth_limit) ||
+            nodes>state->value_limit-total) return 0;
+        total+=nodes;
+        size_t size=qbe_host_types[declaration->parameters[i]].size;
+        if (size>SIZE_MAX-*bytes) return 0;
+        *bytes+=size;
+    }
+    if (!qbe_host_packed_type(declaration->result,&nodes,1,state->depth_limit) ||
+        nodes>state->value_limit-total) return 0;
+    size_t size=qbe_host_types[declaration->result].size;
+    if (size>SIZE_MAX-*bytes) return 0;
+    *bytes+=size;
+    if (*bytes>1024u*1024u) return 0;
+    return 1;
+}
+static void qbe_host_invoke_packed(void *ctx,QbeHostState *state,const QbeHostDeclaration *declaration,const MylangHostBinding *binding,const void *const *arguments,void *output,size_t bytes) {
+    if (declaration->count==SIZE_MAX) { qbe_host_error(ctx,"OutOfMemory"); return; }
+    size_t value_count=declaration->count+1;
+    if (value_count>SIZE_MAX/sizeof(MylangHostPackedValue)) { qbe_host_error(ctx,"OutOfMemory"); return; }
+    size_t headers=value_count*sizeof(MylangHostPackedValue);
+    if (bytes>SIZE_MAX-headers) { qbe_host_error(ctx,"OutOfMemory"); return; }
+    union { max_align_t alignment; unsigned char bytes[1024]; } local;
+    int owned=headers+bytes>sizeof local.bytes;
+    unsigned char *scratch=owned?myl_qbe_frame_allocate(ctx,headers+bytes):local.bytes;
+    if (!scratch) return;
+    if (owned) memset(scratch,0,headers+bytes);
+    MylangHostPackedValue *values=(MylangHostPackedValue *)scratch;
+    unsigned char *cursor=scratch+headers;
+    for (size_t i=0;i<declaration->count;i++) {
+        size_t size=qbe_host_types[declaration->parameters[i]].size;
+        values[i]=(MylangHostPackedValue){cursor,size};
+        if (size) memcpy(cursor,arguments[i],size);
+        cursor+=size;
+    }
+    size_t output_size=qbe_host_types[declaration->result].size;
+    values[declaration->count]=(MylangHostPackedValue){cursor,output_size};
+    if (output_size) memset(cursor,0,output_size);
+    void *expected_output=cursor;
+    state->calls++; state->work--;
+    MylangHostPackedCall call={values,declaration->count,values[declaration->count],0,state->work,0};
+    state->invoking=1;
+    const char *failure=binding->invoke_packed(binding->context,&call);
+    state->invoking=0;
+    if (call.exhausted || call.work_remaining>state->work) qbe_host_error(ctx,"HostWorkLimit");
+    else {
+        state->work=call.work_remaining;
+        if (failure) qbe_host_error(ctx,failure);
+        else if (call.output.bytes!=expected_output || call.output.size!=output_size || call.output_written!=output_size) qbe_host_error(ctx,"InvalidDataValue");
+        else if (!((MylQbeContext *)ctx)->trap && output_size) memcpy(output,call.output.bytes,output_size);
+    }
+    if (owned) myl_qbe_frame_release(ctx,scratch);
+}
+static void qbe_host_invoke_scalar(void *ctx,QbeHostState *state,const QbeHostDeclaration *declaration,const MylangHostBinding *binding,const void *const *arguments,void *output) {
+    MylangHostNode nodes[8]={0};
+    for (size_t i=0;i<declaration->count;i++) {
+        const QbeHostType *type=&qbe_host_types[declaration->parameters[i]];
+        nodes[i]=(MylangHostNode){type->name,qbe_host_word(arguments[i],type),0};
+    }
+    state->calls++; state->work--;
+    MylangHostCall call={nodes,declaration->count,nodes+declaration->count,1,0,state->work,0};
+    state->invoking=1;
+    const char *failure=binding->invoke(binding->context,&call);
+    state->invoking=0;
+    if (call.exhausted || call.work_remaining>state->work) qbe_host_error(ctx,"HostWorkLimit");
+    else {
+        state->work=call.work_remaining;
+        if (failure) qbe_host_error(ctx,failure);
+        else if (call.output_nodes>1) qbe_host_error(ctx,"ValueCountLimit");
+        else if (call.output_nodes!=1) qbe_host_error(ctx,"InvalidDataValue");
+        else {
+            const QbeHostType *type=&qbe_host_types[declaration->result];
+            const MylangHostNode *node=&nodes[declaration->count];
+            if (!node->type || strcmp(node->type,type->name)) qbe_host_error(ctx,"ValueTypeMismatch");
+            else if (node->children || !qbe_host_valid(type,node->bits)) qbe_host_error(ctx,"InvalidDataValue");
+            else memcpy(output,&node->bits,type->size);
+        }
+    }
+}
 static void qbe_host_invoke(void *context,size_t declaration_index,const void *const *arguments,void *output) {
     MylQbeContext *ctx=context;
     myl_qbe_host_begin(ctx);
     if (ctx->trap) return;
     QbeHostState *state=ctx->host_state;
     const QbeHostDeclaration *declaration=&qbe_host_declarations[declaration_index];
-    const MylangHostBinding *binding=qbe_host_binding(ctx,state,declaration);
-    if (!binding) return;
+    const MylangHostBinding *binding=state->bound[declaration_index];
+    if (state->invoking) { qbe_host_error(ctx,"HostReentry"); return; }
     if (state->calls==state->call_limit) { qbe_host_error(ctx,"HostCallLimit"); return; }
     if (!state->work) { qbe_host_error(ctx,"HostWorkLimit"); return; }
+    size_t packed_bytes=0;
+    if (qbe_host_packed_call(state,declaration,binding,&packed_bytes)) {
+        qbe_host_invoke_packed(ctx,state,declaration,binding,arguments,output,packed_bytes);
+        return;
+    }
+    if (qbe_host_scalar_call(state,declaration)) {
+        qbe_host_invoke_scalar(ctx,state,declaration,binding,arguments,output);
+        return;
+    }
     size_t count=0;
     for (size_t i=0;i<declaration->count;i++) if (!qbe_host_write(ctx,state,declaration->parameters[i],arguments[i],NULL,&count,1)) return;
     size_t capacity=qbe_host_nodes(declaration->result,1,state->value_limit-count,state->depth_limit);
-    MylangHostNode *nodes=calloc(count+capacity?count+capacity:1,sizeof(*nodes));
+    if (capacity>SIZE_MAX-count) { qbe_host_error(ctx,"OutOfMemory"); return; }
+    size_t needed=count+capacity?count+capacity:1;
+    MylangHostNode local_nodes[8]={0};
+    MylangHostNode *nodes=needed<=8?local_nodes:calloc(needed,sizeof(*nodes));
     if (!nodes) { qbe_host_error(ctx,"OutOfMemory"); return; }
     size_t cursor=0;
-    for (size_t i=0;i<declaration->count;i++) if (!qbe_host_write(ctx,state,declaration->parameters[i],arguments[i],nodes,&cursor,1)) { free(nodes); return; }
+    for (size_t i=0;i<declaration->count;i++) if (!qbe_host_write(ctx,state,declaration->parameters[i],arguments[i],nodes,&cursor,1)) {
+        if (nodes!=local_nodes) free(nodes);
+        return;
+    }
     state->calls++; state->work--;
     MylangHostCall call={nodes,count,nodes+count,capacity,0,state->work,0};
+    state->invoking=1;
     const char *failure=binding->invoke(binding->context,&call);
+    state->invoking=0;
     if (call.exhausted || call.work_remaining>state->work) qbe_host_error(ctx,"HostWorkLimit");
     else {
         state->work=call.work_remaining;
@@ -186,5 +312,5 @@ static void qbe_host_invoke(void *context,size_t declaration_index,const void *c
             if (qbe_host_read(ctx,state,declaration->result,output,nodes+count,call.output_nodes,&cursor,1) && cursor!=call.output_nodes) qbe_host_error(ctx,"InvalidDataValue");
         }
     }
-    free(nodes);
+    if (nodes!=local_nodes) free(nodes);
 }

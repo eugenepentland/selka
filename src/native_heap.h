@@ -42,14 +42,15 @@ typedef struct myl_native_root {
      * live slot leaves this word unused. */
     void *value;
 } myl_native_root;
-/* One managed allocation's header, laid out immediately before its payload so
+/* One tracing-heap allocation's header, laid out immediately before its payload so
  * the collector reaches it as `(myl_native_object *)payload - 1`. `marked` is a
  * collector write. `immortal` marks storage that lives outside the heap, such as
  * a frozen `str`/`bytes` literal: the collector never frees it and never
  * re-traces it. `region` is the arena depth that owns the payload; a literal
  * keeps 0 so arena ownership checks treat it as ordinary heap-owned storage that
  * any scope may reference. `payload_alignment` forces the header's size to a
- * multiple of `max_align_t` so the payload stays suitably aligned. */
+ * multiple of `max_align_t` so the payload stays suitably aligned. Arena payloads
+ * have no such header: use the heap-aware metadata functions below. */
 struct myl_native_object {
     struct myl_native_object *next, *pending;
     const myl_native_type *element;
@@ -73,7 +74,11 @@ typedef struct myl_native_region {
     size_t users, children;
 } myl_native_region;
 /* Bulk arena counters, reported separately from tracing reclamation. */
-typedef struct { uint64_t scopes, released, escaped; } myl_native_arena_statistics;
+typedef struct {
+    uint64_t scopes, released, escaped, allocations, chunks;
+    size_t chunks_live, reserved_bytes, peak_reserved_bytes;
+} myl_native_arena_statistics;
+typedef struct myl_native_arena_chunk myl_native_arena_chunk;
 typedef struct {
     myl_native_object *objects;
     myl_native_object *pending;
@@ -103,6 +108,9 @@ typedef struct {
      * ordinary copy. */
     void *text_scalars[128];
     int text_scalars_ready;
+    /* Region payloads and their compact side descriptors share bulk chunks.
+     * Appended fields preserve generated code's fixed root-chain offset. */
+    myl_native_arena_chunk *arena_chunks;
 } myl_native_heap;
 /* Address space granted to a guest process on top of its managed byte budget:
  * program text, the C library's own arenas and the test harness that loads it.
@@ -149,10 +157,14 @@ void myl_native_heap_collect(myl_native_heap *heap);
 void *myl_native_heap_alloc_at(myl_native_heap *heap,
                                const myl_native_type *element, size_t count, unsigned region);
 /* Arena depth owning one managed payload; 0 for the ordinary tracing heap. */
-unsigned myl_native_object_region(const void *payload);
+unsigned myl_native_object_region(const myl_native_heap *heap, const void *payload);
+/* Allocation metadata for GC, arena and static payloads without assuming an
+ * adjacent header. NULL payload has no element and is not immortal. */
+const myl_native_type *myl_native_object_element(const myl_native_heap *heap, const void *payload);
+int myl_native_object_immortal(const myl_native_heap *heap, const void *payload);
 /* Open the next innermost arena; later managed allocation lands in it. */
-void myl_native_region_begin(myl_native_heap *heap);
-/* Free every object allocated at the innermost arena depth and leave it. */
+int myl_native_region_begin(myl_native_heap *heap);
+/* Free the innermost arena's chunks without walking individual allocations. */
 void myl_native_region_end(myl_native_heap *heap);
 /* Explicit owned storage release. Caller removes all roots/references first. */
 void myl_native_heap_release(myl_native_heap *heap, void *payload);

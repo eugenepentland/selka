@@ -11,6 +11,7 @@ const format = @import("qbe_format.zig");
 const allocation_failure = format.allocation_failure;
 const load_word = format.load_word;
 const list_storage_offset = format.list_storage_offset;
+const load_scratch = "  %v{d} =l loadl %scratch\n";
 
 /// Bind byte-string lowering to the concrete emitter without an import cycle.
 pub fn Lower(comptime E: type) type {
@@ -57,7 +58,7 @@ pub fn Lower(comptime E: type) type {
 /// Store a checked byte conversion, whose payload the runtime left in scratch.
 fn emitPayloadResult(comptime E: type, self: *E, ty: typed.Type, status: usize, base: usize) Error!void {
     const value = self.temp();
-    try self.print(" %v{d} =l loadl %scratch\n", .{value});
+    try self.print(load_scratch, .{value});
     return @import("qbe_results.zig").Lower(E).payload(self, .{ .ty = ty, .status = status, .value = value, .slot = base });
 }
 
@@ -134,6 +135,11 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try self.require(result, allocation_failure);
             try self.store(base, result);
         },
+        .split_whitespace => {
+            try self.print(" %v{d} =l call $myl_native_bytes_split_whitespace(l %heap, l %v{d})\n", .{ result, input });
+            try self.require(result, allocation_failure);
+            try self.store(base, result);
+        },
         .split, .join => {
             const argument = try self.load("s", base);
             if (op.kind == .split) {
@@ -155,16 +161,28 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
         // Both numeric parses read the receiver's octets in place through the one
         // pinned grammar, so a numeric leaf needs no decoded `str` and no
         // allocation at all; the runtime publishes the value bits in scratch.
-        .parse_int, .parse_float => {
-            const storage = self.temp();
-            const length = self.temp();
-            const header = self.temp();
-            try self.print(" %v{d} =l add %v{d}, {d}\n %v{d} =l loadl %v{d}\n", .{ header, input, list_storage_offset, storage, header });
-            try self.print(load_word, .{ length, input });
+        .parse_int, .parse_float, .parse_int_range, .parse_float_range => {
+            const ranged = op.kind == .parse_int_range or op.kind == .parse_float_range;
+            const floating = op.kind == .parse_float or op.kind == .parse_float_range;
             const status = self.temp();
-            try self.print(" %v{d} =w call $myl_native_bytes_number_parse(l %v{d}, l %v{d}, w {d}, l %scratch)\n", .{ status, storage, length, @intFromBool(op.kind == .parse_float) });
+            if (ranged) {
+                const start = try self.load("s", base);
+                const end = try self.load("s", base + 1);
+                const storage = self.temp();
+                const length = self.temp();
+                try self.print(" %v{d} =l call $myl_native_bytes_range(l %v{d}, l %v{d}, l %v{d}, l %scratch)\n", .{ storage, input, start, end });
+                try self.print(load_scratch, .{length});
+                try self.print(" %v{d} =w call $myl_native_bytes_number_parse(l %v{d}, l %v{d}, w {d}, l %scratch)\n", .{ status, storage, length, @intFromBool(floating) });
+            } else {
+                const storage = self.temp();
+                const length = self.temp();
+                const header = self.temp();
+                try self.print(" %v{d} =l add %v{d}, {d}\n %v{d} =l loadl %v{d}\n", .{ header, input, list_storage_offset, storage, header });
+                try self.print(load_word, .{ length, input });
+                try self.print(" %v{d} =w call $myl_native_bytes_number_parse(l %v{d}, l %v{d}, w {d}, l %scratch)\n", .{ status, storage, length, @intFromBool(floating) });
+            }
             const value = self.temp();
-            try self.print(" %v{d} =l loadl %scratch\n", .{value});
+            try self.print(load_scratch, .{value});
             return @import("qbe_results.zig").Lower(E).option(self, .{ .ty = op.output, .status = status, .value = value, .slot = base });
         },
         // A view keeps the source's octets and retains its backing block, so the
@@ -183,8 +201,12 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try self.require(result, allocation_failure);
             try self.store(base, result);
         },
-        .scalar_count => {
-            try self.print(" %v{d} =w call $myl_qbe_bytes_scalar_count(l %ctx, l %v{d}, l %scratch)\n", .{ result, input });
+        .scalar_count, .scalar_count_range => {
+            if (op.kind == .scalar_count_range) {
+                const start = try self.load("s", base);
+                const end = try self.load("s", base + 1);
+                try self.print(" %v{d} =w call $myl_qbe_bytes_scalar_count_range(l %ctx, l %v{d}, l %v{d}, l %v{d}, l %scratch)\n", .{ result, input, start, end });
+            } else try self.print(" %v{d} =w call $myl_qbe_bytes_scalar_count(l %ctx, l %v{d}, l %scratch)\n", .{ result, input });
             try self.checkFailure("failure");
             return emitPayloadResult(E, self, op.output, result, base);
         },

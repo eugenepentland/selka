@@ -1,3 +1,0 @@
-def main() -> int:
-    b = b"abc"
-    return i64(b[9])
