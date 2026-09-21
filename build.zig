@@ -36,8 +36,11 @@ const mib: u64 = 1 << 20;
 const rss = struct {
     /// Zig test binaries, which also spawn the compiler. Observed: the schematic root 48M, the CLI root 31M, byte I/O 11M,
     /// the focused native-test root 13M. The unit root additionally builds and
-    /// runs every guest program its suites execute, and peaks near 1.1G.
-    const suite: u64 = 2048 * mib;
+    /// runs every guest program its suites execute. It links libc dynamically so
+    /// the invoke tests can `dlopen` a shared object built against it, which
+    /// costs real memory over the statically linked allocator: the whole root now
+    /// peaks near 2.2G where it used to peak near 1.1G.
+    const suite: u64 = 2560 * mib;
     /// One shard of the unit root. A shard builds and runs only its slice of
     /// the guest programs, so its peak sits well under the whole root's 1.1G:
     /// observed 77M-336M across eight warm shards. The ceiling keeps the cold
@@ -289,6 +292,15 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/root_test.zig"),
         .target = target,
         .optimize = optimize,
+        // The invoke tests `dlopen` a shared object that `mylang build --library`
+        // linked against the system libc. Without this the test binary is
+        // statically linked and carries no libc of its own, so the loaded object
+        // brings up a second, independent glibc whose global state disagrees with
+        // the process it was loaded into: the first call through the loaded codec
+        // entry then faults inside glibc at a varying address. Linking the tests
+        // the way the loaded object expects turns that boundary into an ordinary
+        // dynamic call.
+        .link_libc = true,
     }) });
     unit.root_module.addImport("qbe_build_assets", build_assets);
     unit.root_module.addImport("memory_budget", budget);

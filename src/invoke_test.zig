@@ -556,8 +556,13 @@ test "an undersized codec result buffer reports OutputTooSmall, not WireLimit" {
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
     const cache = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    defer a.free(cache);
     const prepared = try builtLibrary(a, context, cache, resolved, "tool::bracket");
     defer context.remove(prepared.session.temporary);
+    // `builtLibrary` allocates the entry path and hands it to the session's
+    // options, which nothing else releases; production runs on an arena and
+    // never notices, while this test allocates from the leak checker.
+    defer a.free(prepared.session.options.source);
     // The Zig mirror of the C ABI is only usable while it matches the header.
     try testing.expectEqual(@as(usize, 24), @sizeOf(WireNode));
     try testing.expectEqual(@as(usize, 32), @sizeOf(RunFrame));

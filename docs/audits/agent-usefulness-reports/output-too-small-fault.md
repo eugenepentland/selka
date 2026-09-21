@@ -1,82 +1,86 @@
-# The `QBE-TEXT-4` codec fault: narrowed, not fixed
+# The `QBE-TEXT-4` codec fault — root cause and fix
 
 `invoke_test`'s "an undersized codec result buffer reports OutputTooSmall, not
-WireLimit" crashes with `SIGSEGV` at the call on its first line. It is the only
-red item in the whole gate and it predates every change in this branch — it
-reproduces on the frozen W0 baseline. This note records what is now known so the
-next attempt does not repeat the search.
+WireLimit" crashed with `SIGSEGV` on its first call through the loaded codec
+entry. It was the only red item in the gate for six rounds. It is fixed, and the
+cause was not in the codec at all.
 
-## What the test does
+## Root cause
 
-```zig
-const call = try codecEntry(&loaded);              // mylang_native_call_codecs_v1
-const arguments = bracketArguments();              // 3 nodes: str + 'a' + 'b'
-var small: [4]WireNode = @splat(sentinel);
-var small_result: CodecResult = undefined;
-const too_small = call("tool::bracket", &arguments, arguments.len, &small, small.len, null, &small_result);
+**The test binary was statically linked and the shared object it loaded was not.**
+
+`mylang build --library` produces a shared object linked against the system
+glibc. `invoke_test` `dlopen`s that object into the Zig test binary. Zig builds
+test binaries statically by default, with no libc of its own:
+
+```console
+$ file .zig-cache/o/<hash>/test
+ELF 64-bit LSB executable ... statically linked
+$ ldd .zig-cache/o/<hash>/test
+        not a dynamic executable
+$ nm -D --defined-only .zig-cache/o/<hash>/test | wc -l
+0
 ```
 
-`tool::bracket("ab")` returns `"[ab]"`, which is one text node plus four scalar
-nodes. A four-node buffer cannot hold it, so the contract is `OutputTooSmall`
-with `node_count == 5` and the caller's buffer untouched. The same call with an
-eight-node buffer is expected to complete.
+Loading a glibc-linked object into that process brings up a second, independent
+glibc whose process-global state — TLS, `environ`, the allocator — disagrees with
+the runtime it was loaded into. The first call through the loaded entry faults
+inside glibc. Nothing in the codec is at fault.
 
-## What is now established
+## How it was pinned down
 
-**The generated library's codec entry is never entered.** Instrumenting
-`codec_start` (the first statement of `mylang_native_call_codecs_v1`), `co_read`,
-`co_write` and the `done:` epilogue with file-appending probes produced **no log
-file at all** — not even the entry probe, and not the epilogue probe that runs on
-every path including failures.
+Two earlier readings were wrong and both are worth recording, because each cost
+a round:
 
-**The capacity is not the trigger, and never was.** Moving the eight-node call
-ahead of the four-node one moved the fault with it: the crash lands on whichever
-call runs first, at the same address, with a buffer that is demonstrably large
-enough. So the test's own name and premise — "an undersized codec result buffer
-reports OutputTooSmall" — describe something that never gets a chance to happen.
-What it actually exercises is *the first call through the loaded library*, and
-the four-node buffer is incidental.
+* It is **not** a capacity bug. Moving the eight-node call ahead of the four-node
+  one moves the fault with it, so it lands on whichever call runs first, with a
+  buffer that is demonstrably large enough. The test's own name describes
+  something that never happens.
+* It is **not** inside the codec. File-appending probes at the entry statement, at
+  `co_read`, at `co_write` and at the `done:` epilogue that runs on every path
+  produced no log file at all.
 
-Three things follow:
+The decisive step was getting the shared object out of the temporary directory
+`mylang invoke` deletes it from — polling `/tmp` while an invoke built — and then
+calling it from a **plain C driver** compiled by the same compiler:
 
-- The earlier note in `recursion-fix.md` that the fault is "inside the codec
-  entry" is wrong. Nothing inside the library runs.
-- Reading this as a capacity bug has been misleading for several rounds. Any
-  reproduction should keep the roomy call first, so the fault cannot be mistaken
-  for an undersized-buffer one.
-- Whatever is wrong is in the caller side of the boundary — the `std.DynLib`
-  load, the `callconv(.c)` function-pointer call, or the marshalling — because a
-  call that faults before its first statement is not a call the callee can be
-  responsible for.
+```console
+$ cc -o codec_driver codec_driver.c -ldl && ./codec_driver tests.so
+loaded tests.so, entry at 0x73d2fd5454b0
+calling with capacity 8 ...
+  rc=0 code=(null) node_count=5 first_type=str children=4
+calling with capacity 4 ...
+  rc=2 code=OutputTooSmall node_count=5 first_type=sentinel
+```
 
-The probe path was verified rather than assumed: the probe string is present in
-both `zig-out/bin/mylang` and the `zig-out/focus/mylang` the focused run
-actually uses, `builtLibrary` builds into a fresh temporary cache so no stale
-object is reused, the probe was rewritten from `stderr` to a file after `stderr`
-turned out not to surface, and the fault address changes when the generated code
-changes (`0x4`, `0x0`, `0xea546` across runs).
+Exactly the contract, in both directions, from a dynamically linked host. That
+exonerated the library and pointed at the test process.
 
-## What is therefore still open
+The first draft of that driver also crashed, on `fprintf` with `%s`, because it
+put `code` at offset 16 where the C struct has it at 24 — the Zig side asserts
+`@offsetOf(RunResult, "code") == 24`. A `backtrace()` in the signal handler
+showed the fault was inside the driver's own `fprintf`, which is what stopped a
+second wrong conclusion from being written down.
 
-The fault is in the caller side of the boundary. The Zig/C layouts either side of
-that call are asserted equal by the test itself (`WireNode` 24, `CodecResult`
-672, `CodecOptions` 40) and those assertions pass, so an obvious layout mismatch
-is already excluded. The varying fault address (`0x4`, `0x0`, `0xea546`) points
-at a wild branch rather than a bad field offset.
+## Fix
 
-## How to attack it next
+`src/root_test.zig`'s test module now sets `.link_libc = true`, so the tests link
+the way the object they load expects and the boundary between the two is an
+ordinary dynamic call. Two leaks the crash had been hiding then surfaced and are
+fixed too: the temporary cache path, and the entry path `builtLibrary` hands to
+the session's options, which nothing released because production runs on an arena
+and never notices.
 
-A standalone C driver that `dlopen`s the same library and makes the same two
-calls would separate "the library is wrong" from "the Zig caller is wrong" in one
-step, and unlike the test it can be run under a shell where probes and a
-debugger are both available. Building it needs the library path that
-`builtLibrary` produces, which the test currently keeps in a temporary directory
-and deletes.
+The unit root went from `1317/1318, 1 crashed` to **1318 passed, 0 failed, 0
+skipped**. It is fully green for the first time on this branch.
 
-## Why it was not fixed here
+The dynamic linkage costs real memory — the whole root peaks near 2.2 G where it
+used to peak near 1.1 G — so `rss.suite` moved from 2048 MiB to 2560 MiB with the
+observed figure recorded beside it.
 
-Four rounds of budget have gone into this branch's positive work, and the fault
-is orthogonal to all of it: `mylang invoke` never takes the undersized-buffer
-path, and the boundary matrix, both worked examples and every list and composed
-shape pass with it outstanding. It is recorded rather than left as a bare red
-test.
+## What would have found it faster
+
+The fault was reported twice-removed and mis-framed twice. A `dlopen` of the
+generated object from a plain C host, which took one round to set up once the
+object could be captured, answers "is the library or the caller wrong?" in a
+single run. That should be the first step for any future ABI fault, not the last.
