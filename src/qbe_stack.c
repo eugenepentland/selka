@@ -32,7 +32,7 @@ uint64_t myl_qbe_on_stack(uint64_t (*entry)(void *),MylQbeContext *ctx) {
     long page_size=sysconf(_SC_PAGESIZE);
     if (page_size<=0) { myl_qbe_fail(ctx,"OutOfMemory");return 0; }
     size_t page=(size_t)page_size;
-    const size_t slack=8*1024*1024;
+    const size_t slack=MYL_QBE_STACK_SLACK;
     if (page>SIZE_MAX/4 || slack>SIZE_MAX-2*page || ctx->max_frames>(SIZE_MAX-slack-2*page)/32768) {
         myl_qbe_fail(ctx,"OutOfMemory");return 0;
     }

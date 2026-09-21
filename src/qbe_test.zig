@@ -678,6 +678,51 @@ test "the fast protocol drops the per-call sticky test and keeps the trace posit
     defer full_parsed.deinit();
     try std.testing.expect(std.mem.indexOf(u8, named(full_parsed.value, "main").?.il, "loadl %trap") != null);
 }
+// spec: QBE-UNWIND-2
+test "the fast protocol indexes frame slots by depth instead of linking a record" {
+    const a = std.testing.allocator;
+    const source =
+        \\def rec(n: i64) -> i64:
+        \\    if n <= 0:
+        \\        return 0
+        \\    return rec(n - 1)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return rec(3)
+    ;
+    var fast = try language.Compilation.init(a, "qbe.my", source);
+    defer fast.deinit();
+    const bare = try fast.emitQbeWithOptions(a, false, false, false);
+    defer a.free(bare);
+    var parsed = try std.json.parseFromSlice(Manifest, a, bare, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+    defer parsed.deinit();
+    const call = named(parsed.value, "rec").?.il;
+    // The activation lives in the depth-indexed array, not a native-stack record:
+    // no record allocation and no `ctx->active_frame` link remain.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, call, "alloc8 32"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, call, "%ctx, 48"));
+    try std.testing.expect(std.mem.indexOf(u8, call, "%ctx, 72") != null);
+    // The floor guard stays, so a runaway recursion still raises R_FRAME_LIMIT,
+    // and the position slot is the array entry's second word.
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, call, "myl_qbe_fail_frame"));
+    try std.testing.expect(std.mem.indexOf(u8, call, " %position =l add ") != null);
+    try std.testing.expect(std.mem.indexOf(u8, call, ", %position") != null);
+    // The array is allocated once, by the entry point, before its first activation.
+    const entry = named(parsed.value, "main").?.il;
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, entry, "myl_qbe_frame_slots"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, call, "myl_qbe_frame_slots"));
+    // An accounting build keeps the linked record and its native-stack probe.
+    var accounted = try language.Compilation.init(a, "qbe.my", source);
+    defer accounted.deinit();
+    const full = try accounted.emitQbeWithOptions(a, false, false, true);
+    defer a.free(full);
+    var full_parsed = try std.json.parseFromSlice(Manifest, a, full, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+    defer full_parsed.deinit();
+    const guarded = named(full_parsed.value, "rec").?.il;
+    try std.testing.expect(std.mem.indexOf(u8, guarded, "alloc8 32") != null);
+    try std.testing.expect(std.mem.indexOf(u8, guarded, "%ctx, 48") != null);
+}
 // spec: QBE-POSITION-2
 test "a trap position stores on the cold path and a call site keeps its own" {
     const a = std.testing.allocator;

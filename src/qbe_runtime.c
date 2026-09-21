@@ -36,6 +36,7 @@ _Static_assert(offsetof(Context, trap) == 32, "QBE context trap ABI");
 _Static_assert(offsetof(Context, active_frame) == 48, "QBE context active frame ABI");
 _Static_assert(offsetof(Context, frame_limit) == 56, "QBE context frame limit ABI");
 _Static_assert(offsetof(Context, frame_floor) == 64, "QBE context frame floor ABI");
+_Static_assert(offsetof(Context, frame_slots) == 72, "QBE context frame slots ABI");
 _Static_assert(offsetof(MylQbeActiveFrame, function) == 8, "QBE frame function ABI");
 _Static_assert(offsetof(MylQbeActiveFrame, position) == 16, "QBE frame position ABI");
 /* Generated code now links the root chain itself, so this offset is an ABI:
@@ -213,15 +214,21 @@ static uint64_t fail(void *context, const char *code) {
     Context *ctx = context;
     if (!ctx->trap) {
         ctx->trap = code;
-        /* Generated frames link through `prev` in the native stack, so the trace
-           is the chain from the innermost active record. Each record expands to
-           the callee frames the inliner spliced into it, innermost first. Frames
-           without function metadata (the direct C entry points) are skipped, and
-           only the first sixteen frames are kept; `omitted_frames` reports the
-           logical depth beyond them. */
+        /* A record build links every guest frame through `prev` in the native
+           stack; the fast protocol instead writes each activation at its own
+           logical depth. Both walk innermost first and expand the callee frames
+           the inliner spliced in. Frames without function metadata (the direct C
+           entry points) are skipped, and only the first sixteen frames are kept;
+           `omitted_frames` reports the logical depth beyond them. */
         uint64_t logical = 0;
-        for (const MylQbeActiveFrame *frame = ctx->active_frame; frame; frame = frame->prev) {
-            trace_frame(ctx, frame->function, frame->position, 0, &logical);
+        if (ctx->active_frame) {
+            for (const MylQbeActiveFrame *frame = ctx->active_frame; frame; frame = frame->prev) {
+                trace_frame(ctx, frame->function, frame->position, 0, &logical);
+            }
+        } else if (ctx->frame_slots) {
+            for (uint64_t depth = ctx->frames; depth-- > 0;) {
+                trace_frame(ctx, ctx->frame_slots[depth].function, ctx->frame_slots[depth].position, 0, &logical);
+            }
         }
         ctx->omitted_frames = logical > ctx->trace_count ? logical-ctx->trace_count : 0;
         /* The trace is complete, so leave. Generated code does not test the
@@ -595,6 +602,19 @@ void myl_qbe_require_frame_accounting(void *context) {
     if (ctx->frame_limit == MYL_QBE_UNBOUNDED) return;
     fail_detail(ctx, "R_NO_FRAME_ACCOUNTING", "run it under `mylang run --max-frames=N`, or rebuild it with --mode Debug", 0, 0, 0, 0, 0, 0);
 }
+void myl_qbe_frame_slots(void *context) {
+    Context *ctx = context;
+    if (ctx->frame_slots) return;
+    /* One activation per 16 bytes of guest stack is a strict upper bound: the
+       smallest generated frame is one saved `rbp` plus one return address. The
+       trampoline's floor guard trips 64 KiB above the bottom, so a live depth
+       can never reach `capacity` and the array cannot be outgrown. */
+    uint64_t total = ctx->native_stack_limit + MYL_QBE_STACK_SLACK;
+    uint64_t capacity = total / 16 + 1;
+    if (capacity > SIZE_MAX / sizeof(MylQbeFrameSlot)) { fail(context, "OutOfMemory"); return; }
+    ctx->frame_slots = calloc((size_t)capacity, sizeof(MylQbeFrameSlot));
+    if (!ctx->frame_slots) fail(context, "OutOfMemory");
+}
 void myl_qbe_enter_at_sized(void *context, const MylQbeFunction *function, uint64_t bytes) {
     Context *ctx=context;
     uint64_t limit=ctx->native_stack_limit ? ctx->native_stack_limit:1048576;
@@ -752,6 +772,7 @@ static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64
     if (context->cleanup) context->cleanup(context);
     while (context->frame_allocations) myl_qbe_frame_release(context,(NativeFrameAllocation *)context->frame_allocations+1);
     free(context->host_state);
+    free(context->frame_slots);
     free(context->frame_data);
     if (!exit_without_sweep) myl_native_heap_destroy(&context->heap);
     int failed=context->trap != NULL;
