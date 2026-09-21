@@ -115,6 +115,17 @@ test "CLI project run reuses emitted manifest while no-cache and grants stay aut
     try testing.expectEqual(@as(usize, 0), try c4WorkCount(warm_work, "emitted_fragments", "performed"));
     try testing.expectEqual(cold_emitted, try c4WorkCount(warm_work, "emitted_fragments", "reused"));
 
+    const alias_argv = .{ compiler_path, "run", entry, "--report", cache_argument } ++ tools;
+    const alias = try std.process.run(testing.allocator, testing.io, .{ .argv = &alias_argv });
+    defer testing.allocator.free(alias.stdout);
+    defer testing.allocator.free(alias.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, alias.term);
+    const alias_work = try c4CommandWorkLine(alias.stderr, "run");
+    try testing.expectEqual(@as(usize, 0), try c4WorkCount(alias_work, "lowered_functions", "performed"));
+    try testing.expectEqual(cold_lowered, try c4WorkCount(alias_work, "lowered_functions", "reused"));
+    try testing.expectEqual(@as(usize, 0), try c4WorkCount(alias_work, "emitted_fragments", "performed"));
+    try testing.expectEqual(cold_emitted, try c4WorkCount(alias_work, "emitted_fragments", "reused"));
+
     const explained_argv = base ++ .{"--explain-invalidation"};
     const explained = try std.process.run(testing.allocator, testing.io, .{ .argv = &explained_argv });
     defer testing.allocator.free(explained.stdout);

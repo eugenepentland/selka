@@ -1768,7 +1768,8 @@ fn entryLocation(init: Context, path: []const u8) !EntryLocation {
 /// fragment receipt it compares.
 fn receiptStages(parsed: Parsed, executed: [std.meta.tags(invalidation.Stage).len]bool) [std.meta.tags(invalidation.Stage).len]bool {
     var stages = executed;
-    const deferred_project_run = parsed.command == .@"run-project" and !parsed.reporting.explain_invalidation;
+    const project_run = parsed.command == .run or parsed.command == .@"run-project";
+    const deferred_project_run = project_run and !parsed.reporting.explain_invalidation;
     if ((parsed.command == .@"emit-project-qbe" and parsed.select_file != null) or deferred_project_run) {
         stages[@backingInt(invalidation.Stage.lower_function)] = false;
         stages[@backingInt(invalidation.Stage.emit_fragment)] = false;
