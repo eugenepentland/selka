@@ -168,6 +168,31 @@ literals and the heap-aware metadata queries (`myl_native_object_element`,
 GC path ≤ 2× Zig; `trace` + `heap_collect` ≤ 5% of parser census samples; every
 GC-stress test and the ten native-memory C suites green under ASan/UBSan.
 
+**Landed in part, 2026-09-21** (`GC-OBJECT-1`, `GC-SEGMENT-1`). The managed
+header is two words — a mark word (mark bit, immortal-literal flag, element
+count) and the element descriptor — and the collector's worklist is a heap-side
+array; the generated frozen-literal block initialises the mark word, the native
+ABI moves to `mylang-qbe-native-v7` and the cache contract to
+`runtime-abi-v2`. Objects come from size-classed segments: a class bump-
+allocates zero-filled slots and reuses slots a previous sweep reclaimed through
+a per-class free list, and the sweep walks segments instead of a global link
+chain. Measured on the default `o3-lto` arm with `.tmp/verify/measure.py`
+(interleaved, 25 rounds, arm outputs byte-identical), `alloc_churn` falls
+**2.65× → 1.85×** Zig ReleaseFast (target ≤ 2×, **met** on `o3-lto` and `qbe` at
+1.81×; the non-default `o3` arm is 2.07×), and no other kernel regresses. The
+parser's census profile falls from 16.5% to 12.3% of samples in `trace` +
+`heap_collect` (collect alone 4.9% → 1.8%, target ≤ 5% **not met** — the mark
+phase over the live graph remains). Peak RSS on the 7.42 MB `input8.sexp` falls
+1.78× → 1.70× Zig census and 2.46× → 2.29× render (target ≤ 1.3×, **not met**;
+the header is no longer the bulk of the parser's bytes, which are the 4-bytes-
+per-scalar `str` payload of item 4 and the list header/backing pair of the third
+change above). The list representation half of this item is **not attempted**:
+coallocating a list's header and inline elements requires the collector to trace
+the elements through the header object's own descriptor, and the frozen
+`{ptr, len}` slice is a representation the compiler must choose and every
+consumer must understand, so it is left for a change that can pay its own way on
+both the fast paths item 5 and item 6 already read.
+
 ### 4. Store strings as UTF-8
 
 *Language and runtime. Size: large.*
