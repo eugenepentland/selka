@@ -517,3 +517,76 @@ test "ARENA-MANAGED-9 a managed binding first assigned inside an arena is confin
         \\    return len(data)
     ));
 }
+
+// spec-case: ARENA-MANAGED-10
+test "ARENA-MANAGED-10 repeated arena scopes reuse a retained chunk inside a small budget" {
+    var looping = try language.Compilation.init(t.allocator, module,
+        \\def fold(seed: int) -> int:
+        \\    values: list[int] = []
+        \\    for index in range(16):
+        \\        values.append(seed + index)
+        \\    total = 0
+        \\    for item in values:
+        \\        total += item
+        \\    return total
+        \\
+        \\def main() -> int:
+        \\    matched = 0
+        \\    for round in range(20000):
+        \\        with arena():
+        \\            if fold(round) == 16 * round + 120:
+        \\                matched += 1
+        \\    return matched
+    );
+    defer looping.deinit();
+    // Twenty thousand scopes under a 1 MiB ceiling. A reused chunk is charged
+    // exactly as a fresh reservation would be, so the budget neither traps nor
+    // drifts however many scopes the loop opens and closes.
+    const reused = try native.runWithOptions(&looping, .{ .max_memory = 1 << 20 });
+    try t.expectEqualStrings("", reused.trap.code);
+    try t.expectEqual(@as(i64, 20000), reused.value);
+    var bounded = try language.Compilation.init(t.allocator, module,
+        \\def main() -> int:
+        \\    kept = 0
+        \\    with arena():
+        \\        values: list[int] = []
+        \\        n = 0
+        \\        while n < 400000:
+        \\            values.append(n)
+        \\            n += 1
+        \\        kept = len(values)
+        \\    return kept
+    );
+    defer bounded.deinit();
+    // A live arena that outgrows the ceiling still names the budget: retained
+    // chunks are not spendable budget, only host bytes the runtime can give back.
+    const refused = try native.runWithOptions(&bounded, .{ .max_memory = 1 << 20 });
+    try t.expectEqualStrings("R_MEMORY_BUDGET", refused.trap.code);
+}
+
+// spec-case: ARENA-MANAGED-10
+test "ARENA-MANAGED-10 a chunk reused after an escape copy keeps the escaped value" {
+    const source =
+        \\def build(width: int) -> list[int]:
+        \\    items: list[int] = []
+        \\    for index in range(width):
+        \\        items.append(index * index)
+        \\    return items
+        \\
+        \\def main() -> int:
+        \\    kept: list[int] = []
+        \\    with arena() as scratch:
+        \\        built = build(6)
+        \\        kept = scratch.escape(built)
+        \\    churn = 0
+        \\    for round in range(500):
+        \\        with arena():
+        \\            churn += len(build(8))
+        \\    return kept[5] + churn
+    ;
+    // The escaped copy lives in the enclosing region; the five hundred scopes
+    // that follow reuse the chunk the escaping scope released.
+    try t.expectEqual(@as(i64, 4025), try value(source));
+    const stressed = try run(source, true);
+    try t.expectEqual(@as(i64, 4025), stressed.value);
+}

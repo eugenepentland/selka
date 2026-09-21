@@ -191,6 +191,20 @@ traps if any of them still reaches arena storage, then frees the arena. Normal
 exit, `return`, `?` propagation, `break` and `continue` out of the block, and
 traps unwinding through it all release the arena exactly once.
 
+Bulk release does not necessarily return the chunks to the host. The runtime
+keeps a bounded few of them — at most four chunks, at most 2 MiB, never more
+than the memory budget itself — and hands the next scope one of them instead of
+reserving and zero-filling a new one, which is what makes a loop that opens an
+arena per iteration cheap (measured in
+[performance](performance.md#prove-a-hot-function-does-not-allocate)).
+A retained chunk is charged to nothing: it leaves the budget, the reserved-byte
+count and the live-chunk count when the scope closes, exactly as freeing it did,
+and is charged again only when a later scope takes it back into service, and
+only when it is no larger than the chunk that scope would otherwise have
+reserved. Reuse first zeroes every byte the previous scope could have written,
+so a program can never read another scope's bytes, and a host reservation that
+fails frees the retained chunks and retries before reporting failure.
+
 Both QBE and LLVM native builds use the same arena runtime, store barrier, bulk
 release and `escape` copy. A program with no arena scope pays for neither the
 barrier nor the per-frame depth bookkeeping. In an arena-using program, only
@@ -216,8 +230,10 @@ recover GC bytes before reporting a memory-budget failure.
 The memory budget charges the actual reserved chunks, including alignment,
 descriptor space and unused capacity. Small budgets use smaller chunks; a failed
 reservation does not consume budget. Runtime statistics separately count scopes,
-arena allocations, objects bulk released, escape copies, chunk allocations and
-current/peak reserved arena bytes. No guest module exposes these counters.
+arena allocations, objects bulk released, escape copies, host chunk
+reservations, chunks reused from the retention cache below, and current/peak
+reserved arena bytes together with what the cache currently holds. No guest
+module exposes these counters.
 
 Allocation inside an arena is still allocation: it contributes the
 `managed_allocation` effect, so `noalloc` rejects it exactly as it rejects

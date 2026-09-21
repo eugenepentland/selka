@@ -1,5 +1,6 @@
 #include "native_heap.h"
 #include "native_bytes.h"
+#include "native_regions.h"
 #include <assert.h>
 #include <limits.h>
 #include <stdint.h>
@@ -158,6 +159,126 @@ static void oversized_chunk(void) {
     assert(!heap.bytes && !heap.objects_live);
     myl_native_heap_destroy(&heap);
 }
+/* spec-case: ARENA-MANAGED-10. The second scope serves its first allocation
+   from the chunk the first scope released: same address, no new host
+   reservation, and every byte the previous scope wrote reads back as zero. */
+static void chunk_reuse_across_scopes(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap,1<<20);
+    assert(myl_native_region_begin(&heap));
+    unsigned char *first=myl_native_heap_alloc(&heap,&octet,64);
+    assert(first && !heap.arena.reused);
+    memset(first,0xa5,64);
+    assert(myl_native_heap_alloc(&heap,&wide,1));
+    uint64_t chunks=heap.arena.chunks;
+    size_t reserved=heap.arena.reserved_bytes;
+    myl_native_region_end(&heap);
+    assert(heap.arena.cached==1 && heap.arena.cached_bytes==reserved);
+    assert(!heap.bytes && !heap.arena.reserved_bytes && !heap.arena.chunks_live);
+    assert(myl_native_region_begin(&heap));
+    unsigned char *again=myl_native_heap_alloc(&heap,&octet,64);
+    assert(again==first && heap.arena.chunks==chunks && heap.arena.reused==1);
+    assert(!heap.arena.cached && !heap.arena.cached_bytes);
+    for (size_t i=0;i<64;i++) assert(again[i]==0);
+    assert(heap.bytes==reserved && heap.arena.reserved_bytes==reserved);
+    assert(heap.arena.peak_reserved_bytes==reserved);
+    myl_native_region_end(&heap);
+    assert(heap.arena_cache);
+    myl_native_heap_destroy(&heap);
+}
+/* spec-case: ARENA-MANAGED-10. Retention is bounded: six nested scopes release
+   six chunks and the cache keeps at most four of them, under its byte bound. */
+static void retention_bound(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap,8u<<20);
+    enum { depth=6 };
+    for (unsigned i=0;i<depth;i++) {
+        assert(myl_native_region_begin(&heap));
+        assert(myl_native_heap_alloc(&heap,&wide,1));
+    }
+    assert(heap.arena.chunks_live==depth && !heap.arena.cached);
+    for (unsigned i=0;i<depth;i++) myl_native_region_end(&heap);
+    assert(heap.arena.cached==4 && heap.arena.cached_bytes<=(2u<<20));
+    assert(!heap.bytes && !heap.arena.chunks_live && !heap.arena.reserved_bytes);
+    myl_native_heap_destroy(&heap);
+}
+/* spec-case: ARENA-MANAGED-10. A reused chunk is charged to the budget exactly
+   as a fresh reservation is, so a tiny budget still shrinks its chunk and still
+   reports exhaustion rather than spending retained bytes. */
+static void reuse_respects_budget(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap,4096);
+    assert(myl_native_region_begin(&heap));
+    assert(myl_native_heap_alloc(&heap,&wide,1));
+    size_t reserved=heap.arena.reserved_bytes;
+    assert(reserved && reserved<=4096 && heap.bytes==reserved);
+    myl_native_region_end(&heap);
+    assert(heap.arena.cached==1 && heap.arena.cached_bytes==reserved && !heap.bytes);
+    assert(myl_native_region_begin(&heap));
+    assert(myl_native_heap_alloc(&heap,&wide,1));
+    assert(heap.arena.reused==1 && !heap.arena.cached && !heap.arena.cached_bytes);
+    assert(heap.bytes==reserved && heap.arena.reserved_bytes==reserved);
+    while (myl_native_heap_alloc(&heap,&wide,1)) {}
+    assert(heap.exhausted && heap.bytes<=heap.limit);
+    myl_native_region_end(&heap);
+    assert(!heap.bytes && !heap.objects_live);
+    myl_native_heap_destroy(&heap);
+}
+/* spec-case: ARENA-MANAGED-10. A chunk released by an inner scope serves the
+   next inner scope while the outer scope keeps its own chunk and its values. */
+static void nested_scope_reuse(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap,1<<20);
+    assert(myl_native_region_begin(&heap));
+    uint64_t *outer=myl_native_heap_alloc(&heap,&(myl_native_type){.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN,.trace_mode=MYL_NATIVE_TRACE_NONE},1);
+    assert(outer); *outer=55;
+    assert(myl_native_region_begin(&heap));
+    void *inner=myl_native_heap_alloc(&heap,&wide,1);
+    assert(inner && myl_native_object_region(&heap,inner)==2);
+    myl_native_region_end(&heap);
+    assert(heap.arena.cached==1 && heap.arena.chunks_live==1);
+    assert(myl_native_region_begin(&heap));
+    void *again=myl_native_heap_alloc(&heap,&wide,1);
+    assert(again==inner && heap.arena.reused==1 && myl_native_object_region(&heap,again)==2);
+    assert(myl_native_object_region(&heap,outer)==1 && *outer==55);
+    myl_native_region_end(&heap);
+    myl_native_region_end(&heap);
+    assert(!heap.region_depth && !heap.bytes && !heap.objects_live);
+    myl_native_heap_destroy(&heap);
+}
+static const myl_native_type pointer={.size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER};
+static const myl_native_type number={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+static const myl_native_type integers={.size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER,.collection_kind=1,.element=&number};
+/* spec-case: ARENA-MANAGED-10. An escape copy lands in the enclosing region and
+   survives the scope that produced it, and the released chunk is then reused. */
+static void reuse_after_escape(void) {
+    myl_native_heap heap;
+    myl_native_root root;
+    myl_native_heap_init(&heap,1<<20);
+    assert(myl_native_region_begin(&heap));
+    myl_native_list *source=myl_native_list_new(&heap,&number,0);
+    assert(source);
+    int64_t value=91;
+    assert(myl_native_list_append(&heap,source,&value));
+    myl_native_list *escaped=NULL;
+    assert(myl_native_region_escape(&heap,&integers,&source,&escaped));
+    myl_native_root_push(&heap,&root,&escaped,&pointer);
+    assert(escaped && escaped!=source && !myl_native_object_region(&heap,escaped));
+    void *chunk_head=source;
+    myl_native_region_end(&heap);
+    assert(heap.arena.cached==1);
+    heap.stress=1;
+    myl_native_heap_collect(&heap);
+    int64_t read=0;
+    assert(myl_native_list_get(escaped,0,&read) && read==91);
+    heap.stress=0;
+    assert(myl_native_region_begin(&heap));
+    void *again=myl_native_heap_alloc(&heap,&octet,1);
+    assert(again==chunk_head && heap.arena.reused==1 && !((unsigned char *)again)[0]);
+    myl_native_region_end(&heap);
+    assert(myl_native_root_pop(&heap,&root));
+    myl_native_heap_destroy(&heap);
+}
 int main(void) {
     chunked_objects();
     zero_and_validation();
@@ -166,5 +287,10 @@ int main(void) {
     frozen_arena_views();
     oversized_chunk();
     arena_views_retain_old_backing();
+    chunk_reuse_across_scopes();
+    retention_bound();
+    reuse_respects_budget();
+    nested_scope_reuse();
+    reuse_after_escape();
     return 0;
 }

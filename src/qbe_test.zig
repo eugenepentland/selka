@@ -1335,3 +1335,44 @@ test "QBE-CTORFWD-1 an operand read from the destination keeps the constructor c
     try std.testing.expectEqual(@as(usize, 5), std.mem.count(u8, body, "blit "));
     try std.testing.expect(std.mem.indexOf(u8, body, "%agg") != null);
 }
+
+// spec: QBE-ARRAYWRITE-1
+test "QBE-ARRAYWRITE-1 a replace stored back into its own array writes one element in place" {
+    var parsed = try emitted(std.testing.allocator,
+        \\def main() -> i64:
+        \\    values: [4]i64 = [1, 2, 3, 4]
+        \\    values = replace(values, 2, 30)
+        \\    return values[2]
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "main").?.il;
+    // The store immediately after the replace names the local the replace read,
+    // so the element goes through a copy of `%l0` itself — the second of the
+    // two, the first being the literal's own forwarded construction. Neither
+    // the copy into the per-pc aggregate scratch nor the copy back out of it is
+    // emitted, so the whole function carries no whole-array copy at all and the
+    // scratch forwarding made dead is removed.
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, body, "=l copy %l0"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "%agg"));
+    // The bounds check against the array's own length is untouched.
+    try std.testing.expect(std.mem.indexOf(u8, body, "$myl_qbe_fail_array_bounds") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "cugel") != null);
+}
+
+// spec-case: QBE-ARRAYWRITE-1
+test "QBE-ARRAYWRITE-1 a replace stored into another local keeps the whole-array copy" {
+    var parsed = try emitted(std.testing.allocator,
+        \\def main() -> i64:
+        \\    values: [4]i64 = [1, 2, 3, 4]
+        \\    other: [4]i64 = replace(values, 2, 30)
+        \\    return other[2] + values[2]
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "main").?.il;
+    // `values` keeps its value, so the replace builds the new array in the
+    // per-pc scratch and the store copies that scratch into `other`: the two
+    // whole-array copies the forwarded spelling removes are both still here.
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, body, "blit "));
+    try std.testing.expect(std.mem.indexOf(u8, body, "%agg") != null);
+}

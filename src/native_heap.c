@@ -210,6 +210,9 @@ void *myl_native_heap_alloc_at(myl_native_heap *heap, const myl_native_type *ele
         return NULL;
     }
     myl_native_object *object = calloc(1, bytes);
+    /* Chunks the arena retained for reuse are host bytes no live allocation
+     * needs, so a refused reservation spends them before reporting failure. */
+    if (!object && heap->arena.cached) { myl_native_arena_reclaim(heap); object = calloc(1, bytes); }
     if (!object) return NULL;
     object->next = heap->objects;
     object->element = element;
@@ -224,6 +227,7 @@ void *myl_native_heap_alloc_at(myl_native_heap *heap, const myl_native_type *ele
 }
 void myl_native_heap_destroy(myl_native_heap *heap) {
     myl_native_arena_release(heap, 0);
+    myl_native_arena_reclaim(heap);
     myl_native_object *object = heap->objects;
     while (object) {
         myl_native_object *next = object->next;
